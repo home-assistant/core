@@ -1,5 +1,5 @@
 """Counter for the days until an HTTPS (TLS) certificate will expire."""
-from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
@@ -20,13 +20,12 @@ from homeassistant.util import dt
 
 from .const import CONF_CA_CERT, DEFAULT_PORT, DOMAIN
 
-SCAN_INTERVAL = timedelta(hours=12)
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_CA_CERT): cv.string,
     }
 )
 
@@ -78,8 +77,9 @@ class CertExpiryEntity(CoordinatorEntity):
             "is_valid": self.coordinator.is_cert_valid,
             "error": str(self.coordinator.cert_error),
         }
-        if self.coordinator.ca_cert:
-            attributes[CONF_CA_CERT] = self.coordinator.ca_cert
+        ca_cert = self.coordinator.config_entry.options[CONF_CA_CERT]
+        if ca_cert:
+            attributes[CONF_CA_CERT] = ca_cert
         return attributes
 
 
@@ -89,7 +89,7 @@ class SSLCertificateDays(CertExpiryEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return f"Cert Expiry ({self.coordinator.name})"
+        return f"Cert Expiry ({self.coordinator.config_entry.title})"
 
     @property
     def state(self):
@@ -103,7 +103,7 @@ class SSLCertificateDays(CertExpiryEntity):
     @property
     def unique_id(self):
         """Return a unique id for the sensor."""
-        return f"{self.coordinator.host}:{self.coordinator.port}"
+        return self.coordinator.unique_id
 
     @property
     def unit_of_measurement(self):
@@ -122,7 +122,7 @@ class SSLCertificateTimestamp(CertExpiryEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return f"Cert Expiry Timestamp ({self.coordinator.name})"
+        return f"Cert Expiry Timestamp ({self.coordinator.config_entry.title})"
 
     @property
     def state(self):
@@ -134,4 +134,4 @@ class SSLCertificateTimestamp(CertExpiryEntity):
     @property
     def unique_id(self):
         """Return a unique id for the sensor."""
-        return f"{self.coordinator.host}:{self.coordinator.port}-timestamp"
+        return f"{self.coordinator.unique_id}-timestamp"

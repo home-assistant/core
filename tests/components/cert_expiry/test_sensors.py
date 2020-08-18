@@ -3,12 +3,12 @@ from datetime import timedelta
 import socket
 import ssl
 
-from homeassistant.components.cert_expiry.const import CONF_CA_CERT, DOMAIN
+from homeassistant.components.cert_expiry.const import DOMAIN
 from homeassistant.config_entries import ENTRY_STATE_SETUP_RETRY
 from homeassistant.const import CONF_HOST, CONF_PORT, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.util.dt import utcnow
 
-from .const import CA_CERT, HOST, PORT
+from .const import HOST, PORT
 from .helpers import future_timestamp, static_datetime
 
 from tests.async_mock import patch
@@ -22,6 +22,7 @@ async def test_async_setup_entry(mock_now, hass):
         domain=DOMAIN,
         data={CONF_HOST: HOST, CONF_PORT: PORT},
         unique_id=f"{HOST}:{PORT}",
+        title=HOST,
     )
 
     timestamp = future_timestamp(100)
@@ -49,66 +50,6 @@ async def test_async_setup_entry(mock_now, hass):
     assert state.attributes.get("error") == "None"
     assert state.attributes.get("is_valid")
     assert state.attributes.get("ca_cert") is None
-
-
-@patch("homeassistant.util.dt.utcnow", return_value=static_datetime())
-async def test_async_setup_entry_with_ca_cert(mock_now, hass):
-    """Test async_setup_entry."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_HOST: HOST, CONF_PORT: PORT, CONF_CA_CERT: CA_CERT},
-        unique_id=f"{HOST}:{PORT}",
-    )
-
-    timestamp = future_timestamp(100)
-
-    with patch(
-        "homeassistant.components.cert_expiry.get_cert_expiry_timestamp",
-        return_value=timestamp,
-    ):
-        entry.add_to_hass(hass)
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.cert_expiry_example_com")
-    assert state is not None
-    assert state.state != STATE_UNAVAILABLE
-    assert state.state == "100"
-    assert state.attributes.get("error") == "None"
-    assert state.attributes.get("is_valid")
-    assert state.attributes.get("ca_cert") == "/some/ca.crt"
-
-    state = hass.states.get("sensor.cert_expiry_timestamp_example_com")
-    assert state is not None
-    assert state.state != STATE_UNAVAILABLE
-    assert state.state == timestamp.isoformat()
-    assert state.attributes.get("error") == "None"
-    assert state.attributes.get("is_valid")
-    assert state.attributes.get("ca_cert") == "/some/ca.crt"
-
-
-async def test_async_setup_entry_bad_cert(hass):
-    """Test async_setup_entry with a bad/expired cert."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_HOST: HOST, CONF_PORT: PORT},
-        unique_id=f"{HOST}:{PORT}",
-    )
-
-    with patch(
-        "homeassistant.components.cert_expiry.helper.get_cert",
-        side_effect=ssl.SSLError("some error"),
-    ):
-        entry.add_to_hass(hass)
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.cert_expiry_example_com")
-    assert state is not None
-    assert state.state != STATE_UNAVAILABLE
-    assert state.state == "0"
-    assert state.attributes.get("error") == "some error"
-    assert not state.attributes.get("is_valid")
 
 
 async def test_async_setup_entry_host_unavailable(hass):
@@ -141,51 +82,13 @@ async def test_async_setup_entry_host_unavailable(hass):
     assert state is None
 
 
-@patch("homeassistant.util.dt.utcnow", return_value=static_datetime())
-async def test_async_setup_entry_with_unavailalbe_ca_cert(mock_now, hass):
-    """Test async_setup_entry."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_HOST: HOST, CONF_PORT: PORT, CONF_CA_CERT: CA_CERT},
-        unique_id=f"{HOST}:{PORT}",
-    )
-
-    with patch(
-        "homeassistant.components.cert_expiry.helper.get_cert",
-        side_effect=FileNotFoundError,
-    ):
-        entry.add_to_hass(hass)
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.cert_expiry_example_com")
-    assert state is not None
-    assert state.state != STATE_UNAVAILABLE
-    assert state.state == "0"
-    assert (
-        state.attributes.get("error")
-        == "CA certificate file '/some/ca.crt' is not accessible"
-    )
-    assert not state.attributes.get("is_valid")
-    assert state.attributes.get("ca_cert") == "/some/ca.crt"
-
-    state = hass.states.get("sensor.cert_expiry_timestamp_example_com")
-    assert state is not None
-    assert state.state == STATE_UNKNOWN
-    assert (
-        state.attributes.get("error")
-        == "CA certificate file '/some/ca.crt' is not accessible"
-    )
-    assert not state.attributes.get("is_valid")
-    assert state.attributes.get("ca_cert") == "/some/ca.crt"
-
-
 async def test_update_sensor(hass):
     """Test async_update for sensor."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: HOST, CONF_PORT: PORT},
         unique_id=f"{HOST}:{PORT}",
+        title=HOST,
     )
 
     starting_time = static_datetime()
@@ -242,6 +145,7 @@ async def test_update_sensor_network_errors(hass):
         domain=DOMAIN,
         data={CONF_HOST: HOST, CONF_PORT: PORT},
         unique_id=f"{HOST}:{PORT}",
+        title=HOST,
     )
 
     starting_time = static_datetime()

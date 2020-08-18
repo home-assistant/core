@@ -6,6 +6,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT
 
+from ...core import callback
 from .const import CONF_CA_CERT, DEFAULT_PORT, DOMAIN  # pylint: disable=unused-import
 from .errors import (
     ConnectionRefused,
@@ -71,10 +72,7 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.error("Config import failed for %s", user_input[CONF_HOST])
                 return self.async_abort(reason="import_failed")
         else:
-            user_input = {}
-            user_input[CONF_HOST] = ""
-            user_input[CONF_PORT] = DEFAULT_PORT
-            user_input[CONF_CA_CERT] = ""
+            user_input = {CONF_HOST: "", CONF_PORT: DEFAULT_PORT, CONF_CA_CERT: ""}
 
         return self.async_show_form(
             step_id="user",
@@ -96,3 +94,41 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         Only host was required in the yaml file all other fields are optional
         """
         return await self.async_step_user(user_input)
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Set the options flow handler for cert_expiry."""
+
+        return OptionsFlowHandler(config_entry)
+
+
+class OptionsFlowHandler(config_entries.OptionsFlow):
+    """The option flow handler for cert_expiry."""
+
+    def __init__(self, config_entry):
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(self, user_input=None):
+        """Manage cert_expiry options."""
+        if user_input is not None:
+            ca_cert = user_input.get(CONF_CA_CERT, "")
+            data = self.config_entry.options.copy()
+            if ca_cert != "":
+                data[CONF_CA_CERT] = ca_cert
+            else:
+                data.pop(CONF_CA_CERT, None)
+            return self.async_create_entry(title="", data=data)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_CA_CERT,
+                        default=self.config_entry.options.get(CONF_CA_CERT, ""),
+                    ): str
+                }
+            ),
+        )

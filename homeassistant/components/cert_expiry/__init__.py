@@ -27,9 +27,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Load the saved entities."""
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
-    ca_cert = entry.data.get(CONF_CA_CERT, None)
 
-    coordinator = CertExpiryDataUpdateCoordinator(hass, host, port, ca_cert)
+    coordinator = CertExpiryDataUpdateCoordinator(hass, entry)
+    await coordinator.async_set_options()
     await coordinator.async_refresh()
 
     if not coordinator.last_update_success:
@@ -55,16 +55,21 @@ async def async_unload_entry(hass, entry):
 class CertExpiryDataUpdateCoordinator(DataUpdateCoordinator[datetime]):
     """Class to manage fetching Cert Expiry data from single endpoint."""
 
-    def __init__(self, hass, host, port, ca_cert):
+    def __init__(self, hass, config_entry):
         """Initialize global Cert Expiry data updater."""
-        self.host = host
-        self.port = port
-        self.ca_cert = ca_cert
+        self.config_entry = config_entry
         self.cert_error = None
         self.is_cert_valid = False
 
-        display_port = f":{port}" if port != DEFAULT_PORT else ""
-        name = f"{self.host}{display_port}"
+        self.unique_id = (
+            f"{self.config_entry.data[CONF_HOST]}:{self.config_entry.data[CONF_PORT]}"
+        )
+
+        display_port = config_entry.options.get(
+            CONF_PORT, config_entry.data.get(CONF_PORT, "")
+        )
+        host = config_entry.options.get(CONF_HOST, config_entry.data.get(CONF_HOST))
+        name = f"{host}{display_port}"
 
         super().__init__(
             hass,
@@ -75,18 +80,39 @@ class CertExpiryDataUpdateCoordinator(DataUpdateCoordinator[datetime]):
 
     async def _async_update_data(self) -> Optional[datetime]:
         """Fetch certificate."""
+
         try:
             timestamp = await get_cert_expiry_timestamp(
-                self.hass, self.host, self.port, self.ca_cert
+                self.hass,
+                self.config_entry.options[CONF_HOST],
+                self.config_entry.options[CONF_PORT],
+                self.config_entry.options[CONF_CA_CERT],
             )
         except TemporaryFailure as err:
             raise UpdateFailed(err.args[0]) from err
         except ValidationFailure as err:
             self.cert_error = err
             self.is_cert_valid = False
-            _LOGGER.error("Certificate validation error: %s [%s]", self.host, err)
+            _LOGGER.error(
+                "Certificate validation error: %s [%s]",
+                self.config_entry.options[CONF_HOST],
+                err,
+            )
             return None
 
         self.cert_error = None
         self.is_cert_valid = True
         return timestamp
+
+    async def async_set_options(self):
+        """Set options for cert_expiry entry."""
+        if not self.config_entry.options:
+            data = {**self.config_entry.data}
+            options = {
+                CONF_HOST: data.pop(CONF_HOST, ""),
+                CONF_PORT: data.pop(CONF_PORT, DEFAULT_PORT),
+                CONF_CA_CERT: data.pop(CONF_CA_CERT, ""),
+            }
+            self.hass.config_entries.async_update_entry(
+                self.config_entry, data=data, options=options
+            )
