@@ -3,7 +3,9 @@
   "name": "Ondilo ICO",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ondilo_ico",
-  "requirements": [],
+  "requirements": [
+    "ondilo==0.1.0"
+  ],
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},
