@@ -775,6 +775,7 @@ omit =
     homeassistant/components/smappee/binary_sensor.py
     homeassistant/components/smappee/sensor.py
     homeassistant/components/smappee/switch.py
+    homeassistant/components/smart_meter_texas/sensor.py
     homeassistant/components/smarty/*
     homeassistant/components/smarthab/__init__.py
     homeassistant/components/smarthab/cover.py

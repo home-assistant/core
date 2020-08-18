@@ -57,6 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     await smartmetertexas.setup()
 
     async def async_update_data():
+        _LOGGER.debug("Fetching latest data")
         await smartmetertexas.read_meters()
         return smartmetertexas
 
