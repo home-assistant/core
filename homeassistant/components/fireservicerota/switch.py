@@ -159,7 +159,9 @@ class ResponseSwitch(SwitchEntity):
         """Register update callback."""
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, f"{SIGNAL_UPDATE_INCIDENTS}-{self._entry_id}", self.async_on_demand_update
+                self.hass,
+                f"{SIGNAL_UPDATE_INCIDENTS}-{self._entry_id}",
+                self.async_on_demand_update,
             )
         )
 

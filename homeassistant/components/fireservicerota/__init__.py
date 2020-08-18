@@ -11,16 +11,22 @@ from pyfireservicerota import (
     InvalidTokenError,
 )
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_TOKEN, CONF_URL
-from homeassistant.core import HomeAssistant
-from homeassistant.util import Throttle
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.helpers.dispatcher import (async_dispatcher_send)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_TOKEN, CONF_URL
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.util import Throttle
 
-from .const import DOMAIN, NOTIFICATION_AUTH_ID, NOTIFICATION_AUTH_TITLE, SIGNAL_UPDATE_INCIDENTS, WSS_BWRURL
+from .const import (
+    DOMAIN,
+    NOTIFICATION_AUTH_ID,
+    NOTIFICATION_AUTH_TITLE,
+    SIGNAL_UPDATE_INCIDENTS,
+    WSS_BWRURL,
+)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
@@ -32,9 +38,9 @@ ENTITY_COMPONENTS = {
     SWITCH_DOMAIN,
 }
 
+
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up the FireServiceRota component."""
-    hass.data[DOMAIN] = {}
 
     return True
 
@@ -44,6 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = FSRDataCoordinator(hass, entry)
     await coordinator.async_update()
 
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
     for component in ENTITY_COMPONENTS:
@@ -73,10 +80,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 class FSRDataCoordinator:
     """Getting the latest data from fireservicerota."""
+
     def __init__(self, hass, entry):
         """Initialize the data object."""
         self._hass = hass
         self._entry = entry
+
         self._url = entry.data[CONF_URL]
         self._tokens = entry.data[CONF_TOKEN]
 
@@ -85,47 +94,50 @@ class FSRDataCoordinator:
         self.incident_id = None
         self.response_data = None
 
-        self.fsr_avail = FireServiceRota(
+        self._fsr_avail = FireServiceRota(
             base_url=f"https://{self._url}", token_info=self._tokens
         )
 
-        self.fsr_incidents = FireServiceRotaIncidents(
-            on_incident=self.on_incident,
-        )
+        self._fsr_incidents = FireServiceRotaIncidents(on_incident=self.on_incident,)
 
         self.start_listener()
 
     def construct_url(self):
-        return WSS_BWRURL.format(self._entry.data[CONF_URL], self._entry.data[CONF_TOKEN]["access_token"])
+        """Return url with latest config values."""
+        return WSS_BWRURL.format(
+            self._entry.data[CONF_URL], self._entry.data[CONF_TOKEN]["access_token"]
+        )
 
     def on_incident(self, data):
         """Update the current data."""
         _LOGGER.debug("Got data from websocket listener: %s", data)
         self.incident_data = data
 
-        async_dispatcher_send(self._hass, f"{SIGNAL_UPDATE_INCIDENTS}-{self._entry.unique_id}")
+        async_dispatcher_send(
+            self._hass, f"{SIGNAL_UPDATE_INCIDENTS}-{self._entry.unique_id}"
+        )
 
     def start_listener(self):
         """Start the websocket listener."""
         _LOGGER.debug("Starting incidents listener")
-        self.fsr_incidents.start(self.construct_url())
+        self._fsr_incidents.start(self.construct_url())
 
     def stop_listener(self):
         """Stop the websocket listener."""
         _LOGGER.debug("Stopping incidents listener")
-        self.fsr_incidents.stop()
+        self._fsr_incidents.stop()
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self):
         """Get the latest availability data."""
         try:
             self.availability_data = await self._hass.async_add_executor_job(
-                self.fsr_avail.get_availability, str(self._hass.config.time_zone)
+                self._fsr_avail.get_availability, str(self._hass.config.time_zone)
             )
             _LOGGER.debug("Updating availability data")
         except (ExpiredTokenError, InvalidTokenError):
             _LOGGER.debug("Refreshing expired tokens")
-            await self.async_refresh()
+            await self.async_refresh_tokens()
 
     async def async_response_update(self):
         """Get the latest incident response data."""
@@ -134,7 +146,7 @@ class FSRDataCoordinator:
             _LOGGER.debug("Incident id: %s", self.incident_id)
             try:
                 self.response_data = await self._hass.async_add_executor_job(
-                    self.fsr_avail.get_incident_response, self.incident_id
+                    self._fsr_avail.get_incident_response, self.incident_id
                 )
                 _LOGGER.debug("Updating incident response data")
             except (ExpiredTokenError, InvalidTokenError):
@@ -145,7 +157,7 @@ class FSRDataCoordinator:
         """Set incident response status."""
         try:
             await self._hass.async_add_executor_job(
-                self.fsr_avail.set_incident_response, incident_id, value
+                self._fsr_avail.set_incident_response, incident_id, value
             )
             _LOGGER.debug("Setting incident response status")
         except (ExpiredTokenError, InvalidTokenError):
@@ -159,7 +171,7 @@ class FSRDataCoordinator:
         _LOGGER.debug("Refreshing authentication tokens")
         try:
             token_info = await self._hass.async_add_executor_job(
-                self.fsr_avail.refresh_tokens
+                self._fsr_avail.refresh_tokens
             )
         except (InvalidAuthError, InvalidTokenError):
             _LOGGER.error("Error occurred while refreshing authentication tokens")
@@ -168,7 +180,7 @@ class FSRDataCoordinator:
                 title=NOTIFICATION_AUTH_TITLE,
                 notification_id=NOTIFICATION_AUTH_ID,
             )
-            self._tokens_valid = False
+
             return False
 
         _LOGGER.debug("Saving new tokens in config entry")

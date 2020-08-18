@@ -2,20 +2,14 @@
 import logging
 from typing import Any, Dict
 
-# from pyfireservicerota import FireServiceRotaIncidents
-
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_TOKEN, CONF_URL
-from homeassistant.helpers.dispatcher import (async_dispatcher_connect)
+from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import (
-    ATTRIBUTION,
-    DOMAIN,
-    SENSOR_ENTITY_LIST,
-    SIGNAL_UPDATE_INCIDENTS,
-)
+from .const import ATTRIBUTION, DOMAIN, SENSOR_ENTITY_LIST, SIGNAL_UPDATE_INCIDENTS
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -196,7 +190,9 @@ class IncidentsSensor(RestoreEntity):
 
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, f"{SIGNAL_UPDATE_INCIDENTS}-{self._entry_id}", self.async_on_demand_update
+                self.hass,
+                f"{SIGNAL_UPDATE_INCIDENTS}-{self._entry_id}",
+                self.async_on_demand_update,
             )
         )
 
