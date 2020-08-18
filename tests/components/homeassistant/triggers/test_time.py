@@ -31,14 +31,14 @@ def setup_comp(hass):
 
 async def test_if_fires_using_at(hass, calls):
     """Test for firing at."""
-    now = dt_util.utcnow()
+    now = dt_util.now()
 
-    time_that_will_not_match_right_away = now.replace(
-        hour=4, minute=59, second=0
-    ) + timedelta(2)
+    trigger_dt = now.replace(hour=5, minute=0, second=0, microsecond=0) + timedelta(2)
+    time_that_will_not_match_right_away = trigger_dt - timedelta(minutes=1)
 
     with patch(
-        "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
+        "homeassistant.util.dt.utcnow",
+        return_value=dt_util.as_utc(time_that_will_not_match_right_away),
     ):
         assert await async_setup_component(
             hass,
@@ -55,14 +55,11 @@ async def test_if_fires_using_at(hass, calls):
                 }
             },
         )
+        await hass.async_block_till_done()
 
-    now = dt_util.utcnow()
-
-    async_fire_time_changed(
-        hass, now.replace(hour=5, minute=0, second=0) + timedelta(2)
-    )
-
+    async_fire_time_changed(hass, trigger_dt + timedelta(seconds=1))
     await hass.async_block_till_done()
+
     assert len(calls) == 1
     assert calls[0].data["some"] == "time - 5"
 
@@ -114,8 +111,9 @@ async def test_if_fires_using_at_input_datetime(hass, calls, has_date, has_time)
                 }
             },
         )
+        await hass.async_block_till_done()
 
-    async_fire_time_changed(hass, trigger_dt)
+    async_fire_time_changed(hass, trigger_dt + timedelta(seconds=1))
     await hass.async_block_till_done()
 
     assert len(calls) == 1
@@ -136,7 +134,7 @@ async def test_if_fires_using_at_input_datetime(hass, calls, has_date, has_time)
         blocking=True,
     )
 
-    async_fire_time_changed(hass, trigger_dt)
+    async_fire_time_changed(hass, trigger_dt + timedelta(seconds=1))
     await hass.async_block_till_done()
 
     assert len(calls) == 2
@@ -146,14 +144,14 @@ async def test_if_fires_using_at_input_datetime(hass, calls, has_date, has_time)
 async def test_if_fires_using_multiple_at(hass, calls):
     """Test for firing at."""
 
-    now = dt_util.utcnow()
+    now = dt_util.now()
 
-    time_that_will_not_match_right_away = now.replace(
-        hour=4, minute=59, second=0
-    ) + timedelta(2)
+    trigger_dt = now.replace(hour=5, minute=0, second=0, microsecond=0) + timedelta(2)
+    time_that_will_not_match_right_away = trigger_dt - timedelta(minutes=1)
 
     with patch(
-        "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
+        "homeassistant.util.dt.utcnow",
+        return_value=dt_util.as_utc(time_that_will_not_match_right_away),
     ):
         assert await async_setup_component(
             hass,
@@ -170,22 +168,17 @@ async def test_if_fires_using_multiple_at(hass, calls):
                 }
             },
         )
+        await hass.async_block_till_done()
 
-    now = dt_util.utcnow()
-
-    async_fire_time_changed(
-        hass, now.replace(hour=5, minute=0, second=0) + timedelta(2)
-    )
-
+    async_fire_time_changed(hass, trigger_dt + timedelta(seconds=1))
     await hass.async_block_till_done()
+
     assert len(calls) == 1
     assert calls[0].data["some"] == "time - 5"
 
-    async_fire_time_changed(
-        hass, now.replace(hour=6, minute=0, second=0) + timedelta(2)
-    )
-
+    async_fire_time_changed(hass, trigger_dt + timedelta(hours=1, seconds=1))
     await hass.async_block_till_done()
+
     assert len(calls) == 2
     assert calls[1].data["some"] == "time - 6"
 
@@ -219,6 +212,7 @@ async def test_if_not_fires_using_wrong_at(hass, calls):
                     }
                 },
             )
+        await hass.async_block_till_done()
 
     async_fire_time_changed(
         hass, now.replace(year=now.year + 1, hour=1, minute=0, second=5)
@@ -241,6 +235,7 @@ async def test_if_action_before(hass, calls):
             }
         },
     )
+    await hass.async_block_till_done()
 
     before_10 = dt_util.now().replace(hour=8)
     after_10 = dt_util.now().replace(hour=14)
@@ -271,6 +266,7 @@ async def test_if_action_after(hass, calls):
             }
         },
     )
+    await hass.async_block_till_done()
 
     before_10 = dt_util.now().replace(hour=8)
     after_10 = dt_util.now().replace(hour=14)
@@ -301,6 +297,7 @@ async def test_if_action_one_weekday(hass, calls):
             }
         },
     )
+    await hass.async_block_till_done()
 
     days_past_monday = dt_util.now().weekday()
     monday = dt_util.now() - timedelta(days=days_past_monday)
@@ -332,6 +329,7 @@ async def test_if_action_list_weekday(hass, calls):
             }
         },
     )
+    await hass.async_block_till_done()
 
     days_past_monday = dt_util.now().weekday()
     monday = dt_util.now() - timedelta(days=days_past_monday)
@@ -378,6 +376,7 @@ async def test_untrack_time_change(hass):
                 }
             },
         )
+        await hass.async_block_till_done()
 
     await hass.services.async_call(
         automation.DOMAIN,
