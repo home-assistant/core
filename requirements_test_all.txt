@@ -595,7 +595,7 @@ pyblackbird==0.5
 pybotvac==0.0.17
 
 # homeassistant.components.cast
-pychromecast==7.2.0
+pychromecast==7.2.1
 
 # homeassistant.components.coolmaster
 pycoolmasternet==0.0.4
