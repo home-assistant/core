@@ -1,10 +1,13 @@
 """Shared class to maintain Plex server instances."""
+from functools import partial
 import logging
 import ssl
 import time
 from urllib.parse import urlparse
 
+from plexapi.client import PlexClient
 from plexapi.exceptions import BadRequest, NotFound, Unauthorized
+from plexapi.gdm import GDM
 import plexapi.myplex
 import plexapi.playqueue
 import plexapi.server
@@ -87,12 +90,20 @@ class PlexServer:
         self._plextv_device_cache = {}
         self._use_plex_tv = self._token is not None
         self._version = None
+        self.gdm = GDM()
         self.async_update_platforms = Debouncer(
             hass,
             _LOGGER,
             cooldown=DEBOUNCE_TIMEOUT,
             immediate=True,
             function=self._async_update_platforms,
+        ).async_call
+        self.async_scan_gdm = Debouncer(
+            hass,
+            _LOGGER,
+            cooldown=10,
+            immediate=True,
+            function=partial(self.gdm.scan, scan_for_clients=True),
         ).async_call
 
         # Header conditionally added as it is not available in config entry v1
@@ -288,6 +299,8 @@ class PlexServer:
             )
             return
 
+        await self.async_scan_gdm()
+
         def process_device(source, device):
             self._known_idle.discard(device.machineIdentifier)
             available_clients.setdefault(device.machineIdentifier, {"device": device})
@@ -321,6 +334,12 @@ class PlexServer:
         for device in devices:
             process_device("PMS", device)
 
+        def connect_to_client(baseurl):
+            """Connect to a Plex client and return a PlexClient instance."""
+            return PlexClient(
+                server=self._plex_server, baseurl=baseurl, token=self._token
+            )
+
         def connect_to_resource(resource):
             """Connect to a plex.tv resource and return a Plex client."""
             client_id = resource.clientIdentifier
@@ -338,6 +357,22 @@ class PlexServer:
 
             self._plextv_device_cache[client_id] = client
             return client
+
+        for gdm_client in self.gdm.entries:
+            machine_identifier = gdm_client["data"]["Resource-Identifier"]
+            if machine_identifier not in available_clients:
+                baseurl = f"http://{gdm_client['from'][0]}:{gdm_client['data']['Port']}"
+                name = gdm_client["data"]["Name"]
+                try:
+                    device = await self.hass.async_add_executor_job(
+                        connect_to_client, baseurl
+                    )
+                except requests.exceptions.ConnectionError:
+                    _LOGGER.error(
+                        "GDM client connection failed: %s (%s)", name, baseurl
+                    )
+                else:
+                    process_device("GDM", device)
 
         for plextv_client in plextv_clients:
             if plextv_client.clientIdentifier not in available_clients:
