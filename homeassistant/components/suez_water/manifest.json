@@ -4,4 +4,5 @@
     "documentation": "https://www.home-assistant.io/integrations/suez_water",
     "codeowners": ["@ooii"],
     "requirements": ["pysuez==0.1.19"],
+    "quality_scale": "No Score"
 }
