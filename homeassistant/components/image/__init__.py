@@ -6,7 +6,7 @@ import secrets
 import shutil
 import typing
 
-from PIL import Image, ImageOps
+from PIL import Image, ImageOps, UnidentifiedImageError
 from aiohttp import hdrs, web
 from aiohttp.web_request import FileField
 import voluptuous as vol
@@ -85,6 +85,15 @@ class ImageStorageCollection(collection.StorageCollection):
         """Move data."""
         uploaded_file: FileField = data.pop("file")
 
+        # Verify we can read the image
+        try:
+            image = Image.open(uploaded_file.file)
+        except UnidentifiedImageError:
+            raise vol.Invalid("Unable to identify image file")
+
+        # Reset content
+        uploaded_file.file.seek(0)
+
         media_folder: pathlib.Path = (self.image_dir / data[CONF_ID])
         media_folder.mkdir(parents=True)
 
@@ -97,6 +106,8 @@ class ImageStorageCollection(collection.StorageCollection):
 
         with media_file.open("wb") as target:
             shutil.copyfileobj(uploaded_file.file, target)
+
+        image.close()
 
         return media_file.stat().st_size
 
