@@ -1662,7 +1662,7 @@ pysqueezebox==0.2.4
 pystiebeleltron==0.0.1.dev2
 
 # homeassistant.components.suez_water
-pysuez==0.1.17
+pysuez==0.1.19
 
 # homeassistant.components.supla
 pysupla==0.0.3
