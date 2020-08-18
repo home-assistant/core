@@ -35,7 +35,7 @@ async def test_if_fires_using_at(hass, calls):
 
     time_that_will_not_match_right_away = now.replace(
         hour=4, minute=59, second=0
-    ) + timedelta(days=2)
+    ) + timedelta(2)
 
     with patch(
         "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
@@ -60,8 +60,7 @@ async def test_if_fires_using_at(hass, calls):
     now = dt_util.utcnow()
 
     async_fire_time_changed(
-        hass,
-        now.replace(hour=5, minute=0, second=0, microsecond=999999) + timedelta(days=2),
+        hass, now.replace(hour=5, minute=0, second=0) + timedelta(2)
     )
 
     await hass.async_block_till_done()
@@ -153,7 +152,7 @@ async def test_if_fires_using_multiple_at(hass, calls):
 
     time_that_will_not_match_right_away = now.replace(
         hour=4, minute=59, second=0
-    ) + timedelta(days=2)
+    ) + timedelta(2)
 
     with patch(
         "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
@@ -178,8 +177,7 @@ async def test_if_fires_using_multiple_at(hass, calls):
     now = dt_util.utcnow()
 
     async_fire_time_changed(
-        hass,
-        now.replace(hour=5, minute=0, second=0, microsecond=999999) + timedelta(days=2),
+        hass, now.replace(hour=5, minute=0, second=0) + timedelta(2)
     )
 
     await hass.async_block_till_done()
@@ -187,8 +185,7 @@ async def test_if_fires_using_multiple_at(hass, calls):
     assert calls[0].data["some"] == "time - 5"
 
     async_fire_time_changed(
-        hass,
-        now.replace(hour=6, minute=0, second=0, microsecond=999999) + timedelta(days=2),
+        hass, now.replace(hour=6, minute=0, second=0) + timedelta(2)
     )
 
     await hass.async_block_till_done()
@@ -228,8 +225,7 @@ async def test_if_not_fires_using_wrong_at(hass, calls):
             await hass.async_block_till_done()
 
     async_fire_time_changed(
-        hass,
-        now.replace(year=now.year + 1, hour=1, minute=0, second=5, microsecond=999999),
+        hass, now.replace(year=now.year + 1, hour=1, minute=0, second=5)
     )
 
     await hass.async_block_till_done()
