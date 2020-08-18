@@ -137,6 +137,7 @@ class ImageServeView(HomeAssistantView):
 
     url = "/api/media_manager/serve/{image_id}/{filename}"
     name = "api:media_manager:serve"
+    requires_auth = False
 
     def __init__(
         self, image_folder: pathlib.Path, image_collection: MediaStorageCollection
