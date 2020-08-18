@@ -65,10 +65,9 @@ def attach(hass: HomeAssistantType, obj: Any) -> None:
         for child in obj:
             attach(hass, child)
     elif isinstance(obj, dict):
-        for child in obj.keys():
-            attach(hass, child)
-        for child in obj.values():
-            attach(hass, child)
+        for child_key, child_value in obj.items():
+            attach(hass, child_key)
+            attach(hass, child_value)
     elif isinstance(obj, Template):
         obj.hass = hass
 
