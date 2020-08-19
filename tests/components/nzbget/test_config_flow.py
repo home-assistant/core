@@ -14,6 +14,7 @@ from homeassistant.setup import async_setup_component
 from . import (
     ENTRY_CONFIG,
     USER_INPUT,
+    _patch_async_setup,
     _patch_async_setup_entry,
     _patch_history,
     _patch_status,
@@ -112,7 +113,3 @@ async def test_user_form_single_instance_allowed(hass):
     )
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "single_instance_allowed"
-
-
-def _patch_async_setup():
-    return patch("homeassistant.components.nzbget.async_setup", return_value=True)
