@@ -639,13 +639,6 @@ async def test_restore_all_active_subscriptions_on_reconnect(
     # Fake that the client is connected
     mqtt_mock().connected = True
 
-    mqtt_client_mock.subscribe.side_effect = (
-        (0, 1),
-        (0, 2),
-        (0, 3),
-        (0, 4),
-    )
-
     unsub = await mqtt.async_subscribe(hass, "test/state", None, qos=2)
     await mqtt.async_subscribe(hass, "test/state", None)
     await mqtt.async_subscribe(hass, "test/state", None, qos=1)
@@ -757,32 +750,28 @@ async def test_setup_without_tls_config_uses_tlsv1_under_python36(hass):
 )
 async def test_custom_birth_message(hass, mqtt_client_mock, mqtt_mock):
     """Test sending birth message."""
-    calls = []
-    mqtt_client_mock.publish.side_effect = lambda *args: calls.append(args)
     mqtt_mock._mqtt_on_connect(None, None, 0, 0)
     await hass.async_block_till_done()
-    assert calls[-1] == ("birth", "birth", 0, False)
+    mqtt_client_mock.publish.assert_called_with("birth", "birth", 0, False)
 
 
 async def test_default_birth_message(hass, mqtt_client_mock, mqtt_mock):
     """Test sending birth message."""
-    calls = []
-    mqtt_client_mock.publish.side_effect = lambda *args: calls.append(args)
     mqtt_mock._mqtt_on_connect(None, None, 0, 0)
     await hass.async_block_till_done()
-    assert calls[-1] == ("homeassistant/status", "online", 0, False)
+    mqtt_client_mock.publish.assert_called_with(
+        "homeassistant/status", "online", 0, False
+    )
 
 
 @pytest.mark.parametrize(
     "mqtt_config", [{mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_BIRTH_MESSAGE: {}}],
 )
 async def test_no_birth_message(hass, mqtt_client_mock, mqtt_mock):
-    """Test sending birth message."""
-    calls = []
-    mqtt_client_mock.publish.side_effect = lambda *args: calls.append(args)
+    """Test disabling birth message."""
     mqtt_mock._mqtt_on_connect(None, None, 0, 0)
     await hass.async_block_till_done()
-    assert not calls
+    mqtt_client_mock.publish.assert_not_called()
 
 
 @pytest.mark.parametrize(
