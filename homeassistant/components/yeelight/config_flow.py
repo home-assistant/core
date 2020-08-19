@@ -70,16 +70,23 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._capabilities = self._discovered_devices[self._unique_id]
             return await self.async_step_options()
 
+        configured_devices = {
+            entry.data[CONF_ID]
+            for entry in self._async_current_entries()
+            if entry.data[CONF_ID]
+        }
         devices_name = {}
         # Run 3 times as packets can get lost
         for _ in range(3):
             devices = await self.hass.async_add_executor_job(yeelight.discover_bulbs)
             for device in devices:
-                ip = device["ip"]
                 capabilities = device["capabilities"]
-                unique_id = device["capabilities"]["id"]
-                model = device["capabilities"]["model"]
-                name = f"{ip} {model} {unique_id}"
+                unique_id = capabilities["id"]
+                if unique_id in configured_devices:
+                    continue  # ignore configured devices
+                model = capabilities["model"]
+                ipaddr = device["ip"]
+                name = f"{ipaddr} {model} {unique_id}"
                 self._discovered_devices[unique_id] = capabilities
                 devices_name[unique_id] = name
 

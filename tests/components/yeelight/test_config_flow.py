@@ -52,9 +52,9 @@ async def test_discovery(hass: HomeAssistant):
 
     with _patch_discovery(f"{MODULE_CONFIG_FLOW}.yeelight"):
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {},)
-        assert result2["type"] == "form"
-        assert result2["step_id"] == "pick_device"
-        assert not result2["errors"]
+    assert result2["type"] == "form"
+    assert result2["step_id"] == "pick_device"
+    assert not result2["errors"]
 
     result3 = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_DEVICE: ID}
@@ -80,6 +80,19 @@ async def test_discovery(hass: HomeAssistant):
     await hass.async_block_till_done()
     mock_setup.assert_called_once()
     mock_setup_entry.assert_called_once()
+
+    # ignore configured devices
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+
+    with _patch_discovery(f"{MODULE_CONFIG_FLOW}.yeelight"):
+        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {},)
+    assert result2["type"] == "abort"
+    assert result2["reason"] == "no_devices_found"
 
 
 async def test_discovery_no_device(hass: HomeAssistant):
