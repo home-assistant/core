@@ -3,7 +3,7 @@ from pynzbgetapi import NZBGetAPIException
 
 from homeassistant.components.nzbget.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_VERIFY_SSL
+from homeassistant.const import CONF_SCAN_INTERVAL, CONF_VERIFY_SSL
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
     RESULT_TYPE_CREATE_ENTRY,
@@ -11,10 +11,35 @@ from homeassistant.data_entry_flow import (
 )
 from homeassistant.setup import async_setup_component
 
-from . import ENTRY_CONFIG, MOCK_HISTORY, MOCK_STATUS, MOCK_VERSION, USER_INPUT
+from . import (
+    ENTRY_CONFIG,
+    USER_INPUT,
+    _patch_async_setup_entry,
+    _patch_history,
+    _patch_status,
+    _patch_version,
+)
 
 from tests.async_mock import patch
 from tests.common import MockConfigEntry
+
+
+async def test_options(hass):
+    """Test updating options."""
+    entry = await init_integration(hass)
+    assert entry.options[CONF_SCAN_INTERVAL] == 5
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    with _patch_async_setup(), _patch_async_setup_entry():
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input={CONF_SCAN_INTERVAL: 15},
+        )
+
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["data"][CONF_SCAN_INTERVAL] == 15
 
 
 async def test_form(hass):
@@ -90,27 +115,3 @@ async def test_user_form_single_instance_allowed(hass):
 
 def _patch_async_setup():
     return patch("homeassistant.components.nzbget.async_setup", return_value=True)
-
-
-def _patch_async_setup_entry():
-    return patch(
-        "homeassistant.components.nzbget.async_setup_entry", return_value=True,
-    )
-
-
-def _patch_history():
-    return patch(
-        "homeassistant.components.nzbget.NZBGetAPI.history", return_value=MOCK_HISTORY,
-    )
-
-
-def _patch_status():
-    return patch(
-        "homeassistant.components.nzbget.NZBGetAPI.status", return_value=MOCK_STATUS,
-    )
-
-
-def _patch_version():
-    return patch(
-        "homeassistant.components.nzbget.NZBGetAPI.version", return_value=MOCK_VERSION,
-    )
