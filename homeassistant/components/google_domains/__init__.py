@@ -31,7 +31,7 @@ CONFIG_SCHEMA = vol.Schema(
                         vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
                     }
                 )
-            ],        
+            ],
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -59,9 +59,10 @@ async def async_setup(hass, config):
 
     return True
 
+
 async def _update_all_google_domains(hass, session, domain_configs):
-    """Update a list of Google Domains"""
-    final_result = True;
+    """Update a list of Google Domains."""
+    final_result = True
 
     for domain_config in domain_configs:
         domain = domain_config.get(CONF_DOMAIN)
@@ -69,11 +70,11 @@ async def _update_all_google_domains(hass, session, domain_configs):
         password = domain_config.get(CONF_PASSWORD)
         timeout = domain_config.get(CONF_TIMEOUT)
 
-        result = await _update_google_domains(hass, session, domain, user, password, timeout);
+        result = await _update_google_domains(hass, session, domain, user, password, timeout)
         if not result:
-            final_result = False;
-    
-    return final_result;
+            final_result = False
+
+    return final_result
 
 
 async def _update_google_domains(hass, session, domain, user, password, timeout):
