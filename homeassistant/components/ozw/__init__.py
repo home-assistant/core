@@ -36,6 +36,7 @@ from .const import (
     DATA_UNSUBSCRIBE,
     DOMAIN,
     MANAGER,
+    NODES_VALUES,
     PLATFORMS,
     TOPIC_OPENZWAVE,
 )
@@ -68,7 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     ozw_data[DATA_UNSUBSCRIBE] = []
 
     data_nodes = {}
-    data_values = {}
+    hass.data[DOMAIN][NODES_VALUES] = data_values = {}
     removed_nodes = []
     manager_options = {"topic_prefix": f"{TOPIC_OPENZWAVE}/"}
 

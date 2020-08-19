@@ -25,6 +25,7 @@ PLATFORMS = [
     SWITCH_DOMAIN,
 ]
 MANAGER = "manager"
+NODES_VALUES = "nodes_values"
 
 # MQTT Topics
 TOPIC_OPENZWAVE = "OpenZWave"
