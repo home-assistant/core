@@ -95,8 +95,7 @@ async def async_setup_entry(
                 continue
         except KeyError:
             _LOGGER.exception(
-                "Unknown device properties received from Control4: %s",
-                item,
+                "Unknown device properties received from Control4: %s", item,
             )
             continue
 
