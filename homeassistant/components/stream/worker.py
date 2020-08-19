@@ -120,7 +120,7 @@ def stream_worker(hass, stream, quit_event):
             )
             quit_event.set()
 
-    def initialize_segment(video_pts, audio_pts):
+    def initialize_segment(video_pts):
         """Reset some variables and initialize outputs for each segment."""
         nonlocal outputs, sequence, segment_start_pts
         # Clear outputs and increment sequence
@@ -159,29 +159,9 @@ def stream_worker(hass, stream, quit_event):
                 packet.stream = output_streams[audio_stream]
                 buffer.output.mux(packet)
 
-    def peek_next_audio_pts():
-        pts = None
-        while pts is None:
-            try:
-                a_packet = next(container.demux())
-            except (av.AVError, StopIteration) as ex:
-                # End of stream, clear listeners and stop thread
-                for fmt, _ in outputs.items():
-                    hass.loop.call_soon_threadsafe(stream.outputs[fmt].put, None)
-                _LOGGER.error(
-                    "Error demuxing stream while finding next audio packet: %s", str(ex)
-                )
-                quit_event.set()
-            if a_packet.stream == audio_stream:
-                pts = a_packet.pts
-            initial_packets.append(a_packet)
-        return pts
-
     peek_first_pts()
     last_dts = {k: v - 1 for k, v in first_pts.items()}
-    initialize_segment(
-        first_pts[video_stream], first_pts[audio_stream] if audio_stream else None
-    )
+    initialize_segment(first_pts[video_stream])
 
     while not quit_event.is_set():
         try:
@@ -223,9 +203,7 @@ def stream_worker(hass, stream, quit_event):
                         )
 
                 # Reinitialize
-                initialize_segment(
-                    packet.pts, peek_next_audio_pts() if audio_stream else None
-                )
+                initialize_segment(packet.pts)
 
         # Update last_dts processed
         last_dts[packet.stream] = packet.dts
