@@ -10,7 +10,6 @@ from aiohomekit.model.services import ServicesTypes
 
 from homeassistant.components.climate.const import (
     DOMAIN,
-    HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
@@ -339,7 +338,7 @@ async def test_heater_cooler_change_thermostat_state(hass, utcnow):
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_HVAC_MODE,
-        {"entity_id": "climate.testdevice", "hvac_mode": HVAC_MODE_AUTO},
+        {"entity_id": "climate.testdevice", "hvac_mode": HVAC_MODE_HEAT_COOL},
         blocking=True,
     )
     assert (
@@ -440,7 +439,7 @@ async def test_heater_cooler_read_thermostat_state(hass, utcnow):
     helper.characteristics[SWING_MODE].value = SwingModeValues.DISABLED
 
     state = await helper.poll_and_get_state()
-    assert state.state == HVAC_MODE_AUTO
+    assert state.state == HVAC_MODE_HEAT_COOL
 
 
 async def test_heater_cooler_hvac_mode_vs_hvac_action(hass, utcnow):

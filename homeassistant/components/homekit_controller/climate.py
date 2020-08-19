@@ -22,7 +22,6 @@ from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
     CURRENT_HVAC_OFF,
-    HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
@@ -67,7 +66,7 @@ CURRENT_HEATER_COOLER_STATE_HOMEKIT_TO_HASS = {
 }
 
 TARGET_HEATER_COOLER_STATE_HOMEKIT_TO_HASS = {
-    TargetHeaterCoolerStateValues.AUTOMATIC: HVAC_MODE_AUTO,
+    TargetHeaterCoolerStateValues.AUTOMATIC: HVAC_MODE_HEAT_COOL,
     TargetHeaterCoolerStateValues.HEAT: HVAC_MODE_HEAT,
     TargetHeaterCoolerStateValues.COOL: HVAC_MODE_COOL,
 }
@@ -126,6 +125,14 @@ class HomeKitHeaterCoolerEntity(HomeKitEntity, ClimateEntity):
             await self.async_put_characteristics(
                 {CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD: temp}
             )
+        else:
+            hvac_mode = TARGET_HEATER_COOLER_STATE_HOMEKIT_TO_HASS.get(state)
+            _LOGGER.warning(
+                "HomeKit device %s: Setting temperature in %s mode is not supported yet."
+                " Consider raising a ticket if you have this device and want to help us implement this feature.",
+                self.entity_id,
+                hvac_mode,
+            )
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set new target operation mode."""
@@ -134,6 +141,13 @@ class HomeKitHeaterCoolerEntity(HomeKitEntity, ClimateEntity):
                 {CharacteristicsTypes.ACTIVE: ActivationStateValues.INACTIVE}
             )
             return
+        if hvac_mode not in {HVAC_MODE_HEAT, HVAC_MODE_COOL}:
+            _LOGGER.warning(
+                "HomeKit device %s: Setting temperature in %s mode is not supported yet."
+                " Consider raising a ticket if you have this device and want to help us implement this feature.",
+                self.entity_id,
+                hvac_mode,
+            )
         await self.async_put_characteristics(
             {
                 CharacteristicsTypes.TARGET_HEATER_COOLER_STATE: TARGET_HEATER_COOLER_STATE_HASS_TO_HOMEKIT[
