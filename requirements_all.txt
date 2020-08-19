@@ -1081,12 +1081,13 @@ piglow==1.2.4
 pilight==0.1.1
 
 # homeassistant.components.doods
+# homeassistant.components.image
 # homeassistant.components.proxy
 # homeassistant.components.qrcode
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
 # homeassistant.components.tensorflow
-pillow==7.1.2
+pillow==7.2.0
 
 # homeassistant.components.dominos
 pizzapi==0.0.3
