@@ -27,7 +27,7 @@ def setup_google_domains(hass, aioclient_mock):
             google_domains.DOMAIN,
             {
                 "google_domains": [
-                    { "domain": DOMAIN, "username": USERNAME, "password": PASSWORD, },
+                    {"domain": DOMAIN, "username": USERNAME, "password": PASSWORD},
                 ],
             },
         )
@@ -43,7 +43,7 @@ async def test_setup(hass, aioclient_mock):
         google_domains.DOMAIN,
         {
             "google_domains": [
-                { "domain": DOMAIN, "username": USERNAME, "password": PASSWORD, },
+                {"domain": DOMAIN, "username": USERNAME, "password": PASSWORD},
             ],
         },
     )
@@ -64,7 +64,7 @@ async def test_setup_fails_if_update_fails(hass, aioclient_mock):
         google_domains.DOMAIN,
         {
             "google_domains": [
-                { "domain": DOMAIN, "username": USERNAME, "password": PASSWORD, },
+                {"domain": DOMAIN, "username": USERNAME, "password": PASSWORD},
             ],
         },
     )
