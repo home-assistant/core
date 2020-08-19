@@ -212,7 +212,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     if unload_ok:
         device = hass.data[DOMAIN][DATA_CONFIG_ENTRIES].pop(entry.entry_id)
         device.async_unload()
-        if entry.data.get(CONF_ID):
+        if entry.data[CONF_ID]:
             # discovery
             scanner = await YeelightScanner.async_get(hass)
             await scanner.async_unregister_callback(entry.data[CONF_ID])

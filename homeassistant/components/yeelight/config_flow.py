@@ -27,9 +27,6 @@ from . import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
-TYPE_DISCOVERY = "Discovery"
-TYPE_MANUAL = "Manual"
-
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Yeelight."""
@@ -40,8 +37,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize the config flow."""
         self._capabilities = None
-        self._ipaddr = None
-        self._unique_id = None
+        self._ipaddr = ""
+        self._unique_id = ""
         self._discovered_devices = {}
 
     async def async_step_user(self, user_input=None):
@@ -137,7 +134,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input.pop(CONF_NIGHTLIGHT_SWITCH_TYPE)
                 == NIGHTLIGHT_SWITCH_TYPE_LIGHT
             )
-        return self.async_create_entry(title=user_input[CONF_NAME], data=user_input,)
+        user_input[CONF_ID] = ""
+        return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
 
     async def _async_try_connect(self, user_input):
         """Set up with options."""
