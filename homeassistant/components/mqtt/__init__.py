@@ -624,6 +624,8 @@ class MQTT:
         self._mqttc: mqtt.Client = None
         self._paho_lock = asyncio.Lock()
 
+        self._pending_operations = {}
+
         self.init_client()
         self.config_entry.add_update_listener(self.async_config_entry_updated)
 
@@ -707,6 +709,9 @@ class MQTT:
         self._mqttc.on_connect = self._mqtt_on_connect
         self._mqttc.on_disconnect = self._mqtt_on_disconnect
         self._mqttc.on_message = self._mqtt_on_message
+        self._mqttc.on_publish = self._mqtt_on_publish
+        self._mqttc.on_subscribe = self._mqtt_on_subscribe
+        self._mqttc.on_unsubscribe = self._mqtt_on_unsubscribe
 
         if (
             CONF_WILL_MESSAGE in self.conf
@@ -729,10 +734,18 @@ class MQTT:
     ) -> None:
         """Publish a MQTT message."""
         async with self._paho_lock:
-            _LOGGER.debug("Transmitting message on %s: %s", topic, payload)
-            await self.hass.async_add_executor_job(
+            msg_info = await self.hass.async_add_executor_job(
                 self._mqttc.publish, topic, payload, qos, retain
             )
+            _LOGGER.debug(
+                "Transmitting message on %s: '%s', mid: %s",
+                topic,
+                payload,
+                msg_info.mid,
+            )
+            _raise_on_error(msg_info.rc)
+            self._pending_operations[msg_info.mid] = asyncio.Event()
+            await self._wait_for_mid(msg_info.mid)
 
     async def async_connect(self) -> str:
         """Connect to the host. Does not process messages yet."""
@@ -810,24 +823,27 @@ class MQTT:
 
         This method is a coroutine.
         """
-        _LOGGER.debug("Unsubscribing from %s", topic)
         async with self._paho_lock:
             result: int = None
-            result, _ = await self.hass.async_add_executor_job(
+            result, mid = await self.hass.async_add_executor_job(
                 self._mqttc.unsubscribe, topic
             )
+            _LOGGER.debug("Unsubscribing from %s, mid: %s", topic, mid)
             _raise_on_error(result)
+            self._pending_operations[mid] = asyncio.Event()
+            await self._wait_for_mid(mid)
 
     async def _async_perform_subscription(self, topic: str, qos: int) -> None:
         """Perform a paho-mqtt subscription."""
-        _LOGGER.debug("Subscribing to %s", topic)
-
         async with self._paho_lock:
             result: int = None
-            result, _ = await self.hass.async_add_executor_job(
+            result, mid = await self.hass.async_add_executor_job(
                 self._mqttc.subscribe, topic, qos
             )
+            _LOGGER.debug("Subscribing to %s, mid: %s", topic, mid)
             _raise_on_error(result)
+            self._pending_operations[mid] = asyncio.Event()
+            await self._wait_for_mid(mid)
 
     def _mqtt_on_connect(self, _mqttc, _userdata, _flags, result_code: int) -> None:
         """On connect callback.
@@ -919,6 +935,24 @@ class MQTT:
                 ),
             )
 
+    def _mqtt_on_publish(self, _mqttc, _userdata, mid) -> None:
+        """Message published callback."""
+        self.hass.add_job(self._mqtt_handle_mid, mid)
+
+    def _mqtt_on_subscribe(self, _mqttc, _userdata, mid, granted_qos) -> None:
+        """Subscribe callback."""
+        self.hass.add_job(self._mqtt_handle_mid, mid)
+
+    def _mqtt_on_unsubscribe(self, _mqttc, _userdata, mid) -> None:
+        """Unsubscribe callback."""
+        self.hass.add_job(self._mqtt_handle_mid, mid)
+
+    async def _mqtt_handle_mid(self, mid) -> None:
+        if mid in self._pending_operations:
+            self._pending_operations[mid].set()
+        else:
+            _LOGGER.warning("Unknown mid %d", mid)
+
     def _mqtt_on_disconnect(self, _mqttc, _userdata, result_code: int) -> None:
         """Disconnected callback."""
         self.connected = False
@@ -929,6 +963,15 @@ class MQTT:
             self.conf[CONF_PORT],
             result_code,
         )
+
+    async def _wait_for_mid(self, mid):
+        """Wait for ACK from broker."""
+        try:
+            await asyncio.wait_for(self._pending_operations[mid].wait(), 1)
+        except asyncio.TimeoutError:
+            _LOGGER.error("Timed out waiting for mid %s", mid)
+        finally:
+            del self._pending_operations[mid]
 
 
 def _raise_on_error(result_code: int) -> None:
