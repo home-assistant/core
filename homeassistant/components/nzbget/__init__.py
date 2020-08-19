@@ -93,7 +93,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         }
         hass.config_entries.async_update_entry(entry, options=options)
 
-    coordinator = NZBGetDataUpdateCoordinator(hass, config=entry.data)
+    coordinator = NZBGetDataUpdateCoordinator(
+        hass, config=entry.data, options=entry.options,
+    )
 
     await coordinator.async_refresh()
 
@@ -124,11 +126,11 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         """Service call to rate limit speeds in NZBGet."""
         coordinator.nzbget.rate(call.data[ATTR_SPEED])
 
-    hass.services.register(DOMAIN, SERVICE_PAUSE, pause, schema=vol.Schema({}))
+    hass.services.async_register(DOMAIN, SERVICE_PAUSE, pause, schema=vol.Schema({}))
 
-    hass.services.register(DOMAIN, SERVICE_RESUME, resume, schema=vol.Schema({}))
+    hass.services.async_register(DOMAIN, SERVICE_RESUME, resume, schema=vol.Schema({}))
 
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN, SERVICE_SET_SPEED, set_speed, schema=SPEED_LIMIT_SCHEMA
     )
 
@@ -161,14 +163,12 @@ async def _async_update_listener(hass: HomeAssistantType, entry: ConfigEntry) ->
 class NZBGetDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching NZBGet data."""
 
-    def __init__(
-        self, hass: HomeAssistantType, *, config: dict,
-    ):
+    def __init__(self, hass: HomeAssistantType, *, config: dict, options: dict):
         """Initialize global NZBGet data updater."""
         self.nzbget = NZBGetAPI(
             config[CONF_HOST],
-            config[CONF_USERNAME],
-            config[CONF_PASSWORD],
+            config[CONF_USERNAME] if config[CONF_USERNAME] != "" else None,
+            config[CONF_PASSWORD] if config[CONF_PASSWORD] != "" else None,
             config[CONF_SSL],
             config[CONF_VERIFY_SSL],
             config[CONF_PORT],
@@ -177,7 +177,7 @@ class NZBGetDataUpdateCoordinator(DataUpdateCoordinator):
         self._completed_downloads_init = False
         self._completed_downloads = {}
 
-        update_interval = timedelta(seconds=config[CONF_SCAN_INTERVAL])
+        update_interval = timedelta(seconds=options[CONF_SCAN_INTERVAL])
 
         super().__init__(
             hass, _LOGGER, name=DOMAIN, update_interval=update_interval,
@@ -207,22 +207,23 @@ class NZBGetDataUpdateCoordinator(DataUpdateCoordinator):
         self._completed_downloads = actual_completed_downloads
         self._completed_downloads_init = True
 
-    def _update_data(self) -> dict:
-        """Fetch data from NZBGet via sync functions."""
-        status = self.nzbget.status()
-        history = self.nzbget.history()
-
-        self._check_completed_downloads(history)
-
-        return {
-            "status": status,
-            "downloads": history,
-        }
-
     async def _async_update_data(self) -> dict:
         """Fetch data from NZBGet."""
+
+        def _update_data() -> dict:
+            """Fetch data from NZBGet via sync functions."""
+            status = self.nzbget.status()
+            history = self.nzbget.history()
+
+            self._check_completed_downloads(history)
+
+            return {
+                "status": status,
+                "downloads": history,
+            }
+
         try:
-            data = await self.hass.async_add_executor_job(self._update_data)
+            data = await self.hass.async_add_executor_job(_update_data)
             return data
         except NZBGetAPIException as error:
             raise UpdateFailed(f"Invalid response from API: {error}")

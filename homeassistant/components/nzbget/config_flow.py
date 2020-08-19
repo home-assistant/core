@@ -38,8 +38,8 @@ def validate_input(hass: HomeAssistantType, data: dict) -> Dict[str, Any]:
     """
     nzbget_api = NZBGetAPI(
         data[CONF_HOST],
-        data[CONF_USERNAME],
-        data[CONF_PASSWORD],
+        data[CONF_USERNAME] if data[CONF_USERNAME] != "" else None,
+        data[CONF_PASSWORD] if data[CONF_PASSWORD] != "" else None,
         data[CONF_SSL],
         data[CONF_VERIFY_SSL],
         data[CONF_PORT],
@@ -66,6 +66,9 @@ class NZBGetConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: Optional[ConfigType] = None
     ) -> Dict[str, Any]:
         """Handle a flow initiated by configuration file."""
+        if CONF_SCAN_INTERVAL in user_input:
+            user_input[CONF_SCAN_INTERVAL] = user_input[CONF_SCAN_INTERVAL].seconds
+
         return await self.async_step_user(user_input)
 
     async def async_step_user(
