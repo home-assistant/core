@@ -39,6 +39,7 @@ async def test_options(hass):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"], user_input={CONF_SCAN_INTERVAL: 15},
         )
+        await hass.async_block_till_done()
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["data"][CONF_SCAN_INTERVAL] == 15
