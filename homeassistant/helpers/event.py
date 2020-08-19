@@ -405,7 +405,11 @@ def async_track_template(
     ) -> None:
         """Check if condition is correct and run action."""
         if isinstance(result, TemplateError):
-            _LOGGER.exception(result)
+            _LOGGER.error(
+                "Error while processing template: %s",
+                template.template,
+                exc_info=result,
+            )
             return
 
         if result_as_boolean(last_result) or not result_as_boolean(result):
@@ -444,10 +448,10 @@ class _TrackTemplateResultInfo:
         """Handle removal / refresh of tracker init."""
         self.hass = hass
         self._template = template
+        self._template.hass = hass
         self._action = action
         self._variables = variables
-        self._last_result: Optional[str] = None
-        self._last_exception = False
+        self._last_result: Optional[Union[str, TemplateError]] = None
         self._all_listener: Optional[Callable] = None
         self._domains_listener: Optional[Callable] = None
         self._entities_listener: Optional[Callable] = None
@@ -458,8 +462,11 @@ class _TrackTemplateResultInfo:
         """Activation of template tracking."""
         self._info = self._template.async_render_to_info(self._variables)
         if self._info.exception:
-            self._last_exception = True
-            _LOGGER.exception(self._info.exception)
+            _LOGGER.error(
+                "Error while processing template: %s",
+                self._template.template,
+                exc_info=self._info.exception,
+            )
         self._create_listeners()
         self._last_info = self._info
 
@@ -593,24 +600,24 @@ class _TrackTemplateResultInfo:
             self._variables = variables
         self._refresh(None)
 
+    @callback
     def _refresh(self, event: Optional[Event]) -> None:
         self._info = self._template.async_render_to_info(self._variables)
         self._update_listeners()
         self._last_info = self._info
 
         try:
-            result = self._info.result
+            result: Union[str, TemplateError] = self._info.result
         except TemplateError as ex:
-            if not self._last_exception:
-                self.hass.async_run_job(
-                    self._action, event, self._template, self._last_result, ex
-                )
-            self._last_exception = True
-            return
-        self._last_exception = False
+            result = ex
 
         # Check to see if the result has changed
         if result == self._last_result:
+            return
+
+        if isinstance(result, TemplateError) and isinstance(
+            self._last_result, TemplateError
+        ):
             return
 
         self.hass.async_run_job(
