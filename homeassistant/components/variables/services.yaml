@@ -1,0 +1,15 @@
+remove:
+  description: Remove a variable.
+  fields:
+    key:
+      description: The variable name to remove.
+      example: my_var
+set:
+  description: Set a variable.
+  fields:
+    key:
+      description: The variable name to set.
+      example: my_var
+    value:
+      description: The value of the variable
+      example: abc123

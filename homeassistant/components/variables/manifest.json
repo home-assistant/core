@@ -1,0 +1,14 @@
+{
+  "domain": "variables",
+  "name": "Variables",
+  "config_flow": false,
+  "documentation": "https://www.home-assistant.io/integrations/variables",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@bachya"
+  ]
+}

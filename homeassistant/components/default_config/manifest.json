@@ -18,6 +18,7 @@
     "system_health",
     "tag",
     "updater",
+    "variables",
     "zeroconf",
     "zone",
     "input_boolean",
