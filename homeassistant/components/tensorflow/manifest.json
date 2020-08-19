@@ -9,7 +9,7 @@
     "pycocotools==2.0.1",
     "numpy==1.19.1",
     "protobuf==3.12.2",
-    "pillow==7.1.2"
+    "pillow==7.2.0"
   ],
   "codeowners": []
 }
