@@ -254,7 +254,7 @@ class SamsungTVDevice(MediaPlayerEntity):
     async def async_turn_on(self):
         """Turn the media player on."""
         if self._on_script:
-            await self._on_script.async_run()
+            await self._on_script.async_run(context=self._context)
 
     def select_source(self, source):
         """Select input source."""

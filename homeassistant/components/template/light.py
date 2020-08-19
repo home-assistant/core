@@ -334,7 +334,7 @@ class LightTemplate(TemplateEntityWithAvailabilityAndImages, LightEntity):
                 context=self._context,
             )
         else:
-            await self._on_script.async_run()
+            await self._on_script.async_run(context=self._context)
 
         if optimistic_set:
             self.async_write_ha_state()
