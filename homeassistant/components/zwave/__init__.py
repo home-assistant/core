@@ -251,7 +251,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_record_ozw_migration_info(hass):
+async def async_get_ozw_migration_data(hass):
     """Return dict with info for migration to ozw integration."""
     data_to_migrate = {}
 

@@ -44,7 +44,7 @@ CC_ID_LABELS = {
 }
 
 
-async def async_get_own_migration_info(hass, nodes_values):
+async def async_get_migration_data(hass, nodes_values):
     """Return dict with ozw side migration info."""
     data = {}
 
