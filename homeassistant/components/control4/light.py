@@ -93,10 +93,9 @@ async def async_setup_entry(
                         item_model = parent_item["model"]
             else:
                 continue
-        except KeyError as exception:
-            _LOGGER.error(
-                "Unknown device properties received from Control4: %s %s",
-                exception,
+        except KeyError:
+            _LOGGER.exception(
+                "Unknown device properties received from Control4: %s",
                 item,
             )
             continue
@@ -111,9 +110,6 @@ async def async_setup_entry(
             director = entry_data[CONF_DIRECTOR]
             item_variables = await director.getItemVariables(item_id)
             _LOGGER.warning(
-                "Couldn't get light state data for %s, skipping setup", item_name,
-            )
-            _LOGGER.debug(
                 "Couldn't get light state data for %s, skipping setup. Available variables from Control4: %s",
                 item_name,
                 item_variables,
@@ -135,9 +131,7 @@ async def async_setup_entry(
             )
         )
 
-    async_add_entities(
-        entity_list, True,
-    )
+    async_add_entities(entity_list, True)
 
 
 class Control4Light(Control4Entity, LightEntity):
