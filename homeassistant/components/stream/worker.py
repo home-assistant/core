@@ -90,7 +90,7 @@ def stream_worker(hass, stream, quit_event):
             while any(
                 [pts is None for pts in {**first_packet, **first_pts}.values()]
             ) and (len(initial_packets) < PACKETS_TO_WAIT_FOR_AUDIO):
-                packet = next(container.demux())
+                packet = next(container.demux((video_stream, audio_stream)))
                 if (
                     first_packet[packet.stream] is None
                 ):  # actually video already found above so only for audio
@@ -168,7 +168,7 @@ def stream_worker(hass, stream, quit_event):
             if len(initial_packets) > 0:
                 packet = initial_packets.popleft()
             else:
-                packet = next(container.demux())
+                packet = next(container.demux((video_stream, audio_stream)))
             if packet.dts is None:
                 _LOGGER.error("Stream packet without dts detected, skipping...")
                 # Allow a single packet without dts before terminating the stream.
