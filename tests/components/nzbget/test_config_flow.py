@@ -18,6 +18,7 @@ from . import (
     _patch_history,
     _patch_status,
     _patch_version,
+    init_integration,
 )
 
 from tests.async_mock import patch
