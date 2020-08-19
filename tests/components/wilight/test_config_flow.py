@@ -100,7 +100,7 @@ async def test_full_ssdp_flow_implementation(hass: HomeAssistantType) -> None:
     )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == WILIGHT_ID
+    assert result["title"] == f"WL{WILIGHT_ID}"
 
     assert result["data"]
     assert result["data"][CONF_HOST] == HOST
