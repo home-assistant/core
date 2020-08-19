@@ -20,13 +20,18 @@ DEFAULT_TIMEOUT = 10
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_DOMAIN): cv.string,
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-            }
+        DOMAIN: vol.All(
+            cv.ensure_list,
+            [
+                vol.Schema(
+                    {
+                        vol.Required(CONF_DOMAIN): cv.string,
+                        vol.Required(CONF_USERNAME): cv.string,
+                        vol.Required(CONF_PASSWORD): cv.string,
+                        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+                    }
+                )
+            ],        
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -35,15 +40,12 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Initialize the Google Domains component."""
-    domain = config[DOMAIN].get(CONF_DOMAIN)
-    user = config[DOMAIN].get(CONF_USERNAME)
-    password = config[DOMAIN].get(CONF_PASSWORD)
-    timeout = config[DOMAIN].get(CONF_TIMEOUT)
+    domain_configs = config[DOMAIN]
 
     session = hass.helpers.aiohttp_client.async_get_clientsession()
 
-    result = await _update_google_domains(
-        hass, session, domain, user, password, timeout
+    result = await _update_all_google_domains(
+        hass, session, domain_configs
     )
 
     if not result:
@@ -51,11 +53,27 @@ async def async_setup(hass, config):
 
     async def update_domain_interval(now):
         """Update the Google Domains entry."""
-        await _update_google_domains(hass, session, domain, user, password, timeout)
+        await _update_all_google_domains(hass, session, domain_configs)
 
     hass.helpers.event.async_track_time_interval(update_domain_interval, INTERVAL)
 
     return True
+
+async def _update_all_google_domains(hass, session, domain_configs):
+    """Update a list of Google Domains"""
+    final_result = True;
+
+    for domain_config in domain_configs:
+        domain = domain_config.get(CONF_DOMAIN)
+        user = domain_config.get(CONF_USERNAME)
+        password = domain_config.get(CONF_PASSWORD)
+        timeout = domain_config.get(CONF_TIMEOUT)
+
+        result = await _update_google_domains(hass, session, domain, user, password, timeout);
+        if not result:
+            final_result = False;
+    
+    return final_result;
 
 
 async def _update_google_domains(hass, session, domain, user, password, timeout):
