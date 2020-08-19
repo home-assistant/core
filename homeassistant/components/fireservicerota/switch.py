@@ -117,15 +117,6 @@ class ResponseSwitch(SwitchEntity):
         return attr
 
     @property
-    def device_info(self) -> Dict[str, Any]:
-        """Return device information."""
-        return {
-            "identifiers": {(DOMAIN, self._unique_id)},
-            "name": f"{self._name} Switch",
-            "manufacturer": "FireServiceRota",
-        }
-
-    @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
         return self._enabled_default
