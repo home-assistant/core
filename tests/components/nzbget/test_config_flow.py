@@ -28,7 +28,9 @@ from tests.common import MockConfigEntry
 
 async def test_options(hass):
     """Test updating options."""
-    entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_CONFIG)
+    entry = MockConfigEntry(
+        domain=DOMAIN, data=ENTRY_CONFIG, options={CONF_SCAN_INTERVAL: 5},
+    )
     entry.add_to_hass(hass)
 
     assert entry.options[CONF_SCAN_INTERVAL] == 5
