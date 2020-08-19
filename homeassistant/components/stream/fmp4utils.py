@@ -5,7 +5,8 @@ import io
 def find_box(segment: io.BytesIO, target_type: bytes, box_start: int = 0) -> int:
     """Find location of first box (or sub_box if box_start provided) of given type."""
     if box_start == 0:
-        box_end = len(segment.getbuffer())
+        box_end = segment.seek(0, io.SEEK_END)
+        segment.seek(0)
         index = 0
     else:
         segment.seek(box_start)
