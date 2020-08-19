@@ -45,4 +45,4 @@ class TestOpenHardwareMonitorSetup(unittest.TestCase):
         )
 
         assert state is not None
-        assert state.state == "100"
+        assert state.state == "100.0"
