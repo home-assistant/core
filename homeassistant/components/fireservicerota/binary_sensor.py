@@ -1,6 +1,5 @@
 """Binary Sensor platform for FireServiceRota integration."""
 import logging
-from typing import Any, Dict
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
