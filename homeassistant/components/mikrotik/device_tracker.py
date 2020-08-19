@@ -96,7 +96,7 @@ class MikrotikHubTracker(ScannerEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique identifier for this device."""
-        return self.device.mac
+        return f"{self.device.mac}-{self.hub.serial_num}"
 
     @property
     def available(self) -> bool:
