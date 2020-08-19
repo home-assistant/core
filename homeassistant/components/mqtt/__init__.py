@@ -709,9 +709,9 @@ class MQTT:
         self._mqttc.on_connect = self._mqtt_on_connect
         self._mqttc.on_disconnect = self._mqtt_on_disconnect
         self._mqttc.on_message = self._mqtt_on_message
-        self._mqttc.on_publish = self._mqtt_on_publish
-        self._mqttc.on_subscribe = self._mqtt_on_subscribe
-        self._mqttc.on_unsubscribe = self._mqtt_on_unsubscribe
+        self._mqttc.on_publish = self._mqtt_on_callback
+        self._mqttc.on_subscribe = self._mqtt_on_callback
+        self._mqttc.on_unsubscribe = self._mqtt_on_callback
 
         if (
             CONF_WILL_MESSAGE in self.conf
@@ -744,7 +744,6 @@ class MQTT:
                 msg_info.mid,
             )
             _raise_on_error(msg_info.rc)
-            self._pending_operations[msg_info.mid] = asyncio.Event()
             await self._wait_for_mid(msg_info.mid)
 
     async def async_connect(self) -> str:
@@ -830,7 +829,6 @@ class MQTT:
             )
             _LOGGER.debug("Unsubscribing from %s, mid: %s", topic, mid)
             _raise_on_error(result)
-            self._pending_operations[mid] = asyncio.Event()
             await self._wait_for_mid(mid)
 
     async def _async_perform_subscription(self, topic: str, qos: int) -> None:
@@ -842,7 +840,6 @@ class MQTT:
             )
             _LOGGER.debug("Subscribing to %s, mid: %s", topic, mid)
             _raise_on_error(result)
-            self._pending_operations[mid] = asyncio.Event()
             await self._wait_for_mid(mid)
 
     def _mqtt_on_connect(self, _mqttc, _userdata, _flags, result_code: int) -> None:
@@ -935,16 +932,8 @@ class MQTT:
                 ),
             )
 
-    def _mqtt_on_publish(self, _mqttc, _userdata, mid) -> None:
-        """Message published callback."""
-        self.hass.add_job(self._mqtt_handle_mid, mid)
-
-    def _mqtt_on_subscribe(self, _mqttc, _userdata, mid, granted_qos) -> None:
-        """Subscribe callback."""
-        self.hass.add_job(self._mqtt_handle_mid, mid)
-
-    def _mqtt_on_unsubscribe(self, _mqttc, _userdata, mid) -> None:
-        """Unsubscribe callback."""
+    def _mqtt_on_callback(self, _mqttc, _userdata, mid, _granted_qos=None) -> None:
+        """Publish / Subscribe / Unsubscribe callback."""
         self.hass.add_job(self._mqtt_handle_mid, mid)
 
     async def _mqtt_handle_mid(self, mid) -> None:
@@ -966,6 +955,7 @@ class MQTT:
 
     async def _wait_for_mid(self, mid):
         """Wait for ACK from broker."""
+        self._pending_operations[mid] = asyncio.Event()
         try:
             await asyncio.wait_for(self._pending_operations[mid].wait(), 1)
         except asyncio.TimeoutError:
