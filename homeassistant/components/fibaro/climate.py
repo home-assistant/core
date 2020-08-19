@@ -124,7 +124,7 @@ class FibaroThermostat(FibaroDevice, ClimateEntity):
         _LOGGER.debug("%s siblings: %s", fibaro_device.ha_id, siblings)
         tempunit = "C"
         for device in siblings:
-            # detecting temperature device, one strong and one weak way of
+            # Detecting temperature device, one strong and one weak way of
             # doing so, so we prefer the hard evidence, if there is such.
             if device.type == "com.fibaro.temperatureSensor":
                 self._temp_sensor_device = FibaroDevice(device)
