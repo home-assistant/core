@@ -87,11 +87,6 @@ ais_mdns:
 # ais_gm_service:
 #
 
-# Remote Python Debugger
-# Using the debugger (even when not attached), increases memory usage and decreases performance.
-# It is not recommended to configure the debugger on a persistent (production) server, unless absolutely required.
-#debugpy:
-#  start: false
 
 # TODO
 # check if user is authenticated and add this to polymer

@@ -479,12 +479,12 @@ class ExoPlayerDevice(MediaPlayerEntity):
 
     def volume_up(self):
         """Service to send the exo the command for volume up."""
-        self._volume_level = min(self._volume_level + 0.1, 1)
+        self._volume_level = min(self._volume_level + 0.0667, 1)
         _publish_command_to_frame(self.hass, self._device_ip, "upVolume", True)
 
     def volume_down(self):
         """Service to send the exo the command for volume down."""
-        self._volume_level = max(self._volume_level - 0.1, 0)
+        self._volume_level = max(self._volume_level - 0.0667, 0)
         _publish_command_to_frame(self.hass, self._device_ip, "downVolume", True)
 
     def mute_volume(self, mute):
