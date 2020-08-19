@@ -217,8 +217,7 @@ class FibaroController:
                 self._device_map[device.id].parentId,
                 self._device_map[device.id].properties.endPointId,
             )
-        else:
-            return self.get_children(self._device_map[device.id].parentId)
+        return self.get_children(self._device_map[device.id].parentId)
 
     @staticmethod
     def _map_device_to_type(device):
@@ -304,39 +303,10 @@ class FibaroController:
                 else:
                     device.mapped_type = None
                 dtype = device.mapped_type
-                if dtype:
-                    device.unique_id_str = f"{self.hub_serial}.{device.id}"
-                    self._device_map[device.id] = device
-                    if dtype != "climate":
-                        self.fibaro_devices[dtype].append(device)
-                    else:
-                        # if a sibling of this has been added, skip this one
-                        # otherwise add the first visible device in the group
-                        # which is a hack, but solves a problem with FGT having
-                        # hidden compatibility devices before the real device
-                        if "endPointId" in device.properties:
-                            _LOGGER.debug(
-                                "climate device: %s, endPointId: %s",
-                                device.ha_id,
-                                device.properties.endPointId,
-                            )
-                        else:
-                            _LOGGER.debug(
-                                "climate device: %s, no endPointId", device.ha_id
-                            )
-                        if last_climate_parent != device.parentId or (
-                            "endPointId" in device.properties
-                            and last_endpoint != device.properties.endPointId
-                        ):
-                            _LOGGER.debug("Handle separately")
-                            self.fibaro_devices[dtype].append(device)
-                            last_climate_parent = device.parentId
-                            if "endPointId" in device.properties:
-                                last_endpoint = device.properties.endPointId
-                            else:
-                                last_endpoint = 0
-                        else:
-                            _LOGGER.debug("not handling separately")
+                if dtype is None:
+                    continue
+                device.unique_id_str = f"{self.hub_serial}.{device.id}"
+                self._device_map[device.id] = device
                 _LOGGER.debug(
                     "%s (%s, %s) -> %s %s",
                     device.ha_id,
@@ -345,6 +315,36 @@ class FibaroController:
                     dtype,
                     str(device),
                 )
+                if dtype != "climate":
+                    self.fibaro_devices[dtype].append(device)
+                    continue
+                # We group climate devices into groups with the same
+                # endPointID belonging to the same parent device.
+                if "endPointId" in device.properties:
+                    _LOGGER.debug(
+                        "climate device: %s, endPointId: %s",
+                        device.ha_id,
+                        device.properties.endPointId,
+                    )
+                else:
+                    _LOGGER.debug("climate device: %s, no endPointId", device.ha_id)
+                # If a sibling of this device has been added, skip this one
+                # otherwise add the first visible device in the group
+                # which is a hack, but solves a problem with FGT having
+                # hidden compatibility devices before the real device
+                if last_climate_parent != device.parentId or (
+                    "endPointId" in device.properties
+                    and last_endpoint != device.properties.endPointId
+                ):
+                    _LOGGER.debug("Handle separately")
+                    self.fibaro_devices[dtype].append(device)
+                    last_climate_parent = device.parentId
+                    if "endPointId" in device.properties:
+                        last_endpoint = device.properties.endPointId
+                    else:
+                        last_endpoint = 0
+                else:
+                    _LOGGER.debug("not handling separately")
             except (KeyError, ValueError):
                 pass
 
