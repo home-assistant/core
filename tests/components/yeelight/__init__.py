@@ -4,12 +4,19 @@ from yeelight.main import _MODEL_SPECS
 
 from homeassistant.components.yeelight import (
     CONF_MODE_MUSIC,
+    CONF_MODEL,
+    CONF_NIGHTLIGHT_SWITCH,
     CONF_NIGHTLIGHT_SWITCH_TYPE,
     CONF_SAVE_ON_CHANGE,
+    CONF_TRANSITION,
+    DEFAULT_MODE_MUSIC,
+    DEFAULT_NIGHTLIGHT_SWITCH,
+    DEFAULT_SAVE_ON_CHANGE,
+    DEFAULT_TRANSITION,
     DOMAIN,
     NIGHTLIGHT_SWITCH_TYPE_LIGHT,
 )
-from homeassistant.const import CONF_DEVICES, CONF_NAME
+from homeassistant.const import CONF_DEVICES, CONF_ID, CONF_IP_ADDRESS, CONF_NAME
 
 from tests.async_mock import MagicMock, patch
 
@@ -68,6 +75,17 @@ YAML_CONFIGURATION = {
             }
         }
     }
+}
+
+CONFIG_ENTRY_DATA = {
+    CONF_ID: ID,
+    CONF_IP_ADDRESS: "",
+    CONF_NAME: NAME,
+    CONF_MODEL: "",
+    CONF_TRANSITION: DEFAULT_TRANSITION,
+    CONF_MODE_MUSIC: DEFAULT_MODE_MUSIC,
+    CONF_SAVE_ON_CHANGE: DEFAULT_SAVE_ON_CHANGE,
+    CONF_NIGHTLIGHT_SWITCH: DEFAULT_NIGHTLIGHT_SWITCH,
 }
 
 

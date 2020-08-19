@@ -4,11 +4,12 @@ from homeassistant.components.yeelight import (
     DOMAIN,
     NIGHTLIGHT_SWITCH_TYPE_LIGHT,
 )
-from homeassistant.const import CONF_DEVICES, CONF_DISCOVERY, CONF_NAME
+from homeassistant.const import CONF_DEVICES, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import (
+    CONFIG_ENTRY_DATA,
     IP_ADDRESS,
     MODULE,
     MODULE_CONFIG_FLOW,
@@ -23,7 +24,7 @@ from tests.common import MockConfigEntry
 
 async def test_setup_discovery(hass: HomeAssistant):
     """Test setting up Yeelight by discovery."""
-    config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_DISCOVERY: True})
+    config_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_ENTRY_DATA)
     config_entry.add_to_hass(hass)
 
     mocked_bulb = _mocked_bulb()
