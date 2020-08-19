@@ -421,7 +421,9 @@ class Hyperion(LightEntity):
 
     async def async_setup(self, hass):
         """Setup the entity"""
-        hass.async_create_task(self._async_manage_connection())
+        # Create connection attempt outside of HA's tracked task in order not
+        # to delay startup.
+        hass.loop.create_task(self._async_manage_connection())
         return True
 
     async def _async_send_json(self, request):
