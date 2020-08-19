@@ -91,7 +91,7 @@ async def test_full_ssdp_flow_implementation(hass: HomeAssistantType) -> None:
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "confirm"
     assert result["description_placeholders"] == {
-        CONF_NAME: WILIGHT_ID,
+        CONF_NAME: f"WL{WILIGHT_ID}",
         "components": "light",
     }
 
