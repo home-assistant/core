@@ -28,7 +28,9 @@ CONFIG_SCHEMA = vol.Schema(
                         vol.Required(CONF_DOMAIN): cv.string,
                         vol.Required(CONF_USERNAME): cv.string,
                         vol.Required(CONF_PASSWORD): cv.string,
-                        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+                        vol.Optional(
+                            CONF_TIMEOUT, default=DEFAULT_TIMEOUT
+                        ): cv.positive_int,
                     }
                 )
             ],
@@ -44,9 +46,7 @@ async def async_setup(hass, config):
 
     session = hass.helpers.aiohttp_client.async_get_clientsession()
 
-    result = await _update_all_google_domains(
-        hass, session, domain_configs
-    )
+    result = await _update_all_google_domains(hass, session, domain_configs)
 
     if not result:
         return False
@@ -70,7 +70,9 @@ async def _update_all_google_domains(hass, session, domain_configs):
         password = domain_config.get(CONF_PASSWORD)
         timeout = domain_config.get(CONF_TIMEOUT)
 
-        result = await _update_google_domains(hass, session, domain, user, password, timeout)
+        result = await _update_google_domains(
+            hass, session, domain, user, password, timeout
+        )
         if not result:
             final_result = False
 
