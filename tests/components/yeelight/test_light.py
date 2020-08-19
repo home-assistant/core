@@ -71,12 +71,7 @@ from homeassistant.components.yeelight.light import (
     YEELIGHT_MONO_EFFECT_LIST,
     YEELIGHT_TEMP_ONLY_EFFECT_LIST,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_DISCOVERY,
-    CONF_IP_ADDRESS,
-    CONF_NAME,
-)
+from homeassistant.const import ATTR_ENTITY_ID, CONF_ID, CONF_IP_ADDRESS, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.color import (
@@ -107,8 +102,9 @@ async def test_services(hass: HomeAssistant, caplog):
     """Test Yeelight services."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_DISCOVERY: False, CONF_IP_ADDRESS: IP_ADDRESS},
-        options={
+        data={
+            CONF_ID: "",
+            CONF_IP_ADDRESS: IP_ADDRESS,
             CONF_TRANSITION: DEFAULT_TRANSITION,
             CONF_MODE_MUSIC: True,
             CONF_SAVE_ON_CHANGE: True,
@@ -308,8 +304,9 @@ async def test_device_types(hass: HomeAssistant):
     ):
         config_entry = MockConfigEntry(
             domain=DOMAIN,
-            data={CONF_DISCOVERY: False, CONF_IP_ADDRESS: IP_ADDRESS},
-            options={
+            data={
+                CONF_ID: "",
+                CONF_IP_ADDRESS: IP_ADDRESS,
                 CONF_TRANSITION: DEFAULT_TRANSITION,
                 CONF_MODE_MUSIC: DEFAULT_MODE_MUSIC,
                 CONF_SAVE_ON_CHANGE: DEFAULT_SAVE_ON_CHANGE,
@@ -338,8 +335,9 @@ async def test_device_types(hass: HomeAssistant):
             return
         config_entry = MockConfigEntry(
             domain=DOMAIN,
-            data={CONF_DISCOVERY: False, CONF_IP_ADDRESS: IP_ADDRESS},
-            options={
+            data={
+                CONF_ID: "",
+                CONF_IP_ADDRESS: IP_ADDRESS,
                 CONF_TRANSITION: DEFAULT_TRANSITION,
                 CONF_MODE_MUSIC: DEFAULT_MODE_MUSIC,
                 CONF_SAVE_ON_CHANGE: DEFAULT_SAVE_ON_CHANGE,
@@ -520,8 +518,9 @@ async def test_effects(hass: HomeAssistant):
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_DISCOVERY: False, CONF_IP_ADDRESS: IP_ADDRESS},
-        options={
+        data={
+            CONF_ID: "",
+            CONF_IP_ADDRESS: IP_ADDRESS,
             CONF_TRANSITION: DEFAULT_TRANSITION,
             CONF_MODE_MUSIC: DEFAULT_MODE_MUSIC,
             CONF_SAVE_ON_CHANGE: DEFAULT_SAVE_ON_CHANGE,
