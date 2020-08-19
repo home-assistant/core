@@ -4,7 +4,6 @@ from typing import Callable
 from aiohttp import web
 
 from homeassistant.core import callback
-from homeassistant.util.dt import utcnow
 
 from .const import FORMAT_CONTENT_TYPE
 from .core import PROVIDERS, StreamOutput, StreamView
@@ -37,7 +36,7 @@ class HlsPlaylistView(StreamView):
             await track.recv()
         headers = {"Content-Type": FORMAT_CONTENT_TYPE["hls"]}
         return web.Response(
-            body=renderer.render(track, utcnow()).encode("utf-8"), headers=headers
+            body=renderer.render(track).encode("utf-8"), headers=headers
         )
 
 
@@ -94,7 +93,7 @@ class M3U8Renderer:
         ]
 
     @staticmethod
-    def render_playlist(track, start_time):
+    def render_playlist(track):
         """Render playlist."""
         segments = track.segments
 
@@ -114,13 +113,9 @@ class M3U8Renderer:
 
         return playlist
 
-    def render(self, track, start_time):
+    def render(self, track):
         """Render M3U8 file."""
-        lines = (
-            ["#EXTM3U"]
-            + self.render_preamble(track)
-            + self.render_playlist(track, start_time)
-        )
+        lines = ["#EXTM3U"] + self.render_preamble(track) + self.render_playlist(track)
         return "\n".join(lines) + "\n"
 
 
@@ -140,7 +135,7 @@ class HlsStreamOutput(StreamOutput):
 
     @property
     def audio_codecs(self) -> str:
-        """Return desired audio codec."""
+        """Return desired audio codecs."""
         return {"aac", "ac3", "mp3"}
 
     @property
