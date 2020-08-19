@@ -17,7 +17,7 @@ from homeassistant.helpers.typing import HomeAssistantType
 from tests.common import MockConfigEntry
 
 HOST = "127.0.0.1"
-WILIGHT_ID = "WL000000000099"
+WILIGHT_ID = "000000000099"
 SSDP_LOCATION = "http://127.0.0.1/"
 UPNP_MANUFACTURER = "All Automacao Ltda"
 UPNP_MODEL_NAME = "WiLight 0102001800010009-10010010"
