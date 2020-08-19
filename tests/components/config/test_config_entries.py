@@ -116,6 +116,12 @@ async def test_reload_entry(hass, client):
     assert len(hass.config_entries.async_entries()) == 1
 
 
+async def test_reload_invalid_entry(hass, client):
+    """Test reloading an invalid entry via the API."""
+    resp = await client.post("/api/config/config_entries/entry/invalid/reload")
+    assert resp.status == 404
+
+
 async def test_remove_entry_unauth(hass, client, hass_admin_user):
     """Test removing an entry via the API."""
     hass_admin_user.groups = []
