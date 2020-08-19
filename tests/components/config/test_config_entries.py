@@ -103,12 +103,37 @@ async def test_remove_entry(hass, client):
     assert len(hass.config_entries.async_entries()) == 0
 
 
+async def test_reload_entry(hass, client):
+    """Test reloading an entry via the API."""
+    entry = MockConfigEntry(domain="demo", state=core_ce.ENTRY_STATE_LOADED)
+    entry.add_to_hass(hass)
+    resp = await client.post(
+        f"/api/config/config_entries/entry/{entry.entry_id}/reload"
+    )
+    assert resp.status == 200
+    data = await resp.json()
+    assert data == {"require_restart": True}
+    assert len(hass.config_entries.async_entries()) == 1
+
+
 async def test_remove_entry_unauth(hass, client, hass_admin_user):
     """Test removing an entry via the API."""
     hass_admin_user.groups = []
     entry = MockConfigEntry(domain="demo", state=core_ce.ENTRY_STATE_LOADED)
     entry.add_to_hass(hass)
     resp = await client.delete(f"/api/config/config_entries/entry/{entry.entry_id}")
+    assert resp.status == 401
+    assert len(hass.config_entries.async_entries()) == 1
+
+
+async def test_reload_entry_unauth(hass, client, hass_admin_user):
+    """Test reloading an entry via the API."""
+    hass_admin_user.groups = []
+    entry = MockConfigEntry(domain="demo", state=core_ce.ENTRY_STATE_LOADED)
+    entry.add_to_hass(hass)
+    resp = await client.post(
+        f"/api/config/config_entries/entry/{entry.entry_id}/reload"
+    )
     assert resp.status == 401
     assert len(hass.config_entries.async_entries()) == 1
 

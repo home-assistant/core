@@ -22,6 +22,7 @@ async def async_setup(hass):
     """Enable the Home Assistant views."""
     hass.http.register_view(ConfigManagerEntryIndexView)
     hass.http.register_view(ConfigManagerEntryResourceView)
+    hass.http.register_view(ConfigManagerEntryResourceReloadView)
     hass.http.register_view(ConfigManagerFlowIndexView(hass.config_entries.flow))
     hass.http.register_view(ConfigManagerFlowResourceView(hass.config_entries.flow))
     hass.http.register_view(ConfigManagerAvailableFlowView)
@@ -90,6 +91,27 @@ class ConfigManagerEntryResourceView(HomeAssistantView):
             return self.json_message("Invalid entry specified", HTTP_NOT_FOUND)
 
         return self.json(result)
+
+
+class ConfigManagerEntryResourceReloadView(HomeAssistantView):
+    """View to reload a config entry."""
+
+    url = "/api/config/config_entries/entry/{entry_id}/reload"
+    name = "api:config:config_entries:entry:resource:reload"
+
+    async def post(self, request, entry_id):
+        """Reload a config entry."""
+        if not request["hass_user"].is_admin:
+            raise Unauthorized(config_entry_id=entry_id, permission="remove")
+
+        hass = request.app["hass"]
+
+        try:
+            result = await hass.config_entries.async_reload(entry_id)
+        except config_entries.UnknownEntry:
+            return self.json_message("Invalid entry specified", HTTP_NOT_FOUND)
+
+        return self.json({"require_restart": not result})
 
 
 class ConfigManagerFlowIndexView(FlowManagerIndexView):
