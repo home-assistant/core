@@ -28,14 +28,16 @@ from tests.common import MockConfigEntry
 
 async def test_options(hass):
     """Test updating options."""
-    entry = await init_integration(hass)
+    entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_CONFIG)
+    entry.add_to_hass(hass)
+
     assert entry.options[CONF_SCAN_INTERVAL] == 5
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "init"
 
-    with _patch_async_setup(), _patch_async_setup_entry():
+    with _patch_async_setup_entry() as mock_setup_entry:
         result = await hass.config_entries.options.async_configure(
             result["flow_id"], user_input={CONF_SCAN_INTERVAL: 15},
         )
@@ -43,6 +45,8 @@ async def test_options(hass):
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["data"][CONF_SCAN_INTERVAL] == 15
+
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_form(hass):
@@ -56,17 +60,17 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with _patch_version(), _patch_status(), _patch_history(), _patch_async_setup() as mock_setup, _patch_async_setup_entry() as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"], USER_INPUT,
         )
-
-        assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
-        assert result2["title"] == "10.10.10.30"
-        assert result2["data"] == {**USER_INPUT, CONF_VERIFY_SSL: False}
-
         await hass.async_block_till_done()
-        assert len(mock_setup.mock_calls) == 1
-        assert len(mock_setup_entry.mock_calls) == 1
+
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == "10.10.10.30"
+    assert result["data"] == {**USER_INPUT, CONF_VERIFY_SSL: False}
+
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_user_form_cannot_connect(hass):
@@ -79,12 +83,12 @@ async def test_user_form_cannot_connect(hass):
         "homeassistant.components.nzbget.NZBGetAPI.version",
         side_effect=NZBGetAPIException(),
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"], USER_INPUT,
         )
 
-    assert result2["type"] == RESULT_TYPE_FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_user_form_unexpected_exception(hass):
@@ -96,12 +100,12 @@ async def test_user_form_unexpected_exception(hass):
     with patch(
         "homeassistant.components.nzbget.NZBGetAPI.version", side_effect=Exception(),
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"], USER_INPUT,
         )
 
-    assert result2["type"] == RESULT_TYPE_ABORT
-    assert result2["reason"] == "unknown"
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "unknown"
 
 
 async def test_user_form_single_instance_allowed(hass):
