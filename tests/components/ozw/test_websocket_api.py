@@ -1,5 +1,5 @@
 """Test OpenZWave Websocket API."""
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from openzwavemqtt.const import (
     ATTR_CODE_SLOT,
@@ -9,6 +9,7 @@ from openzwavemqtt.const import (
     ATTR_VALUE,
     ValueType,
 )
+import pytest
 
 from homeassistant.components.ozw.const import ATTR_CONFIG_PARAMETER
 from homeassistant.components.ozw.lock import ATTR_USERCODE
@@ -39,8 +40,106 @@ from homeassistant.components.websocket_api.const import (
     ERR_NOT_FOUND,
     ERR_NOT_SUPPORTED,
 )
+from homeassistant.helpers.entity_registry import RegistryEntry
 
 from .common import MQTTMessage, setup_ozw
+
+from tests.common import MockModule, mock_integration
+
+
+@pytest.fixture(name="zwave_migration_data")
+def zwave_migration_data_fixture():
+    """Return mock zwave migration data."""
+    zwave_source_node_unique_id = "10-4321"
+    zwave_source_node_entry = RegistryEntry(
+        entity_id="sensor.zwave_source_node",
+        unique_id=zwave_source_node_unique_id,
+        platform="zwave",
+        name="Z-Wave Source Node",
+    )
+    zwave_battery_unique_id = "36-1234"
+    zwave_battery_entry = RegistryEntry(
+        entity_id="sensor.zwave_battery_level",
+        unique_id=zwave_battery_unique_id,
+        platform="zwave",
+        name="Z-Wave Battery Level",
+    )
+    zwave_power_unique_id = "32-5678"
+    zwave_power_entry = RegistryEntry(
+        entity_id="sensor.zwave_power",
+        unique_id=zwave_power_unique_id,
+        platform="zwave",
+        name="Z-Wave Power",
+    )
+    zwave_migration_data = {
+        zwave_source_node_unique_id: {
+            "node_id": 10,
+            "command_class": 113,
+            "command_class_label": "SourceNodeId",
+            "value_index": 2,
+            "unique_id": zwave_source_node_unique_id,
+            "entity_entry": zwave_source_node_entry,
+        },
+        zwave_battery_unique_id: {
+            "node_id": 36,
+            "command_class": 128,
+            "command_class_label": "Battery Level",
+            "value_index": 0,
+            "unique_id": zwave_battery_unique_id,
+            "entity_entry": zwave_battery_entry,
+        },
+        zwave_power_unique_id: {
+            "node_id": 32,
+            "command_class": 50,
+            "command_class_label": "Power",
+            "value_index": 8,
+            "unique_id": zwave_power_unique_id,
+            "entity_entry": zwave_power_entry,
+        },
+    }
+
+    return zwave_migration_data
+
+
+@pytest.fixture(name="zwave_integration")
+def zwave_integration_fixture(hass, zwave_migration_data):
+    """Mock the zwave integration."""
+    zwave_module = MockModule("zwave")
+    zwave_module.async_get_ozw_migration_data = AsyncMock(
+        return_value=zwave_migration_data
+    )
+    zwave_integration = mock_integration(hass, zwave_module)
+    hass.config.components.add("zwave")
+    return zwave_integration
+
+
+async def test_migrate_zwave(
+    hass, migration_data, hass_ws_client, zwave_integration, zwave_migration_data
+):
+    """Test the zwave to ozw migration websocket api."""
+    await setup_ozw(hass, fixture=migration_data)
+    client = await hass_ws_client(hass)
+
+    await client.send_json({ID: 5, TYPE: "ozw/migrate_zwave"})
+    msg = await client.receive_json()
+    result = msg["result"]
+
+    migration_entity_map = {
+        "sensor.zwave_battery_level": "sensor.water_sensor_6_battery_level",
+        "sensor.zwave_power": "sensor.smart_plug_electric_w",
+    }
+
+    assert result["zwave_entity_ids"] == [
+        "sensor.zwave_source_node",
+        "sensor.zwave_battery_level",
+        "sensor.zwave_power",
+    ]
+    assert result["ozw_entity_ids"] == [
+        "sensor.smart_plug_electric_w",
+        "sensor.water_sensor_6_battery_level",
+    ]
+    assert result["migration_entity_map"] == migration_entity_map
+    assert result["migrated"] is False
 
 
 async def test_websocket_api(hass, generic_data, hass_ws_client):
