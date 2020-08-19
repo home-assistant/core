@@ -128,13 +128,12 @@ class OpenWeatherMapWeather(WeatherEntity):
 
     async def async_added_to_hass(self):
         """Connect to dispatcher listening for entity data notifications."""
-        self._weather_coordinator.async_add_listener(self.async_write_ha_state)
-        self._forecast_coordinator.async_add_listener(self.async_write_ha_state)
-
-    async def async_will_remove_from_hass(self):
-        """Disconnect from update signal."""
-        self._weather_coordinator.async_remove_listener(self.async_write_ha_state)
-        self._forecast_coordinator.async_remove_listener(self.async_write_ha_state)
+        self.async_on_remove(
+            self._weather_coordinator.async_add_listener(self.async_write_ha_state)
+        )
+        self.async_on_remove(
+            self._forecast_coordinator.async_add_listener(self.async_write_ha_state)
+        )
 
     async def async_update(self):
         """Get the latest data from OWM and updates the states."""
