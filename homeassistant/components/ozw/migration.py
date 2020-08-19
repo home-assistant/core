@@ -120,3 +120,20 @@ def map_node_values(zwave_data, ozw_data):
         can_migrate[ozw_entry["entity_entry"].entity_id] = zwave_entry
 
     return can_migrate
+
+
+async def async_migrate(hass, migration_map):
+    """Perform zwave to ozw migration."""
+    ent_reg = await async_get_entity_registry(hass)
+    for zwave_entry in migration_map.values():
+        zwave_entity_id = zwave_entry["entity_entry"].entity_id
+        ent_reg.async_remove(zwave_entity_id)
+
+    for ozw_entity_id, zwave_entry in migration_map.items():
+        entity_entry = zwave_entry["entity_entry"]
+        ent_reg.async_update_entity(
+            ozw_entity_id,
+            new_entity_id=entity_entry.entity_id,
+            name=entity_entry.name,
+            icon=entity_entry.icon,
+        )
