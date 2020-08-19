@@ -249,8 +249,7 @@ class HomeKitHeaterCoolerEntity(HomeKitEntity, ClimateEntity):
         modes = [
             TARGET_HEATER_COOLER_STATE_HOMEKIT_TO_HASS[mode] for mode in valid_values
         ]
-        if self.service.has(CharacteristicsTypes.ACTIVE):
-            modes.append(HVAC_MODE_OFF)
+        modes.append(HVAC_MODE_OFF)
         return modes
 
     @property

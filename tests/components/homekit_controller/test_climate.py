@@ -291,7 +291,7 @@ async def test_heater_cooler_respect_supported_op_modes_1(hass, utcnow):
     """Test that climate respects minValue/maxValue hints."""
     helper = await setup_test_component(hass, create_heater_cooler_service_min_max)
     state = await helper.poll_and_get_state()
-    assert state.attributes["hvac_modes"] == ["heat", "cool"]
+    assert state.attributes["hvac_modes"] == ["heat", "cool", "off"]
 
 
 def create_theater_cooler_service_valid_vals(accessory):
@@ -306,7 +306,7 @@ async def test_heater_cooler_respect_supported_op_modes_2(hass, utcnow):
     """Test that climate respects validValue hints."""
     helper = await setup_test_component(hass, create_theater_cooler_service_valid_vals)
     state = await helper.poll_and_get_state()
-    assert state.attributes["hvac_modes"] == ["heat", "cool"]
+    assert state.attributes["hvac_modes"] == ["heat", "cool", "off"]
 
 
 async def test_heater_cooler_change_thermostat_state(hass, utcnow):
