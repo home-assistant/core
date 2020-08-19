@@ -10,7 +10,6 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import ATTRIBUTION, DOMAIN, SENSOR_ENTITY_LIST, SIGNAL_UPDATE_INCIDENTS
 
-
 _LOGGER = logging.getLogger(__name__)
 
 
