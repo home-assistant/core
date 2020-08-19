@@ -7,7 +7,7 @@ from homeassistant.components.homeassistant import (
 )
 from homeassistant.components.smart_meter_texas import async_setup_entry
 from homeassistant.components.smart_meter_texas.const import DOMAIN
-from homeassistant.config_entries import ENTRY_STATE_NOT_LOADED
+from homeassistant.config_entries import ENTRY_STATE_LOADED, ENTRY_STATE_NOT_LOADED
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.setup import async_setup_component
@@ -62,7 +62,13 @@ async def test_update_failure(hass, config_entry, aioclient_mock):
 async def test_unload_config_entry(hass, config_entry, aioclient_mock):
     """Test entry unloading."""
     await setup_integration(hass, config_entry, aioclient_mock)
-    assert hass.data[DOMAIN]
+
+    config_entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(config_entries) == 1
+    assert config_entries[0] is config_entry
+    assert config_entry.state == ENTRY_STATE_LOADED
+
     await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
-    assert not hass.data.get(DOMAIN)
+
+    assert config_entry.state == ENTRY_STATE_NOT_LOADED

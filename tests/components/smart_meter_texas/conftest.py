@@ -13,7 +13,13 @@ from smart_meter_texas.const import (
     OD_READ_ENDPOINT,
 )
 
-from homeassistant.components.smart_meter_texas.const import DATA_COORDINATOR, DOMAIN
+from homeassistant.components.homeassistant import (
+    DOMAIN as HA_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
+from homeassistant.components.smart_meter_texas.const import DOMAIN
+from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -34,10 +40,15 @@ async def setup_integration(hass, config_entry, aioclient_mock):
 
 
 async def refresh_data(hass, config_entry, aioclient_mock):
-    """Mock a DataUpdateCoordinator async_refresh."""
+    """Request a DataUpdateCoordinator refresh."""
     mock_connection(aioclient_mock)
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][DATA_COORDINATOR]
-    await coordinator.async_refresh()
+    await async_setup_component(hass, HA_DOMAIN, {})
+    await hass.services.async_call(
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        blocking=True,
+    )
     await hass.async_block_till_done()
 
 
