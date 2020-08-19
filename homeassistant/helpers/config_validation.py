@@ -37,6 +37,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_ABOVE,
     CONF_ALIAS,
+    CONF_ATTRIBUTE,
     CONF_BELOW,
     CONF_CHOOSE,
     CONF_CONDITION,
@@ -868,6 +869,7 @@ NUMERIC_STATE_CONDITION_SCHEMA = vol.All(
         {
             vol.Required(CONF_CONDITION): "numeric_state",
             vol.Required(CONF_ENTITY_ID): entity_ids,
+            vol.Optional(CONF_ATTRIBUTE): str,
             CONF_BELOW: vol.Coerce(float),
             CONF_ABOVE: vol.Coerce(float),
             vol.Optional(CONF_VALUE_TEMPLATE): template,
@@ -881,6 +883,7 @@ STATE_CONDITION_SCHEMA = vol.All(
         {
             vol.Required(CONF_CONDITION): "state",
             vol.Required(CONF_ENTITY_ID): entity_ids,
+            vol.Optional(CONF_ATTRIBUTE): str,
             vol.Required(CONF_STATE): vol.Any(str, [str]),
             vol.Optional(CONF_FOR): positive_time_period,
             # To support use_trigger_value in automation
