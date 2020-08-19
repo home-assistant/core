@@ -36,9 +36,7 @@ def websocket_get_instances(hass, connection, msg):
     instances = []
 
     for instance in manager.collections["instance"]:
-        status = instance.get_status().data
-        status["id"] = instance.id
-        instances.append(status)
+        instances.append(dict(instance.get_status().data, id=instance.id))
 
     connection.send_result(
         msg[ID], instances,
