@@ -8,7 +8,7 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.broadlink.const import DOMAIN
 
-from . import pick_device
+from . import get_device
 
 from tests.async_mock import call, patch
 
@@ -27,7 +27,7 @@ async def test_flow_user_works(hass):
 
     Best case scenario with no errors or locks.
     """
-    device = pick_device(0)
+    device = get_device("Living Room")
     mock_api = device.get_mock_api()
 
     result = await hass.config_entries.flow.async_init(
@@ -61,7 +61,7 @@ async def test_flow_user_works(hass):
 
 async def test_flow_user_already_in_progress(hass):
     """Test we do not accept more than one config flow per device."""
-    device = pick_device(0)
+    device = get_device("Living Room")
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -90,7 +90,7 @@ async def test_flow_user_mac_already_configured(hass):
 
     We need to abort the flow and update the existing entry.
     """
-    device = pick_device(0)
+    device = get_device("Living Room")
     mock_entry = device.get_mock_entry()
     mock_entry.add_to_hass(hass)
 
@@ -98,8 +98,8 @@ async def test_flow_user_mac_already_configured(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    device.host = pick_device(1).host
-    device.timeout = pick_device(1).timeout
+    device.host = "192.168.1.64"
+    device.timeout = 20
     mock_api = device.get_mock_api()
 
     with patch("broadlink.discover", return_value=[mock_api]):
@@ -148,7 +148,7 @@ async def test_flow_user_invalid_hostname(hass):
 
 async def test_flow_user_device_not_found(hass):
     """Test we handle a device not found in the user step."""
-    device = pick_device(0)
+    device = get_device("Living Room")
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -198,7 +198,7 @@ async def test_flow_user_os_error(hass):
 
 async def test_flow_auth_authentication_error(hass):
     """Test we handle an authentication error in the auth step."""
-    device = pick_device(0)
+    device = get_device("Living Room")
     mock_api = device.get_mock_api()
     mock_api.auth.side_effect = blke.AuthenticationError()
 
@@ -218,7 +218,7 @@ async def test_flow_auth_authentication_error(hass):
 
 async def test_flow_auth_device_offline(hass):
     """Test we handle a device offline in the auth step."""
-    device = pick_device(0)
+    device = get_device("Living Room")
     mock_api = device.get_mock_api()
     mock_api.auth.side_effect = blke.DeviceOfflineError()
 
@@ -238,7 +238,7 @@ async def test_flow_auth_device_offline(hass):
 
 async def test_flow_auth_firmware_error(hass):
     """Test we handle a firmware error in the auth step."""
-    device = pick_device(0)
+    device = get_device("Living Room")
     mock_api = device.get_mock_api()
     mock_api.auth.side_effect = blke.BroadlinkException()
 
@@ -258,7 +258,7 @@ async def test_flow_auth_firmware_error(hass):
 
 async def test_flow_auth_network_unreachable(hass):
     """Test we handle a network unreachable in the auth step."""
-    device = pick_device(0)
+    device = get_device("Living Room")
     mock_api = device.get_mock_api()
     mock_api.auth.side_effect = OSError(errno.ENETUNREACH, None)
 
@@ -278,7 +278,7 @@ async def test_flow_auth_network_unreachable(hass):
 
 async def test_flow_auth_os_error(hass):
     """Test we handle an OS error in the auth step."""
-    device = pick_device(0)
+    device = get_device("Living Room")
     mock_api = device.get_mock_api()
     mock_api.auth.side_effect = OSError()
 
@@ -298,7 +298,7 @@ async def test_flow_auth_os_error(hass):
 
 async def test_flow_reset_works(hass):
     """Test we finish a config flow after a factory reset."""
-    device = pick_device(0)
+    device = get_device("Living Room")
     mock_api = device.get_mock_api()
     mock_api.auth.side_effect = blke.AuthenticationError()
 
@@ -327,7 +327,7 @@ async def test_flow_reset_works(hass):
 
 async def test_flow_unlock_works(hass):
     """Test we finish a config flow with an unlock request."""
-    device = pick_device(0)
+    device = get_device("Living Room")
     mock_api = device.get_mock_api()
     mock_api.is_locked = True
 
@@ -362,7 +362,7 @@ async def test_flow_unlock_works(hass):
 
 async def test_flow_unlock_device_offline(hass):
     """Test we handle a device offline in the unlock step."""
-    device = pick_device(0)
+    device = get_device("Living Room")
     mock_api = device.get_mock_api()
     mock_api.is_locked = True
     mock_api.set_lock.side_effect = blke.DeviceOfflineError
@@ -387,7 +387,7 @@ async def test_flow_unlock_device_offline(hass):
 
 async def test_flow_unlock_firmware_error(hass):
     """Test we handle a firmware error in the unlock step."""
-    device = pick_device(0)
+    device = get_device("Living Room")
     mock_api = device.get_mock_api()
     mock_api.is_locked = True
     mock_api.set_lock.side_effect = blke.BroadlinkException
@@ -412,7 +412,7 @@ async def test_flow_unlock_firmware_error(hass):
 
 async def test_flow_unlock_network_unreachable(hass):
     """Test we handle a network unreachable in the unlock step."""
-    device = pick_device(0)
+    device = get_device("Living Room")
     mock_api = device.get_mock_api()
     mock_api.is_locked = True
     mock_api.set_lock.side_effect = OSError(errno.ENETUNREACH, None)
@@ -437,7 +437,7 @@ async def test_flow_unlock_network_unreachable(hass):
 
 async def test_flow_unlock_os_error(hass):
     """Test we handle an OS error in the unlock step."""
-    device = pick_device(0)
+    device = get_device("Living Room")
     mock_api = device.get_mock_api()
     mock_api.is_locked = True
     mock_api.set_lock.side_effect = OSError()
@@ -462,7 +462,7 @@ async def test_flow_unlock_os_error(hass):
 
 async def test_flow_do_not_unlock(hass):
     """Test we do not unlock the device if the user does not want to."""
-    device = pick_device(0)
+    device = get_device("Living Room")
     mock_api = device.get_mock_api()
     mock_api.is_locked = True
 
@@ -492,7 +492,7 @@ async def test_flow_do_not_unlock(hass):
 
 async def test_flow_import_works(hass):
     """Test an import flow."""
-    device = pick_device(0)
+    device = get_device("Living Room")
     mock_api = device.get_mock_api()
 
     with patch("broadlink.discover", return_value=[mock_api]) as mock_discover:
@@ -512,7 +512,9 @@ async def test_flow_import_works(hass):
 
     assert result["type"] == "create_entry"
     assert result["title"] == device.name
-    assert result["data"] == device.get_entry_data()
+    assert result["data"]["host"] == device.host
+    assert result["data"]["mac"] == device.mac
+    assert result["data"]["type"] == device.devtype
 
     assert mock_api.auth.call_count == 1
     assert mock_discover.call_count == 1
@@ -520,7 +522,7 @@ async def test_flow_import_works(hass):
 
 async def test_flow_import_already_in_progress(hass):
     """Test we do not import more than one flow per device."""
-    device = pick_device(0)
+    device = get_device("Living Room")
     data = {"host": device.host}
 
     with patch("broadlink.discover", return_value=[device.get_mock_api()]):
@@ -539,7 +541,7 @@ async def test_flow_import_already_in_progress(hass):
 
 async def test_flow_import_host_already_configured(hass):
     """Test we do not import a host that is already configured."""
-    device = pick_device(0)
+    device = get_device("Living Room")
     mock_entry = device.get_mock_entry()
     mock_entry.add_to_hass(hass)
     mock_api = device.get_mock_api()
@@ -560,11 +562,11 @@ async def test_flow_import_mac_already_configured(hass):
 
     We need to abort the flow and update the existing entry.
     """
-    device = pick_device(0)
+    device = get_device("Living Room")
     mock_entry = device.get_mock_entry()
     mock_entry.add_to_hass(hass)
 
-    device.host = pick_device(1).host
+    device.host = "192.168.1.16"
     mock_api = device.get_mock_api()
 
     with patch("broadlink.discover", return_value=[mock_api]):
@@ -577,7 +579,9 @@ async def test_flow_import_mac_already_configured(hass):
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
 
-    assert dict(mock_entry.data) == device.get_entry_data()
+    assert mock_entry.data["host"] == device.host
+    assert mock_entry.data["mac"] == device.mac
+    assert mock_entry.data["type"] == device.devtype
     assert mock_api.auth.call_count == 0
 
 
@@ -648,7 +652,7 @@ async def test_flow_import_os_error(hass):
 
 async def test_flow_reauth_works(hass):
     """Test a reauthentication flow."""
-    device = pick_device(0)
+    device = get_device("Living Room")
     mock_entry = device.get_mock_entry()
     mock_entry.add_to_hass(hass)
     mock_api = device.get_mock_api()
@@ -683,7 +687,7 @@ async def test_flow_reauth_invalid_host(hass):
 
     The MAC address cannot change.
     """
-    device = pick_device(0)
+    device = get_device("Living Room")
     mock_entry = device.get_mock_entry()
     mock_entry.add_to_hass(hass)
     mock_api = device.get_mock_api()
@@ -695,7 +699,7 @@ async def test_flow_reauth_invalid_host(hass):
             DOMAIN, context={"source": "reauth"}, data=data
         )
 
-    device.mac = pick_device(1).mac
+    device.mac = get_device("Office").mac
     mock_api = device.get_mock_api()
 
     with patch("broadlink.discover", return_value=[mock_api]) as mock_discover:
@@ -716,7 +720,7 @@ async def test_flow_reauth_valid_host(hass):
 
     The hostname/IP address may change. We need to update the entry.
     """
-    device = pick_device(0)
+    device = get_device("Living Room")
     mock_entry = device.get_mock_entry()
     mock_entry.add_to_hass(hass)
     mock_api = device.get_mock_api()
@@ -728,7 +732,7 @@ async def test_flow_reauth_valid_host(hass):
             DOMAIN, context={"source": "reauth"}, data=data
         )
 
-    device.host = pick_device(1).host
+    device.host = "192.168.1.128"
     mock_api = device.get_mock_api()
 
     with patch("broadlink.discover", return_value=[mock_api]) as mock_discover:

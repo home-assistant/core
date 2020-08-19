@@ -4,6 +4,30 @@ from homeassistant.components.broadlink.const import DOMAIN
 from tests.async_mock import MagicMock
 from tests.common import MockConfigEntry
 
+# Do not edit/remove. Adding is ok.
+BROADLINK_DEVICES = {
+    "Living Room": (
+        "192.168.0.12",
+        "34ea34b43b5a",
+        "RM mini 3",
+        "Broadlink",
+        "RM4",
+        0x5F36,
+        44017,
+        10,
+    ),
+    "Office": (
+        "192.168.0.13",
+        "34ea34b43d22",
+        "RM pro",
+        "Broadlink",
+        "RM2",
+        0x2787,
+        20025,
+        7,
+    ),
+}
+
 
 class BroadlinkDevice:
     """Representation of a Broadlink device."""
@@ -57,30 +81,6 @@ class BroadlinkDevice:
         }
 
 
-def pick_device(index):
-    """Pick a device."""
-    devices = (
-        (
-            "Living Room",
-            "192.168.0.32",
-            "34ea34b45d2c",
-            "e-Sensor",
-            "Broadlink",
-            "A1",
-            0x2714,
-            20025,
-            5,
-        ),
-        (
-            "Office",
-            "192.168.0.64",
-            "34ea34b43b5a",
-            "RM mini 3",
-            "Broadlink",
-            "RM4",
-            0x5F36,
-            44017,
-            10,
-        ),
-    )
-    return BroadlinkDevice(*devices[index])
+def get_device(name):
+    """Get a device by name."""
+    return BroadlinkDevice(name, *BROADLINK_DEVICES[name])

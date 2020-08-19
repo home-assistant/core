@@ -11,7 +11,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.helpers.entity_registry import async_entries_for_device
 
-from . import pick_device
+from . import get_device
 
 from tests.async_mock import patch
 from tests.common import mock_device_registry, mock_registry
@@ -19,7 +19,7 @@ from tests.common import mock_device_registry, mock_registry
 
 async def test_device_setup(hass):
     """Test a successful setup."""
-    device = pick_device(1)
+    device = get_device("Office")
     mock_api = device.get_mock_api()
     mock_entry = device.get_mock_entry()
     mock_entry.add_to_hass(hass)
@@ -43,7 +43,7 @@ async def test_device_setup(hass):
 
 async def test_device_setup_authentication_error(hass):
     """Test we handle an authentication error."""
-    device = pick_device(1)
+    device = get_device("Living Room")
     mock_api = device.get_mock_api()
     mock_api.auth.side_effect = blke.AuthenticationError()
     mock_entry = device.get_mock_entry()
@@ -69,7 +69,7 @@ async def test_device_setup_authentication_error(hass):
 
 async def test_device_setup_device_offline(hass):
     """Test we handle a device offline."""
-    device = pick_device(1)
+    device = get_device("Office")
     mock_api = device.get_mock_api()
     mock_api.auth.side_effect = blke.DeviceOfflineError()
     mock_entry = device.get_mock_entry()
@@ -90,7 +90,7 @@ async def test_device_setup_device_offline(hass):
 
 async def test_device_setup_os_error(hass):
     """Test we handle an OS error."""
-    device = pick_device(1)
+    device = get_device("Office")
     mock_api = device.get_mock_api()
     mock_api.auth.side_effect = OSError()
     mock_entry = device.get_mock_entry()
@@ -111,7 +111,7 @@ async def test_device_setup_os_error(hass):
 
 async def test_device_setup_update_device_offline(hass):
     """Test we handle a device offline in the update step."""
-    device = pick_device(1)
+    device = get_device("Office")
     mock_api = device.get_mock_api()
     mock_api.check_sensors.side_effect = blke.DeviceOfflineError()
     mock_entry = device.get_mock_entry()
@@ -133,7 +133,7 @@ async def test_device_setup_update_device_offline(hass):
 
 async def test_device_setup_update_authorization_error(hass):
     """Test we handle an authorization error in the update step."""
-    device = pick_device(1)
+    device = get_device("Office")
     mock_api = device.get_mock_api()
     mock_api.check_sensors.side_effect = (blke.AuthorizationError(), None)
     mock_entry = device.get_mock_entry()
@@ -158,7 +158,7 @@ async def test_device_setup_update_authorization_error(hass):
 
 async def test_device_setup_update_authentication_error(hass):
     """Test we handle an authentication error in the update step."""
-    device = pick_device(1)
+    device = get_device("Living Room")
     mock_api = device.get_mock_api()
     mock_api.check_sensors.side_effect = blke.AuthorizationError()
     mock_api.auth.side_effect = (None, blke.AuthenticationError())
@@ -186,7 +186,7 @@ async def test_device_setup_update_authentication_error(hass):
 
 async def test_device_setup_get_fwversion_broadlink_exception(hass):
     """Test we load the device even if we cannot read the firmware version."""
-    device = pick_device(1)
+    device = get_device("Office")
     mock_api = device.get_mock_api()
     mock_api.get_fwversion.side_effect = blke.BroadlinkException()
     mock_entry = device.get_mock_entry()
@@ -206,7 +206,7 @@ async def test_device_setup_get_fwversion_broadlink_exception(hass):
 
 async def test_device_setup_get_fwversion_os_error(hass):
     """Test we load the device even if we cannot read the firmware version."""
-    device = pick_device(1)
+    device = get_device("Office")
     mock_api = device.get_mock_api()
     mock_api.get_fwversion.side_effect = OSError()
     mock_entry = device.get_mock_entry()
@@ -226,7 +226,7 @@ async def test_device_setup_get_fwversion_os_error(hass):
 
 async def test_device_setup_registry(hass):
     """Test we register the device and the entries correctly."""
-    device = pick_device(1)
+    device = get_device("Office")
     mock_api = device.get_mock_api()
     mock_entry = device.get_mock_entry()
     mock_entry.add_to_hass(hass)
@@ -255,7 +255,7 @@ async def test_device_setup_registry(hass):
 
 async def test_device_unload_works(hass):
     """Test we unload the device."""
-    device = pick_device(1)
+    device = get_device("Office")
     mock_api = device.get_mock_api()
     mock_entry = device.get_mock_entry()
     mock_entry.add_to_hass(hass)
@@ -279,7 +279,7 @@ async def test_device_unload_works(hass):
 
 async def test_device_unload_authentication_error(hass):
     """Test we unload a device that failed the authentication step."""
-    device = pick_device(1)
+    device = get_device("Office")
     mock_api = device.get_mock_api()
     mock_api.auth.side_effect = blke.AuthenticationError()
     mock_entry = device.get_mock_entry()
@@ -301,7 +301,7 @@ async def test_device_unload_authentication_error(hass):
 
 async def test_device_unload_update_failed(hass):
     """Test we unload a device that failed the update step."""
-    device = pick_device(1)
+    device = get_device("Office")
     mock_api = device.get_mock_api()
     mock_api.check_sensors.side_effect = blke.DeviceOfflineError()
     mock_entry = device.get_mock_entry()
@@ -323,7 +323,7 @@ async def test_device_unload_update_failed(hass):
 
 async def test_device_update_listener(hass):
     """Test we update device and entity registry when the entry is renamed."""
-    device = pick_device(1)
+    device = get_device("Office")
     mock_api = device.get_mock_api()
     mock_entry = device.get_mock_entry()
     mock_entry.add_to_hass(hass)
