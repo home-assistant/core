@@ -24,8 +24,11 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_PRIORITY = 'priority'
 CONF_EFFECT_LIST = 'effect_list'
+CONF_TOKEN = 'token'
 
 KEY_ADJUSTMENT = 'adjustment'
+KEY_AUTHORIZE = 'authorize'
+KEY_AUTHORIZE_LOGIN = 'authorize-login'
 KEY_BRIGHTNESS = 'brightness'
 KEY_CLEAR = 'clear'
 KEY_COLOR = 'color'
@@ -38,6 +41,7 @@ KEY_EFFECT = 'effect'
 KEY_EFFECTS = 'effects'
 KEY_ENABLED = 'enabled'
 KEY_INFO = 'info'
+KEY_LOGIN = 'login'
 KEY_NAME = 'name'
 KEY_ORIGIN = 'origin'
 KEY_OWNER = 'owner'
@@ -45,9 +49,11 @@ KEY_PRIORITY = 'priority'
 KEY_PRIORITIES = 'priorities'
 KEY_RGB = 'RGB'
 KEY_SERVERINFO = 'serverinfo'
+KEY_SUBCOMMAND = 'subcommand'
 KEY_SUBSCRIBE = 'subscribe'
 KEY_SUCCESS = 'success'
 KEY_STATE = 'state'
+KEY_TOKEN = 'token'
 KEY_UPDATE = 'update'
 KEY_VALUE = 'value'
 KEY_VISIBLE = 'visible'
@@ -93,6 +99,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_EFFECT_LIST, default=[]): vol.All(
             cv.ensure_list, [cv.string]
         ),
+        vol.Optional(CONF_TOKEN): cv.string,
     }
 )
 
@@ -100,15 +107,17 @@ ICON_LIGHTBULB = "mdi:lightbulb"
 ICON_EFFECT = "mdi:lava-lamp"
 ICON_EXTERNAL_SOURCE = "mdi:video-input-hdmi"
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass, config, async_add_entities, discovery_info=None):
     """Set up a Hyperion server remote."""
     name = config[CONF_NAME]
     host = config[CONF_HOST]
     port = config[CONF_PORT]
     priority = config[CONF_PRIORITY]
     effect_list = config[CONF_EFFECT_LIST]
+    token = config.get(CONF_TOKEN)
 
-    device = Hyperion(name, host, port, priority, effect_list)
+    device = Hyperion(name, host, port, priority, effect_list, token)
 
     if await device.async_setup(hass):
         async_add_entities([device])
@@ -117,7 +126,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class Hyperion(LightEntity):
     """Representation of a Hyperion remote."""
 
-    def __init__(self, name, host, port, priority, static_effect_list):
+    def __init__(self, name, host, port, priority, static_effect_list, token):
         """Initialize the light."""
         self._host = host
         self._port = port
@@ -129,6 +138,7 @@ class Hyperion(LightEntity):
         self._static_effect_list = static_effect_list
         self._effect_list = static_effect_list
         self._effect = KEY_EFFECT_SOLID
+        self._token = token
         self._on = False
 
         self._components = {}
@@ -358,6 +368,21 @@ class Hyperion(LightEntity):
         except (asyncio.TimeoutError, ConnectionError):
             return False
 
+        # == Request: authorize ==
+        if self._token is not None:
+            data = { KEY_COMMAND: KEY_AUTHORIZE,
+                     KEY_SUBCOMMAND: KEY_LOGIN,
+                     KEY_TOKEN: self._token }
+            await self._async_send_json(data)
+            resp_json = await self._async_safely_read_command()
+            if (not resp_json or
+                resp_json.get(KEY_COMMAND) != KEY_AUTHORIZE_LOGIN or
+                not resp_json.get(KEY_SUCCESS, False)):
+                _LOGGER.warning(
+                    'Authorization failed for Hyperion (%s). '
+                    'Check token is valid: %s' % (self._name, resp_json))
+                return False
+
         # == Request: serverinfo ==
         # Request full state ('serverinfo') and subscribe to relevant
         # future updates to keep this object state accurate without the need to
@@ -368,14 +393,15 @@ class Hyperion(LightEntity):
                      '%s-%s' % (KEY_COMPONENTS, KEY_UPDATE),
                      '%s-%s' % (KEY_EFFECTS, KEY_UPDATE),
                      '%s-%s' % (KEY_PRIORITIES, KEY_UPDATE),
-                 ]}
-        await self._async_send_json(data)
+               ]
+        }
 
+        await self._async_send_json(data)
         resp_json = await self._async_safely_read_command()
         if (not resp_json or
-            resp_json.get(KEY_COMMAND, None) != KEY_SERVERINFO or
-            not resp_json.get(KEY_INFO, None) or
-            resp_json.get(KEY_SUCCESS, False) == False):
+            resp_json.get(KEY_COMMAND) != KEY_SERVERINFO or
+            not resp_json.get(KEY_INFO) or
+            not resp_json.get(KEY_SUCCESS, False)):
             _LOGGER.warning(
                 'Could not load initial state for Hyperion (%s): %s' % (
                 self._name, resp_json))
@@ -417,7 +443,7 @@ class Hyperion(LightEntity):
         except ConnectionError:
             connection_error = True
 
-        if not resp or connection_error:
+        if connection_error or not resp:
             _LOGGER.warning(
                 'Connection to Hyperion lost (%s) ...'% self._name)
             await self._async_close_streams()
@@ -451,6 +477,7 @@ class Hyperion(LightEntity):
                         'Could not estalish valid connection to Hyperion (%s), '
                         'retrying in %i seconds...' % (
                             self._name, DEFAULT_CONNECTION_RETRY_DELAY))
+                    self._is_connected = False
                     await self._async_close_streams()
                     self._reader, self._writer = None, None
                     await asyncio.sleep(DEFAULT_CONNECTION_RETRY_DELAY)
