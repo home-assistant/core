@@ -213,7 +213,11 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
     def hvac_action(self):
         """Return the current running hvac operation if supported."""
         if not self.values.operating_state:
-            return None
+            # Thermostat(valve) with no support for hvac actions are considered heating-only
+            if self.current_temperature <= self.target_temperature:
+                return CURRENT_HVAC_HEAT
+            else:
+                return CURRENT_HVAC_IDLE
         cur_state = self.values.operating_state.value.lower()
         return HVAC_CURRENT_MAPPINGS.get(cur_state)
 
