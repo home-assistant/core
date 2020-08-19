@@ -5,9 +5,8 @@ import voluptuous as vol
 import yeelight
 
 from homeassistant import config_entries, exceptions
-from homeassistant.const import CONF_DISCOVERY, CONF_IP_ADDRESS, CONF_TYPE
+from homeassistant.const import CONF_ID, CONF_IP_ADDRESS, CONF_NAME
 from homeassistant.core import callback
-from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 
 from . import (
@@ -18,10 +17,11 @@ from . import (
     CONF_NIGHTLIGHT_SWITCH_TYPE,
     CONF_SAVE_ON_CHANGE,
     CONF_TRANSITION,
-    DATA_CONFIG_ENTRIES,
-    DATA_SCANNER,
+    DEFAULT_MODE_MUSIC,
+    DEFAULT_NIGHTLIGHT_SWITCH,
+    DEFAULT_SAVE_ON_CHANGE,
+    DEFAULT_TRANSITION,
     NIGHTLIGHT_SWITCH_TYPE_LIGHT,
-    _async_default_config,
 )
 from . import DOMAIN  # pylint:disable=unused-import
 
@@ -37,98 +37,113 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
-    @staticmethod
-    @callback
-    def async_get_options_flow(config_entry):
-        """Return the options flow."""
-        if config_entry.data[CONF_DISCOVERY]:
-            return DiscoveryOptionsFlowHandler(config_entry)
-        return ManualOptionsFlowHandler(config_entry)
-
     def __init__(self):
         """Initialize the config flow."""
         self._capabilities = None
         self._ipaddr = None
+        self._unique_id = None
+        self._discovered_devices = {}
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
+        errors = {}
         if user_input is not None:
-            if user_input[CONF_TYPE] == TYPE_DISCOVERY:
-                return await self.async_step_discovery_setup()
-            return await self.async_step_manual()
-
-        for entry in self._async_current_entries():
-            if entry.data[CONF_DISCOVERY]:  # Only one discovery entry allowed
-                return await self.async_step_manual()
+            if user_input.get(CONF_IP_ADDRESS):
+                try:
+                    await self._async_try_connect(user_input)
+                    return await self.async_step_options()
+                except CannotConnect:
+                    errors["base"] = "cannot_connect"
+                except AlreadyConfigured:
+                    return self.async_abort(reason="already_configured")
+            else:
+                return await self.async_step_pick_device()
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_TYPE): vol.In([TYPE_DISCOVERY, TYPE_MANUAL])}
-            ),
+            data_schema=vol.Schema({vol.Optional(CONF_IP_ADDRESS): str}),
+            errors=errors,
         )
 
-    async def async_step_discovery_setup(self, user_input=None):
-        """Handle discovery setup."""
+    async def async_step_pick_device(self, user_input=None):
+        """Handle the step to pick discovered device."""
         if user_input is not None:
             # Check if there is at least one device
-            # Run 3 times as packets can get lost
-            for _ in range(3):
-                devices = await self.hass.async_add_executor_job(
-                    yeelight.discover_bulbs
-                )
-                if len(devices) > 0:
-                    return self.async_create_entry(
-                        title="Discovery", data={CONF_DISCOVERY: True},
-                    )
+            self._unique_id = user_input[CONF_DEVICE]
+            self._capabilities = self._discovered_devices[self._unique_id]
+            return await self.async_step_options()
+
+        devices_name = {}
+        # Run 3 times as packets can get lost
+        for _ in range(3):
+            devices = await self.hass.async_add_executor_job(yeelight.discover_bulbs)
+            for device in devices:
+                ip = device["ip"]
+                capabilities = device["capabilities"]
+                unique_id = device["capabilities"]["id"]
+                model = device["capabilities"]["model"]
+                name = f"{ip} {model} {unique_id}"
+                self._discovered_devices[unique_id] = capabilities
+                devices_name[unique_id] = name
+
+        if len(devices_name) == 0:
             return self.async_abort(reason="no_devices_found")
+        return self.async_show_form(
+            step_id="pick_device",
+            data_schema=vol.Schema({vol.Required(CONF_DEVICE): vol.In(devices_name)}),
+        )
 
-        return self.async_show_form(step_id="discovery_setup")
-
-    async def async_step_manual(self, user_input=None):
-        """Handle manually setup."""
-        errors = {}
-
+    async def async_step_options(self, user_input=None):
+        """Handle the options step."""
         if user_input is not None:
-            self._ipaddr = user_input[CONF_IP_ADDRESS]
-            if self._async_ip_already_configured():
-                return self.async_abort(reason="already_configured")
-            try:
-                return await self._async_setup(user_input)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
+            user_input[CONF_IP_ADDRESS] = self._ipaddr
+            user_input[CONF_ID] = self._unique_id
+            return self.async_create_entry(
+                title=user_input[CONF_NAME], data=user_input,
+            )
 
         user_input = user_input or {}
         return self.async_show_form(
-            step_id="manual",
+            step_id="options",
             data_schema=vol.Schema(
                 {
+                    vol.Required(CONF_NAME, default=self._async_default_name()): str,
+                    vol.Optional(CONF_MODEL): str,
                     vol.Required(
-                        CONF_IP_ADDRESS, default=user_input.get(CONF_IP_ADDRESS, "")
-                    ): str,
+                        CONF_TRANSITION, default=DEFAULT_TRANSITION
+                    ): cv.positive_int,
+                    vol.Required(CONF_MODE_MUSIC, default=DEFAULT_MODE_MUSIC): bool,
+                    vol.Required(
+                        CONF_SAVE_ON_CHANGE, default=DEFAULT_SAVE_ON_CHANGE
+                    ): bool,
+                    vol.Required(
+                        CONF_NIGHTLIGHT_SWITCH, default=DEFAULT_NIGHTLIGHT_SWITCH
+                    ): bool,
                 }
             ),
-            errors=errors,
         )
 
     async def async_step_import(self, user_input=None):
         """Handle import step."""
-        self._ipaddr = user_input[CONF_IP_ADDRESS]
-        if self._async_ip_already_configured():
-            return self.async_abort(reason="already_configured")
         try:
-            if CONF_NIGHTLIGHT_SWITCH_TYPE in user_input:
-                user_input[CONF_NIGHTLIGHT_SWITCH] = (
-                    user_input.pop(CONF_NIGHTLIGHT_SWITCH_TYPE)
-                    == NIGHTLIGHT_SWITCH_TYPE_LIGHT
-                )
-            return await self._async_setup(user_input)
+            await self._async_try_connect(user_input)
         except CannotConnect:
             _LOGGER.error("Failed to import %s: cannot connect", self._ipaddr)
             return self.async_abort(reason="cannot_connect")
+        except AlreadyConfigured:
+            return self.async_abort(reason="already_configured")
+        if CONF_NIGHTLIGHT_SWITCH_TYPE in user_input:
+            user_input[CONF_NIGHTLIGHT_SWITCH] = (
+                user_input.pop(CONF_NIGHTLIGHT_SWITCH_TYPE)
+                == NIGHTLIGHT_SWITCH_TYPE_LIGHT
+            )
+        return self.async_create_entry(title=user_input[CONF_NAME], data=user_input,)
 
-    async def _async_setup(self, user_input=None, is_import=False):
+    async def _async_try_connect(self, user_input):
         """Set up with options."""
+        self._ipaddr = user_input[CONF_IP_ADDRESS]
+        if self._async_ip_already_configured():
+            raise AlreadyConfigured
         bulb = yeelight.Bulb(self._ipaddr)
         try:
             capabilities = await self.hass.async_add_executor_job(bulb.get_capabilities)
@@ -145,11 +160,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(capabilities["id"])
         self._abort_if_unique_id_configured()
 
-        user_input[CONF_DISCOVERY] = False
-        return self.async_create_entry(
-            title=user_input[CONF_IP_ADDRESS], data=user_input
-        )
-
     @callback
     def _async_ip_already_configured(self):
         """See if we already have an endpoint matching user input."""
@@ -158,98 +168,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return True
         return False
 
-
-@callback
-def _async_options_data_schema(options: dict) -> vol.Schema:
-    return vol.Schema(
-        {
-            vol.Optional(CONF_MODEL, default=options[CONF_MODEL],): str,
-            vol.Required(
-                CONF_TRANSITION, default=options[CONF_TRANSITION],
-            ): cv.positive_int,
-            vol.Required(CONF_MODE_MUSIC, default=options[CONF_MODE_MUSIC],): bool,
-            vol.Required(
-                CONF_SAVE_ON_CHANGE, default=options[CONF_SAVE_ON_CHANGE],
-            ): bool,
-            vol.Required(
-                CONF_NIGHTLIGHT_SWITCH, default=options[CONF_NIGHTLIGHT_SWITCH],
-            ): bool,
-        }
-    )
-
-
-class ManualOptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle a option flow for manually set Yeelight."""
-
-    def __init__(self, config_entry):
-        """Initialize the option flow."""
-        self._config_entry = config_entry
-
-    async def async_step_init(self, user_input=None):
-        """Handle the initial step."""
-        # use options step to share translations with discovery options flow
-        return await self.async_step_options()
-
-    async def async_step_options(self, user_input=None):
-        """Handle step to change options."""
-        if user_input is not None:
-            return self.async_create_entry(
-                title=self._config_entry.data[CONF_IP_ADDRESS], data=user_input
-            )
-
-        return self.async_show_form(
-            step_id="options",
-            data_schema=_async_options_data_schema(self._config_entry.options),
-        )
-
-
-class DiscoveryOptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle a option flow for discovery Yeelight."""
-
-    def __init__(self, config_entry):
-        """Initialize the option flow."""
-        self._config_entry = config_entry
-        self._picked_device = None
-
-    async def async_step_init(self, user_input=None):
-        """Handle option flow initialization."""
-        if user_input is not None:
-            self._picked_device = user_input[CONF_DEVICE]
-            return await self.async_step_options()
-
-        device_registry = await dr.async_get_registry(self.hass)
-        devices = {}
-        unique_ids = (
-            set(self._config_entry.options.keys())
-            | self.hass.data[DOMAIN][DATA_CONFIG_ENTRIES][self._config_entry.entry_id][
-                DATA_SCANNER
-            ].unique_ids
-        )
-        for unique_id in unique_ids:
-            device = device_registry.async_get_device(
-                identifiers={(DOMAIN, unique_id)}, connections={}
-            )
-            name = device.name_by_user or device.name
-            devices[unique_id] = f"{name} ({unique_id})"
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema({vol.Required(CONF_DEVICE): vol.In(devices)}),
-        )
-
-    async def async_step_options(self, user_input=None):
-        """Handle step to change options."""
-        if user_input is not None:
-            options = {**self._config_entry.options}
-            options[self._picked_device] = user_input
-            return self.async_create_entry(title="Discovery", data=options,)
-
-        options = self._config_entry.options.get(self._picked_device)
-        if options is None:
-            options = _async_default_config()
-        return self.async_show_form(
-            step_id="options", data_schema=_async_options_data_schema(options)
-        )
+    @callback
+    def _async_default_name(self):
+        model = self._capabilities["model"]
+        unique_id = self._capabilities["id"]
+        return f"yeelight_{model}_{unique_id}"
 
 
 class CannotConnect(exceptions.HomeAssistantError):
     """Error to indicate we cannot connect."""
+
+
+class AlreadyConfigured(exceptions.HomeAssistantError):
+    """Indicate the ip address is already configured."""
