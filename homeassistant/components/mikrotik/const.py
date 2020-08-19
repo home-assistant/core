@@ -47,4 +47,5 @@ ATTR_DEVICE_TRACKER = [
     "rx-rate",
     "tx-rate",
     "uptime",
+    "rx-signal",
 ]

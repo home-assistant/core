@@ -71,7 +71,8 @@ class Device:
         for attr in ATTR_DEVICE_TRACKER:
             if attr in attr_data:
                 self._attrs[slugify(attr)] = attr_data[attr]
-        self._attrs["ip_address"] = self._params.get("active-address")
+        if "active-address" in self._params:
+            self._attrs["ip_address"] = self._params.get("active-address")
         return self._attrs
 
     def update(self, wireless_params=None, params=None, active=False):
@@ -401,7 +402,7 @@ def get_api(hass, entry):
 
     try:
         api = librouteros.connect(
-            entry[CONF_HOST], entry[CONF_USERNAME], entry[CONF_PASSWORD], **kwargs,
+            entry[CONF_HOST], entry[CONF_USERNAME], entry[CONF_PASSWORD], **kwargs
         )
         _LOGGER.debug("Connected to %s successfully", entry[CONF_HOST])
         return api
