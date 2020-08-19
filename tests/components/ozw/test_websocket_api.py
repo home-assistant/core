@@ -12,6 +12,15 @@ async def test_websocket_api(hass, generic_data, hass_ws_client):
     await setup_ozw(hass, fixture=generic_data)
     client = await hass_ws_client(hass)
 
+    # Test instance list
+    await client.send_json({ID: 4, TYPE: "ozw/get_instances"})
+    msg = await client.receive_json()
+    assert len(msg["result"]) == 1
+    result = msg["result"][0]
+    assert result["id"] == 1
+    assert result["Status"] == "driverAllNodesQueried"
+    assert result["OpenZWave_Version"] == "1.6.1008"
+
     # Test network status
     await client.send_json({ID: 5, TYPE: "ozw/network_status"})
     msg = await client.receive_json()
