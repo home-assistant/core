@@ -21,11 +21,26 @@ NODE_ID = "node_id"
 @callback
 def async_register_api(hass):
     """Register all of our api endpoints."""
+    websocket_api.async_register_command(hass, websocket_get_instances)
     websocket_api.async_register_command(hass, websocket_network_status)
     websocket_api.async_register_command(hass, websocket_node_metadata)
     websocket_api.async_register_command(hass, websocket_node_status)
     websocket_api.async_register_command(hass, websocket_node_statistics)
     websocket_api.async_register_command(hass, websocket_refresh_node_info)
+
+
+@websocket_api.websocket_command({vol.Required(TYPE): "ozw/get_instances"})
+def websocket_get_instances(hass, connection, msg):
+    """Get a list of OZW instances."""
+    manager = hass.data[DOMAIN][MANAGER]
+    instances = []
+
+    for instance in manager.collections["instance"]:
+        instances.append(dict(instance.get_status().data, id=instance.id))
+
+    connection.send_result(
+        msg[ID], instances,
+    )
 
 
 @websocket_api.websocket_command(
