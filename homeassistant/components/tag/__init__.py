@@ -4,7 +4,7 @@ import typing
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_ID, CONF_NAME
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import collection
@@ -23,7 +23,6 @@ STORAGE_VERSION = 1
 TAGS = "tags"
 
 CREATE_FIELDS = {
-    vol.Required(CONF_ID): cv.string,
     vol.Optional(TAG_ID): cv.string,
     vol.Optional(CONF_NAME): vol.All(str, vol.Length(min=1)),
     vol.Optional("description"): cv.string,
@@ -65,8 +64,6 @@ class TagStorageCollection(collection.StorageCollection):
 
     async def _process_create_data(self, data: typing.Dict) -> typing.Dict:
         """Validate the config is valid."""
-        if TAG_ID in data:
-            data[CONF_ID] = data.pop(TAG_ID)
         data = self.CREATE_SCHEMA(data)
         # make last_scanned JSON serializeable
         if LAST_SCANNED in data:
@@ -76,7 +73,7 @@ class TagStorageCollection(collection.StorageCollection):
     @callback
     def _get_suggested_id(self, info: typing.Dict) -> str:
         """Suggest an ID based on the config."""
-        return info[CONF_ID]
+        return info[TAG_ID]
 
     async def _update_data(self, data: dict, update_data: typing.Dict) -> typing.Dict:
         """Return a new updated data object."""
@@ -116,7 +113,5 @@ async def async_scan_tag(hass, tag_id, device_id, context=None):
     if tag_id in helper.data:
         await helper.async_update_item(tag_id, {LAST_SCANNED: dt_util.utcnow()})
     else:
-        await helper.async_create_item(
-            {CONF_ID: tag_id, LAST_SCANNED: dt_util.utcnow()}
-        )
+        await helper.async_create_item({TAG_ID: tag_id, LAST_SCANNED: dt_util.utcnow()})
     _LOGGER.debug("Tag: %s scanned by device: %s", tag_id, device_id)
