@@ -34,6 +34,7 @@ from .const import (
     KEY_TYPE,
     KEY_ZONE_ID,
     KEY_ZONE_NUMBER,
+    SCHEDULE_TYPE_FIXED,
     SCHEDULE_TYPE_FLEX,
     SERVICE_SET_ZONE_MOISTURE,
     SIGNAL_RACHIO_CONTROLLER_UPDATE,
@@ -80,6 +81,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for entity in entities:
         if isinstance(entity, RachioSchedule) and entity.type == SCHEDULE_TYPE_FLEX:
             has_flex_sched = True
+            break
 
     async_add_entities(entities)
     _LOGGER.info("%d Rachio switch(es) added", len(entities))
@@ -377,7 +379,7 @@ class RachioZone(RachioSwitch):
 
     def set_moisture_percent(self, percent) -> None:
         """Set the zone moisture percent."""
-        _LOGGER.info("Setting %s moisture to %s percent", self._zone_name, percent)
+        _LOGGER.debug("Setting %s moisture to %s percent", self._zone_name, percent)
         self._controller.rachio.zone.setMoisturePercent(self._id, percent / 100)
 
     @callback
@@ -416,7 +418,7 @@ class RachioSchedule(RachioSwitch):
         self._duration = data[KEY_DURATION]
         self._schedule_enabled = data[KEY_ENABLED]
         self._summary = data[KEY_SUMMARY]
-        self.type = data.get(KEY_TYPE)
+        self.type = data.get(KEY_TYPE, SCHEDULE_TYPE_FIXED)
         self._current_schedule = current_schedule
         super().__init__(controller)
 
@@ -438,16 +440,12 @@ class RachioSchedule(RachioSwitch):
     @property
     def device_state_attributes(self) -> dict:
         """Return the optional state attributes."""
-        props = {
+        return {
             ATTR_SCHEDULE_SUMMARY: self._summary,
             ATTR_SCHEDULE_ENABLED: self.schedule_is_enabled,
             ATTR_SCHEDULE_DURATION: f"{round(self._duration / 60)} minutes",
+            ATTR_SCHEDULE_TYPE: self.type,
         }
-        if self.type:
-            props[ATTR_SCHEDULE_TYPE] = self.type
-        else:
-            props[ATTR_SCHEDULE_TYPE] = "FIXED"
-        return props
 
     @property
     def schedule_is_enabled(self) -> bool:
