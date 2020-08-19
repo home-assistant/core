@@ -899,6 +899,9 @@ simplisafe-python==9.3.0
 # homeassistant.components.sleepiq
 sleepyq==0.7
 
+# homeassistant.components.smart_meter_texas
+smart-meter-texas==0.4.0
+
 # homeassistant.components.smarthab
 smarthab==0.21
 
