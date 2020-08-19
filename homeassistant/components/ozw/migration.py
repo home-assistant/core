@@ -11,6 +11,38 @@ from .entity import create_value_id
 
 _LOGGER = logging.getLogger(__name__)
 
+# The following dicts map labels between OpenZWave 1.4 and 1.6.
+METER_CC_LABELS = {
+    "Energy": "Electric - kWh",
+    "Power": "Electric - W",
+    "Count": "Electric - Pulses",
+    "Voltage": "Electric - V",
+    "Current": "Electric - A",
+    "Power Factor": "Electric - PF",
+}
+
+NOTIFICATION_CC_LABELS = {
+    "General": "Start",
+    "Smoke": "Smoke_Alarm",
+    "Carbon Monoxide": "Carbon Monoxide",
+    "Carbon Dioxide": "Carbon Dioxide",
+    "Heat": "Heat",
+    "Flood": "Water",
+    "Access Control": "Access Control",
+    "Burglar": "Home Security",
+    "Power Management": "Power Management",
+    "System": "System",
+    "Emergency": "Emergency",
+    "Clock": "Clock",
+    "Appliance": "Appliance",
+    "HomeHealth": "Home Health",
+}
+
+CC_ID_LABELS = {
+    50: METER_CC_LABELS,
+    113: NOTIFICATION_CC_LABELS,
+}
+
 
 async def async_get_own_migration_info(hass, nodes_values):
     """Return dict with ozw side migration info."""
@@ -41,3 +73,50 @@ async def async_get_own_migration_info(hass, nodes_values):
             }
 
     return data
+
+
+def map_node_values(zwave_data, ozw_data):
+    """Map zwave node values onto ozw node values."""
+    can_migrate = {}
+
+    for zwave_entry in zwave_data.values():
+        node_id = zwave_entry["node_id"]
+        cc_id = zwave_entry["command_class"]
+        zwave_cc_label = zwave_entry["command_class_label"]
+
+        if cc_id in CC_ID_LABELS:
+            labels = CC_ID_LABELS[cc_id]
+            ozw_cc_label = labels.get(zwave_cc_label, zwave_cc_label)
+
+            ozw_entry = next(
+                (
+                    entry
+                    for entry in ozw_data.values()
+                    if entry["node_id"] == node_id
+                    and entry["command_class"] == cc_id
+                    and entry["command_class_label"] == ozw_cc_label
+                ),
+                None,
+            )
+        else:
+            ozw_cc_label = zwave_cc_label
+            value_index = zwave_entry["value_index"]
+
+            ozw_entry = next(
+                (
+                    entry
+                    for entry in ozw_data.values()
+                    if entry["node_id"] == node_id
+                    and entry["command_class"] == cc_id
+                    and entry["value_index"] == value_index
+                ),
+                None,
+            )
+
+        if ozw_entry is None:
+            continue
+
+        # Save the zwave_entry under the ozw entity_id to create the map.
+        can_migrate[ozw_entry["entity_entry"].entity_id] = zwave_entry
+
+    return can_migrate
