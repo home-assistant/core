@@ -526,11 +526,8 @@ def template_complex(value: Any) -> Any:
             template_complex(key): template_complex(element)
             for key, element in value.items()
         }
-    elif isinstance(value, str):
-        # pylint: disable=protected-access
-        is_template = template_helper._RE_JINJA_DELIMITERS.search(value) is not None
-        if is_template:
-            return template(value)
+    elif isinstance(value, str) and template_helper.is_template(value):
+        return template(value)
 
     return value
 
