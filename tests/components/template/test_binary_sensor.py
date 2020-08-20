@@ -3,6 +3,8 @@ from datetime import timedelta
 import unittest
 from unittest import mock
 
+import jinja2
+
 from homeassistant import setup
 from homeassistant.components.template import binary_sensor as template
 from homeassistant.const import (
@@ -318,10 +320,10 @@ class TestBinarySensorTemplate(unittest.TestCase):
             None,
             None,
         ).result()
-        mock_render.side_effect = TemplateError("foo")
+        mock_render.side_effect = TemplateError(jinja2.TemplateError("foo"))
         run_callback_threadsafe(self.hass.loop, vs.async_check_state).result()
         mock_render.side_effect = TemplateError(
-            "UndefinedError: 'None' has no attribute"
+            jinja2.TemplateError("UndefinedError: 'None' has no attribute")
         )
         run_callback_threadsafe(self.hass.loop, vs.async_check_state).result()
 
