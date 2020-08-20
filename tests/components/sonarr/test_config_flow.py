@@ -27,30 +27,6 @@ from tests.components.sonarr import (
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_options(hass, aioclient_mock: AiohttpClientMocker):
-    """Test updating options."""
-    entry = await setup_integration(hass, aioclient_mock)
-    assert entry.options[CONF_UPCOMING_DAYS] == DEFAULT_UPCOMING_DAYS
-    assert entry.options[CONF_WANTED_MAX_ITEMS] == DEFAULT_WANTED_MAX_ITEMS
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == "init"
-
-    with patch(
-        "homeassistant.components.sonarr.async_setup_entry", return_value=True
-    ), patch("homeassistant.components.sonarr.async_setup", return_value=True):
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            user_input={CONF_UPCOMING_DAYS: 2, CONF_WANTED_MAX_ITEMS: 100},
-        )
-
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["data"][CONF_UPCOMING_DAYS] == 2
-    assert result["data"][CONF_WANTED_MAX_ITEMS] == 100
-
-
 async def test_show_user_form(hass: HomeAssistantType) -> None:
     """Test that the user set up form is served."""
     result = await hass.config_entries.flow.async_init(
@@ -192,3 +168,27 @@ async def test_full_user_flow_advanced_options(
     assert result["data"]
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_VERIFY_SSL]
+
+
+async def test_options_flow(hass, aioclient_mock: AiohttpClientMocker):
+    """Test updating options."""
+    entry = await setup_integration(hass, aioclient_mock, skip_entry_setup=True)
+    assert entry.options[CONF_UPCOMING_DAYS] == DEFAULT_UPCOMING_DAYS
+    assert entry.options[CONF_WANTED_MAX_ITEMS] == DEFAULT_WANTED_MAX_ITEMS
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    with patch(
+        "homeassistant.components.sonarr.async_setup_entry", return_value=True
+    ), patch("homeassistant.components.sonarr.async_setup", return_value=True):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={CONF_UPCOMING_DAYS: 2, CONF_WANTED_MAX_ITEMS: 100},
+        )
+
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["data"][CONF_UPCOMING_DAYS] == 2
+    assert result["data"][CONF_WANTED_MAX_ITEMS] == 100
