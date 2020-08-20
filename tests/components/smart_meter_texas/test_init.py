@@ -7,7 +7,11 @@ from homeassistant.components.homeassistant import (
 )
 from homeassistant.components.smart_meter_texas import async_setup_entry
 from homeassistant.components.smart_meter_texas.const import DOMAIN
-from homeassistant.config_entries import ENTRY_STATE_LOADED, ENTRY_STATE_NOT_LOADED
+from homeassistant.config_entries import (
+    ENTRY_STATE_LOADED,
+    ENTRY_STATE_NOT_LOADED,
+    ENTRY_STATE_SETUP_RETRY,
+)
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.setup import async_setup_component
@@ -28,7 +32,7 @@ async def test_setup_with_no_config(hass):
 
 async def test_auth_failure(hass, config_entry, aioclient_mock):
     """Test if user's username or password is not accepted."""
-    mock_connection(aioclient_mock, auth_fail=True)
+    await setup_integration(hass, config_entry, aioclient_mock, auth_fail=True)
     result = await async_setup_entry(hass, config_entry)
 
     assert result is False
@@ -36,11 +40,11 @@ async def test_auth_failure(hass, config_entry, aioclient_mock):
 
 async def test_api_timeout(hass, config_entry, aioclient_mock):
     """Test that a timeout results in ConfigEntryNotReady."""
-    mock_connection(aioclient_mock, auth_timeout=True)
+    await setup_integration(hass, config_entry, aioclient_mock, auth_timeout=True)
     with pytest.raises(ConfigEntryNotReady):
         await async_setup_entry(hass, config_entry)
 
-    assert config_entry.state == ENTRY_STATE_NOT_LOADED
+    assert config_entry.state == ENTRY_STATE_SETUP_RETRY
 
 
 async def test_update_failure(hass, config_entry, aioclient_mock):
