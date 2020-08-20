@@ -575,29 +575,37 @@ async def test_subscribe_special_characters(hass, mqtt_mock, calls, record_calls
     assert calls[0][0].payload == payload
 
 
-async def test_retained_message_on_subscribe_received(
-    hass, mqtt_client_mock, mqtt_mock
-):
-    """Test every subscriber receives retained message on subscribe."""
+async def test_subscribe_same_topic(hass, mqtt_client_mock, mqtt_mock):
+    """
+    Test subscring to same topic twice and simulate retained messages.
 
-    def side_effect(*args):
-        async_fire_mqtt_message(hass, "test/state", "online")
-        return 0, 0
-
-    mqtt_client_mock.subscribe.side_effect = side_effect
+    When subscribing to the same topic again, SUBSCRIBE must be sent to the broker again
+    for it to resend any retained messages.
+    """
 
     # Fake that the client is connected
     mqtt_mock().connected = True
 
     calls_a = MagicMock()
     await mqtt.async_subscribe(hass, "test/state", calls_a)
+    async_fire_mqtt_message(
+        hass, "test/state", "online"
+    )  # Simulate a (retained) message
     await hass.async_block_till_done()
     assert calls_a.called
+    mqtt_client_mock.subscribe.assert_called()
+    calls_a.reset_mock()
+    mqtt_client_mock.reset_mock()
 
     calls_b = MagicMock()
     await mqtt.async_subscribe(hass, "test/state", calls_b)
+    async_fire_mqtt_message(
+        hass, "test/state", "online"
+    )  # Simulate a (retained) message
     await hass.async_block_till_done()
+    assert calls_a.called
     assert calls_b.called
+    mqtt_client_mock.subscribe.assert_called()
 
 
 async def test_not_calling_unsubscribe_with_active_subscribers(
