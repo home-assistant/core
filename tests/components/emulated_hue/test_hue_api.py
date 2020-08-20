@@ -22,6 +22,7 @@ from homeassistant.components import (
 from homeassistant.components.emulated_hue import Config, hue_api
 from homeassistant.components.emulated_hue.hue_api import (
     HUE_API_STATE_BRI,
+    HUE_API_STATE_BRI_MAX,
     HUE_API_STATE_CT,
     HUE_API_STATE_HUE,
     HUE_API_STATE_ON,
@@ -281,6 +282,12 @@ async def test_light_without_brightness_supported(hass_hue, hue_client):
 
     assert light_without_brightness_json["state"][HUE_API_STATE_ON] is True
     assert light_without_brightness_json["type"] == "On/Off light"
+
+    # BRI required for alexa compat
+    assert (
+        light_without_brightness_json["state"][HUE_API_STATE_BRI]
+        == HUE_API_STATE_BRI_MAX
+    )
 
 
 async def test_light_without_brightness_can_be_turned_off(hass_hue, hue_client):
