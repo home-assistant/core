@@ -27,6 +27,7 @@ FLOWS = [
     "blink",
     "bond",
     "braviatv",
+    "broadlink",
     "brother",
     "bsblan",
     "cast",
