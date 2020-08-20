@@ -33,8 +33,8 @@ REMOTE_CALL = {
     "name": "HomeAssistant",
     "description": "HomeAssistant",
     "id": "ha.component.samsung",
-    "method": "legacy",
     "host": MOCK_CONFIG[SAMSUNGTV_DOMAIN][0][CONF_HOST],
+    "method": "legacy",
     "port": None,
     "timeout": 1,
 }
