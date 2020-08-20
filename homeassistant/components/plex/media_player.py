@@ -672,7 +672,7 @@ def item_payload(item):
     payload = {
         "title": item.title,
         "thumbnail": item.thumbUrl,
-        "media_content_id": item.ratingKey,
+        "media_content_id": str(item.ratingKey),
         "media_content_type": item.type,
         "can_play": True,
     }
