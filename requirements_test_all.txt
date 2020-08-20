@@ -138,7 +138,7 @@ aioswitcher==1.2.0
 aiounifi==23
 
 # homeassistant.components.yandex_transport
-aioymaps==1.0.0
+aioymaps==1.1.0
 
 # homeassistant.components.airly
 airly==0.0.2
