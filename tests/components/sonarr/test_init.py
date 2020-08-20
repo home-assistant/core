@@ -7,6 +7,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.core import HomeAssistant
 
+from tests.async_mock import patch
 from tests.components.sonarr import setup_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 
