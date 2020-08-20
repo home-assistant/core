@@ -96,7 +96,7 @@ async def test_full_import_flow_implementation(
 
     user_input = MOCK_USER_INPUT.copy()
 
-    with _patch_async_setup, _patch_async_setup_entry():
+    with _patch_async_setup(), _patch_async_setup_entry():
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={CONF_SOURCE: SOURCE_IMPORT}, data=user_input,
         )
@@ -127,7 +127,7 @@ async def test_full_user_flow_implementation(
 
     user_input = MOCK_USER_INPUT.copy()
 
-    with _patch_async_setup, _patch_async_setup_entry():
+    with _patch_async_setup(), _patch_async_setup_entry():
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=user_input,
         )
@@ -157,7 +157,7 @@ async def test_full_user_flow_advanced_options(
         CONF_VERIFY_SSL: True,
     }
 
-    with with _patch_async_setup, _patch_async_setup_entry():
+    with with _patch_async_setup(), _patch_async_setup_entry():
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=user_input,
         )
@@ -181,7 +181,7 @@ async def test_options_flow(hass, aioclient_mock: AiohttpClientMocker):
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "init"
 
-    with _patch_async_setup, _patch_async_setup_entry():
+    with _patch_async_setup(), _patch_async_setup_entry():
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={CONF_UPCOMING_DAYS: 2, CONF_WANTED_MAX_ITEMS: 100},
