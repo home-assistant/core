@@ -196,6 +196,10 @@ async def setup_integration(
             CONF_UPCOMING_DAYS: DEFAULT_UPCOMING_DAYS,
             CONF_WANTED_MAX_ITEMS: DEFAULT_WANTED_MAX_ITEMS,
         },
+        options={
+            CONF_UPCOMING_DAYS: DEFAULT_UPCOMING_DAYS,
+            CONF_WANTED_MAX_ITEMS: DEFAULT_WANTED_MAX_ITEMS,
+        },
     )
 
     entry.add_to_hass(hass)
