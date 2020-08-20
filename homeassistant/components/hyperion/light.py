@@ -21,7 +21,9 @@ import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_DEFAULT_COLOR = "default_color"
 CONF_PRIORITY = 'priority'
+CONF_HDMI_PRIORITY = "hdmi_priority"
 CONF_EFFECT_LIST = 'effect_list'
 CONF_TOKEN = 'token'
 CONF_INSTANCE = 'instance'
@@ -88,23 +90,36 @@ DEFAULT_NAME = 'Hyperion'
 DEFAULT_ORIGIN = 'Home Assistant'
 DEFAULT_PORT = 19444
 DEFAULT_PRIORITY = 128
+DEFAULT_HDMI_PRIORITY = 880
 DEFAULT_INSTANCE = 0
 DEFAULT_CONNECTION_RETRY_DELAY = 30
 DEFAULT_CONNECTION_TIMEOUT_SECS = 5
 SUPPORT_HYPERION = SUPPORT_COLOR | SUPPORT_BRIGHTNESS | SUPPORT_EFFECT
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PRIORITY, default=DEFAULT_PRIORITY): cv.positive_int,
-        vol.Optional(CONF_EFFECT_LIST, default=[]): vol.All(
-            cv.ensure_list, [cv.string]
-        ),
-        vol.Optional(CONF_TOKEN): cv.string,
-        vol.Optional(CONF_INSTANCE, default=DEFAULT_INSTANCE): cv.positive_int,
-    }
+PLATFORM_SCHEMA = vol.All(
+    cv.deprecated(CONF_HDMI_PRIORITY, invalidation_version="0.115"),
+    cv.deprecated(CONF_DEFAULT_COLOR, invalidation_version="0.115"),
+    PLATFORM_SCHEMA.extend(
+        {
+            vol.Required(CONF_HOST): cv.string,
+            vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+            vol.Optional(CONF_DEFAULT_COLOR, default=DEFAULT_COLOR): vol.All(
+                list,
+                vol.Length(min=3, max=3),
+                [vol.All(vol.Coerce(int), vol.Range(min=0, max=255))],
+            ),
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_PRIORITY, default=DEFAULT_PRIORITY): cv.positive_int,
+            vol.Optional(
+                CONF_HDMI_PRIORITY, default=DEFAULT_HDMI_PRIORITY
+            ): cv.positive_int,
+            vol.Optional(CONF_EFFECT_LIST, default=[]): vol.All(
+                cv.ensure_list, [cv.string]
+            ),
+            vol.Optional(CONF_TOKEN): cv.string,
+            vol.Optional(CONF_INSTANCE, default=DEFAULT_INSTANCE): cv.positive_int,
+        }
+    ),
 )
 
 ICON_LIGHTBULB = "mdi:lightbulb"
@@ -202,6 +217,16 @@ class Hyperion(LightEntity):
     def supported_features(self):
         """Flag supported features."""
         return SUPPORT_HYPERION
+
+    @property
+    def available(self):
+        """Return server availability."""
+        return self._is_connected
+
+    @property
+    def unique_id(self):
+        """Return a unique id for this instance."""
+        return "%s:%i-%i" % (self._host, self._port, self._instance)
 
     async def async_turn_on(self, **kwargs):
         """Turn the lights on."""
