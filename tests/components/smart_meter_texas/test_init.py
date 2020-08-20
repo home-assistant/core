@@ -16,7 +16,7 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.setup import async_setup_component
 
-from .conftest import TEST_ENTITY_ID, mock_connection, setup_integration
+from .conftest import TEST_ENTITY_ID, setup_integration
 
 from tests.async_mock import patch
 
@@ -49,8 +49,7 @@ async def test_api_timeout(hass, config_entry, aioclient_mock):
 
 async def test_update_failure(hass, config_entry, aioclient_mock):
     """Test that the coordinator handles a bad response."""
-    mock_connection(aioclient_mock, bad_reading=True)
-    await setup_integration(hass, config_entry, aioclient_mock)
+    await setup_integration(hass, config_entry, aioclient_mock, bad_reading=True)
     await async_setup_component(hass, HA_DOMAIN, {})
     with patch("smart_meter_texas.Meter.read_meter") as updater:
         await hass.services.async_call(
