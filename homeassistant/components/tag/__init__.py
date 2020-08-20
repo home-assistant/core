@@ -1,6 +1,7 @@
 """The Tag integration."""
 import logging
 import typing
+import uuid
 
 import voluptuous as vol
 
@@ -65,6 +66,8 @@ class TagStorageCollection(collection.StorageCollection):
     async def _process_create_data(self, data: typing.Dict) -> typing.Dict:
         """Validate the config is valid."""
         data = self.CREATE_SCHEMA(data)
+        if not data[TAG_ID]:
+            data[TAG_ID] = str(uuid.uuid4())
         # make last_scanned JSON serializeable
         if LAST_SCANNED in data:
             data[LAST_SCANNED] = str(data[LAST_SCANNED])
