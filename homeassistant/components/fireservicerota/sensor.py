@@ -7,8 +7,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import ATTRIBUTION, DOMAIN, SENSOR_ENTITY_LIST, SIGNAL_UPDATE_INCIDENTS
-
+from .const import ATTRIBUTION, DOMAIN, SENSOR_ENTITY_LIST
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -102,11 +101,6 @@ class IncidentsSensor(RestoreEntity):
         return f"{self._unique_id}_{self._type}"
 
     @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return self._unit
-
-    @property
     def device_state_attributes(self):
         """Return available attributes for sensor."""
         attr = {}
@@ -180,7 +174,7 @@ class IncidentsSensor(RestoreEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{SIGNAL_UPDATE_INCIDENTS}-{self._entry_id}",
+                f"{DOMAIN}_{self._entry_id}_update",
                 self.async_on_demand_update,
             )
         )

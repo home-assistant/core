@@ -7,7 +7,7 @@ from homeassistant.const import ATTR_ATTRIBUTION, STATE_OFF, STATE_ON
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import ATTRIBUTION, DOMAIN, SIGNAL_UPDATE_INCIDENTS, SWITCH_ENTITY_LIST
+from .const import ATTRIBUTION, DOMAIN, SWITCH_ENTITY_LIST
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -150,7 +150,7 @@ class ResponseSwitch(SwitchEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{SIGNAL_UPDATE_INCIDENTS}-{self._entry_id}",
+                f"{DOMAIN}_{self._entry_id}_update",
                 self.async_on_demand_update,
             )
         )

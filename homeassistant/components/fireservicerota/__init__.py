@@ -24,7 +24,6 @@ from .const import (
     DOMAIN,
     NOTIFICATION_AUTH_ID,
     NOTIFICATION_AUTH_TITLE,
-    SIGNAL_UPDATE_INCIDENTS,
     WSS_BWRURL,
 )
 
@@ -94,11 +93,11 @@ class FSRDataCoordinator:
         self.incident_id = None
         self.response_data = None
 
-        self._fsr_avail = FireServiceRota(
+        self.fsr_avail = FireServiceRota(
             base_url=f"https://{self._url}", token_info=self._tokens
         )
 
-        self._fsr_incidents = FireServiceRotaIncidents(on_incident=self.on_incident,)
+        self.fsr_incidents = FireServiceRotaIncidents(on_incident=self.on_incident)
 
         self.start_listener()
 
@@ -114,25 +113,25 @@ class FSRDataCoordinator:
         self.incident_data = data
 
         async_dispatcher_send(
-            self._hass, f"{SIGNAL_UPDATE_INCIDENTS}-{self._entry.unique_id}"
+            self._hass, f"{DOMAIN}_{self._entry.entry_id}_update"
         )
 
     def start_listener(self):
         """Start the websocket listener."""
         _LOGGER.debug("Starting incidents listener")
-        self._fsr_incidents.start(self.construct_url())
+        self.fsr_incidents.start(self.construct_url())
 
     def stop_listener(self):
         """Stop the websocket listener."""
         _LOGGER.debug("Stopping incidents listener")
-        self._fsr_incidents.stop()
+        self.fsr_incidents.stop()
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self):
         """Get the latest availability data."""
         try:
             self.availability_data = await self._hass.async_add_executor_job(
-                self._fsr_avail.get_availability, str(self._hass.config.time_zone)
+                self.fsr_avail.get_availability, str(self._hass.config.time_zone)
             )
             _LOGGER.debug("Updating availability data")
         except (ExpiredTokenError, InvalidTokenError):
@@ -146,7 +145,7 @@ class FSRDataCoordinator:
             _LOGGER.debug("Incident id: %s", self.incident_id)
             try:
                 self.response_data = await self._hass.async_add_executor_job(
-                    self._fsr_avail.get_incident_response, self.incident_id
+                    self.fsr_avail.get_incident_response, self.incident_id
                 )
                 _LOGGER.debug("Updating incident response data")
             except (ExpiredTokenError, InvalidTokenError):
@@ -157,7 +156,7 @@ class FSRDataCoordinator:
         """Set incident response status."""
         try:
             await self._hass.async_add_executor_job(
-                self._fsr_avail.set_incident_response, incident_id, value
+                self.fsr_avail.set_incident_response, incident_id, value
             )
             _LOGGER.debug("Setting incident response status")
         except (ExpiredTokenError, InvalidTokenError):
@@ -171,7 +170,7 @@ class FSRDataCoordinator:
         _LOGGER.debug("Refreshing authentication tokens")
         try:
             token_info = await self._hass.async_add_executor_job(
-                self._fsr_avail.refresh_tokens
+                self.fsr_avail.refresh_tokens
             )
         except (InvalidAuthError, InvalidTokenError):
             _LOGGER.error("Error occurred while refreshing authentication tokens")
