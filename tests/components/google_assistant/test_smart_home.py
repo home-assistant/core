@@ -9,7 +9,7 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.components.demo.binary_sensor import DemoBinarySensor
 from homeassistant.components.demo.cover import DemoCover
-from homeassistant.components.demo.light import DemoLight
+from homeassistant.components.demo.light import LIGHT_EFFECT_LIST, DemoLight
 from homeassistant.components.demo.media_player import AbstractDemoPlayer
 from homeassistant.components.demo.switch import DemoSwitch
 from homeassistant.components.google_assistant import (
@@ -48,7 +48,14 @@ def registries(hass):
 
 async def test_sync_message(hass):
     """Test a sync message."""
-    light = DemoLight(None, "Demo Light", state=False, hs_color=(180, 75))
+    light = DemoLight(
+        None,
+        "Demo Light",
+        state=False,
+        hs_color=(180, 75),
+        effect_list=LIGHT_EFFECT_LIST,
+        effect=LIGHT_EFFECT_LIST[0],
+    )
     light.hass = hass
     light.entity_id = "light.demo_light"
     await light.async_update_ha_state()
@@ -95,10 +102,37 @@ async def test_sync_message(hass):
                         trait.TRAIT_BRIGHTNESS,
                         trait.TRAIT_ONOFF,
                         trait.TRAIT_COLOR_SETTING,
+                        trait.TRAIT_MODES,
                     ],
                     "type": const.TYPE_LIGHT,
                     "willReportState": False,
                     "attributes": {
+                        "availableModes": [
+                            {
+                                "name": "effect",
+                                "name_values": [
+                                    {"lang": "en", "name_synonym": ["effect"]}
+                                ],
+                                "ordered": False,
+                                "settings": [
+                                    {
+                                        "setting_name": "rainbow",
+                                        "setting_values": [
+                                            {
+                                                "lang": "en",
+                                                "setting_synonym": ["rainbow"],
+                                            }
+                                        ],
+                                    },
+                                    {
+                                        "setting_name": "none",
+                                        "setting_values": [
+                                            {"lang": "en", "setting_synonym": ["none"]}
+                                        ],
+                                    },
+                                ],
+                            }
+                        ],
                         "colorModel": "hsv",
                         "colorTemperatureRange": {
                             "temperatureMinK": 2000,
@@ -132,7 +166,14 @@ async def test_sync_in_area(hass, registries):
         "light", "test", "1235", suggested_object_id="demo_light", device_id=device.id
     )
 
-    light = DemoLight(None, "Demo Light", state=False, hs_color=(180, 75))
+    light = DemoLight(
+        None,
+        "Demo Light",
+        state=False,
+        hs_color=(180, 75),
+        effect_list=LIGHT_EFFECT_LIST,
+        effect=LIGHT_EFFECT_LIST[0],
+    )
     light.hass = hass
     light.entity_id = entity.entity_id
     await light.async_update_ha_state()
@@ -162,10 +203,37 @@ async def test_sync_in_area(hass, registries):
                         trait.TRAIT_BRIGHTNESS,
                         trait.TRAIT_ONOFF,
                         trait.TRAIT_COLOR_SETTING,
+                        trait.TRAIT_MODES,
                     ],
                     "type": const.TYPE_LIGHT,
                     "willReportState": False,
                     "attributes": {
+                        "availableModes": [
+                            {
+                                "name": "effect",
+                                "name_values": [
+                                    {"lang": "en", "name_synonym": ["effect"]}
+                                ],
+                                "ordered": False,
+                                "settings": [
+                                    {
+                                        "setting_name": "rainbow",
+                                        "setting_values": [
+                                            {
+                                                "lang": "en",
+                                                "setting_synonym": ["rainbow"],
+                                            }
+                                        ],
+                                    },
+                                    {
+                                        "setting_name": "none",
+                                        "setting_values": [
+                                            {"lang": "en", "setting_synonym": ["none"]}
+                                        ],
+                                    },
+                                ],
+                            }
+                        ],
                         "colorModel": "hsv",
                         "colorTemperatureRange": {
                             "temperatureMinK": 2000,
@@ -186,7 +254,14 @@ async def test_sync_in_area(hass, registries):
 
 async def test_query_message(hass):
     """Test a sync message."""
-    light = DemoLight(None, "Demo Light", state=False, hs_color=(180, 75))
+    light = DemoLight(
+        None,
+        "Demo Light",
+        state=False,
+        hs_color=(180, 75),
+        effect_list=LIGHT_EFFECT_LIST,
+        effect=LIGHT_EFFECT_LIST[0],
+    )
     light.hass = hass
     light.entity_id = "light.demo_light"
     await light.async_update_ha_state()
@@ -555,7 +630,14 @@ async def test_serialize_input_boolean(hass):
 
 async def test_unavailable_state_does_sync(hass):
     """Test that an unavailable entity does sync over."""
-    light = DemoLight(None, "Demo Light", state=False, hs_color=(180, 75))
+    light = DemoLight(
+        None,
+        "Demo Light",
+        state=False,
+        hs_color=(180, 75),
+        effect_list=LIGHT_EFFECT_LIST,
+        effect=LIGHT_EFFECT_LIST[0],
+    )
     light.hass = hass
     light.entity_id = "light.demo_light"
     light._available = False  # pylint: disable=protected-access
@@ -584,10 +666,37 @@ async def test_unavailable_state_does_sync(hass):
                         trait.TRAIT_BRIGHTNESS,
                         trait.TRAIT_ONOFF,
                         trait.TRAIT_COLOR_SETTING,
+                        trait.TRAIT_MODES,
                     ],
                     "type": const.TYPE_LIGHT,
                     "willReportState": False,
                     "attributes": {
+                        "availableModes": [
+                            {
+                                "name": "effect",
+                                "name_values": [
+                                    {"lang": "en", "name_synonym": ["effect"]}
+                                ],
+                                "ordered": False,
+                                "settings": [
+                                    {
+                                        "setting_name": "rainbow",
+                                        "setting_values": [
+                                            {
+                                                "lang": "en",
+                                                "setting_synonym": ["rainbow"],
+                                            }
+                                        ],
+                                    },
+                                    {
+                                        "setting_name": "none",
+                                        "setting_values": [
+                                            {"lang": "en", "setting_synonym": ["none"]}
+                                        ],
+                                    },
+                                ],
+                            }
+                        ],
                         "colorModel": "hsv",
                         "colorTemperatureRange": {
                             "temperatureMinK": 2000,

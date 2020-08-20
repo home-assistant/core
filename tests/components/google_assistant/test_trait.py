@@ -515,6 +515,73 @@ async def test_color_light_temperature_light_bad_temp(hass):
     assert trt.query_attributes() == {}
 
 
+async def test_light_modes(hass):
+    """Test Light Mode trait."""
+    assert helpers.get_google_type(light.DOMAIN, None) is not None
+    assert trait.ModesTrait.supported(light.DOMAIN, light.SUPPORT_EFFECT, None)
+
+    trt = trait.ModesTrait(
+        hass,
+        State(
+            "light.living_room",
+            light.STATE_ON,
+            attributes={
+                light.ATTR_EFFECT_LIST: ["random", "colorloop"],
+                light.ATTR_EFFECT: "random",
+            },
+        ),
+        BASIC_CONFIG,
+    )
+
+    attribs = trt.sync_attributes()
+    assert attribs == {
+        "availableModes": [
+            {
+                "name": "effect",
+                "name_values": [{"name_synonym": ["effect"], "lang": "en"}],
+                "settings": [
+                    {
+                        "setting_name": "random",
+                        "setting_values": [
+                            {"setting_synonym": ["random"], "lang": "en"}
+                        ],
+                    },
+                    {
+                        "setting_name": "colorloop",
+                        "setting_values": [
+                            {"setting_synonym": ["colorloop"], "lang": "en"}
+                        ],
+                    },
+                ],
+                "ordered": False,
+            }
+        ]
+    }
+
+    assert trt.query_attributes() == {
+        "currentModeSettings": {"effect": "random"},
+        "on": True,
+    }
+
+    assert trt.can_execute(
+        trait.COMMAND_MODES, params={"updateModeSettings": {"effect": "colorloop"}},
+    )
+
+    calls = async_mock_service(hass, light.DOMAIN, SERVICE_TURN_ON)
+    await trt.execute(
+        trait.COMMAND_MODES,
+        BASIC_DATA,
+        {"updateModeSettings": {"effect": "colorloop"}},
+        {},
+    )
+
+    assert len(calls) == 1
+    assert calls[0].data == {
+        "entity_id": "light.living_room",
+        "effect": "colorloop",
+    }
+
+
 async def test_scene_scene(hass):
     """Test Scene trait support for scene domain."""
     assert helpers.get_google_type(scene.DOMAIN, None) is not None
@@ -1936,9 +2003,7 @@ async def test_volume_media_player(hass):
     """Test volume trait support for media player domain."""
     assert helpers.get_google_type(media_player.DOMAIN, None) is not None
     assert trait.VolumeTrait.supported(
-        media_player.DOMAIN,
-        media_player.SUPPORT_VOLUME_SET | media_player.SUPPORT_VOLUME_MUTE,
-        None,
+        media_player.DOMAIN, media_player.SUPPORT_VOLUME_SET, None,
     )
 
     trt = trait.VolumeTrait(
@@ -1947,16 +2012,21 @@ async def test_volume_media_player(hass):
             "media_player.bla",
             media_player.STATE_PLAYING,
             {
+                ATTR_SUPPORTED_FEATURES: media_player.SUPPORT_VOLUME_SET,
                 media_player.ATTR_MEDIA_VOLUME_LEVEL: 0.3,
-                media_player.ATTR_MEDIA_VOLUME_MUTED: False,
             },
         ),
         BASIC_CONFIG,
     )
 
-    assert trt.sync_attributes() == {}
+    assert trt.sync_attributes() == {
+        "volumeMaxLevel": 100,
+        "levelStepSize": 10,
+        "volumeCanMuteAndUnmute": False,
+        "commandOnlyVolume": False,
+    }
 
-    assert trt.query_attributes() == {"currentVolume": 30, "isMuted": False}
+    assert trt.query_attributes() == {"currentVolume": 30}
 
     calls = async_mock_service(
         hass, media_player.DOMAIN, media_player.SERVICE_VOLUME_SET
@@ -1968,40 +2038,130 @@ async def test_volume_media_player(hass):
         media_player.ATTR_MEDIA_VOLUME_LEVEL: 0.6,
     }
 
+    calls = async_mock_service(
+        hass, media_player.DOMAIN, media_player.SERVICE_VOLUME_SET
+    )
+    await trt.execute(
+        trait.COMMAND_VOLUME_RELATIVE, BASIC_DATA, {"relativeSteps": 10}, {}
+    )
+    assert len(calls) == 1
+    assert calls[0].data == {
+        ATTR_ENTITY_ID: "media_player.bla",
+        media_player.ATTR_MEDIA_VOLUME_LEVEL: 0.4,
+    }
+
 
 async def test_volume_media_player_relative(hass):
-    """Test volume trait support for media player domain."""
+    """Test volume trait support for relative-volume-only media players."""
+    assert trait.VolumeTrait.supported(
+        media_player.DOMAIN, media_player.SUPPORT_VOLUME_STEP, None,
+    )
     trt = trait.VolumeTrait(
         hass,
         State(
             "media_player.bla",
             media_player.STATE_PLAYING,
             {
-                media_player.ATTR_MEDIA_VOLUME_LEVEL: 0.3,
+                ATTR_ASSUMED_STATE: True,
+                ATTR_SUPPORTED_FEATURES: media_player.SUPPORT_VOLUME_STEP,
+            },
+        ),
+        BASIC_CONFIG,
+    )
+
+    assert trt.sync_attributes() == {
+        "volumeMaxLevel": 100,
+        "levelStepSize": 10,
+        "volumeCanMuteAndUnmute": False,
+        "commandOnlyVolume": True,
+    }
+
+    assert trt.query_attributes() == {}
+
+    calls = async_mock_service(
+        hass, media_player.DOMAIN, media_player.SERVICE_VOLUME_UP
+    )
+
+    await trt.execute(
+        trait.COMMAND_VOLUME_RELATIVE, BASIC_DATA, {"relativeSteps": 10}, {},
+    )
+    assert len(calls) == 10
+    for call in calls:
+        assert call.data == {
+            ATTR_ENTITY_ID: "media_player.bla",
+        }
+
+    calls = async_mock_service(
+        hass, media_player.DOMAIN, media_player.SERVICE_VOLUME_DOWN
+    )
+    await trt.execute(
+        trait.COMMAND_VOLUME_RELATIVE, BASIC_DATA, {"relativeSteps": -10}, {},
+    )
+    assert len(calls) == 10
+    for call in calls:
+        assert call.data == {
+            ATTR_ENTITY_ID: "media_player.bla",
+        }
+
+    with pytest.raises(SmartHomeError):
+        await trt.execute(trait.COMMAND_SET_VOLUME, BASIC_DATA, {"volumeLevel": 42}, {})
+
+    with pytest.raises(SmartHomeError):
+        await trt.execute(trait.COMMAND_MUTE, BASIC_DATA, {"mute": True}, {})
+
+
+async def test_media_player_mute(hass):
+    """Test volume trait support for muting."""
+    assert trait.VolumeTrait.supported(
+        media_player.DOMAIN,
+        media_player.SUPPORT_VOLUME_STEP | media_player.SUPPORT_VOLUME_MUTE,
+        None,
+    )
+    trt = trait.VolumeTrait(
+        hass,
+        State(
+            "media_player.bla",
+            media_player.STATE_PLAYING,
+            {
+                ATTR_SUPPORTED_FEATURES: (
+                    media_player.SUPPORT_VOLUME_STEP | media_player.SUPPORT_VOLUME_MUTE
+                ),
                 media_player.ATTR_MEDIA_VOLUME_MUTED: False,
             },
         ),
         BASIC_CONFIG,
     )
 
-    assert trt.sync_attributes() == {}
+    assert trt.sync_attributes() == {
+        "volumeMaxLevel": 100,
+        "levelStepSize": 10,
+        "volumeCanMuteAndUnmute": True,
+        "commandOnlyVolume": False,
+    }
+    assert trt.query_attributes() == {"isMuted": False}
 
-    assert trt.query_attributes() == {"currentVolume": 30, "isMuted": False}
-
-    calls = async_mock_service(
-        hass, media_player.DOMAIN, media_player.SERVICE_VOLUME_SET
+    mute_calls = async_mock_service(
+        hass, media_player.DOMAIN, media_player.SERVICE_VOLUME_MUTE
     )
-
     await trt.execute(
-        trait.COMMAND_VOLUME_RELATIVE,
-        BASIC_DATA,
-        {"volumeRelativeLevel": 20, "relativeSteps": 2},
-        {},
+        trait.COMMAND_MUTE, BASIC_DATA, {"mute": True}, {},
     )
-    assert len(calls) == 1
-    assert calls[0].data == {
+    assert len(mute_calls) == 1
+    assert mute_calls[0].data == {
         ATTR_ENTITY_ID: "media_player.bla",
-        media_player.ATTR_MEDIA_VOLUME_LEVEL: 0.5,
+        media_player.ATTR_MEDIA_VOLUME_MUTED: True,
+    }
+
+    unmute_calls = async_mock_service(
+        hass, media_player.DOMAIN, media_player.SERVICE_VOLUME_MUTE
+    )
+    await trt.execute(
+        trait.COMMAND_MUTE, BASIC_DATA, {"mute": False}, {},
+    )
+    assert len(unmute_calls) == 1
+    assert unmute_calls[0].data == {
+        ATTR_ENTITY_ID: "media_player.bla",
+        media_player.ATTR_MEDIA_VOLUME_MUTED: False,
     }
 
 

@@ -759,6 +759,7 @@ class State:
     last_changed: last time the state was changed, not the attributes.
     last_updated: last time this object was updated.
     context: Context in which it was created
+    domain: Domain of this state.
     """
 
     __slots__ = [
@@ -768,6 +769,7 @@ class State:
         "last_changed",
         "last_updated",
         "context",
+        "domain",
     ]
 
     def __init__(
@@ -801,11 +803,7 @@ class State:
         self.last_updated = last_updated or dt_util.utcnow()
         self.last_changed = last_changed or self.last_updated
         self.context = context or Context()
-
-    @property
-    def domain(self) -> str:
-        """Domain of this state."""
-        return split_entity_id(self.entity_id)[0]
+        self.domain = split_entity_id(self.entity_id)[0]
 
     @property
     def object_id(self) -> str:
@@ -907,7 +905,9 @@ class StateMachine:
         return future.result()
 
     @callback
-    def async_entity_ids(self, domain_filter: Optional[str] = None) -> List[str]:
+    def async_entity_ids(
+        self, domain_filter: Optional[Union[str, Iterable]] = None
+    ) -> List[str]:
         """List of entity ids that are being tracked.
 
         This method must be run in the event loop.
@@ -915,12 +915,13 @@ class StateMachine:
         if domain_filter is None:
             return list(self._states.keys())
 
-        domain_filter = domain_filter.lower()
+        if isinstance(domain_filter, str):
+            domain_filter = (domain_filter.lower(),)
 
         return [
             state.entity_id
             for state in self._states.values()
-            if state.domain == domain_filter
+            if state.domain in domain_filter
         ]
 
     def all(self) -> List[State]:

@@ -1,0 +1,13 @@
+{
+  "domain": "nightscout",
+  "name": "Nightscout",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/nightscout",
+  "requirements": [
+    "py-nightscout==1.2.1"
+  ],
+  "codeowners": [
+    "@marciogranzotto"
+  ],
+  "quality_scale": "platinum"
+}

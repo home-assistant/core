@@ -24,6 +24,7 @@ def mock_connection(aioclient_mock):
         text="""
 {
 \tstatus: {
+\thrDeviceStatus: 2,
 \tstatus1: "  Sleeping...   "
 \t},
 \tidentity: {

@@ -1,5 +1,5 @@
 """Representation of a deCONZ remote."""
-from homeassistant.const import CONF_EVENT, CONF_ID
+from homeassistant.const import CONF_EVENT, CONF_ID, CONF_UNIQUE_ID
 from homeassistant.core import callback
 from homeassistant.util import slugify
 
@@ -7,7 +7,6 @@ from .const import CONF_GESTURE, LOGGER
 from .deconz_device import DeconzBase
 
 CONF_DECONZ_EVENT = "deconz_event"
-CONF_UNIQUE_ID = "unique_id"
 
 
 class DeconzEvent(DeconzBase):
