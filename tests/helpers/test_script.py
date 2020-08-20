@@ -1000,6 +1000,7 @@ async def test_repeat_conditional(hass, condition):
             wait_started.clear()
             hass.states.async_set("sensor.test", index)
         await asyncio.wait_for(wait_started.wait(), 1)
+        wait_started.clear()
         hass.states.async_set("sensor.test", "next")
         await asyncio.wait_for(wait_started.wait(), 1)
         wait_started.clear()
