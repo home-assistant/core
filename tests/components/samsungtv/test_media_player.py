@@ -48,6 +48,7 @@ from homeassistant.const import (
     SERVICE_VOLUME_UP,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_setup_component
@@ -425,19 +426,24 @@ async def test_state_with_turnon(hass: HomeAssistantType, remote: Mock, delay: M
     assert state.state == STATE_OFF
 
 
-async def test_state_without_turnon(hass: HomeAssistantType, remote: Mock):
+async def test_state_without_turnon(
+    hass: HomeAssistantType, remote: Mock, mock_now: Mock
+):
     """Test for state property."""
     await setup_samsungtv(hass, MOCK_CONFIG_NOTURNON)
-    assert await hass.services.async_call(
-        DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID_NOTURNON}, True
-    )
+
+    next_update = mock_now + timedelta(minutes=5)
+    with patch("homeassistant.util.dt.utcnow", return_value=next_update):
+        async_fire_time_changed(hass, next_update)
+        await hass.async_block_till_done()
+
     state = hass.states.get(ENTITY_ID_NOTURNON)
     assert state.state == STATE_ON
     assert await hass.services.async_call(
         DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID_NOTURNON}, True
     )
     state = hass.states.get(ENTITY_ID_NOTURNON)
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_supported_features_with_turnon(hass: HomeAssistantType, remote: Mock):
@@ -480,9 +486,9 @@ async def test_turn_off_websocket(hass: HomeAssistantType, remotews: Mock):
 
 async def test_turn_off_legacy(hass: HomeAssistantType, remote: Mock):
     """Test for turn_off."""
-    await setup_samsungtv(hass, MOCK_CONFIG_NOTURNON)
+    await setup_samsungtv(hass, MOCK_CONFIG)
     assert await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID_NOTURNON}, True
+        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
     # key called
     assert remote.control.call_count == 1
