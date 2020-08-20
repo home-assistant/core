@@ -500,9 +500,8 @@ class Hyperion(LightEntity):
             return False
 
         await self._async_update_full_state(resp_json[KEY_INFO])
-        self.async_write_ha_state()
-
         self._is_connected = True
+        self.async_write_ha_state()
         return True
 
     async def _async_close_streams(self):
@@ -512,6 +511,7 @@ class Hyperion(LightEntity):
             self._writer.close()
             await self._writer.wait_closed()
         self._reader, self._writer = None, None
+        self.async_write_ha_state()
 
     async def async_setup(self, hass):
         """Set up the entity."""
