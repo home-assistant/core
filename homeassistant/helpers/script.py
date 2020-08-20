@@ -860,7 +860,7 @@ class Script:
     ) -> None:
         """Run script."""
         if context is None:
-            self._logger.warning("Running script requires passing in a context")
+            self._log("Running script requires passing in a context", level=logging.WARNING)
             context = Context()
 
         if self.is_running:
