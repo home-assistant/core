@@ -151,7 +151,7 @@ class SamsungTVDevice(MediaPlayerEntity):
     @property
     def available(self):
         """Return the availability of the device."""
-        return self._state == STATE_ON
+        return self._state == STATE_ON or self._on_script
 
     @property
     def device_info(self):
