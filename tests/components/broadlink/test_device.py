@@ -109,6 +109,27 @@ async def test_device_setup_os_error(hass):
     assert mock_init.call_count == 0
 
 
+async def test_device_setup_broadlink_exception(hass):
+    """Test we handle a Broadlink exception."""
+    device = get_device("Office")
+    mock_api = device.get_mock_api()
+    mock_api.auth.side_effect = blke.BroadlinkException()
+    mock_entry = device.get_mock_entry()
+    mock_entry.add_to_hass(hass)
+
+    with patch("broadlink.gendevice", return_value=mock_api), patch.object(
+        hass.config_entries, "async_forward_entry_setup"
+    ) as mock_forward, patch.object(
+        hass.config_entries.flow, "async_init"
+    ) as mock_init:
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+
+    assert mock_entry.state == ENTRY_STATE_SETUP_ERROR
+    assert mock_api.auth.call_count == 1
+    assert mock_forward.call_count == 0
+    assert mock_init.call_count == 0
+
+
 async def test_device_setup_update_device_offline(hass):
     """Test we handle a device offline in the update step."""
     device = get_device("Office")
@@ -182,6 +203,28 @@ async def test_device_setup_update_authentication_error(hass):
         "name": device.name,
         **device.get_entry_data(),
     }
+
+
+async def test_device_setup_update_broadlink_exception(hass):
+    """Test we handle a Broadlink exception in the update step."""
+    device = get_device("Living Room")
+    mock_api = device.get_mock_api()
+    mock_api.check_sensors.side_effect = blke.BroadlinkException()
+    mock_entry = device.get_mock_entry()
+    mock_entry.add_to_hass(hass)
+
+    with patch("broadlink.gendevice", return_value=mock_api), patch.object(
+        hass.config_entries, "async_forward_entry_setup"
+    ) as mock_forward, patch.object(
+        hass.config_entries.flow, "async_init"
+    ) as mock_init:
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+
+    assert mock_entry.state == ENTRY_STATE_SETUP_RETRY
+    assert mock_api.auth.call_count == 1
+    assert mock_api.check_sensors.call_count == 1
+    assert mock_forward.call_count == 0
+    assert mock_init.call_count == 0
 
 
 async def test_device_setup_get_fwversion_broadlink_exception(hass):

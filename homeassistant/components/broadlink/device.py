@@ -85,6 +85,12 @@ class BroadlinkDevice:
         except (DeviceOfflineError, OSError):
             raise ConfigEntryNotReady
 
+        except BroadlinkException as err:
+            _LOGGER.error(
+                "Failed to authenticate to the device at %s: %s", api.host[0], err
+            )
+            return False
+
         self.api = api
         self.authorized = True
 
