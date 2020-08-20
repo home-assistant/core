@@ -10,6 +10,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import CoreState
 from homeassistant.setup import ATTR_COMPONENT, async_setup_component, setup_component
 
 from tests.common import assert_setup_component, get_test_home_assistant
@@ -583,6 +584,8 @@ async def test_invalid_availability_template_keeps_component_available(hass, cap
 async def test_no_template_match_all(hass, caplog):
     """Test that we allow static templates."""
     hass.states.async_set("sensor.test_sensor", "startup")
+
+    hass.state = CoreState.not_running
 
     await async_setup_component(
         hass,
