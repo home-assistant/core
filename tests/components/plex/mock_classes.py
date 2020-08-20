@@ -125,6 +125,7 @@ class MockPlexServer:
 
         self._clients = []
         self._sessions = []
+        self._library = MockPlexLibrary()
         self.set_clients(num_users)
         self.set_sessions(num_users, session_type)
 
@@ -399,6 +400,10 @@ class MockPlexLibrarySection:
     def key(self):
         """Mock the key identifier property."""
         return str(id(self.title))
+
+    def update(self):
+        """Mock the update call."""
+        pass
 
 
 class MockPlexMediaItem:

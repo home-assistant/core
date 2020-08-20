@@ -43,6 +43,7 @@ from .const import (
 )
 from .errors import ShouldUpdateConfigEntry
 from .server import PlexServer
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__package__)
 
@@ -53,6 +54,8 @@ async def async_setup(hass, config):
         PLEX_DOMAIN,
         {SERVERS: {}, DISPATCHERS: {}, WEBSOCKETS: {}, PLATFORMS_COMPLETED: {}},
     )
+
+    await async_setup_services(hass)
 
     return True
 
