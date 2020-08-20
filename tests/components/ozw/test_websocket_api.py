@@ -142,6 +142,19 @@ async def test_migrate_zwave(
     assert result["migrated"] is False
 
 
+async def test_migrate_zwave_not_setup(hass, migration_data, hass_ws_client):
+    """Test the zwave to ozw migration websocket without zwave setup."""
+    await setup_ozw(hass, fixture=migration_data)
+    client = await hass_ws_client(hass)
+
+    await client.send_json({ID: 5, TYPE: "ozw/migrate_zwave"})
+    msg = await client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "zwave_not_loaded"
+    assert msg["error"]["message"] == "Integration zwave is not loaded"
+
+
 async def test_websocket_api(hass, generic_data, hass_ws_client):
     """Test the ozw websocket api."""
     await setup_ozw(hass, fixture=generic_data)

@@ -187,7 +187,7 @@ async def websocket_migrate_zwave(hass, connection, msg):
         _LOGGER.error("Can not migrate, zwave integration is not loaded")
         connection.send_message(
             websocket_api.error_message(
-                msg["id"], "zwave_not_loaded", "zwave integration is not loaded"
+                msg["id"], "zwave_not_loaded", "Integration zwave is not loaded"
             )
         )
         return
