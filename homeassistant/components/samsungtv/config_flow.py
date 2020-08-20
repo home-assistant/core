@@ -129,7 +129,9 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     raise data_entry_flow.AbortFlow(RESULT_NOT_SUPPORTED)
                 self._model = self._device_info.get("device", {}).get("modelName")
                 return
-        raise data_entry_flow.AbortFlow(RESULT_NOT_SUPPORTED)
+            # this will also fail on non-websocket devices - todo
+            # else:
+            #    raise data_entry_flow.AbortFlow(RESULT_NOT_SUPPORTED)
 
     async def async_step_import(self, user_input=None):
         """Handle configuration by yaml file."""

@@ -117,6 +117,7 @@ def remotews_fixture():
         remotews = Mock()
         remotews.__enter__ = Mock()
         remotews.__exit__ = Mock()
+        remotews.rest_device_info.return_value = {"device": {"type": "Samsung SmartTV"}}
         remotews_class.return_value = remotews
         remotews_class().__enter__().token = "FAKE_TOKEN"
         yield remotews
