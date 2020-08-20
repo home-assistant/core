@@ -83,22 +83,22 @@ class ResponseSwitch(SwitchEntity):
         self._state_attributes = {}
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the switch."""
         return self._name
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Return the icon to use in the frontend."""
         return self._icon
 
     @property
-    def is_on(self):
+    def is_on(self) -> str:
         """Get the assumed state of the switch."""
         return self._state
 
     @property
-    def state(self):
+    def state(self) -> str:
         """Return the state of the switch."""
         return self._state
 
@@ -108,7 +108,7 @@ class ResponseSwitch(SwitchEntity):
         return f"{self._unique_id}_{self._type}"
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> object:
         """Return available attributes for switch."""
         attr = {}
         attr = self._state_attributes
@@ -126,7 +126,7 @@ class ResponseSwitch(SwitchEntity):
         return self._available
 
     @property
-    def device_class(self):
+    def device_class(self) -> str:
         """Return the device class of the device."""
         return self._device_class
 
@@ -145,7 +145,7 @@ class ResponseSwitch(SwitchEntity):
         """Enable Polling for this switch."""
         return True
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register update callback."""
         self.async_on_remove(
             async_dispatcher_connect(
@@ -155,11 +155,11 @@ class ResponseSwitch(SwitchEntity):
             )
         )
 
-    async def async_on_demand_update(self):
+    async def async_on_demand_update(self) -> None:
         """Update state."""
         self.async_schedule_update_ha_state(True)
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update FireServiceRota response data."""
         if not self.enabled:
             return
@@ -168,7 +168,6 @@ class ResponseSwitch(SwitchEntity):
 
         response_data = self._data.response_data
         if response_data:
-            _LOGGER.debug("Incident response status: %s", response_data["status"])
             try:
                 if response_data["status"] == "acknowledged":
                     self._state = STATE_ON

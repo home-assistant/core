@@ -82,17 +82,17 @@ class IncidentsSensor(RestoreEntity):
         self._state_attributes = {}
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the sensor."""
         return self._name
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Return the icon to use in the frontend."""
         return self._icon
 
     @property
-    def state(self):
+    def state(self) -> str:
         """Return the state of the sensor."""
         return self._state
 
@@ -102,7 +102,7 @@ class IncidentsSensor(RestoreEntity):
         return f"{self._unique_id}_{self._type}"
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> object:
         """Return available attributes for sensor."""
         attr = {}
         data = self._state_attributes
@@ -157,7 +157,7 @@ class IncidentsSensor(RestoreEntity):
         return self._available
 
     @property
-    def device_class(self):
+    def device_class(self) -> str:
         """Return the device class of the sensor."""
         return self._device_class
 
@@ -185,11 +185,11 @@ class IncidentsSensor(RestoreEntity):
         """No polling needed."""
         return False
 
-    async def async_on_demand_update(self):
+    async def async_on_demand_update(self) -> None:
         """Update state on demand."""
         self.async_schedule_update_ha_state(True)
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update using FireServiceRota data."""
         if not self.enabled:
             return

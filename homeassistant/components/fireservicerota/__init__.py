@@ -18,6 +18,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 from .const import DOMAIN, NOTIFICATION_AUTH_ID, NOTIFICATION_AUTH_TITLE, WSS_BWRURL
@@ -35,13 +36,12 @@ ENTITY_COMPONENTS = {
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up the FireServiceRota component."""
-
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up FireServiceRota from a config entry."""
-    coordinator = FSRDataCoordinator(hass, entry)
+    coordinator = FSRDataUpdateCoordinator(hass, entry)
     await coordinator.async_update()
 
     hass.data.setdefault(DOMAIN, {})
@@ -72,7 +72,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class FSRDataCoordinator:
+class FSRDataUpdateCoordinator(Entity):
     """Getting the latest data from fireservicerota."""
 
     def __init__(self, hass, entry):
@@ -96,31 +96,31 @@ class FSRDataCoordinator:
 
         self.start_listener()
 
-    def construct_url(self):
+    def construct_url(self) -> str:
         """Return url with latest config values."""
         return WSS_BWRURL.format(
             self._entry.data[CONF_URL], self._entry.data[CONF_TOKEN]["access_token"]
         )
 
-    def on_incident(self, data):
+    def on_incident(self, data) -> None:
         """Update the current data."""
         _LOGGER.debug("Got data from websocket listener: %s", data)
         self.incident_data = data
 
         async_dispatcher_send(self._hass, f"{DOMAIN}_{self._entry.entry_id}_update")
 
-    def start_listener(self):
+    def start_listener(self) -> None:
         """Start the websocket listener."""
         _LOGGER.debug("Starting incidents listener")
         self.fsr_incidents.start(self.construct_url())
 
-    def stop_listener(self):
+    def stop_listener(self) -> None:
         """Stop the websocket listener."""
         _LOGGER.debug("Stopping incidents listener")
         self.fsr_incidents.stop()
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest availability data."""
         try:
             self.availability_data = await self._hass.async_add_executor_job(
@@ -131,7 +131,7 @@ class FSRDataCoordinator:
             _LOGGER.debug("Refreshing expired tokens")
             await self.async_refresh_tokens()
 
-    async def async_response_update(self):
+    async def async_response_update(self) -> None:
         """Get the latest incident response data."""
         if self.incident_data:
             self.incident_id = self.incident_data.get("id")
@@ -145,7 +145,7 @@ class FSRDataCoordinator:
                 _LOGGER.debug("Refreshing expired tokens")
                 await self.async_refresh_tokens()
 
-    async def async_set_response(self, incident_id, value):
+    async def async_set_response(self, incident_id, value) -> None:
         """Set incident response status."""
         try:
             await self._hass.async_add_executor_job(

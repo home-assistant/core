@@ -77,17 +77,17 @@ class ResponseBinarySensor(BinarySensorEntity):
         self._state_attributes = {}
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the sensor."""
         return self._name
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Return the icon to use in the frontend."""
         return self._icon
 
     @property
-    def state(self):
+    def state(self) -> str:
         """Return the state of the binary sensor."""
         return self._state
 
@@ -97,7 +97,7 @@ class ResponseBinarySensor(BinarySensorEntity):
         return f"{self._unique_id}_{self._type}"
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> object:
         """Return available attributes for binary sensor."""
         attr = {}
         attr = self._state_attributes
@@ -115,12 +115,12 @@ class ResponseBinarySensor(BinarySensorEntity):
         return self._available
 
     @property
-    def device_class(self):
+    def device_class(self) -> str:
         """Return the device class of the binary sensor."""
         return self._device_class
 
     @property
-    def is_on(self):
+    def is_on(self) -> str:
         """Return the status of the binary sensor."""
         return self._state
 
@@ -129,17 +129,17 @@ class ResponseBinarySensor(BinarySensorEntity):
         """Enable Polling for this binary sensor."""
         return True
 
-    async def async_on_demand_update(self):
+    async def async_on_demand_update(self) -> None:
         """Update state."""
         self.async_schedule_update_ha_state(True)
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update using FireServiceRota data."""
         if not self.enabled:
             return
 
         await self._data.async_update()
-        _LOGGER.debug(self._data.availability_data)
+
         try:
             if self._data.availability_data:
                 state = self._data.availability_data["available"]
