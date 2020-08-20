@@ -711,6 +711,8 @@ def server_payload(plex_server):
     }
     server_info["children"] = []
     for library in plex_server.library.sections():
+        if library.type == "photo":
+            continue
         server_info["children"].append(library_section_payload(library))
     return server_info
 
