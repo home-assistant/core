@@ -19,6 +19,8 @@ from tests.async_mock import patch
 from tests.components.sonarr import (
     HOST,
     MOCK_USER_INPUT,
+    _patch_async_setup,
+    _patch_async_setup_entry,
     mock_connection,
     mock_connection_error,
     mock_connection_invalid_auth,
@@ -94,9 +96,10 @@ async def test_full_import_flow_implementation(
 
     user_input = MOCK_USER_INPUT.copy()
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_IMPORT}, data=user_input,
-    )
+    with _patch_async_setup, _patch_async_setup_entry():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={CONF_SOURCE: SOURCE_IMPORT}, data=user_input,
+        )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == HOST
@@ -123,9 +126,8 @@ async def test_full_user_flow_implementation(
     assert result["step_id"] == "user"
 
     user_input = MOCK_USER_INPUT.copy()
-    with patch(
-        "homeassistant.components.sonarr.async_setup_entry", return_value=True
-    ), patch("homeassistant.components.sonarr.async_setup", return_value=True):
+
+    with _patch_async_setup, _patch_async_setup_entry():
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=user_input,
         )
@@ -155,9 +157,7 @@ async def test_full_user_flow_advanced_options(
         CONF_VERIFY_SSL: True,
     }
 
-    with patch(
-        "homeassistant.components.sonarr.async_setup_entry", return_value=True
-    ), patch("homeassistant.components.sonarr.async_setup", return_value=True):
+    with with _patch_async_setup, _patch_async_setup_entry():
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=user_input,
         )
@@ -181,9 +181,7 @@ async def test_options_flow(hass, aioclient_mock: AiohttpClientMocker):
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "init"
 
-    with patch(
-        "homeassistant.components.sonarr.async_setup_entry", return_value=True
-    ), patch("homeassistant.components.sonarr.async_setup", return_value=True):
+    with _patch_async_setup, _patch_async_setup_entry():
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={CONF_UPCOMING_DAYS: 2, CONF_WANTED_MAX_ITEMS: 100},
