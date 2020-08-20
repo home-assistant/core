@@ -76,13 +76,14 @@ def render_complex(value: Any, variables: TemplateVarsType = None) -> Any:
     """Recursive template creator helper function."""
     if isinstance(value, list):
         return [render_complex(item, variables) for item in value]
-    elif isinstance(value, dict):
+    if isinstance(value, dict):
         return {
             render_complex(key, variables): render_complex(item, variables)
             for key, item in value.items()
         }
-    elif isinstance(value, Template):
+    if isinstance(value, Template):
         return value.async_render(variables)
+
     return value
 
 

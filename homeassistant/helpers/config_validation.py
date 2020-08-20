@@ -521,12 +521,12 @@ def template_complex(value: Any) -> Any:
         for idx, element in enumerate(return_list):
             return_list[idx] = template_complex(element)
         return return_list
-    elif isinstance(value, dict):
+    if isinstance(value, dict):
         return {
             template_complex(key): template_complex(element)
             for key, element in value.items()
         }
-    elif isinstance(value, str) and template_helper.is_template(value):
+    if isinstance(value, str) and template_helper.is_template(value):
         return template(value)
 
     return value
