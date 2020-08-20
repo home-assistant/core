@@ -35,8 +35,6 @@ from homeassistant.const import (
     CONF_FRIENDLY_NAME,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
-    EVENT_HOMEASSISTANT_START,
-    MATCH_ALL,
     STATE_UNKNOWN,
 )
 from homeassistant.core import callback
@@ -45,8 +43,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.script import Script
 
-from . import extract_entities, initialise_templates
 from .const import CONF_AVAILABILITY_TEMPLATE
+from .template_entity import TemplateEntityWithAttributesAvailabilityAndImages
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -118,18 +116,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         fan_speed_list = device_config[CONF_FAN_SPEED_LIST]
         unique_id = device_config.get(CONF_UNIQUE_ID)
 
-        templates = {
-            CONF_VALUE_TEMPLATE: state_template,
-            CONF_BATTERY_LEVEL_TEMPLATE: battery_level_template,
-            CONF_FAN_SPEED_TEMPLATE: fan_speed_template,
-            CONF_AVAILABILITY_TEMPLATE: availability_template,
-        }
-
-        initialise_templates(hass, templates, attribute_templates)
-        entity_ids = extract_entities(
-            device, "vacuum", None, templates, attribute_templates
-        )
-
         vacuums.append(
             TemplateVacuum(
                 hass,
@@ -147,7 +133,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 locate_action,
                 set_fan_speed_action,
                 fan_speed_list,
-                entity_ids,
                 attribute_templates,
                 unique_id,
             )
@@ -156,7 +141,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(vacuums)
 
 
-class TemplateVacuum(StateVacuumEntity):
+class TemplateVacuum(
+    TemplateEntityWithAttributesAvailabilityAndImages, StateVacuumEntity
+):
     """A template vacuum component."""
 
     def __init__(
@@ -176,12 +163,13 @@ class TemplateVacuum(StateVacuumEntity):
         locate_action,
         set_fan_speed_action,
         fan_speed_list,
-        entity_ids,
         attribute_templates,
         unique_id,
     ):
         """Initialize the vacuum."""
-        self.hass = hass
+        super().__init__(
+            attribute_templates, availability_template, None, None,
+        )
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, device_id, hass=hass
         )
@@ -190,10 +178,7 @@ class TemplateVacuum(StateVacuumEntity):
         self._template = state_template
         self._battery_level_template = battery_level_template
         self._fan_speed_template = fan_speed_template
-        self._availability_template = availability_template
         self._supported_features = SUPPORT_START
-        self._attribute_templates = attribute_templates
-        self._attributes = {}
 
         domain = __name__.split(".")[-2]
 
@@ -238,14 +223,12 @@ class TemplateVacuum(StateVacuumEntity):
         self._state = None
         self._battery_level = None
         self._fan_speed = None
-        self._available = True
 
         if self._template:
             self._supported_features |= SUPPORT_STATE
         if self._battery_level_template:
             self._supported_features |= SUPPORT_BATTERY
 
-        self._entities = entity_ids
         self._unique_id = unique_id
 
         # List of valid fan speeds
@@ -285,21 +268,6 @@ class TemplateVacuum(StateVacuumEntity):
     def fan_speed_list(self) -> list:
         """Get the list of available fan speeds."""
         return self._fan_speed_list
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return False
-
-    @property
-    def available(self) -> bool:
-        """Return if the device is available."""
-        return self._available
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        return self._attributes
 
     async def async_start(self):
         """Start or resume the cleaning task."""
@@ -360,108 +328,78 @@ class TemplateVacuum(StateVacuumEntity):
     async def async_added_to_hass(self):
         """Register callbacks."""
 
-        @callback
-        def template_vacuum_state_listener(event):
-            """Handle target device state changes."""
-            self.async_schedule_update_ha_state(True)
-
-        @callback
-        def template_vacuum_startup(event):
-            """Update template on startup."""
-            if self._entities != MATCH_ALL:
-                # Track state changes only for valid templates
-                self.hass.helpers.event.async_track_state_change_event(
-                    self._entities, template_vacuum_state_listener
-                )
-
-            self.async_schedule_update_ha_state(True)
-
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START, template_vacuum_startup
-        )
-
-    async def async_update(self):
-        """Update the state from the template."""
-        # Update state
         if self._template is not None:
-            try:
-                state = self._template.async_render()
-            except TemplateError as ex:
-                _LOGGER.error(ex)
-                state = None
-                self._state = None
-
-            # Validate state
-            if state in _VALID_STATES:
-                self._state = state
-            elif state == STATE_UNKNOWN:
-                self._state = None
-            else:
-                _LOGGER.error(
-                    "Received invalid vacuum state: %s. Expected: %s",
-                    state,
-                    ", ".join(_VALID_STATES),
-                )
-                self._state = None
-
-        # Update battery level if 'battery_level_template' is configured
-        if self._battery_level_template is not None:
-            try:
-                battery_level = self._battery_level_template.async_render()
-            except TemplateError as ex:
-                _LOGGER.error(ex)
-                battery_level = None
-
-            # Validate battery level
-            if battery_level and 0 <= int(battery_level) <= 100:
-                self._battery_level = int(battery_level)
-            else:
-                _LOGGER.error(
-                    "Received invalid battery level: %s. Expected: 0-100", battery_level
-                )
-                self._battery_level = None
-
-        # Update fan speed if 'fan_speed_template' is configured
+            self.add_template_attribute(
+                "_state", self._template, None, self._update_state
+            )
         if self._fan_speed_template is not None:
-            try:
-                fan_speed = self._fan_speed_template.async_render()
-            except TemplateError as ex:
-                _LOGGER.error(ex)
-                fan_speed = None
-                self._state = None
+            self.add_template_attribute(
+                "_fan_speed", self._fan_speed_template, None, self._update_fan_speed,
+            )
+        if self._battery_level_template is not None:
+            self.add_template_attribute(
+                "_battery_level",
+                self._battery_level_template,
+                None,
+                self._update_battery_level,
+                none_on_template_error=True,
+            )
+        await super().async_added_to_hass()
 
-            # Validate fan speed
-            if fan_speed in self._fan_speed_list:
-                self._fan_speed = fan_speed
-            elif fan_speed == STATE_UNKNOWN:
-                self._fan_speed = None
-            else:
-                _LOGGER.error(
-                    "Received invalid fan speed: %s. Expected: %s",
-                    fan_speed,
-                    self._fan_speed_list,
-                )
-                self._fan_speed = None
-        # Update availability if availability template is defined
-        if self._availability_template is not None:
-            try:
-                self._available = (
-                    self._availability_template.async_render().lower() == "true"
-                )
-            except (TemplateError, ValueError) as ex:
-                _LOGGER.error(
-                    "Could not render %s template %s: %s",
-                    CONF_AVAILABILITY_TEMPLATE,
-                    self._name,
-                    ex,
-                )
-        # Update attribute if attribute template is defined
-        if self._attribute_templates is not None:
-            attrs = {}
-            for key, value in self._attribute_templates.items():
-                try:
-                    attrs[key] = value.async_render()
-                except TemplateError as err:
-                    _LOGGER.error("Error rendering attribute %s: %s", key, err)
+    @callback
+    def _update_state(self, result):
+        super()._update_state(result)
+        if isinstance(result, TemplateError):
+            # This is legacy behavior
+            self._state = STATE_UNKNOWN
+            if not self._availability_template:
+                self._available = True
+            return
 
-            self._attributes = attrs
+        # Validate state
+        if result in _VALID_STATES:
+            self._state = result
+        elif result == STATE_UNKNOWN:
+            self._state = None
+        else:
+            _LOGGER.error(
+                "Received invalid vacuum state: %s. Expected: %s",
+                result,
+                ", ".join(_VALID_STATES),
+            )
+            self._state = None
+
+    @callback
+    def _update_battery_level(self, battery_level):
+        try:
+            battery_level_int = int(battery_level)
+            if not 0 <= battery_level_int <= 100:
+                raise ValueError
+        except ValueError:
+            _LOGGER.error(
+                "Received invalid battery level: %s. Expected: 0-100", battery_level
+            )
+            self._battery_level = None
+            return
+
+        self._battery_level = battery_level_int
+
+    @callback
+    def _update_fan_speed(self, fan_speed):
+        if isinstance(fan_speed, TemplateError):
+            # This is legacy behavior
+            self._fan_speed = None
+            self._state = None
+            return
+
+        if fan_speed in self._fan_speed_list:
+            self._fan_speed = fan_speed
+        elif fan_speed == STATE_UNKNOWN:
+            self._fan_speed = None
+        else:
+            _LOGGER.error(
+                "Received invalid fan speed: %s. Expected: %s",
+                fan_speed,
+                self._fan_speed_list,
+            )
+            self._fan_speed = None
