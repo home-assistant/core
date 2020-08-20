@@ -13,7 +13,6 @@ from aiohomekit.model.services import Service, ServicesTypes
 
 from homeassistant.components import zeroconf
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import Entity
 
 from .config_flow import normalize_hkid
@@ -189,21 +188,6 @@ async def async_setup_entry(hass, entry):
     if not await conn.async_setup():
         del hass.data[KNOWN_DEVICES][conn.unique_id]
         raise ConfigEntryNotReady
-
-    conn_info = conn.connection_info
-
-    device_registry = await dr.async_get_registry(hass)
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={
-            (DOMAIN, "serial-number", conn_info["serial-number"]),
-            (DOMAIN, "accessory-id", conn.unique_id),
-        },
-        name=conn.name,
-        manufacturer=conn_info.get("manufacturer"),
-        model=conn_info.get("model"),
-        sw_version=conn_info.get("firmware.revision"),
-    )
 
     return True
 
