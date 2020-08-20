@@ -117,6 +117,7 @@ class _TemplateAttribute:
         result_info = async_track_template_result(
             self._entity.hass, self.template, self._handle_result
         )
+
         self.async_update = result_info.async_refresh
 
         @callback
@@ -263,5 +264,48 @@ class TemplateEntityWithAvailabilityAndImages(TemplateEntityWithAvailability):
             self.add_template_attribute(
                 "_entity_picture", self._entity_picture_template
             )
+
+        await super().async_added_to_hass()
+
+
+class TemplateEntityWithAttributesAvailabilityAndImages(
+    TemplateEntityWithAvailabilityAndImages
+):
+    """Entity that uses templates to calculate attributes with an attributes, availability, icon, and images template."""
+
+    def __init__(
+        self,
+        attribute_templates,
+        availability_template,
+        icon_template,
+        entity_picture_template,
+    ):
+        """Template Entity."""
+        super().__init__(availability_template, icon_template, entity_picture_template)
+        self._attribute_templates = attribute_templates
+        self._attributes = {}
+
+    @callback
+    def _add_attribute_template(self, attribute_key, attribute_template):
+        """Create a template tracker for the attribute."""
+
+        def _update_attribute(result):
+            attr_result = None if isinstance(result, TemplateError) else result
+            self._attributes[attribute_key] = attr_result
+
+        self.add_template_attribute(
+            attribute_key, attribute_template, None, _update_attribute
+        )
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return self._attributes
+
+    async def async_added_to_hass(self):
+        """Register callbacks."""
+
+        for key, value in self._attribute_templates.items():
+            self._add_attribute_template(key, value)
 
         await super().async_added_to_hass()
