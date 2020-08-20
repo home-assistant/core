@@ -156,6 +156,17 @@ def boolean(value: Any) -> bool:
     raise vol.Invalid(f"invalid boolean value {value}")
 
 
+_WS = re.compile("\\s*")
+
+
+def whitespace(value: Any) -> str:
+    """Validate result contains only whitespace."""
+    if isinstance(value, str) and _WS.fullmatch(value):
+        return value
+
+    raise vol.Invalid(f"contains non-whitespace: {value}")
+
+
 def isdevice(value: Any) -> str:
     """Validate that value is a real device."""
     try:

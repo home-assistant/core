@@ -20,17 +20,15 @@ from homeassistant.const import (
     CONF_SENSORS,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
-    EVENT_HOMEASSISTANT_START,
-    MATCH_ALL,
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.template import result_as_boolean
 
-from . import extract_entities, initialise_templates
 from .const import CONF_AVAILABILITY_TEMPLATE
+from .template_entity import TemplateEntity
 
 CONF_ATTRIBUTE_TEMPLATES = "attribute_templates"
 
@@ -75,23 +73,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         attribute_templates = device_config[CONF_ATTRIBUTE_TEMPLATES]
         unique_id = device_config.get(CONF_UNIQUE_ID)
 
-        templates = {
-            CONF_VALUE_TEMPLATE: state_template,
-            CONF_ICON_TEMPLATE: icon_template,
-            CONF_ENTITY_PICTURE_TEMPLATE: entity_picture_template,
-            CONF_FRIENDLY_NAME_TEMPLATE: friendly_name_template,
-            CONF_AVAILABILITY_TEMPLATE: availability_template,
-        }
-
-        initialise_templates(hass, templates, attribute_templates)
-        entity_ids = extract_entities(
-            device,
-            "sensor",
-            device_config.get(ATTR_ENTITY_ID),
-            templates,
-            attribute_templates,
-        )
-
         sensors.append(
             SensorTemplate(
                 hass,
@@ -103,7 +84,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 icon_template,
                 entity_picture_template,
                 availability_template,
-                entity_ids,
                 device_class,
                 attribute_templates,
                 unique_id,
@@ -115,7 +95,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     return True
 
 
-class SensorTemplate(Entity):
+class SensorTemplate(TemplateEntity, Entity):
     """Representation of a Template Sensor."""
 
     def __init__(
@@ -129,7 +109,6 @@ class SensorTemplate(Entity):
         icon_template,
         entity_picture_template,
         availability_template,
-        entity_ids,
         device_class,
         attribute_templates,
         unique_id,
@@ -149,35 +128,66 @@ class SensorTemplate(Entity):
         self._availability_template = availability_template
         self._icon = None
         self._entity_picture = None
-        self._entities = entity_ids
         self._device_class = device_class
         self._available = True
         self._attribute_templates = attribute_templates
         self._attributes = {}
         self._unique_id = unique_id
+        super().__init__()
 
     async def async_added_to_hass(self):
         """Register callbacks."""
 
-        @callback
-        def template_sensor_state_listener(event):
-            """Handle device state changes."""
-            self.async_schedule_update_ha_state(True)
+        self.add_template_attribute("_state", self._template, None, self._update_state)
+        if self._icon_template is not None:
+            self.add_template_attribute(
+                "_icon", self._icon_template, vol.Or(cv.whitespace, cv.icon)
+            )
+        if self._entity_picture_template is not None:
+            self.add_template_attribute(
+                "_entity_picture", self._entity_picture_template
+            )
+        if self._friendly_name_template is not None:
+            self.add_template_attribute("_name", self._friendly_name_template)
+        if self._availability_template is not None:
+            self.add_template_attribute(
+                "_available", self._availability_template, None, self._update_available
+            )
 
-        @callback
-        def template_sensor_startup(event):
-            """Update template on startup."""
-            if self._entities != MATCH_ALL:
-                # Track state change only for valid templates
-                async_track_state_change_event(
-                    self.hass, self._entities, template_sensor_state_listener
-                )
+        for key, value in self._attribute_templates.items():
+            self._add_attribute_template(key, value)
 
-            self.async_schedule_update_ha_state(True)
+        await super().async_added_to_hass()
 
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START, template_sensor_startup
-        )
+    @callback
+    def _add_attribute_template(self, attribute_key, attribute_template):
+        """Create a template tracker for the attribute."""
+
+        def _update_attribute(result):
+            attr_result = None if isinstance(result, TemplateError) else result
+            self._attributes[attribute_key] = attr_result
+
+        self.add_template_attribute(None, attribute_template, None, _update_attribute)
+
+    @callback
+    def _update_state(self, result):
+        if isinstance(result, TemplateError):
+            if not self._availability_template:
+                self._available = False
+            self._state = None
+            return
+
+        if not self._availability_template:
+            self._available = True
+        self._state = result
+
+    @callback
+    def _update_available(self, result):
+        if isinstance(result, TemplateError):
+            self._available = True
+            return
+
+        self._available = result_as_boolean(result)
 
     @property
     def name(self):
@@ -228,69 +238,3 @@ class SensorTemplate(Entity):
     def should_poll(self):
         """No polling needed."""
         return False
-
-    async def async_update(self):
-        """Update the state from the template."""
-        try:
-            self._state = self._template.async_render()
-            self._available = True
-        except TemplateError as ex:
-            self._available = False
-            if ex.args and ex.args[0].startswith(
-                "UndefinedError: 'None' has no attribute"
-            ):
-                # Common during HA startup - so just a warning
-                _LOGGER.warning(
-                    "Could not render template %s, the state is unknown", self._name
-                )
-            else:
-                self._state = None
-                _LOGGER.error("Could not render template %s: %s", self._name, ex)
-
-        attrs = {}
-        for key, value in self._attribute_templates.items():
-            try:
-                attrs[key] = value.async_render()
-            except TemplateError as err:
-                _LOGGER.error("Error rendering attribute %s: %s", key, err)
-
-        self._attributes = attrs
-
-        templates = {
-            "_icon": self._icon_template,
-            "_entity_picture": self._entity_picture_template,
-            "_name": self._friendly_name_template,
-            "_available": self._availability_template,
-        }
-
-        for property_name, template in templates.items():
-            if template is None:
-                continue
-
-            try:
-                value = template.async_render()
-                if property_name == "_available":
-                    value = value.lower() == "true"
-                setattr(self, property_name, value)
-            except TemplateError as ex:
-                friendly_property_name = property_name[1:].replace("_", " ")
-                if ex.args and ex.args[0].startswith(
-                    "UndefinedError: 'None' has no attribute"
-                ):
-                    # Common during HA startup - so just a warning
-                    _LOGGER.warning(
-                        "Could not render %s template %s, the state is unknown",
-                        friendly_property_name,
-                        self._name,
-                    )
-                    continue
-
-                try:
-                    setattr(self, property_name, getattr(super(), property_name))
-                except AttributeError:
-                    _LOGGER.error(
-                        "Could not render %s template %s: %s",
-                        friendly_property_name,
-                        self._name,
-                        ex,
-                    )
