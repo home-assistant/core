@@ -87,7 +87,7 @@ def render_complex(value: Any, variables: TemplateVarsType = None) -> Any:
 
 
 def is_template(maybe_template: str) -> bool:
-    """Returns whether the input is a Jinja2 template."""
+    """Check if the input is a Jinja2 template."""
     return _RE_JINJA_DELIMITERS.search(maybe_template) is not None
 
 
