@@ -20,12 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util import Throttle
 
-from .const import (
-    DOMAIN,
-    NOTIFICATION_AUTH_ID,
-    NOTIFICATION_AUTH_TITLE,
-    WSS_BWRURL,
-)
+from .const import DOMAIN, NOTIFICATION_AUTH_ID, NOTIFICATION_AUTH_TITLE, WSS_BWRURL
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
@@ -112,9 +107,7 @@ class FSRDataCoordinator:
         _LOGGER.debug("Got data from websocket listener: %s", data)
         self.incident_data = data
 
-        async_dispatcher_send(
-            self._hass, f"{DOMAIN}_{self._entry.entry_id}_update"
-        )
+        async_dispatcher_send(self._hass, f"{DOMAIN}_{self._entry.entry_id}_update")
 
     def start_listener(self):
         """Start the websocket listener."""

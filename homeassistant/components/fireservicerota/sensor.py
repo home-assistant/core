@@ -8,6 +8,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import ATTRIBUTION, DOMAIN, SENSOR_ENTITY_LIST
+
 _LOGGER = logging.getLogger(__name__)
 
 
