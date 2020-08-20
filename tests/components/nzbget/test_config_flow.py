@@ -25,32 +25,7 @@ from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
-async def test_options(hass):
-    """Test updating options."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, data=ENTRY_CONFIG, options={CONF_SCAN_INTERVAL: 5},
-    )
-    entry.add_to_hass(hass)
-
-    assert entry.options[CONF_SCAN_INTERVAL] == 5
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == "init"
-
-    with _patch_async_setup_entry() as mock_setup_entry:
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"], user_input={CONF_SCAN_INTERVAL: 15},
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["data"][CONF_SCAN_INTERVAL] == 15
-
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_form(hass):
+async def test_user_form(hass):
     """Test we get the user initiated form."""
     await async_setup_component(hass, "persistent_notification", {})
 
@@ -119,3 +94,28 @@ async def test_user_form_single_instance_allowed(hass):
     )
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "single_instance_allowed"
+
+
+async def test_options_flow(hass):
+    """Test updating options."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data=ENTRY_CONFIG, options={CONF_SCAN_INTERVAL: 5},
+    )
+    entry.add_to_hass(hass)
+
+    assert entry.options[CONF_SCAN_INTERVAL] == 5
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    with _patch_async_setup_entry() as mock_setup_entry:
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input={CONF_SCAN_INTERVAL: 15},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["data"][CONF_SCAN_INTERVAL] == 15
+
+    assert len(mock_setup_entry.mock_calls) == 1
