@@ -40,63 +40,85 @@ from homeassistant.components.websocket_api.const import (
     ERR_NOT_FOUND,
     ERR_NOT_SUPPORTED,
 )
-from homeassistant.helpers.entity_registry import RegistryEntry
+from homeassistant.helpers.entity_registry import (
+    RegistryEntry,
+    async_get_registry as async_get_entity_registry,
+)
 
 from .common import MQTTMessage, setup_ozw
 
-from tests.common import MockModule, mock_integration
+from tests.common import MockModule, mock_integration, mock_registry
+
+ZWAVE_SOURCE_ENTITY = "sensor.zwave_source_node"
+ZWAVE_SOURCE_NODE_UNIQUE_ID = "10-4321"
+ZWAVE_BATTERY_ENTITY = "sensor.zwave_battery_level"
+ZWAVE_BATTERY_UNIQUE_ID = "36-1234"
+ZWAVE_BATTERY_NAME = "Z-Wave Battery Level"
+ZWAVE_BATTERY_ICON = "mdi:zwave-test-battery"
+ZWAVE_POWER_ENTITY = "sensor.zwave_power"
+ZWAVE_POWER_UNIQUE_ID = "32-5678"
+ZWAVE_POWER_NAME = "Z-Wave Power"
+ZWAVE_POWER_ICON = "mdi:zwave-test-power"
 
 
 @pytest.fixture(name="zwave_migration_data")
-def zwave_migration_data_fixture():
+def zwave_migration_data_fixture(hass):
     """Return mock zwave migration data."""
-    zwave_source_node_unique_id = "10-4321"
     zwave_source_node_entry = RegistryEntry(
-        entity_id="sensor.zwave_source_node",
-        unique_id=zwave_source_node_unique_id,
+        entity_id=ZWAVE_SOURCE_ENTITY,
+        unique_id=ZWAVE_SOURCE_NODE_UNIQUE_ID,
         platform="zwave",
         name="Z-Wave Source Node",
     )
-    zwave_battery_unique_id = "36-1234"
     zwave_battery_entry = RegistryEntry(
-        entity_id="sensor.zwave_battery_level",
-        unique_id=zwave_battery_unique_id,
+        entity_id=ZWAVE_BATTERY_ENTITY,
+        unique_id=ZWAVE_BATTERY_UNIQUE_ID,
         platform="zwave",
-        name="Z-Wave Battery Level",
+        name=ZWAVE_BATTERY_NAME,
+        icon=ZWAVE_BATTERY_ICON,
     )
-    zwave_power_unique_id = "32-5678"
     zwave_power_entry = RegistryEntry(
-        entity_id="sensor.zwave_power",
-        unique_id=zwave_power_unique_id,
+        entity_id=ZWAVE_POWER_ENTITY,
+        unique_id=ZWAVE_POWER_UNIQUE_ID,
         platform="zwave",
-        name="Z-Wave Power",
+        name=ZWAVE_POWER_NAME,
+        icon=ZWAVE_POWER_ICON,
     )
     zwave_migration_data = {
-        zwave_source_node_unique_id: {
+        ZWAVE_SOURCE_NODE_UNIQUE_ID: {
             "node_id": 10,
             "command_class": 113,
             "command_class_label": "SourceNodeId",
             "value_index": 2,
-            "unique_id": zwave_source_node_unique_id,
+            "unique_id": ZWAVE_SOURCE_NODE_UNIQUE_ID,
             "entity_entry": zwave_source_node_entry,
         },
-        zwave_battery_unique_id: {
+        ZWAVE_BATTERY_UNIQUE_ID: {
             "node_id": 36,
             "command_class": 128,
             "command_class_label": "Battery Level",
             "value_index": 0,
-            "unique_id": zwave_battery_unique_id,
+            "unique_id": ZWAVE_BATTERY_UNIQUE_ID,
             "entity_entry": zwave_battery_entry,
         },
-        zwave_power_unique_id: {
+        ZWAVE_POWER_UNIQUE_ID: {
             "node_id": 32,
             "command_class": 50,
             "command_class_label": "Power",
             "value_index": 8,
-            "unique_id": zwave_power_unique_id,
+            "unique_id": ZWAVE_POWER_UNIQUE_ID,
             "entity_entry": zwave_power_entry,
         },
     }
+
+    mock_registry(
+        hass,
+        {
+            ZWAVE_SOURCE_ENTITY: zwave_source_node_entry,
+            ZWAVE_BATTERY_ENTITY: zwave_battery_entry,
+            ZWAVE_POWER_ENTITY: zwave_power_entry,
+        },
+    )
 
     return zwave_migration_data
 
@@ -113,10 +135,62 @@ def zwave_integration_fixture(hass, zwave_migration_data):
     return zwave_integration
 
 
-async def test_migrate_zwave(
-    hass, migration_data, hass_ws_client, zwave_integration, zwave_migration_data
-):
+async def test_migrate_zwave(hass, migration_data, hass_ws_client, zwave_integration):
     """Test the zwave to ozw migration websocket api."""
+    await setup_ozw(hass, fixture=migration_data)
+    client = await hass_ws_client(hass)
+
+    await client.send_json({ID: 5, TYPE: "ozw/migrate_zwave", "dry_run": False})
+    msg = await client.receive_json()
+    result = msg["result"]
+
+    migration_entity_map = {
+        ZWAVE_BATTERY_ENTITY: "sensor.water_sensor_6_battery_level",
+        ZWAVE_POWER_ENTITY: "sensor.smart_plug_electric_w",
+    }
+
+    assert result["zwave_entity_ids"] == [
+        ZWAVE_SOURCE_ENTITY,
+        ZWAVE_BATTERY_ENTITY,
+        ZWAVE_POWER_ENTITY,
+    ]
+    assert result["ozw_entity_ids"] == [
+        "sensor.smart_plug_electric_w",
+        "sensor.water_sensor_6_battery_level",
+    ]
+    assert result["migration_entity_map"] == migration_entity_map
+    assert result["migrated"] is True
+
+    ent_reg = await async_get_entity_registry(hass)
+
+    # these should have been migrated and no longer present under that id
+    assert not ent_reg.async_is_registered("sensor.water_sensor_6_battery_level")
+    assert not ent_reg.async_is_registered("sensor.smart_plug_electric_w")
+
+    # this one should not have been migrated and is still in the registry
+    assert ent_reg.async_is_registered(ZWAVE_SOURCE_ENTITY)
+    source_entry = ent_reg.async_get(ZWAVE_SOURCE_ENTITY)
+    assert source_entry.unique_id == ZWAVE_SOURCE_NODE_UNIQUE_ID
+
+    # these are the new entity_ids of the two ozw entities
+    assert ent_reg.async_is_registered(ZWAVE_BATTERY_ENTITY)
+    assert ent_reg.async_is_registered(ZWAVE_POWER_ENTITY)
+
+    # check that the migrated entries have correct attributes
+    battery_entry = ent_reg.async_get(ZWAVE_BATTERY_ENTITY)
+    assert battery_entry.unique_id == "1-36-610271249"
+    assert battery_entry.name == ZWAVE_BATTERY_NAME
+    assert battery_entry.icon == ZWAVE_BATTERY_ICON
+    power_entry = ent_reg.async_get(ZWAVE_POWER_ENTITY)
+    assert power_entry.unique_id == "1-32-562950495305746"
+    assert power_entry.name == ZWAVE_POWER_NAME
+    assert power_entry.icon == ZWAVE_POWER_ICON
+
+
+async def test_migrate_zwave_dry_run(
+    hass, migration_data, hass_ws_client, zwave_integration
+):
+    """Test the zwave to ozw migration websocket api dry run."""
     await setup_ozw(hass, fixture=migration_data)
     client = await hass_ws_client(hass)
 
@@ -125,14 +199,14 @@ async def test_migrate_zwave(
     result = msg["result"]
 
     migration_entity_map = {
-        "sensor.zwave_battery_level": "sensor.water_sensor_6_battery_level",
-        "sensor.zwave_power": "sensor.smart_plug_electric_w",
+        ZWAVE_BATTERY_ENTITY: "sensor.water_sensor_6_battery_level",
+        ZWAVE_POWER_ENTITY: "sensor.smart_plug_electric_w",
     }
 
     assert result["zwave_entity_ids"] == [
-        "sensor.zwave_source_node",
-        "sensor.zwave_battery_level",
-        "sensor.zwave_power",
+        ZWAVE_SOURCE_ENTITY,
+        ZWAVE_BATTERY_ENTITY,
+        ZWAVE_POWER_ENTITY,
     ]
     assert result["ozw_entity_ids"] == [
         "sensor.smart_plug_electric_w",
@@ -140,6 +214,24 @@ async def test_migrate_zwave(
     ]
     assert result["migration_entity_map"] == migration_entity_map
     assert result["migrated"] is False
+
+    ent_reg = await async_get_entity_registry(hass)
+
+    # no real migration should have been done
+    assert ent_reg.async_is_registered("sensor.water_sensor_6_battery_level")
+    assert ent_reg.async_is_registered("sensor.smart_plug_electric_w")
+
+    assert ent_reg.async_is_registered(ZWAVE_SOURCE_ENTITY)
+    source_entry = ent_reg.async_get(ZWAVE_SOURCE_ENTITY)
+    assert source_entry.unique_id == ZWAVE_SOURCE_NODE_UNIQUE_ID
+
+    assert ent_reg.async_is_registered(ZWAVE_BATTERY_ENTITY)
+    battery_entry = ent_reg.async_get(ZWAVE_BATTERY_ENTITY)
+    assert battery_entry.unique_id == ZWAVE_BATTERY_UNIQUE_ID
+
+    assert ent_reg.async_is_registered(ZWAVE_POWER_ENTITY)
+    power_entry = ent_reg.async_get(ZWAVE_POWER_ENTITY)
+    assert power_entry.unique_id == ZWAVE_POWER_UNIQUE_ID
 
 
 async def test_migrate_zwave_not_setup(hass, migration_data, hass_ws_client):
