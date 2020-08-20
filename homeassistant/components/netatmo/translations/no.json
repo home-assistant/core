@@ -1,9 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig.",
             "authorize_url_timeout": "Tidsavbrutt ved oppretting av godkjennings url.",
-            "missing_configuration": "Komponeneten er ikke konfigurert. Vennligst f\u00f8lg dokumentasjonen."
+            "missing_configuration": "Komponeneten er ikke konfigurert. Vennligst f\u00f8lg dokumentasjonen.",
+            "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
         },
         "create_entry": {
             "default": "Vellykket godkjenning med Netatmo."

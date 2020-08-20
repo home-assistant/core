@@ -11,7 +11,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     EVENT_HOMEASSISTANT_STARTED,
 )
-from homeassistant.core import CoreState
+from homeassistant.core import CoreState, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -35,7 +35,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_SERVER_ID): cv.positive_int,
                 vol.Optional(
                     CONF_SCAN_INTERVAL, default=timedelta(minutes=DEFAULT_SCAN_INTERVAL)
-                ): vol.All(cv.time_period, cv.positive_timedelta),
+                ): cv.positive_time_period,
                 vol.Optional(CONF_MANUAL, default=False): cv.boolean,
                 vol.Optional(
                     CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)
@@ -108,6 +108,8 @@ async def async_unload_entry(hass, config_entry):
     """Unload SpeedTest Entry from config_entry."""
     hass.services.async_remove(DOMAIN, SPEED_TEST_SERVICE)
 
+    hass.data[DOMAIN].async_unload()
+
     await hass.config_entries.async_forward_entry_unload(config_entry, "sensor")
 
     hass.data.pop(DOMAIN)
@@ -124,6 +126,7 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator):
         self.config_entry = config_entry
         self.api = None
         self.servers = {}
+        self._unsub_update_listener = None
         super().__init__(
             self.hass, _LOGGER, name=DOMAIN, update_method=self.async_update,
         )
@@ -196,7 +199,17 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator):
 
         self.hass.services.async_register(DOMAIN, SPEED_TEST_SERVICE, request_update)
 
-        self.config_entry.add_update_listener(options_updated_listener)
+        self._unsub_update_listener = self.config_entry.add_update_listener(
+            options_updated_listener
+        )
+
+    @callback
+    def async_unload(self):
+        """Unload the coordinator."""
+        if not self._unsub_update_listener:
+            return
+        self._unsub_update_listener()
+        self._unsub_update_listener = None
 
 
 async def options_updated_listener(hass, entry):

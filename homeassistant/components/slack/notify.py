@@ -193,14 +193,24 @@ class SlackNotificationService(BaseNotificationService):
 
     async def _async_send_text_only_message(self, targets, message, title, blocks):
         """Send a text-only message."""
+        username = self._username
+        icon = self._icon
+
+        if self._icon.lower().startswith(("http://", "https://")):
+            icon_type = "url"
+        else:
+            icon_type = "emoji"
+
         tasks = {
             target: self._client.chat_postMessage(
-                channel=target,
-                text=message,
-                blocks=blocks,
-                icon_emoji=self._icon,
-                link_names=True,
-                username=self._username,
+                **{
+                    "channel": target,
+                    "text": message,
+                    "blocks": blocks,
+                    "link_names": True,
+                    "username": username,
+                    f"icon_{icon_type}": icon,
+                }
             )
             for target in targets
         }

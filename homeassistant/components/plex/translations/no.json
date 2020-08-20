@@ -4,8 +4,6 @@
             "all_configured": "Alle knyttet servere som allerede er konfigurert",
             "already_configured": "Denne Plex-serveren er allerede konfigurert",
             "already_in_progress": "Plex blir konfigurert",
-            "invalid_import": "Den importerte konfigurasjonen er ugyldig",
-            "non-interactive": "Ikke-interaktiv import",
             "token_request_timeout": "Tidsavbrudd ved innhenting av token",
             "unknown": "Mislyktes av ukjent \u00e5rsak"
         },

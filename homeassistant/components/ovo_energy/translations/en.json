@@ -1,18 +1,19 @@
 {
-  "config": {
-    "error": {
-      "authorization_error": "Authorization error. Check your credentials.",
-      "connection_error": "Could not connect to OVO Energy."
-    },
-    "step": {
-      "user": {
-        "data": {
-          "username": "Username",
-          "password": "Password"
+    "config": {
+        "error": {
+            "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+            "authorization_error": "Authorization error. Check your credentials.",
+            "connection_error": "[%key:common::config_flow::error::cannot_connect%]"
         },
-        "description": "Set up an OVO Energy instance to access your energy usage.",
-        "title": "Add OVO Energy"
-      }
+        "step": {
+            "user": {
+                "data": {
+                    "username": "[%key:common::config_flow::data::username%]",
+                    "password": "[%key:common::config_flow::data::password%]"
+                },
+                "description": "Set up an OVO Energy instance to access your energy usage.",
+                "title": "Add OVO Energy Account"
+            }
+        }
     }
-  }
 }

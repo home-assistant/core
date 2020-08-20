@@ -534,7 +534,15 @@ class Recorder(threading.Thread):
         if self.db_url != SQLITE_URL_PREFIX and self.db_url.startswith(
             SQLITE_URL_PREFIX
         ):
-            validate_or_move_away_sqlite_database(self.db_url)
+            with self.hass.timeout.freeze(DOMAIN):
+                #
+                # Here we run an sqlite3 quick_check.  In the majority
+                # of cases, the quick_check takes under 10 seconds.
+                #
+                # On systems with very large databases and
+                # very slow disk or cpus, this can take a while.
+                #
+                validate_or_move_away_sqlite_database(self.db_url)
 
         if self.engine is not None:
             self.engine.dispose()

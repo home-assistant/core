@@ -195,36 +195,44 @@ class TemplateVacuum(StateVacuumEntity):
         self._attribute_templates = attribute_templates
         self._attributes = {}
 
-        self._start_script = Script(hass, start_action)
+        domain = __name__.split(".")[-2]
+
+        self._start_script = Script(hass, start_action, friendly_name, domain)
 
         self._pause_script = None
         if pause_action:
-            self._pause_script = Script(hass, pause_action)
+            self._pause_script = Script(hass, pause_action, friendly_name, domain)
             self._supported_features |= SUPPORT_PAUSE
 
         self._stop_script = None
         if stop_action:
-            self._stop_script = Script(hass, stop_action)
+            self._stop_script = Script(hass, stop_action, friendly_name, domain)
             self._supported_features |= SUPPORT_STOP
 
         self._return_to_base_script = None
         if return_to_base_action:
-            self._return_to_base_script = Script(hass, return_to_base_action)
+            self._return_to_base_script = Script(
+                hass, return_to_base_action, friendly_name, domain
+            )
             self._supported_features |= SUPPORT_RETURN_HOME
 
         self._clean_spot_script = None
         if clean_spot_action:
-            self._clean_spot_script = Script(hass, clean_spot_action)
+            self._clean_spot_script = Script(
+                hass, clean_spot_action, friendly_name, domain
+            )
             self._supported_features |= SUPPORT_CLEAN_SPOT
 
         self._locate_script = None
         if locate_action:
-            self._locate_script = Script(hass, locate_action)
+            self._locate_script = Script(hass, locate_action, friendly_name, domain)
             self._supported_features |= SUPPORT_LOCATE
 
         self._set_fan_speed_script = None
         if set_fan_speed_action:
-            self._set_fan_speed_script = Script(hass, set_fan_speed_action)
+            self._set_fan_speed_script = Script(
+                hass, set_fan_speed_action, friendly_name, domain
+            )
             self._supported_features |= SUPPORT_FAN_SPEED
 
         self._state = None

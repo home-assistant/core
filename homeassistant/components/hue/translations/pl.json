@@ -58,7 +58,6 @@
         "step": {
             "init": {
                 "data": {
-                    "allow_how_groups": "Zezwalaj na grupy Hue",
                     "allow_unreachable": "Zezwalaj nieosi\u0105galnym \u017car\u00f3wkom na poprawne raportowanie ich stanu"
                 }
             }

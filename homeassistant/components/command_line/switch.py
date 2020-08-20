@@ -114,7 +114,9 @@ class CommandSwitch(SwitchEntity):
     def _query_state_code(self, command):
         """Execute state command for return code."""
         _LOGGER.info("Running state code command: %s", command)
-        return call_shell_with_timeout(command, self._timeout) == 0
+        return (
+            call_shell_with_timeout(command, self._timeout, log_return_code=False) == 0
+        )
 
     @property
     def should_poll(self):

@@ -2,6 +2,7 @@ dist: bionic
 addons:
   apt:
     packages:
+      - ffmpeg
       - libudev-dev
       - libavformat-dev
       - libavcodec-dev

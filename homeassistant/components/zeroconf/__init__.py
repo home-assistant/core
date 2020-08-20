@@ -8,6 +8,7 @@ import voluptuous as vol
 from zeroconf import (
     DNSPointer,
     DNSRecord,
+    Error as ZeroconfError,
     InterfaceChoice,
     IPVersion,
     NonUniqueNameException,
@@ -29,6 +30,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.singleton import singleton
 from homeassistant.loader import async_get_homekit, async_get_zeroconf
+
+from .usage import install_multiple_zeroconf_catcher
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -135,6 +138,8 @@ def setup(hass, config):
         ipv6=zc_config.get(CONF_IPV6, DEFAULT_IPV6),
     )
 
+    install_multiple_zeroconf_catcher(zeroconf)
+
     # Get instance UUID
     uuid = asyncio.run_coroutine_threadsafe(
         hass.helpers.instance_id.async_get(), hass.loop
@@ -208,7 +213,12 @@ def setup(hass, config):
         if state_change != ServiceStateChange.Added:
             return
 
-        service_info = zeroconf.get_service_info(service_type, name)
+        try:
+            service_info = zeroconf.get_service_info(service_type, name)
+        except ZeroconfError:
+            _LOGGER.exception("Failed to get info for device %s", name)
+            return
+
         if not service_info:
             # Prevent the browser thread from collapsing as
             # service_info can be None

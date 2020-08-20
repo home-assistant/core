@@ -259,7 +259,7 @@ class AlexaConfig(alexa_config.AbstractConfig):
             return True
 
         except asyncio.TimeoutError:
-            _LOGGER.warning("Timeout trying to sync entitites to Alexa")
+            _LOGGER.warning("Timeout trying to sync entities to Alexa")
             return False
 
         except aiohttp.ClientError as err:

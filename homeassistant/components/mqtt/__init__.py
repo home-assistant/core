@@ -28,6 +28,7 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
     EVENT_HOMEASSISTANT_STOP,
 )
+from homeassistant.const import CONF_UNIQUE_ID  # noqa: F401
 from homeassistant.core import Event, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import config_validation as cv, event, template
@@ -44,6 +45,7 @@ from . import config_flow  # noqa: F401 pylint: disable=unused-import
 from . import debug_info, discovery
 from .const import (
     ATTR_DISCOVERY_HASH,
+    ATTR_DISCOVERY_PAYLOAD,
     ATTR_DISCOVERY_TOPIC,
     ATTR_PAYLOAD,
     ATTR_QOS,
@@ -101,7 +103,6 @@ CONF_PAYLOAD_NOT_AVAILABLE = "payload_not_available"
 CONF_JSON_ATTRS_TOPIC = "json_attributes_topic"
 CONF_JSON_ATTRS_TEMPLATE = "json_attributes_template"
 
-CONF_UNIQUE_ID = "unique_id"
 CONF_IDENTIFIERS = "identifiers"
 CONF_CONNECTIONS = "connections"
 CONF_MANUFACTURER = "manufacturer"
@@ -665,6 +666,9 @@ class MQTT:
         else:
             self._mqttc = mqtt.Client(client_id, protocol=proto)
 
+        # Enable logging
+        self._mqttc.enable_logger()
+
         username = self.conf.get(CONF_USERNAME)
         password = self.conf.get(CONF_PASSWORD)
         if username is not None:
@@ -1169,6 +1173,7 @@ class MqttDiscoveryUpdate(Entity):
             _LOGGER.info(
                 "Got update for entity with hash: %s '%s'", discovery_hash, payload,
             )
+            old_payload = self._discovery_data[ATTR_DISCOVERY_PAYLOAD]
             debug_info.update_entity_discovery_data(self.hass, payload, self.entity_id)
             if not payload:
                 # Empty payload: Remove component
@@ -1176,9 +1181,13 @@ class MqttDiscoveryUpdate(Entity):
                 self._cleanup_discovery_on_remove()
                 await _async_remove_state_and_registry_entry(self)
             elif self._discovery_update:
-                # Non-empty payload: Notify component
-                _LOGGER.info("Updating component: %s", self.entity_id)
-                await self._discovery_update(payload)
+                if old_payload != self._discovery_data[ATTR_DISCOVERY_PAYLOAD]:
+                    # Non-empty, changed payload: Notify component
+                    _LOGGER.info("Updating component: %s", self.entity_id)
+                    await self._discovery_update(payload)
+                else:
+                    # Non-empty, unchanged payload: Ignore to avoid changing states
+                    _LOGGER.info("Ignoring unchanged update for: %s", self.entity_id)
 
         if discovery_hash:
             debug_info.add_entity_discovery_data(

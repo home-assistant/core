@@ -327,13 +327,15 @@ class KodiDevice(MediaPlayerEntity):
                 self.hass,
                 turn_on_action,
                 f"{self.name} turn ON script",
-                self.async_update_ha_state(True),
+                DOMAIN,
+                change_listener=self.async_update_ha_state(True),
             )
         if turn_off_action is not None:
             turn_off_action = script.Script(
                 self.hass,
                 _check_deprecated_turn_off(hass, turn_off_action),
                 f"{self.name} turn OFF script",
+                DOMAIN,
             )
         self._turn_on_action = turn_on_action
         self._turn_off_action = turn_off_action
@@ -774,13 +776,15 @@ class KodiDevice(MediaPlayerEntity):
     @cmd
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Send the play_media command to the media player."""
-        if media_type == "CHANNEL":
+        media_type_lower = media_type.lower()
+
+        if media_type_lower == MEDIA_TYPE_CHANNEL:
             await self.server.Player.Open({"item": {"channelid": int(media_id)}})
-        elif media_type == "PLAYLIST":
+        elif media_type_lower == MEDIA_TYPE_PLAYLIST:
             await self.server.Player.Open({"item": {"playlistid": int(media_id)}})
-        elif media_type == "DIRECTORY":
+        elif media_type_lower == "directory":
             await self.server.Player.Open({"item": {"directory": str(media_id)}})
-        elif media_type == "PLUGIN":
+        elif media_type_lower == "plugin":
             await self.server.Player.Open({"item": {"file": str(media_id)}})
         else:
             await self.server.Player.Open({"item": {"file": str(media_id)}})

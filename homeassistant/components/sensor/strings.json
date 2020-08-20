@@ -10,6 +10,10 @@
       "is_signal_strength": "Current {entity_name} signal strength",
       "is_temperature": "Current {entity_name} temperature",
       "is_timestamp": "Current {entity_name} timestamp",
+      "is_current": "Current {entity_name} current",
+      "is_energy": "Current {entity_name} energy",
+      "is_power_factor": "Current {entity_name} power factor",
+      "is_voltage": "Current {entity_name} voltage",
       "is_value": "Current {entity_name} value"
     },
     "trigger_type": {
@@ -21,6 +25,10 @@
       "signal_strength": "{entity_name} signal strength changes",
       "temperature": "{entity_name} temperature changes",
       "timestamp": "{entity_name} timestamp changes",
+      "current": "{entity_name} current changes",
+      "energy": "{entity_name} energy changes",
+      "power_factor": "{entity_name} power factor changes",
+      "voltage": "{entity_name} voltage changes",
       "value": "{entity_name} value changes"
     }
   },

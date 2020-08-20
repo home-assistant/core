@@ -4,16 +4,8 @@
             "already_configured": "The selected agreement is already configured.",
             "authorize_url_fail": "Unknown error generating an authorize url.",
             "authorize_url_timeout": "Timeout generating authorize URL.",
-            "client_id": "The client ID from the configuration is invalid.",
-            "client_secret": "The client secret from the configuration is invalid.",
             "missing_configuration": "The component is not configured. Please follow the documentation.",
-            "no_agreements": "This account has no Toon displays.",
-            "no_app": "You need to configure Toon before being able to authenticate with it. [Please read the instructions](https://www.home-assistant.io/components/toon/).",
-            "unknown_auth_fail": "Unexpected error occurred, while authenticating."
-        },
-        "error": {
-            "credentials": "The provided credentials are invalid.",
-            "display_exists": "The selected display is already configured."
+            "no_agreements": "This account has no Toon displays."
         },
         "step": {
             "agreement": {
@@ -22,22 +14,6 @@
                 },
                 "description": "Select the agreement address you want to add.",
                 "title": "Select your agreement"
-            },
-            "authenticate": {
-                "data": {
-                    "password": "Password",
-                    "tenant": "Tenant",
-                    "username": "Username"
-                },
-                "description": "Authenticate with your Eneco Toon account (not the developer account).",
-                "title": "Link your Toon account"
-            },
-            "display": {
-                "data": {
-                    "display": "Choose display"
-                },
-                "description": "Select the Toon display to connect with.",
-                "title": "Select display"
             },
             "pick_implementation": {
                 "title": "Choose your tenant to authenticate with"
