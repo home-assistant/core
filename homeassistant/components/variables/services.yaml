@@ -11,5 +11,7 @@ set:
       description: The variable name to set.
       example: my_var
     value:
-      description: The value of the variable
+      description: The value of the variable.
       example: abc123
+    attributes:
+      description: Optional attributes to store in the variable. Can be any valid data structure.
