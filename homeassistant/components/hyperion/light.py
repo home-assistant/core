@@ -2,7 +2,6 @@
 import asyncio
 import json
 import logging
-import socket
 
 import voluptuous as vol
 
@@ -35,7 +34,7 @@ KEY_CLEAR = 'clear'
 KEY_COLOR = 'color'
 KEY_COMMAND = 'command'
 KEY_COMPONENT = 'component'
-KEY_COMPONENTSTATE ='componentstate'
+KEY_COMPONENTSTATE = 'componentstate'
 KEY_COMPONENTS = 'components'
 KEY_DATA = 'data'
 KEY_EFFECT = 'effect'
@@ -112,8 +111,9 @@ ICON_LIGHTBULB = "mdi:lightbulb"
 ICON_EFFECT = "mdi:lava-lamp"
 ICON_EXTERNAL_SOURCE = "mdi:video-input-hdmi"
 
-async def async_setup_platform(
-    hass, config, async_add_entities, discovery_info=None):
+
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up a Hyperion server remote."""
     name = config[CONF_NAME]
     host = config[CONF_HOST]
@@ -205,7 +205,7 @@ class Hyperion(LightEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn the lights on."""
-        _LOGGER.debug('On: %s' % kwargs)
+        _LOGGER.debug('Turning On: %s' % kwargs)
         if not self._is_connected:
             return False
 
@@ -235,7 +235,7 @@ class Hyperion(LightEntity):
         await self._async_send_json({
             KEY_COMMAND: KEY_ADJUSTMENT,
             KEY_ADJUSTMENT: {
-                KEY_BRIGHTNESS: int(round((float(brightness)*100) / 255))
+                KEY_BRIGHTNESS: int(round((float(brightness) * 100) / 255))
             }
         })
         self._brightness = brightness
@@ -263,7 +263,7 @@ class Hyperion(LightEntity):
             await self._async_send_json({
                 KEY_COMMAND: KEY_EFFECT,
                 KEY_PRIORITY: self._priority,
-                KEY_EFFECT: { KEY_NAME: effect },
+                KEY_EFFECT: {KEY_NAME: effect},
                 KEY_ORIGIN: DEFAULT_ORIGIN,
             })
             self._icon = ICON_EFFECT
@@ -285,8 +285,8 @@ class Hyperion(LightEntity):
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
-        """Disable the LED output component"""
-        _LOGGER.debug('Off: %s' % kwargs)
+        """Disable the LED output component."""
+        _LOGGER.debug('Turning Off: %s' % kwargs)
 
         if not self._is_connected:
             return False
@@ -302,23 +302,23 @@ class Hyperion(LightEntity):
         self.async_write_ha_state()
 
     async def _async_update_components(self, components):
-      """Update Hyperion components"""
-      for component in components:
-          if KEY_NAME in component and KEY_ENABLED in component:
-              self._components[component[KEY_NAME]] = component[KEY_ENABLED]
+        """Update Hyperion components."""
+        for component in components:
+            if KEY_NAME in component and KEY_ENABLED in component:
+                self._components[component[KEY_NAME]] = component[KEY_ENABLED]
 
-      if (KEY_COMPONENTID_ALL in self._components and
-          KEY_COMPONENTID_LEDDEVICE in self._components):
-          self._on = (self._components[KEY_COMPONENTID_ALL] and
-                      self._components[KEY_COMPONENTID_LEDDEVICE])
+        if (KEY_COMPONENTID_ALL in self._components and
+                KEY_COMPONENTID_LEDDEVICE in self._components):
+            self._on = (self._components[KEY_COMPONENTID_ALL] and
+                        self._components[KEY_COMPONENTID_LEDDEVICE])
 
     async def _async_update_adjustment(self, adjustment):
-        """Update Hyperion adjustments"""
+        """Update Hyperion adjustments."""
         brightness_pct = adjustment.get(KEY_BRIGHTNESS, DEFAULT_BRIGHTNESS)
-        self._brightness = int(round((brightness_pct*255) / float(100)))
+        self._brightness = int(round((brightness_pct * 255) / float(100)))
 
     async def _async_update_priorities(self, priorities):
-        """Update Hyperion priorities"""
+        """Update Hyperion priorities."""
         # The visible priority is supposed to be the first returned by the
         # API, but due to a bug the ordering is incorrect search for it
         # instead, see:
@@ -348,9 +348,9 @@ class Hyperion(LightEntity):
                 self._effect = KEY_EFFECT_SOLID
 
     async def _async_update_effect_list(self, effects):
-        """Update Hyperion effects"""
+        """Update Hyperion effects."""
         if self._static_effect_list:
-          return
+            return
         effect_list = []
         for effect in effects:
             if KEY_NAME in effect:
@@ -368,11 +368,12 @@ class Hyperion(LightEntity):
 
         _LOGGER.debug(
             'Hyperion full state update: On=%s,Brightness=%i,Effect=%s '
-            '(%i effects total),Color=%s' % (self._on, self._brightness,
-            self._effect, len(self._effect_list), self._rgb_color))
+            '(%i effects total),Color=%s' % (
+                self._on, self._brightness, self._effect,
+                len(self._effect_list), self._rgb_color))
 
     async def _async_connect(self):
-        """Connect to the Hyperion server"""
+        """Connect to the Hyperion server."""
         future_streams = asyncio.open_connection(self._host, self._port)
         try:
             self._reader, self._writer = await asyncio.wait_for(
@@ -380,16 +381,20 @@ class Hyperion(LightEntity):
         except (asyncio.TimeoutError, ConnectionError):
             return False
 
+        _LOGGER.debug(
+            'Connected to Hyperion server (%s): %s:%i' % (
+                self._name, self._host, self._port))
+
         # == Request: authorize ==
         if self._token is not None:
-            data = { KEY_COMMAND: KEY_AUTHORIZE,
-                     KEY_SUBCOMMAND: KEY_LOGIN,
-                     KEY_TOKEN: self._token }
+            data = {KEY_COMMAND: KEY_AUTHORIZE,
+                    KEY_SUBCOMMAND: KEY_LOGIN,
+                    KEY_TOKEN: self._token}
             await self._async_send_json(data)
             resp_json = await self._async_safely_read_command()
             if (not resp_json or
-                resp_json.get(KEY_COMMAND) != KEY_AUTHORIZE_LOGIN or
-                not resp_json.get(KEY_SUCCESS, False)):
+                    resp_json.get(KEY_COMMAND) != KEY_AUTHORIZE_LOGIN or
+                    not resp_json.get(KEY_SUCCESS, False)):
                 _LOGGER.warning(
                     'Authorization failed for Hyperion (%s). '
                     'Check token is valid: %s' % (self._name, resp_json))
@@ -397,15 +402,15 @@ class Hyperion(LightEntity):
 
         # == Request: instance ==
         if self._instance != 0:
-            data = { KEY_COMMAND: KEY_INSTANCE,
-                     KEY_SUBCOMMAND: KEY_SWITCH_TO,
-                     KEY_INSTANCE: self._instance }
+            data = {KEY_COMMAND: KEY_INSTANCE,
+                    KEY_SUBCOMMAND: KEY_SWITCH_TO,
+                    KEY_INSTANCE: self._instance}
             await self._async_send_json(data)
             resp_json = await self._async_safely_read_command()
             if (not resp_json or
-                resp_json.get(KEY_COMMAND) != (
-                    '%s-%s' % (KEY_INSTANCE, KEY_SWITCH_TO)) or
-                not resp_json.get(KEY_SUCCESS, False)):
+                    resp_json.get(KEY_COMMAND) != (
+                        '%s-%s' % (KEY_INSTANCE, KEY_SWITCH_TO)) or
+                    not resp_json.get(KEY_SUCCESS, False)):
                 _LOGGER.warning(
                     'Changing instqnce failed for Hyperion (%s): %s ' % (
                         self._name, resp_json))
@@ -415,25 +420,23 @@ class Hyperion(LightEntity):
         # Request full state ('serverinfo') and subscribe to relevant
         # future updates to keep this object state accurate without the need to
         # poll.
-        data = { KEY_COMMAND: KEY_SERVERINFO,
-                 KEY_SUBSCRIBE: [
-                     '%s-%s' % (KEY_ADJUSTMENT, KEY_UPDATE),
-                     '%s-%s' % (KEY_COMPONENTS, KEY_UPDATE),
-                     '%s-%s' % (KEY_EFFECTS, KEY_UPDATE),
-                     '%s-%s' % (KEY_INSTANCE, KEY_UPDATE),
-                     '%s-%s' % (KEY_PRIORITIES, KEY_UPDATE),
-               ]
-        }
+        data = {KEY_COMMAND: KEY_SERVERINFO,
+                KEY_SUBSCRIBE: [
+                    '%s-%s' % (KEY_ADJUSTMENT, KEY_UPDATE),
+                    '%s-%s' % (KEY_COMPONENTS, KEY_UPDATE),
+                    '%s-%s' % (KEY_EFFECTS, KEY_UPDATE),
+                    '%s-%s' % (KEY_INSTANCE, KEY_UPDATE),
+                    '%s-%s' % (KEY_PRIORITIES, KEY_UPDATE)]}
 
         await self._async_send_json(data)
         resp_json = await self._async_safely_read_command()
         if (not resp_json or
-            resp_json.get(KEY_COMMAND) != KEY_SERVERINFO or
-            not resp_json.get(KEY_INFO) or
-            not resp_json.get(KEY_SUCCESS, False)):
+                resp_json.get(KEY_COMMAND) != KEY_SERVERINFO or
+                not resp_json.get(KEY_INFO) or
+                not resp_json.get(KEY_SUCCESS, False)):
             _LOGGER.warning(
                 'Could not load initial state for Hyperion (%s): %s' % (
-                self._name, resp_json))
+                    self._name, resp_json))
             return False
 
         await self._async_update_full_state(resp_json[KEY_INFO])
@@ -443,7 +446,7 @@ class Hyperion(LightEntity):
         return True
 
     async def _async_close_streams(self):
-        """Close streams to the Hyperion server"""
+        """Close streams to the Hyperion server."""
         self._is_connected = False
         if self._writer is not None:
             self._writer.close()
@@ -451,21 +454,21 @@ class Hyperion(LightEntity):
         self._reader, self._writer = None, None
 
     async def async_setup(self, hass):
-        """Setup the entity"""
+        """Set up the entity."""
         # Create connection attempt outside of HA's tracked task in order not
         # to delay startup.
         hass.loop.create_task(self._async_manage_connection())
         return True
 
     async def _async_send_json(self, request):
-        """Send JSON to the server"""
+        """Send JSON to the server."""
         _LOGGER.debug("Send to server (%s): %s" % (self._name, request))
         output = json.dumps(request).encode('UTF-8') + b'\n'
         self._writer.write(output)
         await self._writer.drain()
 
     async def _async_safely_read_command(self):
-        """Safely read a command from the stream"""
+        """Safely read a command from the stream."""
         connection_error = False
         try:
             resp = await self._reader.readline()
@@ -474,7 +477,7 @@ class Hyperion(LightEntity):
 
         if connection_error or not resp:
             _LOGGER.warning(
-                'Connection to Hyperion lost (%s) ...'% self._name)
+                'Connection to Hyperion lost (%s) ...' % self._name)
             await self._async_close_streams()
             return None
 
@@ -488,7 +491,7 @@ class Hyperion(LightEntity):
                     self._name))
             return None
 
-        if not KEY_COMMAND in resp_json:
+        if KEY_COMMAND not in resp_json:
             _LOGGER.warning(
                 'JSON from Hyperion (%s) did not include expected \'%s\' '
                 'parameter, skipping...' % (self._name, KEY_COMMAND))
@@ -496,7 +499,7 @@ class Hyperion(LightEntity):
         return resp_json
 
     async def _async_verify_instance_or_close(self, instances):
-        """Verify the instance still exists on the server"""
+        """Verify the instance still exists on the server."""
         for instance in instances:
             if instance[KEY_INSTANCE] == self._instance:
                 return
@@ -514,7 +517,7 @@ class Hyperion(LightEntity):
         await self._async_close_streams()
 
     async def _async_manage_connection(self):
-        """Manage the bidirectional connection to the server"""
+        """Manage the bidirectional connection to the server."""
         while True:
             if not self._is_connected:
                 if not await self._async_connect():
