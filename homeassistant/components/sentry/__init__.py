@@ -20,8 +20,11 @@ from .const import (
     CONF_EVENT_THIRD_PARTY_PACKAGES,
     CONF_LOGGING_EVENT_LEVEL,
     CONF_LOGGING_LEVEL,
+    CONF_TRACING,
+    CONF_TRACING_SAMPLE_RATE,
     DEFAULT_LOGGING_EVENT_LEVEL,
     DEFAULT_LOGGING_LEVEL,
+    DEFAULT_TRACING_SAMPLE_RATE,
     DOMAIN,
     ENTITY_COMPONENTS,
 )
@@ -65,6 +68,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     system_info = await hass.helpers.system_info.async_get_system_info()
     custom_components = await async_get_custom_components(hass)
 
+    tracing = {}
+    if entry.options.get(CONF_TRACING):
+        tracing = {
+            "traceparent_v2": True,
+            "traces_sample_rate": entry.options.get(
+                CONF_TRACING_SAMPLE_RATE, DEFAULT_TRACING_SAMPLE_RATE
+            ),
+        }
+
     sentry_sdk.init(
         dsn=entry.data[CONF_DSN],
         environment=entry.options.get(CONF_ENVIRONMENT),
@@ -80,6 +92,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             event,
             hint,
         ),
+        **tracing,
     )
 
     return True
