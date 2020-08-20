@@ -10,6 +10,8 @@ from homeassistant.components.sentry.const import (
     CONF_EVENT_CUSTOM_COMPONENTS,
     CONF_EVENT_HANDLED,
     CONF_EVENT_THIRD_PARTY_PACKAGES,
+    CONF_TRACING,
+    CONF_TRACING_SAMPLE_RATE,
     DOMAIN,
 )
 from homeassistant.const import __version__ as current_version
@@ -70,6 +72,37 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
     ]
     assert call_args["release"] == current_version
     assert call_args["before_send"]
+
+
+async def test_setup_entry_with_tracing(hass: HomeAssistant) -> None:
+    """Test integration setup from entry with tracing enabled."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_DSN: "http://public@example.com/1"},
+        options={CONF_TRACING: True, CONF_TRACING_SAMPLE_RATE: 0.5},
+    )
+    entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.sentry.AioHttpIntegration"), patch(
+        "homeassistant.components.sentry.SqlalchemyIntegration"
+    ), patch("homeassistant.components.sentry.LoggingIntegration"), patch(
+        "homeassistant.components.sentry.sentry_sdk"
+    ) as sentry_mock:
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    call_args = sentry_mock.init.call_args[1]
+    assert set(call_args) == {
+        "dsn",
+        "environment",
+        "integrations",
+        "release",
+        "before_send",
+        "traceparent_v2",
+        "traces_sample_rate",
+    }
+    assert call_args["traces_sample_rate"] == 0.5
+    assert call_args["traceparent_v2"]
 
 
 @pytest.mark.parametrize(

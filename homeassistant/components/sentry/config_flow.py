@@ -1,4 +1,6 @@
 """Config flow for sentry integration."""
+from __future__ import annotations
+
 import logging
 from typing import Any, Dict, Optional
 
@@ -16,8 +18,11 @@ from .const import (  # pylint: disable=unused-import
     CONF_EVENT_THIRD_PARTY_PACKAGES,
     CONF_LOGGING_EVENT_LEVEL,
     CONF_LOGGING_LEVEL,
+    CONF_TRACING,
+    CONF_TRACING_SAMPLE_RATE,
     DEFAULT_LOGGING_EVENT_LEVEL,
     DEFAULT_LOGGING_LEVEL,
+    DEFAULT_TRACING_SAMPLE_RATE,
     DOMAIN,
     LOGGING_LEVELS,
 )
@@ -35,7 +40,9 @@ class SentryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> SentryOptionsFlow:
         """Get the options flow for this handler."""
         return SentryOptionsFlow(config_entry)
 
@@ -66,7 +73,7 @@ class SentryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class SentryOptionsFlow(config_entries.OptionsFlow):
     """Handle Sentry options."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: config_entries.ConfigEntry):
         """Initialize Sentry options flow."""
         self.config_entry = config_entry
 
@@ -115,6 +122,16 @@ class SentryOptionsFlow(config_entries.OptionsFlow):
                             CONF_EVENT_THIRD_PARTY_PACKAGES, False
                         ),
                     ): bool,
+                    vol.Optional(
+                        CONF_TRACING,
+                        default=self.config_entry.options.get(CONF_TRACING, False),
+                    ): bool,
+                    vol.Optional(
+                        CONF_TRACING_SAMPLE_RATE,
+                        default=self.config_entry.options.get(
+                            CONF_TRACING_SAMPLE_RATE, DEFAULT_TRACING_SAMPLE_RATE
+                        ),
+                    ): vol.All(vol.Coerce(float), vol.Range(min=0.0, max=1.0)),
                 }
             ),
         )

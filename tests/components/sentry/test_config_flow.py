@@ -10,6 +10,8 @@ from homeassistant.components.sentry.const import (
     CONF_EVENT_THIRD_PARTY_PACKAGES,
     CONF_LOGGING_EVENT_LEVEL,
     CONF_LOGGING_LEVEL,
+    CONF_TRACING,
+    CONF_TRACING_SAMPLE_RATE,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_USER
@@ -119,6 +121,8 @@ async def test_options_flow(hass):
             CONF_EVENT_THIRD_PARTY_PACKAGES: True,
             CONF_LOGGING_EVENT_LEVEL: logging.DEBUG,
             CONF_LOGGING_LEVEL: logging.DEBUG,
+            CONF_TRACING: True,
+            CONF_TRACING_SAMPLE_RATE: 0.5,
         },
     )
 
@@ -130,4 +134,6 @@ async def test_options_flow(hass):
         CONF_EVENT_THIRD_PARTY_PACKAGES: True,
         CONF_LOGGING_EVENT_LEVEL: logging.DEBUG,
         CONF_LOGGING_LEVEL: logging.DEBUG,
+        CONF_TRACING: True,
+        CONF_TRACING_SAMPLE_RATE: 0.5,
     }
