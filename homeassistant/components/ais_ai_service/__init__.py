@@ -2599,6 +2599,10 @@ async def async_setup(hass, config):
             data["data"] = service.data["data"]
         else:
             data["data"] = {}
+        if "click_action" in service.data:
+            data["click_action"] = service.data["click_action"]
+        else:
+            data["click_action"] = ""
 
         # entry = hass.data["mobile_app"]["config_entries"]
         # entry = hass.config_entries.async_entries("mobile_app")[device_id]
