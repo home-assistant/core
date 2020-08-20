@@ -633,7 +633,15 @@ class PlexMediaPlayer(MediaPlayerEntity):
                     media_info["children"].append(item_payload(item))
             return media_info
 
-        if media_content_type is None:
+        if (
+            media_content_type == "server"
+            and media_content_id != self.plex_server.machine_identifier
+        ):
+            raise BrowseError(
+                f"Plex server with ID '{media_content_id}' is not associated with {self.entity_id}"
+            )
+
+        if media_content_type in ["server", None]:
             return await self.hass.async_add_executor_job(
                 server_payload, self.plex_server
             )
