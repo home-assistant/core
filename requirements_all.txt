@@ -945,7 +945,7 @@ netdata==0.2.0
 
 # homeassistant.components.discovery
 # homeassistant.components.ssdp
-netdisco==2.8.1
+netdisco==2.8.2
 
 # homeassistant.components.neurio_energy
 neurio==0.3.1
@@ -1181,7 +1181,7 @@ pyHS100==0.3.5.1
 
 # homeassistant.components.met
 # homeassistant.components.norway_air
-pyMetno==0.7.0
+pyMetno==0.7.1
 
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.25
@@ -1256,7 +1256,7 @@ pycfdns==0.0.1
 pychannels==1.0.0
 
 # homeassistant.components.cast
-pychromecast==7.2.0
+pychromecast==7.2.1
 
 # homeassistant.components.cmus
 pycmus==0.1.1
@@ -2269,7 +2269,7 @@ youtube_dl==2020.07.28
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.28.0
+zeroconf==0.28.1
 
 # homeassistant.components.zha
 zha-quirks==0.0.43
