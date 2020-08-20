@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant.core import EVENT_HOMEASSISTANT_START, callback
 from homeassistant.exceptions import TemplateError
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import match_all
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import Event, async_track_template_result
@@ -218,6 +219,41 @@ class TemplateEntityWithAvailability(TemplateEntity):
         if self._availability_template is not None:
             self.add_template_attribute(
                 "_available", self._availability_template, None, self._update_available
+            )
+
+        await super().async_added_to_hass()
+
+
+class TemplateEntityWithAvailabilityAndImages(TemplateEntityWithAvailability):
+    """Entity that uses templates to calculate attributes with an availability, icon, and images template."""
+
+    def __init__(self, availability_template, icon_template, entity_picture_template):
+        """Template Entity."""
+        self._icon_template = icon_template
+        self._entity_picture_template = entity_picture_template
+        self._icon = None
+        self._entity_picture = None
+        super().__init__(availability_template)
+
+    @property
+    def icon(self):
+        """Return the icon to use in the frontend, if any."""
+        return self._icon
+
+    @property
+    def entity_picture(self):
+        """Return the entity_picture to use in the frontend, if any."""
+        return self._entity_picture
+
+    async def async_added_to_hass(self):
+        """Register callbacks."""
+        if self._icon_template is not None:
+            self.add_template_attribute(
+                "_icon", self._icon_template, vol.Or(cv.whitespace, cv.icon)
+            )
+        if self._entity_picture_template is not None:
+            self.add_template_attribute(
+                "_entity_picture", self._entity_picture_template
             )
 
         await super().async_added_to_hass()

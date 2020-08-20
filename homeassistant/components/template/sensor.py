@@ -27,7 +27,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 
 from .const import CONF_AVAILABILITY_TEMPLATE
-from .template_entity import TemplateEntityWithAvailability
+from .template_entity import TemplateEntityWithAvailabilityAndImages
 
 CONF_ATTRIBUTE_TEMPLATES = "attribute_templates"
 
@@ -94,7 +94,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     return True
 
 
-class SensorTemplate(TemplateEntityWithAvailability, Entity):
+class SensorTemplate(TemplateEntityWithAvailabilityAndImages, Entity):
     """Representation of a Template Sensor."""
 
     def __init__(
@@ -113,7 +113,7 @@ class SensorTemplate(TemplateEntityWithAvailability, Entity):
         unique_id,
     ):
         """Initialize the sensor."""
-        super().__init__(availability_template)
+        super().__init__(availability_template, icon_template, entity_picture_template)
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, device_id, hass=hass
         )
@@ -122,10 +122,6 @@ class SensorTemplate(TemplateEntityWithAvailability, Entity):
         self._unit_of_measurement = unit_of_measurement
         self._template = state_template
         self._state = None
-        self._icon_template = icon_template
-        self._entity_picture_template = entity_picture_template
-        self._icon = None
-        self._entity_picture = None
         self._device_class = device_class
         self._attribute_templates = attribute_templates
         self._attributes = {}
@@ -135,14 +131,6 @@ class SensorTemplate(TemplateEntityWithAvailability, Entity):
         """Register callbacks."""
 
         self.add_template_attribute("_state", self._template, None, self._update_state)
-        if self._icon_template is not None:
-            self.add_template_attribute(
-                "_icon", self._icon_template, vol.Or(cv.whitespace, cv.icon)
-            )
-        if self._entity_picture_template is not None:
-            self.add_template_attribute(
-                "_entity_picture", self._entity_picture_template
-            )
         if self._friendly_name_template is not None:
             self.add_template_attribute("_name", self._friendly_name_template)
 
@@ -182,19 +170,9 @@ class SensorTemplate(TemplateEntityWithAvailability, Entity):
         return self._state
 
     @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return self._icon
-
-    @property
     def device_class(self) -> Optional[str]:
         """Return the device class of the sensor."""
         return self._device_class
-
-    @property
-    def entity_picture(self):
-        """Return the entity_picture to use in the frontend, if any."""
-        return self._entity_picture
 
     @property
     def unit_of_measurement(self):
