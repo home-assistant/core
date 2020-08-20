@@ -279,7 +279,7 @@ async def test_device_unload_works(hass):
 
 async def test_device_unload_authentication_error(hass):
     """Test we unload a device that failed the authentication step."""
-    device = get_device("Office")
+    device = get_device("Living Room")
     mock_api = device.get_mock_api()
     mock_api.auth.side_effect = blke.AuthenticationError()
     mock_entry = device.get_mock_entry()
