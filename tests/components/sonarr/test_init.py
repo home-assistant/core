@@ -23,7 +23,11 @@ async def test_unload_config_entry(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test the configuration entry unloading."""
-    entry = await setup_integration(hass, aioclient_mock)
+    with patch(
+        "homeassistant.components.sonarr.sensor.async_setup_entry",
+        return_value=True,
+    ):
+        entry = await setup_integration(hass, aioclient_mock)
 
     assert hass.data[DOMAIN]
     assert entry.entry_id in hass.data[DOMAIN]
