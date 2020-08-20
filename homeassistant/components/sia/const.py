@@ -5,8 +5,6 @@ from datetime import timedelta
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
 )
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 
 CONF_ACCOUNT = "account"
 CONF_ACCOUNTS = "accounts"
@@ -25,4 +23,4 @@ PREVIOUS_STATE = "previous_state"
 UTCNOW = "utcnow"
 LAST_MESSAGE = "last_message"
 
-PLATFORMS = [SENSOR_DOMAIN, BINARY_SENSOR_DOMAIN, ALARM_CONTROL_PANEL_DOMAIN]
+PLATFORMS = [ALARM_CONTROL_PANEL_DOMAIN]
