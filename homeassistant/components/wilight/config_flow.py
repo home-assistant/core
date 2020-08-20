@@ -31,16 +31,16 @@ class WiLightFlowHandler(ConfigFlow, domain=DOMAIN):
         self._serial_number = None
         self._title = None
         self._model_name = None
-        self._components = []
+        self._wilight_components = []
         self._components_text = ""
 
-    def _self_update(self, host, serial_number, model_name):
+    def _wilight_update(self, host, serial_number, model_name):
         self._host = host
         self._serial_number = serial_number
         self._title = f"WL{serial_number}"
         self._model_name = model_name
-        self._components = pywilight.get_components_from_model(model_name)
-        self._components_text = ", ".join(self._components)
+        self._wilight_components = pywilight.get_components_from_model(model_name)
+        self._components_text = ", ".join(self._wilight_components)
         return self._components_text != ""
 
     def _get_entry(self):
@@ -70,13 +70,14 @@ class WiLightFlowHandler(ConfigFlow, domain=DOMAIN):
         serial_number = discovery_info[ssdp.ATTR_UPNP_SERIAL]
         model_name = discovery_info[ssdp.ATTR_UPNP_MODEL_NAME]
 
-        if not self._self_update(host, serial_number, model_name):
+        if not self._wilight_update(host, serial_number, model_name):
             return self.async_abort(reason="not_wilight_device")
 
+        # Check if all components of this WiLight are allowed in this version of the HA integration
         allowed_components = PLATFORMS
-        component_ok = any(
+        component_ok = all(
             wilight_component in allowed_components
-            for wilight_component in self._components
+            for wilight_component in self._wilight_components
         )
 
         if not component_ok:
