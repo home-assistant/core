@@ -4,7 +4,15 @@ import logging
 from plexapi.exceptions import NotFound
 import voluptuous as vol
 
-from .const import DOMAIN, SERVERS, SERVICE_REFRESH_LIBRARY
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+
+from .const import (
+    DOMAIN,
+    PLEX_UPDATE_PLATFORMS_SIGNAL,
+    SERVERS,
+    SERVICE_REFRESH_LIBRARY,
+    SERVICE_SCAN_CLIENTS,
+)
 
 REFRESH_LIBRARY_SCHEMA = vol.Schema(
     {vol.Optional("server_name"): str, vol.Required("library_name"): str}
@@ -19,11 +27,19 @@ async def async_setup_services(hass):
     async def async_refresh_library_service(service_call):
         await hass.async_add_executor_job(refresh_library, hass, service_call)
 
+    async def async_scan_clients_service(_):
+        _LOGGER.info("Scanning for new Plex clients")
+        for server_id in hass.data[DOMAIN][SERVERS]:
+            async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
+
     hass.services.async_register(
         DOMAIN,
         SERVICE_REFRESH_LIBRARY,
         async_refresh_library_service,
         schema=REFRESH_LIBRARY_SCHEMA,
+    )
+    hass.services.async_register(
+        DOMAIN, SERVICE_SCAN_CLIENTS, async_scan_clients_service
     )
 
     return True

@@ -39,6 +39,7 @@ from .const import (
     PLEX_UPDATE_PLATFORMS_SIGNAL,
     SERVERS,
     SERVICE_PLAY_ON_SONOS,
+    SERVICE_SCAN_CLIENTS,
     WEBSOCKETS,
 )
 from .errors import ShouldUpdateConfigEntry
