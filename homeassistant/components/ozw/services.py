@@ -9,7 +9,6 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 from . import const
-from .migration import async_get_migration_data
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,11 +16,10 @@ _LOGGER = logging.getLogger(__name__)
 class ZWaveServices:
     """Class that holds our services ( Zwave Commands) that should be published to hass."""
 
-    def __init__(self, hass, manager, nodes_values):
+    def __init__(self, hass, manager):
         """Initialize with both hass and ozwmanager objects."""
         self._hass = hass
         self._manager = manager
-        self._nodes_values = nodes_values
 
     @callback
     def async_register(self):
@@ -87,12 +85,6 @@ class ZWaveServices:
             ),
         )
 
-        self._hass.services.async_register(
-            const.DOMAIN,
-            "migrate_zwave_integration",
-            self.async_migrate_zwave_integration,
-        )
-
     @callback
     def async_set_config_parameter(self, service):
         """Set a config parameter to a node."""
@@ -140,12 +132,3 @@ class ZWaveServices:
         if instance is None:
             raise ValueError(f"No OpenZWave Instance with ID {instance_id}")
         instance.cancel_controller_command()
-
-    async def async_migrate_zwave_integration(self, service):
-        """Migrate data from the Z-Wave integration."""
-        zwave = self._hass.components.zwave
-        zwave_data = await zwave.async_record_ozw_migration_info(self._hass)
-        _LOGGER.warning("Migration zwave data: %s", zwave_data)
-
-        ozw_data = await async_get_migration_data(self._hass, self._nodes_values)
-        _LOGGER.warning("Migration ozw data: %s", ozw_data)

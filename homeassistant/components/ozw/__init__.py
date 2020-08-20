@@ -249,7 +249,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         ozw_data[DATA_UNSUBSCRIBE].append(options.listen(event, event_callback))
 
     # Register Services
-    services = ZWaveServices(hass, manager, data_values)
+    services = ZWaveServices(hass, manager)
     services.async_register()
 
     # Register WebSocket API
