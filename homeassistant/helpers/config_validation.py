@@ -79,7 +79,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import split_entity_id, valid_entity_id
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import template as template_helper, _RE_JINJA_DELIMITERS
+from homeassistant.helpers import template as template_helper
 from homeassistant.helpers.logging import KeywordStyleAdapter
 from homeassistant.util import slugify as util_slugify
 import homeassistant.util.dt as dt_util
@@ -527,7 +527,7 @@ def template_complex(value: Any) -> Any:
             for key, element in value.items()
         }
     if isinstance(value, str):
-        if _RE_JINJA_DELIMITERS.search(value) is not None:
+        if template_helper._RE_JINJA_DELIMITERS.search(value) is not None:
             return template(value)
         else:  # The value doesn't need to be a template.
             return value
