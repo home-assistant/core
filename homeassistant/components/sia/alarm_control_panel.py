@@ -27,6 +27,7 @@ from .const import (
     CONF_PING_INTERVAL,
     DATA_UPDATED,
     DOMAIN,
+    HUB_SENSOR_NAME,
     PING_INTERVAL_MARGIN,
     PREVIOUS_STATE,
 )
@@ -72,6 +73,7 @@ class SIAAlarmControlPanel(AlarmControlPanel, RestoreEntity):
         self._zone = zone
         self._ping_interval = ping_interval
         self._attr = {
+            HUB_SENSOR_NAME: None,
             CONF_ACCOUNT: self._account,
             CONF_PING_INTERVAL: str(self._ping_interval),
             CONF_ZONE: self._zone,
@@ -140,7 +142,26 @@ class SIAAlarmControlPanel(AlarmControlPanel, RestoreEntity):
         return self._is_available
 
     @property
-        self._async_track_unavailable()
+    def device_state_attributes(self) -> dict:
+        """Return device attributes."""
+        return self._attr
+
+    def update_attribute(self, attr: dict):
+        """Update attributes."""
+        self._attr.update(attr)
+
+    @state.setter
+    def state(self, state: str):
+        """Set state."""
+        temp = self._old_state if state == PREVIOUS_STATE else state
+        self._old_state = self._state
+        self._state = temp
+        self.async_schedule_update_ha_state()
+
+    async def assume_available(self):
+        """Reset unavalability tracker."""
+        await self._async_track_unavailable()
+
     @callback
     async def _async_track_unavailable(self) -> bool:
         """Reset unavailability."""

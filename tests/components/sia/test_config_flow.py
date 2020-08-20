@@ -165,9 +165,7 @@ async def test_form_errors(hass, additional, field, value, error):
         config = ADDITIONAL_ACCOUNT.copy()
         config[field] = value
 
-    with patch("homeassistant.components.sia.async_setup", return_value=True), patch(
-        "homeassistant.components.sia.async_setup_entry", return_value=True
-    ):
+    with patch("homeassistant.components.sia.async_setup_entry", return_value=True):
         result_err = await hass.config_entries.flow.async_configure(
             result["flow_id"], config
         )

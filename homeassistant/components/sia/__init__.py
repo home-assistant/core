@@ -64,15 +64,14 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up sia from a config entry."""
-    hass.data[DOMAIN][entry.entry_id] = SIAHub(
-        hass, entry.data, entry.entry_id, entry.title
-    )
-
-    # await hass.data[DOMAIN][entry.entry_id]._create_device_registry()
+    hub = SIAHub(hass, entry.data, entry.entry_id, entry.title)
+    await hub.async_setup_hub()
+    hass.data[DOMAIN][entry.entry_id] = hub
     for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
+    hub.sia_client.start(reuse_port=True)
     return True
 
 
