@@ -157,7 +157,7 @@ async def test_full_user_flow_advanced_options(
         CONF_VERIFY_SSL: True,
     }
 
-    with with _patch_async_setup(), _patch_async_setup_entry():
+    with _patch_async_setup(), _patch_async_setup_entry():
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=user_input,
         )
