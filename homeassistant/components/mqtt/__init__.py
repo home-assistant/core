@@ -744,7 +744,7 @@ class MQTT:
                 msg_info.mid,
             )
             _raise_on_error(msg_info.rc)
-            await self._wait_for_mid(msg_info.mid)
+        await self._wait_for_mid(msg_info.mid)
 
     async def async_connect(self) -> str:
         """Connect to the host. Does not process messages yet."""
@@ -829,7 +829,7 @@ class MQTT:
             )
             _LOGGER.debug("Unsubscribing from %s, mid: %s", topic, mid)
             _raise_on_error(result)
-            await self._wait_for_mid(mid)
+        await self._wait_for_mid(mid)
 
     async def _async_perform_subscription(self, topic: str, qos: int) -> None:
         """Perform a paho-mqtt subscription."""
@@ -840,7 +840,7 @@ class MQTT:
             )
             _LOGGER.debug("Subscribing to %s, mid: %s", topic, mid)
             _raise_on_error(result)
-            await self._wait_for_mid(mid)
+        await self._wait_for_mid(mid)
 
     def _mqtt_on_connect(self, _mqttc, _userdata, _flags, result_code: int) -> None:
         """On connect callback.
