@@ -126,6 +126,8 @@ CONNECTION_SUCCESS = "connection_success"
 CONNECTION_FAILED = "connection_failed"
 CONNECTION_FAILED_RECOVERABLE = "connection_failed_recoverable"
 
+TIMEOUT_ACK = 1
+
 
 def validate_device_has_at_least_one_identifier(value: ConfigType) -> ConfigType:
     """Validate that a device info entry has at least one identifying value."""
@@ -957,7 +959,7 @@ class MQTT:
         """Wait for ACK from broker."""
         self._pending_operations[mid] = asyncio.Event()
         try:
-            await asyncio.wait_for(self._pending_operations[mid].wait(), 1)
+            await asyncio.wait_for(self._pending_operations[mid].wait(), TIMEOUT_ACK)
         except asyncio.TimeoutError:
             _LOGGER.error("Timed out waiting for mid %s", mid)
         finally:
