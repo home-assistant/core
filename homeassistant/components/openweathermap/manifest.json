@@ -1,7 +1,9 @@
 {
   "domain": "openweathermap",
-  "name": "Openweathermap",
+  "name": "OpenWeatherMap",
   "documentation": "https://www.home-assistant.io/integrations/openweathermap",
+  "dependencies": [],
+  "codeowners": ["@fabaff"],
   "requirements": ["pyowm==2.10.0"],
-  "codeowners": ["@fabaff"]
+  "config_flow": true
 }

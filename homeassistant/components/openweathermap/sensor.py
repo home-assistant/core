@@ -59,6 +59,44 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the OpenWeatherMap sensor."""
+    config = config_entry.data
+
+    if None in (hass.config.latitude, hass.config.longitude):
+        _LOGGER.error("Latitude or longitude not set in Home Assistant config")
+        return
+
+    SENSOR_TYPES["temperature"][1] = hass.config.units.temperature_unit
+
+    name = config.get(CONF_NAME)
+    forecast = config.get(CONF_FORECAST)
+    language = config.get(CONF_LANGUAGE)
+    if isinstance(language, str):
+        language = language.lower()[:2]
+
+    owm = OWM(api_key=config.get(CONF_API_KEY), language=language)
+
+    if not owm:
+        _LOGGER.error("Unable to connect to OpenWeatherMap")
+        return
+
+    data = WeatherData(owm, forecast, hass.config.latitude, hass.config.longitude)
+    dev = []
+    for variable in config.get(CONF_MONITORED_CONDITIONS, []):
+        dev.append(
+            OpenWeatherMapSensor(name, data, variable, SENSOR_TYPES[variable][1])
+        )
+
+    if forecast:
+        SENSOR_TYPES["forecast"] = ["Forecast", None]
+        dev.append(
+            OpenWeatherMapSensor(name, data, "forecast", SENSOR_TYPES["temperature"][1])
+        )
+
+    async_add_entities(dev, True)
+
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the OpenWeatherMap sensor."""
 

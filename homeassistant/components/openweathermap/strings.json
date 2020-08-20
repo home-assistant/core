@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
+        },
+        "error": {
+            "cannot_connect": "Failed to connect"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API Key",
+                    "latitude": "Latitude",
+                    "longitude": "Longitude",
+                    "name": "Name of the integration"
+                },
+                "description": "If you need help with the configuration have a look here: https://www.home-assistant.io/integrations/OpenWeatherMap/",
+                "title": "OpenWeatherMap"
+            }
+        }
+    },
+}

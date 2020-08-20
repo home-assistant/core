@@ -32,13 +32,9 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 from homeassistant.util.pressure import convert as convert_pressure
 
+from .const import ATTRIBUTION, NAME, FORECAST_MODE
+
 _LOGGER = logging.getLogger(__name__)
-
-ATTRIBUTION = "Data provided by OpenWeatherMap"
-
-FORECAST_MODE = ["hourly", "daily", "freedaily"]
-
-DEFAULT_NAME = "OpenWeatherMap"
 
 MIN_TIME_BETWEEN_FORECAST_UPDATES = timedelta(minutes=30)
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
@@ -66,9 +62,32 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_LATITUDE): cv.latitude,
         vol.Optional(CONF_LONGITUDE): cv.longitude,
         vol.Optional(CONF_MODE, default="hourly"): vol.In(FORECAST_MODE),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_NAME, default=NAME): cv.string,
     }
 )
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the OpenWeatherMap weather platform."""
+    config = config_entry.data
+
+    longitude = config.get(CONF_LONGITUDE, round(hass.config.longitude, 5))
+    latitude = config.get(CONF_LATITUDE, round(hass.config.latitude, 5))
+    name = config.get(CONF_NAME)
+    mode = config.get(CONF_MODE)
+
+    try:
+        owm = OWM(config.get(CONF_API_KEY))
+    except APICallError:
+        _LOGGER.error("Error while connecting to OpenWeatherMap")
+        return False
+
+    data = WeatherData(owm, latitude, longitude, mode)
+
+    async_add_entities(
+        [OpenWeatherMapWeather(name, data, hass.config.units.temperature_unit, mode)],
+        True,
+    )
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
