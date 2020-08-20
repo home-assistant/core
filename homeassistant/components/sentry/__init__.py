@@ -1,5 +1,6 @@
 """The sentry integration."""
 import re
+from typing import Dict, Union
 
 import sentry_sdk
 from sentry_sdk.integrations.aiohttp import AioHttpIntegration
@@ -10,7 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import __version__ as current_version
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.loader import async_get_custom_components
+from homeassistant.loader import Integration, async_get_custom_components
 
 from .const import (
     CONF_DSN,
@@ -35,12 +36,12 @@ CONFIG_SCHEMA = cv.deprecated(DOMAIN, invalidation_version="0.117")
 LOGGER_INFO_REGEX = re.compile(r"^(\w+)\.?(\w+)?\.?(\w+)?\.?(\w+)?(?:\..*)?$")
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up the Sentry component."""
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Sentry from a config entry."""
 
     # Migrate environment from config entry data to config entry options
@@ -98,7 +99,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     return True
 
 
-def get_channel(version) -> str:
+def get_channel(version: str) -> str:
     """Find channel based on version number."""
     if "dev0" in version:
         return "dev"
@@ -110,7 +111,14 @@ def get_channel(version) -> str:
 
 
 def process_before_send(
-    hass, options, channel, huuid, system_info, custom_components, event, hint
+    hass: HomeAssistant,
+    options,
+    channel: str,
+    huuid: str,
+    system_info: Dict[str, Union[bool, str]],
+    custom_components: Dict[str, Integration],
+    event,
+    hint,
 ):
     """Process a Sentry event before sending it to Sentry."""
     # Filter out handled events by default
