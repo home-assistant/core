@@ -521,16 +521,16 @@ def template_complex(value: Any) -> Any:
         for idx, element in enumerate(return_list):
             return_list[idx] = template_complex(element)
         return return_list
-    if isinstance(value, dict):
+    elif isinstance(value, dict):
         return {
             template_complex(key): template_complex(element)
             for key, element in value.items()
         }
-    if isinstance(value, str):
-        if template_helper._RE_JINJA_DELIMITERS.search(value) is not None:
+    elif isinstance(value, str):
+        # pylint: disable=protected-access
+        is_template = template_helper._RE_JINJA_DELIMITERS.search(value) is not None
+        if is_template:
             return template(value)
-        else:  # The value doesn't need to be a template.
-            return value
 
     return value
 
