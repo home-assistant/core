@@ -89,6 +89,10 @@ class HKDevice:
         # mapped to a HA entity.
         self.entities = []
 
+        # A map of aid -> device_id
+        # Useful when routing events to triggers
+        self.devices = {}
+
         self.available = True
 
         self.signal_state_updated = "_".join((DOMAIN, self.unique_id, "state_updated"))
@@ -162,6 +166,59 @@ class HKDevice:
 
         return True
 
+    async def async_create_devices(self):
+        """
+        Build device registry entries for all accessories paired with the bridge.
+
+        This is done as well as by the entities for 2 reasons. First, the bridge
+        might not have any entities attached to it. Secondly there are stateless
+        entities like doorbells and remote controls.
+        """
+        device_registry = await self.hass.helpers.device_registry.async_get_registry()
+
+        devices = {}
+
+        for accessory in self.entity_map.accessories:
+            info = accessory.services.first(
+                service_type=ServicesTypes.ACCESSORY_INFORMATION,
+            )
+
+            device_info = {
+                "identifiers": {
+                    (
+                        DOMAIN,
+                        "serial-number",
+                        info.value(CharacteristicsTypes.SERIAL_NUMBER),
+                    )
+                },
+                "name": info.value(CharacteristicsTypes.NAME),
+                "manufacturer": info.value(CharacteristicsTypes.MANUFACTURER, ""),
+                "model": info.value(CharacteristicsTypes.MODEL, ""),
+                "sw_version": info.value(CharacteristicsTypes.FIRMWARE_REVISION, ""),
+            }
+
+            if accessory.aid == 1:
+                # Accessory 1 is the root device (sometimes the only device, sometimes a bridge)
+                # Link the root device to the pairing id for the connection.
+                device_info["identifiers"].add((DOMAIN, "accessory-id", self.unique_id))
+            else:
+                # Every pairing has an accessory 1
+                # It *doesn't* have a via_device, as it is the device we are connecting to
+                # Every other accessory should use it as its via device.
+                device_info["via_device"] = (
+                    DOMAIN,
+                    "serial-number",
+                    self.connection_info["serial-number"],
+                )
+
+            device = device_registry.async_get_or_create(
+                config_entry_id=self.config_entry.entry_id, **device_info,
+            )
+
+            devices[accessory.aid] = device.id
+
+        self.devices = devices
+
     async def async_process_entity_map(self):
         """
         Process the entity map and load any platforms or entities that need adding.
@@ -176,6 +233,8 @@ class HKDevice:
         self.pairing.pairing_data["accessories"] = self.accessories
 
         await self.async_load_platforms()
+
+        await self.async_create_devices()
 
         self.add_entities()
 
