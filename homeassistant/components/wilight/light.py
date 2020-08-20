@@ -134,15 +134,6 @@ def hass_to_wilight_saturation(value):
 class WiLightLightColor(WiLightDevice, LightEntity):
     """Representation of a WiLights light rgb."""
 
-    def __init__(self, *args, **kwargs):
-        """Initialize the device."""
-        WiLightDevice.__init__(self, *args, **kwargs)
-        # Initialize the WiLights color.
-        self._on = False
-        self._brightness = 0
-        self._hue = 0
-        self._saturation = 100
-
     @property
     def supported_features(self):
         """Flag supported features."""

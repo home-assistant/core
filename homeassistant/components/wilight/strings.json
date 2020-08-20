@@ -8,12 +8,9 @@
       }
     },
     "abort": {
-      "already_in_progress": "WiLight configuration is already in progress.",
-      "already_configured": "This WiLight is already configured.",
-      "not_successful": "Unable to connect to this WiLight device.",
-      "not_supported": "This WiLight device is currently not supported.",
-	  "not_wilight": "This Device is not WiLight.",
-	  "unknown": "Unknown error occurred."
+      "already_configured": "This WiLight is already configured",
+      "not_supported_device": "This WiLight is currently not supported",
+      "not_wilight_device": "This Device is not WiLight"
     }
   }
 }

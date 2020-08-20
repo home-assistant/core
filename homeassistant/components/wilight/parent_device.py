@@ -36,7 +36,7 @@ class WiLightParent:
         host = self._host
         hass = self._hass
 
-        api_device = await hass.async_add_executor_job(create_api_device, host, 45995)
+        api_device = await hass.async_add_executor_job(create_api_device, host)
 
         if api_device is None:
             return False
@@ -91,20 +91,12 @@ class WiLightParent:
         self._api.client.stop()
 
 
-def create_api_device(host, port):
+def create_api_device(host):
     """Create an API Device."""
-    url = f"http://{host}:{port}/wilight.xml"
-
-    if not url:
-        _LOGGER.error(
-            "Unable to get description url for WiLight at: %s", f"{host}",
-        )
-        return None
-
     try:
-        device = pywilight.device_from_description(url, None)
+        device = pywilight.device_from_host(host)
     except (requests.exceptions.ConnectionError, requests.exceptions.Timeout,) as err:
-        _LOGGER.error("Unable to access WiLight at %s (%s)", url, err)
+        _LOGGER.error("Unable to access WiLight at %s (%s)", host, err)
         return None
 
     return device

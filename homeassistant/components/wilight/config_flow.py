@@ -61,17 +61,17 @@ class WiLightFlowHandler(ConfigFlow, domain=DOMAIN):
             or ssdp.ATTR_UPNP_MODEL_NAME not in discovery_info
             or ssdp.ATTR_UPNP_MODEL_NUMBER not in discovery_info
         ):
-            return self.async_abort(reason="not_wilight")
+            return self.async_abort(reason="not_wilight_device")
         # Filter out non-WiLight devices
         if discovery_info[ssdp.ATTR_UPNP_MANUFACTURER] != WILIGHT_MANUFACTURER:
-            return self.async_abort(reason="not_wilight")
+            return self.async_abort(reason="not_wilight_device")
 
         host = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION]).hostname
         serial_number = discovery_info[ssdp.ATTR_UPNP_SERIAL]
         model_name = discovery_info[ssdp.ATTR_UPNP_MODEL_NAME]
 
         if not self._self_update(host, serial_number, model_name):
-            return self.async_abort(reason="not_wilight")
+            return self.async_abort(reason="not_wilight_device")
 
         allowed_components = PLATFORMS
         component_ok = any(
@@ -80,7 +80,7 @@ class WiLightFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
         if not component_ok:
-            return self.async_abort(reason="not_supported")
+            return self.async_abort(reason="not_supported_device")
 
         await self.async_set_unique_id(self._serial_number)
         self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})

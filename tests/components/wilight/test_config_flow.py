@@ -23,7 +23,7 @@ from tests.components.wilight import (
     UPNP_MODEL_NAME,
     UPNP_SERIAL,
     WILIGHT_ID,
-    setup_integration,
+    mock_config_entry,
 )
 
 
@@ -52,7 +52,7 @@ async def test_ssdp_not_wilight_abort(hass: HomeAssistantType) -> None:
     )
 
     assert result["type"] == RESULT_TYPE_ABORT
-    assert result["reason"] == "not_wilight"
+    assert result["reason"] == "not_wilight_device"
 
 
 async def test_ssdp_not_supported_abort(hass: HomeAssistantType) -> None:
@@ -64,12 +64,12 @@ async def test_ssdp_not_supported_abort(hass: HomeAssistantType) -> None:
     )
 
     assert result["type"] == RESULT_TYPE_ABORT
-    assert result["reason"] == "not_supported"
+    assert result["reason"] == "not_supported_device"
 
 
 async def test_ssdp_device_exists_abort(hass: HomeAssistantType) -> None:
-    """Test we abort SSDP flow if WiLight already configured."""
-    await setup_integration(hass)
+    """Test abort SSDP flow if WiLight already configured."""
+    await mock_config_entry(hass)
 
     discovery_info = MOCK_SSDP_DISCOVERY_INFO.copy()
     result = await hass.config_entries.flow.async_init(

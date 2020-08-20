@@ -25,15 +25,16 @@ from tests.components.wilight import (
     UPNP_MODEL_NAME_DIMMER,
     UPNP_MODEL_NUMBER,
     UPNP_SERIAL,
-    setup_integration,
+    WILIGHT_ID,
+    mock_config_entry,
 )
 
 
-@pytest.fixture(name="dummy_create_api_device_pb")
-def mock_dummy_create_api_device_pb():
+@pytest.fixture(name="dummy_device_from_host_pb")
+def mock_dummy_device_from_host_pb():
     """Mock a valid api_devce."""
 
-    device = pywilight.discovery.wilight_from_discovery(
+    device = pywilight.wilight_from_discovery(
         f"http://{HOST}:45995/wilight.xml",
         UPNP_MAC_ADDRESS,
         UPNP_MODEL_NAME,
@@ -44,17 +45,16 @@ def mock_dummy_create_api_device_pb():
     device.set_dummy(True)
 
     with patch(
-        "homeassistant.components.wilight.parent_device.create_api_device",
-        return_value=device,
+        "pywilight.device_from_host", return_value=device,
     ):
         yield device
 
 
-@pytest.fixture(name="dummy_create_api_device_dimmer")
-def mock_dummy_create_api_device_dimmer():
+@pytest.fixture(name="dummy_device_from_host_dimmer")
+def mock_dummy_device_from_host_dimmer():
     """Mock a valid api_devce."""
 
-    device = pywilight.discovery.wilight_from_discovery(
+    device = pywilight.wilight_from_discovery(
         f"http://{HOST}:45995/wilight.xml",
         UPNP_MAC_ADDRESS,
         UPNP_MODEL_NAME_DIMMER,
@@ -65,17 +65,16 @@ def mock_dummy_create_api_device_dimmer():
     device.set_dummy(True)
 
     with patch(
-        "homeassistant.components.wilight.parent_device.create_api_device",
-        return_value=device,
+        "pywilight.device_from_host", return_value=device,
     ):
         yield device
 
 
-@pytest.fixture(name="dummy_create_api_device_color")
-def mock_dummy_create_api_device_color():
+@pytest.fixture(name="dummy_device_from_host_color")
+def mock_dummy_device_from_host_color():
     """Mock a valid api_devce."""
 
-    device = pywilight.discovery.wilight_from_discovery(
+    device = pywilight.wilight_from_discovery(
         f"http://{HOST}:45995/wilight.xml",
         UPNP_MAC_ADDRESS,
         UPNP_MODEL_NAME_COLOR,
@@ -86,19 +85,18 @@ def mock_dummy_create_api_device_color():
     device.set_dummy(True)
 
     with patch(
-        "homeassistant.components.wilight.parent_device.create_api_device",
-        return_value=device,
+        "pywilight.device_from_host", return_value=device,
     ):
         yield device
 
 
 async def test_on_off_light_state(
-    hass: HomeAssistantType, dummy_create_api_device_pb
+    hass: HomeAssistantType, dummy_device_from_host_pb
 ) -> None:
     """Test the WiLight configuration entry unloading."""
-    entry = await setup_integration(hass)
+    entry = await mock_config_entry(hass)
     assert entry
-    assert entry.unique_id == "WL000000000099"
+    assert entry.unique_id == WILIGHT_ID
 
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
 
@@ -113,10 +111,10 @@ async def test_on_off_light_state(
 
 
 async def test_dimmer_light_state(
-    hass: HomeAssistantType, dummy_create_api_device_dimmer
+    hass: HomeAssistantType, dummy_device_from_host_dimmer
 ) -> None:
     """Test the change of state of the light switches."""
-    await setup_integration(hass)
+    await mock_config_entry(hass)
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -170,10 +168,10 @@ async def test_dimmer_light_state(
 
 
 async def test_color_light_state(
-    hass: HomeAssistantType, dummy_create_api_device_color
+    hass: HomeAssistantType, dummy_device_from_host_color
 ) -> None:
     """Test the change of state of the light switches."""
-    await setup_integration(hass)
+    await mock_config_entry(hass)
 
     await hass.services.async_call(
         LIGHT_DOMAIN,

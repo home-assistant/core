@@ -17,15 +17,15 @@ from tests.components.wilight import (
     UPNP_MODEL_NAME,
     UPNP_MODEL_NUMBER,
     UPNP_SERIAL,
-    setup_integration,
+    mock_config_entry,
 )
 
 
-@pytest.fixture(name="dummy_create_api_device")
-def mock_dummy_create_api_device():
+@pytest.fixture(name="dummy_device_from_host")
+def mock_dummy_device_from_host():
     """Mock a valid api_devce."""
 
-    device = pywilight.discovery.wilight_from_discovery(
+    device = pywilight.wilight_from_discovery(
         f"http://{HOST}:45995/wilight.xml",
         UPNP_MAC_ADDRESS,
         UPNP_MODEL_NAME,
@@ -36,24 +36,23 @@ def mock_dummy_create_api_device():
     device.set_dummy(True)
 
     with patch(
-        "homeassistant.components.wilight.parent_device.create_api_device",
-        return_value=device,
+        "pywilight.device_from_host", return_value=device,
     ):
         yield device
 
 
 async def test_config_entry_not_ready(hass: HomeAssistantType) -> None:
     """Test the WiLight configuration entry not ready."""
-    entry = await setup_integration(hass)
+    entry = await mock_config_entry(hass)
 
     assert entry.state == ENTRY_STATE_SETUP_RETRY
 
 
 async def test_unload_config_entry(
-    hass: HomeAssistantType, dummy_create_api_device
+    hass: HomeAssistantType, dummy_device_from_host
 ) -> None:
     """Test the WiLight configuration entry unloading."""
-    entry = await setup_integration(hass)
+    entry = await mock_config_entry(hass)
 
     assert entry.entry_id in hass.data[DOMAIN]
     assert entry.state == ENTRY_STATE_LOADED

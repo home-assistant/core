@@ -765,7 +765,7 @@ pyvizio==0.1.48
 pywebpush==1.9.2
 
 # homeassistant.components.wilight
-pywilight==0.0.43
+pywilight==0.0.64
 
 # homeassistant.components.zerproc
 pyzerproc==0.2.4
