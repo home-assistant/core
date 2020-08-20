@@ -107,10 +107,6 @@ async def test_full_import_flow_implementation(
     assert result["data"]
     assert result["data"][CONF_HOST] == HOST
 
-    assert result["result"]
-    assert result["result"].options[CONF_UPCOMING_DAYS] == DEFAULT_UPCOMING_DAYS
-    assert result["result"].options[CONF_WANTED_MAX_ITEMS] == DEFAULT_WANTED_MAX_ITEMS
-
 
 async def test_full_user_flow_implementation(
     hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
