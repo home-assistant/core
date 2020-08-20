@@ -27,7 +27,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 
 from .const import CONF_AVAILABILITY_TEMPLATE
-from .template_entity import TemplateEntityWithAvailabilityAndImages
+from .template_entity import TemplateEntityWithAttributesAvailabilityAndImages
 
 CONF_ATTRIBUTE_TEMPLATES = "attribute_templates"
 
@@ -94,7 +94,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     return True
 
 
-class SensorTemplate(TemplateEntityWithAvailabilityAndImages, Entity):
+class SensorTemplate(TemplateEntityWithAttributesAvailabilityAndImages, Entity):
     """Representation of a Template Sensor."""
 
     def __init__(
@@ -113,7 +113,12 @@ class SensorTemplate(TemplateEntityWithAvailabilityAndImages, Entity):
         unique_id,
     ):
         """Initialize the sensor."""
-        super().__init__(availability_template, icon_template, entity_picture_template)
+        super().__init__(
+            attribute_templates,
+            availability_template,
+            icon_template,
+            entity_picture_template,
+        )
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, device_id, hass=hass
         )
@@ -123,8 +128,7 @@ class SensorTemplate(TemplateEntityWithAvailabilityAndImages, Entity):
         self._template = state_template
         self._state = None
         self._device_class = device_class
-        self._attribute_templates = attribute_templates
-        self._attributes = {}
+
         self._unique_id = unique_id
 
     async def async_added_to_hass(self):
@@ -134,20 +138,7 @@ class SensorTemplate(TemplateEntityWithAvailabilityAndImages, Entity):
         if self._friendly_name_template is not None:
             self.add_template_attribute("_name", self._friendly_name_template)
 
-        for key, value in self._attribute_templates.items():
-            self._add_attribute_template(key, value)
-
         await super().async_added_to_hass()
-
-    @callback
-    def _add_attribute_template(self, attribute_key, attribute_template):
-        """Create a template tracker for the attribute."""
-
-        def _update_attribute(result):
-            attr_result = None if isinstance(result, TemplateError) else result
-            self._attributes[attribute_key] = attr_result
-
-        self.add_template_attribute(None, attribute_template, None, _update_attribute)
 
     @callback
     def _update_state(self, result):
@@ -178,8 +169,3 @@ class SensorTemplate(TemplateEntityWithAvailabilityAndImages, Entity):
     def unit_of_measurement(self):
         """Return the unit_of_measurement of the device."""
         return self._unit_of_measurement
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        return self._attributes
