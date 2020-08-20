@@ -888,7 +888,7 @@ samsungtvws[websocket]==1.4.0
 sense_energy==0.7.2
 
 # homeassistant.components.sentry
-sentry-sdk==0.13.5
+sentry-sdk==0.16.5
 
 # homeassistant.components.sighthound
 simplehound==0.3
