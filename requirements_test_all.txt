@@ -359,7 +359,7 @@ hdate==0.9.5
 herepy==2.0.0
 
 # homeassistant.components.hlk_sw16
-hlk-sw16==0.0.8
+hlk-sw16==0.0.9
 
 # homeassistant.components.pi_hole
 hole==0.5.1
