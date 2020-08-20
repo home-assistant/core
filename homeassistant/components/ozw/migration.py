@@ -47,12 +47,7 @@ CC_ID_LABELS = {
 async def async_get_migration_data(hass, nodes_values):
     """Return dict with ozw side migration info."""
     data = {}
-
     ozw_config_entries = hass.config_entries.async_entries(DOMAIN)
-    if not ozw_config_entries:
-        _LOGGER.error("Config entry not set up")
-        return data
-
     config_entry = ozw_config_entries[0]  # ozw only has a single config entry
     ent_reg = await async_get_entity_registry(hass)
     entity_entries = async_entries_for_config_entry(ent_reg, config_entry.entry_id)
