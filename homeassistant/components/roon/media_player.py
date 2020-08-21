@@ -188,19 +188,23 @@ class RoonDevice(MediaPlayerEntity):
         self._unique_id = self.player_data["dev_id"]
         self._zone_id = self.player_data["zone_id"]
         self._output_id = self.player_data["output_id"]
-        self._name = self.player_data["display_name"]
-        self._is_volume_muted = self.player_data["volume"]["is_muted"]
-        self._volume_step = convert(self.player_data["volume"]["step"], int, 0)
         self._shuffle = self.player_data["settings"]["shuffle"]
-
-        if self.player_data["volume"]["type"] == "db":
-            volume = (
-                convert(self.player_data["volume"]["value"], float, 0.0) / 80 * 100
-                + 100
-            )
-        else:
-            volume = convert(self.player_data["volume"]["value"], float, 0.0)
-        self._volume_level = convert(volume, int, 0) / 100
+        self._name = self.player_data["display_name"]
+        try:
+            self._is_volume_muted = self.player_data["volume"]["is_muted"]
+            self._volume_step = convert(self.player_data["volume"]["step"], int, 0)
+            if self.player_data["volume"]["type"] == "db":
+                volume = (
+                    convert(self.player_data["volume"]["value"], float, 0.0) / 80 * 100
+                    + 100
+                )
+            else:
+                volume = convert(self.player_data["volume"]["value"], float, 0.0)
+            self._volume_level = convert(volume, int, 0) / 100
+        except KeyError:
+            self._is_volume_muted = False
+            self._volume_step = 0
+            self._volume_level = 0
 
         try:
             self._media_title = self.player_data["now_playing"]["three_line"]["line1"]
