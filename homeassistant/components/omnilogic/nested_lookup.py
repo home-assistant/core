@@ -9,36 +9,44 @@ VALUES_LIST = []
 def nested_lookup(key, document, wild=False, with_keys=False):
     """Lookup a key in a nested document, return a list of values."""
     if with_keys:
-        dd = defaultdict(list)
-        for kk, vv in _nested_lookup(key, document, wild=wild, with_keys=with_keys):
-            dd[kk].append(vv)
-        return dd
+        this_dict = defaultdict(list)
+        for this_key, this_value in _nested_lookup(
+            key, document, wild=wild, with_keys=with_keys
+        ):
+            this_dict[this_key].append(this_value)
+        return this_dict
     return list(_nested_lookup(key, document, wild=wild, with_keys=with_keys))
 
 
-def _is_case_insensitive_substring(aa, bb):
+def _is_case_insensitive_substring(val_a, val_b):
     """Return True if `a` is a case insensitive substring of `b`, else False."""
-    return str(aa).lower() in str(bb).lower()
+    return str(val_a).lower() in str(val_b).lower()
 
 
 def _nested_lookup(key, document, wild=False, with_keys=False):
     """Lookup a key in a nested document, yield a value."""
     if isinstance(document, list):
-        for dd in document:
-            yield from _nested_lookup(key, dd, wild=wild, with_keys=with_keys)
+        for this_dict in document:
+            yield from _nested_lookup(key, this_dict, wild=wild, with_keys=with_keys)
 
     if isinstance(document, dict):
-        for kk, vv in document.items():
-            if key == kk or (wild and _is_case_insensitive_substring(key, kk)):
+        for this_key, this_value in document.items():
+            if key == this_key or (
+                wild and _is_case_insensitive_substring(key, this_key)
+            ):
                 if with_keys:
-                    yield kk, vv
+                    yield this_key, this_value
                 else:
-                    yield vv
-            if isinstance(vv, dict):
-                yield from _nested_lookup(key, vv, wild=wild, with_keys=with_keys)
-            elif isinstance(vv, list):
-                for dd in vv:
-                    yield from _nested_lookup(key, dd, wild=wild, with_keys=with_keys)
+                    yield this_value
+            if isinstance(this_value, dict):
+                yield from _nested_lookup(
+                    key, this_value, wild=wild, with_keys=with_keys
+                )
+            elif isinstance(this_value, list):
+                for this_dict in this_value:
+                    yield from _nested_lookup(
+                        key, this_dict, wild=wild, with_keys=with_keys
+                    )
 
 
 def get_all_keys(dictionary):
