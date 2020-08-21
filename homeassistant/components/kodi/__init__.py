@@ -1,6 +1,7 @@
 """The kodi component."""
 
 import asyncio
+import logging
 
 from pykodi import CannotConnectError, InvalidAuthError, Kodi, get_kodi_connection
 
@@ -26,6 +27,7 @@ from .const import (
     DOMAIN,
 )
 
+_LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["media_player"]
 
 
