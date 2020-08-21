@@ -859,6 +859,12 @@ class Script:
         self, variables: Optional[_VarsType] = None, context: Optional[Context] = None
     ) -> None:
         """Run script."""
+        if context is None:
+            self._log(
+                "Running script requires passing in a context", level=logging.WARNING
+            )
+            context = Context()
+
         if self.is_running:
             if self.script_mode == SCRIPT_MODE_SINGLE:
                 self._log("Already running", level=logging.WARNING)
@@ -875,6 +881,7 @@ class Script:
         # during the run back to the caller.
         if self._top_level:
             variables = dict(variables) if variables is not None else {}
+            variables["context"] = context
 
         if self.script_mode != SCRIPT_MODE_QUEUED:
             cls = _ScriptRun
