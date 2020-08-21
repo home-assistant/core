@@ -44,7 +44,7 @@ from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.script import Script
 
 from .const import CONF_AVAILABILITY_TEMPLATE
-from .template_entity import TemplateEntityWithAttributesAvailabilityAndImages
+from .template_entity import TemplateEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -141,9 +141,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(vacuums)
 
 
-class TemplateVacuum(
-    TemplateEntityWithAttributesAvailabilityAndImages, StateVacuumEntity
-):
+class TemplateVacuum(TemplateEntity, StateVacuumEntity):
     """A template vacuum component."""
 
     def __init__(
@@ -168,7 +166,8 @@ class TemplateVacuum(
     ):
         """Initialize the vacuum."""
         super().__init__(
-            attribute_templates, availability_template, None, None,
+            attribute_templates=attribute_templates,
+            availability_template=availability_template,
         )
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, device_id, hass=hass

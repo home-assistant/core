@@ -38,7 +38,7 @@ from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.script import Script
 
 from .const import CONF_AVAILABILITY_TEMPLATE
-from .template_entity import TemplateEntityWithAvailabilityAndImages
+from .template_entity import TemplateEntity
 
 _LOGGER = logging.getLogger(__name__)
 _VALID_STATES = [STATE_OPEN, STATE_CLOSED, "true", "false"]
@@ -148,7 +148,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(covers)
 
 
-class CoverTemplate(TemplateEntityWithAvailabilityAndImages, CoverEntity):
+class CoverTemplate(TemplateEntity, CoverEntity):
     """Representation of a Template cover."""
 
     def __init__(
@@ -174,7 +174,9 @@ class CoverTemplate(TemplateEntityWithAvailabilityAndImages, CoverEntity):
     ):
         """Initialize the Template cover."""
         super().__init__(
-            availability_template, icon_template, entity_picture_template,
+            availability_template=availability_template,
+            icon_template=icon_template,
+            entity_picture_template=entity_picture_template,
         )
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, device_id, hass=hass

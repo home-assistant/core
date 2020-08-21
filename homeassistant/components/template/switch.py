@@ -27,7 +27,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.script import Script
 
 from .const import CONF_AVAILABILITY_TEMPLATE
-from .template_entity import TemplateEntityWithAvailabilityAndImages
+from .template_entity import TemplateEntity
 
 _LOGGER = logging.getLogger(__name__)
 _VALID_STATES = [STATE_ON, STATE_OFF, "true", "false"]
@@ -86,9 +86,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(switches)
 
 
-class SwitchTemplate(
-    TemplateEntityWithAvailabilityAndImages, SwitchEntity, RestoreEntity
-):
+class SwitchTemplate(TemplateEntity, SwitchEntity, RestoreEntity):
     """Representation of a Template switch."""
 
     def __init__(
@@ -105,7 +103,11 @@ class SwitchTemplate(
         unique_id,
     ):
         """Initialize the Template switch."""
-        super().__init__(availability_template, icon_template, entity_picture_template)
+        super().__init__(
+            availability_template=availability_template,
+            icon_template=icon_template,
+            entity_picture_template=entity_picture_template,
+        )
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, device_id, hass=hass
         )
