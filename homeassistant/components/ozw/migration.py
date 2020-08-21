@@ -6,7 +6,7 @@ from homeassistant.helpers.entity_registry import (
     async_get_registry as async_get_entity_registry,
 )
 
-from .const import DOMAIN
+from .const import DOMAIN, NODES_VALUES
 from .entity import create_value_id
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,9 +44,10 @@ CC_ID_LABELS = {
 }
 
 
-async def async_get_migration_data(hass, nodes_values):
+async def async_get_migration_data(hass):
     """Return dict with ozw side migration info."""
     data = {}
+    nodes_values = hass.data[DOMAIN][NODES_VALUES]
     ozw_config_entries = hass.config_entries.async_entries(DOMAIN)
     config_entry = ozw_config_entries[0]  # ozw only has a single config entry
     ent_reg = await async_get_entity_registry(hass)
