@@ -17,8 +17,6 @@ from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .const import CONF_SSL_CERTIFICATE, CONF_SSL_KEY, DOMAIN
 
-ENTITY_ID_FORMAT = DOMAIN + ".{}"
-
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
