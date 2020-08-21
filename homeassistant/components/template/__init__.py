@@ -27,15 +27,17 @@ async def _async_setup_reload_service(hass):
             return
 
         for platform in hass.data[PLATFORM_STORAGE_KEY]:
-            await platform.async_reset()
 
             integration = await async_get_integration(hass, platform.domain)
 
             conf = await conf_util.async_process_component_config(
                 hass, unprocessed_conf, integration
             )
+
             if not conf:
                 continue
+
+            await platform.async_reset()
 
             # Extract only the config for template, ignore the rest.
             for p_type, p_config in config_per_platform(conf, platform.domain):
