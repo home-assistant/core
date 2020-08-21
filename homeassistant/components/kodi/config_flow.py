@@ -40,7 +40,7 @@ async def validate_http(hass: core.HomeAssistant, data):
     ssl = data.get(CONF_SSL)
     session = async_get_clientsession(hass)
 
-    _LOGGER.info("Connecting to %s:%s over HTTP.", host, port)
+    _LOGGER.debug("Connecting to %s:%s over HTTP.", host, port)
     khc = get_kodi_connection(
         host, port, None, username, password, ssl, session=session
     )
