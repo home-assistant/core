@@ -8,6 +8,7 @@ from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT, UNIT_PERCENTAGE
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
+from .nested_lookup import nested_lookup
 
 TEMP_UNITS = [TEMP_CELSIUS, TEMP_FAHRENHEIT]
 PERCENT_UNITS = [UNIT_PERCENTAGE, UNIT_PERCENTAGE]
@@ -35,6 +36,20 @@ async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None
                 "mdi:thermometer",
                 TEMP_UNITS,
                 backyard.get("airTemp"),
+            )
+        )
+
+        sensors.append(
+            OmnilogicSensor(
+                coordinator,
+                "alarm",
+                "Alarm",
+                backyard,
+                {},
+                "none",
+                "mdi:alert-circle",
+                "",
+                backyard,
             )
         )
 
@@ -110,7 +125,7 @@ async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None
             )
 
             if "CSAD" in bow.keys():
-                if bow["CSAD"]["ph"] != "" and bow["CSAD"]["ph"] != "0":
+                if bow["CSAD"]["systemId"] != "0":
                     sensors.append(
                         OmnilogicSensor(
                             coordinator,
@@ -125,7 +140,6 @@ async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None
                         )
                     )
 
-                if bow["CSAD"]["orp"] != "" and bow["CSAD"]["orp"] != "0":
                     sensors.append(
                         OmnilogicSensor(
                             coordinator,
@@ -187,6 +201,7 @@ class OmnilogicSensor(Entity):
         self.sensordata = sensordata
         self.attrs = {}
         self.attrs["MspSystemId"] = backyard["systemId"]
+        self.alarms = []
 
     @property
     def should_poll(self) -> bool:
@@ -303,6 +318,14 @@ class OmnilogicSensor(Entity):
             self.attrs["MspSystemId"] = self._backyard["systemId"]
             self.attrs["PumpType"] = self.sensordata.get("Filter-Type")
 
+            self.alarms = sensordata.get("Alarms")
+
+            self.attrs["Alarm"] = ""
+            if len(self.alarms) != 0:
+                self.attrs["Alarm"] = (
+                    self.alarms[0]["Message"] + " (" + self.alarms[0]["Comment"] + ")"
+                )
+
         elif self._kind == "pump_speed":
             sensordata = {}
 
@@ -333,6 +356,15 @@ class OmnilogicSensor(Entity):
             self.attrs["MspSystemId"] = self._backyard["systemId"]
             self.attrs["PumpType"] = self.sensordata.get("Type")
 
+            self.alarms = []
+            self.alarms.append(sensordata.get("Alarms"))
+
+            self.attrs["Alarm"] = ""
+            if len(self.alarms) != 0:
+                self.attrs["Alarm"] = (
+                    self.alarms[0]["Message"] + " (" + self.alarms[0]["Comment"] + ")"
+                )
+
         elif self._kind == "salt_level":
             sensordata = {}
 
@@ -361,6 +393,14 @@ class OmnilogicSensor(Entity):
                 + " Salt Level"
             )
 
+            self.alarms = sensordata.get("Alarms")
+
+            self.attrs["Alarm"] = ""
+            if len(self.alarms) > 0:
+                self.attrs["Alarm"] = (
+                    self.alarms[0]["Message"] + " (" + self.alarms[0]["Comment"] + ")"
+                )
+
         elif self._kind == "chlorinator":
             sensordata = {}
 
@@ -388,6 +428,14 @@ class OmnilogicSensor(Entity):
                 + " Setting"
             )
 
+            self.alarms = sensordata.get("Alarms")
+
+            self.attrs["Alarm"] = ""
+            if len(self.alarms) != 0:
+                self.attrs["Alarm"] = (
+                    self.alarms[0]["Message"] + " (" + self.alarms[0]["Comment"] + ")"
+                )
+
         elif self._kind == "csad_ph":
             sensordata = {}
 
@@ -397,11 +445,23 @@ class OmnilogicSensor(Entity):
                         sensordata = bow.get("CSAD")
                         break
 
-            self._state = sensordata.get("ph")
+            phstate = None
+            if sensordata.get("ph") != 0:
+                phstate = sensordata.get("ph")
+
+            self._state = phstate
             self._unit = "pH"
             self._name = (
                 self._backyard["BackyardName"] + " " + self.bow.get("Name") + " pH"
             )
+
+            self.alarms = sensordata.get("Alarms")
+
+            self.attrs["Alarm"] = ""
+            if len(self.alarms) != 0:
+                self.attrs["Alarm"] = (
+                    self.alarms[0]["Message"] + " (" + self.alarms[0]["Comment"] + ")"
+                )
 
         elif self._kind == "csad_orp":
             sensordata = {}
@@ -412,11 +472,23 @@ class OmnilogicSensor(Entity):
                         sensordata = bow.get("CSAD")
                         break
 
-            self._state = sensordata.get("orp")
+            orpstate = None
+            if sensordata.get("orp") != -1:
+                orpstate = sensordata.get("orp")
+
+            self._state = orpstate
             self._unit = "mV"
             self._name = (
                 self._backyard["BackyardName"] + " " + self.bow.get("Name") + " ORP"
             )
+
+            self.alarms = sensordata.get("Alarms")
+
+            self.attrs["Alarm"] = ""
+            if len(self.alarms) != 0:
+                self.attrs["Alarm"] = (
+                    self.alarms[0]["Message"] + " (" + self.alarms[0]["Comment"] + ")"
+                )
 
         elif self._kind == "air_temperature":
             sensordata = 0
@@ -437,6 +509,27 @@ class OmnilogicSensor(Entity):
             self._unit = TEMP_FAHRENHEIT
             self._name = self._backyard.get("BackyardName") + " Air Temperature"
             self.attrs["MspSystemId"] = self._backyard["systemId"]
+
+        elif self._kind == "alarm":
+            sensordata = []
+
+            self._name = self._backyard.get("BackyardName") + " Alarms"
+
+            for backyard in self.coordinator.data:
+                if backyard.get("systemId") == self.attrs["MspSystemId"]:
+                    sensordata = backyard
+
+            all_alarms = nested_lookup("Alarms", sensordata, False, False)
+
+            alarms_list = []
+            for alarm_segment in all_alarms:
+                for this_alarm in alarm_segment:
+                    alarms_list.append(this_alarm)
+
+            if len(alarms_list) > 0:
+                self._state = "on"
+            else:
+                self._state = "off"
 
     async def async_added_to_hass(self):
         """Subscribe to updates."""
