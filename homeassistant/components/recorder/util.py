@@ -1,5 +1,6 @@
 """SQLAlchemy util functions."""
 from contextlib import contextmanager
+from datetime import timedelta
 import logging
 import os
 import time
@@ -9,12 +10,18 @@ from sqlalchemy.exc import OperationalError, SQLAlchemyError
 import homeassistant.util.dt as dt_util
 
 from .const import DATA_INSTANCE, SQLITE_URL_PREFIX
+from .models import ALL_TABLES, process_timestamp
 
 _LOGGER = logging.getLogger(__name__)
 
 RETRIES = 3
 QUERY_RETRY_WAIT = 0.1
 SQLITE3_POSTFIXES = ["", "-wal", "-shm"]
+
+# This is the maximum time after the recorder ends the session
+# before we no longer consider startup to be a "restart" and we
+# should do a check on the sqlite3 database.
+MAX_RESTART_TIME = timedelta(minutes=6)
 
 
 @contextmanager
@@ -116,19 +123,62 @@ def validate_or_move_away_sqlite_database(dburl: str) -> bool:
     return True
 
 
+def last_run_was_recently_clean(cursor):
+    """Verify the last recorder run was recently clean."""
+
+    cursor.execute("SELECT end FROM recorder_runs ORDER BY start DESC LIMIT 1;")
+    end_time = cursor.fetchone()
+
+    if not end_time or not end_time[0]:
+        return False
+
+    last_run_end_time = process_timestamp(dt_util.parse_datetime(end_time[0]))
+    now = dt_util.utcnow()
+
+    _LOGGER.debug("The last run ended at: %s (now: %s)", last_run_end_time, now)
+
+    if last_run_end_time + MAX_RESTART_TIME < now:
+        return False
+
+    return True
+
+
+def basic_sanity_check(cursor):
+    """Check tables to make sure select does not fail."""
+
+    for table in ALL_TABLES:
+        cursor.execute(f"SELECT * FROM {table} LIMIT 1;")  # sec: not injection
+
+    return True
+
+
 def validate_sqlite_database(dbpath: str) -> bool:
     """Run a quick check on an sqlite database to see if it is corrupt."""
     import sqlite3  # pylint: disable=import-outside-toplevel
 
     try:
         conn = sqlite3.connect(dbpath)
-        conn.cursor().execute("PRAGMA QUICK_CHECK")
+        run_checks_on_open_db(dbpath, conn.cursor())
         conn.close()
     except sqlite3.DatabaseError:
         _LOGGER.exception("The database at %s is corrupt or malformed.", dbpath)
         return False
 
     return True
+
+
+def run_checks_on_open_db(dbpath, cursor):
+    """Run checks that will generate a sqlite3 exception if there is corruption."""
+    if basic_sanity_check(cursor) and last_run_was_recently_clean(cursor):
+        _LOGGER.debug(
+            "The quick_check will be skipped as the system was restarted cleanly and passed the basic sanity check"
+        )
+        return
+
+    _LOGGER.debug(
+        "A quick_check is being performed on the sqlite3 database at %s", dbpath
+    )
+    cursor.execute("PRAGMA QUICK_CHECK")
 
 
 def _move_away_broken_database(dbfile: str) -> None:
