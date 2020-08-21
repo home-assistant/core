@@ -45,21 +45,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     password = entry.data[CONF_PASSWORD]
 
     account = Account(username, password)
-    smartmetertexas = SmartMeterTexasData(hass, entry, account)
+    smart_meter_texas_data = SmartMeterTexasData(hass, entry, account)
     try:
-        await smartmetertexas.client.authenticate()
+        await smart_meter_texas_data.client.authenticate()
     except SmartMeterTexasAuthError:
         _LOGGER.error("Username or password was not accepted")
         return False
     except asyncio.TimeoutError:
         raise ConfigEntryNotReady
 
-    await smartmetertexas.setup()
+    await smart_meter_texas_data.setup()
 
     async def async_update_data():
         _LOGGER.debug("Fetching latest data")
-        await smartmetertexas.read_meters()
-        return smartmetertexas
+        await smart_meter_texas_data.read_meters()
+        return smart_meter_texas_data
 
     # Use a DataUpdateCoordinator to manage the updates. This is due to the
     # Smart Meter Texas API which takes around 30 seconds to read a meter.
@@ -78,7 +78,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     hass.data[DOMAIN][entry.entry_id] = {
         DATA_COORDINATOR: coordinator,
-        DATA_SMART_METER: smartmetertexas,
+        DATA_SMART_METER: smart_meter_texas_data,
     }
 
     asyncio.create_task(coordinator.async_refresh())

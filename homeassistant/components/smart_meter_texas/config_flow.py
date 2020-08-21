@@ -50,14 +50,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
-    def _account_already_configured(self, account):
-        existing_accounts = {
-            entry.data[CONF_USERNAME]
-            for entry in self._async_current_entries()
-            if CONF_USERNAME in entry.data
-        }
-        return account in existing_accounts
-
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
 
@@ -74,8 +66,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 if not errors:
-                    if self._account_already_configured(user_input[CONF_USERNAME]):
-                        return self.async_abort(reason="already_configured")
+                    # Ensure the same account cannot be setup more than once.
+                    await self.async_set_unique_id(user_input[CONF_USERNAME])
+                    self._abort_if_unique_id_configured()
+
                     return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(

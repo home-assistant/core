@@ -32,9 +32,9 @@ def load_smt_fixture(name):
     return json.loads(json_fixture)
 
 
-async def setup_integration(hass, config_entry, aioclient_mock):
+async def setup_integration(hass, config_entry, aioclient_mock, **kwargs):
     """Initialize the Smart Meter Texas integration for testing."""
-    mock_connection(aioclient_mock)
+    mock_connection(aioclient_mock, **kwargs)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
