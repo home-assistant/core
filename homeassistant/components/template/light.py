@@ -23,8 +23,6 @@ from homeassistant.const import (
     CONF_LIGHTS,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
-    EVENT_HOMEASSISTANT_START,
-    MATCH_ALL,
     STATE_OFF,
     STATE_ON,
 )
@@ -33,11 +31,10 @@ from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import async_generate_entity_id
-from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.script import Script
 
-from . import extract_entities, initialise_templates
 from .const import CONF_AVAILABILITY_TEMPLATE
+from .template_entity import TemplateEntityWithAvailabilityAndImages
 
 _LOGGER = logging.getLogger(__name__)
 _VALID_STATES = [STATE_ON, STATE_OFF, "true", "false"]
@@ -108,22 +105,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         white_value_action = device_config.get(CONF_WHITE_VALUE_ACTION)
         white_value_template = device_config.get(CONF_WHITE_VALUE_TEMPLATE)
 
-        templates = {
-            CONF_VALUE_TEMPLATE: state_template,
-            CONF_ICON_TEMPLATE: icon_template,
-            CONF_ENTITY_PICTURE_TEMPLATE: entity_picture_template,
-            CONF_AVAILABILITY_TEMPLATE: availability_template,
-            CONF_LEVEL_TEMPLATE: level_template,
-            CONF_TEMPERATURE_TEMPLATE: temperature_template,
-            CONF_COLOR_TEMPLATE: color_template,
-            CONF_WHITE_VALUE_TEMPLATE: white_value_template,
-        }
-
-        initialise_templates(hass, templates)
-        entity_ids = extract_entities(
-            device, "light", device_config.get(CONF_ENTITY_ID), templates
-        )
-
         lights.append(
             LightTemplate(
                 hass,
@@ -137,7 +118,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 off_action,
                 level_action,
                 level_template,
-                entity_ids,
                 temperature_action,
                 temperature_template,
                 color_action,
@@ -151,7 +131,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(lights)
 
 
-class LightTemplate(LightEntity):
+class LightTemplate(TemplateEntityWithAvailabilityAndImages, LightEntity):
     """Representation of a templated Light, including dimmable."""
 
     def __init__(
@@ -167,7 +147,6 @@ class LightTemplate(LightEntity):
         off_action,
         level_action,
         level_template,
-        entity_ids,
         temperature_action,
         temperature_template,
         color_action,
@@ -177,15 +156,14 @@ class LightTemplate(LightEntity):
         unique_id,
     ):
         """Initialize the light."""
-        self.hass = hass
+        super().__init__(
+            availability_template, icon_template, entity_picture_template,
+        )
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, device_id, hass=hass
         )
         self._name = friendly_name
         self._template = state_template
-        self._icon_template = icon_template
-        self._entity_picture_template = entity_picture_template
-        self._availability_template = availability_template
         domain = __name__.split(".")[-2]
         self._on_script = Script(hass, on_action, friendly_name, domain)
         self._off_script = Script(hass, off_action, friendly_name, domain)
@@ -211,14 +189,10 @@ class LightTemplate(LightEntity):
         self._white_value_template = white_value_template
 
         self._state = False
-        self._icon = None
-        self._entity_picture = None
         self._brightness = None
         self._temperature = None
         self._color = None
         self._white_value = None
-        self._entities = entity_ids
-        self._available = True
         self._unique_id = unique_id
 
     @property
@@ -270,56 +244,46 @@ class LightTemplate(LightEntity):
         """Return true if device is on."""
         return self._state
 
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return False
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return self._icon
-
-    @property
-    def entity_picture(self):
-        """Return the entity picture to use in the frontend, if any."""
-        return self._entity_picture
-
-    @property
-    def available(self) -> bool:
-        """Return if the device is available."""
-        return self._available
-
     async def async_added_to_hass(self):
         """Register callbacks."""
 
-        @callback
-        def template_light_state_listener(event):
-            """Handle target device state changes."""
-            self.async_schedule_update_ha_state(True)
-
-        @callback
-        def template_light_startup(event):
-            """Update template on startup."""
-            if (
-                self._template is not None
-                or self._level_template is not None
-                or self._temperature_template is not None
-                or self._color_template is not None
-                or self._white_value_template is not None
-                or self._availability_template is not None
-            ):
-                if self._entities != MATCH_ALL:
-                    # Track state change only for valid templates
-                    async_track_state_change_event(
-                        self.hass, self._entities, template_light_state_listener
-                    )
-
-            self.async_schedule_update_ha_state(True)
-
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START, template_light_startup
-        )
+        if self._template:
+            self.add_template_attribute(
+                "_state", self._template, None, self._update_state
+            )
+        if self._level_template:
+            self.add_template_attribute(
+                "_brightness",
+                self._level_template,
+                None,
+                self._update_brightness,
+                none_on_template_error=True,
+            )
+        if self._temperature_template:
+            self.add_template_attribute(
+                "_temperature",
+                self._temperature_template,
+                None,
+                self._update_temperature,
+                none_on_template_error=True,
+            )
+        if self._color_template:
+            self.add_template_attribute(
+                "_color",
+                self._color_template,
+                None,
+                self._update_color,
+                none_on_template_error=True,
+            )
+        if self._white_value_template:
+            self.add_template_attribute(
+                "_white_value",
+                self._white_value_template,
+                None,
+                self._update_white_value,
+                none_on_template_error=True,
+            )
+        await super().async_added_to_hass()
 
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
@@ -382,61 +346,10 @@ class LightTemplate(LightEntity):
             self._state = False
             self.async_write_ha_state()
 
-    async def async_update(self):
-        """Update from templates."""
-        self.update_state()
-
-        self.update_brightness()
-
-        self.update_temperature()
-
-        self.update_color()
-
-        self.update_white_value()
-
-        for property_name, template in (
-            ("_icon", self._icon_template),
-            ("_entity_picture", self._entity_picture_template),
-            ("_available", self._availability_template),
-        ):
-            if template is None:
-                continue
-
-            try:
-                value = template.async_render()
-                if property_name == "_available":
-                    value = value.lower() == "true"
-                setattr(self, property_name, value)
-            except TemplateError as ex:
-                friendly_property_name = property_name[1:].replace("_", " ")
-                if ex.args and ex.args[0].startswith(
-                    "UndefinedError: 'None' has no attribute"
-                ):
-                    # Common during HA startup - so just a warning
-                    _LOGGER.warning(
-                        "Could not render %s template %s, the state is unknown",
-                        friendly_property_name,
-                        self._name,
-                    )
-                    return
-
-                try:
-                    setattr(self, property_name, getattr(super(), property_name))
-                except AttributeError:
-                    _LOGGER.error(
-                        "Could not render %s template %s: %s",
-                        friendly_property_name,
-                        self._name,
-                        ex,
-                    )
-
     @callback
-    def update_brightness(self):
+    def _update_brightness(self, brightness):
         """Update the brightness from the template."""
-        if self._level_template is None:
-            return
         try:
-            brightness = self._level_template.async_render()
             if brightness in ("None", ""):
                 self._brightness = None
                 return
@@ -453,17 +366,11 @@ class LightTemplate(LightEntity):
                 exc_info=True,
             )
             self._brightness = None
-        except TemplateError:
-            _LOGGER.error("Invalid template", exc_info=True)
-            self._brightness = None
 
     @callback
-    def update_white_value(self):
+    def _update_white_value(self, white_value):
         """Update the white value from the template."""
-        if self._white_value_template is None:
-            return
         try:
-            white_value = self._white_value_template.async_render()
             if white_value in ("None", ""):
                 self._white_value = None
                 return
@@ -480,37 +387,34 @@ class LightTemplate(LightEntity):
                 exc_info=True,
             )
             self._white_value = None
-        except TemplateError as ex:
-            _LOGGER.error(ex)
-            self._state = None
 
     @callback
-    def update_state(self):
+    def _update_state(self, result):
         """Update the state from the template."""
-        if self._template is None:
+
+        if isinstance(result, TemplateError):
+            # This behavior is legacy
+            self._state = False
+            if not self._availability_template:
+                self._available = True
             return
-        try:
-            state = self._template.async_render().lower()
-            if state in _VALID_STATES:
-                self._state = state in ("true", STATE_ON)
-            else:
-                _LOGGER.error(
-                    "Received invalid light is_on state: %s. Expected: %s",
-                    state,
-                    ", ".join(_VALID_STATES),
-                )
-                self._state = None
-        except TemplateError as ex:
-            _LOGGER.error(ex)
+
+        state = str(result).lower()
+        if state in _VALID_STATES:
+            self._state = state in ("true", STATE_ON)
+        else:
+            _LOGGER.error(
+                "Received invalid light is_on state: %s. Expected: %s",
+                state,
+                ", ".join(_VALID_STATES),
+            )
             self._state = None
 
     @callback
-    def update_temperature(self):
+    def _update_temperature(self, render):
         """Update the temperature from the template."""
-        if self._temperature_template is None:
-            return
+
         try:
-            render = self._temperature_template.async_render()
             if render in ("None", ""):
                 self._temperature = None
                 return
@@ -530,41 +434,30 @@ class LightTemplate(LightEntity):
                 exc_info=True,
             )
             self._temperature = None
-        except TemplateError:
-            _LOGGER.error("Cannot evaluate temperature template", exc_info=True)
-            self._temperature = None
 
     @callback
-    def update_color(self):
+    def _update_color(self, render):
         """Update the hs_color from the template."""
-        if self._color_template is None:
+        if render in ("None", ""):
+            self._color = None
             return
-
-        try:
-            render = self._color_template.async_render()
-            if render in ("None", ""):
-                self._color = None
-                return
-            h_str, s_str = map(
-                float, render.replace("(", "").replace(")", "").split(",", 1)
+        h_str, s_str = map(
+            float, render.replace("(", "").replace(")", "").split(",", 1)
+        )
+        if (
+            h_str is not None
+            and s_str is not None
+            and 0 <= h_str <= 360
+            and 0 <= s_str <= 100
+        ):
+            self._color = (h_str, s_str)
+        elif h_str is not None and s_str is not None:
+            _LOGGER.error(
+                "Received invalid hs_color : (%s, %s). Expected: (0-360, 0-100)",
+                h_str,
+                s_str,
             )
-            if (
-                h_str is not None
-                and s_str is not None
-                and 0 <= h_str <= 360
-                and 0 <= s_str <= 100
-            ):
-                self._color = (h_str, s_str)
-            elif h_str is not None and s_str is not None:
-                _LOGGER.error(
-                    "Received invalid hs_color : (%s, %s). Expected: (0-360, 0-100)",
-                    h_str,
-                    s_str,
-                )
-                self._color = None
-            else:
-                _LOGGER.error("Received invalid hs_color : (%s)", render)
-                self._color = None
-        except TemplateError:
-            _LOGGER.error("Cannot evaluate hs_color template", exc_info=True)
+            self._color = None
+        else:
+            _LOGGER.error("Received invalid hs_color : (%s)", render)
             self._color = None

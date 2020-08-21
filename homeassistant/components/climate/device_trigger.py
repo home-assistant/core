@@ -3,12 +3,12 @@ from typing import List
 
 import voluptuous as vol
 
-from homeassistant.components.automation import (
-    AutomationActionType,
-    numeric_state as numeric_state_automation,
-    state as state_automation,
-)
+from homeassistant.components.automation import AutomationActionType
 from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
+from homeassistant.components.homeassistant.triggers import (
+    numeric_state as numeric_state_trigger,
+    state as state_trigger,
+)
 from homeassistant.const import (
     CONF_ABOVE,
     CONF_BELOW,
@@ -36,7 +36,7 @@ HVAC_MODE_TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_TYPE): "hvac_mode_changed",
-        vol.Required(state_automation.CONF_TO): vol.In(const.HVAC_MODES),
+        vol.Required(state_trigger.CONF_TO): vol.In(const.HVAC_MODES),
     }
 )
 
@@ -118,34 +118,34 @@ async def async_attach_trigger(
 
     if trigger_type == "hvac_mode_changed":
         state_config = {
-            state_automation.CONF_PLATFORM: "state",
-            state_automation.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
-            state_automation.CONF_TO: config[state_automation.CONF_TO],
-            state_automation.CONF_FROM: [
+            state_trigger.CONF_PLATFORM: "state",
+            state_trigger.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
+            state_trigger.CONF_TO: config[state_trigger.CONF_TO],
+            state_trigger.CONF_FROM: [
                 mode
                 for mode in const.HVAC_MODES
-                if mode != config[state_automation.CONF_TO]
+                if mode != config[state_trigger.CONF_TO]
             ],
         }
         if CONF_FOR in config:
             state_config[CONF_FOR] = config[CONF_FOR]
-        state_config = state_automation.TRIGGER_SCHEMA(state_config)
-        return await state_automation.async_attach_trigger(
+        state_config = state_trigger.TRIGGER_SCHEMA(state_config)
+        return await state_trigger.async_attach_trigger(
             hass, state_config, action, automation_info, platform_type="device"
         )
 
     numeric_state_config = {
-        numeric_state_automation.CONF_PLATFORM: "numeric_state",
-        numeric_state_automation.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
+        numeric_state_trigger.CONF_PLATFORM: "numeric_state",
+        numeric_state_trigger.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
     }
 
     if trigger_type == "current_temperature_changed":
         numeric_state_config[
-            numeric_state_automation.CONF_VALUE_TEMPLATE
+            numeric_state_trigger.CONF_VALUE_TEMPLATE
         ] = "{{ state.attributes.current_temperature }}"
     else:
         numeric_state_config[
-            numeric_state_automation.CONF_VALUE_TEMPLATE
+            numeric_state_trigger.CONF_VALUE_TEMPLATE
         ] = "{{ state.attributes.current_humidity }}"
 
     if CONF_ABOVE in config:
@@ -155,8 +155,8 @@ async def async_attach_trigger(
     if CONF_FOR in config:
         numeric_state_config[CONF_FOR] = config[CONF_FOR]
 
-    numeric_state_config = numeric_state_automation.TRIGGER_SCHEMA(numeric_state_config)
-    return await numeric_state_automation.async_attach_trigger(
+    numeric_state_config = numeric_state_trigger.TRIGGER_SCHEMA(numeric_state_config)
+    return await numeric_state_trigger.async_attach_trigger(
         hass, numeric_state_config, action, automation_info, platform_type="device"
     )
 

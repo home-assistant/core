@@ -1,8 +1,6 @@
 """Allow to set up simple automation rules via the config file."""
-import asyncio
-import importlib
 import logging
-from typing import Any, Awaitable, Callable, List, Optional, Set
+from typing import Any, Awaitable, Callable, List, Optional, Set, cast
 
 import voluptuous as vol
 
@@ -46,6 +44,7 @@ from homeassistant.helpers.script import (
     make_script_schema,
 )
 from homeassistant.helpers.service import async_register_admin_service
+from homeassistant.helpers.trigger import async_initialize_triggers
 from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.loader import bind_hass
 from homeassistant.util.dt import parse_datetime, utcnow
@@ -90,26 +89,6 @@ _LOGGER = logging.getLogger(__name__)
 AutomationActionType = Callable[[HomeAssistant, TemplateVarsType], Awaitable[None]]
 
 
-def _platform_validator(config):
-    """Validate it is a valid platform."""
-    try:
-        platform = importlib.import_module(f".{config[CONF_PLATFORM]}", __name__)
-    except ImportError:
-        raise vol.Invalid("Invalid platform specified") from None
-
-    return platform.TRIGGER_SCHEMA(config)
-
-
-_TRIGGER_SCHEMA = vol.All(
-    cv.ensure_list,
-    [
-        vol.All(
-            vol.Schema({vol.Required(CONF_PLATFORM): str}, extra=vol.ALLOW_EXTRA),
-            _platform_validator,
-        )
-    ],
-)
-
 _CONDITION_SCHEMA = vol.All(cv.ensure_list, [cv.CONDITION_SCHEMA])
 
 PLATFORM_SCHEMA = vol.All(
@@ -122,7 +101,7 @@ PLATFORM_SCHEMA = vol.All(
             vol.Optional(CONF_DESCRIPTION): cv.string,
             vol.Optional(CONF_INITIAL_STATE): cv.boolean,
             vol.Optional(CONF_HIDE_ENTITY): cv.boolean,
-            vol.Required(CONF_TRIGGER): _TRIGGER_SCHEMA,
+            vol.Required(CONF_TRIGGER): cv.TRIGGER_SCHEMA,
             vol.Optional(CONF_CONDITION): _CONDITION_SCHEMA,
             vol.Required(CONF_ACTION): cv.SCRIPT_SCHEMA,
         },
@@ -485,36 +464,19 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         self, home_assistant_start: bool
     ) -> Optional[Callable[[], None]]:
         """Set up the triggers."""
-        info = {"name": self._name, "home_assistant_start": home_assistant_start}
 
-        triggers = []
-        for conf in self._trigger_config:
-            platform = importlib.import_module(f".{conf[CONF_PLATFORM]}", __name__)
+        def log_cb(level, msg):
+            self._logger.log(level, "%s %s", msg, self._name)
 
-            triggers.append(
-                platform.async_attach_trigger(  # type: ignore
-                    self.hass, conf, self.async_trigger, info
-                )
-            )
-
-        results = await asyncio.gather(*triggers)
-
-        if None in results:
-            self._logger.error("Error setting up trigger %s", self._name)
-
-        removes = [remove for remove in results if remove is not None]
-        if not removes:
-            return None
-
-        self._logger.info("Initialized trigger %s", self._name)
-
-        @callback
-        def remove_triggers():
-            """Remove attached triggers."""
-            for remove in removes:
-                remove()
-
-        return remove_triggers
+        return await async_initialize_triggers(
+            cast(HomeAssistant, self.hass),
+            self._trigger_config,
+            self.async_trigger,
+            DOMAIN,
+            self._name,
+            log_cb,
+            home_assistant_start,
+        )
 
     @property
     def device_state_attributes(self):

@@ -3,11 +3,12 @@ import asyncio
 
 import voluptuous as vol
 
-from homeassistant.auth.permissions.const import POLICY_READ
+from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_READ
+from homeassistant.components.websocket_api.const import ERR_NOT_FOUND
 from homeassistant.const import EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_ALL
 from homeassistant.core import DOMAIN as HASS_DOMAIN, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceNotFound, Unauthorized
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.loader import IntegrationNotFound, async_get_integration
@@ -30,6 +31,7 @@ def async_register_commands(hass, async_reg):
     async_reg(hass, handle_render_template)
     async_reg(hass, handle_manifest_list)
     async_reg(hass, handle_manifest_get)
+    async_reg(hass, handle_entity_source)
 
 
 def pong_message(iden):
@@ -263,3 +265,46 @@ def handle_render_template(hass, connection, msg):
 
     connection.send_result(msg["id"])
     state_listener()
+
+
+@callback
+@decorators.websocket_command(
+    {vol.Required("type"): "entity/source", vol.Optional("entity_id"): [cv.entity_id]}
+)
+def handle_entity_source(hass, connection, msg):
+    """Handle entity source command."""
+    raw_sources = entity.entity_sources(hass)
+    entity_perm = connection.user.permissions.check_entity
+
+    if "entity_id" not in msg:
+        if connection.user.permissions.access_all_entities("read"):
+            sources = raw_sources
+        else:
+            sources = {
+                entity_id: source
+                for entity_id, source in raw_sources.items()
+                if entity_perm(entity_id, "read")
+            }
+
+        connection.send_message(messages.result_message(msg["id"], sources))
+        return
+
+    sources = {}
+
+    for entity_id in msg["entity_id"]:
+        if not entity_perm(entity_id, "read"):
+            raise Unauthorized(
+                context=connection.context(msg),
+                permission=POLICY_READ,
+                perm_category=CAT_ENTITIES,
+            )
+
+        source = raw_sources.get(entity_id)
+
+        if source is None:
+            connection.send_error(msg["id"], ERR_NOT_FOUND, "Entity not found")
+            return
+
+        sources[entity_id] = source
+
+    connection.send_result(msg["id"], sources)

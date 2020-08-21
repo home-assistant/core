@@ -16,13 +16,43 @@ CONF_SECONDS = "seconds"
 
 _LOGGER = logging.getLogger(__name__)
 
+
+class TimePattern:
+    """Validate a time pattern value.
+
+    :raises Invalid: If the value has a wrong format or is outside the range.
+    """
+
+    def __init__(self, maximum):
+        """Initialize time pattern."""
+        self.maximum = maximum
+
+    def __call__(self, value):
+        """Validate input."""
+        try:
+            if value == "*":
+                return value
+
+            if isinstance(value, str) and value.startswith("/"):
+                number = int(value[1:])
+            else:
+                number = int(value)
+
+            if not (0 <= number <= self.maximum):
+                raise vol.Invalid(f"must be a value between 0 and {self.maximum}")
+        except ValueError:
+            raise vol.Invalid("invalid time_pattern value")
+
+        return value
+
+
 TRIGGER_SCHEMA = vol.All(
     vol.Schema(
         {
             vol.Required(CONF_PLATFORM): "time_pattern",
-            CONF_HOURS: vol.Any(vol.Coerce(int), vol.Coerce(str)),
-            CONF_MINUTES: vol.Any(vol.Coerce(int), vol.Coerce(str)),
-            CONF_SECONDS: vol.Any(vol.Coerce(int), vol.Coerce(str)),
+            CONF_HOURS: TimePattern(maximum=23),
+            CONF_MINUTES: TimePattern(maximum=59),
+            CONF_SECONDS: TimePattern(maximum=59),
         }
     ),
     cv.has_at_least_one_key(CONF_HOURS, CONF_MINUTES, CONF_SECONDS),

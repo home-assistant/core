@@ -37,6 +37,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_ABOVE,
     CONF_ALIAS,
+    CONF_ATTRIBUTE,
     CONF_BELOW,
     CONF_CHOOSE,
     CONF_CONDITION,
@@ -153,6 +154,17 @@ def boolean(value: Any) -> bool:
         # type ignore: https://github.com/python/mypy/issues/3186
         return value != 0  # type: ignore
     raise vol.Invalid(f"invalid boolean value {value}")
+
+
+_WS = re.compile("\\s*")
+
+
+def whitespace(value: Any) -> str:
+    """Validate result contains only whitespace."""
+    if isinstance(value, str) and _WS.fullmatch(value):
+        return value
+
+    raise vol.Invalid(f"contains non-whitespace: {value}")
 
 
 def isdevice(value: Any) -> str:
@@ -868,6 +880,7 @@ NUMERIC_STATE_CONDITION_SCHEMA = vol.All(
         {
             vol.Required(CONF_CONDITION): "numeric_state",
             vol.Required(CONF_ENTITY_ID): entity_ids,
+            vol.Optional(CONF_ATTRIBUTE): str,
             CONF_BELOW: vol.Coerce(float),
             CONF_ABOVE: vol.Coerce(float),
             vol.Optional(CONF_VALUE_TEMPLATE): template,
@@ -881,6 +894,7 @@ STATE_CONDITION_SCHEMA = vol.All(
         {
             vol.Required(CONF_CONDITION): "state",
             vol.Required(CONF_ENTITY_ID): entity_ids,
+            vol.Optional(CONF_ATTRIBUTE): str,
             vol.Required(CONF_STATE): vol.Any(str, [str]),
             vol.Optional(CONF_FOR): positive_time_period,
             # To support use_trigger_value in automation
@@ -993,6 +1007,10 @@ CONDITION_SCHEMA: vol.Schema = key_value_schemas(
         "not": NOT_CONDITION_SCHEMA,
         "device": DEVICE_CONDITION_SCHEMA,
     },
+)
+
+TRIGGER_SCHEMA = vol.All(
+    ensure_list, [vol.Schema({vol.Required(CONF_PLATFORM): str}, extra=vol.ALLOW_EXTRA)]
 )
 
 _SCRIPT_DELAY_SCHEMA = vol.Schema(

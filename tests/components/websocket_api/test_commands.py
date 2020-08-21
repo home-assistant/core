@@ -10,10 +10,11 @@ from homeassistant.components.websocket_api.auth import (
 from homeassistant.components.websocket_api.const import URL
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
 
-from tests.common import async_mock_service
+from tests.common import MockEntity, MockEntityPlatform, async_mock_service
 
 
 async def test_call_service(hass, websocket_client):
@@ -519,3 +520,116 @@ async def test_manifest_get(hass, websocket_client):
     assert msg["type"] == const.TYPE_RESULT
     assert not msg["success"]
     assert msg["error"]["code"] == "not_found"
+
+
+async def test_entity_source_admin(hass, websocket_client, hass_admin_user):
+    """Check that we fetch sources correctly."""
+    platform = MockEntityPlatform(hass)
+
+    await platform.async_add_entities(
+        [MockEntity(name="Entity 1"), MockEntity(name="Entity 2")]
+    )
+
+    # Fetch all
+    await websocket_client.send_json({"id": 6, "type": "entity/source"})
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 6
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"] == {
+        "test_domain.entity_1": {
+            "source": entity.SOURCE_PLATFORM_CONFIG,
+            "domain": "test_platform",
+        },
+        "test_domain.entity_2": {
+            "source": entity.SOURCE_PLATFORM_CONFIG,
+            "domain": "test_platform",
+        },
+    }
+
+    # Fetch one
+    await websocket_client.send_json(
+        {"id": 7, "type": "entity/source", "entity_id": ["test_domain.entity_2"]}
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"] == {
+        "test_domain.entity_2": {
+            "source": entity.SOURCE_PLATFORM_CONFIG,
+            "domain": "test_platform",
+        },
+    }
+
+    # Fetch two
+    await websocket_client.send_json(
+        {
+            "id": 8,
+            "type": "entity/source",
+            "entity_id": ["test_domain.entity_2", "test_domain.entity_1"],
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 8
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"] == {
+        "test_domain.entity_1": {
+            "source": entity.SOURCE_PLATFORM_CONFIG,
+            "domain": "test_platform",
+        },
+        "test_domain.entity_2": {
+            "source": entity.SOURCE_PLATFORM_CONFIG,
+            "domain": "test_platform",
+        },
+    }
+
+    # Fetch non existing
+    await websocket_client.send_json(
+        {
+            "id": 9,
+            "type": "entity/source",
+            "entity_id": ["test_domain.entity_2", "test_domain.non_existing"],
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 9
+    assert msg["type"] == const.TYPE_RESULT
+    assert not msg["success"]
+    assert msg["error"]["code"] == const.ERR_NOT_FOUND
+
+    # Mock policy
+    hass_admin_user.groups = []
+    hass_admin_user.mock_policy(
+        {"entities": {"entity_ids": {"test_domain.entity_2": True}}}
+    )
+
+    # Fetch all
+    await websocket_client.send_json({"id": 10, "type": "entity/source"})
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 10
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"] == {
+        "test_domain.entity_2": {
+            "source": entity.SOURCE_PLATFORM_CONFIG,
+            "domain": "test_platform",
+        },
+    }
+
+    # Fetch unauthorized
+    await websocket_client.send_json(
+        {"id": 11, "type": "entity/source", "entity_id": ["test_domain.entity_1"]}
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 11
+    assert msg["type"] == const.TYPE_RESULT
+    assert not msg["success"]
+    assert msg["error"]["code"] == const.ERR_UNAUTHORIZED

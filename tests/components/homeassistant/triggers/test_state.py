@@ -4,6 +4,7 @@ from datetime import timedelta
 import pytest
 
 import homeassistant.components.automation as automation
+from homeassistant.components.homeassistant.triggers import state as state_trigger
 from homeassistant.core import Context
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -327,7 +328,7 @@ async def test_if_fails_setup_bad_for(hass, calls):
         },
     )
 
-    with patch.object(automation.state, "_LOGGER") as mock_logger:
+    with patch.object(state_trigger, "_LOGGER") as mock_logger:
         hass.states.async_set("test.entity", "world")
         await hass.async_block_till_done()
         assert mock_logger.error.called
@@ -942,7 +943,7 @@ async def test_invalid_for_template_1(hass, calls):
         },
     )
 
-    with patch.object(automation.state, "_LOGGER") as mock_logger:
+    with patch.object(state_trigger, "_LOGGER") as mock_logger:
         hass.states.async_set("test.entity", "world")
         await hass.async_block_till_done()
         assert mock_logger.error.called

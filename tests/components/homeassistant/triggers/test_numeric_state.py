@@ -5,7 +5,9 @@ import pytest
 import voluptuous as vol
 
 import homeassistant.components.automation as automation
-from homeassistant.components.automation import numeric_state
+from homeassistant.components.homeassistant.triggers import (
+    numeric_state as numeric_state_trigger,
+)
 from homeassistant.core import Context
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -776,7 +778,7 @@ async def test_if_fails_setup_bad_for(hass, calls):
         },
     )
 
-    with patch.object(automation.numeric_state, "_LOGGER") as mock_logger:
+    with patch.object(numeric_state_trigger, "_LOGGER") as mock_logger:
         hass.states.async_set("test.entity", 9)
         await hass.async_block_till_done()
         assert mock_logger.error.called
@@ -1164,7 +1166,7 @@ async def test_invalid_for_template(hass, calls):
         },
     )
 
-    with patch.object(automation.numeric_state, "_LOGGER") as mock_logger:
+    with patch.object(numeric_state_trigger, "_LOGGER") as mock_logger:
         hass.states.async_set("test.entity", 9)
         await hass.async_block_till_done()
         assert mock_logger.error.called
@@ -1234,6 +1236,6 @@ async def test_if_fires_on_entities_change_overlap_for_template(hass, calls):
 def test_below_above():
     """Test above cannot be above below."""
     with pytest.raises(vol.Invalid):
-        numeric_state.TRIGGER_SCHEMA(
+        numeric_state_trigger.TRIGGER_SCHEMA(
             {"platform": "numeric_state", "above": 1200, "below": 1000}
         )

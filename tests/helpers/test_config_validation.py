@@ -1092,3 +1092,24 @@ def test_script(caplog):
             cv.script_action(data)
 
         assert msg in str(excinfo.value)
+
+
+def test_whitespace():
+    """Test whitespace validation."""
+    schema = vol.Schema(cv.whitespace)
+
+    for value in (
+        None,
+        "" "T",
+        "negative",
+        "lock",
+        "tr  ue",
+        [],
+        [1, 2],
+        {"one": "two"},
+    ):
+        with pytest.raises(vol.MultipleInvalid):
+            schema(value)
+
+    for value in ("  ", "   "):
+        assert schema(value)

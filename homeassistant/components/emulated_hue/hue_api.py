@@ -246,6 +246,7 @@ class HueConfigView(HomeAssistantView):
     """Return config view of emulated hue."""
 
     url = "/api/{username}/config"
+    extra_urls = ["/api/config"]
     name = "emulated_hue:username:config"
     requires_auth = False
 
@@ -254,12 +255,10 @@ class HueConfigView(HomeAssistantView):
         self.config = config
 
     @core.callback
-    def get(self, request, username):
+    def get(self, request, username=""):
         """Process a request to get the configuration."""
         if not is_local(ip_address(request.remote)):
             return self.json_message("only local IPs allowed", HTTP_UNAUTHORIZED)
-        if username != HUE_API_USERNAME:
-            return self.json(UNAUTHORIZED_USER)
 
         json_response = create_config_model(self.config, request)
 
@@ -781,6 +780,7 @@ def entity_to_json(config, entity):
         retval["type"] = "On/Off light"
         retval["productname"] = "On/Off light"
         retval["modelid"] = "HASS321"
+        retval["state"].update({HUE_API_STATE_BRI: HUE_API_STATE_BRI_MAX})
 
     return retval
 

@@ -7,7 +7,6 @@ import voluptuous as vol
 
 from homeassistant.components import mqtt
 from homeassistant.components.automation import AutomationActionType
-import homeassistant.components.automation.mqtt as automation_mqtt
 from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -27,6 +26,7 @@ from . import (
     DOMAIN,
     cleanup_device_registry,
     debug_info,
+    trigger as mqtt_trigger,
 )
 from .discovery import MQTT_DISCOVERY_UPDATED, clear_discovery_hash
 
@@ -83,16 +83,16 @@ class TriggerInstance:
     async def async_attach_trigger(self):
         """Attach MQTT trigger."""
         mqtt_config = {
-            automation_mqtt.CONF_TOPIC: self.trigger.topic,
-            automation_mqtt.CONF_ENCODING: DEFAULT_ENCODING,
-            automation_mqtt.CONF_QOS: self.trigger.qos,
+            mqtt_trigger.CONF_TOPIC: self.trigger.topic,
+            mqtt_trigger.CONF_ENCODING: DEFAULT_ENCODING,
+            mqtt_trigger.CONF_QOS: self.trigger.qos,
         }
         if self.trigger.payload:
             mqtt_config[CONF_PAYLOAD] = self.trigger.payload
 
         if self.remove:
             self.remove()
-        self.remove = await automation_mqtt.async_attach_trigger(
+        self.remove = await mqtt_trigger.async_attach_trigger(
             self.trigger.hass, mqtt_config, self.action, self.automation_info,
         )
 

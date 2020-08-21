@@ -544,9 +544,13 @@ async def test_invalid_attribute_template(hass, caplog):
     )
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 2
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
     await hass.helpers.entity_component.async_update_entity("sensor.invalid_template")
 
-    assert ("Error rendering attribute test_attribute") in caplog.text
+    assert "TemplateError" in caplog.text
+    assert "test_attribute" in caplog.text
 
 
 async def test_invalid_availability_template_keeps_component_available(hass, caplog):
@@ -577,7 +581,7 @@ async def test_invalid_availability_template_keeps_component_available(hass, cap
 
 
 async def test_no_template_match_all(hass, caplog):
-    """Test that we do not allow sensors that match on all."""
+    """Test that we allow static templates."""
     hass.states.async_set("sensor.test_sensor", "startup")
 
     await async_setup_component(
@@ -617,31 +621,6 @@ async def test_no_template_match_all(hass, caplog):
 
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 6
-    assert (
-        "Template sensor 'invalid_state' has no entity ids "
-        "configured to track nor were we able to extract the entities to "
-        "track from the value template"
-    ) in caplog.text
-    assert (
-        "Template sensor 'invalid_icon' has no entity ids "
-        "configured to track nor were we able to extract the entities to "
-        "track from the icon template"
-    ) in caplog.text
-    assert (
-        "Template sensor 'invalid_entity_picture' has no entity ids "
-        "configured to track nor were we able to extract the entities to "
-        "track from the entity_picture template"
-    ) in caplog.text
-    assert (
-        "Template sensor 'invalid_friendly_name' has no entity ids "
-        "configured to track nor were we able to extract the entities to "
-        "track from the friendly_name template"
-    ) in caplog.text
-    assert (
-        "Template sensor 'invalid_attribute' has no entity ids "
-        "configured to track nor were we able to extract the entities to "
-        "track from the test_attribute template"
-    ) in caplog.text
 
     assert hass.states.get("sensor.invalid_state").state == "unknown"
     assert hass.states.get("sensor.invalid_icon").state == "unknown"
