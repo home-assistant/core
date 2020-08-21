@@ -7,7 +7,7 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.auth.permissions.const import CAT_CONFIG_ENTRIES, POLICY_EDIT
 from homeassistant.components import websocket_api
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.const import HTTP_NOT_FOUND
+from homeassistant.const import HTTP_FORBIDDEN, HTTP_NOT_FOUND
 from homeassistant.core import callback
 from homeassistant.exceptions import Unauthorized
 import homeassistant.helpers.config_validation as cv
@@ -108,6 +108,8 @@ class ConfigManagerEntryResourceReloadView(HomeAssistantView):
 
         try:
             result = await hass.config_entries.async_reload(entry_id)
+        except config_entries.OperationNotAllowed:
+            return self.json_message("Entry cannot be reloaded", HTTP_FORBIDDEN)
         except config_entries.UnknownEntry:
             return self.json_message("Invalid entry specified", HTTP_NOT_FOUND)
 
@@ -367,4 +369,5 @@ def entry_json(entry: config_entries.ConfigEntry) -> dict:
         "state": entry.state,
         "connection_class": entry.connection_class,
         "supports_options": supports_options,
+        "can_unload": entry.can_unload,
     }

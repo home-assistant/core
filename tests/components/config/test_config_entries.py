@@ -53,12 +53,14 @@ async def test_get_entries(hass, client):
             "comp2", "Comp 2", lambda: None, core_ce.CONN_CLASS_ASSUMED
         )
 
-        MockConfigEntry(
+        entry = MockConfigEntry(
             domain="comp1",
             title="Test 1",
             source="bla",
             connection_class=core_ce.CONN_CLASS_LOCAL_POLL,
-        ).add_to_hass(hass)
+        )
+        entry.can_unload = True
+        entry.add_to_hass(hass)
         MockConfigEntry(
             domain="comp2",
             title="Test 2",
@@ -80,6 +82,7 @@ async def test_get_entries(hass, client):
                 "state": "not_loaded",
                 "connection_class": "local_poll",
                 "supports_options": True,
+                "can_unload": True,
             },
             {
                 "domain": "comp2",
@@ -88,6 +91,7 @@ async def test_get_entries(hass, client):
                 "state": "loaded",
                 "connection_class": "assumed",
                 "supports_options": False,
+                "can_unload": False,
             },
         ]
 
@@ -141,6 +145,17 @@ async def test_reload_entry_unauth(hass, client, hass_admin_user):
         f"/api/config/config_entries/entry/{entry.entry_id}/reload"
     )
     assert resp.status == 401
+    assert len(hass.config_entries.async_entries()) == 1
+
+
+async def test_reload_entry_in_failed_state(hass, client, hass_admin_user):
+    """Test reloading an entry via the API that has already failed to unload."""
+    entry = MockConfigEntry(domain="demo", state=core_ce.ENTRY_STATE_FAILED_UNLOAD)
+    entry.add_to_hass(hass)
+    resp = await client.post(
+        f"/api/config/config_entries/entry/{entry.entry_id}/reload"
+    )
+    assert resp.status == 403
     assert len(hass.config_entries.async_entries()) == 1
 
 
