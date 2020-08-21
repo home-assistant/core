@@ -1022,7 +1022,6 @@ omit =
     homeassistant/components/supla/*
     homeassistant/components/zwave/util.py
     homeassistant/components/ozw/__init__.py
-    homeassistant/components/ozw/discovery.py
     homeassistant/components/ozw/entity.py
     homeassistant/components/ozw/services.py
 
