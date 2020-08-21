@@ -26,6 +26,7 @@ from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.template import result_as_boolean
 
+from . import async_setup_platform_reloadable
 from .const import CONF_AVAILABILITY_TEMPLATE
 from .template_entity import TemplateEntity
 
@@ -56,8 +57,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up template binary sensors."""
+async def async_create_entities(hass, config):
+    """Create the template binary sensors."""
     sensors = []
 
     for device, device_config in config[CONF_SENSORS].items():
@@ -90,7 +91,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             )
         )
 
-    async_add_entities(sensors)
+    return sensors
+
+
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Set up the template binary sensors."""
+
+    await async_setup_platform_reloadable(hass)
+    async_add_entities(await async_create_entities(hass, config))
 
 
 class BinarySensorTemplate(TemplateEntity, BinarySensorEntity):

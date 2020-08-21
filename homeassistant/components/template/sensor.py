@@ -26,6 +26,7 @@ from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 
+from . import async_setup_platform_reloadable
 from .const import CONF_AVAILABILITY_TEMPLATE
 from .template_entity import TemplateEntity
 
@@ -56,8 +57,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the template sensors."""
+async def async_create_entities(hass, config):
+    """Create the template sensors."""
+
     sensors = []
 
     for device, device_config in config[CONF_SENSORS].items():
@@ -89,9 +91,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             )
         )
 
-    async_add_entities(sensors)
+    return sensors
 
-    return True
+
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Set up the template sensors."""
+
+    await async_setup_platform_reloadable(hass)
+    async_add_entities(await async_create_entities(hass, config))
 
 
 class SensorTemplate(TemplateEntity, Entity):
