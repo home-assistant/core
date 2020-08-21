@@ -1,8 +1,8 @@
 """Support for monitoring a Sense energy sensor."""
 import asyncio
 from datetime import timedelta
-from time import time
 import logging
+from time import time
 
 from sense_energy import (
     ASyncSenseable,
@@ -13,6 +13,7 @@ from sense_energy import (
 )
 import voluptuous as vol
 
+import homeassistant.components as comps
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
@@ -22,7 +23,6 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_TIMEOUT,
 )
-import homeassistant.components as comps
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
@@ -112,7 +112,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
         hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
-            data={CONF_EMAIL: conf[CONF_EMAIL], CONF_PASSWORD: conf[CONF_PASSWORD],},
+            data={CONF_EMAIL: conf[CONF_EMAIL], CONF_PASSWORD: conf[CONF_PASSWORD], },
         )
     )
     return True
@@ -189,7 +189,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 
 def get_plug_devices(hass):
-    """Produced list of plug devices from config entities."""
+    """Produce list of plug devices from config entities."""
     entities = hass.data[DOMAIN][CONF_ENTITIES]
     for entity_id in entities:
         state = hass.states.get(entity_id)
