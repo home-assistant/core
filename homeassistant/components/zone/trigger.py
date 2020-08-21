@@ -57,19 +57,18 @@ async def async_attach_trigger(hass, config, action, automation_info):
             and not to_match
         ):
             hass.async_run_job(
-                action(
-                    {
-                        "trigger": {
-                            "platform": "zone",
-                            "entity_id": entity,
-                            "from_state": from_s,
-                            "to_state": to_s,
-                            "zone": zone_state,
-                            "event": event,
-                        }
-                    },
-                    context=to_s.context,
-                )
+                action,
+                {
+                    "trigger": {
+                        "platform": "zone",
+                        "entity_id": entity,
+                        "from_state": from_s,
+                        "to_state": to_s,
+                        "zone": zone_state,
+                        "event": event,
+                    }
+                },
+                to_s.context,
             )
 
     return async_track_state_change_event(hass, entity_id, zone_automation_listener)
