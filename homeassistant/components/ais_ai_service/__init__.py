@@ -4860,12 +4860,26 @@ class PersonStatusIntent(intent.IntentHandler):
             message = "Nie znajduję lokalizacji: " + name
             success = False
         else:
+            # try to get address
+            address = ""
+            if "source" in entity.attributes:
+                try:
+                    device_tracker = entity.attributes.get("source", "")
+                    semsor = (
+                        device_tracker.replace("device_tracker", "sensor")
+                        + "_geocoded_location"
+                    )
+                    address = hass.states.get(semsor).state
+                    if address != STATE_UNKNOWN:
+                        address = ", ostatni przesłany adres to " + address
+                except Exception:
+                    address = ""
             if entity.state == STATE_UNKNOWN:
                 location = "lokalizacja nieznana"
             elif entity.state == STATE_HOME:
                 location = "jest w domu"
             elif entity.state == STATE_NOT_HOME:
-                location = "jest poza domem"
+                location = "jest poza domem" + address
             else:
                 location = "lokalizacja " + entity.state
             message = format(entity.name) + ": " + location
