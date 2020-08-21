@@ -16,7 +16,6 @@ from .const import (
     ITEM_LIGHT,
     LIGHT_COLOR,
     LIGHT_DIMMER,
-    LIGHT_NONE,
     LIGHT_ON_OFF,
     SUPPORT_NONE,
 )
@@ -27,8 +26,6 @@ def entities_from_discovered_wilight(hass, api_device):
     entities = []
     for item in api_device.items:
         if item["type"] != ITEM_LIGHT:
-            continue
-        if item["sub_type"] == LIGHT_NONE:
             continue
         index = item["index"]
         item_name = item["name"]

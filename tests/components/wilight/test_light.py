@@ -109,6 +109,32 @@ async def test_on_off_light_state(
     assert entry
     assert entry.unique_id == "WL000000000099_0"
 
+    # Turn on
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "light.wl000000000099_1"},
+        blocking=True,
+    )
+
+    await hass.async_block_till_done()
+    state = hass.states.get("light.wl000000000099_1")
+    assert state
+    assert state.state == STATE_ON
+
+    # Turn off
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "light.wl000000000099_1"},
+        blocking=True,
+    )
+
+    await hass.async_block_till_done()
+    state = hass.states.get("light.wl000000000099_1")
+    assert state
+    assert state.state == STATE_OFF
+
 
 async def test_dimmer_light_state(
     hass: HomeAssistantType, dummy_device_from_host_dimmer
@@ -165,6 +191,19 @@ async def test_dimmer_light_state(
     state = hass.states.get("light.wl000000000099_1")
     assert state
     assert state.state == STATE_OFF
+
+    # Turn on
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "light.wl000000000099_1"},
+        blocking=True,
+    )
+
+    await hass.async_block_till_done()
+    state = hass.states.get("light.wl000000000099_1")
+    assert state
+    assert state.state == STATE_ON
 
 
 async def test_color_light_state(
@@ -237,6 +276,50 @@ async def test_color_light_state(
     )
 
     await hass.async_block_till_done()
+    state = hass.states.get("light.wl000000000099_1")
+    assert state
+    assert state.state == STATE_OFF
+
+    # Turn on
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "light.wl000000000099_1"},
+        blocking=True,
+    )
+
+    await hass.async_block_till_done()
+    state = hass.states.get("light.wl000000000099_1")
+    assert state
+    assert state.state == STATE_ON
+
+    # Hue = 0, Saturation = 100
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_HS_COLOR: [0, 100], ATTR_ENTITY_ID: "light.wl000000000099_1"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.wl000000000099_1")
+    assert state
+    assert state.state == STATE_ON
+    state_color = [
+        round(state.attributes.get(ATTR_HS_COLOR)[0]),
+        round(state.attributes.get(ATTR_HS_COLOR)[1]),
+    ]
+    assert state_color == [0, 100]
+
+    # Brightness = 0
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_BRIGHTNESS: 0, ATTR_ENTITY_ID: "light.wl000000000099_1"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
     state = hass.states.get("light.wl000000000099_1")
     assert state
     assert state.state == STATE_OFF

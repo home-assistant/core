@@ -19,7 +19,9 @@ from tests.components.wilight import (
     CONF_COMPONENTS,
     HOST,
     MOCK_SSDP_DISCOVERY_INFO,
-    MOCK_SSDP_DISCOVERY_INFO_1,
+    MOCK_SSDP_DISCOVERY_INFO_1_1,
+    MOCK_SSDP_DISCOVERY_INFO_1_2,
+    MOCK_SSDP_DISCOVERY_INFO_1_3,
     MOCK_SSDP_DISCOVERY_INFO_2,
     UPNP_MODEL_NAME,
     UPNP_SERIAL,
@@ -43,10 +45,34 @@ async def test_show_ssdp_form(hass: HomeAssistantType) -> None:
     }
 
 
-async def test_ssdp_not_wilight_abort(hass: HomeAssistantType) -> None:
+async def test_ssdp_not_wilight_abort_1(hass: HomeAssistantType) -> None:
     """Test that the ssdp aborts not_wilight."""
 
-    discovery_info = MOCK_SSDP_DISCOVERY_INFO_1.copy()
+    discovery_info = MOCK_SSDP_DISCOVERY_INFO_1_1.copy()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={CONF_SOURCE: SOURCE_SSDP}, data=discovery_info
+    )
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "not_wilight_device"
+
+
+async def test_ssdp_not_wilight_abort_2(hass: HomeAssistantType) -> None:
+    """Test that the ssdp aborts not_wilight."""
+
+    discovery_info = MOCK_SSDP_DISCOVERY_INFO_1_2.copy()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={CONF_SOURCE: SOURCE_SSDP}, data=discovery_info
+    )
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "not_wilight_device"
+
+
+async def test_ssdp_not_wilight_abort_3(hass: HomeAssistantType) -> None:
+    """Test that the ssdp aborts not_wilight."""
+
+    discovery_info = MOCK_SSDP_DISCOVERY_INFO_1_3.copy()
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_SSDP}, data=discovery_info
     )
