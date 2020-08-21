@@ -7,6 +7,7 @@ from matrix_client.client import MatrixClient, MatrixRequestError
 import voluptuous as vol
 
 from homeassistant.components.notify import ATTR_MESSAGE, ATTR_TARGET
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
@@ -19,17 +20,19 @@ from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json, save_json
 
-from .const import DOMAIN, SERVICE_SEND_MESSAGE
+from .const import (
+    CONF_COMMANDS,
+    CONF_EXPRESSION,
+    CONF_HOMESERVER,
+    CONF_ROOMS,
+    CONF_WORD,
+    DOMAIN,
+    SERVICE_SEND_MESSAGE,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 SESSION_FILE = ".matrix.conf"
-
-CONF_HOMESERVER = "homeserver"
-CONF_ROOMS = "rooms"
-CONF_COMMANDS = "commands"
-CONF_WORD = "word"
-CONF_EXPRESSION = "expression"
 
 EVENT_MATRIX_COMMAND = "matrix_command"
 
@@ -49,10 +52,6 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
-                vol.Required(CONF_HOMESERVER): cv.url,
-                vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
-                vol.Required(CONF_USERNAME): cv.matches_regex("@[^:]*:.*"),
-                vol.Required(CONF_PASSWORD): cv.string,
                 vol.Optional(CONF_ROOMS, default=[]): vol.All(
                     cv.ensure_list, [cv.string]
                 ),
@@ -72,27 +71,49 @@ SERVICE_SCHEMA_SEND_MESSAGE = vol.Schema(
 )
 
 
-def setup(hass, config):
-    """Set up the Matrix bot component."""
-    config = config[DOMAIN]
+async def async_setup(hass, config):
+    """Set up the Matrix bot server."""
+    if not hass.config_entries.async_entries(DOMAIN):
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data={
+                    CONF_HOMESERVER: config[DOMAIN][CONF_HOMESERVER],
+                    CONF_VERIFY_SSL: config[DOMAIN][CONF_VERIFY_SSL],
+                    CONF_USERNAME: config[DOMAIN][CONF_USERNAME],
+                    CONF_PASSWORD: config[DOMAIN][CONF_PASSWORD],
+                },
+            )
+        )
+    matrix_config = config.get(DOMAIN, {CONF_ROOMS: [], CONF_COMMANDS: []})
+    hass.data[DOMAIN] = {
+        CONF_ROOMS: matrix_config[CONF_ROOMS],
+        CONF_COMMANDS: matrix_config[CONF_COMMANDS],
+    }
+    return True
 
+
+async def async_setup_entry(hass, entry):
+    """Set up Matrix bot services."""
     try:
         bot = MatrixBot(
             hass,
             os.path.join(hass.config.path(), SESSION_FILE),
-            config[CONF_HOMESERVER],
-            config[CONF_VERIFY_SSL],
-            config[CONF_USERNAME],
-            config[CONF_PASSWORD],
-            config[CONF_ROOMS],
-            config[CONF_COMMANDS],
+            entry.data[CONF_HOMESERVER],
+            entry.data[CONF_VERIFY_SSL],
+            entry.data[CONF_USERNAME],
+            entry.data[CONF_PASSWORD],
+            hass.data[DOMAIN][CONF_ROOMS],
+            hass.data[DOMAIN][CONF_COMMANDS],
         )
-        hass.data[DOMAIN] = bot
+        await hass.async_add_executor_job(bot.init_client)
+        hass.data[DOMAIN]["BOT"] = bot
     except MatrixRequestError as exception:
         _LOGGER.error("Matrix failed to log in: %s", str(exception))
         return False
 
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN,
         SERVICE_SEND_MESSAGE,
         bot.handle_send_message,
@@ -156,8 +177,14 @@ class MatrixBot:
                     if room_id not in self._expression_commands:
                         self._expression_commands[room_id] = []
                     self._expression_commands[room_id].append(command)
+        self._client = None
 
+    def init_client(self):
+        """Try to login and set listeners."""
         # Log in. This raises a MatrixRequestError if login is unsuccessful
+        if self._client is not None:
+            _LOGGER.debug("Client already configured, nothing to do")
+            return
         self._client = self._login()
 
         def handle_matrix_exception(exception):

@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+        },
+        "error": {
+            "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+            "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+            "unknown": "[%key:common::config_flow::error::unknown%]"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "homeserver": "[%key:common::config_flow::data::host%]",
+                    "verify_ssl": "Server uses a SSL certificate",
+                    "password": "[%key:common::config_flow::data::password%]",
+                    "username": "[%key:common::config_flow::data::username%]"
+                }
+            }
+        }
+    },
+    "title": "Matrix"
+}
