@@ -39,6 +39,13 @@ _LOGGER = logging.getLogger(__name__)
 CONF_EVENT_CODE = "event_code"
 
 
+def none_or_int(value, base):
+    """Check if strin is one otherwise convert to int."""
+    if value is None:
+        return None
+    return int(value, base)
+
+
 class OptionsFlow(config_entries.OptionsFlow):
     """Handle Rfxtrx options."""
 
@@ -72,21 +79,18 @@ class OptionsFlow(config_entries.OptionsFlow):
                 self._selected_device = self._config_entry.data[CONF_DEVICES][
                     event_code
                 ]
-                self._selected_device_object = get_rfx_object(
-                    self._selected_device_event_code
-                )
+                self._selected_device_object = get_rfx_object(event_code)
                 return await self.async_step_set_device_options()
             if CONF_REMOVE_DEVICE in user_input:
-                device_data = self._get_device_data(user_input[CONF_REMOVE_DEVICE])
+                entry_id = user_input[CONF_REMOVE_DEVICE]
+                device_data = self._get_device_data(entry_id)
 
                 event_code = device_data[CONF_EVENT_CODE]
                 device_id = device_data[CONF_DEVICE_ID]
                 self.hass.helpers.dispatcher.async_dispatcher_send(
                     f"{DOMAIN}_{CONF_REMOVE_DEVICE}_{device_id}"
                 )
-                self._device_registry.async_remove_device(
-                    user_input[CONF_REMOVE_DEVICE]
-                )
+                self._device_registry.async_remove_device(entry_id)
                 devices = {event_code: None}
                 self.update_config_data(
                     global_options=self._global_options, devices=devices
@@ -145,11 +149,6 @@ class OptionsFlow(config_entries.OptionsFlow):
                 self._selected_device_object.device,
                 data_bits=user_input.get(CONF_DATA_BITS),
             )
-
-            def none_or_int(value, base):
-                if value is None:
-                    return None
-                return int(value, base)
 
             try:
                 command_on = none_or_int(user_input.get(CONF_COMMAND_ON), 16)
@@ -258,10 +257,8 @@ class OptionsFlow(config_entries.OptionsFlow):
         """Get event code based on device identifier."""
         event_code = None
         device_id = None
-        for entry in self._device_entries:
-            if entry.id == entry_id:
-                device_id = next(iter(entry.identifiers))[1:]
-                break
+        entry = self._device_registry.async_get(entry_id)
+        device_id = next(iter(entry.identifiers))[1:]
         for packet_id, entity_info in self._config_entry.data[CONF_DEVICES].items():
             if tuple(entity_info.get(CONF_DEVICE_ID)) == device_id:
                 event_code = packet_id
@@ -284,12 +281,9 @@ class OptionsFlow(config_entries.OptionsFlow):
                 else:
                     entry_data[CONF_DEVICES][event_code] = options
         self.hass.config_entries.async_update_entry(self._config_entry, data=entry_data)
-        self.hass.async_create_task(async_update_options(self.hass, self._config_entry))
-
-
-async def async_update_options(hass, config_entry: ConfigEntry):
-    """Update options."""
-    await hass.config_entries.async_reload(config_entry.entry_id)
+        self.hass.async_create_task(
+            self.hass.config_entries.async_reload(self._config_entry.entry_id)
+        )
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
