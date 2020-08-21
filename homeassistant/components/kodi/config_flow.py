@@ -82,7 +82,7 @@ async def validate_ws(hass: core.HomeAssistant, data):
         raise CannotConnect from error
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Kodi."""
 
     VERSION = 1
