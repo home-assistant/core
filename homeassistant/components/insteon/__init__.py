@@ -6,7 +6,6 @@ from pyinsteon import async_close, async_connect, devices
 
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_PLATFORM, EVENT_HOMEASSISTANT_STOP
-from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import (
@@ -30,10 +29,12 @@ from .utils import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+OPTIONS = "options"
 
 
 async def async_id_unknown_devices(config_dir):
     """Send device ID commands to all unidentified devices."""
+
     await devices.async_load(id_devices=1)
     for addr in devices:
         device = devices[addr]
@@ -98,29 +99,22 @@ async def close_insteon_connection(*args):
     await async_close()
 
 
-async def async_import_config(hass, conf):
-    """Set up all of the config imported from yaml."""
-    data, options = convert_yaml_to_config_flow(conf)
-    # Create a config entry with the connection data
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data=data
-    )
-    # If this is the first time we ran, update the config options
-    if result["type"] == RESULT_TYPE_CREATE_ENTRY and options:
-        entry = result["result"]
-        hass.config_entries.async_update_entry(
-            entry=entry, options=options,
-        )
-    return result
-
-
 async def async_setup(hass, config):
     """Set up the Insteon platform."""
     if DOMAIN not in config:
         return True
 
     conf = config[DOMAIN]
-    hass.async_create_task(async_import_config(hass, conf))
+    data, options = convert_yaml_to_config_flow(conf)
+    if options:
+        hass.data[DOMAIN] = {}
+        hass.data[DOMAIN][OPTIONS] = options
+    # Create a config entry with the connection data
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=data
+        )
+    )
     return True
 
 
@@ -139,6 +133,18 @@ async def async_setup_entry(hass, entry):
     await devices.async_load(
         workdir=hass.config.config_dir, id_devices=0, load_modem_aldb=0
     )
+
+    # If options existed in YAML and have not already been saved to the config entry
+    # add them now
+    if (
+        not entry.options
+        and entry.source == SOURCE_IMPORT
+        and hass.data.get(DOMAIN)
+        and hass.data[DOMAIN].get(OPTIONS)
+    ):
+        hass.config_entries.async_update_entry(
+            entry=entry, options=hass.data[DOMAIN][OPTIONS],
+        )
 
     for device_override in entry.options.get(CONF_OVERRIDE, []):
         # Override the device default capabilities for a specific address
