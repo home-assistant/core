@@ -74,6 +74,14 @@ async def test_websocket_api(hass, generic_data, hass_ws_client):
     result = msg["result"]
     assert result["metadata"]["ProductPic"] == "images/aeotec/zwa002.png"
 
+    # Test network statistics
+    await client.send_json({ID: 9, TYPE: "ozw/network_statistics"})
+    msg = await client.receive_json()
+    result = msg["result"]
+    assert result["readCnt"] == 92220
+    assert result[OZW_INSTANCE] == 1
+    assert result["node_count"] == 5
+
 
 async def test_refresh_node(hass, generic_data, sent_messages, hass_ws_client):
     """Test the ozw refresh node api."""
