@@ -30,6 +30,13 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
     ATTR_EVENT,
+    CONF_AUTOMATIC_ADD,
+    CONF_DATA_BITS,
+    CONF_DEBUG,
+    CONF_FIRE_EVENT,
+    CONF_OFF_DELAY,
+    CONF_REMOVE_DEVICE,
+    CONF_SIGNAL_REPETITIONS,
     DEVICE_PACKET_TYPE_LIGHTING4,
     EVENT_RFXTRX_EVENT,
     SERVICE_SEND,
@@ -39,12 +46,6 @@ DOMAIN = "rfxtrx"
 
 DEFAULT_SIGNAL_REPETITIONS = 1
 
-CONF_FIRE_EVENT = "fire_event"
-CONF_DATA_BITS = "data_bits"
-CONF_AUTOMATIC_ADD = "automatic_add"
-CONF_SIGNAL_REPETITIONS = "signal_repetitions"
-CONF_DEBUG = "debug"
-CONF_OFF_DELAY = "off_delay"
 SIGNAL_EVENT = f"{DOMAIN}_event"
 
 DATA_TYPES = OrderedDict(
@@ -435,6 +436,12 @@ class RfxtrxEntity(RestoreEntity):
         self.async_on_remove(
             self.hass.helpers.dispatcher.async_dispatcher_connect(
                 SIGNAL_EVENT, self._handle_event
+            )
+        )
+
+        self.async_on_remove(
+            self.hass.helpers.dispatcher.async_dispatcher_connect(
+                f"{DOMAIN}_{CONF_REMOVE_DEVICE}_{self._device_id}", self.async_remove
             )
         )
 

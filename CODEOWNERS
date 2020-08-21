@@ -345,7 +345,7 @@ homeassistant/components/rainforest_eagle/* @gtdiehl @jcalbert
 homeassistant/components/rainmachine/* @bachya
 homeassistant/components/random/* @fabaff
 homeassistant/components/repetier/* @MTrab
-homeassistant/components/rfxtrx/* @danielhiversen @elupus
+homeassistant/components/rfxtrx/* @danielhiversen @elupus @RobBie1221
 homeassistant/components/ring/* @balloob
 homeassistant/components/risco/* @OnFreund
 homeassistant/components/rmvtransport/* @cgtobi
