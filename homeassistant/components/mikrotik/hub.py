@@ -72,7 +72,7 @@ class Device:
             if attr in attr_data:
                 self._attrs[slugify(attr)] = attr_data[attr]
         if "active-address" in self._params:
-            self._attrs["ip_address"] = self._params.get("active-address")
+            self._attrs["ip_address"] = self._params["active-address"]
         return self._attrs
 
     def update(self, wireless_params=None, params=None, active=False):
