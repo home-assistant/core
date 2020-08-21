@@ -17,7 +17,7 @@ async def test_websocket_api(hass, generic_data, hass_ws_client):
     msg = await client.receive_json()
     assert len(msg["result"]) == 1
     result = msg["result"][0]
-    assert result["id"] == 1
+    assert result[OZW_INSTANCE] == 1
     assert result["Status"] == "driverAllNodesQueried"
     assert result["OpenZWave_Version"] == "1.6.1008"
 
@@ -26,7 +26,7 @@ async def test_websocket_api(hass, generic_data, hass_ws_client):
     msg = await client.receive_json()
     result = msg["result"]
 
-    assert result["state"] == "driverAllNodesQueried"
+    assert result["Status"] == "driverAllNodesQueried"
     assert result[OZW_INSTANCE] == 1
 
     # Test node status
