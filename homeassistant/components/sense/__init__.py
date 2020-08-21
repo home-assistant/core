@@ -1,32 +1,46 @@
 """Support for monitoring a Sense energy sensor."""
 import asyncio
 from datetime import timedelta
+from time import time
 import logging
 
 from sense_energy import (
     ASyncSenseable,
     SenseAPITimeoutException,
     SenseAuthenticationException,
+    SenseLink,
+    PlugInstance,
 )
 import voluptuous as vol
 
+from homeassistant.components import sensor
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_TIMEOUT
+from homeassistant.const import (
+    ATTR_FRIENDLY_NAME,
+    CONF_EMAIL,
+    CONF_ENTITIES,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_TIMEOUT,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+import homeassistant.components as comps
 
 from .const import (
     ACTIVE_UPDATE_RATE,
+    CONF_POWER,
     DEFAULT_TIMEOUT,
     DOMAIN,
     SENSE_DATA,
     SENSE_DEVICE_UPDATE,
     SENSE_DEVICES_DATA,
     SENSE_DISCOVERED_DEVICES_DATA,
+    SENSE_LINK,
     SENSE_TIMEOUT_EXCEPTIONS,
     SENSE_TRENDS_COORDINATOR,
 )
@@ -35,13 +49,26 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["binary_sensor", "sensor"]
 
+CONFIG_ENTITY_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_POWER): vol.Any(
+            vol.Coerce(float),
+            cv.template,
+        ),
+    }
+)
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
-                vol.Required(CONF_EMAIL): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
+                vol.Optional(CONF_EMAIL): cv.string,
+                vol.Optional(CONF_PASSWORD): cv.string,
                 vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+                vol.Optional(CONF_ENTITIES): vol.Schema(
+                    {cv.entity_id: CONFIG_ENTITY_SCHEMA}
+                ),
             }
         )
     },
@@ -73,7 +100,18 @@ async def async_setup(hass: HomeAssistant, config: dict):
     conf = config.get(DOMAIN)
     if not conf:
         return True
+    hass.data[DOMAIN][CONF_ENTITIES] = conf.get(CONF_ENTITIES, {})
 
+    def devices():
+        for d in get_plug_devices(hass):
+            yield d
+
+    hass.data[DOMAIN][SENSE_LINK] = SenseLink(devices)
+    if hass.data[DOMAIN][CONF_ENTITIES]:
+        await hass.data[DOMAIN][SENSE_LINK].start()
+
+    if not conf.get(CONF_EMAIL) or not conf.get(CONF_PASSWORD):
+        return True
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN,
@@ -81,7 +119,6 @@ async def async_setup(hass: HomeAssistant, config: dict):
             data={
                 CONF_EMAIL: conf[CONF_EMAIL],
                 CONF_PASSWORD: conf[CONF_PASSWORD],
-                CONF_TIMEOUT: conf[CONF_TIMEOUT],
             },
         )
     )
@@ -158,6 +195,32 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     return True
 
 
+def get_plug_devices(hass):
+    entities = hass.data[DOMAIN][CONF_ENTITIES]
+    for entity_id in entities:
+        state = hass.states.get(entity_id)
+        if state is None:
+            continue
+        name = state.attributes.get(ATTR_FRIENDLY_NAME, entity_id)
+        name = entities[entity_id].get(CONF_NAME, name)
+
+        if comps.is_on(hass, entity_id):
+            try:
+                power = float(entities[entity_id][CONF_POWER])
+            except TypeError:
+                entities[entity_id][CONF_POWER].hass = hass
+                power = float(entities[entity_id][CONF_POWER].async_render())
+
+            if state.last_changed:
+                last_changed = state.last_changed.timestamp()
+            else:
+                last_changed = time()-1
+        else:
+            power = 0.0
+            last_changed = time()
+        yield PlugInstance(entity_id, start_time=last_changed, alias=name, power=power)
+
+
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
     unload_ok = all(
@@ -172,6 +235,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         "track_time_remove_callback"
     ]
     track_time_remove_callback()
+
+    await hass.data[DOMAIN][SENSE_LINK].stop()
 
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
