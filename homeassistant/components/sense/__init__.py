@@ -6,14 +6,13 @@ import logging
 
 from sense_energy import (
     ASyncSenseable,
+    PlugInstance,
     SenseAPITimeoutException,
     SenseAuthenticationException,
     SenseLink,
-    PlugInstance,
 )
 import voluptuous as vol
 
-from homeassistant.components import sensor
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
@@ -23,13 +22,13 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_TIMEOUT,
 )
+import homeassistant.components as comps
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-import homeassistant.components as comps
 
 from .const import (
     ACTIVE_UPDATE_RATE,
@@ -52,10 +51,7 @@ PLATFORMS = ["binary_sensor", "sensor"]
 CONFIG_ENTITY_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_POWER): vol.Any(
-            vol.Coerce(float),
-            cv.template,
-        ),
+        vol.Optional(CONF_POWER): vol.Any(vol.Coerce(float), cv.template,),
     }
 )
 
@@ -103,10 +99,10 @@ async def async_setup(hass: HomeAssistant, config: dict):
     hass.data[DOMAIN][CONF_ENTITIES] = conf.get(CONF_ENTITIES, {})
 
     def devices():
-        for d in get_plug_devices(hass):
-            yield d
+        """Drvices to be emulated."""
+        yield from get_plug_devices(hass)
 
-    hass.data[DOMAIN][SENSE_LINK] = SenseLink(devices)
+    hass.data[DOMAIN][SENSE_LINK] = SenseLink(devices())
     if hass.data[DOMAIN][CONF_ENTITIES]:
         await hass.data[DOMAIN][SENSE_LINK].start()
 
@@ -116,10 +112,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
         hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
-            data={
-                CONF_EMAIL: conf[CONF_EMAIL],
-                CONF_PASSWORD: conf[CONF_PASSWORD],
-            },
+            data={CONF_EMAIL: conf[CONF_EMAIL], CONF_PASSWORD: conf[CONF_PASSWORD],},
         )
     )
     return True
@@ -196,6 +189,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 
 def get_plug_devices(hass):
+    """Produced list of plug devices from config entities."""
     entities = hass.data[DOMAIN][CONF_ENTITIES]
     for entity_id in entities:
         state = hass.states.get(entity_id)
@@ -214,7 +208,7 @@ def get_plug_devices(hass):
             if state.last_changed:
                 last_changed = state.last_changed.timestamp()
             else:
-                last_changed = time()-1
+                last_changed = time() - 1
         else:
             power = 0.0
             last_changed = time()
