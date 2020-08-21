@@ -95,6 +95,7 @@ FLOWS = [
     "isy994",
     "izone",
     "juicenet",
+    "kodi",
     "konnected",
     "life360",
     "lifx",

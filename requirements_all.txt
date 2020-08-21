@@ -805,12 +805,6 @@ iperf3==0.1.11
 # homeassistant.components.verisure
 jsonpath==0.82
 
-# homeassistant.components.kodi
-jsonrpc-async==0.6
-
-# homeassistant.components.kodi
-jsonrpc-websocket==0.6
-
 # homeassistant.components.kaiterra
 kaiterra-async-client==0.0.2
 
@@ -1433,6 +1427,9 @@ pyitachip2ir==0.0.7
 
 # homeassistant.components.kira
 pykira==0.1.1
+
+# homeassistant.components.kodi
+pykodi==0.1
 
 # homeassistant.components.kwb
 pykwb==0.0.8
