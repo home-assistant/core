@@ -189,20 +189,20 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity):
         return self._code_arm_required
 
     @callback
-    def _update_state(self, state):
-        if isinstance(state, TemplateError):
+    def _update_state(self, result):
+        if isinstance(result, TemplateError):
             self._state = None
             return
 
         # Validate state
-        if state in _VALID_STATES:
-            self._state = state
-            _LOGGER.debug("Valid state - %s", state)
+        if result in _VALID_STATES:
+            self._state = result
+            _LOGGER.debug("Valid state - %s", result)
             return
 
         _LOGGER.error(
             "Received invalid alarm panel state: %s. Expected: %s",
-            state,
+            result,
             ", ".join(_VALID_STATES),
         )
         self._state = None

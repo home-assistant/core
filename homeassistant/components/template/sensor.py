@@ -27,7 +27,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 
 from .const import CONF_AVAILABILITY_TEMPLATE
-from .template_entity import TemplateEntityWithAttributesAvailabilityAndImages
+from .template_entity import TemplateEntity
 
 CONF_ATTRIBUTE_TEMPLATES = "attribute_templates"
 
@@ -94,7 +94,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     return True
 
 
-class SensorTemplate(TemplateEntityWithAttributesAvailabilityAndImages, Entity):
+class SensorTemplate(TemplateEntity, Entity):
     """Representation of a Template Sensor."""
 
     def __init__(
@@ -114,10 +114,10 @@ class SensorTemplate(TemplateEntityWithAttributesAvailabilityAndImages, Entity):
     ):
         """Initialize the sensor."""
         super().__init__(
-            attribute_templates,
-            availability_template,
-            icon_template,
-            entity_picture_template,
+            attribute_templates=attribute_templates,
+            availability_template=availability_template,
+            icon_template=icon_template,
+            entity_picture_template=entity_picture_template,
         )
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, device_id, hass=hass
