@@ -26,7 +26,7 @@ from tests.components.wilight import (
     UPNP_MODEL_NUMBER,
     UPNP_SERIAL,
     WILIGHT_ID,
-    mock_config_entry,
+    setup_integration,
 )
 
 
@@ -94,7 +94,7 @@ async def test_on_off_light_state(
     hass: HomeAssistantType, dummy_device_from_host_pb
 ) -> None:
     """Test the WiLight configuration entry unloading."""
-    entry = await mock_config_entry(hass)
+    entry = await setup_integration(hass)
     assert entry
     assert entry.unique_id == WILIGHT_ID
 
@@ -114,7 +114,7 @@ async def test_dimmer_light_state(
     hass: HomeAssistantType, dummy_device_from_host_dimmer
 ) -> None:
     """Test the change of state of the light switches."""
-    await mock_config_entry(hass)
+    await setup_integration(hass)
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -171,7 +171,7 @@ async def test_color_light_state(
     hass: HomeAssistantType, dummy_device_from_host_color
 ) -> None:
     """Test the change of state of the light switches."""
-    await mock_config_entry(hass)
+    await setup_integration(hass)
 
     await hass.services.async_call(
         LIGHT_DOMAIN,

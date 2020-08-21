@@ -17,7 +17,7 @@ from tests.components.wilight import (
     UPNP_MODEL_NAME,
     UPNP_MODEL_NUMBER,
     UPNP_SERIAL,
-    mock_config_entry,
+    setup_integration,
 )
 
 
@@ -43,7 +43,7 @@ def mock_dummy_device_from_host():
 
 async def test_config_entry_not_ready(hass: HomeAssistantType) -> None:
     """Test the WiLight configuration entry not ready."""
-    entry = await mock_config_entry(hass)
+    entry = await setup_integration(hass)
 
     assert entry.state == ENTRY_STATE_SETUP_RETRY
 
@@ -52,7 +52,7 @@ async def test_unload_config_entry(
     hass: HomeAssistantType, dummy_device_from_host
 ) -> None:
     """Test the WiLight configuration entry unloading."""
-    entry = await mock_config_entry(hass)
+    entry = await setup_integration(hass)
 
     assert entry.entry_id in hass.data[DOMAIN]
     assert entry.state == ENTRY_STATE_LOADED

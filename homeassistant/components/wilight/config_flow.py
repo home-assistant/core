@@ -8,13 +8,15 @@ from homeassistant.components import ssdp
 from homeassistant.config_entries import CONN_CLASS_LOCAL_PUSH, ConfigFlow
 from homeassistant.const import CONF_HOST
 
-from . import PLATFORMS
 from .const import DOMAIN  # pylint: disable=unused-import
 
 CONF_SERIAL_NUMBER = "serial_number"
 CONF_MODEL_NAME = "model_name"
 
 WILIGHT_MANUFACTURER = "All Automacao Ltda"
+
+# List the components supported by this integration.
+ALLOWED_WILIGHT_COMPONENTS = ["light"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -74,9 +76,8 @@ class WiLightFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="not_wilight_device")
 
         # Check if all components of this WiLight are allowed in this version of the HA integration
-        allowed_components = PLATFORMS
         component_ok = all(
-            wilight_component in allowed_components
+            wilight_component in ALLOWED_WILIGHT_COMPONENTS
             for wilight_component in self._wilight_components
         )
 

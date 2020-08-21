@@ -55,7 +55,7 @@ MOCK_SSDP_DISCOVERY_INFO_2 = {
 }
 
 
-async def mock_config_entry(hass: HomeAssistantType,) -> MockConfigEntry:
+async def setup_integration(hass: HomeAssistantType,) -> MockConfigEntry:
     """Mock ConfigEntry in Home Assistant."""
 
     entry = MockConfigEntry(

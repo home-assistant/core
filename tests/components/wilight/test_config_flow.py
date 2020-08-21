@@ -14,6 +14,7 @@ from homeassistant.data_entry_flow import (
 )
 from homeassistant.helpers.typing import HomeAssistantType
 
+from tests.common import MockConfigEntry
 from tests.components.wilight import (
     CONF_COMPONENTS,
     HOST,
@@ -23,7 +24,6 @@ from tests.components.wilight import (
     UPNP_MODEL_NAME,
     UPNP_SERIAL,
     WILIGHT_ID,
-    mock_config_entry,
 )
 
 
@@ -69,7 +69,17 @@ async def test_ssdp_not_supported_abort(hass: HomeAssistantType) -> None:
 
 async def test_ssdp_device_exists_abort(hass: HomeAssistantType) -> None:
     """Test abort SSDP flow if WiLight already configured."""
-    await mock_config_entry(hass)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=WILIGHT_ID,
+        data={
+            CONF_HOST: HOST,
+            CONF_SERIAL_NUMBER: UPNP_SERIAL,
+            CONF_MODEL_NAME: UPNP_MODEL_NAME,
+        },
+    )
+
+    entry.add_to_hass(hass)
 
     discovery_info = MOCK_SSDP_DISCOVERY_INFO.copy()
     result = await hass.config_entries.flow.async_init(
