@@ -15,13 +15,13 @@ PLATFORMS = [CONF_WEATHER, CONF_CAMERA, CONF_SENSOR]
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the buienradar component."""
+    hass.data.setdefault(DOMAIN, {})
+
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up buienradar2 from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
-
     for component in PLATFORMS:
         if entry.data[component]:
             hass.async_create_task(

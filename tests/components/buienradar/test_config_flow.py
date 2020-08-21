@@ -58,10 +58,6 @@ async def test_config_flow_setup_all(hass):
 
     await hass.async_block_till_done()
 
-    conf_entries = hass.config_entries.async_entries(DOMAIN)
-    await hass.config_entries.async_unload(conf_entries[0].entry_id)
-    await hass.async_block_till_done()
-
 
 async def test_config_flow_setup_without_camera(hass):
     """
@@ -100,10 +96,6 @@ async def test_config_flow_setup_without_camera(hass):
         CONF_COUNTRY: "NL",
     }
 
-    await hass.async_block_till_done()
-
-    conf_entries = hass.config_entries.async_entries(DOMAIN)
-    await hass.config_entries.async_unload(conf_entries[0].entry_id)
     await hass.async_block_till_done()
 
 
@@ -168,7 +160,3 @@ async def test_config_flow_already_configured(hass):
     assert result["type"] == "form"
     assert result["step_id"] == "user"
     assert result["errors"] == {CONF_NAME: "name_exists"}
-
-    conf_entries = hass.config_entries.async_entries(DOMAIN)
-    await hass.config_entries.async_unload(conf_entries[0].entry_id)
-    await hass.async_block_till_done()
