@@ -27,7 +27,7 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.template import result_as_boolean
 
 from .const import CONF_AVAILABILITY_TEMPLATE
-from .template_entity import TemplateEntityWithAttributesAvailabilityAndImages
+from .template_entity import TemplateEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -93,9 +93,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(sensors)
 
 
-class BinarySensorTemplate(
-    TemplateEntityWithAttributesAvailabilityAndImages, BinarySensorEntity
-):
+class BinarySensorTemplate(TemplateEntity, BinarySensorEntity):
     """A virtual binary sensor that triggers from another sensor."""
 
     def __init__(
@@ -115,10 +113,10 @@ class BinarySensorTemplate(
     ):
         """Initialize the Template binary sensor."""
         super().__init__(
-            attribute_templates,
-            availability_template,
-            icon_template,
-            entity_picture_template,
+            attribute_templates=attribute_templates,
+            availability_template=availability_template,
+            icon_template=icon_template,
+            entity_picture_template=entity_picture_template,
         )
         self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, device, hass=hass)
         self._name = friendly_name
