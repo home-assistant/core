@@ -21,7 +21,6 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
 )
-from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.const import STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -33,12 +32,12 @@ from .const import (
     CONF_SERVER_IDENTIFIER,
     DISPATCHERS,
     DOMAIN as PLEX_DOMAIN,
-    EXPANDABLES,
     NAME_FORMAT,
     PLEX_NEW_MP_SIGNAL,
     PLEX_UPDATE_MEDIA_PLAYER_SIGNAL,
     SERVERS,
 )
+from .media_browser import browse_media
 
 LIVE_TV_SECTION = "-4"
 PLAYLISTS_BROWSE_PAYLOAD = {
@@ -625,133 +624,10 @@ class PlexMediaPlayer(MediaPlayerEntity):
 
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
         """Implement the websocket media browsing helper."""
-
-        def build_item_response(payload):
-            """Create response payload for the provided media query."""
-            media = self.plex_server.lookup_media(**payload)
-
-            if media is None:
-                return None
-
-            media_info = item_payload(media)
-            if media_info.get("can_expand"):
-                media_info["children"] = []
-                for item in media:
-                    media_info["children"].append(item_payload(item))
-            return media_info
-
-        if (
-            media_content_type == "server"
-            and media_content_id != self.plex_server.machine_identifier
-        ):
-            raise BrowseError(
-                f"Plex server with ID '{media_content_id}' is not associated with {self.entity_id}"
-            )
-
-        if media_content_type in ["server", None]:
-            return await self.hass.async_add_executor_job(
-                server_payload, self.plex_server
-            )
-
-        if media_content_type == "library":
-            return await self.hass.async_add_executor_job(
-                library_payload, self.plex_server, media_content_id
-            )
-
-        if media_content_type == "playlists":
-            return await self.hass.async_add_executor_job(
-                playlists_payload, self.plex_server
-            )
-
-        payload = {
-            "media_type": PLEX_DOMAIN,
-            "plex_key": int(media_content_id),
-        }
-        response = await self.hass.async_add_executor_job(build_item_response, payload)
-        if response is None:
-            raise BrowseError(
-                f"Media not found: {media_content_type} / {media_content_id}"
-            )
-        return response
-
-
-def item_payload(item):
-    """
-    Create response payload for a single media item.
-
-    Used by async_browse_media.
-    """
-    payload = {
-        "title": item.title,
-        "media_content_id": str(item.ratingKey),
-        "media_content_type": item.type,
-        "can_play": True,
-    }
-    if hasattr(item, "thumbUrl"):
-        payload["thumbnail"] = item.thumbUrl
-    if item.type in EXPANDABLES:
-        payload["can_expand"] = True
-    return payload
-
-
-def library_section_payload(section):
-    """
-    Create response payload for a single library section.
-
-    Used by async_browse_media.
-    """
-    return {
-        "title": section.title,
-        "media_content_id": section.key,
-        "media_content_type": "library",
-        "can_play": False,
-        "can_expand": True,
-    }
-
-
-def server_payload(plex_server):
-    """
-    Create response payload to describe libraries of the Plex server.
-
-    Used by async_browse_media.
-    """
-    server_info = {
-        "title": plex_server.friendly_name,
-        "media_content_id": plex_server.machine_identifier,
-        "media_content_type": "server",
-        "can_play": False,
-        "can_expand": True,
-    }
-    server_info["children"] = []
-    for library in plex_server.library.sections():
-        if library.type == "photo":
-            continue
-        server_info["children"].append(library_section_payload(library))
-    server_info["children"].append(PLAYLISTS_BROWSE_PAYLOAD)
-    return server_info
-
-
-def library_payload(plex_server, library_id):
-    """
-    Create response payload to describe contents of a specific library.
-
-    Used by async_browse_media.
-    """
-    library = plex_server.library.sectionByID(library_id)
-    library_info = library_section_payload(library)
-    library_info["children"] = []
-    for item in library.all():
-        library_info["children"].append(item_payload(item))
-    return library_info
-
-
-def playlists_payload(plex_server):
-    """
-    Create response payload for all available playlists.
-
-    Used by async_browse_media.
-    """
-    playlists_info = {**PLAYLISTS_BROWSE_PAYLOAD, "children": []}
-    for playlist in plex_server.playlists():
-        playlists_info["children"].append(item_payload(playlist))
-    return playlists_info
+        return await self.hass.async_add_executor_job(
+            browse_media,
+            self.entity_id,
+            self.plex_server,
+            media_content_type,
+            media_content_id,
+        )
