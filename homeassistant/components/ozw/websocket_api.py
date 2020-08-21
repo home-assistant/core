@@ -36,7 +36,7 @@ def websocket_get_instances(hass, connection, msg):
     instances = []
 
     for instance in manager.collections["instance"]:
-        instances.append(dict(instance.get_status().data, id=instance.id))
+        instances.append(dict(instance.get_status().data, ozw_instance=instance.id))
 
     connection.send_result(
         msg[ID], instances,
@@ -53,12 +53,9 @@ def websocket_network_status(hass, connection, msg):
     """Get Z-Wave network status."""
 
     manager = hass.data[DOMAIN][MANAGER]
+    status = manager.get_instance(msg[OZW_INSTANCE]).get_status().data
     connection.send_result(
-        msg[ID],
-        {
-            "state": manager.get_instance(msg[OZW_INSTANCE]).get_status().status,
-            OZW_INSTANCE: msg[OZW_INSTANCE],
-        },
+        msg[ID], dict(status, ozw_instance=msg[OZW_INSTANCE]),
     )
 
 
