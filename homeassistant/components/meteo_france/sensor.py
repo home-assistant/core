@@ -189,7 +189,7 @@ class MeteoFranceRainSensor(MeteoFranceSensor):
         return {
             ATTR_NEXT_RAIN_DT_REF: dt_util.utc_from_timestamp(reference_dt).isoformat(),
             ATTR_NEXT_RAIN_1_HOUR_FORECAST: {
-                "{} min".format(int((item["dt"] - reference_dt) / 60)): item["desc"]
+                f"{int((item['dt'] - reference_dt) / 60)} min": item["desc"]
                 for item in self.coordinator.data.forecast
             },
             ATTR_ATTRIBUTION: ATTRIBUTION,
