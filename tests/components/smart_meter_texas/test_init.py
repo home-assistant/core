@@ -1,6 +1,4 @@
 """Test the Smart Meter Texas module."""
-import pytest
-
 from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
     SERVICE_UPDATE_ENTITY,
@@ -13,7 +11,6 @@ from homeassistant.config_entries import (
     ENTRY_STATE_SETUP_RETRY,
 )
 from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_ENTITY_ID, setup_integration
