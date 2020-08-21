@@ -67,7 +67,7 @@ async def validate_ws(hass: core.HomeAssistant, data):
 
     session = async_get_clientsession(hass)
 
-    _LOGGER.info("Connecting to %s:%s over WebSocket.", host, ws_port)
+    _LOGGER.debug("Connecting to %s:%s over WebSocket.", host, ws_port)
     kwc = get_kodi_connection(
         host, port, ws_port, username, password, ssl, session=session
     )
