@@ -463,7 +463,7 @@ class Hyperion(LightEntity):
             if (
                 not resp_json
                 or resp_json.get(KEY_COMMAND)
-                != ("%s-%s" % (KEY_INSTANCE, KEY_SWITCH_TO))
+                != ("{}-{}".format(KEY_INSTANCE, KEY_SWITCH_TO))
                 or not resp_json.get(KEY_SUCCESS, False)
             ):
                 _LOGGER.warning(
@@ -480,11 +480,11 @@ class Hyperion(LightEntity):
         data = {
             KEY_COMMAND: KEY_SERVERINFO,
             KEY_SUBSCRIBE: [
-                "%s-%s" % (KEY_ADJUSTMENT, KEY_UPDATE),
-                "%s-%s" % (KEY_COMPONENTS, KEY_UPDATE),
-                "%s-%s" % (KEY_EFFECTS, KEY_UPDATE),
-                "%s-%s" % (KEY_INSTANCE, KEY_UPDATE),
-                "%s-%s" % (KEY_PRIORITIES, KEY_UPDATE),
+                "{}-{}".format(KEY_ADJUSTMENT, KEY_UPDATE),
+                "{}-{}".format(KEY_COMPONENTS, KEY_UPDATE),
+                "{}-{}".format(KEY_EFFECTS, KEY_UPDATE),
+                "{}-{}".format(KEY_INSTANCE, KEY_UPDATE),
+                "{}-{}".format(KEY_PRIORITIES, KEY_UPDATE),
             ],
         }
 
@@ -611,24 +611,24 @@ class Hyperion(LightEntity):
                 )
                 should_update_state = False
             elif (
-                command == "%s-%s" % (KEY_COMPONENTS, KEY_UPDATE)
+                command == "{}-{}".format(KEY_COMPONENTS, KEY_UPDATE)
                 and KEY_DATA in resp_json
             ):
                 await self._async_update_components([resp_json[KEY_DATA]])
-            elif command == "%s-%s" % (KEY_ADJUSTMENT, KEY_UPDATE) and resp_json.get(
+            elif command == "{}-{}".format(KEY_ADJUSTMENT, KEY_UPDATE) and resp_json.get(
                 KEY_DATA, []
             ):
                 await self._async_update_adjustment(resp_json[KEY_DATA][0])
-            elif command == "%s-%s" % (KEY_EFFECTS, KEY_UPDATE) and resp_json.get(
+            elif command == "{}-{}".format(KEY_EFFECTS, KEY_UPDATE) and resp_json.get(
                 KEY_DATA, []
             ):
                 await self._async_update_effect_list(resp_json[KEY_DATA])
-            elif command == "%s-%s" % (KEY_PRIORITIES, KEY_UPDATE) and resp_json.get(
+            elif command == "{}-{}".format(KEY_PRIORITIES, KEY_UPDATE) and resp_json.get(
                 KEY_DATA, {}
             ).get(KEY_PRIORITIES, {}):
                 await self._async_update_priorities(resp_json[KEY_DATA][KEY_PRIORITIES])
             elif (
-                command == "%s-%s" % (KEY_INSTANCE, KEY_UPDATE)
+                command == "{}-{}".format(KEY_INSTANCE, KEY_UPDATE)
                 and KEY_DATA in resp_json
             ):
                 await self._async_verify_instance_or_close(resp_json[KEY_DATA])
