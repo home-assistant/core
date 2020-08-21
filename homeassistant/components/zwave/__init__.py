@@ -264,14 +264,21 @@ async def async_get_ozw_migration_data(hass):
     ent_reg = await async_get_entity_registry(hass)
     entity_entries = async_entries_for_config_entry(ent_reg, config_entry.entry_id)
     unique_entries = {entry.unique_id: entry for entry in entity_entries}
+    dev_reg = await async_get_device_registry(hass)
 
     for entity_values in hass.data[DATA_ENTITY_VALUES]:
         node = entity_values.primary.node
         unique_id = compute_value_unique_id(node, entity_values.primary)
         if unique_id not in unique_entries:
             continue
+        device_identifier, _ = node_device_id_and_name(
+            node.node_id, entity_values.primary.instance
+        )
+        device_entry = dev_reg.async_get_device({device_identifier}, set())
         data_to_migrate[unique_id] = {
             "node_id": node.node_id,
+            "node_instance": entity_values.primary.instance,
+            "device_id": device_entry.id,
             "command_class": entity_values.primary.command_class,
             "command_class_label": entity_values.primary.label,
             "value_index": entity_values.primary.index,
