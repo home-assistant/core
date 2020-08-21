@@ -1,5 +1,6 @@
 """Commands part of Websocket API."""
 import asyncio
+import logging
 
 import voluptuous as vol
 
@@ -7,13 +8,20 @@ from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_READ
 from homeassistant.components.websocket_api.const import ERR_NOT_FOUND
 from homeassistant.const import EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_ALL
 from homeassistant.core import DOMAIN as HASS_DOMAIN, callback
-from homeassistant.exceptions import HomeAssistantError, ServiceNotFound, Unauthorized
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    ServiceNotFound,
+    TemplateError,
+    Unauthorized,
+)
 from homeassistant.helpers import config_validation as cv, entity
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.event import async_track_template_result
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.loader import IntegrationNotFound, async_get_integration
 
 from . import const, decorators, messages
+
+_LOGGER = logging.getLogger(__name__)
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 
@@ -244,27 +252,26 @@ def handle_render_template(hass, connection, msg):
 
     variables = msg.get("variables")
 
-    entity_ids = msg.get("entity_ids")
-    if entity_ids is None:
-        entity_ids = template.extract_entities(variables)
-
     @callback
-    def state_listener(*_):
-        connection.send_message(
-            messages.event_message(
-                msg["id"], {"result": template.async_render(variables)}
+    def _template_listener(event, template, last_result, result):
+        if isinstance(result, TemplateError):
+            _LOGGER.error(
+                "TemplateError('%s') " "while processing template '%s'",
+                result,
+                template,
             )
-        )
 
-    if entity_ids and entity_ids != MATCH_ALL:
-        connection.subscriptions[msg["id"]] = async_track_state_change_event(
-            hass, entity_ids, state_listener
-        )
-    else:
-        connection.subscriptions[msg["id"]] = lambda: None
+            result = None
+
+        connection.send_message(messages.event_message(msg["id"], {"result": result}))
+
+    info = async_track_template_result(hass, template, _template_listener, variables)
+
+    connection.subscriptions[msg["id"]] = info.async_remove
 
     connection.send_result(msg["id"])
-    state_listener()
+
+    hass.loop.call_soon_threadsafe(info.async_refresh)
 
 
 @callback
