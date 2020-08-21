@@ -224,7 +224,7 @@ class Hyperion(LightEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn the lights on."""
-        _LOGGER.debug("Turning On: %s" % kwargs)
+        _LOGGER.debug("Turning On: %s", kwargs)
         if not self._is_connected:
             return False
 
@@ -316,7 +316,7 @@ class Hyperion(LightEntity):
 
     async def async_turn_off(self, **kwargs):
         """Disable the LED output component."""
-        _LOGGER.debug("Turning Off: %s" % kwargs)
+        _LOGGER.debug("Turning Off: %s", kwargs)
 
         if not self._is_connected:
             return False
@@ -404,14 +404,12 @@ class Hyperion(LightEntity):
 
         _LOGGER.debug(
             "Hyperion full state update: On=%s,Brightness=%i,Effect=%s "
-            "(%i effects total),Color=%s"
-            % (
-                self._on,
-                self._brightness,
-                self._effect,
-                len(self._effect_list),
-                self._rgb_color,
-            )
+            "(%i effects total),Color=%s",
+            self._on,
+            self._brightness,
+            self._effect,
+            len(self._effect_list),
+            self._rgb_color,
         )
 
     async def _async_connect(self):
@@ -425,8 +423,10 @@ class Hyperion(LightEntity):
             return False
 
         _LOGGER.debug(
-            "Connected to Hyperion server (%s): %s:%i"
-            % (self._name, self._host, self._port)
+            "Connected to Hyperion server (%s): %s:%i",
+            self._name,
+            self._host,
+            self._port,
         )
 
         # == Request: authorize ==
@@ -445,7 +445,9 @@ class Hyperion(LightEntity):
             ):
                 _LOGGER.warning(
                     "Authorization failed for Hyperion (%s). "
-                    "Check token is valid: %s" % (self._name, resp_json)
+                    "Check token is valid: %s",
+                    self._name,
+                    resp_json,
                 )
                 return False
 
@@ -465,8 +467,9 @@ class Hyperion(LightEntity):
                 or not resp_json.get(KEY_SUCCESS, False)
             ):
                 _LOGGER.warning(
-                    "Changing instqnce failed for Hyperion (%s): %s "
-                    % (self._name, resp_json)
+                    "Changing instqnce failed for Hyperion (%s): %s ",
+                    self._name,
+                    resp_json,
                 )
                 return False
 
@@ -494,8 +497,9 @@ class Hyperion(LightEntity):
             or not resp_json.get(KEY_SUCCESS, False)
         ):
             _LOGGER.warning(
-                "Could not load initial state for Hyperion (%s): %s"
-                % (self._name, resp_json)
+                "Could not load initial state for Hyperion (%s): %s",
+                self._name,
+                resp_json,
             )
             return False
 
@@ -522,7 +526,7 @@ class Hyperion(LightEntity):
 
     async def _async_send_json(self, request):
         """Send JSON to the server."""
-        _LOGGER.debug("Send to server (%s): %s" % (self._name, request))
+        _LOGGER.debug("Send to server (%s): %s", self._name, request)
         output = json.dumps(request).encode("UTF-8") + b"\n"
         self._writer.write(output)
         await self._writer.drain()
@@ -536,24 +540,26 @@ class Hyperion(LightEntity):
             connection_error = True
 
         if connection_error or not resp:
-            _LOGGER.warning("Connection to Hyperion lost (%s) ..." % self._name)
+            _LOGGER.warning("Connection to Hyperion lost (%s) ...", self._name)
             await self._async_close_streams()
             return None
 
-        _LOGGER.debug("Read from server (%s): %s" % (self._name, resp))
+        _LOGGER.debug("Read from server (%s): %s", self._name, resp)
 
         try:
             resp_json = json.loads(resp)
         except json.decoder.JSONDecodeError:
             _LOGGER.warning(
-                "Could not decode JSON from Hyperion (%s), skipping..." % (self._name)
+                "Could not decode JSON from Hyperion (%s), skipping...", self._name
             )
             return None
 
         if KEY_COMMAND not in resp_json:
             _LOGGER.warning(
                 "JSON from Hyperion (%s) did not include expected '%s' "
-                "parameter, skipping..." % (self._name, KEY_COMMAND)
+                "parameter, skipping...",
+                self._name,
+                KEY_COMMAND,
             )
             return None
         return resp_json
@@ -572,8 +578,9 @@ class Hyperion(LightEntity):
         # https://docs.hyperion-project.org/en/json/Control.html#api-instance-handling
 
         _LOGGER.warning(
-            "Hyperion (%s) instance %i disappeared, closing connection ..."
-            % (self._name, self._instance)
+            "Hyperion (%s) instance %i disappeared, closing connection ...",
+            self._name,
+            self._instance,
         )
         await self._async_close_streams()
 
@@ -584,8 +591,9 @@ class Hyperion(LightEntity):
                 if not await self._async_connect():
                     _LOGGER.warning(
                         "Could not estalish valid connection to Hyperion (%s), "
-                        "retrying in %i seconds..."
-                        % (self._name, DEFAULT_CONNECTION_RETRY_DELAY)
+                        "retrying in %i seconds...",
+                        self._name,
+                        DEFAULT_CONNECTION_RETRY_DELAY,
                     )
                     await self._async_close_streams()
                     await asyncio.sleep(DEFAULT_CONNECTION_RETRY_DELAY)
@@ -599,7 +607,7 @@ class Hyperion(LightEntity):
             should_update_state = True
             if not resp_json.get(KEY_SUCCESS, True):
                 _LOGGER.warning(
-                    "Failed Hyperion (%s) command: %s" % (self._name, resp_json)
+                    "Failed Hyperion (%s) command: %s", self._name, resp_json
                 )
                 should_update_state = False
             elif (
