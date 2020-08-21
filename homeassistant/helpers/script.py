@@ -1,5 +1,6 @@
 """Helpers to execute scripts."""
 import asyncio
+from copy import deepcopy
 from datetime import datetime, timedelta
 from functools import partial
 import itertools
@@ -45,6 +46,7 @@ from homeassistant.const import (
     CONF_SEQUENCE,
     CONF_TIMEOUT,
     CONF_UNTIL,
+    CONF_WAIT_FOR_TRIGGER,
     CONF_WAIT_TEMPLATE,
     CONF_WHILE,
     EVENT_HOMEASSISTANT_STOP,
@@ -60,6 +62,10 @@ from homeassistant.helpers.event import async_call_later, async_track_template
 from homeassistant.helpers.service import (
     CONF_SERVICE_DATA,
     async_prepare_call_from_config,
+)
+from homeassistant.helpers.trigger import (
+    async_initialize_triggers,
+    async_validate_trigger_config,
 )
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
@@ -123,7 +129,7 @@ async def async_validate_action_config(
             hass, config[CONF_DOMAIN], "action"
         )
         config = platform.ACTION_SCHEMA(config)  # type: ignore
-    if (
+    elif (
         action_type == cv.SCRIPT_ACTION_CHECK_CONDITION
         and config[CONF_CONDITION] == "device"
     ):
@@ -131,6 +137,10 @@ async def async_validate_action_config(
             hass, config[CONF_DOMAIN], "condition"
         )
         config = platform.CONDITION_SCHEMA(config)  # type: ignore
+    elif action_type == cv.SCRIPT_ACTION_WAIT_FOR_TRIGGER:
+        config[CONF_WAIT_FOR_TRIGGER] = await async_validate_trigger_config(
+            hass, config[CONF_WAIT_FOR_TRIGGER]
+        )
 
     return config
 
@@ -538,6 +548,64 @@ class _ScriptRun:
 
         if choose_data["default"]:
             await self._async_run_script(choose_data["default"])
+
+    async def _async_wait_for_trigger_step(self):
+        """Wait for a trigger event."""
+        if CONF_TIMEOUT in self._action:
+            delay = self._get_pos_time_period_template(CONF_TIMEOUT).total_seconds()
+        else:
+            delay = None
+
+        self._script.last_action = self._action.get(CONF_ALIAS, "wait for trigger")
+        self._log(
+            "Executing step %s%s",
+            self._script.last_action,
+            "" if delay is None else f" (timeout: {timedelta(seconds=delay)})",
+        )
+
+        variables = deepcopy(self._variables)
+        self._variables["wait"] = {"remaining": delay, "trigger": None}
+
+        async def async_done(variables, context=None):
+            self._variables["wait"] = {
+                "remaining": to_context.remaining if to_context else delay,
+                "trigger": variables["trigger"],
+            }
+            done.set()
+
+        def log_cb(level, msg):
+            self._log(msg, level=level)
+
+        to_context = None
+        remove_triggers = await async_initialize_triggers(
+            self._hass,
+            self._action[CONF_WAIT_FOR_TRIGGER],
+            async_done,
+            self._script.domain,
+            self._script.name,
+            log_cb,
+            variables=variables,
+        )
+        if not remove_triggers:
+            return
+
+        self._changed()
+        done = asyncio.Event()
+        tasks = [
+            self._hass.async_create_task(flag.wait()) for flag in (self._stop, done)
+        ]
+        try:
+            async with timeout(delay) as to_context:
+                await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
+        except asyncio.TimeoutError:
+            if not self._action.get(CONF_CONTINUE_ON_TIMEOUT, True):
+                self._log(_TIMEOUT_MSG)
+                raise _StopScript
+            self._variables["wait"]["remaining"] = 0.0
+        finally:
+            for task in tasks:
+                task.cancel()
+            remove_triggers()
 
     async def _async_run_script(self, script):
         """Execute a script."""
