@@ -185,7 +185,7 @@ invalid_configs = [
 @pytest.mark.parametrize("value", invalid_configs)
 async def test_setup_with_invalid_configs(hass, value):
     """Test setup with invalid configs."""
-    assert not await async_setup_component(
+    assert await async_setup_component(
         hass, "script", {"script": value}
     ), f"Script loaded with wrong config {value}"
 
@@ -418,7 +418,12 @@ async def test_extraction_functions(hass):
                             "service": "test.script",
                             "data": {"entity_id": "light.in_first"},
                         },
-                        {"domain": "light", "device_id": "device-in-both"},
+                        {
+                            "entity_id": "light.device_in_both",
+                            "domain": "light",
+                            "type": "turn_on",
+                            "device_id": "device-in-both",
+                        },
                     ]
                 },
                 "test2": {
@@ -433,8 +438,18 @@ async def test_extraction_functions(hass):
                             "state": "100",
                         },
                         {"scene": "scene.hello"},
-                        {"domain": "light", "device_id": "device-in-both"},
-                        {"domain": "light", "device_id": "device-in-last"},
+                        {
+                            "entity_id": "light.device_in_both",
+                            "domain": "light",
+                            "type": "turn_on",
+                            "device_id": "device-in-both",
+                        },
+                        {
+                            "entity_id": "light.device_in_last",
+                            "domain": "light",
+                            "type": "turn_on",
+                            "device_id": "device-in-last",
+                        },
                     ],
                 },
             }
