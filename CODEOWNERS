@@ -224,7 +224,7 @@ homeassistant/components/keenetic_ndms2/* @foxel
 homeassistant/components/kef/* @basnijholt
 homeassistant/components/keyboard_remote/* @bendavid
 homeassistant/components/knx/* @Julius2342
-homeassistant/components/kodi/* @armills
+homeassistant/components/kodi/* @armills @OnFreund
 homeassistant/components/konnected/* @heythisisnate @kit-klein
 homeassistant/components/lametric/* @robbiet480
 homeassistant/components/launch_library/* @ludeeus
@@ -361,7 +361,7 @@ homeassistant/components/script/* @home-assistant/core
 homeassistant/components/search/* @home-assistant/core
 homeassistant/components/sense/* @kbickar
 homeassistant/components/sensibo/* @andrey-git
-homeassistant/components/sentry/* @dcramer
+homeassistant/components/sentry/* @dcramer @frenck
 homeassistant/components/serial/* @fabaff
 homeassistant/components/seven_segments/* @fabaff
 homeassistant/components/seventeentrack/* @bachya

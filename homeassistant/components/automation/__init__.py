@@ -88,7 +88,6 @@ _LOGGER = logging.getLogger(__name__)
 
 AutomationActionType = Callable[[HomeAssistant, TemplateVarsType], Awaitable[None]]
 
-
 _CONDITION_SCHEMA = vol.All(cv.ensure_list, [cv.CONDITION_SCHEMA])
 
 PLATFORM_SCHEMA = vol.All(

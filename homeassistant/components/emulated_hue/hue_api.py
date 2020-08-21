@@ -780,6 +780,7 @@ def entity_to_json(config, entity):
         retval["type"] = "On/Off light"
         retval["productname"] = "On/Off light"
         retval["modelid"] = "HASS321"
+        retval["state"].update({HUE_API_STATE_BRI: HUE_API_STATE_BRI_MAX})
 
     return retval
 

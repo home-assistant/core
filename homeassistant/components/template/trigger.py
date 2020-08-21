@@ -93,7 +93,9 @@ async def async_attach_trigger(
 
         delay_cancel = async_call_later(hass, period.seconds, call_action)
 
-    info = async_track_template_result(hass, value_template, template_listener)
+    info = async_track_template_result(
+      hass, value_template, template_listener, automation_info["variables"]
+    )
     unsub = info.async_remove
 
     @callback

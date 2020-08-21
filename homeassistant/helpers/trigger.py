@@ -1,7 +1,8 @@
 """Triggers."""
 import asyncio
 import logging
-from typing import Any, Callable, List, Optional
+from types import MappingProxyType
+from typing import Any, Callable, Dict, List, Optional, Union
 
 import voluptuous as vol
 
@@ -59,12 +60,14 @@ async def async_initialize_triggers(
     name: str,
     log_cb: Callable,
     home_assistant_start: bool = False,
+    variables: Optional[Union[Dict[str, Any], MappingProxyType]] = None,
 ) -> Optional[CALLBACK_TYPE]:
     """Initialize triggers."""
     info = {
         "domain": domain,
         "name": name,
         "home_assistant_start": home_assistant_start,
+        "variables": variables,
     }
 
     triggers = []

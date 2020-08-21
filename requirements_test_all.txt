@@ -138,7 +138,7 @@ aioswitcher==1.2.0
 aiounifi==23
 
 # homeassistant.components.yandex_transport
-aioymaps==1.0.0
+aioymaps==1.1.0
 
 # homeassistant.components.airly
 airly==0.0.2
@@ -199,7 +199,7 @@ bond-api==0.1.8
 bravia-tv==1.0.6
 
 # homeassistant.components.broadlink
-broadlink==0.14.0
+broadlink==0.14.1
 
 # homeassistant.components.brother
 brother==0.1.14
@@ -359,7 +359,7 @@ hdate==0.9.5
 herepy==2.0.0
 
 # homeassistant.components.hlk_sw16
-hlk-sw16==0.0.8
+hlk-sw16==0.0.9
 
 # homeassistant.components.pi_hole
 hole==0.5.1
@@ -368,7 +368,7 @@ hole==0.5.1
 holidays==0.10.3
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200811.0
+home-assistant-frontend==20200820.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -569,7 +569,7 @@ pyHS100==0.3.5.1
 
 # homeassistant.components.met
 # homeassistant.components.norway_air
-pyMetno==0.7.0
+pyMetno==0.7.1
 
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.25
@@ -682,6 +682,9 @@ pyisy==2.0.2
 
 # homeassistant.components.kira
 pykira==0.1.1
+
+# homeassistant.components.kodi
+pykodi==0.1
 
 # homeassistant.components.lastfm
 pylast==3.2.1
@@ -888,7 +891,7 @@ samsungtvws[websocket]==1.4.0
 sense_energy==0.7.2
 
 # homeassistant.components.sentry
-sentry-sdk==0.13.5
+sentry-sdk==0.16.5
 
 # homeassistant.components.sighthound
 simplehound==0.3

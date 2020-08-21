@@ -1,8 +1,9 @@
 """Provide functionality to stream HLS."""
+from typing import Callable
+
 from aiohttp import web
 
 from homeassistant.core import callback
-from homeassistant.util.dt import utcnow
 
 from .const import FORMAT_CONTENT_TYPE
 from .core import PROVIDERS, StreamOutput, StreamView
@@ -35,7 +36,7 @@ class HlsPlaylistView(StreamView):
             await track.recv()
         headers = {"Content-Type": FORMAT_CONTENT_TYPE["hls"]}
         return web.Response(
-            body=renderer.render(track, utcnow()).encode("utf-8"), headers=headers
+            body=renderer.render(track).encode("utf-8"), headers=headers
         )
 
 
@@ -71,8 +72,7 @@ class HlsSegmentView(StreamView):
             return web.HTTPNotFound()
         headers = {"Content-Type": "video/iso.segment"}
         return web.Response(
-            body=get_m4s(segment.segment, segment.start_pts, int(sequence)),
-            headers=headers,
+            body=get_m4s(segment.segment, int(sequence)), headers=headers,
         )
 
 
@@ -90,11 +90,10 @@ class M3U8Renderer:
             "#EXT-X-VERSION:7",
             f"#EXT-X-TARGETDURATION:{track.target_duration}",
             '#EXT-X-MAP:URI="init.mp4"',
-            "#EXT-X-INDEPENDENT-SEGMENTS",
         ]
 
     @staticmethod
-    def render_playlist(track, start_time):
+    def render_playlist(track):
         """Render playlist."""
         segments = track.segments
 
@@ -114,13 +113,9 @@ class M3U8Renderer:
 
         return playlist
 
-    def render(self, track, start_time):
+    def render(self, track):
         """Render M3U8 file."""
-        lines = (
-            ["#EXTM3U"]
-            + self.render_preamble(track)
-            + self.render_playlist(track, start_time)
-        )
+        lines = ["#EXTM3U"] + self.render_preamble(track) + self.render_playlist(track)
         return "\n".join(lines) + "\n"
 
 
@@ -139,9 +134,9 @@ class HlsStreamOutput(StreamOutput):
         return "mp4"
 
     @property
-    def audio_codec(self) -> str:
-        """Return desired audio codec."""
-        return "aac"
+    def audio_codecs(self) -> str:
+        """Return desired audio codecs."""
+        return {"aac", "ac3", "mp3"}
 
     @property
     def video_codecs(self) -> tuple:
@@ -149,6 +144,10 @@ class HlsStreamOutput(StreamOutput):
         return {"hevc", "h264"}
 
     @property
-    def container_options(self) -> dict:
-        """Return container options."""
-        return {"movflags": "frag_custom+empty_moov+default_base_moof"}
+    def container_options(self) -> Callable[[int], dict]:
+        """Return Callable which takes a sequence number and returns container options."""
+        return lambda sequence: {
+            "movflags": "frag_custom+empty_moov+default_base_moof+skip_sidx+frag_discont",
+            "avoid_negative_ts": "make_non_negative",
+            "fragment_index": str(sequence),
+        }
