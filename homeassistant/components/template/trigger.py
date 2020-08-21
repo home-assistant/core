@@ -6,8 +6,9 @@ import voluptuous as vol
 from homeassistant import exceptions
 from homeassistant.const import CONF_FOR, CONF_PLATFORM, CONF_VALUE_TEMPLATE
 from homeassistant.core import callback
-from homeassistant.helpers import condition, config_validation as cv, template
-from homeassistant.helpers.event import async_track_same_state, async_track_template
+from homeassistant.helpers import config_validation as cv, template
+from homeassistant.helpers.event import async_call_later, async_track_template_result
+from homeassistant.helpers.template import result_as_boolean
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -30,15 +31,27 @@ async def async_attach_trigger(
     value_template.hass = hass
     time_delta = config.get(CONF_FOR)
     template.attach(hass, time_delta)
-    unsub_track_same = None
+    delay_cancel = None
 
     @callback
-    def template_listener(entity_id, from_s, to_s):
+    def template_listener(event, _, last_result, result):
         """Listen for state changes and calls action."""
-        nonlocal unsub_track_same
+        nonlocal delay_cancel
+
+        if delay_cancel:
+            # pylint: disable=not-callable
+            delay_cancel()
+            delay_cancel = None
+
+        if not result_as_boolean(result):
+            return
+
+        entity_id = event.data.get("entity_id")
+        from_s = event.data.get("old_state")
+        to_s = event.data.get("new_state")
 
         @callback
-        def call_action():
+        def call_action(*_):
             """Call action with right context."""
             hass.async_run_job(
                 action(
@@ -78,24 +91,19 @@ async def async_attach_trigger(
             )
             return
 
-        unsub_track_same = async_track_same_state(
-            hass,
-            period,
-            call_action,
-            lambda _, _2, _3: condition.async_template(hass, value_template),
-            value_template.extract_entities(),
-        )
+        delay_cancel = async_call_later(hass, period.seconds, call_action)
 
-    unsub = async_track_template(
+    info = async_track_template_result(
         hass, value_template, template_listener, automation_info["variables"]
     )
+    unsub = info.async_remove
 
     @callback
     def async_remove():
         """Remove state listeners async."""
         unsub()
-        if unsub_track_same:
+        if delay_cancel:
             # pylint: disable=not-callable
-            unsub_track_same()
+            delay_cancel()
 
     return async_remove
