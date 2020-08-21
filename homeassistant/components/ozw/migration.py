@@ -94,7 +94,6 @@ def map_node_values(zwave_data, ozw_data):
                 None,
             )
         else:
-            ozw_cc_label = zwave_cc_label
             value_index = zwave_entry["value_index"]
 
             ozw_entry = next(
