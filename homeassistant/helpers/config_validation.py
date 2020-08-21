@@ -846,7 +846,7 @@ EVENT_SCHEMA = vol.Schema(
         vol.Optional(CONF_ALIAS): string,
         vol.Required(CONF_EVENT): string,
         vol.Optional(CONF_EVENT_DATA): dict,
-        vol.Optional(CONF_EVENT_DATA_TEMPLATE): {match_all: template_complex},
+        vol.Optional(CONF_EVENT_DATA_TEMPLATE): template_complex,
     }
 )
 
@@ -857,7 +857,7 @@ SERVICE_SCHEMA = vol.All(
             vol.Exclusive(CONF_SERVICE, "service name"): service,
             vol.Exclusive(CONF_SERVICE_TEMPLATE, "service name"): template,
             vol.Optional("data"): dict,
-            vol.Optional("data_template"): {match_all: template_complex},
+            vol.Optional("data_template"): template_complex,
             vol.Optional(CONF_ENTITY_ID): comp_entity_ids,
         }
     ),
