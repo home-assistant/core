@@ -190,10 +190,10 @@ class Remote:
 
         await self._handle_errors(self._control.send_key, key)
 
-    async def async_turn_on(self):
+    async def async_turn_on(self, context):
         """Turn on the TV."""
         if self._on_action is not None:
-            await self._on_action.async_run()
+            await self._on_action.async_run(context=context)
             self.state = STATE_ON
         elif self.state != STATE_ON:
             await self.async_send_key(Keys.power)
