@@ -3,42 +3,42 @@ from collections import defaultdict
 
 # from six import iteritems
 
-values_list = []
+VALUES_LIST = []
 
 
 def nested_lookup(key, document, wild=False, with_keys=False):
     """Lookup a key in a nested document, return a list of values."""
     if with_keys:
-        d = defaultdict(list)
-        for k, v in _nested_lookup(key, document, wild=wild, with_keys=with_keys):
-            d[k].append(v)
-        return d
+        dd = defaultdict(list)
+        for kk, vv in _nested_lookup(key, document, wild=wild, with_keys=with_keys):
+            dd[kk].append(vv)
+        return dd
     return list(_nested_lookup(key, document, wild=wild, with_keys=with_keys))
 
 
-def _is_case_insensitive_substring(a, b):
+def _is_case_insensitive_substring(aa, bb):
     """Return True if `a` is a case insensitive substring of `b`, else False."""
-    return str(a).lower() in str(b).lower()
+    return str(aa).lower() in str(bb).lower()
 
 
 def _nested_lookup(key, document, wild=False, with_keys=False):
     """Lookup a key in a nested document, yield a value."""
     if isinstance(document, list):
-        for d in document:
-            yield from _nested_lookup(key, d, wild=wild, with_keys=with_keys)
+        for dd in document:
+            yield from _nested_lookup(key, dd, wild=wild, with_keys=with_keys)
 
     if isinstance(document, dict):
-        for k, v in document.items():
-            if key == k or (wild and _is_case_insensitive_substring(key, k)):
+        for kk, vv in document.items():
+            if key == kk or (wild and _is_case_insensitive_substring(key, kk)):
                 if with_keys:
-                    yield k, v
+                    yield kk, vv
                 else:
-                    yield v
-            if isinstance(v, dict):
-                yield from _nested_lookup(key, v, wild=wild, with_keys=with_keys)
-            elif isinstance(v, list):
-                for d in v:
-                    yield from _nested_lookup(key, d, wild=wild, with_keys=with_keys)
+                    yield vv
+            if isinstance(vv, dict):
+                yield from _nested_lookup(key, vv, wild=wild, with_keys=with_keys)
+            elif isinstance(vv, list):
+                for dd in vv:
+                    yield from _nested_lookup(key, dd, wild=wild, with_keys=with_keys)
 
 
 def get_all_keys(dictionary):
@@ -54,7 +54,7 @@ def get_all_keys(dictionary):
             for key, value in document.items():
                 result_list.append(key)
                 recursion(document=value)
-        return
+        # return
 
     recursion(document=dictionary)
     return result_list
@@ -89,8 +89,8 @@ def _get_occurrence_with_values(dictionary, item, keyword):
 
     result_recursion = _recursion(dictionary, item, keyword, occurrence, True)
 
-    global values_list
-    values_list = []
+    global VALUES_LIST
+    VALUES_LIST = []
 
     return occurrence[0], result_recursion
 
@@ -103,7 +103,7 @@ def get_occurrence_of_value(dictionary, value):
 
 def _recursion(dictionary, item, keyword, occurrence, with_values=False):
 
-    global values_list
+    global VALUES_LIST
 
     if item == "key":
         if dictionary.get(keyword) is not None:
@@ -111,8 +111,8 @@ def _recursion(dictionary, item, keyword, occurrence, with_values=False):
     elif keyword in list(dictionary.values()):
         occurrence[0] += list(dictionary.values()).count(keyword)
         if with_values:
-            values_list.append(dictionary)
-    for key, value in dictionary.items():
+            VALUES_LIST.append(dictionary)
+    for value in dictionary.items():
         if isinstance(value, dict):
             _recursion(value, item, keyword, occurrence, with_values)
         elif isinstance(value, list):
@@ -122,8 +122,8 @@ def _recursion(dictionary, item, keyword, occurrence, with_values=False):
                 elif list_items == keyword:
                     occurrence[0] += 1 if item == "value" else 0
 
-    if values_list:
-        return values_list
+    if VALUES_LIST:
+        return VALUES_LIST
 
 
 def _get_occurrence(dictionary, item, keyword):
@@ -131,7 +131,7 @@ def _get_occurrence(dictionary, item, keyword):
     occurrence = [0]
     _recursion(dictionary, item, keyword, occurrence)
 
-    global values_list
-    values_list = []
+    global VALUES_LIST
+    VALUES_LIST = []
 
     return occurrence[0]
