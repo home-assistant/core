@@ -7,7 +7,6 @@ from matrix_client.client import MatrixClient, MatrixRequestError
 import voluptuous as vol
 
 from homeassistant.components.notify import ATTR_MESSAGE, ATTR_TARGET
-from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
@@ -73,19 +72,6 @@ SERVICE_SCHEMA_SEND_MESSAGE = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up the Matrix bot server."""
-    if not hass.config_entries.async_entries(DOMAIN):
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data={
-                    CONF_HOMESERVER: config[DOMAIN][CONF_HOMESERVER],
-                    CONF_VERIFY_SSL: config[DOMAIN][CONF_VERIFY_SSL],
-                    CONF_USERNAME: config[DOMAIN][CONF_USERNAME],
-                    CONF_PASSWORD: config[DOMAIN][CONF_PASSWORD],
-                },
-            )
-        )
     matrix_config = config.get(DOMAIN, {CONF_ROOMS: [], CONF_COMMANDS: []})
     hass.data[DOMAIN] = {
         CONF_ROOMS: matrix_config[CONF_ROOMS],
