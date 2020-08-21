@@ -102,7 +102,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
         """Drvices to be emulated."""
         yield from get_plug_devices(hass)
 
-    hass.data[DOMAIN][SENSE_LINK] = SenseLink(devices())
+    hass.data[DOMAIN][SENSE_LINK] = SenseLink(devices)
     if hass.data[DOMAIN][CONF_ENTITIES]:
         await hass.data[DOMAIN][SENSE_LINK].start()
 
