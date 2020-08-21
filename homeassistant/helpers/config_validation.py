@@ -535,12 +535,13 @@ def template_complex(value: Any) -> Any:
             return_list[idx] = template_complex(element)
         return return_list
     if isinstance(value, dict):
-        return_dict = value.copy()
-        for key, element in return_dict.items():
-            return_dict[key] = template_complex(element)
-        return return_dict
-    if isinstance(value, str):
+        return {
+            template_complex(key): template_complex(element)
+            for key, element in value.items()
+        }
+    if isinstance(value, str) and template_helper.is_template_string(value):
         return template(value)
+
     return value
 
 
@@ -858,7 +859,7 @@ EVENT_SCHEMA = vol.Schema(
         vol.Optional(CONF_ALIAS): string,
         vol.Required(CONF_EVENT): string,
         vol.Optional(CONF_EVENT_DATA): dict,
-        vol.Optional(CONF_EVENT_DATA_TEMPLATE): {match_all: template_complex},
+        vol.Optional(CONF_EVENT_DATA_TEMPLATE): template_complex,
     }
 )
 
@@ -869,7 +870,7 @@ SERVICE_SCHEMA = vol.All(
             vol.Exclusive(CONF_SERVICE, "service name"): service,
             vol.Exclusive(CONF_SERVICE_TEMPLATE, "service name"): template,
             vol.Optional("data"): dict,
-            vol.Optional("data_template"): {match_all: template_complex},
+            vol.Optional("data_template"): template_complex,
             vol.Optional(CONF_ENTITY_ID): comp_entity_ids,
         }
     ),
