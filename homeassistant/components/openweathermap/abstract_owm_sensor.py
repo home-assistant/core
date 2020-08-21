@@ -26,8 +26,8 @@ class AbstractOpenWeatherMapSensor(Entity):
         self._unique_id = unique_id
         self._sensor_type = sensor_type
         self._sensor_name = sensor_configuration[SENSOR_NAME]
-        self._unit_of_measurement = sensor_configuration.get(SENSOR_UNIT, None)
-        self._device_class = sensor_configuration.get(SENSOR_DEVICE_CLASS, None)
+        self._unit_of_measurement = sensor_configuration.get(SENSOR_UNIT)
+        self._device_class = sensor_configuration.get(SENSOR_DEVICE_CLASS)
         self._coordinator = coordinator
 
     @property
