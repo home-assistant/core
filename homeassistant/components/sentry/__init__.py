@@ -1,4 +1,5 @@
 """The sentry integration."""
+from datetime import timedelta
 import re
 from typing import Dict, Union
 
@@ -8,10 +9,14 @@ from sentry_sdk.integrations.logging import LoggingIntegration
 from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import __version__ as current_version
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_STARTED,
+    __version__ as current_version,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.loader import Integration, async_get_custom_components
+from homeassistant.util.dt import utcnow
 
 from .const import (
     CONF_DSN,
@@ -67,6 +72,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     channel = get_channel(current_version)
     huuid = await hass.helpers.instance_id.async_get()
     system_info = await hass.helpers.system_info.async_get_system_info()
+    system_info["installation_type"] = "omgpuppies"
     custom_components = await async_get_custom_components(hass)
 
     tracing = {}
@@ -95,6 +101,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ),
         **tracing,
     )
+
+    async def update_system_info(now):
+        nonlocal system_info
+        system_info = await hass.helpers.system_info.async_get_system_info()
+
+        # Update system info every hours
+        hass.helpers.event.async_track_point_in_utc_time(
+            update_system_info, utcnow() + timedelta(minutes=60)
+        )
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, update_system_info)
 
     return True
 
@@ -185,6 +202,9 @@ def process_before_send(
 
     # Update event with the additional tags
     event.setdefault("tags", {}).update(additional_tags)
+
+    # Set user context to the installation UUID
+    event.setdefault("user", {}).update({"id": huuid})
 
     # Update event data with Home Assistant Context
     event.setdefault("contexts", {}).update(
