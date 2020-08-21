@@ -14,8 +14,6 @@ import threading
 import time
 import uuid
 
-from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa
-
 from homeassistant import auth, config_entries, core as ha, loader
 from homeassistant.auth import (
     auth_store,
@@ -61,6 +59,10 @@ from homeassistant.util.unit_system import METRIC_SYSTEM
 import homeassistant.util.yaml.loader as yaml_loader
 
 from tests.async_mock import AsyncMock, Mock, patch
+
+from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa
+
+
 
 _LOGGER = logging.getLogger(__name__)
 INSTANCES = []
