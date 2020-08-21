@@ -108,7 +108,7 @@ PLATFORM_SCHEMA = (
     .extend(mqtt.MQTT_JSON_ATTRS_SCHEMA.schema)
 )
 
- 
+
 async def async_setup_platform(
     hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
 ):
