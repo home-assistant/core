@@ -462,8 +462,7 @@ class Hyperion(LightEntity):
             resp_json = await self._async_safely_read_command()
             if (
                 not resp_json
-                or resp_json.get(KEY_COMMAND)
-                != (f"{KEY_INSTANCE}-{KEY_SWITCH_TO}")
+                or resp_json.get(KEY_COMMAND) != (f"{KEY_INSTANCE}-{KEY_SWITCH_TO}")
                 or not resp_json.get(KEY_SUCCESS, False)
             ):
                 _LOGGER.warning(
@@ -610,10 +609,7 @@ class Hyperion(LightEntity):
                     "Failed Hyperion (%s) command: %s", self._name, resp_json
                 )
                 should_update_state = False
-            elif (
-                command == f"{KEY_COMPONENTS}-{KEY_UPDATE}"
-                and KEY_DATA in resp_json
-            ):
+            elif command == f"{KEY_COMPONENTS}-{KEY_UPDATE}" and KEY_DATA in resp_json:
                 await self._async_update_components([resp_json[KEY_DATA]])
             elif command == f"{KEY_ADJUSTMENT}-{KEY_UPDATE}" and resp_json.get(
                 KEY_DATA, []
@@ -627,10 +623,7 @@ class Hyperion(LightEntity):
                 KEY_DATA, {}
             ).get(KEY_PRIORITIES, {}):
                 await self._async_update_priorities(resp_json[KEY_DATA][KEY_PRIORITIES])
-            elif (
-                command == f"{KEY_INSTANCE}-{KEY_UPDATE}"
-                and KEY_DATA in resp_json
-            ):
+            elif command == f"{KEY_INSTANCE}-{KEY_UPDATE}" and KEY_DATA in resp_json:
                 await self._async_verify_instance_or_close(resp_json[KEY_DATA])
                 should_update_state = False
 
