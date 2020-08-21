@@ -311,15 +311,16 @@ async def test_color_light_state(
     ]
     assert state_color == [0, 100]
 
-    # Brightness = 0
+    # Brightness = 60
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_BRIGHTNESS: 0, ATTR_ENTITY_ID: "light.wl000000000099_1"},
+        {ATTR_BRIGHTNESS: 60, ATTR_ENTITY_ID: "light.wl000000000099_1"},
         blocking=True,
     )
     await hass.async_block_till_done()
 
     state = hass.states.get("light.wl000000000099_1")
     assert state
-    assert state.state == STATE_OFF
+    assert state.state == STATE_ON
+    assert state.attributes.get(ATTR_BRIGHTNESS) == 60
