@@ -510,7 +510,7 @@ unit_system = vol.All(
 )
 
 
-def template(value: Optional[Any]) -> template_helper.Template:
+def template(value: Optional[Any]) -> Any:
     """Validate a jinja2 template."""
 
     if value is None:
@@ -518,13 +518,16 @@ def template(value: Optional[Any]) -> template_helper.Template:
     if isinstance(value, (list, dict, template_helper.Template)):
         raise vol.Invalid("template value should be a string")
 
-    template_value = template_helper.Template(str(value))  # type: ignore
+    if isinstance(value, str) and template_helper.is_template_string(value):
+        template_value = template_helper.Template(str(value))  # type: ignore
 
-    try:
-        template_value.ensure_valid()
-        return cast(template_helper.Template, template_value)
-    except TemplateError as ex:
-        raise vol.Invalid(f"invalid template ({ex})")
+        try:
+            template_value.ensure_valid()
+            return cast(template_helper.Template, template_value)
+        except TemplateError as ex:
+            raise vol.Invalid(f"invalid template ({ex})")
+
+    return value
 
 
 def template_complex(value: Any) -> Any:
@@ -858,8 +861,8 @@ EVENT_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_ALIAS): string,
         vol.Required(CONF_EVENT): string,
-        vol.Optional(CONF_EVENT_DATA): dict,
-        vol.Optional(CONF_EVENT_DATA_TEMPLATE): template_complex,
+        vol.Optional(CONF_EVENT_DATA): vol.All(dict, template_complex),
+        vol.Optional(CONF_EVENT_DATA_TEMPLATE): vol.All(dict, template_complex),
     }
 )
 
@@ -869,8 +872,8 @@ SERVICE_SCHEMA = vol.All(
             vol.Optional(CONF_ALIAS): string,
             vol.Exclusive(CONF_SERVICE, "service name"): service,
             vol.Exclusive(CONF_SERVICE_TEMPLATE, "service name"): template,
-            vol.Optional("data"): dict,
-            vol.Optional("data_template"): template_complex,
+            vol.Optional("data"): vol.All(dict, template_complex),
+            vol.Optional("data_template"): vol.All(dict, template_complex),
             vol.Optional(CONF_ENTITY_ID): comp_entity_ids,
         }
     ),

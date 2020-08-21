@@ -439,18 +439,19 @@ class _ScriptRun:
             CONF_ALIAS, self._action[CONF_EVENT]
         )
         self._log("Executing step %s", self._script.last_action)
-        event_data = dict(self._action.get(CONF_EVENT_DATA, {}))
-        if CONF_EVENT_DATA_TEMPLATE in self._action:
-            try:
-                event_data.update(
-                    template.render_complex(
-                        self._action[CONF_EVENT_DATA_TEMPLATE], self._variables
+        event_data = {}
+        for conf in [CONF_EVENT_DATA, CONF_EVENT_DATA_TEMPLATE]:
+            if conf in self._action:
+                try:
+                    event_data.update(
+                        template.render_complex(self._action[conf], self._variables)
                     )
-                )
-            except exceptions.TemplateError as ex:
-                self._log(
-                    "Error rendering event data template: %s", ex, level=logging.ERROR
-                )
+                except exceptions.TemplateError as ex:
+                    self._log(
+                        "Error rendering event data template: %s",
+                        ex,
+                        level=logging.ERROR,
+                    )
 
         self._hass.bus.async_fire(
             self._action[CONF_EVENT], event_data, context=self._context

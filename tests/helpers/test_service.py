@@ -149,11 +149,11 @@ class TestServiceHelpers(unittest.TestCase):
         config = {
             "service_template": "{{ 'test_domain.test_service' }}",
             "entity_id": "hello.world",
-            "data_template": {
+            "data": {
                 "hello": "{{ 'goodbye' }}",
                 "data": {"value": "{{ 'complex' }}", "simple": "simple"},
-                "list": ["{{ 'list' }}", "2"],
             },
+            "data_template": {"list": ["{{ 'list' }}", "2"]},
         }
 
         service.call_from_config(self.hass, config)
