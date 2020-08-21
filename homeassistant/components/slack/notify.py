@@ -199,12 +199,9 @@ class SlackNotificationService(BaseNotificationService):
             _LOGGER.error("Error while uploading file message: %s", err)
 
     async def _async_send_text_only_message(
-        self, targets, message, title, blocks, username=None, icon=None
+        self, targets, message, title, blocks, username, icon
     ):
         """Send a text-only message."""
-        _username = username or self._username
-        _icon = icon or self._icon
-
         if self._icon.lower().startswith(("http://", "https://")):
             icon_type = "url"
         else:
@@ -217,8 +214,8 @@ class SlackNotificationService(BaseNotificationService):
                     "channel": target,
                     "link_names": True,
                     "text": message,
-                    "username": _username,
-                    f"icon_{icon_type}": _icon,
+                    "username": username,
+                    f"icon_{icon_type}": icon,
                 }
             )
             for target in targets
@@ -265,8 +262,8 @@ class SlackNotificationService(BaseNotificationService):
                 message,
                 title,
                 blocks,
-                username=data.get(ATTR_USERNAME),
-                icon=data.get(ATTR_ICON),
+                username=data.get(ATTR_USERNAME, self._username),
+                icon=data.get(ATTR_ICON, self._icon),
             )
 
         # Message Type 2: A message that uploads a remote file
