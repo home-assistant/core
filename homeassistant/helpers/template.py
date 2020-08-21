@@ -87,7 +87,7 @@ def render_complex(value: Any, variables: TemplateVarsType = None) -> Any:
     return value
 
 
-def is_template(maybe_template: str) -> bool:
+def is_dynamic_template(maybe_template: str) -> bool:
     """Check if the input is a Jinja2 template."""
     return _RE_JINJA_DELIMITERS.search(maybe_template) is not None
 
@@ -98,7 +98,7 @@ def extract_entities(
     variables: TemplateVarsType = None,
 ) -> Union[str, List[str]]:
     """Extract all entities for state_changed listener from template string."""
-    if template is None or not is_template(template):
+    if template is None or not is_dynamic_template(template):
         return []
 
     if _RE_NONE_ENTITIES.search(template):
@@ -272,7 +272,7 @@ class Template:
             render_info.exception = ex
         finally:
             del self.hass.data[_RENDER_INFO]
-            if not is_template(self.template):
+            if not is_dynamic_template(self.template):
                 render_info._freeze_static()
             else:
                 render_info._freeze()
