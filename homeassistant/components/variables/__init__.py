@@ -109,7 +109,6 @@ class Variable:
     key: str
     value: str
     attributes: Optional[dict]
-    existing: bool = False
 
 
 class VariableManager:
