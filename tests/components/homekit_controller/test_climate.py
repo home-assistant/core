@@ -493,3 +493,19 @@ async def test_heater_cooler_change_swing_mode(hass, utcnow):
         blocking=True,
     )
     assert helper.characteristics[SWING_MODE].value == SwingModeValues.DISABLED
+
+
+async def test_heater_cooler_turn_off(hass, utcnow):
+    """Test that both hvac_action and hvac_mode return "off" when turned off."""
+    helper = await setup_test_component(hass, create_heater_cooler_service)
+    # Simulate that the device is turned off but CURRENT_HEATER_COOLER_STATE still returns HEATING/COOLING
+    helper.characteristics[HEATER_COOLER_ACTIVE].value = ActivationStateValues.INACTIVE
+    helper.characteristics[
+        CURRENT_HEATER_COOLER_STATE
+    ].value = CurrentHeaterCoolerStateValues.HEATING
+    helper.characteristics[
+        TARGET_HEATER_COOLER_STATE
+    ].value = TargetHeaterCoolerStateValues.HEAT
+    state = await helper.poll_and_get_state()
+    assert state.state == "off"
+    assert state.attributes["hvac_action"] == "off"

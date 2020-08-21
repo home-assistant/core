@@ -235,6 +235,11 @@ class HomeKitHeaterCoolerEntity(HomeKitEntity, ClimateEntity):
         # This characteristic describes the current mode of a device,
         # e.g. a thermostat is "heating" a room to 75 degrees Fahrenheit.
         # Can be 0 - 3 (Off, Idle, Heat, Cool)
+        if (
+            self.service.value(CharacteristicsTypes.ACTIVE)
+            == ActivationStateValues.INACTIVE
+        ):
+            return CURRENT_HVAC_OFF
         value = self.service.value(CharacteristicsTypes.CURRENT_HEATER_COOLER_STATE)
         return CURRENT_HEATER_COOLER_STATE_HOMEKIT_TO_HASS.get(value)
 
