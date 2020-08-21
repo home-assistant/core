@@ -53,7 +53,7 @@ class PlaatoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=self._errors,
         )
 
-    async def async_step_create_entry(self):
+    async def _async_step_create_entry(self):
         """Create the entry step."""
         if self._init_info.get(CONF_DEVICE_TYPE, None) is None:
             return self.async_abort(reason="no_device")
@@ -112,7 +112,7 @@ class PlaatoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._errors["base"] = "no_auth_token"
             return await self._show_api_method_form(device_type)
 
-        return await self.async_step_create_entry()
+        return await self._async_step_create_entry()
 
     async def async_step_device_type(self, user_input=None):
         """Handle device type step."""
@@ -126,15 +126,16 @@ class PlaatoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_webhook(self, user_input=None):
         """Handle device type step."""
-        return await self.async_step_create_entry()
+        return await self._async_step_create_entry()
 
     async def _show_api_method_form(self, device_type: PlaatoDeviceType):
-        data_scheme = vol.Schema(
-            {
-                vol.Optional(CONF_TOKEN, default=""): str,
-                vol.Optional(CONF_USE_WEBHOOK, default=False): bool,
-            }
-        )
+        data_scheme = vol.Schema({vol.Optional(CONF_TOKEN, default=""): str})
+
+        if device_type == PlaatoDeviceType.Airlock:
+            data_scheme = data_scheme.extend(
+                {vol.Optional(CONF_USE_WEBHOOK, default=False): bool}
+            )
+
         return self.async_show_form(
             step_id="validate",
             data_schema=data_scheme,

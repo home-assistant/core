@@ -810,6 +810,9 @@ pyotgw==0.6b1
 # homeassistant.components.otp
 pyotp==2.3.0
 
+# homeassistant.components.plaato
+pyplaato==0.0.14
+
 # homeassistant.components.openweathermap
 pyowm==3.1.0
 
