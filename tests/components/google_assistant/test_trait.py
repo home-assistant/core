@@ -2409,3 +2409,51 @@ async def test_media_state(hass, state):
         "activityState": trt.activity_lookup.get(state),
         "playbackState": trt.playback_lookup.get(state),
     }
+
+
+async def test_locator_switch(hass):
+    """Test Locator trait support for switch domain."""
+    assert (
+        helpers.get_google_type(switch.DOMAIN, switch.DEVICE_CLASS_LOCATOR)
+        == const.TYPE_SWITCH
+    )
+    assert not trait.LocatorTrait.supported(
+        switch.DOMAIN, 0, switch.DEVICE_CLASS_SWITCH
+    )
+    assert trait.LocatorTrait.supported(switch.DOMAIN, 0, switch.DEVICE_CLASS_LOCATOR)
+
+    trt = trait.LocatorTrait(hass, State("switch.locator", STATE_OFF), BASIC_CONFIG)
+
+    assert trt.sync_attributes() == {}
+
+    on_calls = async_mock_service(hass, switch.DOMAIN, SERVICE_TURN_ON)
+    await trt.execute(trait.COMMAND_LOCATE, BASIC_DATA, {"silence": False}, {})
+    assert len(on_calls) == 1
+    assert on_calls[0].data == {ATTR_ENTITY_ID: "switch.locator"}
+    assert trt.query_attributes() == {"generatedAlert": True}
+
+    off_calls = async_mock_service(hass, switch.DOMAIN, SERVICE_TURN_OFF)
+    await trt.execute(trait.COMMAND_LOCATE, BASIC_DATA, {"silence": True}, {})
+    assert len(off_calls) == 1
+    assert off_calls[0].data == {ATTR_ENTITY_ID: "switch.locator"}
+
+
+async def test_locator_vacuum(hass):
+    """Test Locator trait support for vacuum domain."""
+    assert helpers.get_google_type(vacuum.DOMAIN, None) is not None
+    assert not trait.LocatorTrait.supported(vacuum.DOMAIN, 0, None)
+    assert trait.LocatorTrait.supported(vacuum.DOMAIN, vacuum.SUPPORT_LOCATE, None)
+
+    trt = trait.LocatorTrait(hass, State("vacuum.test", STATE_OFF), BASIC_CONFIG)
+
+    assert trt.sync_attributes() == {}
+
+    locate_calls = async_mock_service(hass, vacuum.DOMAIN, vacuum.SERVICE_LOCATE)
+    await trt.execute(trait.COMMAND_LOCATE, BASIC_DATA, {"silence": False}, {})
+    assert len(locate_calls) == 1
+    assert locate_calls[0].data == {ATTR_ENTITY_ID: "vacuum.test"}
+    assert trt.query_attributes() == {"generatedAlert": True}
+
+    locate_calls = async_mock_service(hass, vacuum.DOMAIN, vacuum.SERVICE_LOCATE)
+    await trt.execute(trait.COMMAND_LOCATE, BASIC_DATA, {"silence": True}, {})
+    assert len(locate_calls) == 0

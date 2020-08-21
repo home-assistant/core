@@ -95,6 +95,7 @@ TRAIT_ARMDISARM = f"{PREFIX_TRAITS}ArmDisarm"
 TRAIT_HUMIDITY_SETTING = f"{PREFIX_TRAITS}HumiditySetting"
 TRAIT_TRANSPORT_CONTROL = f"{PREFIX_TRAITS}TransportControl"
 TRAIT_MEDIA_STATE = f"{PREFIX_TRAITS}MediaState"
+TRAIT_LOCATOR = f"{PREFIX_TRAITS}Locator"
 
 PREFIX_COMMANDS = "action.devices.commands."
 COMMAND_ONOFF = f"{PREFIX_COMMANDS}OnOff"
@@ -132,7 +133,7 @@ COMMAND_MEDIA_SEEK_TO_POSITION = f"{PREFIX_COMMANDS}mediaSeekToPosition"
 COMMAND_MEDIA_SHUFFLE = f"{PREFIX_COMMANDS}mediaShuffle"
 COMMAND_MEDIA_STOP = f"{PREFIX_COMMANDS}mediaStop"
 COMMAND_SET_HUMIDITY = f"{PREFIX_COMMANDS}SetHumidity"
-
+COMMAND_LOCATE = f"{PREFIX_COMMANDS}Locate"
 
 TRAITS = []
 
@@ -1960,3 +1961,71 @@ class MediaStateTrait(_Trait):
             "activityState": self.activity_lookup.get(self.state.state, "INACTIVE"),
             "playbackState": self.playback_lookup.get(self.state.state, "STOPPED"),
         }
+
+
+@register_trait
+class LocatorTrait(_Trait):
+    """Trait to locate devices.
+
+    https://developers.google.com/actions/smarthome/traits/locator
+    """
+
+    name = TRAIT_LOCATOR
+    commands = [COMMAND_LOCATE]
+
+    @staticmethod
+    def supported(domain, features, device_class):
+        """Test if state is supported."""
+        # Using switch as generic locator device
+        # Google Assistant does not seem to support SCENE device type with LOCATOR trait
+        if domain == switch.DOMAIN:
+            return device_class == switch.DEVICE_CLASS_LOCATOR
+
+        if domain == vacuum.DOMAIN:
+            return features & vacuum.SUPPORT_LOCATE
+
+        return False
+
+    def sync_attributes(self):
+        """Return attributes for a sync request."""
+        return {}
+
+    def query_attributes(self):
+        """Return the attributes of this trait for this entity."""
+        # Should be only returned from execute() but it's not supported
+        # i.e. query_attributes() is used as execute() response
+        return {
+            "generatedAlert": True,
+        }
+
+    async def execute(self, command, data, params, challenge):
+        """Execute a locator command."""
+        domain = self.state.domain
+
+        if command == COMMAND_LOCATE:
+            silence = params["silence"]
+
+            if domain == switch.DOMAIN:
+                # Documentation does not specify when/how silence=true is triggered
+                service = SERVICE_TURN_OFF if silence else SERVICE_TURN_ON
+                await self.hass.services.async_call(
+                    switch.DOMAIN,
+                    service,
+                    {ATTR_ENTITY_ID: self.state.entity_id},
+                    blocking=True,
+                    context=data.context,
+                )
+                return
+
+            if domain == vacuum.DOMAIN:
+                if not silence:
+                    await self.hass.services.async_call(
+                        vacuum.DOMAIN,
+                        vacuum.SERVICE_LOCATE,
+                        {ATTR_ENTITY_ID: self.state.entity_id},
+                        blocking=True,
+                        context=data.context,
+                    )
+                return
+        else:
+            raise SmartHomeError(ERR_NOT_SUPPORTED, "Command not supported")
