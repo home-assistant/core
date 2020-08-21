@@ -41,6 +41,13 @@ from .const import (
 )
 
 LIVE_TV_SECTION = "-4"
+PLAYLISTS_BROWSE_PAYLOAD = {
+    "title": "Playlists",
+    "media_content_id": "all",
+    "media_content_type": "playlists",
+    "can_play": False,
+    "can_expand": True,
+}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -651,6 +658,11 @@ class PlexMediaPlayer(MediaPlayerEntity):
                 library_payload, self.plex_server, media_content_id
             )
 
+        if media_content_type == "playlists":
+            return await self.hass.async_add_executor_job(
+                playlists_payload, self.plex_server
+            )
+
         payload = {
             "media_type": PLEX_DOMAIN,
             "plex_key": int(media_content_id),
@@ -671,11 +683,12 @@ def item_payload(item):
     """
     payload = {
         "title": item.title,
-        "thumbnail": item.thumbUrl,
         "media_content_id": str(item.ratingKey),
         "media_content_type": item.type,
         "can_play": True,
     }
+    if hasattr(item, "thumbUrl"):
+        payload["thumbnail"] = item.thumbUrl
     if item.type in EXPANDABLES:
         payload["can_expand"] = True
     return payload
@@ -714,6 +727,7 @@ def server_payload(plex_server):
         if library.type == "photo":
             continue
         server_info["children"].append(library_section_payload(library))
+    server_info["children"].append(PLAYLISTS_BROWSE_PAYLOAD)
     return server_info
 
 
@@ -729,3 +743,15 @@ def library_payload(plex_server, library_id):
     for item in library.all():
         library_info["children"].append(item_payload(item))
     return library_info
+
+
+def playlists_payload(plex_server):
+    """
+    Create response payload for all available playlists.
+
+    Used by async_browse_media.
+    """
+    playlists_info = {**PLAYLISTS_BROWSE_PAYLOAD, "children": []}
+    for playlist in plex_server.playlists():
+        playlists_info["children"].append(item_payload(playlist))
+    return playlists_info

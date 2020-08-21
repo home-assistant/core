@@ -448,6 +448,10 @@ class PlexServer:
         """Return playlist from server object."""
         return self._plex_server.playlist(title)
 
+    def playlists(self):
+        """Return available playlists from server object."""
+        return self._plex_server.playlists()
+
     def create_playqueue(self, media, **kwargs):
         """Create playqueue on Plex server."""
         return plexapi.playqueue.PlayQueue.create(self._plex_server, media, **kwargs)
