@@ -23,7 +23,7 @@ METER_CC_LABELS = {
 
 NOTIFICATION_CC_LABELS = {
     "General": "Start",
-    "Smoke": "Smoke_Alarm",
+    "Smoke": "Smoke Alarm",
     "Carbon Monoxide": "Carbon Monoxide",
     "Carbon Dioxide": "Carbon Dioxide",
     "Heat": "Heat",
