@@ -526,7 +526,7 @@ def template_complex(value: Any) -> Any:
             template_complex(key): template_complex(element)
             for key, element in value.items()
         }
-    if isinstance(value, str) and template_helper.is_dynamic_template(value):
+    if isinstance(value, str) and template_helper.is_template_string(value):
         return template(value)
 
     return value
