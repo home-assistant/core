@@ -6,15 +6,17 @@ from uuid import UUID
 import attr
 import pytest
 
+from homeassistant.components import tts
 from homeassistant.components.cast import media_player as cast
 from homeassistant.components.cast.media_player import ChromecastInfo
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_setup_component
 
 from tests.async_mock import AsyncMock, MagicMock, Mock, patch
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, assert_setup_component
 
 
 @pytest.fixture(autouse=True)
@@ -575,6 +577,126 @@ async def test_group_media_control(hass: HomeAssistantType):
     entity.play_media(None, None)
     assert not grp_media.play_media.called
     assert chromecast.media_controller.play_media.called
+
+
+async def test_failed_cast_on_idle(hass, caplog):
+    """Test no warning when unless player went idle with reason "ERROR"."""
+    info = get_fake_chromecast_info()
+    chromecast, entity = await async_setup_media_player_cast(hass, info)
+
+    media_status = MagicMock(images=None)
+    media_status.player_is_idle = False
+    media_status.idle_reason = "ERROR"
+    media_status.content_id = "http://example.com:8123/tts.mp3"
+    entity.new_media_status(media_status)
+    assert "Failed to cast media" not in caplog.text
+
+    media_status = MagicMock(images=None)
+    media_status.player_is_idle = True
+    media_status.idle_reason = "Other"
+    media_status.content_id = "http://example.com:8123/tts.mp3"
+    entity.new_media_status(media_status)
+    assert "Failed to cast media" not in caplog.text
+
+    media_status = MagicMock(images=None)
+    media_status.player_is_idle = True
+    media_status.idle_reason = "ERROR"
+    media_status.content_id = "http://example.com:8123/tts.mp3"
+    entity.new_media_status(media_status)
+    assert "Failed to cast media http://example.com:8123/tts.mp3." in caplog.text
+
+
+async def test_failed_cast_other_url(hass, caplog):
+    """Test warning when casting from internal_url fails."""
+    with assert_setup_component(1, tts.DOMAIN):
+        assert await async_setup_component(
+            hass,
+            tts.DOMAIN,
+            {tts.DOMAIN: {"platform": "demo", "base_url": "http://example.local:8123"}},
+        )
+
+    info = get_fake_chromecast_info()
+    chromecast, entity = await async_setup_media_player_cast(hass, info)
+
+    media_status = MagicMock(images=None)
+    media_status.player_is_idle = True
+    media_status.idle_reason = "ERROR"
+    media_status.content_id = "http://example.com:8123/tts.mp3"
+    entity.new_media_status(media_status)
+    assert "Failed to cast media http://example.com:8123/tts.mp3." in caplog.text
+
+
+async def test_failed_cast_internal_url(hass, caplog):
+    """Test warning when casting from internal_url fails."""
+    await async_process_ha_core_config(
+        hass, {"internal_url": "http://example.local:8123"},
+    )
+    with assert_setup_component(1, tts.DOMAIN):
+        assert await async_setup_component(
+            hass, tts.DOMAIN, {tts.DOMAIN: {"platform": "demo"}}
+        )
+
+    info = get_fake_chromecast_info()
+    chromecast, entity = await async_setup_media_player_cast(hass, info)
+
+    media_status = MagicMock(images=None)
+    media_status.player_is_idle = True
+    media_status.idle_reason = "ERROR"
+    media_status.content_id = "http://example.local:8123/tts.mp3"
+    entity.new_media_status(media_status)
+    assert (
+        "Failed to cast media http://example.local:8123/tts.mp3 from internal_url"
+        in caplog.text
+    )
+
+
+async def test_failed_cast_external_url(hass, caplog):
+    """Test warning when casting from external_url fails."""
+    await async_process_ha_core_config(
+        hass, {"external_url": "http://example.com:8123"},
+    )
+    with assert_setup_component(1, tts.DOMAIN):
+        assert await async_setup_component(
+            hass,
+            tts.DOMAIN,
+            {tts.DOMAIN: {"platform": "demo", "base_url": "http://example.com:8123"}},
+        )
+
+    info = get_fake_chromecast_info()
+    chromecast, entity = await async_setup_media_player_cast(hass, info)
+
+    media_status = MagicMock(images=None)
+    media_status.player_is_idle = True
+    media_status.idle_reason = "ERROR"
+    media_status.content_id = "http://example.com:8123/tts.mp3"
+    entity.new_media_status(media_status)
+    assert (
+        "Failed to cast media http://example.com:8123/tts.mp3 from external_url"
+        in caplog.text
+    )
+
+
+async def test_failed_cast_tts_base_url(hass, caplog):
+    """Test warning when casting from tts.base_url fails."""
+    with assert_setup_component(1, tts.DOMAIN):
+        assert await async_setup_component(
+            hass,
+            tts.DOMAIN,
+            {tts.DOMAIN: {"platform": "demo", "base_url": "http://example.local:8123"}},
+        )
+
+    info = get_fake_chromecast_info()
+    chromecast, entity = await async_setup_media_player_cast(hass, info)
+
+    media_status = MagicMock(images=None)
+    media_status.player_is_idle = True
+    media_status.idle_reason = "ERROR"
+    media_status.content_id = "http://example.local:8123/tts.mp3"
+    entity.new_media_status(media_status)
+    assert (
+        "Failed to cast media http://example.local:8123/tts.mp3 from tts.base_url"
+        in caplog.text
+    )
 
 
 async def test_disconnect_on_stop(hass: HomeAssistantType):
