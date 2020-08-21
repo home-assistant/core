@@ -65,8 +65,9 @@ def attach(hass: HomeAssistantType, obj: Any) -> None:
         for child in obj:
             attach(hass, child)
     elif isinstance(obj, dict):
-        for child in obj.values():
-            attach(hass, child)
+        for child_key, child_value in obj.items():
+            attach(hass, child_key)
+            attach(hass, child_value)
     elif isinstance(obj, Template):
         obj.hass = hass
 
@@ -76,10 +77,19 @@ def render_complex(value: Any, variables: TemplateVarsType = None) -> Any:
     if isinstance(value, list):
         return [render_complex(item, variables) for item in value]
     if isinstance(value, dict):
-        return {key: render_complex(item, variables) for key, item in value.items()}
+        return {
+            render_complex(key, variables): render_complex(item, variables)
+            for key, item in value.items()
+        }
     if isinstance(value, Template):
         return value.async_render(variables)
+
     return value
+
+
+def is_template_string(maybe_template: str) -> bool:
+    """Check if the input is a Jinja2 template."""
+    return _RE_JINJA_DELIMITERS.search(maybe_template) is not None
 
 
 def extract_entities(
@@ -88,7 +98,7 @@ def extract_entities(
     variables: TemplateVarsType = None,
 ) -> Union[str, List[str]]:
     """Extract all entities for state_changed listener from template string."""
-    if template is None or _RE_JINJA_DELIMITERS.search(template) is None:
+    if template is None or not is_template_string(template):
         return []
 
     if _RE_NONE_ENTITIES.search(template):
@@ -262,7 +272,7 @@ class Template:
             render_info.exception = ex
         finally:
             del self.hass.data[_RENDER_INFO]
-            if _RE_JINJA_DELIMITERS.search(self.template) is None:
+            if not is_template_string(self.template):
                 render_info._freeze_static()
             else:
                 render_info._freeze()
