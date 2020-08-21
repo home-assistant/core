@@ -141,7 +141,7 @@ async def async_setup_platform(
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Cast from a config entry."""
-    config = hass.data[CAST_DOMAIN].get("media_player", {})
+    config = hass.data[CAST_DOMAIN].get("media_player") or {}
     if not isinstance(config, list):
         config = [config]
 
@@ -645,7 +645,9 @@ class CastDevice(MediaPlayerEntity):
 
         images = media_status.images
 
-        return images[0].url if images and images[0].url else None
+        return (
+            images[0].url.replace("http://", "//") if images and images[0].url else None
+        )
 
     @property
     def media_image_remotely_accessible(self) -> bool:

@@ -14,7 +14,7 @@ CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
 
 
-async def test_full_flow(hass, aiohttp_client, aioclient_mock):
+async def test_full_flow(hass, aiohttp_client, aioclient_mock, current_request):
     """Check full flow."""
     assert await setup.async_setup_component(
         hass,

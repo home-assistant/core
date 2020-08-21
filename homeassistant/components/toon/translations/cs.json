@@ -8,12 +8,6 @@
             "agreement": {
                 "title": "Vyberte si smlouvu"
             },
-            "authenticate": {
-                "data": {
-                    "password": "Heslo",
-                    "username": "U\u017eivatelsk\u00e9 jm\u00e9no"
-                }
-            },
             "pick_implementation": {
                 "title": "Zvolte pomoc\u00ed kter\u00e9ho poskytovatele chcete slu\u017ebu ov\u011b\u0159it."
             }

@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Vous ne pouvez configurer qu'un seul compte Netatmo.",
             "missing_configuration": "Ce composant n'est pas configur\u00e9. Veuillez suivre la documentation."
         },
         "create_entry": {

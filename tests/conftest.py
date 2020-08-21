@@ -3,8 +3,10 @@ import asyncio
 import datetime
 import functools
 import logging
+import ssl
 import threading
 
+from aiohttp.test_utils import make_mocked_request
 import pytest
 import requests_mock as _requests_mock
 
@@ -24,7 +26,7 @@ from homeassistant.helpers import event
 from homeassistant.setup import async_setup_component
 from homeassistant.util import location
 
-from tests.async_mock import MagicMock, patch
+from tests.async_mock import MagicMock, Mock, patch
 from tests.ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
 
 pytest.register_assert_rewrite("tests.common")
@@ -264,6 +266,20 @@ def hass_client(hass, aiohttp_client, hass_access_token):
 
 
 @pytest.fixture
+def current_request(hass):
+    """Mock current request."""
+    with patch("homeassistant.helpers.network.current_request") as mock_request_context:
+        mocked_request = make_mocked_request(
+            "GET",
+            "/some/request",
+            headers={"Host": "example.com"},
+            sslcontext=ssl.SSLContext(ssl.PROTOCOL_TLS),
+        )
+        mock_request_context.get = Mock(return_value=mocked_request)
+        yield mock_request_context
+
+
+@pytest.fixture
 def hass_ws_client(aiohttp_client, hass_access_token, hass):
     """Websocket client fixture connected to websocket server."""
 
@@ -319,15 +335,39 @@ def mqtt_config():
 def mqtt_client_mock(hass):
     """Fixture to mock MQTT client."""
 
-    @ha.callback
-    def _async_fire_mqtt_message(topic, payload, qos, retain):
-        async_fire_mqtt_message(hass, topic, payload, qos, retain)
+    mid = 0
+
+    def get_mid():
+        nonlocal mid
+        mid += 1
+        return mid
+
+    class FakeInfo:
+        def __init__(self, mid):
+            self.mid = mid
+            self.rc = 0
 
     with patch("paho.mqtt.client.Client") as mock_client:
+
+        @ha.callback
+        def _async_fire_mqtt_message(topic, payload, qos, retain):
+            async_fire_mqtt_message(hass, topic, payload, qos, retain)
+            mid = get_mid()
+            mock_client.on_publish(0, 0, mid)
+            return FakeInfo(mid)
+
+        def _subscribe(topic, qos=0):
+            mock_client.on_subscribe(0, 0, mid)
+            return (0, mid)
+
+        def _unsubscribe(topic):
+            mock_client.on_unsubscribe(0, 0, mid)
+            return (0, mid)
+
         mock_client = mock_client.return_value
         mock_client.connect.return_value = 0
-        mock_client.subscribe.return_value = (0, 0)
-        mock_client.unsubscribe.return_value = (0, 0)
+        mock_client.subscribe.side_effect = _subscribe
+        mock_client.unsubscribe.side_effect = _unsubscribe
         mock_client.publish.side_effect = _async_fire_mqtt_message
         yield mock_client
 

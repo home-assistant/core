@@ -4,8 +4,6 @@
             "all_configured": "Az \u00f6sszes \u00f6sszekapcsolt szerver m\u00e1r konfigur\u00e1lva van",
             "already_configured": "Ez a Plex szerver m\u00e1r konfigur\u00e1lva van",
             "already_in_progress": "A Plex konfigur\u00e1l\u00e1sa folyamatban van",
-            "invalid_import": "Az import\u00e1lt konfigur\u00e1ci\u00f3 \u00e9rv\u00e9nytelen",
-            "non-interactive": "Nem interakt\u00edv import\u00e1l\u00e1s",
             "token_request_timeout": "Token k\u00e9r\u00e9sre sz\u00e1nt id\u0151 lej\u00e1rt",
             "unknown": "Ismeretlen okb\u00f3l nem siker\u00fclt"
         },

@@ -114,7 +114,7 @@ class AccuWeatherDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         """Update data via library."""
         try:
-            with timeout(10):
+            async with timeout(10):
                 current = await self.accuweather.async_get_current_conditions()
                 forecast = (
                     await self.accuweather.async_get_forecast(metric=self.is_metric)

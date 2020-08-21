@@ -33,6 +33,12 @@ def light_new_ozw_data_fixture():
     return load_fixture("ozw/light_new_ozw_network_dump.csv")
 
 
+@pytest.fixture(name="light_pure_rgb_dimmer_data", scope="session")
+def light_pure_rgb_dimmer_data_fixture():
+    """Load light rgb and dimmer MQTT data and return it."""
+    return load_fixture("ozw/light_pure_rgb_dimmer_dump.csv")
+
+
 @pytest.fixture(name="light_no_rgb_data", scope="session")
 def light_no_rgb_data_fixture():
     """Load light dimmer MQTT data and return it."""
@@ -133,6 +139,17 @@ async def light_rgb_msg_fixture(hass):
     """Return a mock MQTT msg with a light actuator message."""
     light_json = json.loads(
         await hass.async_add_executor_job(load_fixture, "ozw/light_rgb.json")
+    )
+    message = MQTTMessage(topic=light_json["topic"], payload=light_json["payload"])
+    message.encode()
+    return message
+
+
+@pytest.fixture(name="light_pure_rgb_msg")
+async def light_pure_rgb_msg_fixture(hass):
+    """Return a mock MQTT msg with a pure rgb light actuator message."""
+    light_json = json.loads(
+        await hass.async_add_executor_job(load_fixture, "ozw/light_pure_rgb.json")
     )
     message = MQTTMessage(topic=light_json["topic"], payload=light_json["payload"])
     message.encode()

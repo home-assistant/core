@@ -1,5 +1,4 @@
 """Tests for the Toon config flow."""
-
 from toonapi import Agreement, ToonError
 
 from homeassistant import data_entry_flow
@@ -39,7 +38,9 @@ async def test_abort_if_no_configuration(hass):
     assert result["reason"] == "missing_configuration"
 
 
-async def test_full_flow_implementation(hass, aiohttp_client, aioclient_mock):
+async def test_full_flow_implementation(
+    hass, aiohttp_client, aioclient_mock, current_request
+):
     """Test registering an integration and finishing flow works."""
     await setup_component(hass)
 
@@ -95,7 +96,7 @@ async def test_full_flow_implementation(hass, aiohttp_client, aioclient_mock):
     }
 
 
-async def test_no_agreements(hass, aiohttp_client, aioclient_mock):
+async def test_no_agreements(hass, aiohttp_client, aioclient_mock, current_request):
     """Test abort when there are no displays."""
     await setup_component(hass)
     result = await hass.config_entries.flow.async_init(
@@ -127,7 +128,9 @@ async def test_no_agreements(hass, aiohttp_client, aioclient_mock):
     assert result3["reason"] == "no_agreements"
 
 
-async def test_multiple_agreements(hass, aiohttp_client, aioclient_mock):
+async def test_multiple_agreements(
+    hass, aiohttp_client, aioclient_mock, current_request
+):
     """Test abort when there are no displays."""
     await setup_component(hass)
     result = await hass.config_entries.flow.async_init(
@@ -169,7 +172,9 @@ async def test_multiple_agreements(hass, aiohttp_client, aioclient_mock):
         assert result4["data"]["agreement_id"] == 1
 
 
-async def test_agreement_already_set_up(hass, aiohttp_client, aioclient_mock):
+async def test_agreement_already_set_up(
+    hass, aiohttp_client, aioclient_mock, current_request
+):
     """Test showing display form again if display already exists."""
     await setup_component(hass)
     MockConfigEntry(domain=DOMAIN, unique_id=123).add_to_hass(hass)
@@ -202,7 +207,7 @@ async def test_agreement_already_set_up(hass, aiohttp_client, aioclient_mock):
         assert result3["reason"] == "already_configured"
 
 
-async def test_toon_abort(hass, aiohttp_client, aioclient_mock):
+async def test_toon_abort(hass, aiohttp_client, aioclient_mock, current_request):
     """Test we abort on Toon error."""
     await setup_component(hass)
     result = await hass.config_entries.flow.async_init(
@@ -247,7 +252,7 @@ async def test_import(hass):
     assert result["reason"] == "already_in_progress"
 
 
-async def test_import_migration(hass, aiohttp_client, aioclient_mock):
+async def test_import_migration(hass, aiohttp_client, aioclient_mock, current_request):
     """Test if importing step with migration works."""
     old_entry = MockConfigEntry(domain=DOMAIN, unique_id=123, version=1)
     old_entry.add_to_hass(hass)

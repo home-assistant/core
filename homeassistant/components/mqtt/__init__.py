@@ -28,6 +28,7 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
     EVENT_HOMEASSISTANT_STOP,
 )
+from homeassistant.const import CONF_UNIQUE_ID  # noqa: F401
 from homeassistant.core import Event, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import config_validation as cv, event, template
@@ -44,6 +45,7 @@ from . import config_flow  # noqa: F401 pylint: disable=unused-import
 from . import debug_info, discovery
 from .const import (
     ATTR_DISCOVERY_HASH,
+    ATTR_DISCOVERY_PAYLOAD,
     ATTR_DISCOVERY_TOPIC,
     ATTR_PAYLOAD,
     ATTR_QOS,
@@ -101,7 +103,6 @@ CONF_PAYLOAD_NOT_AVAILABLE = "payload_not_available"
 CONF_JSON_ATTRS_TOPIC = "json_attributes_topic"
 CONF_JSON_ATTRS_TEMPLATE = "json_attributes_template"
 
-CONF_UNIQUE_ID = "unique_id"
 CONF_IDENTIFIERS = "identifiers"
 CONF_CONNECTIONS = "connections"
 CONF_MANUFACTURER = "manufacturer"
@@ -124,6 +125,8 @@ MAX_RECONNECT_WAIT = 300  # seconds
 CONNECTION_SUCCESS = "connection_success"
 CONNECTION_FAILED = "connection_failed"
 CONNECTION_FAILED_RECOVERABLE = "connection_failed_recoverable"
+
+TIMEOUT_ACK = 1
 
 
 def validate_device_has_at_least_one_identifier(value: ConfigType) -> ConfigType:
@@ -623,6 +626,8 @@ class MQTT:
         self._mqttc: mqtt.Client = None
         self._paho_lock = asyncio.Lock()
 
+        self._pending_operations = {}
+
         self.init_client()
         self.config_entry.add_update_listener(self.async_config_entry_updated)
 
@@ -665,6 +670,9 @@ class MQTT:
         else:
             self._mqttc = mqtt.Client(client_id, protocol=proto)
 
+        # Enable logging
+        self._mqttc.enable_logger()
+
         username = self.conf.get(CONF_USERNAME)
         password = self.conf.get(CONF_PASSWORD)
         if username is not None:
@@ -703,6 +711,9 @@ class MQTT:
         self._mqttc.on_connect = self._mqtt_on_connect
         self._mqttc.on_disconnect = self._mqtt_on_disconnect
         self._mqttc.on_message = self._mqtt_on_message
+        self._mqttc.on_publish = self._mqtt_on_callback
+        self._mqttc.on_subscribe = self._mqtt_on_callback
+        self._mqttc.on_unsubscribe = self._mqtt_on_callback
 
         if (
             CONF_WILL_MESSAGE in self.conf
@@ -725,10 +736,17 @@ class MQTT:
     ) -> None:
         """Publish a MQTT message."""
         async with self._paho_lock:
-            _LOGGER.debug("Transmitting message on %s: %s", topic, payload)
-            await self.hass.async_add_executor_job(
+            msg_info = await self.hass.async_add_executor_job(
                 self._mqttc.publish, topic, payload, qos, retain
             )
+            _LOGGER.debug(
+                "Transmitting message on %s: '%s', mid: %s",
+                topic,
+                payload,
+                msg_info.mid,
+            )
+            _raise_on_error(msg_info.rc)
+        await self._wait_for_mid(msg_info.mid)
 
     async def async_connect(self) -> str:
         """Connect to the host. Does not process messages yet."""
@@ -806,24 +824,25 @@ class MQTT:
 
         This method is a coroutine.
         """
-        _LOGGER.debug("Unsubscribing from %s", topic)
         async with self._paho_lock:
             result: int = None
-            result, _ = await self.hass.async_add_executor_job(
+            result, mid = await self.hass.async_add_executor_job(
                 self._mqttc.unsubscribe, topic
             )
+            _LOGGER.debug("Unsubscribing from %s, mid: %s", topic, mid)
             _raise_on_error(result)
+        await self._wait_for_mid(mid)
 
     async def _async_perform_subscription(self, topic: str, qos: int) -> None:
         """Perform a paho-mqtt subscription."""
-        _LOGGER.debug("Subscribing to %s", topic)
-
         async with self._paho_lock:
             result: int = None
-            result, _ = await self.hass.async_add_executor_job(
+            result, mid = await self.hass.async_add_executor_job(
                 self._mqttc.subscribe, topic, qos
             )
+            _LOGGER.debug("Subscribing to %s, mid: %s", topic, mid)
             _raise_on_error(result)
+        await self._wait_for_mid(mid)
 
     def _mqtt_on_connect(self, _mqttc, _userdata, _flags, result_code: int) -> None:
         """On connect callback.
@@ -915,6 +934,16 @@ class MQTT:
                 ),
             )
 
+    def _mqtt_on_callback(self, _mqttc, _userdata, mid, _granted_qos=None) -> None:
+        """Publish / Subscribe / Unsubscribe callback."""
+        self.hass.add_job(self._mqtt_handle_mid, mid)
+
+    async def _mqtt_handle_mid(self, mid) -> None:
+        if mid in self._pending_operations:
+            self._pending_operations[mid].set()
+        else:
+            _LOGGER.warning("Unknown mid %d", mid)
+
     def _mqtt_on_disconnect(self, _mqttc, _userdata, result_code: int) -> None:
         """Disconnected callback."""
         self.connected = False
@@ -925,6 +954,16 @@ class MQTT:
             self.conf[CONF_PORT],
             result_code,
         )
+
+    async def _wait_for_mid(self, mid):
+        """Wait for ACK from broker."""
+        self._pending_operations[mid] = asyncio.Event()
+        try:
+            await asyncio.wait_for(self._pending_operations[mid].wait(), TIMEOUT_ACK)
+        except asyncio.TimeoutError:
+            _LOGGER.error("Timed out waiting for mid %s", mid)
+        finally:
+            del self._pending_operations[mid]
 
 
 def _raise_on_error(result_code: int) -> None:
@@ -1169,6 +1208,7 @@ class MqttDiscoveryUpdate(Entity):
             _LOGGER.info(
                 "Got update for entity with hash: %s '%s'", discovery_hash, payload,
             )
+            old_payload = self._discovery_data[ATTR_DISCOVERY_PAYLOAD]
             debug_info.update_entity_discovery_data(self.hass, payload, self.entity_id)
             if not payload:
                 # Empty payload: Remove component
@@ -1176,9 +1216,13 @@ class MqttDiscoveryUpdate(Entity):
                 self._cleanup_discovery_on_remove()
                 await _async_remove_state_and_registry_entry(self)
             elif self._discovery_update:
-                # Non-empty payload: Notify component
-                _LOGGER.info("Updating component: %s", self.entity_id)
-                await self._discovery_update(payload)
+                if old_payload != self._discovery_data[ATTR_DISCOVERY_PAYLOAD]:
+                    # Non-empty, changed payload: Notify component
+                    _LOGGER.info("Updating component: %s", self.entity_id)
+                    await self._discovery_update(payload)
+                else:
+                    # Non-empty, unchanged payload: Ignore to avoid changing states
+                    _LOGGER.info("Ignoring unchanged update for: %s", self.entity_id)
 
         if discovery_hash:
             debug_info.add_entity_discovery_data(

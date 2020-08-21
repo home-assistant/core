@@ -1,11 +1,11 @@
 """Provides device automations for ZHA devices that emit events."""
 import voluptuous as vol
 
-import homeassistant.components.automation.event as event
 from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
+from homeassistant.components.homeassistant.triggers import event as event_trigger
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
 
 from . import DOMAIN
@@ -54,13 +54,13 @@ async def async_attach_trigger(hass, config, action, automation_info):
     trigger = zha_device.device_automation_triggers[trigger]
 
     event_config = {
-        event.CONF_PLATFORM: "event",
-        event.CONF_EVENT_TYPE: ZHA_EVENT,
-        event.CONF_EVENT_DATA: {DEVICE_IEEE: str(zha_device.ieee), **trigger},
+        event_trigger.CONF_PLATFORM: "event",
+        event_trigger.CONF_EVENT_TYPE: ZHA_EVENT,
+        event_trigger.CONF_EVENT_DATA: {DEVICE_IEEE: str(zha_device.ieee), **trigger},
     }
 
-    event_config = event.TRIGGER_SCHEMA(event_config)
-    return await event.async_attach_trigger(
+    event_config = event_trigger.TRIGGER_SCHEMA(event_config)
+    return await event_trigger.async_attach_trigger(
         hass, event_config, action, automation_info, platform_type="device"
     )
 

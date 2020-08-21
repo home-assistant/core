@@ -1,7 +1,6 @@
 {
     "config": {
         "error": {
-            "identifier_exists": "Po\u0161tna \u0161tevilka je \u017ee registrirana",
             "invalid_zip_code": "Po\u0161tna \u0161tevilka ni veljavna"
         },
         "step": {
