@@ -335,15 +335,39 @@ def mqtt_config():
 def mqtt_client_mock(hass):
     """Fixture to mock MQTT client."""
 
-    @ha.callback
-    def _async_fire_mqtt_message(topic, payload, qos, retain):
-        async_fire_mqtt_message(hass, topic, payload, qos, retain)
+    mid = 0
+
+    def get_mid():
+        nonlocal mid
+        mid += 1
+        return mid
+
+    class FakeInfo:
+        def __init__(self, mid):
+            self.mid = mid
+            self.rc = 0
 
     with patch("paho.mqtt.client.Client") as mock_client:
+
+        @ha.callback
+        def _async_fire_mqtt_message(topic, payload, qos, retain):
+            async_fire_mqtt_message(hass, topic, payload, qos, retain)
+            mid = get_mid()
+            mock_client.on_publish(0, 0, mid)
+            return FakeInfo(mid)
+
+        def _subscribe(topic, qos=0):
+            mock_client.on_subscribe(0, 0, mid)
+            return (0, mid)
+
+        def _unsubscribe(topic):
+            mock_client.on_unsubscribe(0, 0, mid)
+            return (0, mid)
+
         mock_client = mock_client.return_value
         mock_client.connect.return_value = 0
-        mock_client.subscribe.return_value = (0, 0)
-        mock_client.unsubscribe.return_value = (0, 0)
+        mock_client.subscribe.side_effect = _subscribe
+        mock_client.unsubscribe.side_effect = _unsubscribe
         mock_client.publish.side_effect = _async_fire_mqtt_message
         yield mock_client
 
