@@ -575,29 +575,37 @@ async def test_subscribe_special_characters(hass, mqtt_mock, calls, record_calls
     assert calls[0][0].payload == payload
 
 
-async def test_retained_message_on_subscribe_received(
-    hass, mqtt_client_mock, mqtt_mock
-):
-    """Test every subscriber receives retained message on subscribe."""
+async def test_subscribe_same_topic(hass, mqtt_client_mock, mqtt_mock):
+    """
+    Test subscring to same topic twice and simulate retained messages.
 
-    def side_effect(*args):
-        async_fire_mqtt_message(hass, "test/state", "online")
-        return 0, 0
-
-    mqtt_client_mock.subscribe.side_effect = side_effect
+    When subscribing to the same topic again, SUBSCRIBE must be sent to the broker again
+    for it to resend any retained messages.
+    """
 
     # Fake that the client is connected
     mqtt_mock().connected = True
 
     calls_a = MagicMock()
     await mqtt.async_subscribe(hass, "test/state", calls_a)
+    async_fire_mqtt_message(
+        hass, "test/state", "online"
+    )  # Simulate a (retained) message
     await hass.async_block_till_done()
     assert calls_a.called
+    mqtt_client_mock.subscribe.assert_called()
+    calls_a.reset_mock()
+    mqtt_client_mock.reset_mock()
 
     calls_b = MagicMock()
     await mqtt.async_subscribe(hass, "test/state", calls_b)
+    async_fire_mqtt_message(
+        hass, "test/state", "online"
+    )  # Simulate a (retained) message
     await hass.async_block_till_done()
+    assert calls_a.called
     assert calls_b.called
+    mqtt_client_mock.subscribe.assert_called()
 
 
 async def test_not_calling_unsubscribe_with_active_subscribers(
@@ -638,13 +646,6 @@ async def test_restore_all_active_subscriptions_on_reconnect(
     """Test active subscriptions are restored correctly on reconnect."""
     # Fake that the client is connected
     mqtt_mock().connected = True
-
-    mqtt_client_mock.subscribe.side_effect = (
-        (0, 1),
-        (0, 2),
-        (0, 3),
-        (0, 4),
-    )
 
     unsub = await mqtt.async_subscribe(hass, "test/state", None, qos=2)
     await mqtt.async_subscribe(hass, "test/state", None)
@@ -757,32 +758,28 @@ async def test_setup_without_tls_config_uses_tlsv1_under_python36(hass):
 )
 async def test_custom_birth_message(hass, mqtt_client_mock, mqtt_mock):
     """Test sending birth message."""
-    calls = []
-    mqtt_client_mock.publish.side_effect = lambda *args: calls.append(args)
     mqtt_mock._mqtt_on_connect(None, None, 0, 0)
     await hass.async_block_till_done()
-    assert calls[-1] == ("birth", "birth", 0, False)
+    mqtt_client_mock.publish.assert_called_with("birth", "birth", 0, False)
 
 
 async def test_default_birth_message(hass, mqtt_client_mock, mqtt_mock):
     """Test sending birth message."""
-    calls = []
-    mqtt_client_mock.publish.side_effect = lambda *args: calls.append(args)
     mqtt_mock._mqtt_on_connect(None, None, 0, 0)
     await hass.async_block_till_done()
-    assert calls[-1] == ("homeassistant/status", "online", 0, False)
+    mqtt_client_mock.publish.assert_called_with(
+        "homeassistant/status", "online", 0, False
+    )
 
 
 @pytest.mark.parametrize(
     "mqtt_config", [{mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_BIRTH_MESSAGE: {}}],
 )
 async def test_no_birth_message(hass, mqtt_client_mock, mqtt_mock):
-    """Test sending birth message."""
-    calls = []
-    mqtt_client_mock.publish.side_effect = lambda *args: calls.append(args)
+    """Test disabling birth message."""
     mqtt_mock._mqtt_on_connect(None, None, 0, 0)
     await hass.async_block_till_done()
-    assert not calls
+    mqtt_client_mock.publish.assert_not_called()
 
 
 @pytest.mark.parametrize(
