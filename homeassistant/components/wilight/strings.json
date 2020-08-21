@@ -8,7 +8,7 @@
       }
     },
     "abort": {
-      "already_configured": "This WiLight is already configured",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "not_supported_device": "This WiLight is currently not supported",
       "not_wilight_device": "This Device is not WiLight"
     }
