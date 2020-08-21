@@ -144,6 +144,26 @@ async def test_calling_service_template(hass):
     assert calls[0].data.get("hello") == "world"
 
 
+async def test_data_template_with_templated_key(hass):
+    """Test the calling of a service with a data_template with a templated key."""
+    context = Context()
+    calls = async_mock_service(hass, "test", "script")
+
+    sequence = cv.SCRIPT_SCHEMA(
+        {"service": "test.script", "data_template": {"{{ hello_var }}": "world"}}
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    await script_obj.async_run(
+        MappingProxyType({"hello_var": "hello"}), context=context
+    )
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert calls[0].context is context
+    assert "hello" in calls[0].data
+
+
 async def test_multiple_runs_no_wait(hass):
     """Test multiple runs with no wait in script."""
     logger = logging.getLogger("TEST")
