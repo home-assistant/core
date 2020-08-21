@@ -86,7 +86,9 @@ async def async_attach_trigger(
             value_template.extract_entities(),
         )
 
-    unsub = async_track_template(hass, value_template, template_listener)
+    unsub = async_track_template(
+        hass, value_template, template_listener, automation_info["variables"]
+    )
 
     @callback
     def async_remove():
