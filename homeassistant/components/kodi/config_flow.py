@@ -40,7 +40,7 @@ async def validate_http(hass: core.HomeAssistant, data):
     ssl = data.get(CONF_SSL)
     session = async_get_clientsession(hass)
 
-    _LOGGER.debug("Connecting to %s:%s over HTTP.", host, port)
+    _LOGGER.debug("Connecting to %s:%s over HTTP", host, port)
     khc = get_kodi_connection(
         host, port, None, username, password, ssl, session=session
     )
@@ -156,7 +156,6 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._password = user_input.get(CONF_PASSWORD)
             try:
                 await validate_http(self.hass, self._get_data())
-                return await self.async_step_ws_port()
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
             except CannotConnect:
@@ -166,6 +165,8 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
+            else:
+                return await self.async_step_ws_port()
 
         return self.async_show_form(
             step_id="credentials", data_schema=self._credentials_schema(), errors=errors
@@ -178,12 +179,13 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._ws_port = user_input.get(CONF_WS_PORT)
             try:
                 await validate_ws(self.hass, self._get_data())
-                return self._create_entry()
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
+            else:
+                return self._create_entry()
 
         return self.async_show_form(
             step_id="ws_port", data_schema=self._ws_port_schema(), errors=errors
@@ -191,8 +193,23 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, data):
         """Handle import from YAML."""
-        # We assume that the imported values work and just create the entry
-        return self.async_create_entry(title=data[CONF_NAME], data=data)
+        reason = None
+        try:
+            await validate_http(self.hass, data)
+            await validate_ws(self.hass, data)
+        except InvalidAuth:
+            _LOGGER.exception("Invalid Kodi credentials")
+            reason = "invalid_auth"
+        except CannotConnect:
+            _LOGGER.exception("Cannot connect to Kodi")
+            reason = "cannot_connect"
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception")
+            reason = "unknown"
+        else:
+            return self.async_create_entry(title=data[CONF_NAME], data=data)
+
+        return self.async_abort(reason=reason)
 
     @callback
     def _create_entry(self):

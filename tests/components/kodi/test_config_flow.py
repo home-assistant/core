@@ -308,6 +308,11 @@ async def test_discovery_updates_unique_id(hass):
 async def test_form_import(hass):
     """Test we get the form with import source."""
     with patch(
+        "homeassistant.components.kodi.config_flow.Kodi.ping", return_value=True,
+    ), patch(
+        "homeassistant.components.kodi.config_flow.get_kodi_connection",
+        return_value=MockConnection(),
+    ), patch(
         "homeassistant.components.kodi.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.kodi.async_setup_entry", return_value=True,
@@ -323,3 +328,53 @@ async def test_form_import(hass):
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_import_invalid_auth(hass):
+    """Test we handle invalid auth on import."""
+    with patch(
+        "homeassistant.components.kodi.config_flow.Kodi.ping",
+        side_effect=InvalidAuthError,
+    ), patch(
+        "homeassistant.components.kodi.config_flow.get_kodi_connection",
+        return_value=MockConnection(),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=TEST_IMPORT,
+        )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "invalid_auth"
+
+
+async def test_form_import_cannot_connect(hass):
+    """Test we handle cannot connect on import."""
+    with patch(
+        "homeassistant.components.kodi.config_flow.Kodi.ping",
+        side_effect=CannotConnectError,
+    ), patch(
+        "homeassistant.components.kodi.config_flow.get_kodi_connection",
+        return_value=MockConnection(),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=TEST_IMPORT,
+        )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "cannot_connect"
+
+
+async def test_form_import_exception(hass):
+    """Test we handle unknown exception on import."""
+    with patch(
+        "homeassistant.components.kodi.config_flow.Kodi.ping", side_effect=Exception,
+    ), patch(
+        "homeassistant.components.kodi.config_flow.get_kodi_connection",
+        return_value=MockConnection(),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=TEST_IMPORT,
+        )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "unknown"
