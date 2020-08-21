@@ -44,6 +44,7 @@ from homeassistant.core import callback
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 import homeassistant.util.dt as dt_util
 from homeassistant.util.logging import async_create_catching_coro
@@ -339,6 +340,48 @@ class CastDevice(MediaPlayerEntity):
 
     def new_media_status(self, media_status):
         """Handle updates of the media status."""
+        if (
+            media_status
+            and media_status.player_is_idle
+            and media_status.idle_reason == "ERROR"
+        ):
+            external_url = None
+            internal_url = None
+            tts_base_url = None
+            url_description = ""
+            if "tts" in self.hass.config.components:
+                try:
+                    tts_base_url = self.hass.components.tts.get_base_url(self.hass)
+                except KeyError:
+                    # base_url not configured, ignore
+                    pass
+            try:
+                external_url = get_url(self.hass, allow_internal=False)
+            except NoURLAvailableError:
+                # external_url not configured, ignore
+                pass
+            try:
+                internal_url = get_url(self.hass, allow_external=False)
+            except NoURLAvailableError:
+                # internal_url not configured, ignore
+                pass
+
+            if media_status.content_id:
+                if tts_base_url and media_status.content_id.startswith(tts_base_url):
+                    url_description = f" from tts.base_url ({tts_base_url})"
+                if external_url and media_status.content_id.startswith(external_url):
+                    url_description = " from external_url ({external_url})"
+                if internal_url and media_status.content_id.startswith(internal_url):
+                    url_description = " from internal_url ({internal_url})"
+
+            _LOGGER.error(
+                "Failed to cast media %s%s. Please make sure the URL is: "
+                "Reachable from the cast device and either a publicly resolvable "
+                "hostname or an IP address.",
+                media_status.content_id,
+                url_description,
+            )
+
         self.media_status = media_status
         self.media_status_received = dt_util.utcnow()
         self.schedule_update_ha_state()
@@ -387,7 +430,7 @@ class CastDevice(MediaPlayerEntity):
     # ========== Service Calls ==========
     def _media_controller(self):
         """
-        Return media status.
+        Return media controller.
 
         First try from our own cast, then groups which our cast is a member in.
         """
