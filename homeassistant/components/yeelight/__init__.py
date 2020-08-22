@@ -192,7 +192,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await _initialize(entry.data[CONF_IP_ADDRESS])
     else:
         # discovery
-        scanner = await YeelightScanner.async_get(hass)
+        scanner = YeelightScanner.async_get(hass)
         await scanner.async_register_callback(entry.data[CONF_ID], _initialize)
 
     return True
@@ -214,7 +214,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         device.async_unload()
         if entry.data[CONF_ID]:
             # discovery
-            scanner = await YeelightScanner.async_get(hass)
+            scanner = YeelightScanner.async_get(hass)
             await scanner.async_unregister_callback(entry.data[CONF_ID])
 
     return unload_ok
@@ -237,15 +237,14 @@ class YeelightScanner:
     """Scan for Yeelight devices."""
 
     _scanner = None
-    _get_lock = asyncio.Lock()
 
-    @staticmethod
-    async def async_get(hass: HomeAssistant):
+    @classmethod
+    @callback
+    def async_get(cls, hass: HomeAssistant):
         """Get scanner instance."""
-        with await YeelightScanner._get_lock:
-            if YeelightScanner._scanner is None:
-                YeelightScanner._scanner = YeelightScanner(hass)
-        return YeelightScanner._scanner
+        if cls._scanner is None:
+            cls._scanner = cls(hass)
+        return cls._scanner
 
     def __init__(self, hass: HomeAssistant):
         """Initialize class."""
