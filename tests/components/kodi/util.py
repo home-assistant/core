@@ -39,7 +39,7 @@ TEST_IMPORT = {
 def get_kodi_connection(
     host, port, ws_port, username, password, ssl=False, timeout=5, session=None
 ):
-    """A mock of Kodi connection getter."""
+    """A mock Kodi connection getter."""
     if ws_port is None:
         return MockConnection()
     else:
