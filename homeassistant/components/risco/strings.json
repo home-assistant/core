@@ -17,5 +17,15 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure options",
+        "data": {
+          "scan_interval": "How often to poll Risco (in seconds)"
+        }
+      }
+    }
   }
 }
