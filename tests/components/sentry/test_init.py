@@ -154,6 +154,9 @@ async def test_process_before_send(hass: HomeAssistant):
     assert tags["uuid"] == "12345"
     assert tags["installation_type"] == "pytest"
 
+    user = result["user"]
+    assert user["id"] == "12345"
+
 
 async def test_event_with_platform_context(hass: HomeAssistant):
     """Test extraction of platform context information during Sentry events."""
