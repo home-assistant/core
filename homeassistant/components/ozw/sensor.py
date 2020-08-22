@@ -109,6 +109,10 @@ class ZWaveStringSensor(ZwaveSensorBase):
         """Return unit of measurement the value is expressed in."""
         return self.values.primary.units
 
+    def entity_registry_enabled_default(self):
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return False
+
 
 class ZWaveNumericSensor(ZwaveSensorBase):
     """Representation of a Z-Wave sensor."""
