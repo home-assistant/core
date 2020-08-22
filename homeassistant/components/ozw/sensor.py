@@ -107,7 +107,6 @@ class ZWaveStringSensor(ZwaveSensorBase):
     @property
     def unit_of_measurement(self):
         """Return unit of measurement the value is expressed in."""
-
         return self.values.primary.units
 
 
