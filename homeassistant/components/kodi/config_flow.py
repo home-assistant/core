@@ -120,7 +120,7 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await validate_http(self.hass, self._get_data())
             await validate_ws(self.hass, self._get_data())
         except InvalidAuth:
-            return self._show_credentials_form({"base": "invalid_auth"})
+            return self._show_credentials_form()
         except WSCannotConnect:
             return self._show_ws_port_form({"base": "cannot_connect"})
         except CannotConnect:
@@ -156,7 +156,7 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await validate_http(self.hass, self._get_data())
                 await validate_ws(self.hass, self._get_data())
             except InvalidAuth:
-                return self._show_credentials_form({"base": "invalid_auth"})
+                return self._show_credentials_form()
             except WSCannotConnect:
                 return self._show_ws_port_form({"base": "cannot_connect"})
             except CannotConnect:
