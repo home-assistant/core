@@ -196,7 +196,7 @@ async def test_discovery(hass):
     ), patch(
         "homeassistant.components.kodi.config_flow.get_kodi_connection",
         return_value=MockConnection(),
-    )y:
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "zeroconf"}, data=TEST_DISCOVERY
         )
