@@ -196,7 +196,9 @@ async def test_form_exception_ws(hass, user_flow):
         "homeassistant.components.kodi.config_flow.get_kodi_connection",
         new=get_kodi_connection,
     ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], TEST_WS_PORT)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], TEST_WS_PORT
+        )
 
     assert result["type"] == "form"
     assert result["step_id"] == "ws_port"
