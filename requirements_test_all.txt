@@ -442,7 +442,7 @@ millheater==0.3.4
 minio==4.0.9
 
 # homeassistant.components.tts
-mutagen==1.44.0
+mutagen==1.45.1
 
 # homeassistant.components.ness_alarm
 nessclient==0.9.15
