@@ -63,7 +63,7 @@ def two_part_alarm():
         yield alarm_mock
 
 
-async def _setup_risco(hass, alarm=MagicMock()):
+async def _setup_risco(hass):
     config_entry = MockConfigEntry(domain=DOMAIN, data=TEST_CONFIG)
     config_entry.add_to_hass(hass)
 
@@ -121,7 +121,7 @@ async def test_setup(hass, two_part_alarm):
     assert not registry.async_is_registered(FIRST_ENTITY_ID)
     assert not registry.async_is_registered(SECOND_ENTITY_ID)
 
-    await _setup_risco(hass, two_part_alarm)
+    await _setup_risco(hass)
 
     assert registry.async_is_registered(FIRST_ENTITY_ID)
     assert registry.async_is_registered(SECOND_ENTITY_ID)
@@ -146,7 +146,7 @@ async def _check_state(hass, alarm, property, state, entity_id, partition_id):
 
 async def test_states(hass, two_part_alarm):
     """Test the various alarm states."""
-    await _setup_risco(hass, two_part_alarm)
+    await _setup_risco(hass)
 
     assert hass.states.get(FIRST_ENTITY_ID).state == STATE_UNKNOWN
     await _check_state(
@@ -207,7 +207,7 @@ async def _call_alarm_service(hass, service, entity_id):
 
 async def test_sets(hass, two_part_alarm):
     """Test settings the various modes."""
-    await _setup_risco(hass, two_part_alarm)
+    await _setup_risco(hass)
 
     await _test_servie_call(hass, SERVICE_ALARM_DISARM, "disarm", FIRST_ENTITY_ID, 0)
     await _test_servie_call(hass, SERVICE_ALARM_DISARM, "disarm", SECOND_ENTITY_ID, 1)
