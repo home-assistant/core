@@ -395,10 +395,12 @@ class StaticTemplate:
         self.template: Any = template
         self.hass = hass
 
+    # pylint: disable=no-self-use
     def ensure_valid(self):
         """Return True as a static template is always valid."""
         return True
 
+    # pylint: disable=no-self-use
     def extract_entities(
         self, variables: TemplateVarsType = None
     ) -> Union[str, List[str]]:

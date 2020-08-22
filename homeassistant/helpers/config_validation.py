@@ -423,12 +423,17 @@ def remove_falsy(value: List[T]) -> List[T]:
     return [v for v in value if v]
 
 
-def service(value: Any) -> str:
+def service(value: Any) -> Union[str, template_helper.Template]:
     """Validate service."""
     # Services use same format as entities so we can use same helper.
     str_value = string(value).lower()
     if valid_entity_id(str_value):
         return str_value
+
+    template_value = template(value)
+    if isinstance(template_value, template_helper.Template):
+        return template_value
+
     raise vol.Invalid(f"Service {value} does not match format <domain>.<name>")
 
 
