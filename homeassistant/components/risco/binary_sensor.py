@@ -48,7 +48,7 @@ class RiscoBinarySensor(BinarySensorEntity, RiscoEntity):
     @property
     def unique_id(self):
         """Return a unique id for this zone."""
-        return f"{self._risco.site_uuid}_{self._zone_id}"
+        return f"{self._risco.site_uuid}_zone_{self._zone_id}"
 
     @property
     def device_state_attributes(self):
