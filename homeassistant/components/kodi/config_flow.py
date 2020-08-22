@@ -185,7 +185,7 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except WSCannotConnect:
                 return self.async_step_ws_port()
             except CannotConnect:
-                return self.async_step_credentials(errors={"base": "cannot_connect"})
+                return self.async_step_user(errors={"base": "cannot_connect"})
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
