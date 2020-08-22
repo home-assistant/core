@@ -1,12 +1,13 @@
 """Test the Risco config flow."""
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
 from homeassistant.components.risco.config_flow import (
     CannotConnectError,
     UnauthorizedError,
 )
 from homeassistant.components.risco.const import DOMAIN
 
-from tests.async_mock import AsyncMock, PropertyMock, patch
+from tests.async_mock import PropertyMock, patch
+from tests.common import MockConfigEntry
 
 TEST_SITE_NAME = "test-site-name"
 TEST_DATA = {
@@ -18,7 +19,6 @@ TEST_DATA = {
 
 async def test_form(hass):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -31,7 +31,7 @@ async def test_form(hass):
         "homeassistant.components.risco.config_flow.RiscoAPI.site_name",
         new_callable=PropertyMock(return_value=TEST_SITE_NAME),
     ), patch(
-        "homeassistant.components.risco.config_flow.RiscoAPI.close", AsyncMock()
+        "homeassistant.components.risco.config_flow.RiscoAPI.close"
     ) as mock_close, patch(
         "homeassistant.components.risco.async_setup", return_value=True
     ) as mock_setup, patch(
@@ -59,9 +59,7 @@ async def test_form_invalid_auth(hass):
     with patch(
         "homeassistant.components.risco.config_flow.RiscoAPI.login",
         side_effect=UnauthorizedError,
-    ), patch(
-        "homeassistant.components.risco.config_flow.RiscoAPI.close", AsyncMock()
-    ) as mock_close:
+    ), patch("homeassistant.components.risco.config_flow.RiscoAPI.close") as mock_close:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], TEST_DATA
         )
@@ -80,9 +78,7 @@ async def test_form_cannot_connect(hass):
     with patch(
         "homeassistant.components.risco.config_flow.RiscoAPI.login",
         side_effect=CannotConnectError,
-    ), patch(
-        "homeassistant.components.risco.config_flow.RiscoAPI.close", AsyncMock()
-    ) as mock_close:
+    ), patch("homeassistant.components.risco.config_flow.RiscoAPI.close") as mock_close:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], TEST_DATA
         )
@@ -101,9 +97,7 @@ async def test_form_exception(hass):
     with patch(
         "homeassistant.components.risco.config_flow.RiscoAPI.login",
         side_effect=Exception,
-    ), patch(
-        "homeassistant.components.risco.config_flow.RiscoAPI.close", AsyncMock()
-    ) as mock_close:
+    ), patch("homeassistant.components.risco.config_flow.RiscoAPI.close") as mock_close:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], TEST_DATA
         )
@@ -111,3 +105,24 @@ async def test_form_exception(hass):
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "unknown"}
     mock_close.assert_awaited_once()
+
+
+async def test_form_already_exists(hass):
+    """Test that a flow with an existing username aborts."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=TEST_DATA["username"], data=TEST_DATA,
+    )
+
+    entry.add_to_hass(hass)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], TEST_DATA
+    )
+
+    assert result2["type"] == "abort"
+    assert result2["reason"] == "already_configured"
