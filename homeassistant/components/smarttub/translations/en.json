@@ -21,6 +21,9 @@
   "options": {
     "step": {
       "init": {
+        "data": {
+            "scan_interval": "Scan interval (seconds)"
+        }
       }
     }
   }
