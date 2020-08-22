@@ -131,13 +131,6 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
-        return await self.async_step_host(user_input)
-
-    async def async_step_host(self, user_input=None, errors=None):
-        """Handle host name and port input."""
-        if not errors:
-            errors = {}
-
         if user_input is not None:
             self._host = user_input[CONF_HOST]
             self._port = user_input[CONF_PORT]
@@ -145,7 +138,7 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_credentials()
 
         return self.async_show_form(
-            step_id="host", data_schema=self._host_schema(), errors=errors
+            step_id="user", data_schema=self._host_schema(), errors=errors
         )
 
     async def async_step_credentials(self, user_input=None):
