@@ -202,7 +202,7 @@ async def test_form_exception_ws(hass, user_flow):
     ), patch(
         "homeassistant.components.kodi.config_flow.get_kodi_connection",
         new=get_kodi_connection,
-    )1:
+    ):
         result = await hass.config_entries.flow.async_configure(
             user_flow, TEST_HOST
         )
