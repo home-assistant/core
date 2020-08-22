@@ -22,20 +22,10 @@ async def async_setup_entry(
 
     entities = []
     entities.append(
-            IncidentsSensor(
-                data,
-                entry_id,
-                unique_id,
-                "Incidents",
-                "mdi:fire-truck",
-            )
-        )
+        IncidentsSensor(data, entry_id, unique_id, "Incidents", "mdi:fire-truck",)
+    )
 
     async_add_entities(entities, True)
-
-    # async_add_entities(
-    #     IncidentsSensor(data, entry_id, unique_id, "Incidents", "mdi:fire-truck"), True
-    # )
 
 
 class IncidentsSensor(RestoreEntity):
