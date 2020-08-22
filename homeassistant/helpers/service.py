@@ -131,12 +131,13 @@ def async_prepare_call_from_config(
 
     service_data = {}
     for conf in [CONF_SERVICE_DATA, CONF_SERVICE_DATA_TEMPLATE]:
-        if conf in config:
-            try:
-                template.attach(hass, config[conf])
-                service_data.update(template.render_complex(config[conf], variables))
-            except TemplateError as ex:
-                raise HomeAssistantError(f"Error rendering data template: {ex}") from ex
+        if conf not in config:
+            continue
+        try:
+            template.attach(hass, config[conf])
+            service_data.update(template.render_complex(config[conf], variables))
+        except TemplateError as ex:
+            raise HomeAssistantError(f"Error rendering data template: {ex}") from ex
 
     if CONF_SERVICE_ENTITY_ID in config:
         service_data[ATTR_ENTITY_ID] = config[CONF_SERVICE_ENTITY_ID]
