@@ -5,10 +5,15 @@ from pyrisco import CannotConnectError, RiscoAPI, UnauthorizedError
 import voluptuous as vol
 
 from homeassistant import config_entries, core
-from homeassistant.const import CONF_PASSWORD, CONF_PIN, CONF_USERNAME
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_PIN,
+    CONF_SCAN_INTERVAL,
+    CONF_USERNAME,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,6 +42,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
+    @staticmethod
+    @core.callback
+    def async_get_options_flow(config_entry):
+        """Define the config flow to handle options."""
+        return RiscoOptionsFlowHandler(config_entry)
+
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
         errors = {}
@@ -59,3 +70,26 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
+
+
+class RiscoOptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle a Risco options flow."""
+
+    def __init__(self, config_entry):
+        """Initialize."""
+        self.config_entry = config_entry
+
+    async def async_step_init(self, user_input=None):
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(
+                title="", data={CONF_SCAN_INTERVAL: user_input[CONF_SCAN_INTERVAL]}
+            )
+
+        current = self.config_entry.options.get(
+            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+        )
+
+        options = vol.Schema({vol.Required(CONF_SCAN_INTERVAL, default=current): int})
+
+        return self.async_show_form(step_id="init", data_schema=options)
