@@ -1,11 +1,18 @@
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
 from homeassistant import config_entries
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_NAME,
+    CONF_MODE,
+)
+from homeassistant.core import callback
 from pyowm import OWM
 from pyowm.exceptions.api_call_error import APICallError
 
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import DOMAIN, CONF_FORECAST, FORECAST_MODE  # pylint:disable=unused-import
 
 
 class OpenWeatherMapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -24,7 +31,7 @@ class OpenWeatherMapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                owm = OWM(user_input[CONF_API_KEY],)
+                OWM(user_input[CONF_API_KEY],)
             except APICallError as e:
                 errors["base"] = "cannot_connect"
             else:
@@ -48,4 +55,41 @@ class OpenWeatherMapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
+        )
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Options callback for OpenWeatherMap."""
+        return OpenWeatherMapOptionsConfigFlow(config_entry)
+
+
+class OpenWeatherMapOptionsConfigFlow(config_entries.OptionsFlow):
+    """Config flow options for OpenWeatherMap."""
+
+    def __init__(self, config_entry):
+        """Initialize OpenWeatherMap options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(self, user_input=None):
+        """Manage the options."""
+        return await self.async_step_user()
+
+    async def async_step_user(self, user_input=None):
+        """Handle a flow initialized by the user."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_MODE,
+                        default=self.config_entry.options.get(
+                            CONF_MODE, FORECAST_MODE[0]
+                        ),
+                    ): vol.In(FORECAST_MODE)
+                }
+            ),
         )

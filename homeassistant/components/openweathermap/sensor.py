@@ -75,7 +75,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     if isinstance(language, str):
         language = language.lower()[:2]
 
-    owm = OWM(api_key=config.get(CONF_API_KEY), language=language)
+    owm = OWM(API_key=config.get(CONF_API_KEY), language=language)
 
     if not owm:
         _LOGGER.error("Unable to connect to OpenWeatherMap")

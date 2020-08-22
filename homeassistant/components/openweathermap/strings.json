@@ -14,9 +14,20 @@
                     "longitude": "Longitude",
                     "name": "Name of the integration"
                 },
-                "description": "If you need help with the configuration have a look here: https://www.home-assistant.io/integrations/OpenWeatherMap/",
+                "description": "",
                 "title": "OpenWeatherMap"
             }
         }
     },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "mode": "Forecast update frequency"
+                },
+                "description": "",
+                "title": "OpenWeatherMap Options"
+            }
+        }
+    }
 }
