@@ -83,6 +83,7 @@ async def async_attach_trigger(
         def call_action():
             """Call action with right context."""
             hass.async_run_job(
+                action,
                 {
                     "trigger": {
                         "platform": platform_type,
