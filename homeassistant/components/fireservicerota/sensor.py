@@ -7,7 +7,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import ATTRIBUTION, DOMAIN, SENSOR_ENTITY_LIST
+from .const import ATTRIBUTION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,63 +21,38 @@ async def async_setup_entry(
     unique_id = entry.unique_id
 
     entities = []
-    for (
-        sensor_type,
-        (name, unit, icon, device_class, enabled_by_default),
-    ) in SENSOR_ENTITY_LIST.items():
-
-        _LOGGER.debug(
-            "Registering entity: %s, %s, %s, %s, %s, %s",
-            sensor_type,
-            name,
-            unit,
-            icon,
-            device_class,
-            enabled_by_default,
-        )
-        entities.append(
+    entities.append(
             IncidentsSensor(
                 data,
                 entry_id,
                 unique_id,
-                sensor_type,
-                name,
-                unit,
-                icon,
-                device_class,
-                enabled_by_default,
+                "Incidents",
+                "mdi:fire-truck",
             )
         )
 
     async_add_entities(entities, True)
 
+    # async_add_entities(
+    #     IncidentsSensor(data, entry_id, unique_id, "Incidents", "mdi:fire-truck"), True
+    # )
+
 
 class IncidentsSensor(RestoreEntity):
     """Representation of FireServiceRota incidents sensor."""
 
-    def __init__(
-        self,
-        data,
-        entry_id,
-        unique_id,
-        sensor_type,
-        name,
-        unit,
-        icon,
-        device_class,
-        enabled_default: bool = True,
-    ):
+    def __init__(self, data, entry_id, unique_id, name, icon):
         """Initialize."""
         self._data = data
         self._entry_id = entry_id
         self._unique_id = unique_id
-        self._type = sensor_type
         self._name = name
-        self._unit = unit
         self._icon = icon
-        self._device_class = device_class
-        self._enabled_default = enabled_default
+
+        self._enabled_default = True
         self._available = True
+        self._device_class = None
+
         self._state = None
         self._state_attributes = {}
 
@@ -99,7 +74,7 @@ class IncidentsSensor(RestoreEntity):
     @property
     def unique_id(self) -> str:
         """Return the unique ID for this sensor."""
-        return f"{self._unique_id}_{self._type}"
+        return f"{self._unique_id}_{self._name}"
 
     @property
     def device_state_attributes(self) -> object:

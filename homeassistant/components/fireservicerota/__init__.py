@@ -11,9 +11,7 @@ from pyfireservicerota import (
     InvalidTokenError,
 )
 
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN, CONF_URL
 from homeassistant.core import HomeAssistant
@@ -28,9 +26,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 _LOGGER = logging.getLogger(__name__)
 
 ENTITY_COMPONENTS = {
-    BINARY_SENSOR_DOMAIN,
-    SENSOR_DOMAIN,
-    SWITCH_DOMAIN,
+    SENSOR_DOMAIN
 }
 
 
