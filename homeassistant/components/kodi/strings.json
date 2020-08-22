@@ -2,7 +2,7 @@
   "config": {
     "flow_title": "Kodi: {name}",
     "step": {
-      "host": {
+      "user": {
         "description": "Kodi connection information. Please make sure to enable \"Allow control of Kodi via HTTP\" in System/Settings/Network/Services.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
