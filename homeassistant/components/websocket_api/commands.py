@@ -14,7 +14,7 @@ from homeassistant.exceptions import (
     TemplateError,
     Unauthorized,
 )
-from homeassistant.helpers import config_validation as cv, entity, typing
+from homeassistant.helpers import config_validation as cv, entity
 from homeassistant.helpers.event import async_track_template_result
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.loader import IntegrationNotFound, async_get_integration
@@ -324,7 +324,7 @@ def handle_entity_source(hass, connection, msg):
     {
         vol.Required("type"): "subscribe_trigger",
         vol.Required("trigger"): cv.TRIGGER_SCHEMA,
-        vol.Optional("variables"): typing.TemplateVarsType,
+        vol.Optional("variables"): dict,
     }
 )
 @decorators.require_admin
@@ -368,7 +368,7 @@ async def handle_subscribe_trigger(hass, connection, msg):
     {
         vol.Required("type"): "test_condition",
         vol.Required("condition"): cv.CONDITION_SCHEMA,
-        vol.Optional("variables"): typing.TemplateVarsType,
+        vol.Optional("variables"): dict,
     }
 )
 @decorators.require_admin

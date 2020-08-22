@@ -665,6 +665,7 @@ async def test_subscribe_trigger(hass, websocket_client):
             "id": 5,
             "type": "subscribe_trigger",
             "trigger": {"platform": "event", "event_type": "test_event"},
+            "variables": {"hello": "world"},
         }
     )
 
@@ -722,6 +723,7 @@ async def test_test_condition(hass, websocket_client):
                 "entity_id": "hello.world",
                 "state": "paulus",
             },
+            "variables": {"hello": "world"},
         }
     )
 
