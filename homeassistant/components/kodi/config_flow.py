@@ -194,7 +194,7 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self._show_credentials_form(errors)
 
-    async def async_step_ws_port(self, user_input=Non):
+    async def async_step_ws_port(self, user_input=None):
         """Handle websocket port of discovered node."""
         errors = {}
 
