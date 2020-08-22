@@ -141,7 +141,7 @@ class VizioOptionsConfigFlow(config_entries.OptionsFlow):
                 and CONF_EXCLUDE in self.config_entry.options.get(CONF_APPS, {})
                 else CONF_INCLUDE
             )
-            options.extend(
+            options = options.extend(
                 {
                     vol.Optional(
                         CONF_INCLUDE_OR_EXCLUDE,
