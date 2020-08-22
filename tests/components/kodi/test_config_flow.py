@@ -321,10 +321,16 @@ async def test_discovery_duplicate_data(hass):
     """Test discovery aborts if same mDNS packet arrives."""
     with patch(
         "homeassistant.components.kodi.config_flow.Kodi.ping", return_value=True,
+    ), patch(
+        "homeassistant.components.kodi.config_flow.get_kodi_connection",
+        return_value=MockConnection(),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "zeroconf"}, data=TEST_DISCOVERY
         )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "discovery_confirm"
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "zeroconf"}, data=TEST_DISCOVERY
