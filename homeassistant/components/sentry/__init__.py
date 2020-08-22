@@ -72,7 +72,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     channel = get_channel(current_version)
     huuid = await hass.helpers.instance_id.async_get()
     system_info = await hass.helpers.system_info.async_get_system_info()
-    system_info["installation_type"] = "omgpuppies"
     custom_components = await async_get_custom_components(hass)
 
     tracing = {}
