@@ -9,9 +9,7 @@ from homeassistant.const import (
     CONF_PIN,
     CONF_USERNAME,
     SERVICE_ALARM_ARM_AWAY,
-    SERVICE_ALARM_ARM_CUSTOM_BYPASS,
     SERVICE_ALARM_ARM_HOME,
-    SERVICE_ALARM_ARM_NIGHT,
     SERVICE_ALARM_DISARM,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
@@ -22,7 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.entity_component import async_update_entity
 
-from tests.async_mock import AsyncMock, MagicMock, PropertyMock, patch
+from tests.async_mock import MagicMock, PropertyMock, patch
 from tests.common import MockConfigEntry
 
 TEST_CONFIG = {
@@ -60,14 +58,15 @@ def two_part_alarm():
         "partitions",
         new_callable=PropertyMock(return_value=partition_mocks),
     ), patch(
-        "homeassistant.components.risco.RiscoAPI.get_state",
-        AsyncMock(return_value=alarm_mock),
+        "homeassistant.components.risco.RiscoAPI.get_state", return_value=alarm_mock,
     ):
         yield alarm_mock
 
 
 async def _setup_risco(hass, alarm=MagicMock()):
     config_entry = MockConfigEntry(domain=DOMAIN, data=TEST_CONFIG)
+    config_entry.add_to_hass(hass)
+
     with patch(
         "homeassistant.components.risco.RiscoAPI.login", return_value=True,
     ), patch(
@@ -77,9 +76,8 @@ async def _setup_risco(hass, alarm=MagicMock()):
         "homeassistant.components.risco.RiscoAPI.site_name",
         new_callable=PropertyMock(return_value=TEST_SITE_NAME),
     ), patch(
-        "homeassistant.components.risco.RiscoAPI.close", AsyncMock()
+        "homeassistant.components.risco.RiscoAPI.close"
     ):
-        config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -194,9 +192,7 @@ async def test_states(hass, two_part_alarm):
 
 
 async def _test_servie_call(hass, service, method, entity_id, partition_id):
-    with patch(
-        "homeassistant.components.risco.RiscoAPI." + method, AsyncMock()
-    ) as set_mock:
+    with patch("homeassistant.components.risco.RiscoAPI." + method) as set_mock:
         await _call_alarm_service(hass, service, entity_id)
         set_mock.assert_awaited_once_with(partition_id)
 
@@ -222,16 +218,4 @@ async def test_sets(hass, two_part_alarm):
     )
     await _test_servie_call(
         hass, SERVICE_ALARM_ARM_HOME, "partial_arm", SECOND_ENTITY_ID, 1
-    )
-    await _test_servie_call(
-        hass, SERVICE_ALARM_ARM_NIGHT, "partial_arm", FIRST_ENTITY_ID, 0
-    )
-    await _test_servie_call(
-        hass, SERVICE_ALARM_ARM_NIGHT, "partial_arm", SECOND_ENTITY_ID, 1
-    )
-    await _test_servie_call(
-        hass, SERVICE_ALARM_ARM_CUSTOM_BYPASS, "partial_arm", FIRST_ENTITY_ID, 0
-    )
-    await _test_servie_call(
-        hass, SERVICE_ALARM_ARM_CUSTOM_BYPASS, "partial_arm", SECOND_ENTITY_ID, 1
     )

@@ -4,19 +4,14 @@ import logging
 from homeassistant.components.alarm_control_panel import AlarmControlPanelEntity
 from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_CUSTOM_BYPASS,
     SUPPORT_ALARM_ARM_HOME,
-    SUPPORT_ALARM_ARM_NIGHT,
 )
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_ARMING,
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
-    STATE_UNKNOWN,
 )
 
 from .const import DATA_COORDINATOR, DOMAIN
@@ -27,8 +22,6 @@ SUPPORTED_STATES = [
     STATE_ALARM_DISARMED,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_TRIGGERED,
 ]
 
@@ -37,8 +30,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Risco alarm control panel."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id][DATA_COORDINATOR]
     entities = [
-        RiscoAlarm(hass, coordinator, partition_id)
-        for partition_id in coordinator.data.partitions.keys()
+        RiscoAlarm(coordinator, partition_id)
+        for partition_id in coordinator.data.partitions
     ]
 
     async_add_entities(entities, False)
@@ -47,9 +40,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class RiscoAlarm(AlarmControlPanelEntity):
     """Representation of a Risco partition."""
 
-    def __init__(self, hass, coordinator, partition_id):
+    def __init__(self, coordinator, partition_id):
         """Init the partition."""
-        self._hass = hass
         self._coordinator = coordinator
         self._partition_id = partition_id
         self._partition = self._coordinator.data.partitions[self._partition_id]
@@ -112,17 +104,12 @@ class RiscoAlarm(AlarmControlPanelEntity):
         if self._partition.disarmed:
             return STATE_ALARM_DISARMED
 
-        return STATE_UNKNOWN
+        return None
 
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return (
-            SUPPORT_ALARM_ARM_HOME
-            | SUPPORT_ALARM_ARM_AWAY
-            | SUPPORT_ALARM_ARM_NIGHT
-            | SUPPORT_ALARM_ARM_CUSTOM_BYPASS
-        )
+        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
 
     @property
     def code_arm_required(self):
@@ -135,14 +122,6 @@ class RiscoAlarm(AlarmControlPanelEntity):
 
     async def async_alarm_arm_home(self, code=None):
         """Send arm home command."""
-        await self._call_alarm_method("partial_arm")
-
-    async def async_alarm_arm_night(self, code=None):
-        """Send arm night command."""
-        await self._call_alarm_method("partial_arm")
-
-    async def async_alarm_arm_custom_bypass(self, code=None):
-        """Send arm custom bypass command."""
         await self._call_alarm_method("partial_arm")
 
     async def async_alarm_arm_away(self, code=None):
