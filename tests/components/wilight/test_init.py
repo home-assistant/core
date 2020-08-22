@@ -14,7 +14,7 @@ from homeassistant.helpers.typing import HomeAssistantType
 from tests.components.wilight import (
     HOST,
     UPNP_MAC_ADDRESS,
-    UPNP_MODEL_NAME,
+    UPNP_MODEL_NAME_P_B,
     UPNP_MODEL_NUMBER,
     UPNP_SERIAL,
     setup_integration,
@@ -28,7 +28,7 @@ def mock_dummy_device_from_host():
     device = pywilight.wilight_from_discovery(
         f"http://{HOST}:45995/wilight.xml",
         UPNP_MAC_ADDRESS,
-        UPNP_MODEL_NAME,
+        UPNP_MODEL_NAME_P_B,
         UPNP_SERIAL,
         UPNP_MODEL_NUMBER,
     )

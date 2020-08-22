@@ -20,14 +20,45 @@ from homeassistant.helpers.typing import HomeAssistantType
 from tests.components.wilight import (
     HOST,
     UPNP_MAC_ADDRESS,
-    UPNP_MODEL_NAME,
     UPNP_MODEL_NAME_COLOR,
     UPNP_MODEL_NAME_DIMMER,
+    UPNP_MODEL_NAME_LIGHT_FAN,
+    UPNP_MODEL_NAME_P_B,
     UPNP_MODEL_NUMBER,
     UPNP_SERIAL,
     WILIGHT_ID,
     setup_integration,
 )
+
+
+@pytest.fixture(name="dummy_get_components_from_model_light")
+def mock_dummy_get_components_from_model_light():
+    """Mock a components list with light."""
+    components = ["light"]
+    with patch(
+        "pywilight.get_components_from_model", return_value=components,
+    ):
+        yield components
+
+
+@pytest.fixture(name="dummy_device_from_host_light_fan")
+def mock_dummy_device_from_host_light_fan():
+    """Mock a valid api_devce."""
+
+    device = pywilight.wilight_from_discovery(
+        f"http://{HOST}:45995/wilight.xml",
+        UPNP_MAC_ADDRESS,
+        UPNP_MODEL_NAME_LIGHT_FAN,
+        UPNP_SERIAL,
+        UPNP_MODEL_NUMBER,
+    )
+
+    device.set_dummy(True)
+
+    with patch(
+        "pywilight.device_from_host", return_value=device,
+    ):
+        yield device
 
 
 @pytest.fixture(name="dummy_device_from_host_pb")
@@ -37,7 +68,7 @@ def mock_dummy_device_from_host_pb():
     device = pywilight.wilight_from_discovery(
         f"http://{HOST}:45995/wilight.xml",
         UPNP_MAC_ADDRESS,
-        UPNP_MODEL_NAME,
+        UPNP_MODEL_NAME_P_B,
         UPNP_SERIAL,
         UPNP_MODEL_NUMBER,
     )
@@ -90,10 +121,15 @@ def mock_dummy_device_from_host_color():
         yield device
 
 
-async def test_on_off_light_state(
-    hass: HomeAssistantType, dummy_device_from_host_pb
+async def test_loading_light(
+    hass: HomeAssistantType,
+    dummy_device_from_host_light_fan,
+    dummy_get_components_from_model_light,
 ) -> None:
-    """Test the WiLight configuration entry unloading."""
+    """Test the WiLight configuration entry loading."""
+
+    # Using light_fan and removind fan from get_components_from_model
+    # to test light.py line 28
     entry = await setup_integration(hass)
     assert entry
     assert entry.unique_id == WILIGHT_ID
@@ -108,6 +144,13 @@ async def test_on_off_light_state(
     entry = entity_registry.async_get("light.wl000000000099_1")
     assert entry
     assert entry.unique_id == "WL000000000099_0"
+
+
+async def test_on_off_light_state(
+    hass: HomeAssistantType, dummy_device_from_host_pb
+) -> None:
+    """Test the change of state of the light switches."""
+    await setup_integration(hass)
 
     # Turn on
     await hass.services.async_call(
