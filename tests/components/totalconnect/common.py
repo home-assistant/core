@@ -124,6 +124,16 @@ CONFIG_DATA = {
 CONFIG_DATA_NO_USERCODES = {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
 
 
+USERNAME = "username@me.com"
+PASSWORD = "password"
+USERCODES = {123456: "7890"}
+CONFIG_DATA = {
+    CONF_USERNAME: USERNAME,
+    CONF_PASSWORD: PASSWORD,
+    CONF_USERCODES: USERCODES,
+}
+
+
 async def setup_platform(hass, platform):
     """Set up the TotalConnect platform."""
     # first set up a config entry and add it to hass

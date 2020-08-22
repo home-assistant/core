@@ -14,7 +14,9 @@ async def test_user(hass):
     """Test user step."""
     # user starts with no data entered, so show the user form
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=None,
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data=None,
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -29,7 +31,9 @@ async def test_user_show_locations(hass):
     ) as client_mock:
         client_mock.return_value.is_valid_credentials.return_value = True
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG_DATA_NO_USERCODES,
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data=CONFIG_DATA_NO_USERCODES,
         )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -47,7 +51,9 @@ async def test_user_all_info(hass):
         client_mock.return_value.is_valid_credentials.return_value = True
         location_mock.return_value.set_usercode.return_value = True
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG_DATA,
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data=CONFIG_DATA,
         )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -63,7 +69,9 @@ async def test_import_good_credentials(hass):
         client_mock.return_value.is_valid_credentials.return_value = True
         location_mock.return_value.set_usercode.return_value = True
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=CONFIG_DATA,
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=CONFIG_DATA,
         )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -71,9 +79,11 @@ async def test_import_good_credentials(hass):
 
 async def test_abort_if_already_setup(hass):
     """Test abort if the account is already setup."""
-    MockConfigEntry(domain=DOMAIN, data=CONFIG_DATA, unique_id=USERNAME,).add_to_hass(
-        hass
-    )
+    MockConfigEntry(
+        domain=DOMAIN,
+        data=CONFIG_DATA,
+        unique_id=USERNAME,
+    ).add_to_hass(hass)
 
     # Should fail, same USERNAME (import)
     with patch(
@@ -81,7 +91,9 @@ async def test_abort_if_already_setup(hass):
     ) as client_mock:
         client_mock.return_value.is_valid_credentials.return_value = True
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=CONFIG_DATA,
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=CONFIG_DATA,
         )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
@@ -93,7 +105,9 @@ async def test_abort_if_already_setup(hass):
     ) as client_mock:
         client_mock.return_value.is_valid_credentials.return_value = True
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG_DATA,
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data=CONFIG_DATA,
         )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
@@ -107,7 +121,9 @@ async def test_login_failed(hass):
     ) as client_mock:
         client_mock.return_value.is_valid_credentials.return_value = False
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG_DATA,
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data=CONFIG_DATA,
         )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
