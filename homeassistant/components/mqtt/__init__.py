@@ -988,6 +988,7 @@ class MQTT:
 
     async def _discovery_cooldown(self):
         now = time.time()
+        # Reset discovery and subscribe cooldowns
         self.hass.data[LAST_DISCOVERY] = now
         self._last_subscribe = now
 
