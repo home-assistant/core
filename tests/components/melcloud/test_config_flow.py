@@ -16,7 +16,7 @@ from tests.common import MockConfigEntry
 @pytest.fixture
 def mock_login():
     """Mock pymelcloud login."""
-    with patch("homeassistant.components.melcloud.pymelcloud.login") as mock:
+    with patch("homeassistant.components.melcloud.config_flow.pymelcloudlogin") as mock:
         mock.return_value = "test-token"
         yield mock
 
@@ -24,7 +24,7 @@ def mock_login():
 @pytest.fixture
 def mock_get_devices():
     """Mock pymelcloud get_devices."""
-    with patch("homeassistant.components.melcloud.pymelcloud.get_devices") as mock:
+    with patch("homeassistant.components.melcloud.config_flow.pymelcloud.get_devices") as mock:
         mock.return_value = {
             pymelcloud.DEVICE_TYPE_ATA: [],
             pymelcloud.DEVICE_TYPE_ATW: [],
