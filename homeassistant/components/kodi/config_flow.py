@@ -122,7 +122,7 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except InvalidAuth:
             return self.async_step_credentials()
         except WSCannotConnect:
-            return self.async_step_ws_port(errors={"base": "cannot_connect"})
+            return self.async_step_ws_port()
         except CannotConnect:
             return self.async_abort(reason="cannot_connect")
         except Exception:  # pylint: disable=broad-except
@@ -143,9 +143,9 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self._create_entry()
 
-    async def async_step_user(self, user_input=None, errors=None):
+    async def async_step_user(self, user_input=None):
         """Handle the initial step."""
-        errors = errors or {}
+        errors = {}
 
         if user_input is not None:
             self._host = user_input[CONF_HOST]
@@ -158,7 +158,7 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except InvalidAuth:
                 return self.async_step_credentials()
             except WSCannotConnect:
-                return self.async_step_ws_port(errors={"base": "cannot_connect"})
+                return self.async_step_ws_port()
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
@@ -169,9 +169,9 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self._show_user_form(errors)
 
-    async def async_step_credentials(self, user_input=None, errors=None):
+    async def async_step_credentials(self, user_input=None):
         """Handle username and password input."""
-        errors = errors or {}
+        errors = {}
 
         if user_input is not None:
             self._username = user_input.get(CONF_USERNAME)
@@ -185,7 +185,7 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except WSCannotConnect:
                 return self.async_step_ws_port()
             except CannotConnect:
-                return self.async_step_user(errors={"base": "cannot_connect"})
+                errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -194,9 +194,9 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self._show_credentials_form(errors)
 
-    async def async_step_ws_port(self, user_input=None, errors=None):
+    async def async_step_ws_port(self, user_input=Non):
         """Handle websocket port of discovered node."""
-        errors = errors or {}
+        errors = {}
 
         if user_input is not None:
             self._ws_port = user_input.get(CONF_WS_PORT)
