@@ -264,6 +264,22 @@ async def test_discovery_cannot_connect_ws(hass):
     assert result["errors"] == {"base": "cannot_connect"}
 
 
+async def test_discovery_exception_http(hass, user_flow):
+    """Test we handle generic exception during discovery validation."""
+    with patch(
+        "homeassistant.components.kodi.config_flow.Kodi.ping", side_effect=Exception,
+    ), patch(
+        "homeassistant.components.kodi.config_flow.get_kodi_connection",
+        return_value=MockConnection(),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "zeroconf"}, data=TEST_DISCOVERY
+        )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "unknown"
+
+
 async def test_discovery_invalid_auth(hass):
     """Test we handle invalid auth during discovery."""
     with patch(
