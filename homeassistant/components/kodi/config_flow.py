@@ -40,7 +40,7 @@ async def validate_http(hass: core.HomeAssistant, data):
     ssl = data.get(CONF_SSL)
     session = async_get_clientsession(hass)
 
-    _LOGGER.debug("Connecting to %s:%s over HTTP.", host, port)
+    _LOGGER.debug("Connecting to %s:%s over HTTP", host, port)
     khc = get_kodi_connection(
         host, port, None, username, password, ssl, session=session
     )
@@ -67,19 +67,19 @@ async def validate_ws(hass: core.HomeAssistant, data):
 
     session = async_get_clientsession(hass)
 
-    _LOGGER.debug("Connecting to %s:%s over WebSocket.", host, ws_port)
+    _LOGGER.debug("Connecting to %s:%s over WebSocket", host, ws_port)
     kwc = get_kodi_connection(
         host, port, ws_port, username, password, ssl, session=session
     )
     try:
         await kwc.connect()
         if not kwc.connected:
-            _LOGGER.warning("Cannot connect to %s:%s over WebSocket.", host, ws_port)
-            raise CannotConnect()
+            _LOGGER.warning("Cannot connect to %s:%s over WebSocket", host, ws_port)
+            raise WSCannotConnect()
         kodi = Kodi(kwc)
         await kodi.ping()
     except CannotConnectError as error:
-        raise CannotConnect from error
+        raise WSCannotConnect from error
 
 
 class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -91,8 +91,8 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize flow."""
         self._host: Optional[str] = None
-        self._port: Optional[int] = None
-        self._ws_port: Optional[int] = None
+        self._port: Optional[int] = DEFAULT_PORT
+        self._ws_port: Optional[int] = DEFAULT_WS_PORT
         self._name: Optional[str] = None
         self._username: Optional[str] = None
         self._password: Optional[str] = None
@@ -116,83 +116,170 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
 
+        try:
+            await validate_http(self.hass, self._get_data())
+            await validate_ws(self.hass, self._get_data())
+        except InvalidAuth:
+            return await self.async_step_credentials()
+        except WSCannotConnect:
+            return await self.async_step_ws_port()
+        except CannotConnect:
+            return self.async_abort(reason="cannot_connect")
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception")
+            return self.async_abort(reason="unknown")
+
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context.update({"title_placeholders": {CONF_NAME: self._name}})
         return await self.async_step_discovery_confirm()
 
     async def async_step_discovery_confirm(self, user_input=None):
         """Handle user-confirmation of discovered node."""
-        if user_input is not None:
-            return await self.async_step_credentials()
+        if user_input is None:
+            return self.async_show_form(
+                step_id="discovery_confirm",
+                description_placeholders={"name": self._name},
+            )
 
-        return self.async_show_form(
-            step_id="discovery_confirm", description_placeholders={"name": self._name}
-        )
+        return self._create_entry()
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
-        return await self.async_step_host(user_input)
-
-    async def async_step_host(self, user_input=None, errors=None):
-        """Handle host name and port input."""
-        if not errors:
-            errors = {}
+        errors = {}
 
         if user_input is not None:
             self._host = user_input[CONF_HOST]
             self._port = user_input[CONF_PORT]
             self._ssl = user_input[CONF_SSL]
-            return await self.async_step_credentials()
 
-        return self.async_show_form(
-            step_id="host", data_schema=self._host_schema(), errors=errors
-        )
-
-    async def async_step_credentials(self, user_input=None):
-        """Handle username and password input."""
-        errors = {}
-        if user_input is not None:
-            self._username = user_input.get(CONF_USERNAME)
-            self._password = user_input.get(CONF_PASSWORD)
             try:
                 await validate_http(self.hass, self._get_data())
-                return await self.async_step_ws_port()
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            except CannotConnect:
-                if self._discovery_name:
-                    return self.async_abort(reason="cannot_connect")
-                return await self.async_step_host(errors={"base": "cannot_connect"})
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-
-        return self.async_show_form(
-            step_id="credentials", data_schema=self._credentials_schema(), errors=errors
-        )
-
-    async def async_step_ws_port(self, user_input=None):
-        """Handle websocket port of discovered node."""
-        errors = {}
-        if user_input is not None:
-            self._ws_port = user_input.get(CONF_WS_PORT)
-            try:
                 await validate_ws(self.hass, self._get_data())
-                return self._create_entry()
+            except InvalidAuth:
+                return await self.async_step_credentials()
+            except WSCannotConnect:
+                return await self.async_step_ws_port()
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
+            else:
+                return self._create_entry()
 
-        return self.async_show_form(
-            step_id="ws_port", data_schema=self._ws_port_schema(), errors=errors
-        )
+        return self._show_user_form(errors)
+
+    async def async_step_credentials(self, user_input=None):
+        """Handle username and password input."""
+        errors = {}
+
+        if user_input is not None:
+            self._username = user_input.get(CONF_USERNAME)
+            self._password = user_input.get(CONF_PASSWORD)
+
+            try:
+                await validate_http(self.hass, self._get_data())
+                await validate_ws(self.hass, self._get_data())
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except WSCannotConnect:
+                return await self.async_step_ws_port()
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                return self._create_entry()
+
+        return self._show_credentials_form(errors)
+
+    async def async_step_ws_port(self, user_input=None):
+        """Handle websocket port of discovered node."""
+        errors = {}
+
+        if user_input is not None:
+            self._ws_port = user_input.get(CONF_WS_PORT)
+
+            try:
+                await validate_ws(self.hass, self._get_data())
+            except WSCannotConnect:
+                errors["base"] = "cannot_connect"
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                return self._create_entry()
+
+        return self._show_ws_port_form(errors)
 
     async def async_step_import(self, data):
         """Handle import from YAML."""
-        # We assume that the imported values work and just create the entry
-        return self.async_create_entry(title=data[CONF_NAME], data=data)
+        reason = None
+        try:
+            await validate_http(self.hass, data)
+            await validate_ws(self.hass, data)
+        except InvalidAuth:
+            _LOGGER.exception("Invalid Kodi credentials")
+            reason = "invalid_auth"
+        except CannotConnect:
+            _LOGGER.exception("Cannot connect to Kodi")
+            reason = "cannot_connect"
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception")
+            reason = "unknown"
+        else:
+            return self.async_create_entry(title=data[CONF_NAME], data=data)
+
+        return self.async_abort(reason=reason)
+
+    @callback
+    def _show_credentials_form(self, errors=None):
+        schema = vol.Schema(
+            {
+                vol.Optional(
+                    CONF_USERNAME, description={"suggested_value": self._username}
+                ): str,
+                vol.Optional(
+                    CONF_PASSWORD, description={"suggested_value": self._password}
+                ): str,
+            }
+        )
+
+        return self.async_show_form(
+            step_id="credentials", data_schema=schema, errors=errors or {}
+        )
+
+    @callback
+    def _show_user_form(self, errors=None):
+        default_port = self._port or DEFAULT_PORT
+        default_ssl = self._ssl or DEFAULT_SSL
+        schema = vol.Schema(
+            {
+                vol.Required(CONF_HOST, default=self._host): str,
+                vol.Required(CONF_PORT, default=default_port): int,
+                vol.Required(CONF_SSL, default=default_ssl): bool,
+            }
+        )
+
+        return self.async_show_form(
+            step_id="user", data_schema=schema, errors=errors or {}
+        )
+
+    @callback
+    def _show_ws_port_form(self, errors=None):
+        suggestion = self._ws_port or DEFAULT_WS_PORT
+        schema = vol.Schema(
+            {
+                vol.Optional(
+                    CONF_WS_PORT, description={"suggested_value": suggestion}
+                ): int
+            }
+        )
+
+        return self.async_show_form(
+            step_id="ws_port", data_schema=schema, errors=errors or {}
+        )
 
     @callback
     def _create_entry(self):
@@ -215,42 +302,6 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return data
 
-    @callback
-    def _ws_port_schema(self):
-        suggestion = self._ws_port or DEFAULT_WS_PORT
-        return vol.Schema(
-            {
-                vol.Optional(
-                    CONF_WS_PORT, description={"suggested_value": suggestion}
-                ): int
-            }
-        )
-
-    @callback
-    def _host_schema(self):
-        default_port = self._port or DEFAULT_PORT
-        default_ssl = self._ssl or DEFAULT_SSL
-        return vol.Schema(
-            {
-                vol.Required(CONF_HOST, default=self._host): str,
-                vol.Required(CONF_PORT, default=default_port): int,
-                vol.Required(CONF_SSL, default=default_ssl): bool,
-            }
-        )
-
-    @callback
-    def _credentials_schema(self):
-        return vol.Schema(
-            {
-                vol.Optional(
-                    CONF_USERNAME, description={"suggested_value": self._username}
-                ): str,
-                vol.Optional(
-                    CONF_PASSWORD, description={"suggested_value": self._password}
-                ): str,
-            }
-        )
-
 
 class CannotConnect(exceptions.HomeAssistantError):
     """Error to indicate we cannot connect."""
@@ -258,3 +309,7 @@ class CannotConnect(exceptions.HomeAssistantError):
 
 class InvalidAuth(exceptions.HomeAssistantError):
     """Error to indicate there is invalid auth."""
+
+
+class WSCannotConnect(exceptions.HomeAssistantError):
+    """Error to indicate we cannot connect to websocket."""
