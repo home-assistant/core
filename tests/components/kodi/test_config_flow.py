@@ -144,7 +144,9 @@ async def test_form_cannot_connect_ws(hass, user_flow):
     assert result["step_id"] == "ws_port"
     assert result["errors"] == {}
 
-    with patch.object(MockWSConnection, "connected", return_value=False), patch(
+    with patch(
+        "homeassistant.components.kodi.config_flow.Kodi.ping", return_value=True,
+    ), patch.object(MockWSConnection, "connected", return_value=False), patch(
         "homeassistant.components.kodi.config_flow.get_kodi_connection",
         new=get_kodi_connection,
     ):
@@ -278,7 +280,7 @@ async def test_discovery_cannot_connect_ws(hass):
 
     assert result["type"] == "form"
     assert result["step_id"] == "ws_port"
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {}
 
 
 async def test_discovery_exception_http(hass, user_flow):
@@ -317,9 +319,12 @@ async def test_discovery_invalid_auth(hass):
 
 async def test_discovery_duplicate_data(hass):
     """Test discovery aborts if same mDNS packet arrives."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "zeroconf"}, data=TEST_DISCOVERY
-    )
+    with patch(
+        "homeassistant.components.kodi.config_flow.Kodi.ping", return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "zeroconf"}, data=TEST_DISCOVERY
+        )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "zeroconf"}, data=TEST_DISCOVERY
