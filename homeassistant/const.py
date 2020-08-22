@@ -224,6 +224,7 @@ DEVICE_CLASS_CURRENT = "current"
 DEVICE_CLASS_ENERGY = "energy"
 DEVICE_CLASS_POWER_FACTOR = "power_factor"
 DEVICE_CLASS_VOLTAGE = "voltage"
+DEVICE_CLASS_STATELESS_PROGRAMMABLE_SWITCH = "stateless_programmable_switch"
 
 # #### STATES ####
 STATE_ON = "on"

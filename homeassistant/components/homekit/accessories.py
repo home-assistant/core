@@ -23,6 +23,7 @@ from homeassistant.const import (
     CONF_TYPE,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
+    DEVICE_CLASS_STATELESS_PROGRAMMABLE_SWITCH,
     DEVICE_CLASS_TEMPERATURE,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -199,6 +200,8 @@ def get_accessory(hass, driver, state, aid, config):
             a_type = "CarbonDioxideSensor"
         elif device_class == DEVICE_CLASS_ILLUMINANCE or unit in ("lm", "lx"):
             a_type = "LightSensor"
+        elif device_class == DEVICE_CLASS_STATELESS_PROGRAMMABLE_SWITCH:
+            a_type = "StatelessProgrammableSwitch"
 
     elif state.domain == "switch":
         switch_type = config.get(CONF_TYPE, TYPE_SWITCH)

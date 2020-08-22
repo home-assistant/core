@@ -34,4 +34,5 @@ HOMEKIT_ACCESSORY_DISPATCH = {
     "occupancy": "binary_sensor",
     "television": "media_player",
     "valve": "switch",
+    "stateless-programmable-switch": "sensor",
 }

@@ -1,4 +1,7 @@
 """Support for Homekit sensors."""
+import enum
+import logging
+
 from aiohomekit.model.characteristics import CharacteristicsTypes
 
 from homeassistant.const import (
@@ -6,6 +9,7 @@ from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
+    DEVICE_CLASS_STATELESS_PROGRAMMABLE_SWITCH,
     DEVICE_CLASS_TEMPERATURE,
     TEMP_CELSIUS,
     UNIT_PERCENTAGE,
@@ -20,6 +24,8 @@ BRIGHTNESS_ICON = "mdi:brightness-6"
 CO2_ICON = "mdi:molecule-co2"
 
 UNIT_LUX = "lux"
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class HomeKitHumiditySensor(HomeKitEntity):
@@ -216,12 +222,75 @@ class HomeKitBatterySensor(HomeKitEntity):
         return self.service.value(CharacteristicsTypes.BATTERY_LEVEL)
 
 
+class InputEvents(enum.IntEnum):
+    """Input event values that a stateless programmable switch can be."""
+
+    SINGLE_PRESS = 0
+    DOUBLE_PRESS = 1
+    LONG_PRESS = 2
+
+
+STATELESS_PROGRAMMABLE_SWITCH_INPUT_EVENT_HOMEKIT_TO_HASS = {
+    None: "released",
+    InputEvents.SINGLE_PRESS: "single_pressed",
+    InputEvents.DOUBLE_PRESS: "double_pressed",
+    InputEvents.LONG_PRESS: "long_pressed",
+}
+
+
+class HomeKitStatelessProgrammableSwitch(HomeKitEntity):
+    """Representation of a Homekit Stateless Programmable Switch."""
+
+    def __init__(self, accessory, devinfo):
+        """Initialise a generic HomeKit device."""
+        super().__init__(accessory, devinfo)
+        self.last_input_event = None
+
+    def get_characteristic_types(self):
+        """Define the homekit characteristics the entity is tracking."""
+        return [
+            CharacteristicsTypes.INPUT_EVENT,
+        ]
+
+    @property
+    def state(self):
+        """Return the state of the binary sensor."""
+        input_event = self.service.value(CharacteristicsTypes.INPUT_EVENT)
+        _LOGGER.info("entity=%s, new=%s", self.entity_id, input_event)
+        hass_input_event = STATELESS_PROGRAMMABLE_SWITCH_INPUT_EVENT_HOMEKIT_TO_HASS.get(
+            input_event
+        )
+        if not (
+            hass_input_event == "released" and self.last_input_event == "released"
+        ):  # avoid repeated "released" events
+            if hass_input_event:
+                self.hass.bus.fire(
+                    "sensor.stateless_programmable_switch.pressed",
+                    {"entity_id": self.entity_id, "input_event": hass_input_event},
+                )
+                self.last_input_event = hass_input_event
+            else:
+                _LOGGER.warning(
+                    "HomeKit device %s: Input event value %s is not supported yet."
+                    " Consider raising a ticket if you have this device and want to help us implement this feature.",
+                    self.entity_id,
+                    input_event,
+                )
+        return hass_input_event
+
+    @property
+    def device_class(self) -> str:
+        """Return the device class of the sensor."""
+        return DEVICE_CLASS_STATELESS_PROGRAMMABLE_SWITCH
+
+
 ENTITY_TYPES = {
     "humidity": HomeKitHumiditySensor,
     "temperature": HomeKitTemperatureSensor,
     "light": HomeKitLightSensor,
     "carbon-dioxide": HomeKitCarbonDioxideSensor,
     "battery": HomeKitBatterySensor,
+    "stateless-programmable-switch": HomeKitStatelessProgrammableSwitch,
 }
 
 

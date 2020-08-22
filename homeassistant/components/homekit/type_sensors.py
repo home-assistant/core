@@ -29,6 +29,8 @@ from .const import (
     CHAR_LEAK_DETECTED,
     CHAR_MOTION_DETECTED,
     CHAR_OCCUPANCY_DETECTED,
+    CHAR_PROGRAMMABLE_SWITCH_EVENT,
+    CHAR_SERVICE_LABEL_INDEX,
     CHAR_SMOKE_DETECTED,
     DEVICE_CLASS_CO2,
     DEVICE_CLASS_DOOR,
@@ -41,6 +43,8 @@ from .const import (
     DEVICE_CLASS_SMOKE,
     DEVICE_CLASS_WINDOW,
     PROP_CELSIUS,
+    PROP_MAX_VALUE,
+    PROP_MIN_VALUE,
     SERV_AIR_QUALITY_SENSOR,
     SERV_CARBON_DIOXIDE_SENSOR,
     SERV_CARBON_MONOXIDE_SENSOR,
@@ -51,10 +55,12 @@ from .const import (
     SERV_MOTION_SENSOR,
     SERV_OCCUPANCY_SENSOR,
     SERV_SMOKE_SENSOR,
+    SERV_STATELESS_PROGRAMMABLE_SWITCH,
     SERV_TEMPERATURE_SENSOR,
     THRESHOLD_CO,
     THRESHOLD_CO2,
 )
+from .event import async_track_stateless_programmable_switch_pressed
 from .util import convert_to_float, density_to_air_quality, temperature_to_homekit
 
 _LOGGER = logging.getLogger(__name__)
@@ -71,6 +77,8 @@ BINARY_SENSOR_SERVICE_MAP = {
     DEVICE_CLASS_SMOKE: (SERV_SMOKE_SENSOR, CHAR_SMOKE_DETECTED, int),
     DEVICE_CLASS_WINDOW: (SERV_CONTACT_SENSOR, CHAR_CONTACT_SENSOR_STATE, int),
 }
+
+CATEGORY_STATELESS_PROGRAMMABLE_SWITCH = 89
 
 
 @TYPES.register("TemperatureSensor")
@@ -298,3 +306,72 @@ class BinarySensor(HomeAccessory):
         if self.char_detected.value != detected:
             self.char_detected.set_value(detected)
             _LOGGER.debug("%s: Set to %d", self.entity_id, detected)
+
+
+STATELESS_SWITCH_STATES = {
+    "SinglePress": 0,
+    "DoublePress": 1,
+    "LongPress": 2,
+}
+
+
+@TYPES.register("StatelessProgrammableSwitch")
+class StatelessProgrammableSwitch(HomeAccessory):
+    """Generate a Stateless Programmable Switch sensor."""
+
+    def __init__(self, *args):
+        """Initialize a StatelessProgrammableSwitch accessory object."""
+        super().__init__(*args, category=CATEGORY_STATELESS_PROGRAMMABLE_SWITCH)
+        state = self.hass.states.get(self.entity_id)
+        chars = [CHAR_SERVICE_LABEL_INDEX]
+        serv_stateless_switch = self.add_preload_service(
+            SERV_STATELESS_PROGRAMMABLE_SWITCH, chars
+        )
+        self.char_stateless_switch = serv_stateless_switch.configure_char(
+            CHAR_PROGRAMMABLE_SWITCH_EVENT,
+            value=0,
+            valid_values=STATELESS_SWITCH_STATES,
+        )
+        self.char_service_label_index = serv_stateless_switch.configure_char(
+            CHAR_SERVICE_LABEL_INDEX,
+            value=1,
+            properties={PROP_MIN_VALUE: 1, PROP_MAX_VALUE: 255},
+        )
+        # Set the state so it is in sync on initial
+        # GET to avoid an event storm after homekit startup
+        self.async_update_state(state)
+
+    async def run_handler(self):
+        """Handle accessory driver started event.
+
+        Run inside the Home Assistant event loop.
+        """
+        super().run_handler()
+        # Listen for stateless_programmable_switch events
+        self._subscriptions.append(
+            async_track_stateless_programmable_switch_pressed(
+                self.hass, [self.entity_id], self.async_handle_pressed
+            )
+        )
+
+    @callback
+    async def async_handle_pressed(self, event):
+        """Handle stateless programmable switch pressed event."""
+        input_event = event.data.get("input_event")
+        my_map = {
+            "released": None,
+            "single_pressed": 0,
+            "double_pressed": 1,
+            "long_pressed": 2,
+        }
+        s = my_map.get(input_event)
+        _LOGGER.warning(
+            "HomeKit Bridge: %s: received state update %s", self.entity_id, s
+        )
+        if s is not None:
+            self.char_stateless_switch.set_value(s)
+
+    @callback
+    def async_update_state(self, new_state):
+        """Update accessory after state change."""
+        pass
