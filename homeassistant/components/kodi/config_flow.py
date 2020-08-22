@@ -91,8 +91,8 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize flow."""
         self._host: Optional[str] = None
-        self._port: Optional[int] = None
-        self._ws_port: Optional[int] = None
+        self._port: Optional[int] = DEFAULT_PORT
+        self._ws_port: Optional[int] = DEFAULT_WS_PORT
         self._name: Optional[str] = None
         self._username: Optional[str] = None
         self._password: Optional[str] = None
