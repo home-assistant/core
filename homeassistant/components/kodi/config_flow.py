@@ -137,7 +137,8 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle user-confirmation of discovered node."""
         if user_input is None:
             return self.async_show_form(
-                step_id="discovery_confirm", description_placeholders={"name": self._name}
+                step_id="discovery_confirm",
+                description_placeholders={"name": self._name},
             )
 
         return self._create_entry()
@@ -233,7 +234,7 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_abort(reason=reason)
 
     @callback
-    def _show_credentials_form(self, errors={}):
+    def _show_credentials_form(self, errors=None):
         schema = vol.Schema(
             {
                 vol.Optional(
@@ -246,11 +247,11 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_show_form(
-            step_id="credentials", data_schema=schema, errors=errors
+            step_id="credentials", data_schema=schema, errors=errors or {}
         )
 
     @callback
-    def _show_user_form(self, errors={}):
+    def _show_user_form(self, errors=None):
         default_port = self._port or DEFAULT_PORT
         default_ssl = self._ssl or DEFAULT_SSL
         schema = vol.Schema(
@@ -262,11 +263,11 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_show_form(
-            step_id="user", data_schema=schema, errors=errors
+            step_id="user", data_schema=schema, errors=errors or {}
         )
 
     @callback
-    def _show_ws_port_form(self, errors={}):
+    def _show_ws_port_form(self, errors=None):
         suggestion = self._ws_port or DEFAULT_WS_PORT
         schema = vol.Schema(
             {
@@ -277,7 +278,7 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_show_form(
-            step_id="ws_port", data_schema=schema, errors=errors
+            step_id="ws_port", data_schema=schema, errors=errors or {}
         )
 
     @callback
