@@ -67,14 +67,14 @@ async def validate_ws(hass: core.HomeAssistant, data):
 
     session = async_get_clientsession(hass)
 
-    _LOGGER.debug("Connecting to %s:%s over WebSocket.", host, ws_port)
+    _LOGGER.debug("Connecting to %s:%s over WebSocket", host, ws_port)
     kwc = get_kodi_connection(
         host, port, ws_port, username, password, ssl, session=session
     )
     try:
         await kwc.connect()
         if not kwc.connected:
-            _LOGGER.warning("Cannot connect to %s:%s over WebSocket.", host, ws_port)
+            _LOGGER.warning("Cannot connect to %s:%s over WebSocket", host, ws_port)
             raise CannotConnect()
         kodi = Kodi(kwc)
         await kodi.ping()
