@@ -129,7 +129,11 @@ async def test_form_already_exists(hass):
 
 async def test_options_flow(hass):
     """Test options flow."""
-    conf = {"scan_interval": 10}
+    conf = {
+        "scan_interval": 10,
+        "code_arm_required": True,
+        "code_disarm_required": True,
+    }
 
     entry = MockConfigEntry(
         domain=DOMAIN, unique_id=TEST_DATA["username"], data=TEST_DATA,
