@@ -54,8 +54,8 @@ async def test_user_flow(hass, user_flow):
     assert result["data"] == {
         **TEST_HOST,
         **TEST_WS_PORT,
-        'password': None,
-        'username': None,
+        "password": None,
+        "username": None,
         "name": None,
         "timeout": DEFAULT_TIMEOUT,
     }
@@ -109,7 +109,7 @@ async def test_form_cannot_connect_http(hass, user_flow):
 
     assert result["type"] == "form"
     assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {}
 
 
 async def test_form_exception_http(hass, user_flow):
@@ -142,7 +142,7 @@ async def test_form_cannot_connect_ws(hass, user_flow):
 
     assert result["type"] == "form"
     assert result["step_id"] == "ws_port"
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {}
 
     with patch(
         "tests.components.kodi.util.MockWSConnection.connected", return_value=False,
@@ -220,8 +220,8 @@ async def test_discovery(hass):
     assert result["data"] == {
         **TEST_HOST,
         **TEST_WS_PORT,
-       'password': None,
-        'username': None,
+        "password": None,
+        "username": None,
         "name": "hostname",
         "timeout": DEFAULT_TIMEOUT,
     }
