@@ -1,5 +1,4 @@
 """The sentry integration."""
-from datetime import timedelta
 import re
 from typing import Dict, Union
 
@@ -16,7 +15,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.loader import Integration, async_get_custom_components
-from homeassistant.util.dt import utcnow
 
 from .const import (
     CONF_DSN,
@@ -105,10 +103,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         nonlocal system_info
         system_info = await hass.helpers.system_info.async_get_system_info()
 
-        # Update system info every hours
-        hass.helpers.event.async_track_point_in_utc_time(
-            update_system_info, utcnow() + timedelta(minutes=60)
-        )
+        # Update system info every hour
+        hass.helpers.event.async_call_later(3600, update_system_info)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, update_system_info)
 
