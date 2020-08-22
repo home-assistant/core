@@ -2,7 +2,7 @@
   "config": {
     "flow_title": "Kodi: {name}",
     "step": {
-      "host": {
+      "user": {
         "description": "Kodi connection information. Please make sure to enable \"Allow control of Kodi via HTTP\" in System/Settings/Network/Services.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
@@ -35,7 +35,9 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "cannot_connect": "Cannot connect to discovered Kodi"
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
   "device_automation": {
