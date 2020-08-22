@@ -193,7 +193,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     else:
         # discovery
         scanner = YeelightScanner.async_get(hass)
-        await scanner.async_register_callback(entry.data[CONF_ID], _initialize)
+        scanner.async_register_callback(entry.data[CONF_ID], _initialize)
 
     return True
 
@@ -215,7 +215,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         if entry.data[CONF_ID]:
             # discovery
             scanner = YeelightScanner.async_get(hass)
-            await scanner.async_unregister_callback(entry.data[CONF_ID])
+            scanner.async_unregister_callback(entry.data[CONF_ID])
 
     return unload_ok
 
@@ -250,7 +250,6 @@ class YeelightScanner:
         """Initialize class."""
         self._hass = hass
         self._seen = {}
-        self._seen_lock = asyncio.Lock()
         self._callbacks = {}
         self._scanning = False
 
@@ -260,18 +259,17 @@ class YeelightScanner:
         for _ in range(3):
             devices = await self._hass.async_add_executor_job(discover_bulbs)
             for device in devices:
-                with await self._seen_lock:
-                    unique_id = device["capabilities"]["id"]
-                    if unique_id in self._seen:
-                        continue
-                    ipaddr = device["ip"]
-                    self._seen[unique_id] = ipaddr
-                    _LOGGER.debug("Yeelight discovered at %s", ipaddr)
-                    if unique_id in self._callbacks:
-                        self._hass.async_create_task(self._callbacks[unique_id](ipaddr))
-                        self._callbacks.pop(unique_id)
-                        if len(self._callbacks) == 0:
-                            self._async_stop_scan()
+                unique_id = device["capabilities"]["id"]
+                if unique_id in self._seen:
+                    continue
+                ipaddr = device["ip"]
+                self._seen[unique_id] = ipaddr
+                _LOGGER.debug("Yeelight discovered at %s", ipaddr)
+                if unique_id in self._callbacks:
+                    self._hass.async_create_task(self._callbacks[unique_id](ipaddr))
+                    self._callbacks.pop(unique_id)
+                    if len(self._callbacks) == 0:
+                        self._async_stop_scan()
 
         if not self._scanning:
             return
@@ -293,25 +291,25 @@ class YeelightScanner:
         _LOGGER.debug("Stop scanning")
         self._scanning = False
 
-    async def async_register_callback(self, unique_id, callback_func):
+    @callback
+    def async_register_callback(self, unique_id, callback_func):
         """Register callback function."""
-        with await self._seen_lock:
-            ipaddr = self._seen.get(unique_id)
-            if ipaddr is not None:
-                self._hass.async_add_job(callback_func(ipaddr))
-            else:
-                self._callbacks[unique_id] = callback_func
-                if len(self._callbacks) == 1:
-                    self._async_start_scan()
+        ipaddr = self._seen.get(unique_id)
+        if ipaddr is not None:
+            self._hass.async_add_job(callback_func(ipaddr))
+        else:
+            self._callbacks[unique_id] = callback_func
+            if len(self._callbacks) == 1:
+                self._async_start_scan()
 
-    async def async_unregister_callback(self, unique_id):
+    @callback
+    def async_unregister_callback(self, unique_id):
         """Unregister callback function."""
-        with await self._seen_lock:
-            if unique_id not in self._callbacks:
-                return
-            self._callbacks.pop(unique_id)
-            if len(self._callbacks) == 0:
-                self._async_stop_scan()
+        if unique_id not in self._callbacks:
+            return
+        self._callbacks.pop(unique_id)
+        if len(self._callbacks) == 0:
+            self._async_stop_scan()
 
 
 class YeelightDevice:
