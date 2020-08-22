@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from total_connect_client import TotalConnectClient
 
-from homeassistant.components.totalconnect import DOMAIN
+from homeassistant.components.totalconnect.const import CONF_USERCODES, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.setup import async_setup_component
 
@@ -106,13 +106,20 @@ RESPONSE_USER_CODE_INVALID = {
     "ResultData": "testing user code invalid",
 }
 
+USERNAME = "username@me.com"
+PASSWORD = "password"
+USERCODES = {123456: "7890"}
+CONFIG_DATA = {
+    CONF_USERNAME: USERNAME,
+    CONF_PASSWORD: PASSWORD,
+    CONF_USERCODES: USERCODES,
+}
+
+
 async def setup_platform(hass, platform):
     """Set up the TotalConnect platform."""
     # first set up a config entry and add it to hass
-    mock_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_USERNAME: "user@email.com", CONF_PASSWORD: "password"},
-    )
+    mock_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_DATA,)
     mock_entry.add_to_hass(hass)
 
     responses = [RESPONSE_AUTHENTICATE, RESPONSE_DISARMED]

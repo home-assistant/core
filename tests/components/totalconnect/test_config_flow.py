@@ -4,12 +4,10 @@ from unittest.mock import patch
 from homeassistant import data_entry_flow
 from homeassistant.components.totalconnect.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+
+from .common import CONFIG_DATA, USERNAME
 
 from tests.common import MockConfigEntry
-
-USERNAME = "username@me.com"
-PASSWORD = "password"
 
 
 async def test_user(hass):
@@ -28,9 +26,7 @@ async def test_user(hass):
     ) as client_mock:
         client_mock.return_value.is_valid_credentials.return_value = True
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG_DATA,
         )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -43,9 +39,7 @@ async def test_import(hass):
     ) as client_mock:
         client_mock.return_value.is_valid_credentials.return_value = True
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=CONFIG_DATA,
         )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -53,11 +47,9 @@ async def test_import(hass):
 
 async def test_abort_if_already_setup(hass):
     """Test abort if the account is already setup."""
-    MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
-        unique_id=USERNAME,
-    ).add_to_hass(hass)
+    MockConfigEntry(domain=DOMAIN, data=CONFIG_DATA, unique_id=USERNAME,).add_to_hass(
+        hass
+    )
 
     # Should fail, same USERNAME (import)
     with patch(
@@ -65,9 +57,7 @@ async def test_abort_if_already_setup(hass):
     ) as client_mock:
         client_mock.return_value.is_valid_credentials.return_value = True
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=CONFIG_DATA,
         )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
@@ -79,9 +69,7 @@ async def test_abort_if_already_setup(hass):
     ) as client_mock:
         client_mock.return_value.is_valid_credentials.return_value = True
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG_DATA,
         )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
@@ -95,9 +83,7 @@ async def test_login_failed(hass):
     ) as client_mock:
         client_mock.return_value.is_valid_credentials.return_value = False
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG_DATA,
         )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM

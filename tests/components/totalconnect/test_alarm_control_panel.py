@@ -81,6 +81,7 @@ async def test_arm_home_failure(hass):
         assert f"{e.value}" == "TotalConnect failed to arm home test."
         assert STATE_ALARM_DISARMED == hass.states.get(ENTITY_ID).state
 
+
 async def test_arm_home_invalid_usercode(hass):
     """Test arm home method with invalid usercode."""
     responses = [RESPONSE_DISARMED, RESPONSE_USER_CODE_INVALID, RESPONSE_DISARMED]
@@ -170,6 +171,7 @@ async def test_disarm_failure(hass):
             await hass.async_block_till_done()
         assert f"{e.value}" == "TotalConnect failed to disarm test."
         assert STATE_ALARM_ARMED_AWAY == hass.states.get(ENTITY_ID).state
+
 
 async def test_disarm_invalid_usercode(hass):
     """Test disarm method failure."""
