@@ -152,8 +152,8 @@ class DiscogsSensor(Entity):
 
             self._attrs = random_record.data
             return f"{random_record.data['artists'][0]['name']} - {random_record.data['title']}"
-        else:
-            return None
+
+        return None
 
     def update(self):
         """Set state to the amount of records in user's collection."""
