@@ -90,7 +90,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._discovered_devices[unique_id] = capabilities
                 devices_name[unique_id] = name
 
-        if len(devices_name) == 0:
+        if not devices_name:
             return self.async_abort(reason="no_devices_found")
         return self.async_show_form(
             step_id="pick_device",
