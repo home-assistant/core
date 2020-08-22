@@ -19,7 +19,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DATA_COORDINATOR, DEFAULT_SCAN_INTERVAL, DOMAIN
 
-PLATFORMS = ["alarm_control_panel"]
+PLATFORMS = ["alarm_control_panel", "binary_sensor"]
 UNDO_UPDATE_LISTENER = "undo_update_listener"
 
 _LOGGER = logging.getLogger(__name__)

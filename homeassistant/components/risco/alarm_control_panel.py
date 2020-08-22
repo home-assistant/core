@@ -15,6 +15,7 @@ from homeassistant.const import (
 )
 
 from .const import DATA_COORDINATOR, DOMAIN
+from .entity import RiscoEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,39 +38,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, False)
 
 
-class RiscoAlarm(AlarmControlPanelEntity):
+class RiscoAlarm(AlarmControlPanelEntity, RiscoEntity):
     """Representation of a Risco partition."""
 
     def __init__(self, coordinator, partition_id):
         """Init the partition."""
-        self._coordinator = coordinator
+        super().__init__(coordinator)
         self._partition_id = partition_id
         self._partition = self._coordinator.data.partitions[self._partition_id]
 
-    @property
-    def should_poll(self):
-        """No need to poll. Coordinator notifies entity of updates."""
-        return False
-
-    @property
-    def available(self):
-        """Return if entity is available."""
-        return self._coordinator.last_update_success
-
-    def _refresh_from_coordinator(self):
+    def _get_data_from_coordinator(self):
         self._partition = self._coordinator.data.partitions[self._partition_id]
-        self.async_write_ha_state()
-
-    async def async_added_to_hass(self):
-        """When entity is added to hass."""
-        self.async_on_remove(
-            self._coordinator.async_add_listener(self._refresh_from_coordinator)
-        )
-
-    @property
-    def _risco(self):
-        """Return the Risco API object."""
-        return self._coordinator.risco
 
     @property
     def device_info(self):
@@ -132,10 +111,3 @@ class RiscoAlarm(AlarmControlPanelEntity):
         alarm = await getattr(self._risco, method)(self._partition_id)
         self._partition = alarm.partitions[self._partition_id]
         self.async_write_ha_state()
-
-    async def async_update(self):
-        """Update the entity.
-
-        Only used by the generic entity update service.
-        """
-        await self._coordinator.async_request_refresh()
