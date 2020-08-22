@@ -27,7 +27,13 @@ from homeassistant.const import (
     MATCH_ALL,
     STATE_UNKNOWN,
 )
-from homeassistant.core import State, callback, split_entity_id, valid_entity_id
+from homeassistant.core import (
+    HomeAssistant,
+    State,
+    callback,
+    split_entity_id,
+    valid_entity_id,
+)
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, location as loc_helper
 from homeassistant.helpers.frame import report
@@ -379,6 +385,79 @@ class Template:
     def __repr__(self) -> str:
         """Representation of Template."""
         return 'Template("' + self.template + '")'
+
+
+class StaticTemplate:
+    """Class to hold a static template."""
+
+    def __init__(self, template: Any, hass: Optional[HomeAssistant] = None):
+        """Instantiate a static template."""
+        self.template: Any = template
+        self.hass = hass
+
+    def ensure_valid(self):
+        """Return True as a static template is always valid."""
+        return True
+
+    def extract_entities(
+        self, variables: TemplateVarsType = None
+    ) -> Union[str, List[str]]:
+        """Extract all entities for state_changed listener."""
+        return []
+
+    def render(self, variables: TemplateVarsType = None, **kwargs: Any) -> Any:
+        """Render given template."""
+        return self.template
+
+    @callback
+    def async_render(self, variables: TemplateVarsType = None, **kwargs: Any) -> Any:
+        """Render given template.
+
+        This method must be run in the event loop.
+        """
+        return self.template
+
+    @callback
+    def async_render_to_info(
+        self, variables: TemplateVarsType = None, **kwargs: Any
+    ) -> RenderInfo:
+        """Render the template and collect an entity filter."""
+        assert self.hass
+        render_info = self.hass.data[_RENDER_INFO] = RenderInfo(self)
+        # pylint: disable=protected-access
+        render_info._result = self.template
+        render_info._freeze_static()
+        return render_info
+
+    def render_with_possible_json_value(self, value, error_value=_SENTINEL):
+        """Render template with value exposed."""
+        return self.template
+
+    @callback
+    def async_render_with_possible_json_value(
+        self, value, error_value=_SENTINEL, variables=None
+    ):
+        """Render template with value exposed.
+
+        This method must be run in the event loop.
+        """
+        return self.template
+
+    def __eq__(self, other):
+        """Compare template with another."""
+        return (
+            self.__class__ == other.__class__
+            and self.template == other.template
+            and self.hass == other.hass
+        )
+
+    def __hash__(self) -> int:
+        """Hash code for template."""
+        return hash(self.template)
+
+    def __repr__(self) -> str:
+        """Representation of Template."""
+        return 'StaticTemplate("' + self.template + '")'
 
 
 class AllStates:
