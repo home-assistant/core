@@ -14,7 +14,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
-from .const import DOMAIN, FORECAST_MODE
+from .const import DOMAIN, FORECAST_MODE  # pylint:disable=unused-import
 
 
 class OpenWeatherMapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
