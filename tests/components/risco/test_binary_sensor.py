@@ -51,7 +51,7 @@ def two_zone_alarm():
         yield alarm_mock
 
 
-async def _setup_risco(hass, alarm=MagicMock()):
+async def _setup_risco(hass):
     config_entry = MockConfigEntry(domain=DOMAIN, data=TEST_CONFIG)
     config_entry.add_to_hass(hass)
 
@@ -109,7 +109,7 @@ async def test_setup(hass, two_zone_alarm):
     assert not registry.async_is_registered(FIRST_ENTITY_ID)
     assert not registry.async_is_registered(SECOND_ENTITY_ID)
 
-    await _setup_risco(hass, two_zone_alarm)
+    await _setup_risco(hass)
 
     assert registry.async_is_registered(FIRST_ENTITY_ID)
     assert registry.async_is_registered(SECOND_ENTITY_ID)
@@ -144,7 +144,7 @@ async def _check_state(hass, alarm, triggered, bypassed, entity_id, zone_id):
 
 async def test_states(hass, two_zone_alarm):
     """Test the various alarm states."""
-    await _setup_risco(hass, two_zone_alarm)
+    await _setup_risco(hass)
 
     await _check_state(hass, two_zone_alarm, True, True, FIRST_ENTITY_ID, 0)
     await _check_state(hass, two_zone_alarm, True, False, FIRST_ENTITY_ID, 0)
