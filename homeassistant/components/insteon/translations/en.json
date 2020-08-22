@@ -1,57 +1,48 @@
 {
     "config": {
         "abort": {
-            "already_configured": "An Insteon modem connection is already configured",
-            "cannot_connect": "Unable to connect to the Insteon modem"
+            "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+            "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed"
         },
         "error": {
-            "cannot_connect": "Failed to connect to the Insteon modem, please try again.",
+            "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
             "select_single": "Select one option."
         },
         "step": {
-            "hub1": {
+            "hubv1": {
                 "data": {
-                    "host": "Hub IP address",
-                    "port": "IP port"
+                    "host": "[%key:common::config_flow::data::ip%]",
+                    "port": "[%key:common::config_flow::data::port%]"
                 },
                 "description": "Configure the Insteon Hub Version 1 (pre-2014).",
                 "title": "Insteon Hub Version 1"
             },
-            "hub2": {
+            "hubv2": {
                 "data": {
-                    "host": "Hub IP address",
-                    "password": "Password",
-                    "port": "IP port",
-                    "username": "Username"
+                    "host": "[%key:common::config_flow::data::ip%]",
+                    "password": "[%key:common::config_flow::data::password%]",
+                    "port": "[%key:common::config_flow::data::port%]",
+                    "username": "[%key:common::config_flow::data::username%]"
                 },
                 "description": "Configure the Insteon Hub Version 2.",
                 "title": "Insteon Hub Version 2"
             },
-            "init": {
-                "data": {
-                    "hubv1": "Hub Version 1 (Pre-2014)",
-                    "hubv2": "Hub Version 2",
-                    "plm": "PowerLink Modem (PLM)"
-                },
-                "description": "Select the Insteon modem type.",
-                "title": "Insteon"
-            },
             "plm": {
                 "data": {
-                    "device": "PLM device (i.e. /dev/ttyUSB0 or COM3)"
+                    "device": "[%key:common::config_flow::data::usb_path%]"
                 },
                 "description": "Configure the Insteon PowerLink Modem (PLM).",
                 "title": "Insteon PLM"
+            },
+            "user": {
+                "description": "Select the Insteon modem type.",
+                "title": "Insteon"
             }
         }
     },
     "options": {
-        "abort": {
-            "already_configured": "An Insteon modem connection is already configured",
-            "cannot_connect": "Unable to connect to the Insteon modem"
-        },
         "error": {
-            "cannot_connect": "Failed to connect to the Insteon modem, please try again.",
+            "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
             "input_error": "Invalid entries, please check your values.",
             "select_single": "Select one option."
         },
@@ -77,10 +68,10 @@
             },
             "change_hub_config": {
                 "data": {
-                    "host": "New host name or IP address",
-                    "password": "New password",
-                    "port": "New port number",
-                    "username": "New username"
+                    "host": "[%key:common::config_flow::data::ip%]",
+                    "password": "[%key:common::config_flow::data::password%]",
+                    "port": "[%key:common::config_flow::data::port%]",
+                    "username": "[%key:common::config_flow::data::username%]"
                 },
                 "description": "Change the Insteon Hub connection information. You must restart Home Assistant after making this change. This does not change the configuration of the Hub itself. To change the configuration in the Hub use the Hub app.",
                 "title": "Insteon"
