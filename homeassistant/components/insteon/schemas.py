@@ -271,11 +271,13 @@ def build_plm_schema(device=vol.UNDEFINED):
 def build_hub_schema(
     hub_version,
     host=vol.UNDEFINED,
-    port=PORT_HUB_V2,
+    port=vol.UNDEFINED,
     username=vol.UNDEFINED,
     password=vol.UNDEFINED,
 ):
     """Build the Hub v2 schema for config flow."""
+    if port == vol.UNDEFINED:
+        port = PORT_HUB_V2 if hub_version == 2 else PORT_HUB_V1
     schema = {
         vol.Required(CONF_HOST, default=host): str,
         vol.Required(CONF_PORT, default=port): int,
@@ -308,6 +310,8 @@ def convert_yaml_to_config_flow(yaml_config):
     """Convert the YAML based configuration to a config flow configuration."""
     config = {}
     if yaml_config.get(CONF_HOST):
+        print("====================================")
+        print(yaml_config.get(CONF_PORT))
         hub_version = yaml_config.get(CONF_HUB_VERSION, 2)
         default_port = PORT_HUB_V2 if hub_version == 2 else PORT_HUB_V1
         config[CONF_HOST] = yaml_config.get(CONF_HOST)
