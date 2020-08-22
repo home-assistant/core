@@ -8,5 +8,6 @@
   ],
   "codeowners": [
     "@OnFreund"
-  ]
+  ],
+  "quality_scale": "platinum"
 }
