@@ -275,7 +275,7 @@ def build_hub_schema(
     username=vol.UNDEFINED,
     password=vol.UNDEFINED,
 ):
-    """Build the Hub v2 schema for config flow."""
+    """Build the Hub schema for config flow."""
     if port == vol.UNDEFINED:
         port = PORT_HUB_V2 if hub_version == 2 else PORT_HUB_V1
     schema = {
