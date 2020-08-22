@@ -10,6 +10,11 @@ from .const import (  # pylint: disable=unused-import
     DEFAULT_USERCODE,
     DOMAIN,
 )
+<<<<<<< HEAD
+=======
+
+_LOGGER = logging.getLogger(__name__)
+>>>>>>> Add usercodes to totalconnect.
 
 
 class TotalConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -26,7 +31,7 @@ class TotalConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
         errors = {}
-
+        _LOGGER.warning(f"TotalConnect async_step_user is {user_input}")
         if user_input is not None:
             # Validate user input
             username = user_input[CONF_USERNAME]
@@ -37,7 +42,11 @@ class TotalConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
 
             client = await self.hass.async_add_executor_job(
+<<<<<<< HEAD
                 TotalConnectClient.TotalConnectClient, username, password, usercodes
+=======
+                TotalConnectClient.TotalConnectClient, username, password
+>>>>>>> Add usercodes to totalconnect.
             )
 
             if client.is_valid_credentials():
@@ -60,7 +69,11 @@ class TotalConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_locations(self, usercodes=None):
         """Handle the user locations and associated usercodes."""
         errors = {}
+<<<<<<< HEAD
 
+=======
+        _LOGGER.warning(f"TotalConnect async_step_locations is {usercodes}")
+>>>>>>> Add usercodes to totalconnect.
         if usercodes is not None:
             for location in usercodes:
                 valid = await self.hass.async_add_executor_job(
@@ -95,4 +108,5 @@ class TotalConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input):
         """Import a config entry."""
+        _LOGGER.warning(f"TotalConnect async_step_import is {user_input}")
         return await self.async_step_user(user_input)
