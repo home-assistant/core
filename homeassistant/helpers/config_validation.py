@@ -876,7 +876,7 @@ SERVICE_SCHEMA = vol.All(
         {
             vol.Optional(CONF_ALIAS): string,
             vol.Exclusive(CONF_SERVICE, "service name"): service,
-            vol.Exclusive(CONF_SERVICE_TEMPLATE, "service name"): template,
+            vol.Exclusive(CONF_SERVICE_TEMPLATE, "service name"): service,
             vol.Optional("data"): vol.All(dict, template_complex),
             vol.Optional("data_template"): vol.All(dict, template_complex),
             vol.Optional(CONF_ENTITY_ID): comp_entity_ids,
