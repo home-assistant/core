@@ -100,8 +100,7 @@ async def test_form_valid_auth(hass, user_flow):
     assert result["data"] == {
         **TEST_HOST,
         **TEST_WS_PORT,
-        "password": None,
-        "username": None,
+        **TEST_CREDENTIALS,
         "name": None,
         "timeout": DEFAULT_TIMEOUT,
     }
@@ -203,8 +202,7 @@ async def test_form_invalid_auth(hass, user_flow):
     assert result["errors"] == {"base": "cannot_connect"}
 
     with patch(
-        "homeassistant.components.kodi.config_flow.Kodi.ping",
-        side_effect=Exception,
+        "homeassistant.components.kodi.config_flow.Kodi.ping", side_effect=Exception,
     ), patch(
         "homeassistant.components.kodi.config_flow.get_kodi_connection",
         return_value=MockConnection(),
