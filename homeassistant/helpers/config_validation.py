@@ -527,7 +527,7 @@ def template(value: Optional[Any]) -> Any:
         except TemplateError as ex:
             raise vol.Invalid(f"invalid template ({ex})")
 
-    return value
+    return template_helper.StaticTemplate(value)
 
 
 def template_complex(value: Any) -> Any:
