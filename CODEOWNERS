@@ -447,7 +447,7 @@ homeassistant/components/ubee/* @mzdrale
 homeassistant/components/unifi/* @Kane610
 homeassistant/components/unifiled/* @florisvdk
 homeassistant/components/upb/* @gwww
-homeassistant/components/upc_connect/* @pvizeli
+homeassistant/components/upc_connect/* @pvizeli @fabaff
 homeassistant/components/upcloud/* @scop
 homeassistant/components/updater/* @home-assistant/core
 homeassistant/components/upnp/* @StevenLooman
