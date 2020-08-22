@@ -138,7 +138,7 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_credentials()
 
         return self.async_show_form(
-            step_id="user", data_schema=self._host_schema(), errors=errors
+            step_id="user", data_schema=self._host_schema()
         )
 
     async def async_step_credentials(self, user_input=None):
