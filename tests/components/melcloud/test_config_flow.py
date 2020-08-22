@@ -16,7 +16,7 @@ from tests.common import MockConfigEntry
 @pytest.fixture
 def mock_login():
     """Mock pymelcloud login."""
-    with patch("homeassistant.components.melcloud.config_flow.pymelcloudlogin") as mock:
+    with patch("homeassistant.components.melcloud.config_flow.pymelcloud.login") as mock:
         mock.return_value = "test-token"
         yield mock
 
