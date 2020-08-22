@@ -120,9 +120,9 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await validate_http(self.hass, self._get_data())
             await validate_ws(self.hass, self._get_data())
         except InvalidAuth:
-            return self.async_step_credentials()
+            return await self.async_step_credentials()
         except WSCannotConnect:
-            return self.async_step_ws_port()
+            return await self.async_step_ws_port()
         except CannotConnect:
             return self.async_abort(reason="cannot_connect")
         except Exception:  # pylint: disable=broad-except
@@ -156,9 +156,9 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await validate_http(self.hass, self._get_data())
                 await validate_ws(self.hass, self._get_data())
             except InvalidAuth:
-                return self.async_step_credentials()
+                return await self.async_step_credentials()
             except WSCannotConnect:
-                return self.async_step_ws_port()
+                return await self.async_step_ws_port()
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
@@ -183,7 +183,7 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
             except WSCannotConnect:
-                return self.async_step_ws_port()
+                return await self.async_step_ws_port()
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
