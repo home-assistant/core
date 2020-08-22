@@ -90,3 +90,24 @@ async def test_form_cannot_connect(hass):
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "cannot_connect"}
     mock_close.assert_awaited_once()
+
+
+async def test_form_exception(hass):
+    """Test we handle unknown exception."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.risco.config_flow.RiscoAPI.login",
+        side_effect=Exception,
+    ), patch(
+        "homeassistant.components.risco.config_flow.RiscoAPI.close", AsyncMock()
+    ) as mock_close:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], TEST_DATA
+        )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "unknown"}
+    mock_close.assert_awaited_once()

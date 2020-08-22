@@ -6,10 +6,6 @@
   "requirements": [
     "pyrisco==0.2.1"
   ],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
-  "dependencies": [],
   "codeowners": [
     "@OnFreund"
   ]

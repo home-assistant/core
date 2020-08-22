@@ -32,8 +32,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     risco = RiscoAPI(data[CONF_USERNAME], data[CONF_PASSWORD], data[CONF_PIN])
     try:
         await risco.login(async_get_clientsession(hass))
-    except (CannotConnectError, UnauthorizedError) as error:
+    except CannotConnectError as error:
         raise ConfigEntryNotReady() from error
+    except UnauthorizedError:
+        _LOGGER.exception("Failed to login to Risco cloud")
+        return False
 
     coordinator = RiscoDataUpdateCoordinator(hass, risco)
     await coordinator.async_refresh()

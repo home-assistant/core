@@ -4,7 +4,7 @@ import logging
 from pyrisco import CannotConnectError, RiscoAPI, UnauthorizedError
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant import config_entries, core
 from homeassistant.const import CONF_PASSWORD, CONF_PIN, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -25,15 +25,10 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     try:
         await risco.login(async_get_clientsession(hass))
-        return {"title": risco.site_name}
-    except UnauthorizedError as error:
-        _LOGGER.error("Unauthorized connection to Risco Cloud")
-        raise InvalidAuth from error
-    except CannotConnectError as error:
-        _LOGGER.error("Error connecting to Risco Cloud")
-        raise CannotConnect from error
     finally:
         await risco.close()
+
+    return {"title": risco.site_name}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -50,9 +45,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 info = await validate_input(self.hass, user_input)
 
                 return self.async_create_entry(title=info["title"], data=user_input)
-            except CannotConnect:
+            except CannotConnectError:
                 errors["base"] = "cannot_connect"
-            except InvalidAuth:
+            except UnauthorizedError:
                 errors["base"] = "invalid_auth"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
@@ -61,11 +56,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
-
-
-class CannotConnect(exceptions.HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(exceptions.HomeAssistantError):
-    """Error to indicate there is invalid auth."""

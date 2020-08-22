@@ -75,13 +75,8 @@ class RiscoAlarm(AlarmControlPanelEntity):
         )
 
     @property
-    def partition(self):
-        """Return representation of the current partition state."""
-        return self._partition
-
-    @property
-    def risco(self):
-        """Return he Risco API object."""
+    def _risco(self):
+        """Return the Risco API object."""
         return self._coordinator.risco
 
     @property
@@ -96,25 +91,25 @@ class RiscoAlarm(AlarmControlPanelEntity):
     @property
     def name(self):
         """Return the name of the partition."""
-        return f"Risco {self.risco.site_name} Partition {self._partition_id}"
+        return f"Risco {self._risco.site_name} Partition {self._partition_id}"
 
     @property
     def unique_id(self):
         """Return a unique id for that partition."""
-        return f"{self.risco.site_uuid}_{self._partition_id}"
+        return f"{self._risco.site_uuid}_{self._partition_id}"
 
     @property
     def state(self):
         """Return the state of the device."""
-        if self.partition.triggered:
+        if self._partition.triggered:
             return STATE_ALARM_TRIGGERED
-        if self.partition.arming:
+        if self._partition.arming:
             return STATE_ALARM_ARMING
-        if self.partition.armed:
+        if self._partition.armed:
             return STATE_ALARM_ARMED_AWAY
-        if self.partition.partially_armed:
+        if self._partition.partially_armed:
             return STATE_ALARM_ARMED_HOME
-        if self.partition.disarmed:
+        if self._partition.disarmed:
             return STATE_ALARM_DISARMED
 
         return STATE_UNKNOWN
@@ -136,31 +131,26 @@ class RiscoAlarm(AlarmControlPanelEntity):
 
     async def async_alarm_disarm(self, code=None):
         """Send disarm command."""
-        alarm = await self.risco.disarm(self._partition_id)
-        self._partition = alarm.partitions[self._partition_id]
-        self.async_write_ha_state()
+        await self._call_alarm_method("disarm")
 
     async def async_alarm_arm_home(self, code=None):
         """Send arm home command."""
-        alarm = await self.risco.partial_arm(self._partition_id)
-        self._partition = alarm.partitions[self._partition_id]
-        self.async_write_ha_state()
+        await self._call_alarm_method("partial_arm")
 
     async def async_alarm_arm_night(self, code=None):
         """Send arm night command."""
-        alarm = await self.risco.partial_arm(self._partition_id)
-        self._partition = alarm.partitions[self._partition_id]
-        self.async_write_ha_state()
+        await self._call_alarm_method("partial_arm")
 
     async def async_alarm_arm_custom_bypass(self, code=None):
         """Send arm custom bypass command."""
-        alarm = await self.risco.partial_arm(self._partition_id)
-        self._partition = alarm.partitions[self._partition_id]
-        self.async_write_ha_state()
+        await self._call_alarm_method("partial_arm")
 
     async def async_alarm_arm_away(self, code=None):
         """Send arm away command."""
-        alarm = await self.risco.arm(self._partition_id)
+        await self._call_alarm_method("arm")
+
+    async def _call_alarm_method(self, method, code=None):
+        alarm = await getattr(self._risco, method)(self._partition_id)
         self._partition = alarm.partitions[self._partition_id]
         self.async_write_ha_state()
 
