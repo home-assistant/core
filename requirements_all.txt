@@ -1783,7 +1783,7 @@ python-velbus==2.0.44
 python-vlc==1.1.2
 
 # homeassistant.components.whois
-python-whois==0.7.2
+python-whois==0.7.3
 
 # homeassistant.components.wink
 python-wink==1.10.5
