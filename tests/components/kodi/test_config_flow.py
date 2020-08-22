@@ -54,6 +54,8 @@ async def test_user_flow(hass, user_flow):
     assert result["data"] == {
         **TEST_HOST,
         **TEST_WS_PORT,
+        'password': None,
+        'username': None,
         "name": None,
         "timeout": DEFAULT_TIMEOUT,
     }
@@ -218,6 +220,8 @@ async def test_discovery(hass):
     assert result["data"] == {
         **TEST_HOST,
         **TEST_WS_PORT,
+       'password': None,
+        'username': None,
         "name": "hostname",
         "timeout": DEFAULT_TIMEOUT,
     }
