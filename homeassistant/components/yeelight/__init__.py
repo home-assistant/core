@@ -233,11 +233,6 @@ async def _async_setup_device(hass: HomeAssistant, ipaddr: str, config: dict,) -
     return device
 
 
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
-    """Handle options update."""
-    await hass.config_entries.async_reload(entry.entry_id)
-
-
 class YeelightScanner:
     """Scan for Yeelight devices."""
 
