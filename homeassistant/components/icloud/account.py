@@ -1,8 +1,9 @@
 """iCloud account."""
+import asyncio
 from datetime import timedelta
 import logging
 import operator
-from typing import Dict
+from typing import Dict, Optional
 
 from pyicloud import PyiCloudService
 from pyicloud.exceptions import (
@@ -13,12 +14,14 @@ from pyicloud.exceptions import (
 from pyicloud.services.findmyiphone import AppleDevice
 
 from homeassistant.components.zone import async_active_zone
-from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_USERNAME
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.loader import async_get_integration
 from homeassistant.util import slugify
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.dt import utcnow
@@ -81,6 +84,7 @@ class IcloudAccount:
         with_family: bool,
         max_interval: int,
         gps_accuracy_threshold: int,
+        config_entry: ConfigEntry,
     ):
         """Initialize an iCloud account."""
         self.hass = hass
@@ -93,11 +97,12 @@ class IcloudAccount:
 
         self._icloud_dir = icloud_dir
 
-        self.api: PyiCloudService = None
+        self.api: Optional[PyiCloudService] = None
         self._owner_fullname = None
         self._family_members_fullname = {}
         self._devices = {}
         self._retried_fetch = False
+        self._config_entry = config_entry
 
         self.listeners = []
 
@@ -110,9 +115,36 @@ class IcloudAccount:
                 self._icloud_dir.path,
                 with_family=self._with_family,
             )
-        except PyiCloudFailedLoginException as error:
+        except PyiCloudFailedLoginException:
             self.api = None
-            _LOGGER.error("Error logging into iCloud Service: %s", error)
+            # Login failed which means credentials need to be updated.
+            username = self._config_entry.data[CONF_USERNAME]
+            message = (
+                f"Your password for '{username}' is no longer working. Go to the "
+                "Integrations menu and click on Configure on the discovered Apple "
+                "iCloud card to update it."
+            )
+            _LOGGER.error(message)
+            self.hass.components.persistent_notification.async_create(
+                message,
+                asyncio.run_coroutine_threadsafe(
+                    async_get_integration(self.hass, DOMAIN), self.hass.loop
+                )
+                .result()
+                .manifest["name"],
+                f"{self._config_entry.entry_id}_update_password",
+            )
+
+            self.hass.async_create_task(
+                self.hass.config_entries.flow.async_init(
+                    DOMAIN,
+                    context={"source": "update_password"},
+                    data={
+                        **self._config_entry.data,
+                        "unique_id": self._config_entry.unique_id,
+                    },
+                )
+            )
             return
 
         try:
