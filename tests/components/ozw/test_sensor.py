@@ -96,3 +96,7 @@ async def test_string_sensor(hass, string_sensor_data):
     entity = hass.data[SENSOR_DOMAIN].get_entity(entry.entity_id)
 
     assert isinstance(entity, ZWaveStringSensor)
+
+    state = hass.states.get(entry.entity_id)
+    assert state is not None
+    assert state.state == "asdfgh"
