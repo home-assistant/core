@@ -20,7 +20,7 @@ from .util import (
     get_kodi_connection,
 )
 
-from tests.async_mock import patch
+from tests.async_mock import AsyncMock, patch
 from tests.common import MockConfigEntry
 
 
@@ -133,7 +133,7 @@ async def test_form_cannot_connect_ws(hass, user_flow):
     with patch(
         "homeassistant.components.kodi.config_flow.Kodi.ping", return_value=True,
     ), patch.object(
-        MockWSConnection, "connect", side_effect=CannotConnectError,
+        MockWSConnection, "connect", AyncMock(side_effect=CannotConnectError),
     ), patch(
         "homeassistant.components.kodi.config_flow.get_kodi_connection",
         new=get_kodi_connection,
@@ -144,9 +144,7 @@ async def test_form_cannot_connect_ws(hass, user_flow):
     assert result["step_id"] == "ws_port"
     assert result["errors"] == {}
 
-    with patch(
-        "tests.components.kodi.util.MockWSConnection.connected", return_value=False,
-    ), patch(
+    with patch.object(MockWSConnection, "connected", return_value=False), patch(
         "homeassistant.components.kodi.config_flow.get_kodi_connection",
         new=get_kodi_connection,
     ):
@@ -178,7 +176,9 @@ async def test_form_exception_ws(hass, user_flow):
     """Test we handle generic exception over WebSocket."""
     with patch(
         "homeassistant.components.kodi.config_flow.Kodi.ping", return_value=True,
-    ), patch.object(MockWSConnection, "connect", side_effect=Exception), patch(
+    ), patch.object(
+        MockWSConnection, "connect", AsyncMock(side_effect=Exception)
+    ), patch(
         "homeassistant.components.kodi.config_flow.get_kodi_connection",
         new=get_kodi_connection,
     ):
@@ -251,7 +251,7 @@ async def test_discovery_cannot_connect_ws(hass):
     with patch(
         "homeassistant.components.kodi.config_flow.Kodi.ping", return_value=True,
     ), patch.object(
-        MockWSConnection, "connect", side_effect=CannotConnectError,
+        MockWSConnection, "connect", AsyncMock(side_effect=CannotConnectError),
     ), patch(
         "homeassistant.components.kodi.config_flow.get_kodi_connection",
         new=get_kodi_connection,
