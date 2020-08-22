@@ -1,18 +1,20 @@
-import homeassistant.helpers.config_validation as cv
+"""Configuration via ui for OpenWeatherMap integration."""
+from pyowm import OWM
+from pyowm.exceptions.api_call_error import APICallError
 import voluptuous as vol
+
 from homeassistant import config_entries
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
     CONF_LONGITUDE,
-    CONF_NAME,
     CONF_MODE,
+    CONF_NAME,
 )
 from homeassistant.core import callback
-from pyowm import OWM
-from pyowm.exceptions.api_call_error import APICallError
+import homeassistant.helpers.config_validation as cv
 
-from .const import DOMAIN, CONF_FORECAST, FORECAST_MODE  # pylint:disable=unused-import
+from .const import CONF_FORECAST, DOMAIN, FORECAST_MODE  # pylint:disable=unused-import
 
 
 class OpenWeatherMapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -32,7 +34,7 @@ class OpenWeatherMapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 OWM(user_input[CONF_API_KEY],)
-            except APICallError as e:
+            except APICallError:
                 errors["base"] = "cannot_connect"
             else:
 

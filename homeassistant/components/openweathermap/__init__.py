@@ -1,11 +1,7 @@
+"""OpenWeatherMap integration."""
 from homeassistant.core import Config, HomeAssistant
 
-from .const import (
-    ATTR_FORECAST,
-    CONF_FORECAST,
-    COORDINATOR,
-    DOMAIN,
-)
+from .const import ATTR_FORECAST, CONF_FORECAST, COORDINATOR, DOMAIN
 
 PLATFORMS = ["sensor", "weather"]
 

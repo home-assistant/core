@@ -32,7 +32,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 from homeassistant.util.pressure import convert as convert_pressure
 
-from .const import ATTRIBUTION, NAME, FORECAST_MODE
+from .const import ATTRIBUTION, FORECAST_MODE, NAME
 
 _LOGGER = logging.getLogger(__name__)
 

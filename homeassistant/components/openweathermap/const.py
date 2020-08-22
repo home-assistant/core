@@ -1,5 +1,5 @@
 """Constants for OpenWeatherMap integration."""
-from homeassistant.const import (
+from homeassistant.const import (  # pylint:disable=unused-import
     ATTR_DEVICE_CLASS,
     DEVICE_CLASS_TEMPERATURE,
     LENGTH_FEET,
@@ -13,7 +13,7 @@ from homeassistant.const import (
     UNIT_PERCENTAGE,
     UV_INDEX,
     VOLUME_CUBIC_METERS,
-)
+)  # pylint:disable=unused-import
 
 ATTRIBUTION = "Data provided by OpenWeatherMap"
 ATTR_ICON = "icon"
