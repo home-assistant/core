@@ -515,7 +515,9 @@ unit_system = vol.All(
 )
 
 
-def template(value: Optional[Any]) -> Any:
+def template(
+    value: Optional[Any],
+) -> Union[template_helper.Template, template_helper.StaticTemplate]:
     """Validate a jinja2 template."""
 
     if value is None:
