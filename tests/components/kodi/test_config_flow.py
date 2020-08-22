@@ -196,13 +196,21 @@ async def test_discovery(hass):
     ), patch(
         "homeassistant.components.kodi.config_flow.get_kodi_connection",
         return_value=MockConnection(),
-    ), patch(
+    )y:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "zeroconf"}, data=TEST_DISCOVERY
+        )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "discovery_confirm"
+
+    with patch(
         "homeassistant.components.kodi.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.kodi.async_setup_entry", return_value=True,
     ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "zeroconf"}, data=TEST_DISCOVERY
+        result = await hass.config_entries.flow.async_configure(
+            flow_id=result["flow_id"], user_input={}
         )
 
     assert result["type"] == "create_entry"
