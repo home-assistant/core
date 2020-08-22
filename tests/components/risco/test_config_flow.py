@@ -1,5 +1,5 @@
 """Test the Risco config flow."""
-from homeassistant import config_entries
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.risco.config_flow import (
     CannotConnectError,
     UnauthorizedError,
@@ -114,7 +114,6 @@ async def test_form_already_exists(hass):
     )
 
     entry.add_to_hass(hass)
-    await hass.async_block_till_done()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -126,3 +125,27 @@ async def test_form_already_exists(hass):
 
     assert result2["type"] == "abort"
     assert result2["reason"] == "already_configured"
+
+
+async def test_options_flow(hass):
+    """Test options flow."""
+    conf = {"scan_interval": 10}
+
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=TEST_DATA["username"], data=TEST_DATA,
+    )
+
+    entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.risco.async_setup_entry", return_value=True):
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "init"
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input=conf,
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert entry.options == conf
