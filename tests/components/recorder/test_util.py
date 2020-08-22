@@ -9,6 +9,8 @@ from homeassistant.components.recorder import util
 from homeassistant.components.recorder.const import DATA_INSTANCE, SQLITE_URL_PREFIX
 from homeassistant.util import dt as dt_util
 
+from .common import wait_recording_done
+
 from tests.async_mock import MagicMock, patch
 from tests.common import get_test_home_assistant, init_recorder_component
 
@@ -101,6 +103,7 @@ def test_last_run_was_recently_clean(hass_recorder):
     assert util.last_run_was_recently_clean(cursor) is False
 
     hass.data[DATA_INSTANCE]._close_run()
+    wait_recording_done(hass)
 
     assert util.last_run_was_recently_clean(cursor) is True
 
