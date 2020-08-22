@@ -10,7 +10,14 @@ import homeassistant.components.input_select as input_select
 import homeassistant.components.media_player as media_player
 import homeassistant.components.switch as switch
 import homeassistant.components.universal.media_player as universal
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING
+from homeassistant.const import (
+    STATE_OFF,
+    STATE_ON,
+    STATE_PAUSED,
+    STATE_PLAYING,
+    STATE_UNKNOWN,
+)
+from homeassistant.setup import async_setup_component
 
 from tests.common import get_test_home_assistant, mock_service
 
@@ -336,23 +343,6 @@ class TestMediaPlayer(unittest.TestCase):
         assert STATE_OFF == ump.master_state
         self.hass.states.set(self.mock_state_switch_id, STATE_ON)
         assert STATE_ON == ump.master_state
-
-    def test_master_state_with_template(self):
-        """Test the state_template option."""
-        config = copy(self.config_children_and_attr)
-        self.hass.states.set("input_boolean.test", STATE_OFF)
-        templ = (
-            '{% if states.input_boolean.test.state == "off" %}on'
-            "{% else %}{{ states.media_player.mock1.state }}{% endif %}"
-        )
-        config["state_template"] = templ
-        config = validate_config(config)
-
-        ump = universal.UniversalMediaPlayer(self.hass, **config)
-
-        assert STATE_ON == ump.master_state
-        self.hass.states.set("input_boolean.test", STATE_ON)
-        assert STATE_OFF == ump.master_state
 
     def test_master_state_with_bad_attrs(self):
         """Test master state property."""
@@ -735,3 +725,90 @@ class TestMediaPlayer(unittest.TestCase):
 
         asyncio.run_coroutine_threadsafe(ump.async_turn_off(), self.hass.loop).result()
         assert 1 == len(service)
+
+
+async def test_state_template(hass):
+    """Test with a simple valid state template."""
+    hass.states.async_set("sensor.test_sensor", STATE_ON)
+
+    await async_setup_component(
+        hass,
+        "media_player",
+        {
+            "media_player": {
+                "platform": "universal",
+                "name": "tv",
+                "state_template": "{{ states.sensor.test_sensor.state }}",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 2
+    await hass.async_start()
+
+    await hass.async_block_till_done()
+    assert hass.states.get("media_player.tv").state == STATE_ON
+    hass.states.async_set("sensor.test_sensor", STATE_OFF)
+    await hass.async_block_till_done()
+    assert hass.states.get("media_player.tv").state == STATE_OFF
+
+
+async def test_invalid_state_template(hass):
+    """Test invalid state template sets state to None."""
+    hass.states.async_set("sensor.test_sensor", "on")
+
+    await async_setup_component(
+        hass,
+        "media_player",
+        {
+            "media_player": {
+                "platform": "universal",
+                "name": "tv",
+                "state_template": "{{ states.sensor.test_sensor.state + x }}",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 2
+    await hass.async_start()
+
+    await hass.async_block_till_done()
+    assert hass.states.get("media_player.tv").state == STATE_UNKNOWN
+    hass.states.async_set("sensor.test_sensor", "off")
+    await hass.async_block_till_done()
+    assert hass.states.get("media_player.tv").state == STATE_UNKNOWN
+
+
+async def test_master_state_with_template(hass):
+    """Test the state_template option."""
+    hass.states.async_set("input_boolean.test", STATE_OFF)
+    hass.states.async_set("media_player.mock1", STATE_OFF)
+
+    templ = (
+        '{% if states.input_boolean.test.state == "off" %}on'
+        "{% else %}{{ states.media_player.mock1.state }}{% endif %}"
+    )
+
+    await async_setup_component(
+        hass,
+        "media_player",
+        {
+            "media_player": {
+                "platform": "universal",
+                "name": "tv",
+                "state_template": templ,
+            }
+        },
+    )
+
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 3
+    await hass.async_start()
+
+    await hass.async_block_till_done()
+    hass.states.get("media_player.tv").state == STATE_ON
+
+    hass.states.async_set("input_boolean.test", STATE_ON)
+    await hass.async_block_till_done()
+
+    hass.states.get("media_player.tv").state == STATE_OFF
