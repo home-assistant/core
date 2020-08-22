@@ -120,7 +120,7 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await validate_http(self.hass, self._get_data())
             await validate_ws(self.hass, self._get_data())
         except InvalidAuth:
-            return self._show_credentials_form()
+            return self._show_credentials_form({"base": "invalid_auth"})
         except WSCannotConnect:
             return self._show_ws_port_form({"base": "cannot_connect"})
         except CannotConnect:
@@ -233,7 +233,7 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_abort(reason=reason)
 
     @callback
-    def _show_credentials_form(errors={}):
+    def _show_credentials_form(self, errors={}):
         schema = vol.Schema(
             {
                 vol.Optional(
@@ -250,7 +250,7 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     @callback
-    def _show_user_form(errors={}):
+    def _show_user_form(self, errors={}):
         default_port = self._port or DEFAULT_PORT
         default_ssl = self._ssl or DEFAULT_SSL
         schema = vol.Schema(
@@ -266,7 +266,7 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     @callback
-    def _show_ws_port_form(errors={}):
+    def _show_ws_port_form(self, errors={}):
         suggestion = self._ws_port or DEFAULT_WS_PORT
         schema = vol.Schema(
             {
