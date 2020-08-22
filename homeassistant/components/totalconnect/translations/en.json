@@ -5,12 +5,20 @@
         },
         "error": {
             "invalid_auth": "Invalid authentication"
+            "usercode": "Usercode not valid for this user at this location"
         },
         "step": {
+            "locations": {
+                "data": {
+                    "location": "Location"
+                },
+                "description": "Enter the usercode for this user at this location",
+                "title": "Location Usercodes"
+            },
             "user": {
                 "data": {
-                    "password": "Password",
-                    "username": "Username"
+                    "password": "[%key:common::config_flow::data::password%]",
+                    "username": "[%key:common::config_flow::data::username%]"
                 },
                 "title": "Total Connect"
             }

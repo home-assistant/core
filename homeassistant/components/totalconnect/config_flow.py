@@ -5,7 +5,11 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import (  # pylint: disable=unused-import
+    CONF_USERCODES,
+    DEFAULT_USERCODE,
+    DOMAIN,
+)
 
 
 class TotalConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -13,26 +17,35 @@ class TotalConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    def __init__(self):
+        """Initialize the config flow."""
+        self.username = None
+        self.password = None
+        self.client = None
+
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
         errors = {}
-
+        _LOGGER.warning(f"TotalConnect async_step_user is {user_input}")
         if user_input is not None:
             # Validate user input
             username = user_input[CONF_USERNAME]
             password = user_input[CONF_PASSWORD]
+            usercodes = user_input.get(CONF_USERCODES)
 
             await self.async_set_unique_id(username)
             self._abort_if_unique_id_configured()
 
-            valid = await self.is_valid(username, password)
+            client = await self.hass.async_add_executor_job(
+                TotalConnectClient.TotalConnectClient, username, password
+            )
 
-            if valid:
-                # authentication success / valid
-                return self.async_create_entry(
-                    title="Total Connect",
-                    data={CONF_USERNAME: username, CONF_PASSWORD: password},
-                )
+            if client.is_valid_credentials():
+                # username/password valid so show user locations
+                self.username = username
+                self.password = password
+                self.client = client
+                return await self.async_step_locations(usercodes)
             # authentication failed / invalid
             errors["base"] = "invalid_auth"
 
@@ -44,13 +57,43 @@ class TotalConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=data_schema, errors=errors
         )
 
+    async def async_step_locations(self, usercodes=None):
+        """Handle the user locations and associated usercodes."""
+        errors = {}
+        _LOGGER.warning(f"TotalConnect async_step_locations is {usercodes}")
+        if usercodes is not None:
+            for location in usercodes:
+                valid = await self.hass.async_add_executor_job(
+                    self.client.locations[int(location)].set_usercode,
+                    usercodes[location],
+                )
+                if not valid:
+                    errors[location] = "usercode"
+
+            if not errors:
+                return self.async_create_entry(
+                    title="Total Connect",
+                    data={
+                        CONF_USERNAME: self.username,
+                        CONF_PASSWORD: self.password,
+                        CONF_USERCODES: usercodes,
+                    },
+                )
+
+        # show the locations with DEFAULT_USERCODE already entered
+        location_codes = {}
+        for location_id in self.client.locations:
+            location_codes[vol.Required(location_id, default=DEFAULT_USERCODE)] = str
+
+        data_schema = vol.Schema(location_codes)
+        return self.async_show_form(
+            step_id="locations",
+            data_schema=data_schema,
+            errors=errors,
+            description_placeholders={"base": "description"},
+        )
+
     async def async_step_import(self, user_input):
         """Import a config entry."""
+        _LOGGER.warning(f"TotalConnect async_step_import is {user_input}")
         return await self.async_step_user(user_input)
-
-    async def is_valid(self, username="", password=""):
-        """Return true if the given username and password are valid."""
-        client = await self.hass.async_add_executor_job(
-            TotalConnectClient.TotalConnectClient, username, password
-        )
-        return client.is_valid_credentials()

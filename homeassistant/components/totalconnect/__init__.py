@@ -10,7 +10,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 
-from .const import DOMAIN
+from .const import CONF_USERCODES, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,6 +22,7 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_USERNAME): cv.string,
                 vol.Required(CONF_PASSWORD): cv.string,
+                vol.Required(CONF_USERCODES): vol.Schema({}, extra=vol.ALLOW_EXTRA),
             }
         )
     },
@@ -34,11 +35,21 @@ async def async_setup(hass: HomeAssistant, config: dict):
     if DOMAIN not in config:
         return True
 
+    config_data = {}
+    config_data[CONF_USERNAME] = config[DOMAIN].get(CONF_USERNAME)
+    config_data[CONF_PASSWORD] = config[DOMAIN].get(CONF_PASSWORD)
+
+    if CONF_USERCODES in config[DOMAIN]:
+        config_data[CONF_USERCODES] = dict(config[DOMAIN][CONF_USERCODES])
+    else:
+        config_data[CONF_USERCODES] = {}
+        _LOGGER.error("TotalConnect configuration is missing usercodes")
+
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
-            data=config[DOMAIN],
+            data=config_data,
         )
     )
 
@@ -53,8 +64,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     username = conf[CONF_USERNAME]
     password = conf[CONF_PASSWORD]
 
+    if CONF_USERCODES in conf:
+        temp_codes = conf[CONF_USERCODES]
+        usercodes = {}
+        for code in temp_codes:
+            usercodes[int(code)] = temp_codes[code]
+    else:
+        _LOGGER.warning("No usercodes in TotalConnect configuration")
+
     client = await hass.async_add_executor_job(
-        TotalConnectClient.TotalConnectClient, username, password
+        TotalConnectClient.TotalConnectClient, username, password, usercodes
     )
 
     if not client.is_valid_credentials():
