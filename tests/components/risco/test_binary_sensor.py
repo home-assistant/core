@@ -12,7 +12,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.entity_component import async_update_entity
 
-from tests.async_mock import AsyncMock, MagicMock, PropertyMock, patch
+from tests.async_mock import MagicMock, PropertyMock, patch
 from tests.common import MockConfigEntry
 
 TEST_CONFIG = {
@@ -46,14 +46,15 @@ def two_zone_alarm():
     ), patch.object(
         alarm_mock, "zones", new_callable=PropertyMock(return_value=zone_mocks),
     ), patch(
-        "homeassistant.components.risco.RiscoAPI.get_state",
-        AsyncMock(return_value=alarm_mock),
+        "homeassistant.components.risco.RiscoAPI.get_state", return_value=alarm_mock,
     ):
         yield alarm_mock
 
 
 async def _setup_risco(hass, alarm=MagicMock()):
     config_entry = MockConfigEntry(domain=DOMAIN, data=TEST_CONFIG)
+    config_entry.add_to_hass(hass)
+
     with patch(
         "homeassistant.components.risco.RiscoAPI.login", return_value=True,
     ), patch(
@@ -63,9 +64,8 @@ async def _setup_risco(hass, alarm=MagicMock()):
         "homeassistant.components.risco.RiscoAPI.site_name",
         new_callable=PropertyMock(return_value=TEST_SITE_NAME),
     ), patch(
-        "homeassistant.components.risco.RiscoAPI.close", AsyncMock()
+        "homeassistant.components.risco.RiscoAPI.close"
     ):
-        config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 

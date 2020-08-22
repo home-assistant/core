@@ -11,7 +11,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Risco alarm control panel."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id][DATA_COORDINATOR]
     entities = [
-        RiscoBinarySensor(hass, coordinator, zone_id, zone)
+        RiscoBinarySensor(coordinator, zone_id, zone)
         for zone_id, zone in coordinator.data.zones.items()
     ]
 
@@ -21,9 +21,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class RiscoBinarySensor(BinarySensorEntity):
     """Representation of a Risco zone as a binary sensor."""
 
-    def __init__(self, hass, coordinator, zone_id, zone):
+    def __init__(self, coordinator, zone_id, zone):
         """Init the zone."""
-        self._hass = hass
         self._coordinator = coordinator
         self._zone_id = zone_id
         self._zone = zone
