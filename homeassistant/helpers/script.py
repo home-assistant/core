@@ -441,17 +441,17 @@ class _ScriptRun:
         self._log("Executing step %s", self._script.last_action)
         event_data = {}
         for conf in [CONF_EVENT_DATA, CONF_EVENT_DATA_TEMPLATE]:
-            if conf in self._action:
-                try:
-                    event_data.update(
-                        template.render_complex(self._action[conf], self._variables)
-                    )
-                except exceptions.TemplateError as ex:
-                    self._log(
-                        "Error rendering event data template: %s",
-                        ex,
-                        level=logging.ERROR,
-                    )
+            if conf not in self._action:
+                continue
+
+            try:
+                event_data.update(
+                    template.render_complex(self._action[conf], self._variables)
+                )
+            except exceptions.TemplateError as ex:
+                self._log(
+                    "Error rendering event data template: %s", ex, level=logging.ERROR,
+                )
 
         self._hass.bus.async_fire(
             self._action[CONF_EVENT], event_data, context=self._context
