@@ -98,7 +98,6 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._password: Optional[str] = None
         self._ssl: Optional[bool] = DEFAULT_SSL
         self._discovery_name: Optional[str] = None
-        self._must_show_form: Optional[bool] = False
 
     async def async_step_zeroconf(self, discovery_info: DiscoveryInfoType):
         """Handle zeroconf discovery."""
@@ -128,7 +127,7 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="cannot_connect")
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
+            return self.async_abort(reason="unknown")
 
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context.update({"title_placeholders": {CONF_NAME: self._name}})
