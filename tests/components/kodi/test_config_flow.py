@@ -178,9 +178,7 @@ async def test_form_exception_ws(hass, user_flow):
     """Test we handle generic exception over WebSocket."""
     with patch(
         "homeassistant.components.kodi.config_flow.Kodi.ping", return_value=True,
-    ), patch.object(
-        MockWSConnection, "connect", side_effect=Exception,
-    ), patch(
+    ), patch.object(MockWSConnection, "connect", side_effect=Exception), patch(
         "homeassistant.components.kodi.config_flow.get_kodi_connection",
         new=get_kodi_connection,
     ):
