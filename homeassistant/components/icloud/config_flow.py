@@ -152,7 +152,7 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # If this is a password update attempt, update the entry instead of creating one
         if step_id == "user":
-            return self.async_create_entry(title=self._username, data=data,)
+            return self.async_create_entry(title=self._username, data=data)
 
         for entry in self.hass.config_entries.async_entries(DOMAIN):
             if entry.unique_id == self.unique_id:
