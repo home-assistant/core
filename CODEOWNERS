@@ -346,6 +346,7 @@ homeassistant/components/random/* @fabaff
 homeassistant/components/repetier/* @MTrab
 homeassistant/components/rfxtrx/* @danielhiversen @elupus
 homeassistant/components/ring/* @balloob
+homeassistant/components/risco/* @OnFreund
 homeassistant/components/rmvtransport/* @cgtobi
 homeassistant/components/roku/* @ctalkington
 homeassistant/components/roomba/* @pschmitt @cyr-ius @shenxn
