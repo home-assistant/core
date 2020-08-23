@@ -1,7 +1,10 @@
 """Support for Risco alarms."""
 import logging
 
-import homeassistant.components.alarm_control_panel as alarm
+from homeassistant.components.alarm_control_panel import (
+    FORMAT_NUMBER,
+    AlarmControlPanelEntity,
+)
 from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
     SUPPORT_ALARM_ARM_HOME,
@@ -47,7 +50,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, False)
 
 
-class RiscoAlarm(alarm.AlarmControlPanelEntity, RiscoEntity):
+class RiscoAlarm(AlarmControlPanelEntity, RiscoEntity):
     """Representation of a Risco partition."""
 
     def __init__(
@@ -112,7 +115,7 @@ class RiscoAlarm(alarm.AlarmControlPanelEntity, RiscoEntity):
     @property
     def code_format(self):
         """Return one or more digits/characters."""
-        return alarm.FORMAT_NUMBER
+        return FORMAT_NUMBER
 
     def _validate_code(self, code, state):
         """Validate given code."""
