@@ -22,7 +22,7 @@ import homeassistant.util.dt as dt_util
 
 from .const import CONF_TRACK_HOME, DOMAIN
 
-URL = "https://api.met.no/weatherapi/locationforecast/2.0/classic"
+URL = "https://api.met.no/weatherapi/locationforecast/2.0/complete"
 
 
 _LOGGER = logging.getLogger(__name__)
