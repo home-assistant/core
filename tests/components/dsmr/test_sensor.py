@@ -8,6 +8,7 @@ Entity to be updated with new values.
 import asyncio
 import datetime
 from decimal import Decimal
+import errno
 from itertools import chain, repeat
 
 import pytest
@@ -347,6 +348,28 @@ async def test_connection_errors_retry(hass, monkeypatch, mock_connection_factor
     # wait for sleep to resolve
     await hass.async_block_till_done()
     assert first_fail_connection_factory.call_count >= 2, "connecting not retried"
+
+
+async def test_connection_abort_error_retry(hass, monkeypatch, mock_connection_factory):
+    """Connection should be retried on connection abort error during setup."""
+    (connection_factory, transport, protocol) = mock_connection_factory
+
+    config = {"platform": "dsmr", "reconnect_interval": 0}
+
+    # override the mock to have it fail the first time and succeed after
+    first_fail_connection_factory = tests.async_mock.AsyncMock(
+        return_value=(transport, protocol),
+        side_effect=chain([OSError(errno.ECONNABORTED)], repeat(DEFAULT)),
+    )
+
+    monkeypatch.setattr(
+        "homeassistant.components.dsmr.sensor.create_dsmr_reader",
+        first_fail_connection_factory,
+    )
+    await async_setup_component(hass, "sensor", {"sensor": config})
+
+    # wait for sleep to resolve
+    await hass.async_block_till_done()
 
 
 async def test_reconnect(hass, monkeypatch, mock_connection_factory):
