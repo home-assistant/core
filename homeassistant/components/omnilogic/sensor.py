@@ -527,7 +527,7 @@ class OmnilogicSensor(Entity):
 
             if len(alarms_list) > 0:
                 self._state = "on"
-                self._attrs["Alarm"] = (
+                self.attrs["Alarm"] = (
                     alarms_list[0]["Message"] + " (" + alarms_list[0]["Comment"] + ")"
                 )
             else:
