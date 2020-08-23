@@ -13,6 +13,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, update_coordinator
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 
@@ -108,6 +109,48 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         """Handle Home Assistant stopping."""
         self._unsub_stop = None
         await self.shutdown()
+
+
+class ShellyBlockEntity(Entity):
+    """Helper class to represent a block."""
+
+    def __init__(self, wrapper, block):
+        """Initialize Shelly entity."""
+        self.wrapper = wrapper
+        self.block = block
+
+    @property
+    def name(self):
+        """Name of entity."""
+        return f"{self.wrapper.name} - {self.block.description}"
+
+    @property
+    def should_poll(self):
+        """If device should be polled."""
+        return False
+
+    @property
+    def device_info(self):
+        """Device info."""
+        return self.wrapper.device_info
+
+    @property
+    def available(self):
+        """Device info."""
+        return self.wrapper.last_update_success
+
+    @property
+    def unique_id(self):
+        """Return unique ID of entity."""
+        return f"{self.wrapper.mac}-{self.block.index}"
+
+    async def async_added_to_hass(self):
+        """When entity is added to HASS."""
+        self.async_on_remove(self.wrapper.async_add_listener(self.async_write_ha_state))
+
+    async def async_update(self):
+        """Update entity with latest info."""
+        await self.wrapper.async_request_refresh()
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
