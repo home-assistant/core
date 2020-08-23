@@ -365,7 +365,7 @@ blockchain==1.4.4
 # bme680==1.0.5
 
 # homeassistant.components.bom
-bomradarloop==0.1.4
+bomradarloop==0.1.5
 
 # homeassistant.components.bond
 bond-api==0.1.8
