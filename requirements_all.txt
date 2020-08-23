@@ -485,7 +485,7 @@ devolo-home-control-api==0.13.0
 directv==0.3.0
 
 # homeassistant.components.discogs
-discogs_client==2.2.2
+discogs_client==2.3.0
 
 # homeassistant.components.discord
 discord.py==1.4.1
