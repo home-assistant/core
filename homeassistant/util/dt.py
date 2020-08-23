@@ -52,7 +52,7 @@ def get_time_zone(time_zone_str: str) -> Optional[dt.tzinfo]:
 
 def utcnow() -> dt.datetime:
     """Get now in UTC time."""
-    return dt.datetime.now(UTC)
+    return dt.datetime.utcnow().replace(tzinfo=UTC)
 
 
 def now(time_zone: Optional[dt.tzinfo] = None) -> dt.datetime:
