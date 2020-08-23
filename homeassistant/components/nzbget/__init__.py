@@ -3,6 +3,7 @@ import asyncio
 from datetime import timedelta
 import logging
 
+from async_timeout import timeout
 from pynzbgetapi import NZBGetAPI, NZBGetAPIException
 import voluptuous as vol
 
@@ -223,8 +224,8 @@ class NZBGetDataUpdateCoordinator(DataUpdateCoordinator):
             }
 
         try:
-            data = await self.hass.async_add_executor_job(_update_data)
-            return data
+            async with timeout(3):
+                return await self.hass.async_add_executor_job(_update_data)
         except NZBGetAPIException as error:
             raise UpdateFailed(f"Invalid response from API: {error}")
 
