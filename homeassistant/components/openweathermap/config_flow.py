@@ -36,10 +36,6 @@ class OpenWeatherMapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
-    def __init__(self):
-        """Initialize."""
-        self._errors = {}
-
     @staticmethod
     @callback
     def async_get_options_flow(config_entry):
@@ -72,6 +68,22 @@ class OpenWeatherMapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=self._get_schema(), errors=errors,
         )
+
+    async def async_step_import(self, import_input=None):
+        """Set the config entry up from yaml."""
+        config = import_input.copy()
+        if CONF_NAME not in config:
+            config[CONF_NAME] = DEFAULT_NAME
+        if CONF_LATITUDE not in config:
+            config[CONF_LATITUDE] = self.hass.config.latitude
+        if CONF_LONGITUDE not in config:
+            config[CONF_LONGITUDE] = self.hass.config.longitude
+        if CONF_MODE not in config:
+            config[CONF_MODE] = DEFAULT_LANGUAGE
+        if CONF_LANGUAGE not in config:
+            config[CONF_LANGUAGE] = DEFAULT_LANGUAGE
+
+        return await self.async_step_user(config)
 
     def _get_schema(self):
         return vol.Schema(

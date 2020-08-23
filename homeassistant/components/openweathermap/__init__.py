@@ -4,7 +4,7 @@ import logging
 
 from pyowm import OWM
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
@@ -32,6 +32,15 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up the OpenWeatherMap component."""
+    hass.data.setdefault(DOMAIN, {})
+
+    weather_configs = _filter_domain_configs(config.get("weather", []), DOMAIN)
+    sensor_configs = _filter_domain_configs(config.get("sensor", []), DOMAIN)
+
+    if len(weather_configs) > 0:
+        _import_configs(hass, weather_configs)
+    else:
+        _import_configs(hass, sensor_configs)
     return True
 
 
@@ -98,6 +107,20 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         hass.data[DOMAIN].pop(config_entry.entry_id)
 
     return unload_ok
+
+
+def _import_configs(hass, configs):
+    for config in configs:
+        _LOGGER.debug("Importing OpenWeatherMap %s", config)
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_IMPORT}, data=config,
+            )
+        )
+
+
+def _filter_domain_configs(elements, domain):
+    return list(filter(lambda elem: elem["platform"] == domain, elements))
 
 
 def _get_config_value(config_entry, key):

@@ -10,7 +10,7 @@ from homeassistant.components.openweathermap.const import (
     DEFAULT_LANGUAGE,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
@@ -29,6 +29,8 @@ CONFIG = {
     CONF_MODE: DEFAULT_FORECAST_MODE,
     CONF_LANGUAGE: DEFAULT_LANGUAGE,
 }
+
+VALID_YAML_CONFIG = {CONF_API_KEY: "foo"}
 
 
 async def test_form(hass):
@@ -71,7 +73,36 @@ async def test_form(hass):
         assert result["data"][CONF_API_KEY] == CONFIG[CONF_API_KEY]
 
 
-async def test_options_form(hass):
+async def test_form_import(hass):
+    """Test we can import yaml config."""
+    mocked_owm = _create_mocked_owm(True)
+
+    with patch(
+        "homeassistant.components.openweathermap.config_flow.OWM",
+        return_value=mocked_owm,
+    ), patch(
+        "homeassistant.helpers.update_coordinator.DataUpdateCoordinator.async_refresh",
+        _async_refresh,
+    ), patch(
+        "homeassistant.components.openweathermap.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.openweathermap.async_setup_entry", return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=VALID_YAML_CONFIG.copy(),
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["data"][CONF_LATITUDE] == hass.config.latitude
+        assert result["data"][CONF_LONGITUDE] == hass.config.longitude
+        assert result["data"][CONF_API_KEY] == VALID_YAML_CONFIG[CONF_API_KEY]
+
+        await hass.async_block_till_done()
+        assert len(mock_setup.mock_calls) == 1
+        assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_options(hass):
     """Test that the options form."""
 
     config_entry = MockConfigEntry(
