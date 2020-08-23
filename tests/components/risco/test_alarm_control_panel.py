@@ -194,7 +194,7 @@ async def test_states(hass, two_part_alarm):
 
 
 async def _test_service_call(hass, service, method, entity_id, partition_id, **kwargs):
-    with patch("homeassistant.components.risco.RiscoAPI." + method) as set_mock:
+    with patch(f"homeassistant.components.risco.RiscoAPI.{method}") as set_mock:
         await _call_alarm_service(hass, service, entity_id, **kwargs)
         set_mock.assert_awaited_once_with(partition_id)
 
@@ -202,7 +202,7 @@ async def _test_service_call(hass, service, method, entity_id, partition_id, **k
 async def _test_no_service_call(
     hass, service, method, entity_id, partition_id, **kwargs
 ):
-    with patch("homeassistant.components.risco.RiscoAPI." + method) as set_mock:
+    with patch(f"homeassistant.components.risco.RiscoAPI.{method}") as set_mock:
         await _call_alarm_service(hass, service, entity_id, **kwargs)
         set_mock.assert_not_awaited()
 
