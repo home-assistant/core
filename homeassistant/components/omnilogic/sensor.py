@@ -8,7 +8,6 @@ from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT, UNIT_PERCENTAGE
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
-from .nested_lookup import nested_lookup
 
 TEMP_UNITS = [TEMP_CELSIUS, TEMP_FAHRENHEIT]
 PERCENT_UNITS = [UNIT_PERCENTAGE, UNIT_PERCENTAGE]
@@ -519,7 +518,7 @@ class OmnilogicSensor(Entity):
                 if backyard.get("systemId") == self.attrs["MspSystemId"]:
                     sensordata = backyard
 
-            all_alarms = nested_lookup("Alarms", sensordata, False, False)
+            all_alarms = sensordata["Alarms"]
 
             alarms_list = []
             for alarm_segment in all_alarms:
@@ -528,6 +527,9 @@ class OmnilogicSensor(Entity):
 
             if len(alarms_list) > 0:
                 self._state = "on"
+                self._attrs["Alarm"] = (
+                    alarms_list[0]["Message"] + " (" + alarms_list[0]["Comment"] + ")"
+                )
             else:
                 self._state = "off"
 
