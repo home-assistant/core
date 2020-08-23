@@ -57,7 +57,6 @@ from .const import (
     SIGNAL_ADD_ENTITIES,
     SIGNAL_GROUP_MEMBERSHIP_CHANGE,
     SIGNAL_REMOVE,
-    SIGNAL_REMOVE_GROUP,
     UNKNOWN_MANUFACTURER,
     UNKNOWN_MODEL,
     ZHA_GW_MSG,
@@ -298,13 +297,10 @@ class ZHAGateway:
         self._send_group_gateway_message(zigpy_group, ZHA_GW_MSG_GROUP_ADDED)
 
     def group_removed(self, zigpy_group: ZigpyGroupType) -> None:
-        """Handle zigpy group added event."""
+        """Handle zigpy group removed event."""
         self._send_group_gateway_message(zigpy_group, ZHA_GW_MSG_GROUP_REMOVED)
         zha_group = self._groups.pop(zigpy_group.group_id, None)
         zha_group.info("group_removed")
-        async_dispatcher_send(
-            self._hass, f"{SIGNAL_REMOVE_GROUP}_0x{zigpy_group.group_id:04x}"
-        )
         self._cleanup_group_entity_registry_entries(zigpy_group)
 
     def _send_group_gateway_message(
@@ -619,7 +615,7 @@ class ZHAGateway:
         if not group:
             _LOGGER.debug("Group: %s:0x%04x could not be found", group.name, group_id)
             return
-        if group and group.members:
+        if group.members:
             tasks = []
             for member in group.members:
                 tasks.append(member.async_remove_from_group())

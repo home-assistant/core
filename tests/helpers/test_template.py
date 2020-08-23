@@ -39,25 +39,22 @@ def render_to_info(hass, template_str, variables=None):
 def extract_entities(hass, template_str, variables=None):
     """Extract entities from a template."""
     info = render_to_info(hass, template_str, variables)
-    # pylint: disable=protected-access
-    assert not hasattr(info, "_domains")
-    return info._entities
+    return info.entities
 
 
 def assert_result_info(info, result, entities=None, domains=None, all_states=False):
     """Check result info."""
     assert info.result == result
-    # pylint: disable=protected-access
-    assert info._all_states == all_states
+    assert info.all_states == all_states
     assert info.filter_lifecycle("invalid_entity_name.somewhere") == all_states
     if entities is not None:
-        assert info._entities == frozenset(entities)
+        assert info.entities == frozenset(entities)
         assert all([info.filter(entity) for entity in entities])
         assert not info.filter("invalid_entity_name.somewhere")
     else:
-        assert not info._entities
+        assert not info.entities
     if domains is not None:
-        assert info._domains == frozenset(domains)
+        assert info.domains == frozenset(domains)
         assert all([info.filter_lifecycle(domain + ".entity") for domain in domains])
     else:
         assert not hasattr(info, "_domains")
@@ -1256,7 +1253,7 @@ async def test_closest_function_home_vs_group_entity_id(hass):
 
     info = render_to_info(hass, '{{ closest("group.location_group").entity_id }}')
     assert_result_info(
-        info, "test_domain.object", ["test_domain.object", "group.location_group"]
+        info, "test_domain.object", {"group.location_group", "test_domain.object"}
     )
 
 
@@ -1281,12 +1278,12 @@ async def test_closest_function_home_vs_group_state(hass):
 
     info = render_to_info(hass, '{{ closest("group.location_group").entity_id }}')
     assert_result_info(
-        info, "test_domain.object", ["test_domain.object", "group.location_group"]
+        info, "test_domain.object", {"group.location_group", "test_domain.object"}
     )
 
     info = render_to_info(hass, "{{ closest(states.group.location_group).entity_id }}")
     assert_result_info(
-        info, "test_domain.object", ["test_domain.object", "group.location_group"]
+        info, "test_domain.object", {"test_domain.object", "group.location_group"}
     )
 
 
@@ -1303,7 +1300,7 @@ async def test_expand(hass):
     info = render_to_info(
         hass, "{{ expand('test.object') | map(attribute='entity_id') | join(', ') }}"
     )
-    assert_result_info(info, "test.object", [])
+    assert_result_info(info, "test.object", ["test.object"])
 
     info = render_to_info(
         hass,
@@ -1322,26 +1319,45 @@ async def test_expand(hass):
         hass,
         "{{ expand('group.new_group') | map(attribute='entity_id') | join(', ') }}",
     )
-    assert_result_info(info, "test.object", ["group.new_group"])
+    assert_result_info(info, "test.object", {"group.new_group", "test.object"})
 
     info = render_to_info(
         hass, "{{ expand(states.group) | map(attribute='entity_id') | join(', ') }}"
     )
-    assert_result_info(info, "test.object", ["group.new_group"], ["group"])
+    assert_result_info(
+        info, "test.object", {"test.object", "group.new_group"}, ["group"]
+    )
 
     info = render_to_info(
         hass,
         "{{ expand('group.new_group', 'test.object')"
         " | map(attribute='entity_id') | join(', ') }}",
     )
-    assert_result_info(info, "test.object", ["group.new_group"])
+    assert_result_info(info, "test.object", {"test.object", "group.new_group"})
 
     info = render_to_info(
         hass,
         "{{ ['group.new_group', 'test.object'] | expand"
         " | map(attribute='entity_id') | join(', ') }}",
     )
-    assert_result_info(info, "test.object", ["group.new_group"])
+    assert_result_info(info, "test.object", {"test.object", "group.new_group"})
+
+    hass.states.async_set("sensor.power_1", 0)
+    hass.states.async_set("sensor.power_2", 200.2)
+    hass.states.async_set("sensor.power_3", 400.4)
+    await group.Group.async_create_group(
+        hass, "power sensors", ["sensor.power_1", "sensor.power_2", "sensor.power_3"]
+    )
+
+    info = render_to_info(
+        hass,
+        "{{ states.group.power_sensors.attributes.entity_id | expand | map(attribute='state')|map('float')|sum  }}",
+    )
+    assert_result_info(
+        info,
+        str(200.2 + 400.4),
+        {"group.power_sensors", "sensor.power_1", "sensor.power_2", "sensor.power_3"},
+    )
 
 
 def test_closest_function_to_coord(hass):
@@ -1388,6 +1404,198 @@ def test_closest_function_to_coord(hass):
     )
 
     assert tpl.async_render() == "test_domain.closest_zone"
+
+
+def test_async_render_to_info_with_branching(hass):
+    """Test async_render_to_info function by domain."""
+    hass.states.async_set("light.a", "off")
+    hass.states.async_set("light.b", "on")
+    hass.states.async_set("light.c", "off")
+
+    info = render_to_info(
+        hass,
+        """
+{% if states.light.a == "on" %}
+  {{ states.light.b.state }}
+{% else %}
+  {{ states.light.c.state }}
+{% endif %}
+""",
+    )
+    assert_result_info(info, "off", {"light.a", "light.c"})
+
+    info = render_to_info(
+        hass,
+        """
+            {% if states.light.a.state == "off" %}
+            {% set domain = "light" %}
+            {{ states[domain].b.state }}
+            {% endif %}
+""",
+    )
+    assert_result_info(info, "on", {"light.a", "light.b"})
+
+
+def test_async_render_to_info_with_complex_branching(hass):
+    """Test async_render_to_info function by domain."""
+    hass.states.async_set("light.a", "off")
+    hass.states.async_set("light.b", "on")
+    hass.states.async_set("light.c", "off")
+    hass.states.async_set("vacuum.a", "off")
+    hass.states.async_set("device_tracker.a", "off")
+    hass.states.async_set("device_tracker.b", "off")
+    hass.states.async_set("lock.a", "off")
+    hass.states.async_set("sensor.a", "off")
+    hass.states.async_set("binary_sensor.a", "off")
+
+    info = render_to_info(
+        hass,
+        """
+{% set domain = "vacuum" %}
+{%      if                 states.light.a == "on" %}
+  {{ states.light.b.state }}
+{% elif  states.light.a == "on" %}
+  {{ states.device_tracker }}
+{%     elif     states.light.a == "on" %}
+  {{ states[domain] | list }}
+{%         elif     states('light.b') == "on" %}
+  {{ states[otherdomain] | map(attribute='entity_id') | list }}
+{% elif states.light.a == "on" %}
+  {{ states["nonexist"] | list }}
+{% else %}
+  else
+{% endif %}
+""",
+        {"otherdomain": "sensor"},
+    )
+
+    assert_result_info(info, "['sensor.a']", {"light.a", "light.b"}, {"sensor"})
+
+
+async def test_async_render_to_info_with_wildcard_matching_entity_id(hass):
+    """Test tracking template with a wildcard."""
+    template_complex_str = r"""
+
+{% for state in states %}
+  {% if state.entity_id | regex_match('.*\.office_') %}
+    {{ state.entity_id }}={{ state.state }}
+  {% endif %}
+{% endfor %}
+
+"""
+    hass.states.async_set("cover.office_drapes", "closed")
+    hass.states.async_set("cover.office_window", "closed")
+    hass.states.async_set("cover.office_skylight", "open")
+    info = render_to_info(hass, template_complex_str)
+
+    assert not info.domains
+    assert info.entities == {
+        "cover.office_drapes",
+        "cover.office_window",
+        "cover.office_skylight",
+    }
+    assert info.all_states is True
+
+
+async def test_async_render_to_info_with_wildcard_matching_state(hass):
+    """Test tracking template with a wildcard."""
+    template_complex_str = """
+
+{% for state in states %}
+  {% if state.state | regex_match('ope.*') %}
+    {{ state.entity_id }}={{ state.state }}
+  {% endif %}
+{% endfor %}
+
+"""
+    hass.states.async_set("cover.office_drapes", "closed")
+    hass.states.async_set("cover.office_window", "closed")
+    hass.states.async_set("cover.office_skylight", "open")
+    hass.states.async_set("cover.x_skylight", "open")
+    hass.states.async_set("binary_sensor.door", "open")
+
+    info = render_to_info(hass, template_complex_str)
+
+    assert not info.domains
+    assert info.entities == {
+        "cover.x_skylight",
+        "binary_sensor.door",
+        "cover.office_drapes",
+        "cover.office_window",
+        "cover.office_skylight",
+    }
+    assert info.all_states is True
+
+    hass.states.async_set("binary_sensor.door", "closed")
+    info = render_to_info(hass, template_complex_str)
+
+    assert not info.domains
+    assert info.entities == {
+        "cover.x_skylight",
+        "binary_sensor.door",
+        "cover.office_drapes",
+        "cover.office_window",
+        "cover.office_skylight",
+    }
+    assert info.all_states is True
+
+    template_cover_str = """
+
+{% for state in states.cover %}
+  {% if state.state | regex_match('ope.*') %}
+    {{ state.entity_id }}={{ state.state }}
+  {% endif %}
+{% endfor %}
+
+"""
+    hass.states.async_set("cover.x_skylight", "closed")
+    info = render_to_info(hass, template_cover_str)
+
+    assert info.domains == {"cover"}
+    assert info.entities == {
+        "cover.x_skylight",
+        "cover.office_drapes",
+        "cover.office_window",
+        "cover.office_skylight",
+    }
+    assert info.all_states is False
+
+
+def test_nested_async_render_to_info_case(hass):
+    """Test a deeply nested state with async_render_to_info."""
+
+    hass.states.async_set("input_select.picker", "vacuum.a")
+    hass.states.async_set("vacuum.a", "off")
+
+    info = render_to_info(
+        hass, "{{ states[states['input_select.picker'].state].state }}", {}
+    )
+    assert_result_info(info, "off", {"input_select.picker", "vacuum.a"})
+
+
+def test_result_as_boolean(hass):
+    """Test converting a template result to a boolean."""
+
+    template.result_as_boolean(True) is True
+    template.result_as_boolean(" 1 ") is True
+    template.result_as_boolean(" true ") is True
+    template.result_as_boolean(" TrUE ") is True
+    template.result_as_boolean(" YeS ") is True
+    template.result_as_boolean(" On ") is True
+    template.result_as_boolean(" Enable ") is True
+    template.result_as_boolean(1) is True
+    template.result_as_boolean(-1) is True
+    template.result_as_boolean(500) is True
+
+    template.result_as_boolean(False) is False
+    template.result_as_boolean(" 0 ") is False
+    template.result_as_boolean(" false ") is False
+    template.result_as_boolean(" FaLsE ") is False
+    template.result_as_boolean(" no ") is False
+    template.result_as_boolean(" off ") is False
+    template.result_as_boolean(" disable ") is False
+    template.result_as_boolean(0) is False
+    template.result_as_boolean(None) is False
 
 
 def test_closest_function_to_entity_id(hass):
@@ -1558,13 +1766,16 @@ def test_extract_entities_none_exclude_stuff(hass):
 
     assert (
         template.extract_entities(
-            hass, "{{ closest(states.zone.far_away, states.test_domain).entity_id }}"
+            hass,
+            "{{ closest(states.zone.far_away, states.test_domain.xxx).entity_id }}",
         )
         == MATCH_ALL
     )
 
     assert (
-        template.extract_entities(hass, '{{ distance("123", states.test_object_2) }}')
+        template.extract_entities(
+            hass, '{{ distance("123", states.test_object_2.user) }}'
+        )
         == MATCH_ALL
     )
 
@@ -1673,6 +1884,42 @@ def test_generate_select(hass):
     )
 
 
+async def test_async_render_to_info_in_conditional(hass):
+    """Test extract entities function with none entities stuff."""
+    template_str = """
+{{ states("sensor.xyz") == "dog" }}
+        """
+
+    tmp = template.Template(template_str, hass)
+    info = tmp.async_render_to_info()
+    assert_result_info(info, "False", ["sensor.xyz"], [])
+
+    hass.states.async_set("sensor.xyz", "dog")
+    hass.states.async_set("sensor.cow", "True")
+    await hass.async_block_till_done()
+
+    template_str = """
+{% if states("sensor.xyz") == "dog" %}
+  {{ states("sensor.cow") }}
+{% else %}
+  {{ states("sensor.pig") }}
+{% endif %}
+        """
+
+    tmp = template.Template(template_str, hass)
+    info = tmp.async_render_to_info()
+    assert_result_info(info, "True", ["sensor.xyz", "sensor.cow"], [])
+
+    hass.states.async_set("sensor.xyz", "sheep")
+    hass.states.async_set("sensor.pig", "oink")
+
+    await hass.async_block_till_done()
+
+    tmp = template.Template(template_str, hass)
+    info = tmp.async_render_to_info()
+    assert_result_info(info, "oink", ["sensor.xyz", "sensor.pig"], [])
+
+
 async def test_extract_entities_match_entities(hass):
     """Test extract entities function with entities stuff."""
     assert (
@@ -1739,8 +1986,8 @@ Hercules you power goes done!.
             hass,
             """
 {{
-states.sensor.pick_temperature.state ~ „°C (“ ~
-states.sensor.pick_humidity.state ~ „ %“
+states.sensor.pick_temperature.state ~ "°C (" ~
+states.sensor.pick_humidity.state ~ " %"
 }}
         """,
         )
@@ -1771,10 +2018,14 @@ states.sensor.pick_humidity.state ~ „ %“
             hass, "{{ expand('group.expand_group') | list | length }}"
         )
     )
-
     assert ["test_domain.entity"] == template.Template(
         '{{ is_state("test_domain.entity", "on") }}', hass
     ).extract_entities()
+
+    # No expand, extract finds the group
+    assert template.extract_entities(hass, "{{ states('group.empty_group') }}") == [
+        "group.empty_group"
+    ]
 
 
 def test_extract_entities_with_variables(hass):

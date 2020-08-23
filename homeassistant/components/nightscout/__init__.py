@@ -11,6 +11,7 @@ from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import SLOW_UPDATE_WARNING
 
 from .const import DOMAIN
@@ -29,8 +30,8 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Nightscout from a config entry."""
     server_url = entry.data[CONF_URL]
-
-    api = NightscoutAPI(server_url)
+    session = async_get_clientsession(hass)
+    api = NightscoutAPI(server_url, session=session)
     try:
         status = await api.get_server_status()
     except (ClientError, AsyncIOTimeoutError, OSError) as error:

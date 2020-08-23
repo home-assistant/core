@@ -331,7 +331,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
     async def async_turn_on(self):
         """Turn on the media player."""
         if self._on_script:
-            await self._on_script.async_run()
+            await self._on_script.async_run(context=self._context)
 
     @cmd
     async def async_volume_up(self):

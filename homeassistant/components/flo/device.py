@@ -138,6 +138,40 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
         """Return the serial number for the device."""
         return self._device_information["serialNumber"]
 
+    @property
+    def pending_info_alerts_count(self) -> int:
+        """Return the number of pending info alerts for the device."""
+        return self._device_information["notifications"]["pending"]["infoCount"]
+
+    @property
+    def pending_warning_alerts_count(self) -> int:
+        """Return the number of pending warning alerts for the device."""
+        return self._device_information["notifications"]["pending"]["warningCount"]
+
+    @property
+    def pending_critical_alerts_count(self) -> int:
+        """Return the number of pending critical alerts for the device."""
+        return self._device_information["notifications"]["pending"]["criticalCount"]
+
+    @property
+    def has_alerts(self) -> bool:
+        """Return True if any alert counts are greater than zero."""
+        return bool(
+            self.pending_info_alerts_count
+            or self.pending_warning_alerts_count
+            or self.pending_warning_alerts_count
+        )
+
+    @property
+    def last_known_valve_state(self) -> str:
+        """Return the last known valve state for the device."""
+        return self._device_information["valve"]["lastKnown"]
+
+    @property
+    def target_valve_state(self) -> str:
+        """Return the target valve state for the device."""
+        return self._device_information["valve"]["target"]
+
     async def _update_device(self, *_) -> None:
         """Update the device information from the API."""
         self._device_information = await self.api_client.device.get_info(

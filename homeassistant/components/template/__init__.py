@@ -1,60 +1,66 @@
 """The template component."""
 
-from itertools import chain
 import logging
 
-from homeassistant.const import MATCH_ALL
+from homeassistant import config as conf_util
+from homeassistant.const import SERVICE_RELOAD
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_per_platform, entity_platform
+from homeassistant.loader import async_get_integration
+
+from .const import DOMAIN, EVENT_TEMPLATE_RELOADED, PLATFORM_STORAGE_KEY
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def initialise_templates(hass, templates, attribute_templates=None):
-    """Initialise templates and attribute templates."""
-    if attribute_templates is None:
-        attribute_templates = {}
-    for template in chain(templates.values(), attribute_templates.values()):
-        if template is None:
-            continue
-        template.hass = hass
+async def _async_setup_reload_service(hass):
+    if hass.services.has_service(DOMAIN, SERVICE_RELOAD):
+        return
 
+    async def _reload_config(call):
+        """Reload the template platform config."""
 
-def extract_entities(
-    device_name, device_type, manual_entity_ids, templates, attribute_templates=None
-):
-    """Extract entity ids from templates and attribute templates."""
-    if attribute_templates is None:
-        attribute_templates = {}
-    entity_ids = set()
-    if manual_entity_ids is None:
-        invalid_templates = []
-        for template_name, template in chain(
-            templates.items(), attribute_templates.items()
-        ):
-            if template is None:
+        try:
+            unprocessed_conf = await conf_util.async_hass_config_yaml(hass)
+        except HomeAssistantError as err:
+            _LOGGER.error(err)
+            return
+
+        for platform in hass.data[PLATFORM_STORAGE_KEY]:
+
+            integration = await async_get_integration(hass, platform.domain)
+
+            conf = await conf_util.async_process_component_config(
+                hass, unprocessed_conf, integration
+            )
+
+            if not conf:
                 continue
 
-            template_entity_ids = template.extract_entities()
+            await platform.async_reset()
 
-            if template_entity_ids != MATCH_ALL:
-                entity_ids |= set(template_entity_ids)
-            else:
-                invalid_templates.append(template_name.replace("_template", ""))
+            # Extract only the config for template, ignore the rest.
+            for p_type, p_config in config_per_platform(conf, platform.domain):
+                if p_type != DOMAIN:
+                    continue
 
-        entity_ids = list(entity_ids)
+                entities = await platform.platform.async_create_entities(hass, p_config)
 
-        if invalid_templates:
-            if not entity_ids:
-                entity_ids = MATCH_ALL
-            _LOGGER.warning(
-                "Template %s '%s' has no entity ids configured to track nor"
-                " were we able to extract the entities to track from the %s "
-                "template(s). This entity will only be able to be updated "
-                "manually",
-                device_type,
-                device_name,
-                ", ".join(invalid_templates),
-            )
-    else:
-        entity_ids = manual_entity_ids
+                await platform.async_add_entities(entities)
 
-    return entity_ids
+        hass.bus.async_fire(EVENT_TEMPLATE_RELOADED, context=call.context)
+
+    hass.helpers.service.async_register_admin_service(
+        DOMAIN, SERVICE_RELOAD, _reload_config
+    )
+
+
+async def async_setup_platform_reloadable(hass):
+    """Template platform with reloadability."""
+
+    await _async_setup_reload_service(hass)
+
+    platform = entity_platform.current_platform.get()
+
+    if platform not in hass.data.setdefault(PLATFORM_STORAGE_KEY, []):
+        hass.data[PLATFORM_STORAGE_KEY].append(platform)

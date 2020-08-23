@@ -71,7 +71,7 @@ KONN_PANEL_MODEL_NAMES = {
 }
 
 OPTIONS_IO_ANY = vol.In([CONF_IO_DIS, CONF_IO_BIN, CONF_IO_DIG, CONF_IO_SWI])
-OPTIONS_IO_INPUT_ONLY = vol.In([CONF_IO_DIS, CONF_IO_BIN, CONF_IO_DIG])
+OPTIONS_IO_INPUT_ONLY = vol.In([CONF_IO_DIS, CONF_IO_BIN])
 OPTIONS_IO_OUTPUT_ONLY = vol.In([CONF_IO_DIS, CONF_IO_SWI])
 
 
@@ -161,7 +161,7 @@ CONFIG_ENTRY_SCHEMA = vol.Schema(
 
 
 class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for NEW_NAME."""
+    """Handle a config flow for Konnected Panels."""
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
@@ -810,6 +810,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             step_id="options_misc",
             data_schema=vol.Schema(
                 {
+                    vol.Required(
+                        CONF_DISCOVERY,
+                        default=self.current_opt.get(CONF_DISCOVERY, True),
+                    ): bool,
                     vol.Required(
                         CONF_BLINK, default=self.current_opt.get(CONF_BLINK, True)
                     ): bool,

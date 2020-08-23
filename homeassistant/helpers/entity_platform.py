@@ -6,7 +6,7 @@ from logging import Logger
 from types import ModuleType
 from typing import TYPE_CHECKING, Callable, Coroutine, Dict, Iterable, List, Optional
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant import config_entries
 from homeassistant.const import DEVICE_DEFAULT_NAME
 from homeassistant.core import (
     CALLBACK_TYPE,
@@ -30,8 +30,8 @@ if TYPE_CHECKING:
 
 SLOW_SETUP_WARNING = 10
 SLOW_SETUP_MAX_WAIT = 60
-SLOW_ADD_ENTITY_MAX_WAIT = 10  # Per Entity
-SLOW_ADD_MIN_TIMEOUT = 60
+SLOW_ADD_ENTITY_MAX_WAIT = 15  # Per Entity
+SLOW_ADD_MIN_TIMEOUT = 500
 
 PLATFORM_NOT_READY_RETRIES = 10
 DATA_ENTITY_PLATFORM = "entity_platform"
@@ -60,7 +60,7 @@ class EntityPlatform:
         self.platform = platform
         self.scan_interval = scan_interval
         self.entity_namespace = entity_namespace
-        self.config_entry: Optional[ConfigEntry] = None
+        self.config_entry: Optional[config_entries.ConfigEntry] = None
         self.entities: Dict[str, Entity] = {}  # pylint: disable=used-before-assignment
         self._tasks: List[asyncio.Future] = []
         # Method to cancel the state change listener
@@ -149,7 +149,7 @@ class EntityPlatform:
 
         await self._async_setup_platform(async_create_setup_task)
 
-    async def async_setup_entry(self, config_entry: ConfigEntry) -> bool:
+    async def async_setup_entry(self, config_entry: config_entries.ConfigEntry) -> bool:
         """Set up the platform from a config entry."""
         # Store it so that we can save config entry ID in entity registry
         self.config_entry = config_entry
@@ -332,10 +332,10 @@ class EntityPlatform:
         if entity is None:
             raise ValueError("Entity cannot be None")
 
-        entity.hass = self.hass
-        entity.platform = self
-        entity.parallel_updates = self._get_parallel_updates_semaphore(
-            hasattr(entity, "async_update")
+        entity.add_to_platform_start(
+            self.hass,
+            self,
+            self._get_parallel_updates_semaphore(hasattr(entity, "async_update")),
         )
 
         # Update properties before we generate the entity_id
@@ -344,8 +344,7 @@ class EntityPlatform:
                 await entity.async_device_update(warning=False)
             except Exception:  # pylint: disable=broad-except
                 self.logger.exception("%s: Error on device update!", self.platform_name)
-                entity.hass = None
-                entity.platform = None
+                entity.add_to_platform_abort()
                 return
 
         requested_entity_id = None
@@ -378,6 +377,9 @@ class EntityPlatform:
                     "manufacturer",
                     "model",
                     "name",
+                    "default_manufacturer",
+                    "default_model",
+                    "default_name",
                     "sw_version",
                     "entry_type",
                     "via_device",
@@ -420,8 +422,7 @@ class EntityPlatform:
                     or entity.name
                     or f'"{self.platform_name} {entity.unique_id}"',
                 )
-                entity.hass = None
-                entity.platform = None
+                entity.add_to_platform_abort()
                 return
 
         # We won't generate an entity ID if the platform has already set one
@@ -447,8 +448,7 @@ class EntityPlatform:
 
         # Make sure it is valid in case an entity set the value themselves
         if not valid_entity_id(entity.entity_id):
-            entity.hass = None
-            entity.platform = None
+            entity.add_to_platform_abort()
             raise HomeAssistantError(f"Invalid entity id: {entity.entity_id}")
 
         already_exists = entity.entity_id in self.entities
@@ -469,18 +469,14 @@ class EntityPlatform:
             else:
                 msg = f"Entity id already exists - ignoring: {entity.entity_id}"
             self.logger.error(msg)
-            entity.hass = None
-            entity.platform = None
+            entity.add_to_platform_abort()
             return
 
         entity_id = entity.entity_id
         self.entities[entity_id] = entity
         entity.async_on_remove(lambda: self.entities.pop(entity_id))
 
-        await entity.async_internal_added_to_hass()
-        await entity.async_added_to_hass()
-
-        entity.async_write_ha_state()
+        await entity.add_to_platform_finish()
 
     async def async_reset(self) -> None:
         """Remove all entities and reset data.

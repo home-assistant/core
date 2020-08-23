@@ -22,6 +22,7 @@ from homeassistant.components import (
 from homeassistant.components.emulated_hue import Config, hue_api
 from homeassistant.components.emulated_hue.hue_api import (
     HUE_API_STATE_BRI,
+    HUE_API_STATE_BRI_MAX,
     HUE_API_STATE_CT,
     HUE_API_STATE_HUE,
     HUE_API_STATE_ON,
@@ -95,7 +96,7 @@ def hass_hue(loop, hass):
         )
     )
 
-    with patch("homeassistant.components.emulated_hue.UPNPResponderThread"):
+    with patch("homeassistant.components.emulated_hue.create_upnp_datagram_endpoint"):
         loop.run_until_complete(
             setup.async_setup_component(
                 hass,
@@ -282,6 +283,12 @@ async def test_light_without_brightness_supported(hass_hue, hue_client):
     assert light_without_brightness_json["state"][HUE_API_STATE_ON] is True
     assert light_without_brightness_json["type"] == "On/Off light"
 
+    # BRI required for alexa compat
+    assert (
+        light_without_brightness_json["state"][HUE_API_STATE_BRI]
+        == HUE_API_STATE_BRI_MAX
+    )
+
 
 async def test_light_without_brightness_can_be_turned_off(hass_hue, hue_client):
     """Test that light without brightness can be turned off."""
@@ -466,6 +473,24 @@ async def test_discover_config(hue_client):
     # Make sure the device announces a link button
     assert "linkbutton" in config_json
     assert config_json["linkbutton"] is True
+
+    # Test without username
+    result = await hue_client.get("/api/config")
+
+    assert result.status == 200
+    assert "application/json" in result.headers["content-type"]
+
+    config_json = await result.json()
+    assert "error" not in config_json
+
+    # Test with wrong username username
+    result = await hue_client.get("/api/wronguser/config")
+
+    assert result.status == 200
+    assert "application/json" in result.headers["content-type"]
+
+    config_json = await result.json()
+    assert "error" not in config_json
 
 
 async def test_get_light_state(hass_hue, hue_client):
@@ -1177,7 +1202,6 @@ async def test_unauthorized_user_blocked(hue_client):
     """Test unauthorized_user blocked."""
     getUrls = [
         "/api/wronguser",
-        "/api/wronguser/config",
     ]
     for getUrl in getUrls:
         result = await hue_client.get(getUrl)

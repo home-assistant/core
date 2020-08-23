@@ -1,18 +1,27 @@
 """Commands part of Websocket API."""
 import asyncio
+import logging
 
 import voluptuous as vol
 
-from homeassistant.auth.permissions.const import POLICY_READ
+from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_READ
+from homeassistant.components.websocket_api.const import ERR_NOT_FOUND
 from homeassistant.const import EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_ALL
 from homeassistant.core import DOMAIN as HASS_DOMAIN, callback
-from homeassistant.exceptions import HomeAssistantError, ServiceNotFound, Unauthorized
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    ServiceNotFound,
+    TemplateError,
+    Unauthorized,
+)
+from homeassistant.helpers import config_validation as cv, entity
+from homeassistant.helpers.event import async_track_template_result
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.loader import IntegrationNotFound, async_get_integration
 
 from . import const, decorators, messages
+
+_LOGGER = logging.getLogger(__name__)
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 
@@ -30,6 +39,7 @@ def async_register_commands(hass, async_reg):
     async_reg(hass, handle_render_template)
     async_reg(hass, handle_manifest_list)
     async_reg(hass, handle_manifest_get)
+    async_reg(hass, handle_entity_source)
 
 
 def pong_message(iden):
@@ -242,24 +252,66 @@ def handle_render_template(hass, connection, msg):
 
     variables = msg.get("variables")
 
-    entity_ids = msg.get("entity_ids")
-    if entity_ids is None:
-        entity_ids = template.extract_entities(variables)
-
     @callback
-    def state_listener(*_):
-        connection.send_message(
-            messages.event_message(
-                msg["id"], {"result": template.async_render(variables)}
+    def _template_listener(event, template, last_result, result):
+        if isinstance(result, TemplateError):
+            _LOGGER.error(
+                "TemplateError('%s') " "while processing template '%s'",
+                result,
+                template,
             )
-        )
 
-    if entity_ids and entity_ids != MATCH_ALL:
-        connection.subscriptions[msg["id"]] = async_track_state_change_event(
-            hass, entity_ids, state_listener
-        )
-    else:
-        connection.subscriptions[msg["id"]] = lambda: None
+            result = None
+
+        connection.send_message(messages.event_message(msg["id"], {"result": result}))
+
+    info = async_track_template_result(hass, template, _template_listener, variables)
+
+    connection.subscriptions[msg["id"]] = info.async_remove
 
     connection.send_result(msg["id"])
-    state_listener()
+
+    hass.loop.call_soon_threadsafe(info.async_refresh)
+
+
+@callback
+@decorators.websocket_command(
+    {vol.Required("type"): "entity/source", vol.Optional("entity_id"): [cv.entity_id]}
+)
+def handle_entity_source(hass, connection, msg):
+    """Handle entity source command."""
+    raw_sources = entity.entity_sources(hass)
+    entity_perm = connection.user.permissions.check_entity
+
+    if "entity_id" not in msg:
+        if connection.user.permissions.access_all_entities("read"):
+            sources = raw_sources
+        else:
+            sources = {
+                entity_id: source
+                for entity_id, source in raw_sources.items()
+                if entity_perm(entity_id, "read")
+            }
+
+        connection.send_message(messages.result_message(msg["id"], sources))
+        return
+
+    sources = {}
+
+    for entity_id in msg["entity_id"]:
+        if not entity_perm(entity_id, "read"):
+            raise Unauthorized(
+                context=connection.context(msg),
+                permission=POLICY_READ,
+                perm_category=CAT_ENTITIES,
+            )
+
+        source = raw_sources.get(entity_id)
+
+        if source is None:
+            connection.send_error(msg["id"], ERR_NOT_FOUND, "Entity not found")
+            return
+
+        sources[entity_id] = source
+
+    connection.send_result(msg["id"], sources)

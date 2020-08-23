@@ -11,6 +11,7 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.components.person import ATTR_SOURCE, ATTR_USER_ID, DOMAIN
 from homeassistant.const import (
+    ATTR_ENTITY_PICTURE,
     ATTR_GPS_ACCURACY,
     ATTR_ID,
     ATTR_LATITUDE,
@@ -24,7 +25,7 @@ from homeassistant.helpers import collection, entity_registry
 from homeassistant.setup import async_setup_component
 
 from tests.async_mock import patch
-from tests.common import assert_setup_component, mock_component, mock_restore_cache
+from tests.common import mock_component, mock_restore_cache
 
 DEVICE_TRACKER = "device_tracker.test_tracker"
 DEVICE_TRACKER_2 = "device_tracker.test_tracker_2"
@@ -67,8 +68,7 @@ def storage_setup(hass, hass_storage, hass_admin_user):
 async def test_minimal_setup(hass):
     """Test minimal config with only name."""
     config = {DOMAIN: {"id": "1234", "name": "test person"}}
-    with assert_setup_component(1):
-        assert await async_setup_component(hass, DOMAIN, config)
+    assert await async_setup_component(hass, DOMAIN, config)
 
     state = hass.states.get("person.test_person")
     assert state.state == STATE_UNKNOWN
@@ -76,6 +76,7 @@ async def test_minimal_setup(hass):
     assert state.attributes.get(ATTR_LONGITUDE) is None
     assert state.attributes.get(ATTR_SOURCE) is None
     assert state.attributes.get(ATTR_USER_ID) is None
+    assert state.attributes.get(ATTR_ENTITY_PICTURE) is None
 
 
 async def test_setup_no_id(hass):
@@ -94,8 +95,7 @@ async def test_setup_user_id(hass, hass_admin_user):
     """Test config with user id."""
     user_id = hass_admin_user.id
     config = {DOMAIN: {"id": "1234", "name": "test person", "user_id": user_id}}
-    with assert_setup_component(1):
-        assert await async_setup_component(hass, DOMAIN, config)
+    assert await async_setup_component(hass, DOMAIN, config)
 
     state = hass.states.get("person.test_person")
     assert state.state == STATE_UNKNOWN
@@ -115,8 +115,7 @@ async def test_valid_invalid_user_ids(hass, hass_admin_user):
             {"id": "5678", "name": "test bad user", "user_id": "bad_user_id"},
         ]
     }
-    with assert_setup_component(2):
-        assert await async_setup_component(hass, DOMAIN, config)
+    assert await async_setup_component(hass, DOMAIN, config)
 
     state = hass.states.get("person.test_valid_user")
     assert state.state == STATE_UNKNOWN
@@ -141,8 +140,7 @@ async def test_setup_tracker(hass, hass_admin_user):
             "device_trackers": DEVICE_TRACKER,
         }
     }
-    with assert_setup_component(1):
-        assert await async_setup_component(hass, DOMAIN, config)
+    assert await async_setup_component(hass, DOMAIN, config)
 
     state = hass.states.get("person.tracked_person")
     assert state.state == STATE_UNKNOWN
@@ -198,8 +196,7 @@ async def test_setup_two_trackers(hass, hass_admin_user):
             "device_trackers": [DEVICE_TRACKER, DEVICE_TRACKER_2],
         }
     }
-    with assert_setup_component(1):
-        assert await async_setup_component(hass, DOMAIN, config)
+    assert await async_setup_component(hass, DOMAIN, config)
 
     state = hass.states.get("person.tracked_person")
     assert state.state == STATE_UNKNOWN
@@ -285,8 +282,7 @@ async def test_ignore_unavailable_states(hass, hass_admin_user):
             "device_trackers": [DEVICE_TRACKER, DEVICE_TRACKER_2],
         }
     }
-    with assert_setup_component(1):
-        assert await async_setup_component(hass, DOMAIN, config)
+    assert await async_setup_component(hass, DOMAIN, config)
 
     state = hass.states.get("person.tracked_person")
     assert state.state == STATE_UNKNOWN
@@ -337,10 +333,10 @@ async def test_restore_home_state(hass, hass_admin_user):
             "name": "tracked person",
             "user_id": user_id,
             "device_trackers": DEVICE_TRACKER,
+            "picture": "/bla",
         }
     }
-    with assert_setup_component(1):
-        assert await async_setup_component(hass, DOMAIN, config)
+    assert await async_setup_component(hass, DOMAIN, config)
 
     state = hass.states.get("person.tracked_person")
     assert state.state == "home"
@@ -350,6 +346,7 @@ async def test_restore_home_state(hass, hass_admin_user):
     # When restoring state the entity_id of the person will be used as source.
     assert state.attributes.get(ATTR_SOURCE) == "person.tracked_person"
     assert state.attributes.get(ATTR_USER_ID) == user_id
+    assert state.attributes.get(ATTR_ENTITY_PICTURE) == "/bla"
 
 
 async def test_duplicate_ids(hass, hass_admin_user):
@@ -360,8 +357,7 @@ async def test_duplicate_ids(hass, hass_admin_user):
             {"id": "1234", "name": "test user 2"},
         ]
     }
-    with assert_setup_component(2):
-        assert await async_setup_component(hass, DOMAIN, config)
+    assert await async_setup_component(hass, DOMAIN, config)
 
     assert len(hass.states.async_entity_ids("person")) == 1
     assert hass.states.get("person.test_user_1") is not None
@@ -371,8 +367,7 @@ async def test_duplicate_ids(hass, hass_admin_user):
 async def test_create_person_during_run(hass):
     """Test that person is updated if created while hass is running."""
     config = {DOMAIN: {}}
-    with assert_setup_component(0):
-        assert await async_setup_component(hass, DOMAIN, config)
+    assert await async_setup_component(hass, DOMAIN, config)
     hass.states.async_set(DEVICE_TRACKER, "home")
     await hass.async_block_till_done()
 
@@ -465,6 +460,7 @@ async def test_ws_create(hass, hass_ws_client, storage_setup, hass_read_only_use
             "name": "Hello",
             "device_trackers": [DEVICE_TRACKER],
             "user_id": hass_read_only_user.id,
+            "picture": "/bla",
         }
     )
     resp = await client.receive_json()
@@ -529,6 +525,7 @@ async def test_ws_update(hass, hass_ws_client, storage_setup):
             "name": "Updated Name",
             "device_trackers": [DEVICE_TRACKER_2],
             "user_id": None,
+            "picture": "/bla",
         }
     )
     resp = await client.receive_json()
@@ -542,6 +539,7 @@ async def test_ws_update(hass, hass_ws_client, storage_setup):
     assert persons[0]["name"] == "Updated Name"
     assert persons[0]["device_trackers"] == [DEVICE_TRACKER_2]
     assert persons[0]["user_id"] is None
+    assert persons[0]["picture"] == "/bla"
 
     state = hass.states.get("person.tracked_person")
     assert state.name == "Updated Name"
