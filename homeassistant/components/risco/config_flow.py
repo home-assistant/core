@@ -13,7 +13,12 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN  # pylint:disable=unused-import
+from .const import (
+    CONF_CODE_ARM_REQUIRED,
+    CONF_CODE_DISARM_REQUIRED,
+    DEFAULT_SCAN_INTERVAL,
+)
+from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,17 +84,28 @@ class RiscoOptionsFlowHandler(config_entries.OptionsFlow):
         """Initialize."""
         self.config_entry = config_entry
 
+    def _options_schema(self):
+        scan_interval = self.config_entry.options.get(
+            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+        )
+        code_arm_required = self.config_entry.options.get(CONF_CODE_ARM_REQUIRED, False)
+        code_disarm_required = self.config_entry.options.get(
+            CONF_CODE_DISARM_REQUIRED, False
+        )
+
+        return vol.Schema(
+            {
+                vol.Required(CONF_SCAN_INTERVAL, default=scan_interval): int,
+                vol.Required(CONF_CODE_ARM_REQUIRED, default=code_arm_required): bool,
+                vol.Required(
+                    CONF_CODE_DISARM_REQUIRED, default=code_disarm_required
+                ): bool,
+            }
+        )
+
     async def async_step_init(self, user_input=None):
         """Manage the options."""
         if user_input is not None:
-            return self.async_create_entry(
-                title="", data={CONF_SCAN_INTERVAL: user_input[CONF_SCAN_INTERVAL]}
-            )
+            return self.async_create_entry(title="", data=user_input)
 
-        current = self.config_entry.options.get(
-            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-        )
-
-        options = vol.Schema({vol.Required(CONF_SCAN_INTERVAL, default=current): int})
-
-        return self.async_show_form(step_id="init", data_schema=options)
+        return self.async_show_form(step_id="init", data_schema=self._options_schema())

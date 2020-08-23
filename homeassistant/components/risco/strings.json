@@ -23,7 +23,9 @@
       "init": {
         "title": "Configure options",
         "data": {
-          "scan_interval": "How often to poll Risco (in seconds)"
+          "scan_interval": "How often to poll Risco (in seconds)",
+          "code_arm_required": "Require pin code to arm",
+          "code_disarm_required": "Require pin code to disarm"
         }
       }
     }

@@ -33,6 +33,8 @@ TEST_SITE_NAME = "test-site-name"
 FIRST_ENTITY_ID = "alarm_control_panel.risco_test_site_name_partition_0"
 SECOND_ENTITY_ID = "alarm_control_panel.risco_test_site_name_partition_1"
 
+CODES_REQUIRED_OPTIONS = {"code_arm_required": True, "code_disarm_required": True}
+
 
 def _partition_mock():
     return MagicMock(
@@ -63,8 +65,8 @@ def two_part_alarm():
         yield alarm_mock
 
 
-async def _setup_risco(hass):
-    config_entry = MockConfigEntry(domain=DOMAIN, data=TEST_CONFIG)
+async def _setup_risco(hass, options={}):
+    config_entry = MockConfigEntry(domain=DOMAIN, data=TEST_CONFIG, options=options)
     config_entry.add_to_hass(hass)
 
     with patch(
@@ -191,14 +193,22 @@ async def test_states(hass, two_part_alarm):
     )
 
 
-async def _test_servie_call(hass, service, method, entity_id, partition_id):
-    with patch("homeassistant.components.risco.RiscoAPI." + method) as set_mock:
-        await _call_alarm_service(hass, service, entity_id)
+async def _test_service_call(hass, service, method, entity_id, partition_id, **kwargs):
+    with patch(f"homeassistant.components.risco.RiscoAPI.{method}") as set_mock:
+        await _call_alarm_service(hass, service, entity_id, **kwargs)
         set_mock.assert_awaited_once_with(partition_id)
 
 
-async def _call_alarm_service(hass, service, entity_id):
-    data = {"entity_id": entity_id}
+async def _test_no_service_call(
+    hass, service, method, entity_id, partition_id, **kwargs
+):
+    with patch(f"homeassistant.components.risco.RiscoAPI.{method}") as set_mock:
+        await _call_alarm_service(hass, service, entity_id, **kwargs)
+        set_mock.assert_not_awaited()
+
+
+async def _call_alarm_service(hass, service, entity_id, **kwargs):
+    data = {"entity_id": entity_id, **kwargs}
 
     await hass.services.async_call(
         ALARM_DOMAIN, service, service_data=data, blocking=True
@@ -209,13 +219,63 @@ async def test_sets(hass, two_part_alarm):
     """Test settings the various modes."""
     await _setup_risco(hass)
 
-    await _test_servie_call(hass, SERVICE_ALARM_DISARM, "disarm", FIRST_ENTITY_ID, 0)
-    await _test_servie_call(hass, SERVICE_ALARM_DISARM, "disarm", SECOND_ENTITY_ID, 1)
-    await _test_servie_call(hass, SERVICE_ALARM_ARM_AWAY, "arm", FIRST_ENTITY_ID, 0)
-    await _test_servie_call(hass, SERVICE_ALARM_ARM_AWAY, "arm", SECOND_ENTITY_ID, 1)
-    await _test_servie_call(
+    await _test_service_call(hass, SERVICE_ALARM_DISARM, "disarm", FIRST_ENTITY_ID, 0)
+    await _test_service_call(hass, SERVICE_ALARM_DISARM, "disarm", SECOND_ENTITY_ID, 1)
+    await _test_service_call(hass, SERVICE_ALARM_ARM_AWAY, "arm", FIRST_ENTITY_ID, 0)
+    await _test_service_call(hass, SERVICE_ALARM_ARM_AWAY, "arm", SECOND_ENTITY_ID, 1)
+    await _test_service_call(
         hass, SERVICE_ALARM_ARM_HOME, "partial_arm", FIRST_ENTITY_ID, 0
     )
-    await _test_servie_call(
+    await _test_service_call(
         hass, SERVICE_ALARM_ARM_HOME, "partial_arm", SECOND_ENTITY_ID, 1
+    )
+
+
+async def test_sets_with_correct_code(hass, two_part_alarm):
+    """Test settings the various modes when code is required."""
+    await _setup_risco(hass, CODES_REQUIRED_OPTIONS)
+
+    code = {"code": 1234}
+    await _test_service_call(
+        hass, SERVICE_ALARM_DISARM, "disarm", FIRST_ENTITY_ID, 0, **code
+    )
+    await _test_service_call(
+        hass, SERVICE_ALARM_DISARM, "disarm", SECOND_ENTITY_ID, 1, **code
+    )
+    await _test_service_call(
+        hass, SERVICE_ALARM_ARM_AWAY, "arm", FIRST_ENTITY_ID, 0, **code
+    )
+    await _test_service_call(
+        hass, SERVICE_ALARM_ARM_AWAY, "arm", SECOND_ENTITY_ID, 1, **code
+    )
+    await _test_service_call(
+        hass, SERVICE_ALARM_ARM_HOME, "partial_arm", FIRST_ENTITY_ID, 0, **code
+    )
+    await _test_service_call(
+        hass, SERVICE_ALARM_ARM_HOME, "partial_arm", SECOND_ENTITY_ID, 1, **code
+    )
+
+
+async def test_sets_with_incorrect_code(hass, two_part_alarm):
+    """Test settings the various modes when code is required and incorrect."""
+    await _setup_risco(hass, CODES_REQUIRED_OPTIONS)
+
+    code = {"code": 4321}
+    await _test_no_service_call(
+        hass, SERVICE_ALARM_DISARM, "disarm", FIRST_ENTITY_ID, 0, **code
+    )
+    await _test_no_service_call(
+        hass, SERVICE_ALARM_DISARM, "disarm", SECOND_ENTITY_ID, 1, **code
+    )
+    await _test_no_service_call(
+        hass, SERVICE_ALARM_ARM_AWAY, "arm", FIRST_ENTITY_ID, 0, **code
+    )
+    await _test_no_service_call(
+        hass, SERVICE_ALARM_ARM_AWAY, "arm", SECOND_ENTITY_ID, 1, **code
+    )
+    await _test_no_service_call(
+        hass, SERVICE_ALARM_ARM_HOME, "partial_arm", FIRST_ENTITY_ID, 0, **code
+    )
+    await _test_no_service_call(
+        hass, SERVICE_ALARM_ARM_HOME, "partial_arm", SECOND_ENTITY_ID, 1, **code
     )
