@@ -204,7 +204,11 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
             rgbw = "#"
             for colorval in color_util.color_hs_to_RGB(*hs_color):
                 rgbw += f"{colorval:02x}"
-            rgbw += "0000"
+            if self._color_channels and self._color_channels & COLOR_CHANNEL_COLD_WHITE:
+                rgbw += "0000"
+            else:
+                # trim the CW value or it will not work correctly
+                rgbw += "00"
             # white LED must be off in order for color to work
 
         elif white is not None:

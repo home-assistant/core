@@ -377,11 +377,11 @@ async def test_pure_rgb_dimmer_light(
 
     msg = sent_messages[-2]
     assert msg["topic"] == "OpenZWave/1/command/setvalue/"
-    assert msg["payload"] == {"Value": "#ff4cff0000", "ValueIDKey": 122470423}
+    assert msg["payload"] == {"Value": "#ff4cff00", "ValueIDKey": 122470423}
 
     # Feedback on state
     light_pure_rgb_msg.decode()
-    light_pure_rgb_msg.payload["Value"] = "#ff4cff0000"
+    light_pure_rgb_msg.payload["Value"] = "#ff4cff00"
     light_pure_rgb_msg.encode()
     receive_message(light_pure_rgb_msg)
     await hass.async_block_till_done()
