@@ -1,0 +1,86 @@
+"""Config flow for Shelly integration."""
+import asyncio
+import logging
+
+import aioshelly
+import async_timeout
+import voluptuous as vol
+
+from homeassistant import config_entries, core
+from homeassistant.helpers import aiohttp_client
+
+from .const import DOMAIN  # pylint:disable=unused-import
+
+_LOGGER = logging.getLogger(__name__)
+
+DATA_SCHEMA = vol.Schema({"host": str})
+
+
+async def validate_input(hass: core.HomeAssistant, data):
+    """Validate the user input allows us to connect.
+
+    Data has the keys from DATA_SCHEMA with values provided by the user.
+    """
+    async with async_timeout.timeout(5):
+        device = await aioshelly.Device.create(
+            data["host"], aiohttp_client.async_get_clientsession(hass)
+        )
+
+    await device.shutdown()
+
+    # Return info that you want to store in the config entry.
+    return {"title": device.settings["name"], "mac": device.settings["device"]["mac"]}
+
+
+class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for Shelly."""
+
+    VERSION = 1
+    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
+    host = None
+
+    async def async_step_user(self, user_input=None):
+        """Handle the initial step."""
+        errors = {}
+        if user_input is not None:
+            try:
+                return await self._create_entry(user_input)
+            except asyncio.TimeoutError:
+                errors["base"] = "cannot_connect"
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+
+        return self.async_show_form(
+            step_id="user", data_schema=DATA_SCHEMA, errors=errors
+        )
+
+    async def async_step_zeroconf(self, zeroconf_info):
+        """Handle zeroconf discovery."""
+        if not zeroconf_info.get("name", "").startswith("shelly"):
+            return self.async_abort(reason="not_shelly")
+
+        info = await aioshelly.get_info(
+            aiohttp_client.async_get_clientsession(self.hass), zeroconf_info["host"]
+        )
+        await self.async_set_unique_id(info["mac"])
+        self._abort_if_unique_id_configured({"host": zeroconf_info["host"]})
+        self.host = zeroconf_info["host"]
+        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+        self.context["title_placeholders"] = {"name": zeroconf_info["host"]}
+        return await self.async_step_confirm_discovery()
+
+    async def async_step_confirm_discovery(self, user_input=None):
+        """Handle discovery confirm."""
+        if user_input is not None:
+            return await self._create_entry({"host": self.host})
+
+        return self.async_show_form(step_id="confirm_discovery",)
+
+    async def _create_entry(self, data):
+        """Create an entry from connection data."""
+        info = await validate_input(self.hass, data)
+
+        await self.async_set_unique_id(info["mac"])
+
+        return self.async_create_entry(title=info["title"] or data["host"], data=data)
