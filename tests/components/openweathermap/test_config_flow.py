@@ -56,6 +56,21 @@ async def test_form(hass):
         assert result["data"][CONF_API_KEY] == CONFIG[CONF_API_KEY]
 
 
+async def test_form_invalid_api_key(hass):
+    """Test that the form is served with no input."""
+    mocked_owm = _create_mocked_owm(False)
+
+    with patch(
+        "homeassistant.components.openweathermap.config_flow.OWM",
+        return_value=mocked_owm,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+        )
+
+        assert result["errors"] == {"base": "auth"}
+
+
 async def test_options_form(hass):
     """Test that the options form."""
 
@@ -84,21 +99,6 @@ async def test_options_form(hass):
             CONF_MODE: "daily",
             CONF_LANGUAGE: DEFAULT_LANGUAGE,
         }
-
-
-async def test_invalid_api_key(hass):
-    """Test that the form is served with no input."""
-    mocked_owm = _create_mocked_owm(False)
-
-    with patch(
-        "homeassistant.components.openweathermap.config_flow.OWM",
-        return_value=mocked_owm,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
-        )
-
-        assert result["errors"] == {"base": "auth"}
 
 
 def _create_mocked_owm(is_api_online: bool):

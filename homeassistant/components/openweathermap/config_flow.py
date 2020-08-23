@@ -57,10 +57,12 @@ class OpenWeatherMapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(f"{latitude}-{longitude}")
             self._abort_if_unique_id_configured()
 
-            api_key_valid = await _validate_api_key(self.hass, user_input[CONF_API_KEY])
+            status = await _validate_owm_api(self.hass, user_input[CONF_API_KEY])
 
-            if not api_key_valid:
+            if not status.get("auth", True):
                 errors["base"] = "auth"
+            if not status.get("connection", True):
+                errors["base"] = "connection"
 
             if not errors:
                 return self.async_create_entry(
@@ -125,9 +127,11 @@ class OpenWeatherMapOptionsFlow(config_entries.OptionsFlow):
         )
 
 
-async def _validate_api_key(hass, api_key):
+async def _validate_owm_api(hass, api_key):
     try:
         owm = OWM(api_key)
-        return await hass.async_add_executor_job(owm.is_API_online)
-    except (APICallError, UnauthorizedError):
-        return False
+        return {"auth": await hass.async_add_executor_job(owm.is_API_online)}
+    except APICallError:
+        return {"connection": False}
+    except UnauthorizedError:
+        return {"auth": False}

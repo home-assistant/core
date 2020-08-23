@@ -4,7 +4,8 @@
             "already_configured": "OpenWeatherMap integration for these coordinates is already configured."
         },
         "error": {
-            "auth": "API key is not correct."
+            "auth": "API key is not correct.",
+            "connection": "Can't connect to OWM API"
         },
         "step": {
             "user": {
