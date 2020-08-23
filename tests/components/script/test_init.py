@@ -516,6 +516,7 @@ async def test_logbook_humanify_script_started_event(hass):
                 ),
             ],
             entity_attr_cache,
+            {},
         )
     )
 
