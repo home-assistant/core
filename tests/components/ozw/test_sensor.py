@@ -1,6 +1,5 @@
 """Test Z-Wave Sensors."""
 from homeassistant.components.ozw.const import DOMAIN
-from homeassistant.components.ozw.sensor import ZWaveStringSensor
 from homeassistant.components.sensor import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_POWER,
@@ -92,10 +91,6 @@ async def test_string_sensor(hass, string_sensor_data):
 
     await setup_ozw(hass, fixture=string_sensor_data)
     await hass.async_block_till_done()
-
-    entity = hass.data[SENSOR_DOMAIN].get_entity(entry.entity_id)
-
-    assert isinstance(entity, ZWaveStringSensor)
 
     state = hass.states.get(entry.entity_id)
     assert state is not None
