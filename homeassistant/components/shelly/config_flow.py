@@ -37,7 +37,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
-    info = None
     host = None
 
     async def async_step_user(self, user_input=None):
@@ -70,7 +69,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             aiohttp_client.async_get_clientsession(self.hass), zeroconf_info["host"]
         )
         await self.async_set_unique_id(info["mac"])
-        self.info = info
         self._abort_if_unique_id_configured({"host": zeroconf_info["host"]})
         self.host = zeroconf_info["host"]
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
