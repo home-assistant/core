@@ -31,7 +31,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.const import CONF_UNIQUE_ID  # noqa: F401
-from homeassistant.core import Event, ServiceCall, callback
+from homeassistant.core import CoreState, Event, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import config_validation as cv, event, template
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
@@ -643,6 +643,8 @@ class MQTT:
             self._ha_started.set()
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, ha_started)
+        if self.hass.state == CoreState.running:
+            self._ha_started.set()
 
         self.init_client()
         self.config_entry.add_update_listener(self.async_config_entry_updated)
