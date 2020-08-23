@@ -8,7 +8,7 @@ import logging
 import math
 import random
 import re
-from typing import Any, Iterable, List, Optional, Union
+from typing import Any, Iterable, Optional, Union
 from urllib.parse import urlencode as urllib_urlencode
 import weakref
 
@@ -24,7 +24,6 @@ from homeassistant.const import (
     ATTR_LONGITUDE,
     ATTR_UNIT_OF_MEASUREMENT,
     LENGTH_METERS,
-    MATCH_ALL,
     STATE_UNKNOWN,
 )
 from homeassistant.core import State, callback, split_entity_id, valid_entity_id
@@ -44,12 +43,6 @@ DATE_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 _RENDER_INFO = "template.render_info"
 _ENVIRONMENT = "template.environment"
-
-_RE_NONE_ENTITIES = re.compile(r"distance\(|closest\(", re.I | re.M)
-_RE_GET_ENTITIES = re.compile(
-    r"(?:(?:(?:states\.|(?P<func>is_state|is_state_attr|state_attr|states|expand)\((?:[\ \'\"]?))(?P<entity_id>[\w]+\.[\w]+)|states\.(?P<domain_outer>[a-z]+)|states\[(?:[\'\"]?)(?P<domain_inner>[\w]+))|(?P<variable>[\w]+))",
-    re.I | re.M,
-)
 
 _RE_JINJA_DELIMITERS = re.compile(r"\{%|\{\{")
 
@@ -90,54 +83,6 @@ def render_complex(value: Any, variables: TemplateVarsType = None) -> Any:
 def is_template_string(maybe_template: str) -> bool:
     """Check if the input is a Jinja2 template."""
     return _RE_JINJA_DELIMITERS.search(maybe_template) is not None
-
-
-def extract_entities(
-    hass: HomeAssistantType,
-    template: Optional[str],
-    variables: TemplateVarsType = None,
-) -> Union[str, List[str]]:
-    """Extract all entities for state_changed listener from template string."""
-    if template is None or not is_template_string(template):
-        return []
-
-    if _RE_NONE_ENTITIES.search(template):
-        return MATCH_ALL
-
-    extraction_final = []
-
-    for result in _RE_GET_ENTITIES.finditer(template):
-        if (
-            result.group("entity_id") == "trigger.entity_id"
-            and variables
-            and "trigger" in variables
-            and "entity_id" in variables["trigger"]
-        ):
-            extraction_final.append(variables["trigger"]["entity_id"])
-        elif result.group("entity_id"):
-            if result.group("func") == "expand":
-                for entity in expand(hass, result.group("entity_id")):
-                    extraction_final.append(entity.entity_id)
-
-            extraction_final.append(result.group("entity_id"))
-        elif result.group("domain_inner") or result.group("domain_outer"):
-            extraction_final.extend(
-                hass.states.async_entity_ids(
-                    result.group("domain_inner") or result.group("domain_outer")
-                )
-            )
-
-        if (
-            variables
-            and result.group("variable") in variables
-            and isinstance(variables[result.group("variable")], str)
-            and valid_entity_id(variables[result.group("variable")])
-        ):
-            extraction_final.append(variables[result.group("variable")])
-
-    if extraction_final:
-        return list(set(extraction_final))
-    return MATCH_ALL
 
 
 def _true(arg: Any) -> bool:
@@ -226,12 +171,6 @@ class Template:
             self._compiled_code = self._env.compile(self.template)
         except jinja2.exceptions.TemplateSyntaxError as err:
             raise TemplateError(err)
-
-    def extract_entities(
-        self, variables: TemplateVarsType = None
-    ) -> Union[str, List[str]]:
-        """Extract all entities for state_changed listener."""
-        return extract_entities(self.hass, self.template, variables)
 
     def render(self, variables: TemplateVarsType = None, **kwargs: Any) -> str:
         """Render given template."""

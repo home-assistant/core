@@ -10,7 +10,6 @@ from homeassistant.components import group
 from homeassistant.const import (
     LENGTH_METERS,
     MASS_GRAMS,
-    MATCH_ALL,
     PRESSURE_PA,
     TEMP_CELSIUS,
     VOLUME_LITERS,
@@ -34,12 +33,6 @@ def render_to_info(hass, template_str, variables=None):
     """Create render info from template."""
     tmp = template.Template(template_str, hass)
     return tmp.async_render_to_info(variables)
-
-
-def extract_entities(hass, template_str, variables=None):
-    """Extract entities from a template."""
-    info = render_to_info(hass, template_str, variables)
-    return info.entities
 
 
 def assert_result_info(info, result, entities=None, domains=None, all_states=False):
@@ -1758,48 +1751,6 @@ def test_closest_function_no_location_states(hass):
     )
 
 
-def test_extract_entities_none_exclude_stuff(hass):
-    """Test extract entities function with none or exclude stuff."""
-    assert template.extract_entities(hass, None) == []
-
-    assert template.extract_entities(hass, "mdi:water") == []
-
-    assert (
-        template.extract_entities(
-            hass,
-            "{{ closest(states.zone.far_away, states.test_domain.xxx).entity_id }}",
-        )
-        == MATCH_ALL
-    )
-
-    assert (
-        template.extract_entities(
-            hass, '{{ distance("123", states.test_object_2.user) }}'
-        )
-        == MATCH_ALL
-    )
-
-
-def test_extract_entities_no_match_entities(hass):
-    """Test extract entities function with none entities stuff."""
-    assert (
-        template.extract_entities(
-            hass, "{{ value_json.tst | timestamp_custom('%Y' True) }}"
-        )
-        == MATCH_ALL
-    )
-
-    info = render_to_info(
-        hass,
-        """
-{% for state in states.sensor %}
-{{ state.entity_id }}={{ state.state }},d
-{% endfor %}
-            """,
-    )
-    assert_result_info(info, "", domains=["sensor"])
-
-
 def test_generate_filter_iterators(hass):
     """Test extract entities function with none entities stuff."""
     info = render_to_info(
@@ -1918,196 +1869,6 @@ async def test_async_render_to_info_in_conditional(hass):
     tmp = template.Template(template_str, hass)
     info = tmp.async_render_to_info()
     assert_result_info(info, "oink", ["sensor.xyz", "sensor.pig"], [])
-
-
-async def test_extract_entities_match_entities(hass):
-    """Test extract entities function with entities stuff."""
-    assert (
-        template.extract_entities(
-            hass,
-            """
-{% if is_state('device_tracker.phone_1', 'home') %}
-Ha, Hercules is home!
-{% else %}
-Hercules is at {{ states('device_tracker.phone_1') }}.
-{% endif %}
-        """,
-        )
-        == ["device_tracker.phone_1"]
-    )
-
-    assert (
-        template.extract_entities(
-            hass,
-            """
-{{ as_timestamp(states.binary_sensor.garage_door.last_changed) }}
-        """,
-        )
-        == ["binary_sensor.garage_door"]
-    )
-
-    assert (
-        template.extract_entities(
-            hass,
-            """
-{{ states("binary_sensor.garage_door") }}
-        """,
-        )
-        == ["binary_sensor.garage_door"]
-    )
-
-    hass.states.async_set("device_tracker.phone_2", "not_home", {"battery": 20})
-
-    assert (
-        template.extract_entities(
-            hass,
-            """
-{{ is_state_attr('device_tracker.phone_2', 'battery', 40) }}
-        """,
-        )
-        == ["device_tracker.phone_2"]
-    )
-
-    assert sorted(["device_tracker.phone_1", "device_tracker.phone_2"]) == sorted(
-        template.extract_entities(
-            hass,
-            """
-{% if is_state('device_tracker.phone_1', 'home') %}
-Ha, Hercules is home!
-{% elif states.device_tracker.phone_2.attributes.battery < 40 %}
-Hercules you power goes done!.
-{% endif %}
-        """,
-        )
-    )
-
-    assert sorted(["sensor.pick_humidity", "sensor.pick_temperature"]) == sorted(
-        template.extract_entities(
-            hass,
-            """
-{{
-states.sensor.pick_temperature.state ~ "°C (" ~
-states.sensor.pick_humidity.state ~ " %"
-}}
-        """,
-        )
-    )
-
-    assert sorted(
-        ["sensor.luftfeuchtigkeit_mean", "input_number.luftfeuchtigkeit"]
-    ) == sorted(
-        template.extract_entities(
-            hass,
-            "{% if (states('sensor.luftfeuchtigkeit_mean') | int)"
-            " > (states('input_number.luftfeuchtigkeit') | int +1.5)"
-            " %}true{% endif %}",
-        )
-    )
-
-    await group.Group.async_create_group(hass, "empty group", [])
-
-    assert ["group.empty_group"] == template.extract_entities(
-        hass, "{{ expand('group.empty_group') | list | length }}"
-    )
-
-    hass.states.async_set("test_domain.object", "exists")
-    await group.Group.async_create_group(hass, "expand group", ["test_domain.object"])
-
-    assert sorted(["group.expand_group", "test_domain.object"]) == sorted(
-        template.extract_entities(
-            hass, "{{ expand('group.expand_group') | list | length }}"
-        )
-    )
-    assert ["test_domain.entity"] == template.Template(
-        '{{ is_state("test_domain.entity", "on") }}', hass
-    ).extract_entities()
-
-    # No expand, extract finds the group
-    assert template.extract_entities(hass, "{{ states('group.empty_group') }}") == [
-        "group.empty_group"
-    ]
-
-
-def test_extract_entities_with_variables(hass):
-    """Test extract entities function with variables and entities stuff."""
-    hass.states.async_set("input_boolean.switch", "on")
-    assert ["input_boolean.switch"] == template.extract_entities(
-        hass, "{{ is_state('input_boolean.switch', 'off') }}", {}
-    )
-
-    assert ["input_boolean.switch"] == template.extract_entities(
-        hass,
-        "{{ is_state(trigger.entity_id, 'off') }}",
-        {"trigger": {"entity_id": "input_boolean.switch"}},
-    )
-
-    assert MATCH_ALL == template.extract_entities(
-        hass, "{{ is_state(data, 'off') }}", {"data": "no_state"}
-    )
-
-    assert ["input_boolean.switch"] == template.extract_entities(
-        hass, "{{ is_state(data, 'off') }}", {"data": "input_boolean.switch"}
-    )
-
-    assert ["input_boolean.switch"] == template.extract_entities(
-        hass,
-        "{{ is_state(trigger.entity_id, 'off') }}",
-        {"trigger": {"entity_id": "input_boolean.switch"}},
-    )
-
-    hass.states.async_set("media_player.livingroom", "off")
-    assert {"media_player.livingroom"} == extract_entities(
-        hass,
-        "{{ is_state('media_player.' ~ where , 'playing') }}",
-        {"where": "livingroom"},
-    )
-
-
-def test_extract_entities_domain_states_inner(hass):
-    """Test extract entities function by domain."""
-    hass.states.async_set("light.switch", "on")
-    hass.states.async_set("light.switch2", "on")
-    hass.states.async_set("light.switch3", "off")
-
-    assert set(
-        template.extract_entities(
-            hass,
-            "{{ states['light'] | selectattr('state','eq','on') | list | count > 0 }}",
-            {},
-        )
-    ) == {"light.switch", "light.switch2", "light.switch3"}
-
-
-def test_extract_entities_domain_states_outer(hass):
-    """Test extract entities function by domain."""
-    hass.states.async_set("light.switch", "on")
-    hass.states.async_set("light.switch2", "on")
-    hass.states.async_set("light.switch3", "off")
-
-    assert set(
-        template.extract_entities(
-            hass,
-            "{{ states.light | selectattr('state','eq','off') | list | count > 0 }}",
-            {},
-        )
-    ) == {"light.switch", "light.switch2", "light.switch3"}
-
-
-def test_extract_entities_domain_states_outer_with_group(hass):
-    """Test extract entities function by domain."""
-    hass.states.async_set("light.switch", "on")
-    hass.states.async_set("light.switch2", "on")
-    hass.states.async_set("light.switch3", "off")
-    hass.states.async_set("switch.pool_light", "off")
-    hass.states.async_set("group.lights", "off", {"entity_id": ["switch.pool_light"]})
-
-    assert set(
-        template.extract_entities(
-            hass,
-            "{{ states.light | selectattr('entity_id', 'in', state_attr('group.lights', 'entity_id')) }}",
-            {},
-        )
-    ) == {"light.switch", "light.switch2", "light.switch3", "group.lights"}
 
 
 def test_jinja_namespace(hass):
