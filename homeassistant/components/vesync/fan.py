@@ -22,7 +22,7 @@ DEV_TYPE_TO_HA = {
 }
 
 SPEED_AUTO = "auto"
-FAN_SPEEDS = [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
+FAN_SPEEDS = [SPEED_AUTO, SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
