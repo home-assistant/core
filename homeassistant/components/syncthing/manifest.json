@@ -3,7 +3,7 @@
   "name": "syncthing",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/syncthing",
-  "requirements": ["aiosyncthing==0.4.0"],
+  "requirements": ["aiosyncthing==0.4.1"],
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},
