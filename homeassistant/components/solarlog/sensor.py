@@ -87,7 +87,7 @@ class SolarlogSensor(Entity):
     @property
     def unique_id(self):
         """Return the unique id."""
-        return f"{self.entry_id}_{self._label}"
+        return f"{self.entry_id}_{self.sensor_key}"
 
     @property
     def name(self):
