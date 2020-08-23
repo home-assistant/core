@@ -4,7 +4,6 @@ import functools
 import logging
 from types import MappingProxyType
 from typing import Any, Callable, Dict, List, Optional, Set, Union, cast
-import uuid
 import weakref
 
 import attr
@@ -16,6 +15,7 @@ from homeassistant.helpers import entity_registry
 from homeassistant.helpers.event import Event
 from homeassistant.setup import async_process_deps_reqs, async_setup_component
 from homeassistant.util.decorator import Registry
+import homeassistant.util.uuid as uuid_util
 
 _LOGGER = logging.getLogger(__name__)
 _UNDEF: dict = {}
@@ -135,7 +135,7 @@ class ConfigEntry:
     ) -> None:
         """Initialize a config entry."""
         # Unique id of the config entry
-        self.entry_id = entry_id or uuid.uuid4().hex
+        self.entry_id = entry_id or uuid_util.uuid_v1mc_hex()
 
         # Version of the configuration.
         self.version = version

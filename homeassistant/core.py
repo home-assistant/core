@@ -12,7 +12,6 @@ from ipaddress import ip_address
 import logging
 import os
 import pathlib
-import random
 import re
 import threading
 from time import monotonic
@@ -33,7 +32,6 @@ from typing import (
     Union,
     cast,
 )
-import uuid
 
 import attr
 import voluptuous as vol
@@ -77,6 +75,7 @@ import homeassistant.util.dt as dt_util
 from homeassistant.util.thread import fix_threading_exception_logging
 from homeassistant.util.timeout import TimeoutManager
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
+import homeassistant.util.uuid as uuid_util
 
 # Typing imports that create a circular dependency
 if TYPE_CHECKING:
@@ -510,13 +509,7 @@ class Context:
 
     user_id: str = attr.ib(default=None)
     parent_id: Optional[str] = attr.ib(default=None)
-    # The uuid1 uses a random multicast MAC address instead of the real MAC address
-    # of the machine without the overhead of calling the getrandom() system call.
-    #
-    # This is effectively equivalent to PostgreSQL's uuid_generate_v1mc() function
-    id: str = attr.ib(
-        factory=lambda: uuid.uuid1(node=random.getrandbits(48) | (1 << 40)).hex
-    )
+    id: str = attr.ib(factory=uuid_util.uuid_v1mc_hex)
 
     def as_dict(self) -> dict:
         """Return a dictionary representation of the context."""
