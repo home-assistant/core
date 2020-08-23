@@ -1,9 +1,9 @@
 """The tests for the Met Office sensor component."""
-from datetime import datetime, timezone
 import json
 
 from homeassistant.components.metoffice.const import ATTRIBUTION, DOMAIN
 
+from . import NewDateTime
 from .const import (
     DATETIME_FORMAT,
     KINGSLYNN_SENSOR_RESULTS,
@@ -15,13 +15,12 @@ from .const import (
     WAVERTREE_SENSOR_RESULTS,
 )
 
-from tests.async_mock import Mock, patch
+from tests.async_mock import patch
 from tests.common import MockConfigEntry, load_fixture
 
 
 @patch(
-    "datapoint.Forecast.datetime.datetime",
-    Mock(now=Mock(return_value=datetime(2020, 4, 25, 12, tzinfo=timezone.utc))),
+    "datapoint.Forecast.datetime.datetime", NewDateTime,
 )
 async def test_one_sensor_site_running(hass, requests_mock, legacy_patchable_time):
     """Test the Met Office sensor platform."""
@@ -58,8 +57,7 @@ async def test_one_sensor_site_running(hass, requests_mock, legacy_patchable_tim
 
 
 @patch(
-    "datapoint.Forecast.datetime.datetime",
-    Mock(now=Mock(return_value=datetime(2020, 4, 25, 12, tzinfo=timezone.utc))),
+    "datapoint.Forecast.datetime.datetime", NewDateTime,
 )
 async def test_two_sensor_sites_running(hass, requests_mock, legacy_patchable_time):
     """Test we handle two sets of sensors running for two different sites."""
