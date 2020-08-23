@@ -30,6 +30,7 @@ from homeassistant.const import (
 from homeassistant.core import State, callback, split_entity_id, valid_entity_id
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, location as loc_helper
+from homeassistant.helpers.frame import report
 from homeassistant.helpers.typing import HomeAssistantType, TemplateVarsType
 from homeassistant.loader import bind_hass
 from homeassistant.util import convert, dt as dt_util, location as loc_util
@@ -98,6 +99,11 @@ def extract_entities(
     variables: TemplateVarsType = None,
 ) -> Union[str, List[str]]:
     """Extract all entities for state_changed listener from template string."""
+
+    report(
+        "called template.extract_entities. Please use event.async_track_template_result instead as it can accurately handle watching entities"
+    )
+
     if template is None or not is_template_string(template):
         return []
 
