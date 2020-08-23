@@ -429,7 +429,7 @@ coinbase==2.1.0
 coinmarketcap==5.0.3
 
 # homeassistant.scripts.check_config
-colorlog==4.1.0
+colorlog==4.2.1
 
 # homeassistant.components.concord232
 concord232==0.15
