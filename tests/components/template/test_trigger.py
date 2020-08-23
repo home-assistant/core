@@ -39,7 +39,10 @@ async def test_if_fires_on_change_bool(hass, calls):
         automation.DOMAIN,
         {
             automation.DOMAIN: {
-                "trigger": {"platform": "template", "value_template": "{{ true }}"},
+                "trigger": {
+                    "platform": "template",
+                    "value_template": "{{ states.test.entity.state and true }}",
+                },
                 "action": {"service": "test.automation"},
             }
         },
@@ -64,7 +67,10 @@ async def test_if_fires_on_change_str(hass, calls):
         automation.DOMAIN,
         {
             automation.DOMAIN: {
-                "trigger": {"platform": "template", "value_template": '{{ "true" }}'},
+                "trigger": {
+                    "platform": "template",
+                    "value_template": '{{ states.test.entity.state and "true" }}',
+                },
                 "action": {"service": "test.automation"},
             }
         },
@@ -82,7 +88,10 @@ async def test_if_fires_on_change_str_crazy(hass, calls):
         automation.DOMAIN,
         {
             automation.DOMAIN: {
-                "trigger": {"platform": "template", "value_template": '{{ "TrUE" }}'},
+                "trigger": {
+                    "platform": "template",
+                    "value_template": '{{ states.test.entity.state and "TrUE" }}',
+                },
                 "action": {"service": "test.automation"},
             }
         },
@@ -100,7 +109,10 @@ async def test_if_not_fires_on_change_bool(hass, calls):
         automation.DOMAIN,
         {
             automation.DOMAIN: {
-                "trigger": {"platform": "template", "value_template": "{{ false }}"},
+                "trigger": {
+                    "platform": "template",
+                    "value_template": "{{ states.test.entity.state and false }}",
+                },
                 "action": {"service": "test.automation"},
             }
         },
@@ -178,7 +190,10 @@ async def test_if_fires_on_two_change(hass, calls):
         automation.DOMAIN,
         {
             automation.DOMAIN: {
-                "trigger": {"platform": "template", "value_template": "{{ true }}"},
+                "trigger": {
+                    "platform": "template",
+                    "value_template": "{{ states.test.entity.state and true }}",
+                },
                 "action": {"service": "test.automation"},
             }
         },
