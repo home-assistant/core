@@ -224,7 +224,7 @@ class NZBGetDataUpdateCoordinator(DataUpdateCoordinator):
             }
 
         try:
-            async with timeout(5):
+            async with timeout(4):
                 return await self.hass.async_add_executor_job(_update_data)
         except NZBGetAPIException as error:
             raise UpdateFailed(f"Invalid response from API: {error}")
