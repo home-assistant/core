@@ -1,4 +1,4 @@
-"""Configuration via ui for OpenWeatherMap integration."""
+"""Configuration via UI for OpenWeatherMap integration."""
 from pyowm import OWM
 from pyowm.exceptions.api_call_error import APICallError
 import voluptuous as vol
@@ -14,7 +14,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
-from .const import DOMAIN, FORECAST_MODE  # pylint:disable=unused-import
+from .const import DOMAIN, FORECAST_MODE
 
 
 class OpenWeatherMapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

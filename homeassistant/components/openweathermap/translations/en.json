@@ -14,7 +14,7 @@
                     "longitude": "Longitude",
                     "name": "Name of the integration"
                 },
-                "description": "",
+                "description": "If you need help with the configuration have a look here: https://www.home-assistant.io/integrations/openweathermap/",
                 "title": "OpenWeatherMap"
             }
         }
@@ -25,7 +25,7 @@
                 "data": {
                     "mode": "Forecast update frequency"
                 },
-                "description": "",
+                "description": "If you need help with the configuration have a look here: https://www.home-assistant.io/integrations/openweathermap/\"",
                 "title": "OpenWeatherMap Options"
             }
         }
