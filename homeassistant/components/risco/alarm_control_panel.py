@@ -139,7 +139,7 @@ class RiscoAlarm(alarm.AlarmControlPanelEntity, RiscoEntity):
             return
         await self._call_alarm_method("arm")
 
-    async def _call_alarm_method(self, method, code=None):
+    async def _call_alarm_method(self, method):
         alarm_obj = await getattr(self._risco, method)(self._partition_id)
         self._partition = alarm_obj.partitions[self._partition_id]
         self.async_write_ha_state()
