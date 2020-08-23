@@ -576,9 +576,9 @@ def _entity_id_name(hass, entity_id):
     """Name of the entity id."""
     state = hass.states.get(entity_id)
     return (
-        state
-        and state.attributes.get(ATTR_FRIENDLY_NAME)
-        or split_entity_id(entity_id)[1].replace("_", " ")
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        if state
+        else split_entity_id(entity_id)[1].replace("_", " ")
     )
 
 
