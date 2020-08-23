@@ -269,6 +269,9 @@ def humanify(hass, events, entity_attr_cache, context_entity_id_map):
                     context_entity_id = context_entity_id_map.get(event.context_id)
                     if context_entity_id and context_entity_id != data["entity_id"]:
                         data["context_entity_id"] = context_entity_id
+                        data["context_entity_id_name"] = _entity_id_name(
+                            hass, context_entity_id
+                        )
                 yield data
 
             if event.event_type == EVENT_STATE_CHANGED:
@@ -299,6 +302,9 @@ def humanify(hass, events, entity_attr_cache, context_entity_id_map):
                 context_entity_id = context_entity_id_map.get(event.context_id)
                 if context_entity_id and context_entity_id != entity_id:
                     data["context_entity_id"] = context_entity_id
+                    data["context_entity_id_name"] = _entity_id_name(
+                        hass, context_entity_id
+                    )
 
                 yield data
 
@@ -349,6 +355,9 @@ def humanify(hass, events, entity_attr_cache, context_entity_id_map):
                     context_entity_id = context_entity_id_map.get(event.context_id)
                     if context_entity_id and context_entity_id != entity_id:
                         data["context_entity_id"] = context_entity_id
+                        data["context_entity_id_name"] = _entity_id_name(
+                            hass, context_entity_id
+                        )
                 yield data
 
 
@@ -561,6 +570,16 @@ def _entry_message_from_event(entity_id, domain, event, entity_attr_cache):
         return "turned off"
 
     return f"changed to {state_state}"
+
+
+def _entity_id_name(hass, entity_id):
+    """Name of the entity id."""
+    state = hass.states.get(entity_id)
+    return (
+        state
+        and state.attributes.get(ATTR_FRIENDLY_NAME)
+        or split_entity_id(entity_id)[1].replace("_", " ")
+    )
 
 
 class LazyEventPartialState:

@@ -16,6 +16,7 @@ from homeassistant.components.recorder.models import process_timestamp_to_utc_is
 from homeassistant.components.script import EVENT_SCRIPT_STARTED
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_FRIENDLY_NAME,
     ATTR_NAME,
     CONF_DOMAINS,
     CONF_ENTITIES,
@@ -1864,7 +1865,12 @@ async def test_logbook_entity_context_id(hass, hass_client):
         {ATTR_NAME: "Mock script", ATTR_ENTITY_ID: "script.mock_script"},
         context=context,
     )
-    hass.states.async_set(automation_entity_id_test, STATE_ON, context=context)
+    hass.states.async_set(
+        automation_entity_id_test,
+        STATE_ON,
+        {ATTR_FRIENDLY_NAME: "Alarm Automation"},
+        context=context,
+    )
 
     entity_id_test = "alarm_control_panel.area_001"
     hass.states.async_set(entity_id_test, STATE_OFF, context=context)
@@ -1917,14 +1923,17 @@ async def test_logbook_entity_context_id(hass, hass_client):
 
     assert json_dict[1]["entity_id"] == "script.mock_script"
     assert json_dict[1]["context_entity_id"] == "automation.alarm"
+    assert json_dict[1]["context_entity_id_name"] == "Alarm Automation"
     assert json_dict[1]["context_user_id"] == "b400facee45711eaa9308bfd3d19e474"
 
     assert json_dict[2]["entity_id"] == entity_id_test
     assert json_dict[2]["context_entity_id"] == "automation.alarm"
+    assert json_dict[2]["context_entity_id_name"] == "Alarm Automation"
     assert json_dict[2]["context_user_id"] == "b400facee45711eaa9308bfd3d19e474"
 
     assert json_dict[3]["entity_id"] == entity_id_second
     assert json_dict[3]["context_entity_id"] == "automation.alarm"
+    assert json_dict[3]["context_entity_id_name"] == "Alarm Automation"
     assert json_dict[3]["context_user_id"] == "b400facee45711eaa9308bfd3d19e474"
 
     assert json_dict[4]["domain"] == "homeassistant"
@@ -1932,6 +1941,7 @@ async def test_logbook_entity_context_id(hass, hass_client):
     assert json_dict[5]["entity_id"] == "alarm_control_panel.area_003"
     assert json_dict[5]["context_entity_id"] == "automation.alarm"
     assert json_dict[5]["domain"] == "alarm_control_panel"
+    assert json_dict[5]["context_entity_id_name"] == "Alarm Automation"
     assert json_dict[5]["context_user_id"] == "b400facee45711eaa9308bfd3d19e474"
 
     assert json_dict[6]["domain"] == "homeassistant"
