@@ -213,7 +213,8 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
 
         elif white is not None:
             if self._color_channels & COLOR_CHANNEL_WARM_WHITE:
-                rgbw = f"#000000{white:02x}00"
+                # trim the CW value or it will not work correctly
+                rgbw = f"#000000{white:02x}"
             else:
                 rgbw = f"#00000000{white:02x}"
 
