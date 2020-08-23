@@ -152,7 +152,7 @@ class TestComponentLogbook(unittest.TestCase):
         eventC = self.create_state_changed_event(pointC, entity_id, 30)
 
         entries = list(
-            logbook.humanify(self.hass, (eventA, eventB, eventC), entity_attr_cache)
+            logbook.humanify(self.hass, (eventA, eventB, eventC), entity_attr_cache, {})
         )
 
         assert len(entries) == 2
@@ -189,9 +189,9 @@ class TestComponentLogbook(unittest.TestCase):
                 eventA,
                 eventB,
             )
-            if logbook._keep_event(self.hass, e, entities_filter)
+            if logbook._keep_event(self.hass, e, entities_filter, {})
         ]
-        entries = list(logbook.humanify(self.hass, events, entity_attr_cache))
+        entries = list(logbook.humanify(self.hass, events, entity_attr_cache, {}))
 
         assert len(entries) == 2
         self.assert_entry(
@@ -227,9 +227,9 @@ class TestComponentLogbook(unittest.TestCase):
                 eventA,
                 eventB,
             )
-            if logbook._keep_event(self.hass, e, entities_filter)
+            if logbook._keep_event(self.hass, e, entities_filter, {})
         ]
-        entries = list(logbook.humanify(self.hass, events, entity_attr_cache))
+        entries = list(logbook.humanify(self.hass, events, entity_attr_cache, {}))
 
         assert len(entries) == 2
         self.assert_entry(
@@ -274,9 +274,9 @@ class TestComponentLogbook(unittest.TestCase):
                 eventB,
                 eventC,
             )
-            if logbook._keep_event(self.hass, e, entities_filter)
+            if logbook._keep_event(self.hass, e, entities_filter, {})
         ]
-        entries = list(logbook.humanify(self.hass, events, entity_attr_cache))
+        entries = list(logbook.humanify(self.hass, events, entity_attr_cache, {}))
 
         assert len(entries) == 2
         self.assert_entry(
@@ -316,9 +316,9 @@ class TestComponentLogbook(unittest.TestCase):
                 eventA,
                 eventB,
             )
-            if logbook._keep_event(self.hass, e, entities_filter)
+            if logbook._keep_event(self.hass, e, entities_filter, {})
         ]
-        entries = list(logbook.humanify(self.hass, events, entity_attr_cache))
+        entries = list(logbook.humanify(self.hass, events, entity_attr_cache, {}))
 
         assert len(entries) == 2
         self.assert_entry(
@@ -362,9 +362,9 @@ class TestComponentLogbook(unittest.TestCase):
                 eventA,
                 eventB,
             )
-            if logbook._keep_event(self.hass, e, entities_filter)
+            if logbook._keep_event(self.hass, e, entities_filter, {})
         ]
-        entries = list(logbook.humanify(self.hass, events, entity_attr_cache))
+        entries = list(logbook.humanify(self.hass, events, entity_attr_cache, {}))
 
         assert len(entries) == 3
         self.assert_entry(
@@ -416,9 +416,9 @@ class TestComponentLogbook(unittest.TestCase):
                 eventB,
                 eventC,
             )
-            if logbook._keep_event(self.hass, e, entities_filter)
+            if logbook._keep_event(self.hass, e, entities_filter, {})
         ]
-        entries = list(logbook.humanify(self.hass, events, entity_attr_cache))
+        entries = list(logbook.humanify(self.hass, events, entity_attr_cache, {}))
 
         assert len(entries) == 4
         self.assert_entry(
@@ -473,9 +473,9 @@ class TestComponentLogbook(unittest.TestCase):
                 eventB1,
                 eventB2,
             )
-            if logbook._keep_event(self.hass, e, entities_filter)
+            if logbook._keep_event(self.hass, e, entities_filter, {})
         ]
-        entries = list(logbook.humanify(self.hass, events, entity_attr_cache))
+        entries = list(logbook.humanify(self.hass, events, entity_attr_cache, {}))
 
         assert len(entries) == 5
         self.assert_entry(
@@ -547,9 +547,9 @@ class TestComponentLogbook(unittest.TestCase):
                 eventC2,
                 eventC3,
             )
-            if logbook._keep_event(self.hass, e, entities_filter)
+            if logbook._keep_event(self.hass, e, entities_filter, {})
         ]
-        entries = list(logbook.humanify(self.hass, events, entity_attr_cache))
+        entries = list(logbook.humanify(self.hass, events, entity_attr_cache, {}))
 
         assert len(entries) == 6
         self.assert_entry(
@@ -585,6 +585,7 @@ class TestComponentLogbook(unittest.TestCase):
                     MockLazyEventPartialState(EVENT_HOMEASSISTANT_START),
                 ),
                 entity_attr_cache,
+                {},
             ),
         )
 
@@ -607,6 +608,7 @@ class TestComponentLogbook(unittest.TestCase):
                     self.create_state_changed_event(pointA, entity_id, 10),
                 ),
                 entity_attr_cache,
+                {},
             )
         )
 
@@ -628,21 +630,21 @@ class TestComponentLogbook(unittest.TestCase):
         # message for a device state change
         eventA = self.create_state_changed_event(pointA, "switch.bla", 10)
         message = logbook._entry_message_from_event(
-            self.hass, eventA.entity_id, eventA.domain, eventA, entity_attr_cache
+            eventA.entity_id, eventA.domain, eventA, entity_attr_cache
         )
         assert message == "changed to 10"
 
         # message for a switch turned on
         eventA = self.create_state_changed_event(pointA, "switch.bla", STATE_ON)
         message = logbook._entry_message_from_event(
-            self.hass, eventA.entity_id, eventA.domain, eventA, entity_attr_cache
+            eventA.entity_id, eventA.domain, eventA, entity_attr_cache
         )
         assert message == "turned on"
 
         # message for a switch turned off
         eventA = self.create_state_changed_event(pointA, "switch.bla", STATE_OFF)
         message = logbook._entry_message_from_event(
-            self.hass, eventA.entity_id, eventA.domain, eventA, entity_attr_cache
+            eventA.entity_id, eventA.domain, eventA, entity_attr_cache
         )
         assert message == "turned off"
 
@@ -656,14 +658,14 @@ class TestComponentLogbook(unittest.TestCase):
             pointA, "device_tracker.john", STATE_NOT_HOME
         )
         message = logbook._entry_message_from_event(
-            self.hass, eventA.entity_id, eventA.domain, eventA, entity_attr_cache
+            eventA.entity_id, eventA.domain, eventA, entity_attr_cache
         )
         assert message == "is away"
 
         # message for a device tracker "home" state
         eventA = self.create_state_changed_event(pointA, "device_tracker.john", "work")
         message = logbook._entry_message_from_event(
-            self.hass, eventA.entity_id, eventA.domain, eventA, entity_attr_cache
+            eventA.entity_id, eventA.domain, eventA, entity_attr_cache
         )
         assert message == "is at work"
 
@@ -675,14 +677,14 @@ class TestComponentLogbook(unittest.TestCase):
         # message for a device tracker "not home" state
         eventA = self.create_state_changed_event(pointA, "person.john", STATE_NOT_HOME)
         message = logbook._entry_message_from_event(
-            self.hass, eventA.entity_id, eventA.domain, eventA, entity_attr_cache
+            eventA.entity_id, eventA.domain, eventA, entity_attr_cache
         )
         assert message == "is away"
 
         # message for a device tracker "home" state
         eventA = self.create_state_changed_event(pointA, "person.john", "work")
         message = logbook._entry_message_from_event(
-            self.hass, eventA.entity_id, eventA.domain, eventA, entity_attr_cache
+            eventA.entity_id, eventA.domain, eventA, entity_attr_cache
         )
         assert message == "is at work"
 
@@ -696,7 +698,7 @@ class TestComponentLogbook(unittest.TestCase):
             pointA, "sun.sun", sun.STATE_ABOVE_HORIZON
         )
         message = logbook._entry_message_from_event(
-            self.hass, eventA.entity_id, eventA.domain, eventA, entity_attr_cache
+            eventA.entity_id, eventA.domain, eventA, entity_attr_cache
         )
         assert message == "has risen"
 
@@ -705,7 +707,7 @@ class TestComponentLogbook(unittest.TestCase):
             pointA, "sun.sun", sun.STATE_BELOW_HORIZON
         )
         message = logbook._entry_message_from_event(
-            self.hass, eventA.entity_id, eventA.domain, eventA, entity_attr_cache
+            eventA.entity_id, eventA.domain, eventA, entity_attr_cache
         )
         assert message == "has set"
 
@@ -720,7 +722,7 @@ class TestComponentLogbook(unittest.TestCase):
             pointA, "binary_sensor.battery", STATE_ON, attributes
         )
         message = logbook._entry_message_from_event(
-            self.hass, eventA.entity_id, eventA.domain, eventA, entity_attr_cache
+            eventA.entity_id, eventA.domain, eventA, entity_attr_cache
         )
         assert message == "is low"
 
@@ -729,7 +731,7 @@ class TestComponentLogbook(unittest.TestCase):
             pointA, "binary_sensor.battery", STATE_OFF, attributes
         )
         message = logbook._entry_message_from_event(
-            self.hass, eventA.entity_id, eventA.domain, eventA, entity_attr_cache
+            eventA.entity_id, eventA.domain, eventA, entity_attr_cache
         )
         assert message == "is normal"
 
@@ -744,7 +746,7 @@ class TestComponentLogbook(unittest.TestCase):
             pointA, "binary_sensor.connectivity", STATE_ON, attributes
         )
         message = logbook._entry_message_from_event(
-            self.hass, eventA.entity_id, eventA.domain, eventA, entity_attr_cache
+            eventA.entity_id, eventA.domain, eventA, entity_attr_cache
         )
         assert message == "is connected"
 
@@ -753,7 +755,7 @@ class TestComponentLogbook(unittest.TestCase):
             pointA, "binary_sensor.connectivity", STATE_OFF, attributes
         )
         message = logbook._entry_message_from_event(
-            self.hass, eventA.entity_id, eventA.domain, eventA, entity_attr_cache
+            eventA.entity_id, eventA.domain, eventA, entity_attr_cache
         )
         assert message == "is disconnected"
 
@@ -768,7 +770,7 @@ class TestComponentLogbook(unittest.TestCase):
             pointA, "binary_sensor.door", STATE_ON, attributes
         )
         message = logbook._entry_message_from_event(
-            self.hass, eventA.entity_id, eventA.domain, eventA, entity_attr_cache
+            eventA.entity_id, eventA.domain, eventA, entity_attr_cache
         )
         assert message == "is opened"
 
@@ -777,7 +779,7 @@ class TestComponentLogbook(unittest.TestCase):
             pointA, "binary_sensor.door", STATE_OFF, attributes
         )
         message = logbook._entry_message_from_event(
-            self.hass, eventA.entity_id, eventA.domain, eventA, entity_attr_cache
+            eventA.entity_id, eventA.domain, eventA, entity_attr_cache
         )
         assert message == "is closed"
 
@@ -792,7 +794,7 @@ class TestComponentLogbook(unittest.TestCase):
             pointA, "binary_sensor.garage_door", STATE_ON, attributes
         )
         message = logbook._entry_message_from_event(
-            self.hass, eventA.entity_id, eventA.domain, eventA, entity_attr_cache
+            eventA.entity_id, eventA.domain, eventA, entity_attr_cache
         )
         assert message == "is opened"
 
@@ -801,7 +803,7 @@ class TestComponentLogbook(unittest.TestCase):
             pointA, "binary_sensor.garage_door", STATE_OFF, attributes
         )
         message = logbook._entry_message_from_event(
-            self.hass, eventA.entity_id, eventA.domain, eventA, entity_attr_cache
+            eventA.entity_id, eventA.domain, eventA, entity_attr_cache
         )
         assert message == "is closed"
 
@@ -816,7 +818,7 @@ class TestComponentLogbook(unittest.TestCase):
             pointA, "binary_sensor.opening", STATE_ON, attributes
         )
         message = logbook._entry_message_from_event(
-            self.hass, eventA.entity_id, eventA.domain, eventA, entity_attr_cache
+            eventA.entity_id, eventA.domain, eventA, entity_attr_cache
         )
         assert message == "is opened"
 
@@ -825,7 +827,7 @@ class TestComponentLogbook(unittest.TestCase):
             pointA, "binary_sensor.opening", STATE_OFF, attributes
         )
         message = logbook._entry_message_from_event(
-            self.hass, eventA.entity_id, eventA.domain, eventA, entity_attr_cache
+            eventA.entity_id, eventA.domain, eventA, entity_attr_cache
         )
         assert message == "is closed"
 
@@ -840,7 +842,7 @@ class TestComponentLogbook(unittest.TestCase):
             pointA, "binary_sensor.window", STATE_ON, attributes
         )
         message = logbook._entry_message_from_event(
-            self.hass, eventA.entity_id, eventA.domain, eventA, entity_attr_cache
+            eventA.entity_id, eventA.domain, eventA, entity_attr_cache
         )
         assert message == "is opened"
 
@@ -849,7 +851,7 @@ class TestComponentLogbook(unittest.TestCase):
             pointA, "binary_sensor.window", STATE_OFF, attributes
         )
         message = logbook._entry_message_from_event(
-            self.hass, eventA.entity_id, eventA.domain, eventA, entity_attr_cache
+            eventA.entity_id, eventA.domain, eventA, entity_attr_cache
         )
         assert message == "is closed"
 
@@ -864,7 +866,7 @@ class TestComponentLogbook(unittest.TestCase):
             pointA, "binary_sensor.lock", STATE_ON, attributes
         )
         message = logbook._entry_message_from_event(
-            self.hass, eventA.entity_id, eventA.domain, eventA, entity_attr_cache
+            eventA.entity_id, eventA.domain, eventA, entity_attr_cache
         )
         assert message == "is unlocked"
 
@@ -873,7 +875,7 @@ class TestComponentLogbook(unittest.TestCase):
             pointA, "binary_sensor.lock", STATE_OFF, attributes
         )
         message = logbook._entry_message_from_event(
-            self.hass, eventA.entity_id, eventA.domain, eventA, entity_attr_cache
+            eventA.entity_id, eventA.domain, eventA, entity_attr_cache
         )
         assert message == "is locked"
 
@@ -888,7 +890,7 @@ class TestComponentLogbook(unittest.TestCase):
             pointA, "binary_sensor.plug", STATE_ON, attributes
         )
         message = logbook._entry_message_from_event(
-            self.hass, eventA.entity_id, eventA.domain, eventA, entity_attr_cache
+            eventA.entity_id, eventA.domain, eventA, entity_attr_cache
         )
         assert message == "is plugged in"
 
@@ -897,7 +899,7 @@ class TestComponentLogbook(unittest.TestCase):
             pointA, "binary_sensor.plug", STATE_OFF, attributes
         )
         message = logbook._entry_message_from_event(
-            self.hass, eventA.entity_id, eventA.domain, eventA, entity_attr_cache
+            eventA.entity_id, eventA.domain, eventA, entity_attr_cache
         )
         assert message == "is unplugged"
 
@@ -912,7 +914,7 @@ class TestComponentLogbook(unittest.TestCase):
             pointA, "binary_sensor.presence", STATE_ON, attributes
         )
         message = logbook._entry_message_from_event(
-            self.hass, eventA.entity_id, eventA.domain, eventA, entity_attr_cache
+            eventA.entity_id, eventA.domain, eventA, entity_attr_cache
         )
         assert message == "is at home"
 
@@ -921,7 +923,7 @@ class TestComponentLogbook(unittest.TestCase):
             pointA, "binary_sensor.presence", STATE_OFF, attributes
         )
         message = logbook._entry_message_from_event(
-            self.hass, eventA.entity_id, eventA.domain, eventA, entity_attr_cache
+            eventA.entity_id, eventA.domain, eventA, entity_attr_cache
         )
         assert message == "is away"
 
@@ -936,7 +938,7 @@ class TestComponentLogbook(unittest.TestCase):
             pointA, "binary_sensor.safety", STATE_ON, attributes
         )
         message = logbook._entry_message_from_event(
-            self.hass, eventA.entity_id, eventA.domain, eventA, entity_attr_cache
+            eventA.entity_id, eventA.domain, eventA, entity_attr_cache
         )
         assert message == "is unsafe"
 
@@ -945,7 +947,7 @@ class TestComponentLogbook(unittest.TestCase):
             pointA, "binary_sensor.safety", STATE_OFF, attributes
         )
         message = logbook._entry_message_from_event(
-            self.hass, eventA.entity_id, eventA.domain, eventA, entity_attr_cache
+            eventA.entity_id, eventA.domain, eventA, entity_attr_cache
         )
         assert message == "is safe"
 
@@ -960,7 +962,7 @@ class TestComponentLogbook(unittest.TestCase):
             pointA, "binary_sensor.cold", STATE_ON, attributes
         )
         message = logbook._entry_message_from_event(
-            self.hass, eventA.entity_id, eventA.domain, eventA, entity_attr_cache
+            eventA.entity_id, eventA.domain, eventA, entity_attr_cache
         )
         assert message == "detected cold"
 
@@ -969,7 +971,7 @@ class TestComponentLogbook(unittest.TestCase):
             pointA, "binary_sensor.cold", STATE_OFF, attributes
         )
         message = logbook._entry_message_from_event(
-            self.hass, eventA.entity_id, eventA.domain, eventA, entity_attr_cache
+            eventA.entity_id, eventA.domain, eventA, entity_attr_cache
         )
         assert message == "cleared (no cold detected)"
 
@@ -984,7 +986,7 @@ class TestComponentLogbook(unittest.TestCase):
             pointA, "binary_sensor.gas", STATE_ON, attributes
         )
         message = logbook._entry_message_from_event(
-            self.hass, eventA.entity_id, eventA.domain, eventA, entity_attr_cache
+            eventA.entity_id, eventA.domain, eventA, entity_attr_cache
         )
         assert message == "detected gas"
 
@@ -993,7 +995,7 @@ class TestComponentLogbook(unittest.TestCase):
             pointA, "binary_sensor.gas", STATE_OFF, attributes
         )
         message = logbook._entry_message_from_event(
-            self.hass, eventA.entity_id, eventA.domain, eventA, entity_attr_cache
+            eventA.entity_id, eventA.domain, eventA, entity_attr_cache
         )
         assert message == "cleared (no gas detected)"
 
@@ -1008,7 +1010,7 @@ class TestComponentLogbook(unittest.TestCase):
             pointA, "binary_sensor.heat", STATE_ON, attributes
         )
         message = logbook._entry_message_from_event(
-            self.hass, eventA.entity_id, eventA.domain, eventA, entity_attr_cache
+            eventA.entity_id, eventA.domain, eventA, entity_attr_cache
         )
         assert message == "detected heat"
 
@@ -1017,7 +1019,7 @@ class TestComponentLogbook(unittest.TestCase):
             pointA, "binary_sensor.heat", STATE_OFF, attributes
         )
         message = logbook._entry_message_from_event(
-            self.hass, eventA.entity_id, eventA.domain, eventA, entity_attr_cache
+            eventA.entity_id, eventA.domain, eventA, entity_attr_cache
         )
         assert message == "cleared (no heat detected)"
 
@@ -1032,7 +1034,7 @@ class TestComponentLogbook(unittest.TestCase):
             pointA, "binary_sensor.light", STATE_ON, attributes
         )
         message = logbook._entry_message_from_event(
-            self.hass, eventA.entity_id, eventA.domain, eventA, entity_attr_cache
+            eventA.entity_id, eventA.domain, eventA, entity_attr_cache
         )
         assert message == "detected light"
 
@@ -1041,7 +1043,7 @@ class TestComponentLogbook(unittest.TestCase):
             pointA, "binary_sensor.light", STATE_OFF, attributes
         )
         message = logbook._entry_message_from_event(
-            self.hass, eventA.entity_id, eventA.domain, eventA, entity_attr_cache
+            eventA.entity_id, eventA.domain, eventA, entity_attr_cache
         )
         assert message == "cleared (no light detected)"
 
@@ -1056,7 +1058,7 @@ class TestComponentLogbook(unittest.TestCase):
             pointA, "binary_sensor.moisture", STATE_ON, attributes
         )
         message = logbook._entry_message_from_event(
-            self.hass, eventA.entity_id, eventA.domain, eventA, entity_attr_cache
+            eventA.entity_id, eventA.domain, eventA, entity_attr_cache
         )
         assert message == "detected moisture"
 
@@ -1065,7 +1067,7 @@ class TestComponentLogbook(unittest.TestCase):
             pointA, "binary_sensor.moisture", STATE_OFF, attributes
         )
         message = logbook._entry_message_from_event(
-            self.hass, eventA.entity_id, eventA.domain, eventA, entity_attr_cache
+            eventA.entity_id, eventA.domain, eventA, entity_attr_cache
         )
         assert message == "cleared (no moisture detected)"
 
@@ -1080,7 +1082,7 @@ class TestComponentLogbook(unittest.TestCase):
             pointA, "binary_sensor.motion", STATE_ON, attributes
         )
         message = logbook._entry_message_from_event(
-            self.hass, eventA.entity_id, eventA.domain, eventA, entity_attr_cache
+            eventA.entity_id, eventA.domain, eventA, entity_attr_cache
         )
         assert message == "detected motion"
 
@@ -1089,7 +1091,7 @@ class TestComponentLogbook(unittest.TestCase):
             pointA, "binary_sensor.motion", STATE_OFF, attributes
         )
         message = logbook._entry_message_from_event(
-            self.hass, eventA.entity_id, eventA.domain, eventA, entity_attr_cache
+            eventA.entity_id, eventA.domain, eventA, entity_attr_cache
         )
         assert message == "cleared (no motion detected)"
 
@@ -1104,7 +1106,7 @@ class TestComponentLogbook(unittest.TestCase):
             pointA, "binary_sensor.occupancy", STATE_ON, attributes
         )
         message = logbook._entry_message_from_event(
-            self.hass, eventA.entity_id, eventA.domain, eventA, entity_attr_cache
+            eventA.entity_id, eventA.domain, eventA, entity_attr_cache
         )
         assert message == "detected occupancy"
 
@@ -1113,7 +1115,7 @@ class TestComponentLogbook(unittest.TestCase):
             pointA, "binary_sensor.occupancy", STATE_OFF, attributes
         )
         message = logbook._entry_message_from_event(
-            self.hass, eventA.entity_id, eventA.domain, eventA, entity_attr_cache
+            eventA.entity_id, eventA.domain, eventA, entity_attr_cache
         )
         assert message == "cleared (no occupancy detected)"
 
@@ -1128,7 +1130,7 @@ class TestComponentLogbook(unittest.TestCase):
             pointA, "binary_sensor.power", STATE_ON, attributes
         )
         message = logbook._entry_message_from_event(
-            self.hass, eventA.entity_id, eventA.domain, eventA, entity_attr_cache
+            eventA.entity_id, eventA.domain, eventA, entity_attr_cache
         )
         assert message == "detected power"
 
@@ -1137,7 +1139,7 @@ class TestComponentLogbook(unittest.TestCase):
             pointA, "binary_sensor.power", STATE_OFF, attributes
         )
         message = logbook._entry_message_from_event(
-            self.hass, eventA.entity_id, eventA.domain, eventA, entity_attr_cache
+            eventA.entity_id, eventA.domain, eventA, entity_attr_cache
         )
         assert message == "cleared (no power detected)"
 
@@ -1152,7 +1154,7 @@ class TestComponentLogbook(unittest.TestCase):
             pointA, "binary_sensor.problem", STATE_ON, attributes
         )
         message = logbook._entry_message_from_event(
-            self.hass, eventA.entity_id, eventA.domain, eventA, entity_attr_cache
+            eventA.entity_id, eventA.domain, eventA, entity_attr_cache
         )
         assert message == "detected problem"
 
@@ -1161,7 +1163,7 @@ class TestComponentLogbook(unittest.TestCase):
             pointA, "binary_sensor.problem", STATE_OFF, attributes
         )
         message = logbook._entry_message_from_event(
-            self.hass, eventA.entity_id, eventA.domain, eventA, entity_attr_cache
+            eventA.entity_id, eventA.domain, eventA, entity_attr_cache
         )
         assert message == "cleared (no problem detected)"
 
@@ -1176,7 +1178,7 @@ class TestComponentLogbook(unittest.TestCase):
             pointA, "binary_sensor.smoke", STATE_ON, attributes
         )
         message = logbook._entry_message_from_event(
-            self.hass, eventA.entity_id, eventA.domain, eventA, entity_attr_cache
+            eventA.entity_id, eventA.domain, eventA, entity_attr_cache
         )
         assert message == "detected smoke"
 
@@ -1185,7 +1187,7 @@ class TestComponentLogbook(unittest.TestCase):
             pointA, "binary_sensor.smoke", STATE_OFF, attributes
         )
         message = logbook._entry_message_from_event(
-            self.hass, eventA.entity_id, eventA.domain, eventA, entity_attr_cache
+            eventA.entity_id, eventA.domain, eventA, entity_attr_cache
         )
         assert message == "cleared (no smoke detected)"
 
@@ -1200,7 +1202,7 @@ class TestComponentLogbook(unittest.TestCase):
             pointA, "binary_sensor.sound", STATE_ON, attributes
         )
         message = logbook._entry_message_from_event(
-            self.hass, eventA.entity_id, eventA.domain, eventA, entity_attr_cache
+            eventA.entity_id, eventA.domain, eventA, entity_attr_cache
         )
         assert message == "detected sound"
 
@@ -1209,7 +1211,7 @@ class TestComponentLogbook(unittest.TestCase):
             pointA, "binary_sensor.sound", STATE_OFF, attributes
         )
         message = logbook._entry_message_from_event(
-            self.hass, eventA.entity_id, eventA.domain, eventA, entity_attr_cache
+            eventA.entity_id, eventA.domain, eventA, entity_attr_cache
         )
         assert message == "cleared (no sound detected)"
 
@@ -1224,7 +1226,7 @@ class TestComponentLogbook(unittest.TestCase):
             pointA, "binary_sensor.vibration", STATE_ON, attributes
         )
         message = logbook._entry_message_from_event(
-            self.hass, eventA.entity_id, eventA.domain, eventA, entity_attr_cache
+            eventA.entity_id, eventA.domain, eventA, entity_attr_cache
         )
         assert message == "detected vibration"
 
@@ -1233,7 +1235,7 @@ class TestComponentLogbook(unittest.TestCase):
             pointA, "binary_sensor.vibration", STATE_OFF, attributes
         )
         message = logbook._entry_message_from_event(
-            self.hass, eventA.entity_id, eventA.domain, eventA, entity_attr_cache
+            eventA.entity_id, eventA.domain, eventA, entity_attr_cache
         )
         assert message == "cleared (no vibration detected)"
 
@@ -1258,6 +1260,7 @@ class TestComponentLogbook(unittest.TestCase):
                     ),
                 ),
                 entity_attr_cache,
+                {},
             )
         )
 
@@ -1652,7 +1655,6 @@ async def test_logbook_entity_filter_with_automations(hass, hass_client):
     assert response.status == 200
     json_dict = await response.json()
 
-    assert len(json_dict) == 5
     assert json_dict[0]["entity_id"] == entity_id_test
     assert json_dict[1]["entity_id"] == entity_id_second
     assert json_dict[2]["entity_id"] == "automation.mock_automation"
@@ -1837,6 +1839,105 @@ async def test_exclude_attribute_changes(hass, hass_client):
     assert response_json[2]["entity_id"] == "light.kitchen"
 
 
+async def test_logbook_entity_context_id(hass, hass_client):
+    """Test the logbook view with end_time and entity with automations and scripts."""
+    await hass.async_add_executor_job(init_recorder_component, hass)
+    await async_setup_component(hass, "logbook", {})
+    await async_setup_component(hass, "automation", {})
+    await async_setup_component(hass, "script", {})
+
+    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+
+    context = ha.Context(
+        id="ac5bd62de45711eaaeb351041eec8dd9",
+        user_id="b400facee45711eaa9308bfd3d19e474",
+    )
+
+    automation_entity_id_test = "automation.alarm"
+    hass.bus.async_fire(
+        EVENT_AUTOMATION_TRIGGERED,
+        {ATTR_NAME: "Mock automation", ATTR_ENTITY_ID: automation_entity_id_test},
+        context=context,
+    )
+    hass.bus.async_fire(
+        EVENT_SCRIPT_STARTED,
+        {ATTR_NAME: "Mock script", ATTR_ENTITY_ID: "script.mock_script"},
+        context=context,
+    )
+    hass.states.async_set(automation_entity_id_test, STATE_ON, context=context)
+
+    entity_id_test = "alarm_control_panel.area_001"
+    hass.states.async_set(entity_id_test, STATE_OFF, context=context)
+    hass.states.async_set(entity_id_test, STATE_ON, context=context)
+    entity_id_second = "alarm_control_panel.area_002"
+    hass.states.async_set(entity_id_second, STATE_OFF, context=context)
+    hass.states.async_set(entity_id_second, STATE_ON, context=context)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_add_job(
+        logbook.log_entry,
+        hass,
+        "mock_name",
+        "mock_message",
+        "alarm_control_panel",
+        "alarm_control_panel.area_003",
+        context,
+    )
+    await hass.async_add_job(
+        logbook.log_entry,
+        hass,
+        "mock_name",
+        "mock_message",
+        "homeassistant",
+        None,
+        context,
+    )
+
+    await hass.async_add_job(trigger_db_commit, hass)
+    await hass.async_block_till_done()
+    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+
+    client = await hass_client()
+
+    # Today time 00:00:00
+    start = dt_util.utcnow().date()
+    start_date = datetime(start.year, start.month, start.day)
+
+    # Test today entries with filter by end_time
+    end_time = start + timedelta(hours=24)
+    response = await client.get(
+        f"/api/logbook/{start_date.isoformat()}?end_time={end_time}"
+    )
+    assert response.status == 200
+    json_dict = await response.json()
+
+    assert json_dict[0]["entity_id"] == "automation.alarm"
+    assert "context_entity_id" not in json_dict[0]
+    assert json_dict[0]["context_user_id"] == "b400facee45711eaa9308bfd3d19e474"
+
+    assert json_dict[1]["entity_id"] == "script.mock_script"
+    assert json_dict[1]["context_entity_id"] == "automation.alarm"
+    assert json_dict[1]["context_user_id"] == "b400facee45711eaa9308bfd3d19e474"
+
+    assert json_dict[2]["entity_id"] == entity_id_test
+    assert json_dict[2]["context_entity_id"] == "automation.alarm"
+    assert json_dict[2]["context_user_id"] == "b400facee45711eaa9308bfd3d19e474"
+
+    assert json_dict[3]["entity_id"] == entity_id_second
+    assert json_dict[3]["context_entity_id"] == "automation.alarm"
+    assert json_dict[3]["context_user_id"] == "b400facee45711eaa9308bfd3d19e474"
+
+    assert json_dict[4]["domain"] == "homeassistant"
+
+    assert json_dict[5]["entity_id"] == "alarm_control_panel.area_003"
+    assert json_dict[5]["context_entity_id"] == "automation.alarm"
+    assert json_dict[5]["domain"] == "alarm_control_panel"
+    assert json_dict[5]["context_user_id"] == "b400facee45711eaa9308bfd3d19e474"
+
+    assert json_dict[6]["domain"] == "homeassistant"
+    assert json_dict[6]["context_user_id"] == "b400facee45711eaa9308bfd3d19e474"
+
+
 class MockLazyEventPartialState(ha.Event):
     """Minimal mock of a Lazy event."""
 
@@ -1849,6 +1950,11 @@ class MockLazyEventPartialState(ha.Event):
     def context_user_id(self):
         """Context user id of event."""
         return self.context.user_id
+
+    @property
+    def context_id(self):
+        """Context id of event."""
+        return self.context.id
 
     @property
     def time_fired_isoformat(self):
