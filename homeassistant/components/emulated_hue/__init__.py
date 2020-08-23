@@ -21,7 +21,7 @@ from .hue_api import (
     HueUnauthorizedUser,
     HueUsernameView,
 )
-from .upnp import DescriptionXmlView, UPNPResponderThread
+from .upnp import DescriptionXmlView, create_upnp_datagram_endpoint
 
 DOMAIN = "emulated_hue"
 
@@ -120,17 +120,22 @@ async def async_setup(hass, yaml_config):
     HueGroupView(config).register(app, app.router)
     HueFullStateView(config).register(app, app.router)
 
-    upnp_listener = UPNPResponderThread(
+    listen = create_upnp_datagram_endpoint(
         config.host_ip_addr,
-        config.listen_port,
         config.upnp_bind_multicast,
         config.advertise_ip,
-        config.advertise_port,
+        config.advertise_port or config.listen_port,
     )
+    protocol = None
 
     async def stop_emulated_hue_bridge(event):
         """Stop the emulated hue bridge."""
-        upnp_listener.stop()
+        nonlocal protocol
+        nonlocal site
+        nonlocal runner
+
+        if protocol:
+            protocol.close()
         if site:
             await site.stop()
         if runner:
@@ -138,9 +143,11 @@ async def async_setup(hass, yaml_config):
 
     async def start_emulated_hue_bridge(event):
         """Start the emulated hue bridge."""
-        upnp_listener.start()
+        nonlocal protocol
         nonlocal site
         nonlocal runner
+
+        _, protocol = await listen
 
         runner = web.AppRunner(app)
         await runner.setup()
@@ -153,6 +160,8 @@ async def async_setup(hass, yaml_config):
             _LOGGER.error(
                 "Failed to create HTTP server at port %d: %s", config.listen_port, error
             )
+            if protocol:
+                protocol.close()
         else:
             hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_STOP, stop_emulated_hue_bridge
