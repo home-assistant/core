@@ -21,6 +21,8 @@ from .const import (
     VS_SWITCHES,
 )
 
+PLATFORMS = ["switch", "fan"]
+
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
@@ -132,18 +134,15 @@ async def async_setup_entry(hass, config_entry):
 
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
-    forward_unload = hass.config_entries.async_forward_entry_unload
-    remove_switches = False
-    if hass.data[DOMAIN][VS_SWITCHES]:
-        remove_switches = await forward_unload(entry, "switch")
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, component)
+                for component in PLATFORMS
+            ]
+        )
+    )
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id)
 
-    remove_fans = False
-    if hass.data[DOMAIN][VS_FANS]:
-        remove_fans = await forward_unload(entry, "fan")
-
-    if remove_switches and remove_fans:
-        hass.services.async_remove(DOMAIN, SERVICE_UPDATE_DEVS)
-        del hass.data[DOMAIN]
-        return True
-
-    return False
+    return unload_ok
