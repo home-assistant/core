@@ -96,7 +96,7 @@ def hass_hue(loop, hass):
         )
     )
 
-    with patch("homeassistant.components.emulated_hue.UPNPResponderThread"):
+    with patch("homeassistant.components.emulated_hue.create_upnp_datagram_endpoint"):
         loop.run_until_complete(
             setup.async_setup_component(
                 hass,
