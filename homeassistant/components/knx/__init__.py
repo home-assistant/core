@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 from xknx import XKNX
-from xknx.devices import ActionCallback, DateTime, DateTimeBroadcastType, ExposeSensor
+from xknx.devices import DateTime, DateTimeBroadcastType, ExposeSensor
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import XKNXException
 from xknx.io import DEFAULT_MCAST_PORT, ConnectionConfig, ConnectionType
@@ -23,26 +23,42 @@ from homeassistant.core import callback
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers.script import Script
+
+from .const import DATA_KNX, DOMAIN, DeviceTypes
+from .factory import create_knx_device
+from .schema import (
+    BinarySensorSchema,
+    ClimateSchema,
+    ConnectionSchema,
+    CoverSchema,
+    ExposeSchema,
+    LightSchema,
+    NotifySchema,
+    SceneSchema,
+    SensorSchema,
+    SwitchSchema,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "knx"
-DATA_KNX = "data_knx"
 CONF_KNX_CONFIG = "config_file"
 
 CONF_KNX_ROUTING = "routing"
 CONF_KNX_TUNNELING = "tunneling"
-CONF_KNX_LOCAL_IP = "local_ip"
 CONF_KNX_FIRE_EVENT = "fire_event"
 CONF_KNX_FIRE_EVENT_FILTER = "fire_event_filter"
 CONF_KNX_STATE_UPDATER = "state_updater"
 CONF_KNX_RATE_LIMIT = "rate_limit"
 CONF_KNX_EXPOSE = "expose"
-CONF_KNX_EXPOSE_TYPE = "type"
-CONF_KNX_EXPOSE_ATTRIBUTE = "attribute"
-CONF_KNX_EXPOSE_DEFAULT = "default"
-CONF_KNX_EXPOSE_ADDRESS = "address"
+
+CONF_KNX_LIGHT = "light"
+CONF_KNX_COVER = "cover"
+CONF_KNX_BINARY_SENSOR = "binary_sensor"
+CONF_KNX_SCENE = "scene"
+CONF_KNX_SENSOR = "sensor"
+CONF_KNX_SWITCH = "switch"
+CONF_KNX_NOTIFY = "notify"
+CONF_KNX_CLIMATE = "climate"
 
 SERVICE_KNX_SEND = "send"
 SERVICE_KNX_ATTR_ADDRESS = "address"
@@ -50,33 +66,17 @@ SERVICE_KNX_ATTR_PAYLOAD = "payload"
 
 ATTR_DISCOVER_DEVICES = "devices"
 
-TUNNELING_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_KNX_LOCAL_IP): cv.string,
-        vol.Optional(CONF_PORT): cv.port,
-    }
-)
-
-ROUTING_SCHEMA = vol.Schema({vol.Optional(CONF_KNX_LOCAL_IP): cv.string})
-
-EXPOSE_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_KNX_EXPOSE_TYPE): cv.string,
-        vol.Optional(CONF_ENTITY_ID): cv.entity_id,
-        vol.Optional(CONF_KNX_EXPOSE_ATTRIBUTE): cv.string,
-        vol.Optional(CONF_KNX_EXPOSE_DEFAULT): cv.match_all,
-        vol.Required(CONF_KNX_EXPOSE_ADDRESS): cv.string,
-    }
-)
-
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
                 vol.Optional(CONF_KNX_CONFIG): cv.string,
-                vol.Exclusive(CONF_KNX_ROUTING, "connection_type"): ROUTING_SCHEMA,
-                vol.Exclusive(CONF_KNX_TUNNELING, "connection_type"): TUNNELING_SCHEMA,
+                vol.Exclusive(
+                    CONF_KNX_ROUTING, "connection_type"
+                ): ConnectionSchema.ROUTING_SCHEMA,
+                vol.Exclusive(
+                    CONF_KNX_TUNNELING, "connection_type"
+                ): ConnectionSchema.TUNNELING_SCHEMA,
                 vol.Inclusive(CONF_KNX_FIRE_EVENT, "fire_ev"): cv.boolean,
                 vol.Inclusive(CONF_KNX_FIRE_EVENT_FILTER, "fire_ev"): vol.All(
                     cv.ensure_list, [cv.string]
@@ -85,7 +85,33 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_KNX_RATE_LIMIT, default=20): vol.All(
                     vol.Coerce(int), vol.Range(min=1, max=100)
                 ),
-                vol.Optional(CONF_KNX_EXPOSE): vol.All(cv.ensure_list, [EXPOSE_SCHEMA]),
+                vol.Optional(CONF_KNX_EXPOSE): vol.All(
+                    cv.ensure_list, [ExposeSchema.SCHEMA]
+                ),
+                vol.Optional(CONF_KNX_COVER): vol.All(
+                    cv.ensure_list, [CoverSchema.SCHEMA]
+                ),
+                vol.Optional(CONF_KNX_BINARY_SENSOR): vol.All(
+                    cv.ensure_list, [BinarySensorSchema.SCHEMA]
+                ),
+                vol.Optional(CONF_KNX_LIGHT): vol.All(
+                    cv.ensure_list, [LightSchema.SCHEMA]
+                ),
+                vol.Optional(CONF_KNX_CLIMATE): vol.All(
+                    cv.ensure_list, [ClimateSchema.SCHEMA]
+                ),
+                vol.Optional(CONF_KNX_NOTIFY): vol.All(
+                    cv.ensure_list, [NotifySchema.SCHEMA]
+                ),
+                vol.Optional(CONF_KNX_SWITCH): vol.All(
+                    cv.ensure_list, [SwitchSchema.SCHEMA]
+                ),
+                vol.Optional(CONF_KNX_SENSOR): vol.All(
+                    cv.ensure_list, [SensorSchema.SCHEMA]
+                ),
+                vol.Optional(CONF_KNX_SCENE): vol.All(
+                    cv.ensure_list, [SceneSchema.SCHEMA]
+                ),
             }
         )
     },
@@ -101,6 +127,17 @@ SERVICE_KNX_SEND_SCHEMA = vol.Schema(
     }
 )
 
+KNX_CONFIG_PLATFORM_MAPPING = {
+    CONF_KNX_COVER: DeviceTypes.cover,
+    CONF_KNX_SWITCH: DeviceTypes.switch,
+    CONF_KNX_LIGHT: DeviceTypes.light,
+    CONF_KNX_SENSOR: DeviceTypes.sensor,
+    CONF_KNX_NOTIFY: DeviceTypes.notify,
+    CONF_KNX_SCENE: DeviceTypes.scene,
+    CONF_KNX_BINARY_SENSOR: DeviceTypes.binary_sensor,
+    CONF_KNX_CLIMATE: DeviceTypes.climate,
+}
+
 
 async def async_setup(hass, config):
     """Set up the KNX component."""
@@ -113,6 +150,15 @@ async def async_setup(hass, config):
         hass.components.persistent_notification.async_create(
             f"Can't connect to KNX interface: <br><b>{ex}</b>", title="KNX"
         )
+
+    for platform_config, device_type in KNX_CONFIG_PLATFORM_MAPPING.items():
+        if platform_config in config[DOMAIN]:
+            for device_config in config[DOMAIN][platform_config]:
+                hass.data[DATA_KNX].xknx.devices.add(
+                    create_knx_device(
+                        hass, device_type, hass.data[DATA_KNX].xknx, device_config
+                    )
+                )
 
     for component, discovery_type in (
         ("switch", "Switch"),
@@ -207,7 +253,9 @@ class KNXModule:
 
     def connection_config_routing(self):
         """Return the connection_config if routing is configured."""
-        local_ip = self.config[DOMAIN][CONF_KNX_ROUTING].get(CONF_KNX_LOCAL_IP)
+        local_ip = self.config[DOMAIN][CONF_KNX_ROUTING].get(
+            ConnectionSchema.CONF_KNX_LOCAL_IP
+        )
         return ConnectionConfig(
             connection_type=ConnectionType.ROUTING, local_ip=local_ip
         )
@@ -216,7 +264,9 @@ class KNXModule:
         """Return the connection_config if tunneling is configured."""
         gateway_ip = self.config[DOMAIN][CONF_KNX_TUNNELING][CONF_HOST]
         gateway_port = self.config[DOMAIN][CONF_KNX_TUNNELING].get(CONF_PORT)
-        local_ip = self.config[DOMAIN][CONF_KNX_TUNNELING].get(CONF_KNX_LOCAL_IP)
+        local_ip = self.config[DOMAIN][CONF_KNX_TUNNELING].get(
+            ConnectionSchema.CONF_KNX_LOCAL_IP
+        )
         if gateway_port is None:
             gateway_port = DEFAULT_MCAST_PORT
         return ConnectionConfig(
@@ -251,11 +301,11 @@ class KNXModule:
         if CONF_KNX_EXPOSE not in self.config[DOMAIN]:
             return
         for to_expose in self.config[DOMAIN][CONF_KNX_EXPOSE]:
-            expose_type = to_expose.get(CONF_KNX_EXPOSE_TYPE)
+            expose_type = to_expose.get(ExposeSchema.CONF_KNX_EXPOSE_TYPE)
             entity_id = to_expose.get(CONF_ENTITY_ID)
-            attribute = to_expose.get(CONF_KNX_EXPOSE_ATTRIBUTE)
-            default = to_expose.get(CONF_KNX_EXPOSE_DEFAULT)
-            address = to_expose.get(CONF_KNX_EXPOSE_ADDRESS)
+            attribute = to_expose.get(ExposeSchema.CONF_KNX_EXPOSE_ATTRIBUTE)
+            default = to_expose.get(ExposeSchema.CONF_KNX_EXPOSE_DEFAULT)
+            address = to_expose.get(ExposeSchema.CONF_KNX_EXPOSE_ADDRESS)
             if expose_type in ["time", "date", "datetime"]:
                 exposure = KNXExposeTime(self.xknx, expose_type, address)
                 exposure.async_register()
@@ -300,22 +350,6 @@ class KNXModule:
         telegram.payload = payload
         telegram.group_address = address
         await self.xknx.telegrams.put(telegram)
-
-
-class KNXAutomation:
-    """Wrapper around xknx.devices.ActionCallback object.."""
-
-    def __init__(self, hass, device, hook, action, counter=1):
-        """Initialize Automation class."""
-        self.hass = hass
-        self.device = device
-        script_name = f"{device.get_name()} turn ON script"
-        self.script = Script(hass, action, script_name, DOMAIN)
-
-        self.action = ActionCallback(
-            hass.data[DATA_KNX].xknx, self.script.async_run, hook=hook, counter=counter
-        )
-        device.actions.append(self.action)
 
 
 class KNXExposeTime:
