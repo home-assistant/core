@@ -37,10 +37,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     weather_configs = _filter_domain_configs(config.get("weather", []), DOMAIN)
     sensor_configs = _filter_domain_configs(config.get("sensor", []), DOMAIN)
 
-    if len(weather_configs) > 0:
-        _import_configs(hass, weather_configs)
-    else:
-        _import_configs(hass, sensor_configs)
+    _import_configs(hass, weather_configs + sensor_configs)
     return True
 
 
