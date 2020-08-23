@@ -1,4 +1,5 @@
 """VeSync integration."""
+import asyncio
 import logging
 
 from pyvesync import VeSync
