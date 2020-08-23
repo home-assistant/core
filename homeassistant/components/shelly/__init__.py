@@ -69,6 +69,10 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
 
     async def _async_update_data(self):
         """Fetch data."""
+        # Race condition on shutdown. Stop all the fetches.
+        if self._unsub_stop is None:
+            return None
+
         try:
             async with async_timeout.timeout(5):
                 return await self.device.update()
@@ -100,10 +104,10 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
 
     async def shutdown(self):
         """Shutdown the device wrapper."""
-        await self.device.shutdown()
         if self._unsub_stop:
             self._unsub_stop()
             self._unsub_stop = None
+        await self.device.shutdown()
 
     async def _handle_ha_stop(self, _):
         """Handle Home Assistant stopping."""
@@ -136,7 +140,7 @@ class ShellyBlockEntity(Entity):
 
     @property
     def available(self):
-        """Device info."""
+        """Available."""
         return self.wrapper.last_update_success
 
     @property

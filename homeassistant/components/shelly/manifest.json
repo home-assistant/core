@@ -4,9 +4,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/shelly2",
   "requirements": ["aioshelly==0.1"],
-  "ssdp": [],
   "zeroconf": ["_http._tcp.local."],
-  "homekit": {},
-  "dependencies": [],
   "codeowners": ["@balloob"]
 }

@@ -37,6 +37,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
+    info = None
     host = None
 
     async def async_step_user(self, user_input=None):
@@ -44,12 +45,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             try:
-                return await self._create_entry(user_input)
+                device_info = await validate_input(self.hass, user_input)
             except asyncio.TimeoutError:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
+            else:
+                await self.async_set_unique_id(device_info["mac"])
+                return self.async_create_entry(
+                    title=device_info["title"] or user_input["host"], data=user_input
+                )
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
@@ -64,6 +70,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             aiohttp_client.async_get_clientsession(self.hass), zeroconf_info["host"]
         )
         await self.async_set_unique_id(info["mac"])
+        self.info = info
         self._abort_if_unique_id_configured({"host": zeroconf_info["host"]})
         self.host = zeroconf_info["host"]
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
@@ -72,15 +79,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_confirm_discovery(self, user_input=None):
         """Handle discovery confirm."""
+        errors = {}
         if user_input is not None:
-            return await self._create_entry({"host": self.host})
+            try:
+                device_info = await validate_input(self.hass, {"host": self.host})
+            except asyncio.TimeoutError:
+                errors["base"] = "cannot_connect"
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                return self.async_create_entry(
+                    title=device_info["title"] or self.host, data={"host": self.host}
+                )
 
-        return self.async_show_form(step_id="confirm_discovery",)
-
-    async def _create_entry(self, data):
-        """Create an entry from connection data."""
-        info = await validate_input(self.hass, data)
-
-        await self.async_set_unique_id(info["mac"])
-
-        return self.async_create_entry(title=info["title"] or data["host"], data=data)
+        return self.async_show_form(step_id="confirm_discovery", errors=errors)
