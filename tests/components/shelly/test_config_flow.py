@@ -18,6 +18,9 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch(
+        "aioshelly.get_info",
+        return_value={"mac": "test-mac", "type": "SHSW-1", "auth": False},
+    ), patch(
         "aioshelly.Device.create",
         return_value=Mock(
             shutdown=AsyncMock(),
@@ -49,7 +52,7 @@ async def test_form_cannot_connect(hass):
     )
 
     with patch(
-        "aioshelly.Device.create", side_effect=asyncio.TimeoutError,
+        "aioshelly.get_info", side_effect=asyncio.TimeoutError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"host": "1.1.1.1"},
@@ -64,7 +67,8 @@ async def test_zeroconf(hass):
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     with patch(
-        "aioshelly.get_info", return_value={"mac": "abcd"},
+        "aioshelly.get_info",
+        return_value={"mac": "test-mac", "type": "SHSW-1", "auth": False},
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -106,7 +110,8 @@ async def test_zeroconf_already_configured(hass):
     entry.add_to_hass(hass)
 
     with patch(
-        "aioshelly.get_info", return_value={"mac": "test-mac"},
+        "aioshelly.get_info",
+        return_value={"mac": "test-mac", "type": "SHSW-1", "auth": False},
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -117,3 +122,19 @@ async def test_zeroconf_already_configured(hass):
 
     # Test config entry got updated with latest IP
     assert entry.data["host"] == "1.1.1.1"
+
+
+async def test_zeroconf_require_auth(hass):
+    """Test we get the form."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    with patch(
+        "aioshelly.get_info",
+        return_value={"mac": "test-mac", "type": "SHSW-1", "auth": True},
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data={"host": "1.1.1.1", "name": "shelly1pm-12345"},
+            context={"source": config_entries.SOURCE_ZEROCONF},
+        )
+        assert result["type"] == "abort"

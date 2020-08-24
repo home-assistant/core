@@ -2,6 +2,7 @@
 import asyncio
 import logging
 
+import aiohttp
 import aioshelly
 import async_timeout
 import voluptuous as vol
@@ -14,6 +15,8 @@ from .const import DOMAIN  # pylint:disable=unused-import
 _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema({"host": str})
+
+HTTP_CONNECT_ERRORS = (asyncio.TimeoutError, aiohttp.ClientError)
 
 
 async def validate_input(hass: core.HomeAssistant, data):
@@ -45,17 +48,27 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             try:
-                device_info = await validate_input(self.hass, user_input)
-            except asyncio.TimeoutError:
+                info = await self._async_get_info(user_input["host"])
+            except HTTP_CONNECT_ERRORS:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+
             else:
-                await self.async_set_unique_id(device_info["mac"])
-                return self.async_create_entry(
-                    title=device_info["title"] or user_input["host"], data=user_input
-                )
+                if info["auth"]:
+                    return self.async_abort(reason="auth_not_supported")
+
+                try:
+                    device_info = await validate_input(self.hass, user_input)
+                except asyncio.TimeoutError:
+                    errors["base"] = "cannot_connect"
+                except Exception:  # pylint: disable=broad-except
+                    _LOGGER.exception("Unexpected exception")
+                    errors["base"] = "unknown"
+                else:
+                    await self.async_set_unique_id(device_info["mac"])
+                    return self.async_create_entry(
+                        title=device_info["title"] or user_input["host"],
+                        data=user_input,
+                    )
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
@@ -66,9 +79,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not zeroconf_info.get("name", "").startswith("shelly"):
             return self.async_abort(reason="not_shelly")
 
-        info = self.info = await aioshelly.get_info(
-            aiohttp_client.async_get_clientsession(self.hass), zeroconf_info["host"]
-        )
+        try:
+            self.info = info = await self._async_get_info(zeroconf_info["host"])
+        except HTTP_CONNECT_ERRORS:
+            return self.async_abort(reason="cannot_connect")
+
+        if info["auth"]:
+            return self.async_abort(reason="auth_not_supported")
+
         await self.async_set_unique_id(info["mac"])
         self._abort_if_unique_id_configured({"host": zeroconf_info["host"]})
         self.host = zeroconf_info["host"]
@@ -102,3 +120,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
             errors=errors,
         )
+
+    async def _async_get_info(self, host):
+        """Get info from shelly device."""
+        async with async_timeout.timeout(5):
+            return await aioshelly.get_info(
+                aiohttp_client.async_get_clientsession(self.hass), host,
+            )
