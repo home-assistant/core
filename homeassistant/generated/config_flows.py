@@ -151,6 +151,7 @@ FLOWS = [
     "samsungtv",
     "sense",
     "sentry",
+    "shelly",
     "shopping_list",
     "simplisafe",
     "smappee",

@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+        },
+        "error": {
+            "auth_not_supported": "Authenticated Shelly devices are not currently supported.",
+            "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+            "unknown": "[%key:common::config_flow::error::unknown%]"
+        },
+        "flow_title": "Shelly: {name}",
+        "step": {
+            "confirm_discovery": {
+                "description": "Do you want to set up the {model} at {host}?"
+            },
+            "user": {
+                "data": {
+                    "host": "[%key:common::config_flow::data::host%]"
+                }
+            }
+        }
+    },
+    "title": "Shelly"
+}
