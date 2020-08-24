@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from pyatv import conf
+from pyatv import conf, net
 import pytest
 
 from homeassistant.components.apple_tv import config_flow
@@ -42,7 +42,9 @@ def pairing():
     with patch("homeassistant.components.apple_tv.config_flow.pair") as mock_pair:
 
         async def _pair(config, protocol, loop, session=None, **kwargs):
-            handler = MockPairingHandler(None, config.get_service(protocol))
+            handler = MockPairingHandler(
+                await net.create_session(session), config.get_service(protocol)
+            )
             handler.always_fail = mock_pair.always_fail
             return handler
 
@@ -71,9 +73,9 @@ def full_device(mock_scan, dmap_pin):
         create_conf(
             "127.0.0.1",
             "MRP Device",
-            conf.MrpService("mrp_id", 5555),
-            conf.DmapService("dmap_id", None, port=6666),
-            conf.AirPlayService("airplay_id", port=7777),
+            conf.MrpService("mrpid", 5555),
+            conf.DmapService("dmapid", None, port=6666),
+            conf.AirPlayService("airplayid", port=7777),
         )
     )
     yield mock_scan
@@ -83,7 +85,7 @@ def full_device(mock_scan, dmap_pin):
 def mrp_device(mock_scan):
     """Mock pyatv.scan."""
     mock_scan.result.append(
-        create_conf("127.0.0.1", "MRP Device", conf.MrpService("mrp_id", 5555))
+        create_conf("127.0.0.1", "MRP Device", conf.MrpService("mrpid", 5555))
     )
     yield mock_scan
 
@@ -93,7 +95,7 @@ def dmap_device(mock_scan):
     """Mock pyatv.scan."""
     mock_scan.result.append(
         create_conf(
-            "127.0.0.1", "DMAP Device", conf.DmapService("dmap_id", None, port=6666),
+            "127.0.0.1", "DMAP Device", conf.DmapService("dmapid", None, port=6666),
         )
     )
     yield mock_scan
@@ -106,7 +108,7 @@ def dmap_device_with_credentials(mock_scan):
         create_conf(
             "127.0.0.1",
             "DMAP Device",
-            conf.DmapService("dmap_id", "dummy_creds", port=6666),
+            conf.DmapService("dmapid", "dummy_creds", port=6666),
         )
     )
     yield mock_scan
@@ -117,7 +119,7 @@ def airplay_device(mock_scan):
     """Mock pyatv.scan."""
     mock_scan.result.append(
         create_conf(
-            "127.0.0.1", "AirPlay Device", conf.AirPlayService("airplay_id", port=7777)
+            "127.0.0.1", "AirPlay Device", conf.AirPlayService("airplayid", port=7777)
         )
     )
     yield mock_scan

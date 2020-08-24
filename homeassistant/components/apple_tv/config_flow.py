@@ -3,7 +3,9 @@ from ipaddress import ip_address
 import logging
 from random import randrange
 
-from pyatv import const, convert, exceptions, pair, scan
+from pyatv import exceptions, pair, scan
+from pyatv.const import Protocol
+from pyatv.convert import protocol_str
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -34,13 +36,13 @@ _LOGGER = logging.getLogger(__name__)
 INPUT_PIN_SCHEMA = vol.Schema({vol.Required(CONF_PIN, default=None): int})
 
 DEFAULT_START_OFF = False
-PROTOCOL_PRIORITY = [const.Protocol.MRP, const.Protocol.DMAP, const.Protocol.AirPlay]
+PROTOCOL_PRIORITY = [Protocol.MRP, Protocol.DMAP, Protocol.AirPlay]
 
 # Mapping between config entry format and pyatv
 CREDENTIAL_MAPPING = {
-    CONF_CREDENTIALS_MRP: const.Protocol.MRP.value,
-    CONF_CREDENTIALS_DMAP: const.Protocol.DMAP.value,
-    CONF_CREDENTIALS_AIRPLAY: const.Protocol.AirPlay.value,
+    CONF_CREDENTIALS_MRP: Protocol.MRP.value,
+    CONF_CREDENTIALS_DMAP: Protocol.DMAP.value,
+    CONF_CREDENTIALS_AIRPLAY: Protocol.AirPlay.value,
 }
 
 
@@ -80,8 +82,8 @@ async def device_scan(identifier, loop, cache=None):
 def is_valid_credentials(credentials):
     """Verify that credentials are valid for establishing a connection."""
     return (
-        credentials.get(const.Protocol.MRP.value) is not None
-        or credentials.get(const.Protocol.DMAP.value) is not None
+        credentials.get(Protocol.MRP.value) is not None
+        or credentials.get(Protocol.DMAP.value) is not None
     )
 
 
@@ -172,9 +174,6 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         elif service_type == "_touch-able._tcp.local.":
             identifier = discovery_info["name"].split(".")[0]
             name = properties["CtlN"]
-        elif service_type == "_appletv-v2._tcp.local.":
-            identifier = discovery_info["name"].split(".")[0]
-            name = properties["Name"] + " (Home Sharing)"
         else:
             return self.async_abort(reason="unrecoverable_error")
 
@@ -303,7 +302,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="pair_with_pin",
             data_schema=INPUT_PIN_SCHEMA,
             errors=errors,
-            description_placeholders={"protocol": convert.protocol_str(self.protocol)},
+            description_placeholders={"protocol": protocol_str(self.protocol)},
         )
 
     async def async_step_pair_no_pin(self, user_input=None):
@@ -322,7 +321,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="pair_no_pin",
             description_placeholders={
-                "protocol": convert.protocol_str(self.protocol),
+                "protocol": protocol_str(self.protocol),
                 "pin": pin,
             },
         )
@@ -335,7 +334,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="service_problem",
-            description_placeholders={"protocol": convert.protocol_str(self.protocol)},
+            description_placeholders={"protocol": protocol_str(self.protocol)},
         )
 
     async def async_step_import(self, info):
@@ -347,8 +346,16 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CREDENTIAL_MAPPING[prot]: creds
             for prot, creds in info.get(CONF_CREDENTIALS).items()
         }
+
+        if Protocol.MRP.value in creds:
+            protocol = Protocol.MRP
+        elif Protocol.DMAP.value in creds:
+            protocol = Protocol.DMAP
+        else:
+            return self.async_abort(reason="missing_credentials")
+
         return await self._async_get_entry(
-            const.Protocol[info.get(CONF_PROTOCOL)],
+            protocol,
             info.get(CONF_NAME),
             creds,
             info.get(CONF_ADDRESS),

@@ -16,9 +16,6 @@ ZEROCONF = {
             "domain": "guardian"
         }
     ],
-    "_appletv-v2._tcp.local.": [
-        "apple_tv"
-    ],
     "_axis-video._tcp.local.": [
         {
             "domain": "axis",
@@ -88,6 +85,9 @@ ZEROCONF = {
             "domain": "ipp"
         }
     ],
+    "_mediaremotetv._tcp.local.": [
+        "apple_tv"
+    ],
     "_miio._udp.local.": [
         {
             "domain": "xiaomi_aqara"
@@ -105,9 +105,6 @@ ZEROCONF = {
         {
             "domain": "plugwise"
         }
-    ],
-    "_mediaremotetv._tcp.local.": [
-        "apple_tv"
     ],
     "_printer._tcp.local.": [
         {

@@ -15,10 +15,9 @@ PARALLEL_UPDATES = 0
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Load Apple TV remote based on a config entry."""
-    identifier = config_entry.unique_id
     name = config_entry.data[CONF_NAME]
     manager = hass.data[DOMAIN][config_entry.unique_id]
-    async_add_entities([AppleTVRemote(name, identifier, manager)])
+    async_add_entities([AppleTVRemote(name, config_entry.unique_id, manager)])
 
 
 class AppleTVRemote(remote.RemoteEntity):
@@ -51,9 +50,7 @@ class AppleTVRemote(remote.RemoteEntity):
         return {
             "identifiers": {(DOMAIN, self._identifier)},
             "manufacturer": "Apple",
-            "model": "Remote",
             "name": self.name,
-            "sw_version": "0.0",
             "via_device": (DOMAIN, self._identifier),
         }
 
@@ -65,7 +62,7 @@ class AppleTVRemote(remote.RemoteEntity):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return f"remote_{self._identifier}"
+        return self._identifier
 
     @property
     def is_on(self):

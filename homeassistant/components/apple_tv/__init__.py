@@ -30,8 +30,6 @@ from .const import (
     CONF_IDENTIFIER,
     CONF_START_OFF,
     DOMAIN,
-    PROTOCOL_DMAP,
-    PROTOCOL_MRP,
     SOURCE_INVALID_CREDENTIALS,
 )
 
@@ -44,7 +42,7 @@ BACKOFF_TIME_UPPER_LIMIT = 300  # Five minutes
 NOTIFICATION_TITLE = "Apple TV Notification"
 NOTIFICATION_ID = "apple_tv_notification"
 
-SUPPORTED_PLATFORMS = [MP_DOMAIN, REMOTE_DOMAIN]
+PLATFORMS = [MP_DOMAIN, REMOTE_DOMAIN]
 
 T = TypeVar("T")
 
@@ -74,9 +72,6 @@ CONFIG_SCHEMA = vol.Schema(
                     {
                         vol.Required(CONF_ADDRESS): cv.string,
                         vol.Required(CONF_IDENTIFIER): cv.string,
-                        vol.Required(CONF_PROTOCOL): vol.In(
-                            [PROTOCOL_DMAP, PROTOCOL_MRP]
-                        ),
                         vol.Required(CONF_CREDENTIALS): CREDENTIALS_SCHEMA,
                         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
                         vol.Optional(CONF_START_OFF, default=False): cv.boolean,
@@ -116,7 +111,7 @@ async def async_setup_entry(hass, entry):
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
 
-    for domain in SUPPORTED_PLATFORMS:
+    for domain in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, domain)
         )
@@ -126,13 +121,19 @@ async def async_setup_entry(hass, entry):
 
 async def async_unload_entry(hass, entry):
     """Unload an Apple TV config entry."""
-    manager = hass.data[DOMAIN].pop(entry.unique_id)
-    await manager.disconnect()
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
+            ]
+        )
+    )
+    if unload_ok:
+        manager = hass.data[DOMAIN].pop(entry.unique_id)
+        await manager.disconnect()
 
-    for domain in SUPPORTED_PLATFORMS:
-        await hass.config_entries.async_forward_entry_unload(entry, domain)
-
-    return True
+    return unload_ok
 
 
 class AppleTVManager:
@@ -160,7 +161,7 @@ class AppleTVManager:
         if self._is_on:
             await self.connect()
 
-    def connection_lost(self, exception):
+    def connection_lost(self, _):
         """Device was unexpectedly disconnected."""
         _LOGGER.warning('Connection lost to Apple TV "%s"', self.atv.name)
         if self.atv:
@@ -191,7 +192,7 @@ class AppleTVManager:
             if self.atv:
                 self.atv.push_updater.listener = None
                 self.atv.push_updater.stop()
-                await self.atv.close()
+                self.atv.close()
                 self.atv = None
             if self._task:
                 self._task.cancel()
@@ -272,7 +273,7 @@ class AppleTVManager:
         address = self.config_entry.data[CONF_ADDRESS]
         protocol = Protocol(self.config_entry.data[CONF_PROTOCOL])
 
-        self._update_state(message="Discovering device...")
+        self._update_state("Discovering device...")
         atvs = await scan(
             self.hass.loop, identifier=identifier, protocol=protocol, hosts=[address]
         )

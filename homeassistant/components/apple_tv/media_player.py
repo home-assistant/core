@@ -3,7 +3,7 @@ import logging
 
 from pyatv.const import DeviceState, MediaType
 
-from homeassistant.components.media_player import MediaPlayerDevice
+from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_TVSHOW,
@@ -51,10 +51,9 @@ SUPPORT_APPLE_TV = (
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Load Apple TV media player based on a config entry."""
-    identifier = config_entry.unique_id
     name = config_entry.data[CONF_NAME]
     manager = hass.data[DOMAIN][config_entry.unique_id]
-    async_add_entities([AppleTvDevice(name, identifier, manager)])
+    async_add_entities([AppleTvDevice(name, config_entry.unique_id, manager)])
 
 
 class AppleTvDevice(MediaPlayerEntity):
@@ -95,10 +94,7 @@ class AppleTvDevice(MediaPlayerEntity):
         return {
             "identifiers": {(DOMAIN, self._identifier)},
             "manufacturer": "Apple",
-            "model": "Media Player",
             "name": self.name,
-            "sw_version": "0.0",
-            "via_device": (DOMAIN, self._identifier),
         }
 
     @property
@@ -109,7 +105,7 @@ class AppleTvDevice(MediaPlayerEntity):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return f"mp_{self._identifier}"
+        return self._identifier
 
     @property
     def should_poll(self):
