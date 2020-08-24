@@ -5,13 +5,10 @@ from aiohomekit.model.services import ServicesTypes
 from homeassistant.components.fan import (
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
-    SPEED_HIGH,
-    SPEED_LOW,
-    SPEED_MEDIUM,
-    SPEED_OFF,
     SUPPORT_DIRECTION,
     SUPPORT_OSCILLATE,
     SUPPORT_SET_SPEED,
+    SUPPORT_SET_SPEED_PERCENTAGE,
     FanEntity,
 )
 from homeassistant.core import callback
@@ -25,13 +22,6 @@ DIRECTION_TO_HK = {
     DIRECTION_FORWARD: 0,
 }
 HK_DIRECTION_TO_HA = {v: k for (k, v) in DIRECTION_TO_HK.items()}
-
-SPEED_TO_PCNT = {
-    SPEED_HIGH: 100,
-    SPEED_MEDIUM: 50,
-    SPEED_LOW: 25,
-    SPEED_OFF: 0,
-}
 
 
 class BaseHomeKitFan(HomeKitEntity, FanEntity):
@@ -56,30 +46,12 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
         return self.service.value(self.on_characteristic) == 1
 
     @property
-    def speed(self):
+    def percentage_speed(self):
         """Return the current speed."""
         if not self.is_on:
-            return SPEED_OFF
+            return 0
 
-        rotation_speed = self.service.value(CharacteristicsTypes.ROTATION_SPEED)
-
-        if rotation_speed > SPEED_TO_PCNT[SPEED_MEDIUM]:
-            return SPEED_HIGH
-
-        if rotation_speed > SPEED_TO_PCNT[SPEED_LOW]:
-            return SPEED_MEDIUM
-
-        if rotation_speed > SPEED_TO_PCNT[SPEED_OFF]:
-            return SPEED_LOW
-
-        return SPEED_OFF
-
-    @property
-    def speed_list(self):
-        """Get the list of available speeds."""
-        if self.supported_features & SUPPORT_SET_SPEED:
-            return [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
-        return []
+        return self.service.value(CharacteristicsTypes.ROTATION_SPEED)
 
     @property
     def current_direction(self):
@@ -102,7 +74,7 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
             features |= SUPPORT_DIRECTION
 
         if self.service.has(CharacteristicsTypes.ROTATION_SPEED):
-            features |= SUPPORT_SET_SPEED
+            features |= SUPPORT_SET_SPEED | SUPPORT_SET_SPEED_PERCENTAGE
 
         if self.service.has(CharacteristicsTypes.SWING_MODE):
             features |= SUPPORT_OSCILLATE
@@ -115,13 +87,13 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
             {CharacteristicsTypes.ROTATION_DIRECTION: DIRECTION_TO_HK[direction]}
         )
 
-    async def async_set_speed(self, speed):
+    async def async_set_speed_percentage(self, speed):
         """Set the speed of the fan."""
-        if speed == SPEED_OFF:
+        if speed == 0:
             return await self.async_turn_off()
 
         await self.async_put_characteristics(
-            {CharacteristicsTypes.ROTATION_SPEED: SPEED_TO_PCNT[speed]}
+            {CharacteristicsTypes.ROTATION_SPEED: speed}
         )
 
     async def async_oscillate(self, oscillating: bool):
@@ -138,8 +110,10 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
         if not self.is_on:
             characteristics[self.on_characteristic] = True
 
-        if self.supported_features & SUPPORT_SET_SPEED and speed:
-            characteristics[CharacteristicsTypes.ROTATION_SPEED] = SPEED_TO_PCNT[speed]
+        if self.supported_features & SUPPORT_SET_SPEED_PERCENTAGE and speed:
+            characteristics[
+                CharacteristicsTypes.ROTATION_SPEED
+            ] = self.speed_to_percentage(speed)
 
         if characteristics:
             await self.async_put_characteristics(characteristics)
