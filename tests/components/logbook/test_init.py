@@ -15,13 +15,16 @@ from homeassistant.components.automation import EVENT_AUTOMATION_TRIGGERED
 from homeassistant.components.recorder.models import process_timestamp_to_utc_isoformat
 from homeassistant.components.script import EVENT_SCRIPT_STARTED
 from homeassistant.const import (
+    ATTR_DOMAIN,
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_NAME,
+    ATTR_SERVICE,
     CONF_DOMAINS,
     CONF_ENTITIES,
     CONF_EXCLUDE,
     CONF_INCLUDE,
+    EVENT_CALL_SERVICE,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
     EVENT_STATE_CHANGED,
@@ -97,7 +100,6 @@ class TestComponentLogbook(unittest.TestCase):
         events = list(
             logbook._get_events(
                 self.hass,
-                {},
                 dt_util.utcnow() - timedelta(hours=1),
                 dt_util.utcnow() + timedelta(hours=1),
             )
@@ -1854,6 +1856,7 @@ async def test_logbook_entity_context_id(hass, hass_client):
         user_id="b400facee45711eaa9308bfd3d19e474",
     )
 
+    # An Automation
     automation_entity_id_test = "automation.alarm"
     hass.bus.async_fire(
         EVENT_AUTOMATION_TRIGGERED,
@@ -1874,12 +1877,18 @@ async def test_logbook_entity_context_id(hass, hass_client):
 
     entity_id_test = "alarm_control_panel.area_001"
     hass.states.async_set(entity_id_test, STATE_OFF, context=context)
+    await hass.async_block_till_done()
     hass.states.async_set(entity_id_test, STATE_ON, context=context)
+    await hass.async_block_till_done()
     entity_id_second = "alarm_control_panel.area_002"
     hass.states.async_set(entity_id_second, STATE_OFF, context=context)
+    await hass.async_block_till_done()
     hass.states.async_set(entity_id_second, STATE_ON, context=context)
+    await hass.async_block_till_done()
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
     await hass.async_add_job(
         logbook.log_entry,
         hass,
@@ -1889,6 +1898,8 @@ async def test_logbook_entity_context_id(hass, hass_client):
         "alarm_control_panel.area_003",
         context,
     )
+    await hass.async_block_till_done()
+
     await hass.async_add_job(
         logbook.log_entry,
         hass,
@@ -1898,6 +1909,31 @@ async def test_logbook_entity_context_id(hass, hass_client):
         None,
         context,
     )
+    await hass.async_block_till_done()
+
+    # A service call
+    light_turn_off_service_context = ha.Context(
+        id="9c5bd62de45711eaaeb351041eec8dd9",
+        user_id="9400facee45711eaa9308bfd3d19e474",
+    )
+    hass.states.async_set("light.switch", STATE_ON)
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire(
+        EVENT_CALL_SERVICE,
+        {
+            ATTR_DOMAIN: "light",
+            ATTR_SERVICE: "turn_off",
+            ATTR_ENTITY_ID: "light.switch",
+        },
+        context=light_turn_off_service_context,
+    )
+    await hass.async_block_till_done()
+
+    hass.states.async_set(
+        "light.switch", STATE_OFF, context=light_turn_off_service_context
+    )
+    await hass.async_block_till_done()
 
     await hass.async_add_job(trigger_db_commit, hass)
     await hass.async_block_till_done()
@@ -1922,16 +1958,19 @@ async def test_logbook_entity_context_id(hass, hass_client):
     assert json_dict[0]["context_user_id"] == "b400facee45711eaa9308bfd3d19e474"
 
     assert json_dict[1]["entity_id"] == "script.mock_script"
+    assert json_dict[1]["context_event_type"] == "automation_triggered"
     assert json_dict[1]["context_entity_id"] == "automation.alarm"
     assert json_dict[1]["context_entity_id_name"] == "Alarm Automation"
     assert json_dict[1]["context_user_id"] == "b400facee45711eaa9308bfd3d19e474"
 
     assert json_dict[2]["entity_id"] == entity_id_test
+    assert json_dict[2]["context_event_type"] == "automation_triggered"
     assert json_dict[2]["context_entity_id"] == "automation.alarm"
     assert json_dict[2]["context_entity_id_name"] == "Alarm Automation"
     assert json_dict[2]["context_user_id"] == "b400facee45711eaa9308bfd3d19e474"
 
     assert json_dict[3]["entity_id"] == entity_id_second
+    assert json_dict[3]["context_event_type"] == "automation_triggered"
     assert json_dict[3]["context_entity_id"] == "automation.alarm"
     assert json_dict[3]["context_entity_id_name"] == "Alarm Automation"
     assert json_dict[3]["context_user_id"] == "b400facee45711eaa9308bfd3d19e474"
@@ -1939,6 +1978,7 @@ async def test_logbook_entity_context_id(hass, hass_client):
     assert json_dict[4]["domain"] == "homeassistant"
 
     assert json_dict[5]["entity_id"] == "alarm_control_panel.area_003"
+    assert json_dict[5]["context_event_type"] == "automation_triggered"
     assert json_dict[5]["context_entity_id"] == "automation.alarm"
     assert json_dict[5]["domain"] == "alarm_control_panel"
     assert json_dict[5]["context_entity_id_name"] == "Alarm Automation"
@@ -1946,6 +1986,99 @@ async def test_logbook_entity_context_id(hass, hass_client):
 
     assert json_dict[6]["domain"] == "homeassistant"
     assert json_dict[6]["context_user_id"] == "b400facee45711eaa9308bfd3d19e474"
+
+    assert json_dict[7]["entity_id"] == "light.switch"
+    assert json_dict[7]["context_event_type"] == "call_service"
+    assert json_dict[7]["context_domain"] == "light"
+    assert json_dict[7]["context_service"] == "turn_off"
+    assert json_dict[7]["domain"] == "light"
+    assert json_dict[7]["context_user_id"] == "9400facee45711eaa9308bfd3d19e474"
+
+
+async def test_logbook_context_from_template(hass, hass_client):
+    """Test the logbook view with end_time and entity with automations and scripts."""
+    await hass.async_add_executor_job(init_recorder_component, hass)
+    await async_setup_component(hass, "logbook", {})
+    assert await async_setup_component(
+        hass,
+        "switch",
+        {
+            "switch": {
+                "platform": "template",
+                "switches": {
+                    "test_template_switch": {
+                        "value_template": "{{ states.switch.test_state.state }}",
+                        "turn_on": {
+                            "service": "switch.turn_on",
+                            "entity_id": "switch.test_state",
+                        },
+                        "turn_off": {
+                            "service": "switch.turn_off",
+                            "entity_id": "switch.test_state",
+                        },
+                    }
+                },
+            }
+        },
+    )
+    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    # Entity added (should not be logged)
+    hass.states.async_set("switch.test_state", STATE_ON)
+    await hass.async_block_till_done()
+
+    # First state change (should be logged)
+    hass.states.async_set("switch.test_state", STATE_OFF)
+    await hass.async_block_till_done()
+
+    switch_turn_off_context = ha.Context(
+        id="9c5bd62de45711eaaeb351041eec8dd9",
+        user_id="9400facee45711eaa9308bfd3d19e474",
+    )
+    hass.states.async_set(
+        "switch.test_state", STATE_ON, context=switch_turn_off_context
+    )
+    await hass.async_block_till_done()
+
+    await hass.async_add_job(trigger_db_commit, hass)
+    await hass.async_block_till_done()
+    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+
+    client = await hass_client()
+
+    # Today time 00:00:00
+    start = dt_util.utcnow().date()
+    start_date = datetime(start.year, start.month, start.day)
+
+    # Test today entries with filter by end_time
+    end_time = start + timedelta(hours=24)
+    response = await client.get(
+        f"/api/logbook/{start_date.isoformat()}?end_time={end_time}"
+    )
+    assert response.status == 200
+    json_dict = await response.json()
+
+    assert json_dict[0]["domain"] == "homeassistant"
+    assert "context_entity_id" not in json_dict[0]
+
+    assert json_dict[1]["entity_id"] == "switch.test_template_switch"
+
+    assert json_dict[2]["entity_id"] == "switch.test_state"
+
+    assert json_dict[3]["entity_id"] == "switch.test_template_switch"
+    assert json_dict[3]["context_entity_id"] == "switch.test_state"
+    assert json_dict[3]["context_entity_id_name"] == "test state"
+
+    assert json_dict[4]["entity_id"] == "switch.test_state"
+    assert json_dict[4]["context_user_id"] == "9400facee45711eaa9308bfd3d19e474"
+
+    assert json_dict[5]["entity_id"] == "switch.test_template_switch"
+    assert json_dict[5]["context_entity_id"] == "switch.test_state"
+    assert json_dict[5]["context_entity_id_name"] == "test state"
+    assert json_dict[5]["context_user_id"] == "9400facee45711eaa9308bfd3d19e474"
 
 
 class MockLazyEventPartialState(ha.Event):

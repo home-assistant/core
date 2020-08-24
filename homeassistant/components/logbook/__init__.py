@@ -24,6 +24,8 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_NAME,
+    ATTR_SERVICE,
+    EVENT_CALL_SERVICE,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
     EVENT_LOGBOOK_ENTRY,
@@ -70,7 +72,12 @@ HOMEASSISTANT_EVENTS = [
     EVENT_HOMEASSISTANT_STOP,
 ]
 
-ALL_EVENT_TYPES = [EVENT_STATE_CHANGED, EVENT_LOGBOOK_ENTRY, *HOMEASSISTANT_EVENTS]
+ALL_EVENT_TYPES = [
+    EVENT_STATE_CHANGED,
+    EVENT_LOGBOOK_ENTRY,
+    EVENT_CALL_SERVICE,
+    *HOMEASSISTANT_EVENTS,
+]
 
 LOG_MESSAGE_SCHEMA = vol.Schema(
     {
@@ -203,7 +210,6 @@ class LogbookView(HomeAssistantView):
             return self.json(
                 _get_events(
                     hass,
-                    self.config,
                     start_day,
                     end_day,
                     entity_id,
@@ -215,7 +221,7 @@ class LogbookView(HomeAssistantView):
         return await hass.async_add_executor_job(json_events)
 
 
-def humanify(hass, events, entity_attr_cache, context_entity_id_map):
+def humanify(hass, events, entity_attr_cache, context_lookup):
     """Generate a converted list of events into Entry objects.
 
     Will try to group events if possible:
@@ -265,13 +271,11 @@ def humanify(hass, events, entity_attr_cache, context_entity_id_map):
                 data["domain"] = domain
                 if event.context_user_id:
                     data["context_user_id"] = event.context_user_id
-                if "entity_id" in data:
-                    context_entity_id = context_entity_id_map.get(event.context_id)
-                    if context_entity_id and context_entity_id != data["entity_id"]:
-                        data["context_entity_id"] = context_entity_id
-                        data["context_entity_id_name"] = _entity_id_name(
-                            hass, context_entity_id
-                        )
+                context_event = context_lookup.get(event.context_id)
+                if context_event:
+                    _augment_data_with_context(
+                        data, data.get(ATTR_ENTITY_ID), context_event, entity_attr_cache
+                    )
                 yield data
 
             if event.event_type == EVENT_STATE_CHANGED:
@@ -287,8 +291,9 @@ def humanify(hass, events, entity_attr_cache, context_entity_id_map):
 
                 data = {
                     "when": event.time_fired_isoformat,
-                    "name": entity_attr_cache.get(entity_id, ATTR_FRIENDLY_NAME, event)
-                    or split_entity_id(entity_id)[1].replace("_", " "),
+                    "name": _entity_name_from_event(
+                        entity_id, event, entity_attr_cache
+                    ),
                     "message": _entry_message_from_event(
                         entity_id, domain, event, entity_attr_cache
                     ),
@@ -299,11 +304,10 @@ def humanify(hass, events, entity_attr_cache, context_entity_id_map):
                 if event.context_user_id:
                     data["context_user_id"] = event.context_user_id
 
-                context_entity_id = context_entity_id_map.get(event.context_id)
-                if context_entity_id and context_entity_id != entity_id:
-                    data["context_entity_id"] = context_entity_id
-                    data["context_entity_id_name"] = _entity_id_name(
-                        hass, context_entity_id
+                context_event = context_lookup.get(event.context_id)
+                if context_event:
+                    _augment_data_with_context(
+                        data, entity_id, context_event, entity_attr_cache
                     )
 
                 yield data
@@ -351,28 +355,28 @@ def humanify(hass, events, entity_attr_cache, context_entity_id_map):
                 }
                 if event.context_user_id:
                     data["context_user_id"] = event.context_user_id
-                if entity_id:
-                    context_entity_id = context_entity_id_map.get(event.context_id)
-                    if context_entity_id and context_entity_id != entity_id:
-                        data["context_entity_id"] = context_entity_id
-                        data["context_entity_id_name"] = _entity_id_name(
-                            hass, context_entity_id
-                        )
+
+                context_event = context_lookup.get(event.context_id)
+                if context_event:
+                    _augment_data_with_context(
+                        data, entity_id, context_event, entity_attr_cache
+                    )
+
                 yield data
 
 
 def _get_events(
-    hass, config, start_day, end_day, entity_id=None, filters=None, entities_filter=None
+    hass, start_day, end_day, entity_id=None, filters=None, entities_filter=None
 ):
     """Get events for a period of time."""
     entity_attr_cache = EntityAttributeCache(hass)
-    context_entity_id_map = {None: None}
+    context_lookup = {None: None}
 
     def yield_events(query):
         """Yield Events that are not filtered away."""
         for row in query.yield_per(1000):
             event = LazyEventPartialState(row)
-            if _keep_event(hass, event, entities_filter, context_entity_id_map):
+            if _keep_event(hass, event, entities_filter, context_lookup):
                 yield event
 
     with session_scope(hass=hass) as session:
@@ -451,16 +455,13 @@ def _get_events(
                 )
 
         return list(
-            humanify(
-                hass, yield_events(query), entity_attr_cache, context_entity_id_map
-            )
+            humanify(hass, yield_events(query), entity_attr_cache, context_lookup)
         )
 
 
-def _keep_event(hass, event, entities_filter, context_entity_id_map):
+def _keep_event(hass, event, entities_filter, context_lookup):
     if event.event_type == EVENT_STATE_CHANGED:
         entity_id = event.entity_id
-        context_entity_id_map.setdefault(event.context_id, entity_id)
     elif event.event_type in HOMEASSISTANT_EVENTS:
         entity_id = f"{HA_DOMAIN}."
     elif event.event_type in hass.data[DOMAIN] and ATTR_ENTITY_ID not in event.data:
@@ -473,13 +474,13 @@ def _keep_event(hass, event, entities_filter, context_entity_id_map):
     else:
         event_data = event.data
         entity_id = event_data.get(ATTR_ENTITY_ID)
-        if entity_id:
-            context_entity_id_map.setdefault(event.context_id, entity_id)
-        else:
+        if not entity_id:
             domain = event_data.get(ATTR_DOMAIN)
             if domain is None:
                 return False
             entity_id = f"{domain}."
+
+    context_lookup.setdefault(event.context_id, event)
 
     return entities_filter is None or entities_filter(entity_id)
 
@@ -572,14 +573,50 @@ def _entry_message_from_event(entity_id, domain, event, entity_attr_cache):
     return f"changed to {state_state}"
 
 
-def _entity_id_name(hass, entity_id):
-    """Name of the entity id."""
-    state = hass.states.get(entity_id)
-    return (
-        state.attributes.get(ATTR_FRIENDLY_NAME)
-        if state
-        else split_entity_id(entity_id)[1].replace("_", " ")
+def _augment_data_with_context(data, entity_id, context_event, entity_attr_cache):
+    event_type = context_event.event_type
+
+    # State change
+    context_entity_id = context_event.entity_id
+    if entity_id and context_entity_id == entity_id:
+        return
+
+    if context_entity_id:
+        data["context_entity_id"] = context_entity_id
+        data["context_entity_id_name"] = _entity_name_from_event(
+            context_entity_id, context_event, entity_attr_cache
+        )
+        data["context_event_type"] = event_type
+        return
+
+    event_data = context_event.data
+
+    # Call service
+    if event_type == EVENT_CALL_SERVICE:
+        event_data = context_event.data
+        data["context_domain"] = event_data.get(ATTR_DOMAIN)
+        data["context_service"] = event_data.get(ATTR_SERVICE)
+        data["context_event_type"] = event_type
+        return
+
+    # Script started or automation triggered
+    attr_entity_id = event_data.get(ATTR_ENTITY_ID)
+    if not attr_entity_id or (entity_id and attr_entity_id == entity_id):
+        return
+
+    data["context_entity_id"] = attr_entity_id
+    data["context_entity_id_name"] = _entity_name_from_event(
+        attr_entity_id, context_event, entity_attr_cache
     )
+    data["context_event_type"] = event_type
+    return
+
+
+def _entity_name_from_event(entity_id, event, entity_attr_cache):
+    """Extract the entity name from the event using the cache if possible."""
+    return entity_attr_cache.get(
+        entity_id, ATTR_FRIENDLY_NAME, event
+    ) or split_entity_id(entity_id)[1].replace("_", " ")
 
 
 class LazyEventPartialState:
