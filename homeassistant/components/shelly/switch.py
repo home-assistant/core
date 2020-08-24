@@ -10,7 +10,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up switches for device."""
     wrapper = hass.data[DOMAIN][config_entry.entry_id]
     relay_blocks = [block for block in wrapper.device.blocks if block.type == "relay"]
+
     if not relay_blocks:
+        return
+
+    if wrapper.model == "SHSW-25" and wrapper.device.settings["mode"] != "relay":
         return
 
     multiple_blocks = len(relay_blocks) > 1

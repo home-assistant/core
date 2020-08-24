@@ -82,6 +82,11 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
             raise update_coordinator.UpdateFailed("Error fetching data")
 
     @property
+    def model(self):
+        """Model of the device."""
+        return self.device.settings["device"]["type"]
+
+    @property
     def mac(self):
         """Mac address of the device."""
         return self.device.settings["device"]["mac"]
@@ -92,6 +97,7 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
             EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop
         )
         dev_reg = await device_registry.async_get_registry(self.hass)
+        model_type = self.device.settings["device"]["type"]
         dev_reg.async_get_or_create(
             config_entry_id=self.entry.entry_id,
             name=self.name,
@@ -99,7 +105,7 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
             # This is duplicate but otherwise via_device can't work
             identifiers={(DOMAIN, self.mac)},
             manufacturer="Shelly",
-            model=self.device.settings["device"]["type"],
+            model=aioshelly.MODEL_NAMES.get(model_type, model_type),
             sw_version=self.device.settings["fw"],
         )
 

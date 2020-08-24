@@ -10,7 +10,7 @@
         "flow_title": "Shelly: {name}",
         "step": {
             "confirm_discovery": {
-                "description": "Do you want to set up Shelly?"
+                "description": "Do you want to set up the {model} at {host}?"
             },
             "user": {
                 "data": {

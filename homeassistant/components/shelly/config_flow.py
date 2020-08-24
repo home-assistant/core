@@ -38,6 +38,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
     host = None
+    info = None
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
@@ -65,7 +66,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not zeroconf_info.get("name", "").startswith("shelly"):
             return self.async_abort(reason="not_shelly")
 
-        info = await aioshelly.get_info(
+        info = self.info = await aioshelly.get_info(
             aiohttp_client.async_get_clientsession(self.hass), zeroconf_info["host"]
         )
         await self.async_set_unique_id(info["mac"])
@@ -91,4 +92,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     title=device_info["title"] or self.host, data={"host": self.host}
                 )
 
-        return self.async_show_form(step_id="confirm_discovery", errors=errors)
+        return self.async_show_form(
+            step_id="confirm_discovery",
+            description_placeholders={
+                "model": aioshelly.MODEL_NAMES.get(
+                    self.info["type"], self.info["type"]
+                ),
+                "host": self.host,
+            },
+            errors=errors,
+        )
