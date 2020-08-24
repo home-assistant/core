@@ -45,6 +45,26 @@ async def test_form(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_form_auth(hass):
+    """Test we can't manually configure if auth is required."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+
+    with patch(
+        "aioshelly.get_info",
+        return_value={"mac": "test-mac", "type": "SHSW-1", "auth": True},
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"host": "1.1.1.1"},
+        )
+
+    assert result2["type"] == "abort"
+    assert result2["reason"] == "auth_not_supported"
+
+
 async def test_form_cannot_connect(hass):
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
@@ -119,6 +139,7 @@ async def test_zeroconf_already_configured(hass):
             context={"source": config_entries.SOURCE_ZEROCONF},
         )
         assert result["type"] == "abort"
+        assert result["reason"] == "already_configured"
 
     # Test config entry got updated with latest IP
     assert entry.data["host"] == "1.1.1.1"
@@ -138,3 +159,4 @@ async def test_zeroconf_require_auth(hass):
             context={"source": config_entries.SOURCE_ZEROCONF},
         )
         assert result["type"] == "abort"
+        assert result["reason"] == "auth_not_supported"
