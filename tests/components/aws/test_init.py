@@ -378,7 +378,7 @@ async def test_invalid_credential(hass):
     """Test configuration will not be created for invalid credential."""
     with async_patch("aiobotocore.AioSession", new=MockAioSession):
         await async_setup_component(
-            hass, "aws", {"aws": {"credentials": {"profile_name": "invalid",},}},
+            hass, "aws", {"aws": {"credentials": {"profile_name": "invalid"}}},
         )
         await hass.async_block_till_done()
 
