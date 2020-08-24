@@ -199,6 +199,7 @@ FLOWS = [
     "volumio",
     "wemo",
     "wiffi",
+    "wilight",
     "withings",
     "wled",
     "wolflink",
