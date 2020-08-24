@@ -235,7 +235,7 @@ def async_fire_triggers(conn, events):
 async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
     """List device triggers for homekit devices."""
 
-    if device_id not in hass.data[TRIGGERS]:
+    if device_id not in hass.data.get(TRIGGERS, {}):
         return []
 
     device = hass.data[TRIGGERS][device_id]
