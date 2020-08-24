@@ -1,6 +1,8 @@
 """Test the Shelly config flow."""
 import asyncio
 
+import pytest
+
 from homeassistant import config_entries, setup
 from homeassistant.components.shelly.const import DOMAIN
 
@@ -65,21 +67,46 @@ async def test_form_auth(hass):
     assert result2["reason"] == "auth_not_supported"
 
 
-async def test_form_cannot_connect(hass):
-    """Test we handle cannot connect error."""
+@pytest.mark.parametrize(
+    "error", [(asyncio.TimeoutError, "cannot_connect"), (ValueError, "unknown")]
+)
+async def test_form_errors_get_info(hass, error):
+    """Test we handle errors."""
+    exc, base_error = error
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     with patch(
-        "aioshelly.get_info", side_effect=asyncio.TimeoutError,
+        "aioshelly.get_info", side_effect=exc,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"host": "1.1.1.1"},
         )
 
     assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result2["errors"] == {"base": base_error}
+
+
+@pytest.mark.parametrize(
+    "error", [(asyncio.TimeoutError, "cannot_connect"), (ValueError, "unknown")]
+)
+async def test_form_errors_test_connection(hass, error):
+    """Test we handle errors."""
+    exc, base_error = error
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch("aioshelly.get_info", return_value={"auth": False}), patch(
+        "aioshelly.Device.create", side_effect=exc,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"host": "1.1.1.1"},
+        )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": base_error}
 
 
 async def test_zeroconf(hass):
@@ -121,6 +148,35 @@ async def test_zeroconf(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.parametrize(
+    "error", [(asyncio.TimeoutError, "cannot_connect"), (ValueError, "unknown")]
+)
+async def test_zeroconf_confirm_error(hass, error):
+    """Test we get the form."""
+    exc, base_error = error
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    with patch(
+        "aioshelly.get_info",
+        return_value={"mac": "test-mac", "type": "SHSW-1", "auth": False},
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data={"host": "1.1.1.1", "name": "shelly1pm-12345"},
+            context={"source": config_entries.SOURCE_ZEROCONF},
+        )
+        assert result["type"] == "form"
+        assert result["errors"] == {}
+
+    with patch(
+        "aioshelly.Device.create", side_effect=exc,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {},)
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": base_error}
+
+
 async def test_zeroconf_already_configured(hass):
     """Test we get the form."""
     await setup.async_setup_component(hass, "persistent_notification", {})
@@ -145,6 +201,20 @@ async def test_zeroconf_already_configured(hass):
     assert entry.data["host"] == "1.1.1.1"
 
 
+async def test_zeroconf_cannot_connect(hass):
+    """Test we get the form."""
+    with patch(
+        "aioshelly.get_info", side_effect=asyncio.TimeoutError,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data={"host": "1.1.1.1", "name": "shelly1pm-12345"},
+            context={"source": config_entries.SOURCE_ZEROCONF},
+        )
+        assert result["type"] == "abort"
+        assert result["reason"] == "cannot_connect"
+
+
 async def test_zeroconf_require_auth(hass):
     """Test we get the form."""
     await setup.async_setup_component(hass, "persistent_notification", {})
@@ -160,3 +230,14 @@ async def test_zeroconf_require_auth(hass):
         )
         assert result["type"] == "abort"
         assert result["reason"] == "auth_not_supported"
+
+
+async def test_zeroconf_not_shelly(hass):
+    """Test we filter out non-shelly devices."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        data={"host": "1.1.1.1", "name": "notshelly"},
+        context={"source": config_entries.SOURCE_ZEROCONF},
+    )
+    assert result["type"] == "abort"
+    assert result["reason"] == "not_shelly"
