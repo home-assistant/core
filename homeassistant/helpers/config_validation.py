@@ -423,15 +423,12 @@ def remove_falsy(value: List[T]) -> List[T]:
     return [v for v in value if v]
 
 
-def service(value: Any) -> Union[str, template_helper.Template]:
+def service(value: Any) -> str:
     """Validate service."""
     # Services use same format as entities so we can use same helper.
     str_value = string(value).lower()
     if valid_entity_id(str_value):
         return str_value
-
-    if template_helper.is_template_string(value):
-        return template(value)
 
     raise vol.Invalid(f"Service {value} does not match format <domain>.<name>")
 
@@ -524,6 +521,24 @@ def template(value: Optional[Any]) -> template_helper.Template:
 
     template_value = template_helper.Template(str(value))  # type: ignore
 
+    try:
+        template_value.ensure_valid()
+        return cast(template_helper.Template, template_value)
+    except TemplateError as ex:
+        raise vol.Invalid(f"invalid template ({ex})")
+
+
+def dynamic_template(value: Optional[Any]) -> template_helper.Template:
+    """Validate a dynamic (non static) jinja2 template."""
+
+    if value is None:
+        raise vol.Invalid("template value is None")
+    if isinstance(value, (list, dict, template_helper.Template)):
+        raise vol.Invalid("template value should be a string")
+    if not template_helper.is_template_string(value):
+        raise vol.Invalid("template value does not contain a dynmamic template")
+
+    template_value = template_helper.Template(str(value))  # type: ignore
     try:
         template_value.ensure_valid()
         return cast(template_helper.Template, template_value)
@@ -871,8 +886,12 @@ SERVICE_SCHEMA = vol.All(
     vol.Schema(
         {
             vol.Optional(CONF_ALIAS): string,
-            vol.Exclusive(CONF_SERVICE, "service name"): service,
-            vol.Exclusive(CONF_SERVICE_TEMPLATE, "service name"): service,
+            vol.Exclusive(CONF_SERVICE, "service name"): vol.Any(
+                service, dynamic_template
+            ),
+            vol.Exclusive(CONF_SERVICE_TEMPLATE, "service name"): vol.Any(
+                service, dynamic_template
+            ),
             vol.Optional("data"): vol.All(dict, template_complex),
             vol.Optional("data_template"): vol.All(dict, template_complex),
             vol.Optional(CONF_ENTITY_ID): comp_entity_ids,
