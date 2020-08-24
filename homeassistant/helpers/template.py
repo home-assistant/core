@@ -281,13 +281,14 @@ class Template:
         """Render the template and collect an entity filter."""
         assert self.hass and _RENDER_INFO not in self.hass.data
 
+        render_info = RenderInfo(self)
+
         # pylint: disable=protected-access
         if self.is_static:
-            render_info = RenderInfo(self)
             render_info._freeze_static()
             return render_info
 
-        render_info = self.hass.data[_RENDER_INFO] = RenderInfo(self)
+        self.hass.data[_RENDER_INFO] = render_info
         try:
             render_info._result = self.async_render(variables, **kwargs)
         except TemplateError as ex:
