@@ -11,9 +11,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client, update_coordinator
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers import (
+    aiohttp_client,
+    device_registry,
+    entity,
+    update_coordinator,
+)
 
 from .const import DOMAIN
 
@@ -34,14 +37,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             device = await aioshelly.Device.create(
                 entry.data["host"], aiohttp_client.async_get_clientsession(hass)
             )
-    except asyncio.TimeoutError:
+    except (asyncio.TimeoutError, OSError):
         raise ConfigEntryNotReady
 
     wrapper = hass.data[DOMAIN][entry.entry_id] = ShellyDeviceWrapper(
         hass, entry, device
     )
-
-    wrapper.async_setup()
+    await wrapper.async_setup()
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -84,22 +86,21 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         """Mac address of the device."""
         return self.device.settings["device"]["mac"]
 
-    @property
-    def device_info(self):
-        """Entity device info."""
-        return {
-            "name": self.name or self.entry.title,
-            "connections": {(CONNECTION_NETWORK_MAC, self.mac)},
-            "manufacturer": "Shelly",
-            "model": self.device.settings["device"]["type"],
-            "sw_version": self.device.settings["fw"],
-        }
-
-    @callback
-    def async_setup(self):
+    async def async_setup(self):
         """Set up the wrapper."""
         self._unsub_stop = self.hass.bus.async_listen(
             EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop
+        )
+        dev_reg = await device_registry.async_get_registry(self.hass)
+        dev_reg.async_get_or_create(
+            config_entry_id=self.entry.entry_id,
+            name=self.name,
+            connections={(device_registry.CONNECTION_NETWORK_MAC, self.mac)},
+            # This is duplicate but otherwise via_device can't work
+            identifiers={(DOMAIN, self.mac)},
+            manufacturer="Shelly",
+            model=self.device.settings["device"]["type"],
+            sw_version=self.device.settings["fw"],
         )
 
     async def shutdown(self):
@@ -115,10 +116,10 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         await self.shutdown()
 
 
-class ShellyBlockEntity(Entity):
+class ShellyBlockEntity(entity.Entity):
     """Helper class to represent a block."""
 
-    def __init__(self, wrapper, block):
+    def __init__(self, wrapper: ShellyDeviceWrapper, block):
         """Initialize Shelly entity."""
         self.wrapper = wrapper
         self.block = block
@@ -136,7 +137,9 @@ class ShellyBlockEntity(Entity):
     @property
     def device_info(self):
         """Device info."""
-        return self.wrapper.device_info
+        return {
+            "connections": {(device_registry.CONNECTION_NETWORK_MAC, self.wrapper.mac)}
+        }
 
     @property
     def available(self):
@@ -150,11 +153,16 @@ class ShellyBlockEntity(Entity):
 
     async def async_added_to_hass(self):
         """When entity is added to HASS."""
-        self.async_on_remove(self.wrapper.async_add_listener(self.async_write_ha_state))
+        self.async_on_remove(self.wrapper.async_add_listener(self._update_callback))
 
     async def async_update(self):
         """Update entity with latest info."""
         await self.wrapper.async_request_refresh()
+
+    @callback
+    def _update_callback(self):
+        """Handle device update."""
+        self.async_write_ha_state()
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
