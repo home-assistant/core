@@ -1089,6 +1089,7 @@ async def test_logbook_humanify_automation_triggered_event(hass):
                 ),
             ],
             entity_attr_cache,
+            {},
         )
     )
 
