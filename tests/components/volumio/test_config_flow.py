@@ -239,6 +239,7 @@ async def test_discovery_updates_unique_id(hass):
             "name": "dummy",
             "id": TEST_DISCOVERY_RESULT["id"],
         },
+        state=config_entries.ENTRY_STATE_SETUP_RETRY,
     )
 
     entry.add_to_hass(hass)
