@@ -212,11 +212,7 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
 
     if not platform_config:
         # no platform config, use the first aws component credential instead
-        if hass.data[DATA_SESSIONS]:
-            session = next(iter(hass.data[DATA_SESSIONS].values()))
-        else:
-            _LOGGER.error("Missing aws credential for %s", config[CONF_NAME])
-            return None
+        session = next(iter(hass.data[DATA_SESSIONS].values()))
 
     if session is None:
         credential_name = conf.get(CONF_CREDENTIAL_NAME)

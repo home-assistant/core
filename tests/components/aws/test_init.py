@@ -89,10 +89,25 @@ MOCK_REKOGNITION_SEARCH_FACE_RESPONSE = {
                     "Top": 0.27747198939323425,
                 },
                 "ImageId": "12345678-abcd-1234-abcd-12345678abcd",
+                "ExternalImageId": "camera.demo_camera",
+                "Confidence": 99.99120330810547,
+            },
+        },
+        {
+            "Similarity": 99.97117614746094,
+            "Face": {
+                "FaceId": "12345678-abcd-1234-abcd-12345678abcd",
+                "BoundingBox": {
+                    "Width": 0.25396499037742615,
+                    "Height": 0.4246560037136078,
+                    "Left": 0.3849340081214905,
+                    "Top": 0.27747198939323425,
+                },
+                "ImageId": "12345678-abcd-1234-abcd-12345678abcd",
                 "ExternalImageId": "TestUser",
                 "Confidence": 99.99120330810547,
             },
-        }
+        },
     ],
     "FaceModelVersion": "5.0",
     "ResponseMetadata": {
@@ -200,7 +215,7 @@ MOCK_REKOGNITION_OBJECT_RESPONSE = {
         },
         {
             "Name": "Shoe",
-            "Confidence": 97.61569213867188,
+            "Confidence": 27.61569213867188,
             "Instances": [
                 {
                     "BoundingBox": {
@@ -209,7 +224,7 @@ MOCK_REKOGNITION_OBJECT_RESPONSE = {
                         "Left": 0.8933280110359192,
                         "Top": 0.7953190207481384,
                     },
-                    "Confidence": 97.61569213867188,
+                    "Confidence": 27.61569213867188,
                 }
             ],
             "Parents": [{"Name": "Clothing"}, {"Name": "Footwear"}],
@@ -300,6 +315,7 @@ class MockAioSession:
 
     def __init__(self, *args, **kwargs):
         """Init a mock session."""
+        self.get_available_regions = AsyncMock(return_value=["us-east-1"])
         self.get_user = AsyncMock()
         self.invoke = AsyncMock()
         self.publish = AsyncMock()
@@ -307,7 +323,7 @@ class MockAioSession:
         self.detect_labels = AsyncMock(return_value=MOCK_REKOGNITION_OBJECT_RESPONSE)
         self.list_collections = AsyncMock()
         self.create_collection = AsyncMock()
-        self.index_faces = AsyncMock(return_value=MOCK_REKOGNITION_INDEX_FACE_RESPONSE)
+        self.index_faces = AsyncMock(side_effect=self.mock_index_faces)
         self.search_faces = AsyncMock(
             return_value=MOCK_REKOGNITION_SEARCH_FACE_RESPONSE
         )
@@ -317,6 +333,7 @@ class MockAioSession:
         return MagicMock(
             __aenter__=AsyncMock(
                 return_value=AsyncMock(
+                    get_available_regions=self.get_available_regions,  # all
                     get_user=self.get_user,  # iam
                     invoke=self.invoke,  # lambda
                     publish=self.publish,  # sns
@@ -335,6 +352,12 @@ class MockAioSession:
         """Mock setting session credentials."""
         return True
 
+    def mock_index_faces(self, *args, **kwargs):
+        """Mock Indexing faces function."""
+        if kwargs["ExternalImageId"] == "test_exception":
+            raise UnboundLocalError
+        return MOCK_REKOGNITION_INDEX_FACE_RESPONSE
+
 
 async def test_empty_config(hass):
     """Test a default config will be create for empty config."""
@@ -349,6 +372,17 @@ async def test_empty_config(hass):
     assert isinstance(session, MockAioSession)
     # we don't validate auto-created default profile
     session.get_user.assert_not_awaited()
+
+
+async def test_invalid_credential(hass):
+    """Test configuration will not be created for invalid credential."""
+    with async_patch("aiobotocore.AioSession", new=MockAioSession):
+        await async_setup_component(
+            hass, "aws", {"aws": {"credentials": {"profile_name": "invalid",},}},
+        )
+        await hass.async_block_till_done()
+
+    assert aws.DATA_SESSIONS not in hass.data
 
 
 async def test_empty_credential(hass):
@@ -382,6 +416,38 @@ async def test_empty_credential(hass):
         "notify", "new_lambda_test", {"message": "test", "target": "ARN"}, blocking=True
     )
     session.invoke.assert_awaited_once()
+
+
+async def test_unsupported_region(hass):
+    """Test configurations with incorrect region."""
+    with async_patch("aiobotocore.AioSession", new=MockAioSession):
+        await async_setup_component(
+            hass,
+            "aws",
+            {
+                "aws": {
+                    "image_processing": [
+                        {
+                            "service": "rekognition",
+                            "platform": "object",
+                            "region_name": "false-region",
+                            "source": [{"entity_id": "camera.demo_camera"}],
+                        },
+                    ],
+                    "notify": [
+                        {
+                            "service": "lambda",
+                            "name": "New Lambda Test",
+                            "region_name": "false-region",
+                        }
+                    ],
+                }
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert hass.states.get("image_processing.rekognition_object_demo_camera") is None
+    assert hass.services.has_service("notify", "new_lambda_test") is False
 
 
 async def test_profile_credential(hass):
@@ -520,16 +586,20 @@ async def test_image_processing_credential(hass):
                             "source": [{"entity_id": "camera.demo_camera"}],
                         },
                         {
+                            "profile_name": "test",
                             "service": "rekognition",
                             "platform": "face",
                             "collection_id": "test-collection",
-                            "credential_name": "test",
                             "region_name": "us-east-1",
-                            "aws_access_key_id": "some-key",
-                            "aws_secret_access_key": "some-secret",
                             "source": [{"entity_id": "camera.demo_camera"}],
                         },
-                    ]
+                        {
+                            "service": "rekognition",
+                            "platform": "object",
+                            "region_name": "us-east-1",
+                            "source": [{"entity_id": "camera.demo_camera_1"}],
+                        },
+                    ],
                 }
             },
         )
@@ -541,6 +611,7 @@ async def test_image_processing_credential(hass):
     assert isinstance(sessions.get("default"), MockAioSession)
 
     assert hass.states.get("image_processing.rekognition_object_demo_camera")
+    assert hass.states.get("image_processing.rekognition_object_demo_camera_1")
     assert hass.states.get("image_processing.rekognition_face_demo_camera")
 
 
@@ -565,7 +636,12 @@ async def test_rekognition_object(hass):
                             "save_file_folder": image_folder,
                             "save_file_timestamp": True,
                             "region_name": "us-east-1",
-                            "source": [{"entity_id": "camera.demo_camera"}],
+                            "source": [
+                                {
+                                    "name": "rekognition object demo camera",
+                                    "entity_id": "camera.demo_camera",
+                                }
+                            ],
                         },
                     ]
                 }
@@ -580,7 +656,7 @@ async def test_rekognition_object(hass):
     )
     state = hass.states.get("image_processing.rekognition_object_demo_camera")
     assert state
-    assert len(state.attributes.get("objects")) == 5
+    assert len(state.attributes.get("objects")) == 4
     assert len(state.attributes.get("labels")) == 7
     assert state.attributes.get("objects")[0] == REKOGNITION_OBJECT_PARSED_RESPONSE
     shutil.rmtree(image_folder)
@@ -610,7 +686,12 @@ async def test_rekognition_face(hass):
                             "save_file_folder": image_folder,
                             "save_file_timestamp": True,
                             "collection_id": "testcollection",
-                            "source": [{"entity_id": "camera.demo_camera"}],
+                            "source": [
+                                {
+                                    "name": "rekognition face demo camera",
+                                    "entity_id": "camera.demo_camera",
+                                }
+                            ],
                         },
                     ]
                 }
@@ -635,6 +716,26 @@ async def test_rekognition_face(hass):
         {
             "entity_id": "image_processing.rekognition_face_demo_camera",
             "image_id": "Jane",
+            "image_folder": image_folder,
+        },
+        blocking=True,
+    )
+    await hass.services.async_call(
+        "aws",
+        "index_face",
+        {
+            "entity_id": "image_processing.rekognition_face_demo_camera",
+            "image_id": "Jane",
+            "image_path": f"{image_folder}/rekognition_face_demo_camera_latest.jpg",
+        },
+        blocking=True,
+    )
+    await hass.services.async_call(
+        "aws",
+        "index_face",
+        {
+            "entity_id": "image_processing.rekognition_face_demo_camera",
+            "image_id": "test_exception",
             "image_folder": image_folder,
         },
         blocking=True,
