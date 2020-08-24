@@ -34,6 +34,10 @@ class AppleTVRemote(remote.RemoteEntity):
         """Handle when an entity is about to be added to Home Assistant."""
         self._manager.listeners.append(self)
 
+    async def async_will_remove_from_hass(self):
+        """Handle when an entity is about to be removed from Home Assistant."""
+        self._manager.listeners.remove(self)
+
     @callback
     def device_connected(self):
         """Handle when connection is made to device."""

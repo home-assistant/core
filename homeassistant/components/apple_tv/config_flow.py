@@ -21,14 +21,7 @@ from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import (
-    CONF_CREDENTIALS,
-    CONF_CREDENTIALS_AIRPLAY,
-    CONF_CREDENTIALS_DMAP,
-    CONF_CREDENTIALS_MRP,
-    CONF_IDENTIFIER,
-    CONF_START_OFF,
-)
+from .const import CONF_CREDENTIALS, CONF_IDENTIFIER, CONF_START_OFF
 from .const import DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,13 +30,6 @@ INPUT_PIN_SCHEMA = vol.Schema({vol.Required(CONF_PIN, default=None): int})
 
 DEFAULT_START_OFF = False
 PROTOCOL_PRIORITY = [Protocol.MRP, Protocol.DMAP, Protocol.AirPlay]
-
-# Mapping between config entry format and pyatv
-CREDENTIAL_MAPPING = {
-    CONF_CREDENTIALS_MRP: Protocol.MRP.value,
-    CONF_CREDENTIALS_DMAP: Protocol.DMAP.value,
-    CONF_CREDENTIALS_AIRPLAY: Protocol.AirPlay.value,
-}
 
 
 async def device_scan(identifier, loop, cache=None):
@@ -178,7 +164,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="unrecoverable_error")
 
         await self.async_set_unique_id(identifier, raise_on_progress=True)
-        self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured(reload_on_update=False)
 
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["identifier"] = self.unique_id
@@ -337,34 +323,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders={"protocol": protocol_str(self.protocol)},
         )
 
-    async def async_step_import(self, info):
-        """Import device from configuration file."""
-        await self.async_set_unique_id(info.get(CONF_IDENTIFIER))
-
-        _LOGGER.debug("Importing device with identifier %s", self.unique_id)
-        creds = {
-            CREDENTIAL_MAPPING[prot]: creds
-            for prot, creds in info.get(CONF_CREDENTIALS).items()
-        }
-
-        if Protocol.MRP.value in creds:
-            protocol = Protocol.MRP
-        elif Protocol.DMAP.value in creds:
-            protocol = Protocol.DMAP
-        else:
-            return self.async_abort(reason="missing_credentials")
-
-        return await self._async_get_entry(
-            protocol,
-            info.get(CONF_NAME),
-            creds,
-            info.get(CONF_ADDRESS),
-            is_import=True,
-        )
-
-    async def _async_get_entry(
-        self, protocol, name, credentials, address, is_import=False
-    ):
+    async def _async_get_entry(self, protocol, name, credentials, address):
         if not is_valid_credentials(credentials):
             return self.async_abort(reason="invalid_config")
 
@@ -375,10 +334,9 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_ADDRESS: str(address),
         }
 
-        self._abort_if_unique_id_configured(updates=data)
+        self._abort_if_unique_id_configured(reload_on_update=False, updates=data)
 
-        title = name + (" (import from configuration.yaml)" if is_import else "")
-        return self.async_create_entry(title=title, data=data)
+        return self.async_create_entry(title=name, data=data)
 
     def _next_protocol_to_pair(self):
         def _needs_pairing(protocol):

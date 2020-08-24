@@ -3,13 +3,10 @@ import asyncio
 from functools import partial
 import logging
 from random import randrange
-from typing import Sequence, TypeVar, Union
 
 from pyatv import connect, exceptions, scan
 from pyatv.const import Protocol
-import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
 from homeassistant.const import (
@@ -20,13 +17,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 
 from .const import (
     CONF_CREDENTIALS,
-    CONF_CREDENTIALS_AIRPLAY,
-    CONF_CREDENTIALS_DMAP,
-    CONF_CREDENTIALS_MRP,
     CONF_IDENTIFIER,
     CONF_START_OFF,
     DOMAIN,
@@ -44,58 +37,9 @@ NOTIFICATION_ID = "apple_tv_notification"
 
 PLATFORMS = [MP_DOMAIN, REMOTE_DOMAIN]
 
-T = TypeVar("T")
-
-
-# This version of ensure_list interprets an empty dict as no value
-def ensure_list(value: Union[T, Sequence[T]]) -> Sequence[T]:
-    """Wrap value in list if it is not one."""
-    if value is None or (isinstance(value, dict) and not value):
-        return []
-    return value if isinstance(value, list) else [value]
-
-
-CREDENTIALS_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_CREDENTIALS_MRP): cv.string,
-        vol.Optional(CONF_CREDENTIALS_DMAP): cv.string,
-        vol.Optional(CONF_CREDENTIALS_AIRPLAY): cv.string,
-    }
-)
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.All(
-            ensure_list,
-            [
-                vol.Schema(
-                    {
-                        vol.Required(CONF_ADDRESS): cv.string,
-                        vol.Required(CONF_IDENTIFIER): cv.string,
-                        vol.Required(CONF_CREDENTIALS): CREDENTIALS_SCHEMA,
-                        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-                        vol.Optional(CONF_START_OFF, default=False): cv.boolean,
-                    }
-                )
-            ],
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
-
 
 async def async_setup(hass, config):
     """Set up the Apple TV integration."""
-    if DOMAIN not in config:
-        return True
-
-    for conf in config[DOMAIN]:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=conf,
-            )
-        )
-
     return True
 
 

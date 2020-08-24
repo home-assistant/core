@@ -12,7 +12,7 @@ from .common import FlowInteraction, MockPairingHandler, create_conf
 from tests.common import MockConfigEntry, mock_coro
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def mock_scan():
     """Mock pyatv.scan."""
     with patch("homeassistant.components.apple_tv.config_flow.scan") as mock_scan:
@@ -62,6 +62,7 @@ def pairing_mock():
             return mock_pair
 
         mock_pair.close.return_value = mock_coro()
+        mock_pair.pin = lambda pin: None
         mock_pair.side_effect = _pair
         yield mock_pair
 

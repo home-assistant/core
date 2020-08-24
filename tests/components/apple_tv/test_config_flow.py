@@ -161,7 +161,7 @@ async def test_user_adds_unusable_device(flow, airplay_device):
 
 async def test_user_connection_failed(flow, mrp_device, pairing_mock):
     """Test error message when connection to device fails."""
-    pairing_mock.begin.side_effect = exceptions.ConnectionFailedError()
+    pairing_mock.begin.side_effect = exceptions.ConnectionFailedError
 
     (await flow().step_user(identifier="MRP Device")).gives_form_confirm(
         description_placeholders={"name": "MRP Device"}
@@ -176,7 +176,7 @@ async def test_user_connection_failed(flow, mrp_device, pairing_mock):
 
 async def test_user_start_pair_error_failed(flow, mrp_device, pairing_mock):
     """Test initiating pairing fails."""
-    pairing_mock.begin.side_effect = exceptions.PairingError()
+    pairing_mock.begin.side_effect = exceptions.PairingError
 
     (await flow().step_user(identifier="MRP Device")).gives_form_confirm(
         description_placeholders={"name": "MRP Device"}
@@ -188,7 +188,7 @@ async def test_user_start_pair_error_failed(flow, mrp_device, pairing_mock):
 async def test_user_pair_invalid_pin(flow, mrp_device, pairing_mock):
     """Test pairing with invalid pin."""
     pairing_mock.begin.return_value = mock_coro()
-    pairing_mock.finish.side_effect = exceptions.PairingError()
+    pairing_mock.finish.side_effect = exceptions.PairingError
 
     (await flow().step_user(identifier="MRP Device")).gives_form_confirm(
         description_placeholders={"name": "MRP Device"}
@@ -233,43 +233,6 @@ async def test_user_pair_begin_unexpected_error(flow, mrp_device, pairing_mock):
     (await flow().step_user(identifier="MRP Device")).gives_form_confirm()
 
     (await flow().step_confirm()).gives_abort(reason="unrecoverable_error")
-
-
-# Import Device
-
-
-async def test_import_missing_credentials(flow, mrp_device):
-    """Test importing MRP device from YAML."""
-    config = {
-        "identifier": "mrpid",
-        "address": "127.0.0.1",
-        "name": "Kitchen",
-        "protocol": "MRP",
-        "credentials": {},
-    }
-
-    (await flow().step_import(**config)).gives_abort("missing_credentials")
-
-
-async def test_import_mrp_device(flow, mrp_device):
-    """Test importing MRP device from YAML."""
-    config = {
-        "identifier": "mrpid",
-        "address": "127.0.0.1",
-        "name": "Kitchen",
-        "protocol": "MRP",
-        "credentials": {"mrp": "mrp_creds"},
-    }
-
-    (await flow().step_import(**config)).gives_create_entry(
-        {
-            "address": "127.0.0.1",
-            "protocol": Protocol.MRP.value,
-            "name": "Kitchen",
-            "credentials": {Protocol.MRP.value: "mrp_creds"},
-        },
-        unique_id="mrpid",
-    )
 
 
 # Zeroconf
