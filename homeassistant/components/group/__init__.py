@@ -347,7 +347,7 @@ class GroupEntity(Entity):
 
     @property
     def should_poll(self) -> bool:
-        """Disable polling for cover group."""
+        """Disable polling for group."""
         return False
 
     async def async_added_to_hass(self):
