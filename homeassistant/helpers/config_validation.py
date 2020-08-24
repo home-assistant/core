@@ -430,9 +430,8 @@ def service(value: Any) -> Union[str, template_helper.Template]:
     if valid_entity_id(str_value):
         return str_value
 
-    template_value = template(value)
-    if isinstance(template_value, template_helper.Template):
-        return template_value
+    if template_helper.is_template_string(value):
+        return template(value)
 
     raise vol.Invalid(f"Service {value} does not match format <domain>.<name>")
 
@@ -515,9 +514,7 @@ unit_system = vol.All(
 )
 
 
-def template(
-    value: Optional[Any],
-) -> Union[template_helper.Template, template_helper.StaticTemplate]:
+def template(value: Optional[Any],) -> template_helper.Template:
     """Validate a jinja2 template."""
 
     if value is None:
@@ -525,16 +522,13 @@ def template(
     if isinstance(value, (list, dict, template_helper.Template)):
         raise vol.Invalid("template value should be a string")
 
-    if isinstance(value, str) and template_helper.is_template_string(value):
-        template_value = template_helper.Template(str(value))  # type: ignore
+    template_value = template_helper.Template(str(value))  # type: ignore
 
-        try:
-            template_value.ensure_valid()
-            return cast(template_helper.Template, template_value)
-        except TemplateError as ex:
-            raise vol.Invalid(f"invalid template ({ex})")
-
-    return template_helper.StaticTemplate(value)
+    try:
+        template_value.ensure_valid()
+        return cast(template_helper.Template, template_value)
+    except TemplateError as ex:
+        raise vol.Invalid(f"invalid template ({ex})")
 
 
 def template_complex(value: Any) -> Any:
