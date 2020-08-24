@@ -47,9 +47,7 @@ class HomeAssistantView:
     ) -> web.Response:
         """Return a JSON response."""
         try:
-            msg = json.dumps(
-                result, sort_keys=True, cls=JSONEncoder, allow_nan=False
-            ).encode("UTF-8")
+            msg = json.dumps(result, cls=JSONEncoder, allow_nan=False).encode("UTF-8")
         except (ValueError, TypeError) as err:
             _LOGGER.error("Unable to serialize to JSON: %s\n%s", err, result)
             raise HTTPInternalServerError
