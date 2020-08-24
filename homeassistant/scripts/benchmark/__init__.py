@@ -231,7 +231,7 @@ async def _logbook_filtering(hass, last_changed, last_updated):
 
     start = timer()
 
-    list(logbook.humanify(hass, yield_events(event), entity_attr_cache))
+    list(logbook.humanify(hass, yield_events(event), entity_attr_cache, {}))
 
     return timer() - start
 
