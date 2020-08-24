@@ -369,5 +369,5 @@ def entry_json(entry: config_entries.ConfigEntry) -> dict:
         "state": entry.state,
         "connection_class": entry.connection_class,
         "supports_options": supports_options,
-        "can_unload": entry.can_unload,
+        "supports_unload": entry.supports_unload,
     }

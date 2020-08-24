@@ -110,7 +110,7 @@ class ConfigEntry:
         "data",
         "options",
         "unique_id",
-        "can_unload",
+        "supports_unload",
         "system_options",
         "source",
         "connection_class",
@@ -168,8 +168,8 @@ class ConfigEntry:
         # Unique ID of this entry.
         self.unique_id = unique_id
 
-        # Can unload
-        self.can_unload = False
+        # Supports unload
+        self.supports_unload = False
 
         # Listeners to call on update
         self.update_listeners: List[weakref.ReferenceType[UpdateListenerType]] = []
@@ -190,6 +190,8 @@ class ConfigEntry:
 
         if integration is None:
             integration = await loader.async_get_integration(hass, self.domain)
+
+        self.supports_unload = await support_entry_unload(hass, self.domain)
 
         try:
             component = integration.get_component()
@@ -263,7 +265,6 @@ class ConfigEntry:
 
         if result:
             self.state = ENTRY_STATE_LOADED
-            self.can_unload = await support_entry_unload(hass, self.domain)
         else:
             self.state = ENTRY_STATE_SETUP_ERROR
 
@@ -1117,7 +1118,7 @@ class EntityRegistryDisabledHandler:
         )
         assert config_entry is not None
 
-        if config_entry.entry_id not in self.changed and config_entry.can_unload:
+        if config_entry.entry_id not in self.changed and config_entry.supports_unload:
             self.changed.add(config_entry.entry_id)
 
         if not self.changed:

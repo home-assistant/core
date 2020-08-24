@@ -59,7 +59,7 @@ async def test_get_entries(hass, client):
             source="bla",
             connection_class=core_ce.CONN_CLASS_LOCAL_POLL,
         )
-        entry.can_unload = True
+        entry.supports_unload = True
         entry.add_to_hass(hass)
         MockConfigEntry(
             domain="comp2",
@@ -82,7 +82,7 @@ async def test_get_entries(hass, client):
                 "state": "not_loaded",
                 "connection_class": "local_poll",
                 "supports_options": True,
-                "can_unload": True,
+                "supports_unload": True,
             },
             {
                 "domain": "comp2",
@@ -91,7 +91,7 @@ async def test_get_entries(hass, client):
                 "state": "loaded",
                 "connection_class": "assumed",
                 "supports_options": False,
-                "can_unload": False,
+                "supports_unload": False,
             },
         ]
 
