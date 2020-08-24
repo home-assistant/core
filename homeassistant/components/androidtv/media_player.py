@@ -376,6 +376,10 @@ def adb_decorator(override_available=False):
                 await self.aftv.adb_close()
                 self._available = False  # pylint: disable=protected-access
                 return None
+            except Exception:
+                # An unforeseen exception occurred. close the ADB connection so that it doesn't happen over and over again, then raise the exception.
+                await self.aftv.adb_close()
+                raise
 
         return _adb_exception_catcher
 
@@ -421,10 +425,8 @@ class ADBDevice(MediaPlayerEntity):
             # Using "adb_shell" (Python ADB implementation)
             self.exceptions = (
                 AdbTimeoutError,
-                AttributeError,
                 BrokenPipeError,
                 ConnectionResetError,
-                TypeError,
                 ValueError,
                 InvalidChecksumError,
                 InvalidCommandError,
