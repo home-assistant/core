@@ -95,6 +95,8 @@ SET_TEMPERATURE_SCHEMA = vol.All(
             vol.Inclusive(ATTR_TARGET_TEMP_HIGH, "temperature"): vol.Coerce(float),
             vol.Inclusive(ATTR_TARGET_TEMP_LOW, "temperature"): vol.Coerce(float),
             vol.Optional(ATTR_HVAC_MODE): vol.In(HVAC_MODES),
+            vol.Optional(ATTR_FAN_MODE): str,
+            vol.Optional(ATTR_SWING_MODE): str,
         }
     ),
 )
