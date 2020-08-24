@@ -764,14 +764,12 @@ async def test_custom_birth_message(hass, mqtt_client_mock, mqtt_mock):
         """Handle birth message."""
         birth.set()
 
-    old_cooldown = mqtt.DISCOVERY_COOLDOWN
-    mqtt.DISCOVERY_COOLDOWN = 0.1
-    await mqtt.async_subscribe(hass, "birth", wait_birth)
-    mqtt_mock._mqtt_on_connect(None, None, 0, 0)
-    await hass.async_block_till_done()
-    await birth.wait()
-    mqtt_client_mock.publish.assert_called_with("birth", "birth", 0, False)
-    mqtt.DISCOVERY_COOLDOWN = old_cooldown
+    with patch("homeassistant.components.mqtt.DISCOVERY_COOLDOWN", 0.1):
+        await mqtt.async_subscribe(hass, "birth", wait_birth)
+        mqtt_mock._mqtt_on_connect(None, None, 0, 0)
+        await hass.async_block_till_done()
+        await birth.wait()
+        mqtt_client_mock.publish.assert_called_with("birth", "birth", 0, False)
 
 
 async def test_default_birth_message(hass, mqtt_client_mock, mqtt_mock):
@@ -782,16 +780,14 @@ async def test_default_birth_message(hass, mqtt_client_mock, mqtt_mock):
         """Handle birth message."""
         birth.set()
 
-    old_cooldown = mqtt.DISCOVERY_COOLDOWN
-    mqtt.DISCOVERY_COOLDOWN = 0.1
-    await mqtt.async_subscribe(hass, "homeassistant/status", wait_birth)
-    mqtt_mock._mqtt_on_connect(None, None, 0, 0)
-    await hass.async_block_till_done()
-    await birth.wait()
-    mqtt_client_mock.publish.assert_called_with(
-        "homeassistant/status", "online", 0, False
-    )
-    mqtt.DISCOVERY_COOLDOWN = old_cooldown
+    with patch("homeassistant.components.mqtt.DISCOVERY_COOLDOWN", 0.1):
+        await mqtt.async_subscribe(hass, "homeassistant/status", wait_birth)
+        mqtt_mock._mqtt_on_connect(None, None, 0, 0)
+        await hass.async_block_till_done()
+        await birth.wait()
+        mqtt_client_mock.publish.assert_called_with(
+            "homeassistant/status", "online", 0, False
+        )
 
 
 @pytest.mark.parametrize(
@@ -799,13 +795,11 @@ async def test_default_birth_message(hass, mqtt_client_mock, mqtt_mock):
 )
 async def test_no_birth_message(hass, mqtt_client_mock, mqtt_mock):
     """Test disabling birth message."""
-    old_cooldown = mqtt.DISCOVERY_COOLDOWN
-    mqtt.DISCOVERY_COOLDOWN = 0.1
-    mqtt_mock._mqtt_on_connect(None, None, 0, 0)
-    await hass.async_block_till_done()
-    await asyncio.sleep(1)
-    mqtt_client_mock.publish.assert_not_called()
-    mqtt.DISCOVERY_COOLDOWN = old_cooldown
+    with patch("homeassistant.components.mqtt.DISCOVERY_COOLDOWN", 0.1):
+        mqtt_mock._mqtt_on_connect(None, None, 0, 0)
+        await hass.async_block_till_done()
+        await asyncio.sleep(0.2)
+        mqtt_client_mock.publish.assert_not_called()
 
 
 @pytest.mark.parametrize(
