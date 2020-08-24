@@ -1,7 +1,4 @@
 """Support for KNX/IP lights."""
-from enum import Enum
-
-import voluptuous as vol
 from xknx.devices import Light as XknxLight
 
 from homeassistant.components.light import (
@@ -9,81 +6,26 @@ from homeassistant.components.light import (
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
     ATTR_WHITE_VALUE,
-    PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
     SUPPORT_WHITE_VALUE,
     LightEntity,
 )
-from homeassistant.const import CONF_ADDRESS, CONF_NAME
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 
 from . import ATTR_DISCOVER_DEVICES, DATA_KNX
 
-CONF_STATE_ADDRESS = "state_address"
-CONF_BRIGHTNESS_ADDRESS = "brightness_address"
-CONF_BRIGHTNESS_STATE_ADDRESS = "brightness_state_address"
-CONF_COLOR_ADDRESS = "color_address"
-CONF_COLOR_STATE_ADDRESS = "color_state_address"
-CONF_COLOR_TEMP_ADDRESS = "color_temperature_address"
-CONF_COLOR_TEMP_STATE_ADDRESS = "color_temperature_state_address"
-CONF_COLOR_TEMP_MODE = "color_temperature_mode"
-CONF_RGBW_ADDRESS = "rgbw_address"
-CONF_RGBW_STATE_ADDRESS = "rgbw_state_address"
-CONF_MIN_KELVIN = "min_kelvin"
-CONF_MAX_KELVIN = "max_kelvin"
-
-DEFAULT_NAME = "KNX Light"
 DEFAULT_COLOR = (0.0, 0.0)
 DEFAULT_BRIGHTNESS = 255
-DEFAULT_COLOR_TEMP_MODE = "absolute"
 DEFAULT_WHITE_VALUE = 255
-DEFAULT_MIN_KELVIN = 2700  # 370 mireds
-DEFAULT_MAX_KELVIN = 6000  # 166 mireds
-
-
-class ColorTempModes(Enum):
-    """Color temperature modes for config validation."""
-
-    absolute = "DPT-7.600"
-    relative = "DPT-5.001"
-
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_ADDRESS): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_STATE_ADDRESS): cv.string,
-        vol.Optional(CONF_BRIGHTNESS_ADDRESS): cv.string,
-        vol.Optional(CONF_BRIGHTNESS_STATE_ADDRESS): cv.string,
-        vol.Optional(CONF_COLOR_ADDRESS): cv.string,
-        vol.Optional(CONF_COLOR_STATE_ADDRESS): cv.string,
-        vol.Optional(CONF_COLOR_TEMP_ADDRESS): cv.string,
-        vol.Optional(CONF_COLOR_TEMP_STATE_ADDRESS): cv.string,
-        vol.Optional(CONF_COLOR_TEMP_MODE, default=DEFAULT_COLOR_TEMP_MODE): cv.enum(
-            ColorTempModes
-        ),
-        vol.Optional(CONF_RGBW_ADDRESS): cv.string,
-        vol.Optional(CONF_RGBW_STATE_ADDRESS): cv.string,
-        vol.Optional(CONF_MIN_KELVIN, default=DEFAULT_MIN_KELVIN): vol.All(
-            vol.Coerce(int), vol.Range(min=1)
-        ),
-        vol.Optional(CONF_MAX_KELVIN, default=DEFAULT_MAX_KELVIN): vol.All(
-            vol.Coerce(int), vol.Range(min=1)
-        ),
-    }
-)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up lights for KNX platform."""
     if discovery_info is not None:
         async_add_entities_discovery(hass, discovery_info, async_add_entities)
-    else:
-        async_add_entities_config(hass, config, async_add_entities)
 
 
 @callback
@@ -96,46 +38,10 @@ def async_add_entities_discovery(hass, discovery_info, async_add_entities):
     async_add_entities(entities)
 
 
-@callback
-def async_add_entities_config(hass, config, async_add_entities):
-    """Set up light for KNX platform configured within platform."""
-    group_address_tunable_white = None
-    group_address_tunable_white_state = None
-    group_address_color_temp = None
-    group_address_color_temp_state = None
-    if config[CONF_COLOR_TEMP_MODE] == ColorTempModes.absolute:
-        group_address_color_temp = config.get(CONF_COLOR_TEMP_ADDRESS)
-        group_address_color_temp_state = config.get(CONF_COLOR_TEMP_STATE_ADDRESS)
-    elif config[CONF_COLOR_TEMP_MODE] == ColorTempModes.relative:
-        group_address_tunable_white = config.get(CONF_COLOR_TEMP_ADDRESS)
-        group_address_tunable_white_state = config.get(CONF_COLOR_TEMP_STATE_ADDRESS)
-
-    light = XknxLight(
-        hass.data[DATA_KNX].xknx,
-        name=config[CONF_NAME],
-        group_address_switch=config[CONF_ADDRESS],
-        group_address_switch_state=config.get(CONF_STATE_ADDRESS),
-        group_address_brightness=config.get(CONF_BRIGHTNESS_ADDRESS),
-        group_address_brightness_state=config.get(CONF_BRIGHTNESS_STATE_ADDRESS),
-        group_address_color=config.get(CONF_COLOR_ADDRESS),
-        group_address_color_state=config.get(CONF_COLOR_STATE_ADDRESS),
-        group_address_rgbw=config.get(CONF_RGBW_ADDRESS),
-        group_address_rgbw_state=config.get(CONF_RGBW_STATE_ADDRESS),
-        group_address_tunable_white=group_address_tunable_white,
-        group_address_tunable_white_state=group_address_tunable_white_state,
-        group_address_color_temperature=group_address_color_temp,
-        group_address_color_temperature_state=group_address_color_temp_state,
-        min_kelvin=config[CONF_MIN_KELVIN],
-        max_kelvin=config[CONF_MAX_KELVIN],
-    )
-    hass.data[DATA_KNX].xknx.devices.add(light)
-    async_add_entities([KNXLight(light)])
-
-
 class KNXLight(LightEntity):
     """Representation of a KNX light."""
 
-    def __init__(self, device):
+    def __init__(self, device: XknxLight):
         """Initialize of KNX light."""
         self.device = device
 
