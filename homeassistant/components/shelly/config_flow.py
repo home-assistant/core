@@ -51,6 +51,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 info = await self._async_get_info(user_input["host"])
             except HTTP_CONNECT_ERRORS:
                 errors["base"] = "cannot_connect"
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
 
             else:
                 if info["auth"]:
