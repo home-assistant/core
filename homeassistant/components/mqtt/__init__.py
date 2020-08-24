@@ -938,7 +938,10 @@ class MQTT:
         """Publish / Subscribe / Unsubscribe callback."""
         self.hass.add_job(self._mqtt_handle_mid, mid)
 
-    async def _mqtt_handle_mid(self, mid) -> None:
+    @callback
+    def _mqtt_handle_mid(self, mid) -> None:
+        # Create the mid event if not created, either _mqtt_handle_mid or _wait_for_mid
+        # may be executed first.
         if mid not in self._pending_operations:
             self._pending_operations[mid] = asyncio.Event()
         self._pending_operations[mid].set()
@@ -956,6 +959,8 @@ class MQTT:
 
     async def _wait_for_mid(self, mid):
         """Wait for ACK from broker."""
+        # Create the mid event if not created, either _mqtt_handle_mid or _wait_for_mid
+        # may be executed first.
         if mid not in self._pending_operations:
             self._pending_operations[mid] = asyncio.Event()
         try:
