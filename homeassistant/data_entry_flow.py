@@ -3,10 +3,9 @@ import abc
 import asyncio
 import logging
 from typing import Any, Dict, List, Optional, cast
+import uuid
 
 import voluptuous as vol
-
-import homeassistant.util.uuid as uuid_util
 
 from .core import HomeAssistant, callback
 from .exceptions import HomeAssistantError
@@ -121,7 +120,7 @@ class FlowManager(abc.ABC):
             raise UnknownFlow("Flow was not created")
         flow.hass = self.hass
         flow.handler = handler
-        flow.flow_id = uuid_util.uuid_v1mc_hex()
+        flow.flow_id = uuid.uuid4().hex
         flow.context = context
         self._progress[flow.flow_id] = flow
 
