@@ -942,8 +942,9 @@ class MQTT:
     def _mqtt_handle_mid(self, mid) -> None:
         # Create the mid event if not created, either _mqtt_handle_mid or _wait_for_mid
         # may be executed first.
-        mid_event = self._pending_operations.setdefault(mid, asyncio.Event())
-        mid_event.set()
+        if mid not in self._pending_operations:
+            self._pending_operations[mid] = asyncio.Event()
+        self._pending_operations[mid].set()
 
     def _mqtt_on_disconnect(self, _mqttc, _userdata, result_code: int) -> None:
         """Disconnected callback."""
@@ -960,9 +961,10 @@ class MQTT:
         """Wait for ACK from broker."""
         # Create the mid event if not created, either _mqtt_handle_mid or _wait_for_mid
         # may be executed first.
-        mid_event = self._pending_operations.setdefault(mid, asyncio.Event())
+        if mid not in self._pending_operations:
+            self._pending_operations[mid] = asyncio.Event()
         try:
-            await asyncio.wait_for(mid_event.wait(), TIMEOUT_ACK)
+            await asyncio.wait_for(self._pending_operations[mid].wait(), TIMEOUT_ACK)
         except asyncio.TimeoutError:
             _LOGGER.error("Timed out waiting for mid %s", mid)
         finally:
