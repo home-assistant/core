@@ -4,6 +4,7 @@ from xknx.devices import Cover as XknxCover
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
+    DEVICE_CLASS_BLIND,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
@@ -48,6 +49,8 @@ class KNXCover(CoverEntity):
         async def after_update_callback(device):
             """Call after device was updated."""
             self.async_write_ha_state()
+            if self.device.is_traveling():
+                self.start_auto_updater()
 
         self.device.register_device_updated_cb(after_update_callback)
 
@@ -75,43 +78,61 @@ class KNXCover(CoverEntity):
         return False
 
     @property
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        if self.device.supports_angle:
+            return DEVICE_CLASS_BLIND
+        return None
+
+    @property
     def supported_features(self):
         """Flag supported features."""
-        supported_features = (
-            SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION | SUPPORT_STOP
-        )
+        supported_features = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
+        if self.device.supports_stop:
+            supported_features |= SUPPORT_STOP
         if self.device.supports_angle:
             supported_features |= SUPPORT_SET_TILT_POSITION
         return supported_features
 
     @property
     def current_cover_position(self):
-        """Return the current position of the cover."""
-        return self.device.current_position()
+        """Return the current position of the cover.
+
+        None is unknown, 0 is closed, 100 is fully open.
+        """
+        # In KNX 0 is open, 100 is closed.
+        try:
+            return 100 - self.device.current_position()
+        except TypeError:
+            return None
 
     @property
     def is_closed(self):
         """Return if the cover is closed."""
         return self.device.is_closed()
 
+    @property
+    def is_opening(self):
+        """Return if the cover is opening or not."""
+        return self.device.is_opening()
+
+    @property
+    def is_closing(self):
+        """Return if the cover is closing or not."""
+        return self.device.is_closing()
+
     async def async_close_cover(self, **kwargs):
         """Close the cover."""
-        if not self.device.is_closed():
-            await self.device.set_down()
-            self.start_auto_updater()
+        await self.device.set_down()
 
     async def async_open_cover(self, **kwargs):
         """Open the cover."""
-        if not self.device.is_open():
-            await self.device.set_up()
-            self.start_auto_updater()
+        await self.device.set_up()
 
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
-        if ATTR_POSITION in kwargs:
-            position = kwargs[ATTR_POSITION]
-            await self.device.set_position(position)
-            self.start_auto_updater()
+        knx_position = 100 - kwargs[ATTR_POSITION]
+        await self.device.set_position(knx_position)
 
     async def async_stop_cover(self, **kwargs):
         """Stop the cover."""
@@ -123,13 +144,15 @@ class KNXCover(CoverEntity):
         """Return current tilt position of cover."""
         if not self.device.supports_angle:
             return None
-        return self.device.current_angle()
+        try:
+            return 100 - self.device.current_angle()
+        except TypeError:
+            return None
 
     async def async_set_cover_tilt_position(self, **kwargs):
         """Move the cover tilt to a specific position."""
-        if ATTR_TILT_POSITION in kwargs:
-            tilt_position = kwargs[ATTR_TILT_POSITION]
-            await self.device.set_angle(tilt_position)
+        knx_tilt_position = 100 - kwargs[ATTR_TILT_POSITION]
+        await self.device.set_angle(knx_tilt_position)
 
     def start_auto_updater(self):
         """Start the autoupdater to update Home Assistant while cover is moving."""
