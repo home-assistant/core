@@ -248,7 +248,7 @@ def requirements_all_output(reqs):
     return "".join(output)
 
 
-def requirements_test_output(reqs):
+def requirements_test_all_output(reqs):
     """Generate output for test_requirements."""
     output = [
         "# Home Assistant tests, full dependency set\n",
@@ -334,7 +334,7 @@ def main(validate):
 
     reqs_file = requirements_output(data)
     reqs_all_file = requirements_all_output(data)
-    reqs_test_file = requirements_test_output(data)
+    reqs_test_all_file = requirements_test_all_output(data)
     reqs_pre_commit_file = requirements_pre_commit_output()
     constraints = gather_constraints()
 
@@ -342,7 +342,7 @@ def main(validate):
         ("requirements.txt", reqs_file),
         ("requirements_all.txt", reqs_all_file),
         ("requirements_test_pre_commit.txt", reqs_pre_commit_file),
-        ("requirements_test_all.txt", reqs_test_file),
+        ("requirements_test_all.txt", reqs_test_all_file),
         ("homeassistant/package_constraints.txt", constraints),
     )
 
