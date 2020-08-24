@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "edit": {
+                "data": {
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                }
+            }
+        }
+    }
+}

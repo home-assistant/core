@@ -17,7 +17,7 @@ import homeassistant.util.yaml.loader as yaml_loader
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 
-REQUIREMENTS = ("colorlog==4.1.0",)
+REQUIREMENTS = ("colorlog==4.2.1",)
 
 _LOGGER = logging.getLogger(__name__)
 # pylint: disable=protected-access

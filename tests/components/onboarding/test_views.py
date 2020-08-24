@@ -276,4 +276,4 @@ async def test_onboarding_core_sets_up_met(hass, hass_storage, hass_client):
     assert resp.status == 200
 
     await hass.async_block_till_done()
-    assert len(hass.states.async_entity_ids("weather")) == 1
+    assert len(hass.states.async_entity_ids("weather")) == 2

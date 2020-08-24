@@ -20,6 +20,8 @@ PLATFORMS = [
     SENSOR_DOMAIN,
     SWITCH_DOMAIN,
 ]
+MANAGER = "manager"
+OPTIONS = "options"
 
 # MQTT Topics
 TOPIC_OPENZWAVE = "OpenZWave"
@@ -56,7 +58,6 @@ DISC_INSTANCE = "instance"
 DISC_NODE_ID = "node_id"
 DISC_OPTIONAL = "optional"
 DISC_PRIMARY = "primary"
-DISC_SCHEMAS = "schemas"
 DISC_SPECIFIC_DEVICE_CLASS = "specific_device_class"
 DISC_TYPE = "type"
 DISC_VALUES = "values"

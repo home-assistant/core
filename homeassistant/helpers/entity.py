@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import functools as ft
 import logging
 from timeit import default_timer as timer
-from typing import Any, Awaitable, Dict, Iterable, List, Optional, Union
+from typing import Any, Awaitable, Dict, Iterable, List, Optional
 
 from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.const import (
@@ -25,18 +25,26 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
-from homeassistant.exceptions import NoEntitySpecifiedError
+from homeassistant.exceptions import HomeAssistantError, NoEntitySpecifiedError
 from homeassistant.helpers.entity_platform import EntityPlatform
-from homeassistant.helpers.entity_registry import (
-    EVENT_ENTITY_REGISTRY_UPDATED,
-    RegistryEntry,
-)
-from homeassistant.helpers.event import Event
+from homeassistant.helpers.entity_registry import RegistryEntry
+from homeassistant.helpers.event import Event, async_track_entity_registry_updated_event
+from homeassistant.helpers.typing import StateType
+from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util, ensure_unique_string, slugify
-from homeassistant.util.async_ import run_callback_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
 SLOW_UPDATE_WARNING = 10
+DATA_ENTITY_SOURCE = "entity_info"
+SOURCE_CONFIG_ENTRY = "config_entry"
+SOURCE_PLATFORM_CONFIG = "platform_config"
+
+
+@callback
+@bind_hass
+def entity_sources(hass: HomeAssistant) -> Dict[str, Dict[str, str]]:
+    """Get the entity sources."""
+    return hass.data.get(DATA_ENTITY_SOURCE, {})
 
 
 def generate_entity_id(
@@ -46,21 +54,7 @@ def generate_entity_id(
     hass: Optional[HomeAssistant] = None,
 ) -> str:
     """Generate a unique entity ID based on given entity IDs or used IDs."""
-    if current_ids is None:
-        if hass is None:
-            raise ValueError("Missing required parameter currentids or hass")
-        return run_callback_threadsafe(
-            hass.loop,
-            async_generate_entity_id,
-            entity_id_format,
-            name,
-            current_ids,
-            hass,
-        ).result()
-
-    name = (slugify(name or "") or slugify(DEVICE_DEFAULT_NAME)).lower()
-
-    return ensure_unique_string(entity_id_format.format(name), current_ids)
+    return async_generate_entity_id(entity_id_format, name, current_ids, hass)
 
 
 @callback
@@ -71,14 +65,23 @@ def async_generate_entity_id(
     hass: Optional[HomeAssistant] = None,
 ) -> str:
     """Generate a unique entity ID based on given entity IDs or used IDs."""
-    if current_ids is None:
-        if hass is None:
-            raise ValueError("Missing required parameter currentids or hass")
 
-        current_ids = hass.states.async_entity_ids()
     name = (name or DEVICE_DEFAULT_NAME).lower()
+    preferred_string = entity_id_format.format(slugify(name))
 
-    return ensure_unique_string(entity_id_format.format(slugify(name)), current_ids)
+    if current_ids is not None:
+        return ensure_unique_string(preferred_string, current_ids)
+
+    if hass is None:
+        raise ValueError("Missing required parameter current_ids or hass")
+
+    test_string = preferred_string
+    tries = 1
+    while hass.states.get(test_string):
+        tries += 1
+        test_string = f"{preferred_string}_{tries}"
+
+    return test_string
 
 
 class Entity(ABC):
@@ -117,6 +120,9 @@ class Entity(ABC):
     _context: Optional[Context] = None
     _context_set: Optional[datetime] = None
 
+    # If entity is added to an entity platform
+    _added = False
+
     @property
     def should_poll(self) -> bool:
         """Return True if entity has to be polled for state.
@@ -136,7 +142,7 @@ class Entity(ABC):
         return None
 
     @property
-    def state(self) -> Union[None, str, int, float]:
+    def state(self) -> StateType:
         """Return the state of the entity."""
         return STATE_UNKNOWN
 
@@ -485,9 +491,48 @@ class Entity(ABC):
         To be extended by integrations.
         """
 
+    @callback
+    def add_to_platform_start(
+        self,
+        hass: HomeAssistant,
+        platform: EntityPlatform,
+        parallel_updates: Optional[asyncio.Semaphore],
+    ) -> None:
+        """Start adding an entity to a platform."""
+        if self._added:
+            raise HomeAssistantError(
+                f"Entity {self.entity_id} cannot be added a second time to an entity platform"
+            )
+
+        self.hass = hass
+        self.platform = platform
+        self.parallel_updates = parallel_updates
+        self._added = True
+
+    @callback
+    def add_to_platform_abort(self) -> None:
+        """Abort adding an entity to a platform."""
+        self.hass = None
+        self.platform = None
+        self.parallel_updates = None
+        self._added = False
+
+    async def add_to_platform_finish(self) -> None:
+        """Finish adding an entity to a platform."""
+        await self.async_internal_added_to_hass()
+        await self.async_added_to_hass()
+        self.async_write_ha_state()
+
     async def async_remove(self) -> None:
         """Remove entity from Home Assistant."""
         assert self.hass is not None
+
+        if self.platform and not self._added:
+            raise HomeAssistantError(
+                f"Entity {self.entity_id} async_remove called twice"
+            )
+
+        self._added = False
 
         if self._on_remove is not None:
             while self._on_remove:
@@ -515,11 +560,28 @@ class Entity(ABC):
 
         Not to be extended by integrations.
         """
+        assert self.hass is not None
+
+        if self.platform:
+            info = {"domain": self.platform.platform_name}
+
+            if self.platform.config_entry:
+                info["source"] = SOURCE_CONFIG_ENTRY
+                info["config_entry"] = self.platform.config_entry.entry_id
+            else:
+                info["source"] = SOURCE_PLATFORM_CONFIG
+
+            self.hass.data.setdefault(DATA_ENTITY_SOURCE, {})[self.entity_id] = info
+
         if self.registry_entry is not None:
-            assert self.hass is not None
+            # This is an assert as it should never happen, but helps in tests
+            assert (
+                not self.registry_entry.disabled_by
+            ), f"Entity {self.entity_id} is being added while it's disabled"
+
             self.async_on_remove(
-                self.hass.bus.async_listen(
-                    EVENT_ENTITY_REGISTRY_UPDATED, self._async_registry_updated
+                async_track_entity_registry_updated_event(
+                    self.hass, self.entity_id, self._async_registry_updated
                 )
             )
 
@@ -528,18 +590,18 @@ class Entity(ABC):
 
         Not to be extended by integrations.
         """
+        if self.platform:
+            assert self.hass is not None
+            self.hass.data[DATA_ENTITY_SOURCE].pop(self.entity_id)
 
     async def _async_registry_updated(self, event: Event) -> None:
         """Handle entity registry update."""
         data = event.data
-        if data["action"] == "remove" and data["entity_id"] == self.entity_id:
+        if data["action"] == "remove":
             await self.async_removed_from_registry()
             await self.async_remove()
 
-        if (
-            data["action"] != "update"
-            or data.get("old_entity_id", data["entity_id"]) != self.entity_id
-        ):
+        if data["action"] != "update":
             return
 
         assert self.hass is not None

@@ -1,0 +1,7 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "\u65bc\u8a2d\u5b9a\u671f\u9593\uff0c\u7121\u6cd5\u9023\u7dda\u81f3 Firmata \u677f"
+        }
+    }
+}

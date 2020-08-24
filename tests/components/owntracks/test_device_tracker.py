@@ -1228,8 +1228,8 @@ async def test_waypoint_import_simple(hass, context):
     assert wayp is not None
 
 
-async def test_waypoint_import_blacklist(hass, context):
-    """Test import of list of waypoints for blacklisted user."""
+async def test_waypoint_import_block(hass, context):
+    """Test import of list of waypoints for blocked user."""
     waypoints_message = WAYPOINTS_EXPORTED_MESSAGE.copy()
     await send_message(hass, WAYPOINTS_TOPIC_BLOCKED, waypoints_message)
     # Check if it made it into states

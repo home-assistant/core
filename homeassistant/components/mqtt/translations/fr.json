@@ -49,12 +49,24 @@
         }
     },
     "options": {
+        "error": {
+            "cannot_connect": "Impossible de se connecter au broker."
+        },
         "step": {
             "broker": {
                 "data": {
+                    "broker": "Broker",
                     "password": "Mot de passe",
-                    "port": "Port"
-                }
+                    "port": "Port",
+                    "username": "Username"
+                },
+                "description": "Veuillez entrer les informations de connexion de votre broker MQTT."
+            },
+            "options": {
+                "data": {
+                    "discovery": "Activer la d\u00e9couverte"
+                },
+                "description": "Veuillez s\u00e9lectionner les options MQTT."
             }
         }
     }

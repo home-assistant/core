@@ -1,0 +1,49 @@
+{
+  "config": {
+    "flow_title": "Kodi: {name}",
+    "step": {
+      "user": {
+        "description": "Kodi connection information. Please make sure to enable \"Allow control of Kodi via HTTP\" in System/Settings/Network/Services.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "ssl": "Connect over SSL"
+        }
+      },
+      "discovery_confirm": {
+        "description": "Do you want to add Kodi (`{name}`) to Home Assistant?",
+        "title": "Discovered Kodi"
+      },
+      "ws_port": {
+        "description": "The WebSocket port (sometimes called TCP port in Kodi). In order to connect over WebSocket, you need to enable \"Allow programs ... to control Kodi\" in System/Settings/Network/Services. If WebSocket is not enabled, remove the port and leave empty.",
+        "data": {
+          "ws_port": "[%key:common::config_flow::data::port%]"
+        }
+      },
+      "credentials": {
+        "description": "Please enter your Kodi user name and password. These can be found in System/Settings/Network/Services.",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "turn_on": "{entity_name} was requested to turn on",
+      "turn_off": "{entity_name} was requested to turn off"
+    }
+  }
+}

@@ -1,7 +1,6 @@
 {
     "config": {
         "error": {
-            "identifier_exists": "Il CAP \u00e8 gi\u00e0 registrato",
             "invalid_zip_code": "Il CAP non \u00e8 valido"
         },
         "step": {

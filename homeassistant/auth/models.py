@@ -20,39 +20,35 @@ TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN = "long_lived_access_token"
 class Group:
     """A group."""
 
-    name = attr.ib(type=Optional[str])
-    policy = attr.ib(type=perm_mdl.PolicyType)
-    id = attr.ib(type=str, factory=lambda: uuid.uuid4().hex)
-    system_generated = attr.ib(type=bool, default=False)
+    name: Optional[str] = attr.ib()
+    policy: perm_mdl.PolicyType = attr.ib()
+    id: str = attr.ib(factory=lambda: uuid.uuid4().hex)
+    system_generated: bool = attr.ib(default=False)
 
 
 @attr.s(slots=True)
 class User:
     """A user."""
 
-    name = attr.ib(type=Optional[str])
-    perm_lookup = attr.ib(type=perm_mdl.PermissionLookup, eq=False, order=False)
-    id = attr.ib(type=str, factory=lambda: uuid.uuid4().hex)
-    is_owner = attr.ib(type=bool, default=False)
-    is_active = attr.ib(type=bool, default=False)
-    system_generated = attr.ib(type=bool, default=False)
+    name: Optional[str] = attr.ib()
+    perm_lookup: perm_mdl.PermissionLookup = attr.ib(eq=False, order=False)
+    id: str = attr.ib(factory=lambda: uuid.uuid4().hex)
+    is_owner: bool = attr.ib(default=False)
+    is_active: bool = attr.ib(default=False)
+    system_generated: bool = attr.ib(default=False)
 
-    groups = attr.ib(type=List[Group], factory=list, eq=False, order=False)
+    groups: List[Group] = attr.ib(factory=list, eq=False, order=False)
 
     # List of credentials of a user.
-    credentials = attr.ib(type=List["Credentials"], factory=list, eq=False, order=False)
+    credentials: List["Credentials"] = attr.ib(factory=list, eq=False, order=False)
 
     # Tokens associated with a user.
-    refresh_tokens = attr.ib(
-        type=Dict[str, "RefreshToken"], factory=dict, eq=False, order=False
+    refresh_tokens: Dict[str, "RefreshToken"] = attr.ib(
+        factory=dict, eq=False, order=False
     )
 
-    _permissions = attr.ib(
-        type=Optional[perm_mdl.PolicyPermissions],
-        init=False,
-        eq=False,
-        order=False,
-        default=None,
+    _permissions: Optional[perm_mdl.PolicyPermissions] = attr.ib(
+        init=False, eq=False, order=False, default=None,
     )
 
     @property
@@ -88,39 +84,38 @@ class User:
 class RefreshToken:
     """RefreshToken for a user to grant new access tokens."""
 
-    user = attr.ib(type=User)
-    client_id = attr.ib(type=Optional[str])
-    access_token_expiration = attr.ib(type=timedelta)
-    client_name = attr.ib(type=Optional[str], default=None)
-    client_icon = attr.ib(type=Optional[str], default=None)
-    token_type = attr.ib(
-        type=str,
+    user: User = attr.ib()
+    client_id: Optional[str] = attr.ib()
+    access_token_expiration: timedelta = attr.ib()
+    client_name: Optional[str] = attr.ib(default=None)
+    client_icon: Optional[str] = attr.ib(default=None)
+    token_type: str = attr.ib(
         default=TOKEN_TYPE_NORMAL,
         validator=attr.validators.in_(
             (TOKEN_TYPE_NORMAL, TOKEN_TYPE_SYSTEM, TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN)
         ),
     )
-    id = attr.ib(type=str, factory=lambda: uuid.uuid4().hex)
-    created_at = attr.ib(type=datetime, factory=dt_util.utcnow)
-    token = attr.ib(type=str, factory=lambda: secrets.token_hex(64))
-    jwt_key = attr.ib(type=str, factory=lambda: secrets.token_hex(64))
+    id: str = attr.ib(factory=lambda: uuid.uuid4().hex)
+    created_at: datetime = attr.ib(factory=dt_util.utcnow)
+    token: str = attr.ib(factory=lambda: secrets.token_hex(64))
+    jwt_key: str = attr.ib(factory=lambda: secrets.token_hex(64))
 
-    last_used_at = attr.ib(type=Optional[datetime], default=None)
-    last_used_ip = attr.ib(type=Optional[str], default=None)
+    last_used_at: Optional[datetime] = attr.ib(default=None)
+    last_used_ip: Optional[str] = attr.ib(default=None)
 
 
 @attr.s(slots=True)
 class Credentials:
     """Credentials for a user on an auth provider."""
 
-    auth_provider_type = attr.ib(type=str)
-    auth_provider_id = attr.ib(type=Optional[str])
+    auth_provider_type: str = attr.ib()
+    auth_provider_id: Optional[str] = attr.ib()
 
     # Allow the auth provider to store data to represent their auth.
-    data = attr.ib(type=dict)
+    data: dict = attr.ib()
 
-    id = attr.ib(type=str, factory=lambda: uuid.uuid4().hex)
-    is_new = attr.ib(type=bool, default=True)
+    id: str = attr.ib(factory=lambda: uuid.uuid4().hex)
+    is_new: bool = attr.ib(default=True)
 
 
 class UserMeta(NamedTuple):

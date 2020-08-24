@@ -11,6 +11,7 @@ from homeassistant.components import zeroconf
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_BATTERY_CHARGING,
     DEVICE_CLASS_MOTION,
+    DEVICE_CLASS_OCCUPANCY,
     DOMAIN as BINARY_SENSOR_DOMAIN,
 )
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
@@ -55,6 +56,7 @@ from .const import (
     CONF_FILTER,
     CONF_LINKED_BATTERY_CHARGING_SENSOR,
     CONF_LINKED_BATTERY_SENSOR,
+    CONF_LINKED_DOORBELL_SENSOR,
     CONF_LINKED_HUMIDITY_SENSOR,
     CONF_LINKED_MOTION_SENSOR,
     CONF_SAFE_MODE,
@@ -487,6 +489,7 @@ class HomeKit:
             {
                 (BINARY_SENSOR_DOMAIN, DEVICE_CLASS_BATTERY_CHARGING),
                 (BINARY_SENSOR_DOMAIN, DEVICE_CLASS_MOTION),
+                (BINARY_SENSOR_DOMAIN, DEVICE_CLASS_OCCUPANCY),
                 (SENSOR_DOMAIN, DEVICE_CLASS_BATTERY),
                 (SENSOR_DOMAIN, DEVICE_CLASS_HUMIDITY),
             }
@@ -630,6 +633,13 @@ class HomeKit:
             if motion_binary_sensor_entity_id:
                 self._config.setdefault(state.entity_id, {}).setdefault(
                     CONF_LINKED_MOTION_SENSOR, motion_binary_sensor_entity_id,
+                )
+            doorbell_binary_sensor_entity_id = device_lookup[ent_reg_ent.device_id].get(
+                (BINARY_SENSOR_DOMAIN, DEVICE_CLASS_OCCUPANCY)
+            )
+            if doorbell_binary_sensor_entity_id:
+                self._config.setdefault(state.entity_id, {}).setdefault(
+                    CONF_LINKED_DOORBELL_SENSOR, doorbell_binary_sensor_entity_id,
                 )
 
         if state.entity_id.startswith(f"{HUMIDIFIER_DOMAIN}."):

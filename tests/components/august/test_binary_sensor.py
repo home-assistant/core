@@ -126,5 +126,5 @@ async def test_doorbell_device_registry(hass):
     )
     assert reg_device.model == "hydra1"
     assert reg_device.name == "tmt100 Name"
-    assert reg_device.manufacturer == "August"
+    assert reg_device.manufacturer == "August Home Inc."
     assert reg_device.sw_version == "3.1.0-HYDRC75+201909251139"

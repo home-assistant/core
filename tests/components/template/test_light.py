@@ -1164,3 +1164,46 @@ async def test_invalid_availability_template_keeps_component_available(hass, cap
 
     assert hass.states.get("light.test_template_light").state != STATE_UNAVAILABLE
     assert ("UndefinedError: 'x' is undefined") in caplog.text
+
+
+async def test_unique_id(hass):
+    """Test unique_id option only creates one light per id."""
+    await setup.async_setup_component(
+        hass,
+        "light",
+        {
+            "light": {
+                "platform": "template",
+                "lights": {
+                    "test_template_light_01": {
+                        "unique_id": "not-so-unique-anymore",
+                        "turn_on": {
+                            "service": "light.turn_on",
+                            "entity_id": "light.test_state",
+                        },
+                        "turn_off": {
+                            "service": "light.turn_off",
+                            "entity_id": "light.test_state",
+                        },
+                    },
+                    "test_template_light_02": {
+                        "unique_id": "not-so-unique-anymore",
+                        "turn_on": {
+                            "service": "light.turn_on",
+                            "entity_id": "light.test_state",
+                        },
+                        "turn_off": {
+                            "service": "light.turn_off",
+                            "entity_id": "light.test_state",
+                        },
+                    },
+                },
+            },
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 1

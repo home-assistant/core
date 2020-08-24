@@ -194,7 +194,9 @@ class VeraDevice(Entity):
             slugify(vera_device.name), vera_device.device_id
         )
 
-        self.controller.register(vera_device, self._update_callback)
+    async def async_added_to_hass(self):
+        """Subscribe to updates."""
+        self.controller.register(self.vera_device, self._update_callback)
 
     def _update_callback(self, _device):
         """Update the state."""

@@ -68,72 +68,59 @@ class ZWaveServices:
         selection = service.data[const.ATTR_CONFIG_VALUE]
         payload = None
 
-        node = self._manager.get_instance(instance_id).get_node(node_id).values()
+        value = (
+            self._manager.get_instance(instance_id)
+            .get_node(node_id)
+            .get_value(CommandClass.CONFIGURATION, param)
+        )
 
-        for value in node:
-            if (
-                value.command_class != CommandClass.CONFIGURATION
-                or value.index != param
-            ):
-                continue
+        if value.type == ValueType.BOOL:
+            payload = selection == "True"
 
-            if value.type == ValueType.BOOL:
-                payload = selection == "True"
+        if value.type == ValueType.LIST:
+            # accept either string from the list value OR the int value
+            for selected in value.value["List"]:
+                if selection not in (selected["Label"], selected["Value"]):
+                    continue
+                payload = int(selected["Value"])
 
-            if value.type == ValueType.LIST:
-                # accept either string from the list value OR the int value
-                if isinstance(selection, int):
-                    if selection > value.max or selection < value.min:
-                        _LOGGER.error(
-                            "Value %s out of range for parameter %s (Min: %s Max: %s)",
-                            selection,
-                            param,
-                            value.min,
-                            value.max,
-                        )
-                        return
-                    payload = int(selection)
-
-                # iterate list labels to get value
-                for selected in value.value["List"]:
-                    if selected["Label"] != selection:
-                        continue
-                    payload = int(selected["Value"])
-
-                if payload is None:
-                    _LOGGER.error(
-                        "Invalid value %s for parameter %s", selection, param,
-                    )
-                    return
-
-            if value.type == ValueType.BUTTON:
-                # Unsupported at this time
-                _LOGGER.info("Button type not supported yet")
+            if payload is None:
+                _LOGGER.error(
+                    "Invalid value %s for parameter %s", selection, param,
+                )
                 return
 
-            if value.type == ValueType.STRING:
-                payload = selection
-
-            if value.type == ValueType.INT or value.type == ValueType.BYTE:
-                if selection > value.max or selection < value.min:
-                    _LOGGER.error(
-                        "Value %s out of range for parameter %s (Min: %s Max: %s)",
-                        selection,
-                        param,
-                        value.min,
-                        value.max,
-                    )
-                    return
-                payload = int(selection)
-
-            value.send_value(payload)  # send the payload
-            _LOGGER.info(
-                "Setting configuration parameter %s on Node %s with value %s",
-                param,
-                node_id,
-                payload,
-            )
+        if value.type == ValueType.BUTTON:
+            # Unsupported at this time
+            _LOGGER.info("Button type not supported yet")
             return
+
+        if value.type == ValueType.STRING:
+            payload = selection
+
+        if (
+            value.type == ValueType.INT
+            or value.type == ValueType.BYTE
+            or value.type == ValueType.SHORT
+        ):
+            if selection > value.max or selection < value.min:
+                _LOGGER.error(
+                    "Value %s out of range for parameter %s (Min: %s Max: %s)",
+                    selection,
+                    param,
+                    value.min,
+                    value.max,
+                )
+                return
+            payload = int(selection)
+
+        value.send_value(payload)  # send the payload
+        _LOGGER.info(
+            "Setting configuration parameter %s on Node %s with value %s",
+            param,
+            node_id,
+            payload,
+        )
 
     @callback
     def async_add_node(self, service):

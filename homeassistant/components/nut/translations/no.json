@@ -25,7 +25,7 @@
                 "data": {
                     "host": "Vert",
                     "password": "Passord",
-                    "port": "Port",
+                    "port": "",
                     "username": "Brukernavn"
                 },
                 "title": "Koble til NUT-serveren"

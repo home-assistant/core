@@ -41,18 +41,24 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     # Get Dyson Devices from parent component
     device_ids = [device.unique_id for device in hass.data[DYSON_SENSOR_DEVICES]]
+    new_entities = []
     for device in hass.data[DYSON_DEVICES]:
         if isinstance(device, DysonPureCool):
             if f"{device.serial}-temperature" not in device_ids:
-                devices.append(DysonTemperatureSensor(device, unit))
+                new_entities.append(DysonTemperatureSensor(device, unit))
             if f"{device.serial}-humidity" not in device_ids:
-                devices.append(DysonHumiditySensor(device))
+                new_entities.append(DysonHumiditySensor(device))
         elif isinstance(device, DysonPureCoolLink):
-            devices.append(DysonFilterLifeSensor(device))
-            devices.append(DysonDustSensor(device))
-            devices.append(DysonHumiditySensor(device))
-            devices.append(DysonTemperatureSensor(device, unit))
-            devices.append(DysonAirQualitySensor(device))
+            new_entities.append(DysonFilterLifeSensor(device))
+            new_entities.append(DysonDustSensor(device))
+            new_entities.append(DysonHumiditySensor(device))
+            new_entities.append(DysonTemperatureSensor(device, unit))
+            new_entities.append(DysonAirQualitySensor(device))
+
+    if not new_entities:
+        return
+
+    devices.extend(new_entities)
     add_entities(devices)
 
 

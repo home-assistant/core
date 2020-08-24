@@ -37,10 +37,14 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_ABOVE,
     CONF_ALIAS,
+    CONF_ATTRIBUTE,
     CONF_BELOW,
+    CONF_CHOOSE,
     CONF_CONDITION,
+    CONF_CONDITIONS,
     CONF_CONTINUE_ON_TIMEOUT,
     CONF_COUNT,
+    CONF_DEFAULT,
     CONF_DELAY,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
@@ -63,6 +67,7 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM_METRIC,
     CONF_UNTIL,
     CONF_VALUE_TEMPLATE,
+    CONF_WAIT_FOR_TRIGGER,
     CONF_WAIT_TEMPLATE,
     CONF_WHILE,
     ENTITY_MATCH_ALL,
@@ -83,7 +88,7 @@ import homeassistant.util.dt as dt_util
 
 # pylint: disable=invalid-name
 
-TIME_PERIOD_ERROR = "offset {} should be format 'HH:MM' or 'HH:MM:SS'"
+TIME_PERIOD_ERROR = "offset {} should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F'"
 
 # Home Assistant types
 byte = vol.All(vol.Coerce(int), vol.Range(min=0, max=255))
@@ -150,6 +155,17 @@ def boolean(value: Any) -> bool:
         # type ignore: https://github.com/python/mypy/issues/3186
         return value != 0  # type: ignore
     raise vol.Invalid(f"invalid boolean value {value}")
+
+
+_WS = re.compile("\\s*")
+
+
+def whitespace(value: Any) -> str:
+    """Validate result contains only whitespace."""
+    if isinstance(value, str) and _WS.fullmatch(value):
+        return value
+
+    raise vol.Invalid(f"contains non-whitespace: {value}")
 
 
 def isdevice(value: Any) -> str:
@@ -296,11 +312,11 @@ time_period_dict = vol.All(
     dict,
     vol.Schema(
         {
-            "days": vol.Coerce(int),
-            "hours": vol.Coerce(int),
-            "minutes": vol.Coerce(int),
-            "seconds": vol.Coerce(int),
-            "milliseconds": vol.Coerce(int),
+            "days": vol.Coerce(float),
+            "hours": vol.Coerce(float),
+            "minutes": vol.Coerce(float),
+            "seconds": vol.Coerce(float),
+            "milliseconds": vol.Coerce(float),
         }
     ),
     has_at_least_one_key("days", "hours", "minutes", "seconds", "milliseconds"),
@@ -354,17 +370,17 @@ def time_period_str(value: str) -> timedelta:
     elif value.startswith("+"):
         value = value[1:]
 
-    try:
-        parsed = [int(x) for x in value.split(":")]
-    except ValueError:
+    parsed = value.split(":")
+    if len(parsed) not in (2, 3):
         raise vol.Invalid(TIME_PERIOD_ERROR.format(value))
-
-    if len(parsed) == 2:
-        hour, minute = parsed
-        second = 0
-    elif len(parsed) == 3:
-        hour, minute, second = parsed
-    else:
+    try:
+        hour = int(parsed[0])
+        minute = int(parsed[1])
+        try:
+            second = float(parsed[2])
+        except IndexError:
+            second = 0
+    except ValueError:
         raise vol.Invalid(TIME_PERIOD_ERROR.format(value))
 
     offset = timedelta(hours=hour, minutes=minute, seconds=second)
@@ -375,10 +391,10 @@ def time_period_str(value: str) -> timedelta:
     return offset
 
 
-def time_period_seconds(value: Union[int, str]) -> timedelta:
+def time_period_seconds(value: Union[float, str]) -> timedelta:
     """Validate and transform seconds to a time offset."""
     try:
-        return timedelta(seconds=int(value))
+        return timedelta(seconds=float(value))
     except (ValueError, TypeError):
         raise vol.Invalid(f"Expected seconds, got {value}")
 
@@ -399,6 +415,7 @@ def positive_timedelta(value: timedelta) -> timedelta:
 
 
 positive_time_period_dict = vol.All(time_period_dict, positive_timedelta)
+positive_time_period = vol.All(time_period, positive_timedelta)
 
 
 def remove_falsy(value: List[T]) -> List[T]:
@@ -518,13 +535,19 @@ def template_complex(value: Any) -> Any:
             return_list[idx] = template_complex(element)
         return return_list
     if isinstance(value, dict):
-        return_dict = value.copy()
-        for key, element in return_dict.items():
-            return_dict[key] = template_complex(element)
-        return return_dict
-    if isinstance(value, str):
+        return {
+            template_complex(key): template_complex(element)
+            for key, element in value.items()
+        }
+    if isinstance(value, str) and template_helper.is_template_string(value):
         return template(value)
+
     return value
+
+
+positive_time_period_template = vol.Any(
+    positive_time_period, template, template_complex
+)
 
 
 def datetime(value: Any) -> datetime_sys:
@@ -836,7 +859,7 @@ EVENT_SCHEMA = vol.Schema(
         vol.Optional(CONF_ALIAS): string,
         vol.Required(CONF_EVENT): string,
         vol.Optional(CONF_EVENT_DATA): dict,
-        vol.Optional(CONF_EVENT_DATA_TEMPLATE): {match_all: template_complex},
+        vol.Optional(CONF_EVENT_DATA_TEMPLATE): template_complex,
     }
 )
 
@@ -847,7 +870,7 @@ SERVICE_SCHEMA = vol.All(
             vol.Exclusive(CONF_SERVICE, "service name"): service,
             vol.Exclusive(CONF_SERVICE_TEMPLATE, "service name"): template,
             vol.Optional("data"): dict,
-            vol.Optional("data_template"): {match_all: template_complex},
+            vol.Optional("data_template"): template_complex,
             vol.Optional(CONF_ENTITY_ID): comp_entity_ids,
         }
     ),
@@ -859,6 +882,7 @@ NUMERIC_STATE_CONDITION_SCHEMA = vol.All(
         {
             vol.Required(CONF_CONDITION): "numeric_state",
             vol.Required(CONF_ENTITY_ID): entity_ids,
+            vol.Optional(CONF_ATTRIBUTE): str,
             CONF_BELOW: vol.Coerce(float),
             CONF_ABOVE: vol.Coerce(float),
             vol.Optional(CONF_VALUE_TEMPLATE): template,
@@ -872,8 +896,9 @@ STATE_CONDITION_SCHEMA = vol.All(
         {
             vol.Required(CONF_CONDITION): "state",
             vol.Required(CONF_ENTITY_ID): entity_ids,
+            vol.Optional(CONF_ATTRIBUTE): str,
             vol.Required(CONF_STATE): vol.Any(str, [str]),
-            vol.Optional(CONF_FOR): vol.All(time_period, positive_timedelta),
+            vol.Optional(CONF_FOR): positive_time_period,
             # To support use_trigger_value in automation
             # Deprecated 2016/04/25
             vol.Optional("from"): str,
@@ -930,7 +955,7 @@ ZONE_CONDITION_SCHEMA = vol.Schema(
 AND_CONDITION_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_CONDITION): "and",
-        vol.Required("conditions"): vol.All(
+        vol.Required(CONF_CONDITIONS): vol.All(
             ensure_list,
             # pylint: disable=unnecessary-lambda
             [lambda value: CONDITION_SCHEMA(value)],
@@ -941,7 +966,7 @@ AND_CONDITION_SCHEMA = vol.Schema(
 OR_CONDITION_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_CONDITION): "or",
-        vol.Required("conditions"): vol.All(
+        vol.Required(CONF_CONDITIONS): vol.All(
             ensure_list,
             # pylint: disable=unnecessary-lambda
             [lambda value: CONDITION_SCHEMA(value)],
@@ -952,7 +977,7 @@ OR_CONDITION_SCHEMA = vol.Schema(
 NOT_CONDITION_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_CONDITION): "not",
-        vol.Required("conditions"): vol.All(
+        vol.Required(CONF_CONDITIONS): vol.All(
             ensure_list,
             # pylint: disable=unnecessary-lambda
             [lambda value: CONDITION_SCHEMA(value)],
@@ -986,12 +1011,14 @@ CONDITION_SCHEMA: vol.Schema = key_value_schemas(
     },
 )
 
+TRIGGER_SCHEMA = vol.All(
+    ensure_list, [vol.Schema({vol.Required(CONF_PLATFORM): str}, extra=vol.ALLOW_EXTRA)]
+)
+
 _SCRIPT_DELAY_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_ALIAS): string,
-        vol.Required(CONF_DELAY): vol.Any(
-            vol.All(time_period, positive_timedelta), template, template_complex
-        ),
+        vol.Required(CONF_DELAY): positive_time_period_template,
     }
 )
 
@@ -999,7 +1026,7 @@ _SCRIPT_WAIT_TEMPLATE_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_ALIAS): string,
         vol.Required(CONF_WAIT_TEMPLATE): template,
-        vol.Optional(CONF_TIMEOUT): vol.All(time_period, positive_timedelta),
+        vol.Optional(CONF_TIMEOUT): positive_time_period_template,
         vol.Optional(CONF_CONTINUE_ON_TIMEOUT): boolean,
     }
 )
@@ -1031,6 +1058,33 @@ _SCRIPT_REPEAT_SCHEMA = vol.Schema(
     }
 )
 
+_SCRIPT_CHOOSE_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_ALIAS): string,
+        vol.Required(CONF_CHOOSE): vol.All(
+            ensure_list,
+            [
+                {
+                    vol.Required(CONF_CONDITIONS): vol.All(
+                        ensure_list, [CONDITION_SCHEMA]
+                    ),
+                    vol.Required(CONF_SEQUENCE): SCRIPT_SCHEMA,
+                }
+            ],
+        ),
+        vol.Optional(CONF_DEFAULT): SCRIPT_SCHEMA,
+    }
+)
+
+_SCRIPT_WAIT_FOR_TRIGGER_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_ALIAS): string,
+        vol.Required(CONF_WAIT_FOR_TRIGGER): TRIGGER_SCHEMA,
+        vol.Optional(CONF_TIMEOUT): positive_time_period_template,
+        vol.Optional(CONF_CONTINUE_ON_TIMEOUT): boolean,
+    }
+)
+
 SCRIPT_ACTION_DELAY = "delay"
 SCRIPT_ACTION_WAIT_TEMPLATE = "wait_template"
 SCRIPT_ACTION_CHECK_CONDITION = "condition"
@@ -1039,6 +1093,8 @@ SCRIPT_ACTION_CALL_SERVICE = "call_service"
 SCRIPT_ACTION_DEVICE_AUTOMATION = "device"
 SCRIPT_ACTION_ACTIVATE_SCENE = "scene"
 SCRIPT_ACTION_REPEAT = "repeat"
+SCRIPT_ACTION_CHOOSE = "choose"
+SCRIPT_ACTION_WAIT_FOR_TRIGGER = "wait_for_trigger"
 
 
 def determine_script_action(action: dict) -> str:
@@ -1064,6 +1120,12 @@ def determine_script_action(action: dict) -> str:
     if CONF_REPEAT in action:
         return SCRIPT_ACTION_REPEAT
 
+    if CONF_CHOOSE in action:
+        return SCRIPT_ACTION_CHOOSE
+
+    if CONF_WAIT_FOR_TRIGGER in action:
+        return SCRIPT_ACTION_WAIT_FOR_TRIGGER
+
     return SCRIPT_ACTION_CALL_SERVICE
 
 
@@ -1076,4 +1138,6 @@ ACTION_TYPE_SCHEMAS: Dict[str, Callable[[Any], dict]] = {
     SCRIPT_ACTION_DEVICE_AUTOMATION: DEVICE_ACTION_SCHEMA,
     SCRIPT_ACTION_ACTIVATE_SCENE: _SCRIPT_SCENE_SCHEMA,
     SCRIPT_ACTION_REPEAT: _SCRIPT_REPEAT_SCHEMA,
+    SCRIPT_ACTION_CHOOSE: _SCRIPT_CHOOSE_SCHEMA,
+    SCRIPT_ACTION_WAIT_FOR_TRIGGER: _SCRIPT_WAIT_FOR_TRIGGER_SCHEMA,
 }

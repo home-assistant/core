@@ -1,6 +1,6 @@
 """Modesl used by multiple MQTT modules."""
 import datetime as dt
-from typing import Callable, Union
+from typing import Callable, Optional, Union
 
 import attr
 
@@ -11,12 +11,12 @@ PublishPayloadType = Union[str, bytes, int, float, None]
 class Message:
     """MQTT Message."""
 
-    topic = attr.ib(type=str)
-    payload = attr.ib(type=PublishPayloadType)
-    qos = attr.ib(type=int)
-    retain = attr.ib(type=bool)
-    subscribed_topic = attr.ib(type=str, default=None)
-    timestamp = attr.ib(type=dt.datetime, default=None)
+    topic: str = attr.ib()
+    payload: PublishPayloadType = attr.ib()
+    qos: int = attr.ib()
+    retain: bool = attr.ib()
+    subscribed_topic: Optional[str] = attr.ib(default=None)
+    timestamp: Optional[dt.datetime] = attr.ib(default=None)
 
 
 MessageCallbackType = Callable[[Message], None]

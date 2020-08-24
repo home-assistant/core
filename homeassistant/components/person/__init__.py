@@ -44,7 +44,7 @@ from homeassistant.helpers import (
     service,
 )
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
@@ -57,6 +57,7 @@ ATTR_USER_ID = "user_id"
 
 CONF_DEVICE_TRACKERS = "device_trackers"
 CONF_USER_ID = "user_id"
+CONF_PICTURE = "picture"
 
 DOMAIN = "person"
 
@@ -73,6 +74,7 @@ PERSON_SCHEMA = vol.Schema(
         vol.Optional(CONF_DEVICE_TRACKERS, default=[]): vol.All(
             cv.ensure_list, cv.entities_domain(DEVICE_TRACKER_DOMAIN)
         ),
+        vol.Optional(CONF_PICTURE): cv.string,
     }
 )
 
@@ -129,6 +131,7 @@ CREATE_FIELDS = {
     vol.Optional(CONF_DEVICE_TRACKERS, default=list): vol.All(
         cv.ensure_list, cv.entities_domain(DEVICE_TRACKER_DOMAIN)
     ),
+    vol.Optional(CONF_PICTURE): vol.Any(str, None),
 }
 
 
@@ -138,6 +141,7 @@ UPDATE_FIELDS = {
     vol.Optional(CONF_DEVICE_TRACKERS, default=list): vol.All(
         cv.ensure_list, cv.entities_domain(DEVICE_TRACKER_DOMAIN)
     ),
+    vol.Optional(CONF_PICTURE): vol.Any(str, None),
 }
 
 
@@ -373,6 +377,11 @@ class Person(RestoreEntity):
         return self._config[CONF_NAME]
 
     @property
+    def entity_picture(self) -> Optional[str]:
+        """Return entity picture."""
+        return self._config.get(CONF_PICTURE)
+
+    @property
     def should_poll(self):
         """Return True if entity has to be polled for state.
 
@@ -440,14 +449,14 @@ class Person(RestoreEntity):
         if trackers:
             _LOGGER.debug("Subscribe to device trackers for %s", self.entity_id)
 
-            self._unsub_track_device = async_track_state_change(
+            self._unsub_track_device = async_track_state_change_event(
                 self.hass, trackers, self._async_handle_tracker_update
             )
 
         self._update_state()
 
     @callback
-    def _async_handle_tracker_update(self, entity, old_state, new_state):
+    def _async_handle_tracker_update(self, event):
         """Handle the device tracker state changes."""
         self._update_state()
 

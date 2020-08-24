@@ -1,5 +1,6 @@
 """Config flow for Netatmo."""
 import logging
+import uuid
 
 import voluptuous as vol
 
@@ -16,6 +17,7 @@ from .const import (
     CONF_LON_SW,
     CONF_NEW_AREA,
     CONF_PUBLIC_MODE,
+    CONF_UUID,
     CONF_WEATHER_AREAS,
     DOMAIN,
 )
@@ -66,11 +68,11 @@ class NetatmoFlowHandler(
     async def async_step_user(self, user_input=None):
         """Handle a flow start."""
         await self.async_set_unique_id(DOMAIN)
-        return await super().async_step_user(user_input)
 
-    async def async_step_homekit(self, homekit_info):
-        """Handle HomeKit discovery."""
-        return await self.async_step_user()
+        if self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
+
+        return await super().async_step_user(user_input)
 
 
 class NetatmoOptionsFlowHandler(config_entries.OptionsFlow):
@@ -102,7 +104,7 @@ class NetatmoOptionsFlowHandler(config_entries.OptionsFlow):
                     user_input={CONF_NEW_AREA: new_client}
                 )
 
-            return await self._update_options()
+            return self._create_options_entry()
 
         weather_areas = list(self.options[CONF_WEATHER_AREAS])
 
@@ -121,7 +123,14 @@ class NetatmoOptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_public_weather(self, user_input=None):
         """Manage configuration of Netatmo public weather sensors."""
         if user_input is not None and CONF_NEW_AREA not in user_input:
-            self.options[CONF_WEATHER_AREAS][user_input[CONF_AREA_NAME]] = user_input
+            self.options[CONF_WEATHER_AREAS][
+                user_input[CONF_AREA_NAME]
+            ] = fix_coordinates(user_input)
+
+            self.options[CONF_WEATHER_AREAS][user_input[CONF_AREA_NAME]][
+                CONF_UUID
+            ] = str(uuid.uuid4())
+
             return await self.async_step_public_weather_areas()
 
         orig_options = self.config_entry.options.get(CONF_WEATHER_AREAS, {}).get(
@@ -170,8 +179,30 @@ class NetatmoOptionsFlowHandler(config_entries.OptionsFlow):
 
         return self.async_show_form(step_id="public_weather", data_schema=data_schema)
 
-    async def _update_options(self):
+    def _create_options_entry(self):
         """Update config entry options."""
         return self.async_create_entry(
             title="Netatmo Public Weather", data=self.options
         )
+
+
+def fix_coordinates(user_input):
+    """Fix coordinates if they don't comply with the Netatmo API."""
+    # Ensure coordinates have acceptable length for the Netatmo API
+    for coordinate in [CONF_LAT_NE, CONF_LAT_SW, CONF_LON_NE, CONF_LON_SW]:
+        if len(str(user_input[coordinate]).split(".")[1]) < 7:
+            user_input[coordinate] = user_input[coordinate] + 0.0000001
+
+    # Swap coordinates if entered in wrong order
+    if user_input[CONF_LAT_NE] < user_input[CONF_LAT_SW]:
+        user_input[CONF_LAT_NE], user_input[CONF_LAT_SW] = (
+            user_input[CONF_LAT_SW],
+            user_input[CONF_LAT_NE],
+        )
+    if user_input[CONF_LON_NE] < user_input[CONF_LON_SW]:
+        user_input[CONF_LON_NE], user_input[CONF_LON_SW] = (
+            user_input[CONF_LON_SW],
+            user_input[CONF_LON_NE],
+        )
+
+    return user_input
