@@ -939,10 +939,9 @@ class MQTT:
         self.hass.add_job(self._mqtt_handle_mid, mid)
 
     async def _mqtt_handle_mid(self, mid) -> None:
-        if mid in self._pending_operations:
-            self._pending_operations[mid].set()
-        else:
-            _LOGGER.warning("Unknown mid %d", mid)
+        if mid not in self._pending_operations:
+            self._pending_operations[mid] = asyncio.Event()
+        self._pending_operations[mid].set()
 
     def _mqtt_on_disconnect(self, _mqttc, _userdata, result_code: int) -> None:
         """Disconnected callback."""
@@ -957,7 +956,8 @@ class MQTT:
 
     async def _wait_for_mid(self, mid):
         """Wait for ACK from broker."""
-        self._pending_operations[mid] = asyncio.Event()
+        if mid not in self._pending_operations:
+            self._pending_operations[mid] = asyncio.Event()
         try:
             await asyncio.wait_for(self._pending_operations[mid].wait(), TIMEOUT_ACK)
         except asyncio.TimeoutError:
