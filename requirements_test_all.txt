@@ -205,7 +205,7 @@ bravia-tv==1.0.6
 broadlink==0.14.1
 
 # homeassistant.components.brother
-brother==0.1.14
+brother==0.1.15
 
 # homeassistant.components.bsblan
 bsblan==0.3.7

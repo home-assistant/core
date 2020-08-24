@@ -1,7 +1,10 @@
 """Support for the Brother service."""
+from datetime import timedelta
 import logging
 
+from homeassistant.const import DEVICE_CLASS_TIMESTAMP
 from homeassistant.helpers.entity import Entity
+from homeassistant.util.dt import utcnow
 
 from .const import (
     ATTR_BLACK_DRUM_COUNTER,
@@ -20,6 +23,7 @@ from .const import (
     ATTR_MAGENTA_DRUM_REMAINING_PAGES,
     ATTR_MANUFACTURER,
     ATTR_UNIT,
+    ATTR_UPTIME,
     ATTR_YELLOW_DRUM_COUNTER,
     ATTR_YELLOW_DRUM_REMAINING_LIFE,
     ATTR_YELLOW_DRUM_REMAINING_PAGES,
@@ -76,7 +80,17 @@ class BrotherPrinterSensor(Entity):
     @property
     def state(self):
         """Return the state."""
+        if self.kind == ATTR_UPTIME:
+            uptime = utcnow() - timedelta(seconds=self.coordinator.data.get(self.kind))
+            return uptime.replace(microsecond=0).isoformat()
         return self.coordinator.data.get(self.kind)
+
+    @property
+    def device_class(self):
+        """Return the class of this sensor."""
+        if self.kind == ATTR_UPTIME:
+            return DEVICE_CLASS_TIMESTAMP
+        return None
 
     @property
     def device_state_attributes(self):
