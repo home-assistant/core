@@ -12,7 +12,13 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 
-from .const import OPERATION_MODES, PRESET_MODES, ColorTempModes
+from .const import (
+    CONF_STATE_ADDRESS,
+    CONF_SYNC_STATE,
+    OPERATION_MODES,
+    PRESET_MODES,
+    ColorTempModes,
+)
 
 
 class ConnectionSchema:
@@ -72,10 +78,10 @@ class CoverSchema:
 class BinarySensorSchema:
     """Voluptuous schema for KNX binary sensors."""
 
-    CONF_STATE_ADDRESS = "state_address"
+    CONF_STATE_ADDRESS = CONF_STATE_ADDRESS
     CONF_SIGNIFICANT_BIT = "significant_bit"
     CONF_DEFAULT_SIGNIFICANT_BIT = 1
-    CONF_SYNC_STATE = "sync_state"
+    CONF_SYNC_STATE = CONF_SYNC_STATE
     CONF_AUTOMATION = "automation"
     CONF_HOOK = "hook"
     CONF_DEFAULT_HOOK = "on"
@@ -113,7 +119,7 @@ class BinarySensorSchema:
 class LightSchema:
     """Voluptuous schema for KNX lights."""
 
-    CONF_STATE_ADDRESS = "state_address"
+    CONF_STATE_ADDRESS = CONF_STATE_ADDRESS
     CONF_BRIGHTNESS_ADDRESS = "brightness_address"
     CONF_BRIGHTNESS_STATE_ADDRESS = "brightness_state_address"
     CONF_COLOR_ADDRESS = "color_address"
@@ -233,7 +239,7 @@ class ClimateSchema:
 class SwitchSchema:
     """Voluptuous schema for KNX switches."""
 
-    CONF_STATE_ADDRESS = "state_address"
+    CONF_STATE_ADDRESS = CONF_STATE_ADDRESS
 
     DEFAULT_NAME = "KNX Switch"
     SCHEMA = vol.Schema(
@@ -248,10 +254,10 @@ class SwitchSchema:
 class ExposeSchema:
     """Voluptuous schema for KNX exposures."""
 
-    CONF_KNX_EXPOSE_TYPE = "type"
+    CONF_KNX_EXPOSE_TYPE = CONF_TYPE
     CONF_KNX_EXPOSE_ATTRIBUTE = "attribute"
     CONF_KNX_EXPOSE_DEFAULT = "default"
-    CONF_KNX_EXPOSE_ADDRESS = "address"
+    CONF_KNX_EXPOSE_ADDRESS = CONF_ADDRESS
 
     SCHEMA = vol.Schema(
         {
@@ -280,8 +286,8 @@ class NotifySchema:
 class SensorSchema:
     """Voluptuous schema for KNX sensors."""
 
-    CONF_STATE_ADDRESS = "state_address"
-    CONF_SYNC_STATE = "sync_state"
+    CONF_STATE_ADDRESS = CONF_STATE_ADDRESS
+    CONF_SYNC_STATE = CONF_SYNC_STATE
     DEFAULT_NAME = "KNX Sensor"
 
     SCHEMA = vol.Schema(

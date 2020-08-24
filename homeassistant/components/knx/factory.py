@@ -36,31 +36,31 @@ def create_knx_device(
 ) -> XknxDevice:
     """Return the requested XKNX device."""
     if device_type is DeviceTypes.light:
-        return __create_light(knx_module, config)
+        return _create_light(knx_module, config)
 
     if device_type is DeviceTypes.cover:
-        return __create_cover(knx_module, config)
+        return _create_cover(knx_module, config)
 
     if device_type is DeviceTypes.climate:
-        return __create_climate(hass, knx_module, config)
+        return _create_climate(hass, knx_module, config)
 
     if device_type is DeviceTypes.switch:
-        return __create_switch(knx_module, config)
+        return _create_switch(knx_module, config)
 
     if device_type is DeviceTypes.sensor:
-        return __create_sensor(knx_module, config)
+        return _create_sensor(knx_module, config)
 
     if device_type is DeviceTypes.notify:
-        return __create_notify(knx_module, config)
+        return _create_notify(knx_module, config)
 
     if device_type is DeviceTypes.scene:
-        return __create_scene(knx_module, config)
+        return _create_scene(knx_module, config)
 
     if device_type is DeviceTypes.binary_sensor:
-        return __create_binary_sensor(hass, knx_module, config)
+        return _create_binary_sensor(hass, knx_module, config)
 
 
-def __create_cover(knx_module: XKNX, config: ConfigType) -> XknxCover:
+def _create_cover(knx_module: XKNX, config: ConfigType) -> XknxCover:
     """Return a KNX Cover device to be used within XKNX."""
     return XknxCover(
         knx_module,
@@ -80,7 +80,7 @@ def __create_cover(knx_module: XKNX, config: ConfigType) -> XknxCover:
     )
 
 
-def __create_light(knx_module: XKNX, config: ConfigType) -> XknxLight:
+def _create_light(knx_module: XKNX, config: ConfigType) -> XknxLight:
     """Return a KNX Light device to be used within XKNX."""
     group_address_tunable_white = None
     group_address_tunable_white_state = None
@@ -119,7 +119,7 @@ def __create_light(knx_module: XKNX, config: ConfigType) -> XknxLight:
     )
 
 
-def __create_climate(
+def _create_climate(
     hass: HomeAssistant, knx_module: XKNX, config: ConfigType
 ) -> XknxClimate:
     """Return a KNX Climate device to be used within XKNX."""
@@ -185,7 +185,7 @@ def __create_climate(
     )
 
 
-def __create_switch(knx_module: XKNX, config: ConfigType) -> XknxSwitch:
+def _create_switch(knx_module: XKNX, config: ConfigType) -> XknxSwitch:
     """Return a KNX switch to be used within XKNX."""
     return XknxSwitch(
         knx_module,
@@ -195,7 +195,7 @@ def __create_switch(knx_module: XKNX, config: ConfigType) -> XknxSwitch:
     )
 
 
-def __create_sensor(knx_module: XKNX, config: ConfigType) -> XknxSensor:
+def _create_sensor(knx_module: XKNX, config: ConfigType) -> XknxSensor:
     """Return a KNX sensor to be used within XKNX."""
     return XknxSensor(
         knx_module,
@@ -206,14 +206,14 @@ def __create_sensor(knx_module: XKNX, config: ConfigType) -> XknxSensor:
     )
 
 
-def __create_notify(knx_module: XKNX, config: ConfigType) -> XknxNotification:
+def _create_notify(knx_module: XKNX, config: ConfigType) -> XknxNotification:
     """Return a KNX notification to be used within XKNX."""
     return XknxNotification(
         knx_module, name=config[CONF_NAME], group_address=config[CONF_ADDRESS],
     )
 
 
-def __create_scene(knx_module: XKNX, config: ConfigType) -> XknxScene:
+def _create_scene(knx_module: XKNX, config: ConfigType) -> XknxScene:
     """Return a KNX scene to be used within XKNX."""
     return XknxScene(
         knx_module,
@@ -223,7 +223,7 @@ def __create_scene(knx_module: XKNX, config: ConfigType) -> XknxScene:
     )
 
 
-def __create_binary_sensor(
+def _create_binary_sensor(
     hass: HomeAssistant, knx_module: XKNX, config: ConfigType
 ) -> XknxBinarySensor:
     """Return a KNX binary sensor to be used within XKNX."""
