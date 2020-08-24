@@ -43,6 +43,8 @@ from homeassistant.core import State, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change_event
 
+from . import GroupEntity
+
 # mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs
 
@@ -68,7 +70,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([CoverGroup(config[CONF_NAME], config[CONF_ENTITIES])])
 
 
-class CoverGroup(CoverEntity):
+class CoverGroup(GroupEntity, CoverEntity):
     """Representation of a CoverGroup."""
 
     def __init__(self, name, entities):
@@ -96,6 +98,7 @@ class CoverGroup(CoverEntity):
 
     @callback
     def _update_supported_features_event(self, event):
+        self.async_set_context(event.context)
         self.update_supported_features(
             event.data.get("entity_id"), event.data.get("new_state")
         )
@@ -111,7 +114,7 @@ class CoverGroup(CoverEntity):
             for values in self._tilts.values():
                 values.discard(entity_id)
             if update_state:
-                self.async_schedule_update_ha_state(True)
+                self.async_schedule_or_defer_update_ha_state(True)
             return
 
         features = new_state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
@@ -143,17 +146,20 @@ class CoverGroup(CoverEntity):
             self._tilts[KEY_POSITION].discard(entity_id)
 
         if update_state:
-            self.async_schedule_update_ha_state(True)
+            self.async_schedule_or_defer_update_ha_state(True)
 
     async def async_added_to_hass(self):
         """Register listeners."""
         for entity_id in self._entities:
             new_state = self.hass.states.get(entity_id)
             self.update_supported_features(entity_id, new_state, update_state=False)
-        async_track_state_change_event(
-            self.hass, self._entities, self._update_supported_features_event
+        assert self.hass is not None
+        self.async_on_remove(
+            async_track_state_change_event(
+                self.hass, self._entities, self._update_supported_features_event
+            )
         )
-        await self.async_update()
+        super().async_added_to_hass()
 
     @property
     def name(self):
@@ -164,11 +170,6 @@ class CoverGroup(CoverEntity):
     def assumed_state(self):
         """Enable buttons even if at end position."""
         return self._assumed_state
-
-    @property
-    def should_poll(self):
-        """Disable polling for cover group."""
-        return False
 
     @property
     def supported_features(self):

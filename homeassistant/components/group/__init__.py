@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_NAME,
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_NONE,
+    EVENT_HOMEASSISTANT_START,
     SERVICE_RELOAD,
     STATE_CLOSED,
     STATE_HOME,
@@ -28,7 +29,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     STATE_UNLOCKED,
 )
-from homeassistant.core import callback
+from homeassistant.core import CoreState, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
@@ -341,6 +342,37 @@ async def _async_process_config(hass, config, component):
         )
 
 
+class GroupEntity(Entity):
+    """Representation of a Group of entities."""
+
+    @property
+    def should_poll(self) -> bool:
+        """Disable polling for cover group."""
+        return False
+
+    async def async_added_to_hass(self):
+        """Register listeners."""
+
+        @callback
+        def _update_at_start(_):
+            self.async_schedule_update_ha_state(True)
+
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _update_at_start)
+
+    @callback
+    def async_schedule_or_defer_update_ha_state(
+        self, force_refresh: bool = False
+    ) -> None:
+        """Only update once at start."""
+        if not self.hass:
+            return
+
+        if self.hass.state != CoreState.running:
+            return
+
+        self.async_schedule_update_ha_state(force_refresh)
+
+
 class Group(Entity):
     """Track a group of entity ids."""
 
@@ -545,6 +577,7 @@ class Group(Entity):
         if self._async_unsub_state_changed is None:
             return
 
+        self.async_set_context(event.context)
         self._async_update_group_state(event.data.get("new_state"))
         self.async_write_ha_state()
 
