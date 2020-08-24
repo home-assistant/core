@@ -1,4 +1,5 @@
 """The tests for the MQTT component."""
+import asyncio
 from datetime import datetime, timedelta
 import json
 import ssl
@@ -760,6 +761,7 @@ async def test_custom_birth_message(hass, mqtt_client_mock, mqtt_mock):
     """Test sending birth message."""
     mqtt_mock._mqtt_on_connect(None, None, 0, 0)
     await hass.async_block_till_done()
+    await asyncio.sleep(3)
     mqtt_client_mock.publish.assert_called_with("birth", "birth", 0, False)
 
 
@@ -767,6 +769,7 @@ async def test_default_birth_message(hass, mqtt_client_mock, mqtt_mock):
     """Test sending birth message."""
     mqtt_mock._mqtt_on_connect(None, None, 0, 0)
     await hass.async_block_till_done()
+    await asyncio.sleep(3)
     mqtt_client_mock.publish.assert_called_with(
         "homeassistant/status", "online", 0, False
     )
