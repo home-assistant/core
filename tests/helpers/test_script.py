@@ -71,13 +71,21 @@ async def test_firing_event_template(hass):
     sequence = cv.SCRIPT_SCHEMA(
         {
             "event": event,
-            "event_data_template": {
+            "event_data": {
                 "dict": {
                     1: "{{ is_world }}",
                     2: "{{ is_world }}{{ is_world }}",
                     3: "{{ is_world }}{{ is_world }}{{ is_world }}",
                 },
                 "list": ["{{ is_world }}", "{{ is_world }}{{ is_world }}"],
+            },
+            "event_data_template": {
+                "dict2": {
+                    1: "{{ is_world }}",
+                    2: "{{ is_world }}{{ is_world }}",
+                    3: "{{ is_world }}{{ is_world }}{{ is_world }}",
+                },
+                "list2": ["{{ is_world }}", "{{ is_world }}{{ is_world }}"],
             },
         }
     )
@@ -91,6 +99,8 @@ async def test_firing_event_template(hass):
     assert events[0].data == {
         "dict": {1: "yes", 2: "yesyes", 3: "yesyesyes"},
         "list": ["yes", "yesyes"],
+        "dict2": {1: "yes", 2: "yesyes", 3: "yesyesyes"},
+        "list2": ["yes", "yesyes"],
     }
 
 
