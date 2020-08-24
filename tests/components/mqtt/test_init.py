@@ -362,7 +362,6 @@ async def test_subscribe_deprecated_async(hass, mqtt_mock):
     """Test the subscription of a topic using deprecated callback signature."""
     calls = []
 
-    @callback
     async def record_calls(topic, payload, qos):
         """Record calls."""
         calls.append((topic, payload, qos))
@@ -759,20 +758,40 @@ async def test_setup_without_tls_config_uses_tlsv1_under_python36(hass):
 )
 async def test_custom_birth_message(hass, mqtt_client_mock, mqtt_mock):
     """Test sending birth message."""
+    birth = asyncio.Event()
+
+    async def wait_birth(topic, payload, qos):
+        """Handle birth message."""
+        birth.set()
+
+    old_cooldown = mqtt.DISCOVERY_COOLDOWN
+    mqtt.DISCOVERY_COOLDOWN = 0.1
+    await mqtt.async_subscribe(hass, "birth", wait_birth)
     mqtt_mock._mqtt_on_connect(None, None, 0, 0)
     await hass.async_block_till_done()
-    await asyncio.sleep(3)
+    await birth.wait()
     mqtt_client_mock.publish.assert_called_with("birth", "birth", 0, False)
+    mqtt.DISCOVERY_COOLDOWN = old_cooldown
 
 
 async def test_default_birth_message(hass, mqtt_client_mock, mqtt_mock):
     """Test sending birth message."""
+    birth = asyncio.Event()
+
+    async def wait_birth(topic, payload, qos):
+        """Handle birth message."""
+        birth.set()
+
+    old_cooldown = mqtt.DISCOVERY_COOLDOWN
+    mqtt.DISCOVERY_COOLDOWN = 0.1
+    await mqtt.async_subscribe(hass, "homeassistant/status", wait_birth)
     mqtt_mock._mqtt_on_connect(None, None, 0, 0)
     await hass.async_block_till_done()
-    await asyncio.sleep(3)
+    await birth.wait()
     mqtt_client_mock.publish.assert_called_with(
         "homeassistant/status", "online", 0, False
     )
+    mqtt.DISCOVERY_COOLDOWN = old_cooldown
 
 
 @pytest.mark.parametrize(
@@ -780,9 +799,13 @@ async def test_default_birth_message(hass, mqtt_client_mock, mqtt_mock):
 )
 async def test_no_birth_message(hass, mqtt_client_mock, mqtt_mock):
     """Test disabling birth message."""
+    old_cooldown = mqtt.DISCOVERY_COOLDOWN
+    mqtt.DISCOVERY_COOLDOWN = 0.1
     mqtt_mock._mqtt_on_connect(None, None, 0, 0)
     await hass.async_block_till_done()
+    await asyncio.sleep(1)
     mqtt_client_mock.publish.assert_not_called()
+    mqtt.DISCOVERY_COOLDOWN = old_cooldown
 
 
 @pytest.mark.parametrize(
