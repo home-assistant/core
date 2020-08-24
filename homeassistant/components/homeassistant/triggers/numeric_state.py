@@ -103,20 +103,19 @@ async def async_attach_trigger(
         def call_action():
             """Call action with right context."""
             hass.async_run_job(
-                action(
-                    {
-                        "trigger": {
-                            "platform": platform_type,
-                            "entity_id": entity,
-                            "below": below,
-                            "above": above,
-                            "from_state": from_s,
-                            "to_state": to_s,
-                            "for": time_delta if not time_delta else period[entity],
-                        }
-                    },
-                    context=to_s.context,
-                )
+                action,
+                {
+                    "trigger": {
+                        "platform": platform_type,
+                        "entity_id": entity,
+                        "below": below,
+                        "above": above,
+                        "from_state": from_s,
+                        "to_state": to_s,
+                        "for": time_delta if not time_delta else period[entity],
+                    }
+                },
+                to_s.context,
             )
 
         matching = check_numeric_state(entity, from_s, to_s)

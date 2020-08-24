@@ -302,6 +302,9 @@ class HomeAssistant:
         target: target to call.
         args: parameters for method to call.
         """
+        if target is None:
+            raise ValueError("Don't call async_add_job with None")
+
         task = None
 
         # Check for partials to properly determine if coroutine function
