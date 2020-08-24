@@ -1169,6 +1169,7 @@ async def test_unique_id_update_existing_entry_with_reload(hass, manager):
         domain="comp",
         data={"additional": "data", "host": "0.0.0.0"},
         unique_id="mock-unique-id",
+        state=config_entries.ENTRY_STATE_LOADED,
     )
     entry.add_to_hass(hass)
 
@@ -1176,6 +1177,7 @@ async def test_unique_id_update_existing_entry_with_reload(hass, manager):
         hass, MockModule("comp"),
     )
     mock_entity_platform(hass, "config_flow.comp", None)
+    updates = {"host": "1.1.1.1"}
 
     class TestFlow(config_entries.ConfigFlow):
         """Test flow."""
@@ -1186,7 +1188,7 @@ async def test_unique_id_update_existing_entry_with_reload(hass, manager):
             """Test user step."""
             await self.async_set_unique_id("mock-unique-id")
             await self._abort_if_unique_id_configured(
-                updates={"host": "1.1.1.1"}, reload_on_update=True
+                updates=updates, reload_on_update=True
             )
 
     with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}), patch(
@@ -1202,6 +1204,23 @@ async def test_unique_id_update_existing_entry_with_reload(hass, manager):
     assert entry.data["host"] == "1.1.1.1"
     assert entry.data["additional"] == "data"
     assert len(async_reload.mock_calls) == 1
+
+    # Test we don't reload if entry not started
+    updates["host"] = "2.2.2.2"
+    entry.state = config_entries.ENTRY_STATE_NOT_LOADED
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}), patch(
+        "homeassistant.config_entries.ConfigEntries.async_reload"
+    ) as async_reload:
+        result = await manager.flow.async_init(
+            "comp", context={"source": config_entries.SOURCE_USER}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+    assert entry.data["host"] == "2.2.2.2"
+    assert entry.data["additional"] == "data"
+    assert len(async_reload.mock_calls) == 0
 
 
 async def test_unique_id_not_update_existing_entry(hass, manager):
