@@ -638,13 +638,15 @@ class MQTT:
 
         self._pending_operations = {}
 
-        @callback
-        def ha_started(_):
-            self._ha_started.set()
-
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, ha_started)
         if self.hass.state == CoreState.running:
             self._ha_started.set()
+        else:
+
+            @callback
+            def ha_started(_):
+                self._ha_started.set()
+
+            self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, ha_started)
 
         self.init_client()
         self.config_entry.add_update_listener(self.async_config_entry_updated)
