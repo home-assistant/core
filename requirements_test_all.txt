@@ -857,6 +857,9 @@ pyvolumio==0.1.1
 # homeassistant.components.html5
 pywebpush==1.9.2
 
+# homeassistant.components.wilight
+pywilight==0.0.65
+
 # homeassistant.components.zerproc
 pyzerproc==0.2.5
 
