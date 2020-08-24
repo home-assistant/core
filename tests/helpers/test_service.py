@@ -144,16 +144,16 @@ class TestServiceHelpers(unittest.TestCase):
         """Stop down everything that was started."""
         self.hass.stop()
 
-    def test_template_service_call(self):
+    def test_service_call(self):
         """Test service call with templating."""
         config = {
-            "service_template": "{{ 'test_domain.test_service' }}",
+            "service": "{{ 'test_domain.test_service' }}",
             "entity_id": "hello.world",
-            "data_template": {
+            "data": {
                 "hello": "{{ 'goodbye' }}",
                 "data": {"value": "{{ 'complex' }}", "simple": "simple"},
-                "list": ["{{ 'list' }}", "2"],
             },
+            "data_template": {"list": ["{{ 'list' }}", "2"]},
         }
 
         service.call_from_config(self.hass, config)
@@ -163,6 +163,19 @@ class TestServiceHelpers(unittest.TestCase):
         assert self.calls[0].data["data"]["value"] == "complex"
         assert self.calls[0].data["data"]["simple"] == "simple"
         assert self.calls[0].data["list"][0] == "list"
+
+    def test_service_template_service_call(self):
+        """Test legacy service_template call with templating."""
+        config = {
+            "service_template": "{{ 'test_domain.test_service' }}",
+            "entity_id": "hello.world",
+            "data": {"hello": "goodbye"},
+        }
+
+        service.call_from_config(self.hass, config)
+        self.hass.block_till_done()
+
+        assert self.calls[0].data["hello"] == "goodbye"
 
     def test_passing_variables_to_templates(self):
         """Test passing variables to templates."""
