@@ -1,5 +1,5 @@
 """Test sensor of Brother integration."""
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 import json
 
 from homeassistant.components.brother.const import UNIT_PAGES
@@ -13,7 +13,7 @@ from homeassistant.const import (
     UNIT_PERCENTAGE,
 )
 from homeassistant.setup import async_setup_component
-from homeassistant.util.dt import utcnow
+from homeassistant.util.dt import UTC, utcnow
 
 from tests.async_mock import patch
 from tests.common import async_fire_time_changed, load_fixture
@@ -25,7 +25,7 @@ ATTR_COUNTER = "counter"
 
 async def test_sensors(hass):
     """Test states of the sensors."""
-    test_time = datetime(2019, 11, 11, 9, 10, 32, tzinfo=timezone.utc)
+    test_time = datetime(2019, 11, 11, 9, 10, 32, tzinfo=UTC)
     with patch(
         "homeassistant.components.brother.sensor.utcnow", return_value=test_time
     ):
