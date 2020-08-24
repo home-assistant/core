@@ -29,12 +29,18 @@ USER = {
 }
 
 RESPONSE_AUTHENTICATE = {
-    "ResultCode": 0,
+    "ResultCode": TotalConnectClient.TotalConnectClient.SUCCESS,
     "SessionID": 1,
     "Locations": LOCATIONS,
     "ModuleFlags": MODULE_FLAGS,
     "UserInfo": USER,
 }
+
+RESPONSE_AUTHENTICATE_FAILED = {
+    "ResultCode": TotalConnectClient.TotalConnectClient.BAD_USER_OR_PASSWORD,
+    "ResultData": "test bad authentication",
+}
+
 
 PARTITION_DISARMED = {
     "PartitionID": "1",
@@ -105,6 +111,7 @@ RESPONSE_USER_CODE_INVALID = {
     "ResultCode": "-4106",
     "ResultData": "testing user code invalid",
 }
+RESPONSE_SUCCESS = {"ResultCode": TotalConnectClient.TotalConnectClient.SUCCESS}
 
 USERNAME = "username@me.com"
 PASSWORD = "password"
@@ -114,6 +121,7 @@ CONFIG_DATA = {
     CONF_PASSWORD: PASSWORD,
     CONF_USERCODES: USERCODES,
 }
+CONFIG_DATA_NO_USERCODES = {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
 
 
 async def setup_platform(hass, platform):
