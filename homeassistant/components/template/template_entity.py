@@ -66,6 +66,9 @@ class _TemplateAttribute:
         last_result: Optional[str],
         result: Union[str, TemplateError],
     ) -> None:
+        if event:
+            self._entity.async_set_context(event.context)
+
         if isinstance(result, TemplateError):
             _LOGGER.error(
                 "TemplateError('%s') "
