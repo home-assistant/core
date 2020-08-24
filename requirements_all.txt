@@ -1919,6 +1919,9 @@ rova==0.1.0
 # homeassistant.components.rpi_rf
 # rpi-rf==0.9.7
 
+# homeassistant.components.rrd
+rrdtool==0.1.15
+
 # homeassistant.components.russound_rnet
 russound==0.1.9
 

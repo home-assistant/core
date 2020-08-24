@@ -1,0 +1,7 @@
+{
+  "domain": "rrd",
+  "name": "RRD",
+  "documentation": "https://www.home-assistant.io/integrations/rrd",
+  "requirements": ["rrdtool==0.1.15"],
+  "codeowners": ["@dgomes"]
+}
