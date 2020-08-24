@@ -19,8 +19,8 @@ from homeassistant.helpers import entity_registry
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util.dt import utcnow
 
-from . import prefs
 from .const import CONF_ENTITY_CONFIG, CONF_FILTER, PREF_SHOULD_EXPOSE, RequireRelink
+from .prefs import CloudPreferences
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ SYNC_DELAY = 1
 class AlexaConfig(alexa_config.AbstractConfig):
     """Alexa Configuration."""
 
-    def __init__(self, hass, config, prefs: prefs.CloudPreferences, cloud):
+    def __init__(self, hass, config, prefs: CloudPreferences, cloud):
         """Initialize the Alexa config."""
         super().__init__(hass)
         self._config = config

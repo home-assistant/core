@@ -14,13 +14,13 @@ from homeassistant.const import (
 from homeassistant.core import CoreState, callback, split_entity_id
 from homeassistant.helpers import entity_registry
 
-from . import prefs
 from .const import (
     CONF_ENTITY_CONFIG,
     DEFAULT_DISABLE_2FA,
     PREF_DISABLE_2FA,
     PREF_SHOULD_EXPOSE,
 )
+from .prefs import CloudPreferences
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 class CloudGoogleConfig(AbstractConfig):
     """HA Cloud Configuration for Google Assistant."""
 
-    def __init__(self, hass, config, cloud_user, prefs: prefs.CloudPreferences, cloud):
+    def __init__(self, hass, config, cloud_user, prefs: CloudPreferences, cloud):
         """Initialize the Google config."""
         super().__init__(hass)
         self._config = config
