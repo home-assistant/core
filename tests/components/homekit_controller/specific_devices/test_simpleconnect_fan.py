@@ -4,7 +4,11 @@ Test against characteristics captured from a SIMPLEconnect Fan.
 https://github.com/home-assistant/core/issues/26180
 """
 
-from homeassistant.components.fan import SUPPORT_DIRECTION, SUPPORT_SET_SPEED
+from homeassistant.components.fan import (
+    SUPPORT_DIRECTION,
+    SUPPORT_SET_SPEED,
+    SUPPORT_SET_SPEED_PERCENTAGE,
+)
 
 from tests.components.homekit_controller.common import (
     Helper,
@@ -37,7 +41,7 @@ async def test_simpleconnect_fan_setup(hass):
     assert fan_state.attributes["friendly_name"] == "SIMPLEconnect Fan-06F674"
     assert fan_state.state == "off"
     assert fan_state.attributes["supported_features"] == (
-        SUPPORT_DIRECTION | SUPPORT_SET_SPEED
+        SUPPORT_DIRECTION | SUPPORT_SET_SPEED | SUPPORT_SET_SPEED_PERCENTAGE
     )
 
     device_registry = await hass.helpers.device_registry.async_get_registry()
