@@ -9,6 +9,7 @@ from sqlalchemy.orm import aliased
 import voluptuous as vol
 
 from homeassistant.components import sun
+from homeassistant.components.automation import EVENT_AUTOMATION_TRIGGERED
 from homeassistant.components.history import sqlalchemy_filter_from_include_exclude_conf
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.recorder.models import (
@@ -18,6 +19,7 @@ from homeassistant.components.recorder.models import (
     process_timestamp_to_utc_isoformat,
 )
 from homeassistant.components.recorder.util import session_scope
+from homeassistant.components.script import EVENT_SCRIPT_STARTED
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_DOMAIN,
@@ -78,6 +80,9 @@ ALL_EVENT_TYPES = [
     EVENT_CALL_SERVICE,
     *HOMEASSISTANT_EVENTS,
 ]
+
+SCRIPT_AUTOMATION_EVENTS = [EVENT_AUTOMATION_TRIGGERED, EVENT_SCRIPT_STARTED]
+
 
 LOG_MESSAGE_SCHEMA = vol.Schema(
     {
@@ -274,7 +279,11 @@ def humanify(hass, events, entity_attr_cache, context_lookup):
                 context_event = context_lookup.get(event.context_id)
                 if context_event:
                     _augment_data_with_context(
-                        data, data.get(ATTR_ENTITY_ID), context_event, entity_attr_cache
+                        data,
+                        data.get(ATTR_ENTITY_ID),
+                        event,
+                        context_event,
+                        entity_attr_cache,
                     )
                 yield data
 
@@ -305,9 +314,9 @@ def humanify(hass, events, entity_attr_cache, context_lookup):
                     data["context_user_id"] = event.context_user_id
 
                 context_event = context_lookup.get(event.context_id)
-                if context_event:
+                if context_event and context_event != event:
                     _augment_data_with_context(
-                        data, entity_id, context_event, entity_attr_cache
+                        data, entity_id, event, context_event, entity_attr_cache
                     )
 
                 yield data
@@ -357,9 +366,9 @@ def humanify(hass, events, entity_attr_cache, context_lookup):
                     data["context_user_id"] = event.context_user_id
 
                 context_event = context_lookup.get(event.context_id)
-                if context_event:
+                if context_event and context_event != event:
                     _augment_data_with_context(
-                        data, entity_id, context_event, entity_attr_cache
+                        data, entity_id, event, context_event, entity_attr_cache
                     )
 
                 yield data
@@ -574,7 +583,9 @@ def _entry_message_from_event(entity_id, domain, event, entity_attr_cache):
     return f"changed to {state_state}"
 
 
-def _augment_data_with_context(data, entity_id, context_event, entity_attr_cache):
+def _augment_data_with_context(
+    data, entity_id, event, context_event, entity_attr_cache
+):
     event_type = context_event.event_type
 
     # State change
@@ -600,9 +611,16 @@ def _augment_data_with_context(data, entity_id, context_event, entity_attr_cache
         data["context_event_type"] = event_type
         return
 
-    # Script started or automation triggered
+    if not entity_id:
+        return
+
     attr_entity_id = event_data.get(ATTR_ENTITY_ID)
-    if not attr_entity_id or (entity_id and attr_entity_id == entity_id):
+    if not attr_entity_id or (
+        event_type in SCRIPT_AUTOMATION_EVENTS and attr_entity_id == entity_id
+    ):
+        return
+
+    if context_event == event:
         return
 
     data["context_entity_id"] = attr_entity_id
@@ -610,7 +628,6 @@ def _augment_data_with_context(data, entity_id, context_event, entity_attr_cache
         attr_entity_id, context_event, entity_attr_cache
     )
     data["context_event_type"] = event_type
-    return
 
 
 def _entity_name_from_event(entity_id, event, entity_attr_cache):
