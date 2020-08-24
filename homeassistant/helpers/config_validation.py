@@ -514,7 +514,7 @@ unit_system = vol.All(
 )
 
 
-def template(value: Optional[Any],) -> template_helper.Template:
+def template(value: Optional[Any]) -> template_helper.Template:
     """Validate a jinja2 template."""
 
     if value is None:
