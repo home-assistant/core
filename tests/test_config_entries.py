@@ -1169,6 +1169,7 @@ async def test_unique_id_update_existing_entry_with_reload(hass, manager):
         domain="comp",
         data={"additional": "data", "host": "0.0.0.0"},
         unique_id="mock-unique-id",
+        state=config_entries.ENTRY_STATE_LOADED,
     )
     entry.add_to_hass(hass)
 

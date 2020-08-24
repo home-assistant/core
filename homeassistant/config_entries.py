@@ -885,7 +885,11 @@ class ConfigFlow(data_entry_flow.FlowHandler):
                     changed = self.hass.config_entries.async_update_entry(
                         entry, data={**entry.data, **updates}
                     )
-                    if changed and reload_on_update:
+                    if (
+                        changed
+                        and reload_on_update
+                        and entry.state in (ENTRY_STATE_LOADED, ENTRY_STATE_SETUP_RETRY)
+                    ):
                         self.hass.async_create_task(
                             self.hass.config_entries.async_reload(entry.entry_id)
                         )
