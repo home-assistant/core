@@ -101,7 +101,8 @@ def enumerate_stateless_switch(service):
     # A stateless switch that has a SERIVCE_LABEL_INDEX is part of a group
     # And is handled separately
     if service.has(CharacteristicsTypes.SERVICE_LABEL_INDEX):
-        return []
+        if len(service.linked) > 0:
+            return []
 
     char = service[CharacteristicsTypes.INPUT_EVENT]
 
