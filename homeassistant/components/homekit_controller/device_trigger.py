@@ -174,7 +174,7 @@ def enumerate_doorbell(service):
     return results
 
 
-TRIGGER_TYPES = {
+TRIGGER_FINDERS = {
     "service-label": enumerate_stateless_switch_group,
     "stateless-programmable-switch": enumerate_stateless_switch,
     "doorbell": enumerate_doorbell,
@@ -191,7 +191,7 @@ async def async_setup_triggers_for_entry(hass: HomeAssistant, config_entry):
         service_type = service_dict["stype"]
 
         # If not a known service type then we can't handle any stateless events for it
-        if service_type not in TRIGGER_TYPES:
+        if service_type not in TRIGGER_FINDERS:
             return False
 
         # We can't have multiple trigger sources for the same device id
@@ -209,7 +209,7 @@ async def async_setup_triggers_for_entry(hass: HomeAssistant, config_entry):
 
         # Just because we recognise the service type doesn't mean we can actually
         # extract any triggers - so only proceed if we can
-        triggers = TRIGGER_TYPES[service_type](service)
+        triggers = TRIGGER_FINDERS[service_type](service)
         if len(triggers) == 0:
             return False
 
