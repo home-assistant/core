@@ -18,10 +18,22 @@ PREF_ALIASES = "aliases"
 PREF_SHOULD_EXPOSE = "should_expose"
 PREF_GOOGLE_LOCAL_WEBHOOK_ID = "google_local_webhook_id"
 PREF_USERNAME = "username"
-DEFAULT_SHOULD_EXPOSE = True
+PREF_ALEXA_DEFAULT_EXPOSE = "alexa_default_expose"
+PREF_GOOGLE_DEFAULT_EXPOSE = "google_default_expose"
 DEFAULT_DISABLE_2FA = False
 DEFAULT_ALEXA_REPORT_STATE = False
 DEFAULT_GOOGLE_REPORT_STATE = False
+DEFAULT_EXPOSED_DOMAINS = [
+    "climate",
+    "cover",
+    "light",
+    "lock",
+    "scene",
+    "script",
+    "sensor",
+    "switch",
+    "vacuum",
+]
 
 CONF_ALEXA = "alexa"
 CONF_ALIASES = "aliases"
