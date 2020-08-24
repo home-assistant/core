@@ -376,7 +376,8 @@ def _get_events(
         """Yield Events that are not filtered away."""
         for row in query.yield_per(1000):
             event = LazyEventPartialState(row)
-            if _keep_event(hass, event, entities_filter, context_lookup):
+            context_lookup.setdefault(event.context_id, event)
+            if _keep_event(hass, event, entities_filter):
                 yield event
 
     with session_scope(hass=hass) as session:
@@ -459,7 +460,7 @@ def _get_events(
         )
 
 
-def _keep_event(hass, event, entities_filter, context_lookup):
+def _keep_event(hass, event, entities_filter):
     if event.event_type == EVENT_STATE_CHANGED:
         entity_id = event.entity_id
     elif event.event_type in HOMEASSISTANT_EVENTS:
@@ -471,6 +472,8 @@ def _keep_event(hass, event, entities_filter, context_lookup):
         if domain is None:
             return False
         entity_id = f"{domain}."
+    elif event.event_type == EVENT_CALL_SERVICE:
+        return False
     else:
         event_data = event.data
         entity_id = event_data.get(ATTR_ENTITY_ID)
@@ -479,8 +482,6 @@ def _keep_event(hass, event, entities_filter, context_lookup):
             if domain is None:
                 return False
             entity_id = f"{domain}."
-
-    context_lookup.setdefault(event.context_id, event)
 
     return entities_filter is None or entities_filter(entity_id)
 

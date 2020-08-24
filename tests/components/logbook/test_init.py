@@ -192,7 +192,7 @@ class TestComponentLogbook(unittest.TestCase):
                 eventA,
                 eventB,
             )
-            if logbook._keep_event(self.hass, e, entities_filter, {})
+            if logbook._keep_event(self.hass, e, entities_filter)
         ]
         entries = list(logbook.humanify(self.hass, events, entity_attr_cache, {}))
 
@@ -230,7 +230,7 @@ class TestComponentLogbook(unittest.TestCase):
                 eventA,
                 eventB,
             )
-            if logbook._keep_event(self.hass, e, entities_filter, {})
+            if logbook._keep_event(self.hass, e, entities_filter)
         ]
         entries = list(logbook.humanify(self.hass, events, entity_attr_cache, {}))
 
@@ -277,7 +277,7 @@ class TestComponentLogbook(unittest.TestCase):
                 eventB,
                 eventC,
             )
-            if logbook._keep_event(self.hass, e, entities_filter, {})
+            if logbook._keep_event(self.hass, e, entities_filter)
         ]
         entries = list(logbook.humanify(self.hass, events, entity_attr_cache, {}))
 
@@ -319,7 +319,7 @@ class TestComponentLogbook(unittest.TestCase):
                 eventA,
                 eventB,
             )
-            if logbook._keep_event(self.hass, e, entities_filter, {})
+            if logbook._keep_event(self.hass, e, entities_filter)
         ]
         entries = list(logbook.humanify(self.hass, events, entity_attr_cache, {}))
 
@@ -365,7 +365,7 @@ class TestComponentLogbook(unittest.TestCase):
                 eventA,
                 eventB,
             )
-            if logbook._keep_event(self.hass, e, entities_filter, {})
+            if logbook._keep_event(self.hass, e, entities_filter)
         ]
         entries = list(logbook.humanify(self.hass, events, entity_attr_cache, {}))
 
@@ -419,7 +419,7 @@ class TestComponentLogbook(unittest.TestCase):
                 eventB,
                 eventC,
             )
-            if logbook._keep_event(self.hass, e, entities_filter, {})
+            if logbook._keep_event(self.hass, e, entities_filter)
         ]
         entries = list(logbook.humanify(self.hass, events, entity_attr_cache, {}))
 
@@ -476,7 +476,7 @@ class TestComponentLogbook(unittest.TestCase):
                 eventB1,
                 eventB2,
             )
-            if logbook._keep_event(self.hass, e, entities_filter, {})
+            if logbook._keep_event(self.hass, e, entities_filter)
         ]
         entries = list(logbook.humanify(self.hass, events, entity_attr_cache, {}))
 
@@ -550,7 +550,7 @@ class TestComponentLogbook(unittest.TestCase):
                 eventC2,
                 eventC3,
             )
-            if logbook._keep_event(self.hass, e, entities_filter, {})
+            if logbook._keep_event(self.hass, e, entities_filter)
         ]
         entries = list(logbook.humanify(self.hass, events, entity_attr_cache, {}))
 
