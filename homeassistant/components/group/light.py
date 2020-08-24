@@ -112,7 +112,7 @@ class LightGroup(GroupEntity, light.LightEntity):
                 self.hass, self._entity_ids, async_state_changed_listener
             )
         )
-        super().async_added_to_hass()
+        await super().async_added_to_hass()
 
     @property
     def name(self) -> str:

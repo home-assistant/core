@@ -159,7 +159,7 @@ class CoverGroup(GroupEntity, CoverEntity):
                 self.hass, self._entities, self._update_supported_features_event
             )
         )
-        super().async_added_to_hass()
+        await super().async_added_to_hass()
 
     @property
     def name(self):
