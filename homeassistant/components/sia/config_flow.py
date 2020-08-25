@@ -19,7 +19,7 @@ from .const import (
     CONF_ZONES,
     DEFAULT_NAME,
     DOMAIN,
-)
+)  # pylint: disable=unused-import
 
 HUB_SCHEMA = vol.Schema(
     {
