@@ -1396,6 +1396,7 @@ def build_item_response(media_library, payload):
             if item.item_id == payload["idstring"]:
                 title = item.title
                 thumbnail = item.album_art_uri
+                break
 
         if not thumbnail:
             thumbnail = media[0].album_art_uri
