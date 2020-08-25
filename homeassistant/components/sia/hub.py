@@ -103,7 +103,6 @@ class SIAHub:
                     zone[CONF_ACCOUNT],
                     zone[CONF_ZONE],
                     ping,
-                    self._hass,
                 )
 
     def _get_entity_id_and_name(
@@ -153,6 +152,17 @@ class SIAHub:
         Whenever a message comes in and is a event that should cause a reaction, the connection is good, so reset the availability timer for all devices of that account, excluding the last heartbeat.
 
         """
+
+        # ignore exceptions (those are returned now, but not read) to deal with disabled sensors.
+        await asyncio.gather(
+            *[
+                entity.assume_available()
+                for entity in self.states.values()
+                if entity.account == event.account
+            ],
+            return_exceptions=True,
+        )
+
         # find the reactions for that code (if any)
         reaction = self._reactions.get(event.code)
         if not reaction:
@@ -184,13 +194,3 @@ class SIAHub:
                             "last_message": f"{utcnow().isoformat()}: SIA: {event.sia_string}, Message: {event.message}"
                         }
                     )
-
-        # ignore exceptions (those are returned now, but not read) to deal with disabled sensors.
-        await asyncio.gather(
-            *[
-                entity.assume_available()
-                for entity in self.states.values()
-                if entity.account == event.account
-            ],
-            return_exceptions=True,
-        )

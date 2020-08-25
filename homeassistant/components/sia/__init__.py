@@ -77,8 +77,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
+<<<<<<< HEAD
     hass.data[DOMAIN][entry.entry_id].sia_client.stop()
 
+=======
+>>>>>>> updated config_flow with better schema, small fixes from review
     unload_ok = all(
         await asyncio.gather(
             *[
@@ -89,6 +92,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
 
     if unload_ok:
+        await hass.data[DOMAIN][entry.entry_id].async_shutdown(None)
+        hass.data[DOMAIN][entry.entry_id].shutdown_remove_listener()
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok

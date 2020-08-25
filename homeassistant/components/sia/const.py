@@ -22,4 +22,11 @@ PREVIOUS_STATE = "previous_state"
 UTCNOW = "utcnow"
 LAST_MESSAGE = "last_message"
 
+INVALID_KEY_FORMAT = "invalid_key_format"
+INVALID_KEY_LENGTH = "invalid_key_length"
+INVALID_ACCOUNT_FORMAT = "invalid_account_format"
+INVALID_ACCOUNT_LENGTH = "invalid_account_length"
+INVALID_PING = "invalid_ping"
+INVALID_ZONES = "invalid_zones"
+
 PLATFORMS = [ALARM_CONTROL_PANEL_DOMAIN]

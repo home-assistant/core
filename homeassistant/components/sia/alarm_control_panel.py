@@ -17,7 +17,7 @@ from homeassistant.const import (
     STATE_ALARM_TRIGGERED,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -62,7 +62,6 @@ class SIAAlarmControlPanel(AlarmControlPanel, RestoreEntity):
         account: str,
         zone: int,
         ping_interval: int,
-        hass: HomeAssistant,
     ):
         """Create SIAAlarmControlPanel object."""
         self._should_poll = False
@@ -73,7 +72,6 @@ class SIAAlarmControlPanel(AlarmControlPanel, RestoreEntity):
         self.hass = hass
         self._zone = zone
         self._ping_interval = ping_interval
-        self.hass = hass
 
         self._is_available = True
         self._remove_unavailability_tracker = None
@@ -129,6 +127,11 @@ class SIAAlarmControlPanel(AlarmControlPanel, RestoreEntity):
         return self._name
 
     @property
+    def account(self) -> str:
+        """Get Account."""
+        return self._account
+
+    @property
     def state(self) -> str:
         """Get state."""
         return self._state
@@ -166,11 +169,13 @@ class SIAAlarmControlPanel(AlarmControlPanel, RestoreEntity):
         temp = self._old_state if state == PREVIOUS_STATE else state
         self._old_state = self._state
         self._state = temp
-        self.async_schedule_update_ha_state()
+        if not self.registry_entry.disabled:
+            self.async_schedule_update_ha_state()
 
     async def assume_available(self):
         """Reset unavalability tracker."""
-        await self._async_track_unavailable()
+        if not self.registry_entry.disabled:
+            await self._async_track_unavailable()
 
     @callback
     async def _async_track_unavailable(self) -> bool:

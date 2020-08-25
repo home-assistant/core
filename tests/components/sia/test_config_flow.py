@@ -4,7 +4,6 @@ import pytest
 
 from homeassistant import config_entries, setup
 from homeassistant.components.sia.const import DOMAIN
-from homeassistant.data_entry_flow import AbortFlow
 
 BASIC_CONFIG = {
     "port": 7777,
@@ -74,7 +73,6 @@ async def test_form_invalid_key_format(hass):
     assert result["errors"] == {}
     config = BASIC_CONFIG.copy()
     config["additional_account"] = True
-    print(config)
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], config)
     assert result2["type"] == "form"
     assert result2["errors"] == {}
@@ -109,23 +107,16 @@ async def test_abort_form(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+    await hass.config_entries.flow.async_configure(result["flow_id"], BASIC_CONFIG)
 
-    with patch(
-        "homeassistant.config_entries.ConfigFlow._abort_if_unique_id_configured",
-        side_effect=AbortFlow(reason="already_configured"),
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "name": "SIA",
-                "port": 7777,
-                "account": "ABCDEF",
-                "encryption_key": "AAAAAAAAAAAAA",
-                "ping_interval": 10,
-            },
-        )
-    assert result2["type"] == "abort"
-    assert result2["reason"] == "already_configured"
+    result_abort = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result3 = await hass.config_entries.flow.async_configure(
+        result_abort["flow_id"], BASIC_CONFIG
+    )
+    assert result3["type"] == "abort"
+    assert result3["reason"] == "already_configured"
 
 
 @pytest.mark.parametrize(
@@ -169,6 +160,5 @@ async def test_form_errors(hass, additional, field, value, error):
         result_err = await hass.config_entries.flow.async_configure(
             result["flow_id"], config
         )
-    print(result_err)
     assert result_err["type"] == "form"
     assert result_err["errors"] == {"base": error}
