@@ -3,43 +3,14 @@ import voluptuous as vol
 
 from homeassistant.auth.providers import homeassistant as auth_ha
 from homeassistant.components import websocket_api
-
-WS_TYPE_CREATE = "config/auth_provider/homeassistant/create"
-SCHEMA_WS_CREATE = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {
-        vol.Required("type"): WS_TYPE_CREATE,
-        vol.Required("user_id"): str,
-        vol.Required("username"): str,
-        vol.Required("password"): str,
-    }
-)
-
-WS_TYPE_DELETE = "config/auth_provider/homeassistant/delete"
-SCHEMA_WS_DELETE = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {vol.Required("type"): WS_TYPE_DELETE, vol.Required("username"): str}
-)
-
-WS_TYPE_CHANGE_PASSWORD = "config/auth_provider/homeassistant/change_password"
-SCHEMA_WS_CHANGE_PASSWORD = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {
-        vol.Required("type"): WS_TYPE_CHANGE_PASSWORD,
-        vol.Required("current_password"): str,
-        vol.Required("new_password"): str,
-    }
-)
+from homeassistant.components.websocket_api import decorators
 
 
 async def async_setup(hass):
     """Enable the Home Assistant views."""
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_CREATE, websocket_create, SCHEMA_WS_CREATE
-    )
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_DELETE, websocket_delete, SCHEMA_WS_DELETE
-    )
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_CHANGE_PASSWORD, websocket_change_password, SCHEMA_WS_CHANGE_PASSWORD
-    )
+    hass.components.websocket_api.async_register_command(websocket_create)
+    hass.components.websocket_api.async_register_command(websocket_delete)
+    hass.components.websocket_api.async_register_command(websocket_change_password)
     return True
 
 
@@ -52,6 +23,14 @@ def _get_provider(hass):
     raise RuntimeError("Provider not found")
 
 
+@decorators.websocket_command(
+    {
+        vol.Required("type"): "config/auth_provider/homeassistant/create",
+        vol.Required("user_id"): str,
+        vol.Required("username"): str,
+        vol.Required("password"): str,
+    }
+)
 @websocket_api.require_admin
 @websocket_api.async_response
 async def websocket_create(hass, connection, msg):
@@ -98,6 +77,12 @@ async def websocket_create(hass, connection, msg):
     connection.send_message(websocket_api.result_message(msg["id"]))
 
 
+@decorators.websocket_command(
+    {
+        vol.Required("type"): "config/auth_provider/homeassistant/delete",
+        vol.Required("username"): str,
+    }
+)
 @websocket_api.require_admin
 @websocket_api.async_response
 async def websocket_delete(hass, connection, msg):
@@ -131,9 +116,16 @@ async def websocket_delete(hass, connection, msg):
     connection.send_message(websocket_api.result_message(msg["id"]))
 
 
+@decorators.websocket_command(
+    {
+        vol.Required("type"): "config/auth_provider/homeassistant/change_password",
+        vol.Required("current_password"): str,
+        vol.Required("new_password"): str,
+    }
+)
 @websocket_api.async_response
 async def websocket_change_password(hass, connection, msg):
-    """Change user password."""
+    """Change current user password."""
     user = connection.user
     if user is None:
         connection.send_message(
