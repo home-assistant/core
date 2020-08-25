@@ -117,7 +117,7 @@ class HomematicipHAP:
         Triggered when the HMIP HOME_CHANGED event has fired.
         There are several occasions for this event to happen.
         1. We are interested to check whether the access point
-        is still connected. If not, device state changes cannot
+        is still connected. If not, entity state changes cannot
         be forwarded to hass. So if access point is disconnected all devices
         are set to unavailable.
         2. We need to update home including devices and groups after a reconnect.
@@ -131,7 +131,7 @@ class HomematicipHAP:
         elif not self._accesspoint_connected:
             # Now the HOME_CHANGED event has fired indicating the access
             # point has reconnected to the cloud again.
-            # Explicitly getting an update as device states might have
+            # Explicitly getting an update as entity states might have
             # changed during access point disconnect."""
 
             job = self.hass.async_create_task(self.get_state())
@@ -140,7 +140,7 @@ class HomematicipHAP:
 
     @callback
     def async_create_entity(self, *args, **kwargs) -> None:
-        """Create a device or a group."""
+        """Create an entity or a group."""
         is_device = EventType(kwargs["event_type"]) == EventType.DEVICE_ADDED
         self.hass.async_create_task(self.async_create_entity_lazy(is_device))
 
