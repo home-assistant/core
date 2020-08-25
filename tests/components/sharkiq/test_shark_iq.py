@@ -166,7 +166,7 @@ async def test_shark_metadata(hass: HomeAssistant) -> None:
     shark_vac = _get_mock_shark_vac(ayla_api)
     coordinator = SharkIqUpdateCoordinator(hass, None, ayla_api, [shark_vac])
     shark = SharkVacuumEntity(shark_vac, coordinator)
-    shark.sharkiq._update_metadata(   # pylint: disable=protected-access
+    shark.sharkiq._update_metadata(  # pylint: disable=protected-access
         SHARK_METADATA_DICT
     )
 
@@ -242,7 +242,9 @@ async def test_coordinator_match(hass: HomeAssistant):
     assert not api1.is_online
     assert not api1.available
 
-    coordinator._online_dsns = {shark_vac1.serial_number}  # pylint: disable=protected-access
+    coordinator._online_dsns = {
+        shark_vac1.serial_number
+    }  # pylint: disable=protected-access
     assert api1.is_online
     assert api1.available
 
