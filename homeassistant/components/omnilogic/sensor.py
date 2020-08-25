@@ -25,7 +25,7 @@ async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None
 
     for backyard in coordinator.data:
         _LOGGER.info(
-            f"Setting up air temperature sensor for {backyard.get('BackyardName')}."
+            "Setting up air temperature sensor for %s.", backyard.get("BackyardName")
         )
         sensors.append(
             OmnilogicSensor(
@@ -41,7 +41,7 @@ async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None
             )
         )
 
-        _LOGGER.info(f"Setting up alarm sensor for {backyard.get('BackyardName')}.")
+        _LOGGER.info("Setting up alarm sensor for %s.", backyard.get("BackyardName"))
         sensors.append(
             OmnilogicSensor(
                 coordinator,
@@ -57,7 +57,7 @@ async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None
         )
 
         for bow in backyard["BOWS"]:
-            _LOGGER.info(f"Setting up water temperature sensor for {bow.get('Name')}.")
+            _LOGGER.info("Setting up water temperature sensor for %s.", bow.get("Name"))
             sensors.append(
                 OmnilogicSensor(
                     coordinator,
@@ -72,7 +72,7 @@ async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None
                 )
             )
 
-            _LOGGER.info(f"Setting up filter pump sensor for {bow.get('Name')}.")
+            _LOGGER.info("Setting up filter pump sensor for %s.", bow.get("Name"))
             sensors.append(
                 OmnilogicSensor(
                     coordinator,
@@ -88,7 +88,7 @@ async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None
             )
 
             for pump in bow["Pumps"]:
-                _LOGGER.info(f"Setting up pump sensor for {pump.get('Name')}.")
+                _LOGGER.info("Setting up pump sensor for %s.", pump.get("Name"))
                 sensors.append(
                     OmnilogicSensor(
                         coordinator,
@@ -104,7 +104,7 @@ async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None
                 )
 
             _LOGGER.info(
-                f"Setting up chlorinator sensor for {bow['Chlorinator'].get('Name')}."
+                "Setting up chlorinator sensor for %s.", bow["Chlorinator"].get("Name")
             )
             sensors.append(
                 OmnilogicSensor(
@@ -121,7 +121,7 @@ async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None
             )
 
             _LOGGER.info(
-                f"Setting up salt level sensor for {bow['Chlorinator'].get('Name')}."
+                "Setting up salt level sensor for %s.", bow["Chlorinator"].get("Name")
             )
             sensors.append(
                 OmnilogicSensor(
@@ -139,7 +139,7 @@ async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None
 
             if "CSAD" in bow.keys():
                 if bow["CSAD"]["systemId"] != "0":
-                    _LOGGER.info(f"Setting up ph sensor for {bow.get('Name')}.")
+                    _LOGGER.info("Setting up ph sensor for %s.", bow.get("Name"))
                     sensors.append(
                         OmnilogicSensor(
                             coordinator,
@@ -154,7 +154,7 @@ async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None
                         )
                     )
 
-                    _LOGGER.info(f"Setting up orp sensor for {bow.get('Name')}.")
+                    _LOGGER.info("Setting up orp sensor for %s.", bow.get("Name"))
                     sensors.append(
                         OmnilogicSensor(
                             coordinator,
