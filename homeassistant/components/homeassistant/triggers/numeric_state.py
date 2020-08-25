@@ -6,6 +6,7 @@ import voluptuous as vol
 from homeassistant import exceptions
 from homeassistant.const import (
     CONF_ABOVE,
+    CONF_ATTRIBUTE,
     CONF_BELOW,
     CONF_ENTITY_ID,
     CONF_FOR,
@@ -48,6 +49,7 @@ TRIGGER_SCHEMA = vol.All(
             vol.Optional(CONF_ABOVE): vol.Coerce(float),
             vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
             vol.Optional(CONF_FOR): cv.positive_time_period_template,
+            vol.Optional(CONF_ATTRIBUTE): cv.match_all,
         }
     ),
     cv.has_at_least_one_key(CONF_BELOW, CONF_ABOVE),
@@ -70,6 +72,7 @@ async def async_attach_trigger(
     unsub_track_same = {}
     entities_triggered = set()
     period: dict = {}
+    attribute = config.get(CONF_ATTRIBUTE)
 
     if value_template is not None:
         value_template.hass = hass
@@ -86,10 +89,11 @@ async def async_attach_trigger(
                 "entity_id": entity,
                 "below": below,
                 "above": above,
+                "attribute": attribute,
             }
         }
         return condition.async_numeric_state(
-            hass, to_s, below, above, value_template, variables
+            hass, to_s, below, above, value_template, variables, attribute
         )
 
     @callback
