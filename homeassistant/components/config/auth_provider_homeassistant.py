@@ -2,8 +2,10 @@
 import voluptuous as vol
 
 from homeassistant.auth.providers import homeassistant as auth_ha
+from homeassistant.auth.providers.homeassistant import InvalidUser
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api import decorators
+from homeassistant.exceptions import Unauthorized
 
 
 async def async_setup(hass):
@@ -11,6 +13,9 @@ async def async_setup(hass):
     hass.components.websocket_api.async_register_command(websocket_create)
     hass.components.websocket_api.async_register_command(websocket_delete)
     hass.components.websocket_api.async_register_command(websocket_change_password)
+    hass.components.websocket_api.async_register_command(
+        websocket_admin_change_password
+    )
     return True
 
 
@@ -166,3 +171,37 @@ async def websocket_change_password(hass, connection, msg):
     await provider.data.async_save()
 
     connection.send_message(websocket_api.result_message(msg["id"]))
+
+
+@decorators.websocket_command(
+    {
+        vol.Required(
+            "type"
+        ): "config/auth_provider/homeassistant/admin_change_password",
+        vol.Required("username"): str,
+        vol.Required("password"): str,
+    }
+)
+@decorators.require_admin
+@decorators.async_response
+async def websocket_admin_change_password(hass, connection, msg):
+    """Change password of any user."""
+    if not connection.user.is_owner:
+        raise Unauthorized(context=connection.context(msg))
+
+    provider = _get_provider(hass)
+    await provider.async_initialize()
+    try:
+        await hass.async_add_executor_job(
+            provider.data.change_password, msg["username"], msg["password"]
+        )
+        await provider.data.async_save()
+
+        connection.send_message(websocket_api.result_message(msg["id"]))
+    except InvalidUser:
+        connection.send_message(
+            websocket_api.error_message(
+                msg["id"], "credentials_not_found", "Credentials not found"
+            )
+        )
+        return

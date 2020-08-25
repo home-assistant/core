@@ -4,7 +4,7 @@ import pytest
 from homeassistant.auth.providers import homeassistant as prov_ha
 from homeassistant.components.config import auth_provider_homeassistant as auth_ha
 
-from tests.common import MockUser, register_auth_provider
+from tests.common import CLIENT_ID, MockUser, register_auth_provider
 
 
 @pytest.fixture(autouse=True)
@@ -22,6 +22,15 @@ async def auth_provider(hass):
     provider = hass.auth.auth_providers[0]
     await provider.async_initialize()
     return provider
+
+
+@pytest.fixture
+async def owner_access_token(hass, hass_owner_user):
+    """Access token for owner user."""
+    refresh_token = await hass.auth.async_create_refresh_token(
+        hass_owner_user, CLIENT_ID
+    )
+    return hass.auth.async_create_access_token(refresh_token)
 
 
 @pytest.fixture
@@ -302,3 +311,65 @@ async def test_change_password_no_creds(hass, hass_ws_client):
     result = await client.receive_json()
     assert not result["success"], result
     assert result["error"]["code"] == "credentials_not_found"
+
+
+async def test_admin_change_password_not_owner(
+    hass, hass_ws_client, auth_provider, test_user_credential
+):
+    """Test that change password fails when not owner."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            "id": 6,
+            "type": "config/auth_provider/homeassistant/admin_change_password",
+            "username": "test-user",
+            "password": "new-pass",
+        }
+    )
+
+    result = await client.receive_json()
+    assert not result["success"], result
+    assert result["error"]["code"] == "unauthorized"
+
+    # Validate old login still works
+    await auth_provider.async_validate_login("test-user", "test-pass")
+
+
+async def test_admin_change_password_no_creds(hass, hass_ws_client, owner_access_token):
+    """Test that change password fails with unknown credentials."""
+    client = await hass_ws_client(hass, owner_access_token)
+
+    await client.send_json(
+        {
+            "id": 6,
+            "type": "config/auth_provider/homeassistant/admin_change_password",
+            "username": "non-existing",
+            "password": "new-pass",
+        }
+    )
+
+    result = await client.receive_json()
+    assert not result["success"], result
+    assert result["error"]["code"] == "credentials_not_found"
+
+
+async def test_admin_change_password(
+    hass, hass_ws_client, owner_access_token, auth_provider, test_user_credential
+):
+    """Test that owners can change any password."""
+    client = await hass_ws_client(hass, owner_access_token)
+
+    await client.send_json(
+        {
+            "id": 6,
+            "type": "config/auth_provider/homeassistant/admin_change_password",
+            "username": "test-user",
+            "password": "new-pass",
+        }
+    )
+
+    result = await client.receive_json()
+    assert result["success"], result
+
+    await auth_provider.async_validate_login("test-user", "new-pass")
