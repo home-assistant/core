@@ -13,6 +13,7 @@ async def test_binary_sensors(hass, surepetcare) -> None:
 
     with _patch_sensor_setup():
         assert await async_setup_component(hass, DOMAIN, MOCK_CONFIG)
+        await hass.async_block_till_done()
 
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
 
