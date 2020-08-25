@@ -364,8 +364,7 @@ class GroupEntity(Entity):
         self, force_refresh: bool = False
     ) -> None:
         """Only update once at start."""
-        if not self.hass:
-            return
+        assert self.hass is not None
 
         if self.hass.state != CoreState.running:
             return
