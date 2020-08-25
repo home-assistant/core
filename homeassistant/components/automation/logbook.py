@@ -18,6 +18,7 @@ def async_describe_events(hass, async_describe_event):  # type: ignore
         return {
             "name": event.data.get(ATTR_NAME),
             "message": message,
+            "source": event.data.get(ATTR_SOURCE),
             "entity_id": event.data.get(ATTR_ENTITY_ID),
         }
 
