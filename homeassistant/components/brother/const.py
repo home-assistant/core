@@ -162,9 +162,5 @@ SENSOR_TYPES = {
         ATTR_LABEL: ATTR_YELLOW_INK_REMAINING.replace("_", " ").title(),
         ATTR_UNIT: UNIT_PERCENTAGE,
     },
-    ATTR_UPTIME: {
-        ATTR_ICON: "mdi:timer-outline",
-        ATTR_LABEL: ATTR_UPTIME.title(),
-        ATTR_UNIT: None,
-    },
+    ATTR_UPTIME: {ATTR_ICON: None, ATTR_LABEL: ATTR_UPTIME.title(), ATTR_UNIT: None},
 }

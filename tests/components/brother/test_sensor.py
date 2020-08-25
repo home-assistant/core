@@ -214,7 +214,7 @@ async def test_sensors(hass):
 
     state = hass.states.get("sensor.hl_l2340dw_uptime")
     assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:timer-outline"
+    assert state.attributes.get(ATTR_ICON) is None
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_TIMESTAMP
     assert state.state == "2019-09-24T12:14:56+00:00"
