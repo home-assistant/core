@@ -818,7 +818,7 @@ async def test_master_state_with_template(hass):
 
 
 async def test_reload(hass):
-    """Test the state_template option."""
+    """Test reloading the media player from yaml."""
     hass.states.async_set("input_boolean.test", STATE_OFF)
     hass.states.async_set("media_player.mock1", STATE_OFF)
 

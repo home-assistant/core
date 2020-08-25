@@ -1,5 +1,10 @@
 """The tests for the Group Light platform."""
-from homeassistant.components.group import DOMAIN
+from os import path
+
+from asynctest.mock import patch
+
+from homeassistant import config as hass_config
+from homeassistant.components.group import DOMAIN, SERVICE_RELOAD
 import homeassistant.components.group.light as group
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -632,3 +637,48 @@ async def test_invalid_service_calls(hass):
         mock_call.assert_called_once_with(
             LIGHT_DOMAIN, SERVICE_TURN_ON, data, blocking=True, context=None
         )
+
+
+async def test_reload(hass):
+    """Test the ability to reload lights."""
+    await async_setup_component(
+        hass,
+        LIGHT_DOMAIN,
+        {
+            LIGHT_DOMAIN: [
+                {"platform": "demo"},
+                {
+                    "platform": DOMAIN,
+                    "entities": [
+                        "light.bed_light",
+                        "light.ceiling_lights",
+                        "light.kitchen_lights",
+                    ],
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+
+    await hass.async_block_till_done()
+    assert hass.states.get("light.light_group").state == STATE_ON
+
+    yaml_path = path.join(
+        _get_fixtures_base_path(), "fixtures", "group/configuration.yaml",
+    )
+    with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
+        await hass.services.async_call(
+            DOMAIN, SERVICE_RELOAD, {}, blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    assert hass.states.get("light.light_group") is None
+    assert hass.states.get("light.master_hall_lights_g") is not None
+    assert hass.states.get("light.outside_patio_lights_g") is not None
+
+
+def _get_fixtures_base_path():
+    return path.dirname(path.dirname(path.dirname(__file__)))
