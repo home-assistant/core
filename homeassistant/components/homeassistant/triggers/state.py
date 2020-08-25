@@ -66,9 +66,6 @@ async def async_attach_trigger(
     def state_automation_listener(event: Event):
         """Listen for state changes and calls action."""
         entity: str = event.data["entity_id"]
-        if entity not in entity_id:
-            return
-
         from_s: Optional[State] = event.data.get("old_state")
         to_s: Optional[State] = event.data.get("new_state")
 

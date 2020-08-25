@@ -1061,9 +1061,29 @@ async def test_attribute_if_not_fires_on_entities_change_with_for_after_stop(
     )
     await hass.async_block_till_done()
 
+    # Test that the for-check works
     hass.states.async_set("test.entity", "bla", {"name": "world"})
     await hass.async_block_till_done()
     assert len(calls) == 0
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=2))
+    hass.states.async_set("test.entity", "bla", {"name": "world", "something": "else"})
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    # Now remove state while inside "for"
+    hass.states.async_set("test.entity", "bla", {"name": "hello"})
+    hass.states.async_set("test.entity", "bla", {"name": "world"})
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    hass.states.async_remove("test.entity")
+    await hass.async_block_till_done()
+
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
     await hass.async_block_till_done()
     assert len(calls) == 1
