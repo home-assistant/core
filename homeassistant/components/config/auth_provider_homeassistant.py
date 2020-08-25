@@ -3,62 +3,34 @@ import voluptuous as vol
 
 from homeassistant.auth.providers import homeassistant as auth_ha
 from homeassistant.components import websocket_api
+from homeassistant.components.websocket_api import decorators
+from homeassistant.exceptions import Unauthorized
 
-WS_TYPE_CREATE = "config/auth_provider/homeassistant/create"
-SCHEMA_WS_CREATE = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
+
+async def async_setup(hass):
+    """Enable the Home Assistant views."""
+    hass.components.websocket_api.async_register_command(websocket_create)
+    hass.components.websocket_api.async_register_command(websocket_delete)
+    hass.components.websocket_api.async_register_command(websocket_change_password)
+    hass.components.websocket_api.async_register_command(
+        websocket_admin_change_password
+    )
+    return True
+
+
+@decorators.websocket_command(
     {
-        vol.Required("type"): WS_TYPE_CREATE,
+        vol.Required("type"): "config/auth_provider/homeassistant/create",
         vol.Required("user_id"): str,
         vol.Required("username"): str,
         vol.Required("password"): str,
     }
 )
-
-WS_TYPE_DELETE = "config/auth_provider/homeassistant/delete"
-SCHEMA_WS_DELETE = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {vol.Required("type"): WS_TYPE_DELETE, vol.Required("username"): str}
-)
-
-WS_TYPE_CHANGE_PASSWORD = "config/auth_provider/homeassistant/change_password"
-SCHEMA_WS_CHANGE_PASSWORD = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {
-        vol.Required("type"): WS_TYPE_CHANGE_PASSWORD,
-        vol.Required("current_password"): str,
-        vol.Required("new_password"): str,
-    }
-)
-
-
-async def async_setup(hass):
-    """Enable the Home Assistant views."""
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_CREATE, websocket_create, SCHEMA_WS_CREATE
-    )
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_DELETE, websocket_delete, SCHEMA_WS_DELETE
-    )
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_CHANGE_PASSWORD, websocket_change_password, SCHEMA_WS_CHANGE_PASSWORD
-    )
-    return True
-
-
-def _get_provider(hass):
-    """Get homeassistant auth provider."""
-    for prv in hass.auth.auth_providers:
-        if prv.type == "homeassistant":
-            return prv
-
-    raise RuntimeError("Provider not found")
-
-
 @websocket_api.require_admin
 @websocket_api.async_response
 async def websocket_create(hass, connection, msg):
     """Create credentials and attach to a user."""
-    provider = _get_provider(hass)
-    await provider.async_initialize()
-
+    provider = await auth_ha.async_get_provider(hass)
     user = await hass.auth.async_get_user(msg["user_id"])
 
     if user is None:
@@ -78,9 +50,7 @@ async def websocket_create(hass, connection, msg):
         return
 
     try:
-        await hass.async_add_executor_job(
-            provider.data.add_auth, msg["username"], msg["password"]
-        )
+        await provider.async_add_auth(msg["username"], msg["password"])
     except auth_ha.InvalidUser:
         connection.send_message(
             websocket_api.error_message(
@@ -94,17 +64,20 @@ async def websocket_create(hass, connection, msg):
     )
     await hass.auth.async_link_user(user, credentials)
 
-    await provider.data.async_save()
     connection.send_message(websocket_api.result_message(msg["id"]))
 
 
+@decorators.websocket_command(
+    {
+        vol.Required("type"): "config/auth_provider/homeassistant/delete",
+        vol.Required("username"): str,
+    }
+)
 @websocket_api.require_admin
 @websocket_api.async_response
 async def websocket_delete(hass, connection, msg):
     """Delete username and related credential."""
-    provider = _get_provider(hass)
-    await provider.async_initialize()
-
+    provider = await auth_ha.async_get_provider(hass)
     credentials = await provider.async_get_or_create_credentials(
         {"username": msg["username"]}
     )
@@ -118,8 +91,7 @@ async def websocket_delete(hass, connection, msg):
         return
 
     try:
-        provider.data.async_remove_auth(msg["username"])
-        await provider.data.async_save()
+        await provider.async_remove_auth(msg["username"])
     except auth_ha.InvalidUser:
         connection.send_message(
             websocket_api.error_message(
@@ -131,9 +103,16 @@ async def websocket_delete(hass, connection, msg):
     connection.send_message(websocket_api.result_message(msg["id"]))
 
 
+@decorators.websocket_command(
+    {
+        vol.Required("type"): "config/auth_provider/homeassistant/change_password",
+        vol.Required("current_password"): str,
+        vol.Required("new_password"): str,
+    }
+)
 @websocket_api.async_response
 async def websocket_change_password(hass, connection, msg):
-    """Change user password."""
+    """Change current user password."""
     user = connection.user
     if user is None:
         connection.send_message(
@@ -141,9 +120,7 @@ async def websocket_change_password(hass, connection, msg):
         )
         return
 
-    provider = _get_provider(hass)
-    await provider.async_initialize()
-
+    provider = await auth_ha.async_get_provider(hass)
     username = None
     for credential in user.credentials:
         if credential.auth_provider_type == provider.type:
@@ -168,9 +145,35 @@ async def websocket_change_password(hass, connection, msg):
         )
         return
 
-    await hass.async_add_executor_job(
-        provider.data.change_password, username, msg["new_password"]
-    )
-    await provider.data.async_save()
+    await provider.async_change_password(username, msg["new_password"])
 
     connection.send_message(websocket_api.result_message(msg["id"]))
+
+
+@decorators.websocket_command(
+    {
+        vol.Required(
+            "type"
+        ): "config/auth_provider/homeassistant/admin_change_password",
+        vol.Required("username"): str,
+        vol.Required("password"): str,
+    }
+)
+@decorators.require_admin
+@decorators.async_response
+async def websocket_admin_change_password(hass, connection, msg):
+    """Change password of any user."""
+    if not connection.user.is_owner:
+        raise Unauthorized(context=connection.context(msg))
+
+    provider = await auth_ha.async_get_provider(hass)
+    try:
+        await provider.async_change_password(msg["username"], msg["password"])
+        connection.send_message(websocket_api.result_message(msg["id"]))
+    except auth_ha.InvalidUser:
+        connection.send_message(
+            websocket_api.error_message(
+                msg["id"], "credentials_not_found", "Credentials not found"
+            )
+        )
+        return
