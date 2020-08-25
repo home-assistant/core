@@ -1,5 +1,7 @@
 """Constants used in shark iq tests."""
 
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+
 # Dummy device dict of the form returned by AylaApi.list_devices()
 SHARK_DEVICE_DICT = {
     "product_name": "Sharknado",
@@ -67,3 +69,5 @@ SHARK_PROPERTIES_DICT = {
 
 TEST_USERNAME = "test-username"
 TEST_PASSWORD = "test-password"
+UNIQUE_ID = "foo@bar.com"
+CONFIG = {CONF_USERNAME: TEST_USERNAME, CONF_PASSWORD: TEST_PASSWORD}

@@ -242,9 +242,9 @@ async def test_coordinator_match(hass: HomeAssistant):
     assert not api1.is_online
     assert not api1.available
 
-    coordinator._online_dsns = {
+    coordinator._online_dsns = {  # pylint: disable=protected-access
         shark_vac1.serial_number
-    }  # pylint: disable=protected-access
+    }
     assert api1.is_online
     assert api1.available
 
@@ -278,3 +278,8 @@ async def test_simple_properties(hass: HomeAssistant):
     shark_vac1.properties_full[Properties.ERROR_CODE.value]["value"] = 0
     assert entity.error_code == 0
     assert entity.error_message is None
+
+    assert (
+        coordinator.online_dsns
+        is coordinator._online_dsns  # pylint: disable=protected-access
+    )
