@@ -863,7 +863,7 @@ async def test_reload(hass):
     )
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
-            universal.DOMAIN, universal.SERVICE_RELOAD, {}, blocking=True,
+            "universal", universal.SERVICE_RELOAD, {}, blocking=True,
         )
         await hass.async_block_till_done()
 

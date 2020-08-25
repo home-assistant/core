@@ -120,7 +120,7 @@ async def async_setup_reload_service(hass):
         hass.bus.async_fire(EVENT_UNIVERSAL_RELOADED, context=call.context)
 
     hass.helpers.service.async_register_admin_service(
-        DOMAIN, SERVICE_RELOAD, _reload_config
+        "universal", SERVICE_RELOAD, _reload_config
     )
 
 
