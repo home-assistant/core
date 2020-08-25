@@ -4,6 +4,17 @@ from homeassistant.setup import async_setup_component
 
 from . import MOCK_API_DATA, MOCK_CONFIG, _patch_sensor_setup
 
+EXPECTED_ENTITY_IDS = {
+    "binary_sensor.pet_flap_pet_flap": "household-id-13576",
+    "binary_sensor.pet_flap_pet_flap_connectivity": "household-id-13576-connectivity",
+    "binary_sensor.pet_flap_cat_flap": "household-id-13579",
+    "binary_sensor.pet_flap_cat_flap_connectivity": "household-id-13579-connectivity:,
+    "binary_sensor.feeder_feeder": "household-id-12345",
+    "binary_sensor.feeder_feeder_connectivity": "household-id-12345-connectivity",
+    "binary_sensor.pet_pet": "household-id-24680",
+    "binary_sensor.hub_hub": "household-id-hub-id",
+}
+
 
 async def test_binary_sensors(hass, surepetcare) -> None:
     """Test the generation of unique ids."""
@@ -16,39 +27,9 @@ async def test_binary_sensors(hass, surepetcare) -> None:
         await hass.async_block_till_done()
 
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    state_entity_ids = hass.states.async_entity_ids()
 
-    assert hass.states.get("binary_sensor.pet_flap_pet_flap")
-    pet_flap = entity_registry.async_get("binary_sensor.pet_flap_pet_flap")
-    assert pet_flap.unique_id == "household-id-13576"
-
-    assert hass.states.get("binary_sensor.pet_flap_pet_flap_connectivity")
-    pet_flap_conn = entity_registry.async_get(
-        "binary_sensor.pet_flap_pet_flap_connectivity"
-    )
-    assert pet_flap_conn.unique_id == "household-id-13576-connectivity"
-
-    assert hass.states.get("binary_sensor.pet_flap_cat_flap")
-    cat_flap = entity_registry.async_get("binary_sensor.pet_flap_cat_flap")
-    assert cat_flap.unique_id == "household-id-13579"
-
-    assert hass.states.get("binary_sensor.pet_flap_cat_flap_connectivity")
-    cat_flap_conn = entity_registry.async_get(
-        "binary_sensor.pet_flap_cat_flap_connectivity"
-    )
-    assert cat_flap_conn.unique_id == "household-id-13579-connectivity"
-
-    assert hass.states.get("binary_sensor.feeder_feeder")
-    feeder = entity_registry.async_get("binary_sensor.feeder_feeder")
-    assert feeder.unique_id == "household-id-12345"
-
-    assert hass.states.get("binary_sensor.feeder_feeder_connectivity")
-    feeder_conn = entity_registry.async_get("binary_sensor.feeder_feeder_connectivity")
-    assert feeder_conn.unique_id == "household-id-12345-connectivity"
-
-    assert hass.states.get("binary_sensor.pet_pet")
-    pet = entity_registry.async_get("binary_sensor.pet_pet")
-    assert pet.unique_id == "household-id-24680"
-
-    assert hass.states.get("binary_sensor.hub_hub")
-    hub = entity_registry.async_get("binary_sensor.hub_hub")
-    assert hub.unique_id == "household-id-hub-id"
+    for entity_id, unique_id in EXPECTED_ENTITY_IDS:
+        assert entity_id in state_entity_ids
+        entity = entity_registry.async_get(entity_id)
+        assert entity.unique_id == unique_id
