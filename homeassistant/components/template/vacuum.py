@@ -43,7 +43,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.script import Script
 
-from . import async_setup_platform_reloadable
+from . import async_setup_reload_service
 from .const import CONF_AVAILABILITY_TEMPLATE
 from .template_entity import TemplateEntity
 
@@ -93,7 +93,7 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_create_entities(hass, config):
+async def _async_create_entities(hass, config):
     """Create the Template Vacuums."""
     vacuums = []
 
@@ -145,8 +145,8 @@ async def async_create_entities(hass, config):
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the template vacuums."""
 
-    await async_setup_platform_reloadable(hass)
-    async_add_entities(await async_create_entities(hass, config))
+    await async_setup_reload_service(hass)
+    async_add_entities(await _async_create_entities(hass, config))
 
 
 class TemplateVacuum(TemplateEntity, StateVacuumEntity):
