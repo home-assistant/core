@@ -32,8 +32,15 @@ _LOGGER = logging.getLogger(__name__)
 OPTIONS = "options"
 
 
-async def async_id_unknown_devices(config_dir):
-    """Send device ID commands to all unidentified devices."""
+async def async_get_device_config(hass, config_entry):
+    """Initiate the connection and services."""
+    # Make a copy of addresses due to edge case where the list of devices could change during status update
+    # Cannot be done concurrently due to issues with the underlying protocol.
+    for address in list(devices):
+        try:
+            await devices[address].async_status()
+        except AttributeError:
+            pass
 
     await devices.async_load(id_devices=1)
     for addr in devices:
@@ -53,45 +60,7 @@ async def async_id_unknown_devices(config_dir):
         if not device.aldb.is_loaded or not flags:
             await device.async_read_config()
 
-    await devices.async_save(workdir=config_dir)
-
-
-async def async_setup_platforms(hass, config_entry):
-    """Initiate the connection and services."""
-    tasks = [
-        hass.config_entries.async_forward_entry_setup(config_entry, component)
-        for component in INSTEON_COMPONENTS
-    ]
-    await asyncio.gather(*tasks)
-
-    for address in devices:
-        device = devices[address]
-        platforms = get_device_platforms(device)
-        if ON_OFF_EVENTS in platforms:
-            add_on_off_event_device(hass, device)
-
-    _LOGGER.debug("Insteon device count: %s", len(devices))
-    register_new_device_callback(hass)
-    async_register_services(hass)
-
-    device_registry = await hass.helpers.device_registry.async_get_registry()
-    device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, str(devices.modem.address))},
-        manufacturer="Smart Home",
-        name=f"{devices.modem.description} {devices.modem.address}",
-        model=f"{devices.modem.model} (0x{devices.modem.cat:02x}, 0x{devices.modem.subcat:02x})",
-        sw_version=f"{devices.modem.firmware:02x} Engine Version: {devices.modem.engine_version}",
-    )
-
-    # Make a copy of addresses due to edge case where the list of devices could change during status update
-    # Cannot be done concurrently due to issues with the underlying protocol.
-    for address in list(devices):
-        try:
-            await devices[address].async_status()
-        except AttributeError:
-            pass
-    await async_id_unknown_devices(hass.config.config_dir)
+    await devices.async_save(workdir=hass.config.config_dir)
 
 
 async def close_insteon_connection(*args):
@@ -168,5 +137,31 @@ async def async_setup_entry(hass, entry):
         )
         device = devices.add_x10_device(housecode, unitcode, x10_type, steps)
 
-    asyncio.create_task(async_setup_platforms(hass, entry))
+    for component in INSTEON_COMPONENTS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, component)
+        )
+
+    for address in devices:
+        device = devices[address]
+        platforms = get_device_platforms(device)
+        if ON_OFF_EVENTS in platforms:
+            add_on_off_event_device(hass, device)
+
+    _LOGGER.debug("Insteon device count: %s", len(devices))
+    register_new_device_callback(hass)
+    async_register_services(hass)
+
+    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, str(devices.modem.address))},
+        manufacturer="Smart Home",
+        name=f"{devices.modem.description} {devices.modem.address}",
+        model=f"{devices.modem.model} (0x{devices.modem.cat:02x}, 0x{devices.modem.subcat:02x})",
+        sw_version=f"{devices.modem.firmware:02x} Engine Version: {devices.modem.engine_version}",
+    )
+
+    asyncio.create_task(async_get_device_config(hass, entry))
+
     return True
