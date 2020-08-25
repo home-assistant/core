@@ -1,4 +1,4 @@
-"""Generic device for the HomematicIP Cloud component."""
+"""Generic entity for the HomematicIP Cloud component."""
 import logging
 from typing import Any, Dict, Optional
 
@@ -65,11 +65,11 @@ GROUP_ATTRIBUTES = {
 }
 
 
-class HomematicipGenericDevice(Entity):
-    """Representation of an HomematicIP generic device."""
+class HomematicipGenericEntity(Entity):
+    """Representation of the HomematicIP generic entity."""
 
     def __init__(self, hap: HomematicipHAP, device, post: Optional[str] = None) -> None:
-        """Initialize the generic device."""
+        """Initialize the generic entity."""
         self._hap = hap
         self._home = hap.home
         self._device = device
@@ -117,7 +117,7 @@ class HomematicipGenericDevice(Entity):
             )
 
     async def async_will_remove_from_hass(self) -> None:
-        """Run when entity will be removed from hass."""
+        """Run when hmip device will be removed from hass."""
 
         # Only go further if the device/entity should be removed from registries
         # due to a removal of the HmIP device.
@@ -127,7 +127,7 @@ class HomematicipGenericDevice(Entity):
                 del self._hap.hmip_device_by_entity_id[self.entity_id]
                 await self.async_remove_from_registries()
             except KeyError as err:
-                _LOGGER.debug("Error removing HMIP entity from registry: %s", err)
+                _LOGGER.debug("Error removing HMIP device from registry: %s", err)
 
     async def async_remove_from_registries(self) -> None:
         """Remove entity/device from registry."""
@@ -164,7 +164,7 @@ class HomematicipGenericDevice(Entity):
 
     @property
     def name(self) -> str:
-        """Return the name of the generic device."""
+        """Return the name of the generic entity."""
         name = self._device.label
         if name and self._home.name:
             name = f"{self._home.name} {name}"
@@ -186,7 +186,7 @@ class HomematicipGenericDevice(Entity):
 
     @property
     def available(self) -> bool:
-        """Device available."""
+        """Return if entity is available."""
         return not self._device.unreach
 
     @property
@@ -205,7 +205,7 @@ class HomematicipGenericDevice(Entity):
 
     @property
     def device_state_attributes(self) -> Dict[str, Any]:
-        """Return the state attributes of the generic device."""
+        """Return the state attributes of the generic entity."""
         state_attr = {}
 
         if isinstance(self._device, AsyncDevice):
