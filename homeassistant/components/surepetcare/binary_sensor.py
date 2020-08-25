@@ -63,14 +63,12 @@ class SurePetcareBinarySensor(BinarySensorEntity):
         _id: int,
         spc: SurePetcareAPI,
         device_class: str,
-        sensor_type: str,
         sure_type: SureProductID,
     ):
         """Initialize a Sure Petcare binary sensor."""
         self._id = _id
         self._sure_type = sure_type
         self._device_class = device_class
-        self._sensor_type = sensor_type
 
         self._spc: SurePetcareAPI = spc
         self._spc_data: Dict[str, Any] = self._spc.states[self._sure_type].get(self._id)
@@ -109,7 +107,7 @@ class SurePetcareBinarySensor(BinarySensorEntity):
     @property
     def unique_id(self) -> str:
         """Return an unique ID."""
-        return f"{self._spc_data['household_id']}-{self._id}-{self._sensor_type}"
+        return f"{self._spc_data['household_id']}-{self._id}"
 
     async def async_update(self) -> None:
         """Get the latest data and update the state."""
@@ -140,7 +138,7 @@ class Hub(SurePetcareBinarySensor):
 
     def __init__(self, _id: int, spc: SurePetcareAPI) -> None:
         """Initialize a Sure Petcare Hub."""
-        super().__init__(_id, spc, DEVICE_CLASS_CONNECTIVITY, "hub", SureProductID.HUB)
+        super().__init__(_id, spc, DEVICE_CLASS_CONNECTIVITY, SureProductID.HUB)
 
     @property
     def available(self) -> bool:
@@ -170,7 +168,7 @@ class Pet(SurePetcareBinarySensor):
 
     def __init__(self, _id: int, spc: SurePetcareAPI) -> None:
         """Initialize a Sure Petcare Pet."""
-        super().__init__(_id, spc, DEVICE_CLASS_PRESENCE, "pet", SureProductID.PET)
+        super().__init__(_id, spc, DEVICE_CLASS_PRESENCE, SureProductID.PET)
 
     @property
     def is_on(self) -> bool:
@@ -208,12 +206,17 @@ class DeviceConnectivity(SurePetcareBinarySensor):
         self, _id: int, sure_type: SureProductID, spc: SurePetcareAPI,
     ) -> None:
         """Initialize a Sure Petcare Device."""
-        super().__init__(_id, spc, DEVICE_CLASS_CONNECTIVITY, "connectivity", sure_type)
+        super().__init__(_id, spc, DEVICE_CLASS_CONNECTIVITY, sure_type)
 
     @property
     def name(self) -> str:
         """Return the name of the device if any."""
         return f"{self._name}_connectivity"
+
+    @property
+    def unique_id(self) -> str:
+        """Return an unique ID."""
+        return f"{self._spc_data['household_id']}-{self._id}-connectivity"
 
     @property
     def available(self) -> bool:

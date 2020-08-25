@@ -1,46 +1,53 @@
-"""The tests for the surepetcare binary sensor platform."""
-from typing import Any, Dict, Optional
-
-from homeassistant.components.binary_sensor import DOMAIN as BS_DOMAIN
+"""The tests for the Sure Petcare binary sensor platform."""
 from homeassistant.components.surepetcare.const import DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
-
-CONFIG = {
-    DOMAIN: {
-        CONF_USERNAME: "test-username",
-        CONF_PASSWORD: "test-password",
-    },
-}
-
-HOUSEHOLD_ID = "household-id"
+from . import MOCK_API_DATA, MOCK_CONFIG, _patch_sensor_setup
 
 
-MOCK_API_DATA = {
-}
-
-
-async def test_unique_ids(hass) -> None:
+async def test_unique_ids(hass, surepetcare) -> None:
     """Test the generation of unique ids."""
-    with _patch_api_get_data(MOCK_API_DATA), _patch_sensor_setup():
-        assert await async_setup_component(hass, DOMAIN, CONFIG)
+    instance = surepetcare.return_value
+    instance.data = MOCK_API_DATA
+    instance.get_data.return_value = MOCK_API_DATA
 
-    assert hass.states.get("binary_sensor.hub")
-    assert hass.states.get("binary_sensor.connectivity")
-    assert hass.states.get("binary_sensor.pet")
+    with _patch_sensor_setup():
+        assert await async_setup_component(hass, DOMAIN, MOCK_CONFIG)
 
+    entity_registry = await hass.helpers.entity_registry.async_get_registry()
 
-def _patch_api_get_data(return_value: Optional[Dict[str, Any]] = None):
-    return patch(
-        "homeassistant.components.surepetcare.SurePetcare.get_data",
-        return_value=return_value,
+    assert hass.states.get("binary_sensor.hub_hub")
+    hub = entity_registry.async_get("binary_sensor.hub_hub")
+    assert hub.unique_id == ""
+
+    assert hass.states.get("binary_sensor.cat_flap_cat_flap")
+    cat_flap = entity_registry.async_get("binary_sensor.cat_flap_cat_flap")
+    assert cat_flap.unique_id == ""
+
+    assert hass.states.get("binary_sensor.cat_flap_cat_flap_connectivity")
+    cat_flap_conn = entity_registry.async_get(
+        "binary_sensor.cat_flap_cat_flap_connectivity"
     )
+    assert cat_flap_conn.unique_id == ""
 
+    assert hass.states.get("binary_sensor.pet_flap_pet_flap")
+    pet_flap = entity_registry.async_get("binary_sensor.pet_flap_pet_flap")
+    assert pet_flap.unique_id == ""
 
-def _patch_sensor_setup():
-    return patch(
-        "homeassistant.components.surepetcare.sensor.async_setup_platform",
-        return_value=True,
+    assert hass.states.get("binary_sensor.pet_flap_pet_flap_connectivity")
+    pet_flap_conn = entity_registry.async_get(
+        "binary_sensor.pet_flap_pet_flap_connectivity"
     )
+    assert pet_flap_conn.unique_id == ""
+
+    assert hass.states.get("binary_sensor.feeder_feeder")
+    feeder = entity_registry.async_get("binary_sensor.feeder_feeder")
+    assert feeder.unique_id == ""
+
+    assert hass.states.get("binary_sensor.feeder_feeder_connectivity")
+    feeder_conn = entity_registry.async_get("binary_sensor.feeder_feeder_connectivity")
+    assert feeder_conn.unique_id == ""
+
+    assert hass.states.get("binary_sensor.pet_pet")
+    pet = entity_registry.async_get("binary_sensor.pet_pet")
+    assert pet.unique_id == ""
