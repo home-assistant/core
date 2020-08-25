@@ -182,3 +182,6 @@ def patch_androidtv_update(
 
 PATCH_LAUNCH_APP = patch("androidtv.basetv.basetv_async.BaseTVAsync.launch_app")
 PATCH_STOP_APP = patch("androidtv.basetv.basetv_async.BaseTVAsync.stop_app")
+PATCH_ANDROIDTV_UPDATE_EXCEPTION = patch(
+    "androidtv.androidtv.androidtv_async.AndroidTVAsync.update", side_effect=Exception
+)
