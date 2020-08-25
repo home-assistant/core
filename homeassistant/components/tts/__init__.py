@@ -324,7 +324,9 @@ class SpeechManager:
         else:
             options_key = "-"
 
-        key = KEY_PATTERN.format(msg_hash, language, options_key, engine).lower()
+        key = KEY_PATTERN.format(
+            msg_hash, language.replace("_", "-"), options_key, engine
+        ).lower()
 
         # Is speech already in memory
         if key in self.mem_cache:
@@ -355,9 +357,14 @@ class SpeechManager:
         # Create file infos
         filename = f"{key}.{extension}".lower()
 
-        data = self.write_tags(filename, data, provider, message, language, options)
+        # Validate filename
+        if not _RE_VOICE_FILE.match(filename):
+            raise HomeAssistantError(
+                f"TTS filename '{filename}' from {engine} is invalid!"
+            )
 
         # Save to memory
+        data = self.write_tags(filename, data, provider, message, language, options)
         self._async_store_to_memcache(key, filename, data)
 
         if cache:
