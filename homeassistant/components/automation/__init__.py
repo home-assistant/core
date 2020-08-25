@@ -1,5 +1,4 @@
 """Allow to set up simple automation rules via the config file."""
-import json
 import logging
 from typing import Any, Awaitable, Callable, List, Optional, Set, cast
 
@@ -34,7 +33,6 @@ from homeassistant.helpers import condition, extract_domain_configs
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.script import (
     ATTR_CUR,
@@ -83,7 +81,7 @@ EVENT_AUTOMATION_RELOADED = "automation_reloaded"
 EVENT_AUTOMATION_TRIGGERED = "automation_triggered"
 
 ATTR_LAST_TRIGGERED = "last_triggered"
-ATTR_TRIGGER = "trigger"
+ATTR_SOURCE = "source"
 ATTR_VARIABLES = "variables"
 SERVICE_TRIGGER = "trigger"
 
@@ -399,22 +397,14 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         self.async_set_context(trigger_context)
         self._last_triggered = utcnow()
         self.async_write_ha_state()
-        trigger = {}
-        for attr, value in variables[ATTR_TRIGGER].items():
-            try:
-                _ = json.dumps(value, cls=JSONEncoder)
-            except TypeError:
-                pass
-            else:
-                trigger[attr] = value
+        event_data = {
+            ATTR_NAME: self._name,
+            ATTR_ENTITY_ID: self.entity_id,
+        }
+        if "description" in variables["trigger"]:
+            event_data[ATTR_SOURCE] = variables["trigger"]["description"]
         self.hass.bus.async_fire(
-            EVENT_AUTOMATION_TRIGGERED,
-            {
-                ATTR_NAME: self._name,
-                ATTR_ENTITY_ID: self.entity_id,
-                ATTR_TRIGGER: trigger,
-            },
-            context=trigger_context,
+            EVENT_AUTOMATION_TRIGGERED, event_data, context=trigger_context
         )
 
         self._logger.info("Executing %s", self._name)
