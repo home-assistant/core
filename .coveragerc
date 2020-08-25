@@ -814,7 +814,8 @@ omit =
     homeassistant/components/streamlabswater/*
     homeassistant/components/suez_water/*
     homeassistant/components/supervisord/sensor.py
-    homeassistant/components/surepetcare/*.py
+    homeassistant/components/surepetcare/__init__.py
+    homeassistant/components/surepetcare/sensor.py
     homeassistant/components/swiss_hydrological_data/sensor.py
     homeassistant/components/swiss_public_transport/sensor.py
     homeassistant/components/swisscom/device_tracker.py
