@@ -5,7 +5,7 @@ from homeassistant.setup import async_setup_component
 from . import MOCK_API_DATA, MOCK_CONFIG, _patch_sensor_setup
 
 
-async def test_unique_ids(hass, surepetcare) -> None:
+async def test_binary_sensors(hass, surepetcare) -> None:
     """Test the generation of unique ids."""
     instance = surepetcare.return_value
     instance.data = MOCK_API_DATA
@@ -15,10 +15,6 @@ async def test_unique_ids(hass, surepetcare) -> None:
         assert await async_setup_component(hass, DOMAIN, MOCK_CONFIG)
 
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
-
-    assert hass.states.get("binary_sensor.hub_hub")
-    hub = entity_registry.async_get("binary_sensor.hub_hub")
-    assert hub.unique_id == "household-id-hub-id"
 
     assert hass.states.get("binary_sensor.pet_flap_pet_flap")
     pet_flap = entity_registry.async_get("binary_sensor.pet_flap_pet_flap")
@@ -51,3 +47,7 @@ async def test_unique_ids(hass, surepetcare) -> None:
     assert hass.states.get("binary_sensor.pet_pet")
     pet = entity_registry.async_get("binary_sensor.pet_pet")
     assert pet.unique_id == "household-id-24680"
+
+    assert hass.states.get("binary_sensor.hub_hub")
+    hub = entity_registry.async_get("binary_sensor.hub_hub")
+    assert hub.unique_id == "household-id-hub-id"
