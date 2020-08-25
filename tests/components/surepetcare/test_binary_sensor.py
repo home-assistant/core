@@ -8,7 +8,7 @@ EXPECTED_ENTITY_IDS = {
     "binary_sensor.pet_flap_pet_flap": "household-id-13576",
     "binary_sensor.pet_flap_pet_flap_connectivity": "household-id-13576-connectivity",
     "binary_sensor.pet_flap_cat_flap": "household-id-13579",
-    "binary_sensor.pet_flap_cat_flap_connectivity": "household-id-13579-connectivity:,
+    "binary_sensor.pet_flap_cat_flap_connectivity": "household-id-13579-connectivity",
     "binary_sensor.feeder_feeder": "household-id-12345",
     "binary_sensor.feeder_feeder_connectivity": "household-id-12345-connectivity",
     "binary_sensor.pet_pet": "household-id-24680",
