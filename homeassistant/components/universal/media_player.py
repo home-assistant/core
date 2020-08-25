@@ -56,6 +56,7 @@ from homeassistant.const import (
     SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_MEDIA_SEEK,
     SERVICE_MEDIA_STOP,
+    SERVICE_RELOAD,
     SERVICE_SHUFFLE_SET,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -71,6 +72,7 @@ from homeassistant.const import (
 from homeassistant.core import EVENT_HOMEASSISTANT_START, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.reload import async_reload_integration_platforms
 from homeassistant.helpers.service import async_call_from_config
 
 _LOGGER = logging.getLogger(__name__)
@@ -102,9 +104,31 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     extra=vol.REMOVE_EXTRA,
 )
 
+EVENT_UNIVERSAL_RELOADED = "event_universal_reloaded"
+
+
+async def async_setup_reload_service(hass):
+    """Create the reload service for the universal domain."""
+
+    if hass.services.has_service("universal", SERVICE_RELOAD):
+        return
+
+    async def _reload_config(call):
+        """Reload the template universal config."""
+
+        await async_reload_integration_platforms(hass, "universal", ["media_player"])
+        hass.bus.async_fire(EVENT_UNIVERSAL_RELOADED, context=call.context)
+
+    hass.helpers.service.async_register_admin_service(
+        "universal", SERVICE_RELOAD, _reload_config
+    )
+
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the universal media players."""
+
+    await async_setup_reload_service(hass)
+
     player = UniversalMediaPlayer(
         hass,
         config.get(CONF_NAME),
@@ -157,7 +181,6 @@ class UniversalMediaPlayer(MediaPlayerEntity):
             result = self.hass.helpers.event.async_track_template_result(
                 self._state_template, _async_on_template_update
             )
-
             self.hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_START, callback(lambda _: result.async_refresh())
             )
