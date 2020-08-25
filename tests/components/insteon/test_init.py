@@ -3,7 +3,6 @@ import asyncio
 import logging
 
 from pyinsteon.address import Address
-import pytest
 
 from homeassistant.components import insteon
 from homeassistant.components.insteon.const import (
@@ -95,8 +94,7 @@ async def test_import_plm(hass: HomeAssistantType):
     assert hass.config_entries.async_entries(DOMAIN)
     data = hass.config_entries.async_entries(DOMAIN)[0].data
     assert data[CONF_DEVICE] == MOCK_IMPORT_CONFIG_PLM[CONF_PORT]
-    with pytest.raises(KeyError):
-        assert data[CONF_PORT]
+    assert CONF_PORT not in data
 
 
 async def test_import_hub1(hass: HomeAssistantType):
@@ -118,10 +116,8 @@ async def test_import_hub1(hass: HomeAssistantType):
     data = hass.config_entries.async_entries(DOMAIN)[0].data
     assert data[CONF_HOST] == MOCK_IMPORT_FULL_CONFIG_HUB_V1[CONF_HOST]
     assert data[CONF_PORT] == PORT_HUB_V1
-    with pytest.raises(KeyError):
-        assert data[CONF_USERNAME]
-    with pytest.raises(KeyError):
-        assert data[CONF_PASSWORD]
+    assert CONF_USERNAME not in data
+    assert CONF_PASSWORD not in data
 
 
 async def test_import_hub2(hass: HomeAssistantType):
