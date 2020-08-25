@@ -64,8 +64,9 @@ TYPE_TRACK = "track"
 TYPE_ARTIST = "artist"
 
 PLAYABLE_MEDIA_TYPES = [
-    TYPE_ALBUM,
     MEDIA_TYPE_PLAYLIST,
+    TYPE_ALBUM,
+    TYPE_ARTIST,
     TYPE_TRACK,
 ]
 
@@ -329,7 +330,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         # Yet, they do generate those types of URI in their official clients.
         media_id = str(URL(media_id).with_query(None).with_fragment(None))
 
-        if media_type == MEDIA_TYPE_MUSIC:
+        if media_type == TYPE_TRACK or media_type == MEDIA_TYPE_MUSIC:
             kwargs["uris"] = [media_id]
         elif media_type in PLAYABLE_MEDIA_TYPES:
             kwargs["context_uri"] = media_id
@@ -437,7 +438,7 @@ def build_item_response(spotify, payload):
     response = {
         "media_content_id": payload.get("media_content_id"),
         "media_content_type": payload.get("media_content_type"),
-        "can_play": True,
+        "can_play": payload.get("media_content_type") in PLAYABLE_MEDIA_TYPES,
         "children": [item_payload(item) for item in items],
     }
 
