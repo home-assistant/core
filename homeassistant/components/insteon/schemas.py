@@ -310,8 +310,6 @@ def convert_yaml_to_config_flow(yaml_config):
     """Convert the YAML based configuration to a config flow configuration."""
     config = {}
     if yaml_config.get(CONF_HOST):
-        print("====================================")
-        print(yaml_config.get(CONF_PORT))
         hub_version = yaml_config.get(CONF_HUB_VERSION, 2)
         default_port = PORT_HUB_V2 if hub_version == 2 else PORT_HUB_V1
         config[CONF_HOST] = yaml_config.get(CONF_HOST)
