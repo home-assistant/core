@@ -47,6 +47,8 @@ async def test_default_state(hass):
         },
     )
     await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
 
     state = hass.states.get("light.bedroom_group")
     assert state is not None
@@ -73,6 +75,9 @@ async def test_state_reporting(hass):
             }
         },
     )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
 
     hass.states.async_set("light.test1", STATE_ON)
     hass.states.async_set("light.test2", STATE_UNAVAILABLE)
@@ -107,6 +112,9 @@ async def test_brightness(hass):
             }
         },
     )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
 
     hass.states.async_set(
         "light.test1", STATE_ON, {ATTR_BRIGHTNESS: 255, ATTR_SUPPORTED_FEATURES: 1}
@@ -147,6 +155,9 @@ async def test_color(hass):
             }
         },
     )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
 
     hass.states.async_set(
         "light.test1", STATE_ON, {ATTR_HS_COLOR: (0, 100), ATTR_SUPPORTED_FEATURES: 16}
@@ -184,6 +195,9 @@ async def test_white_value(hass):
             }
         },
     )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
 
     hass.states.async_set(
         "light.test1", STATE_ON, {ATTR_WHITE_VALUE: 255, ATTR_SUPPORTED_FEATURES: 128}
@@ -219,6 +233,9 @@ async def test_color_temp(hass):
             }
         },
     )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
 
     hass.states.async_set(
         "light.test1", STATE_ON, {"color_temp": 2, ATTR_SUPPORTED_FEATURES: 2}
@@ -261,6 +278,8 @@ async def test_emulated_color_temp_group(hass):
             ]
         },
     )
+    await hass.async_block_till_done()
+    await hass.async_start()
     await hass.async_block_till_done()
 
     hass.states.async_set("light.bed_light", STATE_ON, {ATTR_SUPPORTED_FEATURES: 2})
@@ -306,6 +325,9 @@ async def test_min_max_mireds(hass):
             }
         },
     )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
 
     hass.states.async_set(
         "light.test1",
@@ -350,6 +372,9 @@ async def test_effect_list(hass):
             }
         },
     )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
 
     hass.states.async_set(
         "light.test1",
@@ -402,6 +427,9 @@ async def test_effect(hass):
             }
         },
     )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
 
     hass.states.async_set(
         "light.test1", STATE_ON, {ATTR_EFFECT: "None", ATTR_SUPPORTED_FEATURES: 6}
@@ -447,6 +475,9 @@ async def test_supported_features(hass):
             }
         },
     )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
 
     hass.states.async_set("light.test1", STATE_ON, {ATTR_SUPPORTED_FEATURES: 0})
     await hass.async_block_till_done()
@@ -488,6 +519,8 @@ async def test_service_calls(hass):
             ]
         },
     )
+    await hass.async_block_till_done()
+    await hass.async_start()
     await hass.async_block_till_done()
 
     assert hass.states.get("light.light_group").state == STATE_ON
@@ -559,6 +592,9 @@ async def test_invalid_service_calls(hass):
     await group.async_setup_platform(
         hass, {"entities": ["light.test1", "light.test2"]}, add_entities
     )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
 
     assert add_entities.call_count == 1
     grouped_light = add_entities.call_args[0][0][0]
