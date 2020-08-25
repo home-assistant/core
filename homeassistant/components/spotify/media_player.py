@@ -331,7 +331,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
 
         if media_type == MEDIA_TYPE_MUSIC:
             kwargs["uris"] = [media_id]
-        elif media_type == MEDIA_TYPE_PLAYLIST:
+        elif media_type in PLAYABLE_MEDIA_TYPES:
             kwargs["context_uri"] = media_id
         else:
             _LOGGER.error("Media type %s is not supported", media_type)
