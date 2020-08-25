@@ -1,0 +1,7 @@
+{
+  "domain": "goalzero",
+  "name": "Goal Zero",
+  "documentation": "https://www.home-assistant.io/integrations/goalzero",
+  "requirements": [],
+  "codeowners": ["@tkdrob"],
+}
