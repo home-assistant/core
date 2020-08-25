@@ -484,12 +484,6 @@ class _TrackTemplateResultInfo:
         if self._info.exception:
             return True
 
-        # There are no entities in the template
-        # to track so this template will
-        # re-render on EVERY state change
-        if not self._info.domains and not self._info.entities:
-            return True
-
         return False
 
     @callback
