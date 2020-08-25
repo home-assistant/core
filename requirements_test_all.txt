@@ -960,6 +960,9 @@ stringcase==1.2.0
 # homeassistant.components.solarlog
 sunwatcher==0.2.1
 
+# homeassistant.components.surepetcare
+surepy==0.2.5
+
 # homeassistant.components.tellduslive
 tellduslive==0.10.11
 
