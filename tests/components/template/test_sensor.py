@@ -10,8 +10,10 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import CoreState
+from homeassistant.core import CoreState, callback
+from homeassistant.helpers.template import Template
 from homeassistant.setup import ATTR_COMPONENT, async_setup_component, setup_component
+import homeassistant.util.dt as dt_util
 
 from tests.common import assert_setup_component, get_test_home_assistant
 
@@ -694,3 +696,64 @@ async def test_unique_id(hass):
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 1
+
+
+async def test_sun_renders_once_per_sensor(hass):
+    """Test sun change renders the template only once per sensor."""
+
+    now = dt_util.utcnow()
+    hass.states.async_set(
+        "sun.sun", "above_horizon", {"elevation": 45.3, "next_rising": now}
+    )
+
+    await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": {
+                "platform": "template",
+                "sensors": {
+                    "solar_angle": {
+                        "friendly_name": "Sun angle",
+                        "unit_of_measurement": "degrees",
+                        "value_template": "{{ state_attr('sun.sun', 'elevation') }}",
+                    },
+                    "sunrise": {
+                        "value_template": "{{ state_attr('sun.sun', 'next_rising') }}"
+                    },
+                },
+            }
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 3
+
+    assert hass.states.get("sensor.solar_angle").state == "45.3"
+    assert hass.states.get("sensor.sunrise").state == str(now)
+
+    async_render_calls = []
+
+    @callback
+    def _record_async_render(self, *args, **kwargs):
+        """Catch async_render."""
+        async_render_calls.append(self.template)
+        return "mocked"
+
+    later = dt_util.utcnow()
+
+    with patch.object(Template, "async_render", _record_async_render):
+        hass.states.async_set("sun.sun", {"elevation": 50, "next_rising": later})
+        await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.solar_angle").state == "mocked"
+    assert hass.states.get("sensor.sunrise").state == "mocked"
+
+    assert len(async_render_calls) == 2
+    assert set(async_render_calls) == {
+        "{{ state_attr('sun.sun', 'elevation') }}",
+        "{{ state_attr('sun.sun', 'next_rising') }}",
+    }
