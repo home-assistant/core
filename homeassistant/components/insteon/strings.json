@@ -3,7 +3,10 @@
     "step": {
       "user": {
         "title": "Insteon",
-        "description": "Select the Insteon modem type."
+        "description": "Select the Insteon modem type.",
+        "data": {
+          "modem_type": "Modem type."
+        }
       },
       "plm": {
         "title": "Insteon PLM",
