@@ -105,7 +105,7 @@ async def async_setup(hass, config) -> bool:
 
     # discover hubs the flaps/feeders are connected to
     hub_ids = set()
-    for device in things:
+    for device in things.copy():
         device_data = await surepy.device(device[CONF_ID])
         if (
             CONF_PARENT in device_data
