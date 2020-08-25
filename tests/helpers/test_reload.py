@@ -6,7 +6,7 @@ from homeassistant import config
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.reload import (
     async_get_platform,
-    async_reload_integraton_platforms,
+    async_reload_integration_platforms,
 )
 
 from tests.async_mock import Mock, patch
@@ -54,7 +54,7 @@ async def test_reload_platform(hass):
         _get_fixtures_base_path(), "fixtures", "helpers/reload_configuration.yaml",
     )
     with patch.object(config, "YAML_CONFIG_FILE", yaml_path):
-        await async_reload_integraton_platforms(hass, PLATFORM, [DOMAIN])
+        await async_reload_integration_platforms(hass, PLATFORM, [DOMAIN])
 
     assert len(setup_called) == 2
 

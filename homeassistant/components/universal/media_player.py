@@ -72,7 +72,7 @@ from homeassistant.const import (
 from homeassistant.core import EVENT_HOMEASSISTANT_START, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.reload import async_reload_integraton_platforms
+from homeassistant.helpers.reload import async_reload_integration_platforms
 from homeassistant.helpers.service import async_call_from_config
 
 _LOGGER = logging.getLogger(__name__)
@@ -116,7 +116,7 @@ async def async_setup_reload_service(hass):
     async def _reload_config(call):
         """Reload the template universal config."""
 
-        await async_reload_integraton_platforms(hass, "universal", ["media_player"])
+        await async_reload_integration_platforms(hass, "universal", ["media_player"])
         hass.bus.async_fire(EVENT_UNIVERSAL_RELOADED, context=call.context)
 
     hass.helpers.service.async_register_admin_service(

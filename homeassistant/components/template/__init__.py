@@ -3,7 +3,7 @@
 import logging
 
 from homeassistant.const import SERVICE_RELOAD
-from homeassistant.helpers.reload import async_reload_integraton_platforms
+from homeassistant.helpers.reload import async_reload_integration_platforms
 
 from .const import DOMAIN, EVENT_TEMPLATE_RELOADED, PLATFORMS
 
@@ -19,7 +19,7 @@ async def async_setup_reload_service(hass):
     async def _reload_config(call):
         """Reload the template platform config."""
 
-        await async_reload_integraton_platforms(hass, DOMAIN, PLATFORMS)
+        await async_reload_integration_platforms(hass, DOMAIN, PLATFORMS)
         hass.bus.async_fire(EVENT_TEMPLATE_RELOADED, context=call.context)
 
     hass.helpers.service.async_register_admin_service(

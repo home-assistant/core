@@ -14,7 +14,7 @@ from homeassistant.loader import async_get_integration
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_reload_integraton_platforms(
+async def async_reload_integration_platforms(
     hass: HomeAssistantType, integration_name: str, integration_platforms: str
 ) -> None:
     """Reload an integration's platforms.
