@@ -53,6 +53,7 @@ async def test_call_setup_entry(hass):
     """Test we call <component>.setup_entry."""
     entry = MockConfigEntry(domain="comp")
     entry.add_to_hass(hass)
+    assert not entry.supports_unload
 
     mock_setup_entry = AsyncMock(return_value=True)
     mock_migrate_entry = AsyncMock(return_value=True)
@@ -67,16 +68,49 @@ async def test_call_setup_entry(hass):
     )
     mock_entity_platform(hass, "config_flow.comp", None)
 
-    result = await async_setup_component(hass, "comp", {})
+    with patch("homeassistant.config_entries.support_entry_unload", return_value=True):
+        result = await async_setup_component(hass, "comp", {})
+        await hass.async_block_till_done()
     assert result
     assert len(mock_migrate_entry.mock_calls) == 0
     assert len(mock_setup_entry.mock_calls) == 1
     assert entry.state == config_entries.ENTRY_STATE_LOADED
+    assert entry.supports_unload
+
+
+async def test_call_setup_entry_without_reload_support(hass):
+    """Test we call <component>.setup_entry and the <component> does not support unloading."""
+    entry = MockConfigEntry(domain="comp")
+    entry.add_to_hass(hass)
+    assert not entry.supports_unload
+
+    mock_setup_entry = AsyncMock(return_value=True)
+    mock_migrate_entry = AsyncMock(return_value=True)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup_entry=mock_setup_entry,
+            async_migrate_entry=mock_migrate_entry,
+        ),
+    )
+    mock_entity_platform(hass, "config_flow.comp", None)
+
+    with patch("homeassistant.config_entries.support_entry_unload", return_value=False):
+        result = await async_setup_component(hass, "comp", {})
+        await hass.async_block_till_done()
+    assert result
+    assert len(mock_migrate_entry.mock_calls) == 0
+    assert len(mock_setup_entry.mock_calls) == 1
+    assert entry.state == config_entries.ENTRY_STATE_LOADED
+    assert not entry.supports_unload
 
 
 async def test_call_async_migrate_entry(hass):
     """Test we call <component>.async_migrate_entry when version mismatch."""
     entry = MockConfigEntry(domain="comp")
+    assert not entry.supports_unload
     entry.version = 2
     entry.add_to_hass(hass)
 
@@ -93,11 +127,14 @@ async def test_call_async_migrate_entry(hass):
     )
     mock_entity_platform(hass, "config_flow.comp", None)
 
-    result = await async_setup_component(hass, "comp", {})
+    with patch("homeassistant.config_entries.support_entry_unload", return_value=True):
+        result = await async_setup_component(hass, "comp", {})
+        await hass.async_block_till_done()
     assert result
     assert len(mock_migrate_entry.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
     assert entry.state == config_entries.ENTRY_STATE_LOADED
+    assert entry.supports_unload
 
 
 async def test_call_async_migrate_entry_failure_false(hass):
@@ -105,6 +142,7 @@ async def test_call_async_migrate_entry_failure_false(hass):
     entry = MockConfigEntry(domain="comp")
     entry.version = 2
     entry.add_to_hass(hass)
+    assert not entry.supports_unload
 
     mock_migrate_entry = AsyncMock(return_value=False)
     mock_setup_entry = AsyncMock(return_value=True)
@@ -124,6 +162,7 @@ async def test_call_async_migrate_entry_failure_false(hass):
     assert len(mock_migrate_entry.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 0
     assert entry.state == config_entries.ENTRY_STATE_MIGRATION_ERROR
+    assert not entry.supports_unload
 
 
 async def test_call_async_migrate_entry_failure_exception(hass):
@@ -131,6 +170,7 @@ async def test_call_async_migrate_entry_failure_exception(hass):
     entry = MockConfigEntry(domain="comp")
     entry.version = 2
     entry.add_to_hass(hass)
+    assert not entry.supports_unload
 
     mock_migrate_entry = AsyncMock(side_effect=Exception)
     mock_setup_entry = AsyncMock(return_value=True)
@@ -150,6 +190,7 @@ async def test_call_async_migrate_entry_failure_exception(hass):
     assert len(mock_migrate_entry.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 0
     assert entry.state == config_entries.ENTRY_STATE_MIGRATION_ERROR
+    assert not entry.supports_unload
 
 
 async def test_call_async_migrate_entry_failure_not_bool(hass):
@@ -157,6 +198,7 @@ async def test_call_async_migrate_entry_failure_not_bool(hass):
     entry = MockConfigEntry(domain="comp")
     entry.version = 2
     entry.add_to_hass(hass)
+    assert not entry.supports_unload
 
     mock_migrate_entry = AsyncMock(return_value=None)
     mock_setup_entry = AsyncMock(return_value=True)
@@ -176,6 +218,7 @@ async def test_call_async_migrate_entry_failure_not_bool(hass):
     assert len(mock_migrate_entry.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 0
     assert entry.state == config_entries.ENTRY_STATE_MIGRATION_ERROR
+    assert not entry.supports_unload
 
 
 async def test_call_async_migrate_entry_failure_not_supported(hass):
@@ -183,6 +226,7 @@ async def test_call_async_migrate_entry_failure_not_supported(hass):
     entry = MockConfigEntry(domain="comp")
     entry.version = 2
     entry.add_to_hass(hass)
+    assert not entry.supports_unload
 
     mock_setup_entry = AsyncMock(return_value=True)
 
@@ -193,6 +237,7 @@ async def test_call_async_migrate_entry_failure_not_supported(hass):
     assert result
     assert len(mock_setup_entry.mock_calls) == 0
     assert entry.state == config_entries.ENTRY_STATE_MIGRATION_ERROR
+    assert not entry.supports_unload
 
 
 async def test_remove_entry(hass, manager):
@@ -991,6 +1036,7 @@ async def test_reload_entry_entity_registry_works(hass):
     config_entry = MockConfigEntry(
         domain="comp", state=config_entries.ENTRY_STATE_LOADED
     )
+    config_entry.supports_unload = True
     config_entry.add_to_hass(hass)
     mock_setup_entry = AsyncMock(return_value=True)
     mock_unload_entry = AsyncMock(return_value=True)
