@@ -30,7 +30,8 @@ def _disallow_id(conf: Dict[str, Any]) -> Dict[str, Any]:
 CONFIG_SCHEMA = vol.All(AUTH_PROVIDER_SCHEMA, _disallow_id)
 
 
-async def async_get_provider(hass: HomeAssistant) -> "HassAuthProvider":
+@callback
+def async_get_provider(hass: HomeAssistant) -> "HassAuthProvider":
     """Get the provider."""
     for prv in hass.auth.auth_providers:
         if prv.type == "homeassistant":
