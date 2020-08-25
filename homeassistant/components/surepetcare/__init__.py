@@ -104,7 +104,7 @@ async def async_setup(hass, config) -> bool:
     )
 
     # discover hubs the flaps/feeders are connected to
-    hub_ids = {}
+    hub_ids = set()
     for device in things:
         device_data = await surepy.device(device[CONF_ID])
         if (
