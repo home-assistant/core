@@ -26,6 +26,8 @@ DEFAULT_GOOGLE_REPORT_STATE = False
 DEFAULT_EXPOSED_DOMAINS = [
     "climate",
     "cover",
+    "fan",
+    "humidifier",
     "light",
     "lock",
     "scene",
@@ -33,6 +35,7 @@ DEFAULT_EXPOSED_DOMAINS = [
     "sensor",
     "switch",
     "vacuum",
+    "water_heater",
 ]
 
 CONF_ALEXA = "alexa"
