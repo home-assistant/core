@@ -34,7 +34,7 @@ TRIGGER_SCHEMA = vol.All(
             vol.Optional(CONF_FROM): vol.Any(str, [str]),
             vol.Optional(CONF_TO): vol.Any(str, [str]),
             vol.Optional(CONF_FOR): cv.positive_time_period_template,
-            vol.Optional(CONF_ATTRIBUTE): cv.string,
+            vol.Optional(CONF_ATTRIBUTE): cv.match_all,
         }
     ),
     cv.key_dependency(CONF_FOR, CONF_TO),
@@ -105,6 +105,7 @@ async def async_attach_trigger(
                         "from_state": from_s,
                         "to_state": to_s,
                         "for": time_delta if not time_delta else period[entity],
+                        "attribute": attribute,
                     }
                 },
                 event.context,
