@@ -1200,7 +1200,7 @@ async def test_exception(hass):
 
         # When an unforessen exception occurs, we close the ADB connection and raise the exception
         with patchers.PATCH_ANDROIDTV_UPDATE_EXCEPTION, pytest.raises(Exception):
-            await hass.helpers.entity_component.async_update(entity_id)
+            await hass.helpers.entity_component.async_update_entity(entity_id)
             state = hass.states.get(entity_id)
             assert state is not None
             assert state.state == STATE_UNAVAILABLE
