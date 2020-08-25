@@ -1,6 +1,6 @@
 """Data update coordinator for shark iq vacuums."""
 
-from typing import Dict, List
+from typing import Dict, List, Set
 
 from async_timeout import timeout
 from sharkiqpy import (
@@ -11,6 +11,7 @@ from sharkiqpy import (
     SharkIqVacuum,
 )
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -23,7 +24,7 @@ class SharkIqUpdateCoordinator(DataUpdateCoordinator):
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry,
+        config_entry: ConfigEntry,
         ayla_api: AylaApi,
         shark_vacs: List[SharkIqVacuum],
     ) -> None:
@@ -33,11 +34,16 @@ class SharkIqUpdateCoordinator(DataUpdateCoordinator):
             sharkiq.serial_number: sharkiq for sharkiq in shark_vacs
         }  # type: Dict[SharkIqVacuum]
         self._config_entry = config_entry
-        self._online_dsns = {}
+        self._online_dsns = set()
 
         super().__init__(hass, LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL)
 
-    def is_online(self, dsn: str) -> bool:
+    @property
+    def online_dsns(self) -> Set[str]:
+        """Get the set of all online DSNs."""
+        return self._online_dsns
+
+    def device_is_online(self, dsn: str) -> bool:
         """Return the online state of a given vacuum dsn."""
         return dsn in self._online_dsns
 

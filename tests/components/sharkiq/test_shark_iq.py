@@ -21,6 +21,15 @@ from homeassistant.components.vacuum import (
     STATE_IDLE,
     STATE_PAUSED,
     STATE_RETURNING,
+    SUPPORT_BATTERY,
+    SUPPORT_FAN_SPEED,
+    SUPPORT_LOCATE,
+    SUPPORT_PAUSE,
+    SUPPORT_RETURN_HOME,
+    SUPPORT_START,
+    SUPPORT_STATE,
+    SUPPORT_STATUS,
+    SUPPORT_STOP,
 )
 from homeassistant.config_entries import ConfigEntriesFlowManager, ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -157,9 +166,9 @@ async def test_shark_metadata(hass: HomeAssistant) -> None:
     shark_vac = _get_mock_shark_vac(ayla_api)
     coordinator = SharkIqUpdateCoordinator(hass, None, ayla_api, [shark_vac])
     shark = SharkVacuumEntity(shark_vac, coordinator)
-    shark.sharkiq._update_metadata(
+    shark.sharkiq._update_metadata(   # pylint: disable=protected-access
         SHARK_METADATA_DICT
-    )  # pylint: disable=protected-access
+    )
 
     target_device_info = {
         "identifiers": {("sharkiq", "AC000Wxxxxxxxxx")},
@@ -192,8 +201,8 @@ async def test_updates(hass: HomeAssistant) -> None:
 
     with patch.object(SharkIqVacuum, "async_update", new=_get_async_update()):
         update_called = (
-            await coordinator._async_update_data()
-        )  # pylint: disable=protected-access
+            await coordinator._async_update_data()  # pylint: disable=protected-access
+        )
     assert update_called
 
     update_failed = False
@@ -207,3 +216,63 @@ async def test_updates(hass: HomeAssistant) -> None:
         except UpdateFailed:
             update_failed = True
     assert update_failed
+
+
+async def test_coordinator_match(hass: HomeAssistant):
+    """Test that sharkiq-coordinator references work."""
+    ayla_api = get_ayla_api(TEST_PASSWORD, TEST_USERNAME)
+    shark_vac1 = _get_mock_shark_vac(ayla_api)
+    shark_vac2 = _get_mock_shark_vac(ayla_api)
+    shark_vac2._dsn = "FOOBAR!"  # pylint: disable=protected-access
+
+    coordinator = SharkIqUpdateCoordinator(hass, None, ayla_api, [shark_vac1])
+
+    # The first should succeed, the second should fail
+    api1 = SharkVacuumEntity(shark_vac1, coordinator)
+    try:
+        _ = SharkVacuumEntity(shark_vac2, coordinator)
+    except RuntimeError:
+        api2_failed = True
+    else:
+        api2_failed = False
+    assert api2_failed
+
+    coordinator.last_update_success = True
+    coordinator._online_dsns = set()  # pylint: disable=protected-access
+    assert not api1.is_online
+    assert not api1.available
+
+    coordinator._online_dsns = {shark_vac1.serial_number}  # pylint: disable=protected-access
+    assert api1.is_online
+    assert api1.available
+
+    coordinator.last_update_success = False
+    assert not api1.available
+
+
+async def test_simple_properties(hass: HomeAssistant):
+    """Test that simple properties work as intended."""
+    ayla_api = get_ayla_api(TEST_PASSWORD, TEST_USERNAME)
+    shark_vac1 = _get_mock_shark_vac(ayla_api)
+    coordinator = SharkIqUpdateCoordinator(hass, None, ayla_api, [shark_vac1])
+    entity = SharkVacuumEntity(shark_vac1, coordinator)
+
+    assert entity.unique_id == "sharkiq-AC000Wxxxxxxxxx-vacuum"
+
+    assert entity.supported_features == (
+        SUPPORT_BATTERY
+        | SUPPORT_FAN_SPEED
+        | SUPPORT_PAUSE
+        | SUPPORT_RETURN_HOME
+        | SUPPORT_START
+        | SUPPORT_STATE
+        | SUPPORT_STATUS
+        | SUPPORT_STOP
+        | SUPPORT_LOCATE
+    )
+
+    assert entity.error_code == 7
+    assert entity.error_message == "Cliff sensor is blocked"
+    shark_vac1.properties_full[Properties.ERROR_CODE.value]["value"] = 0
+    assert entity.error_code == 0
+    assert entity.error_message is None

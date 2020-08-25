@@ -93,7 +93,7 @@ class SharkVacuumEntity(StateVacuumEntity):
     @property
     def is_online(self) -> bool:
         """Tell us if the device is online."""
-        return self.coordinator.is_online(self.sharkiq.serial_number)
+        return self.coordinator.device_is_online(self.sharkiq.serial_number)
 
     @property
     def name(self) -> str:
@@ -145,7 +145,7 @@ class SharkVacuumEntity(StateVacuumEntity):
         """Return the last observed error message (or None)."""
         if not self.error_code:
             return None
-        return self.sharkiq.error_code
+        return self.sharkiq.error_text
 
     @property
     def operating_mode(self) -> Optional[str]:
