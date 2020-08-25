@@ -113,9 +113,7 @@ async def test_detect_location_info_ip_api(aioclient_mock, session):
 
 async def test_detect_location_info_queries_fail(session):
     """Ensure we return None if both queries fail."""
-    with patch(
-        "homeassistant.util.location._get_ip_api", return_value=None
-    ):
+    with patch("homeassistant.util.location._get_ip_api", return_value=None):
         info = await location_util.async_detect_location_info(session, _test_real=True)
     assert info is None
 
