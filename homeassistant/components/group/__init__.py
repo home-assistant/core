@@ -34,6 +34,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.reload import async_reload_integration_platforms
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import bind_hass
 
@@ -56,6 +57,8 @@ ATTR_ALL = "all"
 
 SERVICE_SET = "set"
 SERVICE_REMOVE = "remove"
+
+PLATFORMS = ["light", "cover"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -218,6 +221,8 @@ async def async_setup(hass, config):
         await _async_process_config(hass, conf, component)
 
         await component.async_add_entities(auto)
+
+        await async_reload_integration_platforms(hass, DOMAIN, PLATFORMS)
 
     hass.services.async_register(
         DOMAIN, SERVICE_RELOAD, reload_service_handler, schema=vol.Schema({})
