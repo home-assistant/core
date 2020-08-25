@@ -14,6 +14,7 @@ import homeassistant.components.media_player as media_player
 import homeassistant.components.switch as switch
 import homeassistant.components.universal.media_player as universal
 from homeassistant.const import (
+    SERVICE_RELOAD,
     STATE_OFF,
     STATE_ON,
     STATE_PAUSED,
@@ -818,7 +819,7 @@ async def test_master_state_with_template(hass):
 
 
 async def test_reload(hass):
-    """Test the state_template option."""
+    """Test reloading the media player from yaml."""
     hass.states.async_set("input_boolean.test", STATE_OFF)
     hass.states.async_set("media_player.mock1", STATE_OFF)
 
@@ -863,7 +864,7 @@ async def test_reload(hass):
     )
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
-            "universal", universal.SERVICE_RELOAD, {}, blocking=True,
+            "universal", SERVICE_RELOAD, {}, blocking=True,
         )
         await hass.async_block_till_done()
 
