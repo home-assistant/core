@@ -542,12 +542,6 @@ async def test_track_template_error(hass, caplog):
     assert "lunch" not in caplog.text
     assert "TemplateAssertionError" not in caplog.text
 
-    hass.states.async_set("switch.not_exist", "on")
-    await hass.async_block_till_done()
-
-    assert "lunch" in caplog.text
-    assert "TemplateAssertionError" in caplog.text
-
 
 async def test_track_template_result(hass):
     """Test tracking template."""
