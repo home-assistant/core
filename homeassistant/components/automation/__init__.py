@@ -401,7 +401,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
             ATTR_NAME: self._name,
             ATTR_ENTITY_ID: self.entity_id,
         }
-        if "description" in variables["trigger"]:
+        if "trigger" in variables and "description" in variables["trigger"]:
             event_data[ATTR_SOURCE] = variables["trigger"]["description"]
         self.hass.bus.async_fire(
             EVENT_AUTOMATION_TRIGGERED, event_data, context=trigger_context
