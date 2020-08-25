@@ -101,4 +101,4 @@ class RiscoDataUpdateCoordinator(DataUpdateCoordinator):
         try:
             return await self.risco.get_state()
         except (CannotConnectError, UnauthorizedError, OperationError) as error:
-            raise UpdateFailed from error
+            raise UpdateFailed(error) from error
