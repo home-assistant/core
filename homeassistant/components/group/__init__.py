@@ -350,26 +350,23 @@ class GroupEntity(Entity):
         """Disable polling for group."""
         return False
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register listeners."""
+        assert self.hass is not None
 
-        @callback
-        def _update_at_start(_):
-            self.async_schedule_update_ha_state(True)
+        async def _update_at_start(_):
+            await self.async_update_ha_state(True)
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _update_at_start)
 
-    @callback
-    def async_schedule_or_defer_update_ha_state(
-        self, force_refresh: bool = False
-    ) -> None:
+    async def async_defer_or_update_ha_state(self) -> None:
         """Only update once at start."""
         assert self.hass is not None
 
         if self.hass.state != CoreState.running:
             return
 
-        self.async_schedule_update_ha_state(force_refresh)
+        await self.async_update_ha_state(True)
 
 
 class Group(Entity):

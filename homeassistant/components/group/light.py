@@ -36,7 +36,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import State, callback
+from homeassistant.core import State
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
@@ -100,11 +100,10 @@ class LightGroup(GroupEntity, light.LightEntity):
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
 
-        @callback
-        def async_state_changed_listener(event):
+        async def async_state_changed_listener(event):
             """Handle child updates."""
             self.async_set_context(event.context)
-            self.async_schedule_or_defer_update_ha_state(True)
+            await self.async_defer_or_update_ha_state()
 
         assert self.hass
         self.async_on_remove(

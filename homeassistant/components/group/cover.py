@@ -39,7 +39,7 @@ from homeassistant.const import (
     STATE_OPEN,
     STATE_OPENING,
 )
-from homeassistant.core import State, callback
+from homeassistant.core import State
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change_event
 
@@ -96,15 +96,13 @@ class CoverGroup(GroupEntity, CoverEntity):
             KEY_POSITION: set(),
         }
 
-    @callback
-    def _update_supported_features_event(self, event):
+    async def _update_supported_features_event(self, event):
         self.async_set_context(event.context)
-        self.update_supported_features(
+        await self.async_update_supported_features(
             event.data.get("entity_id"), event.data.get("new_state")
         )
 
-    @callback
-    def update_supported_features(
+    async def async_update_supported_features(
         self, entity_id: str, new_state: Optional[State], update_state: bool = True,
     ) -> None:
         """Update dictionaries with supported features."""
@@ -114,7 +112,7 @@ class CoverGroup(GroupEntity, CoverEntity):
             for values in self._tilts.values():
                 values.discard(entity_id)
             if update_state:
-                self.async_schedule_or_defer_update_ha_state(True)
+                await self.async_defer_or_update_ha_state()
             return
 
         features = new_state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
@@ -146,13 +144,15 @@ class CoverGroup(GroupEntity, CoverEntity):
             self._tilts[KEY_POSITION].discard(entity_id)
 
         if update_state:
-            self.async_schedule_or_defer_update_ha_state(True)
+            await self.async_defer_or_update_ha_state()
 
     async def async_added_to_hass(self):
         """Register listeners."""
         for entity_id in self._entities:
             new_state = self.hass.states.get(entity_id)
-            self.update_supported_features(entity_id, new_state, update_state=False)
+            await self.async_update_supported_features(
+                entity_id, new_state, update_state=False
+            )
         assert self.hass is not None
         self.async_on_remove(
             async_track_state_change_event(
