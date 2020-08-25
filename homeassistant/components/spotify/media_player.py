@@ -15,7 +15,6 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_ARTIST,
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_PLAYLIST,
-    MEDIA_TYPE_TRACK,
     SUPPORT_BROWSE_MEDIA,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -68,17 +67,18 @@ SUPPORT_SPOTIFY = (
     | SUPPORT_VOLUME_SET
 )
 
-BROWSE_LIMIT = 48
+TYPE_ALBUM = "album"
+TYPE_TRACK = "track"
+TYPE_ARTIST = "artist"
 
 PLAYABLE_MEDIA_TYPES = [
+    TYPE_ALBUM,
     MEDIA_TYPE_PLAYLIST,
-    MEDIA_TYPE_ALBUM,
-    MEDIA_TYPE_ARTIST,
-    MEDIA_TYPE_TRACK,
+    TYPE_TRACK,
 ]
 
 LIBRARY_MAP = {
-    "user_playlists": "Playlists",
+    "user_playlists": "Paylists",
     "featured_playlists": "Featured Playlists",
     "new_releases": "New Releases",
     "current_user_top_artists": "Top Artists",
@@ -295,8 +295,8 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
     @property
     def supported_features(self) -> int:
         """Return the media player features that are supported."""
-        if self._me["product"] != "premium":
-            return 0
+        # if self._me["product"] != "premium":
+        #     return 0
         return SUPPORT_SPOTIFY
 
     @spotify_exception_handler
@@ -388,11 +388,11 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
 
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
         """Implement the websocket media browsing helper."""
-        if not self._scope_ok:
-            raise NotImplementedError
 
         if media_content_type in [None, "library"]:
-            return await self.hass.async_add_executor_job(library_payload)
+            return await self.hass.async_add_executor_job(
+                library_payload, self._spotify
+            )
 
         payload = {
             "media_content_type": media_content_type,
@@ -413,28 +413,28 @@ def build_item_response(spotify, payload):
     media_content_type = payload.get("media_content_type")
     title = None
     if media_content_type == "user_playlists":
-        media = spotify.current_user_playlists(limit=BROWSE_LIMIT)
+        media = spotify.current_user_playlists(limit=50)
         items = media.get("items", [])
     elif media_content_type == "current_user_recently_played":
-        media = spotify.current_user_recently_played(limit=BROWSE_LIMIT)
+        media = spotify.current_user_recently_played(limit=20)
         items = media.get("items", [])
     elif media_content_type == "featured_playlists":
-        media = spotify.featured_playlists(limit=BROWSE_LIMIT)
+        media = spotify.featured_playlists(limit=20)
         items = media.get("playlists", {}).get("items", [])
     elif media_content_type == "current_user_top_artists":
-        media = spotify.current_user_top_artists(limit=BROWSE_LIMIT)
+        media = spotify.current_user_top_artists(limit=20)
         items = media.get("items", [])
     elif media_content_type == "new_releases":
-        media = spotify.new_releases(limit=BROWSE_LIMIT)
+        media = spotify.new_releases(limit=20)
         items = media.get("albums", {}).get("items", [])
     elif media_content_type == MEDIA_TYPE_PLAYLIST:
         media = spotify.playlist(payload["media_content_id"])
         items = media.get("tracks", {}).get("items", [])
-    elif media_content_type == MEDIA_TYPE_ALBUM:
+    elif media_content_type == TYPE_ALBUM:
         media = spotify.album(payload["media_content_id"])
         items = media.get("tracks", {}).get("items", [])
-    elif media_content_type == MEDIA_TYPE_ARTIST:
-        media = spotify.artist_albums(payload["media_content_id"], limit=BROWSE_LIMIT)
+    elif media_content_type == TYPE_ARTIST:
+        media = spotify.artist_albums(payload["media_content_id"])
         title = spotify.artist(payload["media_content_id"]).get("name")
         items = media.get("items", [])
     else:
@@ -454,7 +454,7 @@ def build_item_response(spotify, payload):
         "title": title,
         "media_content_id": payload.get("media_content_id"),
         "media_content_type": payload.get("media_content_type"),
-        "can_play": payload.get("media_content_type") in PLAYABLE_MEDIA_TYPES,
+        "can_play": True,
         "children": [item_payload(item) for item in items],
         "can_expand": True,
     }
@@ -471,22 +471,35 @@ def item_payload(item):
 
     Used by async_browse_media.
     """
-    can_expand = item.get("type") not in [None, MEDIA_TYPE_TRACK]
+    if TYPE_TRACK in item or item.get("type") != TYPE_ALBUM and "playlists" in item:
+        track = item.get(TYPE_TRACK)
+        payload = {
+            "title": track.get("name"),
+            "thumbnail": fetch_image_url(track.get(TYPE_ALBUM, {})),
+            "media_content_id": track.get("uri"),
+            "media_content_type": TYPE_TRACK,
+            "can_play": True,
+        }
+    elif item.get("type") == TYPE_ALBUM:
+        payload = {
+            "title": item.get("name"),
+            "thumbnail": fetch_image_url(item),
+            "media_content_id": item.get("uri"),
+            "media_content_type": TYPE_ALBUM,
+            "can_play": True,
+        }
+    else:
+        payload = {
+            "title": item.get("name"),
+            "media_content_id": item.get("uri"),
+            "media_content_type": item.get("type"),
+            "can_play": True if item.get("type") in PLAYABLE_MEDIA_TYPES else False,
+        }
+        if "images" in item:
+            payload["thumbnail"] = fetch_image_url(item)
 
-    if (
-        MEDIA_TYPE_TRACK in item
-        or item.get("type") != MEDIA_TYPE_ALBUM
-        and "playlists" in item
-    ):
-        track = item.get(MEDIA_TYPE_TRACK)
-        return BrowseMedia(
-            title=track.get("name"),
-            thumbnail=fetch_image_url(track.get(MEDIA_TYPE_ALBUM, {})),
-            media_content_id=track.get("uri"),
-            media_content_type=MEDIA_TYPE_TRACK,
-            can_play=True,
-            can_expand=can_expand,
-        )
+    if item.get("type") not in [None, TYPE_TRACK]:
+        payload["can_expand"] = True
 
     return BrowseMedia(
         title=item.get("name"),
@@ -498,7 +511,7 @@ def item_payload(item):
     )
 
 
-def library_payload():
+def library_payload(spotify):
     """
     Create response payload to describe contents of a specific library.
 
@@ -525,6 +538,6 @@ def library_payload():
 def fetch_image_url(item):
     """Fetch image url."""
     try:
-        return item.get("images", [])[0].get("url")
+        return item["images"][0].get("url")
     except IndexError:
         return
