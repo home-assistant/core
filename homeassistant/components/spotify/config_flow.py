@@ -36,9 +36,25 @@ class SpotifyFlowHandler(
     @property
     def extra_authorize_data(self) -> Dict[str, Any]:
         """Extra data that needs to be appended to the authorize url."""
-        return {"scope": ",".join(SPOTIFY_SCOPES)}
+        scopes = [
+            # Needed to be able to control playback
+            "user-modify-playback-state",
+            # Needed in order to read available devices
+            "user-read-playback-state",
+            # Needed to determine if the user has Spotify Premium
+            "user-read-private",
+            # Needed for media browsing
+            "playlist-read-private",
+            "playlist-read-collaborative",
+            "user-library-read",
+            "user-top-read",
+            "user-read-playback-position",
+            "user-read-recently-played",
+            "user-follow-read",
+        ]
+        return {"scope": ",".join(scopes)}
 
-    async def async_oauth_create_entry(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    async def async_oauth_create_entry(self, data: dict) -> dict:
         """Create an entry for Spotify."""
         spotify = Spotify(auth=data["token"]["access_token"])
 
