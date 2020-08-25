@@ -562,6 +562,11 @@ class _TrackTemplateResultInfo:
         entities = set(self._info.entities)
         for entity_id in self.hass.states.async_entity_ids(self._info.domains):
             entities.add(entity_id)
+
+        # Entities has changed to none
+        if not entities:
+            return
+
         self._entities_listener = async_track_state_change_event(
             self.hass, entities, self._refresh
         )
@@ -569,6 +574,10 @@ class _TrackTemplateResultInfo:
     @callback
     def _setup_domains_listener(self) -> None:
         assert self._info
+
+        # Domains has changed to none
+        if not self._info.domains:
+            return
 
         self._domains_listener = async_track_state_added_domain(
             self.hass, self._info.domains, self._refresh

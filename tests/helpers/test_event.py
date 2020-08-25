@@ -543,6 +543,33 @@ async def test_track_template_error(hass, caplog):
     assert "TemplateAssertionError" not in caplog.text
 
 
+async def test_track_template_error_can_recover(hass, caplog):
+    """Test tracking template with error."""
+    hass.states.async_set("switch.data_system", "cow", {"opmode": 0})
+    template_error = Template(
+        "{{ states.sensor.data_system.attributes['opmode'] == '0' }}", hass
+    )
+    error_calls = []
+
+    @ha.callback
+    def error_callback(entity_id, old_state, new_state):
+        error_calls.append((entity_id, old_state, new_state))
+
+    async_track_template(hass, template_error, error_callback)
+    await hass.async_block_till_done()
+    assert not error_calls
+
+    hass.states.async_remove("switch.data_system")
+
+    assert "UndefinedError" in caplog.text
+
+    hass.states.async_set("switch.data_system", "cow", {"opmode": 0})
+
+    caplog.clear()
+
+    assert "UndefinedError" not in caplog.text
+
+
 async def test_track_template_result(hass):
     """Test tracking template."""
     specific_runs = []
