@@ -1,10 +1,13 @@
 """The tests for the Universal Media player platform."""
 import asyncio
 from copy import copy
+from os import path
 import unittest
 
+from asynctest.mock import patch
 from voluptuous.error import MultipleInvalid
 
+from homeassistant import config as hass_config
 import homeassistant.components.input_number as input_number
 import homeassistant.components.input_select as input_select
 import homeassistant.components.media_player as media_player
@@ -812,3 +815,64 @@ async def test_master_state_with_template(hass):
     await hass.async_block_till_done()
 
     hass.states.get("media_player.tv").state == STATE_OFF
+
+
+async def test_reload(hass):
+    """Test the state_template option."""
+    hass.states.async_set("input_boolean.test", STATE_OFF)
+    hass.states.async_set("media_player.mock1", STATE_OFF)
+
+    templ = (
+        '{% if states.input_boolean.test.state == "off" %}on'
+        "{% else %}{{ states.media_player.mock1.state }}{% endif %}"
+    )
+
+    await async_setup_component(
+        hass,
+        "media_player",
+        {
+            "media_player": {
+                "platform": "universal",
+                "name": "tv",
+                "state_template": templ,
+            }
+        },
+    )
+
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 3
+    await hass.async_start()
+
+    await hass.async_block_till_done()
+    hass.states.get("media_player.tv").state == STATE_ON
+
+    hass.states.async_set("input_boolean.test", STATE_ON)
+    await hass.async_block_till_done()
+
+    hass.states.get("media_player.tv").state == STATE_OFF
+
+    hass.states.async_set("media_player.master_bedroom_2", STATE_OFF)
+    hass.states.async_set(
+        "remote.alexander_master_bedroom",
+        STATE_ON,
+        {"activity_list": ["act1", "act2"], "current_activity": "act2"},
+    )
+
+    yaml_path = path.join(
+        _get_fixtures_base_path(), "fixtures", "universal/configuration.yaml",
+    )
+    with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
+        await hass.services.async_call(
+            "universal", universal.SERVICE_RELOAD, {}, blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 5
+
+    assert hass.states.get("media_player.tv") is None
+    assert hass.states.get("media_player.master_bed_tv").state == "on"
+    assert hass.states.get("media_player.master_bed_tv").attributes["source"] == "act2"
+
+
+def _get_fixtures_base_path():
+    return path.dirname(path.dirname(path.dirname(__file__)))
