@@ -339,7 +339,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         # Yet, they do generate those types of URI in their official clients.
         media_id = str(URL(media_id).with_query(None).with_fragment(None))
 
-        if media_type == TYPE_TRACK or media_type == MEDIA_TYPE_MUSIC:
+        if media_type in (TYPE_TRACK, MEDIA_TYPE_MUSIC):
             kwargs["uris"] = [media_id]
         elif media_type in PLAYABLE_MEDIA_TYPES:
             kwargs["context_uri"] = media_id
