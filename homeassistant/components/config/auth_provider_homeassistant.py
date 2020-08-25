@@ -30,7 +30,7 @@ async def async_setup(hass):
 @websocket_api.async_response
 async def websocket_create(hass, connection, msg):
     """Create credentials and attach to a user."""
-    provider = await auth_ha.async_get_provider(hass)
+    provider = auth_ha.async_get_provider(hass)
     user = await hass.auth.async_get_user(msg["user_id"])
 
     if user is None:
@@ -77,7 +77,7 @@ async def websocket_create(hass, connection, msg):
 @websocket_api.async_response
 async def websocket_delete(hass, connection, msg):
     """Delete username and related credential."""
-    provider = await auth_ha.async_get_provider(hass)
+    provider = auth_ha.async_get_provider(hass)
     credentials = await provider.async_get_or_create_credentials(
         {"username": msg["username"]}
     )
@@ -120,7 +120,7 @@ async def websocket_change_password(hass, connection, msg):
         )
         return
 
-    provider = await auth_ha.async_get_provider(hass)
+    provider = auth_ha.async_get_provider(hass)
     username = None
     for credential in user.credentials:
         if credential.auth_provider_type == provider.type:
@@ -166,7 +166,7 @@ async def websocket_admin_change_password(hass, connection, msg):
     if not connection.user.is_owner:
         raise Unauthorized(context=connection.context(msg))
 
-    provider = await auth_ha.async_get_provider(hass)
+    provider = auth_ha.async_get_provider(hass)
     try:
         await provider.async_change_password(msg["username"], msg["password"])
         connection.send_message(websocket_api.result_message(msg["id"]))
