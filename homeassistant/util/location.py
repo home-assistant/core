@@ -12,7 +12,6 @@ import aiohttp
 
 ELEVATION_URL = "https://api.open-elevation.com/api/v1/lookup"
 IP_API = "http://ip-api.com/json"
-IPAPI = "https://ipapi.co/json/"
 
 # Constants from https://github.com/maurycyp/vincenty
 # Earth ellipsoid according to WGS 84
@@ -49,14 +48,10 @@ async def async_detect_location_info(
     session: aiohttp.ClientSession,
 ) -> Optional[LocationInfo]:
     """Detect location information."""
-    data = await _get_ipapi(session)
-
-    if data is None:
-        data = await _get_ip_api(session)
+    data = await _get_ip_api(session)
 
     if data is None:
         return None
-
     data["use_metric"] = data["country_code"] not in ("US", "MM", "LR")
 
     return LocationInfo(**data)
@@ -160,36 +155,6 @@ def vincenty(
         s *= MILES_PER_KILOMETER  # kilometers to miles
 
     return round(s, 6)
-
-
-async def _get_ipapi(session: aiohttp.ClientSession) -> Optional[Dict[str, Any]]:
-    """Query ipapi.co for location data."""
-    try:
-        resp = await session.get(IPAPI, timeout=5)
-    except (aiohttp.ClientError, asyncio.TimeoutError):
-        return None
-
-    try:
-        raw_info = await resp.json()
-    except (aiohttp.ClientError, ValueError):
-        return None
-
-    # ipapi allows 30k free requests/month. Some users exhaust those.
-    if raw_info.get("latitude") == "Sign up to access":
-        return None
-
-    return {
-        "ip": raw_info.get("ip"),
-        "country_code": raw_info.get("country"),
-        "country_name": raw_info.get("country_name"),
-        "region_code": raw_info.get("region_code"),
-        "region_name": raw_info.get("region"),
-        "city": raw_info.get("city"),
-        "zip_code": raw_info.get("postal"),
-        "time_zone": raw_info.get("timezone"),
-        "latitude": raw_info.get("latitude"),
-        "longitude": raw_info.get("longitude"),
-    }
 
 
 async def _get_ip_api(session: aiohttp.ClientSession) -> Optional[Dict[str, Any]]:
