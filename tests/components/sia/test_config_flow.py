@@ -3,7 +3,7 @@ from asynctest import patch
 import pytest
 
 from homeassistant import config_entries, setup
-from homeassistant.components.sia.const import ABORT_ALREADY_CONFIGURED, DOMAIN
+from homeassistant.components.sia.const import DOMAIN
 from homeassistant.data_entry_flow import AbortFlow
 
 BASIC_CONFIG = {
@@ -34,7 +34,7 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.sia.config_flow.validate_input", return_value=True,
+        "homeassistant.components.sia.config_flow.validate_input", return_value={},
     ), patch(
         "homeassistant.components.sia.async_setup", return_value=True
     ) as mock_setup, patch(
@@ -112,7 +112,7 @@ async def test_abort_form(hass):
 
     with patch(
         "homeassistant.config_entries.ConfigFlow._abort_if_unique_id_configured",
-        side_effect=AbortFlow(reason=ABORT_ALREADY_CONFIGURED),
+        side_effect=AbortFlow(reason="already_configured"),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -125,7 +125,7 @@ async def test_abort_form(hass):
             },
         )
     assert result2["type"] == "abort"
-    assert result2["reason"] == ABORT_ALREADY_CONFIGURED
+    assert result2["reason"] == "already_configured"
 
 
 @pytest.mark.parametrize(

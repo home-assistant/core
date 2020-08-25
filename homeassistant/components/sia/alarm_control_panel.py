@@ -15,6 +15,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -72,6 +73,12 @@ class SIAAlarmControlPanel(AlarmControlPanel, RestoreEntity):
         self.hass = hass
         self._zone = zone
         self._ping_interval = ping_interval
+        self.hass = hass
+
+        self._is_available = True
+        self._remove_unavailability_tracker = None
+        self._state = None
+        self._old_state = None
         self._attr = {
             HUB_SENSOR_NAME: None,
             CONF_ACCOUNT: self._account,
@@ -87,19 +94,24 @@ class SIAAlarmControlPanel(AlarmControlPanel, RestoreEntity):
         """Once the panel is added, see if it was there before and pull in that state."""
         await super().async_added_to_hass()
         state = await self.async_get_last_state()
-        if state is not None and state.state is not None:
-            if state.state == STATE_ALARM_ARMED_AWAY:
-                self.state = STATE_ALARM_ARMED_AWAY
-            elif state.state == STATE_ALARM_ARMED_NIGHT:
-                self.state = STATE_ALARM_ARMED_NIGHT
-            elif state.state == STATE_ALARM_TRIGGERED:
-                self.state = STATE_ALARM_TRIGGERED
-            elif state.state == STATE_ALARM_DISARMED:
-                self.state = STATE_ALARM_DISARMED
-            elif state.state == STATE_ALARM_ARMED_CUSTOM_BYPASS:
-                self.state = STATE_ALARM_ARMED_CUSTOM_BYPASS
-            else:
-                self.state = None
+        _LOGGER.debug(
+            "Loading last state: %s",
+            state.state if state is not None and state.state is not None else "None",
+        )
+        if (
+            state is not None
+            and state.state is not None
+            and state.state
+            in [
+                STATE_ALARM_ARMED_AWAY,
+                STATE_ALARM_ARMED_CUSTOM_BYPASS,
+                STATE_ALARM_ARMED_NIGHT,
+                STATE_ALARM_DISARMED,
+                STATE_ALARM_TRIGGERED,
+                STATE_UNKNOWN,
+            ]
+        ):
+            self.state = state.state
         else:
             self.state = None
         self._async_track_unavailable()
@@ -117,19 +129,9 @@ class SIAAlarmControlPanel(AlarmControlPanel, RestoreEntity):
         return self._name
 
     @property
-    def ping_interval(self) -> int:
-        """Get ping_interval."""
-        return str(self._ping_interval)
-
-    @property
     def state(self) -> str:
         """Get state."""
         return self._state
-
-    @property
-    def account(self) -> str:
-        """Return device account."""
-        return self._account
 
     @property
     def unique_id(self) -> str:
@@ -140,6 +142,14 @@ class SIAAlarmControlPanel(AlarmControlPanel, RestoreEntity):
     def available(self) -> bool:
         """Get availability."""
         return self._is_available
+
+    @property
+    def should_poll(self) -> bool:
+        """Return True if entity has to be polled for state.
+
+        False if entity pushes its state to HA.
+        """
+        return False
 
     @property
     def device_state_attributes(self) -> dict:
@@ -167,11 +177,12 @@ class SIAAlarmControlPanel(AlarmControlPanel, RestoreEntity):
         """Reset unavailability."""
         if self._remove_unavailability_tracker:
             self._remove_unavailability_tracker()
-        self._remove_unavailability_tracker = async_track_point_in_utc_time(
-            self.hass,
-            self._async_set_unavailable,
-            utcnow() + self._ping_interval + PING_INTERVAL_MARGIN,
-        )
+        if self.hass:
+            self._remove_unavailability_tracker = async_track_point_in_utc_time(
+                self.hass,
+                self._async_set_unavailable,
+                utcnow() + self._ping_interval + PING_INTERVAL_MARGIN,
+            )
         if not self._is_available:
             self._is_available = True
             return True
@@ -182,6 +193,11 @@ class SIAAlarmControlPanel(AlarmControlPanel, RestoreEntity):
         """Set availability."""
         self._remove_unavailability_tracker = None
         self._is_available = False
+        _LOGGER.debug(
+            "Setting entity: %s unavailable, last heartbeat was: %s",
+            self.entity_id,
+            self._attr["last_heartbeat"],
+        )
         self.async_schedule_update_ha_state()
 
     @property

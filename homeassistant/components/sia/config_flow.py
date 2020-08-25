@@ -7,8 +7,8 @@ from pysiaalarm import (
 )
 import voluptuous as vol
 
-from homeassistant import config_entries, exceptions
-from homeassistant.const import CONF_NAME, CONF_PORT
+from homeassistant import config_entries
+from homeassistant.const import CONF_PORT
 
 from .const import (
     ABORT_ALREADY_CONFIGURED,
@@ -43,19 +43,28 @@ ACCOUNT_SCHEMA = vol.Schema(
 )
 
 
-def validate_input(data: dict) -> bool:
+def validate_input(data: dict) -> dict:
     """Validate the input by the user."""
-    SIAAccount(data[CONF_ACCOUNT], data.get(CONF_ENCRYPTION_KEY))
-    try:
-        ping = int(data[CONF_PING_INTERVAL])
-        assert 1 <= ping <= 1440
-    except AssertionError:
-        raise InvalidPing
-    try:
-        zones = int(data[CONF_ZONES])
-        assert zones > 0
-    except AssertionError:
-        raise InvalidZones
+    errors = {}
+    if data:
+        try:
+            SIAAccount(data[CONF_ACCOUNT], data.get(CONF_ENCRYPTION_KEY))
+        except InvalidKeyFormatError:
+            errors["base"] = "invalid_key_format"
+        except InvalidKeyLengthError:
+            errors["base"] = "invalid_key_length"
+        except InvalidAccountFormatError:
+            errors["base"] = "invalid_account_format"
+        except InvalidAccountLengthError:
+            errors["base"] = "invalid_account_length"
+        except Exception:  # pylint: disable=broad-except
+            errors["base"] = "unknown"
+
+        if not 1 <= int(data[CONF_PING_INTERVAL]) <= 1440:
+            errors["base"] = "invalid_ping"
+        if int(data[CONF_ZONES]) <= 0:
+            errors["base"] = "invalid_zones"
+    return errors
 
 
 class SIAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -65,76 +74,63 @@ class SIAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
     data = {}
 
-    async def async_step_user(self, user_input: dict = None):
-        """Handle the initial step."""
-        errors = {}
-        if not user_input:
-            return self.async_show_form(
-                step_id="user", data_schema=HUB_SCHEMA, errors=errors
-            )
-
+    async def async_step_additional_account(self, user_input: dict = None):
+        """Handle the additional account step."""
+        errors = validate_input(user_input)
         # validate and return with error
-        try:
-            validate_input(user_input)
-        except InvalidKeyFormatError:
-            errors["base"] = "invalid_key_format"
-        except InvalidKeyLengthError:
-            errors["base"] = "invalid_key_length"
-        except InvalidAccountFormatError:
-            errors["base"] = "invalid_account_format"
-        except InvalidAccountLengthError:
-            errors["base"] = "invalid_account_length"
-        except InvalidPing:
-            errors["base"] = "invalid_ping"
-        except InvalidZones:
-            errors["base"] = "invalid_zones"
-        except Exception:  # pylint: disable=broad-except
-            errors["base"] = "unknown"
-        if errors:
-            schema = HUB_SCHEMA
-            if self.data.get(CONF_PORT):
-                schema = ACCOUNT_SCHEMA
+        if not user_input or errors:
             return self.async_show_form(
-                step_id="user", data_schema=schema, errors=errors
+                step_id="additional_account", data_schema=ACCOUNT_SCHEMA, errors=errors
             )
 
-        # create self.data or add to self.data
-        if self.data:
-            add_data = user_input.copy()
-            add_data.pop(CONF_ADDITIONAL_ACCOUNTS)
-            self.data[CONF_ACCOUNTS].append(add_data)
-        else:
-            # if the port is being set, check for uniqueness and abort if not unique
-            await self.async_set_unique_id(f"{DOMAIN}_{user_input[CONF_PORT]}")
-            try:
-                self._abort_if_unique_id_configured()
-            except AbortFlow:
-                return self.async_abort(reason=ABORT_ALREADY_CONFIGURED)
-            self.data = {
-                CONF_PORT: user_input[CONF_PORT],
-                CONF_ACCOUNTS: [
-                    {
-                        CONF_ACCOUNT: user_input[CONF_ACCOUNT],
-                        CONF_ENCRYPTION_KEY: user_input.get(CONF_ENCRYPTION_KEY),
-                        CONF_PING_INTERVAL: user_input[CONF_PING_INTERVAL],
-                        CONF_ZONES: user_input[CONF_ZONES],
-                    }
-                ],
-            }
+        # parse the user_input and store in self.data
+        add_data = user_input.copy()
+        add_data.pop(CONF_ADDITIONAL_ACCOUNTS)
+        self.data[CONF_ACCOUNTS].append(add_data)
 
-        # if additional accounts need to be added, do that, otherwise, create entry
+        # call additional accounts if necessary
         if user_input[CONF_ADDITIONAL_ACCOUNTS]:
             return self.async_show_form(
-                step_id="user", data_schema=ACCOUNT_SCHEMA, errors=errors
+                step_id="additional_account", data_schema=ACCOUNT_SCHEMA, errors=errors
             )
+
+        # done
         return self.async_create_entry(
             title=f"SIA Alarm on port {self.data[CONF_PORT]}", data=self.data
         )
 
+    async def async_step_user(self, user_input: dict = None):
+        """Handle the initial step."""
+        errors = validate_input(user_input)
+        if not user_input or errors:
+            return self.async_show_form(
+                step_id="user", data_schema=HUB_SCHEMA, errors=errors
+            )
 
-class InvalidPing(exceptions.HomeAssistantError):
-    """Error to indicate there is invalid ping interval."""
+        # check uniqueness of the setup
+        await self.async_set_unique_id(user_input[CONF_PORT])
+        self._abort_if_unique_id_configured()
 
+        # parse the user_input and store in self.data
+        self.data = {
+            CONF_PORT: user_input[CONF_PORT],
+            CONF_ACCOUNTS: [
+                {
+                    CONF_ACCOUNT: user_input[CONF_ACCOUNT],
+                    CONF_ENCRYPTION_KEY: user_input.get(CONF_ENCRYPTION_KEY),
+                    CONF_PING_INTERVAL: user_input[CONF_PING_INTERVAL],
+                    CONF_ZONES: user_input[CONF_ZONES],
+                }
+            ],
+        }
 
-class InvalidZones(exceptions.HomeAssistantError):
-    """Error to indicate there is invalid number of zones."""
+        # call additional accounts if necessary
+        if user_input[CONF_ADDITIONAL_ACCOUNTS]:
+            return self.async_show_form(
+                step_id="additional_account", data_schema=ACCOUNT_SCHEMA, errors=errors
+            )
+
+        # done
+        return self.async_create_entry(
+            title=f"SIA Alarm on port {self.data[CONF_PORT]}", data=self.data
+        )

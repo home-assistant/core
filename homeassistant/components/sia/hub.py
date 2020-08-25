@@ -66,7 +66,7 @@ class SIAHub:
         self.sia_client = SIAClient(
             "", self._port, self.sia_accounts, self.update_states
         )
-        self._create_sensors()
+        self._create_entities()
 
     async def async_setup_hub(self):
         """Add a device to the device_registry, register shutdown listener, load reactions."""
@@ -88,8 +88,8 @@ class SIAHub:
         """Shutdown the SIA server."""
         await self.sia_client.stop()
 
-    def _create_sensors(self):
-        """Create all the sensors."""
+    def _create_entities(self):
+        """Create all the entities."""
         for zone in self._zones:
             ping = self._get_ping_interval(zone[CONF_ACCOUNT])
             for entity_type in zone[CONF_SENSORS]:
@@ -190,8 +190,7 @@ class SIAHub:
             *[
                 entity.assume_available()
                 for entity in self.states.values()
-                if entity.account
-                == event.account  # and not isinstance(entity, SIASensor)
+                if entity.account == event.account
             ],
             return_exceptions=True,
         )
