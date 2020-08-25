@@ -64,7 +64,9 @@ async def test_full_flow(hass, aiohttp_client, aioclient_mock, current_request):
         "?response_type=code&client_id=client"
         "&redirect_uri=https://example.com/auth/external/callback"
         f"&state={state}"
-        "&scope=user-modify-playback-state,user-read-playback-state,user-read-private"
+        "&scope=user-modify-playback-state,user-read-playback-state,user-read-private,"
+        "playlist-read-private,playlist-read-collaborative,user-library-read,"
+        "user-top-read,user-read-playback-position,user-read-recently-played,user-follow-read"
     )
 
     client = await aiohttp_client(hass.http.app)
