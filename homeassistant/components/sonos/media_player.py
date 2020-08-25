@@ -83,14 +83,13 @@ SUPPORT_SONOS = (
 SOURCE_LINEIN = "Line-in"
 SOURCE_TV = "TV"
 
-EXPANDABLES = [
-    "object.container.album.musicAlbum",
-    "object.container.genre.musicGenre",
-    "object.container.person.composer",
-    "object.container.person.musicArtist",
-    "object.container.albumlist",
-    "object.container.playlistContainer",
-    "object.container",
+EXPANDABLE_MEDIA_TYPES = [
+    TYPE_ALBUM,
+    TYPE_GENRE,
+    TYPE_COMPOSER,
+    TYPE_ALBUM_ARTIST,
+    TYPE_ARTIST,
+    TYPE_PLAYLISTS,
 ]
 
 MEDIA_TYPES_MAPPING = {
@@ -1389,9 +1388,7 @@ def build_item_response(media_library, payload):
         and media[0].item_class == "object.item.audioItem.musicTrack"
     ):
         for item in media_library.browse_by_idstring(
-            TYPE_ALBUM_ARTIST,
-            "/".join(payload["idstring"].split("/")[0:]),
-            full_album_art_uri=True,
+            TYPE_ALBUM_ARTIST, payload["idstring"], full_album_art_uri=True,
         ):
             if item.item_id == payload["idstring"]:
                 title = item.title
@@ -1429,7 +1426,7 @@ def item_payload(item):
         "thumbnail": getattr(item, "album_art_uri", None),
         "media_content_id": item.item_id,
         "media_content_type": get_media_type(item),
-        "can_play": can_play(item),
+        "can_play": can_play(item.item_class),
         "can_expand": can_expand(item),
     }
 
@@ -1469,7 +1466,7 @@ def can_play(item):
 
     Used by async_browse_media.
     """
-    return MEDIA_TYPES_MAPPING.get(item.item_class) in PLAYABLE_MEDIA_TYPES
+    return MEDIA_TYPES_MAPPING.get(item) in PLAYABLE_MEDIA_TYPES
 
 
 def can_expand(item):
@@ -1478,4 +1475,10 @@ def can_expand(item):
 
     Used by async_browse_media.
     """
-    return MEDIA_TYPES_MAPPING.get(item) in EXPANDABLES
+    if isinstance(item, str):
+        return MEDIA_TYPES_MAPPING.get(item) in EXPANDABLE_MEDIA_TYPES
+
+    if item.item_class in MEDIA_TYPES_MAPPING:
+        return MEDIA_TYPES_MAPPING.get(item.item_class) in EXPANDABLE_MEDIA_TYPES
+
+    return MEDIA_TYPES_MAPPING.get(item.item_id) in EXPANDABLE_MEDIA_TYPES
