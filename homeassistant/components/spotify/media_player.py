@@ -70,7 +70,7 @@ PLAYABLE_MEDIA_TYPES = [
 ]
 
 LIBRARY_MAP = {
-    "user_playlists": "Paylists",
+    "user_playlists": "Playlists",
     "featured_playlists": "Featured Playlists",
     "new_releases": "New Releases",
     "current_user_top_artists": "Top Artists",
@@ -286,8 +286,8 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
     @property
     def supported_features(self) -> int:
         """Return the media player features that are supported."""
-        # if self._me["product"] != "premium":
-        #     return 0
+        if self._me["product"] != "premium":
+            return 0
         return SUPPORT_SPOTIFY
 
     @spotify_exception_handler
@@ -482,7 +482,7 @@ def item_payload(item):
             "title": item.get("name"),
             "media_content_id": item.get("uri"),
             "media_content_type": item.get("type"),
-            "can_play": True if item.get("type") in PLAYABLE_MEDIA_TYPES else False,
+            "can_play": item.get("type") in PLAYABLE_MEDIA_TYPES,
         }
         if "images" in item:
             payload["thumbnail"] = fetch_image_url(item)
