@@ -1,10 +1,12 @@
 """Class to reload platforms."""
 
+import asyncio
 import logging
-from typing import Optional
+from typing import Iterable, Optional
 
 from homeassistant import config as conf_util
-from homeassistant.core import callback
+from homeassistant.const import SERVICE_RELOAD
+from homeassistant.core import Event, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform
 from homeassistant.helpers.entity_platform import DATA_ENTITY_PLATFORM, EntityPlatform
@@ -15,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_reload_integration_platforms(
-    hass: HomeAssistantType, integration_name: str, integration_platforms: str
+    hass: HomeAssistantType, integration_name: str, integration_platforms: Iterable
 ) -> None:
     """Reload an integration's platforms.
 
@@ -68,3 +70,32 @@ def async_get_platform(
             return platform
 
     return None
+
+
+async def async_setup_reload_service(
+    hass: HomeAssistantType, domain: str, platforms: Iterable
+) -> None:
+    """Create the reload service for the domain."""
+
+    if hass.services.has_service(domain, SERVICE_RELOAD):
+        return
+
+    async def _reload_config(call: Event) -> None:
+        """Reload the platforms."""
+
+        await async_reload_integration_platforms(hass, domain, platforms)
+        hass.bus.async_fire(f"event_{domain}_reloaded", context=call.context)
+
+    hass.helpers.service.async_register_admin_service(
+        domain, SERVICE_RELOAD, _reload_config
+    )
+
+
+def setup_reload_service(
+    hass: HomeAssistantType, domain: str, platforms: Iterable
+) -> None:
+    """Sync version of async_setup_reload_service."""
+
+    asyncio.run_coroutine_threadsafe(
+        async_setup_reload_service(hass, domain, platforms), hass.loop,
+    ).result()
