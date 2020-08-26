@@ -62,6 +62,7 @@ async def async_attach_trigger(
                         "from_state": from_s,
                         "to_state": to_s,
                         "for": time_delta if not time_delta else period,
+                        "description": f"{entity_id} via template",
                     }
                 },
                 (to_s.context if to_s else None),
