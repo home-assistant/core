@@ -109,6 +109,16 @@ MEDIA_TYPES_MAPPING = {
     "object.item.audioItem.musicTrack": TYPE_TRACKS,
 }
 
+LIBRARY_TITLES_MAPPING = {
+    "A:ALBUM": "Albums",
+    "A:ALBUMARTIST": "Artists",
+    "A:ARTIST": "Contributing Artists",
+    "A:COMPOSER": "Composers",
+    "A:GENRE": "Genres",
+    "A:PLAYLISTS": "Playlists",
+    "A:TRACKS": "Tracks",
+}
+
 PLAYABLE_MEDIA_TYPES = [
     TYPE_ALBUM_ARTIST,
     TYPE_ALBUM,
@@ -1402,7 +1412,7 @@ def build_item_response(media_library, payload):
         try:
             title = urllib.parse.unquote(payload["idstring"].split("/")[1])
         except IndexError:
-            title = MEDIA_TYPES_MAPPING[payload["idstring"]]
+            title = LIBRARY_TITLES_MAPPING[payload["idstring"]]
 
     return {
         "title": title,
