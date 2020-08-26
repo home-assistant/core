@@ -18,7 +18,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     coordinator = hass.data[DOMAIN][
         config_entry.entry_id
     ]  # type: SharkIqUpdateCoordinator
-    devices = coordinator.shark_vacs.values()  # type: Iterable[SharkIqVacuum]
+    devices: Iterable["SharkIqVacuum"] = coordinator.shark_vacs.values()
     device_names = [d.name for d in devices]
     LOGGER.debug(
         "Found %d Shark IQ device(s): %s",
