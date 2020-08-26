@@ -11,8 +11,11 @@ from yarl import URL
 
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
+    MEDIA_TYPE_ALBUM,
+    MEDIA_TYPE_ARTIST,
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_PLAYLIST,
+    MEDIA_TYPE_TRACK,
     SUPPORT_BROWSE_MEDIA,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -59,17 +62,13 @@ SUPPORT_SPOTIFY = (
     | SUPPORT_VOLUME_SET
 )
 
-TYPE_ALBUM = "album"
-TYPE_TRACK = "track"
-TYPE_ARTIST = "artist"
-
 BROWSE_LIMIT = 48
 
 PLAYABLE_MEDIA_TYPES = [
     MEDIA_TYPE_PLAYLIST,
-    TYPE_ALBUM,
-    TYPE_ARTIST,
-    TYPE_TRACK,
+    MEDIA_TYPE_ALBUM,
+    MEDIA_TYPE_ARTIST,
+    MEDIA_TYPE_TRACK,
 ]
 
 LIBRARY_MAP = {
@@ -332,7 +331,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         # Yet, they do generate those types of URI in their official clients.
         media_id = str(URL(media_id).with_query(None).with_fragment(None))
 
-        if media_type in (TYPE_TRACK, MEDIA_TYPE_MUSIC):
+        if media_type in (MEDIA_TYPE_TRACK, MEDIA_TYPE_MUSIC):
             kwargs["uris"] = [media_id]
         elif media_type in PLAYABLE_MEDIA_TYPES:
             kwargs["context_uri"] = media_id
@@ -424,10 +423,10 @@ def build_item_response(spotify, payload):
     elif media_content_type == MEDIA_TYPE_PLAYLIST:
         media = spotify.playlist(payload["media_content_id"])
         items = media.get("tracks", {}).get("items", [])
-    elif media_content_type == TYPE_ALBUM:
+    elif media_content_type == MEDIA_TYPE_ALBUM:
         media = spotify.album(payload["media_content_id"])
         items = media.get("tracks", {}).get("items", [])
-    elif media_content_type == TYPE_ARTIST:
+    elif media_content_type == MEDIA_TYPE_ARTIST:
         media = spotify.artist_albums(payload["media_content_id"], limit=BROWSE_LIMIT)
         title = spotify.artist(payload["media_content_id"]).get("name")
         items = media.get("items", [])
@@ -463,34 +462,29 @@ def item_payload(item):
 
     Used by async_browse_media.
     """
-    if TYPE_TRACK in item or item.get("type") != TYPE_ALBUM and "playlists" in item:
-        track = item.get(TYPE_TRACK)
+    if (
+        MEDIA_TYPE_TRACK in item
+        or item.get("type") != MEDIA_TYPE_ALBUM
+        and "playlists" in item
+    ):
+        track = item.get(MEDIA_TYPE_TRACK)
         payload = {
             "title": track.get("name"),
-            "thumbnail": fetch_image_url(track.get(TYPE_ALBUM, {})),
+            "thumbnail": fetch_image_url(track.get(MEDIA_TYPE_ALBUM, {})),
             "media_content_id": track.get("uri"),
-            "media_content_type": TYPE_TRACK,
-            "can_play": True,
-        }
-    elif item.get("type") == TYPE_ALBUM:
-        payload = {
-            "title": item.get("name"),
-            "thumbnail": fetch_image_url(item),
-            "media_content_id": item.get("uri"),
-            "media_content_type": TYPE_ALBUM,
+            "media_content_type": MEDIA_TYPE_TRACK,
             "can_play": True,
         }
     else:
         payload = {
             "title": item.get("name"),
+            "thumbnail": fetch_image_url(item),
             "media_content_id": item.get("uri"),
             "media_content_type": item.get("type"),
             "can_play": item.get("type") in PLAYABLE_MEDIA_TYPES,
         }
-        if "images" in item:
-            payload["thumbnail"] = fetch_image_url(item)
 
-    if item.get("type") not in [None, TYPE_TRACK]:
+    if item.get("type") not in [None, MEDIA_TYPE_TRACK]:
         payload["can_expand"] = True
 
     return payload
@@ -523,6 +517,6 @@ def library_payload(spotify):
 def fetch_image_url(item):
     """Fetch image url."""
     try:
-        return item["images"][0].get("url")
+        return item.get("images", [])[0].get("url")
     except IndexError:
         return
