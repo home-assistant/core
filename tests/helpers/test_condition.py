@@ -659,3 +659,27 @@ async def test_condition_template_error(hass, caplog):
     assert caplog.records[0].message.startswith(
         "Error during template condition: UndefinedError:"
     )
+
+
+async def test_condition_state_value_template(hass):
+    """Test value template for state condition."""
+    test = await condition.async_from_config(
+        hass,
+        {
+            "condition": "and",
+            "conditions": [
+                {
+                    "condition": "state",
+                    "entity_id": "sensor.temperature",
+                    "value_template": "{{ states.sensor.temperature.state | int + 1 }}",
+                    "state": "100",
+                },
+            ],
+        },
+    )
+
+    hass.states.async_set("sensor.temperature", 100)
+    assert not test(hass)
+
+    hass.states.async_set("sensor.temperature", 99)
+    assert test(hass)

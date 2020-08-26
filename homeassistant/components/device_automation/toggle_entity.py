@@ -137,7 +137,7 @@ def async_condition_from_config(config: ConfigType) -> condition.ConditionChecke
     if CONF_FOR in config:
         state_config[CONF_FOR] = config[CONF_FOR]
 
-    return condition.state_from_config(state_config)
+    return condition.async_state_from_config(state_config)
 
 
 async def async_attach_trigger(

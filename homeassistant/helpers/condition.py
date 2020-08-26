@@ -273,6 +273,31 @@ def state(
     req_state: Union[str, List[str]],
     for_period: Optional[timedelta] = None,
     attribute: Optional[str] = None,
+    value_template: Optional[Template] = None,
+    variables: TemplateVarsType = None,
+) -> bool:
+    """Test a numeric state condition."""
+    return run_callback_threadsafe(
+        hass.loop,
+        async_state,
+        hass,
+        entity,
+        req_state,
+        for_period,
+        attribute,
+        value_template,
+        variables,
+    ).result()
+
+
+def async_state(
+    hass: HomeAssistant,
+    entity: Union[None, str, State],
+    req_state: Union[str, List[str]],
+    for_period: Optional[timedelta] = None,
+    attribute: Optional[str] = None,
+    value_template: Optional[Template] = None,
+    variables: TemplateVarsType = None,
 ) -> bool:
     """Test if state matches requirements.
 
@@ -289,10 +314,22 @@ def state(
     if isinstance(req_state, str):
         req_state = [req_state]
 
-    if attribute is None:
-        is_state = entity.state in req_state
+    value: Any = None
+    if value_template is None:
+        if attribute is None:
+            value = entity.state
+        else:
+            value = str(entity.attributes.get(attribute))
     else:
-        is_state = str(entity.attributes.get(attribute)) in req_state
+        variables = dict(variables or {})
+        variables["state"] = entity
+        try:
+            value = value_template.async_render(variables)
+        except TemplateError as ex:
+            _LOGGER.error("Template error: %s", ex)
+            return False
+
+    is_state = value in req_state
 
     if for_period is None or not is_state:
         return is_state
@@ -300,7 +337,7 @@ def state(
     return dt_util.utcnow() - for_period > entity.last_changed
 
 
-def state_from_config(
+def async_state_from_config(
     config: ConfigType, config_validation: bool = True
 ) -> ConditionCheckerType:
     """Wrap action method with state based condition."""
@@ -310,14 +347,26 @@ def state_from_config(
     req_states: Union[str, List[str]] = config.get(CONF_STATE, [])
     for_period = config.get("for")
     attribute = config.get(CONF_ATTRIBUTE)
+    value_template = config.get(CONF_VALUE_TEMPLATE)
 
     if not isinstance(req_states, list):
         req_states = [req_states]
 
     def if_state(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
         """Test if condition."""
+        if value_template is not None:
+            value_template.hass = hass
+
         return all(
-            state(hass, entity_id, req_states, for_period, attribute)
+            async_state(
+                hass,
+                entity_id,
+                req_states,
+                for_period,
+                attribute,
+                value_template,
+                variables,
+            )
             for entity_id in entity_ids
         )
 

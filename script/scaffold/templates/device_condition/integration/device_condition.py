@@ -82,6 +82,6 @@ def async_condition_from_config(
     @callback
     def test_is_state(hass: HomeAssistant, variables: TemplateVarsType) -> bool:
         """Test if an entity is a certain state."""
-        return condition.state(hass, config[ATTR_ENTITY_ID], state)
+        return condition.async_state(hass, config[ATTR_ENTITY_ID], state)
 
     return test_is_state

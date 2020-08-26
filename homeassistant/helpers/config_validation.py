@@ -922,6 +922,7 @@ STATE_CONDITION_SCHEMA = vol.All(
             vol.Optional(CONF_ATTRIBUTE): str,
             vol.Required(CONF_STATE): vol.Any(str, [str]),
             vol.Optional(CONF_FOR): positive_time_period,
+            vol.Optional(CONF_VALUE_TEMPLATE): template,
             # To support use_trigger_value in automation
             # Deprecated 2016/04/25
             vol.Optional("from"): str,
