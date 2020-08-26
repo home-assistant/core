@@ -45,8 +45,13 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 
 from .const import (
     ATTR_CMODE,
@@ -55,7 +60,10 @@ from .const import (
     DOMAIN,
     SERVICE_SELECT_CMODE,
     SUPPORT_CMODE,
+    TIMEOUT_SCALE,
 )
+
+SIGNAL_CONFIG_OPTIONS_UPDATE = "epson_config_options_update {}"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,22 +90,30 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Epson media player platform."""
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Bosch thermostat from a config entry."""
+
+    timeout_scale = config_entry.options.get(TIMEOUT_SCALE, 1.0)
+    epson_proj = EpsonProjector(
+        async_get_clientsession(
+            hass, verify_ssl=config_entry.data.get(CONF_SSL, False)
+        ),
+        config_entry.title,
+        config_entry.data[CONF_HOST],
+        config_entry.data[CONF_PORT],
+        timeout_scale,
+        config_entry.entry_id,
+    )
+    if not hass.data.get(DOMAIN):
+        hass.data[DOMAIN] = {config_entry.entry_id: {}}
     if DATA_EPSON not in hass.data:
         hass.data[DATA_EPSON] = []
 
-    name = config.get(CONF_NAME)
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
-    ssl = config[CONF_SSL]
-
-    epson_proj = EpsonProjector(
-        async_get_clientsession(hass, verify_ssl=False), name, host, port, ssl
+    hass.data[DOMAIN][config_entry.entry_id] = config_entry.add_update_listener(
+        update_listener
     )
-
     hass.data[DATA_EPSON].append(epson_proj)
-    async_add_entities([epson_proj], update_before_add=True)
+    async_add_entities([epson_proj])
 
     async def async_service_handler(service):
         """Handle for services."""
@@ -122,20 +138,36 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     hass.services.async_register(
         DOMAIN, SERVICE_SELECT_CMODE, async_service_handler, schema=epson_schema
     )
+    return True
+
+
+async def update_listener(hass, entry):
+    """Handle options update."""
+    async_dispatcher_send(
+        hass, SIGNAL_CONFIG_OPTIONS_UPDATE.format(entry.entry_id), entry.options
+    )
+
+
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Set up the Bosch Thermostat Platform."""
+    pass
 
 
 class EpsonProjector(MediaPlayerEntity):
     """Representation of Epson Projector Device."""
 
-    def __init__(self, websession, name, host, port, encryption):
+    def __init__(self, websession, name, host, port, timeout_scale, entry_id):
         """Initialize entity to control Epson projector."""
         self._name = name
-        self._projector = epson.Projector(host, websession=websession, port=port)
+        self._projector = epson.Projector(
+            host, websession=websession, port=port, timeout_scale=timeout_scale
+        )
         self._cmode = None
         self._source_list = list(DEFAULT_SOURCES.values())
         self._source = None
         self._volume = None
         self._state = None
+        self._entry_id = entry_id
 
     async def async_update(self):
         """Update state of device."""
@@ -155,9 +187,29 @@ class EpsonProjector(MediaPlayerEntity):
         else:
             self._state = STATE_OFF
 
+    async def async_added_to_hass(self):
+        """Use lifecycle hooks."""
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_CONFIG_OPTIONS_UPDATE.format(self._entry_id),
+                self.update_options,
+            )
+        )
+
+    @callback
+    def update_options(self, options):
+        """Update timeout scale option."""
+        self._projector.set_timeout_scale(options.get(TIMEOUT_SCALE, 1.0))
+
     @property
     def name(self):
         """Return the name of the device."""
+        return self._name
+
+    @property
+    def unique_id(self):
+        """Return unique ID."""
         return self._name
 
     @property
