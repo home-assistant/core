@@ -50,10 +50,6 @@ jobs:
           . venv/bin/activate
           pip install -U pip setuptools
           pip install -r requirements.txt -r requirements_test.txt
-          # Uninstalling typing as a workaround. Eventually we should make sure
-          # all our dependencies drop typing.
-          # Find offending deps with `pipdeptree -r -p typing`
-          pip uninstall -y typing
       - name: Restore pre-commit environment from cache
         id: cache-precommit
         uses: actions/cache@v2
@@ -595,8 +591,7 @@ jobs:
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
-      - name:
-          Restore full Python ${{ matrix.python-version }} virtual environment
+      - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
         uses: actions/cache@v2
         with:
@@ -610,8 +605,7 @@ jobs:
             ${{ env.CACHE_VERSION}}-${{ runner.os }}-venv-${{ matrix.python-version }}-${{ hashFiles('requirements_test.txt') }}-${{ hashFiles('requirements_all.txt') }}
             ${{ env.CACHE_VERSION}}-${{ runner.os }}-venv-${{ matrix.python-version }}-${{ hashFiles('requirements_test.txt') }}
             ${{ env.CACHE_VERSION}}-${{ runner.os }}-venv-${{ matrix.python-version }}-
-      - name:
-          Create full Python ${{ matrix.python-version }} virtual environment
+      - name: Create full Python ${{ matrix.python-version }} virtual environment
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
           python -m venv venv
@@ -619,10 +613,6 @@ jobs:
           pip install -U pip setuptools wheel
           pip install -r requirements_all.txt
           pip install -r requirements_test.txt
-          # Uninstalling typing as a workaround. Eventually we should make sure
-          # all our dependencies drop typing.
-          # Find offending deps with `pipdeptree -r -p typing`
-          pip uninstall -y typing
           pip install -e .
 
   pylint:
@@ -636,8 +626,7 @@ jobs:
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
-      - name:
-          Restore full Python ${{ matrix.python-version }} virtual environment
+      - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
         uses: actions/cache@v2
         with:
@@ -671,8 +660,7 @@ jobs:
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
-      - name:
-          Restore full Python ${{ matrix.python-version }} virtual environment
+      - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
         uses: actions/cache@v2
         with:
@@ -708,8 +696,7 @@ jobs:
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
-      - name:
-          Restore full Python ${{ matrix.python-version }} virtual environment
+      - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
         uses: actions/cache@v2
         with:
@@ -769,8 +756,7 @@ jobs:
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
-      - name:
-          Restore full Python ${{ matrix.python-version }} virtual environment
+      - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
         uses: actions/cache@v2
         with:
