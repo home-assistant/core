@@ -681,26 +681,26 @@ class TestRestData(unittest.TestCase):
         assert self.rest.data is None
 
 
-async def test_reload(hass):
+async def test_reload(hass, requests_mock):
     """Verify we can reload reset sensors."""
 
-    with requests_mock.Mocker() as mock_req:
-        mock_req.get("http://localhost", text="test data")
-        await async_setup_component(
-            hass,
-            "sensor",
-            {
-                "sensor": {
-                    "platform": "rest",
-                    "method": "GET",
-                    "name": "mockrest",
-                    "resource": "http://localhost",
-                }
-            },
-        )
-        await hass.async_block_till_done()
-        await hass.async_start()
-        await hass.async_block_till_done()
+    requests_mock.get("http://localhost", text="test data")
+
+    await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": {
+                "platform": "rest",
+                "method": "GET",
+                "name": "mockrest",
+                "resource": "http://localhost",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 1
 
@@ -709,10 +709,7 @@ async def test_reload(hass):
     yaml_path = path.join(
         _get_fixtures_base_path(), "fixtures", "rest/configuration.yaml",
     )
-    with patch.object(
-        hass_config, "YAML_CONFIG_FILE", yaml_path
-    ), requests_mock.Mocker() as mock_req:
-        mock_req.get("http://localhost", text="test data 2")
+    with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             "rest", SERVICE_RELOAD, {}, blocking=True,
         )
