@@ -6,7 +6,101 @@ from homeassistant.helpers.device_registry import (
     async_get_registry,
 )
 
+from tests.async_mock import MagicMock, patch
 from tests.common import MockConfigEntry
+
+
+def SerialConnect(self):
+    """Mock a serial connection."""
+    self.serial = True
+
+
+@patch(
+    "homeassistant.components.rfxtrx.rfxtrxmod.PyNetworkTransport.connect",
+    MagicMock(return_value=None),
+)
+async def test_setup_network(hass):
+    """Test we can setup network."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"type": "Network"},
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "setup_network"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"host": "10.10.0.1", "port": 1234}
+    )
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == "RFXTRX"
+    assert result["data"] == {
+        "host": "10.10.0.1",
+        "port": 1234,
+        "device": None,
+        "automatic_add": False,
+        "debug": False,
+        "devices": {},
+    }
+
+
+@patch(
+    "homeassistant.components.rfxtrx.rfxtrxmod.PySerialTransport.connect",
+    SerialConnect,
+)
+@patch(
+    "homeassistant.components.rfxtrx.rfxtrxmod.PySerialTransport.close",
+    MagicMock(return_value=None),
+)
+async def test_setup_serial_manual(hass):
+    """Test we can setup serial with manual entry."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"type": "Serial"},
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "setup_serial"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"device": "Enter Manually"}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "setup_serial_manual_path"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"device": "/dev/ttyUSB0"}
+    )
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == "RFXTRX"
+    assert result["data"] == {
+        "host": None,
+        "port": None,
+        "device": "/dev/ttyUSB0",
+        "automatic_add": False,
+        "debug": False,
+        "devices": {},
+    }
 
 
 async def test_import(hass):
