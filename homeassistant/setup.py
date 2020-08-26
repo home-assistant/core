@@ -124,6 +124,10 @@ async def _async_setup_component(
         log_error("Integration not found.")
         return False
 
+    if integration.disabled:
+        log_error(f"dependency is disabled - {integration.disabled}")
+        return False
+
     # Validate all dependencies exist and there are no circular dependencies
     if not await integration.resolve_dependencies():
         return False
