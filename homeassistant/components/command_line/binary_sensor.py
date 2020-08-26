@@ -18,8 +18,9 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.reload import setup_reload_service
 
-from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT
+from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN, PLATFORMS
 from .sensor import CommandSensorData
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,6 +47,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Command line Binary Sensor."""
+
+    setup_reload_service(hass, DOMAIN, PLATFORMS)
+
     name = config.get(CONF_NAME)
     command = config.get(CONF_COMMAND)
     payload_off = config.get(CONF_PAYLOAD_OFF)
