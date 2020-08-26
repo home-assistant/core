@@ -996,13 +996,19 @@ def async_track_utc_time_change(
 
         calculate_next(now + timedelta(seconds=1))
 
+        # We always get time.time() first to avoid time.time()
+        # ticking forward after fetching hass.loop.time()
+        # and callback being scheduled a few microseconds early
         cancel_callback = hass.loop.call_at(
-            hass.loop.time() + next_time.timestamp() - time.time(),
+            -time.time() + hass.loop.time() + next_time.timestamp(),
             pattern_time_change_listener,
         )
 
+    # We always get time.time() first to avoid time.time()
+    # ticking forward after fetching hass.loop.time()
+    # and callback being scheduled a few microseconds early
     cancel_callback = hass.loop.call_at(
-        hass.loop.time() + next_time.timestamp() - time.time(),
+        -time.time() + hass.loop.time() + next_time.timestamp(),
         pattern_time_change_listener,
     )
 
