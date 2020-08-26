@@ -872,7 +872,10 @@ def test_relative_time(mock_is_safe, hass):
         )
         assert (
             "string"
-            == template.Template('{{relative_time("string")}}', hass,).async_render()
+            == template.Template(
+                '{{relative_time("string")}}',
+                hass,
+            ).async_render()
         )
 
 
@@ -2076,13 +2079,16 @@ def test_extract_entities_domain_states_inner(hass, allow_extract_entities):
     hass.states.async_set("light.switch2", "on")
     hass.states.async_set("light.switch3", "off")
 
-    assert set(
-        template.extract_entities(
-            hass,
-            "{{ states['light'] | selectattr('state','eq','on') | list | count > 0 }}",
-            {},
+    assert (
+        set(
+            template.extract_entities(
+                hass,
+                "{{ states['light'] | selectattr('state','eq','on') | list | count > 0 }}",
+                {},
+            )
         )
-    ) == {"light.switch", "light.switch2", "light.switch3"}
+        == {"light.switch", "light.switch2", "light.switch3"}
+    )
 
 
 def test_extract_entities_domain_states_outer(hass, allow_extract_entities):
@@ -2091,13 +2097,16 @@ def test_extract_entities_domain_states_outer(hass, allow_extract_entities):
     hass.states.async_set("light.switch2", "on")
     hass.states.async_set("light.switch3", "off")
 
-    assert set(
-        template.extract_entities(
-            hass,
-            "{{ states.light | selectattr('state','eq','off') | list | count > 0 }}",
-            {},
+    assert (
+        set(
+            template.extract_entities(
+                hass,
+                "{{ states.light | selectattr('state','eq','off') | list | count > 0 }}",
+                {},
+            )
         )
-    ) == {"light.switch", "light.switch2", "light.switch3"}
+        == {"light.switch", "light.switch2", "light.switch3"}
+    )
 
 
 def test_extract_entities_domain_states_outer_with_group(hass, allow_extract_entities):
@@ -2108,20 +2117,25 @@ def test_extract_entities_domain_states_outer_with_group(hass, allow_extract_ent
     hass.states.async_set("switch.pool_light", "off")
     hass.states.async_set("group.lights", "off", {"entity_id": ["switch.pool_light"]})
 
-    assert set(
-        template.extract_entities(
-            hass,
-            "{{ states.light | selectattr('entity_id', 'in', state_attr('group.lights', 'entity_id')) }}",
-            {},
+    assert (
+        set(
+            template.extract_entities(
+                hass,
+                "{{ states.light | selectattr('entity_id', 'in', state_attr('group.lights', 'entity_id')) }}",
+                {},
+            )
         )
-    ) == {"light.switch", "light.switch2", "light.switch3", "group.lights"}
+        == {"light.switch", "light.switch2", "light.switch3", "group.lights"}
+    )
 
 
 def test_extract_entities_blocked_from_core_code(hass):
     """Test extract entities is blocked from core code."""
     with pytest.raises(RuntimeError):
         template.extract_entities(
-            hass, "{{ states.light }}", {},
+            hass,
+            "{{ states.light }}",
+            {},
         )
 
 
@@ -2142,11 +2156,17 @@ def test_extract_entities_warns_and_logs_from_an_integration(hass, caplog):
                 line="do_something()",
             ),
             correct_frame,
-            Mock(filename="/home/dev/mdns/lights.py", lineno="2", line="something()",),
+            Mock(
+                filename="/home/dev/mdns/lights.py",
+                lineno="2",
+                line="something()",
+            ),
         ],
     ):
         template.extract_entities(
-            hass, "{{ states.light }}", {},
+            hass,
+            "{{ states.light }}",
+            {},
         )
 
     assert "custom_components/burncpu/light.py" in caplog.text
@@ -2219,7 +2239,8 @@ def test_render_complex_handling_non_template_values(hass):
 def test_urlencode(hass):
     """Test the urlencode method."""
     tpl = template.Template(
-        ("{% set dict = {'foo': 'x&y', 'bar': 42} %}" "{{ dict | urlencode }}"), hass,
+        ("{% set dict = {'foo': 'x&y', 'bar': 42} %}" "{{ dict | urlencode }}"),
+        hass,
     )
     assert tpl.async_render() == "foo=x%26y&bar=42"
     tpl = template.Template(
@@ -2234,13 +2255,17 @@ async def test_cache_garbage_collection():
     template_string = (
         "{% set dict = {'foo': 'x&y', 'bar': 42} %} {{ dict | urlencode }}"
     )
-    tpl = template.Template((template_string),)
+    tpl = template.Template(
+        (template_string),
+    )
     tpl.ensure_valid()
     assert template._NO_HASS_ENV.template_cache.get(
         template_string
     )  # pylint: disable=protected-access
 
-    tpl2 = template.Template((template_string),)
+    tpl2 = template.Template(
+        (template_string),
+    )
     tpl2.ensure_valid()
     assert template._NO_HASS_ENV.template_cache.get(
         template_string

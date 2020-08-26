@@ -53,7 +53,9 @@ async def test_reload_platform(hass):
     assert platform.domain == DOMAIN
 
     yaml_path = path.join(
-        _get_fixtures_base_path(), "fixtures", "helpers/reload_configuration.yaml",
+        _get_fixtures_base_path(),
+        "fixtures",
+        "helpers/reload_configuration.yaml",
     )
     with patch.object(config, "YAML_CONFIG_FILE", yaml_path):
         await async_reload_integration_platforms(hass, PLATFORM, [DOMAIN])
@@ -88,11 +90,16 @@ async def test_setup_reload_service(hass):
     await async_setup_reload_service(hass, PLATFORM, [DOMAIN])
 
     yaml_path = path.join(
-        _get_fixtures_base_path(), "fixtures", "helpers/reload_configuration.yaml",
+        _get_fixtures_base_path(),
+        "fixtures",
+        "helpers/reload_configuration.yaml",
     )
     with patch.object(config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
-            PLATFORM, SERVICE_RELOAD, {}, blocking=True,
+            PLATFORM,
+            SERVICE_RELOAD,
+            {},
+            blocking=True,
         )
         await hass.async_block_till_done()
 

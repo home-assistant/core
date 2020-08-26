@@ -472,7 +472,8 @@ async def test_creating_sensor_loads_group(hass):
     hass.bus.async_listen(EVENT_COMPONENT_LOADED, set_after_dep_event)
 
     with patch(
-        "homeassistant.components.group.async_setup", new=async_setup_group,
+        "homeassistant.components.group.async_setup",
+        new=async_setup_group,
     ), patch(
         "homeassistant.components.template.sensor.async_setup_platform",
         new=async_setup_template,

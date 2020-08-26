@@ -47,7 +47,8 @@ async def async_setup_entry(
     async_add_entities(
         [
             MeteoFranceWeather(
-                coordinator, entry.options.get(CONF_MODE, FORECAST_MODE_DAILY),
+                coordinator,
+                entry.options.get(CONF_MODE, FORECAST_MODE_DAILY),
             )
         ],
         True,

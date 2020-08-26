@@ -291,7 +291,8 @@ class CoverTemplate(TemplateEntity, CoverEntity):
         if state < 0 or state > 100:
             self._tilt_value = None
             _LOGGER.error(
-                "Tilt value must be between 0 and 100. Value was: %.2f", state,
+                "Tilt value must be between 0 and 100. Value was: %.2f",
+                state,
             )
         else:
             self._tilt_value = state

@@ -860,11 +860,16 @@ async def test_reload(hass):
     )
 
     yaml_path = path.join(
-        _get_fixtures_base_path(), "fixtures", "universal/configuration.yaml",
+        _get_fixtures_base_path(),
+        "fixtures",
+        "universal/configuration.yaml",
     )
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
-            "universal", SERVICE_RELOAD, {}, blocking=True,
+            "universal",
+            SERVICE_RELOAD,
+            {},
+            blocking=True,
         )
         await hass.async_block_till_done()
 

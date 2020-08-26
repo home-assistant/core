@@ -72,7 +72,10 @@ _CLOUD_ERRORS = {
         "Remote UI not compatible with 127.0.0.1/::1 as trusted proxies.",
     ),
     asyncio.TimeoutError: (502, "Unable to reach the Home Assistant cloud."),
-    aiohttp.ClientError: (HTTP_INTERNAL_SERVER_ERROR, "Error making internal request",),
+    aiohttp.ClientError: (
+        HTTP_INTERNAL_SERVER_ERROR,
+        "Error making internal request",
+    ),
 }
 
 

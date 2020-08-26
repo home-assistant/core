@@ -97,5 +97,6 @@ def setup_reload_service(
     """Sync version of async_setup_reload_service."""
 
     asyncio.run_coroutine_threadsafe(
-        async_setup_reload_service(hass, domain, platforms), hass.loop,
+        async_setup_reload_service(hass, domain, platforms),
+        hass.loop,
     ).result()

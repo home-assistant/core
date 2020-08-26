@@ -138,7 +138,10 @@ class MonopriceOptionsFlowHandler(config_entries.OptionsFlow):
             for idx, source in enumerate(SOURCES)
         }
 
-        return self.async_show_form(step_id="init", data_schema=vol.Schema(options),)
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(options),
+        )
 
 
 class CannotConnect(exceptions.HomeAssistantError):

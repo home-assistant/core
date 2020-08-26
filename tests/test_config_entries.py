@@ -1003,7 +1003,8 @@ async def test_init_custom_integration(hass):
     )
     with pytest.raises(data_entry_flow.UnknownHandler):
         with patch(
-            "homeassistant.loader.async_get_integration", return_value=integration,
+            "homeassistant.loader.async_get_integration",
+            return_value=integration,
         ):
             await hass.config_entries.flow.async_init("bla")
 
@@ -1178,7 +1179,8 @@ async def test_unique_id_update_existing_entry_without_reload(hass, manager):
     entry.add_to_hass(hass)
 
     mock_integration(
-        hass, MockModule("comp"),
+        hass,
+        MockModule("comp"),
     )
     mock_entity_platform(hass, "config_flow.comp", None)
 
@@ -1221,7 +1223,8 @@ async def test_unique_id_update_existing_entry_with_reload(hass, manager):
     entry.add_to_hass(hass)
 
     mock_integration(
-        hass, MockModule("comp"),
+        hass,
+        MockModule("comp"),
     )
     mock_entity_platform(hass, "config_flow.comp", None)
     updates = {"host": "1.1.1.1"}
@@ -1281,7 +1284,8 @@ async def test_unique_id_not_update_existing_entry(hass, manager):
     entry.add_to_hass(hass)
 
     mock_integration(
-        hass, MockModule("comp"),
+        hass,
+        MockModule("comp"),
     )
     mock_entity_platform(hass, "config_flow.comp", None)
 
@@ -1346,7 +1350,8 @@ async def test_unique_id_in_progress(hass, manager):
 async def test_finish_flow_aborts_progress(hass, manager):
     """Test that when finishing a flow, we abort other flows in progress with unique ID."""
     mock_integration(
-        hass, MockModule("comp", async_setup_entry=AsyncMock(return_value=True)),
+        hass,
+        MockModule("comp", async_setup_entry=AsyncMock(return_value=True)),
     )
     mock_entity_platform(hass, "config_flow.comp", None)
 
@@ -1611,7 +1616,9 @@ async def test_async_setup_init_entry(hass):
         """Mock setup."""
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                "comp", context={"source": config_entries.SOURCE_IMPORT}, data={},
+                "comp",
+                context={"source": config_entries.SOURCE_IMPORT},
+                data={},
             )
         )
         return True
@@ -1656,7 +1663,9 @@ async def test_async_setup_update_entry(hass):
         """Mock setup."""
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                "comp", context={"source": config_entries.SOURCE_IMPORT}, data={},
+                "comp",
+                context={"source": config_entries.SOURCE_IMPORT},
+                data={},
             )
         )
         return True
@@ -1714,7 +1723,8 @@ async def test_async_setup_update_entry(hass):
 async def test_flow_with_default_discovery(hass, manager, discovery_source):
     """Test that finishing a default discovery flow removes the unique ID in the entry."""
     mock_integration(
-        hass, MockModule("comp", async_setup_entry=AsyncMock(return_value=True)),
+        hass,
+        MockModule("comp", async_setup_entry=AsyncMock(return_value=True)),
     )
     mock_entity_platform(hass, "config_flow.comp", None)
 

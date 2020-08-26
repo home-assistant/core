@@ -107,7 +107,9 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
         }
         return self.async_show_form(
-            step_id="user", data_schema=vol.Schema(data_schema), errors=errors,
+            step_id="user",
+            data_schema=vol.Schema(data_schema),
+            errors=errors,
         )
 
     async def async_step_auth(self):

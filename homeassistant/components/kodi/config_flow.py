@@ -284,7 +284,8 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def _create_entry(self):
         return self.async_create_entry(
-            title=self._name or self._host, data=self._get_data(),
+            title=self._name or self._host,
+            data=self._get_data(),
         )
 
     @callback

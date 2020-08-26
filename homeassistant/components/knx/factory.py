@@ -218,7 +218,9 @@ def _create_sensor(knx_module: XKNX, config: ConfigType) -> XknxSensor:
 def _create_notify(knx_module: XKNX, config: ConfigType) -> XknxNotification:
     """Return a KNX notification to be used within XKNX."""
     return XknxNotification(
-        knx_module, name=config[CONF_NAME], group_address=config[CONF_ADDRESS],
+        knx_module,
+        name=config[CONF_NAME],
+        group_address=config[CONF_ADDRESS],
     )
 
 

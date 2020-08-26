@@ -30,7 +30,10 @@ async def test_set_config_entry_unique_id(hass):
     mock_plex_server = MockPlexServer()
 
     entry = MockConfigEntry(
-        domain=const.DOMAIN, data=DEFAULT_DATA, options=DEFAULT_OPTIONS, unique_id=None,
+        domain=const.DOMAIN,
+        data=DEFAULT_DATA,
+        options=DEFAULT_OPTIONS,
+        unique_id=None,
     )
 
     with patch("plexapi.server.PlexServer", return_value=mock_plex_server), patch(

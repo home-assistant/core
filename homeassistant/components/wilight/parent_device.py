@@ -95,7 +95,10 @@ def create_api_device(host):
     """Create an API Device."""
     try:
         device = pywilight.device_from_host(host)
-    except (requests.exceptions.ConnectionError, requests.exceptions.Timeout,) as err:
+    except (
+        requests.exceptions.ConnectionError,
+        requests.exceptions.Timeout,
+    ) as err:
         _LOGGER.error("Unable to access WiLight at %s (%s)", host, err)
         return None
 

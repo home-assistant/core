@@ -144,7 +144,9 @@ class SmappeeActuator(SwitchEntity):
         return None
 
     @property
-    def unique_id(self,):
+    def unique_id(
+        self,
+    ):
         """Return the unique ID for this switch."""
         if self._actuator_type == "INFINITY_OUTPUT_MODULE":
             return (

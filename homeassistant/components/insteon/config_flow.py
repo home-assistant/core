@@ -248,7 +248,8 @@ class InsteonOptionsFlowHandler(config_entries.OptionsFlow):
                 data[CONF_PASSWORD] = user_input[CONF_PASSWORD]
             self.hass.config_entries.async_update_entry(self.config_entry, data=data)
             return self.async_create_entry(
-                title="", data={**self.config_entry.options},
+                title="",
+                data={**self.config_entry.options},
             )
         data_schema = build_hub_schema(**self.config_entry.data)
         return self.async_show_form(
@@ -291,7 +292,9 @@ class InsteonOptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             options = _remove_override(user_input[CONF_ADDRESS], options)
             async_dispatcher_send(
-                self.hass, SIGNAL_REMOVE_DEVICE_OVERRIDE, user_input[CONF_ADDRESS],
+                self.hass,
+                SIGNAL_REMOVE_DEVICE_OVERRIDE,
+                user_input[CONF_ADDRESS],
             )
             return self.async_create_entry(title="", data=options)
 

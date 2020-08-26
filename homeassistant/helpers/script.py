@@ -450,7 +450,9 @@ class _ScriptRun:
                 )
             except exceptions.TemplateError as ex:
                 self._log(
-                    "Error rendering event data template: %s", ex, level=logging.ERROR,
+                    "Error rendering event data template: %s",
+                    ex,
+                    level=logging.ERROR,
                 )
 
         self._hass.bus.async_fire(

@@ -94,7 +94,10 @@ class InsteonEntity(Entity):
     def async_entity_update(self, name, address, value, group):
         """Receive notification from transport that new data exists."""
         _LOGGER.debug(
-            "Received update for device %s group %d value %s", address, group, value,
+            "Received update for device %s group %d value %s",
+            address,
+            group,
+            value,
         )
         self.async_write_ha_state()
 

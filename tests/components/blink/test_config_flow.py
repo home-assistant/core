@@ -24,10 +24,12 @@ async def test_form(hass):
     ), patch(
         "homeassistant.components.blink.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.blink.async_setup_entry", return_value=True,
+        "homeassistant.components.blink.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"username": "blink@example.com", "password": "example"},
+            result["flow_id"],
+            {"username": "blink@example.com", "password": "example"},
         )
 
     assert result2["type"] == "create_entry"
@@ -62,7 +64,8 @@ async def test_form_2fa(hass):
         "homeassistant.components.blink.async_setup", return_value=True
     ) as mock_setup:
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"username": "blink@example.com", "password": "example"},
+            result["flow_id"],
+            {"username": "blink@example.com", "password": "example"},
         )
 
     assert result2["type"] == "form"
@@ -106,7 +109,8 @@ async def test_form_2fa_connect_error(hass):
         return_value=True,
     ), patch("homeassistant.components.blink.async_setup", return_value=True):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"username": "blink@example.com", "password": "example"},
+            result["flow_id"],
+            {"username": "blink@example.com", "password": "example"},
         )
 
     assert result2["type"] == "form"
@@ -146,7 +150,8 @@ async def test_form_2fa_invalid_key(hass):
         return_value=True,
     ), patch("homeassistant.components.blink.async_setup", return_value=True):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"username": "blink@example.com", "password": "example"},
+            result["flow_id"],
+            {"username": "blink@example.com", "password": "example"},
         )
 
     assert result2["type"] == "form"
@@ -186,7 +191,8 @@ async def test_form_2fa_unknown_error(hass):
         return_value=True,
     ), patch("homeassistant.components.blink.async_setup", return_value=True):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"username": "blink@example.com", "password": "example"},
+            result["flow_id"],
+            {"username": "blink@example.com", "password": "example"},
         )
 
     assert result2["type"] == "form"
@@ -239,7 +245,8 @@ async def test_form_unknown_error(hass):
     )
 
     with patch(
-        "homeassistant.components.blink.config_flow.Auth.startup", side_effect=KeyError,
+        "homeassistant.components.blink.config_flow.Auth.startup",
+        side_effect=KeyError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"username": "blink@example.com", "password": "example"}
@@ -288,7 +295,8 @@ async def test_options_flow(hass):
     assert result["step_id"] == "simple_options"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"scan_interval": 5},
+        result["flow_id"],
+        user_input={"scan_interval": 5},
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY

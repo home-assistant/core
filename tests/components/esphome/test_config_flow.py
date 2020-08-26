@@ -49,7 +49,9 @@ def mock_api_connection_error():
 async def test_user_connection_works(hass, mock_client):
     """Test we can finish a config flow."""
     result = await hass.config_entries.flow.async_init(
-        "esphome", context={"source": "user"}, data=None,
+        "esphome",
+        context={"source": "user"},
+        data=None,
     )
 
     assert result["type"] == RESULT_TYPE_FORM

@@ -401,7 +401,10 @@ def get_api(hass, entry):
 
     try:
         api = librouteros.connect(
-            entry[CONF_HOST], entry[CONF_USERNAME], entry[CONF_PASSWORD], **kwargs,
+            entry[CONF_HOST],
+            entry[CONF_USERNAME],
+            entry[CONF_PASSWORD],
+            **kwargs,
         )
         _LOGGER.debug("Connected to %s successfully", entry[CONF_HOST])
         return api

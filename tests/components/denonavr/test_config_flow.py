@@ -55,7 +55,8 @@ def denonavr_connect_fixture():
         "homeassistant.components.denonavr.receiver.denonavr.DenonAVR.get_device_info",
         return_value=True,
     ), patch(
-        "homeassistant.components.denonavr.receiver.denonavr.DenonAVR.name", TEST_NAME,
+        "homeassistant.components.denonavr.receiver.denonavr.DenonAVR.name",
+        TEST_NAME,
     ), patch(
         "homeassistant.components.denonavr.receiver.denonavr.DenonAVR.model_name",
         TEST_MODEL,
@@ -92,7 +93,8 @@ async def test_config_flow_manual_host_success(hass):
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_HOST: TEST_HOST},
+        result["flow_id"],
+        {CONF_HOST: TEST_HOST},
     )
 
     assert result["type"] == "create_entry"
@@ -125,7 +127,10 @@ async def test_config_flow_manual_discover_1_success(hass):
         "homeassistant.components.denonavr.config_flow.denonavr.ssdp.identify_denonavr_receivers",
         return_value=TEST_DISCOVER_1_RECEIVER,
     ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {},)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
 
     assert result["type"] == "create_entry"
     assert result["title"] == TEST_NAME
@@ -157,14 +162,18 @@ async def test_config_flow_manual_discover_2_success(hass):
         "homeassistant.components.denonavr.config_flow.denonavr.ssdp.identify_denonavr_receivers",
         return_value=TEST_DISCOVER_2_RECEIVER,
     ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {},)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
 
     assert result["type"] == "form"
     assert result["step_id"] == "select"
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"select_host": TEST_HOST2},
+        result["flow_id"],
+        {"select_host": TEST_HOST2},
     )
 
     assert result["type"] == "create_entry"
@@ -197,7 +206,10 @@ async def test_config_flow_manual_discover_error(hass):
         "homeassistant.components.denonavr.config_flow.denonavr.ssdp.identify_denonavr_receivers",
         return_value=[],
     ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {},)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
 
     assert result["type"] == "form"
     assert result["step_id"] == "user"
@@ -223,7 +235,8 @@ async def test_config_flow_manual_host_no_serial(hass):
         None,
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_HOST: TEST_HOST},
+            result["flow_id"],
+            {CONF_HOST: TEST_HOST},
         )
 
     assert result["type"] == "create_entry"
@@ -257,7 +270,8 @@ async def test_config_flow_manual_host_no_mac(hass):
         return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_HOST: TEST_HOST},
+            result["flow_id"],
+            {CONF_HOST: TEST_HOST},
         )
 
     assert result["type"] == "create_entry"
@@ -294,7 +308,8 @@ async def test_config_flow_manual_host_no_serial_no_mac(hass):
         return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_HOST: TEST_HOST},
+            result["flow_id"],
+            {CONF_HOST: TEST_HOST},
         )
 
     assert result["type"] == "create_entry"
@@ -331,7 +346,8 @@ async def test_config_flow_manual_host_no_serial_no_mac_exception(hass):
         side_effect=OSError,
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_HOST: TEST_HOST},
+            result["flow_id"],
+            {CONF_HOST: TEST_HOST},
         )
 
     assert result["type"] == "create_entry"
@@ -368,7 +384,8 @@ async def test_config_flow_manual_host_connection_error(hass):
         None,
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_HOST: TEST_HOST},
+            result["flow_id"],
+            {CONF_HOST: TEST_HOST},
         )
 
     assert result["type"] == "abort"
@@ -394,7 +411,8 @@ async def test_config_flow_manual_host_no_device_info(hass):
         None,
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_HOST: TEST_HOST},
+            result["flow_id"],
+            {CONF_HOST: TEST_HOST},
         )
 
     assert result["type"] == "abort"
@@ -417,7 +435,10 @@ async def test_config_flow_ssdp(hass):
     assert result["type"] == "form"
     assert result["step_id"] == "confirm"
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {},)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
 
     assert result["type"] == "create_entry"
     assert result["title"] == TEST_NAME
@@ -549,7 +570,8 @@ async def test_config_flow_manual_host_no_serial_double_config(hass):
         None,
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_HOST: TEST_HOST},
+            result["flow_id"],
+            {CONF_HOST: TEST_HOST},
         )
 
     assert result["type"] == "create_entry"
@@ -576,7 +598,8 @@ async def test_config_flow_manual_host_no_serial_double_config(hass):
         None,
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_HOST: TEST_HOST},
+            result["flow_id"],
+            {CONF_HOST: TEST_HOST},
         )
 
     assert result["type"] == "abort"

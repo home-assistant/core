@@ -225,9 +225,7 @@ class ConfigEntry:
                 return
 
         try:
-            result = await component.async_setup_entry(  # type: ignore
-                hass, self
-            )
+            result = await component.async_setup_entry(hass, self)  # type: ignore
 
             if not isinstance(result, bool):
                 _LOGGER.error(
@@ -312,9 +310,7 @@ class ConfigEntry:
             return False
 
         try:
-            result = await component.async_unload_entry(  # type: ignore
-                hass, self
-            )
+            result = await component.async_unload_entry(hass, self)  # type: ignore
 
             assert isinstance(result, bool)
 
@@ -349,9 +345,7 @@ class ConfigEntry:
         if not hasattr(component, "async_remove_entry"):
             return
         try:
-            await component.async_remove_entry(  # type: ignore
-                hass, self
-            )
+            await component.async_remove_entry(hass, self)  # type: ignore
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
                 "Error calling entry remove callback %s for %s",
@@ -389,9 +383,7 @@ class ConfigEntry:
             return False
 
         try:
-            result = await component.async_migrate_entry(  # type: ignore
-                hass, self
-            )
+            result = await component.async_migrate_entry(hass, self)  # type: ignore
             if not isinstance(result, bool):
                 _LOGGER.error(
                     "%s.async_migrate_entry did not return boolean", self.domain
@@ -878,7 +870,9 @@ class ConfigFlow(data_entry_flow.FlowHandler):
 
     @callback
     def _abort_if_unique_id_configured(
-        self, updates: Optional[Dict[Any, Any]] = None, reload_on_update: bool = True,
+        self,
+        updates: Optional[Dict[Any, Any]] = None,
+        reload_on_update: bool = True,
     ) -> None:
         """Abort if the unique ID is already configured."""
         assert self.hass

@@ -62,7 +62,9 @@ MOCK_SSDP_DISCOVERY_INFO_LIGHT_FAN = {
 }
 
 
-async def setup_integration(hass: HomeAssistantType,) -> MockConfigEntry:
+async def setup_integration(
+    hass: HomeAssistantType,
+) -> MockConfigEntry:
     """Mock ConfigEntry in Home Assistant."""
 
     entry = MockConfigEntry(

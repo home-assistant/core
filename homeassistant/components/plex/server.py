@@ -481,7 +481,8 @@ class PlexServer:
                 return None
             except NotFound:
                 _LOGGER.error(
-                    "Playlist '%s' not found", playlist_name,
+                    "Playlist '%s' not found",
+                    playlist_name,
                 )
                 return None
 
@@ -581,7 +582,9 @@ class PlexServer:
                 season = show.season(int(season_number))
             except NotFound:
                 _LOGGER.error(
-                    "Season %d of '%s' not found", season_number, show_name,
+                    "Season %d of '%s' not found",
+                    season_number,
+                    show_name,
                 )
                 return None
 
@@ -611,5 +614,7 @@ class PlexServer:
                 _LOGGER.error("Must specify 'video_name' for this search")
             except NotFound:
                 _LOGGER.error(
-                    "Movie '%s' not found in '%s'", video_name, library_name,
+                    "Movie '%s' not found in '%s'",
+                    video_name,
+                    library_name,
                 )
