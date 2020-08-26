@@ -120,14 +120,6 @@ class MockPlexServer:
 
         self._library = MockPlexLibrary(self)
 
-        self._playlists = [
-            MockPlexPlaylist(
-                self.library.section("Movies").all()
-                + self.library.section("TV Shows").all()
-            ),
-            MockPlexPlaylist(self.library.section("Music").all()),
-        ]
-
         self._clients = []
         self._sessions = []
         self.set_clients(num_users)
@@ -188,8 +180,14 @@ class MockPlexServer:
         return MockPlexMediaItem(playlist, mediatype="playlist")
 
     def playlists(self):
-        """Mock the playlists lookup method."""
-        return self._playlists
+        """Mock the playlists lookup method with a lazy init."""
+        return [
+            MockPlexPlaylist(
+                self.library.section("Movies").all()
+                + self.library.section("TV Shows").all()
+            ),
+            MockPlexPlaylist(self.library.section("Music").all()),
+        ]
 
     def fetchItem(self, item):
         """Mock the fetchItem method."""
