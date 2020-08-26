@@ -176,7 +176,7 @@ class SharkVacuumEntity(StateVacuumEntity):
     @property
     def unique_id(self) -> str:
         """Return the unique id of the vacuum cleaner."""
-        return f"sharkiq-{self.serial_number:s}-vacuum"
+        return self.serial_number
 
     @property
     def available(self) -> bool:
