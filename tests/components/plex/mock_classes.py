@@ -118,7 +118,7 @@ class MockPlexServer:
 
         self._systemAccounts = list(map(MockPlexSystemAccount, range(num_users)))
 
-        self._library = MockPlexLibrary(self)
+        self._library = None
 
         self._clients = []
         self._sessions = []
@@ -173,6 +173,8 @@ class MockPlexServer:
     @property
     def library(self):
         """Mock library object of PlexServer."""
+        if not self._library:
+            self._library = MockPlexLibrary(self)
         return self._library
 
     def playlist(self, playlist):
