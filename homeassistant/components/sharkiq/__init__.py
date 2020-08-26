@@ -73,7 +73,7 @@ async def async_setup_entry(hass, config_entry):
 
     shark_vacs = await ayla_api.async_get_devices(False)
     device_names = ", ".join([d.name for d in shark_vacs])
-    LOGGER.info("Found %d Shark IQ device(s): %s", len(device_names), device_names)
+    LOGGER.debug("Found %d Shark IQ device(s): %s", len(device_names), device_names)
     coordinator = SharkIqUpdateCoordinator(hass, config_entry, ayla_api, shark_vacs)
 
     await coordinator.async_refresh()
