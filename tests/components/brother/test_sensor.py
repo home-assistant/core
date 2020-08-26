@@ -1,18 +1,19 @@
 """Test sensor of Brother integration."""
-from datetime import timedelta
+from datetime import datetime, timedelta
 import json
 
 from homeassistant.components.brother.const import UNIT_PAGES
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
+    DEVICE_CLASS_TIMESTAMP,
     STATE_UNAVAILABLE,
-    TIME_DAYS,
     UNIT_PERCENTAGE,
 )
 from homeassistant.setup import async_setup_component
-from homeassistant.util.dt import utcnow
+from homeassistant.util.dt import UTC, utcnow
 
 from tests.async_mock import patch
 from tests.common import async_fire_time_changed, load_fixture
@@ -24,7 +25,12 @@ ATTR_COUNTER = "counter"
 
 async def test_sensors(hass):
     """Test states of the sensors."""
-    await init_integration(hass)
+    test_time = datetime(2019, 11, 11, 9, 10, 32, tzinfo=UTC)
+    with patch(
+        "homeassistant.components.brother.sensor.utcnow", return_value=test_time
+    ):
+        await init_integration(hass)
+
     registry = await hass.helpers.entity_registry.async_get_registry()
 
     state = hass.states.get("sensor.hl_l2340dw_status")
@@ -208,9 +214,10 @@ async def test_sensors(hass):
 
     state = hass.states.get("sensor.hl_l2340dw_uptime")
     assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:timer-outline"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TIME_DAYS
-    assert state.state == "48"
+    assert state.attributes.get(ATTR_ICON) is None
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_TIMESTAMP
+    assert state.state == "2019-09-24T12:14:56+00:00"
 
     entry = registry.async_get("sensor.hl_l2340dw_uptime")
     assert entry

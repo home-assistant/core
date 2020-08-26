@@ -1,5 +1,5 @@
 """Constants for Brother integration."""
-from homeassistant.const import TIME_DAYS, UNIT_PERCENTAGE
+from homeassistant.const import UNIT_PERCENTAGE
 
 ATTR_BELT_UNIT_REMAINING_LIFE = "belt_unit_remaining_life"
 ATTR_BLACK_DRUM_COUNTER = "black_drum_counter"
@@ -162,9 +162,5 @@ SENSOR_TYPES = {
         ATTR_LABEL: ATTR_YELLOW_INK_REMAINING.replace("_", " ").title(),
         ATTR_UNIT: UNIT_PERCENTAGE,
     },
-    ATTR_UPTIME: {
-        ATTR_ICON: "mdi:timer-outline",
-        ATTR_LABEL: ATTR_UPTIME.title(),
-        ATTR_UNIT: TIME_DAYS,
-    },
+    ATTR_UPTIME: {ATTR_ICON: None, ATTR_LABEL: ATTR_UPTIME.title(), ATTR_UNIT: None},
 }
