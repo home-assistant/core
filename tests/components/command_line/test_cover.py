@@ -1,16 +1,20 @@
 """The tests the cover command line platform."""
 import os
+from os import path
 import tempfile
 from unittest import mock
 
+from asynctest.mock import patch
 import pytest
 
+from homeassistant import config as hass_config
 import homeassistant.components.command_line.cover as cmd_rs
 from homeassistant.components.cover import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
+    SERVICE_RELOAD,
     SERVICE_STOP_COVER,
 )
 from homeassistant.setup import async_setup_component
@@ -87,3 +91,39 @@ async def test_state_value(hass):
             DOMAIN, SERVICE_STOP_COVER, {ATTR_ENTITY_ID: "cover.test"}, blocking=True
         )
         assert "closed" == hass.states.get("cover.test").state
+
+
+async def test_reload(hass):
+    """Verify we can reload command_line covers."""
+
+    test_cover = {
+        "command_state": "echo open",
+        "value_template": "{{ value }}",
+    }
+    await async_setup_component(
+        hass,
+        DOMAIN,
+        {"cover": {"platform": "command_line", "covers": {"test": test_cover}}},
+    )
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 1
+    assert hass.states.get("cover.test").state
+
+    yaml_path = path.join(
+        _get_fixtures_base_path(), "fixtures", "command_line/configuration.yaml",
+    )
+    with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
+        await hass.services.async_call(
+            "command_line", SERVICE_RELOAD, {}, blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 1
+
+    assert hass.states.get("cover.test") is None
+    assert hass.states.get("cover.from_yaml")
+
+
+def _get_fixtures_base_path():
+    return path.dirname(path.dirname(path.dirname(__file__)))
