@@ -211,6 +211,7 @@ class RoonDevice(MediaPlayerEntity):
                 media_artist = now_playing_data["three_line"]["line2"]
                 media_album_name = now_playing_data["three_line"]["line3"]
                 media_position = convert(now_playing_data["seek_position"], int, 0)
+                image_id = now_playing_data.get("image_key")
                 media_duration = convert(now_playing_data["length"], int, 0)
             except KeyError:
                 # catch KeyError
@@ -222,6 +223,8 @@ class RoonDevice(MediaPlayerEntity):
                 now_playing["position"] = media_position
                 now_playing["duration"] = media_duration
 
+                if image_id:
+                    now_playing["image"] = self._server.roonapi.get_image(image_id)
                 try:
                     image_id = now_playing_data["image_key"]
                     media_image_url = self._server.roonapi.get_image(image_id)
