@@ -52,7 +52,9 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         """Supported features."""
         return self._supported_features
 
-    async def async_turn_on(self, brightness=None, **kwargs):
+    async def async_turn_on(
+        self, brightness=None, **kwargs
+    ):  # pylint: disable=arguments-differ
         """Turn on light."""
         params = {"turn": "on"}
         if brightness is not None:
