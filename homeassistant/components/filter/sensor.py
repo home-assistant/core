@@ -285,8 +285,10 @@ class SensorFilter(Entity):
             for state in history_list:
                 self._update_filter_sensor_state(state, False)
 
-        async_track_state_change_event(
-            self.hass, [self._entity], self._update_filter_sensor_state_event
+        self.async_on_remove(
+            async_track_state_change_event(
+                self.hass, [self._entity], self._update_filter_sensor_state_event
+            )
         )
 
     @property
