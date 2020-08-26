@@ -124,8 +124,6 @@ class KNXClimate(ClimateEntity):
         """Return current operation ie. heat, cool, idle."""
         if self.device.supports_on_off and not self.device.is_on:
             return HVAC_MODE_OFF
-        if self.device.supports_on_off and self.device.is_on:
-            return HVAC_MODE_HEAT
         if self.device.mode.supports_operation_mode:
             return OPERATION_MODES.get(
                 self.device.mode.operation_mode.value, HVAC_MODE_HEAT
@@ -142,10 +140,11 @@ class KNXClimate(ClimateEntity):
         ]
 
         if self.device.supports_on_off:
-            _operations.append(HVAC_MODE_HEAT)
+            if not _operations:
+                _operations.append(HVAC_MODE_HEAT)
             _operations.append(HVAC_MODE_OFF)
 
-        _modes = list(filter(None, _operations))
+        _modes = list(set(filter(None, _operations)))
         # default to ["heat"]
         return _modes if _modes else [HVAC_MODE_HEAT]
 
@@ -153,12 +152,15 @@ class KNXClimate(ClimateEntity):
         """Set operation mode."""
         if self.device.supports_on_off and hvac_mode == HVAC_MODE_OFF:
             await self.device.turn_off()
-        elif self.device.supports_on_off and hvac_mode == HVAC_MODE_HEAT:
-            await self.device.turn_on()
-        elif self.device.mode.supports_operation_mode:
-            knx_operation_mode = HVACOperationMode(OPERATION_MODES_INV.get(hvac_mode))
-            await self.device.mode.set_operation_mode(knx_operation_mode)
-            self.async_write_ha_state()
+        else:
+            if self.device.supports_on_off and not self.device.is_on:
+                await self.device.turn_on()
+            if self.device.mode.supports_operation_mode:
+                knx_operation_mode = HVACOperationMode(
+                    OPERATION_MODES_INV.get(hvac_mode)
+                )
+                await self.device.mode.set_operation_mode(knx_operation_mode)
+        self.async_write_ha_state()
 
     @property
     def preset_mode(self) -> Optional[str]:

@@ -3,8 +3,8 @@ import logging
 
 import voluptuous as vol
 from xknx import XKNX
-from xknx.devices import DateTime, DateTimeBroadcastType, ExposeSensor
-from xknx.dpt import DPTArray, DPTBinary
+from xknx.devices import DateTime, ExposeSensor
+from xknx.dpt import DPTArray, DPTBase, DPTBinary
 from xknx.exceptions import XKNXException
 from xknx.io import DEFAULT_MCAST_PORT, ConnectionConfig, ConnectionType
 from xknx.telegram import AddressFilter, GroupAddress, Telegram
@@ -63,6 +63,7 @@ CONF_KNX_CLIMATE = "climate"
 SERVICE_KNX_SEND = "send"
 SERVICE_KNX_ATTR_ADDRESS = "address"
 SERVICE_KNX_ATTR_PAYLOAD = "payload"
+SERVICE_KNX_ATTR_TYPE = "type"
 
 ATTR_DISCOVER_DEVICES = "devices"
 
@@ -124,6 +125,7 @@ SERVICE_KNX_SEND_SCHEMA = vol.Schema(
         vol.Required(SERVICE_KNX_ATTR_PAYLOAD): vol.Any(
             cv.positive_int, [cv.positive_int]
         ),
+        vol.Optional(SERVICE_KNX_ATTR_TYPE): vol.Any(int, float, str),
     }
 )
 
@@ -249,7 +251,9 @@ class KNXModule:
             return self.connection_config_tunneling()
         if CONF_KNX_ROUTING in self.config[DOMAIN]:
             return self.connection_config_routing()
-        return self.connection_config_auto()
+        # return None to let xknx use config from xknx.yaml connection block if given
+        #   otherwise it will use default ConnectionConfig (Automatic)
+        return None
 
     def connection_config_routing(self):
         """Return the connection_config if routing is configured."""
@@ -276,11 +280,6 @@ class KNXModule:
             local_ip=local_ip,
             auto_reconnect=True,
         )
-
-    def connection_config_auto(self):
-        """Return the connection_config if auto is configured."""
-        # pylint: disable=no-self-use
-        return ConnectionConfig()
 
     def register_callbacks(self):
         """Register callbacks within XKNX object."""
@@ -336,9 +335,15 @@ class KNXModule:
         """Service for sending an arbitrary KNX message to the KNX bus."""
         attr_payload = call.data.get(SERVICE_KNX_ATTR_PAYLOAD)
         attr_address = call.data.get(SERVICE_KNX_ATTR_ADDRESS)
+        attr_type = call.data.get(SERVICE_KNX_ATTR_TYPE)
 
         def calculate_payload(attr_payload):
             """Calculate payload depending on type of attribute."""
+            if attr_type is not None:
+                transcoder = DPTBase.parse_transcoder(attr_type)
+                if transcoder is None:
+                    raise ValueError(f"Invalid type for knx.send service: {attr_type}")
+                return DPTArray(transcoder.to_knx(attr_payload))
             if isinstance(attr_payload, int):
                 return DPTBinary(attr_payload)
             return DPTArray(attr_payload)
@@ -366,7 +371,7 @@ class KNXExposeTime:
     def async_register(self):
         """Register listener."""
         broadcast_type_string = self.type.upper()
-        broadcast_type = DateTimeBroadcastType[broadcast_type_string]
+        broadcast_type = broadcast_type_string
         self.device = DateTime(
             self.xknx, "Time", broadcast_type=broadcast_type, group_address=self.address
         )

@@ -1,5 +1,6 @@
 """Voluptuous schemas for the KNX integration."""
 import voluptuous as vol
+from xknx.devices.climate import SetpointShiftMode
 
 from homeassistant.const import (
     CONF_ADDRESS,
@@ -42,6 +43,7 @@ class CoverSchema:
 
     CONF_MOVE_LONG_ADDRESS = "move_long_address"
     CONF_MOVE_SHORT_ADDRESS = "move_short_address"
+    CONF_STOP_ADDRESS = "stop_address"
     CONF_POSITION_ADDRESS = "position_address"
     CONF_POSITION_STATE_ADDRESS = "position_state_address"
     CONF_ANGLE_ADDRESS = "angle_address"
@@ -59,6 +61,7 @@ class CoverSchema:
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Optional(CONF_MOVE_LONG_ADDRESS): cv.string,
             vol.Optional(CONF_MOVE_SHORT_ADDRESS): cv.string,
+            vol.Optional(CONF_STOP_ADDRESS): cv.string,
             vol.Optional(CONF_POSITION_ADDRESS): cv.string,
             vol.Optional(CONF_POSITION_STATE_ADDRESS): cv.string,
             vol.Optional(CONF_ANGLE_ADDRESS): cv.string,
@@ -79,9 +82,8 @@ class BinarySensorSchema:
     """Voluptuous schema for KNX binary sensors."""
 
     CONF_STATE_ADDRESS = CONF_STATE_ADDRESS
-    CONF_SIGNIFICANT_BIT = "significant_bit"
-    CONF_DEFAULT_SIGNIFICANT_BIT = 1
     CONF_SYNC_STATE = CONF_SYNC_STATE
+    CONF_IGNORE_INTERNAL_STATE = "ignore_internal_state"
     CONF_AUTOMATION = "automation"
     CONF_HOOK = "hook"
     CONF_DEFAULT_HOOK = "on"
@@ -101,18 +103,23 @@ class BinarySensorSchema:
 
     AUTOMATIONS_SCHEMA = vol.All(cv.ensure_list, [AUTOMATION_SCHEMA])
 
-    SCHEMA = vol.Schema(
-        {
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Optional(
-                CONF_SIGNIFICANT_BIT, default=CONF_DEFAULT_SIGNIFICANT_BIT
-            ): cv.positive_int,
-            vol.Optional(CONF_SYNC_STATE, default=True): cv.boolean,
-            vol.Required(CONF_STATE_ADDRESS): cv.string,
-            vol.Optional(CONF_DEVICE_CLASS): cv.string,
-            vol.Optional(CONF_RESET_AFTER): cv.positive_int,
-            vol.Optional(CONF_AUTOMATION): AUTOMATIONS_SCHEMA,
-        }
+    SCHEMA = vol.All(
+        cv.deprecated("significant_bit"),
+        vol.Schema(
+            {
+                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+                vol.Optional(CONF_SYNC_STATE, default=True): vol.Any(
+                    vol.All(vol.Coerce(int), vol.Range(min=2, max=1440)),
+                    cv.boolean,
+                    cv.string,
+                ),
+                vol.Optional(CONF_IGNORE_INTERNAL_STATE, default=False): cv.boolean,
+                vol.Required(CONF_STATE_ADDRESS): cv.string,
+                vol.Optional(CONF_DEVICE_CLASS): cv.string,
+                vol.Optional(CONF_RESET_AFTER): cv.positive_int,
+                vol.Optional(CONF_AUTOMATION): AUTOMATIONS_SCHEMA,
+            }
+        ),
     )
 
 
@@ -168,10 +175,11 @@ class ClimateSchema:
 
     CONF_SETPOINT_SHIFT_ADDRESS = "setpoint_shift_address"
     CONF_SETPOINT_SHIFT_STATE_ADDRESS = "setpoint_shift_state_address"
-    CONF_SETPOINT_SHIFT_STEP = "setpoint_shift_step"
+    CONF_SETPOINT_SHIFT_MODE = "setpoint_shift_mode"
     CONF_SETPOINT_SHIFT_MAX = "setpoint_shift_max"
     CONF_SETPOINT_SHIFT_MIN = "setpoint_shift_min"
     CONF_TEMPERATURE_ADDRESS = "temperature_address"
+    CONF_TEMPERATURE_STEP = "temperature_step"
     CONF_TARGET_TEMPERATURE_ADDRESS = "target_temperature_address"
     CONF_TARGET_TEMPERATURE_STATE_ADDRESS = "target_temperature_state_address"
     CONF_OPERATION_MODE_ADDRESS = "operation_mode_address"
@@ -180,11 +188,14 @@ class ClimateSchema:
     CONF_CONTROLLER_STATUS_STATE_ADDRESS = "controller_status_state_address"
     CONF_CONTROLLER_MODE_ADDRESS = "controller_mode_address"
     CONF_CONTROLLER_MODE_STATE_ADDRESS = "controller_mode_state_address"
+    CONF_HEAT_COOL_ADDRESS = "heat_cool_address"
+    CONF_HEAT_COOL_STATE_ADDRESS = "heat_cool_state_address"
     CONF_OPERATION_MODE_FROST_PROTECTION_ADDRESS = (
         "operation_mode_frost_protection_address"
     )
     CONF_OPERATION_MODE_NIGHT_ADDRESS = "operation_mode_night_address"
     CONF_OPERATION_MODE_COMFORT_ADDRESS = "operation_mode_comfort_address"
+    CONF_OPERATION_MODE_STANDBY_ADDRESS = "operation_mode_standby_address"
     CONF_OPERATION_MODES = "operation_modes"
     CONF_ON_OFF_ADDRESS = "on_off_address"
     CONF_ON_OFF_STATE_ADDRESS = "on_off_state_address"
@@ -193,46 +204,58 @@ class ClimateSchema:
     CONF_MAX_TEMP = "max_temp"
 
     DEFAULT_NAME = "KNX Climate"
-    DEFAULT_SETPOINT_SHIFT_STEP = 0.5
+    DEFAULT_SETPOINT_SHIFT_MODE = "DPT6010"
     DEFAULT_SETPOINT_SHIFT_MAX = 6
     DEFAULT_SETPOINT_SHIFT_MIN = -6
+    DEFAULT_TEMPERATURE_STEP = 0.1
     DEFAULT_ON_OFF_INVERT = False
 
-    SCHEMA = vol.Schema(
-        {
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Optional(
-                CONF_SETPOINT_SHIFT_STEP, default=DEFAULT_SETPOINT_SHIFT_STEP
-            ): vol.All(float, vol.Range(min=0, max=2)),
-            vol.Optional(
-                CONF_SETPOINT_SHIFT_MAX, default=DEFAULT_SETPOINT_SHIFT_MAX
-            ): vol.All(int, vol.Range(min=0, max=32)),
-            vol.Optional(
-                CONF_SETPOINT_SHIFT_MIN, default=DEFAULT_SETPOINT_SHIFT_MIN
-            ): vol.All(int, vol.Range(min=-32, max=0)),
-            vol.Required(CONF_TEMPERATURE_ADDRESS): cv.string,
-            vol.Required(CONF_TARGET_TEMPERATURE_STATE_ADDRESS): cv.string,
-            vol.Optional(CONF_TARGET_TEMPERATURE_ADDRESS): cv.string,
-            vol.Optional(CONF_SETPOINT_SHIFT_ADDRESS): cv.string,
-            vol.Optional(CONF_SETPOINT_SHIFT_STATE_ADDRESS): cv.string,
-            vol.Optional(CONF_OPERATION_MODE_ADDRESS): cv.string,
-            vol.Optional(CONF_OPERATION_MODE_STATE_ADDRESS): cv.string,
-            vol.Optional(CONF_CONTROLLER_STATUS_ADDRESS): cv.string,
-            vol.Optional(CONF_CONTROLLER_STATUS_STATE_ADDRESS): cv.string,
-            vol.Optional(CONF_CONTROLLER_MODE_ADDRESS): cv.string,
-            vol.Optional(CONF_CONTROLLER_MODE_STATE_ADDRESS): cv.string,
-            vol.Optional(CONF_OPERATION_MODE_FROST_PROTECTION_ADDRESS): cv.string,
-            vol.Optional(CONF_OPERATION_MODE_NIGHT_ADDRESS): cv.string,
-            vol.Optional(CONF_OPERATION_MODE_COMFORT_ADDRESS): cv.string,
-            vol.Optional(CONF_ON_OFF_ADDRESS): cv.string,
-            vol.Optional(CONF_ON_OFF_STATE_ADDRESS): cv.string,
-            vol.Optional(CONF_ON_OFF_INVERT, default=DEFAULT_ON_OFF_INVERT): cv.boolean,
-            vol.Optional(CONF_OPERATION_MODES): vol.All(
-                cv.ensure_list, [vol.In({**OPERATION_MODES, **PRESET_MODES})]
-            ),
-            vol.Optional(CONF_MIN_TEMP): vol.Coerce(float),
-            vol.Optional(CONF_MAX_TEMP): vol.Coerce(float),
-        }
+    SCHEMA = vol.All(
+        cv.deprecated("setpoint_shift_step", replacement_key=CONF_TEMPERATURE_STEP),
+        vol.Schema(
+            {
+                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+                vol.Optional(
+                    CONF_SETPOINT_SHIFT_MODE, default=DEFAULT_SETPOINT_SHIFT_MODE
+                ): cv.enum(SetpointShiftMode),
+                vol.Optional(
+                    CONF_SETPOINT_SHIFT_MAX, default=DEFAULT_SETPOINT_SHIFT_MAX
+                ): vol.All(int, vol.Range(min=0, max=32)),
+                vol.Optional(
+                    CONF_SETPOINT_SHIFT_MIN, default=DEFAULT_SETPOINT_SHIFT_MIN
+                ): vol.All(int, vol.Range(min=-32, max=0)),
+                vol.Optional(
+                    CONF_TEMPERATURE_STEP, default=DEFAULT_TEMPERATURE_STEP
+                ): vol.All(float, vol.Range(min=0, max=2)),
+                vol.Required(CONF_TEMPERATURE_ADDRESS): cv.string,
+                vol.Required(CONF_TARGET_TEMPERATURE_STATE_ADDRESS): cv.string,
+                vol.Optional(CONF_TARGET_TEMPERATURE_ADDRESS): cv.string,
+                vol.Optional(CONF_SETPOINT_SHIFT_ADDRESS): cv.string,
+                vol.Optional(CONF_SETPOINT_SHIFT_STATE_ADDRESS): cv.string,
+                vol.Optional(CONF_OPERATION_MODE_ADDRESS): cv.string,
+                vol.Optional(CONF_OPERATION_MODE_STATE_ADDRESS): cv.string,
+                vol.Optional(CONF_CONTROLLER_STATUS_ADDRESS): cv.string,
+                vol.Optional(CONF_CONTROLLER_STATUS_STATE_ADDRESS): cv.string,
+                vol.Optional(CONF_CONTROLLER_MODE_ADDRESS): cv.string,
+                vol.Optional(CONF_CONTROLLER_MODE_STATE_ADDRESS): cv.string,
+                vol.Optional(CONF_HEAT_COOL_ADDRESS): cv.string,
+                vol.Optional(CONF_HEAT_COOL_STATE_ADDRESS): cv.string,
+                vol.Optional(CONF_OPERATION_MODE_FROST_PROTECTION_ADDRESS): cv.string,
+                vol.Optional(CONF_OPERATION_MODE_NIGHT_ADDRESS): cv.string,
+                vol.Optional(CONF_OPERATION_MODE_COMFORT_ADDRESS): cv.string,
+                vol.Optional(CONF_OPERATION_MODE_STANDBY_ADDRESS): cv.string,
+                vol.Optional(CONF_ON_OFF_ADDRESS): cv.string,
+                vol.Optional(CONF_ON_OFF_STATE_ADDRESS): cv.string,
+                vol.Optional(
+                    CONF_ON_OFF_INVERT, default=DEFAULT_ON_OFF_INVERT
+                ): cv.boolean,
+                vol.Optional(CONF_OPERATION_MODES): vol.All(
+                    cv.ensure_list, [vol.In({**OPERATION_MODES, **PRESET_MODES})]
+                ),
+                vol.Optional(CONF_MIN_TEMP): vol.Coerce(float),
+                vol.Optional(CONF_MAX_TEMP): vol.Coerce(float),
+            }
+        ),
     )
 
 
@@ -293,9 +316,13 @@ class SensorSchema:
     SCHEMA = vol.Schema(
         {
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Optional(CONF_SYNC_STATE, default=True): cv.boolean,
+            vol.Optional(CONF_SYNC_STATE, default=True): vol.Any(
+                vol.All(vol.Coerce(int), vol.Range(min=2, max=1440)),
+                cv.boolean,
+                cv.string,
+            ),
             vol.Required(CONF_STATE_ADDRESS): cv.string,
-            vol.Required(CONF_TYPE): cv.string,
+            vol.Required(CONF_TYPE): vol.Any(int, float, str),
         }
     )
 

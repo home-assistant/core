@@ -67,6 +67,7 @@ def _create_cover(knx_module: XKNX, config: ConfigType) -> XknxCover:
         name=config[CONF_NAME],
         group_address_long=config.get(CoverSchema.CONF_MOVE_LONG_ADDRESS),
         group_address_short=config.get(CoverSchema.CONF_MOVE_SHORT_ADDRESS),
+        group_address_stop=config.get(CoverSchema.CONF_STOP_ADDRESS),
         group_address_position_state=config.get(
             CoverSchema.CONF_POSITION_STATE_ADDRESS
         ),
@@ -153,6 +154,13 @@ def _create_climate(
         group_address_operation_mode_comfort=config.get(
             ClimateSchema.CONF_OPERATION_MODE_COMFORT_ADDRESS
         ),
+        group_address_operation_mode_standby=config.get(
+            ClimateSchema.CONF_OPERATION_MODE_STANDBY_ADDRESS
+        ),
+        group_address_heat_cool=config.get(ClimateSchema.CONF_HEAT_COOL_ADDRESS),
+        group_address_heat_cool_state=config.get(
+            ClimateSchema.CONF_HEAT_COOL_STATE_ADDRESS
+        ),
         operation_modes=config.get(ClimateSchema.CONF_OPERATION_MODES),
     )
     hass.data[DATA_KNX].xknx.devices.add(climate_mode)
@@ -173,9 +181,10 @@ def _create_climate(
         group_address_setpoint_shift_state=config.get(
             ClimateSchema.CONF_SETPOINT_SHIFT_STATE_ADDRESS
         ),
-        setpoint_shift_step=config[ClimateSchema.CONF_SETPOINT_SHIFT_STEP],
+        setpoint_shift_mode=config[ClimateSchema.CONF_SETPOINT_SHIFT_MODE],
         setpoint_shift_max=config[ClimateSchema.CONF_SETPOINT_SHIFT_MAX],
         setpoint_shift_min=config[ClimateSchema.CONF_SETPOINT_SHIFT_MIN],
+        temperature_step=config[ClimateSchema.CONF_TEMPERATURE_STEP],
         group_address_on_off=config.get(ClimateSchema.CONF_ON_OFF_ADDRESS),
         group_address_on_off_state=config.get(ClimateSchema.CONF_ON_OFF_STATE_ADDRESS),
         min_temp=config.get(ClimateSchema.CONF_MIN_TEMP),
@@ -248,7 +257,7 @@ def _create_binary_sensor(
         group_address_state=config[BinarySensorSchema.CONF_STATE_ADDRESS],
         sync_state=config[BinarySensorSchema.CONF_SYNC_STATE],
         device_class=config.get(CONF_DEVICE_CLASS),
-        significant_bit=config[BinarySensorSchema.CONF_SIGNIFICANT_BIT],
+        ignore_internal_state=config[BinarySensorSchema.CONF_IGNORE_INTERNAL_STATE],
         reset_after=config.get(BinarySensorSchema.CONF_RESET_AFTER),
         actions=actions,
     )
