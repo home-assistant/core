@@ -1,0 +1,145 @@
+"""Config flow to configure OneWire component."""
+from pprint import pformat
+
+import os
+import voluptuous as vol
+
+from homeassistant import config_entries
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PORT,
+    CONF_TYPE,
+)
+from homeassistant.core import callback
+
+from pyownet import protocol
+
+from .const import (
+    CONF_MOUNT_DIR,
+    DEFAULT_MOUNT_DIR,
+    DEFAULT_OWFS_MOUNT_DIR,
+    DEFAULT_PORT,
+    DOMAIN,
+    LOGGER,
+)
+
+CONF_TYPE_OWSERVER = "OWServer"
+CONF_TYPE_OWFS = "OWFS"
+CONF_TYPE_SYSBUS = "/sys/bus/"
+
+
+@callback
+def get_master_gateway(hass):
+    """Return the gateway which is marked as master."""
+    for gateway in hass.data[DOMAIN].values():
+        if gateway.master:
+            return gateway
+
+
+class OneWireFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+    """Handle a OneWire config flow."""
+
+    VERSION = 1
+    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
+
+    _hassio_discovery = None
+
+    def __init__(self):
+        """Initialize the OneWire config flow."""
+        self.onewire_config = {}
+
+    async def async_step_user(self, user_input=None):
+        """Handle a OneWire config flow start.
+
+        Let user manually input configuration.
+        """
+        LOGGER.info(
+            "Running step user with input %s to select %s",
+            pformat(user_input),
+            CONF_TYPE,
+        )
+        if user_input is not None:
+
+            if CONF_TYPE_OWSERVER == user_input[CONF_TYPE]:
+                return await self.async_step_owserver()
+            elif CONF_TYPE_OWFS == user_input[CONF_TYPE]:
+                return await self.async_step_owfs()
+            elif CONF_TYPE_SYSBUS == user_input[CONF_TYPE]:
+                user_input[CONF_MOUNT_DIR] = DEFAULT_MOUNT_DIR
+                self.onewire_config = user_input
+                return await self.async_step_link()
+
+        proxy_types = [CONF_TYPE_OWSERVER, CONF_TYPE_OWFS, CONF_TYPE_SYSBUS]
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema({vol.Required(CONF_TYPE): vol.In(proxy_types)}),
+        )
+
+    async def async_step_owserver(self, user_input=None):
+        """OWServer configuration."""
+        if user_input:
+            self.onewire_config = user_input
+            return await self.async_step_link()
+
+        return self.async_show_form(
+            step_id="owserver",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_HOST): str,
+                    vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+                }
+            ),
+        )
+
+    async def async_step_owfs(self, user_input=None):
+        """OWServer configuration."""
+        if user_input:
+            self.onewire_config = user_input
+            return await self.async_step_link()
+
+        return self.async_show_form(
+            step_id="owfs",
+            data_schema=vol.Schema(
+                {vol.Required(CONF_MOUNT_DIR, default=DEFAULT_OWFS_MOUNT_DIR): str,}
+            ),
+        )
+
+    async def async_step_link(self, user_input=None):
+        """Attempt to link with the OneWire server."""
+        LOGGER.info(
+            "Preparing linking with OneWire server %s", pformat(self.onewire_config)
+        )
+
+        errors = {}
+        owpath = self.onewire_config.get(CONF_MOUNT_DIR)
+        owhost = self.onewire_config.get(CONF_HOST)
+        owport = self.onewire_config.get(CONF_PORT)
+
+        if owhost:
+            try:
+                owproxy = protocol.proxy(host=owhost, port=owport)
+                owproxy.dir()
+                return await self._create_entry()
+            except (protocol.Error, protocol.ConnError) as exc:
+                LOGGER.error(
+                    "Cannot connect to owserver on %s:%d, got: %s", owhost, owport, exc
+                )
+                errors["base"] = "connection_error"
+        else:
+            if os.path.isdir(owpath):
+                return await self._create_entry()
+            LOGGER.error("Cannot create entry: %s is not a directory.", owpath)
+            errors["base"] = "invalid_path"
+
+        return self.async_show_form(step_id="link", errors=errors)
+
+    async def _create_entry(self):
+        """Create entry for gateway."""
+        owpath = self.onewire_config.get(CONF_MOUNT_DIR)
+        owhost = self.onewire_config.get(CONF_HOST)
+        owtitle = owpath
+        if owhost:
+            owtitle = owhost
+
+        return self.async_create_entry(title=owtitle, data=self.onewire_config)

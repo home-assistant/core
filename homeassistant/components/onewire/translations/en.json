@@ -1,0 +1,20 @@
+{
+    "config": {
+        "error": {
+            "connection_error": "Unable to connect to OWServer.",
+            "invalid_path": "Directory not found."
+        },
+        "flow_title": "One-wire connection ({host})",
+        "step": {
+            "owserver": {
+                "data": {
+                    "host": "[%key:common::config_flow::data::host%]",
+                    "port": "[%key:common::config_flow::data::port%]"
+                }
+            },
+            "user": {
+                "title": "Selection connection type"
+            }
+        }
+    }
+}

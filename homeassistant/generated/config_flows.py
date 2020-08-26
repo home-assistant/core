@@ -125,6 +125,7 @@ FLOWS = [
     "nut",
     "nws",
     "nzbget",
+    "onewire",
     "onvif",
     "opentherm_gw",
     "openuv",
