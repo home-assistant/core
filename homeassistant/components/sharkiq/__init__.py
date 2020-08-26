@@ -12,7 +12,7 @@ from sharkiqpy import (
 )
 import voluptuous as vol
 
-from homeassistant import config_entries, exceptions
+from homeassistant import exceptions
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from .const import API_TIMEOUT, COMPONENTS, DOMAIN, LOGGER
@@ -30,31 +30,22 @@ async def async_setup(hass, config):
     hass.data.setdefault(DOMAIN, {})
     if DOMAIN not in config:
         return True
-    for index, conf in enumerate(config[DOMAIN]):
-        LOGGER.debug(
-            "Importing Shark IQ #%d (Username: %s)", index, conf[CONF_USERNAME]
-        )
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=conf,
-            )
-        )
 
 
-async def async_connect_or_timeout(ayla_api: AylaApi) -> AylaApi:
+async def async_connect_or_timeout(ayla_api: AylaApi) -> bool:
     """Connect to vacuum."""
     try:
         with async_timeout.timeout(API_TIMEOUT):
             LOGGER.debug("Initialize connection to Ayla networks API")
             await ayla_api.async_sign_in()
     except SharkIqAuthError as exc:
-        LOGGER.error("Error to connect to Shark IQ api")
-        raise CannotConnect from exc
+        LOGGER.error("Authentication error connecting to Shark IQ api", exc_info=exc)
+        return False
     except asyncio.TimeoutError as exc:
-        LOGGER.error("Timeout expired")
+        LOGGER.error("Timeout expired", exc_info=exc)
         raise CannotConnect from exc
 
-    return ayla_api
+    return True
 
 
 async def async_setup_entry(hass, config_entry):
@@ -87,9 +78,6 @@ async def async_setup_entry(hass, config_entry):
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(config_entry, component)
         )
-
-    if not config_entry.update_listeners:
-        config_entry.add_update_listener(async_update_options)
 
     return True
 

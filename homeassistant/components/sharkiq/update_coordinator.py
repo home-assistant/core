@@ -30,9 +30,9 @@ class SharkIqUpdateCoordinator(DataUpdateCoordinator):
     ) -> None:
         """Set up the SharkIqUpdateCoordinator class."""
         self.ayla_api = ayla_api
-        self.shark_vacs = {
+        self.shark_vacs: Dict[SharkIqVacuum] = {
             sharkiq.serial_number: sharkiq for sharkiq in shark_vacs
-        }  # type: Dict[SharkIqVacuum]
+        }
         self._config_entry = config_entry
         self._online_dsns = set()
 
@@ -94,6 +94,7 @@ class SharkIqUpdateCoordinator(DataUpdateCoordinator):
 
             raise UpdateFailed(err)
         except Exception as err:  # pylint: disable=broad-except
+            LOGGER.exception("Unexpected error updating SharkIQ", exc_info=err)
             raise UpdateFailed(err)
 
         return True

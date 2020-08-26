@@ -39,7 +39,7 @@ async def test_form(hass):
         await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == f"Shark IQ ({TEST_USERNAME:s})"
+    assert result2["title"] == f"{TEST_USERNAME:s}"
     assert result2["data"] == {
         "username": TEST_USERNAME,
         "password": TEST_PASSWORD,

@@ -6,12 +6,11 @@ from typing import Dict, List
 from sharkiqpy import AylaApi, Properties, SharkIqAuthError, SharkIqVacuum, get_ayla_api
 
 from homeassistant.components.sharkiq import SharkIqUpdateCoordinator
-from homeassistant.components.sharkiq.sharkiq import (
+from homeassistant.components.sharkiq.vacuum import (
     ATTR_ERROR_CODE,
     ATTR_ERROR_MSG,
     ATTR_LOW_LIGHT,
     ATTR_RECHARGE_RESUME,
-    ATTR_RSSI,
     STATE_RECHARGING_TO_RESUME,
     SharkVacuumEntity,
 )
@@ -145,13 +144,12 @@ async def test_shark_vac_properties(hass: HomeAssistant) -> None:
     assert isinstance(shark.low_light, bool) and not shark.low_light
 
     target_state_attributes = {
-        ATTR_RSSI: -46,
         ATTR_ERROR_CODE: 7,
         ATTR_ERROR_MSG: "Cliff sensor is blocked",
         ATTR_RECHARGE_RESUME: True,
         ATTR_LOW_LIGHT: False,
     }
-    state_json = json.dumps(shark.shark_state_attributes, sort_keys=True)
+    state_json = json.dumps(shark.device_state_attributes, sort_keys=True)
     target_json = json.dumps(target_state_attributes, sort_keys=True)
     assert state_json == target_json
 
@@ -259,7 +257,7 @@ async def test_simple_properties(hass: HomeAssistant):
     coordinator = SharkIqUpdateCoordinator(hass, None, ayla_api, [shark_vac1])
     entity = SharkVacuumEntity(shark_vac1, coordinator)
 
-    assert entity.unique_id == "sharkiq-AC000Wxxxxxxxxx-vacuum"
+    assert entity.unique_id == "AC000Wxxxxxxxxx"
 
     assert entity.supported_features == (
         SUPPORT_BATTERY
