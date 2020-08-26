@@ -323,7 +323,7 @@ async def test_admin_change_password_not_owner(
         {
             "id": 6,
             "type": "config/auth_provider/homeassistant/admin_change_password",
-            "username": "test-user",
+            "user_id": "test-user",
             "password": "new-pass",
         }
     )
@@ -336,15 +336,35 @@ async def test_admin_change_password_not_owner(
     await auth_provider.async_validate_login("test-user", "test-pass")
 
 
-async def test_admin_change_password_no_creds(hass, hass_ws_client, owner_access_token):
-    """Test that change password fails with unknown credentials."""
+async def test_admin_change_password_no_user(hass, hass_ws_client, owner_access_token):
+    """Test that change password fails with unknown user."""
     client = await hass_ws_client(hass, owner_access_token)
 
     await client.send_json(
         {
             "id": 6,
             "type": "config/auth_provider/homeassistant/admin_change_password",
-            "username": "non-existing",
+            "user_id": "non-existing",
+            "password": "new-pass",
+        }
+    )
+
+    result = await client.receive_json()
+    assert not result["success"], result
+    assert result["error"]["code"] == "user_not_found"
+
+
+async def test_admin_change_password_no_cred(
+    hass, hass_ws_client, owner_access_token, hass_admin_user
+):
+    """Test that change password fails with unknown credential."""
+    client = await hass_ws_client(hass, owner_access_token)
+
+    await client.send_json(
+        {
+            "id": 6,
+            "type": "config/auth_provider/homeassistant/admin_change_password",
+            "user_id": hass_admin_user.id,
             "password": "new-pass",
         }
     )
@@ -355,16 +375,23 @@ async def test_admin_change_password_no_creds(hass, hass_ws_client, owner_access
 
 
 async def test_admin_change_password(
-    hass, hass_ws_client, owner_access_token, auth_provider, test_user_credential
+    hass,
+    hass_ws_client,
+    owner_access_token,
+    auth_provider,
+    test_user_credential,
+    hass_admin_user,
 ):
     """Test that owners can change any password."""
+    await hass.auth.async_link_user(hass_admin_user, test_user_credential)
+
     client = await hass_ws_client(hass, owner_access_token)
 
     await client.send_json(
         {
             "id": 6,
             "type": "config/auth_provider/homeassistant/admin_change_password",
-            "username": "test-user",
+            "user_id": hass_admin_user.id,
             "password": "new-pass",
         }
     )
