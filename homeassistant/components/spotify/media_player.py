@@ -71,6 +71,8 @@ TYPE_ALBUM = "album"
 TYPE_TRACK = "track"
 TYPE_ARTIST = "artist"
 
+BROWSE_LIMIT = 48
+
 PLAYABLE_MEDIA_TYPES = [
     MEDIA_TYPE_PLAYLIST,
     TYPE_ALBUM,
@@ -297,7 +299,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
     def supported_features(self) -> int:
         """Return the media player features that are supported."""
         if self._me["product"] != "premium":
-            return 0
+            return SUPPORT_SPOTIFY  # SUPPORT_BROWSE_MEDIA | SUPPORT_SELECT_SOURCE
         return SUPPORT_SPOTIFY
 
     @spotify_exception_handler
@@ -414,19 +416,19 @@ def build_item_response(spotify, payload):
     media_content_type = payload.get("media_content_type")
     title = None
     if media_content_type == "user_playlists":
-        media = spotify.current_user_playlists(limit=50)
+        media = spotify.current_user_playlists(limit=BROWSE_LIMIT)
         items = media.get("items", [])
     elif media_content_type == "current_user_recently_played":
-        media = spotify.current_user_recently_played(limit=20)
+        media = spotify.current_user_recently_played(limit=BROWSE_LIMIT)
         items = media.get("items", [])
     elif media_content_type == "featured_playlists":
-        media = spotify.featured_playlists(limit=20)
+        media = spotify.featured_playlists(limit=BROWSE_LIMIT)
         items = media.get("playlists", {}).get("items", [])
     elif media_content_type == "current_user_top_artists":
-        media = spotify.current_user_top_artists(limit=20)
+        media = spotify.current_user_top_artists(limit=BROWSE_LIMIT)
         items = media.get("items", [])
     elif media_content_type == "new_releases":
-        media = spotify.new_releases(limit=20)
+        media = spotify.new_releases(limit=BROWSE_LIMIT)
         items = media.get("albums", {}).get("items", [])
     elif media_content_type == MEDIA_TYPE_PLAYLIST:
         media = spotify.playlist(payload["media_content_id"])
@@ -435,7 +437,7 @@ def build_item_response(spotify, payload):
         media = spotify.album(payload["media_content_id"])
         items = media.get("tracks", {}).get("items", [])
     elif media_content_type == TYPE_ARTIST:
-        media = spotify.artist_albums(payload["media_content_id"])
+        media = spotify.artist_albums(payload["media_content_id"], limit=BROWSE_LIMIT)
         title = spotify.artist(payload["media_content_id"]).get("name")
         items = media.get("items", [])
     else:
