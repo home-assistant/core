@@ -35,7 +35,6 @@ def format_condition(condition: str):
     for key, value in CONDITION_CLASSES.items():
         if condition in value:
             return key
-    _LOGGER.debug("'%s' not in CONDITION_CLASSES", condition)
     return condition
 
 
