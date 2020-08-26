@@ -34,6 +34,8 @@ from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
 
+MAX_MICROSECONDS_LOST_FETCHING_LOOP_TIME = 50000
+
 TRACK_STATE_CHANGE_CALLBACKS = "track_state_change_callbacks"
 TRACK_STATE_CHANGE_LISTENER = "track_state_change_listener"
 
@@ -994,7 +996,23 @@ def async_track_utc_time_change(
         now = pattern_utc_now()
         hass.async_run_job(action, dt_util.as_local(now) if local else now)
 
-        calculate_next(now + timedelta(seconds=1))
+        # calculate_next calls find_next_time_expression_time
+        # which will drop the microseconds by replacing them
+        # to 0.
+        #
+        # Since fetching `hass.loop.time` takes at least more
+        # than 1 microsecond, we add 1 second and
+        # MAX_MICROSECONDS_LOST_FETCHING_LOOP_TIME microseconds
+        # to the next time calculation to ensure that
+        # when find_next_time_expression_time drops the microseconds
+        # the timedelta we add below is actually at least
+        # one full second later then when we just fired.
+        calculate_next(
+            now
+            + timedelta(
+                seconds=1, microseconds=MAX_MICROSECONDS_LOST_FETCHING_LOOP_TIME
+            )
+        )
 
         # We always get time.time() first to avoid time.time()
         # ticking forward after fetching hass.loop.time()
