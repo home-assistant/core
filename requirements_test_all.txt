@@ -489,7 +489,7 @@ ovoenergy==1.1.7
 paho-mqtt==1.5.0
 
 # homeassistant.components.panasonic_viera
-panasonic_viera==0.3.5
+panasonic_viera==0.3.6
 
 # homeassistant.components.dunehd
 pdunehd==1.3.2
