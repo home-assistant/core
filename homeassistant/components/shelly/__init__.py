@@ -20,7 +20,7 @@ from homeassistant.helpers import (
 
 from .const import DOMAIN
 
-PLATFORMS = ["switch"]
+PLATFORMS = ["switch", "light"]
 _LOGGER = logging.getLogger(__name__)
 
 
