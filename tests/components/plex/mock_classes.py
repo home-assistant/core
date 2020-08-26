@@ -1,4 +1,7 @@
 """Mock classes used in tests."""
+from functools import lru_cache
+
+from aiohttp.helpers import reify
 from plexapi.exceptions import NotFound
 
 from homeassistant.components.plex.const import (
@@ -125,6 +128,8 @@ class MockPlexServer:
         self.set_clients(num_users)
         self.set_sessions(num_users, session_type)
 
+        self._cache = {}
+
     def set_clients(self, num_clients):
         """Set up mock PlexClients for this PlexServer."""
         self._clients = [MockPlexClient(self._baseurl, x) for x in range(num_clients)]
@@ -170,17 +175,16 @@ class MockPlexServer:
         """Mock version of PlexServer."""
         return "1.0"
 
-    @property
+    @reify
     def library(self):
         """Mock library object of PlexServer."""
-        if not self._library:
-            self._library = MockPlexLibrary(self)
-        return self._library
+        return MockPlexLibrary(self)
 
     def playlist(self, playlist):
         """Mock the playlist lookup method."""
         return MockPlexMediaItem(playlist, mediatype="playlist")
 
+    @lru_cache()
     def playlists(self):
         """Mock the playlists lookup method with a lazy init."""
         return [
@@ -373,12 +377,10 @@ class MockPlexLibrarySection:
         """Return a specific item."""
         for item in self.all():
             if item.ratingKey == ratingKey:
-                print(item.ratingKey, ratingKey, item.title)
                 return item
             if item._children:
                 for child in item._children:
                     if child.ratingKey == ratingKey:
-                        print(child.ratingKey, ratingKey, child.title)
                         return child
 
     @property
