@@ -315,6 +315,9 @@ class TestFilterSensor(unittest.TestCase):
 
 async def test_reload(hass):
     """Verify we can reload filter sensors."""
+    await hass.async_add_executor_job(
+        init_recorder_component, hass
+    )  # force in memory db
 
     hass.states.async_set("sensor.test_monitored", 12345)
     await async_setup_component(
