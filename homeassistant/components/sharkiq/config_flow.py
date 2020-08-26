@@ -36,7 +36,7 @@ async def validate_input(hass: core.HomeAssistant, data):
         raise InvalidAuth
 
     # Return info that you want to store in the config entry.
-    return {"title": f"Shark IQ ({data[CONF_USERNAME]:s})"}
+    return {"title": data[CONF_USERNAME]}
 
 
 class SharkIqConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
