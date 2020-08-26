@@ -71,6 +71,9 @@ enum34==1000000000.0.0
 
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0
+
+# This is built-in and breaks pip if installed
+uuid==1000000000.0.0
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (
@@ -176,6 +179,9 @@ def gather_requirements_from_manifests(errors, reqs):
 
         if not integration.manifest:
             errors.append(f"The manifest for integration {domain} is invalid.")
+            continue
+
+        if integration.disabled:
             continue
 
         process_requirements(
