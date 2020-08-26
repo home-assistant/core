@@ -182,11 +182,7 @@ class SharkVacuumEntity(StateVacuumEntity):
     def available(self) -> bool:
         """Determine if the sensor is available based on API results."""
         # If the last update was successful...
-        if self.coordinator.last_update_success and self.is_online:
-            return True
-
-        # Otherwise, we are not.
-        return False
+        return self.coordinator.last_update_success and self.is_online
 
     @property
     def battery_level(self):
