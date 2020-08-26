@@ -15,8 +15,10 @@ from homeassistant.util.yaml.loader import load_yaml
 COMMENT_REQUIREMENTS = (
     "Adafruit_BBIO",
     "Adafruit-DHT",
+    "avea",  # depends on bluepy
     "avion",
     "beacontools",
+    "beewi_smartclim",  # depends on bluepy
     "blinkt",
     "bluepy",
     "bme680",

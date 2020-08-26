@@ -298,7 +298,7 @@ aurorapy==0.2.6
 av==8.0.2
 
 # homeassistant.components.avea
-avea==1.4
+# avea==1.4
 
 # homeassistant.components.avion
 # avion==0.10
@@ -334,7 +334,7 @@ batinfo==0.4.2
 beautifulsoup4==4.9.1
 
 # homeassistant.components.beewi_smartclim
-beewi_smartclim==0.0.7
+# beewi_smartclim==0.0.7
 
 # homeassistant.components.zha
 bellows==0.18.1
