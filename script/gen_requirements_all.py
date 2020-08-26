@@ -181,6 +181,9 @@ def gather_requirements_from_manifests(errors, reqs):
             errors.append(f"The manifest for integration {domain} is invalid.")
             continue
 
+        if integration.disabled:
+            continue
+
         process_requirements(
             errors, integration.requirements, f"homeassistant.components.{domain}", reqs
         )
