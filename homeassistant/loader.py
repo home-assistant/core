@@ -272,6 +272,11 @@ class Integration:
         return cast(str, self.manifest["name"])
 
     @property
+    def disabled(self) -> Optional[str]:
+        """Return reason integration is disabled."""
+        return cast(Optional[str], self.manifest.get("disabled"))
+
+    @property
     def domain(self) -> str:
         """Return domain."""
         return cast(str, self.manifest["domain"])
