@@ -36,6 +36,7 @@ async def test_form(hass):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], CONFIG,
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == f"Shark IQ ({TEST_USERNAME:s})"
