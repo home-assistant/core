@@ -11,6 +11,7 @@ from . import (
     dependencies,
     json,
     manifest,
+    requirements,
     services,
     ssdp,
     translations,
@@ -28,6 +29,7 @@ INTEGRATION_PLUGINS = [
     ssdp,
     translations,
     zeroconf,
+    requirements,
 ]
 HASS_PLUGINS = [
     coverage,
