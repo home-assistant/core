@@ -66,7 +66,7 @@ class AtagDataUpdateCoordinator(DataUpdateCoordinator):
                 if not await self.atag.update():
                     raise UpdateFailed("No data received")
             except AtagException as error:
-                raise UpdateFailed(error)
+                raise UpdateFailed(error) from error
         return self.atag.report
 
 

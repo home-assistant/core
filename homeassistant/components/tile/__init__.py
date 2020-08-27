@@ -48,7 +48,7 @@ async def async_setup_entry(hass, config_entry):
             LOGGER.info("Tile session expired; creating a new one")
             await client.async_init()
         except TileError as err:
-            raise UpdateFailed(f"Error while retrieving data: {err}")
+            raise UpdateFailed(f"Error while retrieving data: {err}") from err
 
     coordinator = DataUpdateCoordinator(
         hass,

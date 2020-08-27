@@ -90,8 +90,10 @@ def _bytearray_string(data):
     val = cv.string(data)
     try:
         return bytearray.fromhex(val)
-    except ValueError:
-        raise vol.Invalid("Data must be a hex string with multiple of two characters")
+    except ValueError as err:
+        raise vol.Invalid(
+            "Data must be a hex string with multiple of two characters"
+        ) from err
 
 
 def _ensure_device(value):

@@ -52,8 +52,8 @@ def async_get_api_category(sensor_type):
                 if sensor[0] == sensor_type
             )
         )
-    except StopIteration:
-        raise ValueError(f"Can't find category sensor type: {sensor_type}")
+    except StopIteration as err:
+        raise ValueError(f"Can't find category sensor type: {sensor_type}") from err
 
 
 async def async_setup(hass, config):

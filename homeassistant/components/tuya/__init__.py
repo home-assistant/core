@@ -95,8 +95,8 @@ async def async_setup_entry(hass, entry):
         await hass.async_add_executor_job(
             tuya.init, username, password, country_code, platform
         )
-    except (TuyaNetException, TuyaServerException):
-        raise ConfigEntryNotReady()
+    except (TuyaNetException, TuyaServerException) as exc:
+        raise ConfigEntryNotReady() from exc
 
     except TuyaAPIException as exc:
         _LOGGER.error(

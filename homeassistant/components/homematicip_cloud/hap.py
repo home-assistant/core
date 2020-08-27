@@ -92,8 +92,8 @@ class HomematicipHAP:
                 self.config_entry.data.get(HMIPC_AUTHTOKEN),
                 self.config_entry.data.get(HMIPC_NAME),
             )
-        except HmipcConnectionError:
-            raise ConfigEntryNotReady
+        except HmipcConnectionError as err:
+            raise ConfigEntryNotReady from err
         except Exception as err:  # pylint: disable=broad-except
             _LOGGER.error("Error connecting with HomematicIP Cloud: %s", err)
             return False

@@ -26,8 +26,8 @@ def validate_input(hass: core.HomeAssistant, auth):
     """Validate the user input allows us to connect."""
     try:
         auth.startup()
-    except (LoginError, TokenRefreshFailed):
-        raise InvalidAuth
+    except (LoginError, TokenRefreshFailed) as err:
+        raise InvalidAuth from err
     if auth.check_key_required():
         raise Require2FA
 

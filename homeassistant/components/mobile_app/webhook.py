@@ -219,7 +219,7 @@ async def webhook_call_service(hass, config_entry, data):
             config_entry.data[ATTR_DEVICE_NAME],
             ex,
         )
-        raise HTTPBadRequest()
+        raise HTTPBadRequest() from ex
 
     return empty_okay_response()
 

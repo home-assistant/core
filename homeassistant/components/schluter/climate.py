@@ -40,7 +40,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 api.get_thermostats, session_id
             )
         except RequestException as err:
-            raise UpdateFailed(f"Error communicating with Schluter API: {err}")
+            raise UpdateFailed(f"Error communicating with Schluter API: {err}") from err
 
         if thermostats is None:
             return {}

@@ -23,8 +23,8 @@ async def _validate_input(data):
     try:
         api = NightscoutAPI(url)
         status = await api.get_server_status()
-    except (ClientError, AsyncIOTimeoutError, OSError):
-        raise InputValidationError("cannot_connect")
+    except (ClientError, AsyncIOTimeoutError, OSError) as error:
+        raise InputValidationError("cannot_connect") from error
 
     # Return info to be stored in the config entry.
     return {"title": status.name}

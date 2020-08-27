@@ -186,7 +186,7 @@ class PlexServer:
                         else:
                             raise Unauthorized(
                                 "New certificate cannot be validated with provided token"
-                            )
+                            ) from None
                     else:
                         raise
                 else:
