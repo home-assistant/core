@@ -14,7 +14,7 @@ from .const import (
     SYNO_API,
 )
 
-DEFAULT_DEVICE_CLASS = "safety"
+DEFAULT_DEVICE_CLASS = DEVICE_CLASS_SAFETY
 
 
 async def async_setup_entry(
