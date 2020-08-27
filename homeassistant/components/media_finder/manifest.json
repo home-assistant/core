@@ -1,0 +1,11 @@
+{
+  "domain": "media_finder",
+  "name": "media_finder",
+  "documentation": "https://www.home-assistant.io/integrations/media_finder",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": ["http"],
+  "codeowners": ["@hunterjm"]
+}

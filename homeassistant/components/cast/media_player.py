@@ -1,5 +1,6 @@
 """Provide functionality to interact with Cast devices on the network."""
 import asyncio
+from datetime import timedelta
 import json
 import logging
 from typing import Optional
@@ -14,12 +15,16 @@ from pychromecast.socket_client import (
 )
 import voluptuous as vol
 
+from homeassistant.auth.models import RefreshToken
 from homeassistant.components import zeroconf
+from homeassistant.components.http.auth import async_sign_path
+from homeassistant.components.media_finder import async_find_media
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_TVSHOW,
+    SUPPORT_BROWSE_MEDIA,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -32,6 +37,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
 )
+from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.const import (
     CONF_HOST,
     EVENT_HOMEASSISTANT_STOP,
@@ -502,6 +508,59 @@ class CastDevice(MediaPlayerEntity):
         media_controller = self._media_controller()
         media_controller.seek(position)
 
+    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+        """Return a payload for the "media_player/browse_media" websocket command."""
+        hass_url = get_url(self.hass, prefer_external=True)
+
+        # Trim url for media lookup
+        path = None
+        if media_content_id:
+            try:
+                end = media_content_id.rindex("?")
+            except ValueError:
+                end = len(media_content_id)
+            path = media_content_id[len(hass_url) : end]
+
+        payload = await async_find_media(self.hass, path)
+        if not payload:
+            raise BrowseError("Could not find media for given path.")
+
+        # Sign URL with Home Assistant Cast User
+        refresh_token_id = None
+        config_entries = self.hass.config_entries.async_entries(CAST_DOMAIN)
+        if config_entries:
+            user_id = config_entries[0].data["user_id"]
+            user = await self.hass.auth.async_get_user(user_id)
+            if user.refresh_tokens:
+                refresh_token: RefreshToken = list(user.refresh_tokens.values())[0]
+                refresh_token_id = refresh_token.id
+
+        def sign_payload(payload):
+            """Sign the payload."""
+            path = payload["media_content_id"]
+
+            # Sign relative path
+            if refresh_token_id and payload["can_play"]:
+                path = async_sign_path(
+                    self.hass,
+                    refresh_token_id,
+                    payload["media_content_id"],
+                    timedelta(minutes=5),
+                )
+
+            # Sign path of children
+            if payload.get("children"):
+                payload["children"] = [
+                    sign_payload(child) for child in payload["children"]
+                ]
+
+            # Prepend external URL
+            payload["media_content_id"] = f"{hass_url}{path}"
+
+            return payload
+
+        return sign_payload(payload)
+
     def play_media(self, media_type, media_id, **kwargs):
         """Play media from a URL."""
         # We do not want this to be forwarded to a group
@@ -725,6 +784,9 @@ class CastDevice(MediaPlayerEntity):
                 support |= SUPPORT_NEXT_TRACK
             if media_status.supports_seek:
                 support |= SUPPORT_SEEK
+
+        if "media_finder" in self.hass.config.components:
+            support |= SUPPORT_BROWSE_MEDIA
 
         return support
 
