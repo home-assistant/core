@@ -26,6 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_IP = "ip"
 CONF_RTSP_PORT = "rtsp_port"
+CONF_STREAM = "stream"
 
 DEFAULT_NAME = "Foscam Camera"
 DEFAULT_PORT = 88
@@ -65,6 +66,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_RTSP_PORT): cv.port,
+        vol.Optional(CONF_STREAM): cv.string,
     }
 )
 
@@ -135,6 +137,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if ret != 0 and response == 1:
         motion_status = True
 
+    if config.get(CONF_STREAM) == "sub": stream_video = "videoSub"
+    else: stream_video = "videoMain"
+
     async_add_entities(
         [
             HassFoscamCamera(
@@ -144,6 +149,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 config[CONF_PASSWORD],
                 rtsp_port,
                 motion_status,
+                stream_video,
             )
         ]
     )
@@ -152,7 +158,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class HassFoscamCamera(Camera):
     """An implementation of a Foscam IP camera."""
 
-    def __init__(self, camera, name, username, password, rtsp_port, motion_status):
+    def __init__(self, camera, name, username, password, rtsp_port, motion_status, stream_video):
         """Initialize a Foscam camera."""
         super().__init__()
 
@@ -162,6 +168,7 @@ class HassFoscamCamera(Camera):
         self._password = password
         self._rtsp_port = rtsp_port
         self._motion_status = motion_status
+        self._stream_video = stream_video
 
     async def async_added_to_hass(self):
         """Handle entity addition to hass."""
@@ -190,7 +197,7 @@ class HassFoscamCamera(Camera):
     async def stream_source(self):
         """Return the stream source."""
         if self._rtsp_port:
-            return f"rtsp://{self._username}:{self._password}@{self._foscam_session.host}:{self._rtsp_port}/videoMain"
+            return f"rtsp://{self._username}:{self._password}@{self._foscam_session.host}:{self._rtsp_port}/{self._stream_video}"
         return None
 
     @property
