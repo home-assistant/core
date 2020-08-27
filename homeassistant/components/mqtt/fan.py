@@ -22,8 +22,6 @@ from homeassistant.const import (
     CONF_PAYLOAD_ON,
     CONF_STATE,
     CONF_UNIQUE_ID,
-    STATE_OFF,
-    STATE_ON,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -155,7 +153,7 @@ class MqttFan(
     def __init__(self, config, config_entry, discovery_data):
         """Initialize the MQTT fan."""
         self._unique_id = config.get(CONF_UNIQUE_ID)
-        self._state = STATE_OFF
+        self._state = False
         self._speed = None
         self._oscillation = None
         self._supported_features = 0
@@ -257,9 +255,9 @@ class MqttFan(
             """Handle new received MQTT message."""
             payload = templates[CONF_STATE](msg.payload)
             if payload == self._payload["STATE_ON"]:
-                self._state = STATE_ON
+                self._state = True
             elif payload == self._payload["STATE_OFF"]:
-                self._state = STATE_OFF
+                self._state = False
             self.async_write_ha_state()
 
         if self._topic[CONF_STATE_TOPIC] is not None:
@@ -337,7 +335,7 @@ class MqttFan(
     @property
     def is_on(self):
         """Return true if device is on."""
-        return self._state == STATE_ON
+        return self._state
 
     @property
     def name(self) -> str:
@@ -379,7 +377,7 @@ class MqttFan(
         if speed:
             await self.async_set_speed(speed)
         if self._optimistic:
-            self._state = STATE_ON
+            self._state = True
             self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs) -> None:
@@ -395,7 +393,7 @@ class MqttFan(
             self._config[CONF_RETAIN],
         )
         if self._optimistic:
-            self._state = STATE_OFF
+            self._state = False
             self.async_write_ha_state()
 
     async def async_set_speed(self, speed: str) -> None:
