@@ -20,7 +20,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     input_count = config_entry.data["input_count"]
     binary_sensors = []
 
-    for i in range(1, int(input_count)):
+    for i in range(1, int(input_count) + 1):
         binary_sensors.append(
             ProgettihwswBinarySensor(
                 hass, config_entry, f"Input #{i}", setup_input(board_api, i)
