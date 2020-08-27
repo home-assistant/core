@@ -120,7 +120,10 @@ def async_track_time_interval_backoff(hass, action, intervals) -> CALLBACK_TYPE:
                 failed = 0
         finally:
             delay = intervals[failed] if failed < len(intervals) else intervals[-1]
-            remove = async_track_point_in_utc_time(hass, interval_listener, now + delay)
+            # call dt_util.utcnow() again in case time abruptly moves forward
+            remove = async_track_point_in_utc_time(
+                hass, interval_listener, dt_util.utcnow() + delay
+            )
 
     hass.async_run_job(interval_listener, dt_util.utcnow())
 
