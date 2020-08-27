@@ -171,9 +171,7 @@ class Control4Entity(entity.Entity):
     ):
         """Initialize a Control4 entity."""
         self.entry = entry
-        self.account = entry_data[CONF_ACCOUNT]
-        self.director = entry_data[CONF_DIRECTOR]
-        self.director_token_expiry = entry_data[CONF_DIRECTOR_TOKEN_EXPIRATION]
+        self.entry_data = entry_data
         self._name = name
         self._idx = idx
         self._coordinator = coordinator

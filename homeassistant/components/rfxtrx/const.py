@@ -7,12 +7,14 @@ COMMAND_ON_LIST = [
     "Stop",
     "Open (inline relay)",
     "Stop (inline relay)",
+    "Enable sun automation",
 ]
 
 COMMAND_OFF_LIST = [
     "Off",
     "Down",
     "Close (inline relay)",
+    "Disable sun automation",
 ]
 
 ATTR_EVENT = "event"

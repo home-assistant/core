@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert"
+        },
+        "error": {
+            "duplicate_entry": "D\u00ebsen Apparat gouf scho dob\u00e4igesat.",
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun",
+            "unknown": "Onerwaarte Feeler"
+        },
+        "step": {
+            "link": {
+                "description": "Du muss Home Assistant am Roon autoris\u00e9ieren. Nodeems Du op ofsch\u00e9cke geklickt hues, g\u00e9i an d'Roon Applikatioun, an d'Astellungen an aktiv\u00e9ier HomeAssistant an den Extensiounen.",
+                "title": "HomeAssistant am Roon erlaaben"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "G\u00ebff den Numm oder IP-Adress vun dengem Roon Server un.",
+                "title": "Roon Server ariichten"
+            }
+        }
+    },
+    "title": "Roon"
+}

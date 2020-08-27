@@ -235,10 +235,10 @@ class FibaroController:
         scenes = self._client.scenes.list()
         self._scene_map = {}
         for device in scenes:
-            if not device.visible:
+            if "name" not in device or "id" not in device:
                 continue
             device.fibaro_controller = self
-            if device.roomID == 0:
+            if "roomID" not in device or device.roomID == 0:
                 room_name = "Unknown"
             else:
                 room_name = self._room_map[device.roomID].name
@@ -250,6 +250,7 @@ class FibaroController:
             device.unique_id_str = f"{self.hub_serial}.scene.{device.id}"
             self._scene_map[device.id] = device
             self.fibaro_devices["scene"].append(device)
+            _LOGGER.debug("%s scene -> %s", device.ha_id, device)
 
     def _read_devices(self):
         """Read and process the device list."""
@@ -259,8 +260,10 @@ class FibaroController:
         last_climate_parent = None
         for device in devices:
             try:
+                if "name" not in device or "id" not in device:
+                    continue
                 device.fibaro_controller = self
-                if device.roomID == 0:
+                if "roomID" not in device or device.roomID == 0:
                     room_name = "Unknown"
                 else:
                     room_name = self._room_map[device.roomID].name
@@ -292,7 +295,11 @@ class FibaroController:
                         # otherwise add the first visible device in the group
                         # which is a hack, but solves a problem with FGT having
                         # hidden compatibility devices before the real device
-                        if last_climate_parent != device.parentId and device.visible:
+                        if (
+                            last_climate_parent != device.parentId
+                            and "visible" in device
+                            and device.visible
+                        ):
                             self.fibaro_devices[dtype].append(device)
                             last_climate_parent = device.parentId
                 _LOGGER.debug(

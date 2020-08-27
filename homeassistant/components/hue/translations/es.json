@@ -58,7 +58,6 @@
         "step": {
             "init": {
                 "data": {
-                    "allow_how_groups": "Permitir grupos de Hue",
                     "allow_hue_groups": "Permitir grupos de Hue",
                     "allow_unreachable": "Permitir que las bombillas inalcanzables informen su estado correctamente"
                 }

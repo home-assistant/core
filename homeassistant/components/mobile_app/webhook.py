@@ -8,6 +8,7 @@ from aiohttp.web import HTTPBadRequest, Request, Response, json_response
 from nacl.secret import SecretBox
 import voluptuous as vol
 
+from homeassistant.components import tag
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES as BINARY_SENSOR_CLASSES,
 )
@@ -250,7 +251,9 @@ async def webhook_stream_camera(hass, config_entry, data):
 
     if camera is None:
         return webhook_response(
-            {"success": False}, registration=config_entry.data, status=HTTP_BAD_REQUEST,
+            {"success": False},
+            registration=config_entry.data,
+            status=HTTP_BAD_REQUEST,
         )
 
     resp = {"mjpeg_path": "/api/camera_proxy_stream/%s" % (camera.entity_id)}
@@ -341,7 +344,8 @@ async def webhook_update_registration(hass, config_entry, data):
     hass.config_entries.async_update_entry(config_entry, data=new_registration)
 
     return webhook_response(
-        safe_registration(new_registration), registration=new_registration,
+        safe_registration(new_registration),
+        registration=new_registration,
     )
 
 
@@ -419,7 +423,9 @@ async def webhook_register_sensor(hass, config_entry, data):
         async_dispatcher_send(hass, register_signal, data)
 
     return webhook_response(
-        {"success": True}, registration=config_entry.data, status=HTTP_CREATED,
+        {"success": True},
+        registration=config_entry.data,
+        status=HTTP_CREATED,
     )
 
 
@@ -538,3 +544,16 @@ async def webhook_get_config(hass, config_entry, data):
         pass
 
     return webhook_response(resp, registration=config_entry.data)
+
+
+@WEBHOOK_COMMANDS.register("scan_tag")
+@validate_schema({vol.Required("tag_id"): cv.string})
+async def webhook_scan_tag(hass, config_entry, data):
+    """Handle a fire event webhook."""
+    await tag.async_scan_tag(
+        hass,
+        data["tag_id"],
+        config_entry.data[ATTR_DEVICE_ID],
+        registration_context(config_entry.data),
+    )
+    return empty_okay_response()

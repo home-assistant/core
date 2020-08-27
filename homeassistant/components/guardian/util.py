@@ -14,7 +14,7 @@ from .const import LOGGER
 DEFAULT_UPDATE_INTERVAL = timedelta(seconds=30)
 
 
-class GuardianDataUpdateCoordinator(DataUpdateCoordinator):
+class GuardianDataUpdateCoordinator(DataUpdateCoordinator[dict]):
     """Define an extended DataUpdateCoordinator with some Guardian goodies."""
 
     def __init__(

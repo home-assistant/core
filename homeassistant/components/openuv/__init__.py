@@ -16,7 +16,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -53,8 +53,6 @@ TYPE_SAFE_EXPOSURE_TIME_5 = "safe_exposure_time_type_5"
 TYPE_SAFE_EXPOSURE_TIME_6 = "safe_exposure_time_type_6"
 
 PLATFORMS = ["binary_sensor", "sensor"]
-
-CONFIG_SCHEMA = cv.deprecated(DOMAIN, invalidation_version="0.115")
 
 
 async def async_setup(hass, config):

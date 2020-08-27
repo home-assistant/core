@@ -86,7 +86,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class IPPDataUpdateCoordinator(DataUpdateCoordinator):
+class IPPDataUpdateCoordinator(DataUpdateCoordinator[IPPPrinter]):
     """Class to manage fetching IPP data from single endpoint."""
 
     def __init__(
@@ -110,7 +110,10 @@ class IPPDataUpdateCoordinator(DataUpdateCoordinator):
         )
 
         super().__init__(
-            hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL,
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_interval=SCAN_INTERVAL,
         )
 
     async def _async_update_data(self) -> IPPPrinter:

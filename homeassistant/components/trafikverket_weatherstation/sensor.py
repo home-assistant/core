@@ -81,6 +81,13 @@ SENSOR_TYPES = {
         "mdi:weather-windy",
         None,
     ],
+    "wind_speed_max": [
+        "Wind speed max",
+        SPEED_METERS_PER_SECOND,
+        "windforcemax",
+        "mdi:weather-windy-variant",
+        None,
+    ],
     "humidity": [
         "Humidity",
         UNIT_PERCENTAGE,

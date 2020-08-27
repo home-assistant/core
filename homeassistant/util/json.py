@@ -54,7 +54,7 @@ def save_json(
     Returns True on success.
     """
     try:
-        json_data = json.dumps(data, sort_keys=True, indent=4, cls=encoder)
+        json_data = json.dumps(data, indent=4, cls=encoder)
     except TypeError:
         msg = f"Failed to serialize to JSON: {filename}. Bad data at {format_unserializable_data(find_paths_unserializable_data(data))}"
         _LOGGER.error(msg)

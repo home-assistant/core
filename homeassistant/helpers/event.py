@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import functools as ft
 import logging
 import time
-from typing import Any, Awaitable, Callable, Dict, Iterable, Optional, Union
+from typing import Any, Awaitable, Callable, Iterable, Optional, Union
 
 import attr
 
@@ -17,16 +17,28 @@ from homeassistant.const import (
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
 )
-from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, State, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    HomeAssistant,
+    State,
+    callback,
+    split_entity_id,
+)
+from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
 from homeassistant.helpers.sun import get_astral_event_next
-from homeassistant.helpers.template import Template
+from homeassistant.helpers.template import RenderInfo, Template, result_as_boolean
+from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
 
 TRACK_STATE_CHANGE_CALLBACKS = "track_state_change_callbacks"
 TRACK_STATE_CHANGE_LISTENER = "track_state_change_listener"
+
+TRACK_STATE_ADDED_DOMAIN_CALLBACKS = "track_state_added_domain_callbacks"
+TRACK_STATE_ADDED_DOMAIN_LISTENER = "track_state_added_domain_listener"
 
 TRACK_ENTITY_REGISTRY_UPDATED_CALLBACKS = "track_entity_registry_updated_callbacks"
 TRACK_ENTITY_REGISTRY_UPDATED_LISTENER = "track_entity_registry_updated_listener"
@@ -191,7 +203,7 @@ def async_track_state_change_event(
     @callback
     def remove_listener() -> None:
         """Remove state change listener."""
-        _async_remove_entity_listeners(
+        _async_remove_indexed_listeners(
             hass,
             TRACK_STATE_CHANGE_CALLBACKS,
             TRACK_STATE_CHANGE_LISTENER,
@@ -203,23 +215,23 @@ def async_track_state_change_event(
 
 
 @callback
-def _async_remove_entity_listeners(
+def _async_remove_indexed_listeners(
     hass: HomeAssistant,
-    storage_key: str,
+    data_key: str,
     listener_key: str,
-    entity_ids: Iterable[str],
+    storage_keys: Iterable[str],
     action: Callable[[Event], Any],
 ) -> None:
     """Remove a listener."""
 
-    entity_callbacks = hass.data[storage_key]
+    callbacks = hass.data[data_key]
 
-    for entity_id in entity_ids:
-        entity_callbacks[entity_id].remove(action)
-        if len(entity_callbacks[entity_id]) == 0:
-            del entity_callbacks[entity_id]
+    for storage_key in storage_keys:
+        callbacks[storage_key].remove(action)
+        if len(callbacks[storage_key]) == 0:
+            del callbacks[storage_key]
 
-    if not entity_callbacks:
+    if not callbacks:
         hass.data[listener_key]()
         del hass.data[listener_key]
 
@@ -271,11 +283,68 @@ def async_track_entity_registry_updated_event(
     @callback
     def remove_listener() -> None:
         """Remove state change listener."""
-        _async_remove_entity_listeners(
+        _async_remove_indexed_listeners(
             hass,
             TRACK_ENTITY_REGISTRY_UPDATED_CALLBACKS,
             TRACK_ENTITY_REGISTRY_UPDATED_LISTENER,
             entity_ids,
+            action,
+        )
+
+    return remove_listener
+
+
+@bind_hass
+def async_track_state_added_domain(
+    hass: HomeAssistant,
+    domains: Union[str, Iterable[str]],
+    action: Callable[[Event], Any],
+) -> Callable[[], None]:
+    """Track state change events when an entity is added to domains."""
+
+    domain_callbacks = hass.data.setdefault(TRACK_STATE_ADDED_DOMAIN_CALLBACKS, {})
+
+    if TRACK_STATE_ADDED_DOMAIN_LISTENER not in hass.data:
+
+        @callback
+        def _async_state_change_dispatcher(event: Event) -> None:
+            """Dispatch state changes by entity_id."""
+            if event.data.get("old_state") is not None:
+                return
+
+            domain = split_entity_id(event.data["entity_id"])[0]
+
+            if domain not in domain_callbacks:
+                return
+
+            for action in domain_callbacks[domain][:]:
+                try:
+                    hass.async_run_job(action, event)
+                except Exception:  # pylint: disable=broad-except
+                    _LOGGER.exception(
+                        "Error while processing state added for %s", domain
+                    )
+
+        hass.data[TRACK_STATE_ADDED_DOMAIN_LISTENER] = hass.bus.async_listen(
+            EVENT_STATE_CHANGED, _async_state_change_dispatcher
+        )
+
+    if isinstance(domains, str):
+        domains = [domains]
+
+    domains = [domains.lower() for domains in domains]
+
+    for domain in domains:
+        domain_callbacks.setdefault(domain, []).append(action)
+
+    @callback
+    def remove_listener() -> None:
+        """Remove state change listener."""
+        _async_remove_indexed_listeners(
+            hass,
+            TRACK_STATE_ADDED_DOMAIN_CALLBACKS,
+            TRACK_STATE_ADDED_DOMAIN_LISTENER,
+            domains,
             action,
         )
 
@@ -287,34 +356,341 @@ def async_track_entity_registry_updated_event(
 def async_track_template(
     hass: HomeAssistant,
     template: Template,
-    action: Callable[[str, State, State], None],
-    variables: Optional[Dict[str, Any]] = None,
-) -> CALLBACK_TYPE:
-    """Add a listener that track state changes with template condition."""
-    from . import condition  # pylint: disable=import-outside-toplevel
+    action: Callable[[str, Optional[State], Optional[State]], None],
+    variables: Optional[TemplateVarsType] = None,
+) -> Callable[[], None]:
+    """Add a listener that fires when a a template evaluates to 'true'.
 
-    # Local variable to keep track of if the action has already been triggered
-    already_triggered = False
+    Listen for the result of the template becoming true, or a true-like
+    string result, such as 'On', 'Open', or 'Yes'. If the template results
+    in an error state when the value changes, this will be logged and not
+    passed through.
+
+    If the initial check of the template is invalid and results in an
+    exception, the listener will still be registered but will only
+    fire if the template result becomes true without an exception.
+
+    Action arguments
+    ----------------
+    entity_id
+        ID of the entity that triggered the state change.
+    old_state
+        The old state of the entity that changed.
+    new_state
+        New state of the entity that changed.
+
+    Parameters
+    ----------
+    hass
+        Home assistant object.
+    template
+        The template to calculate.
+    action
+        Callable to call with results. See above for arguments.
+    variables
+        Variables to pass to the template.
+
+    Returns
+    -------
+    Callable to unregister the listener.
+
+    """
 
     @callback
-    def template_condition_listener(entity_id: str, from_s: State, to_s: State) -> None:
+    def state_changed_listener(
+        event: Event,
+        template: Template,
+        last_result: Optional[str],
+        result: Union[str, TemplateError],
+    ) -> None:
         """Check if condition is correct and run action."""
-        nonlocal already_triggered
-        template_result = condition.async_template(hass, template, variables)
+        if isinstance(result, TemplateError):
+            _LOGGER.error(
+                "Error while processing template: %s",
+                template.template,
+                exc_info=result,
+            )
+            return
 
-        # Check to see if template returns true
-        if template_result and not already_triggered:
-            already_triggered = True
-            hass.async_run_job(action, entity_id, from_s, to_s)
-        elif not template_result:
-            already_triggered = False
+        if result_as_boolean(last_result) or not result_as_boolean(result):
+            return
 
-    return async_track_state_change(
-        hass, template.extract_entities(variables), template_condition_listener
+        hass.async_run_job(
+            action,
+            event.data.get("entity_id"),
+            event.data.get("old_state"),
+            event.data.get("new_state"),
+        )
+
+    info = async_track_template_result(
+        hass, template, state_changed_listener, variables
     )
+
+    return info.async_remove
 
 
 track_template = threaded_listener_factory(async_track_template)
+
+
+_UNCHANGED = object()
+
+
+class _TrackTemplateResultInfo:
+    """Handle removal / refresh of tracker."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        template: Template,
+        action: Callable,
+        variables: Optional[TemplateVarsType],
+    ):
+        """Handle removal / refresh of tracker init."""
+        self.hass = hass
+        self._template = template
+        self._template.hass = hass
+        self._action = action
+        self._variables = variables
+        self._last_result: Optional[Union[str, TemplateError]] = None
+        self._all_listener: Optional[Callable] = None
+        self._domains_listener: Optional[Callable] = None
+        self._entities_listener: Optional[Callable] = None
+        self._info: Optional[RenderInfo] = None
+        self._last_info: Optional[RenderInfo] = None
+
+    def async_setup(self) -> None:
+        """Activation of template tracking."""
+        self._info = self._template.async_render_to_info(self._variables)
+        if self._info.exception:
+            _LOGGER.error(
+                "Error while processing template: %s",
+                self._template.template,
+                exc_info=self._info.exception,
+            )
+        self._create_listeners()
+        self._last_info = self._info
+
+    @property
+    def _needs_all_listener(self) -> bool:
+        assert self._info
+
+        # Tracking all states
+        if self._info.all_states:
+            return True
+
+        # Previous call had an exception
+        # so we do not know which states
+        # to track
+        if self._info.exception:
+            return True
+
+        return False
+
+    @callback
+    def _create_listeners(self) -> None:
+        assert self._info
+
+        if self._info.is_static:
+            return
+
+        if self._needs_all_listener:
+            self._setup_all_listener()
+            return
+
+        if self._info.domains:
+            self._setup_domains_listener()
+
+        if self._info.entities or self._info.domains:
+            self._setup_entities_listener()
+
+    @callback
+    def _cancel_domains_listener(self) -> None:
+        if self._domains_listener is None:
+            return
+        self._domains_listener()
+        self._domains_listener = None
+
+    @callback
+    def _cancel_entities_listener(self) -> None:
+        if self._entities_listener is None:
+            return
+        self._entities_listener()
+        self._entities_listener = None
+
+    @callback
+    def _cancel_all_listener(self) -> None:
+        if self._all_listener is None:
+            return
+        self._all_listener()
+        self._all_listener = None
+
+    @callback
+    def _update_listeners(self) -> None:
+        assert self._info
+        assert self._last_info
+
+        if self._needs_all_listener:
+            if self._all_listener:
+                return
+            self._cancel_domains_listener()
+            self._cancel_entities_listener()
+            self._setup_all_listener()
+            return
+
+        had_all_listener = self._all_listener is not None
+        if had_all_listener:
+            self._cancel_all_listener()
+
+        domains_changed = self._info.domains != self._last_info.domains
+        if had_all_listener or domains_changed:
+            domains_changed = True
+            self._cancel_domains_listener()
+            self._setup_domains_listener()
+
+        if (
+            had_all_listener
+            or domains_changed
+            or self._info.entities != self._last_info.entities
+        ):
+            self._cancel_entities_listener()
+            self._setup_entities_listener()
+
+    @callback
+    def _setup_entities_listener(self) -> None:
+        assert self._info
+
+        entities = set(self._info.entities)
+        for entity_id in self.hass.states.async_entity_ids(self._info.domains):
+            entities.add(entity_id)
+
+        # Entities has changed to none
+        if not entities:
+            return
+
+        self._entities_listener = async_track_state_change_event(
+            self.hass, entities, self._refresh
+        )
+
+    @callback
+    def _setup_domains_listener(self) -> None:
+        assert self._info
+
+        # Domains has changed to none
+        if not self._info.domains:
+            return
+
+        self._domains_listener = async_track_state_added_domain(
+            self.hass, self._info.domains, self._refresh
+        )
+
+    @callback
+    def _setup_all_listener(self) -> None:
+        self._all_listener = self.hass.bus.async_listen(
+            EVENT_STATE_CHANGED, self._refresh
+        )
+
+    @callback
+    def async_remove(self) -> None:
+        """Cancel the listener."""
+        self._cancel_all_listener()
+        self._cancel_domains_listener()
+        self._cancel_entities_listener()
+
+    @callback
+    def async_refresh(self, variables: Any = _UNCHANGED) -> None:
+        """Force recalculate the template."""
+        if variables is not _UNCHANGED:
+            self._variables = variables
+        self._refresh(None)
+
+    @callback
+    def _refresh(self, event: Optional[Event]) -> None:
+        self._info = self._template.async_render_to_info(self._variables)
+        self._update_listeners()
+        self._last_info = self._info
+
+        try:
+            result: Union[str, TemplateError] = self._info.result
+        except TemplateError as ex:
+            result = ex
+
+        # Check to see if the result has changed
+        if result == self._last_result:
+            return
+
+        if isinstance(result, TemplateError) and isinstance(
+            self._last_result, TemplateError
+        ):
+            return
+
+        self.hass.async_run_job(
+            self._action, event, self._template, self._last_result, result
+        )
+        self._last_result = result
+
+
+TrackTemplateResultListener = Callable[
+    [Event, Template, Optional[str], Union[str, TemplateError]], None
+]
+"""Type for the listener for template results.
+
+    Action arguments
+    ----------------
+    event
+        Event that caused the template to change output. None if not
+        triggered by an event.
+    template
+        The template that has changed.
+    last_result
+        The output from the template on the last successful run, or None
+        if no previous successful run.
+    result
+        Result from the template run. This will be a string or an
+        TemplateError if the template resulted in an error.
+"""
+
+
+@callback
+@bind_hass
+def async_track_template_result(
+    hass: HomeAssistant,
+    template: Template,
+    action: TrackTemplateResultListener,
+    variables: Optional[TemplateVarsType] = None,
+) -> _TrackTemplateResultInfo:
+    """Add a listener that fires when a the result of a template changes.
+
+    The action will fire with the initial result from the template, and
+    then whenever the output from the template changes. The template will
+    be reevaluated if any states referenced in the last run of the
+    template change, or if manually triggered. If the result of the
+    evaluation is different from the previous run, the listener is passed
+    the result.
+
+    If the template results in an TemplateError, this will be returned to
+    the listener the first time this happens but not for subsequent errors.
+    Once the template returns to a non-error condition the result is sent
+    to the action as usual.
+
+    Parameters
+    ----------
+    hass
+        Home assistant object.
+    template
+        The template to calculate.
+    action
+        Callable to call with results.
+    variables
+        Variables to pass to the template.
+
+    Returns
+    -------
+    Info object used to unregister the listener, and refresh the template.
+
+    """
+    tracker = _TrackTemplateResultInfo(hass, template, action, variables)
+    tracker.async_setup()
+    return tracker
 
 
 @callback
@@ -620,13 +996,19 @@ def async_track_utc_time_change(
 
         calculate_next(now + timedelta(seconds=1))
 
+        # We always get time.time() first to avoid time.time()
+        # ticking forward after fetching hass.loop.time()
+        # and callback being scheduled a few microseconds early
         cancel_callback = hass.loop.call_at(
-            hass.loop.time() + next_time.timestamp() - time.time(),
+            -time.time() + hass.loop.time() + next_time.timestamp(),
             pattern_time_change_listener,
         )
 
+    # We always get time.time() first to avoid time.time()
+    # ticking forward after fetching hass.loop.time()
+    # and callback being scheduled a few microseconds early
     cancel_callback = hass.loop.call_at(
-        hass.loop.time() + next_time.timestamp() - time.time(),
+        -time.time() + hass.loop.time() + next_time.timestamp(),
         pattern_time_change_listener,
     )
 

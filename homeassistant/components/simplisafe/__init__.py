@@ -3,7 +3,7 @@ import asyncio
 from uuid import UUID
 
 from simplipy import API
-from simplipy.errors import InvalidCredentialsError, SimplipyError
+from simplipy.errors import EndpointUnavailable, InvalidCredentialsError, SimplipyError
 from simplipy.websocket import (
     EVENT_CAMERA_MOTION_DETECTED,
     EVENT_CONNECTION_LOST,
@@ -554,6 +554,13 @@ class SimpliSafe:
                 except SimplipyError as err:
                     LOGGER.error("Error while using stored refresh token: %s", err)
                     return
+
+            if isinstance(result, EndpointUnavailable):
+                # In case the user attempt an action not allowed in their current plan,
+                # we merely log that message at INFO level (so the user is aware,
+                # but not spammed with ERROR messages that they cannot change):
+                LOGGER.info(result)
+                return
 
             if isinstance(result, SimplipyError):
                 LOGGER.error("SimpliSafe error while updating: %s", result)

@@ -45,17 +45,27 @@ async def turn_fan_on(
     if speed:
         service_data[fan.ATTR_SPEED] = speed
     await hass.services.async_call(
-        FAN_DOMAIN, SERVICE_TURN_ON, service_data=service_data, blocking=True,
+        FAN_DOMAIN,
+        SERVICE_TURN_ON,
+        service_data=service_data,
+        blocking=True,
     )
     await hass.async_block_till_done()
 
 
 async def test_entity_registry(hass: core.HomeAssistant):
     """Tests that the devices are registered in the entity registry."""
-    await setup_platform(hass, FAN_DOMAIN, ceiling_fan("name-1"))
+    await setup_platform(
+        hass,
+        FAN_DOMAIN,
+        ceiling_fan("name-1"),
+        bond_version={"bondid": "test-hub-id"},
+        bond_device_id="test-device-id",
+    )
 
     registry: EntityRegistry = await hass.helpers.entity_registry.async_get_registry()
-    assert [key for key in registry.entities] == ["fan.name_1"]
+    entity = registry.entities["fan.name_1"]
+    assert entity.unique_id == "test-hub-id_test-device-id"
 
 
 async def test_non_standard_speed_list(hass: core.HomeAssistant):
@@ -96,6 +106,20 @@ async def test_non_standard_speed_list(hass: core.HomeAssistant):
         )
 
 
+async def test_fan_speed_with_no_max_seed(hass: core.HomeAssistant):
+    """Tests that fans without max speed (increase/decrease controls) map speed to HA standard."""
+    await setup_platform(
+        hass,
+        FAN_DOMAIN,
+        ceiling_fan("name-1"),
+        bond_device_id="test-device-id",
+        props={"no": "max_speed"},
+        state={"power": 1, "speed": 14},
+    )
+
+    assert hass.states.get("fan.name_1").attributes["speed"] == fan.SPEED_HIGH
+
+
 async def test_turn_on_fan_with_speed(hass: core.HomeAssistant):
     """Tests that turn on command delegates to set speed API."""
     await setup_platform(
@@ -128,7 +152,10 @@ async def test_turn_off_fan(hass: core.HomeAssistant):
 
     with patch_bond_action() as mock_turn_off, patch_bond_device_state():
         await hass.services.async_call(
-            FAN_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: "fan.name_1"}, blocking=True,
+            FAN_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "fan.name_1"},
+            blocking=True,
         )
         await hass.async_block_till_done()
 

@@ -31,7 +31,7 @@ from homeassistant.const import (
     UNIT_PERCENTAGE,
     __version__,
 )
-from homeassistant.core import callback as ha_callback, split_entity_id
+from homeassistant.core import Context, callback as ha_callback, split_entity_id
 from homeassistant.helpers.event import (
     async_track_state_change_event,
     track_point_in_utc_time,
@@ -490,9 +490,12 @@ class HomeAccessory(Accessory):
             ATTR_SERVICE: service,
             ATTR_VALUE: value,
         }
+        context = Context()
 
-        self.hass.bus.async_fire(EVENT_HOMEKIT_CHANGED, event_data)
-        await self.hass.services.async_call(domain, service, service_data)
+        self.hass.bus.async_fire(EVENT_HOMEKIT_CHANGED, event_data, context=context)
+        await self.hass.services.async_call(
+            domain, service, service_data, context=context
+        )
 
     @ha_callback
     def async_stop(self):

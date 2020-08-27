@@ -22,7 +22,8 @@ async def test_auth_fail(
     with patch(
         "homeassistant.components.gogogate2.async_setup", return_value=True
     ), patch(
-        "homeassistant.components.gogogate2.async_setup_entry", return_value=True,
+        "homeassistant.components.gogogate2.async_setup_entry",
+        return_value=True,
     ):
         await component_factory.configure_component()
         component_factory.api_class_mock.return_value = api_mock

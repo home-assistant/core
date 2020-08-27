@@ -61,7 +61,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             )
         )
         flume_devices = await hass.async_add_executor_job(
-            partial(FlumeDeviceList, flume_auth, http_session=http_session,)
+            partial(
+                FlumeDeviceList,
+                flume_auth,
+                http_session=http_session,
+            )
         )
     except RequestException:
         raise ConfigEntryNotReady

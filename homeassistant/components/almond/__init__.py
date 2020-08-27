@@ -108,8 +108,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEnt
         auth = AlmondLocalAuth(entry.data["host"], websession)
     else:
         # OAuth2
-        implementation = await config_entry_oauth2_flow.async_get_config_entry_implementation(
-            hass, entry
+        implementation = (
+            await config_entry_oauth2_flow.async_get_config_entry_implementation(
+                hass, entry
+            )
         )
         oauth_session = config_entry_oauth2_flow.OAuth2Session(
             hass, entry, implementation

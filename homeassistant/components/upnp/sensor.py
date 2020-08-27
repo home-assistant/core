@@ -1,6 +1,6 @@
 """Support for UPnP/IGD Sensors."""
 from datetime import timedelta
-from typing import Mapping
+from typing import Any, Mapping
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DATA_BYTES, DATA_RATE_KIBIBYTES_PER_SECOND
@@ -18,6 +18,8 @@ from .const import (
     DATA_RATE_PACKETS_PER_SECOND,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
+    DOMAIN_COORDINATORS,
+    DOMAIN_DEVICES,
     KIBIBYTE,
     LOGGER as _LOGGER,
     PACKETS_RECEIVED,
@@ -84,9 +86,9 @@ async def async_setup_entry(
         udn = data[CONFIG_ENTRY_UDN]
     else:
         # any device will do
-        udn = list(hass.data[DOMAIN]["devices"].keys())[0]
+        udn = list(hass.data[DOMAIN][DOMAIN_DEVICES].keys())[0]
 
-    device: Device = hass.data[DOMAIN]["devices"][udn]
+    device: Device = hass.data[DOMAIN][DOMAIN_DEVICES][udn]
 
     update_interval_sec = config_entry.options.get(
         CONFIG_ENTRY_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
@@ -94,7 +96,7 @@ async def async_setup_entry(
     update_interval = timedelta(seconds=update_interval_sec)
     _LOGGER.debug("update_interval: %s", update_interval)
     _LOGGER.debug("Adding sensors")
-    coordinator = DataUpdateCoordinator(
+    coordinator = DataUpdateCoordinator[Mapping[str, Any]](
         hass,
         _LOGGER,
         name=device.name,
@@ -102,7 +104,7 @@ async def async_setup_entry(
         update_interval=update_interval,
     )
     await coordinator.async_refresh()
-    hass.data[DOMAIN]["coordinators"][udn] = coordinator
+    hass.data[DOMAIN][DOMAIN_COORDINATORS][udn] = coordinator
 
     sensors = [
         RawUpnpSensor(coordinator, device, SENSOR_TYPES[BYTES_RECEIVED]),
@@ -122,7 +124,7 @@ class UpnpSensor(Entity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[Mapping[str, Any]],
         device: Device,
         sensor_type: Mapping[str, str],
         update_multiplier: int = 2,
@@ -169,7 +171,7 @@ class UpnpSensor(Entity):
         return self._sensor_type["unit"]
 
     @property
-    def device_info(self) -> Mapping[str, any]:
+    def device_info(self) -> Mapping[str, Any]:
         """Get device info."""
         return {
             "connections": {(dr.CONNECTION_UPNP, self._device.udn)},

@@ -150,7 +150,9 @@ class SensorManager:
 
         self.bridge.hass.async_create_task(
             remove_devices(
-                self.bridge, [value.uniqueid for value in api.values()], current,
+                self.bridge,
+                [value.uniqueid for value in api.values()],
+                current,
             )
         )
 

@@ -12,7 +12,7 @@
         },
         "error": {
             "follow_link": "Vennligst f\u00f8lg lenken og godkjenn f\u00f8r du trykker p\u00e5 Send",
-            "no_token": "Ikke godkjent med Minut"
+            "no_token": "Ugyldig tilgangstoken"
         },
         "step": {
             "auth": {

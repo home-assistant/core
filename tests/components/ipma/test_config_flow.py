@@ -79,7 +79,9 @@ async def test_flow_entry_created_from_user_input():
     with patch(
         "homeassistant.components.ipma.config_flow.IpmaFlowHandler._show_config_form"
     ) as config_form, patch.object(
-        flow.hass.config_entries, "async_entries", return_value=[],
+        flow.hass.config_entries,
+        "async_entries",
+        return_value=[],
     ) as config_entries:
 
         result = await flow.async_step_user(user_input=test_data)

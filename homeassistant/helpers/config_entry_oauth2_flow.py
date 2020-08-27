@@ -118,7 +118,7 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
     @property
     def redirect_uri(self) -> str:
         """Return the redirect uri."""
-        return f"{get_url(self.hass)}{AUTH_CALLBACK_PATH}"
+        return f"{get_url(self.hass, require_current_request=True)}{AUTH_CALLBACK_PATH}"
 
     @property
     def extra_authorize_data(self) -> dict:

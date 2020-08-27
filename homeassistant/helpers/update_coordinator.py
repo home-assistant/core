@@ -3,9 +3,11 @@ import asyncio
 from datetime import datetime, timedelta
 import logging
 from time import monotonic
-from typing import Any, Awaitable, Callable, List, Optional
+from typing import Awaitable, Callable, Generic, List, Optional, TypeVar
+import urllib.error
 
 import aiohttp
+import requests
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import event
@@ -16,12 +18,14 @@ from .debounce import Debouncer
 REQUEST_REFRESH_DEFAULT_COOLDOWN = 10
 REQUEST_REFRESH_DEFAULT_IMMEDIATE = True
 
+T = TypeVar("T")
+
 
 class UpdateFailed(Exception):
     """Raised when an update has failed."""
 
 
-class DataUpdateCoordinator:
+class DataUpdateCoordinator(Generic[T]):
     """Class to manage fetching data from single endpoint."""
 
     def __init__(
@@ -31,7 +35,7 @@ class DataUpdateCoordinator:
         *,
         name: str,
         update_interval: Optional[timedelta] = None,
-        update_method: Optional[Callable[[], Awaitable]] = None,
+        update_method: Optional[Callable[[], Awaitable[T]]] = None,
         request_refresh_debouncer: Optional[Debouncer] = None,
     ):
         """Initialize global data updater."""
@@ -41,7 +45,7 @@ class DataUpdateCoordinator:
         self.update_method = update_method
         self.update_interval = update_interval
 
-        self.data: Optional[Any] = None
+        self.data: Optional[T] = None
 
         self._listeners: List[CALLBACK_TYPE] = []
         self._unsub_refresh: Optional[CALLBACK_TYPE] = None
@@ -120,7 +124,7 @@ class DataUpdateCoordinator:
         """
         await self._debounced_refresh.async_call()
 
-    async def _async_update_data(self) -> Optional[Any]:
+    async def _async_update_data(self) -> Optional[T]:
         """Fetch the latest data from the source."""
         if self.update_method is None:
             raise NotImplementedError("Update method not implemented")
@@ -138,14 +142,22 @@ class DataUpdateCoordinator:
             start = monotonic()
             self.data = await self._async_update_data()
 
-        except asyncio.TimeoutError:
+        except (asyncio.TimeoutError, requests.exceptions.Timeout):
             if self.last_update_success:
                 self.logger.error("Timeout fetching %s data", self.name)
                 self.last_update_success = False
 
-        except aiohttp.ClientError as err:
+        except (aiohttp.ClientError, requests.exceptions.RequestException) as err:
             if self.last_update_success:
                 self.logger.error("Error requesting %s data: %s", self.name, err)
+                self.last_update_success = False
+
+        except urllib.error.URLError as err:
+            if self.last_update_success:
+                if err.reason == "timed out":
+                    self.logger.error("Timeout fetching %s data", self.name)
+                else:
+                    self.logger.error("Error requesting %s data: %s", self.name, err)
                 self.last_update_success = False
 
         except UpdateFailed as err:

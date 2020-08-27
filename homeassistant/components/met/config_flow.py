@@ -1,4 +1,6 @@
 """Config flow to configure Met component."""
+from typing import Any, Dict, Optional
+
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -70,6 +72,12 @@ class MetFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             errors=self._errors,
         )
+
+    async def async_step_import(
+        self, user_input: Optional[Dict] = None
+    ) -> Dict[str, Any]:
+        """Handle configuration by yaml file."""
+        return await self.async_step_user(user_input)
 
     async def async_step_onboarding(self, data=None):
         """Handle a flow initialized by onboarding."""

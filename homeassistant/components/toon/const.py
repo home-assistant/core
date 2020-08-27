@@ -31,6 +31,8 @@ DEFAULT_MIN_TEMP = 6.0
 CURRENCY_EUR = "EUR"
 VOLUME_CM3 = "CM3"
 VOLUME_M3 = "M3"
+VOLUME_LHOUR = "L/H"
+VOLUME_LMIN = "L/MIN"
 
 ATTR_DEFAULT_ENABLED = "default_enabled"
 ATTR_INVERTED = "inverted"
@@ -337,6 +339,60 @@ SENSOR_ENTITIES = {
         ATTR_DEVICE_CLASS: None,
         ATTR_ICON: "mdi:solar-power",
         ATTR_DEFAULT_ENABLED: True,
+    },
+    "water_average": {
+        ATTR_NAME: "Average Water Usage",
+        ATTR_SECTION: "water_usage",
+        ATTR_MEASUREMENT: "average",
+        ATTR_UNIT_OF_MEASUREMENT: VOLUME_LMIN,
+        ATTR_DEVICE_CLASS: None,
+        ATTR_ICON: "mdi:water",
+        ATTR_DEFAULT_ENABLED: False,
+    },
+    "water_average_daily": {
+        ATTR_NAME: "Average Daily Water Usage",
+        ATTR_SECTION: "water_usage",
+        ATTR_MEASUREMENT: "day_average",
+        ATTR_UNIT_OF_MEASUREMENT: VOLUME_M3,
+        ATTR_DEVICE_CLASS: None,
+        ATTR_ICON: "mdi:water",
+        ATTR_DEFAULT_ENABLED: False,
+    },
+    "water_daily_usage": {
+        ATTR_NAME: "Water Usage Today",
+        ATTR_SECTION: "water_usage",
+        ATTR_MEASUREMENT: "day_usage",
+        ATTR_UNIT_OF_MEASUREMENT: VOLUME_M3,
+        ATTR_DEVICE_CLASS: None,
+        ATTR_ICON: "mdi:water",
+        ATTR_DEFAULT_ENABLED: False,
+    },
+    "water_meter_reading": {
+        ATTR_NAME: "Water Meter",
+        ATTR_SECTION: "water_usage",
+        ATTR_MEASUREMENT: "meter",
+        ATTR_UNIT_OF_MEASUREMENT: VOLUME_M3,
+        ATTR_DEVICE_CLASS: None,
+        ATTR_ICON: "mdi:water",
+        ATTR_DEFAULT_ENABLED: False,
+    },
+    "water_value": {
+        ATTR_NAME: "Current Water Usage",
+        ATTR_SECTION: "water_usage",
+        ATTR_MEASUREMENT: "current",
+        ATTR_UNIT_OF_MEASUREMENT: VOLUME_LMIN,
+        ATTR_DEVICE_CLASS: None,
+        ATTR_ICON: "mdi:water-pump",
+        ATTR_DEFAULT_ENABLED: False,
+    },
+    "water_daily_cost": {
+        ATTR_NAME: "Water Cost Today",
+        ATTR_SECTION: "water_usage",
+        ATTR_MEASUREMENT: "day_cost",
+        ATTR_UNIT_OF_MEASUREMENT: CURRENCY_EUR,
+        ATTR_DEVICE_CLASS: None,
+        ATTR_ICON: "mdi:water-pump",
+        ATTR_DEFAULT_ENABLED: False,
     },
 }
 

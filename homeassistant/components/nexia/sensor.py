@@ -126,7 +126,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             # Zone Status
             entities.append(
                 NexiaThermostatZoneSensor(
-                    coordinator, zone, "get_status", "Zone Status", None, None,
+                    coordinator,
+                    zone,
+                    "get_status",
+                    "Zone Status",
+                    None,
+                    None,
                 )
             )
             # Setpoint Status

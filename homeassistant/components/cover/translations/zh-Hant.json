@@ -6,7 +6,8 @@
             "open": "\u958b\u555f{entity_name}",
             "open_tilt": "\u958b\u555f{entity_name}\u7a97\u7c3e",
             "set_position": "\u8a2d\u5b9a{entity_name}\u4f4d\u7f6e",
-            "set_tilt_position": "\u8a2d\u5b9a{entity_name}\u5e8a\u7c3e\u4f4d\u7f6e"
+            "set_tilt_position": "\u8a2d\u5b9a{entity_name}\u5e8a\u7c3e\u4f4d\u7f6e",
+            "stop": "\u505c\u6b62 {entity_name}"
         },
         "condition_type": {
             "is_closed": "{entity_name}\u5df2\u95dc\u9589",

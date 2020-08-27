@@ -48,7 +48,10 @@ class User:
     )
 
     _permissions: Optional[perm_mdl.PolicyPermissions] = attr.ib(
-        init=False, eq=False, order=False, default=None,
+        init=False,
+        eq=False,
+        order=False,
+        default=None,
     )
 
     @property

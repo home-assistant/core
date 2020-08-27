@@ -76,7 +76,7 @@ async def test_get_triggers(hass, device_reg, entity_reg):
         if device_class != "none"
     ]
     triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
-    assert len(triggers) == 8
+    assert len(triggers) == 12
     assert triggers == expected_triggers
 
 

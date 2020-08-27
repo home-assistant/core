@@ -10,7 +10,7 @@ from homeassistant.components.air_quality import (
 )
 from homeassistant.const import CONF_NAME
 
-from .const import ATTR_STATION, DOMAIN, ICONS_MAP
+from .const import ATTR_STATION, DEFAULT_NAME, DOMAIN, ICONS_MAP, MANUFACTURER
 
 ATTRIBUTION = "Data provided by GIOŚ"
 
@@ -116,6 +116,16 @@ class GiosAirQuality(AirQualityEntity):
     def unique_id(self):
         """Return a unique_id for this entity."""
         return self.coordinator.gios.station_id
+
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return {
+            "identifiers": {(DOMAIN, self.coordinator.gios.station_id)},
+            "name": DEFAULT_NAME,
+            "manufacturer": MANUFACTURER,
+            "entry_type": "service",
+        }
 
     @property
     def should_poll(self):

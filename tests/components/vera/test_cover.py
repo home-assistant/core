@@ -31,7 +31,9 @@ async def test_cover(
     assert hass.states.get(entity_id).attributes["current_position"] == 0
 
     await hass.services.async_call(
-        "cover", "open_cover", {"entity_id": entity_id},
+        "cover",
+        "open_cover",
+        {"entity_id": entity_id},
     )
     await hass.async_block_till_done()
     vera_device.open.assert_called()
@@ -43,7 +45,9 @@ async def test_cover(
     assert hass.states.get(entity_id).attributes["current_position"] == 100
 
     await hass.services.async_call(
-        "cover", "set_cover_position", {"entity_id": entity_id, "position": 50},
+        "cover",
+        "set_cover_position",
+        {"entity_id": entity_id, "position": 50},
     )
     await hass.async_block_till_done()
     vera_device.set_level.assert_called_with(50)
@@ -55,7 +59,9 @@ async def test_cover(
     assert hass.states.get(entity_id).attributes["current_position"] == 50
 
     await hass.services.async_call(
-        "cover", "stop_cover", {"entity_id": entity_id},
+        "cover",
+        "stop_cover",
+        {"entity_id": entity_id},
     )
     await hass.async_block_till_done()
     vera_device.stop.assert_called()
@@ -65,7 +71,9 @@ async def test_cover(
     assert hass.states.get(entity_id).attributes["current_position"] == 50
 
     await hass.services.async_call(
-        "cover", "close_cover", {"entity_id": entity_id},
+        "cover",
+        "close_cover",
+        {"entity_id": entity_id},
     )
     await hass.async_block_till_done()
     vera_device.close.assert_called()

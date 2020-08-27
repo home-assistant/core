@@ -129,7 +129,8 @@ class ComponentFactory:
         assert result["step_id"] == "user"
 
         result = await self._hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=config_data,
+            result["flow_id"],
+            user_input=config_data,
         )
         assert result
         assert result["type"] == RESULT_TYPE_CREATE_ENTRY

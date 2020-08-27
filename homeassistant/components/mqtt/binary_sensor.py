@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PAYLOAD_OFF,
     CONF_PAYLOAD_ON,
+    CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import callback
@@ -30,7 +31,6 @@ from . import (
     ATTR_DISCOVERY_HASH,
     CONF_QOS,
     CONF_STATE_TOPIC,
-    CONF_UNIQUE_ID,
     MqttAttributes,
     MqttAvailability,
     MqttDiscoveryUpdate,
@@ -169,7 +169,8 @@ class MqttBinarySensor(
 
             if expire_after is not None and expire_after > 0:
 
-                # When expire_after is set, and we receive a message, assume device is not expired since it has to be to receive the message
+                # When expire_after is set, and we receive a message, assume device is
+                # not expired since it has to be to receive the message
                 self._expired = False
 
                 # Reset old trigger

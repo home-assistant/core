@@ -30,7 +30,9 @@ async def test_lock(
     assert hass.states.get(entity_id).state == STATE_UNLOCKED
 
     await hass.services.async_call(
-        "lock", "lock", {"entity_id": entity_id},
+        "lock",
+        "lock",
+        {"entity_id": entity_id},
     )
     await hass.async_block_till_done()
     vera_device.lock.assert_called()
@@ -40,7 +42,9 @@ async def test_lock(
     assert hass.states.get(entity_id).state == STATE_LOCKED
 
     await hass.services.async_call(
-        "lock", "unlock", {"entity_id": entity_id},
+        "lock",
+        "unlock",
+        {"entity_id": entity_id},
     )
     await hass.async_block_till_done()
     vera_device.unlock.assert_called()

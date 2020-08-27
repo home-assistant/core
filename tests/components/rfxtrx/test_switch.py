@@ -8,6 +8,9 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import mock_restore_cache
 
+EVENT_RFY_ENABLE_SUN_AUTO = "081a00000301010113"
+EVENT_RFY_DISABLE_SUN_AUTO = "081a00000301010114"
+
 
 async def test_one_switch(hass, rfxtrx):
     """Test with 1 switch."""
@@ -131,5 +134,20 @@ async def test_discover_switch(hass, rfxtrx_automatic):
 
     await rfxtrx.signal("0b1100100118cdeb02010f70")
     state = hass.states.get("switch.ac_118cdeb_2")
+    assert state
+    assert state.state == "on"
+
+
+async def test_discover_rfy_sun_switch(hass, rfxtrx_automatic):
+    """Test with discovery of switches."""
+    rfxtrx = rfxtrx_automatic
+
+    await rfxtrx.signal(EVENT_RFY_DISABLE_SUN_AUTO)
+    state = hass.states.get("switch.rfy_030101_1")
+    assert state
+    assert state.state == "off"
+
+    await rfxtrx.signal(EVENT_RFY_ENABLE_SUN_AUTO)
+    state = hass.states.get("switch.rfy_030101_1")
     assert state
     assert state.state == "on"

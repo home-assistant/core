@@ -462,7 +462,8 @@ async def test_websocket_subscription_not_logged_in(hass, hass_ws_client):
     """Test querying the status."""
     client = await hass_ws_client(hass)
     with patch(
-        "hass_nabucasa.Cloud.fetch_subscription_info", return_value={"return": "value"},
+        "hass_nabucasa.Cloud.fetch_subscription_info",
+        return_value={"return": "value"},
     ):
         await client.send_json({"id": 5, "type": "cloud/subscription"})
         response = await client.receive_json()

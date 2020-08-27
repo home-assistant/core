@@ -1,13 +1,33 @@
 {
     "config": {
         "abort": {
+            "already_configured_device": "Apparat ass scho konfigur\u00e9iert",
+            "already_configured_local_device": "Lokalen Apparat ass scho konfigur\u00e9iert. L\u00e4sch d\u00e9i iers de ee Cloud Apparat dob\u00e4isetz.",
             "authorize_url_timeout": "Z\u00e4it Iwwerschreidung beim gener\u00e9ieren vun der Autorisatiouns URL.",
-            "missing_configuration": "Komponent ass nach net konfigur\u00e9iert. Follegt w.e.g der Dokumentatioun.",
-            "single_instance_allowed": "Scho konfigur\u00e9iert. N\u00ebmmen eng Konfiguratioun ass m\u00e9iglech."
+            "connection_error": "Feeler beim verbannen mam Smappee Apparat.",
+            "invalid_mdns": "Net \u00ebnnerst\u00ebtzten Apparat fir Smappee Integratioun.",
+            "missing_configuration": "Komponent ass nach net konfigur\u00e9iert. Follegt w.e.g der Dokumentatioun."
         },
+        "flow_title": "Smappee: {name}",
         "step": {
+            "environment": {
+                "data": {
+                    "environment": "\u00cbmwelt"
+                },
+                "description": "Smappee ariichten fir d'Integratioun mam Home Assistant."
+            },
+            "local": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "G\u00ebff den Host un fir Smappee lokal Integratioun z'initialis\u00e9ieren"
+            },
             "pick_implementation": {
                 "title": "Wiel Authentifikatiouns Method aus"
+            },
+            "zeroconf_confirm": {
+                "description": "Soll den Smappee Apparat mat der Seriennummer  `{serialnumber}` am Home Assistant dob\u00e4igesat ginn?",
+                "title": "Entdeckten Smappee Apparat"
             }
         }
     }

@@ -1,8 +1,6 @@
 """Allow to set up simple automation rules via the config file."""
-import asyncio
-import importlib
 import logging
-from typing import Any, Awaitable, Callable, List, Optional, Set
+from typing import Any, Awaitable, Callable, List, Optional, Set, cast
 
 import voluptuous as vol
 
@@ -46,6 +44,7 @@ from homeassistant.helpers.script import (
     make_script_schema,
 )
 from homeassistant.helpers.service import async_register_admin_service
+from homeassistant.helpers.trigger import async_initialize_triggers
 from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.loader import bind_hass
 from homeassistant.util.dt import parse_datetime, utcnow
@@ -67,6 +66,7 @@ CONF_TRIGGER = "trigger"
 CONF_CONDITION_TYPE = "condition_type"
 CONF_INITIAL_STATE = "initial_state"
 CONF_SKIP_CONDITION = "skip_condition"
+CONF_STOP_ACTIONS = "stop_actions"
 
 CONDITION_USE_TRIGGER_VALUES = "use_trigger_values"
 CONDITION_TYPE_AND = "and"
@@ -75,6 +75,7 @@ CONDITION_TYPE_OR = "or"
 
 DEFAULT_CONDITION_TYPE = CONDITION_TYPE_AND
 DEFAULT_INITIAL_STATE = True
+DEFAULT_STOP_ACTIONS = True
 
 EVENT_AUTOMATION_RELOADED = "automation_reloaded"
 EVENT_AUTOMATION_TRIGGERED = "automation_triggered"
@@ -86,27 +87,6 @@ SERVICE_TRIGGER = "trigger"
 _LOGGER = logging.getLogger(__name__)
 
 AutomationActionType = Callable[[HomeAssistant, TemplateVarsType], Awaitable[None]]
-
-
-def _platform_validator(config):
-    """Validate it is a valid platform."""
-    try:
-        platform = importlib.import_module(f".{config[CONF_PLATFORM]}", __name__)
-    except ImportError:
-        raise vol.Invalid("Invalid platform specified") from None
-
-    return platform.TRIGGER_SCHEMA(config)
-
-
-_TRIGGER_SCHEMA = vol.All(
-    cv.ensure_list,
-    [
-        vol.All(
-            vol.Schema({vol.Required(CONF_PLATFORM): str}, extra=vol.ALLOW_EXTRA),
-            _platform_validator,
-        )
-    ],
-)
 
 _CONDITION_SCHEMA = vol.All(cv.ensure_list, [cv.CONDITION_SCHEMA])
 
@@ -120,7 +100,7 @@ PLATFORM_SCHEMA = vol.All(
             vol.Optional(CONF_DESCRIPTION): cv.string,
             vol.Optional(CONF_INITIAL_STATE): cv.boolean,
             vol.Optional(CONF_HIDE_ENTITY): cv.boolean,
-            vol.Required(CONF_TRIGGER): _TRIGGER_SCHEMA,
+            vol.Required(CONF_TRIGGER): cv.TRIGGER_SCHEMA,
             vol.Optional(CONF_CONDITION): _CONDITION_SCHEMA,
             vol.Required(CONF_ACTION): cv.SCRIPT_SCHEMA,
         },
@@ -225,7 +205,11 @@ async def async_setup(hass, config):
     )
     component.async_register_entity_service(SERVICE_TOGGLE, {}, "async_toggle")
     component.async_register_entity_service(SERVICE_TURN_ON, {}, "async_turn_on")
-    component.async_register_entity_service(SERVICE_TURN_OFF, {}, "async_turn_off")
+    component.async_register_entity_service(
+        SERVICE_TURN_OFF,
+        {vol.Optional(CONF_STOP_ACTIONS, default=DEFAULT_STOP_ACTIONS): cv.boolean},
+        "async_turn_off",
+    )
 
     async def reload_service_handler(service_call):
         """Remove all automations and load new ones from config."""
@@ -261,6 +245,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         self._async_detach_triggers = None
         self._cond_func = cond_func
         self.action_script = action_script
+        self.action_script.change_listener = self.async_write_ha_state
         self._last_triggered = None
         self._initial_state = initial_state
         self._is_enabled = False
@@ -289,11 +274,10 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         attrs = {
             ATTR_LAST_TRIGGERED: self._last_triggered,
             ATTR_MODE: self.action_script.script_mode,
+            ATTR_CUR: self.action_script.runs,
         }
         if self.action_script.supports_max:
             attrs[ATTR_MAX] = self.action_script.max_runs
-            if self.is_on:
-                attrs[ATTR_CUR] = self.action_script.runs
         return attrs
 
     @property
@@ -388,9 +372,12 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        await self.async_disable()
+        if CONF_STOP_ACTIONS in kwargs:
+            await self.async_disable(kwargs[CONF_STOP_ACTIONS])
+        else:
+            await self.async_disable()
 
-    async def async_trigger(self, variables, skip_condition=False, context=None):
+    async def async_trigger(self, variables, context=None, skip_condition=False):
         """Trigger automation.
 
         This method is a coroutine.
@@ -456,9 +443,9 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         )
         self.async_write_ha_state()
 
-    async def async_disable(self):
+    async def async_disable(self, stop_actions=DEFAULT_STOP_ACTIONS):
         """Disable the automation entity."""
-        if not self._is_enabled:
+        if not self._is_enabled and not self.action_script.runs:
             return
 
         self._is_enabled = False
@@ -467,7 +454,8 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
             self._async_detach_triggers()
             self._async_detach_triggers = None
 
-        await self.action_script.async_stop()
+        if stop_actions:
+            await self.action_script.async_stop()
 
         self.async_write_ha_state()
 
@@ -475,36 +463,19 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         self, home_assistant_start: bool
     ) -> Optional[Callable[[], None]]:
         """Set up the triggers."""
-        info = {"name": self._name, "home_assistant_start": home_assistant_start}
 
-        triggers = []
-        for conf in self._trigger_config:
-            platform = importlib.import_module(f".{conf[CONF_PLATFORM]}", __name__)
+        def log_cb(level, msg):
+            self._logger.log(level, "%s %s", msg, self._name)
 
-            triggers.append(
-                platform.async_attach_trigger(  # type: ignore
-                    self.hass, conf, self.async_trigger, info
-                )
-            )
-
-        results = await asyncio.gather(*triggers)
-
-        if None in results:
-            self._logger.error("Error setting up trigger %s", self._name)
-
-        removes = [remove for remove in results if remove is not None]
-        if not removes:
-            return None
-
-        self._logger.info("Initialized trigger %s", self._name)
-
-        @callback
-        def remove_triggers():
-            """Remove attached triggers."""
-            for remove in removes:
-                remove()
-
-        return remove_triggers
+        return await async_initialize_triggers(
+            cast(HomeAssistant, self.hass),
+            self._trigger_config,
+            self.async_trigger,
+            DOMAIN,
+            self._name,
+            log_cb,
+            home_assistant_start,
+        )
 
     @property
     def device_state_attributes(self):
@@ -535,6 +506,8 @@ async def _async_process_config(hass, config, component):
                 hass,
                 config_block[CONF_ACTION],
                 name,
+                DOMAIN,
+                running_description="automation actions",
                 script_mode=config_block[CONF_MODE],
                 max_runs=config_block[CONF_MAX],
                 logger=_LOGGER,

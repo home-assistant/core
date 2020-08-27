@@ -1,31 +1,16 @@
 """Support for KNX/IP notification services."""
-import voluptuous as vol
 from xknx.devices import Notification as XknxNotification
 
-from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
-from homeassistant.const import CONF_ADDRESS, CONF_NAME
+from homeassistant.components.notify import BaseNotificationService
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
 
 from . import ATTR_DISCOVER_DEVICES, DATA_KNX
-
-DEFAULT_NAME = "KNX Notify"
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_ADDRESS): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
 
 
 async def async_get_service(hass, config, discovery_info=None):
     """Get the KNX notification service."""
-    return (
+    if discovery_info is not None:
         async_get_service_discovery(hass, discovery_info)
-        if discovery_info is not None
-        else async_get_service_config(hass, config)
-    )
 
 
 @callback
@@ -40,22 +25,10 @@ def async_get_service_discovery(hass, discovery_info):
     )
 
 
-@callback
-def async_get_service_config(hass, config):
-    """Set up notification for KNX platform configured within platform."""
-    notification = XknxNotification(
-        hass.data[DATA_KNX].xknx,
-        name=config[CONF_NAME],
-        group_address=config[CONF_ADDRESS],
-    )
-    hass.data[DATA_KNX].xknx.devices.add(notification)
-    return KNXNotificationService([notification])
-
-
 class KNXNotificationService(BaseNotificationService):
     """Implement demo notification service."""
 
-    def __init__(self, devices):
+    def __init__(self, devices: XknxNotification):
         """Initialize the service."""
         self.devices = devices
 

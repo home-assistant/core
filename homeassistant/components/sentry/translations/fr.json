@@ -9,8 +9,25 @@
         },
         "step": {
             "user": {
+                "data": {
+                    "dsn": "DSN"
+                },
                 "description": "Entrez votre DSN Sentry",
                 "title": "Sentry"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "environment": "Nom facultatif de l'environnement.",
+                    "event_custom_components": "Envoyer des \u00e9v\u00e9nements \u00e0 partir de composants personnalis\u00e9s",
+                    "event_handled": "Envoyer des \u00e9v\u00e9nements g\u00e9r\u00e9s",
+                    "event_third_party_packages": "Envoyer des \u00e9v\u00e9nements \u00e0 partir de paquets de tiers",
+                    "logging_event_level": "Le niveau de journal de Sentry enregistrera un \u00e9v\u00e9nement pour",
+                    "tracing": "Activer le suivi des performances"
+                }
             }
         }
     }

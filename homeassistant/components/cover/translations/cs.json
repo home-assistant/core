@@ -1,5 +1,8 @@
 {
     "device_automation": {
+        "action_type": {
+            "stop": "Zastavit {entity_name}"
+        },
         "condition_type": {
             "is_closed": "{entity_name} je zav\u0159eno",
             "is_closing": "{entity_name} se zav\u00edr\u00e1",

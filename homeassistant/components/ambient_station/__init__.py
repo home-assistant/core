@@ -293,7 +293,7 @@ async def async_setup_entry(hass, config_entry):
             Client(
                 config_entry.data[CONF_API_KEY],
                 config_entry.data[CONF_APP_KEY],
-                session,
+                session=session,
             ),
         )
         hass.loop.create_task(ambient.ws_connect())

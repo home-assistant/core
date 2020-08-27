@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_auth": "Autenticazione non valida",
+            "unknown": "Errore imprevisto"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "pin": "Codice PIN",
+                    "username": "Nome utente"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "code_arm_required": "Richiedi codice PIN per armare",
+                    "code_disarm_required": "Richiedi codice PIN per disarmare",
+                    "scan_interval": "Con che frequenza interrogare Risco (in secondi)"
+                },
+                "title": "Configura le opzioni"
+            }
+        }
+    }
+}

@@ -70,7 +70,9 @@ async def async_setup(hass: HomeAssistant, base_config: dict) -> bool:
 
     hass.async_create_task(
         hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config,
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=config,
         )
     )
 
@@ -213,7 +215,9 @@ class VeraDevice(Entity):
         else:
             self._unique_id = f"vera_{controller_data.config_entry.unique_id}_{self.vera_device.vera_device_id}"
 
-        self.controller.register(vera_device, self._update_callback)
+    async def async_added_to_hass(self):
+        """Subscribe to updates."""
+        self.controller.register(self.vera_device, self._update_callback)
 
     def _update_callback(self, _device):
         """Update the state."""
