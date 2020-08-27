@@ -6,7 +6,7 @@ from spotipy import Spotify
 from homeassistant import config_entries
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from .const import DOMAIN
+from .const import DOMAIN, SPOTIFY_SCOPES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,23 +27,7 @@ class SpotifyFlowHandler(
     @property
     def extra_authorize_data(self) -> dict:
         """Extra data that needs to be appended to the authorize url."""
-        scopes = [
-            # Needed to be able to control playback
-            "user-modify-playback-state",
-            # Needed in order to read available devices
-            "user-read-playback-state",
-            # Needed to determine if the user has Spotify Premium
-            "user-read-private",
-            # Needed for media browsing
-            "playlist-read-private",
-            "playlist-read-collaborative",
-            "user-library-read",
-            "user-top-read",
-            "user-read-playback-position",
-            "user-read-recently-played",
-            "user-follow-read",
-        ]
-        return {"scope": ",".join(scopes)}
+        return {"scope": ",".join(SPOTIFY_SCOPES)}
 
     async def async_oauth_create_entry(self, data: dict) -> dict:
         """Create an entry for Spotify."""

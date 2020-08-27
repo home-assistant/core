@@ -41,7 +41,13 @@ from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.entity import Entity
 from homeassistant.util.dt import utc_from_timestamp
 
-from .const import DATA_SPOTIFY_CLIENT, DATA_SPOTIFY_ME, DATA_SPOTIFY_SESSION, DOMAIN
+from .const import (
+    DATA_SPOTIFY_CLIENT,
+    DATA_SPOTIFY_ME,
+    DATA_SPOTIFY_SESSION,
+    DOMAIN,
+    SPOTIFY_SCOPES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -131,6 +137,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         self._name = f"Spotify {name}"
         self._session = session
         self._spotify = spotify
+        self._scope_ok = set(session.token["scope"].split(" ")) == set(SPOTIFY_SCOPES)
 
         self._currently_playing: Optional[dict] = {}
         self._devices: Optional[List[dict]] = []
@@ -381,11 +388,11 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
 
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
         """Implement the websocket media browsing helper."""
+        if not self._scope_ok:
+            raise NotImplementedError
 
         if media_content_type in [None, "library"]:
-            return await self.hass.async_add_executor_job(
-                library_payload, self._spotify
-            )
+            return await self.hass.async_add_executor_job(library_payload)
 
         payload = {
             "media_content_type": media_content_type,
@@ -490,7 +497,7 @@ def item_payload(item):
     return payload
 
 
-def library_payload(spotify):
+def library_payload():
     """
     Create response payload to describe contents of a specific library.
 
