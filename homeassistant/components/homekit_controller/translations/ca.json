@@ -15,17 +15,34 @@
             "max_peers_error": "El dispositiu ha refusat la vinculaci\u00f3 perqu\u00e8 no t\u00e9 suficient espai lliure.",
             "max_tries_error": "El dispositiu ha refusat la vinculaci\u00f3 perqu\u00e8 ha rebut m\u00e9s de 100 intents d'autenticaci\u00f3 fallits.",
             "pairing_failed": "S'ha produ\u00eft un error mentre s'intentava la vinculaci\u00f3 amb aquest dispositiu. Pot ser que sigui un error temporal o pot ser que el teu dispositiu encara no sigui compatible.",
+            "protocol_error": "Error en comunicar-se amb l'accessori. \u00c9s possible que el dispositiu no estigui en mode de vinculaci\u00f3, potser cal pr\u00e9mer un bot\u00f3 f\u00edsic o virtual.",
             "unable_to_pair": "No s'ha pogut vincular, torna-ho a provar.",
             "unknown_error": "El dispositiu ha em\u00e8s un error desconegut. Vinculaci\u00f3 fallida."
         },
         "flow_title": "Accessori HomeKit: {name}",
         "step": {
+            "busy_error": {
+                "description": "Atura la vinculaci\u00f3 a tots els controladors o prova de reiniciar el dispositiu, despr\u00e9s, segueix amb la vinculaci\u00f3.",
+                "title": "El dispositiu ja s'est\u00e0 vinculant amb un altre controlador"
+            },
+            "max_tries_error": {
+                "description": "El dispositiu ha rebut m\u00e9s de 100 intents d'autenticaci\u00f3 fallits. Prova de reiniciar el dispositiu, despr\u00e9s torna a intentar vincular-lo.",
+                "title": "S'ha superat el m\u00e0xim nombre d'intents d'autenticaci\u00f3"
+            },
             "pair": {
                 "data": {
                     "pairing_code": "Codi de vinculaci\u00f3"
                 },
                 "description": "Introdueix el codi de vinculaci\u00f3 de HomeKit per utilitzar aquest accessori (format XXX-XX-XXX)",
                 "title": "Vinculaci\u00f3 amb"
+            },
+            "protocol_error": {
+                "description": "\u00c9s possible que el dispositiu no estigui en mode de vinculaci\u00f3, potser cal pr\u00e9mer un bot\u00f3 f\u00edsic o virtual. Assegura't que el dispositiu est\u00e0 en mode vinculaci\u00f3 o prova de reiniciar-lo, despr\u00e9s, segueix amb la vinculaci\u00f3.",
+                "title": "Error en comunicar-se amb l'accessori"
+            },
+            "try_pair_later": {
+                "description": "Assegura't que el dispositiu estigui en mode vinculaci\u00f3 o prova de reiniciar-lo, despr\u00e9s continua reiniciant la vinculaci\u00f3.",
+                "title": "Vinculaci\u00f3 no disponible"
             },
             "user": {
                 "data": {

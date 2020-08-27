@@ -26,10 +26,12 @@ async def test_form(hass):
     ), patch(
         "homeassistant.components.nexia.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.nexia.async_setup_entry", return_value=True,
+        "homeassistant.components.nexia.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_USERNAME: "username", CONF_PASSWORD: "password"},
+            result["flow_id"],
+            {CONF_USERNAME: "username", CONF_PASSWORD: "password"},
         )
 
     assert result2["type"] == "create_entry"
@@ -51,7 +53,8 @@ async def test_form_invalid_auth(hass):
 
     with patch("homeassistant.components.nexia.config_flow.NexiaHome.login"):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_USERNAME: "username", CONF_PASSWORD: "password"},
+            result["flow_id"],
+            {CONF_USERNAME: "username", CONF_PASSWORD: "password"},
         )
 
     assert result2["type"] == "form"
@@ -69,7 +72,8 @@ async def test_form_cannot_connect(hass):
         side_effect=ConnectTimeout,
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_USERNAME: "username", CONF_PASSWORD: "password"},
+            result["flow_id"],
+            {CONF_USERNAME: "username", CONF_PASSWORD: "password"},
         )
 
     assert result2["type"] == "form"
@@ -89,7 +93,8 @@ async def test_form_import(hass):
     ), patch(
         "homeassistant.components.nexia.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.nexia.async_setup_entry", return_value=True,
+        "homeassistant.components.nexia.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

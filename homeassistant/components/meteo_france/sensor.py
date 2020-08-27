@@ -64,7 +64,8 @@ async def async_setup_entry(
             entities.append(MeteoFranceSensor(sensor_type, coordinator_forecast))
 
     async_add_entities(
-        entities, False,
+        entities,
+        False,
     )
 
 

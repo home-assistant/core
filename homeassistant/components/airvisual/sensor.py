@@ -98,7 +98,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     if config_entry.data[CONF_INTEGRATION_TYPE] == INTEGRATION_TYPE_GEOGRAPHY:
         sensors = [
             AirVisualGeographySensor(
-                coordinator, config_entry, kind, name, icon, unit, locale,
+                coordinator,
+                config_entry,
+                kind,
+                name,
+                icon,
+                unit,
+                locale,
             )
             for locale in GEOGRAPHY_SENSOR_LOCALES
             for kind, name, icon, unit in GEOGRAPHY_SENSORS

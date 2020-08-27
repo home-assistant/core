@@ -421,7 +421,8 @@ async def test_options_flow(hass: HomeAssistantType, service: MagicMock):
     # Scan interval
     # Default
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={},
+        result["flow_id"],
+        user_input={},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert config_entry.options[CONF_SCAN_INTERVAL] == DEFAULT_SCAN_INTERVAL
@@ -429,7 +430,8 @@ async def test_options_flow(hass: HomeAssistantType, service: MagicMock):
     # Manual
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_SCAN_INTERVAL: 2},
+        result["flow_id"],
+        user_input={CONF_SCAN_INTERVAL: 2},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert config_entry.options[CONF_SCAN_INTERVAL] == 2

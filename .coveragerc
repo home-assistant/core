@@ -103,7 +103,6 @@ omit =
     homeassistant/components/broadlink/__init__.py
     homeassistant/components/broadlink/const.py
     homeassistant/components/broadlink/remote.py
-    homeassistant/components/broadlink/sensor.py
     homeassistant/components/broadlink/switch.py
     homeassistant/components/broadlink/updater.py
     homeassistant/components/brottsplatskartan/sensor.py
@@ -754,6 +753,8 @@ omit =
     homeassistant/components/seventeentrack/sensor.py
     homeassistant/components/shiftr/*
     homeassistant/components/shodan/sensor.py
+    homeassistant/components/shelly/__init__.py
+    homeassistant/components/shelly/switch.py
     homeassistant/components/sht31/sensor.py
     homeassistant/components/sigfox/sensor.py
     homeassistant/components/simplepush/notify.py
@@ -812,7 +813,8 @@ omit =
     homeassistant/components/streamlabswater/*
     homeassistant/components/suez_water/*
     homeassistant/components/supervisord/sensor.py
-    homeassistant/components/surepetcare/*.py
+    homeassistant/components/surepetcare/__init__.py
+    homeassistant/components/surepetcare/sensor.py
     homeassistant/components/swiss_hydrological_data/sensor.py
     homeassistant/components/swiss_public_transport/sensor.py
     homeassistant/components/swisscom/device_tracker.py

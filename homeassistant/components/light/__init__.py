@@ -469,5 +469,6 @@ class Light(LightEntity):
         """Print deprecation warning."""
         super().__init_subclass__(**kwargs)
         _LOGGER.warning(
-            "Light is deprecated, modify %s to extend LightEntity", cls.__name__,
+            "Light is deprecated, modify %s to extend LightEntity",
+            cls.__name__,
         )

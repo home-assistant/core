@@ -584,7 +584,11 @@ async def test_automation_stops(hass, calls, service):
             ],
         }
     }
-    assert await async_setup_component(hass, automation.DOMAIN, config,)
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        config,
+    )
 
     running = asyncio.Event()
 
@@ -1089,6 +1093,7 @@ async def test_logbook_humanify_automation_triggered_event(hass):
                 ),
             ],
             entity_attr_cache,
+            {},
         )
     )
 

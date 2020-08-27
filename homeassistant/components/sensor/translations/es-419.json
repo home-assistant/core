@@ -10,11 +10,5 @@
             "value": "{entity_name} cambios de valor"
         }
     },
-    "state": {
-        "_": {
-            "off": "",
-            "on": ""
-        }
-    },
     "title": "Sensor"
 }

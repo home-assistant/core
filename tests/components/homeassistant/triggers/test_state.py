@@ -1007,3 +1007,83 @@ async def test_if_fires_on_entities_change_overlap_for_template(hass, calls):
         await hass.async_block_till_done()
         assert len(calls) == 2
         assert calls[1].data["some"] == "test.entity_2 - 0:00:10"
+
+
+async def test_attribute_if_fires_on_entity_change_with_both_filters(hass, calls):
+    """Test for firing if both filters are match attribute."""
+    hass.states.async_set("test.entity", "bla", {"name": "hello"})
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "state",
+                    "entity_id": "test.entity",
+                    "from": "hello",
+                    "to": "world",
+                    "attribute": "name",
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    hass.states.async_set("test.entity", "bla", {"name": "world"})
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+
+async def test_attribute_if_not_fires_on_entities_change_with_for_after_stop(
+    hass, calls
+):
+    """Test for not firing on entity change with for after stop trigger."""
+    hass.states.async_set("test.entity", "bla", {"name": "hello"})
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "state",
+                    "entity_id": "test.entity",
+                    "from": "hello",
+                    "to": "world",
+                    "attribute": "name",
+                    "for": 5,
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    # Test that the for-check works
+    hass.states.async_set("test.entity", "bla", {"name": "world"})
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=2))
+    hass.states.async_set("test.entity", "bla", {"name": "world", "something": "else"})
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    # Now remove state while inside "for"
+    hass.states.async_set("test.entity", "bla", {"name": "hello"})
+    hass.states.async_set("test.entity", "bla", {"name": "world"})
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    hass.states.async_remove("test.entity")
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
+    await hass.async_block_till_done()
+    assert len(calls) == 1

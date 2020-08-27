@@ -2,7 +2,7 @@
 from homematicip.base.enums import ValveState
 
 from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
-from homeassistant.components.homematicip_cloud.device import (
+from homeassistant.components.homematicip_cloud.generic_entity import (
     ATTR_CONFIG_PENDING,
     ATTR_DEVICE_OVERHEATED,
     ATTR_DEVICE_OVERLOADED,

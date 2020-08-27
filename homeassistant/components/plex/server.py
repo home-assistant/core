@@ -31,7 +31,6 @@ from .const import (
     CONF_USE_EPISODE_ART,
     DEBOUNCE_TIMEOUT,
     DEFAULT_VERIFY_SSL,
-    DOMAIN,
     PLAYER_SOURCE,
     PLEX_NEW_MP_SIGNAL,
     PLEX_UPDATE_MEDIA_PLAYER_SIGNAL,
@@ -449,6 +448,10 @@ class PlexServer:
         """Return playlist from server object."""
         return self._plex_server.playlist(title)
 
+    def playlists(self):
+        """Return available playlists from server object."""
+        return self._plex_server.playlists()
+
     def create_playqueue(self, media, **kwargs):
         """Create playqueue on Plex server."""
         return plexapi.playqueue.PlayQueue.create(self._plex_server, media, **kwargs)
@@ -461,7 +464,7 @@ class PlexServer:
         """Lookup a piece of media."""
         media_type = media_type.lower()
 
-        if media_type == DOMAIN:
+        if isinstance(kwargs.get("plex_key"), int):
             key = kwargs["plex_key"]
             try:
                 return self.fetch_item(key)
@@ -478,7 +481,8 @@ class PlexServer:
                 return None
             except NotFound:
                 _LOGGER.error(
-                    "Playlist '%s' not found", playlist_name,
+                    "Playlist '%s' not found",
+                    playlist_name,
                 )
                 return None
 
@@ -578,7 +582,9 @@ class PlexServer:
                 season = show.season(int(season_number))
             except NotFound:
                 _LOGGER.error(
-                    "Season %d of '%s' not found", season_number, show_name,
+                    "Season %d of '%s' not found",
+                    season_number,
+                    show_name,
                 )
                 return None
 
@@ -608,5 +614,7 @@ class PlexServer:
                 _LOGGER.error("Must specify 'video_name' for this search")
             except NotFound:
                 _LOGGER.error(
-                    "Movie '%s' not found in '%s'", video_name, library_name,
+                    "Movie '%s' not found in '%s'",
+                    video_name,
+                    library_name,
                 )

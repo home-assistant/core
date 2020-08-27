@@ -50,7 +50,8 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.risco.config_flow.RiscoAPI.login", return_value=True,
+        "homeassistant.components.risco.config_flow.RiscoAPI.login",
+        return_value=True,
     ), patch(
         "homeassistant.components.risco.config_flow.RiscoAPI.site_name",
         new_callable=PropertyMock(return_value=TEST_SITE_NAME),
@@ -59,7 +60,8 @@ async def test_form(hass):
     ) as mock_close, patch(
         "homeassistant.components.risco.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.risco.async_setup_entry", return_value=True,
+        "homeassistant.components.risco.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], TEST_DATA
@@ -134,7 +136,9 @@ async def test_form_exception(hass):
 async def test_form_already_exists(hass):
     """Test that a flow with an existing username aborts."""
     entry = MockConfigEntry(
-        domain=DOMAIN, unique_id=TEST_DATA["username"], data=TEST_DATA,
+        domain=DOMAIN,
+        unique_id=TEST_DATA["username"],
+        data=TEST_DATA,
     )
 
     entry.add_to_hass(hass)
@@ -193,7 +197,9 @@ async def test_options_flow(hass):
 async def test_ha_to_risco_schema(hass):
     """Test that the schema for the ha-to-risco mapping step is generated properly."""
     entry = MockConfigEntry(
-        domain=DOMAIN, unique_id=TEST_DATA["username"], data=TEST_DATA,
+        domain=DOMAIN,
+        unique_id=TEST_DATA["username"],
+        data=TEST_DATA,
     )
 
     entry.add_to_hass(hass)

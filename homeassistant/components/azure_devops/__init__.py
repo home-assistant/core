@@ -38,7 +38,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
                 )
                 hass.async_create_task(
                     hass.config_entries.flow.async_init(
-                        DOMAIN, context={"source": "reauth"}, data=entry.data,
+                        DOMAIN,
+                        context={"source": "reauth"},
+                        data=entry.data,
                     )
                 )
                 return False
@@ -115,7 +117,13 @@ class AzureDevOpsDeviceEntity(AzureDevOpsEntity):
     def device_info(self) -> Dict[str, Any]:
         """Return device information about this Azure DevOps instance."""
         return {
-            "identifiers": {(DOMAIN, self.organization, self.project,)},
+            "identifiers": {
+                (
+                    DOMAIN,
+                    self.organization,
+                    self.project,
+                )
+            },
             "manufacturer": self.organization,
             "name": self.project,
         }

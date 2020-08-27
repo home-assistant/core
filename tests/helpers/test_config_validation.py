@@ -443,6 +443,29 @@ def test_template():
         schema(value)
 
 
+def test_dynamic_template():
+    """Test dynamic template validator."""
+    schema = vol.Schema(cv.dynamic_template)
+
+    for value in (
+        None,
+        1,
+        "{{ partial_print }",
+        "{% if True %}Hello",
+        ["test"],
+        "just a string",
+    ):
+        with pytest.raises(vol.Invalid):
+            schema(value)
+
+    options = (
+        "{{ beer }}",
+        "{% if 1 == 1 %}Hello{% else %}World{% endif %}",
+    )
+    for value in options:
+        schema(value)
+
+
 def test_template_complex():
     """Test template_complex validator."""
     schema = vol.Schema(cv.template_complex)

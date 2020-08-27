@@ -179,7 +179,7 @@ aioguardian==1.0.1
 aioharmony==0.2.6
 
 # homeassistant.components.homekit_controller
-aiohomekit[IP]==0.2.47
+aiohomekit[IP]==0.2.49
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -220,6 +220,9 @@ aiopvpc==2.0.2
 
 # homeassistant.components.webostv
 aiopylgtv==0.3.3
+
+# homeassistant.components.shelly
+aioshelly==0.1.2
 
 # homeassistant.components.switcher_kis
 aioswitcher==1.2.0
@@ -295,7 +298,7 @@ aurorapy==0.2.6
 av==8.0.2
 
 # homeassistant.components.avea
-avea==1.4
+# avea==1.4
 
 # homeassistant.components.avion
 # avion==0.10
@@ -331,7 +334,7 @@ batinfo==0.4.2
 beautifulsoup4==4.9.1
 
 # homeassistant.components.beewi_smartclim
-beewi_smartclim==0.0.7
+# beewi_smartclim==0.0.7
 
 # homeassistant.components.zha
 bellows==0.18.1
@@ -358,7 +361,6 @@ blinkstick==1.1.8
 blockchain==1.4.4
 
 # homeassistant.components.decora
-# homeassistant.components.miflora
 # bluepy==1.3.0
 
 # homeassistant.components.bme680
@@ -381,7 +383,7 @@ bravia-tv==1.0.6
 broadlink==0.14.1
 
 # homeassistant.components.brother
-brother==0.1.14
+brother==0.1.15
 
 # homeassistant.components.brottsplatskartan
 brottsplatskartan==0.0.1
@@ -458,7 +460,7 @@ datadog==0.15.0
 datapoint==0.9.5
 
 # homeassistant.components.debugpy
-debugpy==1.0.0b12
+debugpy==1.0.0rc2
 
 # homeassistant.components.decora
 # decora==0.6
@@ -712,7 +714,7 @@ ha-philipsjs==0.0.8
 habitipy==0.2.0
 
 # homeassistant.components.hangouts
-hangups==0.4.9
+hangups==0.4.10
 
 # homeassistant.components.cloud
 hass-nabucasa==0.35.0
@@ -742,7 +744,7 @@ hole==0.5.1
 holidays==0.10.3
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200820.0
+home-assistant-frontend==20200824.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -910,9 +912,6 @@ meteofrance-api==0.1.1
 # homeassistant.components.mfi
 mficlient==0.3.0
 
-# homeassistant.components.miflora
-miflora==0.6.0
-
 # homeassistant.components.mill
 millheater==0.3.4
 
@@ -1042,7 +1041,7 @@ paho-mqtt==1.5.0
 panacotta==0.1
 
 # homeassistant.components.panasonic_viera
-panasonic_viera==0.3.5
+panasonic_viera==0.3.6
 
 # homeassistant.components.pcal9535a
 pcal9535a==0.7
@@ -1173,9 +1172,6 @@ py-synology==0.2.0
 
 # homeassistant.components.seventeentrack
 py17track==2.2.2
-
-# homeassistant.components.hdmi_cec
-pyCEC==0.4.13
 
 # homeassistant.components.control4
 pyControl4==0.0.6
@@ -1330,9 +1326,6 @@ pyephember==0.3.1
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
-
-# homeassistant.components.ezviz
-pyezviz==0.1.5
 
 # homeassistant.components.fido
 pyfido==2.1.1
@@ -1630,7 +1623,7 @@ pyskyqhub==0.1.1
 pysma==0.3.5
 
 # homeassistant.components.smappee
-pysmappee==0.2.9
+pysmappee==0.2.10
 
 # homeassistant.components.smartthings
 pysmartapp==0.3.2
@@ -1848,6 +1841,9 @@ pywebpush==1.9.2
 
 # homeassistant.components.wemo
 pywemo==0.4.46
+
+# homeassistant.components.wilight
+pywilight==0.0.65
 
 # homeassistant.components.xeoma
 pyxeoma==1.4.1
@@ -2111,7 +2107,7 @@ tellcore-py==1.1.2
 tellduslive==0.10.11
 
 # homeassistant.components.lg_soundbar
-temescal==0.1
+temescal==0.2
 
 # homeassistant.components.temper
 temperusb==1.5.3
@@ -2256,13 +2252,12 @@ xboxapi==2.0.1
 xfinity-gateway==0.0.4
 
 # homeassistant.components.knx
-xknx==0.11.3
+xknx==0.12.0
 
 # homeassistant.components.bluesound
 # homeassistant.components.rest
 # homeassistant.components.startca
 # homeassistant.components.ted5000
-# homeassistant.components.yr
 # homeassistant.components.zestimate
 xmltodict==0.12.0
 

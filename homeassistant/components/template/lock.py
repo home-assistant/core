@@ -15,10 +15,10 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.script import Script
 
-from . import async_setup_platform_reloadable
-from .const import CONF_AVAILABILITY_TEMPLATE
+from .const import CONF_AVAILABILITY_TEMPLATE, DOMAIN, PLATFORMS
 from .template_entity import TemplateEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,7 +42,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_create_entities(hass, config):
+async def _async_create_entities(hass, config):
     """Create the Template lock."""
     device = config.get(CONF_NAME)
     value_template = config.get(CONF_VALUE_TEMPLATE)
@@ -65,8 +65,8 @@ async def async_create_entities(hass, config):
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the template lock."""
 
-    await async_setup_platform_reloadable(hass)
-    async_add_entities(await async_create_entities(hass, config))
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+    async_add_entities(await _async_create_entities(hass, config))
 
 
 class TemplateLock(TemplateEntity, LockEntity):

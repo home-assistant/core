@@ -50,7 +50,9 @@ async def async_setup(hass: HomeAssistantType, config: Dict) -> bool:
         for entry_config in config[DOMAIN]:
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": SOURCE_IMPORT}, data=entry_config,
+                    DOMAIN,
+                    context={"source": SOURCE_IMPORT},
+                    data=entry_config,
                 )
             )
 
@@ -112,7 +114,10 @@ class RokuDataUpdateCoordinator(DataUpdateCoordinator[Device]):
     """Class to manage fetching Roku data."""
 
     def __init__(
-        self, hass: HomeAssistantType, *, host: str,
+        self,
+        hass: HomeAssistantType,
+        *,
+        host: str,
     ):
         """Initialize global Roku data updater."""
         self.roku = Roku(host=host, session=async_get_clientsession(hass))
@@ -121,7 +126,10 @@ class RokuDataUpdateCoordinator(DataUpdateCoordinator[Device]):
         self.last_full_update = None
 
         super().__init__(
-            hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL,
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_interval=SCAN_INTERVAL,
         )
 
     async def _async_update_data(self) -> Device:

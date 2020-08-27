@@ -429,6 +429,7 @@ def service(value: Any) -> str:
     str_value = string(value).lower()
     if valid_entity_id(str_value):
         return str_value
+
     raise vol.Invalid(f"Service {value} does not match format <domain>.<name>")
 
 
@@ -520,6 +521,24 @@ def template(value: Optional[Any]) -> template_helper.Template:
 
     template_value = template_helper.Template(str(value))  # type: ignore
 
+    try:
+        template_value.ensure_valid()
+        return cast(template_helper.Template, template_value)
+    except TemplateError as ex:
+        raise vol.Invalid(f"invalid template ({ex})")
+
+
+def dynamic_template(value: Optional[Any]) -> template_helper.Template:
+    """Validate a dynamic (non static) jinja2 template."""
+
+    if value is None:
+        raise vol.Invalid("template value is None")
+    if isinstance(value, (list, dict, template_helper.Template)):
+        raise vol.Invalid("template value should be a string")
+    if not template_helper.is_template_string(str(value)):
+        raise vol.Invalid("template value does not contain a dynmamic template")
+
+    template_value = template_helper.Template(str(value))  # type: ignore
     try:
         template_value.ensure_valid()
         return cast(template_helper.Template, template_value)
@@ -858,8 +877,8 @@ EVENT_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_ALIAS): string,
         vol.Required(CONF_EVENT): string,
-        vol.Optional(CONF_EVENT_DATA): dict,
-        vol.Optional(CONF_EVENT_DATA_TEMPLATE): template_complex,
+        vol.Optional(CONF_EVENT_DATA): vol.All(dict, template_complex),
+        vol.Optional(CONF_EVENT_DATA_TEMPLATE): vol.All(dict, template_complex),
     }
 )
 
@@ -867,10 +886,14 @@ SERVICE_SCHEMA = vol.All(
     vol.Schema(
         {
             vol.Optional(CONF_ALIAS): string,
-            vol.Exclusive(CONF_SERVICE, "service name"): service,
-            vol.Exclusive(CONF_SERVICE_TEMPLATE, "service name"): template,
-            vol.Optional("data"): dict,
-            vol.Optional("data_template"): template_complex,
+            vol.Exclusive(CONF_SERVICE, "service name"): vol.Any(
+                service, dynamic_template
+            ),
+            vol.Exclusive(CONF_SERVICE_TEMPLATE, "service name"): vol.Any(
+                service, dynamic_template
+            ),
+            vol.Optional("data"): vol.All(dict, template_complex),
+            vol.Optional("data_template"): vol.All(dict, template_complex),
             vol.Optional(CONF_ENTITY_ID): comp_entity_ids,
         }
     ),

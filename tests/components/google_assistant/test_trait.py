@@ -110,7 +110,8 @@ async def test_brightness_light(hass):
 async def test_camera_stream(hass):
     """Test camera stream trait support for camera domain."""
     await async_process_ha_core_config(
-        hass, {"external_url": "https://example.com"},
+        hass,
+        {"external_url": "https://example.com"},
     )
     assert helpers.get_google_type(camera.DOMAIN, None) is not None
     assert trait.CameraStreamTrait.supported(camera.DOMAIN, camera.SUPPORT_STREAM, None)
@@ -564,7 +565,8 @@ async def test_light_modes(hass):
     }
 
     assert trt.can_execute(
-        trait.COMMAND_MODES, params={"updateModeSettings": {"effect": "colorloop"}},
+        trait.COMMAND_MODES,
+        params={"updateModeSettings": {"effect": "colorloop"}},
     )
 
     calls = async_mock_service(hass, light.DOMAIN, SERVICE_TURN_ON)
@@ -988,7 +990,9 @@ async def test_lock_unlock_unlock(hass):
 
     # Test with 2FA override
     with patch.object(
-        BASIC_CONFIG, "should_2fa", return_value=False,
+        BASIC_CONFIG,
+        "should_2fa",
+        return_value=False,
     ):
         await trt.execute(trait.COMMAND_LOCKUNLOCK, BASIC_DATA, {"lock": False}, {})
     assert len(calls) == 2
@@ -1150,7 +1154,10 @@ async def test_arm_disarm_arm_away(hass):
 
     with pytest.raises(error.SmartHomeError) as err:
         await trt.execute(
-            trait.COMMAND_ARMDISARM, PIN_DATA, {"arm": True}, {},
+            trait.COMMAND_ARMDISARM,
+            PIN_DATA,
+            {"arm": True},
+            {},
         )
 
 
@@ -1483,13 +1490,19 @@ async def test_inputselector(hass):
         "currentInput": "game",
     }
 
-    assert trt.can_execute(trait.COMMAND_INPUT, params={"newInput": "media"},)
+    assert trt.can_execute(
+        trait.COMMAND_INPUT,
+        params={"newInput": "media"},
+    )
 
     calls = async_mock_service(
         hass, media_player.DOMAIN, media_player.SERVICE_SELECT_SOURCE
     )
     await trt.execute(
-        trait.COMMAND_INPUT, BASIC_DATA, {"newInput": "media"}, {},
+        trait.COMMAND_INPUT,
+        BASIC_DATA,
+        {"newInput": "media"},
+        {},
     )
 
     assert len(calls) == 1
@@ -1526,10 +1539,16 @@ async def test_inputselector_nextprev(hass, sources, source, source_next, source
         hass, media_player.DOMAIN, media_player.SERVICE_SELECT_SOURCE
     )
     await trt.execute(
-        "action.devices.commands.NextInput", BASIC_DATA, {}, {},
+        "action.devices.commands.NextInput",
+        BASIC_DATA,
+        {},
+        {},
     )
     await trt.execute(
-        "action.devices.commands.PreviousInput", BASIC_DATA, {}, {},
+        "action.devices.commands.PreviousInput",
+        BASIC_DATA,
+        {},
+        {},
     )
 
     assert len(calls) == 2
@@ -1563,17 +1582,26 @@ async def test_inputselector_nextprev_invalid(hass, sources, source):
 
     with pytest.raises(SmartHomeError):
         await trt.execute(
-            "action.devices.commands.NextInput", BASIC_DATA, {}, {},
+            "action.devices.commands.NextInput",
+            BASIC_DATA,
+            {},
+            {},
         )
 
     with pytest.raises(SmartHomeError):
         await trt.execute(
-            "action.devices.commands.PreviousInput", BASIC_DATA, {}, {},
+            "action.devices.commands.PreviousInput",
+            BASIC_DATA,
+            {},
+            {},
         )
 
     with pytest.raises(SmartHomeError):
         await trt.execute(
-            "action.devices.commands.InvalidCommand", BASIC_DATA, {}, {},
+            "action.devices.commands.InvalidCommand",
+            BASIC_DATA,
+            {},
+            {},
         )
 
 
@@ -1583,7 +1611,9 @@ async def test_modes_input_select(hass):
     assert trait.ModesTrait.supported(input_select.DOMAIN, None, None)
 
     trt = trait.ModesTrait(
-        hass, State("input_select.bla", "unavailable"), BASIC_CONFIG,
+        hass,
+        State("input_select.bla", "unavailable"),
+        BASIC_CONFIG,
     )
     assert trt.sync_attributes() == {"availableModes": []}
 
@@ -1633,14 +1663,18 @@ async def test_modes_input_select(hass):
     }
 
     assert trt.can_execute(
-        trait.COMMAND_MODES, params={"updateModeSettings": {"option": "xyz"}},
+        trait.COMMAND_MODES,
+        params={"updateModeSettings": {"option": "xyz"}},
     )
 
     calls = async_mock_service(
         hass, input_select.DOMAIN, input_select.SERVICE_SELECT_OPTION
     )
     await trt.execute(
-        trait.COMMAND_MODES, BASIC_DATA, {"updateModeSettings": {"option": "xyz"}}, {},
+        trait.COMMAND_MODES,
+        BASIC_DATA,
+        {"updateModeSettings": {"option": "xyz"}},
+        {},
     )
 
     assert len(calls) == 1
@@ -1711,7 +1745,10 @@ async def test_modes_humidifier(hass):
 
     calls = async_mock_service(hass, humidifier.DOMAIN, humidifier.SERVICE_SET_MODE)
     await trt.execute(
-        trait.COMMAND_MODES, BASIC_DATA, {"updateModeSettings": {"mode": "away"}}, {},
+        trait.COMMAND_MODES,
+        BASIC_DATA,
+        {"updateModeSettings": {"mode": "away"}},
+        {},
     )
 
     assert len(calls) == 1
@@ -1774,7 +1811,8 @@ async def test_sound_modes(hass):
     }
 
     assert trt.can_execute(
-        trait.COMMAND_MODES, params={"updateModeSettings": {"sound mode": "stereo"}},
+        trait.COMMAND_MODES,
+        params={"updateModeSettings": {"sound mode": "stereo"}},
     )
 
     calls = async_mock_service(
@@ -2003,7 +2041,9 @@ async def test_volume_media_player(hass):
     """Test volume trait support for media player domain."""
     assert helpers.get_google_type(media_player.DOMAIN, None) is not None
     assert trait.VolumeTrait.supported(
-        media_player.DOMAIN, media_player.SUPPORT_VOLUME_SET, None,
+        media_player.DOMAIN,
+        media_player.SUPPORT_VOLUME_SET,
+        None,
     )
 
     trt = trait.VolumeTrait(
@@ -2054,7 +2094,9 @@ async def test_volume_media_player(hass):
 async def test_volume_media_player_relative(hass):
     """Test volume trait support for relative-volume-only media players."""
     assert trait.VolumeTrait.supported(
-        media_player.DOMAIN, media_player.SUPPORT_VOLUME_STEP, None,
+        media_player.DOMAIN,
+        media_player.SUPPORT_VOLUME_STEP,
+        None,
     )
     trt = trait.VolumeTrait(
         hass,
@@ -2083,7 +2125,10 @@ async def test_volume_media_player_relative(hass):
     )
 
     await trt.execute(
-        trait.COMMAND_VOLUME_RELATIVE, BASIC_DATA, {"relativeSteps": 10}, {},
+        trait.COMMAND_VOLUME_RELATIVE,
+        BASIC_DATA,
+        {"relativeSteps": 10},
+        {},
     )
     assert len(calls) == 10
     for call in calls:
@@ -2095,7 +2140,10 @@ async def test_volume_media_player_relative(hass):
         hass, media_player.DOMAIN, media_player.SERVICE_VOLUME_DOWN
     )
     await trt.execute(
-        trait.COMMAND_VOLUME_RELATIVE, BASIC_DATA, {"relativeSteps": -10}, {},
+        trait.COMMAND_VOLUME_RELATIVE,
+        BASIC_DATA,
+        {"relativeSteps": -10},
+        {},
     )
     assert len(calls) == 10
     for call in calls:
@@ -2144,7 +2192,10 @@ async def test_media_player_mute(hass):
         hass, media_player.DOMAIN, media_player.SERVICE_VOLUME_MUTE
     )
     await trt.execute(
-        trait.COMMAND_MUTE, BASIC_DATA, {"mute": True}, {},
+        trait.COMMAND_MUTE,
+        BASIC_DATA,
+        {"mute": True},
+        {},
     )
     assert len(mute_calls) == 1
     assert mute_calls[0].data == {
@@ -2156,7 +2207,10 @@ async def test_media_player_mute(hass):
         hass, media_player.DOMAIN, media_player.SERVICE_VOLUME_MUTE
     )
     await trt.execute(
-        trait.COMMAND_MUTE, BASIC_DATA, {"mute": False}, {},
+        trait.COMMAND_MUTE,
+        BASIC_DATA,
+        {"mute": False},
+        {},
     )
     assert len(unmute_calls) == 1
     assert unmute_calls[0].data == {

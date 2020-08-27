@@ -484,12 +484,6 @@ class _TrackTemplateResultInfo:
         if self._info.exception:
             return True
 
-        # There are no entities in the template
-        # to track so this template will
-        # re-render on EVERY state change
-        if not self._info.domains and not self._info.entities:
-            return True
-
         return False
 
     @callback
@@ -568,6 +562,11 @@ class _TrackTemplateResultInfo:
         entities = set(self._info.entities)
         for entity_id in self.hass.states.async_entity_ids(self._info.domains):
             entities.add(entity_id)
+
+        # Entities has changed to none
+        if not entities:
+            return
+
         self._entities_listener = async_track_state_change_event(
             self.hass, entities, self._refresh
         )
@@ -575,6 +574,10 @@ class _TrackTemplateResultInfo:
     @callback
     def _setup_domains_listener(self) -> None:
         assert self._info
+
+        # Domains has changed to none
+        if not self._info.domains:
+            return
 
         self._domains_listener = async_track_state_added_domain(
             self.hass, self._info.domains, self._refresh
@@ -993,13 +996,19 @@ def async_track_utc_time_change(
 
         calculate_next(now + timedelta(seconds=1))
 
+        # We always get time.time() first to avoid time.time()
+        # ticking forward after fetching hass.loop.time()
+        # and callback being scheduled a few microseconds early
         cancel_callback = hass.loop.call_at(
-            hass.loop.time() + next_time.timestamp() - time.time(),
+            -time.time() + hass.loop.time() + next_time.timestamp(),
             pattern_time_change_listener,
         )
 
+    # We always get time.time() first to avoid time.time()
+    # ticking forward after fetching hass.loop.time()
+    # and callback being scheduled a few microseconds early
     cancel_callback = hass.loop.call_at(
-        hass.loop.time() + next_time.timestamp() - time.time(),
+        -time.time() + hass.loop.time() + next_time.timestamp(),
         pattern_time_change_listener,
     )
 

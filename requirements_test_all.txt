@@ -104,7 +104,7 @@ aioguardian==1.0.1
 aioharmony==0.2.6
 
 # homeassistant.components.homekit_controller
-aiohomekit[IP]==0.2.47
+aiohomekit[IP]==0.2.49
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -130,6 +130,9 @@ aiopvpc==2.0.2
 
 # homeassistant.components.webostv
 aiopylgtv==0.3.3
+
+# homeassistant.components.shelly
+aioshelly==0.1.2
 
 # homeassistant.components.switcher_kis
 aioswitcher==1.2.0
@@ -202,7 +205,7 @@ bravia-tv==1.0.6
 broadlink==0.14.1
 
 # homeassistant.components.brother
-brother==0.1.14
+brother==0.1.15
 
 # homeassistant.components.bsblan
 bsblan==0.3.7
@@ -237,7 +240,7 @@ datadog==0.15.0
 datapoint==0.9.5
 
 # homeassistant.components.debugpy
-debugpy==1.0.0b12
+debugpy==1.0.0rc2
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -347,7 +350,7 @@ griddypower==0.1.0
 ha-ffmpeg==2.0
 
 # homeassistant.components.hangouts
-hangups==0.4.9
+hangups==0.4.10
 
 # homeassistant.components.cloud
 hass-nabucasa==0.35.0
@@ -368,7 +371,7 @@ hole==0.5.1
 holidays==0.10.3
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200820.0
+home-assistant-frontend==20200824.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -486,7 +489,7 @@ ovoenergy==1.1.7
 paho-mqtt==1.5.0
 
 # homeassistant.components.panasonic_viera
-panasonic_viera==0.3.5
+panasonic_viera==0.3.6
 
 # homeassistant.components.dunehd
 pdunehd==1.3.2
@@ -768,7 +771,7 @@ pysignalclirestapi==0.3.4
 pysma==0.3.5
 
 # homeassistant.components.smappee
-pysmappee==0.2.9
+pysmappee==0.2.10
 
 # homeassistant.components.smartthings
 pysmartapp==0.3.2
@@ -853,6 +856,9 @@ pyvolumio==0.1.1
 
 # homeassistant.components.html5
 pywebpush==1.9.2
+
+# homeassistant.components.wilight
+pywilight==0.0.65
 
 # homeassistant.components.zerproc
 pyzerproc==0.2.5
@@ -954,6 +960,9 @@ stringcase==1.2.0
 # homeassistant.components.solarlog
 sunwatcher==0.2.1
 
+# homeassistant.components.surepetcare
+surepy==0.2.5
+
 # homeassistant.components.tellduslive
 tellduslive==0.10.11
 
@@ -1022,7 +1031,6 @@ wolf_smartset==0.1.4
 # homeassistant.components.rest
 # homeassistant.components.startca
 # homeassistant.components.ted5000
-# homeassistant.components.yr
 # homeassistant.components.zestimate
 xmltodict==0.12.0
 

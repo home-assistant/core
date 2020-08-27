@@ -21,7 +21,8 @@ async def rfxtrx_fixture(hass):
         async def _signal_event(packet_id):
             event = rfxtrx.get_rfx_object(packet_id)
             await hass.async_add_executor_job(
-                rfx.event_callback, event,
+                rfx.event_callback,
+                event,
             )
 
             await hass.async_block_till_done()
@@ -38,7 +39,9 @@ async def rfxtrx_automatic_fixture(hass, rfxtrx):
     """Fixture that starts up with automatic additions."""
 
     assert await async_setup_component(
-        hass, "rfxtrx", {"rfxtrx": {"device": "abcd", "automatic_add": True}},
+        hass,
+        "rfxtrx",
+        {"rfxtrx": {"device": "abcd", "automatic_add": True}},
     )
     await hass.async_block_till_done()
     await hass.async_start()

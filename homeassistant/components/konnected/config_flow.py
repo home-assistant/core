@@ -349,7 +349,8 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         ) or "".join(random.choices(f"{string.ascii_uppercase}{string.digits}", k=20))
 
         return self.async_create_entry(
-            title=KONN_PANEL_MODEL_NAMES[self.data[CONF_MODEL]], data=self.data,
+            title=KONN_PANEL_MODEL_NAMES[self.data[CONF_MODEL]],
+            data=self.data,
         )
 
     @staticmethod

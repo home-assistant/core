@@ -50,7 +50,9 @@ def client_fixture():
 async def setup_webostv(hass):
     """Initialize webostv and media_player for tests."""
     assert await async_setup_component(
-        hass, DOMAIN, {DOMAIN: {CONF_HOST: "fake", CONF_NAME: NAME}},
+        hass,
+        DOMAIN,
+        {DOMAIN: {CONF_HOST: "fake", CONF_NAME: NAME}},
     )
     await hass.async_block_till_done()
 

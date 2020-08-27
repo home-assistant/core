@@ -213,6 +213,7 @@ class Template:
         self._compiled_code = None
         self._compiled = None
         self.hass = hass
+        self.is_static = not is_template_string(template)
 
     @property
     def _env(self):
@@ -237,10 +238,16 @@ class Template:
         self, variables: TemplateVarsType = None
     ) -> Union[str, List[str]]:
         """Extract all entities for state_changed listener."""
+        if self.is_static:
+            return []
+
         return extract_entities(self.hass, self.template, variables)
 
     def render(self, variables: TemplateVarsType = None, **kwargs: Any) -> str:
         """Render given template."""
+        if self.is_static:
+            return self.template
+
         if variables is not None:
             kwargs.update(variables)
 
@@ -254,6 +261,9 @@ class Template:
 
         This method must be run in the event loop.
         """
+        if self.is_static:
+            return self.template
+
         compiled = self._compiled or self._ensure_compiled()
 
         if variables is not None:
@@ -270,18 +280,23 @@ class Template:
     ) -> RenderInfo:
         """Render the template and collect an entity filter."""
         assert self.hass and _RENDER_INFO not in self.hass.data
-        render_info = self.hass.data[_RENDER_INFO] = RenderInfo(self)
+
+        render_info = RenderInfo(self)
+
         # pylint: disable=protected-access
+        if self.is_static:
+            render_info._freeze_static()
+            return render_info
+
+        self.hass.data[_RENDER_INFO] = render_info
         try:
             render_info._result = self.async_render(variables, **kwargs)
         except TemplateError as ex:
             render_info.exception = ex
         finally:
             del self.hass.data[_RENDER_INFO]
-            if not is_template_string(self.template):
-                render_info._freeze_static()
-            else:
-                render_info._freeze()
+
+        render_info._freeze()
         return render_info
 
     def render_with_possible_json_value(self, value, error_value=_SENTINEL):
@@ -289,6 +304,9 @@ class Template:
 
         If valid JSON will expose value_json too.
         """
+        if self.is_static:
+            return self.template
+
         return run_callback_threadsafe(
             self.hass.loop,
             self.async_render_with_possible_json_value,
@@ -306,6 +324,9 @@ class Template:
 
         This method must be run in the event loop.
         """
+        if self.is_static:
+            return self.template
+
         if self._compiled is None:
             self._ensure_compiled()
 

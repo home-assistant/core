@@ -5,7 +5,7 @@ import voluptuous as vol
 
 from homeassistant.components.vacuum import (
     ATTR_FAN_SPEED,
-    DOMAIN,
+    DOMAIN as VACUUM_DOMAIN,
     SERVICE_CLEAN_SPOT,
     SERVICE_LOCATE,
     SERVICE_PAUSE,
@@ -41,10 +41,10 @@ from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
+from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.script import Script
 
-from . import async_setup_platform_reloadable
-from .const import CONF_AVAILABILITY_TEMPLATE
+from .const import CONF_AVAILABILITY_TEMPLATE, DOMAIN, PLATFORMS
 from .template_entity import TemplateEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,7 +55,7 @@ CONF_FAN_SPEED_LIST = "fan_speeds"
 CONF_FAN_SPEED_TEMPLATE = "fan_speed_template"
 CONF_ATTRIBUTE_TEMPLATES = "attribute_templates"
 
-ENTITY_ID_FORMAT = DOMAIN + ".{}"
+ENTITY_ID_FORMAT = VACUUM_DOMAIN + ".{}"
 _VALID_STATES = [
     STATE_CLEANING,
     STATE_DOCKED,
@@ -93,7 +93,7 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_create_entities(hass, config):
+async def _async_create_entities(hass, config):
     """Create the Template Vacuums."""
     vacuums = []
 
@@ -145,8 +145,8 @@ async def async_create_entities(hass, config):
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the template vacuums."""
 
-    await async_setup_platform_reloadable(hass)
-    async_add_entities(await async_create_entities(hass, config))
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+    async_add_entities(await _async_create_entities(hass, config))
 
 
 class TemplateVacuum(TemplateEntity, StateVacuumEntity):
@@ -341,7 +341,10 @@ class TemplateVacuum(TemplateEntity, StateVacuumEntity):
             )
         if self._fan_speed_template is not None:
             self.add_template_attribute(
-                "_fan_speed", self._fan_speed_template, None, self._update_fan_speed,
+                "_fan_speed",
+                self._fan_speed_template,
+                None,
+                self._update_fan_speed,
             )
         if self._battery_level_template is not None:
             self.add_template_attribute(

@@ -71,6 +71,7 @@ from homeassistant.const import (
 from homeassistant.core import EVENT_HOMEASSISTANT_START, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.service import async_call_from_config
 
 _LOGGER = logging.getLogger(__name__)
@@ -105,6 +106,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the universal media players."""
+
+    await async_setup_reload_service(hass, "universal", ["media_player"])
+
     player = UniversalMediaPlayer(
         hass,
         config.get(CONF_NAME),
@@ -157,7 +161,6 @@ class UniversalMediaPlayer(MediaPlayerEntity):
             result = self.hass.helpers.event.async_track_template_result(
                 self._state_template, _async_on_template_update
             )
-
             self.hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_START, callback(lambda _: result.async_refresh())
             )

@@ -77,14 +77,20 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     # Initialize bridge
     data = config_entry.data.copy()
     bridge = SamsungTVBridge.get_bridge(
-        data[CONF_METHOD], data[CONF_HOST], data[CONF_PORT], data.get(CONF_TOKEN),
+        data[CONF_METHOD],
+        data[CONF_HOST],
+        data[CONF_PORT],
+        data.get(CONF_TOKEN),
     )
     if bridge.port is None and bridge.default_port is not None:
         # For backward compat, set default port for websocket tv
         data[CONF_PORT] = bridge.default_port
         hass.config_entries.async_update_entry(config_entry, data=data)
         bridge = SamsungTVBridge.get_bridge(
-            data[CONF_METHOD], data[CONF_HOST], data[CONF_PORT], data.get(CONF_TOKEN),
+            data[CONF_METHOD],
+            data[CONF_HOST],
+            data[CONF_PORT],
+            data.get(CONF_TOKEN),
         )
 
     async_add_entities([SamsungTVDevice(bridge, config_entry, on_script)])
@@ -117,7 +123,9 @@ class SamsungTVDevice(MediaPlayerEntity):
         LOGGER.debug("Access denied in getting remote object")
         self.hass.add_job(
             self.hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": "reauth"}, data=self._config_entry.data,
+                DOMAIN,
+                context={"source": "reauth"},
+                data=self._config_entry.data,
             )
         )
 

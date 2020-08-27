@@ -40,7 +40,8 @@ async def test_flow_user_works(hass):
 
     with patch("broadlink.discover", return_value=[mock_api]) as mock_discover:
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"host": device.host, "timeout": device.timeout},
+            result["flow_id"],
+            {"host": device.host, "timeout": device.timeout},
         )
 
     assert result["type"] == "form"
@@ -48,7 +49,8 @@ async def test_flow_user_works(hass):
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"name": device.name},
+        result["flow_id"],
+        {"name": device.name},
     )
 
     assert result["type"] == "create_entry"
@@ -69,7 +71,8 @@ async def test_flow_user_already_in_progress(hass):
 
     with patch("broadlink.discover", return_value=[device.get_mock_api()]):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"host": device.host, "timeout": device.timeout},
+            result["flow_id"],
+            {"host": device.host, "timeout": device.timeout},
         )
 
     result = await hass.config_entries.flow.async_init(
@@ -78,7 +81,8 @@ async def test_flow_user_already_in_progress(hass):
 
     with patch("broadlink.discover", return_value=[device.get_mock_api()]):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"host": device.host, "timeout": device.timeout},
+            result["flow_id"],
+            {"host": device.host, "timeout": device.timeout},
         )
 
     assert result["type"] == "abort"
@@ -104,7 +108,8 @@ async def test_flow_user_mac_already_configured(hass):
 
     with patch("broadlink.discover", return_value=[mock_api]):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"host": device.host, "timeout": device.timeout},
+            result["flow_id"],
+            {"host": device.host, "timeout": device.timeout},
         )
 
     assert result["type"] == "abort"
@@ -122,7 +127,8 @@ async def test_flow_user_invalid_ip_address(hass):
 
     with patch("broadlink.discover", side_effect=OSError(errno.EINVAL, None)):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"host": "0.0.0.1"},
+            result["flow_id"],
+            {"host": "0.0.0.1"},
         )
 
     assert result["type"] == "form"
@@ -138,7 +144,8 @@ async def test_flow_user_invalid_hostname(hass):
 
     with patch("broadlink.discover", side_effect=OSError(socket.EAI_NONAME, None)):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"host": "pancakemaster.local"},
+            result["flow_id"],
+            {"host": "pancakemaster.local"},
         )
 
     assert result["type"] == "form"
@@ -156,7 +163,8 @@ async def test_flow_user_device_not_found(hass):
 
     with patch("broadlink.discover", return_value=[]):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"host": device.host},
+            result["flow_id"],
+            {"host": device.host},
         )
 
     assert result["type"] == "form"
@@ -172,7 +180,8 @@ async def test_flow_user_network_unreachable(hass):
 
     with patch("broadlink.discover", side_effect=OSError(errno.ENETUNREACH, None)):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"host": "192.168.1.32"},
+            result["flow_id"],
+            {"host": "192.168.1.32"},
         )
 
     assert result["type"] == "form"
@@ -188,7 +197,8 @@ async def test_flow_user_os_error(hass):
 
     with patch("broadlink.discover", side_effect=OSError()):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"host": "192.168.1.32"},
+            result["flow_id"],
+            {"host": "192.168.1.32"},
         )
 
     assert result["type"] == "form"
@@ -208,7 +218,8 @@ async def test_flow_auth_authentication_error(hass):
 
     with patch("broadlink.discover", return_value=[mock_api]):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"host": device.host, "timeout": device.timeout},
+            result["flow_id"],
+            {"host": device.host, "timeout": device.timeout},
         )
 
     assert result["type"] == "form"
@@ -228,7 +239,8 @@ async def test_flow_auth_device_offline(hass):
 
     with patch("broadlink.discover", return_value=[mock_api]):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"host": device.host},
+            result["flow_id"],
+            {"host": device.host},
         )
 
     assert result["type"] == "form"
@@ -248,7 +260,8 @@ async def test_flow_auth_firmware_error(hass):
 
     with patch("broadlink.discover", return_value=[mock_api]):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"host": device.host},
+            result["flow_id"],
+            {"host": device.host},
         )
 
     assert result["type"] == "form"
@@ -268,7 +281,8 @@ async def test_flow_auth_network_unreachable(hass):
 
     with patch("broadlink.discover", return_value=[mock_api]):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"host": device.host},
+            result["flow_id"],
+            {"host": device.host},
         )
 
     assert result["type"] == "form"
@@ -288,7 +302,8 @@ async def test_flow_auth_os_error(hass):
 
     with patch("broadlink.discover", return_value=[mock_api]):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"host": device.host},
+            result["flow_id"],
+            {"host": device.host},
         )
 
     assert result["type"] == "form"
@@ -308,16 +323,19 @@ async def test_flow_reset_works(hass):
 
     with patch("broadlink.discover", return_value=[mock_api]):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"host": device.host, "timeout": device.timeout},
+            result["flow_id"],
+            {"host": device.host, "timeout": device.timeout},
         )
 
     with patch("broadlink.discover", return_value=[device.get_mock_api()]):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"host": device.host, "timeout": device.timeout},
+            result["flow_id"],
+            {"host": device.host, "timeout": device.timeout},
         )
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"name": device.name},
+        result["flow_id"],
+        {"name": device.name},
     )
 
     assert result["type"] == "create_entry"
@@ -337,7 +355,8 @@ async def test_flow_unlock_works(hass):
 
     with patch("broadlink.discover", return_value=[mock_api]):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"host": device.host, "timeout": device.timeout},
+            result["flow_id"],
+            {"host": device.host, "timeout": device.timeout},
         )
 
     assert result["type"] == "form"
@@ -345,11 +364,13 @@ async def test_flow_unlock_works(hass):
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"unlock": True},
+        result["flow_id"],
+        {"unlock": True},
     )
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"name": device.name},
+        result["flow_id"],
+        {"name": device.name},
     )
 
     assert result["type"] == "create_entry"
@@ -373,11 +394,13 @@ async def test_flow_unlock_device_offline(hass):
 
     with patch("broadlink.discover", return_value=[mock_api]):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"host": device.host, "timeout": device.timeout},
+            result["flow_id"],
+            {"host": device.host, "timeout": device.timeout},
         )
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"unlock": True},
+        result["flow_id"],
+        {"unlock": True},
     )
 
     assert result["type"] == "form"
@@ -398,11 +421,13 @@ async def test_flow_unlock_firmware_error(hass):
 
     with patch("broadlink.discover", return_value=[mock_api]):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"host": device.host, "timeout": device.timeout},
+            result["flow_id"],
+            {"host": device.host, "timeout": device.timeout},
         )
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"unlock": True},
+        result["flow_id"],
+        {"unlock": True},
     )
 
     assert result["type"] == "form"
@@ -423,11 +448,13 @@ async def test_flow_unlock_network_unreachable(hass):
 
     with patch("broadlink.discover", return_value=[mock_api]):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"host": device.host, "timeout": device.timeout},
+            result["flow_id"],
+            {"host": device.host, "timeout": device.timeout},
         )
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"unlock": True},
+        result["flow_id"],
+        {"unlock": True},
     )
 
     assert result["type"] == "form"
@@ -448,11 +475,13 @@ async def test_flow_unlock_os_error(hass):
 
     with patch("broadlink.discover", return_value=[mock_api]):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"host": device.host, "timeout": device.timeout},
+            result["flow_id"],
+            {"host": device.host, "timeout": device.timeout},
         )
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"unlock": True},
+        result["flow_id"],
+        {"unlock": True},
     )
 
     assert result["type"] == "form"
@@ -472,15 +501,18 @@ async def test_flow_do_not_unlock(hass):
 
     with patch("broadlink.discover", return_value=[mock_api]):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"host": device.host, "timeout": device.timeout},
+            result["flow_id"],
+            {"host": device.host, "timeout": device.timeout},
         )
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"unlock": False},
+        result["flow_id"],
+        {"unlock": False},
     )
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"name": device.name},
+        result["flow_id"],
+        {"name": device.name},
     )
 
     assert result["type"] == "create_entry"
@@ -507,7 +539,8 @@ async def test_flow_import_works(hass):
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"name": device.name},
+        result["flow_id"],
+        {"name": device.name},
     )
 
     assert result["type"] == "create_entry"
@@ -671,7 +704,8 @@ async def test_flow_reauth_works(hass):
 
     with patch("broadlink.discover", return_value=[mock_api]) as mock_discover:
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"host": device.host, "timeout": device.timeout},
+            result["flow_id"],
+            {"host": device.host, "timeout": device.timeout},
         )
 
     assert result["type"] == "abort"
@@ -704,7 +738,8 @@ async def test_flow_reauth_invalid_host(hass):
 
     with patch("broadlink.discover", return_value=[mock_api]) as mock_discover:
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"host": device.host, "timeout": device.timeout},
+            result["flow_id"],
+            {"host": device.host, "timeout": device.timeout},
         )
 
     assert result["type"] == "form"
@@ -737,7 +772,8 @@ async def test_flow_reauth_valid_host(hass):
 
     with patch("broadlink.discover", return_value=[mock_api]) as mock_discover:
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"host": device.host, "timeout": device.timeout},
+            result["flow_id"],
+            {"host": device.host, "timeout": device.timeout},
         )
 
     assert result["type"] == "abort"

@@ -128,7 +128,10 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator):
         self.servers = {}
         self._unsub_update_listener = None
         super().__init__(
-            self.hass, _LOGGER, name=DOMAIN, update_method=self.async_update,
+            self.hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_method=self.async_update,
         )
 
     def update_servers(self):

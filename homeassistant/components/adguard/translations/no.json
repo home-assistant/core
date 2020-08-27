@@ -16,7 +16,6 @@
                 "data": {
                     "host": "Vert",
                     "password": "Passord",
-                    "port": "",
                     "ssl": "AdGuard Hjem bruker et SSL-sertifikat",
                     "username": "Brukernavn",
                     "verify_ssl": "AdGuard Home bruker et riktig sertifikat"

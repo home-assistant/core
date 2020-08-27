@@ -223,7 +223,7 @@ homeassistant/components/keba/* @dannerph
 homeassistant/components/keenetic_ndms2/* @foxel
 homeassistant/components/kef/* @basnijholt
 homeassistant/components/keyboard_remote/* @bendavid
-homeassistant/components/knx/* @Julius2342
+homeassistant/components/knx/* @Julius2342 @farmio @marvin-w
 homeassistant/components/kodi/* @armills @OnFreund
 homeassistant/components/konnected/* @heythisisnate @kit-klein
 homeassistant/components/lametric/* @robbiet480
@@ -367,6 +367,7 @@ homeassistant/components/serial/* @fabaff
 homeassistant/components/seven_segments/* @fabaff
 homeassistant/components/seventeentrack/* @bachya
 homeassistant/components/shell_command/* @home-assistant/core
+homeassistant/components/shelly/* @balloob
 homeassistant/components/shiftr/* @fabaff
 homeassistant/components/shodan/* @fabaff
 homeassistant/components/sighthound/* @robmarkcole
@@ -473,6 +474,7 @@ homeassistant/components/weather/* @fabaff
 homeassistant/components/webostv/* @bendavid
 homeassistant/components/websocket_api/* @home-assistant/core
 homeassistant/components/wiffi/* @mampfes
+homeassistant/components/wilight/* @leofig-rj
 homeassistant/components/withings/* @vangorra
 homeassistant/components/wled/* @frenck
 homeassistant/components/wolflink/* @adamkrol93
@@ -490,7 +492,6 @@ homeassistant/components/yeelight/* @rytilahti @zewelor
 homeassistant/components/yeelightsunflower/* @lindsaymarkward
 homeassistant/components/yessssms/* @flowolf
 homeassistant/components/yi/* @bachya
-homeassistant/components/yr/* @danielhiversen
 homeassistant/components/zeroconf/* @Kane610
 homeassistant/components/zerproc/* @emlove
 homeassistant/components/zha/* @dmulcahey @adminiuga

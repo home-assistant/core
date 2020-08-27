@@ -1,16 +1,17 @@
 {
     "config": {
         "abort": {
-            "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+            "already_configured": "Device is already configured",
             "already_in_progress": "Config flow for this gateway is already in progress",
             "not_xiaomi_aqara": "Not a Xiaomi Aqara Gateway, discovered device did not match known gateways"
         },
         "error": {
             "discovery_error": "Failed to discover a Xiaomi Aqara Gateway, try using the IP of the device running HomeAssistant as interface",
-            "invalid_host": "Invalid [%key:common::config_flow::data::ip%]",
+            "invalid_host": "Invalid IP Address",
             "invalid_interface": "Invalid network interface",
             "invalid_key": "Invalid gateway key",
-            "invalid_mac": "Invalid Mac Address"
+            "invalid_mac": "Invalid Mac Address",
+            "not_found_error": "Zeroconf discovered Gateway could not be located to get the necessary information, try using the IP of the device running HomeAssistant as interface"
         },
         "flow_title": "Xiaomi Aqara Gateway: {name}",
         "step": {
@@ -31,7 +32,7 @@
             },
             "user": {
                 "data": {
-                    "host": "[%key:common::config_flow::data::ip%] (optional)",
+                    "host": "IP Address (optional)",
                     "interface": "The network interface to use",
                     "mac": "Mac Address (optional)"
                 },

@@ -34,11 +34,16 @@ async def test_reloadable(hass):
     assert len(hass.states.async_all()) == 2
 
     yaml_path = path.join(
-        _get_fixtures_base_path(), "fixtures", "template/sensor_configuration.yaml",
+        _get_fixtures_base_path(),
+        "fixtures",
+        "template/sensor_configuration.yaml",
     )
     with patch.object(config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
-            DOMAIN, SERVICE_RELOAD, {}, blocking=True,
+            DOMAIN,
+            SERVICE_RELOAD,
+            {},
+            blocking=True,
         )
         await hass.async_block_till_done()
 
@@ -76,11 +81,16 @@ async def test_reloadable_can_remove(hass):
     assert len(hass.states.async_all()) == 2
 
     yaml_path = path.join(
-        _get_fixtures_base_path(), "fixtures", "template/empty_configuration.yaml",
+        _get_fixtures_base_path(),
+        "fixtures",
+        "template/empty_configuration.yaml",
     )
     with patch.object(config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
-            DOMAIN, SERVICE_RELOAD, {}, blocking=True,
+            DOMAIN,
+            SERVICE_RELOAD,
+            {},
+            blocking=True,
         )
         await hass.async_block_till_done()
 
@@ -115,11 +125,16 @@ async def test_reloadable_stops_on_invalid_config(hass):
     assert len(hass.states.async_all()) == 2
 
     yaml_path = path.join(
-        _get_fixtures_base_path(), "fixtures", "template/configuration.yaml.corrupt",
+        _get_fixtures_base_path(),
+        "fixtures",
+        "template/configuration.yaml.corrupt",
     )
     with patch.object(config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
-            DOMAIN, SERVICE_RELOAD, {}, blocking=True,
+            DOMAIN,
+            SERVICE_RELOAD,
+            {},
+            blocking=True,
         )
         await hass.async_block_till_done()
 
@@ -155,11 +170,16 @@ async def test_reloadable_handles_partial_valid_config(hass):
     assert len(hass.states.async_all()) == 2
 
     yaml_path = path.join(
-        _get_fixtures_base_path(), "fixtures", "template/broken_configuration.yaml",
+        _get_fixtures_base_path(),
+        "fixtures",
+        "template/broken_configuration.yaml",
     )
     with patch.object(config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
-            DOMAIN, SERVICE_RELOAD, {}, blocking=True,
+            DOMAIN,
+            SERVICE_RELOAD,
+            {},
+            blocking=True,
         )
         await hass.async_block_till_done()
 
@@ -213,11 +233,16 @@ async def test_reloadable_multiple_platforms(hass):
     assert len(hass.states.async_all()) == 3
 
     yaml_path = path.join(
-        _get_fixtures_base_path(), "fixtures", "template/sensor_configuration.yaml",
+        _get_fixtures_base_path(),
+        "fixtures",
+        "template/sensor_configuration.yaml",
     )
     with patch.object(config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
-            DOMAIN, SERVICE_RELOAD, {}, blocking=True,
+            DOMAIN,
+            SERVICE_RELOAD,
+            {},
+            blocking=True,
         )
         await hass.async_block_till_done()
 

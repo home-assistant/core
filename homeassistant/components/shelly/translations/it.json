@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
+        },
+        "error": {
+            "auth_not_supported": "I dispositivi Shelly che richiedono l'autenticazione non sono attualmente supportati.",
+            "cannot_connect": "Impossibile connettersi",
+            "unknown": "Errore imprevisto"
+        },
+        "flow_title": "Shelly: {name}",
+        "step": {
+            "confirm_discovery": {
+                "description": "Vuoi impostare {model} su {host}?"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                }
+            }
+        }
+    },
+    "title": "Shelly"
+}
