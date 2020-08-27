@@ -30,6 +30,7 @@ from homeassistant.const import (
 from homeassistant.core import State, callback, split_entity_id, valid_entity_id
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, location as loc_helper
+from homeassistant.helpers.frame import report
 from homeassistant.helpers.typing import HomeAssistantType, TemplateVarsType
 from homeassistant.loader import bind_hass
 from homeassistant.util import convert, dt as dt_util, location as loc_util
@@ -65,8 +66,9 @@ def attach(hass: HomeAssistantType, obj: Any) -> None:
         for child in obj:
             attach(hass, child)
     elif isinstance(obj, dict):
-        for child in obj.values():
-            attach(hass, child)
+        for child_key, child_value in obj.items():
+            attach(hass, child_key)
+            attach(hass, child_value)
     elif isinstance(obj, Template):
         obj.hass = hass
 
@@ -76,10 +78,19 @@ def render_complex(value: Any, variables: TemplateVarsType = None) -> Any:
     if isinstance(value, list):
         return [render_complex(item, variables) for item in value]
     if isinstance(value, dict):
-        return {key: render_complex(item, variables) for key, item in value.items()}
+        return {
+            render_complex(key, variables): render_complex(item, variables)
+            for key, item in value.items()
+        }
     if isinstance(value, Template):
         return value.async_render(variables)
+
     return value
+
+
+def is_template_string(maybe_template: str) -> bool:
+    """Check if the input is a Jinja2 template."""
+    return _RE_JINJA_DELIMITERS.search(maybe_template) is not None
 
 
 def extract_entities(
@@ -88,7 +99,12 @@ def extract_entities(
     variables: TemplateVarsType = None,
 ) -> Union[str, List[str]]:
     """Extract all entities for state_changed listener from template string."""
-    if template is None or _RE_JINJA_DELIMITERS.search(template) is None:
+
+    report(
+        "called template.extract_entities. Please use event.async_track_template_result instead as it can accurately handle watching entities"
+    )
+
+    if template is None or not is_template_string(template):
         return []
 
     if _RE_NONE_ENTITIES.search(template):
@@ -197,6 +213,7 @@ class Template:
         self._compiled_code = None
         self._compiled = None
         self.hass = hass
+        self.is_static = not is_template_string(template)
 
     @property
     def _env(self):
@@ -221,10 +238,16 @@ class Template:
         self, variables: TemplateVarsType = None
     ) -> Union[str, List[str]]:
         """Extract all entities for state_changed listener."""
+        if self.is_static:
+            return []
+
         return extract_entities(self.hass, self.template, variables)
 
     def render(self, variables: TemplateVarsType = None, **kwargs: Any) -> str:
         """Render given template."""
+        if self.is_static:
+            return self.template
+
         if variables is not None:
             kwargs.update(variables)
 
@@ -238,6 +261,9 @@ class Template:
 
         This method must be run in the event loop.
         """
+        if self.is_static:
+            return self.template
+
         compiled = self._compiled or self._ensure_compiled()
 
         if variables is not None:
@@ -254,18 +280,23 @@ class Template:
     ) -> RenderInfo:
         """Render the template and collect an entity filter."""
         assert self.hass and _RENDER_INFO not in self.hass.data
-        render_info = self.hass.data[_RENDER_INFO] = RenderInfo(self)
+
+        render_info = RenderInfo(self)
+
         # pylint: disable=protected-access
+        if self.is_static:
+            render_info._freeze_static()
+            return render_info
+
+        self.hass.data[_RENDER_INFO] = render_info
         try:
             render_info._result = self.async_render(variables, **kwargs)
         except TemplateError as ex:
             render_info.exception = ex
         finally:
             del self.hass.data[_RENDER_INFO]
-            if _RE_JINJA_DELIMITERS.search(self.template) is None:
-                render_info._freeze_static()
-            else:
-                render_info._freeze()
+
+        render_info._freeze()
         return render_info
 
     def render_with_possible_json_value(self, value, error_value=_SENTINEL):
@@ -273,6 +304,9 @@ class Template:
 
         If valid JSON will expose value_json too.
         """
+        if self.is_static:
+            return self.template
+
         return run_callback_threadsafe(
             self.hass.loop,
             self.async_render_with_possible_json_value,
@@ -290,6 +324,9 @@ class Template:
 
         This method must be run in the event loop.
         """
+        if self.is_static:
+            return self.template
+
         if self._compiled is None:
             self._ensure_compiled()
 

@@ -70,7 +70,6 @@ SERVICE_HANDLERS = {
     "openhome": ("media_player", "openhome"),
     "bose_soundtouch": ("media_player", "soundtouch"),
     "bluesound": ("media_player", "bluesound"),
-    "kodi": ("media_player", "kodi"),
     "lg_smart_device": ("media_player", "lg_soundbar"),
     "nanoleaf_aurora": ("light", "nanoleaf"),
 }
@@ -87,6 +86,7 @@ MIGRATED_SERVICE_HANDLERS = [
     "harmony",
     "homekit",
     "ikea_tradfri",
+    "kodi",
     "philips_hue",
     "sonos",
     "songpal",

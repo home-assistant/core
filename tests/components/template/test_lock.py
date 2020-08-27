@@ -231,8 +231,8 @@ class TestTemplateLock:
 
         assert self.hass.states.all() == []
 
-    def test_no_template_match_all(self, caplog):
-        """Test that we do not allow locks that match on all."""
+    def test_template_static(self, caplog):
+        """Test that we allow static templates."""
         with assert_setup_component(1, "lock"):
             assert setup.setup_component(
                 self.hass,
@@ -259,12 +259,6 @@ class TestTemplateLock:
 
         state = self.hass.states.get("lock.template_lock")
         assert state.state == lock.STATE_UNLOCKED
-
-        assert (
-            "Template lock 'Template Lock' has no entity ids configured to track "
-            "nor were we able to extract the entities to track from the value "
-            "template(s). This entity will only be able to be updated manually"
-        ) in caplog.text
 
         self.hass.states.set("lock.template_lock", lock.STATE_LOCKED)
         self.hass.block_till_done()

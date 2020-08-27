@@ -1,0 +1,57 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "flow_title": "Kodi: {name}",
+        "step": {
+            "credentials": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "description": "Please enter your Kodi user name and password. These can be found in System/Settings/Network/Services."
+            },
+            "discovery_confirm": {
+                "description": "Do you want to add Kodi (`{name}`) to Home Assistant?",
+                "title": "Discovered Kodi"
+            },
+            "host": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port",
+                    "ssl": "Connect over SSL"
+                },
+                "description": "Kodi connection information. Please make sure to enable \"Allow control of Kodi via HTTP\" in System/Settings/Network/Services."
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port",
+                    "ssl": "Connect over SSL"
+                },
+                "description": "Kodi connection information. Please make sure to enable \"Allow control of Kodi via HTTP\" in System/Settings/Network/Services."
+            },
+            "ws_port": {
+                "data": {
+                    "ws_port": "Port"
+                },
+                "description": "The WebSocket port (sometimes called TCP port in Kodi). In order to connect over WebSocket, you need to enable \"Allow programs ... to control Kodi\" in System/Settings/Network/Services. If WebSocket is not enabled, remove the port and leave empty."
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "turn_off": "{entity_name} was requested to turn off",
+            "turn_on": "{entity_name} was requested to turn on"
+        }
+    }
+}

@@ -27,7 +27,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.helpers.typing import HomeAssistantType
 
-from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericDevice
+from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericEntity
 from .hap import HomematicipHAP
 
 HEATING_PROFILES = {"PROFILE_1": 0, "PROFILE_2": 1, "PROFILE_3": 2}
@@ -57,8 +57,8 @@ async def async_setup_entry(
         async_add_entities(entities)
 
 
-class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateEntity):
-    """Representation of a HomematicIP heating group.
+class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
+    """Representation of the HomematicIP heating group.
 
     Heat mode is supported for all heating devices incl. their defined profiles.
     Boost is available for radiator thermostats only.

@@ -36,6 +36,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         elif isinstance(value.primary.value, dict):
             sensor = ZWaveListSensor(value)
 
+        elif isinstance(value.primary.value, str):
+            sensor = ZWaveStringSensor(value)
+
         else:
             _LOGGER.warning("Sensor not implemented for value %s", value.primary.label)
             return
@@ -91,6 +94,25 @@ class ZwaveSensorBase(ZWaveDeviceEntity):
     def force_update(self) -> bool:
         """Force updates."""
         return True
+
+
+class ZWaveStringSensor(ZwaveSensorBase):
+    """Representation of a Z-Wave sensor."""
+
+    @property
+    def state(self):
+        """Return state of the sensor."""
+        return self.values.primary.value
+
+    @property
+    def unit_of_measurement(self):
+        """Return unit of measurement the value is expressed in."""
+        return self.values.primary.units
+
+    @property
+    def entity_registry_enabled_default(self):
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return False
 
 
 class ZWaveNumericSensor(ZwaveSensorBase):

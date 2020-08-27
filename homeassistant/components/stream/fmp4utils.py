@@ -5,7 +5,8 @@ import io
 def find_box(segment: io.BytesIO, target_type: bytes, box_start: int = 0) -> int:
     """Find location of first box (or sub_box if box_start provided) of given type."""
     if box_start == 0:
-        box_end = len(segment.getbuffer())
+        box_end = segment.seek(0, io.SEEK_END)
+        segment.seek(0)
         index = 0
     else:
         segment.seek(box_start)
@@ -29,22 +30,9 @@ def get_init(segment: io.BytesIO) -> bytes:
     return segment.read(moof_location)
 
 
-def get_m4s(segment: io.BytesIO, start_pts: tuple, sequence: int) -> bytes:
+def get_m4s(segment: io.BytesIO, sequence: int) -> bytes:
     """Get m4s section from fragmented mp4."""
     moof_location = next(find_box(segment, b"moof"))
     mfra_location = next(find_box(segment, b"mfra"))
-    # adjust mfhd sequence number in moof
-    view = segment.getbuffer()
-    view[moof_location + 20 : moof_location + 24] = sequence.to_bytes(4, "big")
-    # adjust tfdt in video traf
-    traf_finder = find_box(segment, b"traf", moof_location)
-    traf_location = next(traf_finder)
-    tfdt_location = next(find_box(segment, b"tfdt", traf_location))
-    view[tfdt_location + 12 : tfdt_location + 20] = start_pts[0].to_bytes(8, "big")
-    # adjust tfdt in audio traf
-    traf_location = next(traf_finder)
-    tfdt_location = next(find_box(segment, b"tfdt", traf_location))
-    view[tfdt_location + 12 : tfdt_location + 20] = start_pts[1].to_bytes(8, "big")
-    # done adjusting
     segment.seek(moof_location)
     return segment.read(mfra_location - moof_location)

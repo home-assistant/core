@@ -2,7 +2,7 @@
 import asyncio
 from collections import deque
 import io
-from typing import Any, List
+from typing import Any, Callable, List
 
 from aiohttp import web
 import attr
@@ -34,7 +34,6 @@ class Segment:
     sequence: int = attr.ib()
     segment: io.BytesIO = attr.ib()
     duration: float = attr.ib()
-    start_pts: tuple = attr.ib()
 
 
 class StreamOutput:
@@ -61,8 +60,8 @@ class StreamOutput:
         return None
 
     @property
-    def audio_codec(self) -> str:
-        """Return desired audio codec."""
+    def audio_codecs(self) -> str:
+        """Return desired audio codecs."""
         return None
 
     @property
@@ -71,8 +70,8 @@ class StreamOutput:
         return None
 
     @property
-    def container_options(self) -> dict:
-        """Return container options."""
+    def container_options(self) -> Callable[[int], dict]:
+        """Return Callable which takes a sequence number and returns container options."""
         return None
 
     @property

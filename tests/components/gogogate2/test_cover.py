@@ -398,7 +398,9 @@ async def test_open_close(
 
     assert hass.states.get("cover.door1").state == STATE_OPEN
     await hass.services.async_call(
-        COVER_DOMAIN, "close_cover", service_data={"entity_id": "cover.door1"},
+        COVER_DOMAIN,
+        "close_cover",
+        service_data={"entity_id": "cover.door1"},
     )
     await hass.async_block_till_done()
     component_data.api.close_door.assert_called_with(1)
@@ -410,7 +412,9 @@ async def test_open_close(
 
     # Assert mid state changed when new status is received.
     await hass.services.async_call(
-        COVER_DOMAIN, "open_cover", service_data={"entity_id": "cover.door1"},
+        COVER_DOMAIN,
+        "open_cover",
+        service_data={"entity_id": "cover.door1"},
     )
     await hass.async_block_till_done()
     component_data.api.open_door.assert_called_with(1)
@@ -423,7 +427,9 @@ async def test_open_close(
 
     await component_data.data_update_coordinator.async_refresh()
     await hass.services.async_call(
-        HA_DOMAIN, "update_entity", service_data={"entity_id": "cover.door1"},
+        HA_DOMAIN,
+        "update_entity",
+        service_data={"entity_id": "cover.door1"},
     )
     await hass.async_block_till_done()
     assert hass.states.get("cover.door1").state == STATE_CLOSED

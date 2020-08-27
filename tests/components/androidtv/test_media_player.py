@@ -1085,7 +1085,10 @@ async def _test_service(
         f"androidtv.{androidtv_patch}.{androidtv_method}", return_value=return_value
     ) as service_call:
         await hass.services.async_call(
-            DOMAIN, ha_service_name, service_data=service_data, blocking=True,
+            DOMAIN,
+            ha_service_name,
+            service_data=service_data,
+            blocking=True,
         )
         assert service_call.called
 

@@ -323,7 +323,9 @@ class UniFiController:
             client = self.api.clients_all[mac]
             self.api.clients.process_raw([client.raw])
             LOGGER.debug(
-                "Restore disconnected client %s (%s)", entity.entity_id, client.mac,
+                "Restore disconnected client %s (%s)",
+                entity.entity_id,
+                client.mac,
             )
 
         wireless_clients = self.hass.data[UNIFI_WIRELESS_CLIENTS]

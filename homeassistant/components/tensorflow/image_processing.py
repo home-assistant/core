@@ -204,7 +204,12 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
     """Representation of an TensorFlow image processor."""
 
     def __init__(
-        self, hass, camera_entity, name, category_index, config,
+        self,
+        hass,
+        camera_entity,
+        name,
+        category_index,
+        config,
     ):
         """Initialize the TensorFlow entity."""
         model_config = config.get(CONF_MODEL)

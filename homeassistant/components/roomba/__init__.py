@@ -71,7 +71,9 @@ async def async_setup(hass, config):
         _LOGGER.debug("Importing Roomba #%d - %s", index, conf[CONF_HOST])
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=conf,
+                DOMAIN,
+                context={"source": config_entries.SOURCE_IMPORT},
+                data=conf,
             )
         )
 

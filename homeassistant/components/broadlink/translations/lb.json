@@ -1,0 +1,45 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert",
+            "already_in_progress": "Et ass schonn ee Konfiguratioun's Oflaf fir d\u00ebsen Apparat am gaang.",
+            "cannot_connect": "Feeler beim verbannen",
+            "invalid_host": "Ong\u00ebltege Numm oder IP Adresse.",
+            "unknown": "Onerwaarte Feeler"
+        },
+        "error": {
+            "cannot_connect": "Feeler beim verbannen",
+            "invalid_host": "Ong\u00ebltege Numm oder IP Adresse.",
+            "unknown": "Onerwaarte Feeler"
+        },
+        "flow_title": "{name} ({model} um {host})",
+        "step": {
+            "auth": {
+                "title": "Mam Apparat verbannen"
+            },
+            "finish": {
+                "data": {
+                    "name": "Numm"
+                },
+                "title": "Numm auswielen fir den Apparat"
+            },
+            "reset": {
+                "title": "Apparat entsp\u00e4ren"
+            },
+            "unlock": {
+                "data": {
+                    "unlock": "Jo, mach \u00ebt"
+                },
+                "description": "D\u00e4in Apparat ass gespaart. D\u00ebs kann zu Authentifikatiouns Problemer am Home Assistant f\u00e9ieren. W\u00eblls du et enstp\u00e4ren?",
+                "title": "Apparat entsp\u00e4ren (optionell)"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "timeout": "Z\u00e4itiwwerscheidung"
+                },
+                "title": "Mam Apparat verbannen"
+            }
+        }
+    }
+}

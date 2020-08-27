@@ -584,7 +584,11 @@ async def test_automation_stops(hass, calls, service):
             ],
         }
     }
-    assert await async_setup_component(hass, automation.DOMAIN, config,)
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        config,
+    )
 
     running = asyncio.Event()
 
@@ -861,6 +865,22 @@ async def test_automation_not_trigger_on_bootstrap(hass):
     assert ["hello.world"] == calls[0].data.get(ATTR_ENTITY_ID)
 
 
+async def test_automation_bad_trigger(hass, caplog):
+    """Test bad trigger configuration."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": "hello",
+                "trigger": {"platform": "automation"},
+                "action": [],
+            }
+        },
+    )
+    assert "Integration 'automation' does not provide trigger support." in caplog.text
+
+
 async def test_automation_with_error_in_script(hass, caplog):
     """Test automation with an error in script."""
     assert await async_setup_component(
@@ -1073,6 +1093,7 @@ async def test_logbook_humanify_automation_triggered_event(hass):
                 ),
             ],
             entity_attr_cache,
+            {},
         )
     )
 

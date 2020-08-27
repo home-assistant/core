@@ -46,6 +46,8 @@ ATTR_MESSAGE = "message"
 ATTR_OPTIONS = "options"
 ATTR_PLATFORM = "platform"
 
+BASE_URL_KEY = "tts_base_url"
+
 CONF_BASE_URL = "base_url"
 CONF_CACHE = "cache"
 CONF_CACHE_DIR = "cache_dir"
@@ -115,10 +117,11 @@ async def async_setup(hass, config):
         cache_dir = conf.get(CONF_CACHE_DIR, DEFAULT_CACHE_DIR)
         time_memory = conf.get(CONF_TIME_MEMORY, DEFAULT_TIME_MEMORY)
         base_url = conf.get(CONF_BASE_URL) or get_url(hass)
+        hass.data[BASE_URL_KEY] = base_url
 
         await tts.async_init_cache(use_cache, cache_dir, time_memory, base_url)
-    except (HomeAssistantError, KeyError) as err:
-        _LOGGER.error("Error on cache init %s", err)
+    except (HomeAssistantError, KeyError):
+        _LOGGER.exception("Error on cache init")
         return False
 
     hass.http.register_view(TextToSpeechView(tts))
@@ -321,7 +324,9 @@ class SpeechManager:
         else:
             options_key = "-"
 
-        key = KEY_PATTERN.format(msg_hash, language, options_key, engine).lower()
+        key = KEY_PATTERN.format(
+            msg_hash, language.replace("_", "-"), options_key, engine
+        ).lower()
 
         # Is speech already in memory
         if key in self.mem_cache:
@@ -352,9 +357,14 @@ class SpeechManager:
         # Create file infos
         filename = f"{key}.{extension}".lower()
 
-        data = self.write_tags(filename, data, provider, message, language, options)
+        # Validate filename
+        if not _RE_VOICE_FILE.match(filename):
+            raise HomeAssistantError(
+                f"TTS filename '{filename}' from {engine} is invalid!"
+            )
 
         # Save to memory
+        data = self.write_tags(filename, data, provider, message, language, options)
         self._async_store_to_memcache(key, filename, data)
 
         if cache:
@@ -592,3 +602,8 @@ class TextToSpeechView(HomeAssistantView):
             return web.Response(status=HTTP_NOT_FOUND)
 
         return web.Response(body=data, content_type=content)
+
+
+def get_base_url(hass):
+    """Get base URL."""
+    return hass.data[BASE_URL_KEY]

@@ -15,8 +15,10 @@ from homeassistant.util.yaml.loader import load_yaml
 COMMENT_REQUIREMENTS = (
     "Adafruit_BBIO",
     "Adafruit-DHT",
+    "avea",  # depends on bluepy
     "avion",
     "beacontools",
+    "beewi_smartclim",  # depends on bluepy
     "blinkt",
     "bluepy",
     "bme680",
@@ -66,11 +68,17 @@ urllib3>=1.24.3
 # Constrain httplib2 to protect against CVE-2020-11078
 httplib2>=0.18.0
 
-# Not needed for our supported Python versions
-enum34==1000000000.0.0
-
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0
+
+# To remove reliance on typing
+btlewrap>=0.0.10
+
+# This overrides a built-in Python package
+enum34==1000000000.0.0
+typing==1000000000.0.0
+uuid==1000000000.0.0
+
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (
@@ -176,6 +184,9 @@ def gather_requirements_from_manifests(errors, reqs):
 
         if not integration.manifest:
             errors.append(f"The manifest for integration {domain} is invalid.")
+            continue
+
+        if integration.disabled:
             continue
 
         process_requirements(

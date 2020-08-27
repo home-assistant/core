@@ -21,11 +21,28 @@ NODE_ID = "node_id"
 @callback
 def async_register_api(hass):
     """Register all of our api endpoints."""
+    websocket_api.async_register_command(hass, websocket_get_instances)
     websocket_api.async_register_command(hass, websocket_network_status)
+    websocket_api.async_register_command(hass, websocket_network_statistics)
     websocket_api.async_register_command(hass, websocket_node_metadata)
     websocket_api.async_register_command(hass, websocket_node_status)
     websocket_api.async_register_command(hass, websocket_node_statistics)
     websocket_api.async_register_command(hass, websocket_refresh_node_info)
+
+
+@websocket_api.websocket_command({vol.Required(TYPE): "ozw/get_instances"})
+def websocket_get_instances(hass, connection, msg):
+    """Get a list of OZW instances."""
+    manager = hass.data[DOMAIN][MANAGER]
+    instances = []
+
+    for instance in manager.collections["instance"]:
+        instances.append(dict(instance.get_status().data, ozw_instance=instance.id))
+
+    connection.send_result(
+        msg[ID],
+        instances,
+    )
 
 
 @websocket_api.websocket_command(
@@ -38,12 +55,30 @@ def websocket_network_status(hass, connection, msg):
     """Get Z-Wave network status."""
 
     manager = hass.data[DOMAIN][MANAGER]
+    status = manager.get_instance(msg[OZW_INSTANCE]).get_status().data
     connection.send_result(
         msg[ID],
-        {
-            "state": manager.get_instance(msg[OZW_INSTANCE]).get_status().status,
-            OZW_INSTANCE: msg[OZW_INSTANCE],
-        },
+        dict(status, ozw_instance=msg[OZW_INSTANCE]),
+    )
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "ozw/network_statistics",
+        vol.Optional(OZW_INSTANCE, default=1): vol.Coerce(int),
+    }
+)
+def websocket_network_statistics(hass, connection, msg):
+    """Get Z-Wave network statistics."""
+
+    manager = hass.data[DOMAIN][MANAGER]
+    statistics = manager.get_instance(msg[OZW_INSTANCE]).get_statistics().data
+    node_count = len(
+        manager.get_instance(msg[OZW_INSTANCE]).collections["node"].collection
+    )
+    connection.send_result(
+        msg[ID],
+        dict(statistics, ozw_instance=msg[OZW_INSTANCE], node_count=node_count),
     )
 
 

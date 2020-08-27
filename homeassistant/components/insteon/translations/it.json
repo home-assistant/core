@@ -1,0 +1,115 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Una connessione modem Insteon \u00e8 gi\u00e0 configurata",
+            "cannot_connect": "Impossibile connettersi al modem Insteon"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi al modem Insteon, riprovare.",
+            "select_single": "Selezionare un'opzione."
+        },
+        "step": {
+            "hub1": {
+                "data": {
+                    "host": "Indirizzo IP dell'hub",
+                    "port": "Porta IP"
+                },
+                "description": "Configurare la versione 1 di Insteon Hub (pre-2014).",
+                "title": "Insteon Hub versione 1"
+            },
+            "hub2": {
+                "data": {
+                    "host": "Indirizzo IP dell'hub",
+                    "password": "Password",
+                    "port": "Porta IP",
+                    "username": "Nome utente"
+                },
+                "description": "Configurare la versione 2 di Insteon Hub.",
+                "title": "Insteon Hub versione 2"
+            },
+            "init": {
+                "data": {
+                    "hubv1": "Hub versione 1 (precedente al 2014)",
+                    "hubv2": "Hub versione 2",
+                    "plm": "Modem PowerLink (PLM)"
+                },
+                "description": "Selezionare il tipo di modem Insteon.",
+                "title": "Insteon"
+            },
+            "plm": {
+                "data": {
+                    "device": "Dispositivo PLM (ad esempio /dev/ttyUSB0 o COM3)"
+                },
+                "description": "Configurare Insteon PowerLink Modem (PLM).",
+                "title": "Insteon PLM"
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "already_configured": "Una connessione modem Insteon \u00e8 gi\u00e0 configurata",
+            "cannot_connect": "Impossibile connettersi al modem Insteon"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi al modem Insteon, riprovare.",
+            "input_error": "Voci non valide, si prega di controllare i valori.",
+            "select_single": "Selezionare un'opzione."
+        },
+        "step": {
+            "add_override": {
+                "data": {
+                    "address": "Indirizzo del dispositivo (ad es. 1a2b3c)",
+                    "cat": "Categoria del dispositivo (ad es. 0x10)",
+                    "subcat": "Sottocategoria del dispositivo (ad es. 0x0a)"
+                },
+                "description": "Aggiungi una sostituzione del dispositivo.",
+                "title": "Insteon"
+            },
+            "add_x10": {
+                "data": {
+                    "housecode": "Codice casa (a - p)",
+                    "platform": "Piattaforma",
+                    "steps": "Livelli del dimmer (solo per dispositivi luminosi, predefiniti 22)",
+                    "unitcode": "Codice unit\u00e0 (1 - 16)"
+                },
+                "description": "Cambia la password di Insteon Hub.",
+                "title": "Insteon"
+            },
+            "change_hub_config": {
+                "data": {
+                    "host": "Nuovo nome host o indirizzo IP",
+                    "password": "Nuova password",
+                    "port": "Nuovo numero di porta",
+                    "username": "Nuovo nome utente"
+                },
+                "description": "Modificare le informazioni di connessione di Insteon Hub. \u00c8 necessario riavviare Home Assistant dopo aver apportato questa modifica. Ci\u00f2 non modifica la configurazione dell'Hub stesso. Per modificare la configurazione nell'Hub, utilizzare l'app Hub.",
+                "title": "Insteon"
+            },
+            "init": {
+                "data": {
+                    "add_override": "Aggiungi una sostituzione del dispositivo.",
+                    "add_x10": "Aggiungi un dispositivo X10.",
+                    "change_hub_config": "Modificare la configurazione dell'hub.",
+                    "remove_override": "Rimuovere una sostituzione del dispositivo.",
+                    "remove_x10": "Rimuovi un dispositivo X10."
+                },
+                "description": "Selezionare un'opzione da configurare.",
+                "title": "Insteon"
+            },
+            "remove_override": {
+                "data": {
+                    "address": "Selezionare un indirizzo del dispositivo da rimuovere"
+                },
+                "description": "Rimuovere una sostituzione del dispositivo",
+                "title": "Insteon"
+            },
+            "remove_x10": {
+                "data": {
+                    "address": "Selezionare un indirizzo del dispositivo da rimuovere"
+                },
+                "description": "Rimuovi un dispositivo X10",
+                "title": "Insteon"
+            }
+        }
+    }
+}

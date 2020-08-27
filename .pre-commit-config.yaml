@@ -5,7 +5,7 @@ repos:
       - id: pyupgrade
         args: [--py37-plus]
   - repo: https://github.com/psf/black
-    rev: 19.10b0
+    rev: 20.8b1
     hooks:
       - id: black
         args:
@@ -46,6 +46,7 @@ repos:
     rev: v3.2.0
     hooks:
       - id: check-executables-have-shebangs
+        stages: [manual]
       - id: check-json
       - id: no-commit-to-branch
         args:

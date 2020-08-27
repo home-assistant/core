@@ -117,7 +117,9 @@ def _async_loop_exception_handler(_: Any, context: Dict) -> None:
     )
 
 
-async def setup_and_run_hass(runtime_config: RuntimeConfig,) -> int:
+async def setup_and_run_hass(
+    runtime_config: RuntimeConfig,
+) -> int:
     """Set up Home Assistant and run."""
     hass = await bootstrap.async_setup_hass(runtime_config)
 

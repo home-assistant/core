@@ -60,16 +60,16 @@ SENSOR_TYPES = {
     "battery_percent": ["Battery Percent", UNIT_PERCENTAGE, None, DEVICE_CLASS_BATTERY],
     "min_temp": ["Min Temp.", TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE],
     "max_temp": ["Max Temp.", TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE],
-    "windangle": ["Angle", None, "mdi:compass-outline", None],
-    "windangle_value": ["Angle Value", DEGREE, "mdi:compass-outline", None],
+    "windangle": ["Direction", None, "mdi:compass-outline", None],
+    "windangle_value": ["Angle", DEGREE, "mdi:compass-outline", None],
     "windstrength": [
         "Wind Strength",
         SPEED_KILOMETERS_PER_HOUR,
         "mdi:weather-windy",
         None,
     ],
-    "gustangle": ["Gust Angle", None, "mdi:compass-outline", None],
-    "gustangle_value": ["Gust Angle Value", DEGREE, "mdi:compass-outline", None],
+    "gustangle": ["Gust Direction", None, "mdi:compass-outline", None],
+    "gustangle_value": ["Gust Angle", DEGREE, "mdi:compass-outline", None],
     "guststrength": [
         "Gust Strength",
         SPEED_KILOMETERS_PER_HOUR,
@@ -128,7 +128,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 continue
 
             _LOGGER.debug(
-                "Adding module %s %s", module.get("module_name"), module.get("_id"),
+                "Adding module %s %s",
+                module.get("module_name"),
+                module.get("_id"),
             )
             conditions = [
                 c.lower()
@@ -179,7 +181,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
                 if update:
                     async_dispatcher_send(
-                        hass, f"netatmo-config-{area.area_name}", area,
+                        hass,
+                        f"netatmo-config-{area.area_name}",
+                        area,
                     )
                     continue
 

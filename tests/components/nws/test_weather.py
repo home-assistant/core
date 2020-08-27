@@ -35,7 +35,10 @@ async def test_imperial_metric(
 ):
     """Test with imperial and metric units."""
     hass.config.units = units
-    entry = MockConfigEntry(domain=nws.DOMAIN, data=NWS_CONFIG,)
+    entry = MockConfigEntry(
+        domain=nws.DOMAIN,
+        data=NWS_CONFIG,
+    )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -73,7 +76,10 @@ async def test_none_values(hass, mock_simple_nws):
     instance.observation = NONE_OBSERVATION
     instance.forecast = NONE_FORECAST
 
-    entry = MockConfigEntry(domain=nws.DOMAIN, data=NWS_CONFIG,)
+    entry = MockConfigEntry(
+        domain=nws.DOMAIN,
+        data=NWS_CONFIG,
+    )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -95,7 +101,10 @@ async def test_none(hass, mock_simple_nws):
     instance.observation = None
     instance.forecast = None
 
-    entry = MockConfigEntry(domain=nws.DOMAIN, data=NWS_CONFIG,)
+    entry = MockConfigEntry(
+        domain=nws.DOMAIN,
+        data=NWS_CONFIG,
+    )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -118,7 +127,10 @@ async def test_error_station(hass, mock_simple_nws):
     instance = mock_simple_nws.return_value
     instance.set_station.side_effect = aiohttp.ClientError
 
-    entry = MockConfigEntry(domain=nws.DOMAIN, data=NWS_CONFIG,)
+    entry = MockConfigEntry(
+        domain=nws.DOMAIN,
+        data=NWS_CONFIG,
+    )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -133,7 +145,10 @@ async def test_entity_refresh(hass, mock_simple_nws):
 
     await async_setup_component(hass, "homeassistant", {})
 
-    entry = MockConfigEntry(domain=nws.DOMAIN, data=NWS_CONFIG,)
+    entry = MockConfigEntry(
+        domain=nws.DOMAIN,
+        data=NWS_CONFIG,
+    )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -171,7 +186,10 @@ async def test_error_observation(hass, mock_simple_nws):
         # first update fails
         instance.update_observation.side_effect = aiohttp.ClientError
 
-        entry = MockConfigEntry(domain=nws.DOMAIN, data=NWS_CONFIG,)
+        entry = MockConfigEntry(
+            domain=nws.DOMAIN,
+            data=NWS_CONFIG,
+        )
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -235,7 +253,10 @@ async def test_error_forecast(hass, mock_simple_nws):
     instance = mock_simple_nws.return_value
     instance.update_forecast.side_effect = aiohttp.ClientError
 
-    entry = MockConfigEntry(domain=nws.DOMAIN, data=NWS_CONFIG,)
+    entry = MockConfigEntry(
+        domain=nws.DOMAIN,
+        data=NWS_CONFIG,
+    )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -263,7 +284,10 @@ async def test_error_forecast_hourly(hass, mock_simple_nws):
     instance = mock_simple_nws.return_value
     instance.update_forecast_hourly.side_effect = aiohttp.ClientError
 
-    entry = MockConfigEntry(domain=nws.DOMAIN, data=NWS_CONFIG,)
+    entry = MockConfigEntry(
+        domain=nws.DOMAIN,
+        data=NWS_CONFIG,
+    )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
