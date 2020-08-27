@@ -9,7 +9,6 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     LightEntity,
 )
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import CROWNSTONE_EXCLUDE, CROWNSTONE_TYPES, DOMAIN
 
@@ -79,11 +78,6 @@ class Crownstone(LightEntity):
         return self.crownstone.cloud_id
 
     @property
-    def should_dim(self) -> bool:
-        """Return if this crownstone is able to dim."""
-        return self.crownstone.abilities.get(DIMMING_ABILITY).is_enabled
-
-    @property
     def brightness(self) -> float:
         """Return the brightness if dimming enabled."""
         return crownstone_state_to_hass(self.crownstone.state)
@@ -92,6 +86,11 @@ class Crownstone(LightEntity):
     def is_on(self) -> bool:
         """Return if the device is on."""
         return crownstone_state_to_hass(self.crownstone.state) > 0
+
+    @property
+    def assumed_state(self) -> bool:
+        """Use assumed state because there is no state update confirmation."""
+        return True
 
     @property
     def sw_version(self) -> str:
@@ -112,7 +111,7 @@ class Crownstone(LightEntity):
     @property
     def supported_features(self) -> int:
         """Return the supported features of this Crownstone."""
-        if self.should_dim:
+        if self.crownstone.abilities.get(DIMMING_ABILITY).is_enabled:
             return SUPPORT_BRIGHTNESS
         return 0
 
@@ -121,16 +120,10 @@ class Crownstone(LightEntity):
         """No polling required."""
         return False
 
-    async def async_added_to_hass(self) -> None:
-        """Set up a listener when this entity is added to HA."""
-        self.async_on_remove(
-            async_dispatcher_connect(self.hass, DOMAIN, self.async_write_ha_state)
-        )
-
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on this light via dongle or cloud."""
         if ATTR_BRIGHTNESS in kwargs:
-            if self.should_dim:
+            if self.crownstone.abilities.get(DIMMING_ABILITY).is_enabled:
                 if self.uart.is_ready():
                     self.uart.dim_crownstone(
                         self.unique_id,

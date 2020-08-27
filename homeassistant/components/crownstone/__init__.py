@@ -17,7 +17,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Initiate the Crownstone API login from a config entry."""
+    """Initiate setup for a Crownstone config entry."""
     crownstone_hub = CrownstoneHub(hass, entry)
 
     if not await crownstone_hub.async_setup():

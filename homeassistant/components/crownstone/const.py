@@ -1,9 +1,13 @@
 """Constants for the crownstone integration."""
 
+# Integrations
 DOMAIN = "crownstone"
-CONF_SPHERE = "sphere"
 LIGHT_PLATFORM = "light"
 
+# Config flow
+CONF_SPHERE = "sphere"
+
+# Crownstone entity
 CROWNSTONE_TYPES = {
     "PLUG": "Crownstone plug",
     "CROWNSTONE_USB": "Crownstone USB",
@@ -11,5 +15,4 @@ CROWNSTONE_TYPES = {
     "BUILTIN_ONE": "Crownstone built-in one",
     "GUIDESTONE": "Crownstone guidestone",
 }
-
 CROWNSTONE_EXCLUDE = ["CROWNSTONE_USB", "GUIDESTONE"]

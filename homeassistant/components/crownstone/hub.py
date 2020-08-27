@@ -16,14 +16,12 @@ from crownstone_sse.const import (
 )
 from crownstone_sse.events.AbilityChangeEvent import AbilityChangeEvent
 
-from homeassistant.components import persistent_notification
 from homeassistant.config_entries import ConfigEntry, ConfigEntryNotReady
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import CONF_SPHERE, DOMAIN, LIGHT_PLATFORM
+from .const import CONF_SPHERE, LIGHT_PLATFORM
 from .helpers import UartManager
 
 _LOGGER = logging.getLogger(__name__)
@@ -143,23 +141,14 @@ class CrownstoneHub:
                 ability_event.unique_id
             )
             if update_crownstone is not None:
-                if not ability_event.ability_synced_to_crownstone:
-                    # show the user when the crownstone ability has changed but not synced yet.
-                    persistent_notification.async_create(
-                        hass=self.hass,
-                        message=f"Crownstone {update_crownstone.name} ability {ability_event.ability_type} changed to "
-                        f"{ability_event.ability_enabled}, however this change has not been synced to the "
-                        f"Crownstone yet.",
-                        title="Crownstone ability changed",
-                        notification_id="crownstone_ability_changed",
-                    )
-
                 # write the change to the crownstone entity.
                 update_crownstone.abilities[
                     ability_event.ability_type
                 ].is_enabled = ability_event.ability_enabled
-                # signal the entity updater service.
-                async_dispatcher_send(self.hass, DOMAIN)
+                # reload the config entry to process the change in supported features
+                self.hass.async_create_task(
+                    self.hass.config_entries.async_reload(self.config_entry.entry_id)
+                )
 
     @callback
     async def async_stop(self, event: Event) -> None:
