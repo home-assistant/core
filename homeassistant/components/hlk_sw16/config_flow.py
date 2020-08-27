@@ -62,7 +62,7 @@ async def validate_input(hass: HomeAssistant, user_input):
     except CannotConnect:
         client.disconnect_callback = None
         client.stop()
-        raise CannotConnect
+        raise
     else:
         client.disconnect_callback = None
         client.stop()
