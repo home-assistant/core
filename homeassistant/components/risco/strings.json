@@ -32,8 +32,8 @@
         "title": "Map Risco states to Home Assistant states",
         "description": "Select what state your Home Assistant alarm will report for every state reported by Risco",
         "data": {
-          "arm": "Armed",
-          "partial_arm": "Partially Armed",
+          "arm": "Armed (AWAY)",
+          "partial_arm": "Partially Armed (STAY)",
           "A": "Group A",
           "B": "Group B",
           "C": "Group C",
