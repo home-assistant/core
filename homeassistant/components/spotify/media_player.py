@@ -11,8 +11,12 @@ from yarl import URL
 
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
+    MEDIA_TYPE_ALBUM,
+    MEDIA_TYPE_ARTIST,
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_PLAYLIST,
+    MEDIA_TYPE_TRACK,
+    SUPPORT_BROWSE_MEDIA,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -23,6 +27,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_SHUFFLE_SET,
     SUPPORT_VOLUME_SET,
 )
+from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ID,
@@ -36,7 +41,13 @@ from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.entity import Entity
 from homeassistant.util.dt import utc_from_timestamp
 
-from .const import DATA_SPOTIFY_CLIENT, DATA_SPOTIFY_ME, DATA_SPOTIFY_SESSION, DOMAIN
+from .const import (
+    DATA_SPOTIFY_CLIENT,
+    DATA_SPOTIFY_ME,
+    DATA_SPOTIFY_SESSION,
+    DOMAIN,
+    SPOTIFY_SCOPES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,7 +56,8 @@ ICON = "mdi:spotify"
 SCAN_INTERVAL = timedelta(seconds=30)
 
 SUPPORT_SPOTIFY = (
-    SUPPORT_NEXT_TRACK
+    SUPPORT_BROWSE_MEDIA
+    | SUPPORT_NEXT_TRACK
     | SUPPORT_PAUSE
     | SUPPORT_PLAY
     | SUPPORT_PLAY_MEDIA
@@ -55,6 +67,23 @@ SUPPORT_SPOTIFY = (
     | SUPPORT_SHUFFLE_SET
     | SUPPORT_VOLUME_SET
 )
+
+BROWSE_LIMIT = 48
+
+PLAYABLE_MEDIA_TYPES = [
+    MEDIA_TYPE_PLAYLIST,
+    MEDIA_TYPE_ALBUM,
+    MEDIA_TYPE_ARTIST,
+    MEDIA_TYPE_TRACK,
+]
+
+LIBRARY_MAP = {
+    "user_playlists": "Playlists",
+    "featured_playlists": "Featured Playlists",
+    "new_releases": "New Releases",
+    "current_user_top_artists": "Top Artists",
+    "current_user_recently_played": "Recently played",
+}
 
 
 async def async_setup_entry(
@@ -108,6 +137,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         self._name = f"Spotify {name}"
         self._session = session
         self._spotify = spotify
+        self._scope_ok = set(session.token["scope"].split(" ")) == set(SPOTIFY_SCOPES)
 
         self._currently_playing: Optional[dict] = {}
         self._devices: Optional[List[dict]] = []
@@ -308,9 +338,9 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         # Yet, they do generate those types of URI in their official clients.
         media_id = str(URL(media_id).with_query(None).with_fragment(None))
 
-        if media_type == MEDIA_TYPE_MUSIC:
+        if media_type in (MEDIA_TYPE_TRACK, MEDIA_TYPE_MUSIC):
             kwargs["uris"] = [media_id]
-        elif media_type == MEDIA_TYPE_PLAYLIST:
+        elif media_type in PLAYABLE_MEDIA_TYPES:
             kwargs["context_uri"] = media_id
         else:
             _LOGGER.error("Media type %s is not supported", media_type)
@@ -355,3 +385,145 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
 
         devices = self._spotify.devices() or {}
         self._devices = devices.get("devices", [])
+
+    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+        """Implement the websocket media browsing helper."""
+        if not self._scope_ok:
+            raise NotImplementedError
+
+        if media_content_type in [None, "library"]:
+            return await self.hass.async_add_executor_job(library_payload)
+
+        payload = {
+            "media_content_type": media_content_type,
+            "media_content_id": media_content_id,
+        }
+        response = await self.hass.async_add_executor_job(
+            build_item_response, self._spotify, payload
+        )
+        if response is None:
+            raise BrowseError(
+                f"Media not found: {media_content_type} / {media_content_id}"
+            )
+        return response
+
+
+def build_item_response(spotify, payload):
+    """Create response payload for the provided media query."""
+    media_content_type = payload.get("media_content_type")
+    title = None
+    if media_content_type == "user_playlists":
+        media = spotify.current_user_playlists(limit=BROWSE_LIMIT)
+        items = media.get("items", [])
+    elif media_content_type == "current_user_recently_played":
+        media = spotify.current_user_recently_played(limit=BROWSE_LIMIT)
+        items = media.get("items", [])
+    elif media_content_type == "featured_playlists":
+        media = spotify.featured_playlists(limit=BROWSE_LIMIT)
+        items = media.get("playlists", {}).get("items", [])
+    elif media_content_type == "current_user_top_artists":
+        media = spotify.current_user_top_artists(limit=BROWSE_LIMIT)
+        items = media.get("items", [])
+    elif media_content_type == "new_releases":
+        media = spotify.new_releases(limit=BROWSE_LIMIT)
+        items = media.get("albums", {}).get("items", [])
+    elif media_content_type == MEDIA_TYPE_PLAYLIST:
+        media = spotify.playlist(payload["media_content_id"])
+        items = media.get("tracks", {}).get("items", [])
+    elif media_content_type == MEDIA_TYPE_ALBUM:
+        media = spotify.album(payload["media_content_id"])
+        items = media.get("tracks", {}).get("items", [])
+    elif media_content_type == MEDIA_TYPE_ARTIST:
+        media = spotify.artist_albums(payload["media_content_id"], limit=BROWSE_LIMIT)
+        title = spotify.artist(payload["media_content_id"]).get("name")
+        items = media.get("items", [])
+    else:
+        media = None
+
+    if media is None:
+        return None
+
+    response = {
+        "media_content_id": payload.get("media_content_id"),
+        "media_content_type": payload.get("media_content_type"),
+        "can_play": payload.get("media_content_type") in PLAYABLE_MEDIA_TYPES,
+        "children": [item_payload(item) for item in items],
+    }
+
+    if "name" in media:
+        response["title"] = media.get("name")
+    elif title:
+        response["title"] = title
+    else:
+        response["title"] = LIBRARY_MAP.get(payload["media_content_id"])
+
+    if "images" in media:
+        response["thumbnail"] = fetch_image_url(media)
+
+    return response
+
+
+def item_payload(item):
+    """
+    Create response payload for a single media item.
+
+    Used by async_browse_media.
+    """
+    if (
+        MEDIA_TYPE_TRACK in item
+        or item.get("type") != MEDIA_TYPE_ALBUM
+        and "playlists" in item
+    ):
+        track = item.get(MEDIA_TYPE_TRACK)
+        payload = {
+            "title": track.get("name"),
+            "thumbnail": fetch_image_url(track.get(MEDIA_TYPE_ALBUM, {})),
+            "media_content_id": track.get("uri"),
+            "media_content_type": MEDIA_TYPE_TRACK,
+            "can_play": True,
+        }
+    else:
+        payload = {
+            "title": item.get("name"),
+            "thumbnail": fetch_image_url(item),
+            "media_content_id": item.get("uri"),
+            "media_content_type": item.get("type"),
+            "can_play": item.get("type") in PLAYABLE_MEDIA_TYPES,
+        }
+
+    if item.get("type") not in [None, MEDIA_TYPE_TRACK]:
+        payload["can_expand"] = True
+
+    return payload
+
+
+def library_payload():
+    """
+    Create response payload to describe contents of a specific library.
+
+    Used by async_browse_media.
+    """
+    library_info = {
+        "title": "Media Library",
+        "media_content_id": "library",
+        "media_content_type": "library",
+        "can_play": False,
+        "can_expand": True,
+        "children": [],
+    }
+
+    for item in [{"name": n, "type": t} for t, n in LIBRARY_MAP.items()]:
+        library_info["children"].append(
+            item_payload(
+                {"name": item["name"], "type": item["type"], "uri": item["type"]}
+            )
+        )
+    return library_info
+
+
+def fetch_image_url(item):
+    """Fetch image url."""
+    try:
+        return item.get("images", [])[0].get("url")
+    except IndexError:
+        return
