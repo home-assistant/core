@@ -6,6 +6,16 @@ from tests.common import MockConfigEntry
 
 # Do not edit/remove. Adding is ok.
 BROADLINK_DEVICES = {
+    "Entrance": (
+        "192.168.0.11",
+        "34ea34befc25",
+        "RM mini 3",
+        "Broadlink",
+        "RM2",
+        0x2737,
+        57,
+        8,
+    ),
     "Living Room": (
         "192.168.0.12",
         "34ea34b43b5a",
@@ -25,6 +35,26 @@ BROADLINK_DEVICES = {
         0x2787,
         20025,
         7,
+    ),
+    "Garage": (
+        "192.168.0.14",
+        "34ea34c43f31",
+        "RM4 pro",
+        "Broadlink",
+        "RM4",
+        0x6026,
+        52,
+        4,
+    ),
+    "Bedroom": (
+        "192.168.0.15",
+        "34ea34b45d2c",
+        "e-Sensor",
+        "Broadlink",
+        "A1",
+        0x2714,
+        20025,
+        5,
     ),
 }
 
