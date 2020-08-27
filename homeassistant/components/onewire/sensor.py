@@ -171,6 +171,6 @@ class OneWireSensor(OneWireEntity):
         if self._unit_of_measurement is not None:
             if self._unit_of_measurement == VOLT:
                 return round(float(raw_value), 2)
-            elif "count" in self._unit_of_measurement:
+            if "count" in self._unit_of_measurement:
                 return int(raw_value)
         return round(float(raw_value), 1)

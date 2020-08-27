@@ -77,7 +77,7 @@ class OneWireProxy:
         """Read the devices from the path."""
         if self._owproxy:
             return self._owproxy.dir()
-        elif self.is_sysbus:
+        if self.is_sysbus:
             devices = []
             device_family = "28"
             for device_folder in glob(
@@ -85,32 +85,32 @@ class OneWireProxy:
             ):
                 devices.append(os.path.join(device_folder, ""))
             return devices
-        else:
-            devices = []
-            for family_file_path in glob(os.path.join(self._base_dir, "*", "family")):
-                devices.append(os.path.join(os.path.split(family_file_path)[0], ""))
-            return devices
+
+        devices = []
+        for family_file_path in glob(os.path.join(self._base_dir, "*", "family")):
+            devices.append(os.path.join(os.path.split(family_file_path)[0], ""))
+        return devices
 
     def is_present(self, device_path):
         """Check that the path exists."""
         if self._owproxy:
             return self._owproxy.present(device_path)
-        else:
-            return os.path.exists(device_path)
+
+        return os.path.exists(device_path)
 
     def read_family(self, device):
         """Read the device family."""
         if self.is_sysbus:
             parent = os.path.split(device)[0]
             return os.path.split(parent)[1][:2]
-        else:
-            return self.read_value(f"{device}family")
+
+        return self.read_value(f"{device}family")
 
     def read_value(self, device_path):
         """Read the value from the path."""
         if self._owproxy:
             return self._owproxy.read(device_path).decode().lstrip()
-        elif self.is_sysbus:
+        if self.is_sysbus:
             w1_slave_path = os.path.split(device_path)[0]
             w1_slave_path = os.path.join(w1_slave_path, "w1_slave")
             with open(w1_slave_path) as ds_device_file:
@@ -123,12 +123,12 @@ class OneWireProxy:
             if equals_pos != -1:
                 value_string = lines[1][equals_pos + 2 :]
                 return value_string
-        else:
-            with open(device_path) as ds_device_file:
-                lines = ds_device_file.readlines()
-            if len(lines) == 1:
-                return lines[0]
-            return lines
+
+        with open(device_path) as ds_device_file:
+            lines = ds_device_file.readlines()
+        if len(lines) == 1:
+            return lines[0]
+        return lines
 
     def write_value(self, device_path, value):
         """Write the value to the path."""
