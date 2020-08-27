@@ -204,7 +204,10 @@ async def initialize(hass: HomeAssistantType, config_entry: ConfigEntry):
             )
             # invalid IP / IP changed? - try autodetection
             if isinstance(e.previous, OSError) and e.previous.errno == 113:
-                _LOGGER.debug("Trying autodiscovery....")
+                _LOGGER.warning(
+                    "Could not connect to EFC-01 on IP stored in configuration: %s. Trying to discover controller IP in the network",
+                    controller_ip,
+                )
                 controller = await hass.async_add_executor_job(
                     api_connect, el_conf[CONF_USER], el_conf[CONF_PASSWORD], None
                 )
@@ -618,9 +621,15 @@ class ExtaLifeChannel(Entity):
 
     @property
     def available(self):
-        return (
-            self.data_available == True and self.channel_data.get("is_timeout") == False
+        is_timeout = self.channel_data.get("is_timeout")
+        _LOGGER.debug(
+            "available() for entity: %s. self.data_available: %s; 'is_timeout': %s",
+            self.entity_id,
+            self.data_available,
+            is_timeout,
         )
+
+        return self.data_available == True and is_timeout == False
 
     @property
     def device_state_attributes(self):
