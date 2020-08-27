@@ -16,6 +16,7 @@ from .const import (
 
 DEFAULT_DEVICE_CLASS = "safety"
 
+
 async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ) -> None:
