@@ -1,14 +1,17 @@
 """Validate requirements."""
 import operator
 import subprocess
+import sys
 from typing import Dict, Set
 
+from script.gen_requirements_all import COMMENT_REQUIREMENTS
 from stdlib_list import stdlib_list
+from tqdm import tqdm
 
 from homeassistant.const import REQUIRED_PYTHON_VER
 import homeassistant.util.package as pkg_util
 
-from .model import Integration
+from .model import Config, Integration
 
 SUPPORTED_PYTHON_TUPLES = [
     REQUIRED_PYTHON_VER[:2],
@@ -17,12 +20,15 @@ SUPPORTED_PYTHON_TUPLES = [
 SUPPORTED_PYTHON_VERSIONS = [
     ".".join(map(str, version_tuple)) for version_tuple in SUPPORTED_PYTHON_TUPLES
 ]
+IGNORE_PACKAGES = {commented.lower() for commented in COMMENT_REQUIREMENTS}
+
+STD_LIBS = {version: set(stdlib_list(version)) for version in SUPPORTED_PYTHON_VERSIONS}
 
 
-def validate(integrations: Dict[str, Integration], config):
+def validate(integrations: Dict[str, Integration], config: Config):
     """Handle requirements for integrations."""
     # check for incompatible requirements
-    for integration in integrations.values():
+    for integration in tqdm(integrations.values()):
         if not integration.manifest:
             continue
 
@@ -36,19 +42,26 @@ def validate_requirements(integration: Integration):
     if not install_ok:
         return
 
-    integration_requirements = get_requirements(integration)
+    integration_requirements = set()
+    for req in integration.requirements:
+        package = req.split("==")[0].lower()
+        if package in IGNORE_PACKAGES:
+            continue
+        integration_requirements.add(req)
 
-    if integration.requirements and not integration_requirements:
+    all_integration_requirements = get_requirements(
+        integration, integration_requirements
+    )
+
+    if integration_requirements and not all_integration_requirements:
         integration.add_error(
             "requirements",
-            f"Failed to resolve requirements {integration.requirements}, check PyPI name",
+            f"Failed to resolve requirements {integration_requirements}, check PyPI name",
         )
         return
 
-    for version in SUPPORTED_PYTHON_VERSIONS:
-        std_libs = set(stdlib_list(version))
-
-        for req in integration_requirements:
+    for version, std_libs in STD_LIBS.items():
+        for req in all_integration_requirements:
             if req in std_libs:
                 integration.add_error(
                     "requirements",
@@ -56,21 +69,20 @@ def validate_requirements(integration: Integration):
                 )
 
 
-def get_requirements(integration: Integration) -> Set[str]:
+def get_requirements(integration: Integration, requirements: Set[str]) -> Set[str]:
     """Return all (recursively) requirements for an integration."""
-    requirements = integration.requirements
-
     all_requirements = set()
 
     for req in requirements:
         package = req.split("==")[0]
-        result = subprocess.run(
-            ["pipdeptree", "-w", "silence", "--packages", package],
-            check=False,
-            capture_output=True,
-            text=True,
-        )
-        if result.returncode != 0:
+        try:
+            result = subprocess.run(
+                ["pipdeptree", "-w", "silence", "--packages", package],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+        except subprocess.SubprocessError:
             integration.add_error(
                 "requirements", f"Failed to resolve requirements for {req}"
             )
@@ -103,12 +115,24 @@ def install_requirements(integration: Integration) -> bool:
     requirements = integration.requirements
 
     for req in requirements:
-        if pkg_util.is_installed(req):
+        package = req.split("==")[0].lower()
+        if package in IGNORE_PACKAGES:
+            continue
+        try:
+            is_installed = pkg_util.is_installed(req)
+        except ValueError:
+            integration.add_error(
+                "requirements", f"Invalid requirement {req}",
+            )
             continue
 
-        ret = pkg_util.install_package(req)
+        if is_installed:
+            continue
 
-        if not ret:
+        args = [sys.executable, "-m", "pip", "install", "--quiet", req]
+        try:
+            subprocess.run(args, check=True)
+        except subprocess.SubprocessError:
             integration.add_error(
                 "requirements", f"Requirement {req} failed to install",
             )
