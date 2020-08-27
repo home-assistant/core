@@ -1398,7 +1398,9 @@ def build_item_response(media_library, payload):
         and media[0].item_class == "object.item.audioItem.musicTrack"
     ):
         for item in media_library.browse_by_idstring(
-            TYPE_ALBUM_ARTIST, payload["idstring"], full_album_art_uri=True,
+            TYPE_ALBUM_ARTIST,
+            payload["idstring"],
+            full_album_art_uri=True,
         ):
             if item.item_id == payload["idstring"]:
                 title = item.title
@@ -1459,12 +1461,14 @@ def library_payload(media_library):
 
 def get_media_type(item):
     """Extract media type of item."""
-    if item.item_class == "object.container.album.musicAlbum" and MEDIA_TYPES_MAPPING.get(
-        item.item_id.split("/")[0]
-    ) in [
-        TYPE_ALBUM_ARTIST,
-        TYPE_GENRE,
-    ]:
+    if (
+        item.item_class == "object.container.album.musicAlbum"
+        and MEDIA_TYPES_MAPPING.get(item.item_id.split("/")[0])
+        in [
+            TYPE_ALBUM_ARTIST,
+            TYPE_GENRE,
+        ]
+    ):
         return MEDIA_TYPES_MAPPING[item.item_class]
 
     return MEDIA_TYPES_MAPPING.get(item.item_id.split("/")[0], item.item_class)
