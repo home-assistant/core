@@ -115,4 +115,3 @@ class OneWireBinarySensor(OneWireEntity, BinarySensorEntity):
             self._value_raw = value_read
 
         self._state = value
-

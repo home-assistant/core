@@ -141,4 +141,3 @@ class OneWireSwitchSensor(OneWireEntity, SwitchEntity):
             self._value_raw = value_read
 
         self._state = value
-

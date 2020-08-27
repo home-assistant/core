@@ -109,7 +109,9 @@ class OneWireFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="owfs",
             data_schema=vol.Schema(
-                {vol.Required(CONF_MOUNT_DIR, default=DEFAULT_OWFS_MOUNT_DIR): str,}
+                {
+                    vol.Required(CONF_MOUNT_DIR, default=DEFAULT_OWFS_MOUNT_DIR): str,
+                }
             ),
             errors=errors,
         )
