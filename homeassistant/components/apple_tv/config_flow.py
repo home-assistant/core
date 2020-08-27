@@ -26,6 +26,8 @@ from .const import DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
+DEVICE_INPUT = "device_input"
+
 INPUT_PIN_SCHEMA = vol.Schema({vol.Required(CONF_PIN, default=None): int})
 
 DEFAULT_START_OFF = False
@@ -93,12 +95,12 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.pairing = None
         self.credentials = {}  # Protocol -> credentials
 
-    async def async_step_invalid_credentials(self, info):
+    async def async_step_reauth(self, info):
         """Handle initial step when updating invalid credentials."""
-        await self.async_set_unique_id(info.get(CONF_IDENTIFIER))
+        await self.async_set_unique_id(info[CONF_IDENTIFIER])
 
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-        self.context["title_placeholders"] = {"name": info.get(CONF_NAME)}
+        self.context["title_placeholders"] = {"name": info[CONF_NAME]}
 
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["identifier"] = self.unique_id
@@ -122,10 +124,9 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         default_suggestion = self._prefill_identifier()
         if user_input is not None:
-            await self.async_set_unique_id(user_input[CONF_IDENTIFIER])
+            await self.async_set_unique_id(user_input[DEVICE_INPUT])
             try:
                 await self.async_find_device()
-                return await self.async_step_confirm()
             except DeviceNotFound:
                 errors["base"] = "device_not_found"
             except DeviceAlreadyConfigured:
@@ -135,6 +136,8 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
+            else:
+                return await self.async_step_confirm()
 
             # Use whatever the user entered as default value
             default_suggestion = self.unique_id
@@ -142,7 +145,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
-                {vol.Required(CONF_IDENTIFIER, default=default_suggestion): str}
+                {vol.Required(DEVICE_INPUT, default=default_suggestion): str}
             ),
             errors=errors,
             description_placeholders={"devices": self._devices_str()},
@@ -163,8 +166,8 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         else:
             return self.async_abort(reason="unrecoverable_error")
 
-        await self.async_set_unique_id(identifier, raise_on_progress=True)
-        self._abort_if_unique_id_configured(reload_on_update=False)
+        await self.async_set_unique_id(identifier)
+        self._abort_if_unique_id_configured()
 
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["identifier"] = self.unique_id
@@ -229,7 +232,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Any more protocols to pair? Else bail out here
         if not self.protocol:
             await self.async_set_unique_id(self.atv.main_service().identifier)
-            return await self._async_get_entry(
+            return self._async_get_entry(
                 self.atv.main_service().protocol,
                 self.atv.name,
                 self.credentials,
@@ -323,7 +326,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders={"protocol": protocol_str(self.protocol)},
         )
 
-    async def _async_get_entry(self, protocol, name, credentials, address):
+    def _async_get_entry(self, protocol, name, credentials, address):
         if not is_valid_credentials(credentials):
             return self.async_abort(reason="invalid_config")
 

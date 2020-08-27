@@ -2,10 +2,10 @@
 
 import logging
 
-from homeassistant.components import remote
+from homeassistant.components.remote import RemoteEntity
 from homeassistant.const import CONF_NAME
-from homeassistant.core import callback
 
+from . import AppleTVEntity
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -20,53 +20,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities([AppleTVRemote(name, config_entry.unique_id, manager)])
 
 
-class AppleTVRemote(remote.RemoteEntity):
+class AppleTVRemote(AppleTVEntity, RemoteEntity):
     """Device that sends commands to an Apple TV."""
 
-    def __init__(self, name, identifier, manager):
+    def __init__(self, name, identifier, manager, **kwargs):
         """Initialize device."""
-        self.atv = None
-        self._name = name
-        self._identifier = identifier
-        self._manager = manager
-
-    async def async_added_to_hass(self):
-        """Handle when an entity is about to be added to Home Assistant."""
-        self._manager.listeners.append(self)
-
-    async def async_will_remove_from_hass(self):
-        """Handle when an entity is about to be removed from Home Assistant."""
-        self._manager.listeners.remove(self)
-
-    @callback
-    def device_connected(self):
-        """Handle when connection is made to device."""
-        self.atv = self._manager.atv
-
-    @callback
-    def device_disconnected(self):
-        """Handle when connection was lost to device."""
-        self.atv = None
-
-    @property
-    def device_info(self):
-        """Return the device info."""
-        return {
-            "identifiers": {(DOMAIN, self._identifier)},
-            "manufacturer": "Apple",
-            "name": self.name,
-            "via_device": (DOMAIN, self._identifier),
-        }
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return self._identifier
+        super().__init__(name, identifier, manager, **kwargs)
 
     @property
     def is_on(self):
@@ -80,11 +39,11 @@ class AppleTVRemote(remote.RemoteEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn the device on."""
-        await self._manager.connect()
+        await self.manager.connect()
 
     async def async_turn_off(self, **kwargs):
         """Turn the device off."""
-        await self._manager.disconnect()
+        await self.manager.disconnect()
 
     async def async_send_command(self, command, **kwargs):
         """Send a command to one device."""

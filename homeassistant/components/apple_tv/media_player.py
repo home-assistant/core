@@ -30,6 +30,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 import homeassistant.util.dt as dt_util
 
+from . import AppleTVEntity
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -53,75 +54,37 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Load Apple TV media player based on a config entry."""
     name = config_entry.data[CONF_NAME]
     manager = hass.data[DOMAIN][config_entry.unique_id]
-    async_add_entities([AppleTvDevice(name, config_entry.unique_id, manager)])
+    async_add_entities([AppleTvMediaPlayer(name, config_entry.unique_id, manager)])
 
 
-class AppleTvDevice(MediaPlayerEntity):
-    """Representation of an Apple TV device."""
+class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
+    """Representation of an Apple TV media player."""
 
-    def __init__(self, name, identifier, manager):
-        """Initialize the Apple TV device."""
-        self.atv = None
-        self._name = name
-        self._identifier = identifier
+    def __init__(self, name, identifier, manager, **kwargs):
+        """Initialize the Apple TV media player"""
+        super().__init__(name, identifier, manager, **kwargs)
         self._playing = None
-        self._manager = manager
-
-    async def async_added_to_hass(self):
-        """Handle when an entity is about to be added to Home Assistant."""
-        self._manager.listeners.append(self)
-        await self._manager.init()
-
-    async def async_will_remove_from_hass(self):
-        """Handle when an entity is about to be removed from Home Assistant."""
-        self._manager.listeners.remove(self)
 
     @callback
-    def device_connected(self):
+    def device_connected(self, atv):
         """Handle when connection is made to device."""
-        self.atv = self._manager.atv
         self.atv.push_updater.listener = self
+        self.atv.push_updater.start()
 
     @callback
     def device_disconnected(self):
         """Handle when connection was lost to device."""
+        self.atv.push_updater.stop()
         self.atv.push_updater.listener = None
-        self.atv = None
-
-    @property
-    def device_info(self):
-        """Return the device info."""
-        return {
-            "identifiers": {(DOMAIN, self._identifier)},
-            "manufacturer": "Apple",
-            "name": self.name,
-        }
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return self._identifier
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def state(self):
         """Return the state of the device."""
-        if self._manager.is_connecting:
-            return STATE_UNKNOWN
+        if self.manager.is_connecting:
+            return None
         if self.atv is None:
             return STATE_OFF
-
         if self._playing:
-
             state = self._playing.device_state
             if state in (DeviceState.Idle, DeviceState.Loading):
                 return STATE_IDLE
@@ -197,12 +160,7 @@ class AppleTvDevice(MediaPlayerEntity):
     def media_title(self):
         """Title of current playing media."""
         if self._playing:
-            if self.state == STATE_IDLE:
-                return "Nothing playing"
-            title = self._playing.title
-            return title if title else "No title"
-
-        return self._manager.message
+            return self._playing.title
 
     @property
     def supported_features(self):
@@ -211,12 +169,12 @@ class AppleTvDevice(MediaPlayerEntity):
 
     async def async_turn_on(self):
         """Turn the media player on."""
-        await self._manager.connect()
+        await self.manager.connect()
 
     async def async_turn_off(self):
         """Turn the media player off."""
         self._playing = None
-        await self._manager.disconnect()
+        await self.manager.disconnect()
 
     async def async_media_play_pause(self):
         """Pause media on media player."""
