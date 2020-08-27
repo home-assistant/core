@@ -57,7 +57,9 @@ def get_config() -> Config:
         help="Validate a single integration",
     )
     parser.add_argument(
-        "--requirements", action="store_true", help="Validate requirements",
+        "--requirements",
+        action="store_true",
+        help="Validate requirements",
     )
     parsed = parser.parse_args()
 
@@ -112,6 +114,8 @@ def main():
         try:
             start = monotonic()
             print(f"Validating {plugin.__name__.split('.')[-1]}...", end="", flush=True)
+            if plugin is requirements:
+                print()
             plugin.validate(integrations, config)
             print(" done in {:.2f}s".format(monotonic() - start))
         except RuntimeError as err:
