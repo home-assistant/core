@@ -14,6 +14,7 @@ from .const import (
     SYNO_API,
 )
 
+DEFAULT_DEVICE_CLASS = "safety"
 
 async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
@@ -71,3 +72,8 @@ class SynoDSMStorageBinarySensor(SynologyDSMDeviceEntity, BinarySensorEntity):
         if attr is None:
             return None
         return attr
+
+    @property
+    def device_class(self):
+        """Return the device class of this binary sensor."""
+        return DEFAULT_DEVICE_CLASS
