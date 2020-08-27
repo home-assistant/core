@@ -211,7 +211,7 @@ def websocket_node_statistics(hass, connection, msg):
     connection.send_result(
         msg[ID],
         {
-            "node_id": msg[NODE_ID],
+            NODE_ID: msg[NODE_ID],
             "send_count": stats.send_count,
             "sent_failed": stats.sent_failed,
             "retries": stats.retries,
@@ -249,7 +249,7 @@ def websocket_refresh_node_info(hass, connection, msg):
 
         forward_data = {
             "type": "node_updated",
-            "node_query_stage": node.node_query_stage,
+            ATTR_NODE_QUERY_STAGE: node.node_query_stage,
         }
         connection.send_message(websocket_api.event_message(msg["id"], forward_data))
 
