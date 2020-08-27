@@ -24,6 +24,7 @@ FORECAST_MODE_DAILY = "daily"
 FORECAST_MODE = [FORECAST_MODE_HOURLY, FORECAST_MODE_DAILY]
 
 ATTR_NEXT_RAIN_1_HOUR_FORECAST = "1_hour_forecast"
+ATTR_NEXT_RAIN_DT_REF = "forecast_time_ref"
 
 ENTITY_NAME = "name"
 ENTITY_UNIT = "unit"
@@ -150,6 +151,7 @@ CONDITION_CLASSES = {
         "Pluies éparses / Rares averses",
         "Pluies éparses",
         "Rares averses",
+        "Pluie modérée",
         "Pluie / Averses",
         "Averses",
         "Pluie",
