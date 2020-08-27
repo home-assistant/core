@@ -266,6 +266,7 @@ async def test_reload(hass):
         init_recorder_component, hass
     )  # force in memory db
 
+    hass.state = ha.CoreState.not_running
     hass.states.async_set("binary_sensor.test_id", "on")
 
     await async_setup_component(
