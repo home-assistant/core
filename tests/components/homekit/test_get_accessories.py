@@ -271,7 +271,8 @@ def test_type_vacuum(type_name, entity_id, state, attrs):
 
 
 @pytest.mark.parametrize(
-    "type_name, entity_id, state, attrs", [("Camera", "camera.basic", "on", {})],
+    "type_name, entity_id, state, attrs",
+    [("Camera", "camera.basic", "on", {})],
 )
 def test_type_camera(type_name, entity_id, state, attrs):
     """Test if camera types are associated correctly."""

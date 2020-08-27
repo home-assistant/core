@@ -60,9 +60,15 @@ CONFIG_SCHEMA = vol.Schema(
                             ): cv.icon,
                             vol.Optional(CONF_URL_PATH): cv.string,
                             vol.Optional(CONF_CONFIG): dict,
-                            vol.Optional(CONF_WEBCOMPONENT_PATH,): cv.string,
-                            vol.Optional(CONF_JS_URL,): cv.string,
-                            vol.Optional(CONF_MODULE_URL,): cv.string,
+                            vol.Optional(
+                                CONF_WEBCOMPONENT_PATH,
+                            ): cv.string,
+                            vol.Optional(
+                                CONF_JS_URL,
+                            ): cv.string,
+                            vol.Optional(
+                                CONF_MODULE_URL,
+                            ): cv.string,
                             vol.Optional(
                                 CONF_EMBED_IFRAME, default=DEFAULT_EMBED_IFRAME
                             ): cv.boolean,

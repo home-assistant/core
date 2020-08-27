@@ -57,7 +57,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         raise ConfigEntryNotReady from error
     except InvalidAuthError as error:
         _LOGGER.error(
-            "Login to %s failed: [%s]", entry.data[CONF_HOST], error,
+            "Login to %s failed: [%s]",
+            entry.data[CONF_HOST],
+            error,
         )
         return False
 

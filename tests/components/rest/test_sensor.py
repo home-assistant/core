@@ -631,7 +631,8 @@ class TestRestSensor(unittest.TestCase):
         value_template.hass = self.hass
 
         self.rest.update = Mock(
-            "rest.RestData.update", side_effect=self.update_side_effect(None, None),
+            "rest.RestData.update",
+            side_effect=self.update_side_effect(None, None),
         )
         self.sensor = rest.RestSensor(
             self.hass,
@@ -707,11 +708,16 @@ async def test_reload(hass, requests_mock):
     assert hass.states.get("sensor.mockrest")
 
     yaml_path = path.join(
-        _get_fixtures_base_path(), "fixtures", "rest/configuration.yaml",
+        _get_fixtures_base_path(),
+        "fixtures",
+        "rest/configuration.yaml",
     )
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
-            "rest", SERVICE_RELOAD, {}, blocking=True,
+            "rest",
+            SERVICE_RELOAD,
+            {},
+            blocking=True,
         )
         await hass.async_block_till_done()
 

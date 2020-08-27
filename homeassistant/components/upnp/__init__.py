@@ -122,7 +122,8 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
     # Ensure entry has proper unique_id.
     if config_entry.unique_id != device.unique_id:
         hass.config_entries.async_update_entry(
-            entry=config_entry, unique_id=device.unique_id,
+            entry=config_entry,
+            unique_id=device.unique_id,
         )
 
     # Create device registry entry.

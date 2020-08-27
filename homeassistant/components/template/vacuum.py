@@ -341,7 +341,10 @@ class TemplateVacuum(TemplateEntity, StateVacuumEntity):
             )
         if self._fan_speed_template is not None:
             self.add_template_attribute(
-                "_fan_speed", self._fan_speed_template, None, self._update_fan_speed,
+                "_fan_speed",
+                self._fan_speed_template,
+                None,
+                self._update_fan_speed,
             )
         if self._battery_level_template is not None:
             self.add_template_attribute(

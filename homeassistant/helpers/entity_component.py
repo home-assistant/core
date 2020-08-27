@@ -106,11 +106,7 @@ class EntityComponent:
 
         This doesn't block the executor to protect from deadlocks.
         """
-        self.hass.add_job(
-            self.async_setup(  # type: ignore
-                config
-            )
-        )
+        self.hass.add_job(self.async_setup(config))  # type: ignore
 
     async def async_setup(self, config: ConfigType) -> None:
         """Set up a full entity component.

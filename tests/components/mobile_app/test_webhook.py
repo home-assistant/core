@@ -143,7 +143,9 @@ async def test_webhook_update_registration(webhook_client, authed_api_client):
 async def test_webhook_handle_get_zones(hass, create_registrations, webhook_client):
     """Test that we can get zones properly."""
     await async_setup_component(
-        hass, ZONE_DOMAIN, {ZONE_DOMAIN: {}},
+        hass,
+        ZONE_DOMAIN,
+        {ZONE_DOMAIN: {}},
     )
 
     resp = await webhook_client.post(
@@ -266,7 +268,8 @@ async def test_webhook_enable_encryption(hass, webhook_client, create_registrati
     webhook_id = create_registrations[1]["webhook_id"]
 
     enable_enc_resp = await webhook_client.post(
-        f"/api/webhook/{webhook_id}", json={"type": "enable_encryption"},
+        f"/api/webhook/{webhook_id}",
+        json={"type": "enable_encryption"},
     )
 
     assert enable_enc_resp.status == 200
@@ -278,7 +281,8 @@ async def test_webhook_enable_encryption(hass, webhook_client, create_registrati
     key = enable_enc_json["secret"]
 
     enc_required_resp = await webhook_client.post(
-        f"/api/webhook/{webhook_id}", json=RENDER_TEMPLATE,
+        f"/api/webhook/{webhook_id}",
+        json=RENDER_TEMPLATE,
     )
 
     assert enc_required_resp.status == 400

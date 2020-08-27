@@ -44,7 +44,8 @@ CONFIG_SCHEMA = vol.Schema(
             DOMAIN: vol.Schema(
                 {
                     vol.Optional(CONF_BRIDGES): vol.All(
-                        cv.ensure_list, [BRIDGE_CONFIG_SCHEMA],
+                        cv.ensure_list,
+                        [BRIDGE_CONFIG_SCHEMA],
                     )
                 }
             )
@@ -149,7 +150,8 @@ async def async_setup_entry(
 
         if options:
             hass.config_entries.async_update_entry(
-                entry, options={**entry.options, **options},
+                entry,
+                options={**entry.options, **options},
             )
 
     bridge = HueBridge(hass, entry)

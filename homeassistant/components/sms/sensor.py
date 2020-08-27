@@ -17,7 +17,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     entities = []
     imei = await gateway.get_imei_async()
     name = f"gsm_signal_imei_{imei}"
-    entities.append(GSMSignalSensor(hass, gateway, name,))
+    entities.append(
+        GSMSignalSensor(
+            hass,
+            gateway,
+            name,
+        )
+    )
     async_add_entities(entities, True)
 
 
@@ -25,7 +31,10 @@ class GSMSignalSensor(Entity):
     """Implementation of a GSM Signal sensor."""
 
     def __init__(
-        self, hass, gateway, name,
+        self,
+        hass,
+        gateway,
+        name,
     ):
         """Initialize the GSM Signal sensor."""
         self._hass = hass

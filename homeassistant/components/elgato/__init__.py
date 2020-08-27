@@ -24,7 +24,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Elgato Key Light from a config entry."""
     session = async_get_clientsession(hass)
-    elgato = Elgato(entry.data[CONF_HOST], port=entry.data[CONF_PORT], session=session,)
+    elgato = Elgato(
+        entry.data[CONF_HOST],
+        port=entry.data[CONF_PORT],
+        session=session,
+    )
 
     # Ensure we can connect to it
     try:

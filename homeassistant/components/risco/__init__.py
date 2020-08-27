@@ -93,7 +93,10 @@ class RiscoDataUpdateCoordinator(DataUpdateCoordinator):
         self.risco = risco
         interval = timedelta(seconds=scan_interval)
         super().__init__(
-            hass, _LOGGER, name=DOMAIN, update_interval=interval,
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_interval=interval,
         )
 
     async def _async_update_data(self):

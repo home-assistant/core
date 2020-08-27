@@ -59,7 +59,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 _LOGGER.debug("Adding camera light %s %s", camera["id"], camera["name"])
                 entities.append(
                     NetatmoLight(
-                        data_handler, camera["id"], camera["type"], camera["home_id"],
+                        data_handler,
+                        camera["id"],
+                        camera["type"],
+                        camera["home_id"],
                     )
                 )
 
@@ -132,14 +135,18 @@ class NetatmoLight(NetatmoBase, LightEntity):
         """Turn camera floodlight on."""
         _LOGGER.debug("Turn camera '%s' on", self._name)
         self._data.set_state(
-            home_id=self._home_id, camera_id=self._id, floodlight="on",
+            home_id=self._home_id,
+            camera_id=self._id,
+            floodlight="on",
         )
 
     def turn_off(self, **kwargs):
         """Turn camera floodlight into auto mode."""
         _LOGGER.debug("Turn camera '%s' off", self._name)
         self._data.set_state(
-            home_id=self._home_id, camera_id=self._id, floodlight="auto",
+            home_id=self._home_id,
+            camera_id=self._id,
+            floodlight="auto",
         )
 
     @callback

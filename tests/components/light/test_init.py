@@ -589,28 +589,40 @@ async def test_light_brightness_pct_conversion(hass):
     assert state.attributes["brightness"] == 100
 
     await hass.services.async_call(
-        "light", "turn_on", {"entity_id": entity.entity_id, "brightness_pct": 1}, True,
+        "light",
+        "turn_on",
+        {"entity_id": entity.entity_id, "brightness_pct": 1},
+        True,
     )
 
     _, data = entity.last_call("turn_on")
     assert data["brightness"] == 3, data
 
     await hass.services.async_call(
-        "light", "turn_on", {"entity_id": entity.entity_id, "brightness_pct": 2}, True,
+        "light",
+        "turn_on",
+        {"entity_id": entity.entity_id, "brightness_pct": 2},
+        True,
     )
 
     _, data = entity.last_call("turn_on")
     assert data["brightness"] == 5, data
 
     await hass.services.async_call(
-        "light", "turn_on", {"entity_id": entity.entity_id, "brightness_pct": 50}, True,
+        "light",
+        "turn_on",
+        {"entity_id": entity.entity_id, "brightness_pct": 50},
+        True,
     )
 
     _, data = entity.last_call("turn_on")
     assert data["brightness"] == 128, data
 
     await hass.services.async_call(
-        "light", "turn_on", {"entity_id": entity.entity_id, "brightness_pct": 99}, True,
+        "light",
+        "turn_on",
+        {"entity_id": entity.entity_id, "brightness_pct": 99},
+        True,
     )
 
     _, data = entity.last_call("turn_on")

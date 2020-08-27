@@ -213,7 +213,8 @@ async def setup_axis_integration(hass, config=ENTRY_CONFIG, options=ENTRY_OPTION
     config_entry.add_to_hass(hass)
 
     with patch("axis.vapix.session_request", new=vapix_session_request), patch(
-        "axis.rtsp.RTSPClient.start", return_value=True,
+        "axis.rtsp.RTSPClient.start",
+        return_value=True,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -291,7 +292,8 @@ async def test_update_address(hass):
     assert device.api.config.host == "1.2.3.4"
 
     with patch("axis.vapix.session_request", new=vapix_session_request), patch(
-        "homeassistant.components.axis.async_setup_entry", return_value=True,
+        "homeassistant.components.axis.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         await hass.config_entries.flow.async_init(
             AXIS_DOMAIN,

@@ -86,7 +86,9 @@ class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         }
 
         return self.async_show_form(
-            step_id="user", data_schema=vol.Schema(data_schema), errors=errors,
+            step_id="user",
+            data_schema=vol.Schema(data_schema),
+            errors=errors,
         )
 
     async def async_step_2fa(self, user_input=None):
@@ -156,7 +158,12 @@ class BlinkOptionsFlowHandler(config_entries.OptionsFlow):
         return self.async_show_form(
             step_id="simple_options",
             data_schema=vol.Schema(
-                {vol.Optional(CONF_SCAN_INTERVAL, default=scan_interval,): int}
+                {
+                    vol.Optional(
+                        CONF_SCAN_INTERVAL,
+                        default=scan_interval,
+                    ): int
+                }
             ),
         )
 

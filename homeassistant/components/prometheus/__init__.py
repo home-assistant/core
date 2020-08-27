@@ -332,7 +332,10 @@ class PrometheusMetrics:
         current_action = state.attributes.get(ATTR_HVAC_ACTION)
         if current_action:
             metric = self._metric(
-                "climate_action", self.prometheus_cli.Gauge, "HVAC action", ["action"],
+                "climate_action",
+                self.prometheus_cli.Gauge,
+                "HVAC action",
+                ["action"],
             )
             for action in CURRENT_HVAC_ACTIONS:
                 metric.labels(**dict(self._labels(state), action=action)).set(

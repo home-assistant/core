@@ -400,7 +400,10 @@ class KNXExposeSensor:
         else:
             _name = self.entity_id
         self.device = ExposeSensor(
-            self.xknx, name=_name, group_address=self.address, value_type=self.type,
+            self.xknx,
+            name=_name,
+            group_address=self.address,
+            value_type=self.type,
         )
         self.xknx.devices.add(self.device)
         async_track_state_change_event(

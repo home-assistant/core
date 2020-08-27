@@ -50,7 +50,8 @@ def mock_not_supports_encryption():
 async def init_config_flow(hass):
     """Init a configuration flow."""
     await async_process_ha_core_config(
-        hass, {"external_url": BASE_URL},
+        hass,
+        {"external_url": BASE_URL},
     )
     flow = config_flow.OwnTracksFlow()
     flow.hass = hass
@@ -90,7 +91,8 @@ async def test_import(hass, webhook_id, secret):
 async def test_import_setup(hass):
     """Test that we automatically create a config flow."""
     await async_process_ha_core_config(
-        hass, {"external_url": "http://example.com"},
+        hass,
+        {"external_url": "http://example.com"},
     )
 
     assert not hass.config_entries.async_entries(DOMAIN)
@@ -132,7 +134,8 @@ async def test_user_not_supports_encryption(hass, not_supports_encryption):
 async def test_unload(hass):
     """Test unloading a config flow."""
     await async_process_ha_core_config(
-        hass, {"external_url": "http://example.com"},
+        hass,
+        {"external_url": "http://example.com"},
     )
 
     with patch(

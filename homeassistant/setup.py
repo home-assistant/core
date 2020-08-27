@@ -177,9 +177,7 @@ async def _async_setup_component(
 
     try:
         if hasattr(component, "async_setup"):
-            task = component.async_setup(  # type: ignore
-                hass, processed_config
-            )
+            task = component.async_setup(hass, processed_config)  # type: ignore
         elif hasattr(component, "setup"):
             # This should not be replaced with hass.async_add_executor_job because
             # we don't want to track this task in case it blocks startup.

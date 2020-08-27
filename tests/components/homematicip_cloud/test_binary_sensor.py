@@ -31,7 +31,9 @@ from .helper import async_manipulate_test_data, get_and_check_entity_basics
 async def test_manually_configured_platform(hass):
     """Test that we do not set up an access point."""
     assert await async_setup_component(
-        hass, BINARY_SENSOR_DOMAIN, {BINARY_SENSOR_DOMAIN: {"platform": HMIPC_DOMAIN}},
+        hass,
+        BINARY_SENSOR_DOMAIN,
+        {BINARY_SENSOR_DOMAIN: {"platform": HMIPC_DOMAIN}},
     )
     assert not hass.data.get(HMIPC_DOMAIN)
 
@@ -245,7 +247,10 @@ async def test_hmip_smoke_detector(hass, default_mock_hap_factory):
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_ON
     await async_manipulate_test_data(
-        hass, hmip_device, "smokeDetectorAlarmType", None,
+        hass,
+        hmip_device,
+        "smokeDetectorAlarmType",
+        None,
     )
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_OFF

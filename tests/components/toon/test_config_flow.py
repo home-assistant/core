@@ -16,7 +16,8 @@ from tests.common import MockConfigEntry
 async def setup_component(hass):
     """Set up Toon component."""
     await async_process_ha_core_config(
-        hass, {"external_url": "https://example.com"},
+        hass,
+        {"external_url": "https://example.com"},
     )
 
     with patch("os.path.isfile", return_value=False):

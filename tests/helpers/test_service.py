@@ -44,7 +44,8 @@ SUPPORT_C = 4
 def mock_handle_entity_call():
     """Mock service platform call."""
     with patch(
-        "homeassistant.helpers.service._handle_entity_call", return_value=None,
+        "homeassistant.helpers.service._handle_entity_call",
+        return_value=None,
     ) as mock_call:
         yield mock_call
 
@@ -701,7 +702,9 @@ async def test_domain_control_unauthorized(hass, hass_read_only_user):
         hass,
         {
             "light.kitchen": ent_reg.RegistryEntry(
-                entity_id="light.kitchen", unique_id="kitchen", platform="test_domain",
+                entity_id="light.kitchen",
+                unique_id="kitchen",
+                platform="test_domain",
             )
         },
     )
@@ -738,7 +741,9 @@ async def test_domain_control_admin(hass, hass_admin_user):
         hass,
         {
             "light.kitchen": ent_reg.RegistryEntry(
-                entity_id="light.kitchen", unique_id="kitchen", platform="test_domain",
+                entity_id="light.kitchen",
+                unique_id="kitchen",
+                platform="test_domain",
             )
         },
     )
@@ -774,7 +779,9 @@ async def test_domain_control_no_user(hass):
         hass,
         {
             "light.kitchen": ent_reg.RegistryEntry(
-                entity_id="light.kitchen", unique_id="kitchen", platform="test_domain",
+                entity_id="light.kitchen",
+                unique_id="kitchen",
+                platform="test_domain",
             )
         },
     )
@@ -835,7 +842,11 @@ async def test_extract_from_service_available_device(hass):
         await service.async_extract_entities(
             hass,
             entities,
-            ha.ServiceCall("test", "service", data={"entity_id": ENTITY_MATCH_NONE},),
+            ha.ServiceCall(
+                "test",
+                "service",
+                data={"entity_id": ENTITY_MATCH_NONE},
+            ),
         )
         == []
     )

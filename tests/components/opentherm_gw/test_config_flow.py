@@ -26,11 +26,14 @@ async def test_form_user(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.opentherm_gw.async_setup", return_value=True,
+        "homeassistant.components.opentherm_gw.async_setup",
+        return_value=True,
     ) as mock_setup, patch(
-        "homeassistant.components.opentherm_gw.async_setup_entry", return_value=True,
+        "homeassistant.components.opentherm_gw.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry, patch(
-        "pyotgw.pyotgw.connect", return_value={OTGW_ABOUT: "OpenTherm Gateway 4.2.5"},
+        "pyotgw.pyotgw.connect",
+        return_value={OTGW_ABOUT: "OpenTherm Gateway 4.2.5"},
     ) as mock_pyotgw_connect, patch(
         "pyotgw.pyotgw.disconnect", return_value=None
     ) as mock_pyotgw_disconnect:
@@ -56,11 +59,14 @@ async def test_form_import(hass):
     """Test import from existing config."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     with patch(
-        "homeassistant.components.opentherm_gw.async_setup", return_value=True,
+        "homeassistant.components.opentherm_gw.async_setup",
+        return_value=True,
     ) as mock_setup, patch(
-        "homeassistant.components.opentherm_gw.async_setup_entry", return_value=True,
+        "homeassistant.components.opentherm_gw.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry, patch(
-        "pyotgw.pyotgw.connect", return_value={OTGW_ABOUT: "OpenTherm Gateway 4.2.5"},
+        "pyotgw.pyotgw.connect",
+        return_value={OTGW_ABOUT: "OpenTherm Gateway 4.2.5"},
     ) as mock_pyotgw_connect, patch(
         "pyotgw.pyotgw.disconnect", return_value=None
     ) as mock_pyotgw_disconnect:
@@ -96,11 +102,14 @@ async def test_form_duplicate_entries(hass):
     )
 
     with patch(
-        "homeassistant.components.opentherm_gw.async_setup", return_value=True,
+        "homeassistant.components.opentherm_gw.async_setup",
+        return_value=True,
     ) as mock_setup, patch(
-        "homeassistant.components.opentherm_gw.async_setup_entry", return_value=True,
+        "homeassistant.components.opentherm_gw.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry, patch(
-        "pyotgw.pyotgw.connect", return_value={OTGW_ABOUT: "OpenTherm Gateway 4.2.5"},
+        "pyotgw.pyotgw.connect",
+        return_value={OTGW_ABOUT: "OpenTherm Gateway 4.2.5"},
     ) as mock_pyotgw_connect, patch(
         "pyotgw.pyotgw.disconnect", return_value=None
     ) as mock_pyotgw_disconnect:
