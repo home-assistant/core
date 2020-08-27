@@ -20,8 +20,7 @@
             },
             "user": {
                 "data": {
-                    "host": "IP adresse",
-                    "port": ""
+                    "host": "IP adresse"
                 },
                 "description": "Vennligst skriv inn verten informasjon for din Konnected Panel."
             }
@@ -41,7 +40,7 @@
                     "name": "Navn (valgfritt)",
                     "type": "Bin\u00e6r sensortype"
                 },
-                "description": "Vennligst velg alternativer for bin\u00e6re sensor koblet til {sone}",
+                "description": "{zone} -alternativer",
                 "title": "Konfigurer bin\u00e6r sensor"
             },
             "options_digital": {
@@ -50,7 +49,7 @@
                     "poll_interval": "Avstemningsintervall (minutter) (valgfritt)",
                     "type": "Sensortype"
                 },
-                "description": "Vennligst velg alternativene for den digitale sensor som er koblet til {sone}",
+                "description": "{zone} -alternativer",
                 "title": "Konfigurere Digital Sensor"
             },
             "options_io": {
@@ -85,6 +84,7 @@
                 "data": {
                     "api_host": "Overstyre API-vert-URL (valgfritt)",
                     "blink": "Blink p\u00e5 LED-lampen n\u00e5r du sender statusendring",
+                    "discovery": "Svar p\u00e5 oppdagelsesforesp\u00f8rsler i nettverket ditt",
                     "override_api_host": "Overstyre standard Home Assistant API-vertspanel-URL"
                 },
                 "description": "Vennligst velg \u00f8nsket atferd for din panel",
@@ -99,7 +99,7 @@
                     "pause": "Pause mellom pulser (ms) (valgfritt)",
                     "repeat": "Tider \u00e5 gjenta (-1 = uendelig) (valgfritt)"
                 },
-                "description": "Velg outputalternativer for {zone} : state {state}",
+                "description": "{zone} alternativer: tilstand {state}",
                 "title": "Konfigurer utskiftbar utgang"
             }
         }

@@ -8,8 +8,7 @@
         "step": {
             "user": {
                 "data": {
-                    "ip_address": "IP adresse",
-                    "port": ""
+                    "ip_address": "IP adresse"
                 },
                 "description": "Konfigurer en lokal Elexa Guardian-enhet."
             },

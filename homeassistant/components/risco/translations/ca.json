@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "unknown": "Error inesperat"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Contrasenya",
+                    "pin": "Codi PIN",
+                    "username": "Nom d'usuari"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "code_arm_required": "Demana codi PIN per activar",
+                    "code_disarm_required": "Demana codi PIN per desactivar",
+                    "scan_interval": "Freq\u00fc\u00e8ncia de sondeig a Risco (en segons)"
+                },
+                "title": "Opcions de configuraci\u00f3"
+            }
+        }
+    }
+}

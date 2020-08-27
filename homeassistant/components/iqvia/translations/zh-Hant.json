@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "\u90f5\u905e\u5340\u865f\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210\u3002"
+        },
         "error": {
             "invalid_zip_code": "\u90f5\u905e\u5340\u865f\u7121\u6548"
         },

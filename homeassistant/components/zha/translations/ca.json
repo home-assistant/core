@@ -65,6 +65,7 @@
             "device_dropped": "Dispositiu caigut",
             "device_flipped": "Dispositiu voltejat a \"{subtype}\"",
             "device_knocked": "Dispositiu colpejat a \"{subtype}\"",
+            "device_offline": "Dispositiu desconnectat",
             "device_rotated": "Dispositiu rotat a \"{subtype}\"",
             "device_shaken": "Dispositiu sacsejat",
             "device_slid": "Dispositiu lliscat a \"{subtype}\"",
