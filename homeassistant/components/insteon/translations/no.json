@@ -1,0 +1,115 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "En Insteon-modemtilkobling er allerede konfigurert",
+            "cannot_connect": "Kan ikke koble til Insteon-modemet"
+        },
+        "error": {
+            "cannot_connect": "Kan ikke koble til Insteon-modemet, pr\u00f8v p\u00e5 nytt.",
+            "select_single": "Velg ett alternativ."
+        },
+        "step": {
+            "hub1": {
+                "data": {
+                    "host": "Hub-IP-adresse",
+                    "port": "IP-port"
+                },
+                "description": "Konfigurer Insteon Hub versjon 1 (f\u00f8r 2014).",
+                "title": "Insteon Hub versjon 1"
+            },
+            "hub2": {
+                "data": {
+                    "host": "Hub-IP-adresse",
+                    "password": "Passord",
+                    "port": "IP-port",
+                    "username": "Brukernavn"
+                },
+                "description": "Konfigurer Insteon Hub versjon 2.",
+                "title": "Insteon Hub versjon 2"
+            },
+            "init": {
+                "data": {
+                    "hubv1": "Hub versjon 1 (f\u00f8r 2014)",
+                    "hubv2": "Hub versjon 2",
+                    "plm": "PowerLink-modem (PLM)"
+                },
+                "description": "Velg Insteon modemtype.",
+                "title": "Insteon"
+            },
+            "plm": {
+                "data": {
+                    "device": "PLM-enhet (dvs. /dev/ttyUSB0 eller COM3)"
+                },
+                "description": "Konfigurer Insteon PowerLink-modem (PLM).",
+                "title": "Insteon PLM"
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "already_configured": "En Insteon-modemtilkobling er allerede konfigurert",
+            "cannot_connect": "Kan ikke koble til Insteon-modemet"
+        },
+        "error": {
+            "cannot_connect": "Kan ikke koble til Insteon-modemet, pr\u00f8v p\u00e5 nytt.",
+            "input_error": "Ugyldige oppf\u00f8ringer, vennligst sjekk verdiene dine.",
+            "select_single": "Velg ett alternativ."
+        },
+        "step": {
+            "add_override": {
+                "data": {
+                    "address": "Enhetsadresse (dvs. 1a2b3c)",
+                    "cat": "Enhetskategori (dvs. 0x10)",
+                    "subcat": "Underkategori for enhet (dvs. 0x0a)"
+                },
+                "description": "Legg til en enhetsoverstyring.",
+                "title": "Insteon"
+            },
+            "add_x10": {
+                "data": {
+                    "housecode": "Huskode (a - p)",
+                    "platform": "Plattform",
+                    "steps": "Dimmer trinn (kun for lette enheter, standard 22)",
+                    "unitcode": "Enhetskode (1 - 16)"
+                },
+                "description": "Endre insteon hub-passordet.",
+                "title": "Insteon"
+            },
+            "change_hub_config": {
+                "data": {
+                    "host": "Nytt vertsnavn eller IP-adresse",
+                    "password": "Nytt passord",
+                    "port": "Nytt portnummer",
+                    "username": "Nytt brukernavn"
+                },
+                "description": "Endre Insteon Hub-tilkoblingsinformasjonen. Du m\u00e5 starte Home Assistant p\u00e5 nytt n\u00e5r du har gjort denne endringen. Dette endrer ikke konfigurasjonen av selve huben. For \u00e5 endre konfigurasjonen i huben bruker du hub-appen.",
+                "title": "Insteon"
+            },
+            "init": {
+                "data": {
+                    "add_override": "Legg til en enhetsoverstyring.",
+                    "add_x10": "Legg til en X10-enhet.",
+                    "change_hub_config": "Endre hub-konfigurasjonen.",
+                    "remove_override": "Fjern en enhet overstyring.",
+                    "remove_x10": "Fjern en X10-enhet."
+                },
+                "description": "Velg et alternativ for \u00e5 konfigurere.",
+                "title": "Insteon"
+            },
+            "remove_override": {
+                "data": {
+                    "address": "Velg en enhetsadresse du vil fjerne"
+                },
+                "description": "Fjerne en enhetsoverstyring",
+                "title": "Insteon"
+            },
+            "remove_x10": {
+                "data": {
+                    "address": "Velg en enhetsadresse du vil fjerne"
+                },
+                "description": "Fjern en X10-enhet",
+                "title": "Insteon"
+            }
+        }
+    }
+}

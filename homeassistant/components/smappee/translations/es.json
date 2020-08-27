@@ -1,12 +1,33 @@
 {
     "config": {
         "abort": {
+            "already_configured_device": "El dispositivo ya est\u00e1 configurado",
+            "already_configured_local_device": "Los dispositivos locales ya est\u00e1n configurados. Elim\u00ednelos primero antes de configurar un dispositivo en la nube.",
             "authorize_url_timeout": "Tiempo de espera agotado generando la url de autorizaci\u00f3n.",
+            "connection_error": "No se pudo conectar al dispositivo Smappee.",
+            "invalid_mdns": "Dispositivo no compatible para la integraci\u00f3n de Smappee.",
             "missing_configuration": "El componente no est\u00e1 configurado. Por favor, siga la documentaci\u00f3n."
         },
+        "flow_title": "Smappee: {name}",
         "step": {
+            "environment": {
+                "data": {
+                    "environment": "Ambiente"
+                },
+                "description": "Configura tu Smappee para que se integre con Home Assistant."
+            },
+            "local": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Ingrese el host para iniciar la integraci\u00f3n local de Smappee"
+            },
             "pick_implementation": {
                 "title": "Elija el m\u00e9todo de autenticaci\u00f3n"
+            },
+            "zeroconf_confirm": {
+                "description": "\u00bfDesea agregar el dispositivo Smappee con el n\u00famero de serie `{serialnumber}` a Home Assistant?",
+                "title": "Dispositivo Smappee descubierto"
             }
         }
     }

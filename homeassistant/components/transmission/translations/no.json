@@ -14,7 +14,6 @@
                     "host": "Vert",
                     "name": "Navn",
                     "password": "Passord",
-                    "port": "",
                     "username": "Brukernavn"
                 },
                 "title": "Oppsett av Transmission-klient"

@@ -7,7 +7,6 @@
         "error": {
             "cannot_connect": "Tilkobling feilet"
         },
-        "flow_title": "",
         "step": {
             "ssdp_confirm": {
                 "description": "Vil du sette opp {name} ?"

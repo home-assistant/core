@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "pin": "Pin code",
+                    "username": "Username"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "code_arm_required": "Require pin code to arm",
+                    "code_disarm_required": "Require pin code to disarm",
+                    "scan_interval": "How often to poll Risco (in seconds)"
+                },
+                "title": "Configure options"
+            }
+        }
+    }
+}

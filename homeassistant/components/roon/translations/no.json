@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert"
+        },
+        "error": {
+            "duplicate_entry": "Denne verten er allerede lagt til.",
+            "invalid_auth": "Ugyldig godkjenning",
+            "unknown": "Uventet feil"
+        },
+        "step": {
+            "link": {
+                "description": "Du m\u00e5 autorisere home assistant i Roon. N\u00e5r du klikker send inn, g\u00e5r du til Roon Core-programmet, \u00e5pner Innstillinger og aktiverer HomeAssistant p\u00e5 Utvidelser-fanen.",
+                "title": "Autoriser HomeAssistant i Roon"
+            },
+            "user": {
+                "data": {
+                    "host": "Vert"
+                },
+                "description": "Vennligst skriv inn Roon-serverens vertsnavn eller IP.",
+                "title": "Konfigurer Roon Server"
+            }
+        }
+    },
+    "title": "Roon"
+}

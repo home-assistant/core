@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "not_supported_device": "Ce WiLight n'est actuellement pas pris en charge",
+            "not_wilight_device": "Cet appareil n'est pas WiLight"
+        },
+        "flow_title": "WiLight: {name}",
+        "step": {
+            "confirm": {
+                "title": "WiLight"
+            }
+        }
+    }
+}
