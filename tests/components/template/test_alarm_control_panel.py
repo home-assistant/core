@@ -346,7 +346,9 @@ async def test_invalid_panel_does_not_create(hass, caplog):
 async def test_no_panels_does_not_create(hass, caplog):
     """Test if there are no panels -> no creation."""
     await setup.async_setup_component(
-        hass, "alarm_control_panel", {"alarm_control_panel": {"platform": "template"}},
+        hass,
+        "alarm_control_panel",
+        {"alarm_control_panel": {"platform": "template"}},
     )
 
     await hass.async_block_till_done()

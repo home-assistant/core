@@ -46,7 +46,11 @@ async def test_multiple_zeroconf_instances_gives_shared(hass, mock_zeroconf, cap
                 lineno="23",
                 line="self.light.is_on",
             ),
-            Mock(filename="/home/dev/mdns/lights.py", lineno="2", line="something()",),
+            Mock(
+                filename="/home/dev/mdns/lights.py",
+                lineno="2",
+                line="something()",
+            ),
         ],
     ):
         assert zeroconf.Zeroconf() == zeroconf_instance

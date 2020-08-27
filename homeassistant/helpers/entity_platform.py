@@ -322,7 +322,9 @@ class EntityPlatform:
             return
 
         self._async_unsub_polling = async_track_time_interval(
-            self.hass, self._update_entity_states, self.scan_interval,
+            self.hass,
+            self._update_entity_states,
+            self.scan_interval,
         )
 
     async def _async_add_entity(

@@ -115,7 +115,13 @@ class Remote:
     """The Remote class. It stores the TV properties and the remote control connection itself."""
 
     def __init__(
-        self, hass, host, port, on_action=None, app_id=None, encryption_key=None,
+        self,
+        hass,
+        host,
+        port,
+        on_action=None,
+        app_id=None,
+        encryption_key=None,
     ):
         """Initialize the Remote class."""
         self._hass = hass

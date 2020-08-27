@@ -577,7 +577,11 @@ async def test_parallel_entry_setup(hass):
         return True
 
     mock_integration(
-        hass, MockModule("comp", async_setup_entry=mock_async_setup_entry,),
+        hass,
+        MockModule(
+            "comp",
+            async_setup_entry=mock_async_setup_entry,
+        ),
     )
     mock_entity_platform(hass, "config_flow.comp", None)
     await setup.async_setup_component(hass, "comp", {})

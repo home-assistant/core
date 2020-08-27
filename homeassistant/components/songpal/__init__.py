@@ -31,7 +31,9 @@ async def async_setup(hass: HomeAssistantType, config: OrderedDict) -> bool:
     for config_entry in conf:
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=config_entry,
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data=config_entry,
             ),
         )
     return True

@@ -917,7 +917,8 @@ async def test_raise_config_entry_not_ready(hass):
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.homekit.port_is_available", return_value=False,
+        "homeassistant.components.homekit.port_is_available",
+        return_value=False,
     ):
         assert not await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()

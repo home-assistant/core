@@ -287,7 +287,8 @@ class HomeKitHeaterCoolerEntity(HomeKitEntity, ClimateEntity):
         Requires SUPPORT_SWING_MODE.
         """
         valid_values = clamp_enum_to_char(
-            SwingModeValues, self.service[CharacteristicsTypes.SWING_MODE],
+            SwingModeValues,
+            self.service[CharacteristicsTypes.SWING_MODE],
         )
         return [SWING_MODE_HOMEKIT_TO_HASS[mode] for mode in valid_values]
 

@@ -385,7 +385,8 @@ class TemplateFan(TemplateEntity, FanEntity):
             self._oscillating = None
         else:
             _LOGGER.error(
-                "Received invalid oscillating: %s. Expected: True/False", oscillating,
+                "Received invalid oscillating: %s. Expected: True/False",
+                oscillating,
             )
             self._oscillating = None
 

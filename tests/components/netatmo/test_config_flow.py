@@ -127,7 +127,10 @@ async def test_option_flow(hass):
     }
 
     config_entry = MockConfigEntry(
-        domain=DOMAIN, unique_id=DOMAIN, data=VALID_CONFIG, options={},
+        domain=DOMAIN,
+        unique_id=DOMAIN,
+        data=VALID_CONFIG,
+        options={},
     )
     config_entry.add_to_hass(hass)
 
@@ -182,7 +185,10 @@ async def test_option_flow_wrong_coordinates(hass):
     }
 
     config_entry = MockConfigEntry(
-        domain=DOMAIN, unique_id=DOMAIN, data=VALID_CONFIG, options={},
+        domain=DOMAIN,
+        unique_id=DOMAIN,
+        data=VALID_CONFIG,
+        options={},
     )
     config_entry.add_to_hass(hass)
 

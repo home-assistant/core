@@ -180,7 +180,9 @@ class IQVIAData:
         # If this is the first registration we have, start a time interval:
         if not self._async_cancel_time_interval_listener:
             self._async_cancel_time_interval_listener = async_track_time_interval(
-                self._hass, self._async_update_listener_action, DEFAULT_SCAN_INTERVAL,
+                self._hass,
+                self._async_update_listener_action,
+                DEFAULT_SCAN_INTERVAL,
             )
 
         api_category = async_get_api_category(sensor_type)

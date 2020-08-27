@@ -96,7 +96,9 @@ def execute(qry, to_native=False, validate_entity_ids=True):
                     )
                 else:
                     _LOGGER.debug(
-                        "querying %d rows took %fs", len(result), elapsed,
+                        "querying %d rows took %fs",
+                        len(result),
+                        elapsed,
                     )
 
             return result

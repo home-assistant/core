@@ -100,7 +100,8 @@ async def async_setup_entry(hass, entry):
 
     except TuyaAPIException as exc:
         _LOGGER.error(
-            "Connection error during integration setup. Error: %s", exc,
+            "Connection error during integration setup. Error: %s",
+            exc,
         )
         return False
 

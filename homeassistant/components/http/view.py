@@ -43,7 +43,9 @@ class HomeAssistantView:
 
     @staticmethod
     def json(
-        result: Any, status_code: int = HTTP_OK, headers: Optional[LooseHeaders] = None,
+        result: Any,
+        status_code: int = HTTP_OK,
+        headers: Optional[LooseHeaders] = None,
     ) -> web.Response:
         """Return a JSON response."""
         try:
@@ -114,7 +116,10 @@ def request_handler_factory(view: HomeAssistantView, handler: Callable) -> Calla
             raise HTTPUnauthorized()
 
         _LOGGER.debug(
-            "Serving %s to %s (auth: %s)", request.path, request.remote, authenticated,
+            "Serving %s to %s (auth: %s)",
+            request.path,
+            request.remote,
+            authenticated,
         )
 
         try:

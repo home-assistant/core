@@ -87,7 +87,8 @@ def mutagen_mock():
 async def internal_url_mock(hass):
     """Mock internal URL of the instance."""
     await async_process_ha_core_config(
-        hass, {"internal_url": "http://example.local:8123"},
+        hass,
+        {"internal_url": "http://example.local:8123"},
     )
 
 

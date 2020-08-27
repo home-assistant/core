@@ -128,5 +128,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Get info from shelly device."""
         async with async_timeout.timeout(5):
             return await aioshelly.get_info(
-                aiohttp_client.async_get_clientsession(self.hass), host,
+                aiohttp_client.async_get_clientsession(self.hass),
+                host,
             )

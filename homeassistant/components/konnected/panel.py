@@ -168,12 +168,20 @@ class AlarmPanel:
             if self.client:
                 if self.api_version == CONF_ZONE:
                     return await self.client.put_zone(
-                        zone, state, momentary, times, pause,
+                        zone,
+                        state,
+                        momentary,
+                        times,
+                        pause,
                     )
 
                 # device endpoint uses pin number instead of zone
                 return await self.client.put_device(
-                    ZONE_TO_PIN[zone], state, momentary, times, pause,
+                    ZONE_TO_PIN[zone],
+                    state,
+                    momentary,
+                    times,
+                    pause,
                 )
 
         except self.client.ClientError as err:
@@ -208,7 +216,8 @@ class AlarmPanel:
             act = {
                 CONF_ZONE: zone,
                 CONF_NAME: entity.get(
-                    CONF_NAME, f"Konnected {self.device_id[6:]} Actuator {zone}",
+                    CONF_NAME,
+                    f"Konnected {self.device_id[6:]} Actuator {zone}",
                 ),
                 ATTR_STATE: None,
                 CONF_ACTIVATION: entity[CONF_ACTIVATION],

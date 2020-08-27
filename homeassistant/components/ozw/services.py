@@ -86,7 +86,9 @@ class ZWaveServices:
 
             if payload is None:
                 _LOGGER.error(
-                    "Invalid value %s for parameter %s", selection, param,
+                    "Invalid value %s for parameter %s",
+                    selection,
+                    param,
                 )
                 return
 

@@ -231,7 +231,9 @@ class MediaPlayer(HomeAccessory):
         if self.chars[FEATURE_PLAY_STOP]:
             hk_state = current_state == STATE_PLAYING
             _LOGGER.debug(
-                '%s: Set current state for "play_stop" to %s', self.entity_id, hk_state,
+                '%s: Set current state for "play_stop" to %s',
+                self.entity_id,
+                hk_state,
             )
             if self.chars[FEATURE_PLAY_STOP].value != hk_state:
                 self.chars[FEATURE_PLAY_STOP].set_value(hk_state)
@@ -414,7 +416,9 @@ class TelevisionMediaPlayer(HomeAccessory):
         if CHAR_VOLUME_SELECTOR in self.chars_speaker:
             current_mute_state = bool(new_state.attributes.get(ATTR_MEDIA_VOLUME_MUTED))
             _LOGGER.debug(
-                "%s: Set current mute state to %s", self.entity_id, current_mute_state,
+                "%s: Set current mute state to %s",
+                self.entity_id,
+                current_mute_state,
             )
             if self.char_mute.value != current_mute_state:
                 self.char_mute.set_value(current_mute_state)
@@ -429,7 +433,8 @@ class TelevisionMediaPlayer(HomeAccessory):
                     self.char_input_source.set_value(index)
             elif hk_state:
                 _LOGGER.warning(
-                    "%s: Sources out of sync. Restart Home Assistant", self.entity_id,
+                    "%s: Sources out of sync. Restart Home Assistant",
+                    self.entity_id,
                 )
                 if self.char_input_source.value != 0:
                     self.char_input_source.set_value(0)

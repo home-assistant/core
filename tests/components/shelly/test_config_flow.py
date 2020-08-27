@@ -31,10 +31,12 @@ async def test_form(hass):
     ), patch(
         "homeassistant.components.shelly.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.shelly.async_setup_entry", return_value=True,
+        "homeassistant.components.shelly.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"host": "1.1.1.1"},
+            result["flow_id"],
+            {"host": "1.1.1.1"},
         )
 
     assert result2["type"] == "create_entry"
@@ -60,7 +62,8 @@ async def test_form_auth(hass):
         return_value={"mac": "test-mac", "type": "SHSW-1", "auth": True},
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"host": "1.1.1.1"},
+            result["flow_id"],
+            {"host": "1.1.1.1"},
         )
 
     assert result2["type"] == "abort"
@@ -78,10 +81,12 @@ async def test_form_errors_get_info(hass, error):
     )
 
     with patch(
-        "aioshelly.get_info", side_effect=exc,
+        "aioshelly.get_info",
+        side_effect=exc,
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"host": "1.1.1.1"},
+            result["flow_id"],
+            {"host": "1.1.1.1"},
         )
 
     assert result2["type"] == "form"
@@ -99,10 +104,12 @@ async def test_form_errors_test_connection(hass, error):
     )
 
     with patch("aioshelly.get_info", return_value={"auth": False}), patch(
-        "aioshelly.Device.create", side_effect=exc,
+        "aioshelly.Device.create",
+        side_effect=exc,
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"host": "1.1.1.1"},
+            result["flow_id"],
+            {"host": "1.1.1.1"},
         )
 
     assert result2["type"] == "form"
@@ -134,9 +141,13 @@ async def test_zeroconf(hass):
     ), patch(
         "homeassistant.components.shelly.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.shelly.async_setup_entry", return_value=True,
+        "homeassistant.components.shelly.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {},)
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "Test name"
@@ -169,9 +180,13 @@ async def test_zeroconf_confirm_error(hass, error):
         assert result["errors"] == {}
 
     with patch(
-        "aioshelly.Device.create", side_effect=exc,
+        "aioshelly.Device.create",
+        side_effect=exc,
     ):
-        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {},)
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": base_error}
@@ -204,7 +219,8 @@ async def test_zeroconf_already_configured(hass):
 async def test_zeroconf_cannot_connect(hass):
     """Test we get the form."""
     with patch(
-        "aioshelly.get_info", side_effect=asyncio.TimeoutError,
+        "aioshelly.get_info",
+        side_effect=asyncio.TimeoutError,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

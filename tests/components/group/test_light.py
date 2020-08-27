@@ -667,11 +667,16 @@ async def test_reload(hass):
     assert hass.states.get("light.light_group").state == STATE_ON
 
     yaml_path = path.join(
-        _get_fixtures_base_path(), "fixtures", "group/configuration.yaml",
+        _get_fixtures_base_path(),
+        "fixtures",
+        "group/configuration.yaml",
     )
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
-            DOMAIN, SERVICE_RELOAD, {}, blocking=True,
+            DOMAIN,
+            SERVICE_RELOAD,
+            {},
+            blocking=True,
         )
         await hass.async_block_till_done()
 

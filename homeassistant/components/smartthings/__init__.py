@@ -315,7 +315,8 @@ class DeviceBroker:
         async def regenerate_refresh_token(now):
             """Generate a new refresh token and update the config entry."""
             await self._token.refresh(
-                self._entry.data[CONF_CLIENT_ID], self._entry.data[CONF_CLIENT_SECRET],
+                self._entry.data[CONF_CLIENT_ID],
+                self._entry.data[CONF_CLIENT_SECRET],
             )
             self._hass.config_entries.async_update_entry(
                 self._entry,

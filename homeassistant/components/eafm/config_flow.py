@@ -32,7 +32,8 @@ class UKFloodsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(station, raise_on_progress=False)
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
-                title=user_input["station"], data={"station": station},
+                title=user_input["station"],
+                data={"station": station},
             )
 
         session = async_get_clientsession(hass=self.hass)

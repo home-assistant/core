@@ -223,7 +223,10 @@ class TeslaDataUpdateCoordinator(DataUpdateCoordinator):
         update_interval = timedelta(seconds=MIN_SCAN_INTERVAL)
 
         super().__init__(
-            hass, _LOGGER, name=DOMAIN, update_interval=update_interval,
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_interval=update_interval,
         )
 
     async def _async_update_data(self):
