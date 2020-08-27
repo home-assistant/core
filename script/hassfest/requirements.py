@@ -20,9 +20,24 @@ SUPPORTED_PYTHON_TUPLES = [
 SUPPORTED_PYTHON_VERSIONS = [
     ".".join(map(str, version_tuple)) for version_tuple in SUPPORTED_PYTHON_TUPLES
 ]
-IGNORE_PACKAGES = {commented.lower() for commented in COMMENT_REQUIREMENTS}
-
 STD_LIBS = {version: set(stdlib_list(version)) for version in SUPPORTED_PYTHON_VERSIONS}
+
+
+def normalize_package_name(requirement: str) -> str:
+    """Return a normalized package name from a requirement string."""
+    requirement = requirement.split(" ")[-1]  # remove potential pip argument
+    package = requirement.split("==")[0]  # remove version pinning
+    package = package.split("[")[0]  # remove potential require extras
+    # replace undescore with dash to work with pipdeptree
+    package = package.replace("_", "-")
+    package = package.lower()  # normalize casing
+
+    return package
+
+
+IGNORE_PACKAGES = {
+    normalize_package_name(commented) for commented in COMMENT_REQUIREMENTS
+}
 
 
 def validate(integrations: Dict[str, Integration], config: Config):
@@ -117,16 +132,14 @@ def install_requirements(integration: Integration, requirements: Set[str]) -> bo
         try:
             is_installed = pkg_util.is_installed(req)
         except ValueError:
-            integration.add_error(
-                "requirements",
-                f"Invalid requirement {req}",
-            )
-            continue
+            is_installed = False
 
         if is_installed:
             continue
 
-        args = [sys.executable, "-m", "pip", "install", "--quiet", req]
+        requirement_args = req.split(" ")
+        args = [sys.executable, "-m", "pip", "install", "--quiet"]
+        args.extend(requirement_args)
         try:
             subprocess.run(args, check=True)
         except subprocess.SubprocessError:
@@ -139,14 +152,3 @@ def install_requirements(integration: Integration, requirements: Set[str]) -> bo
         return False
 
     return True
-
-
-def normalize_package_name(requirement: str) -> str:
-    """Return a normalized package name from a requirement string."""
-    package = requirement.split("==")[0]  # remove version pinning
-    package = package.split("[")[0]  # remove potential require extras
-    # replace undescore with dash to work with pipdeptree
-    package = package.replace("_", "-")
-    package = package.lower()  # normalize casing
-
-    return package
