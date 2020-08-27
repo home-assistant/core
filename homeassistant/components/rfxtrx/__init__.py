@@ -153,7 +153,6 @@ async def async_setup(hass, config):
 
     # Read device_id from the event code add to the data that will end up in the ConfigEntry
     for event_code, event_config in data[CONF_DEVICES].items():
-        _LOGGER.debug(event_code)
         event = get_rfx_object(event_code)
         if event is None:
             continue
