@@ -62,7 +62,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 await validate_input_relay_modes(user_input)
                 whole_data = user_input
-                whole_data.update(self.step_user_user_input)
+                whole_data.update(self.s1_in)
 
                 return self.async_create_entry(
                     title=whole_data["title"], data=whole_data
@@ -73,7 +73,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
 
         relay_modes_schema = {}
-        for i in range(1, int(self.step_user_user_input["relay_count"]) + 1):
+        for i in range(1, int(self.s1_in["relay_count"]) + 1):
             relay_modes_schema[
                 vol.Required(f"relay_{str(i)}", default="bistable")
             ] = str
@@ -91,8 +91,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 info = await validate_input(self.hass, user_input)
                 user_input.update(info)
-                self.step_user_user_input = (
-                    user_input  # pylint: disable=attribute-defined-outside-init
+                self.s1_in = (  # pylint: disable=attribute-defined-outside-init
+                    user_input
                 )
                 return await self.async_step_relay_modes()
             except UnexistingBoard:
