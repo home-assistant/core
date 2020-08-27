@@ -29,7 +29,6 @@ INTEGRATION_PLUGINS = [
     ssdp,
     translations,
     zeroconf,
-    requirements,
 ]
 HASS_PLUGINS = [
     coverage,
@@ -57,6 +56,9 @@ def get_config() -> Config:
         type=valid_integration_path,
         help="Validate a single integration",
     )
+    parser.add_argument(
+        "--requirements", action="store_true", help="Validate requirements",
+    )
     parsed = parser.parse_args()
 
     if parsed.action is None:
@@ -77,6 +79,7 @@ def get_config() -> Config:
         root=pathlib.Path(".").absolute(),
         specific_integrations=parsed.integration_path,
         action=parsed.action,
+        requirements=parsed.requirements,
     )
 
 
@@ -88,7 +91,10 @@ def main():
         print(err)
         return 1
 
-    plugins = INTEGRATION_PLUGINS
+    plugins = [*INTEGRATION_PLUGINS]
+
+    if config.requirements:
+        plugins.append(requirements)
 
     if config.specific_integrations:
         integrations = {}
