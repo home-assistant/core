@@ -1,6 +1,6 @@
 """Light support for switch entities."""
 import logging
-from typing import Callable, Optional, Sequence, cast
+from typing import Any, Callable, Optional, Sequence, cast
 
 import voluptuous as vol
 
@@ -13,10 +13,10 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import CALLBACK_TYPE, State, callback
+from homeassistant.core import CALLBACK_TYPE, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import (
     ConfigType,
     DiscoveryInfoType,
@@ -117,15 +117,13 @@ class LightSwitch(LightEntity):
         """Register callbacks."""
 
         @callback
-        def async_state_changed_listener(
-            entity_id: str, old_state: State, new_state: State
-        ) -> None:
+        def async_state_changed_listener(*_: Any) -> None:
             """Handle child updates."""
             self.async_schedule_update_ha_state(True)
 
         assert self.hass is not None
-        self._async_unsub_state_changed = async_track_state_change(
-            self.hass, self._switch_entity_id, async_state_changed_listener
+        self._async_unsub_state_changed = async_track_state_change_event(
+            self.hass, [self._switch_entity_id], async_state_changed_listener
         )
 
     async def async_will_remove_from_hass(self):

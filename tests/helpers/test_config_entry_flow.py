@@ -259,7 +259,8 @@ async def test_webhook_config_flow_registers_webhook(hass, webhook_flow_conf):
     flow.hass = hass
 
     await async_process_ha_core_config(
-        hass, {"external_url": "https://example.com"},
+        hass,
+        {"external_url": "https://example.com"},
     )
     result = await flow.async_step_user(user_input={})
 

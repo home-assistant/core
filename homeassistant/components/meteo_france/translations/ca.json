@@ -4,13 +4,32 @@
             "already_configured": "Ciutat ja configurada",
             "unknown": "Error desconegut: torna-ho a provar m\u00e9s tard"
         },
+        "error": {
+            "empty": "No s'ha trobat cap resultat en la cerca de la ciutat: comprova el camp ciutat"
+        },
         "step": {
+            "cities": {
+                "data": {
+                    "city": "Ciutat"
+                },
+                "description": "Tria una ciutat de la llista",
+                "title": "M\u00e9t\u00e9o-France"
+            },
             "user": {
                 "data": {
                     "city": "Ciutat"
                 },
                 "description": "Introdueix el codi postal (nom\u00e9s recomanat per Fran\u00e7a) o nom de la ciutat",
                 "title": "M\u00e9t\u00e9o-France"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "mode": "Mode de predicci\u00f3"
+                }
             }
         }
     }

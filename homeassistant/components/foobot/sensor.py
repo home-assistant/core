@@ -39,11 +39,7 @@ SENSOR_TYPES = {
     "pm": [ATTR_PM2_5, CONCENTRATION_MICROGRAMS_PER_CUBIC_METER, "mdi:cloud"],
     "tmp": [ATTR_TEMPERATURE, TEMP_CELSIUS, "mdi:thermometer"],
     "hum": [ATTR_HUMIDITY, UNIT_PERCENTAGE, "mdi:water-percent"],
-    "co2": [
-        ATTR_CARBON_DIOXIDE,
-        CONCENTRATION_PARTS_PER_MILLION,
-        "mdi:periodic-table-co2",
-    ],
+    "co2": [ATTR_CARBON_DIOXIDE, CONCENTRATION_PARTS_PER_MILLION, "mdi:molecule-co2"],
     "voc": [
         ATTR_VOLATILE_ORGANIC_COMPOUNDS,
         CONCENTRATION_PARTS_PER_BILLION,

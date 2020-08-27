@@ -12,7 +12,7 @@
         "step": {
             "auth": {
                 "data": {
-                    "host": "H\u00f4te",
+                    "host": "Nom d'h\u00f4te ou adresse IP",
                     "security_code": "Code de s\u00e9curit\u00e9"
                 },
                 "description": "Vous pouvez trouver le code de s\u00e9curit\u00e9 au dos de votre passerelle.",

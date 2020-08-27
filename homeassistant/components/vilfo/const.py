@@ -27,7 +27,7 @@ SENSOR_TYPES = {
     },
     ATTR_BOOT_TIME: {
         ATTR_LABEL: "Boot time",
-        ATTR_ICON: "mdi:timer",
+        ATTR_ICON: "mdi:timer-outline",
         ATTR_API_DATA_FIELD: ATTR_API_DATA_FIELD_BOOT_TIME,
         ATTR_DEVICE_CLASS: DEVICE_CLASS_TIMESTAMP,
     },

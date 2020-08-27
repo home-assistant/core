@@ -1,6 +1,10 @@
 {
     "config": {
+        "abort": {
+            "invalid_credentials": "Credenciais inv\u00e1lidas"
+        },
         "error": {
+            "invalid_credentials": "Credenciais inv\u00e1lidas",
             "invalid_username": "Nome de utilizador incorreto"
         },
         "step": {

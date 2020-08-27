@@ -119,8 +119,8 @@ SCHEMA_WS_CAMERA_THUMBNAIL = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
 class Image:
     """Represent an image."""
 
-    content_type = attr.ib(type=str)
-    content = attr.ib(type=bytes)
+    content_type: str = attr.ib()
+    content: bytes = attr.ib()
 
 
 @bind_hass

@@ -1,77 +1,64 @@
 """Common test tools."""
-import threading
-from unittest import mock
+from datetime import timedelta
 
-import RFXtrx
 import pytest
 
-from homeassistant.components import rfxtrx as rfxtrx_core
+from homeassistant.components import rfxtrx
+from homeassistant.setup import async_setup_component
+from homeassistant.util.dt import utcnow
 
-from tests.common import mock_component
-
-
-class FixedDummySerial(RFXtrx._dummySerial):  # pylint: disable=protected-access
-    """Fixed dummy serial that doesn't cause max CPU usage."""
-
-    def __init__(self, *args, **kwargs):
-        """Init."""
-        super().__init__(*args, **kwargs)
-        self._close_event = threading.Event()
-
-    def read(self, data=None):
-        """Read."""
-        res = super().read(data)
-        if not res and not data:
-            self._close_event.wait(0.1)
-        return res
-
-    def close(self):
-        """Close."""
-        self._close_event.set()
+from tests.async_mock import patch
+from tests.common import async_fire_time_changed
 
 
-class FixedDummyTransport(RFXtrx.DummyTransport):
-    """Fixed dummy transport that maxes CPU."""
-
-    def __init__(self, device="", debug=True):
-        """Init."""
-        super().__init__(device, debug)
-        self._close_event = threading.Event()
-
-    def receive_blocking(self, data=None):
-        """Read."""
-        res = super().receive_blocking(data)
-        if not res:
-            self._close_event.wait(0.1)
-        return res
-
-    def close(self):
-        """Close."""
-        self._close_event.set()
-
-
-@pytest.fixture(autouse=True)
-async def rfxtrx_cleanup():
+@pytest.fixture(autouse=True, name="rfxtrx")
+async def rfxtrx_fixture(hass):
     """Fixture that cleans up threads from integration."""
 
-    with mock.patch("RFXtrx._dummySerial", new=FixedDummySerial), mock.patch(
-        "RFXtrx.DummyTransport", new=FixedDummyTransport
-    ):
-        yield
+    with patch("RFXtrx.Connect") as connect, patch("RFXtrx.DummyTransport2"):
+        rfx = connect.return_value
 
-    rfxtrx_core.RFX_DEVICES.clear()
+        async def _signal_event(packet_id):
+            event = rfxtrx.get_rfx_object(packet_id)
+            await hass.async_add_executor_job(
+                rfx.event_callback,
+                event,
+            )
+
+            await hass.async_block_till_done()
+            await hass.async_block_till_done()
+            return event
+
+        rfx.signal = _signal_event
+
+        yield rfx
 
 
-@pytest.fixture(name="rfxtrx")
-async def rfxtrx_fixture(hass):
-    """Stub out core rfxtrx to test platform."""
-    mock_component(hass, "rfxtrx")
+@pytest.fixture(name="rfxtrx_automatic")
+async def rfxtrx_automatic_fixture(hass, rfxtrx):
+    """Fixture that starts up with automatic additions."""
 
-    rfxobject = mock.MagicMock()
-    hass.data[rfxtrx_core.DATA_RFXOBJECT] = rfxobject
+    assert await async_setup_component(
+        hass,
+        "rfxtrx",
+        {"rfxtrx": {"device": "abcd", "automatic_add": True}},
+    )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    yield rfxtrx
 
-    yield rfxobject
 
-    # These test don't listen for stop to do cleanup.
-    if rfxtrx_core.DATA_RFXOBJECT in hass.data:
-        hass.data[rfxtrx_core.DATA_RFXOBJECT].close_connection()
+@pytest.fixture
+async def timestep(hass):
+    """Step system time forward."""
+
+    with patch("homeassistant.core.dt_util.utcnow") as mock_utcnow:
+        mock_utcnow.return_value = utcnow()
+
+        async def delay(seconds):
+            """Trigger delay in system."""
+            mock_utcnow.return_value += timedelta(seconds=seconds)
+            async_fire_time_changed(hass, mock_utcnow.return_value)
+            await hass.async_block_till_done()
+
+        yield delay

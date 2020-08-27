@@ -97,6 +97,7 @@ ERR_NOT_SUPPORTED = "notSupported"
 ERR_PROTOCOL_ERROR = "protocolError"
 ERR_UNKNOWN_ERROR = "unknownError"
 ERR_FUNCTION_NOT_SUPPORTED = "functionNotSupported"
+ERR_UNSUPPORTED_INPUT = "unsupportedInput"
 
 ERR_ALREADY_DISARMED = "alreadyDisarmed"
 ERR_ALREADY_ARMED = "alreadyArmed"

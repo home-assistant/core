@@ -23,6 +23,7 @@ from typing import (
     Callable,
     Coroutine,
     Dict,
+    Iterable,
     List,
     Mapping,
     Optional,
@@ -31,9 +32,7 @@ from typing import (
     Union,
     cast,
 )
-import uuid
 
-from async_timeout import timeout
 import attr
 import voluptuous as vol
 import yarl
@@ -74,7 +73,9 @@ from homeassistant.util import location, network
 from homeassistant.util.async_ import fire_coroutine_threadsafe, run_callback_threadsafe
 import homeassistant.util.dt as dt_util
 from homeassistant.util.thread import fix_threading_exception_logging
+from homeassistant.util.timeout import TimeoutManager
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
+import homeassistant.util.uuid as uuid_util
 
 # Typing imports that create a circular dependency
 if TYPE_CHECKING:
@@ -97,6 +98,9 @@ CORE_STORAGE_KEY = "core.config"
 CORE_STORAGE_VERSION = 1
 
 DOMAIN = "homeassistant"
+
+# How long to wait to log tasks that are blocking
+BLOCK_LOG_TIMEOUT = 60
 
 # How long we wait for the result of a service call
 SERVICE_CALL_LIMIT = 10  # seconds
@@ -152,6 +156,7 @@ class CoreState(enum.Enum):
     running = "RUNNING"
     stopping = "STOPPING"
     final_write = "FINAL_WRITE"
+    stopped = "STOPPED"
 
     def __str__(self) -> str:
         """Return the event."""
@@ -178,10 +183,12 @@ class HomeAssistant:
         self.helpers = loader.Helpers(self)
         # This is a dictionary that any component can store any data on.
         self.data: dict = {}
-        self.state = CoreState.not_running
-        self.exit_code = 0
+        self.state: CoreState = CoreState.not_running
+        self.exit_code: int = 0
         # If not None, use to signal end-of-loop
         self._stopped: Optional[asyncio.Event] = None
+        # Timeout handler for Core/Helper namespace
+        self.timeout: TimeoutManager = TimeoutManager()
 
     @property
     def is_running(self) -> bool:
@@ -249,7 +256,7 @@ class HomeAssistant:
         try:
             # Only block for EVENT_HOMEASSISTANT_START listener
             self.async_stop_track_tasks()
-            async with timeout(TIMEOUT_EVENT_START):
+            async with self.timeout.async_timeout(TIMEOUT_EVENT_START):
                 await self.async_block_till_done()
         except asyncio.TimeoutError:
             _LOGGER.warning(
@@ -295,6 +302,9 @@ class HomeAssistant:
         target: target to call.
         args: parameters for method to call.
         """
+        if target is None:
+            raise ValueError("Don't call async_add_job with None")
+
         task = None
 
         # Check for partials to properly determine if coroutine function
@@ -309,9 +319,7 @@ class HomeAssistant:
         elif is_callback(check_target):
             self.loop.call_soon(target, *args)
         else:
-            task = self.loop.run_in_executor(  # type: ignore
-                None, target, *args
-            )
+            task = self.loop.run_in_executor(None, target, *args)  # type: ignore
 
         # If a task is scheduled
         if self._track_task and task is not None:
@@ -387,14 +395,41 @@ class HomeAssistant:
         """Block until all pending work is done."""
         # To flush out any call_soon_threadsafe
         await asyncio.sleep(0)
+        start_time: Optional[float] = None
 
         while self._pending_tasks:
             pending = [task for task in self._pending_tasks if not task.done()]
             self._pending_tasks.clear()
             if pending:
-                await asyncio.wait(pending)
+                await self._await_and_log_pending(pending)
+
+                if start_time is None:
+                    # Avoid calling monotonic() until we know
+                    # we may need to start logging blocked tasks.
+                    start_time = 0
+                elif start_time == 0:
+                    # If we have waited twice then we set the start
+                    # time
+                    start_time = monotonic()
+                elif monotonic() - start_time > BLOCK_LOG_TIMEOUT:
+                    # We have waited at least three loops and new tasks
+                    # continue to block. At this point we start
+                    # logging all waiting tasks.
+                    for task in pending:
+                        _LOGGER.debug("Waiting for task: %s", task)
             else:
                 await asyncio.sleep(0)
+
+    async def _await_and_log_pending(self, pending: Iterable[Awaitable[Any]]) -> None:
+        """Await and log tasks that take a long time."""
+        wait_time = 0
+        while pending:
+            _, pending = await asyncio.wait(pending, timeout=BLOCK_LOG_TIMEOUT)
+            if not pending:
+                return
+            wait_time += BLOCK_LOG_TIMEOUT
+            for task in pending:
+                _LOGGER.debug("Waited %s seconds for task: %s", wait_time, task)
 
     def stop(self) -> None:
         """Stop Home Assistant and shuts down all threads."""
@@ -427,22 +462,41 @@ class HomeAssistant:
         self.state = CoreState.stopping
         self.async_track_tasks()
         self.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-        await self.async_block_till_done()
+        try:
+            async with self.timeout.async_timeout(120):
+                await self.async_block_till_done()
+        except asyncio.TimeoutError:
+            _LOGGER.warning(
+                "Timed out waiting for shutdown stage 1 to complete, the shutdown will continue"
+            )
 
         # stage 2
         self.state = CoreState.final_write
         self.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
-        await self.async_block_till_done()
+        try:
+            async with self.timeout.async_timeout(60):
+                await self.async_block_till_done()
+        except asyncio.TimeoutError:
+            _LOGGER.warning(
+                "Timed out waiting for shutdown stage 2 to complete, the shutdown will continue"
+            )
 
         # stage 3
         self.state = CoreState.not_running
         self.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
-        await self.async_block_till_done()
+        try:
+            async with self.timeout.async_timeout(30):
+                await self.async_block_till_done()
+        except asyncio.TimeoutError:
+            _LOGGER.warning(
+                "Timed out waiting for shutdown stage 3 to complete, the shutdown will continue"
+            )
 
         # Python 3.9+ and backported in runner.py
         await self.loop.shutdown_default_executor()  # type: ignore
 
         self.exit_code = exit_code
+        self.state = CoreState.stopped
 
         if self._stopped is not None:
             self._stopped.set()
@@ -454,9 +508,9 @@ class HomeAssistant:
 class Context:
     """The context that triggered something."""
 
-    user_id = attr.ib(type=str, default=None)
-    parent_id = attr.ib(type=Optional[str], default=None)
-    id = attr.ib(type=str, default=attr.Factory(lambda: uuid.uuid4().hex))
+    user_id: str = attr.ib(default=None)
+    parent_id: Optional[str] = attr.ib(default=None)
+    id: str = attr.ib(factory=uuid_util.uuid_v1mc_hex)
 
     def as_dict(self) -> dict:
         """Return a dictionary representation of the context."""
@@ -699,6 +753,7 @@ class State:
     last_changed: last time the state was changed, not the attributes.
     last_updated: last time this object was updated.
     context: Context in which it was created
+    domain: Domain of this state.
     """
 
     __slots__ = [
@@ -708,6 +763,7 @@ class State:
         "last_changed",
         "last_updated",
         "context",
+        "domain",
     ]
 
     def __init__(
@@ -741,11 +797,7 @@ class State:
         self.last_updated = last_updated or dt_util.utcnow()
         self.last_changed = last_changed or self.last_updated
         self.context = context or Context()
-
-    @property
-    def domain(self) -> str:
-        """Domain of this state."""
-        return split_entity_id(self.entity_id)[0]
+        self.domain = split_entity_id(self.entity_id)[0]
 
     @property
     def object_id(self) -> str:
@@ -847,7 +899,9 @@ class StateMachine:
         return future.result()
 
     @callback
-    def async_entity_ids(self, domain_filter: Optional[str] = None) -> List[str]:
+    def async_entity_ids(
+        self, domain_filter: Optional[Union[str, Iterable]] = None
+    ) -> List[str]:
         """List of entity ids that are being tracked.
 
         This method must be run in the event loop.
@@ -855,12 +909,13 @@ class StateMachine:
         if domain_filter is None:
             return list(self._states.keys())
 
-        domain_filter = domain_filter.lower()
+        if isinstance(domain_filter, str):
+            domain_filter = (domain_filter.lower(),)
 
         return [
             state.entity_id
             for state in self._states.values()
-            if state.domain == domain_filter
+            if state.domain in domain_filter
         ]
 
     def all(self) -> List[State]:
@@ -1318,7 +1373,7 @@ class Config:
         self.config_dir: Optional[str] = None
 
         # List of allowed external dirs to access
-        self.whitelist_external_dirs: Set[str] = set()
+        self.allowlist_external_dirs: Set[str] = set()
 
         # List of allowed external URLs that integrations may use
         self.allowlist_external_urls: Set[str] = set()
@@ -1368,9 +1423,9 @@ class Config:
         except (FileNotFoundError, RuntimeError, PermissionError):
             return False
 
-        for whitelisted_path in self.whitelist_external_dirs:
+        for allowed_path in self.allowlist_external_dirs:
             try:
-                thepath.relative_to(whitelisted_path)
+                thepath.relative_to(allowed_path)
                 return True
             except ValueError:
                 pass
@@ -1395,7 +1450,9 @@ class Config:
             "time_zone": time_zone,
             "components": self.components,
             "config_dir": self.config_dir,
-            "whitelist_external_dirs": self.whitelist_external_dirs,
+            # legacy, backwards compat
+            "whitelist_external_dirs": self.allowlist_external_dirs,
+            "allowlist_external_dirs": self.allowlist_external_dirs,
             "allowlist_external_urls": self.allowlist_external_urls,
             "version": __version__,
             "config_source": self.config_source,
@@ -1535,6 +1592,7 @@ class Config:
 def _async_create_timer(hass: HomeAssistant) -> None:
     """Create a timer that will start on HOMEASSISTANT_START."""
     handle = None
+    timer_context = Context()
 
     def schedule_tick(now: datetime.datetime) -> None:
         """Schedule a timer tick when the next second rolls around."""
@@ -1549,12 +1607,14 @@ def _async_create_timer(hass: HomeAssistant) -> None:
         """Fire next time event."""
         now = dt_util.utcnow()
 
-        hass.bus.async_fire(EVENT_TIME_CHANGED, {ATTR_NOW: now})
+        hass.bus.async_fire(EVENT_TIME_CHANGED, {ATTR_NOW: now}, context=timer_context)
 
         # If we are more than a second late, a tick was missed
         late = monotonic() - target
         if late > 1:
-            hass.bus.async_fire(EVENT_TIMER_OUT_OF_SYNC, {ATTR_SECONDS: late})
+            hass.bus.async_fire(
+                EVENT_TIMER_OUT_OF_SYNC, {ATTR_SECONDS: late}, context=timer_context
+            )
 
         schedule_tick(now)
 

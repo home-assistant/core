@@ -257,7 +257,8 @@ class TestComponentHistory(unittest.TestCase):
         # will happen with encoding a native state
         input_state = states["media_player.test"][1]
         orig_last_changed = json.dumps(
-            process_timestamp(input_state.last_changed), cls=JSONEncoder,
+            process_timestamp(input_state.last_changed),
+            cls=JSONEncoder,
         ).replace('"', "")
         orig_state = input_state.state
         states["media_player.test"][1] = {
@@ -690,7 +691,6 @@ class TestComponentHistory(unittest.TestCase):
         therm = "thermostat.test"
         therm2 = "thermostat.test2"
         zone = "zone.home"
-        script_nc = "script.cannot_cancel_this_one"
         script_c = "script.can_cancel_this_one"
 
         def set_state(entity_id, state, **kwargs):
@@ -730,9 +730,8 @@ class TestComponentHistory(unittest.TestCase):
         ):
             # This state will be skipped only different in time
             set_state(mp, "YouTube", attributes={"media_title": str(sentinel.mt3)})
-            # This state will be skipped because domain blacklisted
+            # This state will be skipped because domain is excluded
             set_state(zone, "zoning")
-            set_state(script_nc, "off")
             states[script_c].append(
                 set_state(script_c, "off", attributes={"can_cancel": True})
             )

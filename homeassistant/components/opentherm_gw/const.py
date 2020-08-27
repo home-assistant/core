@@ -12,6 +12,7 @@ from homeassistant.const import (
 ATTR_GW_ID = "gateway_id"
 ATTR_LEVEL = "level"
 ATTR_DHW_OVRD = "dhw_override"
+ATTR_CH_OVRD = "ch_override"
 
 CONF_CLIMATE = "climate"
 CONF_FLOOR_TEMP = "floor_temperature"
@@ -27,6 +28,7 @@ DEVICE_CLASS_PROBLEM = "problem"
 DOMAIN = "opentherm_gw"
 
 SERVICE_RESET_GATEWAY = "reset_gateway"
+SERVICE_SET_CH_OVRD = "set_central_heating_ovrd"
 SERVICE_SET_CLOCK = "set_clock"
 SERVICE_SET_CONTROL_SETPOINT = "set_control_setpoint"
 SERVICE_SET_HOT_WATER_SETPOINT = "set_hot_water_setpoint"

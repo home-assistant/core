@@ -1,0 +1,14 @@
+{
+    "config": {
+        "step": {
+            "2fa": {
+                "description": "Digite o pin enviado para o seu email. Se o email n\u00e3o contiver um pin, deixe em branco"
+            },
+            "user": {
+                "data": {
+                    "password": "Palavra-passe"
+                }
+            }
+        }
+    }
+}

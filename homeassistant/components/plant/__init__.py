@@ -24,7 +24,7 @@ from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.event import async_track_state_change_event
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -183,11 +183,15 @@ class Plant(Entity):
         self._brightness_history = DailyHistory(self._conf_check_days)
 
     @callback
-    def state_changed(self, entity_id, _, new_state):
-        """Update the sensor status.
+    def _state_changed_event(self, event):
+        """Sensor state change event."""
+        self.state_changed(event.data.get("entity_id"), event.data.get("new_state"))
 
-        This callback is triggered, when the sensor state changes.
-        """
+    @callback
+    def state_changed(self, entity_id, new_state):
+        """Update the sensor status."""
+        if new_state is None:
+            return
         value = new_state.state
         _LOGGER.debug("Received callback from %s with value %s", entity_id, value)
         if value == STATE_UNKNOWN:
@@ -279,12 +283,14 @@ class Plant(Entity):
             # only use the database if it's configured
             self.hass.async_add_job(self._load_history_from_db)
 
-        async_track_state_change(self.hass, list(self._sensormap), self.state_changed)
+        async_track_state_change_event(
+            self.hass, list(self._sensormap), self._state_changed_event
+        )
 
         for entity_id in self._sensormap:
             state = self.hass.states.get(entity_id)
             if state is not None:
-                self.state_changed(entity_id, None, state)
+                self.state_changed(entity_id, state)
 
     async def _load_history_from_db(self):
         """Load the history of the brightness values from the database.

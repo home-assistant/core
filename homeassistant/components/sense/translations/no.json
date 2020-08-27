@@ -11,7 +11,7 @@
         "step": {
             "user": {
                 "data": {
-                    "email": "E-postadresse",
+                    "email": "E-post",
                     "password": "Passord"
                 },
                 "title": "Koble til din Sense Energi Monitor"

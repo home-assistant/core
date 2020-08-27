@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u8bbe\u5907\u5df2\u914d\u7f6e\u5b8c\u6210"
+            "already_configured": "\u8bbe\u5907\u5df2\u914d\u7f6e\u5b8c\u6210",
+            "cannot_connect": "\u8fde\u63a5\u5931\u8d25"
         },
         "step": {
             "user": {

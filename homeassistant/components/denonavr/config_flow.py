@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "denonavr"
 
-SUPPORTED_MANUFACTURERS = ["Denon", "DENON", "Marantz"]
+SUPPORTED_MANUFACTURERS = ["Denon", "DENON", "DENON PROFESSIONAL", "Marantz"]
 IGNORED_MODELS = ["HEOS 1", "HEOS 3", "HEOS 5", "HEOS 7"]
 
 CONF_SHOW_ALL_SOURCES = "show_all_sources"

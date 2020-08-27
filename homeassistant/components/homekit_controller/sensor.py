@@ -17,7 +17,7 @@ from . import KNOWN_DEVICES, HomeKitEntity
 HUMIDITY_ICON = "mdi:water-percent"
 TEMP_C_ICON = "mdi:thermometer"
 BRIGHTNESS_ICON = "mdi:brightness-6"
-CO2_ICON = "mdi:periodic-table-co2"
+CO2_ICON = "mdi:molecule-co2"
 
 UNIT_LUX = "lux"
 

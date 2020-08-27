@@ -366,6 +366,7 @@ async def test_reconnect(hass, monkeypatch, mock_connection_factory):
     protocol.wait_closed = wait_closed
 
     await async_setup_component(hass, "sensor", {"sensor": config})
+    await hass.async_block_till_done()
 
     assert connection_factory.call_count == 1
 

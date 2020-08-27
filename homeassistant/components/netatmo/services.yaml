@@ -3,8 +3,34 @@ set_schedule:
   description: Set the heating schedule.
   fields:
     schedule_name:
-      description: Schedule name.
+      description: Schedule name
       example: Standard
-    home_name:
-      description: Home name.
-      example: MyHome
+    entity_id:
+      description: Entity id of the climate device.
+      example: climate.netatmo_livingroom
+
+set_persons_home:
+  description: Set a list of persons as at home. Person's name must match a name known by the Welcome Camera.
+  fields:
+    persons:
+      description: List of names
+      example: Bob
+    entity_id:
+      description: Entity id of the camera.
+      example: camera.netatmo_entrance
+
+set_person_away:
+  description: Set a person away. If no person is set the home will be marked as empty. Person's name must match a name known by the Welcome Camera.
+  fields:
+    person:
+      description: Person's name (optional)
+      example: Bob
+    entity_id:
+      description: Entity id of the camera.
+      example: camera.netatmo_entrance
+
+register_webhook:
+  description: Register webhook
+
+unregister_webhook:
+  description: Unregister webhook

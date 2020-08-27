@@ -6,7 +6,8 @@
         },
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3",
-            "complete_pairing_failed": "No s'ha pogut completar l'emparellament. Verifica que el PIN proporcionat sigui el correcte i que el televisor segueix connectat a la xarxa abans de provar-ho de nou.",
+            "complete_pairing_failed": "No s'ha pogut completar la vinculaci\u00f3. Verifica que el PIN proporcionat sigui el correcte i que el televisor segueix connectat a la xarxa abans de provar-ho de nou.",
+            "existing_config_entry_found": "Ja s'ha configurat una entrada de configuraci\u00f3 del Dispositiu VIZIO SmartCast amb el mateix n\u00famero de s\u00e8rie. Per poder configurar aquesta, has de suprimir l'entrada existent.",
             "host_exists": "Dispositiu VIZIO SmartCast amb aquest nom d'amfitri\u00f3 ja configurat.",
             "name_exists": "Dispositiu VIZIO SmartCast amb aquest nom ja configurat."
         },
@@ -15,16 +16,16 @@
                 "data": {
                     "pin": "PIN"
                 },
-                "description": "El televisor hauria d'estar mostrant un codi. Introdueix aquest codi al formulari i segueix amb els seg\u00fcents passos per completar l'emparellament.",
-                "title": "Proc\u00e9s d'aparellament complet"
+                "description": "El televisor hauria d'estar mostrant un codi. Introdueix aquest codi al formulari i segueix amb els seg\u00fcents passos per completar la vinculaci\u00f3.",
+                "title": "Proc\u00e9s de vinculaci\u00f3 complet"
             },
             "pairing_complete": {
                 "description": "El Dispositiu VIZIO SmartCast est\u00e0 connectat a Home Assistant.",
-                "title": "Emparellament completat"
+                "title": "Vinculaci\u00f3 completada"
             },
             "pairing_complete_import": {
                 "description": "El Dispositiu VIZIO SmartCast est\u00e0 connectat a Home Assistant.\n\nEl teu [%key::common::config_flow::data::access_token%] \u00e9s '**{access_token}**'.",
-                "title": "Emparellament completat"
+                "title": "Vinculaci\u00f3 completada"
             },
             "user": {
                 "data": {
@@ -33,7 +34,7 @@
                     "host": "Amfitri\u00f3",
                     "name": "Nom"
                 },
-                "description": "Nom\u00e9s es necessita el [%key::common::config_flow::data::access_token%] per als televisors. Si est\u00e0s configurant un televisor i encara no tens un [%key::common::config_flow::data::access_token%], deixa-ho en blanc per poder fer el proc\u00e9s d'emparellament.",
+                "description": "Nom\u00e9s es necessita el [%key::common::config_flow::data::access_token%] per als televisors. Si est\u00e0s configurant un televisor i encara no tens un [%key::common::config_flow::data::access_token%], deixa-ho en blanc per poder fer el proc\u00e9s de vinculaci\u00f3.",
                 "title": "Dispositiu VIZIO SmartCast"
             }
         }

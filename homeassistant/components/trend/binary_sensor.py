@@ -25,7 +25,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import generate_entity_id
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.util import utcnow
 
 _LOGGER = logging.getLogger(__name__)
@@ -162,8 +162,11 @@ class SensorTrend(BinarySensorEntity):
         """Complete device setup after being added to hass."""
 
         @callback
-        def trend_sensor_state_listener(entity, old_state, new_state):
+        def trend_sensor_state_listener(event):
             """Handle state changes on the observed device."""
+            new_state = event.data.get("new_state")
+            if new_state is None:
+                return
             try:
                 if self._attribute:
                     state = new_state.attributes.get(self._attribute)
@@ -176,8 +179,8 @@ class SensorTrend(BinarySensorEntity):
             except (ValueError, TypeError) as ex:
                 _LOGGER.error(ex)
 
-        async_track_state_change(
-            self.hass, self._entity_id, trend_sensor_state_listener
+        async_track_state_change_event(
+            self.hass, [self._entity_id], trend_sensor_state_listener
         )
 
     async def async_update(self):

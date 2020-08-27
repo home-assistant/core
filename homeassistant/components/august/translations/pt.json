@@ -5,7 +5,8 @@
                 "data": {
                     "password": "Palavra-passe",
                     "username": "Nome de Utilizador"
-                }
+                },
+                "description": "Se o m\u00e9todo de login for 'email', Nome do utilizador \u00e9 o endere\u00e7o de email. Se o m\u00e9todo de login for 'telefone', Nome do utilizador ser\u00e1 o n\u00famero de telefone no formato '+NNNNNNNNN'."
             }
         }
     }

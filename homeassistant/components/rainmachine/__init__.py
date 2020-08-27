@@ -133,7 +133,7 @@ async def async_setup_entry(hass, config_entry):
     _verify_domain_control = verify_domain_control(hass, DOMAIN)
 
     websession = aiohttp_client.async_get_clientsession(hass)
-    client = Client(websession)
+    client = Client(session=websession)
 
     try:
         await client.load_local(

@@ -22,8 +22,13 @@
                 "title": "Velg Hue Bridge"
             },
             "link": {
-                "description": "Trykk p\u00e5 knappen p\u00e5 Bridgen for \u00e5 registrere Philips Hue med Home Assistant. \n\n ![Knappens plassering p\u00e5 Bridgen](/static/images/config_philips_hue.jpg)",
-                "title": ""
+                "description": "Trykk p\u00e5 knappen p\u00e5 Bridgen for \u00e5 registrere Philips Hue med Home Assistant. \n\n ![Knappens plassering p\u00e5 Bridgen](/static/images/config_philips_hue.jpg)"
+            },
+            "manual": {
+                "data": {
+                    "host": "Vert"
+                },
+                "title": "Manuell konfigurere en Hue-bro"
             }
         }
     },
@@ -46,6 +51,16 @@
             "remote_button_short_release": "\"{subtype}\"-knappen sluppet",
             "remote_double_button_long_press": "Begge \" {subtype} \" utgitt etter lang trykk",
             "remote_double_button_short_press": "Begge \" {subtype} \" utgitt"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "allow_hue_groups": "Tillat Hue-grupper",
+                    "allow_unreachable": "Tillat uoppn\u00e5elige p\u00e6rer \u00e5 rapportere sin tilstand riktig"
+                }
+            }
         }
     }
 }

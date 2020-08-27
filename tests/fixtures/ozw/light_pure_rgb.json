@@ -1,0 +1,25 @@
+{
+    "topic": "OpenZWave/1/node/7/instance/1/commandclass/51/value/122470423/",
+    "payload": {
+        "Label": "Color",
+        "Value": "#ff00000000",
+        "Units": "#RRGGBBWW",
+        "ValueSet": false,
+        "ValuePolled": false,
+        "ChangeVerified": false,
+        "Min": 0,
+        "Max": 0,
+        "Type": "String",
+        "Instance": 1,
+        "CommandClass": "COMMAND_CLASS_COLOR",
+        "Index": 0,
+        "Node": 7,
+        "Genre": "User",
+        "Help": "Color (in RGB format)",
+        "ValueIDKey": 122470423,
+        "ReadOnly": false,
+        "WriteOnly": false,
+        "Event": "valueAdded",
+        "TimeStamp": 1597142799
+    }
+}

@@ -1,0 +1,18 @@
+{
+    "device_automation": {
+        "action_type": {
+            "set_humidity": "R\u00e9gler l'humidit\u00e9 pour  {nom_entit\u00e9}",
+            "set_mode": "Changer le mode sur {nom_entit\u00e9}.",
+            "toggle": "Inverser {nom_entit\u00e9}",
+            "turn_off": "\u00c9teindre {entity_name}",
+            "turn_on": "Allumer {entity_name}"
+        }
+    },
+    "state": {
+        "_": {
+            "off": "Eteint",
+            "on": "Allum\u00e9"
+        }
+    },
+    "title": "Humidificateur"
+}

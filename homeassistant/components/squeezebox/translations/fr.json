@@ -1,0 +1,26 @@
+{
+    "config": {
+        "error": {
+            "no_server_found": "Impossible de d\u00e9couvrir automatiquement le serveur.",
+            "unknown": "Erreur inattendue"
+        },
+        "flow_title": "Logitech Squeezebox: {host}",
+        "step": {
+            "edit": {
+                "data": {
+                    "host": "H\u00f4te",
+                    "password": "Mot de passe",
+                    "port": "Port",
+                    "username": "Username"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "H\u00f4te"
+                },
+                "title": "Configurer Logitech Media Server"
+            }
+        }
+    },
+    "title": "Logitech Squeezebox"
+}

@@ -35,13 +35,11 @@ from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
 from . import migration, purge
-from .const import DATA_INSTANCE
+from .const import DATA_INSTANCE, DOMAIN, SQLITE_URL_PREFIX
 from .models import Base, Events, RecorderRuns, States
-from .util import session_scope
+from .util import session_scope, validate_or_move_away_sqlite_database
 
 _LOGGER = logging.getLogger(__name__)
-
-DOMAIN = "recorder"
 
 SERVICE_PURGE = "purge"
 
@@ -214,7 +212,7 @@ class Recorder(threading.Thread):
         self.auto_purge = auto_purge
         self.keep_days = keep_days
         self.commit_interval = commit_interval
-        self.queue: Any = queue.Queue()
+        self.queue: Any = queue.SimpleQueue()
         self.recording_start = dt_util.utcnow()
         self.db_url = uri
         self.db_max_retries = db_max_retries
@@ -341,16 +339,13 @@ class Recorder(threading.Thread):
             if event is None:
                 self._close_run()
                 self._close_connection()
-                self.queue.task_done()
                 return
             if isinstance(event, PurgeTask):
                 # Schedule a new purge task if this one didn't finish
                 if not purge.purge_old_data(self, event.keep_days, event.repack):
                     self.queue.put(PurgeTask(event.keep_days, event.repack))
-                self.queue.task_done()
                 continue
             if event.event_type == EVENT_TIME_CHANGED:
-                self.queue.task_done()
                 self._keepalive_count += 1
                 if self._keepalive_count >= KEEPALIVE_TIME:
                     self._keepalive_count = 0
@@ -362,13 +357,11 @@ class Recorder(threading.Thread):
                         self._commit_event_session_or_retry()
                 continue
             if event.event_type in self.exclude_t:
-                self.queue.task_done()
                 continue
 
             entity_id = event.data.get(ATTR_ENTITY_ID)
             if entity_id is not None:
                 if not self.entity_filter(entity_id):
-                    self.queue.task_done()
                     continue
 
             try:
@@ -411,8 +404,6 @@ class Recorder(threading.Thread):
             if not self.commit_interval:
                 self._commit_event_session_or_retry()
 
-            self.queue.task_done()
-
     def _send_keep_alive(self):
         try:
             _LOGGER.debug("Sending keepalive")
@@ -421,7 +412,8 @@ class Recorder(threading.Thread):
         except Exception as err:  # pylint: disable=broad-except
             # Must catch the exception to prevent the loop from collapsing
             _LOGGER.error(
-                "Error in database connectivity during keepalive: %s", err,
+                "Error in database connectivity during keepalive: %s",
+                err,
             )
             self._reopen_event_session()
 
@@ -495,8 +487,19 @@ class Recorder(threading.Thread):
         self.queue.put(event)
 
     def block_till_done(self):
-        """Block till all events processed."""
-        self.queue.join()
+        """Block till all events processed.
+
+        This is only called in tests.
+
+        This only blocks until the queue is empty
+        which does not mean the recorder is done.
+
+        Call tests.common's wait_recording_done
+        after calling this to ensure the data
+        is in the database.
+        """
+        while not self.queue.empty():
+            time.sleep(0.025)
 
     def _setup_connection(self):
         """Ensure database is ready to fly."""
@@ -510,7 +513,7 @@ class Recorder(threading.Thread):
             # We do not import sqlite3 here so mysql/other
             # users do not have to pay for it to be loaded in
             # memory
-            if self.db_url.startswith("sqlite://"):
+            if self.db_url.startswith(SQLITE_URL_PREFIX):
                 old_isolation = dbapi_connection.isolation_level
                 dbapi_connection.isolation_level = None
                 cursor = dbapi_connection.cursor()
@@ -526,12 +529,25 @@ class Recorder(threading.Thread):
                 cursor.execute("SET session wait_timeout=28800")
                 cursor.close()
 
-        if self.db_url == "sqlite://" or ":memory:" in self.db_url:
+        if self.db_url == SQLITE_URL_PREFIX or ":memory:" in self.db_url:
             kwargs["connect_args"] = {"check_same_thread": False}
             kwargs["poolclass"] = StaticPool
             kwargs["pool_reset_on_return"] = None
         else:
             kwargs["echo"] = False
+
+        if self.db_url != SQLITE_URL_PREFIX and self.db_url.startswith(
+            SQLITE_URL_PREFIX
+        ):
+            with self.hass.timeout.freeze(DOMAIN):
+                #
+                # Here we run an sqlite3 quick_check.  In the majority
+                # of cases, the quick_check takes under 10 seconds.
+                #
+                # On systems with very large databases and
+                # very slow disk or cpus, this can take a while.
+                #
+                validate_or_move_away_sqlite_database(self.db_url)
 
         if self.engine is not None:
             self.engine.dispose()

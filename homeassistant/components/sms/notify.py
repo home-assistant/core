@@ -42,7 +42,7 @@ class SMSNotificationService(BaseNotificationService):
         self.gateway = gateway
         self.number = number
 
-    async def send_message(self, message="", **kwargs):
+    async def async_send_message(self, message="", **kwargs):
         """Send SMS message."""
         smsinfo = {
             "Class": -1,

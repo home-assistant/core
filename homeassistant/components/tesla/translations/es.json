@@ -10,7 +10,7 @@
             "user": {
                 "data": {
                     "password": "Contrase\u00f1a",
-                    "username": "Direcci\u00f3n de correo electr\u00f3nico"
+                    "username": "Correo electr\u00f3nico"
                 },
                 "description": "Por favor, introduzca su informaci\u00f3n.",
                 "title": "Tesla - Configuraci\u00f3n"

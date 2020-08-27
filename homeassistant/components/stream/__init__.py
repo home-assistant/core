@@ -2,6 +2,7 @@
 import logging
 import secrets
 import threading
+from types import MappingProxyType
 
 import voluptuous as vol
 
@@ -18,6 +19,7 @@ from .const import (
     CONF_LOOKBACK,
     CONF_STREAM_SOURCE,
     DOMAIN,
+    MAX_SEGMENTS,
     SERVICE_RECORD,
 )
 from .core import PROVIDERS
@@ -36,8 +38,6 @@ SERVICE_RECORD_SCHEMA = STREAM_SERVICE_SCHEMA.extend(
         vol.Optional(CONF_LOOKBACK, default=0): int,
     }
 )
-# Set log level to error for libav
-logging.getLogger("libav").setLevel(logging.ERROR)
 
 
 @bind_hass
@@ -80,6 +80,9 @@ def request_stream(hass, stream_source, *, fmt="hls", keepalive=False, options=N
 
 async def async_setup(hass, config):
     """Set up stream."""
+    # Set log level to error for libav
+    logging.getLogger("libav").setLevel(logging.ERROR)
+
     # Keep import here so that we can import stream integration without installing reqs
     # pylint: disable=import-outside-toplevel
     from .recorder import async_setup_recorder
@@ -135,8 +138,10 @@ class Stream:
 
     @property
     def outputs(self):
-        """Return stream outputs."""
-        return self._outputs
+        """Return a copy of the stream outputs."""
+        # A copy is returned so the caller can iterate through the outputs
+        # without concern about self._outputs being modified from another thread.
+        return MappingProxyType(self._outputs.copy())
 
     def add_provider(self, fmt):
         """Add provider output stream."""
@@ -224,7 +229,7 @@ async def async_handle_record_service(hass, call):
     # Take advantage of lookback
     hls = stream.outputs.get("hls")
     if lookback > 0 and hls:
-        num_segments = min(int(lookback // hls.target_duration), hls.num_segments)
+        num_segments = min(int(lookback // hls.target_duration), MAX_SEGMENTS)
         # Wait for latest segment, then add the lookback
         await hls.recv()
         recorder.prepend(list(hls.get_segment())[-num_segments:])

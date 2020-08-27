@@ -17,7 +17,7 @@ CONF_DESCRIPTION = "description"
 CONF_PRODUCT_ID = "product_id"
 CONF_LOCALE = "locale"
 
-ICON = "mdi:coin"
+ICON = "mdi:currency-usd-circle"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 

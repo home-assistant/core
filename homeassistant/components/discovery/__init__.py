@@ -15,7 +15,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
-from homeassistant.const import EVENT_HOMEASSISTANT_START
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_discover, async_load_platform
@@ -60,7 +60,7 @@ SERVICE_HANDLERS = {
     SERVICE_ENIGMA2: ("media_player", "enigma2"),
     SERVICE_WINK: ("wink", None),
     SERVICE_SABNZBD: ("sabnzbd", None),
-    SERVICE_SAMSUNG_PRINTER: ("sensor", "syncthru"),
+    SERVICE_SAMSUNG_PRINTER: ("sensor", None),
     SERVICE_KONNECTED: ("konnected", None),
     SERVICE_OCTOPRINT: ("octoprint", None),
     SERVICE_FREEBOX: ("freebox", None),
@@ -70,8 +70,6 @@ SERVICE_HANDLERS = {
     "openhome": ("media_player", "openhome"),
     "bose_soundtouch": ("media_player", "soundtouch"),
     "bluesound": ("media_player", "bluesound"),
-    "kodi": ("media_player", "kodi"),
-    "volumio": ("media_player", "volumio"),
     "lg_smart_device": ("media_player", "lg_soundbar"),
     "nanoleaf_aurora": ("light", "nanoleaf"),
 }
@@ -88,11 +86,13 @@ MIGRATED_SERVICE_HANDLERS = [
     "harmony",
     "homekit",
     "ikea_tradfri",
+    "kodi",
     "philips_hue",
     "sonos",
     "songpal",
     SERVICE_WEMO,
     SERVICE_XIAOMI_GW,
+    "volumio",
 ]
 
 DEFAULT_ENABLED = (
@@ -126,9 +126,6 @@ async def async_setup(hass, config):
     logger = logging.getLogger(__name__)
     netdisco = NetworkDiscovery()
     already_discovered = set()
-
-    # Disable zeroconf logging, it spams
-    logging.getLogger("zeroconf").setLevel(logging.CRITICAL)
 
     if DOMAIN in config:
         # Platforms ignore by config
@@ -181,7 +178,7 @@ async def async_setup(hass, config):
 
         # We do not know how to handle this service.
         if not comp_plat:
-            logger.info("Unknown service discovered: %s %s", service, info)
+            logger.debug("Unknown service discovered: %s %s", service, info)
             return
 
         logger.info("Found new service: %s %s", service, info)
@@ -212,7 +209,7 @@ async def async_setup(hass, config):
         """Schedule the first discovery when Home Assistant starts up."""
         async_track_point_in_utc_time(hass, scan_devices, dt_util.utcnow())
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, schedule_first)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, schedule_first)
 
     return True
 

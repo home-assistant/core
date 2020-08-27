@@ -2,7 +2,9 @@
     "device_automation": {
         "action_type": {
             "close": "Fermer {entity_name}",
+            "close_tilt": "Fermer {entity_name}",
             "open": "Ouvrir {entity_name}",
+            "open_tilt": "Ouvrir {entity_name}",
             "set_position": "D\u00e9finir la position de {entity_name}"
         },
         "condition_type": {
@@ -17,9 +19,9 @@
             "closed": "{entity_name} ferm\u00e9",
             "closing": "{entity_name} fermeture",
             "opened": "{entity_name} ouvert",
-            "opening": "{entity_name} ouverture",
-            "position": "{entity_name} changement de position",
-            "tilt_position": "{entity_name} changement d'inclinaison"
+            "opening": "Ouverture de {entity_name}",
+            "position": "Changement de position de {entity_name}",
+            "tilt_position": "Changement d'inclinaison de {entity_name}"
         }
     },
     "state": {

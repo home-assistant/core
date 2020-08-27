@@ -1,9 +1,13 @@
 {
     "config": {
+        "error": {
+            "wrong_password": "Senha incorreta."
+        },
         "step": {
             "user": {
                 "data": {
-                    "host": "Servidor"
+                    "host": "Servidor",
+                    "password": "Palavra-passe da API (deixar em branco se sem palavra-passe)"
                 }
             }
         }

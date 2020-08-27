@@ -1,0 +1,13 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "\u00c9chec de la connexion \u00e0 la passerelle Cas\u00e9ta; v\u00e9rifiez la configuration de votre h\u00f4te et de votre certificat."
+        },
+        "step": {
+            "import_failed": {
+                "description": "Impossible de configurer la passerelle (h\u00f4te: {host} ) import\u00e9 \u00e0 partir de configuration.yaml.",
+                "title": "\u00c9chec de l'importation de la configuration de la passerelle Cas\u00e9ta."
+            }
+        }
+    }
+}

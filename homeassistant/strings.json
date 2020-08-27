@@ -31,6 +31,7 @@
         "host": "Host",
         "ip": "IP Address",
         "port": "Port",
+        "url": "URL",
         "usb_path": "USB Device Path",
         "access_token": "Access Token",
         "api_key": "API Key"

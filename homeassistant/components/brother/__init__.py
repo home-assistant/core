@@ -71,7 +71,10 @@ class BrotherDataUpdateCoordinator(DataUpdateCoordinator):
         self.brother = Brother(host, kind=kind)
 
         super().__init__(
-            hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL,
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_interval=SCAN_INTERVAL,
         )
 
     async def _async_update_data(self):

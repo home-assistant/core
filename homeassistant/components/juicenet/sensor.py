@@ -75,7 +75,7 @@ class JuiceNetSensorDevice(JuiceNetDevice, Entity):
         elif self.type == "watts":
             icon = "mdi:flash"
         elif self.type == "charge_time":
-            icon = "mdi:timer"
+            icon = "mdi:timer-outline"
         elif self.type == "energy_added":
             icon = "mdi:flash"
         return icon

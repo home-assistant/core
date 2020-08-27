@@ -23,7 +23,7 @@ class TestFileSensor(unittest.TestCase):
     def setup_method(self, method):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.hass.config.whitelist_external_dirs = {TEST_DIR}
+        self.hass.config.allowlist_external_dirs = {TEST_DIR}
 
     def teardown_method(self, method):
         """Stop everything that was started."""

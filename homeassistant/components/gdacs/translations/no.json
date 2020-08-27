@@ -5,9 +5,6 @@
         },
         "step": {
             "user": {
-                "data": {
-                    "radius": ""
-                },
                 "title": "Fyll ut filterdetaljene."
             }
         }

@@ -13,5 +13,5 @@ if TYPE_CHECKING:
 class PermissionLookup:
     """Class to hold data for permission lookups."""
 
-    entity_registry = attr.ib(type="ent_reg.EntityRegistry")
-    device_registry = attr.ib(type="dev_reg.DeviceRegistry")
+    entity_registry: "ent_reg.EntityRegistry" = attr.ib()
+    device_registry: "dev_reg.DeviceRegistry" = attr.ib()

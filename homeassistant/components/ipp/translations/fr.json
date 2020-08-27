@@ -18,7 +18,7 @@
             "user": {
                 "data": {
                     "base_path": "Chemin d'acc\u00e8s relatif \u00e0 l'imprimante",
-                    "host": "H\u00f4te ou adresse IP",
+                    "host": "Nom d'h\u00f4te ou adresse IP",
                     "port": "Port",
                     "ssl": "L'imprimante prend en charge la communication via SSL/TLS",
                     "verify_ssl": "L'imprimante utilise un certificat SSL appropri\u00e9"

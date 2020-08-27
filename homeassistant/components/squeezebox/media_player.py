@@ -224,7 +224,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         "async_call_query",
     )
     platform.async_register_entity_service(
-        SERVICE_SYNC, {vol.Required(ATTR_OTHER_PLAYER): cv.string}, "async_sync",
+        SERVICE_SYNC,
+        {vol.Required(ATTR_OTHER_PLAYER): cv.string},
+        "async_sync",
     )
     platform.async_register_entity_service(SERVICE_UNSYNC, None, "async_unsync")
 

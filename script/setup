@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Setups the repository.
 
 # Stop on errors
@@ -14,7 +14,7 @@ source venv/bin/activate
 script/bootstrap
 
 pre-commit install
-pip install -e . --constraint homeassistant/package_constraints.txt
+python3 -m pip install -e . --constraint homeassistant/package_constraints.txt
 
 hass --script ensure_config -c config
 

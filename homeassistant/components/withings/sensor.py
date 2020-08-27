@@ -39,7 +39,10 @@ async def async_setup_entry(
 
     # Create the measurement entities.
     entities = await async_create_entities(
-        hass, entry, WithingsHealthSensor, SENSOR_DOMAIN,
+        hass,
+        entry,
+        WithingsHealthSensor,
+        SENSOR_DOMAIN,
     )
 
     async_add_entities(entities, True)

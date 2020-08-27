@@ -112,21 +112,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     try:
         async with async_timeout.timeout(10):
             device_info = await async_get_device_info(pv_request)
+
+        async with async_timeout.timeout(10):
+            rooms = Rooms(pv_request)
+            room_data = _async_map_data_by_id((await rooms.get_resources())[ROOM_DATA])
+
+        async with async_timeout.timeout(10):
+            scenes = Scenes(pv_request)
+            scene_data = _async_map_data_by_id(
+                (await scenes.get_resources())[SCENE_DATA]
+            )
+
+        async with async_timeout.timeout(10):
+            shades = Shades(pv_request)
+            shade_data = _async_map_data_by_id(
+                (await shades.get_resources())[SHADE_DATA]
+            )
     except HUB_EXCEPTIONS:
         _LOGGER.error("Connection error to PowerView hub: %s", hub_address)
         raise ConfigEntryNotReady
+
     if not device_info:
         _LOGGER.error("Unable to initialize PowerView hub: %s", hub_address)
         raise ConfigEntryNotReady
-
-    rooms = Rooms(pv_request)
-    room_data = _async_map_data_by_id((await rooms.get_resources())[ROOM_DATA])
-
-    scenes = Scenes(pv_request)
-    scene_data = _async_map_data_by_id((await scenes.get_resources())[SCENE_DATA])
-
-    shades = Shades(pv_request)
-    shade_data = _async_map_data_by_id((await shades.get_resources())[SHADE_DATA])
 
     async def async_update_data():
         """Fetch data from shade endpoint."""

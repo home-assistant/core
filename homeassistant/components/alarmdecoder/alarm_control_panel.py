@@ -84,6 +84,7 @@ class AlarmDecoderAlarmPanel(AlarmControlPanelEntity):
         self._name = "Alarm Panel"
         self._state = None
         self._ac_power = None
+        self._alarm_event_occurred = None
         self._backlight_on = None
         self._battery_low = None
         self._check_zone = None
@@ -117,6 +118,7 @@ class AlarmDecoderAlarmPanel(AlarmControlPanelEntity):
             self._state = STATE_ALARM_DISARMED
 
         self._ac_power = message.ac_power
+        self._alarm_event_occurred = message.alarm_event_occurred
         self._backlight_on = message.backlight_on
         self._battery_low = message.battery_low
         self._check_zone = message.check_zone
@@ -163,6 +165,7 @@ class AlarmDecoderAlarmPanel(AlarmControlPanelEntity):
         """Return the state attributes."""
         return {
             "ac_power": self._ac_power,
+            "alarm_event_occurred": self._alarm_event_occurred,
             "backlight_on": self._backlight_on,
             "battery_low": self._battery_low,
             "check_zone": self._check_zone,

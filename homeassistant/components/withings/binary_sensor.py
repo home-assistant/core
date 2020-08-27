@@ -2,7 +2,7 @@
 from typing import Callable, List
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_PRESENCE,
+    DEVICE_CLASS_OCCUPANCY,
     DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorEntity,
 )
@@ -37,4 +37,4 @@ class WithingsHealthBinarySensor(BaseWithingsSensor, BinarySensorEntity):
     @property
     def device_class(self) -> str:
         """Provide the device class."""
-        return DEVICE_CLASS_PRESENCE
+        return DEVICE_CLASS_OCCUPANCY

@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado"
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar",
+            "invalid_auth": "Autenticaci\u00f3n inv\u00e1lida",
+            "unknown": "Error inesperado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Contrase\u00f1a",
+                    "pin": "C\u00f3digo pin",
+                    "username": "Nombre de usuario"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "code_arm_required": "Requiere un c\u00f3digo PIN para armar",
+                    "code_disarm_required": "Requiere un c\u00f3digo PIN para desarmar",
+                    "scan_interval": "Con qu\u00e9 frecuencia sondear Risco (en segundos)"
+                },
+                "title": "Configurar opciones"
+            }
+        }
+    }
+}

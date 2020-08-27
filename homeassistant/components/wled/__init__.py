@@ -107,17 +107,23 @@ def wled_exception_handler(func):
     return handler
 
 
-class WLEDDataUpdateCoordinator(DataUpdateCoordinator):
+class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
     """Class to manage fetching WLED data from single endpoint."""
 
     def __init__(
-        self, hass: HomeAssistant, *, host: str,
+        self,
+        hass: HomeAssistant,
+        *,
+        host: str,
     ):
         """Initialize global WLED data updater."""
         self.wled = WLED(host, session=async_get_clientsession(hass))
 
         super().__init__(
-            hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL,
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_interval=SCAN_INTERVAL,
         )
 
     def update_listeners(self) -> None:

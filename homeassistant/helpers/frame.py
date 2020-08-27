@@ -3,7 +3,7 @@ import asyncio
 import functools
 import logging
 from traceback import FrameSummary, extract_stack
-from typing import Any, Callable, Tuple, TypeVar, cast
+from typing import Any, Callable, Optional, Tuple, TypeVar, cast
 
 from homeassistant.exceptions import HomeAssistantError
 
@@ -12,15 +12,24 @@ _LOGGER = logging.getLogger(__name__)
 CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)  # pylint: disable=invalid-name
 
 
-def get_integration_frame() -> Tuple[FrameSummary, str, str]:
+def get_integration_frame(
+    exclude_integrations: Optional[set] = None,
+) -> Tuple[FrameSummary, str, str]:
     """Return the frame, integration and integration path of the current stack frame."""
     found_frame = None
+    if not exclude_integrations:
+        exclude_integrations = set()
 
     for frame in reversed(extract_stack()):
         for path in ("custom_components/", "homeassistant/components/"):
             try:
                 index = frame.filename.index(path)
-                found_frame = frame
+                start = index + len(path)
+                end = frame.filename.index("/", start)
+                integration = frame.filename[start:end]
+                if integration not in exclude_integrations:
+                    found_frame = frame
+
                 break
             except ValueError:
                 continue
@@ -30,11 +39,6 @@ def get_integration_frame() -> Tuple[FrameSummary, str, str]:
 
     if found_frame is None:
         raise MissingIntegrationFrame
-
-    start = index + len(path)
-    end = found_frame.filename.index("/", start)
-
-    integration = found_frame.filename[start:end]
 
     return found_frame, integration, path
 
@@ -49,10 +53,23 @@ def report(what: str) -> None:
     Async friendly.
     """
     try:
-        found_frame, integration, path = get_integration_frame()
+        integration_frame = get_integration_frame()
     except MissingIntegrationFrame:
         # Did not source from an integration? Hard error.
         raise RuntimeError(f"Detected code that {what}. Please report this issue.")
+
+    report_integration(what, integration_frame)
+
+
+def report_integration(
+    what: str, integration_frame: Tuple[FrameSummary, str, str]
+) -> None:
+    """Report incorrect usage in an integration.
+
+    Async friendly.
+    """
+
+    found_frame, integration, path = integration_frame
 
     index = found_frame.filename.index(path)
     if path == "custom_components/":

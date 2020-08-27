@@ -88,9 +88,7 @@ def _add_reference(
     ...
 
 
-def _add_reference(  # type: ignore
-    obj, loader: SafeLineLoader, node: yaml.nodes.Node
-):
+def _add_reference(obj, loader: SafeLineLoader, node: yaml.nodes.Node):  # type: ignore
     """Add file reference information to an object."""
     if isinstance(obj, list):
         obj = NodeListClass(obj)

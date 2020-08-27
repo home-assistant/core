@@ -28,6 +28,7 @@ CONF_COMPONENT_CONFIG = "component_config"
 CONF_COMPONENT_CONFIG_GLOB = "component_config_glob"
 CONF_COMPONENT_CONFIG_DOMAIN = "component_config_domain"
 CONF_RETRY_COUNT = "max_retries"
+CONF_IGNORE_ATTRIBUTES = "ignore_attributes"
 
 CONF_LANGUAGE = "language"
 CONF_QUERIES = "queries"
@@ -76,7 +77,7 @@ BATCH_BUFFER_SIZE = 100
 LANGUAGE_INFLUXQL = "influxQL"
 LANGUAGE_FLUX = "flux"
 TEST_QUERY_V1 = "SHOW DATABASES;"
-TEST_QUERY_V2 = f"buckets() {DEFAULT_FUNCTION_FLUX}"
+TEST_QUERY_V2 = "buckets()"
 CODE_INVALID_INPUTS = 400
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
@@ -99,6 +100,14 @@ CLIENT_ERROR_V1 = (
     "Please check that the database, username and password are correct and "
     "that the specified user has the correct permissions set."
 )
+NO_BUCKET_ERROR = (
+    "InfluxDB bucket '%s' cannot be found. "
+    "Check the name is correct and the token has access to it."
+)
+NO_DATABASE_ERROR = (
+    "InfluxDB database '%s' cannot be found. "
+    "Check the name is correct and the user has access to it."
+)
 WRITE_ERROR = "Could not write '%s' to influx due to '%s'."
 QUERY_ERROR = (
     "Could not execute query '%s' due to '%s'. Check the syntax of your query."
@@ -120,7 +129,8 @@ RENDERING_WHERE_ERROR_MESSAGE = "Could not render where template: %s."
 COMPONENT_CONFIG_SCHEMA_CONNECTION = {
     # Connection config for V1 and V2 APIs.
     vol.Optional(CONF_API_VERSION, default=DEFAULT_API_VERSION): vol.All(
-        vol.Coerce(str), vol.In([DEFAULT_API_VERSION, API_VERSION_2]),
+        vol.Coerce(str),
+        vol.In([DEFAULT_API_VERSION, API_VERSION_2]),
     ),
     vol.Optional(CONF_HOST): cv.string,
     vol.Optional(CONF_PATH): cv.string,

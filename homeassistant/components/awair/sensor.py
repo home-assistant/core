@@ -32,7 +32,8 @@ from .const import (
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_ACCESS_TOKEN): cv.string}, extra=vol.ALLOW_EXTRA,
+    {vol.Required(CONF_ACCESS_TOKEN): cv.string},
+    extra=vol.ALLOW_EXTRA,
 )
 
 
@@ -43,7 +44,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
     hass.async_create_task(
         hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config,
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config,
         )
     )
 
@@ -83,7 +86,10 @@ class AwairSensor(Entity):
     """Defines an Awair sensor entity."""
 
     def __init__(
-        self, kind: str, device: AwairDevice, coordinator: AwairDataUpdateCoordinator,
+        self,
+        kind: str,
+        device: AwairDevice,
+        coordinator: AwairDataUpdateCoordinator,
     ) -> None:
         """Set up an individual AwairSensor."""
         self._kind = kind
