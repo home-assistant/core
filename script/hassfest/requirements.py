@@ -28,7 +28,7 @@ def normalize_package_name(requirement: str) -> str:
     requirement = requirement.split(" ")[-1]  # remove potential pip argument
     package = requirement.split("==")[0]  # remove version pinning
     package = package.split("[")[0]  # remove potential require extras
-    # replace undescore with dash to work with pipdeptree
+    # replace underscore with dash to work with pipdeptree
     package = package.replace("_", "-")
     package = package.lower()  # normalize casing
 
