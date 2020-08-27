@@ -785,14 +785,9 @@ def async_track_point_in_utc_time(
     hass: HomeAssistant, action: Callable[..., Any], point_in_time: datetime
 ) -> CALLBACK_TYPE:
     """Add a listener that fires once after a specific point in UTC time."""
-    # Ensure point_in_time is UTC
-    utc_point_in_time = dt_util.as_utc(point_in_time)
-
     cancel_callback = hass.loop.call_at(
         hass.loop.time() + point_in_time.timestamp() - time.time(),
-        hass.async_run_job,
-        action,
-        utc_point_in_time,
+        callback(lambda: hass.async_run_job(action, dt_util.utcnow())),
     )
 
     @callback
