@@ -40,7 +40,9 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Required(CONF_USERNAME): cv.string,
                 vol.Required(CONF_PASSWORD): cv.string,
                 vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-                vol.Optional(CONF_PROTOCOL, default=DEFAULT_PROTOCOL): cv.string,
+                vol.Optional(CONF_PROTOCOL, default=DEFAULT_PROTOCOL): vol.All(
+                    cv.string, vol.In(["http", "https"])
+                ),
                 vol.Optional(CONF_EXCLUDE_CHANNELS, default=[]): vol.All(
                     cv.ensure_list_csv, [cv.positive_int]
                 ),
