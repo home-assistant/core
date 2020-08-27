@@ -119,7 +119,9 @@ class VeraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # If there are entities with the legacy unique_id, then this imported config
         # should also use the legacy unique_id for entity creation.
-        entity_registry: EntityRegistry = await self.hass.helpers.entity_registry.async_get_registry()
+        entity_registry: EntityRegistry = (
+            await self.hass.helpers.entity_registry.async_get_registry()
+        )
         use_legacy_unique_id = (
             len(
                 [
