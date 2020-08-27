@@ -66,7 +66,9 @@ async def async_migrate_entry(hass, entry):
     if entry.version == 1:
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": "reauth"}, data=entry.data,
+                DOMAIN,
+                context={"source": "reauth"},
+                data=entry.data,
             )
         )
 
