@@ -8,6 +8,7 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 from . import SynologyDSMDeviceEntity, SynologyDSMEntity
 from .const import (
+    DEVICE_CLASS_SAFETY,
     DOMAIN,
     SECURITY_BINARY_SENSORS,
     STORAGE_DISK_BINARY_SENSORS,
