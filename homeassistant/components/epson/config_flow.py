@@ -107,7 +107,7 @@ class EpsonOptionsFlowHandler(config_entries.OptionsFlow):
                     vol.Required(
                         TIMEOUT_SCALE,
                         default=self.config_entry.options.get(TIMEOUT_SCALE, 1.0),
-                    ): float
+                    ): vol.And(vol.Coerce(float), vol.Range(min=0))
                 }
             ),
         )

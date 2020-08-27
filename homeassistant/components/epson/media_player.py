@@ -172,7 +172,7 @@ class EpsonProjector(MediaPlayerEntity):
     async def async_update(self):
         """Update state of device."""
         is_turned_on = await self._projector.get_property(POWER)
-        _LOGGER.debug("Project turn on/off status: %s", is_turned_on)
+        _LOGGER.debug("Projector status: %s", is_turned_on)
         if is_turned_on and is_turned_on == EPSON_CODES[POWER]:
             self._state = STATE_ON
             cmode = await self._projector.get_property(CMODE)
