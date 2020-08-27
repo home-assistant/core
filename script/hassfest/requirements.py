@@ -71,7 +71,7 @@ def validate_requirements(integration: Integration):
     if integration_requirements and not all_integration_requirements:
         integration.add_error(
             "requirements",
-            f"Failed to resolve requirements {integration_requirements}, check PyPI name",
+            f"Failed to resolve requirements {integration_requirements}",
         )
         return
 
