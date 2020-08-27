@@ -1,19 +1,29 @@
 {
     "config": {
+        "abort": {},
         "error": {
             "connection_error": "Unable to connect to OWServer.",
             "invalid_path": "Directory not found."
         },
-        "flow_title": "One-wire connection ({host})",
         "step": {
+            "owfs": {
+                "data": {
+                    "mount_dir": "Mount directory"
+                },
+                "title": "Set owfs mount directory"
+            },
             "owserver": {
                 "data": {
-                    "host": "[%key:common::config_flow::data::host%]",
-                    "port": "[%key:common::config_flow::data::port%]"
-                }
+                    "host": "Host",
+                    "port": "Port"
+                },
+                "title": "Set owserver details"
             },
             "user": {
-                "title": "Selection connection type"
+                "data": {
+                    "type": "Connection type"
+                },
+                "title": "Set up 1-Wire"
             }
         }
     }
