@@ -17,6 +17,22 @@ ID = "id"
 OZW_INSTANCE = "ozw_instance"
 NODE_ID = "node_id"
 
+ATTR_NODE_QUERY_STAGE = "node_query_stage"
+ATTR_IS_ZWAVE_PLUS = "is_zwave_plus"
+ATTR_IS_AWAKE = "is_awake"
+ATTR_IS_FAILED = "is_failed"
+ATTR_NODE_BAUD_RATE = "node_baud_rate"
+ATTR_IS_BEAMING = "is_beaming"
+ATTR_IS_FLIRS = "is_flirs"
+ATTR_IS_ROUTING = "is_routing"
+ATTR_IS_SECURITYV1 = "is_securityv1"
+ATTR_NODE_BASIC_STRING = "node_basic_string"
+ATTR_NODE_GENERIC_STRING = "node_generic_string"
+ATTR_NODE_SPECIFIC_STRING = "node_specific_string"
+ATTR_NODE_MANUFACTURER_NAME = "node_manufacturer_name"
+ATTR_NODE_PRODUCT_NAME = "node_product_name"
+ATTR_NEIGHBORS = "neighbors"
+
 
 @callback
 def async_register_api(hass):
@@ -60,22 +76,22 @@ def websocket_get_nodes(hass, connection, msg):
     for node in manager.get_instance(msg[OZW_INSTANCE]).collections["node"]:
         nodes.append(
             {
-                "node_query_stage": node.node_query_stage,
-                "node_id": node.node_id,
-                "is_zwave_plus": node.is_zwave_plus,
-                "is_awake": node.is_awake,
-                "is_failed": node.is_failed,
-                "node_baud_rate": node.node_baud_rate,
-                "is_beaming": node.is_beaming,
-                "is_flirs": node.is_flirs,
-                "is_routing": node.is_routing,
-                "is_securityv1": node.is_securityv1,
-                "node_basic_string": node.node_basic_string,
-                "node_generic_string": node.node_generic_string,
-                "node_specific_string": node.node_specific_string,
-                "node_manufacturer_name": node.node_manufacturer_name,
-                "node_product_name": node.node_product_name,
-                "neighbors": node.neighbors,
+                ATTR_NODE_QUERY_STAGE: node.node_query_stage,
+                NODE_ID: node.node_id,
+                ATTR_IS_ZWAVE_PLUS: node.is_zwave_plus,
+                ATTR_IS_AWAKE: node.is_awake,
+                ATTR_IS_FAILED: node.is_failed,
+                ATTR_NODE_BAUD_RATE: node.node_baud_rate,
+                ATTR_IS_BEAMING: node.is_beaming,
+                ATTR_IS_FLIRS: node.is_flirs,
+                ATTR_IS_ROUTING: node.is_routing,
+                ATTR_IS_SECURITYV1: node.is_securityv1,
+                ATTR_NODE_BASIC_STRING: node.node_basic_string,
+                ATTR_NODE_GENERIC_STRING: node.node_generic_string,
+                ATTR_NODE_SPECIFIC_STRING: node.node_specific_string,
+                ATTR_NODE_MANUFACTURER_NAME: node.node_manufacturer_name,
+                ATTR_NODE_PRODUCT_NAME: node.node_product_name,
+                ATTR_NEIGHBORS: node.neighbors,
                 OZW_INSTANCE: msg[OZW_INSTANCE],
             }
         )
@@ -137,20 +153,22 @@ def websocket_node_status(hass, connection, msg):
     connection.send_result(
         msg[ID],
         {
-            "node_query_stage": node.node_query_stage,
-            "node_id": node.node_id,
-            "is_zwave_plus": node.is_zwave_plus,
-            "is_awake": node.is_awake,
-            "is_failed": node.is_failed,
-            "node_baud_rate": node.node_baud_rate,
-            "is_beaming": node.is_beaming,
-            "is_flirs": node.is_flirs,
-            "is_routing": node.is_routing,
-            "is_securityv1": node.is_securityv1,
-            "node_basic_string": node.node_basic_string,
-            "node_generic_string": node.node_generic_string,
-            "node_specific_string": node.node_specific_string,
-            "neighbors": node.neighbors,
+            ATTR_NODE_QUERY_STAGE: node.node_query_stage,
+            NODE_ID: node.node_id,
+            ATTR_IS_ZWAVE_PLUS: node.is_zwave_plus,
+            ATTR_IS_AWAKE: node.is_awake,
+            ATTR_IS_FAILED: node.is_failed,
+            ATTR_NODE_BAUD_RATE: node.node_baud_rate,
+            ATTR_IS_BEAMING: node.is_beaming,
+            ATTR_IS_FLIRS: node.is_flirs,
+            ATTR_IS_ROUTING: node.is_routing,
+            ATTR_IS_SECURITYV1: node.is_securityv1,
+            ATTR_NODE_BASIC_STRING: node.node_basic_string,
+            ATTR_NODE_GENERIC_STRING: node.node_generic_string,
+            ATTR_NODE_SPECIFIC_STRING: node.node_specific_string,
+            ATTR_NODE_MANUFACTURER_NAME: node.node_manufacturer_name,
+            ATTR_NODE_PRODUCT_NAME: node.node_product_name,
+            ATTR_NEIGHBORS: node.neighbors,
             OZW_INSTANCE: msg[OZW_INSTANCE],
         },
     )
