@@ -325,6 +325,7 @@ homeassistant/components/plum_lightpad/* @ColinHarrington @prystupa
 homeassistant/components/point/* @fredrike
 homeassistant/components/poolsense/* @haemishkyd
 homeassistant/components/powerwall/* @bdraco @jrester
+homeassistant/components/progettihwsw/* @ardaseremet
 homeassistant/components/prometheus/* @knyar
 homeassistant/components/proxmoxve/* @k4ds3 @jhollowe
 homeassistant/components/ps4/* @ktnrg45
