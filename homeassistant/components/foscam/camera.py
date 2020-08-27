@@ -137,8 +137,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if ret != 0 and response == 1:
         motion_status = True
 
-    if config.get(CONF_STREAM) == "sub": stream_video = "videoSub"
-    else: stream_video = "videoMain"
+    if config.get(CONF_STREAM) == "sub":
+        stream_video = "videoSub"
+    else:
+        stream_video = "videoMain"
 
     async_add_entities(
         [
@@ -158,7 +160,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class HassFoscamCamera(Camera):
     """An implementation of a Foscam IP camera."""
 
-    def __init__(self, camera, name, username, password, rtsp_port, motion_status, stream_video):
+    def __init__(
+        self, camera, name, username, password, rtsp_port, motion_status, stream_video
+    ):
         """Initialize a Foscam camera."""
         super().__init__()
 
