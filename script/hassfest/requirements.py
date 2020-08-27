@@ -60,6 +60,7 @@ def validate_requirements(integration: Integration):
         )
         return
 
+    # Check for requirements incompatible with standard library.
     for version, std_libs in STD_LIBS.items():
         for req in all_integration_requirements:
             if req in std_libs:
