@@ -158,7 +158,9 @@ async def test_form_already_exists(hass):
 async def test_options_flow(hass):
     """Test options flow."""
     entry = MockConfigEntry(
-        domain=DOMAIN, unique_id=TEST_DATA["username"], data=TEST_DATA,
+        domain=DOMAIN,
+        unique_id=TEST_DATA["username"],
+        data=TEST_DATA,
     )
 
     entry.add_to_hass(hass)
@@ -169,13 +171,15 @@ async def test_options_flow(hass):
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input=TEST_OPTIONS,
+        result["flow_id"],
+        user_input=TEST_OPTIONS,
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "risco_to_ha"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input=TEST_RISCO_TO_HA,
+        result["flow_id"],
+        user_input=TEST_RISCO_TO_HA,
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -183,7 +187,8 @@ async def test_options_flow(hass):
 
     with patch("homeassistant.components.risco.async_setup_entry", return_value=True):
         result = await hass.config_entries.options.async_configure(
-            result["flow_id"], user_input=TEST_HA_TO_RISCO,
+            result["flow_id"],
+            user_input=TEST_HA_TO_RISCO,
         )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -207,10 +212,12 @@ async def test_ha_to_risco_schema(hass):
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input=TEST_OPTIONS,
+        result["flow_id"],
+        user_input=TEST_OPTIONS,
     )
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input=TEST_RISCO_TO_HA,
+        result["flow_id"],
+        user_input=TEST_RISCO_TO_HA,
     )
 
     # Test an HA state that isn't used
@@ -223,5 +230,6 @@ async def test_ha_to_risco_schema(hass):
     # Test a combo that can't be selected
     with pytest.raises(vol.error.MultipleInvalid):
         await hass.config_entries.options.async_configure(
-            result["flow_id"], user_input={**TEST_HA_TO_RISCO, "armed_night": "A"},
+            result["flow_id"],
+            user_input={**TEST_HA_TO_RISCO, "armed_night": "A"},
         )
