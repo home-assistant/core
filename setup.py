@@ -52,7 +52,8 @@ REQUIRES = [
     "requests==2.24.0",
     "ruamel.yaml==0.15.100",
     "stdlib-list>=0.7.0",
-    "tqdm>=4.48.2" "voluptuous==0.11.7",
+    "tqdm>=4.48.2",
+    "voluptuous==0.11.7",
     "voluptuous-serialize==2.4.0",
     "yarl==1.4.2",
 ]
