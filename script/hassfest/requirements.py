@@ -37,17 +37,17 @@ def validate(integrations: Dict[str, Integration], config: Config):
 
 def validate_requirements(integration: Integration):
     """Validate requirements."""
-    install_ok = install_requirements(integration)
-
-    if not install_ok:
-        return
-
     integration_requirements = set()
     for req in integration.requirements:
         package = req.split("==")[0].lower()
         if package in IGNORE_PACKAGES:
             continue
         integration_requirements.add(req)
+
+    install_ok = install_requirements(integration, integration_requirements)
+
+    if not install_ok:
+        return
 
     all_integration_requirements = get_requirements(
         integration, integration_requirements
@@ -107,22 +107,18 @@ def get_requirements(integration: Integration, requirements: Set[str]) -> Set[st
     return all_requirements
 
 
-def install_requirements(integration: Integration) -> bool:
+def install_requirements(integration: Integration, requirements: Set[str]) -> bool:
     """Install integration requirements.
 
     Return True if successful.
     """
-    requirements = integration.requirements
-
     for req in requirements:
-        package = req.split("==")[0].lower()
-        if package in IGNORE_PACKAGES:
-            continue
         try:
             is_installed = pkg_util.is_installed(req)
         except ValueError:
             integration.add_error(
-                "requirements", f"Invalid requirement {req}",
+                "requirements",
+                f"Invalid requirement {req}",
             )
             continue
 
@@ -134,7 +130,8 @@ def install_requirements(integration: Integration) -> bool:
             subprocess.run(args, check=True)
         except subprocess.SubprocessError:
             integration.add_error(
-                "requirements", f"Requirement {req} failed to install",
+                "requirements",
+                f"Requirement {req} failed to install",
             )
 
     if integration.errors:
