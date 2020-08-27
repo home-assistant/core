@@ -402,10 +402,11 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
         """Implement the websocket media browsing helper."""
 
+        if not self._scope_ok:
+            raise NotImplementedError
+
         if media_content_type in [None, "library"]:
-            return await self.hass.async_add_executor_job(
-                library_payload, self._spotify
-            )
+            return await self.hass.async_add_executor_job(library_payload)
 
         payload = {
             "media_content_type": media_content_type,
@@ -468,7 +469,9 @@ def build_item_response(self, payload):
             limit=BROWSE_LIMIT,
         )
         # pylint: disable=protected-access
-        category = self._spotify._get(f"browse/categories/{media_content_id}")
+        category = self._spotify._get(
+            f"browse/categories/{media_content_id}", country=self._me["country"]
+        )
         title = category.get("name")
         image = fetch_image_url(category, key="icons")
         items = media.get("playlists", {}).get("items", [])
@@ -585,7 +588,7 @@ def item_payload(item):
     )
 
 
-def library_payload(spotify):
+def library_payload():
     """
     Create response payload to describe contents of a specific library.
 
