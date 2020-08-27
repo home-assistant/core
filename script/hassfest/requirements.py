@@ -39,7 +39,7 @@ def validate_requirements(integration: Integration):
     """Validate requirements."""
     integration_requirements = set()
     for req in integration.requirements:
-        package = req.split("==")[0].lower()
+        package = normalize_package_name(req)
         if package in IGNORE_PACKAGES:
             continue
         integration_requirements.add(req)
@@ -75,7 +75,7 @@ def get_requirements(integration: Integration, requirements: Set[str]) -> Set[st
     all_requirements = set()
 
     for req in requirements:
-        package = req.split("==")[0]
+        package = normalize_package_name(req)
         try:
             result = subprocess.run(
                 ["pipdeptree", "-w", "silence", "--packages", package],
@@ -139,3 +139,14 @@ def install_requirements(integration: Integration, requirements: Set[str]) -> bo
         return False
 
     return True
+
+
+def normalize_package_name(requirement: str) -> str:
+    """Return a normalized package name from a requirement string."""
+    package = requirement.split("==")[0]  # remove version pinning
+    package = package.split("[")[0]  # remove potential require extras
+    # replace undescore with dash to work with pipdeptree
+    package = package.replace("_", "-")
+    package = package.lower()  # normalize casing
+
+    return package
