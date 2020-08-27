@@ -9,6 +9,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
+    CONF_HOST,
     CONF_MONITORED_VARIABLES,
     CONF_NAME,
     DATA_RATE_MEGABITS_PER_SECOND,
@@ -24,6 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 ATTRIBUTION = "Powered by Bouygues Telecom"
 
 DEFAULT_NAME = "Bbox"
+DEFAULT_HOST = "192.168.1.254"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
@@ -59,22 +61,25 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             cv.ensure_list, [vol.In(SENSOR_TYPES)]
         ),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
     }
 )
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Bbox sensor."""
+
+    host = config[CONF_HOST]
+    name = config[CONF_NAME]
+
     # Create a data fetcher to support all of the configured sensors. Then make
     # the first call to init the data.
     try:
-        bbox_data = BboxData()
+        bbox_data = BboxData(host)
         bbox_data.update()
     except requests.exceptions.HTTPError as error:
         _LOGGER.error(error)
         return False
-
-    name = config[CONF_NAME]
 
     sensors = []
     for variable in config[CONF_MONITORED_VARIABLES]:
@@ -189,8 +194,9 @@ class BboxSensor(Entity):
 class BboxData:
     """Get data from the Bbox."""
 
-    def __init__(self):
+    def __init__(self, host):
         """Initialize the data object."""
+        self.host = host
         self.data = None
         self.router_infos = None
 
@@ -199,7 +205,7 @@ class BboxData:
         """Get the latest data from the Bbox."""
 
         try:
-            box = pybbox.Bbox()
+            box = pybbox.Bbox(ip=self.host)
             self.data = box.get_ip_stats()
             self.router_infos = box.get_bbox_info()
         except requests.exceptions.HTTPError as error:
