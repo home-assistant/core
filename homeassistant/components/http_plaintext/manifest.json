@@ -1,0 +1,6 @@
+{
+  "domain": "http_plaintext",
+  "name": "HttpPlainText",
+  "documentation": "https://github.com/1e1/arduino-webcontroller-relay",
+  "codeowners": ["@1e1"]
+}
