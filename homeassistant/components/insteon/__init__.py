@@ -112,7 +112,8 @@ async def async_setup_entry(hass, entry):
         and hass.data[DOMAIN].get(OPTIONS)
     ):
         hass.config_entries.async_update_entry(
-            entry=entry, options=hass.data[DOMAIN][OPTIONS],
+            entry=entry,
+            options=hass.data[DOMAIN][OPTIONS],
         )
 
     for device_override in entry.options.get(CONF_OVERRIDE, []):
