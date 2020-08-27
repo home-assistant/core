@@ -146,14 +146,6 @@ async def test_abort_if_spotify_error(
 
 async def test_reauthentication(hass, aiohttp_client, aioclient_mock, current_request):
     """Test Spotify reauthentication."""
-    old_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=123,
-        version=1,
-        data={"id": "frenck", "auth_implementation": DOMAIN},
-    )
-    old_entry.add_to_hass(hass)
-
     await setup.async_setup_component(
         hass,
         DOMAIN,
@@ -163,9 +155,17 @@ async def test_reauthentication(hass, aiohttp_client, aioclient_mock, current_re
         },
     )
 
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    assert entries[0].version == 1
+    old_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=123,
+        version=1,
+        data={"id": "frenck", "auth_implementation": DOMAIN},
+    )
+    old_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "reauth"}, data=old_entry.data
+    )
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
@@ -205,6 +205,15 @@ async def test_reauth_account_mismatch(
     hass, aiohttp_client, aioclient_mock, current_request
 ):
     """Test Spotify reauthentication with different account."""
+    await setup.async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {CONF_CLIENT_ID: "client", CONF_CLIENT_SECRET: "secret"},
+            "http": {"base_url": "https://example.com"},
+        },
+    )
+
     old_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=123,
@@ -213,13 +222,8 @@ async def test_reauth_account_mismatch(
     )
     old_entry.add_to_hass(hass)
 
-    await setup.async_setup_component(
-        hass,
-        DOMAIN,
-        {
-            DOMAIN: {CONF_CLIENT_ID: "client", CONF_CLIENT_SECRET: "secret"},
-            "http": {"base_url": "https://example.com"},
-        },
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "reauth"}, data=old_entry.data
     )
 
     flows = hass.config_entries.flow.async_progress()
