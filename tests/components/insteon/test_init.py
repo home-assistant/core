@@ -67,7 +67,11 @@ async def test_setup_entry(hass: HomeAssistantType):
     ), patch.object(insteon, "async_close") as mock_close, patch.object(
         insteon, "devices", new=MockDevices()
     ):
-        assert await async_setup_component(hass, insteon.DOMAIN, {},)
+        assert await async_setup_component(
+            hass,
+            insteon.DOMAIN,
+            {},
+        )
         await hass.async_block_till_done()
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         await hass.async_block_till_done()
@@ -88,7 +92,11 @@ async def test_import_plm(hass: HomeAssistantType):
     ), patch(
         PATCH_CONNECTION, new=mock_successful_connection
     ):
-        assert await async_setup_component(hass, insteon.DOMAIN, config,)
+        assert await async_setup_component(
+            hass,
+            insteon.DOMAIN,
+            config,
+        )
         await hass.async_block_till_done()
         await asyncio.sleep(0.01)
     assert hass.config_entries.async_entries(DOMAIN)
@@ -109,7 +117,11 @@ async def test_import_hub1(hass: HomeAssistantType):
     ), patch(
         PATCH_CONNECTION, new=mock_successful_connection
     ):
-        assert await async_setup_component(hass, insteon.DOMAIN, config,)
+        assert await async_setup_component(
+            hass,
+            insteon.DOMAIN,
+            config,
+        )
         await hass.async_block_till_done()
         await asyncio.sleep(0.01)
         assert hass.config_entries.async_entries(DOMAIN)
@@ -132,7 +144,11 @@ async def test_import_hub2(hass: HomeAssistantType):
     ), patch(
         PATCH_CONNECTION, new=mock_successful_connection
     ):
-        assert await async_setup_component(hass, insteon.DOMAIN, config,)
+        assert await async_setup_component(
+            hass,
+            insteon.DOMAIN,
+            config,
+        )
         await hass.async_block_till_done()
         await asyncio.sleep(0.01)
         assert hass.config_entries.async_entries(DOMAIN)
@@ -155,7 +171,11 @@ async def test_import_options(hass: HomeAssistantType):
     ), patch(
         PATCH_CONNECTION, new=mock_successful_connection
     ):
-        assert await async_setup_component(hass, insteon.DOMAIN, config,)
+        assert await async_setup_component(
+            hass,
+            insteon.DOMAIN,
+            config,
+        )
         await hass.async_block_till_done()
         await asyncio.sleep(0.01)  # Need to yield to async processes
         # pylint: disable=no-member
@@ -182,7 +202,11 @@ async def test_import_failed_connection(hass: HomeAssistantType):
     ), patch.object(insteon, "async_close"), patch.object(
         insteon, "devices", new=MockDevices(connected=False)
     ):
-        assert await async_setup_component(hass, insteon.DOMAIN, config,)
+        assert await async_setup_component(
+            hass,
+            insteon.DOMAIN,
+            config,
+        )
         await hass.async_block_till_done()
         assert not hass.config_entries.async_entries(DOMAIN)
 
@@ -195,5 +219,9 @@ async def test_setup_entry_failed_connection(hass: HomeAssistantType, caplog):
     with patch.object(
         insteon, "async_connect", new=mock_failed_connection
     ), patch.object(insteon, "devices", new=MockDevices(connected=False)):
-        assert await async_setup_component(hass, insteon.DOMAIN, {},)
+        assert await async_setup_component(
+            hass,
+            insteon.DOMAIN,
+            {},
+        )
         assert "Could not connect to Insteon modem" in caplog.text

@@ -228,7 +228,8 @@ async def _options_init_form(hass, entry_id, step):
     assert result["step_id"] == "init"
 
     result2 = await hass.config_entries.options.async_configure(
-        result["flow_id"], {step: True},
+        result["flow_id"],
+        {step: True},
     )
     return result2
 
