@@ -16,7 +16,7 @@ from homeassistant.const import (
     TIME_HOURS,
     UNIT_PERCENTAGE,
 )
-from homeassistant.core import callback
+from homeassistant.core import CoreState, callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -123,6 +123,9 @@ class HistoryStatsSensor(Entity):
         self.value = None
         self.count = None
 
+    async def async_added_to_hass(self):
+        """Create listeners when the entity is added."""
+
         @callback
         def start_refresh(*args):
             """Register state tracking."""
@@ -139,8 +142,12 @@ class HistoryStatsSensor(Entity):
                 )
             )
 
+        if self.hass.state == CoreState.running:
+            start_refresh()
+            return
+
         # Delay first refresh to keep startup fast
-        hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_refresh)
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_refresh)
 
     @property
     def name(self):

@@ -283,6 +283,8 @@ async def test_reload(hass):
         },
     )
     await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 2
 
