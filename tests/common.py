@@ -295,8 +295,8 @@ def async_fire_time_changed(hass, datetime_, fire_all=False):
         if task.cancelled():
             continue
 
-        future_seconds = task.when() - hass.loop.time()
         mock_seconds_into_future = datetime_.timestamp() - time.time()
+        future_seconds = task.when() - hass.loop.time()
 
         if fire_all or mock_seconds_into_future >= future_seconds:
             with patch(
