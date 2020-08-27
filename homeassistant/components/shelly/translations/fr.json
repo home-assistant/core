@@ -1,0 +1,13 @@
+{
+    "config": {
+        "flow_title": "Shelly: {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "H\u00f4te"
+                }
+            }
+        }
+    },
+    "title": "Shelly"
+}

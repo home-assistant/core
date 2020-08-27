@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u8a2d\u5099\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
+        "error": {
+            "auth_not_supported": "\u76ee\u524d\u4e0d\u652f\u63f4 Shelly \u8a2d\u5099\u6240\u9700\u8a8d\u8b49\u3002",
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+        },
+        "flow_title": "Shelly\uff1a{name}",
+        "step": {
+            "confirm_discovery": {
+                "description": "\u662f\u5426\u8981\u8a2d\u5b9a\u4f4d\u65bc {host} \u7684 {model}\uff1f"
+            },
+            "user": {
+                "data": {
+                    "host": "\u4e3b\u6a5f\u7aef"
+                }
+            }
+        }
+    },
+    "title": "Shelly"
+}

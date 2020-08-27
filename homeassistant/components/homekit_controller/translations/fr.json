@@ -27,6 +27,10 @@
                 "description": "Entrez votre code de jumelage HomeKit (au format XXX-XX-XXX) pour utiliser cet accessoire.",
                 "title": "Appairer avec l'accessoire HomeKit"
             },
+            "protocol_error": {
+                "description": "L\u2019appareil peut ne pas \u00eatre en mode appairement et peut n\u00e9cessiter une pression sur un bouton physique ou virtuel. Assurez-vous que l\u2019appareil est en mode appariement ou essayez de red\u00e9marrer l\u2019appareil, puis continuez \u00e0 reprendre l\u2019appariement.",
+                "title": "Erreur de communication avec l\u2019accessoire"
+            },
             "user": {
                 "data": {
                     "device": "Appareil"
