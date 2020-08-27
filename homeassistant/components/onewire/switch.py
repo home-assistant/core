@@ -7,7 +7,7 @@ from homeassistant.components.switch import SwitchEntity
 
 from .const import CONF_NAMES, LOGGER
 from .onewireentity import OneWireEntity
-from .onewireproxy import get_proxy_from_config_entry, OneWireProxy
+from .onewireproxy import OneWireProxy, get_proxy_from_config_entry
 
 
 DEVICE_SWITCH = {

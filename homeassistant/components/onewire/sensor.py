@@ -7,7 +7,7 @@ from homeassistant.const import VOLT
 
 from .const import CONF_NAMES, LOGGER, SENSOR_TYPES
 from .onewireentity import OneWireEntity
-from .onewireproxy import get_proxy_from_config_entry, OneWireProxy
+from .onewireproxy import OneWireProxy, get_proxy_from_config_entry
 
 DEVICE_SENSORS = {
     # Family : { SensorType: owfs path }
