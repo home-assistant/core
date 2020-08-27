@@ -3,7 +3,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_MOTION,
     BinarySensorEntity,
 )
-from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers import entity_platform
 
 from .const import DATA_COORDINATOR, DOMAIN
 from .entity import RiscoEntity
@@ -15,11 +15,9 @@ SERVICE_UNBYPASS_ZONE = "unbypass_zone"
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Risco alarm control panel."""
     platform = entity_platform.current_platform.get()
+    platform.async_register_entity_service(SERVICE_BYPASS_ZONE, {}, "async_bypass_zone")
     platform.async_register_entity_service(
-        SERVICE_BYPASS_ZONE, cv.make_entity_service_schema({}), "async_bypass_zone"
-    )
-    platform.async_register_entity_service(
-        SERVICE_UNBYPASS_ZONE, cv.make_entity_service_schema({}), "async_unbypass_zone"
+        SERVICE_UNBYPASS_ZONE, {}, "async_unbypass_zone"
     )
 
     coordinator = hass.data[DOMAIN][config_entry.entry_id][DATA_COORDINATOR]
