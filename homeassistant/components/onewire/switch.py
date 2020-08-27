@@ -9,7 +9,6 @@ from .const import CONF_NAMES, LOGGER
 from .onewireentity import OneWireEntity
 from .onewireproxy import OneWireProxy, get_proxy_from_config_entry
 
-
 DEVICE_SWITCH = {
     # Family : { SensorType: owfs path }
     "12": {
