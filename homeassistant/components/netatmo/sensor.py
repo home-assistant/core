@@ -128,7 +128,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 continue
 
             _LOGGER.debug(
-                "Adding module %s %s", module.get("module_name"), module.get("_id"),
+                "Adding module %s %s",
+                module.get("module_name"),
+                module.get("_id"),
             )
             conditions = [
                 c.lower()
@@ -179,7 +181,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
                 if update:
                     async_dispatcher_send(
-                        hass, f"netatmo-config-{area.area_name}", area,
+                        hass,
+                        f"netatmo-config-{area.area_name}",
+                        area,
                     )
                     continue
 

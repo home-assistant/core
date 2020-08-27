@@ -55,7 +55,9 @@ async def test_invalid_api_key(hass):
     ):
 
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=VALID_CONFIG,
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data=VALID_CONFIG,
         )
 
         assert result["errors"] == {CONF_API_KEY: "invalid_api_key"}
@@ -69,7 +71,9 @@ async def test_api_error(hass):
     ):
 
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=VALID_CONFIG,
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data=VALID_CONFIG,
         )
 
         assert result["errors"] == {"base": "cannot_connect"}
@@ -85,7 +89,9 @@ async def test_requests_exceeded_error(hass):
     ):
 
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=VALID_CONFIG,
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data=VALID_CONFIG,
         )
 
         assert result["errors"] == {CONF_API_KEY: "requests_exceeded"}
@@ -98,11 +104,15 @@ async def test_integration_already_exists(hass):
         return_value=json.loads(load_fixture("accuweather/location_data.json")),
     ):
         MockConfigEntry(
-            domain=DOMAIN, unique_id="123456", data=VALID_CONFIG,
+            domain=DOMAIN,
+            unique_id="123456",
+            data=VALID_CONFIG,
         ).add_to_hass(hass)
 
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=VALID_CONFIG,
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data=VALID_CONFIG,
         )
 
         assert result["type"] == "abort"
@@ -119,7 +129,9 @@ async def test_create_entry(hass):
     ):
 
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=VALID_CONFIG,
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data=VALID_CONFIG,
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -133,7 +145,9 @@ async def test_create_entry(hass):
 async def test_options_flow(hass):
     """Test config flow options."""
     config_entry = MockConfigEntry(
-        domain=DOMAIN, unique_id="123456", data=VALID_CONFIG,
+        domain=DOMAIN,
+        unique_id="123456",
+        data=VALID_CONFIG,
     )
     config_entry.add_to_hass(hass)
 

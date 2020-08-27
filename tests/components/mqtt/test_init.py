@@ -791,7 +791,8 @@ async def test_default_birth_message(hass, mqtt_client_mock, mqtt_mock):
 
 
 @pytest.mark.parametrize(
-    "mqtt_config", [{mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_BIRTH_MESSAGE: {}}],
+    "mqtt_config",
+    [{mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_BIRTH_MESSAGE: {}}],
 )
 async def test_no_birth_message(hass, mqtt_client_mock, mqtt_mock):
     """Test disabling birth message."""
@@ -829,7 +830,8 @@ async def test_default_will_message(hass, mqtt_client_mock, mqtt_mock):
 
 
 @pytest.mark.parametrize(
-    "mqtt_config", [{mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_WILL_MESSAGE: {}}],
+    "mqtt_config",
+    [{mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_WILL_MESSAGE: {}}],
 )
 async def test_no_will_message(hass, mqtt_client_mock, mqtt_mock):
     """Test will message."""
@@ -837,7 +839,8 @@ async def test_no_will_message(hass, mqtt_client_mock, mqtt_mock):
 
 
 @pytest.mark.parametrize(
-    "mqtt_config", [{mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_BIRTH_MESSAGE: {}}],
+    "mqtt_config",
+    [{mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_BIRTH_MESSAGE: {}}],
 )
 async def test_mqtt_subscribes_topics_on_connect(hass, mqtt_client_mock, mqtt_mock):
     """Test subscription to topic on connect."""

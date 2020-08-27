@@ -41,7 +41,11 @@ async def async_setup(hass: HomeAssistant, config: dict):
     hass.data[DOMAIN] = storage_collection = ImageStorageCollection(hass, image_dir)
     await storage_collection.async_load()
     collection.StorageCollectionWebsocket(
-        storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS,
+        storage_collection,
+        DOMAIN,
+        DOMAIN,
+        CREATE_FIELDS,
+        UPDATE_FIELDS,
     ).async_setup(hass, create_create=False)
 
     hass.http.register_view(ImageUploadView)
@@ -94,7 +98,7 @@ class ImageStorageCollection(collection.StorageCollection):
         # Reset content
         uploaded_file.file.seek(0)
 
-        media_folder: pathlib.Path = (self.image_dir / data[CONF_ID])
+        media_folder: pathlib.Path = self.image_dir / data[CONF_ID]
         media_folder.mkdir(parents=True)
 
         media_file = media_folder / "original"

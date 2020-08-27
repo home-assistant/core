@@ -64,7 +64,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     return await self.async_step_pairing()
 
                 return self.async_create_entry(
-                    title=self._data[CONF_NAME], data=self._data,
+                    title=self._data[CONF_NAME],
+                    data=self._data,
                 )
 
         return self.async_show_form(
@@ -117,7 +118,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._data = {**self._data, **encryption_data}
 
                 return self.async_create_entry(
-                    title=self._data[CONF_NAME], data=self._data,
+                    title=self._data[CONF_NAME],
+                    data=self._data,
                 )
 
         try:

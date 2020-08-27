@@ -261,7 +261,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         data_schema = vol.Schema(
             {
                 vol.Optional(
-                    CONF_CAMERA_COPY, default=cameras_with_copy,
+                    CONF_CAMERA_COPY,
+                    default=cameras_with_copy,
                 ): cv.multi_select(self.included_cameras),
             }
         )

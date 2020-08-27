@@ -40,7 +40,8 @@ def websocket_get_instances(hass, connection, msg):
         instances.append(dict(instance.get_status().data, ozw_instance=instance.id))
 
     connection.send_result(
-        msg[ID], instances,
+        msg[ID],
+        instances,
     )
 
 
@@ -56,7 +57,8 @@ def websocket_network_status(hass, connection, msg):
     manager = hass.data[DOMAIN][MANAGER]
     status = manager.get_instance(msg[OZW_INSTANCE]).get_status().data
     connection.send_result(
-        msg[ID], dict(status, ozw_instance=msg[OZW_INSTANCE]),
+        msg[ID],
+        dict(status, ozw_instance=msg[OZW_INSTANCE]),
     )
 
 

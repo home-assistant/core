@@ -45,7 +45,10 @@ async def turn_fan_on(
     if speed:
         service_data[fan.ATTR_SPEED] = speed
     await hass.services.async_call(
-        FAN_DOMAIN, SERVICE_TURN_ON, service_data=service_data, blocking=True,
+        FAN_DOMAIN,
+        SERVICE_TURN_ON,
+        service_data=service_data,
+        blocking=True,
     )
     await hass.async_block_till_done()
 
@@ -149,7 +152,10 @@ async def test_turn_off_fan(hass: core.HomeAssistant):
 
     with patch_bond_action() as mock_turn_off, patch_bond_device_state():
         await hass.services.async_call(
-            FAN_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: "fan.name_1"}, blocking=True,
+            FAN_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "fan.name_1"},
+            blocking=True,
         )
         await hass.async_block_till_done()
 

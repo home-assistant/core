@@ -52,10 +52,12 @@ async def test_form_invalid_auth(hass):
     )
 
     with patch(
-        "smart_meter_texas.Client.authenticate", side_effect=SmartMeterTexasAuthError,
+        "smart_meter_texas.Client.authenticate",
+        side_effect=SmartMeterTexasAuthError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], TEST_LOGIN,
+            result["flow_id"],
+            TEST_LOGIN,
         )
 
     assert result2["type"] == "form"
@@ -72,7 +74,8 @@ async def test_form_cannot_connect(hass, side_effect):
     )
 
     with patch(
-        "smart_meter_texas.Client.authenticate", side_effect=side_effect,
+        "smart_meter_texas.Client.authenticate",
+        side_effect=side_effect,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], TEST_LOGIN
@@ -89,10 +92,12 @@ async def test_form_unknown_exception(hass):
     )
 
     with patch(
-        "smart_meter_texas.Client.authenticate", side_effect=Exception,
+        "smart_meter_texas.Client.authenticate",
+        side_effect=Exception,
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], TEST_LOGIN,
+            result["flow_id"],
+            TEST_LOGIN,
         )
 
     assert result2["type"] == "form"
@@ -108,7 +113,8 @@ async def test_form_duplicate_account(hass):
     ).add_to_hass(hass)
 
     with patch(
-        "smart_meter_texas.Client.authenticate", return_value=True,
+        "smart_meter_texas.Client.authenticate",
+        return_value=True,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

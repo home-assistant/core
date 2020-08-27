@@ -220,7 +220,8 @@ async def async_setup_entry(hass, config_entry):
                 )
             else:
                 api_coro = client.api.nearest_city(
-                    config_entry.data[CONF_LATITUDE], config_entry.data[CONF_LONGITUDE],
+                    config_entry.data[CONF_LATITUDE],
+                    config_entry.data[CONF_LONGITUDE],
                 )
 
             try:

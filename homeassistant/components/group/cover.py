@@ -103,7 +103,10 @@ class CoverGroup(GroupEntity, CoverEntity):
         )
 
     async def async_update_supported_features(
-        self, entity_id: str, new_state: Optional[State], update_state: bool = True,
+        self,
+        entity_id: str,
+        new_state: Optional[State],
+        update_state: bool = True,
     ) -> None:
         """Update dictionaries with supported features."""
         if not new_state:

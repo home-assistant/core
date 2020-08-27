@@ -131,7 +131,8 @@ async def test_abort_if_authorization_timeout(hass, flow_handler, local_impl):
 async def test_step_discovery(hass, flow_handler, local_impl):
     """Check flow triggers from discovery."""
     await async_process_ha_core_config(
-        hass, {"external_url": "https://example.com"},
+        hass,
+        {"external_url": "https://example.com"},
     )
     flow_handler.async_register_implementation(hass, local_impl)
     config_entry_oauth2_flow.async_register_implementation(
@@ -149,7 +150,8 @@ async def test_step_discovery(hass, flow_handler, local_impl):
 async def test_abort_discovered_multiple(hass, flow_handler, local_impl):
     """Test if aborts when discovered multiple times."""
     await async_process_ha_core_config(
-        hass, {"external_url": "https://example.com"},
+        hass,
+        {"external_url": "https://example.com"},
     )
 
     flow_handler.async_register_implementation(hass, local_impl)
@@ -175,14 +177,18 @@ async def test_abort_discovered_multiple(hass, flow_handler, local_impl):
 async def test_abort_discovered_existing_entries(hass, flow_handler, local_impl):
     """Test if abort discovery when entries exists."""
     await async_process_ha_core_config(
-        hass, {"external_url": "https://example.com"},
+        hass,
+        {"external_url": "https://example.com"},
     )
     flow_handler.async_register_implementation(hass, local_impl)
     config_entry_oauth2_flow.async_register_implementation(
         hass, TEST_DOMAIN, MockOAuth2Implementation()
     )
 
-    entry = MockConfigEntry(domain=TEST_DOMAIN, data={},)
+    entry = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        data={},
+    )
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -198,7 +204,8 @@ async def test_full_flow(
 ):
     """Check full flow."""
     await async_process_ha_core_config(
-        hass, {"external_url": "https://example.com"},
+        hass,
+        {"external_url": "https://example.com"},
     )
 
     flow_handler.async_register_implementation(hass, local_impl)

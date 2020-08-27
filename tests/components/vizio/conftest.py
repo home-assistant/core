@@ -107,7 +107,8 @@ def vizio_invalid_pin_failure_fixture():
         "homeassistant.components.vizio.config_flow.VizioAsync.start_pair",
         return_value=MockStartPairingResponse(CH_TYPE, RESPONSE_TOKEN),
     ), patch(
-        "homeassistant.components.vizio.config_flow.VizioAsync.pair", return_value=None,
+        "homeassistant.components.vizio.config_flow.VizioAsync.pair",
+        return_value=None,
     ):
         yield
 

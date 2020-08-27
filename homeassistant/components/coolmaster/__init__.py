@@ -61,7 +61,10 @@ class CoolmasterDataUpdateCoordinator(DataUpdateCoordinator):
         self._coolmaster = coolmaster
 
         super().__init__(
-            hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL,
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_interval=SCAN_INTERVAL,
         )
 
     async def _async_update_data(self):

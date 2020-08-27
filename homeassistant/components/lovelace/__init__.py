@@ -58,7 +58,8 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Lower, vol.In([MODE_YAML, MODE_STORAGE])
                 ),
                 vol.Optional(CONF_DASHBOARDS): cv.schema_with_slug_keys(
-                    YAML_DASHBOARD_SCHEMA, slug_validator=url_slug,
+                    YAML_DASHBOARD_SCHEMA,
+                    slug_validator=url_slug,
                 ),
                 vol.Optional(CONF_RESOURCES): [RESOURCE_SCHEMA],
             }

@@ -406,7 +406,8 @@ async def test_continue_flow_unauth(hass, client, hass_admin_user):
     hass_admin_user.groups = []
 
     resp = await client.post(
-        f"/api/config/config_entries/flow/{flow_id}", json={"user_title": "user-title"},
+        f"/api/config/config_entries/flow/{flow_id}",
+        json={"user_title": "user-title"},
     )
     assert resp.status == 401
 

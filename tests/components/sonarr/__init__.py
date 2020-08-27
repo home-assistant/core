@@ -55,19 +55,28 @@ def mock_connection(
     """Mock Sonarr connection."""
     if error:
         mock_connection_error(
-            aioclient_mock, host=host, port=port, base_path=base_path,
+            aioclient_mock,
+            host=host,
+            port=port,
+            base_path=base_path,
         )
         return
 
     if invalid_auth:
         mock_connection_invalid_auth(
-            aioclient_mock, host=host, port=port, base_path=base_path,
+            aioclient_mock,
+            host=host,
+            port=port,
+            base_path=base_path,
         )
         return
 
     if server_error:
         mock_connection_server_error(
-            aioclient_mock, host=host, port=port, base_path=base_path,
+            aioclient_mock,
+            host=host,
+            port=port,
+            base_path=base_path,
         )
         return
 
@@ -232,5 +241,6 @@ def _patch_async_setup(return_value=True):
 def _patch_async_setup_entry(return_value=True):
     """Patch the async entry setup of sonarr."""
     return patch(
-        "homeassistant.components.sonarr.async_setup_entry", return_value=return_value,
+        "homeassistant.components.sonarr.async_setup_entry",
+        return_value=return_value,
     )

@@ -60,7 +60,8 @@ def two_part_alarm():
         "partitions",
         new_callable=PropertyMock(return_value=partition_mocks),
     ), patch(
-        "homeassistant.components.risco.RiscoAPI.get_state", return_value=alarm_mock,
+        "homeassistant.components.risco.RiscoAPI.get_state",
+        return_value=alarm_mock,
     ):
         yield alarm_mock
 
@@ -70,7 +71,8 @@ async def _setup_risco(hass, options={}):
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.risco.RiscoAPI.login", return_value=True,
+        "homeassistant.components.risco.RiscoAPI.login",
+        return_value=True,
     ), patch(
         "homeassistant.components.risco.RiscoAPI.site_uuid",
         new_callable=PropertyMock(return_value=TEST_SITE_UUID),
@@ -90,7 +92,8 @@ async def test_cannot_connect(hass):
     """Test connection error."""
 
     with patch(
-        "homeassistant.components.risco.RiscoAPI.login", side_effect=CannotConnectError,
+        "homeassistant.components.risco.RiscoAPI.login",
+        side_effect=CannotConnectError,
     ):
         config_entry = MockConfigEntry(domain=DOMAIN, data=TEST_CONFIG)
         config_entry.add_to_hass(hass)
@@ -105,7 +108,8 @@ async def test_unauthorized(hass):
     """Test unauthorized error."""
 
     with patch(
-        "homeassistant.components.risco.RiscoAPI.login", side_effect=UnauthorizedError,
+        "homeassistant.components.risco.RiscoAPI.login",
+        side_effect=UnauthorizedError,
     ):
         config_entry = MockConfigEntry(domain=DOMAIN, data=TEST_CONFIG)
         config_entry.add_to_hass(hass)

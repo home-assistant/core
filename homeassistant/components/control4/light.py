@@ -36,7 +36,8 @@ async def async_setup_entry(
     entry_data = hass.data[DOMAIN][entry.entry_id]
     scan_interval = entry_data[CONF_SCAN_INTERVAL]
     _LOGGER.debug(
-        "Scan interval = %s", scan_interval,
+        "Scan interval = %s",
+        scan_interval,
     )
 
     async def async_update_data_non_dimmer():
@@ -95,7 +96,8 @@ async def async_setup_entry(
                 continue
         except KeyError:
             _LOGGER.exception(
-                "Unknown device properties received from Control4: %s", item,
+                "Unknown device properties received from Control4: %s",
+                item,
             )
             continue
 

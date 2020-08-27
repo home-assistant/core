@@ -914,7 +914,8 @@ async def test_query_disconnect(hass):
 async def test_trait_execute_adding_query_data(hass):
     """Test a trait execute influencing query data."""
     await async_process_ha_core_config(
-        hass, {"external_url": "https://example.com"},
+        hass,
+        {"external_url": "https://example.com"},
     )
     hass.states.async_set(
         "camera.office", "idle", {"supported_features": camera.SUPPORT_STREAM}

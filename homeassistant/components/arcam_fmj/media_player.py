@@ -60,7 +60,10 @@ class ArcamFmj(MediaPlayerEntity):
     """Representation of a media device."""
 
     def __init__(
-        self, device_name, state: State, uuid: str,
+        self,
+        device_name,
+        state: State,
+        uuid: str,
     ):
         """Initialize device."""
         self._state = state

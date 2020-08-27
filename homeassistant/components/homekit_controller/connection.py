@@ -212,7 +212,8 @@ class HKDevice:
                 )
 
             device = device_registry.async_get_or_create(
-                config_entry_id=self.config_entry.entry_id, **device_info,
+                config_entry_id=self.config_entry.entry_id,
+                **device_info,
             )
 
             devices[accessory.aid] = device.id

@@ -179,7 +179,10 @@ INFLUX_SCHEMA = vol.All(
     create_influx_url,
 )
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: INFLUX_SCHEMA}, extra=vol.ALLOW_EXTRA,)
+CONFIG_SCHEMA = vol.Schema(
+    {DOMAIN: INFLUX_SCHEMA},
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 def _generate_event_to_json(conf: Dict) -> Callable[[Dict], str]:

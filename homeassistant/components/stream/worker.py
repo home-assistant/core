@@ -199,7 +199,11 @@ def stream_worker(hass, stream, quit_event):
                     if stream.outputs.get(fmt):
                         hass.loop.call_soon_threadsafe(
                             stream.outputs[fmt].put,
-                            Segment(sequence, buffer.segment, segment_duration,),
+                            Segment(
+                                sequence,
+                                buffer.segment,
+                                segment_duration,
+                            ),
                         )
 
                 # Reinitialize

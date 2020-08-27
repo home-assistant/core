@@ -195,7 +195,8 @@ class Router:
                 _LOGGER.debug("Trying to authorize again...")
                 if self.connection.enforce_authorized_connection():
                     _LOGGER.debug(
-                        "...success, %s will be updated by a future periodic run", key,
+                        "...success, %s will be updated by a future periodic run",
+                        key,
                     )
                 else:
                     _LOGGER.debug("...failed")
@@ -523,7 +524,10 @@ async def async_setup(hass: HomeAssistantType, config) -> bool:
 
     for service in ADMIN_SERVICES:
         hass.helpers.service.async_register_admin_service(
-            DOMAIN, service, service_handler, schema=SERVICE_SCHEMA,
+            DOMAIN,
+            service,
+            service_handler,
+            schema=SERVICE_SCHEMA,
         )
 
     for url, router_config in domain_config.items():

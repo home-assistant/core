@@ -531,7 +531,11 @@ async def async_setup_entry(hass, entry):
 
     conf = _merge_config(entry, conf)
 
-    hass.data[DATA_MQTT] = MQTT(hass, entry, conf,)
+    hass.data[DATA_MQTT] = MQTT(
+        hass,
+        entry,
+        conf,
+    )
 
     await hass.data[DATA_MQTT].async_connect()
 
@@ -620,7 +624,12 @@ class Subscription:
 class MQTT:
     """Home Assistant MQTT client."""
 
-    def __init__(self, hass: HomeAssistantType, config_entry, conf,) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistantType,
+        config_entry,
+        conf,
+    ) -> None:
         """Initialize Home Assistant MQTT client."""
         # We don't import on the top because some integrations
         # should be able to optionally rely on MQTT.
@@ -1177,7 +1186,9 @@ class MqttAvailability(Entity):
             }
 
         self._availability_sub_state = await async_subscribe_topics(
-            self.hass, self._availability_sub_state, topics,
+            self.hass,
+            self._availability_sub_state,
+            topics,
         )
 
     @callback
@@ -1256,7 +1267,9 @@ class MqttDiscoveryUpdate(Entity):
         async def discovery_callback(payload):
             """Handle discovery update."""
             _LOGGER.info(
-                "Got update for entity with hash: %s '%s'", discovery_hash, payload,
+                "Got update for entity with hash: %s '%s'",
+                discovery_hash,
+                payload,
             )
             old_payload = self._discovery_data[ATTR_DISCOVERY_PAYLOAD]
             debug_info.update_entity_discovery_data(self.hass, payload, self.entity_id)
@@ -1291,7 +1304,10 @@ class MqttDiscoveryUpdate(Entity):
         if not self._removed_from_hass:
             discovery_topic = self._discovery_data[ATTR_DISCOVERY_TOPIC]
             publish(
-                self.hass, discovery_topic, "", retain=True,
+                self.hass,
+                discovery_topic,
+                "",
+                retain=True,
             )
 
     async def async_will_remove_from_hass(self) -> None:

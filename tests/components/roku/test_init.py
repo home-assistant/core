@@ -29,7 +29,8 @@ async def test_unload_config_entry(
         "homeassistant.components.roku.media_player.async_setup_entry",
         return_value=True,
     ), patch(
-        "homeassistant.components.roku.remote.async_setup_entry", return_value=True,
+        "homeassistant.components.roku.remote.async_setup_entry",
+        return_value=True,
     ):
         entry = await setup_integration(hass, aioclient_mock)
 
