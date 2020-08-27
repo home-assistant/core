@@ -178,9 +178,6 @@ class Remote:
         self.muted = self._control.get_mute()
         self.volume = self._control.get_volume() / 100
 
-        self.state = STATE_ON
-        self.available = True
-
     async def async_send_key(self, key):
         """Send a key to the TV and handle exceptions."""
         try:
@@ -231,7 +228,6 @@ class Remote:
         except (TimeoutError, URLError, SOAPError, OSError):
             self.state = STATE_OFF
             self.available = self._on_action is not None
-            await self.async_create_remote_control()
         except Exception as err:  # pylint: disable=broad-except
             _LOGGER.exception("An unknown error occurred: %s", err)
             self.state = STATE_OFF
