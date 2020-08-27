@@ -4,7 +4,6 @@ import voluptuous as vol
 from .const import DOMAIN
 from .onewireproxy import OneWireProxy
 
-
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.Schema({}, extra=vol.ALLOW_EXTRA)}, extra=vol.ALLOW_EXTRA
 )

@@ -1,7 +1,9 @@
 """Representation of an OWServer proxy."""
+from glob import glob
 import os
 import time
-from glob import glob
+
+from pyownet import protocol
 
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import callback
@@ -13,9 +15,6 @@ from .const import (
     LOGGER,
     SUPPORTED_PLATFORMS,
 )
-
-
-from pyownet import protocol
 
 
 @callback

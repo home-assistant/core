@@ -5,12 +5,9 @@ from pyownet import protocol
 
 from homeassistant.components.switch import SwitchEntity
 
-from .onewireproxy import get_proxy_from_config_entry, OneWireProxy
+from .const import CONF_NAMES, LOGGER
 from .onewireentity import OneWireEntity
-from .const import (
-    CONF_NAMES,
-    LOGGER,
-)
+from .onewireproxy import get_proxy_from_config_entry, OneWireProxy
 
 
 DEVICE_SWITCH = {

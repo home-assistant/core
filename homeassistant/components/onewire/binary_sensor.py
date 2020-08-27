@@ -5,13 +5,12 @@ from pyownet import protocol
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 
-from .onewireproxy import get_proxy_from_config_entry, OneWireProxy
-from .onewireentity import OneWireEntity
 from .const import (
     CONF_NAMES,
     LOGGER,
 )
-
+from .onewireentity import OneWireEntity
+from .onewireproxy import get_proxy_from_config_entry, OneWireProxy
 
 DEVICE_BINARY_SENSORS = {
     # Family : { SensorType: owfs path }

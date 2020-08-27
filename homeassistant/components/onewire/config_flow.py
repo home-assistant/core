@@ -1,16 +1,12 @@
 """Config flow to configure OneWire component."""
 import os
+
+from pyownet import protocol
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PORT,
-    CONF_TYPE,
-)
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.core import callback
-
-from pyownet import protocol
 
 from .const import (
     CONF_MOUNT_DIR,
@@ -71,7 +67,7 @@ class OneWireFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_owserver(self, user_input=None):
-        """OWServer configuration."""
+        """Handle OWServer configuration."""
         errors = {}
         if user_input:
             owhost = user_input.get(CONF_HOST)
@@ -98,7 +94,7 @@ class OneWireFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_owfs(self, user_input=None):
-        """OWServer configuration."""
+        """Handle OWServer configuration."""
         errors = {}
         if user_input:
             owpath = user_input.get(CONF_MOUNT_DIR)
