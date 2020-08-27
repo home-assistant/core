@@ -30,12 +30,14 @@ from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
+    SERVICE_RELOAD,
 )
 from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, Unauthorized
 from homeassistant.helpers import device_registry, entity_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import BASE_FILTER_SCHEMA, FILTER_SCHEMA
+from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.loader import async_get_integration
 from homeassistant.util import get_local_ip
 
@@ -150,23 +152,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
     entries_by_name = {entry.data[CONF_NAME]: entry for entry in current_entries}
 
     for index, conf in enumerate(config[DOMAIN]):
-        bridge_name = conf[CONF_NAME]
-
-        if (
-            bridge_name in entries_by_name
-            and entries_by_name[bridge_name].source == SOURCE_IMPORT
-        ):
-            entry = entries_by_name[bridge_name]
-            # If they alter the yaml config we import the changes
-            # since there currently is no practical way to support
-            # all the options in the UI at this time.
-            data = conf.copy()
-            options = {}
-            for key in CONFIG_OPTIONS:
-                options[key] = data[key]
-                del data[key]
-
-            hass.config_entries.async_update_entry(entry, data=data, options=options)
+        if _async_update_config_entry_if_from_yaml(hass, entries_by_name, conf):
             continue
 
         conf[CONF_ENTRY_INDEX] = index
@@ -179,6 +165,36 @@ async def async_setup(hass: HomeAssistant, config: dict):
         )
 
     return True
+
+
+@callback
+def _async_update_config_entry_if_from_yaml(hass, entries_by_name, conf):
+    """Update a config entry with the latest yaml.
+
+    Returns True if a matching config entry was found
+
+    Returns False if there is no matching config entry
+    """
+    bridge_name = conf[CONF_NAME]
+
+    if (
+        bridge_name in entries_by_name
+        and entries_by_name[bridge_name].source == SOURCE_IMPORT
+    ):
+        entry = entries_by_name[bridge_name]
+        # If they alter the yaml config we import the changes
+        # since there currently is no practical way to support
+        # all the options in the UI at this time.
+        data = conf.copy()
+        options = {}
+        for key in CONFIG_OPTIONS:
+            options[key] = data[key]
+            del data[key]
+
+        hass.config_entries.async_update_entry(entry, data=data, options=options)
+        return True
+
+    return False
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
@@ -347,6 +363,32 @@ def _async_register_events_and_services(hass: HomeAssistant):
 
     hass.services.async_register(
         DOMAIN, SERVICE_HOMEKIT_START, async_handle_homekit_service_start
+    )
+
+    async def _handle_homekit_reload(service):
+        """Handle start HomeKit service call."""
+        config = await async_integration_yaml_config(hass, DOMAIN)
+
+        if not config or DOMAIN not in config:
+            return
+
+        current_entries = hass.config_entries.async_entries(DOMAIN)
+        entries_by_name = {entry.data[CONF_NAME]: entry for entry in current_entries}
+
+        for conf in config[DOMAIN]:
+            _async_update_config_entry_if_from_yaml(hass, entries_by_name, conf)
+
+        reload_tasks = [
+            hass.config_entries.async_reload(entry.entry_id)
+            for entry in current_entries
+        ]
+
+        await asyncio.gather(*reload_tasks)
+
+    hass.helpers.service.async_register_admin_service(
+        DOMAIN,
+        SERVICE_RELOAD,
+        _handle_homekit_reload,
     )
 
 
