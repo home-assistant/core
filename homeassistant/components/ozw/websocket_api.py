@@ -81,7 +81,8 @@ def websocket_get_nodes(hass, connection, msg):
         )
 
     connection.send_result(
-        msg[ID], nodes,
+        msg[ID],
+        nodes,
     )
 
 
