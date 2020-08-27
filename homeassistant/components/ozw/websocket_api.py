@@ -22,6 +22,7 @@ NODE_ID = "node_id"
 def async_register_api(hass):
     """Register all of our api endpoints."""
     websocket_api.async_register_command(hass, websocket_get_instances)
+    websocket_api.async_register_command(hass, websocket_get_nodes)
     websocket_api.async_register_command(hass, websocket_network_status)
     websocket_api.async_register_command(hass, websocket_network_statistics)
     websocket_api.async_register_command(hass, websocket_node_metadata)
@@ -42,6 +43,45 @@ def websocket_get_instances(hass, connection, msg):
     connection.send_result(
         msg[ID],
         instances,
+    )
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "ozw/get_nodes",
+        vol.Optional(OZW_INSTANCE, default=1): vol.Coerce(int),
+    }
+)
+def websocket_get_nodes(hass, connection, msg):
+    """Get a list of nodes for an OZW instance."""
+    manager = hass.data[DOMAIN][MANAGER]
+    nodes = []
+
+    for node in manager.get_instance(msg[OZW_INSTANCE]).collections["node"]:
+        nodes.append(
+            {
+                "node_query_stage": node.node_query_stage,
+                "node_id": node.node_id,
+                "is_zwave_plus": node.is_zwave_plus,
+                "is_awake": node.is_awake,
+                "is_failed": node.is_failed,
+                "node_baud_rate": node.node_baud_rate,
+                "is_beaming": node.is_beaming,
+                "is_flirs": node.is_flirs,
+                "is_routing": node.is_routing,
+                "is_securityv1": node.is_securityv1,
+                "node_basic_string": node.node_basic_string,
+                "node_generic_string": node.node_generic_string,
+                "node_specific_string": node.node_specific_string,
+                "node_manufacturer_name": node.node_manufacturer_name,
+                "node_product_name": node.node_product_name,
+                "neighbors": node.neighbors,
+                OZW_INSTANCE: msg[OZW_INSTANCE],
+            }
+        )
+
+    connection.send_result(
+        msg[ID], nodes,
     )
 
 

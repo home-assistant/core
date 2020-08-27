@@ -82,6 +82,14 @@ async def test_websocket_api(hass, generic_data, hass_ws_client):
     assert result[OZW_INSTANCE] == 1
     assert result["node_count"] == 5
 
+    # Test get nodes
+    await client.send_json({ID: 10, TYPE: "ozw/get_nodes"})
+    msg = await client.receive_json()
+    result = msg["result"]
+    assert len(result) == 5
+    assert result[2]["is_awake"]
+    assert not result[1]["is_failed"]
+
 
 async def test_refresh_node(hass, generic_data, sent_messages, hass_ws_client):
     """Test the ozw refresh node api."""
