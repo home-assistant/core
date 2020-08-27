@@ -1,5 +1,4 @@
 # Home Assistant Core, full dependency set
--c homeassistant/package_constraints.txt
 -r requirements.txt
 
 # homeassistant.components.nuimo_controller
