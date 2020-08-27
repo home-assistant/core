@@ -5,7 +5,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
 
-from .const import DOMAIN
+from .const import DOMAIN  # pylint: disable=unused-import
 
 DATA_SCHEMA = vol.Schema({vol.Required("host"): str})
 
@@ -42,8 +42,8 @@ async def validate_input(hass: core.HomeAssistant, data):
 
 async def validate_input_relay_modes(data):
     """Validate the user input in relay modes form."""
-    for name, mode in data.items():
-        if mode != "bistable" and mode != "monostable":
+    for mode in data.values():
+        if mode not in ("bistable", "monostable"):
             raise WrongInfo
 
     return True
@@ -69,7 +69,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             except WrongInfo:
                 errors["base"] = "wrong_info_relay_modes"
-            except Exception:
+            except Exception:  # pylint: disable=broad-except
                 errors["base"] = "unknown"
 
         relay_modes_schema = {}
@@ -91,7 +91,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 info = await validate_input(self.hass, user_input)
                 user_input.update(info)
-                self.step_user_user_input = user_input
+                self.step_user_user_input = (
+                    user_input  # pylint: disable=attribute-defined-outside-init
+                )
                 return await self.async_step_relay_modes()
             except UnexistingBoard:
                 errors["base"] = "unexisting_board"
