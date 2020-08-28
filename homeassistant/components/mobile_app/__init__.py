@@ -119,7 +119,11 @@ async def async_unload_entry(hass, entry):
     if not unload_ok:
         return False
 
-    webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
+    webhook_id = entry.data[CONF_WEBHOOK_ID]
+
+    webhook_unregister(hass, webhook_id)
+    del hass.data[DOMAIN][DATA_CONFIG_ENTRIES][webhook_id]
+    await hass_notify.async_reload(hass, DOMAIN)
 
     return True
 
