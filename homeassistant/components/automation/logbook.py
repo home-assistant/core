@@ -12,14 +12,15 @@ def async_describe_events(hass, async_describe_event):  # type: ignore
     @callback
     def async_describe_logbook_event(event):  # type: ignore
         """Describe a logbook event."""
+        data = event.data
         message = "has been triggered"
-        if ATTR_SOURCE in event.data:
-            message = f"{message} by {event.data[ATTR_SOURCE]}"
+        if ATTR_SOURCE in data:
+            message = f"{message} by {data[ATTR_SOURCE]}"
         return {
-            "name": event.data.get(ATTR_NAME),
+            "name": data.get(ATTR_NAME),
             "message": message,
-            "source": event.data.get(ATTR_SOURCE),
-            "entity_id": event.data.get(ATTR_ENTITY_ID),
+            "source": data.get(ATTR_SOURCE),
+            "entity_id": data.get(ATTR_ENTITY_ID),
         }
 
     async_describe_event(
