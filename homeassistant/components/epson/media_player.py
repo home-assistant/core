@@ -29,11 +29,14 @@ import voluptuous as vol
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
+    SUPPORT_PLAY,
+    SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.const import (
@@ -66,6 +69,18 @@ from .const import (
 SIGNAL_CONFIG_OPTIONS_UPDATE = "epson_config_options_update {}"
 
 _LOGGER = logging.getLogger(__name__)
+
+
+SUPPORT_ONKYO = (
+    SUPPORT_VOLUME_SET
+    | SUPPORT_VOLUME_MUTE
+    | SUPPORT_VOLUME_STEP
+    | SUPPORT_TURN_ON
+    | SUPPORT_TURN_OFF
+    | SUPPORT_SELECT_SOURCE
+    | SUPPORT_PLAY
+    | SUPPORT_PLAY_MEDIA
+)
 
 SUPPORT_EPSON = (
     SUPPORT_TURN_ON
@@ -168,10 +183,13 @@ class EpsonProjector(MediaPlayerEntity):
         self._volume = None
         self._state = None
         self._entry_id = entry_id
+        print(self.source_list)
+        print(self.source)
 
     async def async_update(self):
         """Update state of device."""
         is_turned_on = await self._projector.get_property(POWER)
+        is_turned_on = "01"
         _LOGGER.debug("Projector status: %s", is_turned_on)
         if is_turned_on and is_turned_on == EPSON_CODES[POWER]:
             self._state = STATE_ON
@@ -182,10 +200,12 @@ class EpsonProjector(MediaPlayerEntity):
             volume = await self._projector.get_property(VOLUME)
             if volume:
                 self._volume = volume
+            print("ustawione!")
         elif is_turned_on == BUSY:
             self._state = STATE_ON
         else:
             self._state = STATE_OFF
+        print("działam")
 
     async def async_added_to_hass(self):
         """Use lifecycle hooks."""
@@ -220,7 +240,7 @@ class EpsonProjector(MediaPlayerEntity):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        return SUPPORT_EPSON
+        return SUPPORT_ONKYO
 
     async def async_turn_on(self):
         """Turn on epson."""
@@ -253,7 +273,10 @@ class EpsonProjector(MediaPlayerEntity):
 
     async def async_select_source(self, source):
         """Select input source."""
+        print("wybieram source")
         selected_source = INV_SOURCES[source]
+        print("mam source")
+        print(selected_source)
         await self._projector.send_command(selected_source)
 
     async def async_mute_volume(self, mute):
