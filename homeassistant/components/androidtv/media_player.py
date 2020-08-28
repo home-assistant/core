@@ -597,7 +597,8 @@ class ADBDevice(MediaPlayerEntity):
 
             msg = f"Output from service '{SERVICE_LEARN_SENDEVENT}' from {self.entity_id}: '{output}'"
             self.hass.components.persistent_notification.async_create(
-                msg, title="Android TV",
+                msg,
+                title="Android TV",
             )
             _LOGGER.info("%s", msg)
 

@@ -577,9 +577,25 @@ async def test_parallel_entry_setup(hass):
         return True
 
     mock_integration(
-        hass, MockModule("comp", async_setup_entry=mock_async_setup_entry,),
+        hass,
+        MockModule(
+            "comp",
+            async_setup_entry=mock_async_setup_entry,
+        ),
     )
     mock_entity_platform(hass, "config_flow.comp", None)
     await setup.async_setup_component(hass, "comp", {})
 
     assert calls == [1, 2, 1, 2]
+
+
+async def test_integration_disabled(hass, caplog):
+    """Test we can disable an integration."""
+    disabled_reason = "Dependency contains code that breaks Home Assistant"
+    mock_integration(
+        hass,
+        MockModule("test_component1", partial_manifest={"disabled": disabled_reason}),
+    )
+    result = await setup.async_setup_component(hass, "test_component1", {})
+    assert not result
+    assert disabled_reason in caplog.text

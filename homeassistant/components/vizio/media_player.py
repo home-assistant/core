@@ -226,8 +226,10 @@ class VizioDevice(MediaPlayerEntity):
                 self._supported_commands |= SUPPORT_SELECT_SOUND_MODE
                 self._current_sound_mode = audio_settings[VIZIO_SOUND_MODE]
                 if not self._available_sound_modes:
-                    self._available_sound_modes = await self._device.get_setting_options(
-                        VIZIO_AUDIO_SETTINGS, VIZIO_SOUND_MODE
+                    self._available_sound_modes = (
+                        await self._device.get_setting_options(
+                            VIZIO_AUDIO_SETTINGS, VIZIO_SOUND_MODE
+                        )
                     )
             else:
                 # Explicitly remove SUPPORT_SELECT_SOUND_MODE from supported features
@@ -291,7 +293,9 @@ class VizioDevice(MediaPlayerEntity):
     ) -> None:
         """Update a setting when update_setting service is called."""
         await self._device.set_setting(
-            setting_type, setting_name, new_value,
+            setting_type,
+            setting_name,
+            new_value,
         )
 
     async def async_added_to_hass(self) -> None:

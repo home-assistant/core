@@ -54,6 +54,7 @@ MANIFEST_SCHEMA = vol.Schema(
         vol.Optional("dependencies"): [str],
         vol.Optional("after_dependencies"): [str],
         vol.Required("codeowners"): [str],
+        vol.Optional("disabled"): str,
     }
 )
 

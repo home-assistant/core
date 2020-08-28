@@ -123,14 +123,16 @@ class VizioOptionsConfigFlow(config_entries.OptionsFlow):
 
             return self.async_create_entry(title="", data=user_input)
 
-        options = {
-            vol.Optional(
-                CONF_VOLUME_STEP,
-                default=self.config_entry.options.get(
-                    CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP
-                ),
-            ): vol.All(vol.Coerce(int), vol.Range(min=1, max=10))
-        }
+        options = vol.Schema(
+            {
+                vol.Optional(
+                    CONF_VOLUME_STEP,
+                    default=self.config_entry.options.get(
+                        CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP
+                    ),
+                ): vol.All(vol.Coerce(int), vol.Range(min=1, max=10))
+            }
+        )
 
         if self.config_entry.data[CONF_DEVICE_CLASS] == DEVICE_CLASS_TV:
             default_include_or_exclude = (
@@ -139,7 +141,7 @@ class VizioOptionsConfigFlow(config_entries.OptionsFlow):
                 and CONF_EXCLUDE in self.config_entry.options.get(CONF_APPS, {})
                 else CONF_INCLUDE
             )
-            options.update(
+            options = options.extend(
                 {
                     vol.Optional(
                         CONF_INCLUDE_OR_EXCLUDE,
@@ -156,7 +158,7 @@ class VizioOptionsConfigFlow(config_entries.OptionsFlow):
                 }
             )
 
-        return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
+        return self.async_show_form(step_id="init", data_schema=options)
 
 
 class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

@@ -60,7 +60,8 @@ async def async_setup(hass, config):
             hass.data[DOMAIN] = conf
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": config_entries.SOURCE_IMPORT},
+                    DOMAIN,
+                    context={"source": config_entries.SOURCE_IMPORT},
                 )
             )
 

@@ -323,6 +323,39 @@ async def test_multiple_states(hass):
     assert not test(hass)
 
 
+async def test_state_attribute(hass):
+    """Test with state attribute in condition."""
+    test = await condition.async_from_config(
+        hass,
+        {
+            "condition": "and",
+            "conditions": [
+                {
+                    "condition": "state",
+                    "entity_id": "sensor.temperature",
+                    "attribute": "attribute1",
+                    "state": "200",
+                },
+            ],
+        },
+    )
+
+    hass.states.async_set("sensor.temperature", 100, {"unkown_attr": 200})
+    assert not test(hass)
+
+    hass.states.async_set("sensor.temperature", 100, {"attribute1": 200})
+    assert test(hass)
+
+    hass.states.async_set("sensor.temperature", 100, {"attribute1": "200"})
+    assert test(hass)
+
+    hass.states.async_set("sensor.temperature", 100, {"attribute1": 201})
+    assert not test(hass)
+
+    hass.states.async_set("sensor.temperature", 100, {"attribute1": None})
+    assert not test(hass)
+
+
 async def test_numeric_state_multiple_entities(hass):
     """Test with multiple entities in condition."""
     test = await condition.async_from_config(
@@ -349,6 +382,39 @@ async def test_numeric_state_multiple_entities(hass):
 
     hass.states.async_set("sensor.temperature_1", 49)
     hass.states.async_set("sensor.temperature_2", 50)
+    assert not test(hass)
+
+
+async def test_numberic_state_attribute(hass):
+    """Test with numeric state attribute in condition."""
+    test = await condition.async_from_config(
+        hass,
+        {
+            "condition": "and",
+            "conditions": [
+                {
+                    "condition": "numeric_state",
+                    "entity_id": "sensor.temperature",
+                    "attribute": "attribute1",
+                    "below": 50,
+                },
+            ],
+        },
+    )
+
+    hass.states.async_set("sensor.temperature", 100, {"unkown_attr": 10})
+    assert not test(hass)
+
+    hass.states.async_set("sensor.temperature", 100, {"attribute1": 49})
+    assert test(hass)
+
+    hass.states.async_set("sensor.temperature", 100, {"attribute1": "49"})
+    assert test(hass)
+
+    hass.states.async_set("sensor.temperature", 100, {"attribute1": 51})
+    assert not test(hass)
+
+    hass.states.async_set("sensor.temperature", 100, {"attribute1": None})
     assert not test(hass)
 
 
@@ -534,50 +600,53 @@ async def test_extract_entities():
 
 async def test_extract_devices():
     """Test extracting devices."""
-    assert condition.async_extract_devices(
-        {
-            "condition": "and",
-            "conditions": [
-                {"condition": "device", "device_id": "abcd", "domain": "light"},
-                {"condition": "device", "device_id": "qwer", "domain": "switch"},
-                {
-                    "condition": "state",
-                    "entity_id": "sensor.not_a_device",
-                    "state": "100",
-                },
-                {
-                    "condition": "not",
-                    "conditions": [
-                        {
-                            "condition": "device",
-                            "device_id": "abcd_not",
-                            "domain": "light",
-                        },
-                        {
-                            "condition": "device",
-                            "device_id": "qwer_not",
-                            "domain": "switch",
-                        },
-                    ],
-                },
-                {
-                    "condition": "or",
-                    "conditions": [
-                        {
-                            "condition": "device",
-                            "device_id": "abcd_or",
-                            "domain": "light",
-                        },
-                        {
-                            "condition": "device",
-                            "device_id": "qwer_or",
-                            "domain": "switch",
-                        },
-                    ],
-                },
-            ],
-        }
-    ) == {"abcd", "qwer", "abcd_not", "qwer_not", "abcd_or", "qwer_or"}
+    assert (
+        condition.async_extract_devices(
+            {
+                "condition": "and",
+                "conditions": [
+                    {"condition": "device", "device_id": "abcd", "domain": "light"},
+                    {"condition": "device", "device_id": "qwer", "domain": "switch"},
+                    {
+                        "condition": "state",
+                        "entity_id": "sensor.not_a_device",
+                        "state": "100",
+                    },
+                    {
+                        "condition": "not",
+                        "conditions": [
+                            {
+                                "condition": "device",
+                                "device_id": "abcd_not",
+                                "domain": "light",
+                            },
+                            {
+                                "condition": "device",
+                                "device_id": "qwer_not",
+                                "domain": "switch",
+                            },
+                        ],
+                    },
+                    {
+                        "condition": "or",
+                        "conditions": [
+                            {
+                                "condition": "device",
+                                "device_id": "abcd_or",
+                                "domain": "light",
+                            },
+                            {
+                                "condition": "device",
+                                "device_id": "qwer_or",
+                                "domain": "switch",
+                            },
+                        ],
+                    },
+                ],
+            }
+        )
+        == {"abcd", "qwer", "abcd_not", "qwer_not", "abcd_or", "qwer_or"}
+    )
 
 
 async def test_condition_template_error(hass, caplog):

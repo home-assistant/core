@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "invalid_auth": "Authentification erron\u00e9e",
+            "unknown": "Erreur inattendue"
+        },
+        "flow_title": "Kodi: {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "H\u00f4te",
+                    "port": "Port",
+                    "ssl": "Connexion via SSL"
+                }
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "turn_off": "Il a \u00e9t\u00e9 demand\u00e9 \u00e0 {entity_name} de s'\u00e9teindre",
+            "turn_on": "Il a \u00e9t\u00e9 demand\u00e9 \u00e0 {entity_name} de s'allumer"
+        }
+    }
+}

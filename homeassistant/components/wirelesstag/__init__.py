@@ -122,7 +122,8 @@ class WirelessTagPlatform:
                 )
             else:
                 _LOGGER.info(
-                    "Installed push notifications for all tags in %s", mac,
+                    "Installed push notifications for all tags in %s",
+                    mac,
                 )
 
     @property

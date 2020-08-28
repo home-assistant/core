@@ -15,10 +15,8 @@
             },
             "user": {
                 "data": {
-                    "host": "Vert",
-                    "port": ""
-                },
-                "title": ""
+                    "host": "Vert"
+                }
             }
         }
     }

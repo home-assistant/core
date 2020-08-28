@@ -47,7 +47,8 @@ async def async_setup_entry(
     async_add_entities(
         [
             MeteoFranceWeather(
-                coordinator, entry.options.get(CONF_MODE, FORECAST_MODE_DAILY),
+                coordinator,
+                entry.options.get(CONF_MODE, FORECAST_MODE_DAILY),
             )
         ],
         True,
@@ -129,9 +130,6 @@ class MeteoFranceWeather(WeatherEntity):
             for forecast in self.coordinator.data.forecast:
                 # Can have data in the past
                 if forecast["dt"] < today:
-                    _LOGGER.debug(
-                        "remove forecast in the past: %s %s", self._mode, forecast
-                    )
                     continue
                 forecast_data.append(
                     {

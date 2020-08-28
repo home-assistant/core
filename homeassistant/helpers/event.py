@@ -405,7 +405,11 @@ def async_track_template(
     ) -> None:
         """Check if condition is correct and run action."""
         if isinstance(result, TemplateError):
-            _LOGGER.exception(result)
+            _LOGGER.error(
+                "Error while processing template: %s",
+                template.template,
+                exc_info=result,
+            )
             return
 
         if result_as_boolean(last_result) or not result_as_boolean(result):
@@ -444,10 +448,10 @@ class _TrackTemplateResultInfo:
         """Handle removal / refresh of tracker init."""
         self.hass = hass
         self._template = template
+        self._template.hass = hass
         self._action = action
         self._variables = variables
-        self._last_result: Optional[str] = None
-        self._last_exception = False
+        self._last_result: Optional[Union[str, TemplateError]] = None
         self._all_listener: Optional[Callable] = None
         self._domains_listener: Optional[Callable] = None
         self._entities_listener: Optional[Callable] = None
@@ -458,8 +462,11 @@ class _TrackTemplateResultInfo:
         """Activation of template tracking."""
         self._info = self._template.async_render_to_info(self._variables)
         if self._info.exception:
-            self._last_exception = True
-            _LOGGER.exception(self._info.exception)
+            _LOGGER.error(
+                "Error while processing template: %s",
+                self._template.template,
+                exc_info=self._info.exception,
+            )
         self._create_listeners()
         self._last_info = self._info
 
@@ -475,12 +482,6 @@ class _TrackTemplateResultInfo:
         # so we do not know which states
         # to track
         if self._info.exception:
-            return True
-
-        # There are no entities in the template
-        # to track so this template will
-        # re-render on EVERY state change
-        if not self._info.domains and not self._info.entities:
             return True
 
         return False
@@ -561,6 +562,11 @@ class _TrackTemplateResultInfo:
         entities = set(self._info.entities)
         for entity_id in self.hass.states.async_entity_ids(self._info.domains):
             entities.add(entity_id)
+
+        # Entities has changed to none
+        if not entities:
+            return
+
         self._entities_listener = async_track_state_change_event(
             self.hass, entities, self._refresh
         )
@@ -568,6 +574,10 @@ class _TrackTemplateResultInfo:
     @callback
     def _setup_domains_listener(self) -> None:
         assert self._info
+
+        # Domains has changed to none
+        if not self._info.domains:
+            return
 
         self._domains_listener = async_track_state_added_domain(
             self.hass, self._info.domains, self._refresh
@@ -593,24 +603,24 @@ class _TrackTemplateResultInfo:
             self._variables = variables
         self._refresh(None)
 
+    @callback
     def _refresh(self, event: Optional[Event]) -> None:
         self._info = self._template.async_render_to_info(self._variables)
         self._update_listeners()
         self._last_info = self._info
 
         try:
-            result = self._info.result
+            result: Union[str, TemplateError] = self._info.result
         except TemplateError as ex:
-            if not self._last_exception:
-                self.hass.async_run_job(
-                    self._action, event, self._template, self._last_result, ex
-                )
-            self._last_exception = True
-            return
-        self._last_exception = False
+            result = ex
 
         # Check to see if the result has changed
         if result == self._last_result:
+            return
+
+        if isinstance(result, TemplateError) and isinstance(
+            self._last_result, TemplateError
+        ):
             return
 
         self.hass.async_run_job(
@@ -986,13 +996,19 @@ def async_track_utc_time_change(
 
         calculate_next(now + timedelta(seconds=1))
 
+        # We always get time.time() first to avoid time.time()
+        # ticking forward after fetching hass.loop.time()
+        # and callback being scheduled a few microseconds early
         cancel_callback = hass.loop.call_at(
-            hass.loop.time() + next_time.timestamp() - time.time(),
+            -time.time() + hass.loop.time() + next_time.timestamp(),
             pattern_time_change_listener,
         )
 
+    # We always get time.time() first to avoid time.time()
+    # ticking forward after fetching hass.loop.time()
+    # and callback being scheduled a few microseconds early
     cancel_callback = hass.loop.call_at(
-        hass.loop.time() + next_time.timestamp() - time.time(),
+        -time.time() + hass.loop.time() + next_time.timestamp(),
         pattern_time_change_listener,
     )
 

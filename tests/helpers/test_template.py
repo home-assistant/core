@@ -20,7 +20,14 @@ from homeassistant.helpers import template
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import UnitSystem
 
-from tests.async_mock import patch
+from tests.async_mock import Mock, patch
+
+
+@pytest.fixture()
+def allow_extract_entities():
+    """Allow extract entities."""
+    with patch("homeassistant.helpers.template.report"):
+        yield
 
 
 def _set_up_units(hass):
@@ -865,7 +872,10 @@ def test_relative_time(mock_is_safe, hass):
         )
         assert (
             "string"
-            == template.Template('{{relative_time("string")}}', hass,).async_render()
+            == template.Template(
+                '{{relative_time("string")}}',
+                hass,
+            ).async_render()
         )
 
 
@@ -1758,7 +1768,7 @@ def test_closest_function_no_location_states(hass):
     )
 
 
-def test_extract_entities_none_exclude_stuff(hass):
+def test_extract_entities_none_exclude_stuff(hass, allow_extract_entities):
     """Test extract entities function with none or exclude stuff."""
     assert template.extract_entities(hass, None) == []
 
@@ -1780,7 +1790,7 @@ def test_extract_entities_none_exclude_stuff(hass):
     )
 
 
-def test_extract_entities_no_match_entities(hass):
+def test_extract_entities_no_match_entities(hass, allow_extract_entities):
     """Test extract entities function with none entities stuff."""
     assert (
         template.extract_entities(
@@ -1920,7 +1930,7 @@ async def test_async_render_to_info_in_conditional(hass):
     assert_result_info(info, "oink", ["sensor.xyz", "sensor.pig"], [])
 
 
-async def test_extract_entities_match_entities(hass):
+async def test_extract_entities_match_entities(hass, allow_extract_entities):
     """Test extract entities function with entities stuff."""
     assert (
         template.extract_entities(
@@ -2028,7 +2038,7 @@ states.sensor.pick_humidity.state ~ " %"
     ]
 
 
-def test_extract_entities_with_variables(hass):
+def test_extract_entities_with_variables(hass, allow_extract_entities):
     """Test extract entities function with variables and entities stuff."""
     hass.states.async_set("input_boolean.switch", "on")
     assert ["input_boolean.switch"] == template.extract_entities(
@@ -2063,37 +2073,43 @@ def test_extract_entities_with_variables(hass):
     )
 
 
-def test_extract_entities_domain_states_inner(hass):
+def test_extract_entities_domain_states_inner(hass, allow_extract_entities):
     """Test extract entities function by domain."""
     hass.states.async_set("light.switch", "on")
     hass.states.async_set("light.switch2", "on")
     hass.states.async_set("light.switch3", "off")
 
-    assert set(
-        template.extract_entities(
-            hass,
-            "{{ states['light'] | selectattr('state','eq','on') | list | count > 0 }}",
-            {},
+    assert (
+        set(
+            template.extract_entities(
+                hass,
+                "{{ states['light'] | selectattr('state','eq','on') | list | count > 0 }}",
+                {},
+            )
         )
-    ) == {"light.switch", "light.switch2", "light.switch3"}
+        == {"light.switch", "light.switch2", "light.switch3"}
+    )
 
 
-def test_extract_entities_domain_states_outer(hass):
+def test_extract_entities_domain_states_outer(hass, allow_extract_entities):
     """Test extract entities function by domain."""
     hass.states.async_set("light.switch", "on")
     hass.states.async_set("light.switch2", "on")
     hass.states.async_set("light.switch3", "off")
 
-    assert set(
-        template.extract_entities(
-            hass,
-            "{{ states.light | selectattr('state','eq','off') | list | count > 0 }}",
-            {},
+    assert (
+        set(
+            template.extract_entities(
+                hass,
+                "{{ states.light | selectattr('state','eq','off') | list | count > 0 }}",
+                {},
+            )
         )
-    ) == {"light.switch", "light.switch2", "light.switch3"}
+        == {"light.switch", "light.switch2", "light.switch3"}
+    )
 
 
-def test_extract_entities_domain_states_outer_with_group(hass):
+def test_extract_entities_domain_states_outer_with_group(hass, allow_extract_entities):
     """Test extract entities function by domain."""
     hass.states.async_set("light.switch", "on")
     hass.states.async_set("light.switch2", "on")
@@ -2101,13 +2117,61 @@ def test_extract_entities_domain_states_outer_with_group(hass):
     hass.states.async_set("switch.pool_light", "off")
     hass.states.async_set("group.lights", "off", {"entity_id": ["switch.pool_light"]})
 
-    assert set(
+    assert (
+        set(
+            template.extract_entities(
+                hass,
+                "{{ states.light | selectattr('entity_id', 'in', state_attr('group.lights', 'entity_id')) }}",
+                {},
+            )
+        )
+        == {"light.switch", "light.switch2", "light.switch3", "group.lights"}
+    )
+
+
+def test_extract_entities_blocked_from_core_code(hass):
+    """Test extract entities is blocked from core code."""
+    with pytest.raises(RuntimeError):
         template.extract_entities(
             hass,
-            "{{ states.light | selectattr('entity_id', 'in', state_attr('group.lights', 'entity_id')) }}",
+            "{{ states.light }}",
             {},
         )
-    ) == {"light.switch", "light.switch2", "light.switch3", "group.lights"}
+
+
+def test_extract_entities_warns_and_logs_from_an_integration(hass, caplog):
+    """Test extract entities works from a custom_components with a log message."""
+
+    correct_frame = Mock(
+        filename="/config/custom_components/burncpu/light.py",
+        lineno="23",
+        line="self.light.is_on",
+    )
+    with patch(
+        "homeassistant.helpers.frame.extract_stack",
+        return_value=[
+            Mock(
+                filename="/home/dev/homeassistant/core.py",
+                lineno="23",
+                line="do_something()",
+            ),
+            correct_frame,
+            Mock(
+                filename="/home/dev/mdns/lights.py",
+                lineno="2",
+                line="something()",
+            ),
+        ],
+    ):
+        template.extract_entities(
+            hass,
+            "{{ states.light }}",
+            {},
+        )
+
+    assert "custom_components/burncpu/light.py" in caplog.text
+    assert "23" in caplog.text
+    assert "self.light.is_on" in caplog.text
 
 
 def test_jinja_namespace(hass):
@@ -2175,7 +2239,8 @@ def test_render_complex_handling_non_template_values(hass):
 def test_urlencode(hass):
     """Test the urlencode method."""
     tpl = template.Template(
-        ("{% set dict = {'foo': 'x&y', 'bar': 42} %}" "{{ dict | urlencode }}"), hass,
+        ("{% set dict = {'foo': 'x&y', 'bar': 42} %}" "{{ dict | urlencode }}"),
+        hass,
     )
     assert tpl.async_render() == "foo=x%26y&bar=42"
     tpl = template.Template(
@@ -2190,13 +2255,17 @@ async def test_cache_garbage_collection():
     template_string = (
         "{% set dict = {'foo': 'x&y', 'bar': 42} %} {{ dict | urlencode }}"
     )
-    tpl = template.Template((template_string),)
+    tpl = template.Template(
+        (template_string),
+    )
     tpl.ensure_valid()
     assert template._NO_HASS_ENV.template_cache.get(
         template_string
     )  # pylint: disable=protected-access
 
-    tpl2 = template.Template((template_string),)
+    tpl2 = template.Template(
+        (template_string),
+    )
     tpl2.ensure_valid()
     assert template._NO_HASS_ENV.template_cache.get(
         template_string

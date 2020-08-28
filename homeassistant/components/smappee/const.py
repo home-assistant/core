@@ -14,6 +14,8 @@ ENV_LOCAL = "local"
 
 SMAPPEE_PLATFORMS = ["binary_sensor", "sensor", "switch"]
 
+SUPPORTED_LOCAL_DEVICES = ("Smappee1", "Smappee2")
+
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=20)
 
 AUTHORIZE_URL = {

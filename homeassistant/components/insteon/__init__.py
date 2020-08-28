@@ -109,7 +109,8 @@ async def async_import_config(hass, conf):
     if result["type"] == RESULT_TYPE_CREATE_ENTRY and options:
         entry = result["result"]
         hass.config_entries.async_update_entry(
-            entry=entry, options=options,
+            entry=entry,
+            options=options,
         )
     return result
 

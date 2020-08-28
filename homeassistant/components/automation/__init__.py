@@ -88,7 +88,6 @@ _LOGGER = logging.getLogger(__name__)
 
 AutomationActionType = Callable[[HomeAssistant, TemplateVarsType], Awaitable[None]]
 
-
 _CONDITION_SCHEMA = vol.All(cv.ensure_list, [cv.CONDITION_SCHEMA])
 
 PLATFORM_SCHEMA = vol.All(
@@ -378,7 +377,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         else:
             await self.async_disable()
 
-    async def async_trigger(self, variables, skip_condition=False, context=None):
+    async def async_trigger(self, variables, context=None, skip_condition=False):
         """Trigger automation.
 
         This method is a coroutine.

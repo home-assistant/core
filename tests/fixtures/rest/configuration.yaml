@@ -1,0 +1,5 @@
+sensor:
+  - platform: rest
+    resource: "http://localhost"
+    method: GET
+    name: rollout

@@ -74,7 +74,9 @@ async def test_humidifier(hass, hk_driver, events):
     }
 
     hass.states.async_set(
-        entity_id, STATE_ON, {ATTR_HUMIDITY: 47},
+        entity_id,
+        STATE_ON,
+        {ATTR_HUMIDITY: 47},
     )
     await hass.async_block_till_done()
     assert acc.char_target_humidity.value == 47.0
@@ -153,7 +155,9 @@ async def test_dehumidifier(hass, hk_driver, events):
     }
 
     hass.states.async_set(
-        entity_id, STATE_ON, {ATTR_HUMIDITY: 30},
+        entity_id,
+        STATE_ON,
+        {ATTR_HUMIDITY: 30},
     )
     await hass.async_block_till_done()
     assert acc.char_target_humidity.value == 30.0
@@ -162,7 +166,9 @@ async def test_dehumidifier(hass, hk_driver, events):
     assert acc.char_active.value == 1
 
     hass.states.async_set(
-        entity_id, STATE_OFF, {ATTR_HUMIDITY: 42},
+        entity_id,
+        STATE_OFF,
+        {ATTR_HUMIDITY: 42},
     )
     await hass.async_block_till_done()
     assert acc.char_target_humidity.value == 42.0
@@ -204,7 +210,9 @@ async def test_hygrostat_power_state(hass, hk_driver, events):
     entity_id = "humidifier.test"
 
     hass.states.async_set(
-        entity_id, STATE_ON, {ATTR_HUMIDITY: 43},
+        entity_id,
+        STATE_ON,
+        {ATTR_HUMIDITY: 43},
     )
     await hass.async_block_till_done()
     acc = HumidifierDehumidifier(
@@ -220,7 +228,9 @@ async def test_hygrostat_power_state(hass, hk_driver, events):
     assert acc.char_active.value == 1
 
     hass.states.async_set(
-        entity_id, STATE_OFF, {ATTR_HUMIDITY: 43},
+        entity_id,
+        STATE_OFF,
+        {ATTR_HUMIDITY: 43},
     )
     await hass.async_block_till_done()
     assert acc.char_current_humidifier_dehumidifier.value == 0
@@ -397,9 +407,9 @@ async def test_humidifier_as_dehumidifier(hass, hk_driver, events, caplog):
     assert acc.char_target_humidifier_dehumidifier.value == 1
 
     # Set from HomeKit
-    char_target_humidifier_dehumidifier_iid = acc.char_target_humidifier_dehumidifier.to_HAP()[
-        HAP_REPR_IID
-    ]
+    char_target_humidifier_dehumidifier_iid = (
+        acc.char_target_humidifier_dehumidifier.to_HAP()[HAP_REPR_IID]
+    )
 
     hk_driver.set_characteristics(
         {

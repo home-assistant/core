@@ -15,6 +15,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTR_NEXT_RAIN_1_HOUR_FORECAST,
+    ATTR_NEXT_RAIN_DT_REF,
     ATTRIBUTION,
     COORDINATOR_ALERT,
     COORDINATOR_FORECAST,
@@ -64,7 +65,8 @@ async def async_setup_entry(
             entities.append(MeteoFranceSensor(sensor_type, coordinator_forecast))
 
     async_add_entities(
-        entities, False,
+        entities,
+        False,
     )
 
 
@@ -184,11 +186,13 @@ class MeteoFranceRainSensor(MeteoFranceSensor):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
+        reference_dt = self.coordinator.data.forecast[0]["dt"]
         return {
-            ATTR_NEXT_RAIN_1_HOUR_FORECAST: [
-                {dt_util.utc_from_timestamp(item["dt"]).isoformat(): item["desc"]}
+            ATTR_NEXT_RAIN_DT_REF: dt_util.utc_from_timestamp(reference_dt).isoformat(),
+            ATTR_NEXT_RAIN_1_HOUR_FORECAST: {
+                f"{int((item['dt'] - reference_dt) / 60)} min": item["desc"]
                 for item in self.coordinator.data.forecast
-            ],
+            },
             ATTR_ATTRIBUTION: ATTRIBUTION,
         }
 

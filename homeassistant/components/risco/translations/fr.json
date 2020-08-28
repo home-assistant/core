@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "P\u00e9riph\u00e9rique d\u00e9j\u00e0 configur\u00e9"
+        },
+        "error": {
+            "cannot_connect": "Echec de connexion",
+            "invalid_auth": "Authentification erron\u00e9e",
+            "unknown": "Erreur inattendue"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Mot de passe",
+                    "pin": "Code Pin",
+                    "username": "Nom d'utilisateur"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "\u00c0 quelle fr\u00e9quence interroger Risco (en secondes)"
+                },
+                "title": "Configurer les options"
+            }
+        }
+    }
+}

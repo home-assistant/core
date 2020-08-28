@@ -112,7 +112,8 @@ async def async_setup_hass(
             config_dict = await conf_util.async_hass_config_yaml(hass)
         except HomeAssistantError as err:
             _LOGGER.error(
-                "Failed to parse configuration.yaml: %s. Activating safe mode", err,
+                "Failed to parse configuration.yaml: %s. Activating safe mode",
+                err,
             )
         else:
             if not is_virtual_env():
@@ -160,7 +161,8 @@ async def async_setup_hass(
         http_conf = (await http.async_get_last_config(hass)) or {}
 
         await async_from_config_dict(
-            {"safe_mode": {}, "http": http_conf}, hass,
+            {"safe_mode": {}, "http": http_conf},
+            hass,
         )
 
     if runtime_config.open_ui:
@@ -331,8 +333,10 @@ def async_enable_logging(
     ):
 
         if log_rotate_days:
-            err_handler: logging.FileHandler = logging.handlers.TimedRotatingFileHandler(
-                err_log_path, when="midnight", backupCount=log_rotate_days
+            err_handler: logging.FileHandler = (
+                logging.handlers.TimedRotatingFileHandler(
+                    err_log_path, when="midnight", backupCount=log_rotate_days
+                )
             )
         else:
             err_handler = logging.FileHandler(err_log_path, mode="w", delay=True)
@@ -391,7 +395,8 @@ async def _async_log_pending_setups(
 
         if remaining:
             _LOGGER.warning(
-                "Waiting on integrations to complete setup: %s", ", ".join(remaining),
+                "Waiting on integrations to complete setup: %s",
+                ", ".join(remaining),
             )
 
 

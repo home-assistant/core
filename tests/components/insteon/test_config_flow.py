@@ -130,7 +130,8 @@ async def _init_form(hass, modem_type):
     assert result["errors"] == {}
 
     result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {MODEM_TYPE: modem_type},
+        result["flow_id"],
+        {MODEM_TYPE: modem_type},
     )
     return result2
 
@@ -140,7 +141,8 @@ async def _device_form(hass, flow_id, connection, user_input):
     with patch(PATCH_CONNECTION, new=connection,), patch(
         PATCH_ASYNC_SETUP, return_value=True
     ) as mock_setup, patch(
-        PATCH_ASYNC_SETUP_ENTRY, return_value=True,
+        PATCH_ASYNC_SETUP_ENTRY,
+        return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(flow_id, user_input)
     return result, mock_setup, mock_setup_entry
@@ -397,7 +399,8 @@ async def _options_init_form(hass, entry_id, step):
     assert result["step_id"] == "init"
 
     result2 = await hass.config_entries.options.async_configure(
-        result["flow_id"], {step: True},
+        result["flow_id"],
+        {step: True},
     )
     return result2
 
@@ -673,7 +676,8 @@ async def test_options_dup_selection(hass: HomeAssistantType):
     assert result["step_id"] == "init"
 
     result2 = await hass.config_entries.options.async_configure(
-        result["flow_id"], {STEP_ADD_OVERRIDE: True, STEP_ADD_X10: True},
+        result["flow_id"],
+        {STEP_ADD_OVERRIDE: True, STEP_ADD_X10: True},
     )
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result2["errors"] == {"base": "select_single"}

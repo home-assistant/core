@@ -35,6 +35,7 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType, TemplateVarsType
 from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.util.yaml import load_yaml
@@ -110,9 +111,12 @@ def async_prepare_call_from_config(
     if CONF_SERVICE in config:
         domain_service = config[CONF_SERVICE]
     else:
+        domain_service = config[CONF_SERVICE_TEMPLATE]
+
+    if isinstance(domain_service, Template):
         try:
-            config[CONF_SERVICE_TEMPLATE].hass = hass
-            domain_service = config[CONF_SERVICE_TEMPLATE].async_render(variables)
+            domain_service.hass = hass
+            domain_service = domain_service.async_render(variables)
             domain_service = cv.service(domain_service)
         except TemplateError as ex:
             raise HomeAssistantError(
@@ -124,14 +128,14 @@ def async_prepare_call_from_config(
             ) from ex
 
     domain, service = domain_service.split(".", 1)
-    service_data = dict(config.get(CONF_SERVICE_DATA, {}))
 
-    if CONF_SERVICE_DATA_TEMPLATE in config:
+    service_data = {}
+    for conf in [CONF_SERVICE_DATA, CONF_SERVICE_DATA_TEMPLATE]:
+        if conf not in config:
+            continue
         try:
-            template.attach(hass, config[CONF_SERVICE_DATA_TEMPLATE])
-            service_data.update(
-                template.render_complex(config[CONF_SERVICE_DATA_TEMPLATE], variables)
-            )
+            template.attach(hass, config[conf])
+            service_data.update(template.render_complex(config[conf], variables))
         except TemplateError as ex:
             raise HomeAssistantError(f"Error rendering data template: {ex}") from ex
 

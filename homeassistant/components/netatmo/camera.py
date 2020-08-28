@@ -107,7 +107,12 @@ class NetatmoCamera(NetatmoBase, Camera):
     """Representation of a Netatmo camera."""
 
     def __init__(
-        self, data_handler, camera_id, camera_type, home_id, quality,
+        self,
+        data_handler,
+        camera_id,
+        camera_type,
+        home_id,
+        quality,
     ):
         """Set up for access to the Netatmo camera images."""
         Camera.__init__(self)
@@ -172,7 +177,9 @@ class NetatmoCamera(NetatmoBase, Camera):
                 )
             elif self._vpnurl:
                 response = requests.get(
-                    f"{self._vpnurl}/live/snapshot_720.jpg", timeout=10, verify=True,
+                    f"{self._vpnurl}/live/snapshot_720.jpg",
+                    timeout=10,
+                    verify=True,
                 )
             else:
                 _LOGGER.error("Welcome/Presence VPN URL is None")
@@ -283,12 +290,14 @@ class NetatmoCamera(NetatmoBase, Camera):
 
         if person_id is not None:
             self._data.set_persons_away(
-                person_id=person_id, home_id=self._home_id,
+                person_id=person_id,
+                home_id=self._home_id,
             )
             _LOGGER.debug("Set %s as away", person)
 
         else:
             self._data.set_persons_away(
-                person_id=person_id, home_id=self._home_id,
+                person_id=person_id,
+                home_id=self._home_id,
             )
             _LOGGER.debug("Set home as empty")

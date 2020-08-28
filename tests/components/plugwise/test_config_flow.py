@@ -11,7 +11,9 @@ from tests.async_mock import patch
 @pytest.fixture(name="mock_smile")
 def mock_smile():
     """Create a Mock Smile for testing exceptions."""
-    with patch("homeassistant.components.plugwise.config_flow.Smile",) as smile_mock:
+    with patch(
+        "homeassistant.components.plugwise.config_flow.Smile",
+    ) as smile_mock:
         smile_mock.PlugwiseError = Smile.PlugwiseError
         smile_mock.InvalidAuthentication = Smile.InvalidAuthentication
         smile_mock.ConnectionFailedError = Smile.ConnectionFailedError
@@ -32,12 +34,15 @@ async def test_form(hass):
         "homeassistant.components.plugwise.config_flow.Smile.connect",
         return_value=True,
     ), patch(
-        "homeassistant.components.plugwise.async_setup", return_value=True,
+        "homeassistant.components.plugwise.async_setup",
+        return_value=True,
     ) as mock_setup, patch(
-        "homeassistant.components.plugwise.async_setup_entry", return_value=True,
+        "homeassistant.components.plugwise.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"host": "1.1.1.1", "password": "test-password"},
+            result["flow_id"],
+            {"host": "1.1.1.1", "password": "test-password"},
         )
 
     assert result2["type"] == "create_entry"
@@ -60,7 +65,8 @@ async def test_form_invalid_auth(hass, mock_smile):
     mock_smile.gateway_id = "0a636a4fc1704ab4a24e4f7e37fb187a"
 
     result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"host": "1.1.1.1", "password": "test-password"},
+        result["flow_id"],
+        {"host": "1.1.1.1", "password": "test-password"},
     )
 
     assert result2["type"] == "form"
@@ -77,7 +83,8 @@ async def test_form_cannot_connect(hass, mock_smile):
     mock_smile.gateway_id = "0a636a4fc1704ab4a24e4f7e37fb187a"
 
     result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"host": "1.1.1.1", "password": "test-password"},
+        result["flow_id"],
+        {"host": "1.1.1.1", "password": "test-password"},
     )
 
     assert result2["type"] == "form"

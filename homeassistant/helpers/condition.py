@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import functools as ft
 import logging
 import sys
-from typing import Callable, Container, List, Optional, Set, Union, cast
+from typing import Any, Callable, Container, List, Optional, Set, Union, cast
 
 from homeassistant.components import zone as zone_cmp
 from homeassistant.components.device_automation import (
@@ -17,6 +17,7 @@ from homeassistant.const import (
     ATTR_LONGITUDE,
     CONF_ABOVE,
     CONF_AFTER,
+    CONF_ATTRIBUTE,
     CONF_BEFORE,
     CONF_BELOW,
     CONF_CONDITION,
@@ -191,16 +192,21 @@ def async_numeric_state(
     above: Optional[float] = None,
     value_template: Optional[Template] = None,
     variables: TemplateVarsType = None,
+    attribute: Optional[str] = None,
 ) -> bool:
     """Test a numeric state condition."""
     if isinstance(entity, str):
         entity = hass.states.get(entity)
 
-    if entity is None:
+    if entity is None or (attribute is not None and attribute not in entity.attributes):
         return False
 
+    value: Any = None
     if value_template is None:
-        value = entity.state
+        if attribute is None:
+            value = entity.state
+        else:
+            value = entity.attributes.get(attribute)
     else:
         variables = dict(variables or {})
         variables["state"] = entity
@@ -239,6 +245,7 @@ def async_numeric_state_from_config(
     if config_validation:
         config = cv.NUMERIC_STATE_CONDITION_SCHEMA(config)
     entity_ids = config.get(CONF_ENTITY_ID, [])
+    attribute = config.get(CONF_ATTRIBUTE)
     below = config.get(CONF_BELOW)
     above = config.get(CONF_ABOVE)
     value_template = config.get(CONF_VALUE_TEMPLATE)
@@ -252,7 +259,7 @@ def async_numeric_state_from_config(
 
         return all(
             async_numeric_state(
-                hass, entity_id, below, above, value_template, variables
+                hass, entity_id, below, above, value_template, variables, attribute
             )
             for entity_id in entity_ids
         )
@@ -265,6 +272,7 @@ def state(
     entity: Union[None, str, State],
     req_state: Union[str, List[str]],
     for_period: Optional[timedelta] = None,
+    attribute: Optional[str] = None,
 ) -> bool:
     """Test if state matches requirements.
 
@@ -273,14 +281,18 @@ def state(
     if isinstance(entity, str):
         entity = hass.states.get(entity)
 
-    if entity is None:
+    if entity is None or (attribute is not None and attribute not in entity.attributes):
         return False
+
     assert isinstance(entity, State)
 
     if isinstance(req_state, str):
         req_state = [req_state]
 
-    is_state = entity.state in req_state
+    if attribute is None:
+        is_state = entity.state in req_state
+    else:
+        is_state = str(entity.attributes.get(attribute)) in req_state
 
     if for_period is None or not is_state:
         return is_state
@@ -297,6 +309,7 @@ def state_from_config(
     entity_ids = config.get(CONF_ENTITY_ID, [])
     req_states: Union[str, List[str]] = config.get(CONF_STATE, [])
     for_period = config.get("for")
+    attribute = config.get(CONF_ATTRIBUTE)
 
     if not isinstance(req_states, list):
         req_states = [req_states]
@@ -304,7 +317,8 @@ def state_from_config(
     def if_state(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
         """Test if condition."""
         return all(
-            state(hass, entity_id, req_states, for_period) for entity_id in entity_ids
+            state(hass, entity_id, req_states, for_period, attribute)
+            for entity_id in entity_ids
         )
 
     return if_state

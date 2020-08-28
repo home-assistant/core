@@ -52,7 +52,9 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
     hass.async_create_task(
         hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=conf,
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=conf,
         )
     )
     return True

@@ -85,7 +85,12 @@ async def async_setup_entry(hass, entry):
     try:
         session = async_get_clientsession(hass, verify_tls)
         api = Hole(
-            host, hass.loop, session, location=location, tls=use_tls, api_token=api_key,
+            host,
+            hass.loop,
+            session,
+            location=location,
+            tls=use_tls,
+            api_token=api_key,
         )
         await api.get_data()
     except HoleError as ex:
