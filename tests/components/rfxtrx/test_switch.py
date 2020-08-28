@@ -169,5 +169,7 @@ async def test_unknown_event_code(hass, rfxtrx):
     await hass.async_block_till_done()
 
     conf_entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(conf_entries) == 1
+
     entry = conf_entries[0]
     assert entry.state == "loaded"
