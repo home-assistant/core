@@ -3,8 +3,6 @@ from typing import Any, Dict, Optional, Tuple, Union
 
 import homeassistant.core
 
-# pylint: disable=invalid-name
-
 GPSType = Tuple[float, float]
 ConfigType = Dict[str, Any]
 ContextType = homeassistant.core.Context
