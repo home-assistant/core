@@ -187,5 +187,7 @@ async def test_google_config_expose_entity_prefs(mock_conf, cloud_prefs):
     entity_conf["should_expose"] = None
     assert mock_conf.should_expose(state)
 
-    await cloud_prefs.async_update(google_default_expose=["sensor"],)
+    await cloud_prefs.async_update(
+        google_default_expose=["sensor"],
+    )
     assert not mock_conf.should_expose(state)
