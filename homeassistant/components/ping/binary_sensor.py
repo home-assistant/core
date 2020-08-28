@@ -149,7 +149,6 @@ class PingDataSubProcess(PingData):
     def __init__(self, hass, host, count) -> None:
         """Initialize the data object."""
         super().__init__(hass, host, count)
-
         if sys.platform == "win32":
             self._ping_cmd = [
                 "ping",
