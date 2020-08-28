@@ -566,7 +566,7 @@ class SimpliSafe:
                 LOGGER.error("SimpliSafe error while updating: %s", result)
                 return
 
-            if isinstance(result, Exception):  # pylint: disable=broad-except
+            if isinstance(result, Exception):
                 LOGGER.error("Unknown error while updating: %s", result)
                 return
 
