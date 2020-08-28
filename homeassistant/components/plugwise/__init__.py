@@ -50,13 +50,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("Invalid Smile ID")
         return False
 
-    except Smile.PlugwiseError:
+    except Smile.PlugwiseError as err:
         _LOGGER.error("Error while communicating to device")
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from err
 
-    except asyncio.TimeoutError:
+    except asyncio.TimeoutError as err:
         _LOGGER.error("Timeout while connecting to Smile")
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from err
 
     update_interval = timedelta(seconds=60)
     if api.smile_type == "power":
@@ -68,8 +68,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             async with async_timeout.timeout(10):
                 await api.full_update_device()
                 return True
-        except Smile.XMLDataMissingError:
-            raise UpdateFailed("Smile update failed")
+        except Smile.XMLDataMissingError as err:
+            raise UpdateFailed("Smile update failed") from err
 
     coordinator = DataUpdateCoordinator(
         hass,

@@ -253,7 +253,7 @@ class MikrotikData:
             socket.timeout,
         ) as api_error:
             _LOGGER.error("Mikrotik %s connection error %s", self._host, api_error)
-            raise CannotConnect
+            raise CannotConnect from api_error
         except librouteros.exceptions.ProtocolError as api_error:
             _LOGGER.warning(
                 "Mikrotik %s failed to retrieve data. cmd=[%s] Error: %s",
@@ -367,8 +367,8 @@ class MikrotikHub:
             api = await self.hass.async_add_executor_job(
                 get_api, self.hass, self.config_entry.data
             )
-        except CannotConnect:
-            raise ConfigEntryNotReady
+        except CannotConnect as api_error:
+            raise ConfigEntryNotReady from api_error
         except LoginError:
             return False
 
@@ -415,5 +415,5 @@ def get_api(hass, entry):
     ) as api_error:
         _LOGGER.error("Mikrotik %s error: %s", entry[CONF_HOST], api_error)
         if "invalid user name or password" in str(api_error):
-            raise LoginError
-        raise CannotConnect
+            raise LoginError from api_error
+        raise CannotConnect from api_error

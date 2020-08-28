@@ -83,7 +83,7 @@ class MetDataUpdateCoordinator(DataUpdateCoordinator):
         try:
             return await self.weather.fetch_data()
         except Exception as err:
-            raise UpdateFailed(f"Update failed: {err}")
+            raise UpdateFailed(f"Update failed: {err}") from err
 
     def track_home(self):
         """Start tracking changes to HA home setting."""

@@ -86,7 +86,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         )
     except DeviceException as ex:
         _LOGGER.error("Device unavailable or token incorrect: %s", ex)
-        raise PlatformNotReady
+        raise PlatformNotReady from ex
 
     if DATA_KEY not in hass.data:
         hass.data[DATA_KEY] = {}

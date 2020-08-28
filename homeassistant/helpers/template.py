@@ -232,7 +232,7 @@ class Template:
         try:
             self._compiled_code = self._env.compile(self.template)
         except jinja2.exceptions.TemplateSyntaxError as err:
-            raise TemplateError(err)
+            raise TemplateError(err) from err
 
     def extract_entities(
         self, variables: TemplateVarsType = None
@@ -272,7 +272,7 @@ class Template:
         try:
             return compiled.render(kwargs).strip()
         except jinja2.TemplateError as err:
-            raise TemplateError(err)
+            raise TemplateError(err) from err
 
     @callback
     def async_render_to_info(

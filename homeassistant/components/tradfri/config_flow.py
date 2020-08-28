@@ -166,10 +166,10 @@ async def authenticate(hass, host, security_code):
     try:
         with async_timeout.timeout(5):
             key = await api_factory.generate_psk(security_code)
-    except RequestError:
-        raise AuthError("invalid_security_code")
-    except asyncio.TimeoutError:
-        raise AuthError("timeout")
+    except RequestError as err:
+        raise AuthError("invalid_security_code") from err
+    except asyncio.TimeoutError as err:
+        raise AuthError("timeout") from err
 
     return await get_gateway_info(hass, host, identity, key)
 
@@ -185,10 +185,10 @@ async def get_gateway_info(hass, host, identity, key):
         gateway_info_result = await api(gateway.get_gateway_info())
 
         await factory.shutdown()
-    except (OSError, RequestError):
+    except (OSError, RequestError) as err:
         # We're also catching OSError as PyTradfri doesn't catch that one yet
         # Upstream PR: https://github.com/ggravlingen/pytradfri/pull/189
-        raise AuthError("cannot_connect")
+        raise AuthError("cannot_connect") from err
 
     return {
         CONF_HOST: host,

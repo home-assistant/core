@@ -82,8 +82,8 @@ class BroadlinkDevice:
             await self._async_handle_auth_error()
             return False
 
-        except (DeviceOfflineError, OSError):
-            raise ConfigEntryNotReady
+        except (DeviceOfflineError, OSError) as err:
+            raise ConfigEntryNotReady from err
 
         except BroadlinkException as err:
             _LOGGER.error(

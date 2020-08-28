@@ -59,8 +59,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await dtv.update()
-    except DIRECTVError:
-        raise ConfigEntryNotReady
+    except DIRECTVError as err:
+        raise ConfigEntryNotReady from err
 
     hass.data[DOMAIN][entry.entry_id] = dtv
 

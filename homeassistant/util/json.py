@@ -35,10 +35,10 @@ def load_json(
         _LOGGER.debug("JSON file not found: %s", filename)
     except ValueError as error:
         _LOGGER.exception("Could not parse JSON content: %s", filename)
-        raise HomeAssistantError(error)
+        raise HomeAssistantError(error) from error
     except OSError as error:
         _LOGGER.exception("JSON file reading failed: %s", filename)
-        raise HomeAssistantError(error)
+        raise HomeAssistantError(error) from error
     return {} if default is None else default
 
 
@@ -55,10 +55,10 @@ def save_json(
     """
     try:
         json_data = json.dumps(data, indent=4, cls=encoder)
-    except TypeError:
+    except TypeError as error:
         msg = f"Failed to serialize to JSON: {filename}. Bad data at {format_unserializable_data(find_paths_unserializable_data(data))}"
         _LOGGER.error(msg)
-        raise SerializationError(msg)
+        raise SerializationError(msg) from error
 
     tmp_filename = ""
     tmp_path = os.path.split(filename)[0]
@@ -74,7 +74,7 @@ def save_json(
         os.replace(tmp_filename, filename)
     except OSError as error:
         _LOGGER.exception("Saving JSON file failed: %s", filename)
-        raise WriteError(error)
+        raise WriteError(error) from error
     finally:
         if os.path.exists(tmp_filename):
             try:

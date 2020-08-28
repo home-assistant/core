@@ -113,9 +113,9 @@ async def async_setup_entry(hass, entry):
 
     try:
         gateway_info = await api(gateway.get_gateway_info())
-    except RequestError:
+    except RequestError as err:
         await factory.shutdown()
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from err
 
     hass.data.setdefault(KEY_API, {})[entry.entry_id] = api
     hass.data.setdefault(KEY_GATEWAY, {})[entry.entry_id] = gateway

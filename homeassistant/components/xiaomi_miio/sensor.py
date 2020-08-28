@@ -122,8 +122,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             device_info.hardware_version,
         )
         device = XiaomiAirQualityMonitor(name, air_quality_monitor, model, unique_id)
-    except DeviceException:
-        raise PlatformNotReady
+    except DeviceException as ex:
+        raise PlatformNotReady from ex
 
     hass.data[DATA_KEY][host] = device
     async_add_entities([device], update_before_add=True)
