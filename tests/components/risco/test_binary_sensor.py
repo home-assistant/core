@@ -163,3 +163,29 @@ async def test_states(hass, two_zone_alarm):
     await _check_state(hass, two_zone_alarm, True, False, SECOND_ENTITY_ID, 1)
     await _check_state(hass, two_zone_alarm, False, True, SECOND_ENTITY_ID, 1)
     await _check_state(hass, two_zone_alarm, False, False, SECOND_ENTITY_ID, 1)
+
+
+async def test_bypass(hass, two_zone_alarm):
+    """Test bypassing a zone."""
+    await _setup_risco(hass)
+    with patch("homeassistant.components.risco.RiscoAPI.bypass_zone") as mock:
+        data = {"entity_id": FIRST_ENTITY_ID}
+
+        await hass.services.async_call(
+            DOMAIN, "bypass_zone", service_data=data, blocking=True
+        )
+
+        mock.assert_awaited_once_with(0, True)
+
+
+async def test_unbypass(hass, two_zone_alarm):
+    """Test unbypassing a zone."""
+    await _setup_risco(hass)
+    with patch("homeassistant.components.risco.RiscoAPI.bypass_zone") as mock:
+        data = {"entity_id": FIRST_ENTITY_ID}
+
+        await hass.services.async_call(
+            DOMAIN, "unbypass_zone", service_data=data, blocking=True
+        )
+
+        mock.assert_awaited_once_with(0, False)
