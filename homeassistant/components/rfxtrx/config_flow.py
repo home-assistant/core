@@ -402,23 +402,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_validate_rfx(self, host=None, port=None, device=None):
         """Create data for rfxtrx entry."""
-        if port is not None:
-            try:
-                conn = rfxtrxmod.PyNetworkTransport((host, port))
-            except OSError:
-                raise CannotConnect
-
-            conn.close()
-        else:
-            try:
-                conn = rfxtrxmod.PySerialTransport(device)
-            except serial.serialutil.SerialException:
-                raise CannotConnect
-
-            if conn.serial is None:
-                raise CannotConnect
-
-            conn.close()
+        success = await self.hass.async_add_executor_job(
+            _test_transport, host, port, device
+        )
+        if not success:
+            raise CannotConnect
 
         data = {
             CONF_HOST: host,
@@ -435,6 +423,29 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
         """Get the options flow for this handler."""
         return OptionsFlow(config_entry)
+
+
+def _test_transport(host, port, device):
+    """Construct a rfx object based on config."""
+    if port is not None:
+        try:
+            conn = rfxtrxmod.PyNetworkTransport((host, port))
+        except OSError:
+            return False
+
+        conn.close()
+    else:
+        try:
+            conn = rfxtrxmod.PySerialTransport(device)
+        except serial.serialutil.SerialException:
+            return False
+
+        if conn.serial is None:
+            return False
+
+        conn.close()
+
+    return True
 
 
 def get_serial_by_id(dev_path: str) -> str:
