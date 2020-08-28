@@ -15,6 +15,7 @@ from .const import (
     ATTR_PERSON,
     ATTR_PERSONS,
     ATTR_PSEUDO,
+    CAMERA_LIGHT_MODES,
     DATA_HANDLER,
     DATA_PERSONS,
     DOMAIN,
@@ -105,7 +106,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         )
         platform.async_register_entity_service(
             SERVICE_SET_CAMERA_LIGHT,
-            {vol.Required(ATTR_CAMERA_LIGHT_MODE): cv.string},
+            {vol.Required(ATTR_CAMERA_LIGHT_MODE): vol.In(CAMERA_LIGHT_MODES)},
             "_service_set_camera_light",
         )
 
