@@ -10,7 +10,6 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SENSORS,
     CONF_ZONE,
-    DEVICE_CLASS_TIMESTAMP,
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import Event, HomeAssistant
@@ -109,17 +108,10 @@ class SIAHub:
         self, account: str, zone: int = 0, entity_type: str = None
     ) -> Tuple[str, str]:
         """Give back a entity_id and name according to the variables."""
-        if zone == 0:
-            return (
-                self._get_entity_id(account, zone, entity_type),
-                f"{self._port} - {account} - Last Heartbeat",
-            )
-        if entity_type:
-            return (
-                self._get_entity_id(account, zone, entity_type),
-                f"{self._port} - {account} - zone {zone} - {entity_type}",
-            )
-        return None
+        return (
+            self._get_entity_id(account, zone, entity_type),
+            f"{self._port} - {account} - zone {zone} - {entity_type}",
+        )
 
     def _get_zones(self, account: str, zone=None) -> list:
         """Get a list of zones for a account."""
@@ -133,11 +125,7 @@ class SIAHub:
         self, account: str, zone: int = 0, entity_type: str = None
     ) -> str:
         """Give back a entity_id according to the variables, defaults to the hub sensor entity_id."""
-        if zone == 0 or entity_type == DEVICE_CLASS_TIMESTAMP:
-            return f"{self._port}_{account}_{HUB_SENSOR_NAME}"
-        if entity_type:
-            return f"{self._port}_{account}_{zone}_{entity_type}"
-        return None
+        return f"{self._port}_{account}_{zone}_{entity_type}"
 
     def _get_ping_interval(self, account: str) -> timedelta:
         """Return the ping interval for specified account."""
@@ -172,7 +160,7 @@ class SIAHub:
                 event.message,
                 event.sia_string,
             )
-            reaction = {"type": DEVICE_CLASS_TIMESTAMP, "attr": LAST_MESSAGE}
+            reaction = {"attr": LAST_MESSAGE}
         attr = reaction.get("attr")
         new_state = reaction.get("new_state")
         new_state_eval = reaction.get("new_state_eval")

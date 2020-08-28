@@ -1,10 +1,9 @@
 {
-  "title": "sia",
+  "title": "SIA Alarm Systems",
   "config": {
     "step": {
       "user": {
         "data": {
-          "name": "Name",
           "port": "Port",
           "account": "Account",
           "encryption_key": "Encryption Key",
@@ -13,6 +12,16 @@
           "additional_account": "Add more accounts?"
         },
         "title": "Create a connection for SIA based alarm systems."
+      },
+      "additional_account": {
+        "data": {
+          "account": "Account",
+          "encryption_key": "Encryption Key",
+          "ping_interval": "Ping Interval (min)",
+          "zones": "Number of zones for the account",
+          "additional_account": "Add more accounts?"
+        },
+        "title": "Add another account to the current port."
       }
     },
     "error": {

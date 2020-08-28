@@ -8,6 +8,7 @@ from homeassistant.components.alarm_control_panel import (
 
 CONF_ACCOUNT = "account"
 CONF_ACCOUNTS = "accounts"
+CONF_ADDITIONAL_ACCOUNTS = "additional_account"
 CONF_PING_INTERVAL = "ping_interval"
 CONF_ENCRYPTION_KEY = "encryption_key"
 CONF_ZONES = "zones"

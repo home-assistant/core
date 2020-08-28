@@ -5,7 +5,7 @@ from typing import Callable
 
 from homeassistant.components.alarm_control_panel import (
     ENTITY_ID_FORMAT as ALARM_FORMAT,
-    AlarmControlPanel,
+    AlarmControlPanelEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -42,8 +42,7 @@ async def async_setup_entry(
     """Set up sia_alarm_control_panel from a config entry."""
     devices = [
         device
-        for hub in hass.data[DOMAIN].values()
-        for device in hub.states.values()
+        for device in hass.data[DOMAIN][entry.entry_id].states.values()
         if isinstance(device, SIAAlarmControlPanel)
     ]
     async_add_devices(devices)
@@ -51,7 +50,7 @@ async def async_setup_entry(
     return True
 
 
-class SIAAlarmControlPanel(AlarmControlPanel, RestoreEntity):
+class SIAAlarmControlPanel(AlarmControlPanelEntity, RestoreEntity):
     """Class for SIA Alarm Control Panels."""
 
     def __init__(
@@ -69,9 +68,9 @@ class SIAAlarmControlPanel(AlarmControlPanel, RestoreEntity):
         self.entity_id = ALARM_FORMAT.format(entity_id)
         self._unique_id = entity_id
         self._name = name
-        self.hass = hass
         self._zone = zone
         self._ping_interval = ping_interval
+        self._port = port
 
         self._is_available = True
         self._remove_unavailability_tracker = None
@@ -112,7 +111,7 @@ class SIAAlarmControlPanel(AlarmControlPanel, RestoreEntity):
             self.state = state.state
         else:
             self.state = None
-        self._async_track_unavailable()
+        await self._async_track_unavailable()
         async_dispatcher_connect(
             self.hass, DATA_UPDATED, self._schedule_immediate_update
         )
@@ -214,7 +213,7 @@ class SIAAlarmControlPanel(AlarmControlPanel, RestoreEntity):
     def device_info(self) -> dict:
         """Return the device_info."""
         return {
-            "identifiers": {(DOMAIN, self.unique_id)},
+            "identifiers": {(DOMAIN, self._unique_id)},
             "name": self.name,
             "via_device": (DOMAIN, self._port, self._account),
         }

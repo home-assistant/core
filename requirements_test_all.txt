@@ -944,7 +944,7 @@ pyserial-asyncio==0.5
 pyserial==3.4
 
 # homeassistant.components.sia
-pysiaalarm==0.2.0
+pysiaalarm==2.0.7
 
 # homeassistant.components.signal_messenger
 pysignalclirestapi==0.3.4

@@ -6,6 +6,7 @@ from pysiaalarm import (
     InvalidAccountLengthError,
     InvalidKeyFormatError,
     InvalidKeyLengthError,
+    SIAAccount,
 )
 import voluptuous as vol
 
@@ -15,10 +16,10 @@ from homeassistant.const import CONF_PORT
 from .const import (  # pylint: disable=unused-import
     CONF_ACCOUNT,
     CONF_ACCOUNTS,
+    CONF_ADDITIONAL_ACCOUNTS,
     CONF_ENCRYPTION_KEY,
     CONF_PING_INTERVAL,
     CONF_ZONES,
-    DEFAULT_NAME,
     DOMAIN,
     INVALID_ACCOUNT_FORMAT,
     INVALID_ACCOUNT_LENGTH,
@@ -108,7 +109,9 @@ class SIAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not user_input or errors:
             schema = create_schema("additional_account", user_input)
             return self.async_show_form(
-                step_id="additional_account", data_schema=schema, errors=errors,
+                step_id="additional_account",
+                data_schema=schema,
+                errors=errors,
             )
 
         add_data = user_input.copy()
@@ -129,7 +132,9 @@ class SIAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not user_input or errors:
             schema = create_schema("user", user_input)
             return self.async_show_form(
-                step_id="user", data_schema=schema, errors=errors,
+                step_id="user",
+                data_schema=schema,
+                errors=errors,
             )
 
         await self.async_set_unique_id(user_input[CONF_PORT])

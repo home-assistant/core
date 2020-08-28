@@ -33,38 +33,44 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.sia.config_flow.validate_input", return_value={},
+        "homeassistant.components.sia.config_flow.validate_input",
+        return_value={},
     ), patch(
         "homeassistant.components.sia.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.sia.async_setup_entry", return_value=True,
+        "homeassistant.components.sia.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "name": "SIA",
                 "port": 7777,
                 "account": "ABCDEF",
                 "encryption_key": "AAAAAAAAAAAAAAAA",
                 "ping_interval": 10,
+                "zones": 1,
             },
         )
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "ABCDEF"
+    assert result2["title"] == "SIA Alarm on port 7777"
     assert result2["data"] == {
-        "name": "SIA",
         "port": 7777,
-        "account": "ABCDEF",
-        "encryption_key": "AAAAAAAAAAAAAAAA",
-        "ping_interval": 10,
+        "accounts": [
+            {
+                "account": "ABCDEF",
+                "encryption_key": "AAAAAAAAAAAAAAAA",
+                "ping_interval": 10,
+                "zones": 1,
+            }
+        ],
     }
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_key_format(hass):
+async def test_form_additional_account(hass):
     """Test we handle invalid key."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -92,8 +98,15 @@ async def test_form_invalid_key_format(hass):
         "accounts": [
             {
                 "account": "ABCDEF",
-                "encryption_key": "AAAAAAAAAAAAA",
+                "encryption_key": "AAAAAAAAAAAAAAAA",
                 "ping_interval": 10,
+                "zones": 1,
+            },
+            {
+                "account": "ACC2",
+                "encryption_key": "AAAAAAAAAAAAAAAA",
+                "ping_interval": 2,
+                "zones": 2,
             },
         ],
     }
