@@ -96,6 +96,13 @@ async def setup_push_receiver(hass, aioclient_mock):
     assert hass.services.has_service("notify", "mobile_app_test")
     assert not hass.services.has_service("notify", "mobile_app_loaded_late")
 
+    loaded_late_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(loaded_late_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.services.has_service("notify", "mobile_app_test")
+    assert hass.services.has_service("notify", "mobile_app_loaded_late")
+
 
 async def test_notify_works(hass, aioclient_mock, setup_push_receiver):
     """Test notify works."""
