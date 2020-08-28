@@ -60,7 +60,10 @@ NOTIFY_SERVICE_SCHEMA = vol.Schema(
 @bind_hass
 async def async_reload(hass, integration_name):
     """Register notify services for an integration."""
-    if NOTIFY_SERVICES not in hass.data:
+    if (
+        NOTIFY_SERVICES not in hass.data
+        or integration_name not in hass.data[NOTIFY_SERVICES]
+    ):
         return
 
     data = hass.data[NOTIFY_SERVICES][integration_name]
@@ -74,8 +77,12 @@ async def async_reload(hass, integration_name):
 
     if hasattr(notify_service, "targets"):
         target_friendly_name = data[TARGET_FRIENDLY_NAME]
+        stale_targets = set(targets)
+
         for name, target in notify_service.targets.items():
             target_name = slugify(f"{target_friendly_name}_{name}")
+            if target_name in stale_targets:
+                stale_targets.remove(target_name)
             if target_name in targets:
                 continue
             targets[target_name] = target
@@ -84,6 +91,12 @@ async def async_reload(hass, integration_name):
                 target_name,
                 _async_notify_message,
                 schema=NOTIFY_SERVICE_SCHEMA,
+            )
+
+        for stale_target_name in stale_targets:
+            hass.services.async_remove(
+                DOMAIN,
+                stale_target_name,
             )
 
     friendly_name_slug = slugify(friendly_name)
