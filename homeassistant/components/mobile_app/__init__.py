@@ -1,7 +1,7 @@
 """Integrates Native Apps to Home Assistant."""
 import asyncio
 
-from homeassistant.components import cloud
+from homeassistant.components import cloud, notify as hass_notify
 from homeassistant.components.webhook import (
     async_register as webhook_register,
     async_unregister as webhook_unregister,
@@ -100,6 +100,8 @@ async def async_setup_entry(hass, entry):
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, domain)
         )
+
+    await hass_notify.async_reload(hass, DOMAIN)
 
     return True
 
