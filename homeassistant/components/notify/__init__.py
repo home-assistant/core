@@ -40,7 +40,7 @@ NOTIFY_SERVICES = "notify_services"
 SERVICE = "service"
 TARGETS = "targets"
 FRIENDLY_NAME = "friendly_name"
-
+TARGET_FRIENDLY_NAME = "target_friendly_name"
 
 PLATFORM_SCHEMA = vol.Schema(
     {vol.Required(CONF_PLATFORM): cv.string, vol.Optional(CONF_NAME): cv.string},
@@ -73,8 +73,9 @@ async def async_reload(hass, integration_name):
         await _async_notify_message_service(hass, service, notify_service, targets)
 
     if hasattr(notify_service, "targets"):
+        target_friendly_name = data[TARGET_FRIENDLY_NAME]
         for name, target in notify_service.targets.items():
-            target_name = slugify(f"{friendly_name}_{name}")
+            target_name = slugify(f"{target_friendly_name}_{name}")
             if target_name in targets:
                 continue
             targets[target_name] = target
@@ -170,15 +171,19 @@ async def async_setup(hass, config):
         if discovery_info is None:
             discovery_info = {}
 
+        target_friendly_name = (
+            p_config.get(CONF_NAME) or discovery_info.get(CONF_NAME) or integration_name
+        )
+
         friendly_name = (
-            p_config.get(CONF_NAME)
-            or discovery_info.get(CONF_NAME)
-            or integration_name
-            or SERVICE_NOTIFY
+            p_config.get(CONF_NAME) or discovery_info.get(CONF_NAME) or SERVICE_NOTIFY
         )
 
         hass.data[NOTIFY_SERVICES][integration_name] = {
             FRIENDLY_NAME: friendly_name,
+            # The targets use a slightly different friendly name
+            # selection pattern than the base service
+            TARGET_FRIENDLY_NAME: target_friendly_name,
             SERVICE: notify_service,
             TARGETS: {},
         }
