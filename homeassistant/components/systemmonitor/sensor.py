@@ -30,9 +30,6 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_ARG = "arg"
 
-DOMAIN = "sensor"
-ENTITY_ID_FORMAT = DOMAIN + ".{}"
-
 if sys.maxsize > 2 ** 32:
     CPU_ICON = "mdi:cpu-64-bit"
 else:
