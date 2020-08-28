@@ -46,6 +46,8 @@ MEDIA_TYPE_ARTIST = "artist"
 MEDIA_TYPE_CONTRIBUTING_ARTIST = "contributing_artist"
 MEDIA_TYPE_PODCAST = "podcast"
 MEDIA_TYPE_SEASON = "season"
+MEDIA_TYPE_GENRE = "genre"
+MEDIA_TYPE_COMPOSER = "composer"
 
 SERVICE_CLEAR_PLAYLIST = "clear_playlist"
 SERVICE_PLAY_MEDIA = "play_media"
