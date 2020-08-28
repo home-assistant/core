@@ -73,7 +73,7 @@ async def test_service_specify_data(hass, calls):
 
     time = dt_util.utcnow()
 
-    with patch("homeassistant.components.automation.utcnow", return_value=time):
+    with patch("homeassistant.helpers.script.utcnow", return_value=time):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
 
@@ -587,11 +587,7 @@ async def test_automation_stops(hass, calls, service):
             ],
         }
     }
-    assert await async_setup_component(
-        hass,
-        automation.DOMAIN,
-        config,
-    )
+    assert await async_setup_component(hass, automation.DOMAIN, config)
 
     running = asyncio.Event()
 
