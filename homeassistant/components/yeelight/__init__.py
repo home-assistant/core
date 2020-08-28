@@ -251,7 +251,7 @@ class YeelightScanner:
         self._hass = hass
         self._seen = {}
         self._callbacks = {}
-        self._scanning = False
+        self._scan_task = None
 
     async def _async_scan(self):
         _LOGGER.debug("Yeelight scanning")
@@ -271,25 +271,22 @@ class YeelightScanner:
                     if len(self._callbacks) == 0:
                         self._async_stop_scan()
 
-        if not self._scanning:
-            return
-
         await asyncio.sleep(SCAN_INTERVAL.seconds)
-        if self._scanning:  # make sure we are still scanning after sleep
-            self._hass.async_create_task(self._async_scan())
+        self._scan_task = self._hass.async_create_task(self._async_scan())
 
     @callback
     def _async_start_scan(self):
         """Start scanning for Yeelight devices."""
         _LOGGER.debug("Start scanning")
-        self._scanning = True
-        self._hass.async_create_task(self._async_scan())
+        self._scan_task = self._hass.async_create_task(self._async_scan())
 
     @callback
     def _async_stop_scan(self):
         """Stop scanning."""
         _LOGGER.debug("Stop scanning")
-        self._scanning = False
+        if self._scan_task is not None:
+            self._scan_task.cancel()
+            self._scan_task = None
 
     @callback
     def async_register_callback(self, unique_id, callback_func):
