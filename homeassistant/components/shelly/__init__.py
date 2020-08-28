@@ -20,7 +20,7 @@ from homeassistant.helpers import (
 
 from .const import DOMAIN
 
-PLATFORMS = ["switch"]
+PLATFORMS = ["switch", "light", "sensor"]
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -129,11 +129,12 @@ class ShellyBlockEntity(entity.Entity):
         """Initialize Shelly entity."""
         self.wrapper = wrapper
         self.block = block
+        self._name = f"{self.wrapper.name} - {self.block.description.replace('_', ' ')}"
 
     @property
     def name(self):
         """Name of entity."""
-        return f"{self.wrapper.name} - {self.block.description}"
+        return self._name
 
     @property
     def should_poll(self):
@@ -155,7 +156,7 @@ class ShellyBlockEntity(entity.Entity):
     @property
     def unique_id(self):
         """Return unique ID of entity."""
-        return f"{self.wrapper.mac}-{self.block.index}"
+        return f"{self.wrapper.mac}-{self.block.description}"
 
     async def async_added_to_hass(self):
         """When entity is added to HASS."""
