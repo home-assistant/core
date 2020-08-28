@@ -364,9 +364,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         ports = await self.hass.async_add_executor_job(serial.tools.list_ports.comports)
         list_of_ports = {}
-        for p in ports:
-            list_of_ports[p.device] = f"{p}, s/n: {p.serial_number or 'n/a'}" + (
-                f" - {p.manufacturer}" if p.manufacturer else ""
+        for port in ports:
+            list_of_ports[port.device] = (
+                f"{port}, s/n: {port.serial_number or 'n/a'}"
+                + (f" - {port.manufacturer}" if port.manufacturer else "")
             )
         list_of_ports[CONF_MANUAL_PATH] = CONF_MANUAL_PATH
 
