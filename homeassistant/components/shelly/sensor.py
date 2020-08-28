@@ -2,7 +2,7 @@
 import aioshelly
 
 from homeassistant.components import sensor
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT, UNIT_PERCENTAGE
 from homeassistant.helpers.entity import Entity
 
 from . import ShellyBlockEntity, ShellyDeviceWrapper
@@ -10,7 +10,7 @@ from .const import DOMAIN
 
 SENSORS = {
     "extTemp": [None, sensor.DEVICE_CLASS_TEMPERATURE],
-    "humidity": ["%", sensor.DEVICE_CLASS_HUMIDITY],
+    "humidity": [UNIT_PERCENTAGE, sensor.DEVICE_CLASS_HUMIDITY],
 }
 
 
