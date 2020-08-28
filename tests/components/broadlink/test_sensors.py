@@ -15,6 +15,7 @@ def _patch_broadlink_gendevice(return_value):
         return_value=return_value,
     )
 
+
 async def test_a1_sensor_setup(hass):
     """Test a successful e-Sensor setup."""
     device = get_device("Bedroom")
