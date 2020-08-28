@@ -17,7 +17,7 @@ async def test_form(hass):
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"host": "2.238.194.163:8085"},
+        {"host": "2.238.194.163", "port": 8085},
     )
 
     assert result2["type"] == "form"
@@ -36,7 +36,7 @@ async def test_form_unexisting_board(hass):
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": "1.1.1.1"},
+            {"host": "1.1.1.1", "port": 80},
         )
 
     assert result2["type"] == "form"
