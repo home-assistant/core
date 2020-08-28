@@ -155,7 +155,7 @@ class SystemMonitorSensor(Entity):
     def __init__(self, sensor_type, argument=""):
         """Initialize the sensor."""
         self._name = "{} {}".format(SENSOR_TYPES[sensor_type][0], argument)
-        self.entity_id = ENTITY_ID_FORMAT.format(slugify(sensor_type + "_" + argument))
+        self._unique_id = slugify(f"{sensor_type}_{argument}")
         self.argument = argument
         self.type = sensor_type
         self._state = None
@@ -169,6 +169,11 @@ class SystemMonitorSensor(Entity):
     def name(self):
         """Return the name of the sensor."""
         return self._name.rstrip()
+
+    @property
+    def unique_id(self):
+        """Return the unique ID."""
+        return self._unique_id
 
     @property
     def device_class(self):
@@ -299,7 +304,7 @@ class SystemMonitorSensor(Entity):
                 # In case the label is empty (e.g. on Raspberry PI 4),
                 # construct it ourself here based on the sensor key name.
                 if not entry.label:
-                    _label = name + " " + str(i)
+                    _label = f"{name} {i}"
                 else:
                     _label = entry.label
 
