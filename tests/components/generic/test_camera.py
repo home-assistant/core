@@ -1,8 +1,15 @@
 """The tests for generic camera component."""
 import asyncio
+from os import path
 
+from homeassistant import config as hass_config
+from homeassistant.components.generic import DOMAIN
 from homeassistant.components.websocket_api.const import TYPE_RESULT
-from homeassistant.const import HTTP_INTERNAL_SERVER_ERROR, HTTP_NOT_FOUND
+from homeassistant.const import (
+    HTTP_INTERNAL_SERVER_ERROR,
+    HTTP_NOT_FOUND,
+    SERVICE_RELOAD,
+)
 from homeassistant.setup import async_setup_component
 
 from tests.async_mock import patch
@@ -292,3 +299,58 @@ async def test_camera_content_type(aioclient_mock, hass, hass_client):
     assert resp_2.content_type == "image/jpeg"
     body = await resp_2.text()
     assert body == svg_image
+
+
+async def test_reloading(aioclient_mock, hass, hass_client):
+    """Test we can cleanly reload."""
+    aioclient_mock.get("http://example.com", text="hello world")
+
+    await async_setup_component(
+        hass,
+        "camera",
+        {
+            "camera": {
+                "name": "config_test",
+                "platform": "generic",
+                "still_image_url": "http://example.com",
+                "username": "user",
+                "password": "pass",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+
+    resp = await client.get("/api/camera_proxy/camera.config_test")
+
+    assert resp.status == 200
+    assert aioclient_mock.call_count == 1
+    body = await resp.text()
+    assert body == "hello world"
+
+    yaml_path = path.join(
+        _get_fixtures_base_path(), "fixtures", "generic/configuration.yaml",
+    )
+    with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
+        await hass.services.async_call(
+            DOMAIN, SERVICE_RELOAD, {}, blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 1
+
+    resp = await client.get("/api/camera_proxy/camera.config_test")
+
+    assert resp.status == 404
+
+    resp = await client.get("/api/camera_proxy/camera.reload")
+
+    assert resp.status == 200
+    assert aioclient_mock.call_count == 2
+    body = await resp.text()
+    assert body == "hello world"
+
+
+def _get_fixtures_base_path():
+    return path.dirname(path.dirname(path.dirname(__file__)))
