@@ -39,22 +39,6 @@ class ProgettihwswBinarySensor(BinarySensorEntity):
         self._sensor = sensor
         self._state = None
 
-    def added_to_hass(self):
-        """Run this function when entity is added to HASS."""
-
-        def setup_entity():
-            """Set up sensor entity when HA starts up."""
-            self._sensor.update()
-            self._state = self._sensor.is_on
-            self.schedule_update_ha_state(True)
-
-        self.hass.add_executor_job(setup_entity)
-
-    @property
-    def should_poll(self):
-        """Poll for new switch state."""
-        return True
-
     @property
     def name(self):
         """Return the sensor name."""
@@ -65,7 +49,7 @@ class ProgettihwswBinarySensor(BinarySensorEntity):
         """Get sensor state."""
         return self._state
 
-    async def async_update(self):
+    def update(self):
         """Update the state of binary sensor."""
-        self.hass.async_add_executor_job(self._sensor.update)
+        self._sensor.update()
         self._state = self._sensor.is_on

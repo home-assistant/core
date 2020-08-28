@@ -23,7 +23,9 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up ProgettiHWSW Automation from a config entry."""
 
-    hass.data[DOMAIN][entry.entry_id] = ProgettiHWSWAPI(entry.data["host"])
+    hass.data[DOMAIN][entry.entry_id] = ProgettiHWSWAPI(
+        f'{entry.data["host"]}:{entry.data["port"]}'
+    )
 
     # Check board validation again to load new values to API.
     await hass.async_add_executor_job(hass.data[DOMAIN][entry.entry_id].check_board)

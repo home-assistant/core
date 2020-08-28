@@ -49,17 +49,6 @@ class ProgettihwswSwitch(SwitchEntity):
         self._state = None
         self._number = number
 
-    def added_to_hass(self):
-        """Run this function when entity is added to HASS."""
-
-        def setup_entity():
-            """Set switch entity up when HA starts."""
-            self._switch.update()
-            self._state = self._switch.is_on
-            self.schedule_update_ha_state(True)
-
-        self.hass.add_executor_job(setup_entity)
-
     def turn_on(self, **kwargs):
         """Turn the switch on."""
         return self._switch.control(True)
@@ -82,12 +71,7 @@ class ProgettihwswSwitch(SwitchEntity):
         """Get switch state."""
         return self._state
 
-    @property
-    def should_poll(self):
-        """Poll for new switch state."""
-        return True
-
-    async def async_update(self):
+    def update(self):
         """Update the state of switch."""
-        self.hass.async_add_executor_job(self._switch.update)
+        self._switch.update()
         self._state = self._switch.is_on
