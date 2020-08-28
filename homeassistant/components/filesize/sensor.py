@@ -9,8 +9,8 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import DATA_BYTES, DATA_MEGABYTES
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-import homeassistant.util.data_size as data_size
 from homeassistant.helpers.reload import setup_reload_service
+import homeassistant.util.data_size as data_size
 
 from . import DOMAIN, PLATFORMS
 
