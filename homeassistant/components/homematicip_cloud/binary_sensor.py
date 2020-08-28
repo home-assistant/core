@@ -87,7 +87,10 @@ async def async_setup_entry(
             entities.append(HomematicipAccelerationSensor(hap, device))
         if isinstance(device, (AsyncContactInterface, AsyncFullFlushContactInterface)):
             entities.append(HomematicipContactInterface(hap, device))
-        if isinstance(device, (AsyncShutterContact, AsyncShutterContactMagnetic),):
+        if isinstance(
+            device,
+            (AsyncShutterContact, AsyncShutterContactMagnetic),
+        ):
             entities.append(HomematicipShutterContact(hap, device))
         if isinstance(device, AsyncRotaryHandleSensor):
             entities.append(HomematicipShutterContact(hap, device, True))
