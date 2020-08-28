@@ -53,7 +53,7 @@ class OneWireFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if CONF_TYPE_SYSBUS == user_input[CONF_TYPE]:
                 if os.path.isdir(DEFAULT_MOUNT_DIR):
                     user_input[CONF_MOUNT_DIR] = DEFAULT_MOUNT_DIR
-                    return await self.async_create_entry(
+                    return self.async_create_entry(
                         title=DEFAULT_MOUNT_DIR, data=user_input
                     )
                 errors["base"] = "invalid_path"
@@ -75,7 +75,7 @@ class OneWireFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 owproxy = protocol.proxy(host=owhost, port=owport)
                 owproxy.dir()
-                return await self.async_create_entry(title=owhost, data=user_input)
+                return self.async_create_entry(title=owhost, data=user_input)
             except (protocol.Error, protocol.ConnError) as exc:
                 LOGGER.error(
                     "Cannot connect to owserver on %s:%d, got: %s", owhost, owport, exc
@@ -99,7 +99,7 @@ class OneWireFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input:
             owpath = user_input.get(CONF_MOUNT_DIR)
             if os.path.isdir(owpath):
-                return await self.async_create_entry(title=owpath, data=user_input)
+                return self.async_create_entry(title=owpath, data=user_input)
             errors["base"] = "invalid_path"
 
         return self.async_show_form(
