@@ -6,6 +6,7 @@ import re
 import sys
 from typing import Any, Dict
 
+from icmplib import SocketPermissionError, ping as icmp_ping
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
@@ -59,7 +60,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None) -> None:
     count = config[CONF_PING_COUNT]
     name = config.get(CONF_NAME, f"{DEFAULT_NAME} {host}")
 
-    add_entities([PingBinarySensor(name, PingData(host, count))], True)
+    try:
+        # Verify we can create a raw socket, or
+        # fallback to using a subprocess
+        icmp_ping("127.0.0.1", count=0, timeout=0)
+        ping_cls = PingDataICMPLib
+    except SocketPermissionError:
+        ping_cls = PingDataSubProcess
+
+    ping_data = ping_cls(hass, host, count)
+
+    add_entities([PingBinarySensor(name, ping_data)], True)
 
 
 class PingBinarySensor(BinarySensorEntity):
@@ -102,15 +113,42 @@ class PingBinarySensor(BinarySensorEntity):
 
 
 class PingData:
-    """The Class for handling the data retrieval."""
+    """The base class for handling the data retrieval."""
 
-    def __init__(self, host, count) -> None:
+    def __init__(self, hass, host, count) -> None:
         """Initialize the data object."""
+        self.hass = hass
         self._ip_address = host
         self._count = count
         self.data = {}
         self.available = False
 
+
+class PingDataICMPLib(PingData):
+    """The Class for handling the data retrieval using icmplib."""
+
+    def ping(self):
+        """Send ICMP echo request and return details."""
+        return icmp_ping(self._ip_address, count=self._count)
+
+    async def async_update(self) -> None:
+        """Retrieve the latest details from the host."""
+        data = await self.hass.async_add_executor_job(self.ping)
+        self.data = {
+            "min": data.min_rtt,
+            "max": data.max_rtt,
+            "avg": data.avg_rtt,
+            "mdev": "",
+        }
+        self.available = data.is_alive
+
+
+class PingDataSubProcess(PingData):
+    """The Class for handling the data retrieval using the ping binary."""
+
+    def __init__(self, hass, host, count) -> None:
+        """Initialize the data object."""
+        super().__init__(hass, host, count)
         if sys.platform == "win32":
             self._ping_cmd = [
                 "ping",
