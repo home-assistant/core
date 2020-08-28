@@ -1,16 +1,19 @@
 """The test for the History Statistics sensor platform."""
 # pylint: disable=protected-access
 from datetime import datetime, timedelta
+from os import path
 import unittest
 
 import pytest
 import pytz
 
+from homeassistant import config as hass_config
+from homeassistant.components.history_stats import DOMAIN
 from homeassistant.components.history_stats.sensor import HistoryStatsSensor
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import SERVICE_RELOAD, STATE_UNKNOWN
 import homeassistant.core as ha
 from homeassistant.helpers.template import Template
-from homeassistant.setup import setup_component
+from homeassistant.setup import async_setup_component, setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.async_mock import patch
@@ -255,3 +258,58 @@ class TestHistoryStatsSensor(unittest.TestCase):
         """Initialize the recorder."""
         init_recorder_component(self.hass)
         self.hass.start()
+
+
+async def test_reload(hass):
+    """Verify we can reload history_stats sensors."""
+    await hass.async_add_executor_job(
+        init_recorder_component, hass
+    )  # force in memory db
+
+    hass.state = ha.CoreState.not_running
+    hass.states.async_set("binary_sensor.test_id", "on")
+
+    await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": {
+                "platform": "history_stats",
+                "entity_id": "binary_sensor.test_id",
+                "name": "test",
+                "state": "on",
+                "start": "{{ as_timestamp(now()) - 3600 }}",
+                "duration": "01:00",
+            },
+        },
+    )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 2
+
+    assert hass.states.get("sensor.test")
+
+    yaml_path = path.join(
+        _get_fixtures_base_path(),
+        "fixtures",
+        "history_stats/configuration.yaml",
+    )
+    with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RELOAD,
+            {},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 2
+
+    assert hass.states.get("sensor.test") is None
+    assert hass.states.get("sensor.second_test")
+
+
+def _get_fixtures_base_path():
+    return path.dirname(path.dirname(path.dirname(__file__)))
