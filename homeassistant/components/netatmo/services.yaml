@@ -1,4 +1,11 @@
 # Describes the format for available Netatmo services
+set_camera_light:
+  description: Set the camera light mode.
+  fields:
+    camera_light_mode:
+      description: Outdoor camera light mode (on/off/auto)
+      example: auto
+
 set_schedule:
   description: Set the heating schedule.
   fields:
