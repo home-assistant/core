@@ -910,6 +910,7 @@ build.json @home-assistant/supervisor
 /tests/components/roon/ @pavoni
 /homeassistant/components/rpi_power/ @shenxn @swetoast
 /tests/components/rpi_power/ @shenxn @swetoast
+/homeassistant/components/rrd/ @dgomes
 /homeassistant/components/rss_feed_template/ @home-assistant/core
 /tests/components/rss_feed_template/ @home-assistant/core
 /homeassistant/components/rtsp_to_webrtc/ @allenporter

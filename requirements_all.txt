@@ -2132,6 +2132,9 @@ rova==0.3.0
 # homeassistant.components.rpi_power
 rpi-bad-power==0.1.0
 
+# homeassistant.components.rrd
+rrdtool==0.1.15
+
 # homeassistant.components.rtsp_to_webrtc
 rtsp-to-webrtc==0.5.1
 
