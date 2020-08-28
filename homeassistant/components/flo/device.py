@@ -46,7 +46,7 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
                     *[self._update_device(), self._update_consumption_data()]
                 )
         except (RequestError) as error:
-            raise UpdateFailed(error)
+            raise UpdateFailed(error) from error
 
     @property
     def location_id(self) -> str:

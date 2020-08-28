@@ -54,8 +54,8 @@ def is_socket_address(value):
     try:
         socket.getaddrinfo(value, None)
         return value
-    except OSError:
-        raise vol.Invalid("Device is not a valid domain name or ip address")
+    except OSError as err:
+        raise vol.Invalid("Device is not a valid domain name or ip address") from err
 
 
 def get_mysensors_gateway(hass, gateway_id):

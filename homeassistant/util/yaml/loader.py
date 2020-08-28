@@ -61,10 +61,10 @@ def load_yaml(fname: str) -> JSON_TYPE:
             return yaml.load(conf_file, Loader=SafeLineLoader) or OrderedDict()
     except yaml.YAMLError as exc:
         _LOGGER.error(str(exc))
-        raise HomeAssistantError(exc)
+        raise HomeAssistantError(exc) from exc
     except UnicodeDecodeError as exc:
         _LOGGER.error("Unable to read file %s: %s", fname, exc)
-        raise HomeAssistantError(exc)
+        raise HomeAssistantError(exc) from exc
 
 
 @overload
@@ -109,8 +109,10 @@ def _include_yaml(loader: SafeLineLoader, node: yaml.nodes.Node) -> JSON_TYPE:
     fname = os.path.join(os.path.dirname(loader.name), node.value)
     try:
         return _add_reference(load_yaml(fname), loader, node)
-    except FileNotFoundError:
-        raise HomeAssistantError(f"{node.start_mark}: Unable to read file {fname}.")
+    except FileNotFoundError as exc:
+        raise HomeAssistantError(
+            f"{node.start_mark}: Unable to read file {fname}."
+        ) from exc
 
 
 def _is_file_valid(name: str) -> bool:
@@ -195,12 +197,12 @@ def _ordered_dict(loader: SafeLineLoader, node: yaml.nodes.MappingNode) -> Order
 
         try:
             hash(key)
-        except TypeError:
+        except TypeError as exc:
             fname = getattr(loader.stream, "name", "")
             raise yaml.MarkedYAMLError(
                 context=f'invalid key: "{key}"',
                 context_mark=yaml.Mark(fname, 0, line, -1, None, None),
-            )
+            ) from exc
 
         if key in seen:
             fname = getattr(loader.stream, "name", "")

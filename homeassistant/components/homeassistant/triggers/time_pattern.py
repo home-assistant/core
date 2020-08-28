@@ -40,8 +40,8 @@ class TimePattern:
 
             if not (0 <= number <= self.maximum):
                 raise vol.Invalid(f"must be a value between 0 and {self.maximum}")
-        except ValueError:
-            raise vol.Invalid("invalid time_pattern value")
+        except ValueError as err:
+            raise vol.Invalid("invalid time_pattern value") from err
 
         return value
 

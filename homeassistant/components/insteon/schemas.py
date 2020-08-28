@@ -173,8 +173,8 @@ def normalize_byte_entry_to_int(entry: [int, bytes, str]):
             raise ValueError("Not a valid hex code")
         try:
             entry = unhexlify(entry)
-        except HexError:
-            raise ValueError("Not a valid hex code")
+        except HexError as err:
+            raise ValueError("Not a valid hex code") from err
     return int.from_bytes(entry, byteorder="big")
 
 
@@ -184,8 +184,8 @@ def add_device_override(config_data, new_override):
         address = str(Address(new_override[CONF_ADDRESS]))
         cat = normalize_byte_entry_to_int(new_override[CONF_CAT])
         subcat = normalize_byte_entry_to_int(new_override[CONF_SUBCAT])
-    except ValueError:
-        raise ValueError("Incorrect values")
+    except ValueError as err:
+        raise ValueError("Incorrect values") from err
 
     overrides = config_data.get(CONF_OVERRIDE, [])
     curr_override = {}

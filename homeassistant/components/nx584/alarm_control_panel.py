@@ -60,7 +60,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             "Unable to connect to %(host)s: %(reason)s",
             dict(host=url, reason=ex),
         )
-        raise PlatformNotReady
+        raise PlatformNotReady from ex
 
     entity = NX584Alarm(name, alarm_client, url)
     async_add_entities([entity])

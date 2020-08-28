@@ -102,9 +102,9 @@ class AwairDataUpdateCoordinator(DataUpdateCoordinator):
                         )
                     )
 
-                raise UpdateFailed(err)
+                raise UpdateFailed(err) from err
             except Exception as err:
-                raise UpdateFailed(err)
+                raise UpdateFailed(err) from err
 
     async def _fetch_air_data(self, device):
         """Fetch latest air quality data."""

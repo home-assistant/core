@@ -264,7 +264,7 @@ class _ScriptRun:
                 ex,
                 level=logging.ERROR,
             )
-            raise _StopScript
+            raise _StopScript from ex
 
     async def _async_delay_step(self):
         """Handle delay."""
@@ -327,10 +327,10 @@ class _ScriptRun:
         try:
             async with timeout(delay) as to_context:
                 await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
-        except asyncio.TimeoutError:
+        except asyncio.TimeoutError as ex:
             if not self._action.get(CONF_CONTINUE_ON_TIMEOUT, True):
                 self._log(_TIMEOUT_MSG)
-                raise _StopScript
+                raise _StopScript from ex
             self._variables["wait"]["remaining"] = 0.0
         finally:
             for task in tasks:
@@ -502,7 +502,7 @@ class _ScriptRun:
                         ex,
                         level=logging.ERROR,
                     )
-                    raise _StopScript
+                    raise _StopScript from ex
             extra_msg = f" of {count}"
             for iteration in range(1, count + 1):
                 set_repeat_var(iteration, count)
@@ -600,10 +600,10 @@ class _ScriptRun:
         try:
             async with timeout(delay) as to_context:
                 await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
-        except asyncio.TimeoutError:
+        except asyncio.TimeoutError as ex:
             if not self._action.get(CONF_CONTINUE_ON_TIMEOUT, True):
                 self._log(_TIMEOUT_MSG)
-                raise _StopScript
+                raise _StopScript from ex
             self._variables["wait"]["remaining"] = 0.0
         finally:
             for task in tasks:

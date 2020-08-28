@@ -45,14 +45,14 @@ async def async_setup_entry(
         try:
             return await director_update_data(hass, entry, CONTROL4_NON_DIMMER_VAR)
         except C4Exception as err:
-            raise UpdateFailed(f"Error communicating with API: {err}")
+            raise UpdateFailed(f"Error communicating with API: {err}") from err
 
     async def async_update_data_dimmer():
         """Fetch data from Control4 director for dimmer lights."""
         try:
             return await director_update_data(hass, entry, CONTROL4_DIMMER_VAR)
         except C4Exception as err:
-            raise UpdateFailed(f"Error communicating with API: {err}")
+            raise UpdateFailed(f"Error communicating with API: {err}") from err
 
     non_dimmer_coordinator = DataUpdateCoordinator(
         hass,

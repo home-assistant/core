@@ -136,6 +136,6 @@ class PoolSenseDataUpdateCoordinator(DataUpdateCoordinator):
                 data = await self.poolsense.get_poolsense_data()
             except (PoolSenseError) as error:
                 _LOGGER.error("PoolSense query did not complete.")
-                raise UpdateFailed(error)
+                raise UpdateFailed(error) from error
 
         return data

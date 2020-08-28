@@ -24,10 +24,10 @@ async def validate_input(hass: core.HomeAssistant, data):
             data["password"],
             data.get("2fa"),
         )
-    except MissingTokenError:
-        raise Require2FA
-    except AccessDeniedError:
-        raise InvalidAuth
+    except MissingTokenError as err:
+        raise Require2FA from err
+    except AccessDeniedError as err:
+        raise InvalidAuth from err
 
     return token
 

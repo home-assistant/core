@@ -121,7 +121,7 @@ class IPPDataUpdateCoordinator(DataUpdateCoordinator[IPPPrinter]):
         try:
             return await self.ipp.printer()
         except IPPError as error:
-            raise UpdateFailed(f"Invalid response from API: {error}")
+            raise UpdateFailed(f"Invalid response from API: {error}") from error
 
 
 class IPPEntity(Entity):

@@ -199,8 +199,8 @@ def _get_cloud_url(hass: HomeAssistant, require_current_request: bool = False) -
     if "cloud" in hass.config.components:
         try:
             cloud_url = yarl.URL(cast(str, hass.components.cloud.async_remote_ui_url()))
-        except hass.components.cloud.CloudNotAvailable:
-            raise NoURLAvailableError
+        except hass.components.cloud.CloudNotAvailable as err:
+            raise NoURLAvailableError from err
 
         if not require_current_request or cloud_url.host == _get_request_host():
             return normalize_url(str(cloud_url))

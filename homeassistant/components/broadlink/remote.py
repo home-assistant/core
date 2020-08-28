@@ -175,8 +175,8 @@ class BroadlinkRemote(RemoteEntity, RestoreEntity):
 
             try:
                 code = self._codes[device][command]
-            except KeyError:
-                raise KeyError("Command not found")
+            except KeyError as err:
+                raise KeyError("Command not found") from err
 
             # For toggle commands, alternate between codes in a list.
             if isinstance(code, list):
@@ -187,8 +187,8 @@ class BroadlinkRemote(RemoteEntity, RestoreEntity):
 
         try:
             return data_packet(code), is_toggle_cmd
-        except ValueError:
-            raise ValueError("Invalid code")
+        except ValueError as err:
+            raise ValueError("Invalid code") from err
 
     @callback
     def get_flags(self):

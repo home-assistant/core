@@ -238,7 +238,7 @@ async def async_setup_entry(hass, config_entry):
         return False
     except SimplipyError as err:
         LOGGER.error("Config entry failed: %s", err)
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from err
 
     _async_save_refresh_token(hass, config_entry, api.refresh_token)
 

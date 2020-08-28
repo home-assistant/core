@@ -146,7 +146,7 @@ class RokuDataUpdateCoordinator(DataUpdateCoordinator[Device]):
 
             return data
         except RokuError as error:
-            raise UpdateFailed(f"Invalid response from API: {error}")
+            raise UpdateFailed(f"Invalid response from API: {error}") from error
 
 
 class RokuEntity(Entity):
