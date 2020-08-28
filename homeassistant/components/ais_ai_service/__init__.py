@@ -4256,7 +4256,7 @@ class AskQuestionIntent(intent.IntentHandler):
         else:
             from homeassistant.components import ais_knowledge_service
 
-            message = await ais_knowledge_service.process_ask_async(hass, question)
+            message = await ais_knowledge_service.async_process_ask(hass, question)
         return "DO_NOT_SAY " + message, True
 
 
@@ -4278,7 +4278,7 @@ class AskWikiQuestionIntent(intent.IntentHandler):
         else:
             from homeassistant.components import ais_knowledge_service
 
-            message = await ais_knowledge_service.process_ask_wiki_async(hass, question)
+            message = await ais_knowledge_service.async_process_ask_wiki(hass, question)
 
         return "DO_NOT_SAY " + message, True
 
