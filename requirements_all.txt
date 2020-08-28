@@ -784,6 +784,9 @@ ibm-watson==4.0.1
 # homeassistant.components.watson_iot
 ibmiotf==0.3.4
 
+# homeassistant.components.ping
+icmplib==1.1.1
+
 # homeassistant.components.iglo
 iglo==1.2.7
 
