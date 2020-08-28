@@ -66,7 +66,12 @@ async def async_reload(hass, integration_name):
     ):
         return
 
-    data = hass.data[NOTIFY_SERVICES][integration_name]
+    for data in hass.data[NOTIFY_SERVICES][integration_name]:
+        await _async_setup_notify_services(hass, data)
+
+
+async def _async_setup_notify_services(hass, data):
+    """Create or remove the notify services."""
     notify_service = data[SERVICE]
     friendly_name = data[FRIENDLY_NAME]
     targets = data[TARGETS]
@@ -94,6 +99,7 @@ async def async_reload(hass, integration_name):
             )
 
         for stale_target_name in stale_targets:
+            del targets[stale_target_name]
             hass.services.async_remove(
                 DOMAIN,
                 stale_target_name,
@@ -187,12 +193,11 @@ async def async_setup(hass, config):
         target_friendly_name = (
             p_config.get(CONF_NAME) or discovery_info.get(CONF_NAME) or integration_name
         )
-
         friendly_name = (
             p_config.get(CONF_NAME) or discovery_info.get(CONF_NAME) or SERVICE_NOTIFY
         )
 
-        hass.data[NOTIFY_SERVICES][integration_name] = {
+        data = {
             FRIENDLY_NAME: friendly_name,
             # The targets use a slightly different friendly name
             # selection pattern than the base service
@@ -200,8 +205,10 @@ async def async_setup(hass, config):
             SERVICE: notify_service,
             TARGETS: {},
         }
+        hass.data[NOTIFY_SERVICES].setdefault(integration_name, [])
+        hass.data[NOTIFY_SERVICES][integration_name].append(data)
 
-        await async_reload(hass, integration_name)
+        await _async_setup_notify_services(hass, data)
 
         hass.config.components.add(f"{DOMAIN}.{integration_name}")
 
