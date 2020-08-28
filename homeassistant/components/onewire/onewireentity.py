@@ -5,7 +5,7 @@ from .const import DOMAIN
 
 
 class OneWireEntity(Entity):
-    """Implementation of a 1-wire Entity."""
+    """Implementation of a 1-Wire Entity."""
 
     def __init__(
         self, device_id, device_file, device_type, entity_type, proxy, initial_value
