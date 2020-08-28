@@ -1706,3 +1706,22 @@ async def test_update_logger(hass, caplog):
     await hass.async_block_till_done()
 
     assert log_name in caplog.text
+
+
+async def test_started_action(hass, caplog):
+    """Test the callback of started_action."""
+    event = "test_event"
+    log_message = "The script started!"
+    logger = logging.getLogger("TEST")
+
+    sequence = cv.SCRIPT_SCHEMA({"event": event})
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    @callback
+    def started_action():
+        logger.info(log_message)
+
+    await script_obj.async_run(context=Context(), started_action=started_action)
+    await hass.async_block_till_done()
+
+    assert log_message in caplog.text

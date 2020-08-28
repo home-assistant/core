@@ -450,9 +450,7 @@ class _ScriptRun:
                 )
             except exceptions.TemplateError as ex:
                 self._log(
-                    "Error rendering event data template: %s",
-                    ex,
-                    level=logging.ERROR,
+                    "Error rendering event data template: %s", ex, level=logging.ERROR
                 )
 
         self._hass.bus.async_fire(
@@ -859,7 +857,10 @@ class Script:
         ).result()
 
     async def async_run(
-        self, variables: Optional[_VarsType] = None, context: Optional[Context] = None
+        self,
+        variables: Optional[_VarsType] = None,
+        context: Optional[Context] = None,
+        started_action: Optional[Callable[..., Any]] = None,
     ) -> None:
         """Run script."""
         if context is None:
@@ -894,6 +895,8 @@ class Script:
             self._hass, self, cast(dict, variables), context, self._log_exceptions
         )
         self._runs.append(run)
+        if started_action:
+            self._hass.async_run_job(started_action)
         self.last_triggered = utcnow()
         self._changed()
 
