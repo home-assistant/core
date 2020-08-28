@@ -43,6 +43,7 @@ MEDIA_TYPE_APP = "app"
 MEDIA_TYPE_ALBUM = "album"
 MEDIA_TYPE_TRACK = "track"
 MEDIA_TYPE_ARTIST = "artist"
+MEDIA_TYPE_CONTRIBUTING_ARTIST = "contributing_artist"
 MEDIA_TYPE_PODCAST = "podcast"
 MEDIA_TYPE_SEASON = "season"
 

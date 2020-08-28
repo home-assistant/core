@@ -20,6 +20,7 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_ALBUM,
     MEDIA_TYPE_ARTIST,
     MEDIA_TYPE_COMPOSER,
+    MEDIA_TYPE_CONTRIBUTING_ARTIST,
     MEDIA_TYPE_GENRE,
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_PLAYLIST,
@@ -87,8 +88,6 @@ SUPPORT_SONOS = (
 
 SOURCE_LINEIN = "Line-in"
 SOURCE_TV = "TV"
-
-MEDIA_TYPE_CONTRIBUTING_ARTIST = "contributing_artist"
 
 EXPANDABLE_MEDIA_TYPES = [
     MEDIA_TYPE_ALBUM,
