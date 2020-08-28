@@ -28,7 +28,6 @@ class AcmedaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             and self.discovered_hubs is not None
             and user_input["id"] in self.discovered_hubs
         ):
-            # pylint: disable=unsubscriptable-object
             return await self.async_create(self.discovered_hubs[user_input["id"]])
 
         # Already configured hosts
