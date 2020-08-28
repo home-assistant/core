@@ -4,8 +4,7 @@
             "already_configured": "Already configured. Only a single configuration possible."
         },
         "error": {
-            "cannot_connect": "Failed to connect",
-            "unknown": "Unexpected error"
+            "cannot_connect": "Failed to connect"
         },
         "step": {
             "user": {
