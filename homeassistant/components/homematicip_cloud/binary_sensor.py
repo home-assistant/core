@@ -87,11 +87,10 @@ async def async_setup_entry(
             entities.append(HomematicipAccelerationSensor(hap, device))
         if isinstance(device, (AsyncContactInterface, AsyncFullFlushContactInterface)):
             entities.append(HomematicipContactInterface(hap, device))
-        if isinstance(
-            device,
-            (AsyncShutterContact, AsyncShutterContactMagnetic, AsyncRotaryHandleSensor),
-        ):
+        if isinstance(device, (AsyncShutterContact, AsyncShutterContactMagnetic),):
             entities.append(HomematicipShutterContact(hap, device))
+        if isinstance(device, AsyncRotaryHandleSensor):
+            entities.append(HomematicipShutterContact(hap, device, True))
         if isinstance(
             device,
             (
@@ -176,6 +175,13 @@ class HomematicipContactInterface(HomematicipGenericEntity, BinarySensorEntity):
 class HomematicipShutterContact(HomematicipGenericEntity, BinarySensorEntity):
     """Representation of the HomematicIP shutter contact."""
 
+    def __init__(
+        self, hap: HomematicipHAP, device, has_additional_state: bool = False
+    ) -> None:
+        """Initialize the shutter contact."""
+        super().__init__(hap, device)
+        self.has_additional_state = has_additional_state
+
     @property
     def device_class(self) -> str:
         """Return the class of this sensor."""
@@ -187,6 +193,18 @@ class HomematicipShutterContact(HomematicipGenericEntity, BinarySensorEntity):
         if self._device.windowState is None:
             return None
         return self._device.windowState != WindowState.CLOSED
+
+    @property
+    def device_state_attributes(self) -> Dict[str, Any]:
+        """Return the state attributes of the Shutter Contact."""
+        state_attr = super().device_state_attributes
+
+        if self.has_additional_state:
+            window_state = getattr(self._device, "windowState", None)
+            if window_state and window_state != WindowState.CLOSED:
+                state_attr[ATTR_WINDOW_STATE] = window_state
+
+        return state_attr
 
 
 class HomematicipMotionDetector(HomematicipGenericEntity, BinarySensorEntity):
