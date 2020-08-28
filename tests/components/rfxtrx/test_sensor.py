@@ -1,7 +1,6 @@
 """The tests for the Rfxtrx sensor platform."""
 import pytest
 
-from homeassistant.components.rfxtrx import sensor
 from homeassistant.components.rfxtrx.const import ATTR_EVENT
 from homeassistant.const import TEMP_CELSIUS, UNIT_PERCENTAGE
 from homeassistant.core import State
@@ -344,11 +343,3 @@ async def test_rssi_sensor(hass, rfxtrx):
     state = hass.states.get("sensor.ac_213c7f2_48_rssi_numeric")
     assert state
     assert state.state == "-72"
-
-
-async def test_empty_conversions(hass, rfxtrx):
-    """Test conversion functions."""
-    battery = sensor.battery_convert(None)
-    assert not battery
-    rssi = sensor.rssi_convert(None)
-    assert not rssi

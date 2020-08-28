@@ -26,14 +26,14 @@ from .const import ATTR_EVENT
 _LOGGER = logging.getLogger(__name__)
 
 
-def battery_convert(value):
+def _battery_convert(value):
     """Battery is given as a value between 0 and 9."""
     if value is None:
         return None
     return value * 10
 
 
-def rssi_convert(value):
+def _rssi_convert(value):
     """Rssi is given as dBm value."""
     if value is None:
         return None
@@ -49,8 +49,8 @@ DEVICE_CLASSES = {
 
 
 CONVERT_FUNCTIONS = {
-    "Battery numeric": battery_convert,
-    "Rssi numeric": rssi_convert,
+    "Battery numeric": _battery_convert,
+    "Rssi numeric": _rssi_convert,
 }
 
 
