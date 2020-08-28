@@ -97,7 +97,7 @@ class ShellySensor(ShellyBlockEntity, Entity):
         # Energy unit change from Wmin or Wh to kWh
         if self.info[aioshelly.BLOCK_VALUE_UNIT] == "Wmin":
             return round(getattr(self.block, self.attribute) / 60 / 1000, 2)
-        elif self.info[aioshelly.BLOCK_VALUE_UNIT] == "Wh":
+        if self.info[aioshelly.BLOCK_VALUE_UNIT] == "Wh":
             return round(getattr(self.block, self.attribute) / 1000, 2)
         return getattr(self.block, self.attribute)
 
