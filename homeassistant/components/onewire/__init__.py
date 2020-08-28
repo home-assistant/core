@@ -1,4 +1,4 @@
-"""The onewire component."""
+"""The 1-Wire component."""
 import voluptuous as vol
 
 from .const import DOMAIN
@@ -10,12 +10,12 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 async def async_setup(hass, config):
-    """Old way of setting up OneWire integrations."""
+    """Old way of setting up 1-Wire integrations."""
     return True
 
 
 async def async_setup_entry(hass, config_entry):
-    """Set up a OneWire server for a config entry."""
+    """Set up a 1-Wire proxy for a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
     owproxy = OneWireProxy(hass, config_entry.data)
