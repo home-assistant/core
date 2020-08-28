@@ -26,7 +26,6 @@ class AcmedaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if (
             user_input is not None
             and self.discovered_hubs is not None
-            # pylint: disable=unsupported-membership-test
             and user_input["id"] in self.discovered_hubs
         ):
             # pylint: disable=unsubscriptable-object
