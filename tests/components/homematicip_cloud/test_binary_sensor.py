@@ -112,11 +112,19 @@ async def test_hmip_shutter_contact(hass, default_mock_hap_factory):
     )
 
     assert ha_state.state == STATE_ON
+    assert ha_state.attributes[ATTR_WINDOW_STATE] == WindowState.TILTED
+
+    await async_manipulate_test_data(hass, hmip_device, "windowState", WindowState.OPEN)
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == STATE_ON
+    assert ha_state.attributes[ATTR_WINDOW_STATE] == WindowState.OPEN
+
     await async_manipulate_test_data(
         hass, hmip_device, "windowState", WindowState.CLOSED
     )
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_OFF
+    assert not ha_state.attributes.get(ATTR_WINDOW_STATE)
 
     await async_manipulate_test_data(hass, hmip_device, "windowState", None)
     ha_state = hass.states.get(entity_id)
