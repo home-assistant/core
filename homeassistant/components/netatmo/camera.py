@@ -11,9 +11,11 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
+    ATTR_CAMERA_LIGHT_MODE,
     ATTR_PERSON,
     ATTR_PERSONS,
     ATTR_PSEUDO,
+    CAMERA_LIGHT_MODES,
     DATA_HANDLER,
     DATA_PERSONS,
     DOMAIN,
@@ -21,6 +23,7 @@ from .const import (
     EVENT_TYPE_ON,
     MANUFACTURER,
     MODELS,
+    SERVICE_SET_CAMERA_LIGHT,
     SERVICE_SET_PERSON_AWAY,
     SERVICE_SET_PERSONS_HOME,
     SIGNAL_NAME,
@@ -100,6 +103,11 @@ async def async_setup_entry(hass, entry, async_add_entities):
             SERVICE_SET_PERSON_AWAY,
             {vol.Optional(ATTR_PERSON): cv.string},
             "_service_set_person_away",
+        )
+        platform.async_register_entity_service(
+            SERVICE_SET_CAMERA_LIGHT,
+            {vol.Required(ATTR_CAMERA_LIGHT_MODE): vol.In(CAMERA_LIGHT_MODES)},
+            "_service_set_camera_light",
         )
 
 
@@ -301,3 +309,13 @@ class NetatmoCamera(NetatmoBase, Camera):
                 home_id=self._home_id,
             )
             _LOGGER.debug("Set home as empty")
+
+    def _service_set_camera_light(self, **kwargs):
+        """Service to set light mode."""
+        mode = kwargs.get(ATTR_CAMERA_LIGHT_MODE)
+        _LOGGER.debug("Turn camera '%s' %s", self._name, mode)
+        self._data.set_state(
+            home_id=self._home_id,
+            camera_id=self._id,
+            floodlight=mode,
+        )
