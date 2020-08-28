@@ -37,7 +37,10 @@ class ShellySensor(ShellyBlockEntity, Entity):
     """Switch that controls a relay block on Shelly devices."""
 
     def __init__(
-        self, wrapper: ShellyDeviceWrapper, block: aioshelly.Block, attribute: str,
+        self,
+        wrapper: ShellyDeviceWrapper,
+        block: aioshelly.Block,
+        attribute: str,
     ) -> None:
         """Initialize sensor."""
         super().__init__(wrapper, block)
