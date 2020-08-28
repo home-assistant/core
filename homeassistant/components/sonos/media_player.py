@@ -107,7 +107,7 @@ EXPANDABLE_MEDIA_TYPES = [
 SONOS_TO_MEDIA_TYPES = {
     SONOS_ALBUM: MEDIA_TYPE_ALBUM,
     SONOS_ALBUM_ARTIST: MEDIA_TYPE_ARTIST,
-    SONOS_ARTIST: "contributing_artist",
+    SONOS_ARTIST: MEDIA_TYPE_CONTRIBUTING_ARTIST,
     SONOS_COMPOSER: MEDIA_TYPE_COMPOSER,
     SONOS_GENRE: MEDIA_TYPE_GENRE,
     SONOS_PLAYLISTS: MEDIA_TYPE_PLAYLIST,
@@ -131,7 +131,7 @@ MEDIA_TYPES_TO_SONOS = {
     MEDIA_TYPE_TRACK: SONOS_TRACKS,
 }
 
-MEDIA_TYPES_MAPPING = {
+SONOS_TYPES_MAPPING = {
     "A:ALBUM": SONOS_ALBUM,
     "A:ALBUMARTIST": SONOS_ALBUM_ARTIST,
     "A:ARTIST": SONOS_ARTIST,
@@ -159,7 +159,6 @@ LIBRARY_TITLES_MAPPING = {
 }
 
 PLAYABLE_MEDIA_TYPES = [
-    # MEDIA_TYPE_ALBUM_ARTIST,
     MEDIA_TYPE_ALBUM,
     MEDIA_TYPE_ARTIST,
     MEDIA_TYPE_COMPOSER,
@@ -167,13 +166,6 @@ PLAYABLE_MEDIA_TYPES = [
     MEDIA_TYPE_GENRE,
     MEDIA_TYPE_PLAYLIST,
     MEDIA_TYPE_TRACK,
-    # "object.container.album.musicAlbum",
-    # "object.container.genre.musicGenre",
-    # "object.container.person.composer",
-    # "object.container.person.musicArtist",
-    # "object.container.playlistContainer.sameArtist",
-    # "object.container.playlistContainer",
-    # "object.item.audioItem.musicTrack",
 ]
 
 ATTR_SONOS_GROUP = "sonos_group"
@@ -1133,13 +1125,9 @@ class SonosEntity(MediaPlayerEntity):
                 self.soco.play_uri(media_id)
         elif media_type == MEDIA_TYPE_PLAYLIST:
             if media_id.startswith("S:"):
-                item = self._media_library.browse_by_idstring(
-                    search_type="playlists",
-                    idstring=media_id,
-                    # max_items=1,
-                )
-                print(item)
-                # media_id = media_id.replace("S:", "x-file-cifs:")
+                item = get_media(self._media_library, media_id, media_type)
+                self.soco.play_uri(item.get_uri())
+                return
             try:
                 playlists = self.soco.get_sonos_playlists()
                 playlist = next(p for p in playlists if p.title == media_id)
@@ -1149,23 +1137,13 @@ class SonosEntity(MediaPlayerEntity):
             except StopIteration:
                 _LOGGER.error('Could not find a Sonos playlist named "%s"', media_id)
         elif media_type in PLAYABLE_MEDIA_TYPES:
-            print(media_id, media_type, MEDIA_TYPES_TO_SONOS[media_type])
-            if media_id.startswith(("A:GENRE", "A:COMPOSER")):
-                media_id = "A:ALBUMARTIST/" + "/".join(media_id.split("/")[2:])
+            item = get_media(self._media_library, media_id, media_type)
 
-            print(media_id, media_type, MEDIA_TYPES_TO_SONOS[media_type])
-            item = self._media_library.browse_by_idstring(
-                search_type=MEDIA_TYPES_TO_SONOS[media_type],
-                idstring=media_id,
-                max_items=1,
-            )
-            if len(item) == 0:
+            if not item:
                 _LOGGER.error('Could not find "%s" in the library', media_id)
                 return
 
-            print("/".join(item[0].get_uri().split("/")[:-1]))
-            # self.soco.play_uri(media_id.replace("S:", "x-file-cifs:"))
-            self.soco.play_uri("/".join(item[0].get_uri().split("/")[:-1]))
+            self.soco.play_uri(item.get_uri())
         else:
             _LOGGER.error('Sonos does not support a media type of "%s"', media_type)
 
@@ -1464,18 +1442,9 @@ def build_item_response(media_library, payload):
         payload["search_type"] == MEDIA_TYPE_ALBUM
         and media[0].item_class == "object.item.audioItem.musicTrack"
     ):
-        for item in media_library.browse_by_idstring(
-            SONOS_ALBUM_ARTIST,
-            payload["idstring"],
-            full_album_art_uri=True,
-        ):
-            if item.item_id == payload["idstring"]:
-                title = item.title
-                thumbnail = item.album_art_uri
-                break
-
-        if not thumbnail:
-            thumbnail = media[0].album_art_uri
+        item = get_media(media_library, payload["idstring"], SONOS_ALBUM_ARTIST)
+        title = getattr(item, "title", None)
+        thumbnail = getattr(item, "album_art_uri", media[0].album_art_uri)
 
     if not title:
         try:
@@ -1500,14 +1469,6 @@ def item_payload(item):
 
     Used by async_browse_media.
     """
-    # print(
-    #     item,
-    #     item.to_dict(),
-    #     item.item_id,
-    #     item.item_class,
-    #     f"Can Play: {can_play(item.item_class)}",
-    #     f"Can Expand: {can_expand(item)}",
-    # )
     return {
         "title": item.title,
         "thumbnail": getattr(item, "album_art_uri", None),
@@ -1536,17 +1497,20 @@ def library_payload(media_library):
 
 def get_media_type(item):
     """Extract media type of item."""
+    if item.item_class == "object.item.audioItem.musicTrack":
+        return SONOS_TRACKS
+
     if (
         item.item_class == "object.container.album.musicAlbum"
-        and MEDIA_TYPES_MAPPING.get(item.item_id.split("/")[0])
+        and SONOS_TYPES_MAPPING.get(item.item_id.split("/")[0])
         in [
             SONOS_ALBUM_ARTIST,
             SONOS_GENRE,
         ]
     ):
-        return MEDIA_TYPES_MAPPING[item.item_class]
+        return SONOS_TYPES_MAPPING[item.item_class]
 
-    return MEDIA_TYPES_MAPPING.get(item.item_id.split("/")[0], item.item_class)
+    return SONOS_TYPES_MAPPING.get(item.item_id.split("/")[0], item.item_class)
 
 
 def can_play(item):
@@ -1565,12 +1529,12 @@ def can_expand(item):
     Used by async_browse_media.
     """
     if isinstance(item, str):
-        return MEDIA_TYPES_MAPPING.get(item) in EXPANDABLE_MEDIA_TYPES
+        return SONOS_TYPES_MAPPING.get(item) in EXPANDABLE_MEDIA_TYPES
 
     if SONOS_TO_MEDIA_TYPES.get(item.item_class) in EXPANDABLE_MEDIA_TYPES:
         return True
 
-    return MEDIA_TYPES_MAPPING.get(item.item_id) in EXPANDABLE_MEDIA_TYPES
+    return SONOS_TYPES_MAPPING.get(item.item_id) in EXPANDABLE_MEDIA_TYPES
 
 
 def get_content_id(item):
@@ -1578,3 +1542,19 @@ def get_content_id(item):
     if item.item_class == "object.item.audioItem.musicTrack":
         return item.get_uri()
     return item.item_id
+
+
+def get_media(media_library, item_id, search_type):
+    """Fetch media/album."""
+    search_type = MEDIA_TYPES_TO_SONOS.get(search_type, search_type)
+
+    if not item_id.startswith("A:ALBUM") and search_type == SONOS_ALBUM:
+        item_id = "A:ALBUMARTIST/" + "/".join(item_id.split("/")[2:])
+
+    for item in media_library.browse_by_idstring(
+        search_type,
+        "/".join(item_id.split("/")[:-1]),
+        full_album_art_uri=True,
+    ):
+        if item.item_id == item_id:
+            return item
