@@ -723,7 +723,6 @@ class HomeKitPairingQRView(HomeAssistantView):
     name = "api:homekit:pairingqr"
     requires_auth = False
 
-    # pylint: disable=no-self-use
     async def get(self, request):
         """Retrieve the pairing QRCode image."""
         if not request.query_string:
