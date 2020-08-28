@@ -244,8 +244,11 @@ class HomematicipHAP:
         home.modelType = "HmIP-HAP"
 
         home.set_auth_token(authtoken)
-        await home.init(hapid)
-        await home.get_current_state()
+        try:
+            await home.init(hapid)
+            await home.get_current_state()
+        except HmipConnectionError as err:
+            raise HmipcConnectionError from err
         home.on_update(self.async_update)
         home.on_create(self.async_create_entity)
         hass.loop.create_task(self.async_connect())
