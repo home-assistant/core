@@ -2,13 +2,15 @@
     "config": {
         "error": {
             "unexisting_board": "Couldn't find a board at that hostname.",
-            "unknown": "Unknown error."
+            "unknown": "Unknown error.",
+            "wrong_info_relay_modes": "Relay mode selection must be monostable or bistable."
         },
         "step": {
             "user": {
                 "title": "Set up board",
                 "data": {
-                    "host": "IP Address of Board"
+                    "host": "IP Address of Board",
+                    "port": "Port Number of Board"
                 }
             },
             "relay_modes": {
