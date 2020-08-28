@@ -100,7 +100,7 @@ class SIAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
-    DATA = {}
+    data = {}
 
     async def async_step_additional_account(self, user_input: dict = None):
         """Handle the additional account step, parse and store the input, get additional accounts if needed and create entry."""
@@ -113,14 +113,14 @@ class SIAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         add_data = user_input.copy()
         add_data.pop(CONF_ADDITIONAL_ACCOUNTS)
-        self.DATA[CONF_ACCOUNTS].append(add_data)
+        self.data[CONF_ACCOUNTS].append(add_data)
 
         if user_input[CONF_ADDITIONAL_ACCOUNTS]:
             return await self.async_step_additional_account()
 
-        _LOGGER.debug("Creating SIA entry with data: %s", self.DATA)
+        _LOGGER.debug("Creating SIA entry with data: %s", self.data)
         return self.async_create_entry(
-            title=f"SIA Alarm on port {self.DATA[CONF_PORT]}", data=self.DATA
+            title=f"SIA Alarm on port {self.data[CONF_PORT]}", data=self.data
         )
 
     async def async_step_user(self, user_input: dict = None):
@@ -135,7 +135,7 @@ class SIAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(user_input[CONF_PORT])
         self._abort_if_unique_id_configured()
 
-        self.DATA = {
+        self.data = {
             CONF_PORT: user_input[CONF_PORT],
             CONF_ACCOUNTS: [
                 {
@@ -150,7 +150,7 @@ class SIAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input[CONF_ADDITIONAL_ACCOUNTS]:
             return await self.async_step_additional_account()
 
-        _LOGGER.debug("Creating SIA entry with data: %s", self.DATA)
+        _LOGGER.debug("Creating SIA entry with data: %s", self.data)
         return self.async_create_entry(
-            title=f"SIA Alarm on port {self.DATA[CONF_PORT]}", data=self.DATA
+            title=f"SIA Alarm on port {self.data[CONF_PORT]}", data=self.data
         )
