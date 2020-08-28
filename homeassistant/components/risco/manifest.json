@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/risco",
   "requirements": [
-    "pyrisco==0.2.1"
+    "pyrisco==0.2.3"
   ],
   "codeowners": [
     "@OnFreund"
