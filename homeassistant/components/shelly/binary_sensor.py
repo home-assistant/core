@@ -9,9 +9,10 @@ from . import ShellyBlockEntity, ShellyDeviceWrapper
 from .const import DOMAIN
 
 SENSORS = {
-    "flood": binary_sensor.DEVICE_CLASS_MOISTURE,
     "dwIsOpened": binary_sensor.DEVICE_CLASS_OPENING,
+    "flood": binary_sensor.DEVICE_CLASS_MOISTURE,
     "overpower": None,
+    "smoke": binary_sensor.DEVICE_CLASS_SMOKE,
 }
 
 
