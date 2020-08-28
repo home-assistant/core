@@ -5,6 +5,9 @@ set_camera_light:
     camera_light_mode:
       description: Outdoor camera light mode (on/off/auto)
       example: auto
+    entity_id:
+      description: Entity id of the camera.
+      example: camera.netatmo_entrance
 
 set_schedule:
   description: Set the heating schedule.

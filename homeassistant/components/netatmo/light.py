@@ -2,21 +2,17 @@
 import logging
 
 import pyatmo
-import voluptuous as vol
 
 from homeassistant.components.light import LightEntity
 from homeassistant.core import callback
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
-    ATTR_CAMERA_LIGHT_MODE,
     DATA_HANDLER,
     DOMAIN,
     EVENT_TYPE_LIGHT_MODE,
     MANUFACTURER,
-    SERVICE_SET_CAMERA_LIGHT,
     SIGNAL_NAME,
 )
 from .data_handler import CAMERA_DATA_CLASS_NAME, NetatmoDataHandler
@@ -73,19 +69,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
         return entities
 
     async_add_entities(await get_entities(), True)
-
-    platform = entity_platform.current_platform.get()
-
-    if data_handler.data[CAMERA_DATA_CLASS_NAME] is not None:
-        platform.async_register_entity_service(
-            SERVICE_SET_CAMERA_LIGHT,
-            {
-                vol.Required(ATTR_CAMERA_LIGHT_MODE): vol.All(
-                    cv.ensure_list, [cv.string]
-                )
-            },
-            "_service_set_camera_light",
-        )
 
 
 class NetatmoLight(NetatmoBase, LightEntity):
@@ -170,13 +153,3 @@ class NetatmoLight(NetatmoBase, LightEntity):
     def async_update_callback(self):
         """Update the entity's state."""
         self._is_on = bool(self._data.get_light_state(self._id) == "on")
-
-    def _service_set_camera_light(self, **kwargs):
-        """Service to set light mode."""
-        mode = kwargs.get(ATTR_CAMERA_LIGHT_MODE)
-        _LOGGER.debug("Turn camera '%s' %s", self._name, mode)
-        self._data.set_state(
-            home_id=self._home_id,
-            camera_id=self._id,
-            floodlight=mode,
-        )
