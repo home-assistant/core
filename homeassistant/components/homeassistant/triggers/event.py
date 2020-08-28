@@ -48,7 +48,13 @@ async def async_attach_trigger(
 
         hass.async_run_job(
             action,
-            {"trigger": {"platform": platform_type, "event": event}},
+            {
+                "trigger": {
+                    "platform": platform_type,
+                    "event": event,
+                    "description": f"event '{event.event_type}'",
+                }
+            },
             event.context,
         )
 

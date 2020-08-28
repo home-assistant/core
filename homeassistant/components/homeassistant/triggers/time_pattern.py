@@ -75,7 +75,14 @@ async def async_attach_trigger(hass, config, action, automation_info):
     def time_automation_listener(now):
         """Listen for time changes and calls action."""
         hass.async_run_job(
-            action, {"trigger": {"platform": "time_pattern", "now": now}}
+            action,
+            {
+                "trigger": {
+                    "platform": "time_pattern",
+                    "now": now,
+                    "description": "time pattern",
+                }
+            },
         )
 
     return async_track_time_change(
