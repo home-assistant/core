@@ -1,4 +1,4 @@
-"""Support for 1-Wire environment binary sensors."""
+"""Support for 1-Wire switches."""
 import os
 
 from pyownet import protocol
@@ -39,7 +39,7 @@ DEVICE_SWITCH = {
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Old way of setting up deCONZ platforms."""
+    """Old way of setting up 1-Wire platform."""
     owproxy = OneWireProxy(hass, config)
     if not owproxy.setup():
         return False
@@ -49,7 +49,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up the one wire Sensors."""
+    """Set up the 1-Wire switches."""
     owproxy = get_proxy_from_config_entry(hass, config_entry)
     entities = get_entities(owproxy, config_entry.data)
     async_add_entities(entities, True)
@@ -76,7 +76,7 @@ def get_entities(owproxy, config):
 
             try:
                 initial_value = owproxy.read_value(device_file)
-                LOGGER.info("Adding one-wire switch: %s", device_file)
+                LOGGER.info("Adding 1-Wire switch: %s", device_file)
                 entities.append(
                     OneWireSwitchSensor(
                         device_id,
@@ -94,11 +94,11 @@ def get_entities(owproxy, config):
 
 
 class OneWireSwitchSensor(OneWireEntity, SwitchEntity):
-    """Implementation of a One wire Sensor."""
+    """Implementation of a 1-Wire Switch."""
 
     @property
     def is_on(self) -> bool:
-        """Return true if sensor is on."""
+        """Return true if switch is on."""
         return self._state
 
     def turn_on(self, **kwargs) -> None:
@@ -109,7 +109,7 @@ class OneWireSwitchSensor(OneWireEntity, SwitchEntity):
             LOGGER.error("Owserver failure in read(), got: %s", exc)
 
     def turn_off(self, **kwargs) -> None:
-        """Turn the entity on."""
+        """Turn the entity off."""
         try:
             self.write_value(b"0")
         except protocol.Error as exc:

@@ -57,7 +57,7 @@ def hb_info_from_type(base_device_type="std"):
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Old way of setting up deCONZ platforms."""
+    """Old way of setting up 1-Wire platform."""
     owproxy = OneWireProxy(hass, config)
     if not owproxy.setup():
         return False
@@ -67,7 +67,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up the one wire Sensors."""
+    """Set up the 1-Wire sensors."""
     owproxy = get_proxy_from_config_entry(hass, config_entry)
     entities = get_entities(owproxy, config_entry.data)
     async_add_entities(entities, True)
@@ -107,7 +107,7 @@ def get_entities(owproxy, config):
 
             try:
                 initial_value = owproxy.read_value(device_file)
-                LOGGER.info("Adding one-wire sensor: %s", device_file)
+                LOGGER.info("Adding 1-Wire sensor: %s", device_file)
                 entities.append(
                     OneWireSensor(
                         device_id,
@@ -123,7 +123,7 @@ def get_entities(owproxy, config):
 
     if entities == []:
         LOGGER.warning(
-            "No onewire sensor found. Check if dtoverlay=w1-gpio "
+            "No 1-Wire sensor found. Check if dtoverlay=w1-gpio "
             "is in your /boot/config.txt. "
             "Check the mount_dir parameter if it's defined"
         )
@@ -131,7 +131,7 @@ def get_entities(owproxy, config):
 
 
 class OneWireSensor(OneWireEntity):
-    """Implementation of a One wire Sensor."""
+    """Implementation of a 1-Wire sensor."""
 
     def __init__(
         self, name, device_file, device_type, sensor_type, proxy, initial_value

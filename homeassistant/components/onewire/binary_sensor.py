@@ -26,7 +26,7 @@ DEVICE_BINARY_SENSORS = {
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Old way of setting up deCONZ platforms."""
+    """Old way of setting up 1-Wire platform."""
     owproxy = OneWireProxy(hass, config)
     if not owproxy.setup():
         return False
@@ -36,7 +36,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up the one wire Sensors."""
+    """Set up the 1-Wire binary sensors."""
     owproxy = get_proxy_from_config_entry(hass, config_entry)
     entities = get_entities(owproxy, config_entry.data)
     async_add_entities(entities, True)
@@ -63,7 +63,7 @@ def get_entities(owproxy, config):
 
             try:
                 initial_value = owproxy.read_value(device_file)
-                LOGGER.info("Adding one-wire binary sensor: %s", device_file)
+                LOGGER.info("Adding 1-Wire binary sensor: %s", device_file)
                 entities.append(
                     OneWireBinarySensor(
                         device_id,
@@ -81,7 +81,7 @@ def get_entities(owproxy, config):
 
 
 class OneWireBinarySensor(OneWireEntity, BinarySensorEntity):
-    """Implementation of a One wire Sensor."""
+    """Implementation of a 1-Wire binary sensor."""
 
     @property
     def is_on(self):

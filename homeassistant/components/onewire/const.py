@@ -1,4 +1,4 @@
-"""Constants for the deCONZ component."""
+"""Constants for the 1-Wire component."""
 import logging
 
 from homeassistant.const import (
