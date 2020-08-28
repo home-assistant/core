@@ -8,7 +8,13 @@ from requests.exceptions import ConnectionError as RequestsConnectionError
 import voluptuous as vol
 
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_PROTOCOL,
+    CONF_USERNAME,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 
@@ -20,6 +26,7 @@ from .const import (
 )
 
 DEFAULT_PORT = 8080
+DEFAULT_PROTOCOL = "http"
 
 SERVICE_CHANNEL_GUID = "guid"
 
@@ -33,6 +40,9 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Required(CONF_USERNAME): cv.string,
                 vol.Required(CONF_PASSWORD): cv.string,
                 vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                vol.Optional(CONF_PROTOCOL, default=DEFAULT_PROTOCOL): vol.All(
+                    cv.string, vol.In(["http", "https"])
+                ),
                 vol.Optional(CONF_EXCLUDE_CHANNELS, default=[]): vol.All(
                     cv.ensure_list_csv, [cv.positive_int]
                 ),
@@ -54,10 +64,11 @@ def setup(hass, config):
     password = conf[CONF_PASSWORD]
     host = conf[CONF_HOST]
     port = conf[CONF_PORT]
+    protocol = conf[CONF_PROTOCOL]
     excluded_channels = conf[CONF_EXCLUDE_CHANNELS]
 
     try:
-        qvrpro = Client(user, password, host, port=port)
+        qvrpro = Client(user, password, host, protocol=protocol, port=port)
 
         channel_resp = qvrpro.get_channel_list()
 
