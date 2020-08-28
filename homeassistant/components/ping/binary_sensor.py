@@ -146,10 +146,6 @@ class PingDataICMPLib(PingData):
 class PingDataSubProcess(PingData):
     """The Class for handling the data retrieval using the ping binary."""
 
-    def __init__(self, hass, host, count) -> None:
-        """Initialize the data object."""
-        super().__init__(hass, host, count)
-
         if sys.platform == "win32":
             self._ping_cmd = [
                 "ping",
