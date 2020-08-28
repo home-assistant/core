@@ -25,7 +25,9 @@ async def test_alexa_config_expose_entity_prefs(hass, cloud_prefs):
     entity_conf["should_expose"] = None
     assert conf.should_expose("light.kitchen")
 
-    await cloud_prefs.async_update(alexa_default_expose=["sensor"],)
+    await cloud_prefs.async_update(
+        alexa_default_expose=["sensor"],
+    )
     assert not conf.should_expose("light.kitchen")
 
 
