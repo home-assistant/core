@@ -10,6 +10,7 @@ from homeassistant.core import callback
 
 from .const import (
     CONF_MOUNT_DIR,
+    CONF_NAMES,
     DEFAULT_MOUNT_DIR,
     DOMAIN,
     LOGGER,
@@ -24,7 +25,7 @@ def get_proxy_from_config_entry(hass, config_entry):
 
 
 class OneWireProxy:
-    """Manages a single owserver proxy."""
+    """Manages a proxy for owserver/owfs/sysbus."""
 
     def __init__(self, hass, config) -> None:
         """Initialize the system."""
@@ -32,6 +33,14 @@ class OneWireProxy:
         self.config = config
         self._owproxy = None
         self._base_dir = None
+        self._device_names = {}
+        if CONF_NAMES in config:
+            if isinstance(config[CONF_NAMES], dict):
+                self._device_names = config[CONF_NAMES]
+
+    def get_device_name(self, device_id):
+        """Returns the device name if specified from the config."""
+        return self._device_names.get(device_id, device_id)
 
     @property
     def is_sysbus(self):
@@ -75,24 +84,28 @@ class OneWireProxy:
 
     def read_device_list(self):
         """Read the devices from the path."""
+        devices = {}
         if self._owproxy:
-            return self._owproxy.dir()
-        if self.is_sysbus:
-            devices = []
+            for device_path in self._owproxy.dir():
+                device_id = device_path.replace("/", "")
+                devices[device_id] = device_path
+        elif self.is_sysbus:
             device_family = "28"
             for device_folder in glob(
                 os.path.join(self._base_dir, f"{device_family}[.-]*")
             ):
-                devices.append(os.path.join(device_folder, ""))
-            return devices
-
-        devices = []
-        for family_file_path in glob(os.path.join(self._base_dir, "*", "family")):
-            devices.append(os.path.join(os.path.split(family_file_path)[0], ""))
+                device_id = os.path.split(device_folder)[1]
+                device_path = os.path.join(device_folder, "")
+                devices[device_id] = device_path
+        else:
+            for family_file_path in glob(os.path.join(self._base_dir, "*", "family")):
+                device_id = os.path.split(os.path.split(family_file_path)[0])[1]
+                device_path = os.path.join(os.path.split(family_file_path)[0], "")
+                devices[device_id] = device_path
         return devices
 
     def is_present(self, device_path):
-        """Check that the path exists."""
+        """Check that the device is present."""
         if self._owproxy:
             return self._owproxy.present(device_path)
 
@@ -106,8 +119,16 @@ class OneWireProxy:
 
         return self.read_value(f"{device}family")
 
+    def read_type(self, device):
+        """Read the device type."""
+        if self.is_sysbus:
+            parent = os.path.split(device)[0]
+            return os.path.split(parent)[1][:2]
+
+        return self.read_value(f"{device}type")
+
     def read_value(self, device_path):
-        """Read the value from the path."""
+        """Read the device value."""
         if self._owproxy:
             return self._owproxy.read(device_path).decode().lstrip()
         if self.is_sysbus:
@@ -131,7 +152,7 @@ class OneWireProxy:
         return lines
 
     def write_value(self, device_path, value):
-        """Write the value to the path."""
+        """Write the device value."""
         if self._owproxy:
             self._owproxy.write(device_path, value)
         else:

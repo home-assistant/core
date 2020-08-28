@@ -5,7 +5,7 @@ from pyownet import protocol
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 
-from .const import CONF_NAMES, LOGGER
+from .const import LOGGER
 from .onewireentity import OneWireEntity
 from .onewireproxy import OneWireProxy, get_proxy_from_config_entry
 
@@ -45,33 +45,30 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 def get_entities(owproxy, config):
     """Get a list of entities."""
     entities = []
-    device_names = {}
-    if CONF_NAMES in config:
-        if isinstance(config[CONF_NAMES], dict):
-            device_names = config[CONF_NAMES]
 
-    for device in owproxy.read_device_list():
-        LOGGER.debug("Found device: %s", device)
-        family = owproxy.read_family(device)
+    for device_id, device_path in owproxy.read_device_list().items():
+        LOGGER.debug("Found device: %s", device_id)
+        family = owproxy.read_family(device_path)
+        device_type = owproxy.read_type(device_path)
         if family not in DEVICE_BINARY_SENSORS:
             LOGGER.debug(
-                "Ignoring unknown family (%s) of binary sensor found for device: %s",
+                "Ignoring unknown binary sensor family (%s) for device: %s",
                 family,
-                device,
+                device_id,
             )
             continue
 
         for sensor_key, sensor_value in DEVICE_BINARY_SENSORS[family].items():
-            sensor_id = os.path.split(os.path.split(device)[0])[1]
-            device_file = os.path.join(os.path.split(device)[0], sensor_value)
+            device_file = os.path.join(os.path.split(device_path)[0], sensor_value)
 
             try:
                 initial_value = owproxy.read_value(device_file)
                 LOGGER.info("Adding one-wire binary sensor: %s", device_file)
                 entities.append(
                     OneWireBinarySensor(
-                        device_names.get(sensor_id, sensor_id),
+                        device_id,
                         device_file,
+                        device_type,
                         sensor_key,
                         owproxy,
                         initial_value,
@@ -79,13 +76,6 @@ def get_entities(owproxy, config):
                 )
             except protocol.Error as exc:
                 LOGGER.error("Owserver failure in read(), got: %s", exc)
-
-    if entities == []:
-        LOGGER.error(
-            "No onewire sensor found. Check if dtoverlay=w1-gpio "
-            "is in your /boot/config.txt. "
-            "Check the mount_dir parameter if it's defined"
-        )
 
     return entities
 

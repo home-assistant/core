@@ -17,6 +17,8 @@ DEFAULT_PORT = 4304
 DEFAULT_MOUNT_DIR = "/sys/bus/w1/devices/"
 DEFAULT_OWFS_MOUNT_DIR = "/mnt/1wire"
 
+DOMAIN = "onewire"
+
 SENSOR_TYPES = {
     # SensorType: [ Measured unit, Unit ]
     "temperature": ["temperature", TEMP_CELSIUS],
@@ -40,8 +42,6 @@ SENSOR_TYPES = {
     "voltage_VDD": ["voltage", VOLT],
     "current": ["current", ELECTRICAL_CURRENT_AMPERE],
 }
-
-DOMAIN = "onewire"
 
 SUPPORTED_PLATFORMS = [
     "binary_sensor",

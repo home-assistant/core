@@ -5,7 +5,7 @@ from pyownet import protocol
 
 from homeassistant.const import VOLT
 
-from .const import CONF_NAMES, LOGGER, SENSOR_TYPES
+from .const import LOGGER, SENSOR_TYPES
 from .onewireentity import OneWireEntity
 from .onewireproxy import OneWireProxy, get_proxy_from_config_entry
 
@@ -49,12 +49,11 @@ HOBBYBOARD_EF = {
 }
 
 
-def hb_info_from_type(dev_type="std"):
+def hb_info_from_type(base_device_type="std"):
     """Return the proper info array for the device type."""
-    if "std" in dev_type:
-        return DEVICE_SENSORS
-    if "HobbyBoard" in dev_type:
+    if "HobbyBoard" in base_device_type:
         return HOBBYBOARD_EF
+    return DEVICE_SENSORS
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -77,44 +76,43 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 def get_entities(owproxy, config):
     """Get a list of entities."""
     entities = []
-    device_names = {}
-    if CONF_NAMES in config:
-        if isinstance(config[CONF_NAMES], dict):
-            device_names = config[CONF_NAMES]
-
-    for device in owproxy.read_device_list():
-        LOGGER.debug("Found device: %s", device)
-        family = owproxy.read_family(device)
-        dev_type = "std"
+    for device_id, device_path in owproxy.read_device_list().items():
+        LOGGER.debug("Found device: %s", device_id)
+        family = owproxy.read_family(device_path)
+        device_type = owproxy.read_type(device_path)
+        base_device_type = "std"
         if "EF" in family:
-            dev_type = "HobbyBoard"
-            family = owproxy.read_value(f"{device}type")
-        LOGGER.info("Found device: %s, family is %s", device, family)
+            base_device_type = "HobbyBoard"
+            family = device_type
+        LOGGER.info("Found device: %s (family: %s)", device_id, family)
 
-        if family not in hb_info_from_type(dev_type):
+        known_types = hb_info_from_type(base_device_type)
+        if family not in known_types:
             LOGGER.debug(
-                "Ignoring unknown family (%s) of sensor found for device: %s",
+                "Ignoring unknown sensor family (%s) for device: %s",
                 family,
-                device,
+                device_id,
             )
             continue
 
-        for sensor_key, sensor_value in hb_info_from_type(dev_type)[family].items():
+        for sensor_key, sensor_value in known_types[family].items():
             if "moisture" in sensor_key:
                 s_id = sensor_key.split("_")[1]
-                is_leaf = int(owproxy.read_value(f"{device}moisture/is_leaf.{s_id}"))
+                is_leaf = int(
+                    owproxy.read_value(f"{device_path}moisture/is_leaf.{s_id}")
+                )
                 if is_leaf:
                     sensor_key = f"wetness_{id}"
-            sensor_id = os.path.split(os.path.split(device)[0])[1]
-            device_file = os.path.join(os.path.split(device)[0], sensor_value)
+            device_file = os.path.join(os.path.split(device_path)[0], sensor_value)
 
             try:
                 initial_value = owproxy.read_value(device_file)
                 LOGGER.info("Adding one-wire sensor: %s", device_file)
                 entities.append(
                     OneWireSensor(
-                        device_names.get(sensor_id, sensor_id),
+                        device_id,
                         device_file,
+                        device_type,
                         sensor_key,
                         owproxy,
                         initial_value,
@@ -124,7 +122,7 @@ def get_entities(owproxy, config):
                 LOGGER.error("Owserver failure in read(), got: %s", exc)
 
     if entities == []:
-        LOGGER.error(
+        LOGGER.warning(
             "No onewire sensor found. Check if dtoverlay=w1-gpio "
             "is in your /boot/config.txt. "
             "Check the mount_dir parameter if it's defined"
@@ -135,9 +133,13 @@ def get_entities(owproxy, config):
 class OneWireSensor(OneWireEntity):
     """Implementation of a One wire Sensor."""
 
-    def __init__(self, name, device_file, sensor_type, proxy, initial_value):
+    def __init__(
+        self, name, device_file, device_type, sensor_type, proxy, initial_value
+    ):
         """Initialize the sensor."""
-        super().__init__(name, device_file, sensor_type, proxy, initial_value)
+        super().__init__(
+            name, device_file, device_type, sensor_type, proxy, initial_value
+        )
         self._unit_of_measurement = None
         if SENSOR_TYPES.get(sensor_type) is not None:
             self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
