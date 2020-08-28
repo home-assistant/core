@@ -8,7 +8,7 @@ from aiohttp.web import HTTPBadRequest, Request, Response, json_response
 from nacl.secret import SecretBox
 import voluptuous as vol
 
-from homeassistant.components import tag
+from homeassistant.components import notify as hass_notify, tag
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES as BINARY_SENSOR_CLASSES,
 )
@@ -150,6 +150,7 @@ async def handle_webhook(
     config_entry = hass.data[DOMAIN][DATA_CONFIG_ENTRIES][webhook_id]
 
     device_name = config_entry.data[ATTR_DEVICE_NAME]
+
     try:
         req_data = await request.json()
     except ValueError:
@@ -188,8 +189,6 @@ async def handle_webhook(
             "Received invalid webhook from %s of type: %s", device_name, webhook_type
         )
         return empty_okay_response()
-
-    device_name = config_entry.data[ATTR_DEVICE_NAME]
 
     _LOGGER.debug(
         "Received webhook payload from %s for type %s: %s",
@@ -352,6 +351,8 @@ async def webhook_update_registration(hass, config_entry, data):
     )
 
     hass.config_entries.async_update_entry(config_entry, data=new_registration)
+
+    await hass_notify.async_reload(hass, DOMAIN)
 
     return webhook_response(
         safe_registration(new_registration),
