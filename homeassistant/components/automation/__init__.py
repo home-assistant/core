@@ -81,6 +81,7 @@ EVENT_AUTOMATION_RELOADED = "automation_reloaded"
 EVENT_AUTOMATION_TRIGGERED = "automation_triggered"
 
 ATTR_LAST_TRIGGERED = "last_triggered"
+ATTR_SOURCE = "source"
 ATTR_VARIABLES = "variables"
 SERVICE_TRIGGER = "trigger"
 
@@ -396,10 +397,14 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         self.async_set_context(trigger_context)
         self._last_triggered = utcnow()
         self.async_write_ha_state()
+        event_data = {
+            ATTR_NAME: self._name,
+            ATTR_ENTITY_ID: self.entity_id,
+        }
+        if "trigger" in variables and "description" in variables["trigger"]:
+            event_data[ATTR_SOURCE] = variables["trigger"]["description"]
         self.hass.bus.async_fire(
-            EVENT_AUTOMATION_TRIGGERED,
-            {ATTR_NAME: self._name, ATTR_ENTITY_ID: self.entity_id},
-            context=trigger_context,
+            EVENT_AUTOMATION_TRIGGERED, event_data, context=trigger_context
         )
 
         self._logger.info("Executing %s", self._name)

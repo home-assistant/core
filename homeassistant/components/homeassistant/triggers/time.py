@@ -1,5 +1,6 @@
 """Offer time listening automation rules."""
 from datetime import datetime
+from functools import partial
 import logging
 
 import voluptuous as vol
@@ -38,9 +39,12 @@ async def async_attach_trigger(hass, config, action, automation_info):
     removes = []
 
     @callback
-    def time_automation_listener(now):
+    def time_automation_listener(description, now):
         """Listen for time changes and calls action."""
-        hass.async_run_job(action, {"trigger": {"platform": "time", "now": now}})
+        hass.async_run_job(
+            action,
+            {"trigger": {"platform": "time", "now": now, "description": description}},
+        )
 
     @callback
     def update_entity_trigger_event(event):
@@ -81,13 +85,15 @@ async def async_attach_trigger(hass, config, action, automation_info):
                 # Only set up listener if time is now or in the future.
                 if trigger_dt >= dt_util.now():
                     remove = async_track_point_in_time(
-                        hass, time_automation_listener, trigger_dt
+                        hass,
+                        partial(time_automation_listener, f"time set in {entity_id}"),
+                        trigger_dt,
                     )
             elif has_time:
                 # Else if it has time, then track time change.
                 remove = async_track_time_change(
                     hass,
-                    time_automation_listener,
+                    partial(time_automation_listener, f"time set in {entity_id}"),
                     hour=hour,
                     minute=minute,
                     second=second,
@@ -108,7 +114,7 @@ async def async_attach_trigger(hass, config, action, automation_info):
             removes.append(
                 async_track_time_change(
                     hass,
-                    time_automation_listener,
+                    partial(time_automation_listener, "time"),
                     hour=at_time.hour,
                     minute=at_time.minute,
                     second=at_time.second,

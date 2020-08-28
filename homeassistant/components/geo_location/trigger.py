@@ -67,20 +67,20 @@ async def async_attach_trigger(hass, config, action, automation_info):
             and not to_match
         ):
             hass.async_run_job(
-                action(
-                    {
-                        "trigger": {
-                            "platform": "geo_location",
-                            "source": source,
-                            "entity_id": event.data.get("entity_id"),
-                            "from_state": from_state,
-                            "to_state": to_state,
-                            "zone": zone_state,
-                            "event": trigger_event,
-                        }
-                    },
-                    context=event.context,
-                )
+                action,
+                {
+                    "trigger": {
+                        "platform": "geo_location",
+                        "source": source,
+                        "entity_id": event.data.get("entity_id"),
+                        "from_state": from_state,
+                        "to_state": to_state,
+                        "zone": zone_state,
+                        "event": trigger_event,
+                        "description": f"geo_location - {source}",
+                    }
+                },
+                event.context,
             )
 
     return hass.bus.async_listen(EVENT_STATE_CHANGED, state_change_listener)
