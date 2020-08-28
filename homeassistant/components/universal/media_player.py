@@ -149,8 +149,10 @@ class UniversalMediaPlayer(MediaPlayerEntity):
             self.async_schedule_update_ha_state(True)
 
         @callback
-        def _async_on_template_update(event, template, last_result, result):
+        def _async_on_template_update(event, updates):
             """Update ha state when dependencies update."""
+            _, _, result = updates.pop()
+
             if isinstance(result, TemplateError):
                 self._state_template_result = None
             else:
@@ -159,7 +161,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
 
         if self._state_template is not None:
             result = self.hass.helpers.event.async_track_template_result(
-                self._state_template, _async_on_template_update
+                [(self._state_template, None)], _async_on_template_update
             )
             self.hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_START, callback(lambda _: result.async_refresh())

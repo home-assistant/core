@@ -187,7 +187,8 @@ class BayesianBinarySensor(BinarySensorEntity):
         )
 
         @callback
-        def _async_template_result_changed(event, template, last_result, result):
+        def _async_template_result_changed(event, updates):
+            template, _, result = updates.pop()
             entity = event and event.data.get("entity_id")
 
             if isinstance(result, TemplateError):
@@ -215,7 +216,7 @@ class BayesianBinarySensor(BinarySensorEntity):
 
         for template in self.observations_by_template:
             info = async_track_template_result(
-                self.hass, template, _async_template_result_changed
+                self.hass, [(template, None)], _async_template_result_changed
             )
 
             self._callbacks.append(info)

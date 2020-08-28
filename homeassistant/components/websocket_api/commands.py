@@ -255,7 +255,8 @@ def handle_render_template(hass, connection, msg):
     variables = msg.get("variables")
 
     @callback
-    def _template_listener(event, template, last_result, result):
+    def _template_listener(event, updates):
+        template, _, result = updates.pop()
         if isinstance(result, TemplateError):
             _LOGGER.error(
                 "TemplateError('%s') " "while processing template '%s'",
@@ -267,7 +268,9 @@ def handle_render_template(hass, connection, msg):
 
         connection.send_message(messages.event_message(msg["id"], {"result": result}))
 
-    info = async_track_template_result(hass, template, _template_listener, variables)
+    info = async_track_template_result(
+        hass, [(template, variables)], _template_listener
+    )
 
     connection.subscriptions[msg["id"]] = info.async_remove
 

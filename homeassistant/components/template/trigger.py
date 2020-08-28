@@ -34,9 +34,10 @@ async def async_attach_trigger(
     delay_cancel = None
 
     @callback
-    def template_listener(event, _, last_result, result):
+    def template_listener(event, updates):
         """Listen for state changes and calls action."""
         nonlocal delay_cancel
+        _, _, result = updates.pop()
 
         if delay_cancel:
             # pylint: disable=not-callable
@@ -94,7 +95,7 @@ async def async_attach_trigger(
         delay_cancel = async_call_later(hass, period.seconds, call_action)
 
     info = async_track_template_result(
-        hass, value_template, template_listener, automation_info["variables"]
+        hass, [(value_template, automation_info["variables"])], template_listener
     )
     unsub = info.async_remove
 
