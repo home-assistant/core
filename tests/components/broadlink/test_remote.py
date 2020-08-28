@@ -105,7 +105,9 @@ async def test_remote_turn_off_turn_on(hass):
 
         remote = remotes.pop()
         await hass.services.async_call(
-            REMOTE_DOMAIN, SERVICE_TURN_OFF, {"entity_id": remote.entity_id},
+            REMOTE_DOMAIN,
+            SERVICE_TURN_OFF,
+            {"entity_id": remote.entity_id},
         )
         await hass.async_block_till_done()
         assert hass.states.get(remote.entity_id).state == STATE_OFF
@@ -119,7 +121,9 @@ async def test_remote_turn_off_turn_on(hass):
         assert mock_api.send_data.call_count == 0
 
         await hass.services.async_call(
-            REMOTE_DOMAIN, SERVICE_TURN_ON, {"entity_id": remote.entity_id},
+            REMOTE_DOMAIN,
+            SERVICE_TURN_ON,
+            {"entity_id": remote.entity_id},
         )
         await hass.async_block_till_done()
         assert hass.states.get(remote.entity_id).state == STATE_ON
