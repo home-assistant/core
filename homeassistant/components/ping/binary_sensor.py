@@ -12,7 +12,9 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 from homeassistant.const import CONF_HOST, CONF_NAME
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.reload import setup_reload_service
 
+from . import DOMAIN, PLATFORMS
 from .const import PING_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
@@ -56,6 +58,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None) -> None:
     """Set up the Ping Binary sensor."""
+    setup_reload_service(hass, DOMAIN, PLATFORMS)
+
     host = config[CONF_HOST]
     count = config[CONF_PING_COUNT]
     name = config.get(CONF_NAME, f"{DEFAULT_NAME} {host}")
