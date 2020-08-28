@@ -39,7 +39,7 @@ class OneWireProxy:
                 self._device_names = config[CONF_NAMES]
 
     def get_device_name(self, device_id):
-        """Returns the device name if specified from the config."""
+        """Return device name if specified in the config."""
         return self._device_names.get(device_id, device_id)
 
     @property
