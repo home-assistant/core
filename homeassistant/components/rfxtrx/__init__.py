@@ -156,6 +156,8 @@ async def async_setup(hass, config):
     # Read device_id from the event code add to the data that will end up in the ConfigEntry
     for event_code, event_config in data[CONF_DEVICES].items():
         event = get_rfx_object(event_code)
+        if event is None:
+            continue
         device_id = get_device_id(
             event.device, data_bits=event_config.get(CONF_DATA_BITS)
         )
@@ -229,6 +231,8 @@ def _get_device_lookup(devices):
     lookup = dict()
     for event_code, event_config in devices.items():
         event = get_rfx_object(event_code)
+        if event is None:
+            continue
         device_id = get_device_id(
             event.device, data_bits=event_config.get(CONF_DATA_BITS)
         )
