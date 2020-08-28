@@ -12,12 +12,21 @@ from tests.common import async_fire_time_changed
 async def test_alexa_config_expose_entity_prefs(hass, cloud_prefs):
     """Test Alexa config should expose using prefs."""
     entity_conf = {"should_expose": False}
-    await cloud_prefs.async_update(alexa_entity_configs={"light.kitchen": entity_conf})
+    await cloud_prefs.async_update(
+        alexa_entity_configs={"light.kitchen": entity_conf},
+        alexa_default_expose=["light"],
+    )
     conf = alexa_config.AlexaConfig(hass, ALEXA_SCHEMA({}), cloud_prefs, None)
 
     assert not conf.should_expose("light.kitchen")
     entity_conf["should_expose"] = True
     assert conf.should_expose("light.kitchen")
+
+    entity_conf["should_expose"] = None
+    assert conf.should_expose("light.kitchen")
+
+    await cloud_prefs.async_update(alexa_default_expose=["sensor"],)
+    assert not conf.should_expose("light.kitchen")
 
 
 async def test_alexa_config_report_state(hass, cloud_prefs):

@@ -24,9 +24,11 @@ from homeassistant.core import callback
 
 from .const import (
     DOMAIN,
+    PREF_ALEXA_DEFAULT_EXPOSE,
     PREF_ALEXA_REPORT_STATE,
     PREF_ENABLE_ALEXA,
     PREF_ENABLE_GOOGLE,
+    PREF_GOOGLE_DEFAULT_EXPOSE,
     PREF_GOOGLE_REPORT_STATE,
     PREF_GOOGLE_SECURE_DEVICES_PIN,
     REQUEST_TIMEOUT,
@@ -371,6 +373,8 @@ async def websocket_subscription(hass, connection, msg):
         vol.Optional(PREF_ENABLE_ALEXA): bool,
         vol.Optional(PREF_ALEXA_REPORT_STATE): bool,
         vol.Optional(PREF_GOOGLE_REPORT_STATE): bool,
+        vol.Optional(PREF_ALEXA_DEFAULT_EXPOSE): [str],
+        vol.Optional(PREF_GOOGLE_DEFAULT_EXPOSE): [str],
         vol.Optional(PREF_GOOGLE_SECURE_DEVICES_PIN): vol.Any(None, str),
     }
 )
@@ -514,7 +518,7 @@ async def google_assistant_list(hass, connection, msg):
     {
         "type": "cloud/google_assistant/entities/update",
         "entity_id": str,
-        vol.Optional("should_expose"): bool,
+        vol.Optional("should_expose"): vol.Any(None, bool),
         vol.Optional("override_name"): str,
         vol.Optional("aliases"): [str],
         vol.Optional("disable_2fa"): bool,
@@ -566,7 +570,7 @@ async def alexa_list(hass, connection, msg):
     {
         "type": "cloud/alexa/entities/update",
         "entity_id": str,
-        vol.Optional("should_expose"): bool,
+        vol.Optional("should_expose"): vol.Any(None, bool),
     }
 )
 async def alexa_update(hass, connection, msg):
