@@ -126,6 +126,7 @@ async def test_duplicate_cover(hass, rfxtrx):
                 "device": "abcd",
                 "devices": {
                     "0b1400cd0213c7f20d010f51": {},
+                    "0b1400cd0213c7f20d010f50": {},
                 },
             }
         },
