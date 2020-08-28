@@ -148,8 +148,8 @@ async def async_setup_entry(hass, config_entry):
         )
         await luftdaten.async_update()
         hass.data[DOMAIN][DATA_LUFTDATEN_CLIENT][config_entry.entry_id] = luftdaten
-    except LuftdatenError:
-        raise ConfigEntryNotReady
+    except LuftdatenError as err:
+        raise ConfigEntryNotReady from err
 
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(config_entry, "sensor")

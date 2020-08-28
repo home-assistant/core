@@ -76,7 +76,7 @@ class CertExpiryDataUpdateCoordinator(DataUpdateCoordinator[datetime]):
         try:
             timestamp = await get_cert_expiry_timestamp(self.hass, self.host, self.port)
         except TemporaryFailure as err:
-            raise UpdateFailed(err.args[0])
+            raise UpdateFailed(err.args[0]) from err
         except ValidationFailure as err:
             self.cert_error = err
             self.is_cert_valid = False

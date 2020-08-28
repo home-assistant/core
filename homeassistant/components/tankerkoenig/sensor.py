@@ -35,8 +35,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         """Fetch data from API endpoint."""
         try:
             return await tankerkoenig.fetch_data()
-        except LookupError:
-            raise UpdateFailed("Failed to fetch data")
+        except LookupError as err:
+            raise UpdateFailed("Failed to fetch data") from err
 
     coordinator = DataUpdateCoordinator(
         hass,

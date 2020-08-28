@@ -110,7 +110,7 @@ class EbusdData:
                     self.value[name] = command_result
         except RuntimeError as err:
             _LOGGER.error(err)
-            raise RuntimeError(err)
+            raise RuntimeError(err) from err
 
     def write(self, call):
         """Call write methon on ebusd."""

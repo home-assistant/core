@@ -227,7 +227,7 @@ async def async_setup_entry(hass, config_entry):
             try:
                 return await api_coro
             except AirVisualError as err:
-                raise UpdateFailed(f"Error while retrieving data: {err}")
+                raise UpdateFailed(f"Error while retrieving data: {err}") from err
 
         coordinator = DataUpdateCoordinator(
             hass,
@@ -263,7 +263,7 @@ async def async_setup_entry(hass, config_entry):
                     include_trends=False,
                 )
             except NodeProError as err:
-                raise UpdateFailed(f"Error while retrieving data: {err}")
+                raise UpdateFailed(f"Error while retrieving data: {err}") from err
 
         coordinator = DataUpdateCoordinator(
             hass,

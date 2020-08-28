@@ -92,8 +92,8 @@ class ImageStorageCollection(collection.StorageCollection):
         # Verify we can read the image
         try:
             image = Image.open(uploaded_file.file)
-        except UnidentifiedImageError:
-            raise vol.Invalid("Unable to identify image file")
+        except UnidentifiedImageError as err:
+            raise vol.Invalid("Unable to identify image file") from err
 
         # Reset content
         uploaded_file.file.seek(0)
@@ -170,8 +170,8 @@ class ImageServeView(HomeAssistantView):
             parts = image_size.split("x", 1)
             width = int(parts[0])
             height = int(parts[1])
-        except (ValueError, IndexError):
-            raise web.HTTPBadRequest
+        except (ValueError, IndexError) as err:
+            raise web.HTTPBadRequest from err
 
         if not width or width != height or width not in VALID_SIZES:
             raise web.HTTPBadRequest

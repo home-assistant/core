@@ -70,8 +70,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         current_user = await hass.async_add_executor_job(spotify.me)
-    except SpotifyException:
-        raise ConfigEntryNotReady
+    except SpotifyException as err:
+        raise ConfigEntryNotReady from err
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {

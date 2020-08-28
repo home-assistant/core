@@ -98,8 +98,8 @@ class DeconzGateway:
                 self.async_connection_status_callback,
             )
 
-        except CannotConnect:
-            raise ConfigEntryNotReady
+        except CannotConnect as err:
+            raise ConfigEntryNotReady from err
 
         except Exception as err:  # pylint: disable=broad-except
             LOGGER.error("Error connecting with deCONZ gateway: %s", err)
@@ -254,10 +254,10 @@ async def get_gateway(
             await deconz.initialize()
         return deconz
 
-    except errors.Unauthorized:
+    except errors.Unauthorized as err:
         LOGGER.warning("Invalid key for deCONZ at %s", config[CONF_HOST])
-        raise AuthenticationRequired
+        raise AuthenticationRequired from err
 
-    except (asyncio.TimeoutError, errors.RequestError):
+    except (asyncio.TimeoutError, errors.RequestError) as err:
         LOGGER.error("Error connecting to deCONZ gateway at %s", config[CONF_HOST])
-        raise CannotConnect
+        raise CannotConnect from err

@@ -244,7 +244,7 @@ class TeslaDataUpdateCoordinator(DataUpdateCoordinator):
             async with async_timeout.timeout(30):
                 return await self.controller.update()
         except TeslaException as err:
-            raise UpdateFailed(f"Error communicating with API: {err}")
+            raise UpdateFailed(f"Error communicating with API: {err}") from err
 
 
 class TeslaDevice(Entity):

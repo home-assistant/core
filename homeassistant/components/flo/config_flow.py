@@ -29,7 +29,7 @@ async def validate_input(hass: core.HomeAssistant, data):
         )
     except RequestError as request_error:
         _LOGGER.error("Error connecting to the Flo API: %s", request_error)
-        raise CannotConnect
+        raise CannotConnect from request_error
 
     user_info = await api.user.get_info()
     a_location_id = user_info["locations"][0]["id"]

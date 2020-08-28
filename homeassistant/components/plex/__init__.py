@@ -91,7 +91,7 @@ async def async_setup_entry(hass, entry):
             server_config[CONF_URL],
             error,
         )
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from error
     except (
         plexapi.exceptions.BadRequest,
         plexapi.exceptions.Unauthorized,

@@ -52,7 +52,7 @@ class HomeAssistantView:
             msg = json.dumps(result, cls=JSONEncoder, allow_nan=False).encode("UTF-8")
         except (ValueError, TypeError) as err:
             _LOGGER.error("Unable to serialize to JSON: %s\n%s", err, result)
-            raise HTTPInternalServerError
+            raise HTTPInternalServerError from err
         response = web.Response(
             body=msg,
             content_type=CONTENT_TYPE_JSON,
@@ -127,12 +127,12 @@ def request_handler_factory(view: HomeAssistantView, handler: Callable) -> Calla
 
             if asyncio.iscoroutine(result):
                 result = await result
-        except vol.Invalid:
-            raise HTTPBadRequest()
-        except exceptions.ServiceNotFound:
-            raise HTTPInternalServerError()
-        except exceptions.Unauthorized:
-            raise HTTPUnauthorized()
+        except vol.Invalid as err:
+            raise HTTPBadRequest() from err
+        except exceptions.ServiceNotFound as err:
+            raise HTTPInternalServerError() from err
+        except exceptions.Unauthorized as err:
+            raise HTTPUnauthorized() from err
 
         if isinstance(result, web.StreamResponse):
             # The method handler returned a ready-made Response, how nice of it

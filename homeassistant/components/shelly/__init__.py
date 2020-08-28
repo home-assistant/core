@@ -37,8 +37,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             device = await aioshelly.Device.create(
                 entry.data["host"], aiohttp_client.async_get_clientsession(hass)
             )
-    except (asyncio.TimeoutError, OSError):
-        raise ConfigEntryNotReady
+    except (asyncio.TimeoutError, OSError) as err:
+        raise ConfigEntryNotReady from err
 
     wrapper = hass.data[DOMAIN][entry.entry_id] = ShellyDeviceWrapper(
         hass, entry, device
@@ -78,8 +78,8 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         try:
             async with async_timeout.timeout(5):
                 return await self.device.update()
-        except aiocoap_error.Error:
-            raise update_coordinator.UpdateFailed("Error fetching data")
+        except aiocoap_error.Error as err:
+            raise update_coordinator.UpdateFailed("Error fetching data") from err
 
     @property
     def model(self):

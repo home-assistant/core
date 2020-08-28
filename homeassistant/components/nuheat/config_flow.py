@@ -36,27 +36,27 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     try:
         await hass.async_add_executor_job(api.authenticate)
-    except requests.exceptions.Timeout:
-        raise CannotConnect
+    except requests.exceptions.Timeout as ex:
+        raise CannotConnect from ex
     except requests.exceptions.HTTPError as ex:
         if (
             ex.response.status_code > HTTP_BAD_REQUEST
             and ex.response.status_code < HTTP_INTERNAL_SERVER_ERROR
         ):
-            raise InvalidAuth
-        raise CannotConnect
+            raise InvalidAuth from ex
+        raise CannotConnect from ex
     #
     # The underlying module throws a generic exception on login failure
     #
-    except Exception:  # pylint: disable=broad-except
-        raise InvalidAuth
+    except Exception as ex:  # pylint: disable=broad-except
+        raise InvalidAuth from ex
 
     try:
         thermostat = await hass.async_add_executor_job(
             api.get_thermostat, data[CONF_SERIAL_NUMBER]
         )
-    except requests.exceptions.HTTPError:
-        raise InvalidThermostat
+    except requests.exceptions.HTTPError as ex:
+        raise InvalidThermostat from ex
 
     return {"title": thermostat.room, "serial_number": thermostat.serial_number}
 

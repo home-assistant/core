@@ -516,9 +516,9 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         """
         try:
             integration = await loader.async_get_integration(self.hass, handler_key)
-        except loader.IntegrationNotFound:
+        except loader.IntegrationNotFound as err:
             _LOGGER.error("Cannot find integration %s", handler_key)
-            raise data_entry_flow.UnknownHandler
+            raise data_entry_flow.UnknownHandler from err
 
         # Make sure requirements and dependencies of component are resolved
         await async_process_deps_reqs(self.hass, self._hass_config, integration)

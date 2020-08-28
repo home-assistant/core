@@ -102,7 +102,7 @@ class AugustGateway:
             self._authentication = await self.authenticator.async_authenticate()
         except ClientError as ex:
             _LOGGER.error("Unable to connect to August service: %s", str(ex))
-            raise CannotConnect
+            raise CannotConnect from ex
 
         if self._authentication.state == AuthenticationState.BAD_PASSWORD:
             raise InvalidAuth

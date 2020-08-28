@@ -55,9 +55,9 @@ async def validate_input(hass: core.HomeAssistant, data):
     """
     try:
         await get_async_monoprice(data[CONF_PORT], hass.loop)
-    except SerialException:
+    except SerialException as err:
         _LOGGER.error("Error connecting to Monoprice controller")
-        raise CannotConnect
+        raise CannotConnect from err
 
     sources = _sources_from_config(data)
 

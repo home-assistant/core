@@ -69,7 +69,9 @@ def get_data_update_coordinator(
                 async with async_timeout.timeout(3):
                     return await hass.async_add_executor_job(api.info)
             except Exception as exception:
-                raise UpdateFailed(f"Error communicating with API: {exception}")
+                raise UpdateFailed(
+                    f"Error communicating with API: {exception}"
+                ) from exception
 
         config_entry_data[DATA_UPDATE_COORDINATOR] = GogoGateDataUpdateCoordinator(
             hass,
