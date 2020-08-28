@@ -1,7 +1,6 @@
 """Control switches."""
 
 from datetime import timedelta
-import logging
 
 from ProgettiHWSW.relay import Relay
 
@@ -11,7 +10,6 @@ from . import setup_switch
 from .const import DEFAULT_POLLING_INTERVAL_SEC, DOMAIN
 
 SCAN_INTERVAL = timedelta(seconds=DEFAULT_POLLING_INTERVAL_SEC)
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):

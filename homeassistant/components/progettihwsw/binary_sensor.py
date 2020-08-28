@@ -1,11 +1,15 @@
 """Control binary sensor instances."""
 
+from datetime import timedelta
+
 from ProgettiHWSW.input import Input
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 
 from . import setup_input
-from .const import DOMAIN
+from .const import DEFAULT_POLLING_INTERVAL_SEC, DOMAIN
+
+SCAN_INTERVAL = timedelta(seconds=DEFAULT_POLLING_INTERVAL_SEC)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
