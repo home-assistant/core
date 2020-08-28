@@ -57,6 +57,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                 "chuangmi.plug.v3",
                 "chuangmi.plug.hmi205",
                 "chuangmi.plug.hmi206",
+                "chuangmi.plug.hmi208",
                 "lumi.acpartner.v3",
             ]
         ),
@@ -142,7 +143,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         except DeviceException as ex:
             raise PlatformNotReady from ex
 
-    if model in ["chuangmi.plug.v1", "chuangmi.plug.v3"]:
+    if model in ["chuangmi.plug.v1", "chuangmi.plug.v3", "chuangmi.plug.hmi208"]:
         plug = ChuangmiPlug(host, token, model=model)
 
         # The device has two switchable channels (mains and a USB port).
