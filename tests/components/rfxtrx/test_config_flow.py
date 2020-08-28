@@ -86,7 +86,6 @@ async def test_setup_network(hass):
 async def test_setup_serial(hass):
     """Test we can setup serial."""
     port = com_port()
-    port_select = f"{port}, s/n: {port.serial_number} - {port.manufacturer}"
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -106,7 +105,7 @@ async def test_setup_serial(hass):
 
     with patch("homeassistant.components.rfxtrx.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"device": port_select}
+            result["flow_id"], {"device": port.device}
         )
 
     assert result["type"] == "create_entry"
@@ -212,7 +211,6 @@ async def test_setup_network_fail(hass):
 async def test_setup_serial_fail(hass):
     """Test setup serial failed connection."""
     port = com_port()
-    port_select = f"{port}, s/n: {port.serial_number} - {port.manufacturer}"
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -231,7 +229,7 @@ async def test_setup_serial_fail(hass):
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"device": port_select}
+        result["flow_id"], {"device": port.device}
     )
 
     assert result["type"] == "form"

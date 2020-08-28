@@ -344,22 +344,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_setup_serial(self, user_input=None):
         """Step when setting up serial configuration."""
         errors = {}
-        ports = await self.hass.async_add_executor_job(serial.tools.list_ports.comports)
-        list_of_ports = [
-            f"{p}, s/n: {p.serial_number or 'n/a'}"
-            + (f" - {p.manufacturer}" if p.manufacturer else "")
-            for p in ports
-        ]
-        list_of_ports.append(CONF_MANUAL_PATH)
 
         if user_input is not None:
             user_selection = user_input[CONF_DEVICE]
             if user_selection == CONF_MANUAL_PATH:
                 return await self.async_step_setup_serial_manual_path()
 
-            port = ports[list_of_ports.index(user_selection)]
             dev_path = await self.hass.async_add_executor_job(
-                get_serial_by_id, port.device
+                get_serial_by_id, user_selection
             )
 
             try:
@@ -369,6 +361,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if not errors:
                 return self.async_create_entry(title="RFXTRX", data=data)
+
+        ports = await self.hass.async_add_executor_job(serial.tools.list_ports.comports)
+        list_of_ports = {}
+        for p in ports:
+            list_of_ports[p.device] = f"{p}, s/n: {p.serial_number or 'n/a'}" + (
+                f" - {p.manufacturer}" if p.manufacturer else ""
+            )
+        list_of_ports[CONF_MANUAL_PATH] = CONF_MANUAL_PATH
 
         schema = vol.Schema({vol.Required(CONF_DEVICE): vol.In(list_of_ports)})
         return self.async_show_form(
