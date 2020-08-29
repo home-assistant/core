@@ -3,10 +3,10 @@ from datetime import timedelta
 import logging
 
 from async_timeout import timeout
+from pynzbgetapi import NZBGetAPI, NZBGetAPIException
 
 from homeassistant.const import (
     CONF_HOST,
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SCAN_INTERVAL,
@@ -15,8 +15,8 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.typing import HomeAssistantType
 
-from . import NZBGetAPI, NZBGetAPIException
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
