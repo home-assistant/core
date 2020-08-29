@@ -12,8 +12,9 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 
-from . import NZBGetDataUpdateCoordinator, NZBGetEntity
+from . import NZBGetEntity
 from .const import DATA_COORDINATOR, DOMAIN
+from .coordinator import NZBGetDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
