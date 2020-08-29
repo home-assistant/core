@@ -2,7 +2,6 @@
 import asyncio
 import logging
 
-from pynzbgetapi import NZBGetAPI, NZBGetAPIException
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
