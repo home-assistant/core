@@ -38,8 +38,8 @@ repos:
           - --format=custom
           - --configfile=tests/bandit.yaml
         files: ^(homeassistant|script|tests)/.+\.py$
-  - repo: https://github.com/pre-commit/mirrors-isort
-    rev: v4.3.21
+  - repo: https://github.com/timothycrosley/isort
+    rev: 5.4.2
     hooks:
       - id: isort
   - repo: https://github.com/pre-commit/pre-commit-hooks

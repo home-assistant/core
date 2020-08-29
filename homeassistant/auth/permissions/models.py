@@ -5,8 +5,10 @@ import attr
 
 if TYPE_CHECKING:
     # pylint: disable=unused-import
-    from homeassistant.helpers import entity_registry as ent_reg  # noqa: F401
-    from homeassistant.helpers import device_registry as dev_reg  # noqa: F401
+    from homeassistant.helpers import (  # noqa: F401
+        device_registry as dev_reg,
+        entity_registry as ent_reg,
+    )
 
 
 @attr.s(slots=True)
