@@ -22,8 +22,8 @@ _LOGGER = logging.getLogger(__name__)
 def encrypt_payload(secret_key, payload):
     """Return a encrypted payload given a key and dictionary of data."""
     try:
-        from nacl.secret import SecretBox
         from nacl.encoding import Base64Encoder
+        from nacl.secret import SecretBox
     except (ImportError, OSError):
         pytest.skip("libnacl/libsodium is not installed")
         return
@@ -45,8 +45,8 @@ def encrypt_payload(secret_key, payload):
 def decrypt_payload(secret_key, encrypted_data):
     """Return a decrypted payload given a key and a string of encrypted data."""
     try:
-        from nacl.secret import SecretBox
         from nacl.encoding import Base64Encoder
+        from nacl.secret import SecretBox
     except (ImportError, OSError):
         pytest.skip("libnacl/libsodium is not installed")
         return
