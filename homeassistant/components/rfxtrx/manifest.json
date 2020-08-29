@@ -4,5 +4,5 @@
   "documentation": "https://www.home-assistant.io/integrations/rfxtrx",
   "requirements": ["pyRFXtrx==0.25"],
   "codeowners": ["@danielhiversen", "@elupus", "@RobBie1221"],
-  "config_flow": false
+  "config_flow": true
 }
