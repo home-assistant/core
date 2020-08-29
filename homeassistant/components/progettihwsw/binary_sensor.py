@@ -1,15 +1,18 @@
 """Control binary sensor instances."""
 
 from datetime import timedelta
+import logging
 
 from ProgettiHWSW.input import Input
+import async_timeout
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import setup_input
 from .const import DEFAULT_POLLING_INTERVAL_SEC, DOMAIN
 
-SCAN_INTERVAL = timedelta(seconds=DEFAULT_POLLING_INTERVAL_SEC)
+_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -24,24 +27,48 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     input_count = config_entry.data["input_count"]
     binary_sensors = []
 
+    async def async_update_data():
+        """Fetch data from API endpoint of board."""
+        async with async_timeout.timeout(5):
+            return await board_api.get_inputs()
+
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name="binary_sensor",
+        update_method=async_update_data,
+        update_interval=timedelta(seconds=DEFAULT_POLLING_INTERVAL_SEC),
+    )
+    await coordinator.async_refresh()
+
     for i in range(1, int(input_count) + 1):
         binary_sensors.append(
             ProgettihwswBinarySensor(
-                hass, config_entry, f"Input #{i}", setup_input(board_api, i)
+                hass,
+                coordinator,
+                config_entry,
+                f"Input #{i}",
+                setup_input(board_api, i),
             )
         )
 
-    async_add_entities(binary_sensors, True)
+    async_add_entities(binary_sensors)
 
 
 class ProgettihwswBinarySensor(BinarySensorEntity):
     """Represent a binary sensor."""
 
-    def __init__(self, hass, config_entry, name, sensor: Input):
+    def __init__(self, hass, coordinator, config_entry, name, sensor: Input):
         """Set initializing values."""
         self._name = name
         self._sensor = sensor
-        self._state = None
+        self._coordinator = coordinator
+
+    async def async_added_to_hass(self):
+        """When entity is added to hass."""
+        self.async_on_remove(
+            self._coordinator.async_add_listener(self.async_write_ha_state)
+        )
 
     @property
     def name(self):
@@ -51,9 +78,18 @@ class ProgettihwswBinarySensor(BinarySensorEntity):
     @property
     def is_on(self):
         """Get sensor state."""
-        return self._state
+        return self._coordinator.data[self._sensor.id]
 
-    def update(self):
+    @property
+    def should_poll(self):
+        """No need to poll. Coordinator notifies entity of updates."""
+        return False
+
+    @property
+    def available(self):
+        """Return if entity is available."""
+        return self._coordinator.last_update_success
+
+    async def async_update(self):
         """Update the state of binary sensor."""
-        self._sensor.update()
-        self._state = self._sensor.is_on
+        await self._coordinator.async_request_refresh()

@@ -28,7 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
 
     # Check board validation again to load new values to API.
-    await hass.async_add_executor_job(hass.data[DOMAIN][entry.entry_id].check_board)
+    await hass.data[DOMAIN][entry.entry_id].check_board()
 
     for component in PLATFORMS:
         hass.async_create_task(

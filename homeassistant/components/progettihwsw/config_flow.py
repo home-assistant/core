@@ -20,16 +20,16 @@ class EntryValidator:
         self._host = host
         self._phwsw_instance = ProgettiHWSWAPI(host)
 
-    def check_board_validity(self):
+    async def check_board_validity(self):
         """Check that if board actually exists. If it does, return the specs of that board."""
-        return self._phwsw_instance.check_board()
+        return await self._phwsw_instance.check_board()
 
 
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user host input."""
 
     validity_checker = EntryValidator(f'{data["host"]}:{data["port"]}')
-    is_valid = await hass.async_add_executor_job(validity_checker.check_board_validity)
+    is_valid = await validity_checker.check_board_validity()
 
     if is_valid is False:
         raise UnexistingBoard
