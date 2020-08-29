@@ -88,6 +88,7 @@ SERVICE_ANSWER_CALLBACK_QUERY = "answer_callback_query"
 SERVICE_DELETE_MESSAGE = "delete_message"
 SERVICE_LEAVE_CHAT = "leave_chat"
 
+EVENT_TELEGRAM_SENT = "telegram_sent"
 EVENT_TELEGRAM_CALLBACK = "telegram_callback"
 EVENT_TELEGRAM_COMMAND = "telegram_command"
 EVENT_TELEGRAM_TEXT = "telegram_text"
@@ -541,6 +542,9 @@ class TelegramNotificationService:
             if not isinstance(out, bool) and hasattr(out, ATTR_MESSAGEID):
                 chat_id = out.chat_id
                 self._last_message_id[chat_id] = out[ATTR_MESSAGEID]
+
+                self.hass.bus.async_fire(EVENT_TELEGRAM_SENT, out)
+
                 _LOGGER.debug(
                     "Last message ID: %s (from chat_id %s)",
                     self._last_message_id,
