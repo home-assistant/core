@@ -74,7 +74,7 @@ class PowerWallRunningSensor(PowerWallEntity, BinarySensorEntity):
     @property
     def is_on(self):
         """Get the powerwall running state."""
-        return self._coordinator.data[POWERWALL_API_SITEMASTER].running
+        return self.coordinator.data[POWERWALL_API_SITEMASTER].running
 
 
 class PowerWallConnectedSensor(PowerWallEntity, BinarySensorEntity):
@@ -98,7 +98,7 @@ class PowerWallConnectedSensor(PowerWallEntity, BinarySensorEntity):
     @property
     def is_on(self):
         """Get the powerwall connected to tesla state."""
-        return self._coordinator.data[POWERWALL_API_SITEMASTER].connected_to_tesla
+        return self.coordinator.data[POWERWALL_API_SITEMASTER].connected_to_tesla
 
 
 class PowerWallGridStatusSensor(PowerWallEntity, BinarySensorEntity):
@@ -122,7 +122,7 @@ class PowerWallGridStatusSensor(PowerWallEntity, BinarySensorEntity):
     @property
     def is_on(self):
         """Grid is online."""
-        return self._coordinator.data[POWERWALL_API_GRID_STATUS] == GridStatus.CONNECTED
+        return self.coordinator.data[POWERWALL_API_GRID_STATUS] == GridStatus.CONNECTED
 
 
 class PowerWallChargingStatusSensor(PowerWallEntity, BinarySensorEntity):
@@ -147,6 +147,6 @@ class PowerWallChargingStatusSensor(PowerWallEntity, BinarySensorEntity):
     def is_on(self):
         """Powerwall is charging."""
         # is_sending_to returns true for values greater than 100 watts
-        return self._coordinator.data[POWERWALL_API_METERS][
+        return self.coordinator.data[POWERWALL_API_METERS][
             POWERWALL_BATTERY_METER
         ].is_sending_to()
