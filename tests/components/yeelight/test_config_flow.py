@@ -150,7 +150,6 @@ async def test_import(hass: HomeAssistant):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config
         )
-    type(mocked_bulb).get_capabilities.assert_not_called()
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
 

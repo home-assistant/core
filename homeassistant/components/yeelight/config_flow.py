@@ -120,8 +120,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_try_connect(self, ipaddr):
         """Set up with options."""
-        if self._async_ip_already_configured(ipaddr):
-            raise AlreadyConfigured
         bulb = yeelight.Bulb(ipaddr)
         try:
             capabilities = await self.hass.async_add_executor_job(bulb.get_capabilities)
@@ -135,14 +133,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._capabilities = capabilities
         await self.async_set_unique_id(capabilities["id"])
         self._abort_if_unique_id_configured()
-
-    @callback
-    def _async_ip_already_configured(self, ipaddr):
-        """See if we already have an endpoint matching user input."""
-        for entry in self._async_current_entries():
-            if entry.data.get(CONF_IP_ADDRESS) == ipaddr:
-                return True
-        return False
 
     @callback
     def _async_default_name(self):
