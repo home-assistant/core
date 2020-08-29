@@ -25,13 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 class NZBGetDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching NZBGet data."""
 
-    def __init__(
-        self,
-        hass: HomeAssistantType,
-        *,
-        config: dict,
-        options: dict
-    ):
+    def __init__(self, hass: HomeAssistantType, *, config: dict, options: dict):
         """Initialize global NZBGet data updater."""
         self.nzbget = NZBGetAPI(
             config[CONF_HOST],
@@ -48,7 +42,10 @@ class NZBGetDataUpdateCoordinator(DataUpdateCoordinator):
         update_interval = timedelta(seconds=options[CONF_SCAN_INTERVAL])
 
         super().__init__(
-            hass, _LOGGER, name=DOMAIN, update_interval=update_interval,
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_interval=update_interval,
         )
 
     def _check_completed_downloads(self, history):
