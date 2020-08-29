@@ -37,7 +37,8 @@ async def test_user_form(hass):
 
     with _patch_version(), _patch_status(), _patch_history(), _patch_async_setup() as mock_setup, _patch_async_setup_entry() as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], USER_INPUT,
+            result["flow_id"],
+            USER_INPUT,
         )
         await hass.async_block_till_done()
 
@@ -56,11 +57,12 @@ async def test_user_form_cannot_connect(hass):
     )
 
     with patch(
-        "homeassistant.components.nzbget.NZBGetAPI.version",
+        "homeassistant.components.nzbget.coordinator.NZBGetAPI.version",
         side_effect=NZBGetAPIException(),
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], USER_INPUT,
+            result["flow_id"],
+            USER_INPUT,
         )
 
     assert result["type"] == RESULT_TYPE_FORM
@@ -74,10 +76,12 @@ async def test_user_form_unexpected_exception(hass):
     )
 
     with patch(
-        "homeassistant.components.nzbget.NZBGetAPI.version", side_effect=Exception(),
+        "homeassistant.components.nzbget.coordinator.NZBGetAPI.version",
+        side_effect=Exception(),
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], USER_INPUT,
+            result["flow_id"],
+            USER_INPUT,
         )
 
     assert result["type"] == RESULT_TYPE_ABORT
@@ -90,7 +94,9 @@ async def test_user_form_single_instance_allowed(hass):
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT,
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data=USER_INPUT,
     )
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "single_instance_allowed"
@@ -110,7 +116,8 @@ async def test_options_flow(hass):
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_SCAN_INTERVAL: 15},
+        result["flow_id"],
+        user_input={CONF_SCAN_INTERVAL: 15},
     )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
