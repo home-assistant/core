@@ -37,9 +37,9 @@ def com_port():
 
 @patch(
     "homeassistant.components.rfxtrx.rfxtrxmod.PyNetworkTransport.connect",
-    MagicMock(return_value=None),
+    return_value=None,
 )
-async def test_setup_network(hass):
+async def test_setup_network(connect_mock, hass):
     """Test we can setup network."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -74,16 +74,16 @@ async def test_setup_network(hass):
     }
 
 
-@patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
+@patch("serial.tools.list_ports.comports", return_value=[com_port()])
 @patch(
     "homeassistant.components.rfxtrx.rfxtrxmod.PySerialTransport.connect",
     serial_connect,
 )
 @patch(
     "homeassistant.components.rfxtrx.rfxtrxmod.PySerialTransport.close",
-    MagicMock(return_value=None),
+    return_value=None,
 )
-async def test_setup_serial(hass):
+async def test_setup_serial(com_mock, connect_mock, hass):
     """Test we can setup serial."""
     port = com_port()
 
@@ -120,16 +120,16 @@ async def test_setup_serial(hass):
     }
 
 
-@patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
+@patch("serial.tools.list_ports.comports", return_value=[com_port()])
 @patch(
     "homeassistant.components.rfxtrx.rfxtrxmod.PySerialTransport.connect",
     serial_connect,
 )
 @patch(
     "homeassistant.components.rfxtrx.rfxtrxmod.PySerialTransport.close",
-    MagicMock(return_value=None),
+    return_value=None,
 )
-async def test_setup_serial_manual(hass):
+async def test_setup_serial_manual(com_mock, connect_mock, hass):
     """Test we can setup serial with manual entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -174,9 +174,9 @@ async def test_setup_serial_manual(hass):
 
 @patch(
     "homeassistant.components.rfxtrx.rfxtrxmod.PyNetworkTransport.connect",
-    MagicMock(side_effect=OSError),
+    side_effect=OSError,
 )
-async def test_setup_network_fail(hass):
+async def test_setup_network_fail(connect_mock, hass):
     """Test we can setup network."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -203,12 +203,12 @@ async def test_setup_network_fail(hass):
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-@patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
+@patch("serial.tools.list_ports.comports", return_value=[com_port()])
 @patch(
     "homeassistant.components.rfxtrx.rfxtrxmod.PySerialTransport.connect",
-    MagicMock(side_effect=serial.serialutil.SerialException),
+    side_effect=serial.serialutil.SerialException,
 )
-async def test_setup_serial_fail(hass):
+async def test_setup_serial_fail(com_mock, connect_mock, hass):
     """Test setup serial failed connection."""
     port = com_port()
 
@@ -237,12 +237,12 @@ async def test_setup_serial_fail(hass):
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-@patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
+@patch("serial.tools.list_ports.comports", return_value=[com_port()])
 @patch(
     "homeassistant.components.rfxtrx.rfxtrxmod.PySerialTransport.connect",
     serial_connect_fail,
 )
-async def test_setup_serial_manual_fail(hass):
+async def test_setup_serial_manual_fail(com_mock, hass):
     """Test setup serial failed connection."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
