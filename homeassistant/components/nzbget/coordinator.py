@@ -3,7 +3,6 @@ from datetime import timedelta
 import logging
 
 from async_timeout import timeout
-from pynzbgetapi import NZBGetAPI, NZBGetAPIException
 
 from homeassistant.const import (
     CONF_HOST,
@@ -17,6 +16,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from . import NZBGetAPI, NZBGetAPIException
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
