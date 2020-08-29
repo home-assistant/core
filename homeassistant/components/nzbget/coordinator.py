@@ -1,4 +1,7 @@
 """Provides the NZBGet DataUpdateCoordinator."""
+from datetime import timedelta
+import logging
+
 from async_timeout import timeout
 from pynzbgetapi import NZBGetAPI, NZBGetAPIException
 
@@ -13,6 +16,10 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class NZBGetDataUpdateCoordinator(DataUpdateCoordinator):
