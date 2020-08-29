@@ -66,8 +66,11 @@ async def async_reload(hass, integration_name):
     ):
         return
 
-    for data in hass.data[NOTIFY_SERVICES][integration_name]:
-        await _async_setup_notify_services(hass, data)
+    tasks = [
+        _async_setup_notify_services(hass, data)
+        for data in hass.data[NOTIFY_SERVICES][integration_name]
+    ]
+    await asyncio.gather(*tasks)
 
 
 async def _async_setup_notify_services(hass, data):
