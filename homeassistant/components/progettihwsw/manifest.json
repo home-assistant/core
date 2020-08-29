@@ -6,7 +6,7 @@
     "@ardaseremet"
   ],
   "requirements": [
-    "progettihwsw==0.0.12"
+    "progettihwsw==0.1.0"
   ],
   "config_flow": true
 }

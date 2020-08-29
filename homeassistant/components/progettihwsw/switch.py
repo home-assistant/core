@@ -1,15 +1,19 @@
 """Control switches."""
 
 from datetime import timedelta
+import logging
 
 from ProgettiHWSW.relay import Relay
+import async_timeout
 
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import setup_switch
 from .const import DEFAULT_POLLING_INTERVAL_SEC, DOMAIN
 
-SCAN_INTERVAL = timedelta(seconds=DEFAULT_POLLING_INTERVAL_SEC)
+# SCAN_INTERVAL = timedelta(seconds=DEFAULT_POLLING_INTERVAL_SEC)
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -23,41 +27,63 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     relay_count = config_entry.data["relay_count"]
     switches = []
 
+    async def async_update_data():
+        """Fetch data from API endpoint of board."""
+        async with async_timeout.timeout(5):
+            return await board_api.get_switches()
+
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name="switch",
+        update_method=async_update_data,
+        update_interval=timedelta(seconds=DEFAULT_POLLING_INTERVAL_SEC),
+    )
+    await coordinator.async_refresh()
+
     for i in range(1, int(relay_count) + 1):
         switches.append(
             ProgettihwswSwitch(
                 hass,
+                coordinator,
                 config_entry,
                 f"Relay #{i}",
                 setup_switch(board_api, i, config_entry.data[f"relay_{str(i)}"]),
-                i,
             )
         )
 
-    async_add_entities(switches, True)
+    async_add_entities(switches)
 
 
 class ProgettihwswSwitch(SwitchEntity):
     """Represent a switch entity."""
 
-    def __init__(self, hass, config_entry, name, switch: Relay, number: int):
+    def __init__(self, hass, coordinator, config_entry, name, switch: Relay):
         """Initialize the values."""
         self._switch = switch
         self._name = name
-        self._state = None
-        self._number = number
+        self._coordinator = coordinator
 
-    def turn_on(self, **kwargs):
+    async def async_added_to_hass(self):
+        """When entity is added to hass."""
+        self.async_on_remove(
+            self._coordinator.async_add_listener(self.async_write_ha_state)
+        )
+
+    async def async_turn_on(self, **kwargs):
         """Turn the switch on."""
-        return self._switch.control(True)
+        await self._switch.control(True)
+        await self._coordinator.async_request_refresh()
 
-    def turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn the switch off."""
-        return self._switch.control(False)
+        await self._switch.control(False)
+        await self._coordinator.async_request_refresh()
 
-    def toggle(self, **kwargs):
+    async def async_toggle(self, **kwargs):
         """Toggle the state of switch."""
-        return self._switch.toggle()
+        await self._switch.toggle()
+        await self._coordinator.async_request_refresh()
 
     @property
     def name(self):
@@ -67,9 +93,18 @@ class ProgettihwswSwitch(SwitchEntity):
     @property
     def is_on(self):
         """Get switch state."""
-        return self._state
+        return self._coordinator.data[self._switch.id]
 
-    def update(self):
+    @property
+    def should_poll(self):
+        """No need to poll. Coordinator notifies entity of updates."""
+        return False
+
+    @property
+    def available(self):
+        """Return if entity is available."""
+        return self._coordinator.last_update_success
+
+    async def async_update(self):
         """Update the state of switch."""
-        self._switch.update()
-        self._state = self._switch.is_on
+        await self._coordinator.async_request_refresh()
