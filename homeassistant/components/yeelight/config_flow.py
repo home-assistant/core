@@ -49,7 +49,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 try:
                     await self._async_try_connect(user_input[CONF_IP_ADDRESS])
                     return self.async_create_entry(
-                        title=self._async_default_name(), data=user_input,
+                        title=self._async_default_name(),
+                        data=user_input,
                     )
                 except CannotConnect:
                     errors["base"] = "cannot_connect"
@@ -70,7 +71,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             unique_id = user_input[CONF_DEVICE]
             self._capabilities = self._discovered_devices[unique_id]
             return self.async_create_entry(
-                title=self._async_default_name(), data={CONF_ID: unique_id},
+                title=self._async_default_name(),
+                data={CONF_ID: unique_id},
             )
 
         configured_devices = {
@@ -165,16 +167,19 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 {
                     vol.Optional(CONF_MODEL, default=options[CONF_MODEL]): str,
                     vol.Required(
-                        CONF_TRANSITION, default=options[CONF_TRANSITION],
+                        CONF_TRANSITION,
+                        default=options[CONF_TRANSITION],
                     ): cv.positive_int,
                     vol.Required(
                         CONF_MODE_MUSIC, default=options[CONF_MODE_MUSIC]
                     ): bool,
                     vol.Required(
-                        CONF_SAVE_ON_CHANGE, default=options[CONF_SAVE_ON_CHANGE],
+                        CONF_SAVE_ON_CHANGE,
+                        default=options[CONF_SAVE_ON_CHANGE],
                     ): bool,
                     vol.Required(
-                        CONF_NIGHTLIGHT_SWITCH, default=options[CONF_NIGHTLIGHT_SWITCH],
+                        CONF_NIGHTLIGHT_SWITCH,
+                        default=options[CONF_NIGHTLIGHT_SWITCH],
                     ): bool,
                 }
             ),

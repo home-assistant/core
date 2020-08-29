@@ -52,13 +52,17 @@ async def test_discovery(hass: HomeAssistant):
     assert not result["errors"]
 
     with _patch_discovery(f"{MODULE_CONFIG_FLOW}.yeelight"):
-        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {},)
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
     assert result2["type"] == "form"
     assert result2["step_id"] == "pick_device"
     assert not result2["errors"]
 
     with patch(f"{MODULE}.async_setup", return_value=True) as mock_setup, patch(
-        f"{MODULE}.async_setup_entry", return_value=True,
+        f"{MODULE}.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_DEVICE: ID}
@@ -80,7 +84,10 @@ async def test_discovery(hass: HomeAssistant):
     assert not result["errors"]
 
     with _patch_discovery(f"{MODULE_CONFIG_FLOW}.yeelight"):
-        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {},)
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
     assert result2["type"] == "abort"
     assert result2["reason"] == "no_devices_found"
 
@@ -92,7 +99,10 @@ async def test_discovery_no_device(hass: HomeAssistant):
     )
 
     with _patch_discovery(f"{MODULE_CONFIG_FLOW}.yeelight", no_device=True):
-        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {},)
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
 
     assert result2["type"] == "abort"
     assert result2["reason"] == "no_devices_found"
@@ -124,7 +134,8 @@ async def test_import(hass: HomeAssistant):
     with patch(f"{MODULE_CONFIG_FLOW}.yeelight.Bulb", return_value=mocked_bulb), patch(
         f"{MODULE}.async_setup", return_value=True
     ) as mock_setup, patch(
-        f"{MODULE}.async_setup_entry", return_value=True,
+        f"{MODULE}.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config
@@ -186,7 +197,8 @@ async def test_manual(hass: HomeAssistant):
     with patch(f"{MODULE_CONFIG_FLOW}.yeelight.Bulb", return_value=mocked_bulb), patch(
         f"{MODULE}.async_setup", return_value=True
     ), patch(
-        f"{MODULE}.async_setup_entry", return_value=True,
+        f"{MODULE}.async_setup_entry",
+        return_value=True,
     ):
         result4 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_IP_ADDRESS: IP_ADDRESS}

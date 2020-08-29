@@ -171,7 +171,9 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
         }
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=entry_config,
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data=entry_config,
             ),
         )
 
@@ -250,7 +252,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     return unload_ok
 
 
-async def _async_setup_device(hass: HomeAssistant, ipaddr: str, config: dict,) -> None:
+async def _async_setup_device(
+    hass: HomeAssistant,
+    ipaddr: str,
+    config: dict,
+) -> None:
     # Set up device
     bulb = Bulb(ipaddr, model=config.get(CONF_MODEL) or None)
     capabilities = await hass.async_add_executor_job(bulb.get_capabilities)
