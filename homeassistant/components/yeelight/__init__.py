@@ -307,13 +307,14 @@ class YeelightScanner:
                         self._async_stop_scan()
 
         await asyncio.sleep(SCAN_INTERVAL.seconds)
-        self._scan_task = self._hass.async_create_task(self._async_scan())
+        self._scan_task = self._hass.loop.create_task(self._async_scan())
 
     @callback
     def _async_start_scan(self):
         """Start scanning for Yeelight devices."""
         _LOGGER.debug("Start scanning")
-        self._scan_task = self._hass.async_create_task(self._async_scan())
+        # Use loop directly to avoid home assistant track this task
+        self._scan_task = self._hass.loop.create_task(self._async_scan())
 
     @callback
     def _async_stop_scan(self):
