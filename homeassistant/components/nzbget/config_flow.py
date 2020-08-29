@@ -18,7 +18,6 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from . import NZBGetAPI, NZBGetAPIException
 from .const import (
     DEFAULT_NAME,
     DEFAULT_PORT,
@@ -27,6 +26,7 @@ from .const import (
     DEFAULT_VERIFY_SSL,
 )
 from .const import DOMAIN  # pylint: disable=unused-import
+from .coordinator import NZBGetAPI, NZBGetAPIException
 
 _LOGGER = logging.getLogger(__name__)
 
