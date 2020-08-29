@@ -77,7 +77,9 @@ async def async_setup(hass: HomeAssistantType, config: dict) -> bool:
     if DOMAIN in config:
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=config[DOMAIN],
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data=config[DOMAIN],
             )
         )
 
@@ -95,7 +97,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         hass.config_entries.async_update_entry(entry, options=options)
 
     coordinator = NZBGetDataUpdateCoordinator(
-        hass, config=entry.data, options=entry.options,
+        hass,
+        config=entry.data,
+        options=entry.options,
     )
 
     await coordinator.async_refresh()
@@ -171,7 +175,13 @@ async def _async_update_listener(hass: HomeAssistantType, entry: ConfigEntry) ->
 class NZBGetDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching NZBGet data."""
 
-    def __init__(self, hass: HomeAssistantType, *, config: dict, options: dict):
+    def __init__(
+        self,
+        hass: HomeAssistantType,
+        *,
+        config: dict,
+        options: dict
+    ):
         """Initialize global NZBGet data updater."""
         self.nzbget = NZBGetAPI(
             config[CONF_HOST],
