@@ -44,6 +44,7 @@ FIBARO_COMPONENTS = [
     "light",
     "scene",
     "sensor",
+    "lock",
     "switch",
 ]
 
@@ -67,6 +68,7 @@ FIBARO_TYPEMAP = {
     "com.fibaro.setpoint": "climate",
     "com.fibaro.FGT001": "climate",
     "com.fibaro.thermostatDanfoss": "climate",
+    "com.fibaro.doorLock": "lock",
 }
 
 DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema(
@@ -220,6 +222,8 @@ class FibaroController:
                 device_type = "switch"
             elif "open" in device.actions:
                 device_type = "cover"
+            elif "secure" in device.actions:
+                device_type = "lock"
             elif "value" in device.properties:
                 if device.properties.value in ("true", "false"):
                     device_type = "binary_sensor"
