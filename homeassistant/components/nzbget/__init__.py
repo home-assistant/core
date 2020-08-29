@@ -1,9 +1,7 @@
 """The NZBGet integration."""
 import asyncio
-from datetime import timedelta
 import logging
 
-from async_timeout import timeout
 from pynzbgetapi import NZBGetAPI, NZBGetAPIException
 import voluptuous as vol
 
@@ -16,7 +14,6 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_SSL,
     CONF_USERNAME,
-    CONF_VERIFY_SSL,
 )
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
