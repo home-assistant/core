@@ -20,6 +20,16 @@
     },
     "options": {
         "step": {
+            "ha_to_risco": {
+                "data": {
+                    "armed_away": "Activat, mode fora",
+                    "armed_custom_bypass": "Activat, bypass personalitzat",
+                    "armed_home": "Activat, mode a casa",
+                    "armed_night": "Activat, mode nocturn"
+                },
+                "description": "Selecciona quin estat establir a l'alarma Risco quan s'activi l'alarma de Home Assistant",
+                "title": "Converteix els estats de Risco en estats a Home Assistant"
+            },
             "init": {
                 "data": {
                     "code_arm_required": "Demana codi PIN per activar",
@@ -27,6 +37,18 @@
                     "scan_interval": "Freq\u00fc\u00e8ncia de sondeig a Risco (en segons)"
                 },
                 "title": "Opcions de configuraci\u00f3"
+            },
+            "risco_to_ha": {
+                "data": {
+                    "A": "Grup A",
+                    "B": "Grup B",
+                    "C": "Grup C",
+                    "D": "Grup D",
+                    "arm": "Activat (mode fora)",
+                    "partial_arm": "Activat parcial (estada)"
+                },
+                "description": "Selecciona quin estat tindr\u00e0 l'alarma de Home Assistant per a cadascun dels estats que proporcioni Risco",
+                "title": "Converteix els estats de Risco en estats a Home Assistant"
             }
         }
     }

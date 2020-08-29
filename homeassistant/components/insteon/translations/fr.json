@@ -31,6 +31,8 @@
             },
             "init": {
                 "data": {
+                    "add_x10": "Ajouter un appareil X10.",
+                    "change_hub_config": "Modifier la configuration du Hub.",
                     "remove_x10": "Retirez un p\u00e9riph\u00e9rique X10."
                 },
                 "description": "S\u00e9lectionnez une option \u00e0 configurer.",
