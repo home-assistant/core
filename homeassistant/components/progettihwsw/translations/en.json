@@ -1,16 +1,16 @@
 {
     "config": {
         "error": {
-            "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-            "unknown": "[%key:common::config_flow::error::unknown%]",
+            "cannot_connect": "Cannot connect to the board.",
+            "unknown": "Unknown error.",
             "wrong_info_relay_modes": "Relay mode selection must be monostable or bistable."
         },
         "step": {
             "user": {
                 "title": "Set up board",
                 "data": {
-                    "host": "[%key:common::config_flow::data::host%]",
-                    "port": "[%key:common::config_flow::data::port%]"
+                    "host": "Host",
+                    "port": "Port Number"
                 }
             },
             "relay_modes": {

@@ -88,3 +88,49 @@ async def test_form_cannot_connect(hass):
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_user_exception(hass):
+    """Test we handle unknown exception."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.progettihwsw.config_flow.validate_input",
+        side_effect=Exception,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"host": "", "port": 80},
+        )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "unknown"}
+
+
+async def test_form_rm_exception(hass):
+    """Test we handle unknown exception on seconds step."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.progettihwsw.config_flow.ProgettiHWSWAPI.check_board",
+        return_value=mock_value_step_user,
+    ), patch(
+        "homeassistant.components.progettihwsw.config_flow.validate_input_relay_modes",
+        side_effect=Exception,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"host": "", "port": 80},
+        )
+
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {"relay_1": "bistable"},
+        )
+
+    assert result3["type"] == "form"
+    assert result3["errors"] == {"base": "unknown"}
