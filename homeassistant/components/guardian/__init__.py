@@ -35,8 +35,6 @@ from .util import GuardianDataUpdateCoordinator
 DATA_LAST_SENSOR_PAIR_DUMP = "last_sensor_pair_dump"
 DATA_UNSUB_DISPATCHER_CONNECTS = "unsub_dispatcher_connects"
 
-SIGNAL_NEW_SENSOR_PAIR_DUMP = "guardian_new_sensor_pair_dump_{0}"
-
 PLATFORMS = ["binary_sensor", "sensor", "switch"]
 
 
@@ -106,8 +104,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     @callback
     def async_new_sensor_pair_dump():
         """Define a callback for when new paired sensor data is received."""
-        async_dispatcher_send(
-            hass, SIGNAL_NEW_SENSOR_PAIR_DUMP.format(entry.data[CONF_UID])
+        hass.async_create_task(
+            paired_sensor_manager.async_process_latest_paired_sensor_uids()
         )
 
     # When the sensor_pair_dump API completes, send a signal (via the dispatcher) to the
@@ -169,7 +167,6 @@ class PairedSensorManager:
         """Perform post-creation initialization."""
         for signal_template, target in [
             (SIGNAL_ADD_PAIRED_SENSOR, self.async_pair_sensor),
-            (SIGNAL_NEW_SENSOR_PAIR_DUMP, self.async_process_latest_paired_sensor_uids),
             (SIGNAL_REMOVE_PAIRED_SENSOR, self.async_unpair_sensor),
         ]:
             async_register_dispatcher_connect(
