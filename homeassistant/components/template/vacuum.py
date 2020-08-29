@@ -65,27 +65,30 @@ _VALID_STATES = [
     STATE_ERROR,
 ]
 
-VACUUM_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_FRIENDLY_NAME): cv.string,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_BATTERY_LEVEL_TEMPLATE): cv.template,
-        vol.Optional(CONF_FAN_SPEED_TEMPLATE): cv.template,
-        vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
-        vol.Optional(CONF_ATTRIBUTE_TEMPLATES, default={}): vol.Schema(
-            {cv.string: cv.template}
-        ),
-        vol.Required(SERVICE_START): cv.SCRIPT_SCHEMA,
-        vol.Optional(SERVICE_PAUSE): cv.SCRIPT_SCHEMA,
-        vol.Optional(SERVICE_STOP): cv.SCRIPT_SCHEMA,
-        vol.Optional(SERVICE_RETURN_TO_BASE): cv.SCRIPT_SCHEMA,
-        vol.Optional(SERVICE_CLEAN_SPOT): cv.SCRIPT_SCHEMA,
-        vol.Optional(SERVICE_LOCATE): cv.SCRIPT_SCHEMA,
-        vol.Optional(SERVICE_SET_FAN_SPEED): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_FAN_SPEED_LIST, default=[]): cv.ensure_list,
-        vol.Optional(CONF_ENTITY_ID): cv.entity_ids,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
-    }
+VACUUM_SCHEMA = vol.All(
+    cv.deprecated(CONF_ENTITY_ID),
+    vol.Schema(
+        {
+            vol.Optional(CONF_FRIENDLY_NAME): cv.string,
+            vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+            vol.Optional(CONF_BATTERY_LEVEL_TEMPLATE): cv.template,
+            vol.Optional(CONF_FAN_SPEED_TEMPLATE): cv.template,
+            vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
+            vol.Optional(CONF_ATTRIBUTE_TEMPLATES, default={}): vol.Schema(
+                {cv.string: cv.template}
+            ),
+            vol.Required(SERVICE_START): cv.SCRIPT_SCHEMA,
+            vol.Optional(SERVICE_PAUSE): cv.SCRIPT_SCHEMA,
+            vol.Optional(SERVICE_STOP): cv.SCRIPT_SCHEMA,
+            vol.Optional(SERVICE_RETURN_TO_BASE): cv.SCRIPT_SCHEMA,
+            vol.Optional(SERVICE_CLEAN_SPOT): cv.SCRIPT_SCHEMA,
+            vol.Optional(SERVICE_LOCATE): cv.SCRIPT_SCHEMA,
+            vol.Optional(SERVICE_SET_FAN_SPEED): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_FAN_SPEED_LIST, default=[]): cv.ensure_list,
+            vol.Optional(CONF_ENTITY_ID): cv.entity_ids,
+            vol.Optional(CONF_UNIQUE_ID): cv.string,
+        }
+    ),
 )
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
