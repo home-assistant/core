@@ -12,7 +12,7 @@ from homeassistant.helpers.entity_registry import async_entries_for_device
 
 from . import get_device
 
-from tests.async_mock import call, patch
+from tests.async_mock import call
 from tests.common import mock_device_registry, mock_registry
 
 REMOTE_DEVICES = ["Entrance", "Living Room", "Office", "Garage"]
@@ -26,16 +26,9 @@ IR_PACKET = (
 async def test_remote_setup_works(hass):
     """Test a successful setup with all remotes."""
     for device in map(get_device, REMOTE_DEVICES):
-        mock_api = device.get_mock_api()
-        mock_entry = device.get_mock_entry()
-        mock_entry.add_to_hass(hass)
-
         device_registry = mock_device_registry(hass)
         entity_registry = mock_registry(hass)
-
-        with patch("broadlink.gendevice", return_value=mock_api):
-            await hass.config_entries.async_setup(mock_entry.entry_id)
-            await hass.async_block_till_done()
+        mock_api, mock_entry = await device.setup(hass)
 
         device_entry = device_registry.async_get_device(
             {(DOMAIN, mock_entry.unique_id)}, set()
@@ -47,21 +40,15 @@ async def test_remote_setup_works(hass):
         remote = remotes.pop()
         assert remote.original_name == f"{device.name} Remote"
         assert hass.states.get(remote.entity_id).state == STATE_ON
+        assert mock_api.auth.call_count == 1
 
 
 async def test_remote_send_command(hass):
     """Test sending a command with all remotes."""
     for device in map(get_device, REMOTE_DEVICES):
-        mock_api = device.get_mock_api()
-        mock_entry = device.get_mock_entry()
-        mock_entry.add_to_hass(hass)
-
         device_registry = mock_device_registry(hass)
         entity_registry = mock_registry(hass)
-
-        with patch("broadlink.gendevice", return_value=mock_api):
-            await hass.config_entries.async_setup(mock_entry.entry_id)
-            await hass.async_block_till_done()
+        mock_api, mock_entry = await device.setup(hass)
 
         device_entry = device_registry.async_get_device(
             {(DOMAIN, mock_entry.unique_id)}, set()
@@ -80,21 +67,15 @@ async def test_remote_send_command(hass):
 
         assert mock_api.send_data.call_count == 1
         assert mock_api.send_data.call_args == call(b64decode(IR_PACKET))
+        assert mock_api.auth.call_count == 1
 
 
 async def test_remote_turn_off_turn_on(hass):
     """Test we do not send commands if the remotes are off."""
     for device in map(get_device, REMOTE_DEVICES):
-        mock_api = device.get_mock_api()
-        mock_entry = device.get_mock_entry()
-        mock_entry.add_to_hass(hass)
-
         device_registry = mock_device_registry(hass)
         entity_registry = mock_registry(hass)
-
-        with patch("broadlink.gendevice", return_value=mock_api):
-            await hass.config_entries.async_setup(mock_entry.entry_id)
-            await hass.async_block_till_done()
+        mock_api, mock_entry = await device.setup(hass)
 
         device_entry = device_registry.async_get_device(
             {(DOMAIN, mock_entry.unique_id)}, set()
@@ -136,3 +117,4 @@ async def test_remote_turn_off_turn_on(hass):
         await hass.async_block_till_done()
         assert mock_api.send_data.call_count == 1
         assert mock_api.send_data.call_args == call(b64decode(IR_PACKET))
+        assert mock_api.auth.call_count == 1
