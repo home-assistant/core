@@ -12,27 +12,14 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-class EntryValidator:
-    """Class to validate data given by user."""
-
-    def __init__(self, host):
-        """Initialize the data."""
-        self._host = host
-        self._phwsw_instance = ProgettiHWSWAPI(host)
-
-    async def check_board_validity(self):
-        """Check that if board actually exists. If it does, return the specs of that board."""
-        return await self._phwsw_instance.check_board()
-
-
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user host input."""
 
-    validity_checker = EntryValidator(f'{data["host"]}:{data["port"]}')
-    is_valid = await validity_checker.check_board_validity()
+    api_instance = ProgettiHWSWAPI(f'{data["host"]}:{data["port"]}')
+    is_valid = await api_instance.check_board()
 
     if is_valid is False:
-        raise UnexistingBoard
+        raise CannotConnect
 
     return {
         "title": is_valid["title"],
@@ -97,8 +84,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     user_input
                 )
                 return await self.async_step_relay_modes()
-            except UnexistingBoard:
-                errors["base"] = "unexisting_board"
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
                 errors["base"] = "unknown"
 
@@ -107,7 +94,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class UnexistingBoard(exceptions.HomeAssistantError):
+class CannotConnect(exceptions.HomeAssistantError):
     """Error to indicate we cannot identify host."""
 
 

@@ -12,8 +12,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from . import setup_switch
 from .const import DEFAULT_POLLING_INTERVAL_SEC, DOMAIN
 
-# SCAN_INTERVAL = timedelta(seconds=DEFAULT_POLLING_INTERVAL_SEC)
-_LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(DOMAIN)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):

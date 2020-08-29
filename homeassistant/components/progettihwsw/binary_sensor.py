@@ -12,7 +12,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from . import setup_input
 from .const import DEFAULT_POLLING_INTERVAL_SEC, DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(DOMAIN)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
