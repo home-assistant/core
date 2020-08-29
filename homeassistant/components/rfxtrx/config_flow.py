@@ -1,9 +1,13 @@
 """Config flow for RFXCOM RFXtrx integration."""
 import logging
+import os
 
+import RFXtrx as rfxtrxmod
+import serial
+import serial.tools.list_ports
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant import config_entries, exceptions
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_COMMAND_OFF,
@@ -11,6 +15,9 @@ from homeassistant.const import (
     CONF_DEVICE,
     CONF_DEVICE_ID,
     CONF_DEVICES,
+    CONF_HOST,
+    CONF_PORT,
+    CONF_TYPE,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import (
@@ -37,6 +44,7 @@ from .switch import supported as switch_supported
 _LOGGER = logging.getLogger(__name__)
 
 CONF_EVENT_CODE = "event_code"
+CONF_MANUAL_PATH = "Enter Manually"
 
 
 def none_or_int(value, base):
@@ -292,14 +300,166 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
+    async def async_step_user(self, user_input=None):
+        """Step when user initializes a integration."""
+        await self.async_set_unique_id(DOMAIN)
+        self._abort_if_unique_id_configured()
+
+        errors = {}
+        if user_input is not None:
+            user_selection = user_input[CONF_TYPE]
+            if user_selection == "Serial":
+                return await self.async_step_setup_serial()
+
+            return await self.async_step_setup_network()
+
+        list_of_types = ["Serial", "Network"]
+
+        schema = vol.Schema({vol.Required(CONF_TYPE): vol.In(list_of_types)})
+        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
+
+    async def async_step_setup_network(self, user_input=None):
+        """Step when setting up network configuration."""
+        errors = {}
+
+        if user_input is not None:
+            host = user_input[CONF_HOST]
+            port = user_input[CONF_PORT]
+
+            try:
+                data = await self.async_validate_rfx(host=host, port=port)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+
+            if not errors:
+                return self.async_create_entry(title="RFXTRX", data=data)
+
+        schema = vol.Schema(
+            {vol.Required(CONF_HOST): str, vol.Required(CONF_PORT): int}
+        )
+        return self.async_show_form(
+            step_id="setup_network", data_schema=schema, errors=errors,
+        )
+
+    async def async_step_setup_serial(self, user_input=None):
+        """Step when setting up serial configuration."""
+        errors = {}
+
+        if user_input is not None:
+            user_selection = user_input[CONF_DEVICE]
+            if user_selection == CONF_MANUAL_PATH:
+                return await self.async_step_setup_serial_manual_path()
+
+            dev_path = await self.hass.async_add_executor_job(
+                get_serial_by_id, user_selection
+            )
+
+            try:
+                data = await self.async_validate_rfx(device=dev_path)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+
+            if not errors:
+                return self.async_create_entry(title="RFXTRX", data=data)
+
+        ports = await self.hass.async_add_executor_job(serial.tools.list_ports.comports)
+        list_of_ports = {}
+        for port in ports:
+            list_of_ports[port.device] = (
+                f"{port}, s/n: {port.serial_number or 'n/a'}"
+                + (f" - {port.manufacturer}" if port.manufacturer else "")
+            )
+        list_of_ports[CONF_MANUAL_PATH] = CONF_MANUAL_PATH
+
+        schema = vol.Schema({vol.Required(CONF_DEVICE): vol.In(list_of_ports)})
+        return self.async_show_form(
+            step_id="setup_serial", data_schema=schema, errors=errors,
+        )
+
+    async def async_step_setup_serial_manual_path(self, user_input=None):
+        """Select path manually."""
+        errors = {}
+
+        if user_input is not None:
+            device = user_input[CONF_DEVICE]
+            try:
+                data = await self.async_validate_rfx(device=device)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+
+            if not errors:
+                return self.async_create_entry(title="RFXTRX", data=data)
+
+        schema = vol.Schema({vol.Required(CONF_DEVICE): str})
+        return self.async_show_form(
+            step_id="setup_serial_manual_path", data_schema=schema, errors=errors,
+        )
+
     async def async_step_import(self, import_config=None):
         """Handle the initial step."""
         await self.async_set_unique_id(DOMAIN)
         self._abort_if_unique_id_configured()
         return self.async_create_entry(title="RFXTRX", data=import_config)
 
+    async def async_validate_rfx(self, host=None, port=None, device=None):
+        """Create data for rfxtrx entry."""
+        success = await self.hass.async_add_executor_job(
+            _test_transport, host, port, device
+        )
+        if not success:
+            raise CannotConnect
+
+        data = {
+            CONF_HOST: host,
+            CONF_PORT: port,
+            CONF_DEVICE: device,
+            CONF_AUTOMATIC_ADD: False,
+            CONF_DEBUG: False,
+            CONF_DEVICES: {},
+        }
+        return data
+
     @staticmethod
     @callback
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
         """Get the options flow for this handler."""
         return OptionsFlow(config_entry)
+
+
+def _test_transport(host, port, device):
+    """Construct a rfx object based on config."""
+    if port is not None:
+        try:
+            conn = rfxtrxmod.PyNetworkTransport((host, port))
+        except OSError:
+            return False
+
+        conn.close()
+    else:
+        try:
+            conn = rfxtrxmod.PySerialTransport(device)
+        except serial.serialutil.SerialException:
+            return False
+
+        if conn.serial is None:
+            return False
+
+        conn.close()
+
+    return True
+
+
+def get_serial_by_id(dev_path: str) -> str:
+    """Return a /dev/serial/by-id match for given device if available."""
+    by_id = "/dev/serial/by-id"
+    if not os.path.isdir(by_id):
+        return dev_path
+
+    for path in (entry.path for entry in os.scandir(by_id) if entry.is_symlink()):
+        if os.path.realpath(path) == dev_path:
+            return path
+    return dev_path
+
+
+class CannotConnect(exceptions.HomeAssistantError):
+    """Error to indicate we cannot connect."""

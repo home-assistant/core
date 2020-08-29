@@ -1,5 +1,40 @@
 {
   "title": "Rfxtrx",
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "type": "Connection type"
+        },
+        "title": "Select connection type"
+      },
+      "setup_network": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "title": "Select connection address"
+      },
+      "setup_serial": {
+        "data": {
+          "device": "Select device"
+        },
+        "title": "Device"
+      },
+      "setup_serial_manual_path": {
+        "data": {
+          "device": "Select path"
+        },
+        "title": "Path"
+      }
+    }
+  },
   "options": {
     "step": {
       "prompt_options": {

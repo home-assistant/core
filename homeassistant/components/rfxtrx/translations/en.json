@@ -1,4 +1,39 @@
 {
+    "config": {
+        "abort": {
+            "already_configured": "Already configured. Only a single configuration possible."
+        },
+        "error": {
+            "cannot_connect": "Failed to connect"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "type": "Connection type"
+                },
+                "title": "Select connection type"
+            },
+            "setup_network": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                },
+                "title": "Select connection address"
+            },
+            "setup_serial": {
+                "data": {
+                    "device": "Select device"
+                },
+                "title": "Device"
+            },
+            "setup_serial_manual_path": {
+                "data": {
+                    "device": "Select path"
+                },
+                "title": "Path"
+            }
+        }
+    },
     "options": {
         "step": {
             "prompt_options": {
