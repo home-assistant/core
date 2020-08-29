@@ -144,6 +144,18 @@ async def test_turn_on_fan_without_speed(hass: core.HomeAssistant):
     mock_turn_on.assert_called_with("test-device-id", Action.turn_on())
 
 
+async def test_turn_on_fan_with_off_speed(hass: core.HomeAssistant):
+    """Tests that turn on command delegates to turn off API."""
+    await setup_platform(
+        hass, FAN_DOMAIN, ceiling_fan("name-1"), bond_device_id="test-device-id"
+    )
+
+    with patch_bond_action() as mock_turn_off, patch_bond_device_state():
+        await turn_fan_on(hass, "fan.name_1", fan.SPEED_OFF)
+
+    mock_turn_off.assert_called_with("test-device-id", Action.turn_off())
+
+
 async def test_turn_off_fan(hass: core.HomeAssistant):
     """Tests that turn off command delegates to API."""
     await setup_platform(
