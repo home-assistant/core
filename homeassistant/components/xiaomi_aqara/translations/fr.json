@@ -7,8 +7,10 @@
         },
         "error": {
             "discovery_error": "Impossible de d\u00e9couvrir une passerelle Xiaomi Aqara, essayez d'utiliser l'IP du p\u00e9riph\u00e9rique ex\u00e9cutant HomeAssistant comme interface",
+            "invalid_host": "Adresse IP non valide",
             "invalid_interface": "Interface r\u00e9seau non valide",
             "invalid_key": "Cl\u00e9 de passerelle non valide",
+            "invalid_mac": "Adresse MAC non valide",
             "not_found_error": "La passerelle d\u00e9couverte par Zeroconf  ne permet pas d'obtenir les informations n\u00e9cessaires, essayez d'utiliser l'IP du p\u00e9riph\u00e9rique ex\u00e9cutant HomeAssistant comme interface"
         },
         "flow_title": "Passerelle Xiaomi Aqara: {nom}",
@@ -30,8 +32,12 @@
             },
             "user": {
                 "data": {
-                    "interface": "Interface r\u00e9seau \u00e0 utiliser"
-                }
+                    "host": "Adresse IP (facultatif)",
+                    "interface": "Interface r\u00e9seau \u00e0 utiliser",
+                    "mac": "Adresse MAC (facultatif)"
+                },
+                "description": "Connectez-vous \u00e0 votre passerelle Xiaomi Aqara, si les adresses IP et mac sont laiss\u00e9es vides, la d\u00e9tection automatique est utilis\u00e9e",
+                "title": "Passerelle Xiaomi Aqara"
             }
         }
     }

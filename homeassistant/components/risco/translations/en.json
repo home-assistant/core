@@ -20,6 +20,16 @@
     },
     "options": {
         "step": {
+            "ha_to_risco": {
+                "data": {
+                    "armed_away": "Armed Away",
+                    "armed_custom_bypass": "Armed Custom Bypass",
+                    "armed_home": "Armed Home",
+                    "armed_night": "Armed Night"
+                },
+                "description": "Select what state to set your Risco alarm to when arming the Home Assistant alarm",
+                "title": "Map Home Assistant states to Risco states"
+            },
             "init": {
                 "data": {
                     "code_arm_required": "Require pin code to arm",
@@ -27,6 +37,18 @@
                     "scan_interval": "How often to poll Risco (in seconds)"
                 },
                 "title": "Configure options"
+            },
+            "risco_to_ha": {
+                "data": {
+                    "A": "Group A",
+                    "B": "Group B",
+                    "C": "Group C",
+                    "D": "Group D",
+                    "arm": "Armed (AWAY)",
+                    "partial_arm": "Partially Armed (STAY)"
+                },
+                "description": "Select what state your Home Assistant alarm will report for every state reported by Risco",
+                "title": "Map Risco states to Home Assistant states"
             }
         }
     }
