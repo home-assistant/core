@@ -5,7 +5,6 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_SAFETY,
     BinarySensorEntity,
 )
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DISKS
 from homeassistant.helpers.typing import HomeAssistantType
