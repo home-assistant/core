@@ -468,10 +468,7 @@ def build_item_response(self, payload):
             country=self._me["country"],
             limit=BROWSE_LIMIT,
         )
-        # pylint: disable=protected-access
-        category = self._spotify._get(
-            f"browse/categories/{media_content_id}", country=self._me["country"]
-        )
+        category = self._spotify.category(media_content_id, country=self._me["country"])
         title = category.get("name")
         image = fetch_image_url(category, key="icons")
         items = media.get("playlists", {}).get("items", [])
