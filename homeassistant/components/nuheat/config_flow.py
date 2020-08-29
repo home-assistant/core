@@ -48,7 +48,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     #
     # The underlying module throws a generic exception on login failure
     #
-    except Exception as ex:  # pylint: disable=broad-except
+    except Exception as ex:
         raise InvalidAuth from ex
 
     try:

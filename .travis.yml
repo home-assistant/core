@@ -31,7 +31,8 @@ jobs:
     - python: "3.7.1"
       env: TOXENV=lint
     - python: "3.7.1"
-      env: TOXENV=pylint PYLINT_ARGS=--jobs=0 TRAVIS_WAIT=30
+      # PYLINT_ARGS=--jobs=0 disabled for now: https://github.com/PyCQA/pylint/issues/3584
+      env: TOXENV=pylint TRAVIS_WAIT=30
     - python: "3.7.1"
       env: TOXENV=typing
 

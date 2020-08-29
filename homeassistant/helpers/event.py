@@ -47,9 +47,6 @@ TRACK_ENTITY_REGISTRY_UPDATED_LISTENER = "track_entity_registry_updated_listener
 
 _LOGGER = logging.getLogger(__name__)
 
-# PyLint does not like the use of threaded_listener_factory
-# pylint: disable=invalid-name
-
 
 def threaded_listener_factory(async_factory: Callable[..., Any]) -> CALLBACK_TYPE:
     """Convert an async event helper to a threaded one."""

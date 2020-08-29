@@ -743,6 +743,7 @@ class ConfigEntries:
         self,
         entry: ConfigEntry,
         *,
+        # pylint: disable=dangerous-default-value # _UNDEFs not modified
         unique_id: Union[str, dict, None] = _UNDEF,
         title: Union[str, dict] = _UNDEF,
         data: dict = _UNDEF,

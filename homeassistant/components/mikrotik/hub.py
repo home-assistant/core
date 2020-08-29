@@ -129,7 +129,11 @@ class MikrotikData:
         """Return device model name."""
         cmd = IDENTITY if param == NAME else INFO
         data = self.command(MIKROTIK_SERVICES[cmd])
-        return data[0].get(param) if data else None
+        return (
+            data[0].get(param)  # pylint: disable=unsubscriptable-object
+            if data
+            else None
+        )
 
     def get_hub_details(self):
         """Get Hub info."""
@@ -229,7 +233,7 @@ class MikrotikData:
         data = self.command(cmd, params)
         if data is not None:
             status = 0
-            for result in data:
+            for result in data:  # pylint: disable=not-an-iterable
                 if "status" in result:
                     status += 1
             if status == len(data):
