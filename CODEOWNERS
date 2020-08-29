@@ -243,7 +243,7 @@ homeassistant/components/lutron_caseta/* @swails
 homeassistant/components/mastodon/* @fabaff
 homeassistant/components/matrix/* @tinloaf
 homeassistant/components/mcp23017/* @jardiamj
-homeassistant/components/media_finder/* @hunterjm
+homeassistant/components/media_source/* @hunterjm
 homeassistant/components/mediaroom/* @dgomes
 homeassistant/components/melcloud/* @vilppuvuorinen
 homeassistant/components/melissa/* @kennedyshead

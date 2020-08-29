@@ -1,8 +1,10 @@
 """Provide functionality to interact with Cast devices on the network."""
 import asyncio
 from datetime import timedelta
+import functools as ft
 import json
 import logging
+import re
 from typing import Optional
 
 import pychromecast
@@ -18,7 +20,6 @@ import voluptuous as vol
 from homeassistant.auth.models import RefreshToken
 from homeassistant.components import zeroconf
 from homeassistant.components.http.auth import async_sign_path
-from homeassistant.components.media_finder import async_find_media
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MOVIE,
@@ -38,6 +39,8 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
 )
 from homeassistant.components.media_player.errors import BrowseError
+from homeassistant.components.media_source.const import URI_SCHEME, URI_SCHEME_REGEX
+from homeassistant.components.media_source.models import Media
 from homeassistant.const import (
     CONF_HOST,
     EVENT_HOMEASSISTANT_STOP,
@@ -509,57 +512,58 @@ class CastDevice(MediaPlayerEntity):
         media_controller.seek(position)
 
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
-        """Return a payload for the "media_player/browse_media" websocket command."""
-        hass_url = get_url(self.hass, prefer_external=True)
-
-        # Trim url for media lookup
-        path = None
-        if media_content_id:
-            try:
-                end = media_content_id.rindex("?")
-            except ValueError:
-                end = len(media_content_id)
-            path = media_content_id[len(hass_url) : end]
-
-        payload = await async_find_media(self.hass, path)
-        if not payload:
+        """Implement the websocket media browsing helper."""
+        media: Media = await self.hass.components.media_source.async_find_media(
+            media_content_id
+        )
+        if not media:
             raise BrowseError("Could not find media for given path.")
 
-        # Sign URL with Home Assistant Cast User
-        refresh_token_id = None
-        config_entries = self.hass.config_entries.async_entries(CAST_DOMAIN)
-        if config_entries:
-            user_id = config_entries[0].data["user_id"]
-            user = await self.hass.auth.async_get_user(user_id)
-            if user.refresh_tokens:
-                refresh_token: RefreshToken = list(user.refresh_tokens.values())[0]
-                refresh_token_id = refresh_token.id
+        def media_to_dict(media: Media):
+            """Convert Media class to browse media dictionary."""
+            response = {
+                "title": media.name,
+                "media_content_type": media.mime_type or "",
+                "media_content_id": media.location,
+                "can_play": media.is_file,
+                "can_expand": media.is_dir,
+            }
 
-        def sign_payload(payload):
-            """Sign the payload."""
-            path = payload["media_content_id"]
-
-            # Sign relative path
-            if refresh_token_id and payload["can_play"]:
-                path = async_sign_path(
-                    self.hass,
-                    refresh_token_id,
-                    payload["media_content_id"],
-                    timedelta(minutes=5),
-                )
-
-            # Sign path of children
-            if payload.get("children"):
-                payload["children"] = [
-                    sign_payload(child) for child in payload["children"]
+            if media.children:
+                response["children"] = [
+                    media_to_dict(child) for child in media.children
                 ]
 
-            # Prepend external URL
-            payload["media_content_id"] = f"{hass_url}{path}"
+            return response
 
-            return payload
+        return media_to_dict(media)
 
-        return sign_payload(payload)
+    async def async_play_media(self, media_type, media_id, **kwargs):
+        """Play a piece of media."""
+        # Handle media_source
+        if media_id.startswith(URI_SCHEME):
+            matches = re.match(URI_SCHEME_REGEX, media_id)
+            media_id = matches.group("path")
+
+            # Sign URL with Home Assistant Cast User
+            config_entries = self.hass.config_entries.async_entries(CAST_DOMAIN)
+            if config_entries:
+                user_id = config_entries[0].data["user_id"]
+                user = await self.hass.auth.async_get_user(user_id)
+                if user.refresh_tokens:
+                    refresh_token: RefreshToken = list(user.refresh_tokens.values())[0]
+
+                    media_id = async_sign_path(
+                        self.hass, refresh_token.id, media_id, timedelta(minutes=5),
+                    )
+
+            # prepend external URL
+            hass_url = get_url(self.hass, prefer_external=True)
+            media_id = f"{hass_url}{media_id}"
+
+        await self.hass.async_add_job(
+            ft.partial(self.play_media, media_type, media_id, **kwargs)
+        )
 
     def play_media(self, media_type, media_id, **kwargs):
         """Play media from a URL."""
@@ -785,7 +789,7 @@ class CastDevice(MediaPlayerEntity):
             if media_status.supports_seek:
                 support |= SUPPORT_SEEK
 
-        if "media_finder" in self.hass.config.components:
+        if "media_source" in self.hass.config.components:
             support |= SUPPORT_BROWSE_MEDIA
 
         return support

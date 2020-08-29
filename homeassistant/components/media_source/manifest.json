@@ -1,7 +1,7 @@
 {
-  "domain": "media_finder",
-  "name": "media_finder",
-  "documentation": "https://www.home-assistant.io/integrations/media_finder",
+  "domain": "media_source",
+  "name": "media_source",
+  "documentation": "https://www.home-assistant.io/integrations/media_source",
   "requirements": [],
   "ssdp": [],
   "zeroconf": [],
