@@ -71,7 +71,7 @@ async def async_setup(hass: HomeAssistantType, config: dict) -> bool:
     """Set up the NZBGet integration."""
     hass.data.setdefault(DOMAIN, {})
 
-    if len(hass.config_entries.async_entries(DOMAIN)) > 0:
+    if hass.config_entries.async_entries(DOMAIN):
         return True
 
     if DOMAIN in config:
@@ -154,6 +154,31 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+def _async_register_services(
+    hass: HomeAssistantType,
+    coordinator:NZBGetDataUpdateCoordinator,
+) -> None:
+    """Register integration-level services."""
+
+    def pause(call) -> None:
+        """Service call to pause downloads in NZBGet."""
+        coordinator.nzbget.pausedownload()
+
+    def resume(call) -> None:
+        """Service call to resume downloads in NZBGet."""
+        coordinator.nzbget.resumedownload()
+
+    def set_speed(call) -> None:
+        """Service call to rate limit speeds in NZBGet."""
+        coordinator.nzbget.rate(call.data[ATTR_SPEED])
+
+    hass.services.async_register(DOMAIN, SERVICE_PAUSE, pause, schema=vol.Schema({}))
+    hass.services.async_register(DOMAIN, SERVICE_RESUME, resume, schema=vol.Schema({}))
+    hass.services.async_register(
+        DOMAIN, SERVICE_SET_SPEED, set_speed, schema=SPEED_LIMIT_SCHEMA
+    )
 
 
 async def _async_update_listener(hass: HomeAssistantType, entry: ConfigEntry) -> None:

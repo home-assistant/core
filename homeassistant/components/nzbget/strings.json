@@ -1,5 +1,4 @@
 {
-  "title": "NZBGet",
   "config": {
     "flow_title": "NZBGet: {name}",
     "step": {
