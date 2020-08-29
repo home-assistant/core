@@ -5,7 +5,7 @@ import logging
 
 import btlewrap
 from btlewrap import BluetoothBackendException
-from miflora import miflora_poller
+from miflora import miflora_poller  # pylint: disable=import-error
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
