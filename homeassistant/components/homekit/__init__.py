@@ -606,6 +606,7 @@ class HomeKit:
             type_cameras,
             type_covers,
             type_fans,
+            type_humidifiers,
             type_lights,
             type_locks,
             type_media_players,
@@ -613,7 +614,6 @@ class HomeKit:
             type_sensors,
             type_switches,
             type_thermostats,
-            type_humidifiers,
         )
 
         for state in bridged_states:

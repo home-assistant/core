@@ -43,8 +43,8 @@ class ZwaveFlowHandler(config_entries.ConfigFlow):
 
         if user_input is not None:
             # Check if USB path is valid
-            from openzwave.option import ZWaveOption
             from openzwave.object import ZWaveException
+            from openzwave.option import ZWaveOption
 
             try:
                 from functools import partial
