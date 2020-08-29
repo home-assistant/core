@@ -100,20 +100,20 @@ def _patch_async_setup_entry(return_value=True):
 
 def _patch_history(return_value=MOCK_HISTORY):
     return patch(
-        "homeassistant.components.nzbget.NZBGetAPI.history",
+        "homeassistant.components.nzbget.coordinator.NZBGetAPI.history",
         return_value=return_value,
     )
 
 
 def _patch_status(return_value=MOCK_STATUS):
     return patch(
-        "homeassistant.components.nzbget.NZBGetAPI.status",
+        "homeassistant.components.nzbget.coordinator.NZBGetAPI.status",
         return_value=return_value,
     )
 
 
 def _patch_version(return_value=MOCK_VERSION):
     return patch(
-        "homeassistant.components.nzbget.NZBGetAPI.version",
+        "homeassistant.components.nzbget.coordinator.NZBGetAPI.version",
         return_value=return_value,
     )
