@@ -124,6 +124,7 @@ FLOWS = [
     "nuheat",
     "nut",
     "nws",
+    "nzbget",
     "onvif",
     "opentherm_gw",
     "openuv",

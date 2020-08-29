@@ -736,6 +736,9 @@ pynws==1.2.1
 # homeassistant.components.nx584
 pynx584==0.5
 
+# homeassistant.components.nzbget
+pynzbgetapi==0.2.0
+
 # homeassistant.components.openuv
 pyopenuv==1.0.9
 
