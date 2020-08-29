@@ -36,13 +36,20 @@ async def test_form(hass):
             {CONF_HOST: "", CONF_PORT: 80},
         )
 
+    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["errors"] == {}
+
+    with patch(
+        "homeassistant.components.progettihwsw.async_setup",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.progettihwsw.async_setup_entry",
+        return_value=True,
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             mock_value_step_rm,
         )
-
-    assert result2["type"] == RESULT_TYPE_FORM
-    assert result2["errors"] == {}
 
     assert result3["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result3["data"]
@@ -65,9 +72,12 @@ async def test_form_wrong_info(hass):
             result["flow_id"], {CONF_HOST: "", CONF_PORT: 80}
         )
 
-        result3 = await hass.config_entries.flow.async_configure(
-            result2["flow_id"], {"relay_1": ""}
-        )
+    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["errors"] == {}
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"], {"relay_1": ""}
+    )
 
     assert result3["type"] == RESULT_TYPE_FORM
     assert result3["errors"] == {"base": "wrong_info_relay_modes"}
@@ -120,15 +130,19 @@ async def test_form_rm_exception(hass):
     with patch(
         "homeassistant.components.progettihwsw.config_flow.ProgettiHWSWAPI.check_board",
         return_value=mock_value_step_user,
-    ), patch(
-        "homeassistant.components.progettihwsw.config_flow.validate_input_relay_modes",
-        side_effect=Exception,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_HOST: "", CONF_PORT: 80},
         )
 
+    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["errors"] == {}
+
+    with patch(
+        "homeassistant.components.progettihwsw.config_flow.validate_input_relay_modes",
+        side_effect=Exception,
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {"relay_1": "bistable"},
