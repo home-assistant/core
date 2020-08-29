@@ -50,6 +50,36 @@ async def test_user_form(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_user_form_show_advanced_options(hass):
+    """Test we get the user initiated form with advanced options shown."""
+    await async_setup_component(hass, "persistent_notification", {})
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER, "show_advanced_options": True}
+    )
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] == {}
+
+    user_input_advanced = {
+        **USER_INPUT,
+        CONF_VERIFY_SSL: True,
+    }
+
+    with _patch_version(), _patch_status(), _patch_history(), _patch_async_setup() as mock_setup, _patch_async_setup_entry() as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input_advanced,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == "10.10.10.30"
+    assert result["data"] == {**USER_INPUT, CONF_VERIFY_SSL: True}
+
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
 async def test_user_form_cannot_connect(hass):
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
