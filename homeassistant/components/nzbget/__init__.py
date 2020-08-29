@@ -140,7 +140,7 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
 
 def _async_register_services(
     hass: HomeAssistantType,
-    coordinator:NZBGetDataUpdateCoordinator,
+    coordinator: NZBGetDataUpdateCoordinator,
 ) -> None:
     """Register integration-level services."""
 
