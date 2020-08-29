@@ -1129,3 +1129,62 @@ async def test_reachable_devices(hass):
         "requestId": REQ_ID,
         "payload": {"devices": [{"verificationId": "light.ceiling_lights"}]},
     }
+
+
+async def test_sync_message_recovery(hass, caplog):
+    """Test a sync message recovers from bad entities."""
+    light = DemoLight(
+        None,
+        "Demo Light",
+        state=False,
+        hs_color=(180, 75),
+    )
+    light.hass = hass
+    light.entity_id = "light.demo_light"
+    await light.async_update_ha_state()
+
+    hass.states.async_set(
+        "light.bad_light",
+        "on",
+        {
+            "min_mireds": "badvalue",
+            "supported_features": hass.components.light.SUPPORT_COLOR_TEMP,
+        },
+    )
+
+    result = await sh.async_handle_message(
+        hass,
+        BASIC_CONFIG,
+        "test-agent",
+        {"requestId": REQ_ID, "inputs": [{"intent": "action.devices.SYNC"}]},
+        const.SOURCE_CLOUD,
+    )
+
+    assert result == {
+        "requestId": REQ_ID,
+        "payload": {
+            "agentUserId": "test-agent",
+            "devices": [
+                {
+                    "id": "light.demo_light",
+                    "name": {"name": "Demo Light"},
+                    "attributes": {
+                        "colorModel": "hsv",
+                        "colorTemperatureRange": {
+                            "temperatureMaxK": 6535,
+                            "temperatureMinK": 2000,
+                        },
+                    },
+                    "traits": [
+                        "action.devices.traits.Brightness",
+                        "action.devices.traits.OnOff",
+                        "action.devices.traits.ColorSetting",
+                    ],
+                    "willReportState": False,
+                    "type": "action.devices.types.LIGHT",
+                },
+            ],
+        },
+    }
+
+    assert "Error serializing light.bad_light" in caplog.text
