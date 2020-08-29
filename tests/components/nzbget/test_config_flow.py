@@ -105,7 +105,9 @@ async def test_user_form_single_instance_allowed(hass):
 async def test_options_flow(hass):
     """Test updating options."""
     entry = MockConfigEntry(
-        domain=DOMAIN, data=ENTRY_CONFIG, options={CONF_SCAN_INTERVAL: 5},
+        domain=DOMAIN,
+        data=ENTRY_CONFIG,
+        options={CONF_SCAN_INTERVAL: 5},
     )
     entry.add_to_hass(hass)
 
