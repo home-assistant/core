@@ -19,9 +19,9 @@ from homeassistant.const import (
     LENGTH_FEET,
     MASS_KILOGRAMS,
     MASS_MILLIGRAMS,
+    PERCENTAGE,
     TIME_MILLISECONDS,
     TIME_MINUTES,
-    UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -97,11 +97,11 @@ FITBIT_RESOURCES_LIST = {
     ],
     "activities/tracker/steps": ["Tracker Steps", "steps", "walk"],
     "body/bmi": ["BMI", "BMI", "human"],
-    "body/fat": ["Body Fat", UNIT_PERCENTAGE, "human"],
+    "body/fat": ["Body Fat", PERCENTAGE, "human"],
     "body/weight": ["Weight", "", "human"],
     "devices/battery": ["Battery", None, None],
     "sleep/awakeningsCount": ["Awakenings Count", "times awaken", "sleep"],
-    "sleep/efficiency": ["Sleep Efficiency", UNIT_PERCENTAGE, "sleep"],
+    "sleep/efficiency": ["Sleep Efficiency", PERCENTAGE, "sleep"],
     "sleep/minutesAfterWakeup": ["Minutes After Wakeup", TIME_MINUTES, "sleep"],
     "sleep/minutesAsleep": ["Sleep Minutes Asleep", TIME_MINUTES, "sleep"],
     "sleep/minutesAwake": ["Sleep Minutes Awake", TIME_MINUTES, "sleep"],

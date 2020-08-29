@@ -4,10 +4,10 @@ from homeassistant.const import (
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
+    PERCENTAGE,
     PRESSURE_HPA,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
 )
 
 DOMAIN = "meteo_france"
@@ -44,7 +44,7 @@ SENSOR_TYPES = {
     },
     "rain_chance": {
         ENTITY_NAME: "Rain chance",
-        ENTITY_UNIT: UNIT_PERCENTAGE,
+        ENTITY_UNIT: PERCENTAGE,
         ENTITY_ICON: "mdi:weather-rainy",
         ENTITY_DEVICE_CLASS: None,
         ENTITY_ENABLE: True,
@@ -52,7 +52,7 @@ SENSOR_TYPES = {
     },
     "snow_chance": {
         ENTITY_NAME: "Snow chance",
-        ENTITY_UNIT: UNIT_PERCENTAGE,
+        ENTITY_UNIT: PERCENTAGE,
         ENTITY_ICON: "mdi:weather-snowy",
         ENTITY_DEVICE_CLASS: None,
         ENTITY_ENABLE: True,
@@ -60,7 +60,7 @@ SENSOR_TYPES = {
     },
     "freeze_chance": {
         ENTITY_NAME: "Freeze chance",
-        ENTITY_UNIT: UNIT_PERCENTAGE,
+        ENTITY_UNIT: PERCENTAGE,
         ENTITY_ICON: "mdi:snowflake",
         ENTITY_DEVICE_CLASS: None,
         ENTITY_ENABLE: True,
@@ -116,7 +116,7 @@ SENSOR_TYPES = {
     },
     "cloud": {
         ENTITY_NAME: "Cloud cover",
-        ENTITY_UNIT: UNIT_PERCENTAGE,
+        ENTITY_UNIT: PERCENTAGE,
         ENTITY_ICON: "mdi:weather-partly-cloudy",
         ENTITY_DEVICE_CLASS: None,
         ENTITY_ENABLE: True,

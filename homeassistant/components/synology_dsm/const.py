@@ -8,7 +8,7 @@ from homeassistant.const import (
     DATA_MEGABYTES,
     DATA_RATE_KILOBYTES_PER_SECOND,
     DATA_TERABYTES,
-    UNIT_PERCENTAGE,
+    PERCENTAGE,
 )
 
 DOMAIN = "synology_dsm"
@@ -68,56 +68,56 @@ SECURITY_BINARY_SENSORS = {
 UTILISATION_SENSORS = {
     f"{SynoCoreUtilization.API_KEY}:cpu_other_load": {
         ENTITY_NAME: "CPU Load (Other)",
-        ENTITY_UNIT: UNIT_PERCENTAGE,
+        ENTITY_UNIT: PERCENTAGE,
         ENTITY_ICON: "mdi:chip",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: False,
     },
     f"{SynoCoreUtilization.API_KEY}:cpu_user_load": {
         ENTITY_NAME: "CPU Load (User)",
-        ENTITY_UNIT: UNIT_PERCENTAGE,
+        ENTITY_UNIT: PERCENTAGE,
         ENTITY_ICON: "mdi:chip",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: True,
     },
     f"{SynoCoreUtilization.API_KEY}:cpu_system_load": {
         ENTITY_NAME: "CPU Load (System)",
-        ENTITY_UNIT: UNIT_PERCENTAGE,
+        ENTITY_UNIT: PERCENTAGE,
         ENTITY_ICON: "mdi:chip",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: False,
     },
     f"{SynoCoreUtilization.API_KEY}:cpu_total_load": {
         ENTITY_NAME: "CPU Load (Total)",
-        ENTITY_UNIT: UNIT_PERCENTAGE,
+        ENTITY_UNIT: PERCENTAGE,
         ENTITY_ICON: "mdi:chip",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: True,
     },
     f"{SynoCoreUtilization.API_KEY}:cpu_1min_load": {
         ENTITY_NAME: "CPU Load (1 min)",
-        ENTITY_UNIT: UNIT_PERCENTAGE,
+        ENTITY_UNIT: PERCENTAGE,
         ENTITY_ICON: "mdi:chip",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: False,
     },
     f"{SynoCoreUtilization.API_KEY}:cpu_5min_load": {
         ENTITY_NAME: "CPU Load (5 min)",
-        ENTITY_UNIT: UNIT_PERCENTAGE,
+        ENTITY_UNIT: PERCENTAGE,
         ENTITY_ICON: "mdi:chip",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: True,
     },
     f"{SynoCoreUtilization.API_KEY}:cpu_15min_load": {
         ENTITY_NAME: "CPU Load (15 min)",
-        ENTITY_UNIT: UNIT_PERCENTAGE,
+        ENTITY_UNIT: PERCENTAGE,
         ENTITY_ICON: "mdi:chip",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: True,
     },
     f"{SynoCoreUtilization.API_KEY}:memory_real_usage": {
         ENTITY_NAME: "Memory Usage (Real)",
-        ENTITY_UNIT: UNIT_PERCENTAGE,
+        ENTITY_UNIT: PERCENTAGE,
         ENTITY_ICON: "mdi:memory",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: True,
@@ -203,7 +203,7 @@ STORAGE_VOL_SENSORS = {
     },
     f"{SynoStorage.API_KEY}:volume_percentage_used": {
         ENTITY_NAME: "Volume Used",
-        ENTITY_UNIT: UNIT_PERCENTAGE,
+        ENTITY_UNIT: PERCENTAGE,
         ENTITY_ICON: "mdi:chart-pie",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: True,

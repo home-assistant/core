@@ -13,10 +13,10 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     DEGREE,
+    PERCENTAGE,
     SPEED_METERS_PER_SECOND,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    UNIT_PERCENTAGE,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -38,9 +38,9 @@ SENSOR_TYPES = {
     "temperature": ["Temperature", None],
     "wind_speed": ["Wind speed", SPEED_METERS_PER_SECOND],
     "wind_bearing": ["Wind bearing", DEGREE],
-    "humidity": ["Humidity", UNIT_PERCENTAGE],
+    "humidity": ["Humidity", PERCENTAGE],
     "pressure": ["Pressure", "mbar"],
-    "clouds": ["Cloud coverage", UNIT_PERCENTAGE],
+    "clouds": ["Cloud coverage", PERCENTAGE],
     "rain": ["Rain", "mm"],
     "snow": ["Snow", "mm"],
     "weather_code": ["Weather code", None],

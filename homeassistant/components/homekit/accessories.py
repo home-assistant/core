@@ -24,11 +24,11 @@ from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_TEMPERATURE,
+    PERCENTAGE,
     STATE_ON,
     STATE_UNAVAILABLE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    UNIT_PERCENTAGE,
     __version__,
 )
 from homeassistant.core import Context, callback as ha_callback, split_entity_id
@@ -189,7 +189,7 @@ def get_accessory(hass, driver, state, aid, config):
             TEMP_FAHRENHEIT,
         ):
             a_type = "TemperatureSensor"
-        elif device_class == DEVICE_CLASS_HUMIDITY and unit == UNIT_PERCENTAGE:
+        elif device_class == DEVICE_CLASS_HUMIDITY and unit == PERCENTAGE:
             a_type = "HumiditySensor"
         elif device_class == DEVICE_CLASS_PM25 or DEVICE_CLASS_PM25 in state.entity_id:
             a_type = "AirQualitySensor"
