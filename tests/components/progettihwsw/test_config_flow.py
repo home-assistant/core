@@ -1,9 +1,15 @@
 """Test the ProgettiHWSW Automation config flow."""
 from homeassistant import config_entries, setup
-from homeassistant.components.progettihwsw.config_flow import UnexistingBoard
 from homeassistant.components.progettihwsw.const import DOMAIN
 
 from tests.async_mock import patch
+
+mock_value_step_user = {
+    "title": "1R & 1IN Board",
+    "relay_count": 1,
+    "input_count": 1,
+    "is_old": False,
+}
 
 
 async def test_form(hass):
@@ -15,30 +21,22 @@ async def test_form(hass):
     assert result["type"] == "form"
     assert result["errors"] == {}
 
+    mock_value_step_rm = {
+        "relay_1": "bistable",  # Mocking a single relay board instance.
+    }
+
     with patch(
-        "homeassistant.components.progettihwsw.async_setup_entry",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.progettihwsw.async_setup",
-        return_value=True,
+        "homeassistant.components.progettihwsw.config_flow.ProgettiHWSWAPI.check_board",
+        return_value=mock_value_step_user,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": "2.238.194.163", "port": 8085},
+            {"host": "", "port": 80},
         )
 
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
-            {
-                "relay_1": "bistable",
-                "relay_2": "bistable",
-                "relay_3": "bistable",
-                "relay_4": "bistable",
-                "relay_5": "bistable",
-                "relay_6": "bistable",
-                "relay_7": "bistable",
-                "relay_8": "bistable",
-            },
+            mock_value_step_rm,
         )
 
     assert result2["type"] == "form"
@@ -46,25 +44,47 @@ async def test_form(hass):
 
     assert result3["type"] == "create_entry"
     assert result3["data"]
-    assert result3["data"]["title"] == "8R & 8IN Board"
+    assert result3["data"]["title"] == "1R & 1IN Board"
     assert result3["data"]["is_old"] is False
-    assert result3["data"]["relay_count"] == result3["data"]["input_count"] == 8
+    assert result3["data"]["relay_count"] == result3["data"]["input_count"] == 1
 
 
-async def test_form_unexisting_board(hass):
+async def test_form_wrong_info(hass):
+    """Test we handle wrong info exception."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.progettihwsw.config_flow.ProgettiHWSWAPI.check_board",
+        return_value=mock_value_step_user,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"host": "", "port": 80}
+        )
+
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"], {"relay_1": ""}
+        )
+
+    assert result3["type"] == "form"
+    assert result3["errors"] == {"base": "wrong_info_relay_modes"}
+
+
+async def test_form_cannot_connect(hass):
     """Test we handle unexisting board."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     with patch(
-        "homeassistant.components.progettihwsw.config_flow.EntryValidator.check_board_validity",
-        side_effect=UnexistingBoard,
+        "homeassistant.components.progettihwsw.config_flow.ProgettiHWSWAPI.check_board",
+        return_value=False,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": "1.1.1.1", "port": 80},
+            {"host": "", "port": 80},
         )
 
     assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "unexisting_board"}
+    assert result2["errors"] == {"base": "cannot_connect"}

@@ -1,16 +1,16 @@
 {
   "config": {
       "error": {
-          "unexisting_board": "Couldn't find a board at that hostname.",
-          "unknown": "Unknown error.",
+          "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+          "unknown": "[%key:common::config_flow::error::unknown%]",
           "wrong_info_relay_modes": "Relay mode selection must be monostable or bistable."
       },
       "step": {
           "user": {
               "title": "Set up board",
               "data": {
-                  "host": "IP Address of Board",
-                  "port": "Port Number of Board"
+                  "host": "[%key:common::config_flow::data::host%]",
+                  "port": "[%key:common::config_flow::data::port%]"
               }
           },
           "relay_modes": {
