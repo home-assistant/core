@@ -30,6 +30,7 @@ from . import (
 )
 
 from tests.async_mock import MagicMock, patch
+from tests.common import MockConfigEntry
 
 DEFAULT_CONFIG = {
     CONF_NAME: NAME,
@@ -205,3 +206,45 @@ async def test_manual(hass: HomeAssistant):
         )
     assert result2["type"] == "abort"
     assert result2["reason"] == "already_configured"
+
+
+async def test_options(hass: HomeAssistant):
+    """Test options flow."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_IP_ADDRESS: IP_ADDRESS})
+    config_entry.add_to_hass(hass)
+
+    mocked_bulb = _mocked_bulb()
+    with patch(f"{MODULE}.Bulb", return_value=mocked_bulb):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    config = {
+        CONF_MODEL: "",
+        CONF_TRANSITION: DEFAULT_TRANSITION,
+        CONF_MODE_MUSIC: DEFAULT_MODE_MUSIC,
+        CONF_SAVE_ON_CHANGE: DEFAULT_SAVE_ON_CHANGE,
+        CONF_NIGHTLIGHT_SWITCH: DEFAULT_NIGHTLIGHT_SWITCH,
+    }
+    assert config_entry.options == {
+        CONF_NAME: "",
+        **config,
+    }
+    assert hass.states.get(f"light.{NAME}_nightlight") is None
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] == "form"
+    assert result["step_id"] == "init"
+
+    config[CONF_NIGHTLIGHT_SWITCH] = True
+    with patch(f"{MODULE}.Bulb", return_value=mocked_bulb):
+        result2 = await hass.config_entries.options.async_configure(
+            result["flow_id"], config
+        )
+        await hass.async_block_till_done()
+    assert result2["type"] == "create_entry"
+    assert result2["data"] == {
+        CONF_NAME: "",
+        **config,
+    }
+    assert result2["data"] == config_entry.options
+    assert hass.states.get(f"light.{NAME}_nightlight") is not None
