@@ -21,7 +21,7 @@
             "user": {
                 "data": {
                     "host": "Adresse IP",
-                    "port": "Port de l'appareil Konnected"
+                    "port": "Port"
                 },
                 "description": "Veuillez saisir les informations de l\u2019h\u00f4te de votre panneau Konnected."
             }

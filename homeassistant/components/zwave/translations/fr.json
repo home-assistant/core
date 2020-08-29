@@ -26,8 +26,8 @@
             "sleeping": "En veille"
         },
         "query_stage": {
-            "dead": "Morte ( {query_stage} )",
-            "initializing": "Initialisation ( {query_stage} )"
+            "dead": "Morte",
+            "initializing": "Initialisation"
         }
     }
 }
