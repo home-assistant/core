@@ -1,6 +1,8 @@
 """Test the ProgettiHWSW Automation config flow."""
 from homeassistant import config_entries, setup
 from homeassistant.components.progettihwsw.const import DOMAIN
+from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
 
 from tests.async_mock import patch
 
@@ -18,7 +20,7 @@ async def test_form(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] == {}
 
     mock_value_step_rm = {
@@ -31,7 +33,7 @@ async def test_form(hass):
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": "", "port": 80},
+            {CONF_HOST: "", CONF_PORT: 80},
         )
 
         result3 = await hass.config_entries.flow.async_configure(
@@ -39,10 +41,10 @@ async def test_form(hass):
             mock_value_step_rm,
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] == RESULT_TYPE_FORM
     assert result2["errors"] == {}
 
-    assert result3["type"] == "create_entry"
+    assert result3["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result3["data"]
     assert result3["data"]["title"] == "1R & 1IN Board"
     assert result3["data"]["is_old"] is False
@@ -60,14 +62,14 @@ async def test_form_wrong_info(hass):
         return_value=mock_value_step_user,
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"host": "", "port": 80}
+            result["flow_id"], {CONF_HOST: "", CONF_PORT: 80}
         )
 
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"], {"relay_1": ""}
         )
 
-    assert result3["type"] == "form"
+    assert result3["type"] == RESULT_TYPE_FORM
     assert result3["errors"] == {"base": "wrong_info_relay_modes"}
 
 
@@ -83,10 +85,10 @@ async def test_form_cannot_connect(hass):
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": "", "port": 80},
+            {CONF_HOST: "", CONF_PORT: 80},
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] == RESULT_TYPE_FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -102,10 +104,10 @@ async def test_form_user_exception(hass):
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": "", "port": 80},
+            {CONF_HOST: "", CONF_PORT: 80},
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] == RESULT_TYPE_FORM
     assert result2["errors"] == {"base": "unknown"}
 
 
@@ -124,7 +126,7 @@ async def test_form_rm_exception(hass):
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": "", "port": 80},
+            {CONF_HOST: "", CONF_PORT: 80},
         )
 
         result3 = await hass.config_entries.flow.async_configure(
@@ -132,5 +134,5 @@ async def test_form_rm_exception(hass):
             {"relay_1": "bistable"},
         )
 
-    assert result3["type"] == "form"
+    assert result3["type"] == RESULT_TYPE_FORM
     assert result3["errors"] == {"base": "unknown"}

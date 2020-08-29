@@ -38,7 +38,7 @@ async def validate_input_relay_modes(data):
     return True
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class ProgettiHWSWConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for ProgettiHWSW Automation."""
 
     VERSION = 1
