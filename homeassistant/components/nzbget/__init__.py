@@ -115,25 +115,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
 
-    def pause(call) -> None:
-        """Service call to pause downloads in NZBGet."""
-        coordinator.nzbget.pausedownload()
-
-    def resume(call) -> None:
-        """Service call to resume downloads in NZBGet."""
-        coordinator.nzbget.resumedownload()
-
-    def set_speed(call) -> None:
-        """Service call to rate limit speeds in NZBGet."""
-        coordinator.nzbget.rate(call.data[ATTR_SPEED])
-
-    hass.services.async_register(DOMAIN, SERVICE_PAUSE, pause, schema=vol.Schema({}))
-
-    hass.services.async_register(DOMAIN, SERVICE_RESUME, resume, schema=vol.Schema({}))
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_SET_SPEED, set_speed, schema=SPEED_LIMIT_SCHEMA
-    )
+    _async_register_services(hass, coordinator)
 
     return True
 
