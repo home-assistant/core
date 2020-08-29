@@ -15,13 +15,40 @@ async def test_form(hass):
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {"host": "2.238.194.163", "port": 8085},
-    )
+    with patch(
+        "homeassistant.components.progettihwsw.async_setup_entry",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.progettihwsw.async_setup",
+        return_value=True,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"host": "2.238.194.163", "port": 8085},
+        )
+
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                "relay_1": "bistable",
+                "relay_2": "bistable",
+                "relay_3": "bistable",
+                "relay_4": "bistable",
+                "relay_5": "bistable",
+                "relay_6": "bistable",
+                "relay_7": "bistable",
+                "relay_8": "bistable",
+            },
+        )
 
     assert result2["type"] == "form"
     assert result2["errors"] == {}
+
+    assert result3["type"] == "create_entry"
+    assert result3["data"]
+    assert result3["data"]["title"] == "8R & 8IN Board"
+    assert result3["data"]["is_old"] is False
+    assert result3["data"]["relay_count"] == result3["data"]["input_count"] == 8
 
 
 async def test_form_unexisting_board(hass):
