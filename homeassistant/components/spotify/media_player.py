@@ -16,7 +16,6 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_EPISODE,
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_PLAYLIST,
-    MEDIA_TYPE_SHOW,
     MEDIA_TYPE_TRACK,
     SUPPORT_BROWSE_MEDIA,
     SUPPORT_NEXT_TRACK,
@@ -71,6 +70,8 @@ SUPPORT_SPOTIFY = (
 )
 
 BROWSE_LIMIT = 48
+
+MEDIA_TYPE_SHOW = "show"
 
 PLAYABLE_MEDIA_TYPES = [
     MEDIA_TYPE_PLAYLIST,
