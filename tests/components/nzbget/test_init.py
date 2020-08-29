@@ -58,7 +58,7 @@ async def test_async_setup_raises_entry_not_ready(hass):
     config_entry.add_to_hass(hass)
 
     with _patch_version(), patch(
-        "homeassistant.components.nzbget.NZBGetAPI.status",
+        "homeassistant.components.nzbget.coordinator.NZBGetAPI.status",
         side_effect=NZBGetAPIException(),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
