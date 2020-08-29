@@ -567,7 +567,7 @@ epson-projector==0.1.3
 epsonprinter==0.0.9
 
 # homeassistant.components.netgear_lte
-eternalegypt==0.0.11
+eternalegypt==0.0.12
 
 # homeassistant.components.keyboard_remote
 # evdev==1.1.2
