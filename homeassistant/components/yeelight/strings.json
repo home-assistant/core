@@ -12,8 +12,19 @@
         "data": {
           "device": "Device"
         }
-      },
-      "options": {
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
         "description": "If you leave model empty, it will be automatically detected.",
         "data": {
           "model": "Model (Optional)",
@@ -23,13 +34,6 @@
           "nightlight_switch": "Use Nightlight Switch"
         }
       }
-    },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     }
   }
 }

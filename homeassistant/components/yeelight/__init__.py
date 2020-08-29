@@ -48,6 +48,8 @@ CONF_DEVICE = "device"
 DATA_CONFIG_ENTRIES = "config_entries"
 DATA_CUSTOM_EFFECTS = "custom_effects"
 DATA_SCAN_INTERVAL = "scan_interval"
+DATA_DEVICE = "device"
+DATA_UNSUB_UPDATE_LISTENER = "unsub_update_listener"
 
 ATTR_COUNT = "count"
 ATTR_ACTION = "action"
@@ -180,14 +182,41 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Yeelight from a config entry."""
 
     async def _initialize(ipaddr: str) -> None:
-        device = await _async_setup_device(hass, ipaddr, entry.data)
-        hass.data[DOMAIN][DATA_CONFIG_ENTRIES][entry.entry_id] = device
+        device = await _async_setup_device(hass, ipaddr, entry.options)
+        hass.data[DOMAIN][DATA_CONFIG_ENTRIES][entry.entry_id][DATA_DEVICE] = device
         for component in PLATFORMS:
             hass.async_create_task(
                 hass.config_entries.async_forward_entry_setup(entry, component)
             )
 
-    if entry.data[CONF_IP_ADDRESS]:
+    # Move options from data for imported entries
+    # Initialize options with default values for other entries
+    if not entry.options:
+        hass.config_entries.async_update_entry(
+            entry,
+            data={
+                CONF_IP_ADDRESS: entry.data.get(CONF_IP_ADDRESS),
+                CONF_ID: entry.data.get(CONF_ID),
+            },
+            options={
+                CONF_NAME: entry.data.get(CONF_NAME, ""),
+                CONF_MODEL: entry.data.get(CONF_MODEL, ""),
+                CONF_TRANSITION: entry.data.get(CONF_TRANSITION, DEFAULT_TRANSITION),
+                CONF_MODE_MUSIC: entry.data.get(CONF_MODE_MUSIC, DEFAULT_MODE_MUSIC),
+                CONF_SAVE_ON_CHANGE: entry.data.get(
+                    CONF_SAVE_ON_CHANGE, DEFAULT_SAVE_ON_CHANGE
+                ),
+                CONF_NIGHTLIGHT_SWITCH: entry.data.get(
+                    CONF_NIGHTLIGHT_SWITCH, DEFAULT_NIGHTLIGHT_SWITCH
+                ),
+            },
+        )
+
+    hass.data[DOMAIN][DATA_CONFIG_ENTRIES][entry.entry_id] = {
+        DATA_UNSUB_UPDATE_LISTENER: entry.add_update_listener(_async_update_listener)
+    }
+
+    if entry.data.get(CONF_IP_ADDRESS):
         # manually added device
         await _initialize(entry.data[CONF_IP_ADDRESS])
     else:
@@ -210,8 +239,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
 
     if unload_ok:
-        device = hass.data[DOMAIN][DATA_CONFIG_ENTRIES].pop(entry.entry_id)
-        device.async_unload()
+        data = hass.data[DOMAIN][DATA_CONFIG_ENTRIES].pop(entry.entry_id)
+        data[DATA_UNSUB_UPDATE_LISTENER]()
+        data[DATA_DEVICE].async_unload()
         if entry.data[CONF_ID]:
             # discovery
             scanner = YeelightScanner.async_get(hass)
@@ -231,6 +261,11 @@ async def _async_setup_device(hass: HomeAssistant, ipaddr: str, config: dict,) -
     await hass.async_add_executor_job(device.update)
     await device.async_setup()
     return device
+
+
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
+    """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 class YeelightScanner:

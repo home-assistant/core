@@ -7,7 +7,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import DATA_CONFIG_ENTRIES, DATA_UPDATED, DOMAIN, YeelightEntity
+from . import DATA_CONFIG_ENTRIES, DATA_DEVICE, DATA_UPDATED, DOMAIN, YeelightEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -16,7 +16,7 @@ async def async_setup_entry(
     hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up Yeelight from a config entry."""
-    device = hass.data[DOMAIN][DATA_CONFIG_ENTRIES][config_entry.entry_id]
+    device = hass.data[DOMAIN][DATA_CONFIG_ENTRIES][config_entry.entry_id][DATA_DEVICE]
     if device.is_nightlight_supported:
         _LOGGER.debug("Adding nightlight mode sensor for %s", device.name)
         async_add_entities([YeelightNightlightModeSensor(device)])

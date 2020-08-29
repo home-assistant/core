@@ -57,6 +57,7 @@ from . import (
     CONF_TRANSITION,
     DATA_CONFIG_ENTRIES,
     DATA_CUSTOM_EFFECTS,
+    DATA_DEVICE,
     DATA_UPDATED,
     DATA_YEELIGHT,
     DOMAIN,
@@ -249,7 +250,7 @@ async def async_setup_entry(
 
     custom_effects = _parse_custom_effects(hass.data[DOMAIN][DATA_CUSTOM_EFFECTS])
 
-    device = hass.data[DOMAIN][DATA_CONFIG_ENTRIES][config_entry.entry_id]
+    device = hass.data[DOMAIN][DATA_CONFIG_ENTRIES][config_entry.entry_id][DATA_DEVICE]
     _LOGGER.debug("Adding %s", device.name)
 
     nl_switch_light = device.config.get(CONF_NIGHTLIGHT_SWITCH)

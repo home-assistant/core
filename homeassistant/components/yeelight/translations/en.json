@@ -8,16 +8,6 @@
             "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
         },
         "step": {
-            "options": {
-                "data": {
-                    "model": "Model (Optional)",
-                    "nightlight_switch": "Use Nightlight Switch",
-                    "save_on_change": "Save Status On Change",
-                    "transition": "Transition Time (ms)",
-                    "use_music_mode": "Enable Music Mode"
-                },
-                "description": "If you leave model empty, it will be automatically detected."
-            },
             "pick_device": {
                 "data": {
                     "device": "Device"
@@ -28,6 +18,20 @@
                     "ip_address": "[%key:common::config_flow::data::ip%]"
                 },
                 "description": "If you leave IP address empty, discovery will be used to find devices."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "model": "Model (Optional)",
+                    "nightlight_switch": "Use Nightlight Switch",
+                    "save_on_change": "Save Status On Change",
+                    "transition": "Transition Time (ms)",
+                    "use_music_mode": "Enable Music Mode"
+                },
+                "description": "If you leave model empty, it will be automatically detected."
             }
         }
     },

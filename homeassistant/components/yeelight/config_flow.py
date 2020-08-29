@@ -17,10 +17,6 @@ from . import (
     CONF_NIGHTLIGHT_SWITCH_TYPE,
     CONF_SAVE_ON_CHANGE,
     CONF_TRANSITION,
-    DEFAULT_MODE_MUSIC,
-    DEFAULT_NIGHTLIGHT_SWITCH,
-    DEFAULT_SAVE_ON_CHANGE,
-    DEFAULT_TRANSITION,
     NIGHTLIGHT_SWITCH_TYPE_LIGHT,
 )
 from . import DOMAIN  # pylint:disable=unused-import
@@ -34,11 +30,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Return the options flow."""
+        return OptionsFlowHandler(config_entry)
+
     def __init__(self):
         """Initialize the config flow."""
         self._capabilities = None
-        self._ipaddr = ""
-        self._unique_id = ""
         self._discovered_devices = {}
 
     async def async_step_user(self, user_input=None):
@@ -47,8 +47,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             if user_input.get(CONF_IP_ADDRESS):
                 try:
-                    await self._async_try_connect(user_input)
-                    return await self.async_step_options()
+                    await self._async_try_connect(user_input[CONF_IP_ADDRESS])
+                    return self.async_create_entry(
+                        title=self._async_default_name(), data=user_input,
+                    )
                 except CannotConnect:
                     errors["base"] = "cannot_connect"
                 except AlreadyConfigured:
@@ -65,10 +67,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_pick_device(self, user_input=None):
         """Handle the step to pick discovered device."""
         if user_input is not None:
-            # Check if there is at least one device
-            self._unique_id = user_input[CONF_DEVICE]
-            self._capabilities = self._discovered_devices[self._unique_id]
-            return await self.async_step_options()
+            unique_id = user_input[CONF_DEVICE]
+            self._capabilities = self._discovered_devices[unique_id]
+            return self.async_create_entry(
+                title=self._async_default_name(), data={CONF_ID: unique_id},
+            )
 
         configured_devices = {
             entry.data[CONF_ID]
@@ -90,6 +93,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._discovered_devices[unique_id] = capabilities
                 devices_name[unique_id] = name
 
+        # Check if there is at least one device
         if not devices_name:
             return self.async_abort(reason="no_devices_found")
         return self.async_show_form(
@@ -97,42 +101,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema({vol.Required(CONF_DEVICE): vol.In(devices_name)}),
         )
 
-    async def async_step_options(self, user_input=None):
-        """Handle the options step."""
-        if user_input is not None:
-            user_input[CONF_IP_ADDRESS] = self._ipaddr
-            user_input[CONF_ID] = self._unique_id
-            return self.async_create_entry(
-                title=user_input[CONF_NAME], data=user_input,
-            )
-
-        user_input = user_input or {}
-        return self.async_show_form(
-            step_id="options",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_NAME, default=self._async_default_name()): str,
-                    vol.Optional(CONF_MODEL): str,
-                    vol.Required(
-                        CONF_TRANSITION, default=DEFAULT_TRANSITION
-                    ): cv.positive_int,
-                    vol.Required(CONF_MODE_MUSIC, default=DEFAULT_MODE_MUSIC): bool,
-                    vol.Required(
-                        CONF_SAVE_ON_CHANGE, default=DEFAULT_SAVE_ON_CHANGE
-                    ): bool,
-                    vol.Required(
-                        CONF_NIGHTLIGHT_SWITCH, default=DEFAULT_NIGHTLIGHT_SWITCH
-                    ): bool,
-                }
-            ),
-        )
-
     async def async_step_import(self, user_input=None):
         """Handle import step."""
+        ipaddr = user_input[CONF_IP_ADDRESS]
         try:
-            await self._async_try_connect(user_input)
+            await self._async_try_connect(ipaddr)
         except CannotConnect:
-            _LOGGER.error("Failed to import %s: cannot connect", self._ipaddr)
+            _LOGGER.error("Failed to import %s: cannot connect", ipaddr)
             return self.async_abort(reason="cannot_connect")
         except AlreadyConfigured:
             return self.async_abort(reason="already_configured")
@@ -141,24 +116,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input.pop(CONF_NIGHTLIGHT_SWITCH_TYPE)
                 == NIGHTLIGHT_SWITCH_TYPE_LIGHT
             )
-        user_input[CONF_ID] = ""
         return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
 
-    async def _async_try_connect(self, user_input):
+    async def _async_try_connect(self, ipaddr):
         """Set up with options."""
-        self._ipaddr = user_input[CONF_IP_ADDRESS]
-        if self._async_ip_already_configured():
+        if self._async_ip_already_configured(ipaddr):
             raise AlreadyConfigured
-        bulb = yeelight.Bulb(self._ipaddr)
+        bulb = yeelight.Bulb(ipaddr)
         try:
             capabilities = await self.hass.async_add_executor_job(bulb.get_capabilities)
             if capabilities is None:  # timeout
-                _LOGGER.error(
-                    "Failed to get capabilities from %s: timeout", self._ipaddr
-                )
+                _LOGGER.error("Failed to get capabilities from %s: timeout", ipaddr)
                 raise CannotConnect
         except OSError as err:
-            _LOGGER.error("Failed to get capabilities from %s: %s", self._ipaddr, err)
+            _LOGGER.error("Failed to get capabilities from %s: %s", ipaddr, err)
             raise CannotConnect
         _LOGGER.debug("Get capabilities: %s", capabilities)
         self._capabilities = capabilities
@@ -166,10 +137,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
     @callback
-    def _async_ip_already_configured(self):
+    def _async_ip_already_configured(self, ipaddr):
         """See if we already have an endpoint matching user input."""
         for entry in self._async_current_entries():
-            if entry.data.get(CONF_IP_ADDRESS) == self._ipaddr:
+            if entry.data.get(CONF_IP_ADDRESS) == ipaddr:
                 return True
         return False
 
@@ -178,6 +149,46 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         model = self._capabilities["model"]
         unique_id = self._capabilities["id"]
         return f"yeelight_{model}_{unique_id}"
+
+
+class OptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle a option flow for Yeelight."""
+
+    def __init__(self, config_entry):
+        """Initialize the option flow."""
+        self._config_entry = config_entry
+
+    async def async_step_init(self, user_input=None):
+        """Handle the initial step."""
+        if user_input is not None:
+            # keep the name from imported entries
+            options = {
+                CONF_NAME: self._config_entry.options.get(CONF_NAME),
+                **user_input,
+            }
+            return self.async_create_entry(title="", data=options)
+
+        options = self._config_entry.options
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(CONF_MODEL, default=options[CONF_MODEL]): str,
+                    vol.Required(
+                        CONF_TRANSITION, default=options[CONF_TRANSITION],
+                    ): cv.positive_int,
+                    vol.Required(
+                        CONF_MODE_MUSIC, default=options[CONF_MODE_MUSIC]
+                    ): bool,
+                    vol.Required(
+                        CONF_SAVE_ON_CHANGE, default=options[CONF_SAVE_ON_CHANGE],
+                    ): bool,
+                    vol.Required(
+                        CONF_NIGHTLIGHT_SWITCH, default=options[CONF_NIGHTLIGHT_SWITCH],
+                    ): bool,
+                }
+            ),
+        )
 
 
 class CannotConnect(exceptions.HomeAssistantError):
