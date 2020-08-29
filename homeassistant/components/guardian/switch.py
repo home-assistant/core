@@ -163,7 +163,9 @@ class ValveControllerSwitch(ValveControllerEntity, SwitchEntity):
             return
 
         async_dispatcher_send(
-            self.hass, SIGNAL_ADD_PAIRED_SENSOR.format(self._entry.data[CONF_UID]), uid,
+            self.hass,
+            SIGNAL_ADD_PAIRED_SENSOR.format(self._entry.data[CONF_UID]),
+            uid,
         )
 
     async def async_reboot(self):
