@@ -86,29 +86,34 @@ async def init_integration(
 
 def _patch_async_setup(return_value=True):
     return patch(
-        "homeassistant.components.nzbget.async_setup", return_value=return_value
+        "homeassistant.components.nzbget.async_setup",
+        return_value=return_value,
     )
 
 
 def _patch_async_setup_entry(return_value=True):
     return patch(
-        "homeassistant.components.nzbget.async_setup_entry", return_value=return_value,
+        "homeassistant.components.nzbget.async_setup_entry",
+        return_value=return_value,
     )
 
 
 def _patch_history(return_value=MOCK_HISTORY):
     return patch(
-        "homeassistant.components.nzbget.NZBGetAPI.history", return_value=return_value,
+        "homeassistant.components.nzbget.NZBGetAPI.history",
+        return_value=return_value,
     )
 
 
 def _patch_status(return_value=MOCK_STATUS):
     return patch(
-        "homeassistant.components.nzbget.NZBGetAPI.status", return_value=return_value,
+        "homeassistant.components.nzbget.NZBGetAPI.status",
+        return_value=return_value,
     )
 
 
 def _patch_version(return_value=MOCK_VERSION):
     return patch(
-        "homeassistant.components.nzbget.NZBGetAPI.version", return_value=return_value,
+        "homeassistant.components.nzbget.NZBGetAPI.version",
+        return_value=return_value,
     )
