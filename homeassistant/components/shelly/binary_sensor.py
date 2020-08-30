@@ -2,6 +2,7 @@
 import aioshelly
 
 from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_GAS,
     DEVICE_CLASS_MOISTURE,
     DEVICE_CLASS_OPENING,
     DEVICE_CLASS_SMOKE,
@@ -14,6 +15,7 @@ from .const import DOMAIN
 SENSORS = {
     "dwIsOpened": DEVICE_CLASS_OPENING,
     "flood": DEVICE_CLASS_MOISTURE,
+    "gas": DEVICE_CLASS_GAS,
     "overpower": None,
     "smoke": DEVICE_CLASS_SMOKE,
 }
@@ -63,10 +65,24 @@ class ShellySensor(ShellyBlockEntity, BinarySensorEntity):
 
     @property
     def is_on(self):
-        """Return true if sensor state is 1."""
+        """Return true if sensor state is on."""
+        if self.attribute == "gas":
+            # Gas sensor value of Shelly Gas can be none/mild/heavy/test. We return True
+            # when the value is mild or heavy.
+            return (
+                True
+                if getattr(self.block, self.attribute) in ["mild", "heavy"]
+                else False
+            )
         return bool(getattr(self.block, self.attribute))
 
     @property
     def device_class(self):
         """Device class of sensor."""
         return self._device_class
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        if self.attribute == "gas":
+            return {"raw_state": getattr(self.block, self.attribute)}

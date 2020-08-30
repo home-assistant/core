@@ -1,0 +1,15 @@
+{
+  "state": {
+    "shelly__gas_sensor_operation": {
+      "warmup": "Warmup",
+      "normal": "Normal",
+      "fault": "Fault"
+    },
+    "shelly__gas_sensor_self_test": {
+      "not_completed": "Not completed",
+      "completed": "Completed",
+      "running": "Running",
+      "pending": "Pending"
+    }
+  }
+}
