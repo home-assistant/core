@@ -110,7 +110,6 @@ class PowerViewShade(ShadeEntity, CoverEntity):
         self._scheduled_transition_update = None
         self._room_name = room_data.get(room_id, {}).get(ROOM_NAME_UNICODE, "")
         self._current_cover_position = MIN_POSITION
-        self._coordinator = coordinator
 
     @property
     def device_state_attributes(self):
@@ -272,7 +271,7 @@ class PowerViewShade(ShadeEntity, CoverEntity):
         """When entity is added to hass."""
         self._async_update_current_cover_position()
         self.async_on_remove(
-            self._coordinator.async_add_listener(self._async_update_shade_from_group)
+            self.coordinator.async_add_listener(self._async_update_shade_from_group)
         )
 
     @callback
@@ -282,5 +281,5 @@ class PowerViewShade(ShadeEntity, CoverEntity):
             # If a transition in in progress
             # the data will be wrong
             return
-        self._async_process_new_shade_data(self._coordinator.data[self._shade.id])
+        self._async_process_new_shade_data(self.coordinator.data[self._shade.id])
         self.async_write_ha_state()
