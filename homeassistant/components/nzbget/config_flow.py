@@ -94,7 +94,9 @@ class NZBGetConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 return self.async_abort(reason="unknown")
             else:
-                return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
+                return self.async_create_entry(
+                    title=user_input[CONF_HOST], data=user_input,
+                )
 
         data_schema = {
             vol.Required(CONF_HOST): str,
