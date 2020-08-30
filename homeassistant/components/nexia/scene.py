@@ -57,6 +57,6 @@ class NexiaAutomationScene(NexiaEntity, Scene):
         await self.hass.async_add_executor_job(self._automation.activate)
 
         async def refresh_callback(_):
-            await self._coordinator.async_refresh()
+            await self.coordinator.async_refresh()
 
         async_call_later(self.hass, SCENE_ACTIVATION_TIME, refresh_callback)
