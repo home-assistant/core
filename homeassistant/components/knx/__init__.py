@@ -24,7 +24,7 @@ from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change_event
 
-from .const import DATA_KNX, DOMAIN, DeviceTypes
+from .const import DATA_KNX, DOMAIN, SupportedPlatforms
 from .factory import create_knx_device
 from .schema import (
     BinarySensorSchema,
@@ -51,21 +51,10 @@ CONF_KNX_STATE_UPDATER = "state_updater"
 CONF_KNX_RATE_LIMIT = "rate_limit"
 CONF_KNX_EXPOSE = "expose"
 
-CONF_KNX_LIGHT = "light"
-CONF_KNX_COVER = "cover"
-CONF_KNX_BINARY_SENSOR = "binary_sensor"
-CONF_KNX_SCENE = "scene"
-CONF_KNX_SENSOR = "sensor"
-CONF_KNX_SWITCH = "switch"
-CONF_KNX_NOTIFY = "notify"
-CONF_KNX_CLIMATE = "climate"
-
 SERVICE_KNX_SEND = "send"
 SERVICE_KNX_ATTR_ADDRESS = "address"
 SERVICE_KNX_ATTR_PAYLOAD = "payload"
 SERVICE_KNX_ATTR_TYPE = "type"
-
-ATTR_DISCOVER_DEVICES = "devices"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -89,28 +78,28 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_KNX_EXPOSE): vol.All(
                     cv.ensure_list, [ExposeSchema.SCHEMA]
                 ),
-                vol.Optional(CONF_KNX_COVER): vol.All(
+                vol.Optional(SupportedPlatforms.cover.value): vol.All(
                     cv.ensure_list, [CoverSchema.SCHEMA]
                 ),
-                vol.Optional(CONF_KNX_BINARY_SENSOR): vol.All(
+                vol.Optional(SupportedPlatforms.binary_sensor.value): vol.All(
                     cv.ensure_list, [BinarySensorSchema.SCHEMA]
                 ),
-                vol.Optional(CONF_KNX_LIGHT): vol.All(
+                vol.Optional(SupportedPlatforms.light.value): vol.All(
                     cv.ensure_list, [LightSchema.SCHEMA]
                 ),
-                vol.Optional(CONF_KNX_CLIMATE): vol.All(
+                vol.Optional(SupportedPlatforms.climate.value): vol.All(
                     cv.ensure_list, [ClimateSchema.SCHEMA]
                 ),
-                vol.Optional(CONF_KNX_NOTIFY): vol.All(
+                vol.Optional(SupportedPlatforms.notify.value): vol.All(
                     cv.ensure_list, [NotifySchema.SCHEMA]
                 ),
-                vol.Optional(CONF_KNX_SWITCH): vol.All(
+                vol.Optional(SupportedPlatforms.switch.value): vol.All(
                     cv.ensure_list, [SwitchSchema.SCHEMA]
                 ),
-                vol.Optional(CONF_KNX_SENSOR): vol.All(
+                vol.Optional(SupportedPlatforms.sensor.value): vol.All(
                     cv.ensure_list, [SensorSchema.SCHEMA]
                 ),
-                vol.Optional(CONF_KNX_SCENE): vol.All(
+                vol.Optional(SupportedPlatforms.scene.value): vol.All(
                     cv.ensure_list, [SceneSchema.SCHEMA]
                 ),
             }
@@ -129,17 +118,6 @@ SERVICE_KNX_SEND_SCHEMA = vol.Schema(
     }
 )
 
-KNX_CONFIG_PLATFORM_MAPPING = {
-    CONF_KNX_COVER: DeviceTypes.cover,
-    CONF_KNX_SWITCH: DeviceTypes.switch,
-    CONF_KNX_LIGHT: DeviceTypes.light,
-    CONF_KNX_SENSOR: DeviceTypes.sensor,
-    CONF_KNX_NOTIFY: DeviceTypes.notify,
-    CONF_KNX_SCENE: DeviceTypes.scene,
-    CONF_KNX_BINARY_SENSOR: DeviceTypes.binary_sensor,
-    CONF_KNX_CLIMATE: DeviceTypes.climate,
-}
-
 
 async def async_setup(hass, config):
     """Set up the KNX component."""
@@ -153,30 +131,17 @@ async def async_setup(hass, config):
             f"Can't connect to KNX interface: <br><b>{ex}</b>", title="KNX"
         )
 
-    for platform_config, device_type in KNX_CONFIG_PLATFORM_MAPPING.items():
-        if platform_config in config[DOMAIN]:
-            for device_config in config[DOMAIN][platform_config]:
-                hass.data[DATA_KNX].xknx.devices.add(
-                    create_knx_device(
-                        hass, device_type, hass.data[DATA_KNX].xknx, device_config
-                    )
+    for platform in SupportedPlatforms:
+        if platform.value in config[DOMAIN]:
+            for device_config in config[DOMAIN][platform.value]:
+                create_knx_device(
+                    hass, platform, hass.data[DATA_KNX].xknx, device_config
                 )
 
-    for component, discovery_type in (
-        ("switch", "Switch"),
-        ("climate", "Climate"),
-        ("cover", "Cover"),
-        ("light", "Light"),
-        ("sensor", "Sensor"),
-        ("binary_sensor", "BinarySensor"),
-        ("scene", "Scene"),
-        ("notify", "Notification"),
-    ):
-        found_devices = _get_devices(hass, discovery_type)
+    # We need to wait until all entities are loaded into the device list since they could also be created from other platforms
+    for platform in SupportedPlatforms:
         hass.async_create_task(
-            discovery.async_load_platform(
-                hass, component, DOMAIN, {ATTR_DISCOVER_DEVICES: found_devices}, config
-            )
+            discovery.async_load_platform(hass, platform.value, DOMAIN, {}, config)
         )
 
     hass.services.async_register(
@@ -187,19 +152,6 @@ async def async_setup(hass, config):
     )
 
     return True
-
-
-def _get_devices(hass, discovery_type):
-    """Get the KNX devices."""
-    return list(
-        map(
-            lambda device: device.name,
-            filter(
-                lambda device: type(device).__name__ == discovery_type,
-                hass.data[DATA_KNX].xknx.devices,
-            ),
-        )
-    )
 
 
 class KNXModule:
@@ -375,7 +327,6 @@ class KNXExposeTime:
         self.device = DateTime(
             self.xknx, "Time", broadcast_type=broadcast_type, group_address=self.address
         )
-        self.xknx.devices.add(self.device)
 
 
 class KNXExposeSensor:
@@ -405,7 +356,6 @@ class KNXExposeSensor:
             group_address=self.address,
             value_type=self.type,
         )
-        self.xknx.devices.add(self.device)
         async_track_state_change_event(
             self.hass, [self.entity_id], self._async_entity_changed
         )
