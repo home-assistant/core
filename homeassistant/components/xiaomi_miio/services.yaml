@@ -149,6 +149,16 @@ fan_set_dry_off:
       description: Name of the xiaomi miio entity.
       example: "fan.xiaomi_miio_device"
 
+fan_set_motor_speed:
+  description: Set the target motor speed.
+  fields:
+    entity_id:
+      description: Name of the xiaomi miio entity.
+      example: 'fan.xiaomi_miio_device'
+    motor_speed:
+      description: Set RPM of motor speed, between 200 and 2000.
+      example: 1100
+
 light_set_scene:
   description: Set a fixed scene.
   fields:
