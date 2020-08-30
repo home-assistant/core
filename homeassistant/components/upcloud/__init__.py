@@ -121,12 +121,12 @@ class UpCloudHassData:
 
 async def async_setup(hass: HomeAssistantType, config) -> bool:
     """Set up UpCloud component."""
-    _LOGGER.warning(
-        "Loading upcloud via top level config is deprecated and no longer "
-        "necessary as of 0.115. Please remove it from your YAML configuration."
-    )
     domain_config = config.get(DOMAIN)
     if domain_config:
+        _LOGGER.warning(
+            "Loading upcloud via top level config is deprecated and no longer "
+            "necessary as of 0.115. Please remove it from your YAML configuration."
+        )
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
