@@ -18,8 +18,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client, device_registry as dr, entity
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers import aiohttp_client, device_registry as dr
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .const import (
     CONF_ACCOUNT,
@@ -154,7 +157,7 @@ async def get_items_of_category(hass: HomeAssistant, entry: ConfigEntry, categor
     return return_list
 
 
-class Control4Entity(entity.Entity):
+class Control4Entity(CoordinatorEntity):
     """Base entity for Control4."""
 
     def __init__(
@@ -170,11 +173,11 @@ class Control4Entity(entity.Entity):
         device_id: int,
     ):
         """Initialize a Control4 entity."""
+        super().__init__(coordinator)
         self.entry = entry
         self.entry_data = entry_data
         self._name = name
         self._idx = idx
-        self._coordinator = coordinator
         self._controller_unique_id = entry_data[CONF_CONTROLLER_UNIQUE_ID]
         self._device_name = device_name
         self._device_manufacturer = device_manufacturer
@@ -202,23 +205,3 @@ class Control4Entity(entity.Entity):
             "model": self._device_model,
             "via_device": (DOMAIN, self._controller_unique_id),
         }
-
-    @property
-    def should_poll(self):
-        """No need to poll. Coordinator notifies entity of updates."""
-        return False
-
-    @property
-    def available(self):
-        """Return if entity is available."""
-        return self._coordinator.last_update_success
-
-    async def async_added_to_hass(self):
-        """When entity is added to hass."""
-        self.async_on_remove(
-            self._coordinator.async_add_listener(self.async_write_ha_state)
-        )
-
-    async def async_update(self):
-        """Update the state of the device."""
-        await self._coordinator.async_request_refresh()
