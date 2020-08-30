@@ -1,19 +1,18 @@
 """The Tesla Powerwall integration base entity."""
 
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER, MODEL
 
 
-class PowerWallEntity(Entity):
+class PowerWallEntity(CoordinatorEntity):
     """Base class for powerwall entities."""
 
     def __init__(
         self, coordinator, site_info, status, device_type, powerwalls_serial_numbers
     ):
         """Initialize the sensor."""
-        super().__init__()
-        self._coordinator = coordinator
+        super().__init__(coordinator)
         self._site_info = site_info
         self._device_type = device_type
         self._version = status.version
@@ -33,26 +32,3 @@ class PowerWallEntity(Entity):
         device_info["model"] = model
         device_info["sw_version"] = self._version
         return device_info
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return self._coordinator.last_update_success
-
-    @property
-    def should_poll(self):
-        """Return False, updates are controlled via coordinator."""
-        return False
-
-    async def async_update(self):
-        """Update the entity.
-
-        Only used by the generic entity update service.
-        """
-        await self._coordinator.async_request_refresh()
-
-    async def async_added_to_hass(self):
-        """Subscribe to updates."""
-        self.async_on_remove(
-            self._coordinator.async_add_listener(self.async_write_ha_state)
-        )

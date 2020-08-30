@@ -89,7 +89,7 @@ class PowerWallChargeSensor(PowerWallEntity):
     @property
     def state(self):
         """Get the current value in percentage."""
-        return self._coordinator.data[POWERWALL_API_CHARGE]
+        return self.coordinator.data[POWERWALL_API_CHARGE]
 
 
 class PowerWallEnergySensor(PowerWallEntity):
@@ -134,7 +134,7 @@ class PowerWallEnergySensor(PowerWallEntity):
     def state(self):
         """Get the current value in kW."""
         return (
-            self._coordinator.data[POWERWALL_API_METERS]
+            self.coordinator.data[POWERWALL_API_METERS]
             .get(self._meter)
             .get_power(precision=3)
         )
@@ -142,7 +142,7 @@ class PowerWallEnergySensor(PowerWallEntity):
     @property
     def device_state_attributes(self):
         """Return the device specific state attributes."""
-        meter = self._coordinator.data[POWERWALL_API_METERS].get(self._meter)
+        meter = self.coordinator.data[POWERWALL_API_METERS].get(self._meter)
         return {
             ATTR_FREQUENCY: round(meter.frequency, 1),
             ATTR_ENERGY_EXPORTED: convert_to_kw(meter.energy_exported),
