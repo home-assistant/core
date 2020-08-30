@@ -95,7 +95,9 @@ class SharkIqConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason=errors["base"])
 
         return self.async_show_form(
-            step_id="reauth", data_schema=SHARKIQ_SCHEMA, errors=errors,
+            step_id="reauth",
+            data_schema=SHARKIQ_SCHEMA,
+            errors=errors,
         )
 
 
