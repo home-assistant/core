@@ -464,4 +464,4 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
 
         Only used by the generic entity update service.
         """
-        await self._coordinator.async_request_refresh()
+        await self.coordinator.async_request_refresh()
