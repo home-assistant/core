@@ -94,9 +94,9 @@ class SharkIqUpdateCoordinator(DataUpdateCoordinator):
                     )
                 )
 
-            raise UpdateFailed(err)
+            raise UpdateFailed(err) from err
         except Exception as err:  # pylint: disable=broad-except
             LOGGER.exception("Unexpected error updating SharkIQ", exc_info=err)
-            raise UpdateFailed(err)
+            raise UpdateFailed(err) from err
 
         return True
