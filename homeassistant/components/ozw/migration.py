@@ -161,3 +161,6 @@ async def async_migrate(hass, migration_map):
             name=entity_entry.name,
             icon=entity_entry.icon,
         )
+
+    zwave_config_entry = hass.config_entries.async_entries("zwave")[0]
+    await hass.config_entries.async_remove(zwave_config_entry.entry_id)
