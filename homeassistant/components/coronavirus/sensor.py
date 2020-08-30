@@ -48,11 +48,6 @@ class CoronavirusSensor(CoordinatorEntity):
         )
 
     @property
-    def should_poll(self):
-        """Return True if the sensor has to be polled for state."""
-        return True
-
-    @property
     def state(self):
         """State of the sensor."""
         if self.country == OPTION_WORLDWIDE:
