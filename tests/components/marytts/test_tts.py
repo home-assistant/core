@@ -2,7 +2,6 @@
 import asyncio
 import os
 import shutil
-from urllib.parse import urlencode
 
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_ID,
@@ -62,18 +61,14 @@ class TestTTSMaryTTSPlatform:
         """Test service call say."""
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
-        conn = Mock()
-        response = Mock()
-        conn.getresponse.return_value = response
-        response.status = 200
-        response.read.return_value = b"audio"
-
         config = {tts.DOMAIN: {"platform": "marytts"}}
 
         with assert_setup_component(1, tts.DOMAIN):
             setup_component(self.hass, tts.DOMAIN, config)
 
-        with patch("http.client.HTTPConnection", return_value=conn):
+        with patch(
+            "homeassistant.components.marytts.tts.MaryTTS.speak"
+        ) as mock_speak:
             self.hass.services.call(
                 tts.DOMAIN,
                 "marytts_say",
@@ -92,12 +87,6 @@ class TestTTSMaryTTSPlatform:
         """Test service call say with effects."""
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
-        conn = Mock()
-        response = Mock()
-        conn.getresponse.return_value = response
-        response.status = 200
-        response.read.return_value = b"audio"
-
         config = {
             tts.DOMAIN: {"platform": "marytts", "effect": {"Volume": "amount:2.0;"}}
         }
@@ -105,7 +94,9 @@ class TestTTSMaryTTSPlatform:
         with assert_setup_component(1, tts.DOMAIN):
             setup_component(self.hass, tts.DOMAIN, config)
 
-        with patch("http.client.HTTPConnection", return_value=conn):
+        with patch(
+            "homeassistant.components.marytts.tts.MaryTTS.speak"
+        ) as mock_speak:
             self.hass.services.call(
                 tts.DOMAIN,
                 "marytts_say",
@@ -128,19 +119,14 @@ class TestTTSMaryTTSPlatform:
         """Test service call say."""
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
-        conn = Mock()
-        response = Mock()
-        conn.getresponse.return_value = response
-        response.status = HTTP_INTERNAL_SERVER_ERROR
-        response.reason = "test"
-        response.readline.return_value = "content"
-
         config = {tts.DOMAIN: {"platform": "marytts"}}
 
         with assert_setup_component(1, tts.DOMAIN):
             setup_component(self.hass, tts.DOMAIN, config)
 
-        with patch("http.client.HTTPConnection", return_value=conn):
+        with patch(
+            "homeassistant.components.marytts.tts.MaryTTS.speak",
+        ) as mock_speak:
             self.hass.services.call(
                 tts.DOMAIN,
                 "marytts_say",
