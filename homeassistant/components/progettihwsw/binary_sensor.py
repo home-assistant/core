@@ -7,7 +7,10 @@ from ProgettiHWSW.input import Input
 import async_timeout
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from . import setup_input
 from .const import DEFAULT_POLLING_INTERVAL_SEC, DOMAIN
@@ -55,20 +58,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(binary_sensors)
 
 
-class ProgettihwswBinarySensor(BinarySensorEntity):
+class ProgettihwswBinarySensor(CoordinatorEntity, BinarySensorEntity):
     """Represent a binary sensor."""
 
     def __init__(self, hass, coordinator, config_entry, name, sensor: Input):
         """Set initializing values."""
+        super().__init__(coordinator)
         self._name = name
         self._sensor = sensor
-        self._coordinator = coordinator
-
-    async def async_added_to_hass(self):
-        """When entity is added to hass."""
-        self.async_on_remove(
-            self._coordinator.async_add_listener(self.async_write_ha_state)
-        )
 
     @property
     def name(self):
@@ -78,18 +75,4 @@ class ProgettihwswBinarySensor(BinarySensorEntity):
     @property
     def is_on(self):
         """Get sensor state."""
-        return self._coordinator.data[self._sensor.id]
-
-    @property
-    def should_poll(self):
-        """No need to poll. Coordinator notifies entity of updates."""
-        return False
-
-    @property
-    def available(self):
-        """Return if entity is available."""
-        return self._coordinator.last_update_success
-
-    async def async_update(self):
-        """Update the state of binary sensor."""
-        await self._coordinator.async_request_refresh()
+        return self.coordinator.data[self._sensor.id]
