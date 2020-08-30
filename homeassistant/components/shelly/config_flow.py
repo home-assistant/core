@@ -8,25 +8,29 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant import config_entries, core
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema({"host": str})
+HOST_SCHEMA = vol.Schema({CONF_HOST: str})
 
 HTTP_CONNECT_ERRORS = (asyncio.TimeoutError, aiohttp.ClientError)
 
 
-async def validate_input(hass: core.HomeAssistant, data):
+async def validate_input(hass: core.HomeAssistant, host, data):
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
     async with async_timeout.timeout(5):
         device = await aioshelly.Device.create(
-            data["host"], aiohttp_client.async_get_clientsession(hass)
+            host,
+            aiohttp_client.async_get_clientsession(hass),
+            data.get(CONF_USERNAME),
+            data.get(CONF_PASSWORD),
         )
 
     await device.shutdown()
@@ -48,7 +52,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             try:
-                info = await self._async_get_info(user_input["host"])
+                self.host = user_input[CONF_HOST]
+                info = await self._async_get_info(self.host)
             except HTTP_CONNECT_ERRORS:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
@@ -56,25 +61,59 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
 
             else:
+                await self.async_set_unique_id(info["mac"])
                 if info["auth"]:
-                    return self.async_abort(reason="auth_not_supported")
+                    return await self.async_step_credentials()
 
                 try:
-                    device_info = await validate_input(self.hass, user_input)
+                    device_info = await validate_input(self.hass, self.host, user_input)
                 except HTTP_CONNECT_ERRORS:
                     errors["base"] = "cannot_connect"
                 except Exception:  # pylint: disable=broad-except
                     _LOGGER.exception("Unexpected exception")
                     errors["base"] = "unknown"
                 else:
-                    await self.async_set_unique_id(device_info["mac"])
                     return self.async_create_entry(
-                        title=device_info["title"] or user_input["host"],
+                        title=device_info["title"] or self.host,
                         data=user_input,
                     )
 
         return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors
+            step_id="user", data_schema=HOST_SCHEMA, errors=errors
+        )
+
+    async def async_step_credentials(self, user_input=None):
+        """Handle the credentials step."""
+        errors = {}
+        schema = None
+        if user_input is not None:
+            try:
+                device_info = await validate_input(self.hass, self.host, user_input)
+            except aiohttp.ClientResponseError as error:
+                if error.status == 401:
+                    errors["base"] = "invalid_auth"
+                else:
+                    errors["base"] = "cannot_connect"
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                return self.async_create_entry(
+                    title=device_info["title"] or self.host,
+                    data={**user_input, **{CONF_HOST: self.host}},
+                )
+            schema = vol.Schema(
+                {
+                    vol.Required(CONF_USERNAME, default=user_input[CONF_USERNAME]): str,
+                    vol.Required(CONF_PASSWORD, default=user_input[CONF_PASSWORD]): str,
+                }
+            )
+
+        if schema is None:
+            schema = vol.Schema({CONF_USERNAME: str, CONF_PASSWORD: str})
+
+        return self.async_show_form(
+            step_id="credentials", data_schema=schema, errors=errors
         )
 
     async def async_step_zeroconf(self, zeroconf_info):
@@ -87,9 +126,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except HTTP_CONNECT_ERRORS:
             return self.async_abort(reason="cannot_connect")
 
-        if info["auth"]:
-            return self.async_abort(reason="auth_not_supported")
-
         await self.async_set_unique_id(info["mac"])
         self._abort_if_unique_id_configured({"host": zeroconf_info["host"]})
         self.host = zeroconf_info["host"]
@@ -101,8 +137,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle discovery confirm."""
         errors = {}
         if user_input is not None:
+            if self.info["auth"]:
+                return await self.async_step_credentials()
+
             try:
-                device_info = await validate_input(self.hass, {"host": self.host})
+                device_info = await validate_input(self.hass, self.host, {})
             except HTTP_CONNECT_ERRORS:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
