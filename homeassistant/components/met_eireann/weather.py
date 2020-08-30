@@ -16,12 +16,11 @@ from homeassistant.const import (
     PRESSURE_INHG,
     TEMP_CELSIUS,
 )
-from .const import CONDITION_MAP
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util.distance import convert as convert_distance
 from homeassistant.util.pressure import convert as convert_pressure
 
-from .const import ATTRIBUTION, CONF_TRACK_HOME, DEFAULT_NAME, DOMAIN
+from .const import ATTRIBUTION, CONDITION_MAP, CONF_TRACK_HOME, DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +40,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 
 def format_condition(condition: str):
-    """Map the conditons provided by the weather API to those supported by the frontend."""
+    """Map the conditions provided by the weather API to those supported by the frontend."""
     if condition is not None:
         for key, value in CONDITION_MAP.items():
             if condition in value:
