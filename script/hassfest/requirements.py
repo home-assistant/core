@@ -1,5 +1,6 @@
 """Validate requirements."""
 import operator
+import re
 import subprocess
 import sys
 from typing import Dict, Set
@@ -13,6 +14,11 @@ import homeassistant.util.package as pkg_util
 
 from .model import Config, Integration
 
+IGNORE_PACKAGES = {
+    commented.lower().replace("_", "-") for commented in COMMENT_REQUIREMENTS
+}
+PACKAGE_REGEX = re.compile(r"^(?:--.+\s)?([-_\w\d]+).*==.+$")
+PIP_REGEX = re.compile(r"^(--.+\s)?([-_\w\d]+.*(?:==|>=|<=|~=|!=|<|>|===)?.*$)")
 SUPPORTED_PYTHON_TUPLES = [
     REQUIRED_PYTHON_VER[:2],
     tuple(map(operator.add, REQUIRED_PYTHON_VER, (0, 1, 0)))[:2],
@@ -25,19 +31,14 @@ STD_LIBS = {version: set(stdlib_list(version)) for version in SUPPORTED_PYTHON_V
 
 def normalize_package_name(requirement: str) -> str:
     """Return a normalized package name from a requirement string."""
-    requirement = requirement.split(" ")[-1]  # remove potential pip argument
-    package = requirement.split("==")[0]  # remove version pinning
-    package = package.split("[")[0]  # remove potential require extras
-    # replace underscore with dash to work with pipdeptree
-    package = package.replace("_", "-")
-    package = package.lower()  # normalize casing
+    match = PACKAGE_REGEX.search(requirement)
+    if not match:
+        return ""
+
+    # pipdeptree needs lowercase and dash instead of underscore as separator
+    package = match.group(1).lower().replace("_", "-")
 
     return package
-
-
-IGNORE_PACKAGES = {
-    normalize_package_name(commented) for commented in COMMENT_REQUIREMENTS
-}
 
 
 def validate(integrations: Dict[str, Integration], config: Config):
@@ -53,20 +54,26 @@ def validate(integrations: Dict[str, Integration], config: Config):
 def validate_requirements(integration: Integration):
     """Validate requirements."""
     integration_requirements = set()
+    integration_packages = set()
     for req in integration.requirements:
         package = normalize_package_name(req)
+        if not package:
+            integration.add_error(
+                "requirements",
+                f"Failed to normalize package name from requirement {req}",
+            )
+            return
         if package in IGNORE_PACKAGES:
             continue
         integration_requirements.add(req)
+        integration_packages.add(package)
 
     install_ok = install_requirements(integration, integration_requirements)
 
     if not install_ok:
         return
 
-    all_integration_requirements = get_requirements(
-        integration, integration_requirements
-    )
+    all_integration_requirements = get_requirements(integration, integration_packages)
 
     if integration_requirements and not all_integration_requirements:
         integration.add_error(
@@ -85,12 +92,11 @@ def validate_requirements(integration: Integration):
                 )
 
 
-def get_requirements(integration: Integration, requirements: Set[str]) -> Set[str]:
+def get_requirements(integration: Integration, packages: Set[str]) -> Set[str]:
     """Return all (recursively) requirements for an integration."""
     all_requirements = set()
 
-    for req in requirements:
-        package = normalize_package_name(req)
+    for package in packages:
         try:
             result = subprocess.run(
                 ["pipdeptree", "-w", "silence", "--packages", package],
@@ -100,7 +106,7 @@ def get_requirements(integration: Integration, requirements: Set[str]) -> Set[st
             )
         except subprocess.SubprocessError:
             integration.add_error(
-                "requirements", f"Failed to resolve requirements for {req}"
+                "requirements", f"Failed to resolve requirements for {package}"
             )
             continue
 
@@ -137,9 +143,22 @@ def install_requirements(integration: Integration, requirements: Set[str]) -> bo
         if is_installed:
             continue
 
-        requirement_args = req.split(" ")
+        match = PIP_REGEX.search(req)
+
+        if not match:
+            integration.add_error(
+                "requirements",
+                f"Failed to parse requirement {req} before installation",
+            )
+            continue
+
+        install_args = match.group(1)
+        requirement_arg = match.group(2)
+
         args = [sys.executable, "-m", "pip", "install", "--quiet"]
-        args.extend(requirement_args)
+        if install_args:
+            args.append(install_args)
+        args.append(requirement_arg)
         try:
             subprocess.run(args, check=True)
         except subprocess.SubprocessError:
