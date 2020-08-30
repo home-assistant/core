@@ -31,10 +31,12 @@ async def test_form(hass):
     with patch("sharkiqpy.AylaApi.async_sign_in", return_value=True), patch(
         "homeassistant.components.sharkiq.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.sharkiq.async_setup_entry", return_value=True,
+        "homeassistant.components.sharkiq.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], CONFIG,
+            result["flow_id"],
+            CONFIG,
         )
         await hass.async_block_till_done()
 
@@ -61,7 +63,8 @@ async def test_form_invalid_auth(hass):
         return_value=mocked_ayla,
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], CONFIG,
+            result["flow_id"],
+            CONFIG,
         )
 
     assert result2["type"] == "form"
@@ -80,7 +83,8 @@ async def test_form_cannot_connect(hass):
         return_value=mocked_ayla,
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], CONFIG,
+            result["flow_id"],
+            CONFIG,
         )
 
     assert result2["type"] == "form"
@@ -109,7 +113,8 @@ async def test_form_other_error(hass):
 async def test_reauth(hass):
     """Test reauth flow."""
     with patch(
-        "homeassistant.components.sharkiq.vacuum.async_setup_entry", return_value=True,
+        "homeassistant.components.sharkiq.vacuum.async_setup_entry",
+        return_value=True,
     ), patch("sharkiqpy.AylaApi.async_sign_in", return_value=True):
         mock_config = MockConfigEntry(domain=DOMAIN, unique_id=UNIQUE_ID, data=CONFIG)
         mock_config.add_to_hass(hass)
@@ -124,14 +129,18 @@ async def test_reauth(hass):
 
     with patch("sharkiqpy.AylaApi.async_sign_in", side_effect=SharkIqAuthError):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "reauth", "unique_id": UNIQUE_ID}, data=CONFIG,
+            DOMAIN,
+            context={"source": "reauth", "unique_id": UNIQUE_ID},
+            data=CONFIG,
         )
         assert result["type"] == "form"
         assert result["errors"] == {"base": "invalid_auth"}
 
     with patch("sharkiqpy.AylaApi.async_sign_in", side_effect=RuntimeError):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "reauth", "unique_id": UNIQUE_ID}, data=CONFIG,
+            DOMAIN,
+            context={"source": "reauth", "unique_id": UNIQUE_ID},
+            data=CONFIG,
         )
 
         assert result["type"] == "abort"
