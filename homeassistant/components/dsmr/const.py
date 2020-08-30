@@ -14,7 +14,6 @@ DEFAULT_PRECISION = 3
 DEFAULT_RECONNECT_INTERVAL = 30
 
 DATA_TASK = "task"
-DATA_LISTENER = "listener"
 
 ICON_GAS = "mdi:fire"
 ICON_POWER = "mdi:flash"
