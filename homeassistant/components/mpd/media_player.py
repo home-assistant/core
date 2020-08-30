@@ -135,7 +135,9 @@ class MpdDevice(MediaPlayerEntity):
 
         position = self._status.get("elapsed")
 
-        if position is None:
+        if position:
+            position = int(position)
+        elif position is None:
             position = self._status.get("time")
 
             if ":" in position:
