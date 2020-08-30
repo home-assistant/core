@@ -143,6 +143,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 transport, protocol = await hass.loop.create_task(reader_factory())
             except (
                 serial.serialutil.SerialException,
+                ConnectionRefusedError,
+                TimeoutError,
                 OSError,
             ):
                 # Log any error while establishing connection and drop to retry
