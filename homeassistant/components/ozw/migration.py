@@ -1,6 +1,4 @@
 """Provide tools for migrating from the zwave integration."""
-import logging
-
 from homeassistant.helpers.device_registry import (
     async_get_registry as async_get_device_registry,
 )
@@ -11,8 +9,6 @@ from homeassistant.helpers.entity_registry import (
 
 from .const import DOMAIN, NODES_VALUES
 from .entity import create_device_id, create_value_id
-
-_LOGGER = logging.getLogger(__name__)
 
 # The following dicts map labels between OpenZWave 1.4 and 1.6.
 METER_CC_LABELS = {
