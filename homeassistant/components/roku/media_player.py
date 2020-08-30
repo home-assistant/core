@@ -244,7 +244,6 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         """Volume up media player."""
         await self.coordinator.roku.remote("volume_up")
 
-
     @roku_exception_handler
     async def async_volume_down(self) -> None:
         """Volume down media player."""
