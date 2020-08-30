@@ -54,10 +54,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
         so entities can quickly look up their data.
         """
         try:
-            # # Note: asyncio.TimeoutError and aiohttp.ClientError are already
-            # # handled by the data update coordinator.
-            # async with async_timeout.timeout(10):
-            #     return await api.get_pools()
             pools = await hass.async_add_executor_job(api.get_pools)
             for pool in pools:
                 pool["ICO"] = await hass.async_add_executor_job(
@@ -101,18 +97,24 @@ class OndiloICO(Entity):
         self._coordinator = coordinator
         self._devidx = devidx
         self._poolidx = poolidx
-        self._devdata = self._coordinator.data[self._poolidx]["devices"][self._devidx]
-        self._pooldata = self._coordinator.data[self._poolidx]
         self._unique_id = (
-            f"{self._pooldata['ICO']['serial_number']}-{self._devdata['data_type']}"
+            f"{self._pooldata()['ICO']['serial_number']}-{self._devdata()['data_type']}"
         )
-        self._device_name = self._pooldata["name"]
+        self._device_name = self._pooldata()["name"]
         self._name = (
-            f"Ondilo {self._device_name} {SENSOR_TYPES[self._devdata['data_type']][0]}"
+            f"{self._device_name} {SENSOR_TYPES[self._devdata()['data_type']][0]}"
         )
-        self._device_class = SENSOR_TYPES[self._devdata["data_type"]][3]
-        self._icon = SENSOR_TYPES[self._devdata["data_type"]][2]
-        self._unit = SENSOR_TYPES[self._devdata["data_type"]][1]
+        self._device_class = SENSOR_TYPES[self._devdata()["data_type"]][3]
+        self._icon = SENSOR_TYPES[self._devdata()["data_type"]][2]
+        self._unit = SENSOR_TYPES[self._devdata()["data_type"]][1]
+
+    def _pooldata(self):
+        """Get pool data dict."""
+        return self._coordinator.data[self._poolidx]
+
+    def _devdata(self):
+        """Get device data dict."""
+        return self._pooldata()["devices"][self._devidx]
 
     @property
     def should_poll(self):
@@ -132,7 +134,12 @@ class OndiloICO(Entity):
     @property
     def state(self):
         """Last value of the device."""
-        return self._devdata["value"]
+        _LOGGER.debug(
+            "Retrieving Ondilo sensor %s state value: %s",
+            self._name,
+            self._devdata()["value"],
+        )
+        return self._devdata()["value"]
 
     @property
     def icon(self):
@@ -158,11 +165,11 @@ class OndiloICO(Entity):
     def device_info(self):
         """Return the device info for the sensor."""
         return {
-            "identifiers": {(DOMAIN, self._pooldata["ICO"]["serial_number"])},
+            "identifiers": {(DOMAIN, self._pooldata()["ICO"]["serial_number"])},
             "name": self._device_name,
             "manufacturer": "Ondilo",
             "model": "ICO",
-            "sw_version": self._pooldata["ICO"]["sw_version"],
+            "sw_version": self._pooldata()["ICO"]["sw_version"],
         }
 
     async def async_added_to_hass(self):

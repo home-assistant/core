@@ -20,6 +20,8 @@ class OAuth2FlowHandler(
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
+        await self.async_set_unique_id(DOMAIN)
+
         # As client_id and secret are always the same, let's hard-code them and create an entry as if created from config file
         self.async_register_implementation(
             self.hass, OndiloOauth2Implementation(self.hass),
