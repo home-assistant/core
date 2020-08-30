@@ -130,7 +130,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 raise CannotConnect
         except OSError as err:
             _LOGGER.error("Failed to get capabilities from %s: %s", ipaddr, err)
-            raise CannotConnect
+            raise CannotConnect from err
         _LOGGER.debug("Get capabilities: %s", capabilities)
         self._capabilities = capabilities
         await self.async_set_unique_id(capabilities["id"])
