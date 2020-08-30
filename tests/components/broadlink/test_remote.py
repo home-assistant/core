@@ -28,7 +28,7 @@ async def test_remote_setup_works(hass):
     for device in map(get_device, REMOTE_DEVICES):
         device_registry = mock_device_registry(hass)
         entity_registry = mock_registry(hass)
-        mock_api, mock_entry = await device.setup(hass)
+        mock_api, mock_entry = await device.setup_entry(hass)
 
         device_entry = device_registry.async_get_device(
             {(DOMAIN, mock_entry.unique_id)}, set()
@@ -48,7 +48,7 @@ async def test_remote_send_command(hass):
     for device in map(get_device, REMOTE_DEVICES):
         device_registry = mock_device_registry(hass)
         entity_registry = mock_registry(hass)
-        mock_api, mock_entry = await device.setup(hass)
+        mock_api, mock_entry = await device.setup_entry(hass)
 
         device_entry = device_registry.async_get_device(
             {(DOMAIN, mock_entry.unique_id)}, set()
@@ -75,7 +75,7 @@ async def test_remote_turn_off_turn_on(hass):
     for device in map(get_device, REMOTE_DEVICES):
         device_registry = mock_device_registry(hass)
         entity_registry = mock_registry(hass)
-        mock_api, mock_entry = await device.setup(hass)
+        mock_api, mock_entry = await device.setup_entry(hass)
 
         device_entry = device_registry.async_get_device(
             {(DOMAIN, mock_entry.unique_id)}, set()

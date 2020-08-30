@@ -76,7 +76,7 @@ class BroadlinkDevice:
         self.timeout: int = timeout
         self.fwversion: int = fwversion
 
-    async def setup(self, hass, mock_api=None, mock_entry=None):
+    async def setup_entry(self, hass, mock_api=None, mock_entry=None):
         """Set up the device."""
         mock_api = mock_api or self.get_mock_api()
         mock_entry = mock_entry or self.get_mock_entry()
