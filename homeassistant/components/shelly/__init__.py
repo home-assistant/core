@@ -20,7 +20,7 @@ from homeassistant.helpers import (
 
 from .const import DOMAIN
 
-PLATFORMS = ["switch", "light", "sensor"]
+PLATFORMS = ["binary_sensor", "light", "sensor", "switch"]
 _LOGGER = logging.getLogger(__name__)
 
 
