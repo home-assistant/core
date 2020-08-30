@@ -2,7 +2,6 @@
 import logging
 
 from homeassistant.components.media_player.errors import BrowseError
-from homeassistant.util import slugify
 
 from .const import DOMAIN
 
@@ -13,6 +12,10 @@ PLAYLISTS_BROWSE_PAYLOAD = {
     "media_content_type": "playlists",
     "can_play": False,
     "can_expand": True,
+}
+SPECIAL_METHODS = {
+    "On Deck": "onDeck",
+    "Recently Added": "recentlyAdded",
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,14 +40,42 @@ def browse_media(
                 media_info["children"].append(item_payload(item))
         return media_info
 
+    if media_content_id and ":" in media_content_id:
+        media_content_id, special_folder = media_content_id.split(":")
+    else:
+        special_folder = None
+
     if (
         media_content_type
-        and media_content_type.startswith("server")
+        and media_content_type == "server"
         and media_content_id != plex_server.machine_identifier
     ):
         raise BrowseError(
             f"Plex server with ID '{media_content_id}' is not associated with {entity_id}"
         )
+
+    if special_folder:
+        if media_content_type == "server":
+            library_or_section = plex_server.library
+            title = plex_server.friendly_name
+        elif media_content_type == "library":
+            library_or_section = plex_server.library.sectionByID(media_content_id)
+            title = library_or_section.title
+
+        payload = {
+            "title": title,
+            "media_content_id": f"{media_content_id}:{special_folder}",
+            "media_content_type": media_content_type,
+            "can_play": False,
+            "can_expand": True,
+            "children": [],
+        }
+
+        method = SPECIAL_METHODS[special_folder]
+        items = getattr(library_or_section, method)()
+        for item in items:
+            payload["children"].append(item_payload(item))
+        return payload
 
     if media_content_type in ["server", None]:
         return server_payload(plex_server)
@@ -54,31 +85,6 @@ def browse_media(
 
     if media_content_type == "playlists":
         return playlists_payload(plex_server)
-
-    if "|" in media_content_type:
-        item_type, title, special = media_content_type.split("|")
-        payload = {
-            "title": title,
-            "media_content_id": media_content_id,
-            "media_content_type": media_content_type,
-            "can_play": False,
-            "can_expand": True,
-            "children": [],
-        }
-
-        if item_type == "server":
-            library_or_section = plex_server.library
-        elif item_type == "library":
-            library_or_section = plex_server.library.sectionByID(media_content_id)
-
-        if special == "recently_added":
-            call = library_or_section.recentlyAdded
-        elif special == "on_deck":
-            call = library_or_section.onDeck
-        for item in call():
-            payload["children"].append(item_payload(item))
-
-        return payload
 
     payload = {
         "media_type": DOMAIN,
@@ -121,8 +127,8 @@ def special_library_payload(parent_payload, special_type):
     title = f"{special_type} ({parent_payload['title']})"
     return {
         "title": title,
-        "media_content_id": parent_payload["media_content_id"],
-        "media_content_type": f"{parent_payload['media_content_type']}|{title}|{slugify(special_type)}",
+        "media_content_id": f"{parent_payload['media_content_id']}:{special_type}",
+        "media_content_type": parent_payload["media_content_type"],
         "can_play": False,
         "can_expand": True,
     }
