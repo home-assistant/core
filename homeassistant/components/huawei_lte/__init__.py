@@ -385,9 +385,6 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
     sw_version = None
     if router.data.get(KEY_DEVICE_INFORMATION):
         device_info = router.data[KEY_DEVICE_INFORMATION]
-        serial_number = device_info.get("SerialNumber")
-        if serial_number:
-            device_data["identifiers"] = {(DOMAIN, serial_number)}
         sw_version = device_info.get("SoftwareVersion")
         if device_info.get("DeviceName"):
             device_data["model"] = device_info["DeviceName"]
