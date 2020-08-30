@@ -28,7 +28,7 @@
                     "armed_night": "Sikret Natt"
                 },
                 "description": "Velg hvilken tilstand du vil stille Risco-alarmen til n\u00e5r du aktiverer Home Assistant-alarmen",
-                "title": "Kart Hjem Assistant oppgir til Risco stater"
+                "title": "Koble Home Assistant statuser til Risco statuser"
             },
             "init": {
                 "data": {
@@ -48,7 +48,7 @@
                     "partial_arm": "Delvis Sikret (OPPHOLD)"
                 },
                 "description": "Velg hvilken tilstand Home Assistant-alarmen skal rapportere for hver delstat som er rapportert av Risco",
-                "title": "Kart Risco oppgir til Home Assistant stater"
+                "title": "Koble Risco statuser til Home Assistant statuser"
             }
         }
     }
