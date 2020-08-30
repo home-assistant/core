@@ -5,12 +5,12 @@ import subprocess
 import sys
 from typing import Dict, Set
 
-from script.gen_requirements_all import COMMENT_REQUIREMENTS
 from stdlib_list import stdlib_list
 from tqdm import tqdm
 
 from homeassistant.const import REQUIRED_PYTHON_VER
 import homeassistant.util.package as pkg_util
+from script.gen_requirements_all import COMMENT_REQUIREMENTS
 
 from .model import Config, Integration
 
