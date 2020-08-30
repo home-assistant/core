@@ -20,8 +20,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 
 from .const import (
     CONF_CITY,
@@ -351,20 +354,15 @@ async def async_update_options(hass, config_entry):
     await coordinator.async_request_refresh()
 
 
-class AirVisualEntity(Entity):
+class AirVisualEntity(CoordinatorEntity):
     """Define a generic AirVisual entity."""
 
     def __init__(self, coordinator):
         """Initialize."""
+        super().__init__(coordinator)
         self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
         self._icon = None
         self._unit = None
-        self.coordinator = coordinator
-
-    @property
-    def available(self):
-        """Return if entity is available."""
-        return self.coordinator.last_update_success
 
     @property
     def device_state_attributes(self):
@@ -375,11 +373,6 @@ class AirVisualEntity(Entity):
     def icon(self):
         """Return the icon."""
         return self._icon
-
-    @property
-    def should_poll(self) -> bool:
-        """Disable polling."""
-        return False
 
     @property
     def unit_of_measurement(self):
@@ -398,13 +391,6 @@ class AirVisualEntity(Entity):
         self.async_on_remove(self.coordinator.async_add_listener(update))
 
         self.update_from_latest_data()
-
-    async def async_update(self):
-        """Update the entity.
-
-        Only used by the generic entity update service.
-        """
-        await self.coordinator.async_request_refresh()
 
     @callback
     def update_from_latest_data(self):
