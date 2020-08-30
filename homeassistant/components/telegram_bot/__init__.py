@@ -542,7 +542,8 @@ class TelegramNotificationService:
             if not isinstance(out, bool) and hasattr(out, ATTR_MESSAGEID):
                 chat_id = out.chat_id
                 self._last_message_id[chat_id] = out[ATTR_MESSAGEID]
-
+                
+                # Fire event of telegram_sent
                 self.hass.bus.async_fire(EVENT_TELEGRAM_SENT, out.to_dict())
 
                 _LOGGER.debug(
