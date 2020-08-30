@@ -370,6 +370,7 @@ async def test_connection_abort_error_retry(hass, monkeypatch, mock_connection_f
 
     # wait for sleep to resolve
     await hass.async_block_till_done()
+    assert first_fail_connection_factory.call_count >= 2, "connecting not retried"
 
 
 async def test_reconnect(hass, monkeypatch, mock_connection_factory):
