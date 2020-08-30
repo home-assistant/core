@@ -17,8 +17,8 @@ from .model import Config, Integration
 IGNORE_PACKAGES = {
     commented.lower().replace("_", "-") for commented in COMMENT_REQUIREMENTS
 }
-PACKAGE_REGEX = re.compile(r"^(?:--.+\s)?([-_\w\d]+).*==.+$")
-PIP_REGEX = re.compile(r"^(--.+\s)?([-_\w\d]+.*(?:==|>=|<=|~=|!=|<|>|===)?.*$)")
+PACKAGE_REGEX = re.compile(r"^(?:--.+\s)?([-_\.\w\d]+).*==.+$")
+PIP_REGEX = re.compile(r"^(--.+\s)?([-_\.\w\d]+.*(?:==|>=|<=|~=|!=|<|>|===)?.*$)")
 SUPPORTED_PYTHON_TUPLES = [
     REQUIRED_PYTHON_VER[:2],
     tuple(map(operator.add, REQUIRED_PYTHON_VER, (0, 1, 0)))[:2],
