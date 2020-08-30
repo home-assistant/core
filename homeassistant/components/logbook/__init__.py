@@ -3,6 +3,7 @@ from datetime import timedelta
 from itertools import groupby
 import json
 import logging
+import re
 
 import sqlalchemy
 from sqlalchemy.orm import aliased
@@ -49,6 +50,9 @@ from homeassistant.helpers.integration_platform import (
 )
 from homeassistant.loader import bind_hass
 import homeassistant.util.dt as dt_util
+
+ENTITY_ID_JSON_EXTRACT = re.compile('"entity_id": "([^"]+)"')
+DOMAIN_JSON_EXTRACT = re.compile('"domain": "([^"]+)"')
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -485,20 +489,17 @@ def _keep_event(hass, event, entities_filter):
         entity_id = event.entity_id
     elif event.event_type in HOMEASSISTANT_EVENTS:
         entity_id = f"{HA_DOMAIN}."
-    elif event.event_type in hass.data[DOMAIN] and ATTR_ENTITY_ID not in event.data:
-        # If the entity_id isn't described, use the domain that describes
-        # the event for filtering.
-        domain = hass.data[DOMAIN][event.event_type][0]
-        if domain is None:
-            return False
-        entity_id = f"{domain}."
     elif event.event_type == EVENT_CALL_SERVICE:
         return False
     else:
-        event_data = event.data
-        entity_id = event_data.get(ATTR_ENTITY_ID)
+        entity_id = event.data_entity_id
         if not entity_id:
-            domain = event_data.get(ATTR_DOMAIN)
+            if event.event_type in hass.data[DOMAIN]:
+                # If the entity_id isn't described, use the domain that describes
+                # the event for filtering.
+                domain = hass.data[DOMAIN][event.event_type][0]
+            else:
+                domain = event.data_domain
             if domain is None:
                 return False
             entity_id = f"{domain}."
@@ -688,6 +689,24 @@ class LazyEventPartialState:
         self.context_id = self._row.context_id
         self.context_user_id = self._row.context_user_id
         self.time_fired_minute = self._row.time_fired.minute
+
+    @property
+    def data_entity_id(self):
+        """Extract the entity id from the decoded data or json."""
+        if self._event_data:
+            return self._event_data.get(ATTR_ENTITY_ID)
+
+        result = ENTITY_ID_JSON_EXTRACT.search(self._row.event_data)
+        return result and result.group(1)
+
+    @property
+    def data_domain(self):
+        """Extract the domain from the decoded data or json."""
+        if self._event_data:
+            return self._event_data.get(ATTR_DOMAIN)
+
+        result = DOMAIN_JSON_EXTRACT.search(self._row.event_data)
+        return result and result.group(1)
 
     @property
     def attributes(self):
