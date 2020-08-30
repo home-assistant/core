@@ -211,7 +211,6 @@ async def test_migrate_zwave(hass, migration_data, hass_ws_client, zwave_integra
     dev_reg = await async_get_device_registry(hass)
     ent_reg = await async_get_entity_registry(hass)
 
-    print(dev_reg.devices)
     # check the device registry migration
 
     # check that the migrated entries have correct attributes
