@@ -26,9 +26,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
-    if not entry.update_listeners:
-        listener = entry.add_update_listener(async_update_options)
-        hass.data[DOMAIN][entry.entry_id][DATA_LISTENER] = listener
+    listener = entry.add_update_listener(async_update_options)
+    hass.data[DOMAIN][entry.entry_id][DATA_LISTENER] = listener
 
     return True
 
