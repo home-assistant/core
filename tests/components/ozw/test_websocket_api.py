@@ -40,6 +40,10 @@ from homeassistant.components.websocket_api.const import (
     ERR_NOT_FOUND,
     ERR_NOT_SUPPORTED,
 )
+from homeassistant.helpers.device_registry import (
+    DeviceEntry,
+    async_get_registry as async_get_device_registry,
+)
 from homeassistant.helpers.entity_registry import (
     RegistryEntry,
     async_get_registry as async_get_entity_registry,
@@ -47,14 +51,28 @@ from homeassistant.helpers.entity_registry import (
 
 from .common import MQTTMessage, setup_ozw
 
-from tests.common import MockModule, mock_integration, mock_registry
+from tests.common import (
+    MockModule,
+    mock_device_registry,
+    mock_integration,
+    mock_registry,
+)
 
+ZWAVE_SOURCE_NODE_DEVICE_ID = "zwave_source_node_device_id"
+ZWAVE_SOURCE_NODE_DEVICE_NAME = "Z-Wave Source Node Device"
+ZWAVE_SOURCE_NODE_DEVICE_AREA = "Z-Wave Source Node Area"
 ZWAVE_SOURCE_ENTITY = "sensor.zwave_source_node"
 ZWAVE_SOURCE_NODE_UNIQUE_ID = "10-4321"
+ZWAVE_BATTERY_DEVICE_ID = "zwave_battery_device_id"
+ZWAVE_BATTERY_DEVICE_NAME = "Z-Wave Battery Device"
+ZWAVE_BATTERY_DEVICE_AREA = "Z-Wave Battery Area"
 ZWAVE_BATTERY_ENTITY = "sensor.zwave_battery_level"
 ZWAVE_BATTERY_UNIQUE_ID = "36-1234"
 ZWAVE_BATTERY_NAME = "Z-Wave Battery Level"
 ZWAVE_BATTERY_ICON = "mdi:zwave-test-battery"
+ZWAVE_POWER_DEVICE_ID = "zwave_power_device_id"
+ZWAVE_POWER_DEVICE_NAME = "Z-Wave Power Device"
+ZWAVE_POWER_DEVICE_AREA = "Z-Wave Power Area"
 ZWAVE_POWER_ENTITY = "sensor.zwave_power"
 ZWAVE_POWER_UNIQUE_ID = "32-5678"
 ZWAVE_POWER_NAME = "Z-Wave Power"
@@ -64,11 +82,21 @@ ZWAVE_POWER_ICON = "mdi:zwave-test-power"
 @pytest.fixture(name="zwave_migration_data")
 def zwave_migration_data_fixture(hass):
     """Return mock zwave migration data."""
+    zwave_source_node_device = DeviceEntry(
+        id=ZWAVE_SOURCE_NODE_DEVICE_ID,
+        name_by_user=ZWAVE_SOURCE_NODE_DEVICE_NAME,
+        area_id=ZWAVE_SOURCE_NODE_DEVICE_AREA,
+    )
     zwave_source_node_entry = RegistryEntry(
         entity_id=ZWAVE_SOURCE_ENTITY,
         unique_id=ZWAVE_SOURCE_NODE_UNIQUE_ID,
         platform="zwave",
         name="Z-Wave Source Node",
+    )
+    zwave_battery_device = DeviceEntry(
+        id=ZWAVE_BATTERY_DEVICE_ID,
+        name_by_user=ZWAVE_BATTERY_DEVICE_NAME,
+        area_id=ZWAVE_BATTERY_DEVICE_AREA,
     )
     zwave_battery_entry = RegistryEntry(
         entity_id=ZWAVE_BATTERY_ENTITY,
@@ -76,6 +104,11 @@ def zwave_migration_data_fixture(hass):
         platform="zwave",
         name=ZWAVE_BATTERY_NAME,
         icon=ZWAVE_BATTERY_ICON,
+    )
+    zwave_power_device = DeviceEntry(
+        id=ZWAVE_POWER_DEVICE_ID,
+        name_by_user=ZWAVE_POWER_DEVICE_NAME,
+        area_id=ZWAVE_POWER_DEVICE_AREA,
     )
     zwave_power_entry = RegistryEntry(
         entity_id=ZWAVE_POWER_ENTITY,
@@ -87,6 +120,8 @@ def zwave_migration_data_fixture(hass):
     zwave_migration_data = {
         ZWAVE_SOURCE_NODE_UNIQUE_ID: {
             "node_id": 10,
+            "node_instance": 1,
+            "device_id": zwave_source_node_device.id,
             "command_class": 113,
             "command_class_label": "SourceNodeId",
             "value_index": 2,
@@ -95,6 +130,8 @@ def zwave_migration_data_fixture(hass):
         },
         ZWAVE_BATTERY_UNIQUE_ID: {
             "node_id": 36,
+            "node_instance": 1,
+            "device_id": zwave_battery_device.id,
             "command_class": 128,
             "command_class_label": "Battery Level",
             "value_index": 0,
@@ -103,6 +140,8 @@ def zwave_migration_data_fixture(hass):
         },
         ZWAVE_POWER_UNIQUE_ID: {
             "node_id": 32,
+            "node_instance": 1,
+            "device_id": zwave_power_device.id,
             "command_class": 50,
             "command_class_label": "Power",
             "value_index": 8,
@@ -111,6 +150,14 @@ def zwave_migration_data_fixture(hass):
         },
     }
 
+    mock_device_registry(
+        hass,
+        {
+            zwave_source_node_device.id: zwave_source_node_device,
+            zwave_battery_device.id: zwave_battery_device,
+            zwave_power_device.id: zwave_power_device,
+        },
+    )
     mock_registry(
         hass,
         {
@@ -161,7 +208,25 @@ async def test_migrate_zwave(hass, migration_data, hass_ws_client, zwave_integra
     assert result["migration_entity_map"] == migration_entity_map
     assert result["migrated"] is True
 
+    dev_reg = await async_get_device_registry(hass)
     ent_reg = await async_get_entity_registry(hass)
+
+    print(dev_reg.devices)
+    # check the device registry migration
+
+    # check that the migrated entries have correct attributes
+    battery_entry = dev_reg.async_get_device(
+        identifiers={("ozw", "1.36.1")}, connections=set()
+    )
+    assert battery_entry.name_by_user == ZWAVE_BATTERY_DEVICE_NAME
+    assert battery_entry.area_id == ZWAVE_BATTERY_DEVICE_AREA
+    power_entry = dev_reg.async_get_device(
+        identifiers={("ozw", "1.32.1")}, connections=set()
+    )
+    assert power_entry.name_by_user == ZWAVE_POWER_DEVICE_NAME
+    assert power_entry.area_id == ZWAVE_POWER_DEVICE_AREA
+
+    # check the entity registry migration
 
     # these should have been migrated and no longer present under that id
     assert not ent_reg.async_is_registered("sensor.water_sensor_6_battery_level")
