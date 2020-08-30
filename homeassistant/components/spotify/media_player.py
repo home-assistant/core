@@ -414,7 +414,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
             "media_content_id": media_content_id,
         }
         response = await self.hass.async_add_executor_job(
-            build_item_response, self, payload
+            build_item_response, self._spotify, self._me, payload
         )
         if response is None:
             raise BrowseError(
@@ -423,80 +423,70 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         return response
 
 
-def build_item_response(self, payload):
+def build_item_response(spotify, me, payload):
     """Create response payload for the provided media query."""
     media_content_type = payload.get("media_content_type")
     title = None
     image = None
     if media_content_type == "current_user_playlists":
-        media = self._spotify.current_user_playlists(limit=BROWSE_LIMIT)
+        media = spotify.current_user_playlists(limit=BROWSE_LIMIT)
         items = media.get("items", [])
     elif media_content_type == "current_user_followed_artists":
-        media = self._spotify.current_user_followed_artists(limit=BROWSE_LIMIT)
+        media = spotify.current_user_followed_artists(limit=BROWSE_LIMIT)
         items = media.get("artists", {}).get("items", [])
     elif media_content_type == "current_user_saved_albums":
-        media = self._spotify.current_user_saved_albums(limit=BROWSE_LIMIT)
+        media = spotify.current_user_saved_albums(limit=BROWSE_LIMIT)
         items = media.get("items", [])
     elif media_content_type == "current_user_saved_tracks":
-        media = self._spotify.current_user_saved_tracks(limit=BROWSE_LIMIT)
+        media = spotify.current_user_saved_tracks(limit=BROWSE_LIMIT)
         items = media.get("items", [])
     elif media_content_type == "current_user_saved_shows":
-        media = self._spotify.current_user_saved_shows(limit=BROWSE_LIMIT)
+        media = spotify.current_user_saved_shows(limit=BROWSE_LIMIT)
         items = media.get("items", [])
     elif media_content_type == "current_user_recently_played":
-        media = self._spotify.current_user_recently_played(limit=BROWSE_LIMIT)
+        media = spotify.current_user_recently_played(limit=BROWSE_LIMIT)
         items = media.get("items", [])
     elif media_content_type == "current_user_top_artists":
-        media = self._spotify.current_user_top_artists(limit=BROWSE_LIMIT)
+        media = spotify.current_user_top_artists(limit=BROWSE_LIMIT)
         items = media.get("items", [])
     elif media_content_type == "current_user_top_tracks":
-        media = self._spotify.current_user_top_tracks(limit=BROWSE_LIMIT)
+        media = spotify.current_user_top_tracks(limit=BROWSE_LIMIT)
         items = media.get("items", [])
     elif media_content_type == "featured_playlists":
-        media = self._spotify.featured_playlists(
-            country=self._me["country"], limit=BROWSE_LIMIT
-        )
+        media = spotify.featured_playlists(country=me["country"], limit=BROWSE_LIMIT)
         items = media.get("playlists", {}).get("items", [])
     elif media_content_type == "categories":
-        media = self._spotify.categories(
-            country=self._me["country"], limit=BROWSE_LIMIT
-        )
+        media = spotify.categories(country=me["country"], limit=BROWSE_LIMIT)
         items = media.get("categories", {}).get("items", [])
     elif media_content_type == "category_playlists":
         media_content_id = payload["media_content_id"]
-        media = self._spotify.category_playlists(
+        media = spotify.category_playlists(
             category_id=media_content_id,
-            country=self._me["country"],
+            country=me["country"],
             limit=BROWSE_LIMIT,
         )
-        category = self._spotify.category(media_content_id, country=self._me["country"])
+        category = spotify.category(media_content_id, country=me["country"])
         title = category.get("name")
         image = fetch_image_url(category, key="icons")
         items = media.get("playlists", {}).get("items", [])
     elif media_content_type == "new_releases":
-        media = self._spotify.new_releases(
-            country=self._me["country"], limit=BROWSE_LIMIT
-        )
+        media = spotify.new_releases(country=me["country"], limit=BROWSE_LIMIT)
         items = media.get("albums", {}).get("items", [])
     elif media_content_type == MEDIA_TYPE_PLAYLIST:
-        media = self._spotify.playlist(payload["media_content_id"])
+        media = spotify.playlist(payload["media_content_id"])
         items = media.get("tracks", {}).get("items", [])
     elif media_content_type == MEDIA_TYPE_ALBUM:
-        media = self._spotify.album(payload["media_content_id"])
+        media = spotify.album(payload["media_content_id"])
         items = media.get("tracks", {}).get("items", [])
     elif media_content_type == MEDIA_TYPE_ARTIST:
-        media = self._spotify.artist_albums(
-            payload["media_content_id"], limit=BROWSE_LIMIT
-        )
-        artist = self._spotify.artist(payload["media_content_id"])
+        media = spotify.artist_albums(payload["media_content_id"], limit=BROWSE_LIMIT)
+        artist = spotify.artist(payload["media_content_id"])
         title = artist.get("name")
         image = fetch_image_url(artist)
         items = media.get("items", [])
     elif media_content_type == MEDIA_TYPE_SHOW:
-        media = self._spotify.show_episodes(
-            payload["media_content_id"], limit=BROWSE_LIMIT
-        )
-        show = self._spotify.show(payload["media_content_id"])
+        media = spotify.show_episodes(payload["media_content_id"], limit=BROWSE_LIMIT)
+        show = spotify.show(payload["media_content_id"])
         title = show.get("name")
         image = fetch_image_url(show)
         items = media.get("items", [])
