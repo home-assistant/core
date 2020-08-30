@@ -78,6 +78,8 @@ class NZBGetConfigFlow(ConfigFlow, domain=DOMAIN):
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
+        errors = {}
+
         if user_input:
             if CONF_VERIFY_SSL not in user_input:
                 user_input[CONF_VERIFY_SSL] = DEFAULT_VERIFY_SSL
