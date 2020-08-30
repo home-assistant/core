@@ -65,7 +65,7 @@ class RiscoAlarm(AlarmControlPanelEntity, RiscoEntity):
         """Init the partition."""
         super().__init__(coordinator)
         self._partition_id = partition_id
-        self._partition = self._coordinator.data.partitions[self._partition_id]
+        self._partition = self.coordinator.data.partitions[self._partition_id]
         self._code = code
         self._code_arm_required = options[CONF_CODE_ARM_REQUIRED]
         self._code_disarm_required = options[CONF_CODE_DISARM_REQUIRED]
@@ -76,7 +76,7 @@ class RiscoAlarm(AlarmControlPanelEntity, RiscoEntity):
             self._supported_states |= STATES_TO_SUPPORTED_FEATURES[state]
 
     def _get_data_from_coordinator(self):
-        self._partition = self._coordinator.data.partitions[self._partition_id]
+        self._partition = self.coordinator.data.partitions[self._partition_id]
 
     @property
     def device_info(self):
