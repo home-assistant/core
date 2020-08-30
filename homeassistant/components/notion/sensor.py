@@ -79,13 +79,13 @@ class NotionSensor(NotionEntity):
     @callback
     def _async_update_from_latest_data(self) -> None:
         """Fetch new state data for the sensor."""
-        task = self._coordinator.data["tasks"][self._task_id]
+        task = self.coordinator.data["tasks"][self._task_id]
 
         if task["task_type"] == SENSOR_TEMPERATURE:
             self._state = round(float(task["status"]["value"]), 1)
         else:
             _LOGGER.error(
                 "Unknown task type: %s: %s",
-                self._coordinator.data["sensors"][self._sensor_id],
+                self.coordinator.data["sensors"][self._sensor_id],
                 task["task_type"],
             )
