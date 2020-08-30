@@ -12,8 +12,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, asyncio
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,12 +88,12 @@ async def async_unload_entry(hass, entry):
     return unload_ok
 
 
-class AtagEntity(Entity):
+class AtagEntity(CoordinatorEntity):
     """Defines a base Atag entity."""
 
     def __init__(self, coordinator: AtagDataUpdateCoordinator, atag_id: str) -> None:
         """Initialize the Atag entity."""
-        self.coordinator = coordinator
+        super().__init__(coordinator)
 
         self._id = atag_id
         self._name = DOMAIN.title()
@@ -114,26 +117,6 @@ class AtagEntity(Entity):
         return self._name
 
     @property
-    def should_poll(self) -> bool:
-        """Return the polling requirement of the entity."""
-        return False
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return self.coordinator.last_update_success
-
-    @property
     def unique_id(self):
         """Return a unique ID to use for this entity."""
         return f"{self.coordinator.atag.id}-{self._id}"
-
-    async def async_added_to_hass(self):
-        """Connect to dispatcher listening for entity data notifications."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
-        )
-
-    async def async_update(self):
-        """Update Atag entity."""
-        await self.coordinator.async_request_refresh()
