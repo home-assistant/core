@@ -1,18 +1,22 @@
 """Binary sensor for Shelly."""
 import aioshelly
 
-from homeassistant.components import binary_sensor
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_MOISTURE,
+    DEVICE_CLASS_OPENING,
+    DEVICE_CLASS_SMOKE,
+    BinarySensorEntity,
+)
 from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.helpers.entity import Entity
 
 from . import ShellyBlockEntity, ShellyDeviceWrapper
 from .const import DOMAIN
 
 SENSORS = {
-    "dwIsOpened": binary_sensor.DEVICE_CLASS_OPENING,
-    "flood": binary_sensor.DEVICE_CLASS_MOISTURE,
+    "dwIsOpened": DEVICE_CLASS_OPENING,
+    "flood": DEVICE_CLASS_MOISTURE,
     "overpower": None,
-    "smoke": binary_sensor.DEVICE_CLASS_SMOKE,
+    "smoke": DEVICE_CLASS_SMOKE,
 }
 
 
@@ -32,7 +36,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         async_add_entities(sensors)
 
 
-class ShellySensor(ShellyBlockEntity, Entity):
+class ShellySensor(ShellyBlockEntity, BinarySensorEntity):
     """Switch that controls a relay block on Shelly devices."""
 
     def __init__(
