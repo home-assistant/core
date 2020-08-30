@@ -127,7 +127,7 @@ class IPPDataUpdateCoordinator(DataUpdateCoordinator[IPPPrinter]):
             raise UpdateFailed(f"Invalid response from API: {error}") from error
 
 
-class IPPEntity(CoordinaorEntity):
+class IPPEntity(CoordinatorEntity):
     """Defines a base IPP entity."""
 
     def __init__(
