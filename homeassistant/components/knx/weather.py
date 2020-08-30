@@ -1,9 +1,10 @@
 """Support for KNX/IP weather station."""
 from xknx.devices import Weather as XknxWeather
 
-from . import DATA_KNX
-from ...const import TEMP_CELSIUS
-from ..weather import WeatherEntity
+from homeassistant.components.weather import WeatherEntity
+from homeassistant.const import TEMP_CELSIUS
+
+from .const import DATA_KNX
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
