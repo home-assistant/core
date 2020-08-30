@@ -9,7 +9,6 @@ from homeassistant.const import (
     DATA_MEGABYTES,
     DATA_RATE_MEGABYTES_PER_SECOND,
     DEVICE_CLASS_TIMESTAMP,
-    TIME_MINUTES,
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
@@ -35,7 +34,7 @@ SENSOR_TYPES = {
     "post_job_count": ["PostJobCount", "Post Processing Jobs", "Jobs"],
     "post_paused": ["PostPaused", "Post Processing Paused", None],
     "remaining_size": ["RemainingSizeMB", "Queue Size", DATA_MEGABYTES],
-    "uptime": ["UpTimeSec", "Uptime", TIME_MINUTES],
+    "uptime": ["UpTimeSec", "Uptime", None],
 }
 
 
