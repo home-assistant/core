@@ -81,6 +81,7 @@ class TestTTSMaryTTSPlatform:
         assert len(calls) == 1
         assert calls[0].data[ATTR_MEDIA_CONTENT_ID].find(".wav") != -1
 
+        mock_speak.assert_called_once()
         mock_speak.assert_called_with("HomeAssistant", {})
 
     def test_service_say_with_effect(self):
@@ -110,6 +111,7 @@ class TestTTSMaryTTSPlatform:
         assert len(calls) == 1
         assert calls[0].data[ATTR_MEDIA_CONTENT_ID].find(".wav") != -1
 
+        mock_speak.assert_called_once()
         mock_speak.assert_called_with("HomeAssistant", {"Volume": "amount:2.0;"})
 
     def test_service_say_http_error(self):
@@ -124,7 +126,7 @@ class TestTTSMaryTTSPlatform:
         with patch(
             "homeassistant.components.marytts.tts.MaryTTS.speak",
             side_effect=Exception(),
-        ) as mock_speak:
+        )as mock_speak:
             self.hass.services.call(
                 tts.DOMAIN,
                 "marytts_say",
@@ -136,3 +138,5 @@ class TestTTSMaryTTSPlatform:
         self.hass.block_till_done()
 
         assert len(calls) == 0
+
+        mock_speak.assert_called_once()
