@@ -27,9 +27,11 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .const import CONFIG_ENTRY_UPDATE_SIGNAL_TEMPLATE, DEFAULT_SCAN_INTERVAL, DOMAIN
 
@@ -188,7 +190,8 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
     ):
         update_interval = migrated_scan_interval
         hass.config_entries.async_update_entry(
-            config_entry, options={CONF_SCAN_INTERVAL: update_interval.seconds},
+            config_entry,
+            options={CONF_SCAN_INTERVAL: update_interval.seconds},
         )
     elif config_entry.options.get(CONF_SCAN_INTERVAL):
         update_interval = timedelta(seconds=config_entry.options[CONF_SCAN_INTERVAL])
@@ -244,23 +247,18 @@ async def async_unload_entry(hass, config_entry):
     return True
 
 
-class UpCloudServerEntity(Entity):
+class UpCloudServerEntity(CoordinatorEntity):
     """Entity class for UpCloud servers."""
 
     def __init__(self, coordinator, uuid):
         """Initialize the UpCloud server entity."""
-        self._coordinator = coordinator
+        super().__init__(coordinator)
         self.uuid = uuid
         self._unsub_handlers = []
 
     @property
     def _server(self) -> upcloud_api.Server:
-        return self._coordinator.data[self.uuid]
-
-    @property
-    def should_poll(self) -> bool:
-        """Individual entities do not poll."""
-        return False
+        return self.coordinator.data[self.uuid]
 
     @property
     def unique_id(self) -> str:
@@ -274,12 +272,6 @@ class UpCloudServerEntity(Entity):
             return DEFAULT_COMPONENT_NAME.format(self._server.title)
         except (AttributeError, KeyError, TypeError):
             return DEFAULT_COMPONENT_NAME.format(self.uuid)
-
-    async def async_added_to_hass(self):
-        """Connect to dispatcher listening for entity data notifications."""
-        self.async_on_remove(
-            self._coordinator.async_add_listener(self.async_write_ha_state)
-        )
 
     @property
     def icon(self):
@@ -319,7 +311,3 @@ class UpCloudServerEntity(Entity):
                 ATTR_MEMORY_AMOUNT,
             )
         }
-
-    async def async_update(self):
-        """Update entity."""
-        await self._coordinator.async_request_refresh()
