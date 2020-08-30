@@ -30,10 +30,10 @@ async def validate_input(hass: core.HomeAssistant, data):
         with async_timeout.timeout(10):
             LOGGER.debug("Initialize connection to Ayla networks API")
             await ayla_api.async_sign_in()
-    except (asyncio.TimeoutError, aiohttp.ClientError):
-        raise CannotConnect
-    except SharkIqAuthError:
-        raise InvalidAuth
+    except (asyncio.TimeoutError, aiohttp.ClientError) as err:
+        raise CannotConnect from err
+    except SharkIqAuthError as err:
+        raise InvalidAuth from err
 
     # Return info that you want to store in the config entry.
     return {"title": data[CONF_USERNAME]}
