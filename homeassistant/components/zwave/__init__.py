@@ -82,6 +82,8 @@ CONF_DEVICE_CONFIG = "device_config"
 CONF_DEVICE_CONFIG_GLOB = "device_config_glob"
 CONF_DEVICE_CONFIG_DOMAIN = "device_config_domain"
 
+DATA_ZWAVE_CONFIG_YAML_PRESENT = "zwave_config_yaml_present"
+
 DEFAULT_CONF_IGNORED = False
 DEFAULT_CONF_INVERT_OPENCLOSE_BUTTONS = False
 DEFAULT_CONF_INVERT_PERCENT = False
@@ -260,6 +262,13 @@ async def async_get_ozw_migration_data(hass):
         _LOGGER.error("Config entry not set up")
         return data_to_migrate
 
+    if hass.data.get(DATA_ZWAVE_CONFIG_YAML_PRESENT):
+        _LOGGER.warning(
+            "Remove %s from configuration.yaml "
+            "to avoid setting up this integration on restart",
+            DOMAIN,
+        )
+
     config_entry = zwave_config_entries[0]  # zwave only has a single config entry
     ent_reg = await async_get_entity_registry(hass)
     entity_entries = async_entries_for_config_entry(ent_reg, config_entry.entry_id)
@@ -351,6 +360,7 @@ async def async_setup(hass, config):
 
     conf = config[DOMAIN]
     hass.data[DATA_ZWAVE_CONFIG] = conf
+    hass.data[DATA_ZWAVE_CONFIG_YAML_PRESENT] = True
 
     if not hass.config_entries.async_entries(DOMAIN):
         hass.async_create_task(
