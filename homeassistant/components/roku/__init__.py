@@ -155,7 +155,7 @@ class RokuEntity(CoordinatorEntity):
         self, *, device_id: str, name: str, coordinator: RokuDataUpdateCoordinator
     ) -> None:
         """Initialize the Roku entity."""
-        super().__init__()
+        super().__init__(coordinator)
         self._device_id = device_id
         self._name = name
 
