@@ -7,7 +7,10 @@ from ProgettiHWSW.relay import Relay
 import async_timeout
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.helpers.update_coordinator import CoordinatorEntity, DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from . import setup_switch
 from .const import DEFAULT_POLLING_INTERVAL_SEC, DOMAIN
