@@ -43,6 +43,8 @@ CONF_PUSH_ACTIONS_CONTEXT = "context"
 CONF_PUSH_ACTIONS_TEXT_INPUT_BUTTON_TITLE = "textInputButtonTitle"
 CONF_PUSH_ACTIONS_TEXT_INPUT_PLACEHOLDER = "textInputPlaceholder"
 
+CONF_USER = "user"
+
 ATTR_FOREGROUND = "foreground"
 ATTR_BACKGROUND = "background"
 
@@ -252,7 +254,10 @@ async def async_setup(hass, config):
     if ios_config == {}:
         ios_config[ATTR_DEVICES] = {}
 
-    ios_config[CONF_PUSH] = (conf or {}).get(CONF_PUSH, {})
+    ios_config[CONF_USER] = conf or {}
+
+    if CONF_PUSH not in ios_config[CONF_USER]:
+        ios_config[CONF_USER][CONF_PUSH] = {}
 
     hass.data[DOMAIN] = ios_config
 
@@ -266,11 +271,6 @@ async def async_setup(hass, config):
             )
         )
 
-    conf = config.get(DOMAIN)
-
-    if conf:
-        hass.http.register_view(iOSConfigView(conf))
-
     return True
 
 
@@ -281,7 +281,8 @@ async def async_setup_entry(hass, entry):
     )
 
     hass.http.register_view(iOSIdentifyDeviceView(hass.config.path(CONFIGURATION_FILE)))
-    hass.http.register_view(iOSPushConfigView(hass.data[DOMAIN][CONF_PUSH]))
+    hass.http.register_view(iOSPushConfigView(hass.data[DOMAIN][CONF_USER][CONF_PUSH]))
+    hass.http.register_view(iOSConfigView(hass.data[DOMAIN][CONF_USER]))
 
     return True
 
