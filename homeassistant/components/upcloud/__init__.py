@@ -174,9 +174,9 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
     except upcloud_api.UpCloudAPIError:
         _LOGGER.error("Authentication failed", exc_info=True)
         return False
-    except requests.exceptions.RequestException:
+    except requests.exceptions.RequestException as err:
         _LOGGER.error("Failed to connect", exc_info=True)
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from err
 
     upcloud_data = hass.data.setdefault(DATA_UPCLOUD, UpCloudHassData())
 
