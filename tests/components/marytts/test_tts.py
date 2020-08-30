@@ -65,9 +65,7 @@ class TestTTSMaryTTSPlatform:
         with assert_setup_component(1, tts.DOMAIN):
             setup_component(self.hass, tts.DOMAIN, config)
 
-        with patch(
-            "homeassistant.components.marytts.tts.MaryTTS.speak"
-        ) as mock_speak:
+        with patch("homeassistant.components.marytts.tts.MaryTTS.speak") as mock_speak:
             self.hass.services.call(
                 tts.DOMAIN,
                 "marytts_say",
@@ -95,9 +93,7 @@ class TestTTSMaryTTSPlatform:
         with assert_setup_component(1, tts.DOMAIN):
             setup_component(self.hass, tts.DOMAIN, config)
 
-        with patch(
-            "homeassistant.components.marytts.tts.MaryTTS.speak"
-        ) as mock_speak:
+        with patch("homeassistant.components.marytts.tts.MaryTTS.speak") as mock_speak:
             self.hass.services.call(
                 tts.DOMAIN,
                 "marytts_say",
