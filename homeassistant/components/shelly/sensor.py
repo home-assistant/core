@@ -69,6 +69,8 @@ class ShellySensor(ShellyBlockEntity, Entity):
                 unit = TEMP_CELSIUS
             else:
                 unit = TEMP_FAHRENHEIT
+        elif self.info[aioshelly.BLOCK_VALUE_TYPE] == aioshelly.BLOCK_VALUE_TYPE_ENERGY:
+            unit = ENERGY_KILO_WATT_HOUR
 
         self._unit = unit
         self._device_class = device_class
