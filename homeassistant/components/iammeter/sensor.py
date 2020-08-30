@@ -109,11 +109,3 @@ class IamMeter(CoordinatorEntity):
     def unit_of_measurement(self):
         """Return the unit of measurement."""
         return self.unit
-
-    async def async_added_to_hass(self):
-        """When entity is added to hass."""
-        self.coordinator.async_add_listener(self.async_write_ha_state)
-
-    async def async_will_remove_from_hass(self):
-        """When entity will be removed from hass."""
-        self.coordinator.async_remove_listener(self.async_write_ha_state)
