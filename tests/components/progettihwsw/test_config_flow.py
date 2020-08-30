@@ -21,6 +21,7 @@ async def test_form(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
     assert result["errors"] == {}
 
     mock_value_step_rm = {
@@ -37,6 +38,7 @@ async def test_form(hass):
         )
 
     assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["step_id"] == "relay_modes"
     assert result2["errors"] == {}
 
     with patch(
@@ -64,6 +66,8 @@ async def test_form_wrong_info(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
+    assert result["step_id"] == "user"
+
     with patch(
         "homeassistant.components.progettihwsw.config_flow.ProgettiHWSWAPI.check_board",
         return_value=mock_value_step_user,
@@ -73,6 +77,7 @@ async def test_form_wrong_info(hass):
         )
 
     assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["step_id"] == "relay_modes"
     assert result2["errors"] == {}
 
     result3 = await hass.config_entries.flow.async_configure(
@@ -80,6 +85,7 @@ async def test_form_wrong_info(hass):
     )
 
     assert result3["type"] == RESULT_TYPE_FORM
+    assert result3["step_id"] == "relay_modes"
     assert result3["errors"] == {"base": "wrong_info_relay_modes"}
 
 
@@ -88,6 +94,8 @@ async def test_form_cannot_connect(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+
+    assert result["step_id"] == "user"
 
     with patch(
         "homeassistant.components.progettihwsw.config_flow.ProgettiHWSWAPI.check_board",
@@ -99,6 +107,7 @@ async def test_form_cannot_connect(hass):
         )
 
     assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -107,6 +116,8 @@ async def test_form_user_exception(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+
+    assert result["step_id"] == "user"
 
     with patch(
         "homeassistant.components.progettihwsw.config_flow.validate_input",
@@ -118,6 +129,7 @@ async def test_form_user_exception(hass):
         )
 
     assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "unknown"}
 
 
@@ -126,6 +138,8 @@ async def test_form_rm_exception(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+
+    assert result["step_id"] == "user"
 
     with patch(
         "homeassistant.components.progettihwsw.config_flow.ProgettiHWSWAPI.check_board",
@@ -137,6 +151,7 @@ async def test_form_rm_exception(hass):
         )
 
     assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["step_id"] == "relay_modes"
     assert result2["errors"] == {}
 
     with patch(
@@ -149,4 +164,5 @@ async def test_form_rm_exception(hass):
         )
 
     assert result3["type"] == RESULT_TYPE_FORM
+    assert result3["step_id"] == "relay_modes"
     assert result3["errors"] == {"base": "unknown"}
