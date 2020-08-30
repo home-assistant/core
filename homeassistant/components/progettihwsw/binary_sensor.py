@@ -7,7 +7,10 @@ from ProgettiHWSW.input import Input
 import async_timeout
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.helpers.update_coordinator import CoordinatorEntity, DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from . import setup_input
 from .const import DEFAULT_POLLING_INTERVAL_SEC, DOMAIN
