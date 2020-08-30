@@ -6,7 +6,6 @@ from pyinsteon import async_close, async_connect, devices
 
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_PLATFORM, EVENT_HOMEASSISTANT_STOP
-from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import (
@@ -30,10 +29,19 @@ from .utils import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+OPTIONS = "options"
 
 
-async def async_id_unknown_devices(config_dir):
-    """Send device ID commands to all unidentified devices."""
+async def async_get_device_config(hass, config_entry):
+    """Initiate the connection and services."""
+    # Make a copy of addresses due to edge case where the list of devices could change during status update
+    # Cannot be done concurrently due to issues with the underlying protocol.
+    for address in list(devices):
+        try:
+            await devices[address].async_status()
+        except AttributeError:
+            pass
+
     await devices.async_load(id_devices=1)
     for addr in devices:
         device = devices[addr]
@@ -52,67 +60,12 @@ async def async_id_unknown_devices(config_dir):
         if not device.aldb.is_loaded or not flags:
             await device.async_read_config()
 
-    await devices.async_save(workdir=config_dir)
-
-
-async def async_setup_platforms(hass, config_entry):
-    """Initiate the connection and services."""
-    tasks = [
-        hass.config_entries.async_forward_entry_setup(config_entry, component)
-        for component in INSTEON_COMPONENTS
-    ]
-    await asyncio.gather(*tasks)
-
-    for address in devices:
-        device = devices[address]
-        platforms = get_device_platforms(device)
-        if ON_OFF_EVENTS in platforms:
-            add_on_off_event_device(hass, device)
-
-    _LOGGER.debug("Insteon device count: %s", len(devices))
-    register_new_device_callback(hass)
-    async_register_services(hass)
-
-    device_registry = await hass.helpers.device_registry.async_get_registry()
-    device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, str(devices.modem.address))},
-        manufacturer="Smart Home",
-        name=f"{devices.modem.description} {devices.modem.address}",
-        model=f"{devices.modem.model} (0x{devices.modem.cat:02x}, 0x{devices.modem.subcat:02x})",
-        sw_version=f"{devices.modem.firmware:02x} Engine Version: {devices.modem.engine_version}",
-    )
-
-    # Make a copy of addresses due to edge case where the list of devices could change during status update
-    # Cannot be done concurrently due to issues with the underlying protocol.
-    for address in list(devices):
-        try:
-            await devices[address].async_status()
-        except AttributeError:
-            pass
-    await async_id_unknown_devices(hass.config.config_dir)
+    await devices.async_save(workdir=hass.config.config_dir)
 
 
 async def close_insteon_connection(*args):
     """Close the Insteon connection."""
     await async_close()
-
-
-async def async_import_config(hass, conf):
-    """Set up all of the config imported from yaml."""
-    data, options = convert_yaml_to_config_flow(conf)
-    # Create a config entry with the connection data
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data=data
-    )
-    # If this is the first time we ran, update the config options
-    if result["type"] == RESULT_TYPE_CREATE_ENTRY and options:
-        entry = result["result"]
-        hass.config_entries.async_update_entry(
-            entry=entry,
-            options=options,
-        )
-    return result
 
 
 async def async_setup(hass, config):
@@ -121,7 +74,16 @@ async def async_setup(hass, config):
         return True
 
     conf = config[DOMAIN]
-    hass.async_create_task(async_import_config(hass, conf))
+    data, options = convert_yaml_to_config_flow(conf)
+    if options:
+        hass.data[DOMAIN] = {}
+        hass.data[DOMAIN][OPTIONS] = options
+    # Create a config entry with the connection data
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=data
+        )
+    )
     return True
 
 
@@ -140,6 +102,19 @@ async def async_setup_entry(hass, entry):
     await devices.async_load(
         workdir=hass.config.config_dir, id_devices=0, load_modem_aldb=0
     )
+
+    # If options existed in YAML and have not already been saved to the config entry
+    # add them now
+    if (
+        not entry.options
+        and entry.source == SOURCE_IMPORT
+        and hass.data.get(DOMAIN)
+        and hass.data[DOMAIN].get(OPTIONS)
+    ):
+        hass.config_entries.async_update_entry(
+            entry=entry,
+            options=hass.data[DOMAIN][OPTIONS],
+        )
 
     for device_override in entry.options.get(CONF_OVERRIDE, []):
         # Override the device default capabilities for a specific address
@@ -163,5 +138,31 @@ async def async_setup_entry(hass, entry):
         )
         device = devices.add_x10_device(housecode, unitcode, x10_type, steps)
 
-    asyncio.create_task(async_setup_platforms(hass, entry))
+    for component in INSTEON_COMPONENTS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, component)
+        )
+
+    for address in devices:
+        device = devices[address]
+        platforms = get_device_platforms(device)
+        if ON_OFF_EVENTS in platforms:
+            add_on_off_event_device(hass, device)
+
+    _LOGGER.debug("Insteon device count: %s", len(devices))
+    register_new_device_callback(hass)
+    async_register_services(hass)
+
+    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, str(devices.modem.address))},
+        manufacturer="Smart Home",
+        name=f"{devices.modem.description} {devices.modem.address}",
+        model=f"{devices.modem.model} (0x{devices.modem.cat:02x}, 0x{devices.modem.subcat:02x})",
+        sw_version=f"{devices.modem.firmware:02x} Engine Version: {devices.modem.engine_version}",
+    )
+
+    asyncio.create_task(async_get_device_config(hass, entry))
+
     return True
