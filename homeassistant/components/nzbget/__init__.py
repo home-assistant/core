@@ -16,8 +16,8 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     ATTR_SPEED,
@@ -168,38 +168,18 @@ async def _async_update_listener(hass: HomeAssistantType, entry: ConfigEntry) ->
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-class NZBGetEntity(Entity):
+class NZBGetEntity(CoordinatorEntity):
     """Defines a base NZBGet entity."""
 
     def __init__(
         self, *, entry_id: str, name: str, coordinator: NZBGetDataUpdateCoordinator
     ) -> None:
         """Initialize the NZBGet entity."""
+        super().__init__(coordinator)
         self._name = name
         self._entry_id = entry_id
-        self.coordinator = coordinator
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self.coordinator.last_update_success
 
     @property
     def name(self) -> str:
         """Return the name of the entity."""
         return self._name
-
-    @property
-    def should_poll(self) -> bool:
-        """Return the polling requirement of the entity."""
-        return False
-
-    async def async_added_to_hass(self) -> None:
-        """Connect to dispatcher listening for entity data notifications."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
-        )
-
-    async def async_update(self) -> None:
-        """Request an update from the coordinator of this entity."""
-        await self.coordinator.async_request_refresh()
