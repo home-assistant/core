@@ -144,13 +144,6 @@ class MeteoFranceSensor(CoordinatorEntity):
         """Return the state attributes."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
-    async def async_update(self):
-        """Only used by the generic entity update service."""
-        if not self.enabled:
-            return
-
-        await self.coordinator.async_request_refresh()
-
 
 class MeteoFranceRainSensor(MeteoFranceSensor):
     """Representation of a Meteo-France rain sensor."""
