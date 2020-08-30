@@ -85,4 +85,5 @@ class ShellySensor(ShellyBlockEntity, BinarySensorEntity):
     def device_state_attributes(self):
         """Return the state attributes."""
         if self.attribute == "gas":
+            # We return raw value of the gas sensor as an attribute.
             return {"raw_state": getattr(self.block, self.attribute)}
