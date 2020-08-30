@@ -1,0 +1,8 @@
+{
+    "domain": "met_eireann",
+    "name": "Met Éireann",
+    "config_flow": true,
+    "documentation": "https://www.home-assistant.io/integrations/meteireann",
+    "requirements": ["pyMetEireann==0.2"],
+    "codeowners": ["@DylanGore"]
+}
