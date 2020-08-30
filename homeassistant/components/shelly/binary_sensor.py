@@ -69,11 +69,7 @@ class ShellySensor(ShellyBlockEntity, BinarySensorEntity):
         if self.attribute == "gas":
             # Gas sensor value of Shelly Gas can be none/mild/heavy/test. We return True
             # when the value is mild or heavy.
-            return (
-                True
-                if getattr(self.block, self.attribute) in ["mild", "heavy"]
-                else False
-            )
+            return bool(getattr(self.block, self.attribute) in ["mild", "heavy"])
         return bool(getattr(self.block, self.attribute))
 
     @property
