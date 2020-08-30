@@ -78,26 +78,27 @@ class NZBGetConfigFlow(ConfigFlow, domain=DOMAIN):
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
-        if user_input is None:
-            return self._show_setup_form()
+        errors = {}
 
-        if CONF_VERIFY_SSL not in user_input:
-            user_input[CONF_VERIFY_SSL] = DEFAULT_VERIFY_SSL
+        if user_input is not None:
+            if CONF_VERIFY_SSL not in user_input:
+                user_input[CONF_VERIFY_SSL] = DEFAULT_VERIFY_SSL
 
-        try:
-            await self.hass.async_add_executor_job(
-                validate_input, self.hass, user_input
-            )
-        except NZBGetAPIException:
-            return self._show_setup_form({"base": "cannot_connect"})
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
-            return self.async_abort(reason="unknown")
+            try:
+                await self.hass.async_add_executor_job(
+                    validate_input, self.hass, user_input
+                )
+            except NZBGetAPIException:
+                errors["base"] = "cannot_connect"
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                return self.async_abort(reason="unknown")
+            else:
+                return self.async_create_entry(
+                    title=user_input[CONF_HOST],
+                    data=user_input,
+                )
 
-        return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
-
-    def _show_setup_form(self, errors: Optional[Dict] = None) -> Dict[str, Any]:
-        """Show the setup form to the user."""
         data_schema = {
             vol.Required(CONF_HOST): str,
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,

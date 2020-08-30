@@ -1,4 +1,5 @@
 """Monitor the NZBGet API."""
+from datetime import timedelta
 import logging
 from typing import Callable, List, Optional
 
@@ -7,10 +8,11 @@ from homeassistant.const import (
     CONF_NAME,
     DATA_MEGABYTES,
     DATA_RATE_MEGABYTES_PER_SECOND,
-    TIME_MINUTES,
+    DEVICE_CLASS_TIMESTAMP,
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.util.dt import utcnow
 
 from . import NZBGetEntity
 from .const import DATA_COORDINATOR, DOMAIN
@@ -32,7 +34,7 @@ SENSOR_TYPES = {
     "post_job_count": ["PostJobCount", "Post Processing Jobs", "Jobs"],
     "post_paused": ["PostPaused", "Post Processing Paused", None],
     "remaining_size": ["RemainingSizeMB", "Queue Size", DATA_MEGABYTES],
-    "uptime": ["UpTimeSec", "Uptime", TIME_MINUTES],
+    "uptime": ["UpTimeSec", "Uptime", None],
 }
 
 
@@ -86,6 +88,14 @@ class NZBGetSensor(NZBGetEntity, Entity):
         )
 
     @property
+    def device_class(self):
+        """Return the device class."""
+        if "UpTimeSec" in self._sensor_type:
+            return DEVICE_CLASS_TIMESTAMP
+
+        return None
+
+    @property
     def unique_id(self) -> str:
         """Return the unique ID of the sensor."""
         return self._unique_id
@@ -109,7 +119,7 @@ class NZBGetSensor(NZBGetEntity, Entity):
             return round(value / 2 ** 20, 2)
 
         if "UpTimeSec" in self._sensor_type and value > 0:
-            # Convert uptime from seconds to minutes
-            return round(value / 60, 2)
+            uptime = utcnow() - timedelta(seconds=value)
+            return uptime.replace(microsecond=0).isoformat()
 
         return value
