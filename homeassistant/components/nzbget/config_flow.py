@@ -78,26 +78,30 @@ class NZBGetConfigFlow(ConfigFlow, domain=DOMAIN):
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
-        if user_input is None:
-            return self._show_setup_form()
+        if user_input:
+            if CONF_VERIFY_SSL not in user_input:
+                user_input[CONF_VERIFY_SSL] = DEFAULT_VERIFY_SSL
 
-        if CONF_VERIFY_SSL not in user_input:
-            user_input[CONF_VERIFY_SSL] = DEFAULT_VERIFY_SSL
+            try:
+                await self.hass.async_add_executor_job(
+                    validate_input, self.hass, user_input
+                )
+            except NZBGetAPIException:
+                errors["base"] = "cannot_connect"
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                return self.async_abort(reason="unknown")
+            else:
+                return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
 
-        try:
-            await self.hass.async_add_executor_job(
-                validate_input, self.hass, user_input
-            )
-        except NZBGetAPIException:
-            return self._show_setup_form({"base": "cannot_connect"})
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
-            return self.async_abort(reason="unknown")
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema(self._get_user_schema()),
+            errors=errors or {},
+        )
 
-        return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
-
-    def _show_setup_form(self, errors: Optional[Dict] = None) -> Dict[str, Any]:
-        """Show the setup form to the user."""
+    def _get_user_schema(self):
+        """Get the schema for the user form."""
         data_schema = {
             vol.Required(CONF_HOST): str,
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
@@ -112,11 +116,7 @@ class NZBGetConfigFlow(ConfigFlow, domain=DOMAIN):
                 vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL)
             ] = bool
 
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema(data_schema),
-            errors=errors or {},
-        )
+        return data_schema
 
 
 class NZBGetOptionsFlowHandler(OptionsFlow):
