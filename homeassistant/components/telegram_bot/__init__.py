@@ -543,7 +543,7 @@ class TelegramNotificationService:
                 chat_id = out.chat_id
                 self._last_message_id[chat_id] = out[ATTR_MESSAGEID]
 
-                self.hass.bus.async_fire(EVENT_TELEGRAM_SENT, out)
+                self.hass.bus.async_fire(EVENT_TELEGRAM_SENT, out.to_dict())
 
                 _LOGGER.debug(
                     "Last message ID: %s (from chat_id %s)",
