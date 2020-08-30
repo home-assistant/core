@@ -1188,3 +1188,59 @@ async def test_sync_message_recovery(hass, caplog):
     }
 
     assert "Error serializing light.bad_light" in caplog.text
+
+
+async def test_query_recover(hass, caplog):
+    """Test that we recover if an entity raises during query."""
+
+    hass.states.async_set(
+        "light.good",
+        "on",
+        {
+            "supported_features": hass.components.light.SUPPORT_BRIGHTNESS,
+            "brightness": 50,
+        },
+    )
+    hass.states.async_set(
+        "light.bad",
+        "on",
+        {
+            "supported_features": hass.components.light.SUPPORT_BRIGHTNESS,
+            "brightness": "shoe",
+        },
+    )
+
+    result = await sh.async_handle_message(
+        hass,
+        BASIC_CONFIG,
+        "test-agent",
+        {
+            "requestId": REQ_ID,
+            "inputs": [
+                {
+                    "intent": "action.devices.QUERY",
+                    "payload": {
+                        "devices": [
+                            {"id": "light.good"},
+                            {"id": "light.bad"},
+                        ]
+                    },
+                }
+            ],
+        },
+        const.SOURCE_CLOUD,
+    )
+
+    assert (
+        f"Unexpected error serializing query for {hass.states.get('light.bad')}"
+        in caplog.text
+    )
+    assert result == {
+        "requestId": REQ_ID,
+        "payload": {
+            "devices": {
+                "light.bad": {"online": False},
+                "light.good": {"on": True, "online": True, "brightness": 19},
+            }
+        },
+    }
