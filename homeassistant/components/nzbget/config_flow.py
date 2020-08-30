@@ -95,7 +95,8 @@ class NZBGetConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="unknown")
             else:
                 return self.async_create_entry(
-                    title=user_input[CONF_HOST], data=user_input,
+                    title=user_input[CONF_HOST],
+                    data=user_input,
                 )
 
         data_schema = {
