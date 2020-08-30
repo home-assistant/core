@@ -423,7 +423,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         return response
 
 
-def build_item_response(spotify, me, payload):
+def build_item_response(spotify, user, payload):
     """Create response payload for the provided media query."""
     media_content_type = payload.get("media_content_type")
     title = None
@@ -453,24 +453,24 @@ def build_item_response(spotify, me, payload):
         media = spotify.current_user_top_tracks(limit=BROWSE_LIMIT)
         items = media.get("items", [])
     elif media_content_type == "featured_playlists":
-        media = spotify.featured_playlists(country=me["country"], limit=BROWSE_LIMIT)
+        media = spotify.featured_playlists(country=user["country"], limit=BROWSE_LIMIT)
         items = media.get("playlists", {}).get("items", [])
     elif media_content_type == "categories":
-        media = spotify.categories(country=me["country"], limit=BROWSE_LIMIT)
+        media = spotify.categories(country=user["country"], limit=BROWSE_LIMIT)
         items = media.get("categories", {}).get("items", [])
     elif media_content_type == "category_playlists":
         media_content_id = payload["media_content_id"]
         media = spotify.category_playlists(
             category_id=media_content_id,
-            country=me["country"],
+            country=user["country"],
             limit=BROWSE_LIMIT,
         )
-        category = spotify.category(media_content_id, country=me["country"])
+        category = spotify.category(media_content_id, country=user["country"])
         title = category.get("name")
         image = fetch_image_url(category, key="icons")
         items = media.get("playlists", {}).get("items", [])
     elif media_content_type == "new_releases":
-        media = spotify.new_releases(country=me["country"], limit=BROWSE_LIMIT)
+        media = spotify.new_releases(country=user["country"], limit=BROWSE_LIMIT)
         items = media.get("albums", {}).get("items", [])
     elif media_content_type == MEDIA_TYPE_PLAYLIST:
         media = spotify.playlist(payload["media_content_id"])
