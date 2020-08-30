@@ -126,7 +126,7 @@ class TestTTSMaryTTSPlatform:
         with patch(
             "homeassistant.components.marytts.tts.MaryTTS.speak",
             side_effect=Exception(),
-        )as mock_speak:
+        ) as mock_speak:
             self.hass.services.call(
                 tts.DOMAIN,
                 "marytts_say",
