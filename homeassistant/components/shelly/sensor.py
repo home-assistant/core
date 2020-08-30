@@ -24,7 +24,7 @@ SENSORS = {
     "energyReturned": [ENERGY_KILO_WATT_HOUR, sensor.DEVICE_CLASS_ENERGY],
     "extTemp": [None, sensor.DEVICE_CLASS_TEMPERATURE],
     "humidity": [UNIT_PERCENTAGE, sensor.DEVICE_CLASS_HUMIDITY],
-    "overpowerValue": [POWER_WATT, sensor.DEVICE_CLASS_ENERGY],
+    "overpowerValue": [POWER_WATT, sensor.DEVICE_CLASS_POWER],
     "power": [POWER_WATT, sensor.DEVICE_CLASS_POWER],
     "voltage": [VOLT, sensor.DEVICE_CLASS_VOLTAGE],
 }
