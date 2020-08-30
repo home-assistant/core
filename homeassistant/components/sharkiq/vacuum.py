@@ -23,6 +23,7 @@ from homeassistant.components.vacuum import (
     SUPPORT_STOP,
     StateVacuumEntity,
 )
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, SHARK
 from .update_coordinator import SharkIqUpdateCoordinator
@@ -65,22 +66,17 @@ ATTR_RECHARGE_RESUME = "recharge_and_resume"
 ATTR_RSSI = "rssi"
 
 
-class SharkVacuumEntity(StateVacuumEntity):
+class SharkVacuumEntity(CoordinatorEntity, StateVacuumEntity):
     """Shark IQ vacuum entity."""
 
     def __init__(self, sharkiq: SharkIqVacuum, coordinator: SharkIqUpdateCoordinator):
         """Create a new SharkVacuumEntity."""
+        super().__init__(coordinator)
         if sharkiq.serial_number not in coordinator.shark_vacs:
             raise RuntimeError(
                 f"Shark IQ robot {sharkiq.serial_number} is not known to the coordinator"
             )
-        self.coordinator = coordinator
         self.sharkiq = sharkiq
-
-    @property
-    def should_poll(self):
-        """Don't poll this entity. Polling is done via the coordinator."""
-        return False
 
     def clean_spot(self, **kwargs):
         """Clean a spot. Not yet implemented."""
@@ -188,16 +184,6 @@ class SharkVacuumEntity(StateVacuumEntity):
     def battery_level(self):
         """Get the current battery level."""
         return self.sharkiq.get_property_value(Properties.BATTERY_CAPACITY)
-
-    async def async_update(self):
-        """Update the known properties asynchronously."""
-        await self.coordinator.async_request_refresh()
-
-    async def async_added_to_hass(self) -> None:
-        """Connect to dispatcher listening for entity data notifications."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
-        )
 
     async def async_return_to_base(self, **kwargs):
         """Have the device return to base."""
