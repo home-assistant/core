@@ -174,10 +174,3 @@ class MeteoFranceWeather(CoordinatorEntity, WeatherEntity):
     def attribution(self):
         """Return the attribution."""
         return ATTRIBUTION
-
-    async def async_update(self):
-        """Only used by the generic entity update service."""
-        if not self.enabled:
-            return
-
-        await self.coordinator.async_request_refresh()
