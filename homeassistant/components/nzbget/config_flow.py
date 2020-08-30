@@ -80,7 +80,7 @@ class NZBGetConfigFlow(ConfigFlow, domain=DOMAIN):
 
         errors = {}
 
-        if user_input:
+        if user_input is not None:
             if CONF_VERIFY_SSL not in user_input:
                 user_input[CONF_VERIFY_SSL] = DEFAULT_VERIFY_SSL
 
@@ -96,14 +96,6 @@ class NZBGetConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
 
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema(self._get_user_schema()),
-            errors=errors or {},
-        )
-
-    def _get_user_schema(self):
-        """Get the schema for the user form."""
         data_schema = {
             vol.Required(CONF_HOST): str,
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
@@ -118,7 +110,11 @@ class NZBGetConfigFlow(ConfigFlow, domain=DOMAIN):
                 vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL)
             ] = bool
 
-        return data_schema
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema(data_schema),
+            errors=errors or {},
+        )
 
 
 class NZBGetOptionsFlowHandler(OptionsFlow):
