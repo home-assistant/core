@@ -67,7 +67,7 @@ class TestTTSMaryTTSPlatform:
 
         with patch(
             "homeassistant.components.marytts.tts.MaryTTS.speak",
-            return_value="audio",
+            return_value=b"audio",
         ) as mock_speak:
             self.hass.services.call(
                 tts.DOMAIN,
@@ -98,7 +98,7 @@ class TestTTSMaryTTSPlatform:
 
         with patch(
             "homeassistant.components.marytts.tts.MaryTTS.speak",
-            return_value="audio",
+            return_value=b"audio",
         ) as mock_speak:
             self.hass.services.call(
                 tts.DOMAIN,
