@@ -244,3 +244,9 @@ async def test_coordinator_entity(crd):
         await entity.async_added_to_hass()
 
     assert mock_async_on_remove.called
+
+    # Verify we do not update if the entity is disabled
+    crd.last_update_success = False
+    with patch("homeassistant.helpers.entity.Entity.enabled", False):
+        await entity.async_update()
+    assert entity.available is False
