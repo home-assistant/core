@@ -2,15 +2,31 @@
 import aioshelly
 
 from homeassistant.components import sensor
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT, UNIT_PERCENTAGE
+from homeassistant.const import (
+    ELECTRICAL_CURRENT_AMPERE,
+    ENERGY_KILO_WATT_HOUR,
+    POWER_WATT,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+    UNIT_PERCENTAGE,
+    VOLT,
+)
 from homeassistant.helpers.entity import Entity
 
 from . import ShellyBlockEntity, ShellyDeviceWrapper
 from .const import DOMAIN
 
 SENSORS = {
+    "battery": [UNIT_PERCENTAGE, sensor.DEVICE_CLASS_BATTERY],
+    "current": [ELECTRICAL_CURRENT_AMPERE, sensor.DEVICE_CLASS_CURRENT],
+    "deviceTemp": [None, sensor.DEVICE_CLASS_TEMPERATURE],
+    "energy": [ENERGY_KILO_WATT_HOUR, sensor.DEVICE_CLASS_ENERGY],
+    "energyReturned": [ENERGY_KILO_WATT_HOUR, sensor.DEVICE_CLASS_ENERGY],
     "extTemp": [None, sensor.DEVICE_CLASS_TEMPERATURE],
     "humidity": [UNIT_PERCENTAGE, sensor.DEVICE_CLASS_HUMIDITY],
+    "overpowerValue": [POWER_WATT, sensor.DEVICE_CLASS_POWER],
+    "power": [POWER_WATT, sensor.DEVICE_CLASS_POWER],
+    "voltage": [VOLT, sensor.DEVICE_CLASS_VOLTAGE],
 }
 
 
@@ -20,9 +36,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     sensors = []
 
     for block in wrapper.device.blocks:
-        if block.type != "sensor":
-            continue
-
         for attr in SENSORS:
             if not hasattr(block, attr):
                 continue
@@ -46,13 +59,18 @@ class ShellySensor(ShellyBlockEntity, Entity):
         super().__init__(wrapper, block)
         self.attribute = attribute
         unit, device_class = SENSORS[attribute]
-        info = block.info(attribute)
+        self.info = block.info(attribute)
 
-        if info[aioshelly.BLOCK_VALUE_TYPE] == aioshelly.BLOCK_VALUE_TYPE_TEMPERATURE:
-            if info[aioshelly.BLOCK_VALUE_UNIT] == "C":
+        if (
+            self.info[aioshelly.BLOCK_VALUE_TYPE]
+            == aioshelly.BLOCK_VALUE_TYPE_TEMPERATURE
+        ):
+            if self.info[aioshelly.BLOCK_VALUE_UNIT] == "C":
                 unit = TEMP_CELSIUS
             else:
                 unit = TEMP_FAHRENHEIT
+        elif self.info[aioshelly.BLOCK_VALUE_TYPE] == aioshelly.BLOCK_VALUE_TYPE_ENERGY:
+            unit = ENERGY_KILO_WATT_HOUR
 
         self._unit = unit
         self._device_class = device_class
@@ -70,6 +88,19 @@ class ShellySensor(ShellyBlockEntity, Entity):
     @property
     def state(self):
         """Value of sensor."""
+        if self.attribute in [
+            "deviceTemp",
+            "extTemp",
+            "humidity",
+            "overpowerValue",
+            "power",
+        ]:
+            return round(getattr(self.block, self.attribute), 1)
+        # Energy unit change from Wmin or Wh to kWh
+        if self.info[aioshelly.BLOCK_VALUE_UNIT] == "Wmin":
+            return round(getattr(self.block, self.attribute) / 60 / 1000, 2)
+        if self.info[aioshelly.BLOCK_VALUE_UNIT] == "Wh":
+            return round(getattr(self.block, self.attribute) / 1000, 2)
         return getattr(self.block, self.attribute)
 
     @property
