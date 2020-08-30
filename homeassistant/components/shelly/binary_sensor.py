@@ -7,7 +7,6 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_SMOKE,
     BinarySensorEntity,
 )
-from homeassistant.const import STATE_OFF, STATE_ON
 
 from . import ShellyBlockEntity, ShellyDeviceWrapper
 from .const import DOMAIN
@@ -63,9 +62,9 @@ class ShellySensor(ShellyBlockEntity, BinarySensorEntity):
         return f"{self.wrapper.name} - {self.attribute}"
 
     @property
-    def state(self):
-        """Value of sensor."""
-        return STATE_ON if getattr(self.block, self.attribute) else STATE_OFF
+    def is_on(self):
+        """Return true if sensor state is 1."""
+        return bool(getattr(self.block, self.attribute))
 
     @property
     def device_class(self):
