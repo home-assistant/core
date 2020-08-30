@@ -10,10 +10,9 @@ from homeassistant.components.media_player.const import (
 )
 import homeassistant.components.tts as tts
 from homeassistant.config import async_process_ha_core_config
-from homeassistant.const import HTTP_INTERNAL_SERVER_ERROR
 from homeassistant.setup import setup_component
 
-from tests.async_mock import Mock, patch
+from tests.async_mock import patch
 from tests.common import assert_setup_component, get_test_home_assistant, mock_service
 
 
@@ -81,7 +80,8 @@ class TestTTSMaryTTSPlatform:
 
         assert len(calls) == 1
         assert calls[0].data[ATTR_MEDIA_CONTENT_ID].find(".wav") != -1
-        conn.request.assert_called_with("POST", "/process", urlencode(self.params))
+
+        mock_speak.assert_called_with("HomeAssistant", {})
 
     def test_service_say_with_effect(self):
         """Test service call say with effects."""
@@ -110,10 +110,7 @@ class TestTTSMaryTTSPlatform:
         assert len(calls) == 1
         assert calls[0].data[ATTR_MEDIA_CONTENT_ID].find(".wav") != -1
 
-        self.params.update(
-            {"effect_Volume_selected": "on", "effect_Volume_parameters": "amount:2.0;"}
-        )
-        conn.request.assert_called_with("POST", "/process", urlencode(self.params))
+        mock_speak.assert_called_with("HomeAssistant", {"Volume": "amount:2.0;"})
 
     def test_service_say_http_error(self):
         """Test service call say."""
@@ -126,6 +123,7 @@ class TestTTSMaryTTSPlatform:
 
         with patch(
             "homeassistant.components.marytts.tts.MaryTTS.speak",
+            side_effect=Exception(),
         ) as mock_speak:
             self.hass.services.call(
                 tts.DOMAIN,
@@ -138,4 +136,3 @@ class TestTTSMaryTTSPlatform:
         self.hass.block_till_done()
 
         assert len(calls) == 0
-        conn.request.assert_called_with("POST", "/process", urlencode(self.params))
