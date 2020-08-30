@@ -53,6 +53,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Import the platform into a config entry."""
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+    )
+
+
 async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ) -> None:
@@ -157,9 +166,6 @@ async def async_setup_entry(
                     # Wait for reader to close
                     await protocol.wait_closed()
 
-                if hass.state == CoreState.stopping:
-                    return
-
                 # Unexpected disconnect
                 if transport:
                     # remove listener
@@ -198,15 +204,6 @@ async def async_setup_entry(
 
     # Save the task to be able to cancel it when unloading
     hass.data[DOMAIN][entry.entry_id][DATA_TASK] = task
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Import the platform into a config entry."""
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-        )
-    )
 
 
 class DSMREntity(Entity):
