@@ -3,6 +3,7 @@ Provide a mock remote platform.
 
 Call init before using it in your tests to ensure clean test data.
 """
+from homeassistant.components.remote import RemoteEntity
 from homeassistant.const import STATE_OFF, STATE_ON
 
 from tests.common import MockToggleEntity
@@ -18,9 +19,9 @@ def init(empty=False):
         []
         if empty
         else [
-            MockToggleEntity("TV", STATE_ON),
-            MockToggleEntity("DVD", STATE_OFF),
-            MockToggleEntity(None, STATE_OFF),
+            MockRemote("TV", STATE_ON),
+            MockRemote("DVD", STATE_OFF),
+            MockRemote(None, STATE_OFF),
         ]
     )
 
@@ -30,3 +31,9 @@ async def async_setup_platform(
 ):
     """Return mock entities."""
     async_add_entities_callback(ENTITIES)
+
+
+class MockRemote(MockToggleEntity, RemoteEntity):
+    """Mock remote class."""
+
+    supported_features = 0
