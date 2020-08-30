@@ -38,7 +38,6 @@ async def test_form(hass):
             result["flow_id"],
             CONFIG,
         )
-        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == f"{TEST_USERNAME:s}"
@@ -118,7 +117,6 @@ async def test_reauth(hass):
     ), patch("sharkiqpy.AylaApi.async_sign_in", return_value=True):
         mock_config = MockConfigEntry(domain=DOMAIN, unique_id=UNIQUE_ID, data=CONFIG)
         mock_config.add_to_hass(hass)
-        hass.config_entries.async_update_entry(mock_config, data=CONFIG)
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "reauth", "unique_id": UNIQUE_ID}, data=CONFIG

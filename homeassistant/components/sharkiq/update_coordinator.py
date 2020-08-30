@@ -51,7 +51,7 @@ class SharkIqUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_vacuum(sharkiq: SharkIqVacuum) -> None:
         """Asynchronously update the data for a single vacuum."""
         dsn = sharkiq.serial_number
-        LOGGER.info("Updating sharkiq data for device DSN %s", dsn)
+        LOGGER.debug("Updating sharkiq data for device DSN %s", dsn)
         with timeout(API_TIMEOUT):
             await sharkiq.async_update()
 
@@ -65,7 +65,7 @@ class SharkIqUpdateCoordinator(DataUpdateCoordinator):
                 if v["connection_status"] == "Online" and v["dsn"] in self.shark_vacs
             }
 
-            LOGGER.info("Updating sharkiq data")
+            LOGGER.debug("Updating sharkiq data")
             for dsn in self._online_dsns:
                 await self._async_update_vacuum(self.shark_vacs[dsn])
         except (
@@ -73,7 +73,7 @@ class SharkIqUpdateCoordinator(DataUpdateCoordinator):
             SharkIqNotAuthedError,
             SharkIqAuthExpiringError,
         ) as err:
-            LOGGER.exception("Bad auth state", exc_info=err)
+            LOGGER.exception("Bad auth state")
             flow_context = {
                 "source": "reauth",
                 "unique_id": self._config_entry.unique_id,
@@ -96,7 +96,7 @@ class SharkIqUpdateCoordinator(DataUpdateCoordinator):
 
             raise UpdateFailed(err) from err
         except Exception as err:  # pylint: disable=broad-except
-            LOGGER.exception("Unexpected error updating SharkIQ", exc_info=err)
+            LOGGER.exception("Unexpected error updating SharkIQ")
             raise UpdateFailed(err) from err
 
         return True
