@@ -138,7 +138,7 @@ class MpdDevice(MediaPlayerEntity):
         if position is None:
             position = self._status.get("time")
 
-            if ":" in position:
+            if position is not None and ":" in position:
                 position = position.split(":")[0]
 
         if position is not None and self._media_position != position:
