@@ -141,7 +141,7 @@ async def async_devices_query(hass, data, payload):
             devices[devid] = entity.query_serialize()
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected error serializing query for %s", state)
-            devices[devid] = devices[devid] = {"online": False}
+            devices[devid] = {"online": False}
 
     return {"devices": devices}
 
