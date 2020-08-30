@@ -254,7 +254,6 @@ class UpCloudServerEntity(CoordinatorEntity):
         """Initialize the UpCloud server entity."""
         super().__init__(coordinator)
         self.uuid = uuid
-        self._unsub_handlers = []
 
     @property
     def _server(self) -> upcloud_api.Server:
