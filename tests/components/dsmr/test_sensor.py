@@ -12,11 +12,13 @@ from itertools import chain, repeat
 
 import pytest
 
+from homeassistant.components.dsmr import sensor
+from homeassistant.components.dsmr.const import DOMAIN
 from homeassistant.components.dsmr.sensor import DerivativeDSMREntity
 from homeassistant.const import ENERGY_KILO_WATT_HOUR, TIME_HOURS, VOLUME_CUBIC_METERS
 
 import tests.async_mock
-from tests.async_mock import DEFAULT, Mock
+from tests.async_mock import DEFAULT, MagicMock, Mock
 from tests.common import MockConfigEntry
 
 
@@ -44,6 +46,39 @@ def mock_connection_factory(monkeypatch):
     )
 
     return connection_factory, transport, protocol
+
+
+async def test_setup_platform(hass, mock_connection_factory):
+    """Test invalid device config."""
+    # mock_device = MagicMock()
+    # hass.data[DATA_NETWORK] = MagicMock()
+    # hass.data[zwave.DATA_DEVICES] = {456: mock_device}
+    async_add_entities = MagicMock()
+
+    entry_data = {
+        "port": "/dev/ttyUSB0",
+        "dsmr_version": "2.2",
+        "precision": 4,
+        "reconnect_interval": 30,
+    }
+
+    result = await sensor.async_setup_platform(
+        hass, entry_data, async_add_entities, None
+    )
+    assert not result
+    assert not async_add_entities.called
+
+    await hass.async_block_till_done()
+
+    # Check config entry
+    conf_entries = hass.config_entries.async_entries(DOMAIN)
+
+    assert len(conf_entries) == 1
+
+    entry = conf_entries[0]
+
+    assert entry.state == "loaded"
+    assert entry.data == entry_data
 
 
 async def test_default_setup(hass, mock_connection_factory):
