@@ -16,8 +16,11 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
 )
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 
 from .const import DATA_COORDINATOR, DOMAIN
 
@@ -166,7 +169,7 @@ async def async_register_new_bridge(
     )
 
 
-class NotionEntity(Entity):
+class NotionEntity(CoordinatorEntity):
     """Define a base Notion entity."""
 
     def __init__(
@@ -180,9 +183,9 @@ class NotionEntity(Entity):
         device_class: str,
     ):
         """Initialize the entity."""
+        super().__init__(coordinator)
         self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
         self._bridge_id = bridge_id
-        self._coordinator = coordinator
         self._device_class = device_class
         self._name = name
         self._sensor_id = sensor_id
@@ -194,8 +197,8 @@ class NotionEntity(Entity):
     def available(self) -> bool:
         """Return True if entity is available."""
         return (
-            self._coordinator.last_update_success
-            and self._task_id in self._coordinator.data["tasks"]
+            self.coordinator.last_update_success
+            and self._task_id in self.coordinator.data["tasks"]
         )
 
     @property
@@ -211,8 +214,8 @@ class NotionEntity(Entity):
     @property
     def device_info(self) -> dict:
         """Return device registry information for this entity."""
-        bridge = self._coordinator.data["bridges"].get(self._bridge_id, {})
-        sensor = self._coordinator.data["sensors"][self._sensor_id]
+        bridge = self.coordinator.data["bridges"].get(self._bridge_id, {})
+        sensor = self.coordinator.data["sensors"][self._sensor_id]
 
         return {
             "identifiers": {(DOMAIN, sensor["hardware_id"])},
@@ -226,18 +229,13 @@ class NotionEntity(Entity):
     @property
     def name(self) -> str:
         """Return the name of the entity."""
-        sensor = self._coordinator.data["sensors"][self._sensor_id]
+        sensor = self.coordinator.data["sensors"][self._sensor_id]
         return f'{sensor["name"]}: {self._name}'
-
-    @property
-    def should_poll(self) -> bool:
-        """Disable entity polling."""
-        return False
 
     @property
     def unique_id(self) -> str:
         """Return a unique, unchanging string that represents this entity."""
-        task = self._coordinator.data["tasks"][self._task_id]
+        task = self.coordinator.data["tasks"][self._task_id]
         return f'{self._sensor_id}_{task["task_type"]}'
 
     async def _async_update_bridge_id(self) -> None:
@@ -245,21 +243,21 @@ class NotionEntity(Entity):
 
         Sensors can move to other bridges based on signal strength, etc.
         """
-        sensor = self._coordinator.data["sensors"][self._sensor_id]
+        sensor = self.coordinator.data["sensors"][self._sensor_id]
 
         # If the sensor's bridge ID is the same as what we had before or if it points
         # to a bridge that doesn't exist (which can happen due to a Notion API bug),
         # return immediately:
         if (
             self._bridge_id == sensor["bridge"]["id"]
-            or sensor["bridge"]["id"] not in self._coordinator.data["bridges"]
+            or sensor["bridge"]["id"] not in self.coordinator.data["bridges"]
         ):
             return
 
         self._bridge_id = sensor["bridge"]["id"]
 
         device_registry = await dr.async_get_registry(self.hass)
-        bridge = self._coordinator.data["bridges"][self._bridge_id]
+        bridge = self.coordinator.data["bridges"][self._bridge_id]
         bridge_device = device_registry.async_get_device(
             {DOMAIN: bridge["hardware_id"]}, set()
         )
@@ -285,6 +283,6 @@ class NotionEntity(Entity):
             self._async_update_from_latest_data()
             self.async_write_ha_state()
 
-        self.async_on_remove(self._coordinator.async_add_listener(update))
+        self.async_on_remove(self.coordinator.async_add_listener(update))
 
         self._async_update_from_latest_data()
