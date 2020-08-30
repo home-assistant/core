@@ -51,7 +51,7 @@ async def test_form(hass):
 
 
 async def test_form_auth(hass):
-    """Test manually configuration if auth is required."""
+    """Test manual configuration if auth is required."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -156,7 +156,7 @@ async def test_form_errors_test_connection(hass, error):
     ],
 )
 async def test_form_auth_errors_test_connection(hass, error):
-    """Test we handle errors."""
+    """Test we handle errors in authenticated devices."""
     exc, base_error = error
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
