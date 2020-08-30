@@ -121,11 +121,8 @@ class MockPlexServer:
 
         self._systemAccounts = list(map(MockPlexSystemAccount, range(num_users)))
 
-        self._library = None
-
         self._clients = []
         self._sessions = []
-        self._library = MockPlexLibrary()
         self.set_clients(num_users)
         self.set_sessions(num_users, session_type)
 
