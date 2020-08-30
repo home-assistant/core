@@ -1,7 +1,6 @@
 """Test the config flow for the Insteon integration."""
 
 from homeassistant import config_entries, data_entry_flow, setup
-from homeassistant.components.insteon import async_import_config
 from homeassistant.components.insteon.config_flow import (
     HUB1,
     HUB2,
@@ -24,7 +23,6 @@ from homeassistant.components.insteon.const import (
     CONF_UNITCODE,
     CONF_X10,
     DOMAIN,
-    X10_PLATFORMS,
 )
 from homeassistant.const import (
     CONF_ADDRESS,
@@ -37,78 +35,23 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.typing import HomeAssistantType
 
+from .const import (
+    MOCK_HOSTNAME,
+    MOCK_IMPORT_CONFIG_PLM,
+    MOCK_IMPORT_MINIMUM_HUB_V1,
+    MOCK_IMPORT_MINIMUM_HUB_V2,
+    MOCK_PASSWORD,
+    MOCK_USER_INPUT_HUB_V1,
+    MOCK_USER_INPUT_HUB_V2,
+    MOCK_USER_INPUT_PLM,
+    MOCK_USERNAME,
+    PATCH_ASYNC_SETUP,
+    PATCH_ASYNC_SETUP_ENTRY,
+    PATCH_CONNECTION,
+)
+
 from tests.async_mock import patch
 from tests.common import MockConfigEntry
-
-MOCK_HOSTNAME = "1.1.1.1"
-MOCK_DEVICE = "/dev/ttyUSB55"
-MOCK_USERNAME = "test-username"
-MOCK_PASSWORD = "test-password"
-MOCK_PORT = 4567
-
-MOCK_ADDRESS = "1a2b3c"
-MOCK_CAT = 0x02
-MOCK_SUBCAT = 0x1A
-
-MOCK_HOUSECODE = "c"
-MOCK_UNITCODE = 6
-MOCK_X10_PLATFORM = X10_PLATFORMS[2]
-MOCK_X10_STEPS = 10
-
-MOCK_USER_INPUT_PLM = {
-    CONF_DEVICE: MOCK_DEVICE,
-}
-
-MOCK_USER_INPUT_HUB_V2 = {
-    CONF_HOST: MOCK_HOSTNAME,
-    CONF_USERNAME: MOCK_USERNAME,
-    CONF_PASSWORD: MOCK_PASSWORD,
-    CONF_PORT: MOCK_PORT,
-}
-
-MOCK_USER_INPUT_HUB_V1 = {
-    CONF_HOST: MOCK_HOSTNAME,
-    CONF_PORT: MOCK_PORT,
-}
-
-MOCK_DEVICE_OVERRIDE_CONFIG = {
-    CONF_ADDRESS: MOCK_ADDRESS,
-    CONF_CAT: MOCK_CAT,
-    CONF_SUBCAT: MOCK_SUBCAT,
-}
-
-MOCK_X10_CONFIG = {
-    CONF_HOUSECODE: MOCK_HOUSECODE,
-    CONF_UNITCODE: MOCK_UNITCODE,
-    CONF_PLATFORM: MOCK_X10_PLATFORM,
-    CONF_DIM_STEPS: MOCK_X10_STEPS,
-}
-
-MOCK_IMPORT_CONFIG_PLM = {CONF_PORT: MOCK_DEVICE}
-
-MOCK_IMPORT_MINIMUM_HUB_V2 = {
-    CONF_HOST: MOCK_HOSTNAME,
-    CONF_USERNAME: MOCK_USERNAME,
-    CONF_PASSWORD: MOCK_PASSWORD,
-}
-MOCK_IMPORT_MINIMUM_HUB_V1 = {CONF_HOST: MOCK_HOSTNAME, CONF_HUB_VERSION: 1}
-MOCK_IMPORT_FULL_CONFIG_PLM = MOCK_IMPORT_CONFIG_PLM.copy()
-MOCK_IMPORT_FULL_CONFIG_PLM[CONF_OVERRIDE] = [MOCK_DEVICE_OVERRIDE_CONFIG]
-MOCK_IMPORT_FULL_CONFIG_PLM[CONF_X10] = [MOCK_X10_CONFIG]
-
-MOCK_IMPORT_FULL_CONFIG_HUB_V2 = MOCK_USER_INPUT_HUB_V2.copy()
-MOCK_IMPORT_FULL_CONFIG_HUB_V2[CONF_HUB_VERSION] = 2
-MOCK_IMPORT_FULL_CONFIG_HUB_V2[CONF_OVERRIDE] = [MOCK_DEVICE_OVERRIDE_CONFIG]
-MOCK_IMPORT_FULL_CONFIG_HUB_V2[CONF_X10] = [MOCK_X10_CONFIG]
-
-MOCK_IMPORT_FULL_CONFIG_HUB_V1 = MOCK_USER_INPUT_HUB_V1.copy()
-MOCK_IMPORT_FULL_CONFIG_HUB_V1[CONF_HUB_VERSION] = 1
-MOCK_IMPORT_FULL_CONFIG_HUB_V1[CONF_OVERRIDE] = [MOCK_DEVICE_OVERRIDE_CONFIG]
-MOCK_IMPORT_FULL_CONFIG_HUB_V1[CONF_X10] = [MOCK_X10_CONFIG]
-
-PATCH_CONNECTION = "homeassistant.components.insteon.config_flow.async_connect"
-PATCH_ASYNC_SETUP = "homeassistant.components.insteon.async_setup"
-PATCH_ASYNC_SETUP_ENTRY = "homeassistant.components.insteon.async_setup_entry"
 
 
 async def mock_successful_connection(*args, **kwargs):
@@ -122,7 +65,7 @@ async def mock_failed_connection(*args, **kwargs):
 
 
 async def _init_form(hass, modem_type):
-    """Run the init form."""
+    """Run the user form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -173,7 +116,7 @@ async def test_fail_on_existing(hass: HomeAssistantType):
         context={"source": config_entries.SOURCE_USER},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "single_instance_allowed"
 
 
 async def test_form_select_plm(hass: HomeAssistantType):
@@ -259,7 +202,9 @@ async def _import_config(hass, config):
     with patch(PATCH_CONNECTION, new=mock_successful_connection,), patch(
         PATCH_ASYNC_SETUP, return_value=True
     ), patch(PATCH_ASYNC_SETUP_ENTRY, return_value=True):
-        return await async_import_config(hass, config)
+        return await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config
+        )
 
 
 async def test_import_plm(hass: HomeAssistantType):
@@ -271,71 +216,31 @@ async def test_import_plm(hass: HomeAssistantType):
     assert result["type"] == "create_entry"
     assert hass.config_entries.async_entries(DOMAIN)
     for entry in hass.config_entries.async_entries(DOMAIN):
-        assert entry.data == MOCK_USER_INPUT_PLM
+        assert entry.data == MOCK_IMPORT_CONFIG_PLM
 
 
-async def test_import_plm_full(hass: HomeAssistantType):
-    """Test importing a full PLM config from yaml."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-    result = await _import_config(hass, MOCK_IMPORT_FULL_CONFIG_PLM)
-    assert result["type"] == "create_entry"
-    assert hass.config_entries.async_entries(DOMAIN)
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        assert entry.data == MOCK_USER_INPUT_PLM
-        assert entry.options[CONF_OVERRIDE][0][CONF_ADDRESS] == "1A.2B.3C"
-        assert entry.options[CONF_OVERRIDE][0][CONF_CAT] == MOCK_CAT
-        assert entry.options[CONF_OVERRIDE][0][CONF_SUBCAT] == MOCK_SUBCAT
-        assert entry.options[CONF_X10][0][CONF_HOUSECODE] == MOCK_HOUSECODE
-        assert entry.options[CONF_X10][0][CONF_UNITCODE] == MOCK_UNITCODE
-        assert entry.options[CONF_X10][0][CONF_PLATFORM] == MOCK_X10_PLATFORM
-        assert entry.options[CONF_X10][0][CONF_DIM_STEPS] == MOCK_X10_STEPS
+async def _options_init_form(hass, entry_id, step):
+    """Run the init options form."""
+    with patch(PATCH_ASYNC_SETUP_ENTRY, return_value=True):
+        result = await hass.config_entries.options.async_init(entry_id)
 
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
 
-async def test_import_full_hub_v1(hass: HomeAssistantType):
-    """Test importing a full Hub v1 config from yaml."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
-    result = await _import_config(hass, MOCK_IMPORT_FULL_CONFIG_HUB_V1)
-
-    assert result["type"] == "create_entry"
-    assert hass.config_entries.async_entries(DOMAIN)
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        assert entry.data[CONF_HOST] == MOCK_HOSTNAME
-        assert entry.data[CONF_PORT] == MOCK_PORT
-        assert entry.data[CONF_HUB_VERSION] == 1
-        assert CONF_USERNAME not in entry.data
-        assert CONF_PASSWORD not in entry.data
-        assert CONF_OVERRIDE not in entry.data
-        assert CONF_X10 not in entry.data
-        assert entry.options[CONF_OVERRIDE][0][CONF_ADDRESS] == "1A.2B.3C"
-        assert entry.options[CONF_X10][0][CONF_HOUSECODE] == MOCK_HOUSECODE
-
-
-async def test_import_full_hub_v2(hass: HomeAssistantType):
-    """Test importing a full Hub v2 config from yaml."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
-    result = await _import_config(hass, MOCK_IMPORT_FULL_CONFIG_HUB_V2)
-
-    assert result["type"] == "create_entry"
-    assert hass.config_entries.async_entries(DOMAIN)
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        assert entry.data[CONF_HOST] == MOCK_HOSTNAME
-        assert entry.data[CONF_PORT] == MOCK_PORT
-        assert entry.data[CONF_USERNAME] == MOCK_USERNAME
-        assert entry.data[CONF_PASSWORD] == MOCK_PASSWORD
-        assert entry.data[CONF_HUB_VERSION] == 2
-        assert CONF_OVERRIDE not in entry.data
-        assert CONF_X10 not in entry.data
-        assert entry.options[CONF_OVERRIDE][0][CONF_ADDRESS] == "1A.2B.3C"
-        assert entry.options[CONF_X10][0][CONF_HOUSECODE] == MOCK_HOUSECODE
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {step: True},
+    )
+    return result2
 
 
 async def test_import_min_hub_v2(hass: HomeAssistantType):
     """Test importing a minimum Hub v2 config from yaml."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
-    result = await _import_config(hass, MOCK_IMPORT_MINIMUM_HUB_V2)
+    result = await _import_config(
+        hass, {**MOCK_IMPORT_MINIMUM_HUB_V2, CONF_PORT: 25105, CONF_HUB_VERSION: 2}
+    )
 
     assert result["type"] == "create_entry"
     assert hass.config_entries.async_entries(DOMAIN)
@@ -351,7 +256,9 @@ async def test_import_min_hub_v1(hass: HomeAssistantType):
     """Test importing a minimum Hub v1 config from yaml."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
-    result = await _import_config(hass, MOCK_IMPORT_MINIMUM_HUB_V1)
+    result = await _import_config(
+        hass, {**MOCK_IMPORT_MINIMUM_HUB_V1, CONF_PORT: 9761, CONF_HUB_VERSION: 1}
+    )
 
     assert result["type"] == "create_entry"
     assert hass.config_entries.async_entries(DOMAIN)
@@ -372,9 +279,11 @@ async def test_import_existing(hass: HomeAssistantType):
     config_entry.add_to_hass(hass)
     assert config_entry.state == config_entries.ENTRY_STATE_NOT_LOADED
 
-    result = await _import_config(hass, MOCK_IMPORT_MINIMUM_HUB_V2)
+    result = await _import_config(
+        hass, {**MOCK_IMPORT_MINIMUM_HUB_V2, CONF_PORT: 25105, CONF_HUB_VERSION: 2}
+    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "single_instance_allowed"
 
 
 async def test_import_failed_connection(hass: HomeAssistantType):
@@ -384,25 +293,14 @@ async def test_import_failed_connection(hass: HomeAssistantType):
     with patch(PATCH_CONNECTION, new=mock_failed_connection,), patch(
         PATCH_ASYNC_SETUP, return_value=True
     ), patch(PATCH_ASYNC_SETUP_ENTRY, return_value=True):
-        result = await async_import_config(hass, MOCK_IMPORT_MINIMUM_HUB_V2)
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={**MOCK_IMPORT_MINIMUM_HUB_V2, CONF_PORT: 25105, CONF_HUB_VERSION: 2},
+        )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "cannot_connect"
-
-
-async def _options_init_form(hass, entry_id, step):
-    """Run the init options form."""
-    with patch(PATCH_ASYNC_SETUP_ENTRY, return_value=True):
-        result = await hass.config_entries.options.async_init(entry_id)
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "init"
-
-    result2 = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        {step: True},
-    )
-    return result2
 
 
 async def _options_form(hass, flow_id, user_input):
