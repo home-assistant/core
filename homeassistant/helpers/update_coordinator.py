@@ -10,7 +10,7 @@ import aiohttp
 import requests
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.helpers import event
+from homeassistant.helpers import entity, event
 from homeassistant.util.dt import utcnow
 
 from .debounce import Debouncer
@@ -190,3 +190,34 @@ class DataUpdateCoordinator(Generic[T]):
 
         for update_callback in self._listeners:
             update_callback()
+
+
+class CoordinatorEntity(entity.Entity):
+    """A class for entities using DataUpdateCoordinator."""
+
+    def __init__(self, coordinator: DataUpdateCoordinator) -> None:
+        """Create the entity with a DataUpdateCoordinator."""
+        self.coordinator = coordinator
+
+    @property
+    def should_poll(self) -> bool:
+        """No need to poll. Coordinator notifies entity of updates."""
+        return False
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self.coordinator.last_update_success
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        self.async_on_remove(
+            self.coordinator.async_add_listener(self.async_write_ha_state)
+        )
+
+    async def async_update(self) -> None:
+        """Update the entity.
+
+        Only used by the generic entity update service.
+        """
+        await self.coordinator.async_request_refresh()
