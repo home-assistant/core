@@ -13,9 +13,8 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
-from homeassistant.core import callback
 
-from . import ATTR_DISCOVER_DEVICES, DATA_KNX
+from . import DATA_KNX
 from .const import OPERATION_MODES, PRESET_MODES
 
 OPERATION_MODES_INV = dict(reversed(item) for item in OPERATION_MODES.items())
@@ -24,17 +23,10 @@ PRESET_MODES_INV = dict(reversed(item) for item in PRESET_MODES.items())
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up climate(s) for KNX platform."""
-    if discovery_info is not None:
-        async_add_entities_discovery(hass, discovery_info, async_add_entities)
-
-
-@callback
-def async_add_entities_discovery(hass, discovery_info, async_add_entities):
-    """Set up climates for KNX platform configured within platform."""
     entities = []
-    for device_name in discovery_info[ATTR_DISCOVER_DEVICES]:
-        device = hass.data[DATA_KNX].xknx.devices[device_name]
-        entities.append(KNXClimate(device))
+    for device in hass.data[DATA_KNX].xknx.devices:
+        if isinstance(device, XknxClimate):
+            entities.append(KNXClimate(device))
     async_add_entities(entities)
 
 
