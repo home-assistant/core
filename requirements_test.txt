@@ -23,5 +23,5 @@ pytest-xdist==1.32.0
 pytest==5.4.3
 requests_mock==1.8.0
 responses==0.10.6
-stdlib-list==.7.0
+stdlib-list==0.7.0
 tqdm==4.48.2
