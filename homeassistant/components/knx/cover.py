@@ -15,22 +15,15 @@ from homeassistant.components.cover import (
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_utc_time_change
 
-from . import ATTR_DISCOVER_DEVICES, DATA_KNX
+from . import DATA_KNX
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up cover(s) for KNX platform."""
-    if discovery_info is not None:
-        async_add_entities_discovery(hass, discovery_info, async_add_entities)
-
-
-@callback
-def async_add_entities_discovery(hass, discovery_info, async_add_entities):
-    """Set up covers for KNX platform configured via xknx.yaml."""
     entities = []
-    for device_name in discovery_info[ATTR_DISCOVER_DEVICES]:
-        device = hass.data[DATA_KNX].xknx.devices[device_name]
-        entities.append(KNXCover(device))
+    for device in hass.data[DATA_KNX].xknx.devices:
+        if isinstance(device, XknxCover):
+            entities.append(KNXCover(device))
     async_add_entities(entities)
 
 
