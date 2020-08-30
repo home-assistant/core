@@ -667,6 +667,9 @@ omit =
     homeassistant/components/poolsense/sensor.py
     homeassistant/components/poolsense/binary_sensor.py
     homeassistant/components/proliphix/climate.py
+    homeassistant/components/progettihwsw/__init__.py
+    homeassistant/components/progettihwsw/binary_sensor.py
+    homeassistant/components/progettihwsw/switch.py
     homeassistant/components/prometheus/*
     homeassistant/components/prowl/notify.py
     homeassistant/components/proxmoxve/*

@@ -1115,6 +1115,9 @@ praw==7.1.0
 # homeassistant.components.islamic_prayer_times
 prayer_times_calculator==0.0.3
 
+# homeassistant.components.progettihwsw
+progettihwsw==0.1.1
+
 # homeassistant.components.proliphix
 proliphix==0.4.1
 
