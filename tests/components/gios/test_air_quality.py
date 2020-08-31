@@ -15,13 +15,11 @@ from homeassistant.components.air_quality import (
 from homeassistant.components.gios.air_quality import ATTRIBUTION
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
-    ATTR_ENTITY_ID,
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     STATE_UNAVAILABLE,
 )
-from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from tests.async_mock import patch
@@ -56,6 +54,33 @@ async def test_air_quality(hass):
     assert entry.unique_id == 123
 
 
+async def test_air_quality_with_incomplete_data(hass):
+    """Test states of the air_quality with incomplete data from measuring station."""
+    await init_integration(hass, incomplete_data=True)
+    registry = await hass.helpers.entity_registry.async_get_registry()
+
+    state = hass.states.get("air_quality.home")
+    assert state
+    assert state.state == "4"
+    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
+    assert state.attributes.get(ATTR_PM_10) is None
+    assert state.attributes.get(ATTR_PM_2_5) == 4
+    assert state.attributes.get(ATTR_CO) == 252
+    assert state.attributes.get(ATTR_SO2) == 4
+    assert state.attributes.get(ATTR_NO2) == 7
+    assert state.attributes.get(ATTR_OZONE) == 96
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+    )
+    assert state.attributes.get(ATTR_ICON) == "mdi:blur"
+    assert state.attributes.get("station") == "Test Name 1"
+
+    entry = registry.async_get("air_quality.home")
+    assert entry
+    assert entry.unique_id == 123
+
+
 async def test_availability(hass):
     """Ensure that we mark the entities unavailable correctly when service causes an error."""
     await init_integration(hass)
@@ -66,7 +91,7 @@ async def test_availability(hass):
     assert state.state == "4"
 
     future = utcnow() + timedelta(minutes=60)
-    with patch("gios.Gios._get_station", side_effect=ApiError("Unexpected error")):
+    with patch("gios.Gios._get_all_sensors", side_effect=ApiError("Unexpected error")):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
@@ -89,19 +114,3 @@ async def test_availability(hass):
         assert state
         assert state.state != STATE_UNAVAILABLE
         assert state.state == "4"
-
-
-async def test_manual_update_entity(hass):
-    """Test manual update entity via service homeasasistant/update_entity."""
-    await init_integration(hass)
-
-    await async_setup_component(hass, "homeassistant", {})
-
-    with patch("homeassistant.components.gios.Gios.update") as mock_update:
-        await hass.services.async_call(
-            "homeassistant",
-            "update_entity",
-            {ATTR_ENTITY_ID: ["air_quality.home"]},
-            blocking=True,
-        )
-    assert mock_update.call_count == 1
