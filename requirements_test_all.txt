@@ -860,7 +860,7 @@ pyvesync==1.1.0
 pyvizio==0.1.51
 
 # homeassistant.components.volumio
-pyvolumio==0.1.1
+pyvolumio==0.1.2
 
 # homeassistant.components.html5
 pywebpush==1.9.2
