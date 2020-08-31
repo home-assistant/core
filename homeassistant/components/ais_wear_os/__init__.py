@@ -1,4 +1,4 @@
-"""Support for the definition of AIS hostname."""
+"""Support for the definition of AIS Ware OS."""
 
 from .config_flow import configured_host
 

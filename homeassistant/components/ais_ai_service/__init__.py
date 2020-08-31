@@ -2281,6 +2281,12 @@ async def async_process_json_from_frame(hass, json_req):
                 {ATTR_ENTITY_ID: "media_player.wbudowany_glosnik"},
             )
         )
+    elif topic == "ais/register_wear_os":
+        # TODO
+        # 1. check pin
+        pin = payload["ais_dom_pin"]
+        # 2. register device and return webhook
+        pass
 
     # add player satus for some topics
     if topic in ("ais/player_status", "ais/player_auto_discovery", "ais/media_player"):

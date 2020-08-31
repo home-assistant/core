@@ -470,6 +470,8 @@ class AisCloudWS:
 
     def get_gate_parring_pin(self):
         rest_url = self.url + "gate_id_from_pin"
+        # payload = {}
+        # json=payload,
         ws_resp = requests.post(rest_url, headers=self.cloud_ws_header, timeout=5)
         return ws_resp
 
@@ -1905,6 +1907,9 @@ class AisColudData:
         )
 
     def enable_gate_pairing_by_pin(self, call):
+        # create token
+
+        # send token to cloud and get the pin
         ws_resp = self.cloud.get_gate_parring_pin()
         json_ws_resp = ws_resp.json()
         pin = json_ws_resp["pin"]

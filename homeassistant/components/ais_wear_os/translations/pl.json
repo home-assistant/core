@@ -1,0 +1,25 @@
+{   "title": "AIS Wear OS",
+    "config": {
+        "step": {
+            "init": {
+                "title": "Podaj nową nazwę hosta",
+                "description": "Możesz zmienić nazwę hosta urządzenia na inną, jest to przydatne gdy masz kilka urządzeń ais-dom w sieci.\n\n Nazwa hosta nie może mieć żadnych znaków specjalnych [Szczeg\u00F3\u0142y w dokumentacji  ](https://www.ai-speaker.com).",
+                "data": {
+                    "name": "Nazwa"
+                }
+            },
+           "confirm": {
+                "description": "###### ![AIS logo](/static/icons/change_host_name.png)\n\nCzy chcesz skonfigurowa\u0107 własną nazwę hosta dla urządzenia?",
+                "title": "AIS host name"
+           }
+        },
+        "error": {
+            "name_not_correct": "Nazwa nie jest poprawna",
+            "name_the_same": "Nazwa jest taka sama jak aktualna nazwa hosta"
+        },
+        "abort": {
+            "do_the_restart": "OK, teraz trzeba zrestartować urządzenie, żeby zmiany były widoczne w sieci.",
+            "single_instance_allowed": "Masz już skonfigurowaną własną nazwę hosta."
+        }
+    }
+}

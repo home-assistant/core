@@ -1,4 +1,4 @@
-"""Config flow to configure ais host component."""
+"""Config flow to configure ais wear os component."""
 
 import voluptuous as vol
 
@@ -75,10 +75,6 @@ class HostFlowHandler(config_entries.ConfigFlow):
 
             """Finish config flow"""
             if l_valid:
-                # return self.async_create_entry(
-                #     title=user_input[CONF_NAME],
-                #     data=user_input
-                # )
                 return self.async_abort(reason="do_the_restart")
 
         return self.async_show_form(
