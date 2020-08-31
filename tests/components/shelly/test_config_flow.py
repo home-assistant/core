@@ -147,7 +147,7 @@ async def test_form_errors_test_connection(hass, error):
     assert result2["errors"] == {"base": base_error}
 
 
-async def form_already_configured(hass):
+async def test_form_already_configured(hass):
     """Test we get the form."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     entry = MockConfigEntry(
