@@ -25,6 +25,8 @@ from homeassistant.helpers.network import get_url
 
 from .aiohttp_client import async_get_clientsession
 
+_LOGGER = logging.getLogger(__name__)
+
 DATA_JWT_SECRET = "oauth2_jwt_secret"
 DATA_VIEW_REGISTERED = "oauth2_view_reg"
 DATA_IMPLEMENTATIONS = "oauth2_impl"
@@ -257,11 +259,11 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
     ) -> Dict[str, Any]:
         """Create config entry from external data."""
         token = await self.flow_impl.async_resolve_external_data(self.external_data)
-        # Force float for non-compliant oauth2 providers
+        # Force int for non-compliant oauth2 providers
         try:
-            token["expires_in"] = float(token["expires_in"])
-        except ValueError:
-            pass
+            token["expires_in"] = int(token["expires_in"])
+        except ValueError as err:
+            _LOGGER.warning("Error converting expires_in to int: %s", err)
         token["expires_at"] = time.time() + token["expires_in"]
 
         self.logger.info("Successfully authenticated")
