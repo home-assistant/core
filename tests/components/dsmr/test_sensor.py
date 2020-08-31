@@ -327,7 +327,20 @@ async def test_tcp(hass, mock_connection_factory):
     assert connection_factory.call_args_list[0][0][1] == "1234"
 
 
-async def test_connection_errors_retry(hass, monkeypatch, mock_connection_factory):
+@pytest.mark.parametrize(
+    "test_error",
+    [
+        # OSError: TCP connection abort errors will raise an OSError
+        # Ref issue: https://github.com/home-assistant/core/issues/31604
+        (OSError(errno.ECONNABORTED)),
+        # TimeoutError: TCP connection timeouts (subclass of OSError)
+        # Tested to make sure that both OSError and it's subclasses are retried
+        (TimeoutError),
+    ],
+)
+async def test_connection_errors_retry(
+    hass, monkeypatch, mock_connection_factory, test_error
+):
     """Connection should be retried on error during setup."""
     (connection_factory, transport, protocol) = mock_connection_factory
 
@@ -336,30 +349,7 @@ async def test_connection_errors_retry(hass, monkeypatch, mock_connection_factor
     # override the mock to have it fail the first time and succeed after
     first_fail_connection_factory = tests.async_mock.AsyncMock(
         return_value=(transport, protocol),
-        side_effect=chain([TimeoutError], repeat(DEFAULT)),
-    )
-
-    monkeypatch.setattr(
-        "homeassistant.components.dsmr.sensor.create_dsmr_reader",
-        first_fail_connection_factory,
-    )
-    await async_setup_component(hass, "sensor", {"sensor": config})
-
-    # wait for sleep to resolve
-    await hass.async_block_till_done()
-    assert first_fail_connection_factory.call_count >= 2, "connecting not retried"
-
-
-async def test_connection_abort_error_retry(hass, monkeypatch, mock_connection_factory):
-    """Connection should be retried on connection abort error during setup."""
-    (connection_factory, transport, protocol) = mock_connection_factory
-
-    config = {"platform": "dsmr", "reconnect_interval": 0}
-
-    # override the mock to have it fail the first time and succeed after
-    first_fail_connection_factory = tests.async_mock.AsyncMock(
-        return_value=(transport, protocol),
-        side_effect=chain([OSError(errno.ECONNABORTED)], repeat(DEFAULT)),
+        side_effect=chain([test_error], repeat(DEFAULT)),
     )
 
     monkeypatch.setattr(
