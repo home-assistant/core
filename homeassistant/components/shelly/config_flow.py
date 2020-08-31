@@ -15,7 +15,7 @@ from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
-HOST_SCHEMA = vol.Schema({CONF_HOST: str})
+HOST_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 
 HTTP_CONNECT_ERRORS = (asyncio.TimeoutError, aiohttp.ClientError)
 
@@ -103,15 +103,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     title=device_info["title"] or self.host,
                     data={**user_input, CONF_HOST: self.host},
                 )
-            schema = vol.Schema(
-                {
-                    vol.Required(CONF_USERNAME, default=user_input[CONF_USERNAME]): str,
-                    vol.Required(CONF_PASSWORD, default=user_input[CONF_PASSWORD]): str,
-                }
-            )
+        else:
+            user_input = {}
 
-        if schema is None:
-            schema = vol.Schema({CONF_USERNAME: str, CONF_PASSWORD: str})
+        schema = vol.Schema(
+            {
+                vol.Required(CONF_USERNAME, default=user_input.get(CONF_USERNAME)): str,
+                vol.Required(CONF_PASSWORD, default=user_input.get(CONF_PASSWORD)): str,
+            }
+        )
 
         return self.async_show_form(
             step_id="credentials", data_schema=schema, errors=errors
