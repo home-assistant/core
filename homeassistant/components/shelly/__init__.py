@@ -42,8 +42,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             device = await aioshelly.Device.create(
                 entry.data[CONF_HOST],
                 aiohttp_client.async_get_clientsession(hass),
-                entry.data[CONF_USERNAME],
-                entry.data[CONF_PASSWORD],
+                entry.data.get(CONF_USERNAME),
+                entry.data.get(CONF_PASSWORD),
             )
     except (asyncio.TimeoutError, OSError) as err:
         raise ConfigEntryNotReady from err
