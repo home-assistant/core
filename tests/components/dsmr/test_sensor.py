@@ -49,10 +49,7 @@ def mock_connection_factory(monkeypatch):
 
 
 async def test_setup_platform(hass, mock_connection_factory):
-    """Test invalid device config."""
-    # mock_device = MagicMock()
-    # hass.data[DATA_NETWORK] = MagicMock()
-    # hass.data[zwave.DATA_DEVICES] = {456: mock_device}
+    """Test setup of platform."""
     async_add_entities = MagicMock()
 
     entry_data = {
