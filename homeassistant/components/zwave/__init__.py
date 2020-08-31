@@ -265,7 +265,8 @@ async def async_get_ozw_migration_data(hass):
     if hass.data.get(DATA_ZWAVE_CONFIG_YAML_PRESENT):
         _LOGGER.warning(
             "Remove %s from configuration.yaml "
-            "to avoid setting up this integration on restart",
+            "to avoid setting up this integration on restart "
+            "after completing migration to ozw",
             DOMAIN,
         )
 
