@@ -68,9 +68,6 @@ async def _resetup_platform(
 
         root_config[integration_platform].append(p_config)
 
-    if not root_config[integration_platform]:
-        return
-
     component = integration.get_component()
 
     if hasattr(component, "async_reset_platform"):
