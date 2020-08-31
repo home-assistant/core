@@ -596,6 +596,9 @@ omit =
     homeassistant/components/oasa_telematics/sensor.py
     homeassistant/components/ohmconnect/sensor.py
     homeassistant/components/ombi/*
+    homeassistant/components/onewire/__init__.py
+    homeassistant/components/onewire/config_flow.py
+    homeassistant/components/onewire/const.py
     homeassistant/components/onewire/onewireentity.py
     homeassistant/components/onewire/onewireproxy.py
     homeassistant/components/onewire/sensor.py
