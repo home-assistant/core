@@ -495,8 +495,8 @@ class _TrackTemplateResultInfo:
         self.hass = hass
         self._action = action
 
-        for track_template in track_templates:
-            track_template.template.hass = hass
+        for track_template_ in track_templates:
+            track_template_.template.hass = hass
         self._track_templates = track_templates
 
         self._all_listener: Optional[Callable] = None
@@ -511,15 +511,15 @@ class _TrackTemplateResultInfo:
 
     def async_setup(self) -> None:
         """Activation of template tracking."""
-        for track_template in self._track_templates:
-            template = track_template.template
-            variables = track_template.variables
+        for track_template_ in self._track_templates:
+            template = track_template_.template
+            variables = track_template_.variables
 
             self._info[template] = template.async_render_to_info(variables)
             if self._info[template].exception:
                 _LOGGER.error(
                     "Error while processing template: %s",
-                    template.template,
+                    track_template_.template,
                     exc_info=self._info[template].exception,
                 )
 
@@ -528,8 +528,8 @@ class _TrackTemplateResultInfo:
 
     @property
     def _needs_all_listener(self) -> bool:
-        for track_template in self._track_templates:
-            template = track_template.template
+        for track_template_ in self._track_templates:
+            template = track_template_.template
 
             # Tracking all states
             if self._info[template].all_states:
@@ -545,8 +545,8 @@ class _TrackTemplateResultInfo:
 
     @property
     def _all_templates_are_static(self) -> bool:
-        for track_template in self._track_templates:
-            if not self._info[track_template.template].is_static:
+        for track_template_ in self._track_templates:
+            if not self._info[track_template_.template].is_static:
                 return False
 
         return True
@@ -665,8 +665,8 @@ class _TrackTemplateResultInfo:
         updates = []
         info_changed = False
 
-        for track_template in self._track_templates:
-            template = track_template.template
+        for track_template_ in self._track_templates:
+            template = track_template_.template
             if (
                 entity_id
                 and len(self._last_info) > 1
@@ -675,7 +675,7 @@ class _TrackTemplateResultInfo:
                 continue
 
             self._info[template] = template.async_render_to_info(
-                track_template.variables
+                track_template_.variables
             )
             info_changed = True
 
