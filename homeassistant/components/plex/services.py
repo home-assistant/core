@@ -14,7 +14,7 @@ _LOGGER = logging.getLogger(__package__)
 
 
 async def async_setup_services(hass):
-    """Set up the Plex component."""
+    """Set up services for the Plex component."""
 
     async def async_refresh_library_service(service_call):
         await hass.async_add_executor_job(refresh_library, hass, service_call)
