@@ -150,11 +150,3 @@ class OneWireProxy:
         if len(lines) == 1:
             return lines[0]
         return lines
-
-    def write_value(self, device_path, value):
-        """Write the device value."""
-        if self._owproxy:
-            self._owproxy.write(device_path, value)
-        else:
-            with open(device_path) as ds_device_file:
-                ds_device_file.write(value)

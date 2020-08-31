@@ -44,7 +44,5 @@ SENSOR_TYPES = {
 }
 
 SUPPORTED_PLATFORMS = [
-    "binary_sensor",
     "sensor",
-    "switch",
 ]

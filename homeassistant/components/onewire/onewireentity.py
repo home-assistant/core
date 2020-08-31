@@ -51,7 +51,3 @@ class OneWireEntity(Entity):
     def read_value(self):
         """Read the value from the path."""
         return self._proxy.read_value(self._device_file)
-
-    def write_value(self, value):
-        """Write the value to the path."""
-        self._proxy.write_value(self._device_file, value)
