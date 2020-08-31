@@ -66,7 +66,7 @@ async def test_air_quality_with_incomplete_data(hass):
     assert state
     assert state.state == "4"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
-    assert state.attributes.get(ATTR_AQI) == AQI_GOOD
+    assert state.attributes.get(ATTR_AQI) == "foo"
     assert state.attributes.get(ATTR_PM_10) is None
     assert state.attributes.get(ATTR_PM_2_5) == 4
     assert state.attributes.get(ATTR_CO) == 252
