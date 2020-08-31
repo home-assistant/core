@@ -13,4 +13,6 @@ async def test_setup_entry(hass, config_entry, aioclient_mock_fixture):
         hass, FLO_DOMAIN, {CONF_USERNAME: TEST_USER_ID, CONF_PASSWORD: TEST_PASSWORD}
     )
     await hass.async_block_till_done()
-    assert len(hass.data[FLO_DOMAIN]["devices"]) == 1
+    assert len(hass.data[FLO_DOMAIN][config_entry.entry_id]["devices"]) == 1
+
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
