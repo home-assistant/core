@@ -52,7 +52,7 @@ _RE_GET_ENTITIES = re.compile(
     re.I | re.M,
 )
 
-_RE_JINJA_DELIMITERS = re.compile(r"\{%|\{\{")
+_RE_JINJA_DELIMITERS = re.compile(r"\{%|\{\{|\{#")
 
 _RESERVED_NAMES = {"contextfunction", "evalcontextfunction", "environmentfunction"}
 
