@@ -34,10 +34,15 @@ from homeassistant.components.yeelight import (
     ATTR_TRANSITIONS,
     CONF_CUSTOM_EFFECTS,
     CONF_FLOW_PARAMS,
-    CONF_NIGHTLIGHT_SWITCH_TYPE,
+    CONF_MODE_MUSIC,
+    CONF_NIGHTLIGHT_SWITCH,
+    CONF_SAVE_ON_CHANGE,
+    CONF_TRANSITION,
+    DEFAULT_MODE_MUSIC,
+    DEFAULT_NIGHTLIGHT_SWITCH,
+    DEFAULT_SAVE_ON_CHANGE,
     DEFAULT_TRANSITION,
     DOMAIN,
-    NIGHTLIGHT_SWITCH_TYPE_LIGHT,
     YEELIGHT_HSV_TRANSACTION,
     YEELIGHT_RGB_TRANSITION,
     YEELIGHT_SLEEP_TRANSACTION,
@@ -66,7 +71,7 @@ from homeassistant.components.yeelight.light import (
     YEELIGHT_MONO_EFFECT_LIST,
     YEELIGHT_TEMP_ONLY_EFFECT_LIST,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CONF_DEVICES, CONF_NAME
+from homeassistant.const import ATTR_ENTITY_ID, CONF_ID, CONF_IP_ADDRESS, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.color import (
@@ -79,24 +84,38 @@ from homeassistant.util.color import (
 )
 
 from . import (
-    CAPABILITIES,
     ENTITY_LIGHT,
     ENTITY_NIGHTLIGHT,
+    IP_ADDRESS,
     MODULE,
     NAME,
     PROPERTIES,
-    YAML_CONFIGURATION,
     _mocked_bulb,
+    _patch_discovery,
 )
 
 from tests.async_mock import MagicMock, patch
+from tests.common import MockConfigEntry
 
 
 async def test_services(hass: HomeAssistant, caplog):
     """Test Yeelight services."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_ID: "",
+            CONF_IP_ADDRESS: IP_ADDRESS,
+            CONF_TRANSITION: DEFAULT_TRANSITION,
+            CONF_MODE_MUSIC: True,
+            CONF_SAVE_ON_CHANGE: True,
+            CONF_NIGHTLIGHT_SWITCH: True,
+        },
+    )
+    config_entry.add_to_hass(hass)
+
     mocked_bulb = _mocked_bulb()
-    with patch(f"{MODULE}.Bulb", return_value=mocked_bulb):
-        await async_setup_component(hass, DOMAIN, YAML_CONFIGURATION)
+    with _patch_discovery(MODULE), patch(f"{MODULE}.Bulb", return_value=mocked_bulb):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
     async def _async_test_service(service, data, method, payload=None, domain=DOMAIN):
@@ -264,70 +283,70 @@ async def test_services(hass: HomeAssistant, caplog):
 
 async def test_device_types(hass: HomeAssistant):
     """Test different device types."""
+    mocked_bulb = _mocked_bulb()
     properties = {**PROPERTIES}
     properties.pop("active_mode")
     properties["color_mode"] = "3"
+    mocked_bulb.last_properties = properties
 
-    def _create_mocked_bulb(bulb_type, model, unique_id):
-        capabilities = {**CAPABILITIES}
-        capabilities["id"] = f"yeelight.{unique_id}"
-        mocked_bulb = _mocked_bulb()
-        mocked_bulb.bulb_type = bulb_type
-        mocked_bulb.last_properties = properties
-        mocked_bulb.capabilities = capabilities
-        model_specs = _MODEL_SPECS.get(model)
-        type(mocked_bulb).get_model_specs = MagicMock(return_value=model_specs)
-        return mocked_bulb
-
-    types = {
-        "default": (None, "mono"),
-        "white": (BulbType.White, "mono"),
-        "color": (BulbType.Color, "color"),
-        "white_temp": (BulbType.WhiteTemp, "ceiling1"),
-        "white_temp_mood": (BulbType.WhiteTempMood, "ceiling4"),
-        "ambient": (BulbType.WhiteTempMood, "ceiling4"),
-    }
-
-    devices = {}
-    mocked_bulbs = []
-    unique_id = 0
-    for name, (bulb_type, model) in types.items():
-        devices[f"{name}.yeelight"] = {CONF_NAME: name}
-        devices[f"{name}_nightlight.yeelight"] = {
-            CONF_NAME: f"{name}_nightlight",
-            CONF_NIGHTLIGHT_SWITCH_TYPE: NIGHTLIGHT_SWITCH_TYPE_LIGHT,
-        }
-        mocked_bulbs.append(_create_mocked_bulb(bulb_type, model, unique_id))
-        mocked_bulbs.append(_create_mocked_bulb(bulb_type, model, unique_id + 1))
-        unique_id += 2
-
-    with patch(f"{MODULE}.Bulb", side_effect=mocked_bulbs):
-        await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_DEVICES: devices}})
-        await hass.async_block_till_done()
+    async def _async_setup(config_entry):
+        with patch(f"{MODULE}.Bulb", return_value=mocked_bulb):
+            await hass.config_entries.async_setup(config_entry.entry_id)
+            await hass.async_block_till_done()
 
     async def _async_test(
-        name,
         bulb_type,
         model,
         target_properties,
         nightlight_properties=None,
-        entity_name=None,
-        entity_id=None,
+        name=NAME,
+        entity_id=ENTITY_LIGHT,
     ):
-        if entity_id is None:
-            entity_id = f"light.{name}"
+        config_entry = MockConfigEntry(
+            domain=DOMAIN,
+            data={
+                CONF_ID: "",
+                CONF_IP_ADDRESS: IP_ADDRESS,
+                CONF_TRANSITION: DEFAULT_TRANSITION,
+                CONF_MODE_MUSIC: DEFAULT_MODE_MUSIC,
+                CONF_SAVE_ON_CHANGE: DEFAULT_SAVE_ON_CHANGE,
+                CONF_NIGHTLIGHT_SWITCH: False,
+            },
+        )
+        config_entry.add_to_hass(hass)
+
+        mocked_bulb.bulb_type = bulb_type
+        model_specs = _MODEL_SPECS.get(model)
+        type(mocked_bulb).get_model_specs = MagicMock(return_value=model_specs)
+        await _async_setup(config_entry)
+
         state = hass.states.get(entity_id)
         assert state.state == "on"
-        target_properties["friendly_name"] = entity_name or name
+        target_properties["friendly_name"] = name
         target_properties["flowing"] = False
         target_properties["night_light"] = True
         assert dict(state.attributes) == target_properties
 
+        await hass.config_entries.async_unload(config_entry.entry_id)
+        await config_entry.async_remove(hass)
+
         # nightlight
         if nightlight_properties is None:
             return
-        name += "_nightlight"
-        entity_id = f"light.{name}"
+        config_entry = MockConfigEntry(
+            domain=DOMAIN,
+            data={
+                CONF_ID: "",
+                CONF_IP_ADDRESS: IP_ADDRESS,
+                CONF_TRANSITION: DEFAULT_TRANSITION,
+                CONF_MODE_MUSIC: DEFAULT_MODE_MUSIC,
+                CONF_SAVE_ON_CHANGE: DEFAULT_SAVE_ON_CHANGE,
+                CONF_NIGHTLIGHT_SWITCH: True,
+            },
+        )
+        config_entry.add_to_hass(hass)
+        await _async_setup(config_entry)
+
         assert hass.states.get(entity_id).state == "off"
         state = hass.states.get(f"{entity_id}_nightlight")
         assert state.state == "on"
@@ -336,6 +355,9 @@ async def test_device_types(hass: HomeAssistant):
         nightlight_properties["flowing"] = False
         nightlight_properties["night_light"] = True
         assert dict(state.attributes) == nightlight_properties
+
+        await hass.config_entries.async_unload(config_entry.entry_id)
+        await config_entry.async_remove(hass)
 
     bright = round(255 * int(PROPERTIES["bright"]) / 100)
     current_brightness = round(255 * int(PROPERTIES["current_brightness"]) / 100)
@@ -355,7 +377,6 @@ async def test_device_types(hass: HomeAssistant):
 
     # Default
     await _async_test(
-        "default",
         None,
         "mono",
         {
@@ -367,7 +388,6 @@ async def test_device_types(hass: HomeAssistant):
 
     # White
     await _async_test(
-        "white",
         BulbType.White,
         "mono",
         {
@@ -380,7 +400,6 @@ async def test_device_types(hass: HomeAssistant):
     # Color
     model_specs = _MODEL_SPECS["color"]
     await _async_test(
-        "color",
         BulbType.Color,
         "color",
         {
@@ -404,7 +423,6 @@ async def test_device_types(hass: HomeAssistant):
     # WhiteTemp
     model_specs = _MODEL_SPECS["ceiling1"]
     await _async_test(
-        "white_temp",
         BulbType.WhiteTemp,
         "ceiling1",
         {
@@ -427,9 +445,10 @@ async def test_device_types(hass: HomeAssistant):
     )
 
     # WhiteTempMood
+    properties.pop("power")
+    properties["main_power"] = "on"
     model_specs = _MODEL_SPECS["ceiling4"]
     await _async_test(
-        "white_temp_mood",
         BulbType.WhiteTempMood,
         "ceiling4",
         {
@@ -454,7 +473,6 @@ async def test_device_types(hass: HomeAssistant):
         },
     )
     await _async_test(
-        "ambient",
         BulbType.WhiteTempMood,
         "ceiling4",
         {
@@ -468,36 +486,52 @@ async def test_device_types(hass: HomeAssistant):
             "rgb_color": bg_rgb_color,
             "xy_color": bg_xy_color,
         },
-        entity_name="ambient ambilight",
-        entity_id="light.ambient_ambilight",
+        name=f"{NAME} ambilight",
+        entity_id=f"{ENTITY_LIGHT}_ambilight",
     )
 
 
 async def test_effects(hass: HomeAssistant):
     """Test effects."""
-    yaml_configuration = {
-        DOMAIN: {
-            CONF_DEVICES: YAML_CONFIGURATION[DOMAIN][CONF_DEVICES],
-            CONF_CUSTOM_EFFECTS: [
-                {
-                    CONF_NAME: "mock_effect",
-                    CONF_FLOW_PARAMS: {
-                        ATTR_COUNT: 3,
-                        ATTR_TRANSITIONS: [
-                            {YEELIGHT_HSV_TRANSACTION: [300, 50, 500, 50]},
-                            {YEELIGHT_RGB_TRANSITION: [100, 100, 100, 300, 30]},
-                            {YEELIGHT_TEMPERATURE_TRANSACTION: [3000, 200, 20]},
-                            {YEELIGHT_SLEEP_TRANSACTION: [800]},
-                        ],
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                CONF_CUSTOM_EFFECTS: [
+                    {
+                        CONF_NAME: "mock_effect",
+                        CONF_FLOW_PARAMS: {
+                            ATTR_COUNT: 3,
+                            ATTR_TRANSITIONS: [
+                                {YEELIGHT_HSV_TRANSACTION: [300, 50, 500, 50]},
+                                {YEELIGHT_RGB_TRANSITION: [100, 100, 100, 300, 30]},
+                                {YEELIGHT_TEMPERATURE_TRANSACTION: [3000, 200, 20]},
+                                {YEELIGHT_SLEEP_TRANSACTION: [800]},
+                            ],
+                        },
                     },
-                },
-            ],
-        }
-    }
+                ],
+            },
+        },
+    )
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_ID: "",
+            CONF_IP_ADDRESS: IP_ADDRESS,
+            CONF_TRANSITION: DEFAULT_TRANSITION,
+            CONF_MODE_MUSIC: DEFAULT_MODE_MUSIC,
+            CONF_SAVE_ON_CHANGE: DEFAULT_SAVE_ON_CHANGE,
+            CONF_NIGHTLIGHT_SWITCH: DEFAULT_NIGHTLIGHT_SWITCH,
+        },
+    )
+    config_entry.add_to_hass(hass)
 
     mocked_bulb = _mocked_bulb()
-    with patch(f"{MODULE}.Bulb", return_value=mocked_bulb):
-        assert await async_setup_component(hass, DOMAIN, yaml_configuration)
+    with _patch_discovery(MODULE), patch(f"{MODULE}.Bulb", return_value=mocked_bulb):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
     assert hass.states.get(ENTITY_LIGHT).attributes.get(
