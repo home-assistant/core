@@ -1,5 +1,5 @@
 """Test OpenZWave Websocket API."""
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 from openzwavemqtt.const import (
     ATTR_CODE_SLOT,
@@ -51,13 +51,7 @@ from homeassistant.helpers.entity_registry import (
 
 from .common import MQTTMessage, setup_ozw
 
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    mock_device_registry,
-    mock_integration,
-    mock_registry,
-)
+from tests.common import MockConfigEntry, mock_device_registry, mock_registry
 
 ZWAVE_SOURCE_NODE_DEVICE_ID = "zwave_source_node_device_id"
 ZWAVE_SOURCE_NODE_DEVICE_NAME = "Z-Wave Source Node Device"
@@ -174,15 +168,14 @@ def zwave_migration_data_fixture(hass):
 @pytest.fixture(name="zwave_integration")
 def zwave_integration_fixture(hass, zwave_migration_data):
     """Mock the zwave integration."""
-    zwave_module = MockModule("zwave")
-    zwave_module.async_get_ozw_migration_data = AsyncMock(
-        return_value=zwave_migration_data
-    )
-    zwave_integration = mock_integration(hass, zwave_module)
     hass.config.components.add("zwave")
-    MockConfigEntry(domain="zwave").add_to_hass(hass)
-
-    return zwave_integration
+    zwave_config_entry = MockConfigEntry(domain="zwave", data={"usb_path": "/dev/test"})
+    zwave_config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.zwave.async_get_ozw_migration_data",
+        return_value=zwave_migration_data,
+    ):
+        yield zwave_config_entry
 
 
 async def test_migrate_zwave(hass, migration_data, hass_ws_client, zwave_integration):
@@ -258,6 +251,11 @@ async def test_migrate_zwave(hass, migration_data, hass_ws_client, zwave_integra
     # check that the zwave config entry has been removed
     assert not hass.config_entries.async_entries("zwave")
 
+    # Check that the zwave integration fails entry setup after migration
+    zwave_config_entry = MockConfigEntry(domain="zwave")
+    zwave_config_entry.add_to_hass(hass)
+    assert not await hass.config_entries.async_setup(zwave_config_entry.entry_id)
+
 
 async def test_migrate_zwave_dry_run(
     hass, migration_data, hass_ws_client, zwave_integration
@@ -304,6 +302,14 @@ async def test_migrate_zwave_dry_run(
     assert ent_reg.async_is_registered(ZWAVE_POWER_ENTITY)
     power_entry = ent_reg.async_get(ZWAVE_POWER_ENTITY)
     assert power_entry.unique_id == ZWAVE_POWER_UNIQUE_ID
+
+    # check that the zwave config entry has not been removed
+    assert hass.config_entries.async_entries("zwave")
+
+    # Check that the zwave integration can be setup after dry run
+    zwave_config_entry = zwave_integration
+    with patch("openzwave.option.ZWaveOption"), patch("openzwave.network.ZWaveNetwork"):
+        assert await hass.config_entries.async_setup(zwave_config_entry.entry_id)
 
 
 async def test_migrate_zwave_not_setup(hass, migration_data, hass_ws_client):

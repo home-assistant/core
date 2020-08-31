@@ -7,7 +7,7 @@ from homeassistant.helpers.entity_registry import (
     async_get_registry as async_get_entity_registry,
 )
 
-from .const import DOMAIN, NODES_VALUES
+from .const import DOMAIN, MIGRATED, NODES_VALUES
 from .entity import create_device_id, create_value_id
 
 # The following dicts map labels between OpenZWave 1.4 and 1.6.
@@ -160,3 +160,10 @@ async def async_migrate(hass, migration_map):
 
     zwave_config_entry = hass.config_entries.async_entries("zwave")[0]
     await hass.config_entries.async_remove(zwave_config_entry.entry_id)
+
+    ozw_config_entry = hass.config_entries.async_entries("ozw")[0]
+    updates = {
+        **ozw_config_entry.data,
+        MIGRATED: True,
+    }
+    hass.config_entries.async_update_entry(ozw_config_entry, data=updates)

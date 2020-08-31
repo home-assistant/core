@@ -298,6 +298,18 @@ async def async_get_ozw_migration_data(hass):
     return data_to_migrate
 
 
+@callback
+def async_is_ozw_migrated(hass):
+    """Return True if migration to ozw is done."""
+    ozw_config_entries = hass.config_entries.async_entries("ozw")
+    if not ozw_config_entries:
+        return False
+
+    ozw_config_entry = ozw_config_entries[0]  # only one ozw entry is allowed
+    migrated = bool(ozw_config_entry.data.get("migrated"))
+    return migrated
+
+
 def _obj_to_dict(obj):
     """Convert an object into a hash for debug."""
     return {
@@ -391,6 +403,12 @@ async def async_setup_entry(hass, config_entry):
 
     # pylint: enable=import-error
     from pydispatch import dispatcher
+
+    if async_is_ozw_migrated(hass):
+        _LOGGER.error(
+            "Migration to ozw has been done. Please remove the zwave integration"
+        )
+        return False
 
     # Merge config entry and yaml config
     config = config_entry.data
