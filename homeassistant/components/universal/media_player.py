@@ -71,6 +71,7 @@ from homeassistant.const import (
 from homeassistant.core import EVENT_HOMEASSISTANT_START, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.event import TrackTemplate, async_track_template_result
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.service import async_call_from_config
 
@@ -151,7 +152,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         @callback
         def _async_on_template_update(event, updates):
             """Update ha state when dependencies update."""
-            _, _, result = updates.pop()
+            result = updates.pop().result
 
             if isinstance(result, TemplateError):
                 self._state_template_result = None
@@ -160,8 +161,10 @@ class UniversalMediaPlayer(MediaPlayerEntity):
             self.async_schedule_update_ha_state(True)
 
         if self._state_template is not None:
-            result = self.hass.helpers.event.async_track_template_result(
-                [(self._state_template, None)], _async_on_template_update
+            result = async_track_template_result(
+                self.hass,
+                [TrackTemplate(self._state_template, None)],
+                _async_on_template_update,
             )
             self.hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_START, callback(lambda _: result.async_refresh())

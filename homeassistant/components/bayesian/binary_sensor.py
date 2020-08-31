@@ -21,6 +21,7 @@ from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import condition
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import (
+    TrackTemplate,
     async_track_state_change_event,
     async_track_template_result,
 )
@@ -188,7 +189,9 @@ class BayesianBinarySensor(BinarySensorEntity):
 
         @callback
         def _async_template_result_changed(event, updates):
-            template, _, result = updates.pop()
+            track_template_result = updates.pop()
+            template = track_template_result.template
+            result = track_template_result.result
             entity = event and event.data.get("entity_id")
 
             if isinstance(result, TemplateError):
@@ -216,7 +219,9 @@ class BayesianBinarySensor(BinarySensorEntity):
 
         for template in self.observations_by_template:
             info = async_track_template_result(
-                self.hass, [(template, None)], _async_template_result_changed
+                self.hass,
+                [TrackTemplate(template, None)],
+                _async_template_result_changed,
             )
 
             self._callbacks.append(info)

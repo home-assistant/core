@@ -1,7 +1,7 @@
 """TemplateEntity utility class."""
 
 import logging
-from typing import Any, Callable, List, Optional, Tuple, Union
+from typing import Any, Callable, List, Optional, Union
 
 import voluptuous as vol
 
@@ -9,7 +9,12 @@ from homeassistant.core import EVENT_HOMEASSISTANT_START, CoreState, callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import Event, async_track_template_result
+from homeassistant.helpers.event import (
+    Event,
+    TrackTemplate,
+    TrackTemplateResult,
+    async_track_template_result,
+)
 from homeassistant.helpers.template import Template, result_as_boolean
 
 _LOGGER = logging.getLogger(__name__)
@@ -57,7 +62,7 @@ class _TemplateAttribute:
         self,
         event: Optional[Event],
         template: Template,
-        last_result: Optional[str],
+        last_result: Union[str, None, TemplateError],
         result: Union[str, TemplateError],
     ) -> None:
         """Handle a template result event callback."""
@@ -214,25 +219,26 @@ class TemplateEntity(Entity):
     def _handle_results(
         self,
         event: Optional[Event],
-        updates: List[
-            Tuple[Template, Union[str, TemplateError], Union[str, TemplateError]]
-        ],
+        updates: List[TrackTemplateResult],
     ) -> None:
         """Call back the results to the attributes."""
         if event:
             self.async_set_context(event.context)
 
         for update in updates:
-            template, last_result, result = update
-            for attr in self._template_attrs[template]:
-                attr.handle_result(event, template, last_result, result)
+            for attr in self._template_attrs[update.template]:
+                attr.handle_result(
+                    event, update.template, update.last_result, update.result
+                )
 
         if self._async_update:
             self.async_write_ha_state()
 
     async def _async_template_startup(self, *_) -> None:
         # _handle_results will not write state until "_async_update" is set
-        template_var_tups = [(template, None) for template in self._template_attrs]
+        template_var_tups = [
+            TrackTemplate(template, None) for template in self._template_attrs
+        ]
 
         result_info = async_track_template_result(
             self.hass, template_var_tups, self._handle_results

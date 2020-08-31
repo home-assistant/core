@@ -14,6 +14,8 @@ from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
 from homeassistant.helpers.event import (
+    TrackTemplate,
+    TrackTemplateResult,
     async_call_later,
     async_track_point_in_time,
     async_track_point_in_utc_time,
@@ -582,28 +584,34 @@ async def test_track_template_result(hass):
     )
 
     def specific_run_callback(event, updates):
-        template, old_result, new_result = updates.pop()
-        specific_runs.append(int(new_result))
+        track_result = updates.pop()
+        specific_runs.append(int(track_result.result))
 
     async_track_template_result(
-        hass, [(template_condition, None)], specific_run_callback
+        hass, [TrackTemplate(template_condition, None)], specific_run_callback
     )
 
     @ha.callback
     def wildcard_run_callback(event, updates):
-        template, old_result, new_result = updates.pop()
-        wildcard_runs.append((int(old_result or 0), int(new_result)))
+        track_result = updates.pop()
+        wildcard_runs.append(
+            (int(track_result.last_result or 0), int(track_result.result))
+        )
 
     async_track_template_result(
-        hass, [(template_condition, None)], wildcard_run_callback
+        hass, [TrackTemplate(template_condition, None)], wildcard_run_callback
     )
 
     async def wildercard_run_callback(event, updates):
-        template, old_result, new_result = updates.pop()
-        wildercard_runs.append((int(old_result or 0), int(new_result)))
+        track_result = updates.pop()
+        wildercard_runs.append(
+            (int(track_result.last_result or 0), int(track_result.result))
+        )
 
     async_track_template_result(
-        hass, [(template_condition_var, {"test": 5})], wildercard_run_callback
+        hass,
+        [TrackTemplate(template_condition_var, {"test": 5})],
+        wildercard_run_callback,
     )
     await hass.async_block_till_done()
 
@@ -669,13 +677,14 @@ async def test_track_template_result_complex(hass):
     template_complex = Template(template_complex_str, hass)
 
     def specific_run_callback(event, updates):
-        template, old_result, new_result = updates.pop()
-        specific_runs.append(new_result)
+        specific_runs.append(updates.pop().result)
 
     hass.states.async_set("light.one", "on")
     hass.states.async_set("lock.one", "locked")
 
-    async_track_template_result(hass, [(template_complex, None)], specific_run_callback)
+    async_track_template_result(
+        hass, [TrackTemplate(template_complex, None)], specific_run_callback
+    )
     await hass.async_block_till_done()
 
     hass.states.async_set("sensor.domain", "light")
@@ -751,14 +760,15 @@ async def test_track_template_result_with_wildcard(hass):
     template_complex = Template(template_complex_str, hass)
 
     def specific_run_callback(event, updates):
-        template, old_result, new_result = updates.pop()
-        specific_runs.append(new_result)
+        specific_runs.append(updates.pop().result)
 
     hass.states.async_set("cover.office_drapes", "closed")
     hass.states.async_set("cover.office_window", "closed")
     hass.states.async_set("cover.office_skylight", "open")
 
-    async_track_template_result(hass, [(template_complex, None)], specific_run_callback)
+    async_track_template_result(
+        hass, [TrackTemplate(template_complex, None)], specific_run_callback
+    )
     await hass.async_block_till_done()
 
     hass.states.async_set("cover.office_window", "open")
@@ -796,10 +806,11 @@ async def test_track_template_result_with_group(hass):
     template_complex = Template(template_complex_str, hass)
 
     def specific_run_callback(event, updates):
-        template, old_result, new_result = updates.pop()
-        specific_runs.append(new_result)
+        specific_runs.append(updates.pop().result)
 
-    async_track_template_result(hass, [(template_complex, None)], specific_run_callback)
+    async_track_template_result(
+        hass, [TrackTemplate(template_complex, None)], specific_run_callback
+    )
     await hass.async_block_till_done()
 
     hass.states.async_set("sensor.power_1", 100.1)
@@ -838,10 +849,11 @@ async def test_track_template_result_and_conditional(hass):
     template = Template(template_str, hass)
 
     def specific_run_callback(event, updates):
-        template, old_result, new_result = updates.pop()
-        specific_runs.append(new_result)
+        specific_runs.append(updates.pop().result)
 
-    async_track_template_result(hass, [(template, None)], specific_run_callback)
+    async_track_template_result(
+        hass, [TrackTemplate(template, None)], specific_run_callback
+    )
     await hass.async_block_till_done()
 
     hass.states.async_set("light.b", "on")
@@ -878,13 +890,12 @@ async def test_track_template_result_iterator(hass):
 
     @ha.callback
     def iterator_callback(event, updates):
-        template, old_result, new_result = updates.pop()
-        iterator_runs.append(new_result)
+        iterator_runs.append(updates.pop().result)
 
     async_track_template_result(
         hass,
         [
-            (
+            TrackTemplate(
                 Template(
                     """
             {% for state in states.sensor %}
@@ -911,13 +922,12 @@ async def test_track_template_result_iterator(hass):
 
     @ha.callback
     def filter_callback(event, updates):
-        template, old_result, new_result = updates.pop()
-        filter_runs.append(new_result)
+        filter_runs.append(updates.pop().result)
 
     async_track_template_result(
         hass,
         [
-            (
+            TrackTemplate(
                 Template(
                     """{{ states.sensor|selectattr("state","equalto","on")
                 |join(",", attribute="entity_id") }}""",
@@ -953,11 +963,18 @@ async def test_track_template_result_errors(hass, caplog):
 
     @ha.callback
     def syntax_error_listener(event, updates):
-        template, last_result, result = updates.pop()
-        syntax_error_runs.append((event, template, last_result, result))
+        track_result = updates.pop()
+        syntax_error_runs.append(
+            (
+                event,
+                track_result.template,
+                track_result.last_result,
+                track_result.result,
+            )
+        )
 
     async_track_template_result(
-        hass, [(template_syntax_error, None)], syntax_error_listener
+        hass, [TrackTemplate(template_syntax_error, None)], syntax_error_listener
     )
     await hass.async_block_till_done()
 
@@ -966,12 +983,19 @@ async def test_track_template_result_errors(hass, caplog):
 
     @ha.callback
     def not_exist_runs_error_listener(event, updates):
-        template, last_result, result = updates.pop()
-        not_exist_runs.append((event, template, last_result, result))
+        template_track = updates.pop()
+        not_exist_runs.append(
+            (
+                event,
+                template_track.template,
+                template_track.last_result,
+                template_track.result,
+            )
+        )
 
     async_track_template_result(
         hass,
-        [(template_not_exist, None)],
+        [TrackTemplate(template_not_exist, None)],
         not_exist_runs_error_listener,
     )
     await hass.async_block_till_done()
@@ -1019,11 +1043,10 @@ async def test_track_template_result_refresh_cancel(hass):
 
     @ha.callback
     def refresh_listener(event, updates):
-        template, last_result, result = updates.pop()
-        refresh_runs.append(result)
+        refresh_runs.append(updates.pop().result)
 
     info = async_track_template_result(
-        hass, [(template_refresh, None)], refresh_listener
+        hass, [TrackTemplate(template_refresh, None)], refresh_listener
     )
     await hass.async_block_till_done()
 
@@ -1052,7 +1075,7 @@ async def test_track_template_result_refresh_cancel(hass):
 
     info = async_track_template_result(
         hass,
-        [(template_refresh, {"value": "duck"})],
+        [TrackTemplate(template_refresh, {"value": "duck"})],
         refresh_listener,
     )
     await hass.async_block_till_done()
@@ -1085,10 +1108,10 @@ async def test_async_track_template_result_multiple_templates(hass):
     async_track_template_result(
         hass,
         [
-            (template_1, None),
-            (template_2, None),
-            (template_3, None),
-            (template_4, None),
+            TrackTemplate(template_1, None),
+            TrackTemplate(template_2, None),
+            TrackTemplate(template_3, None),
+            TrackTemplate(template_4, None),
         ],
         refresh_listener,
     )
@@ -1098,9 +1121,9 @@ async def test_async_track_template_result_multiple_templates(hass):
 
     assert refresh_runs == [
         [
-            (template_1, None, "True"),
-            (template_2, None, "True"),
-            (template_3, None, "False"),
+            TrackTemplateResult(template_1, None, "True"),
+            TrackTemplateResult(template_2, None, "True"),
+            TrackTemplateResult(template_3, None, "False"),
         ]
     ]
 
@@ -1110,9 +1133,9 @@ async def test_async_track_template_result_multiple_templates(hass):
 
     assert refresh_runs == [
         [
-            (template_1, "True", "False"),
-            (template_2, "True", "False"),
-            (template_3, "False", "True"),
+            TrackTemplateResult(template_1, "True", "False"),
+            TrackTemplateResult(template_2, "True", "False"),
+            TrackTemplateResult(template_3, "False", "True"),
         ]
     ]
 
@@ -1120,7 +1143,9 @@ async def test_async_track_template_result_multiple_templates(hass):
     hass.states.async_set("binary_sensor.test", "off")
     await hass.async_block_till_done()
 
-    assert refresh_runs == [[(template_4, None, "['binary_sensor.test']")]]
+    assert refresh_runs == [
+        [TrackTemplateResult(template_4, None, "['binary_sensor.test']")]
+    ]
 
 
 async def test_async_track_template_result_multiple_templates_mixing_domain(hass):
@@ -1140,10 +1165,10 @@ async def test_async_track_template_result_multiple_templates_mixing_domain(hass
     async_track_template_result(
         hass,
         [
-            (template_1, None),
-            (template_2, None),
-            (template_3, None),
-            (template_4, None),
+            TrackTemplate(template_1, None),
+            TrackTemplate(template_2, None),
+            TrackTemplate(template_3, None),
+            TrackTemplate(template_4, None),
         ],
         refresh_listener,
     )
@@ -1153,10 +1178,10 @@ async def test_async_track_template_result_multiple_templates_mixing_domain(hass
 
     assert refresh_runs == [
         [
-            (template_1, None, "True"),
-            (template_2, None, "True"),
-            (template_3, None, "False"),
-            (template_4, None, "['switch.test']"),
+            TrackTemplateResult(template_1, None, "True"),
+            TrackTemplateResult(template_2, None, "True"),
+            TrackTemplateResult(template_3, None, "False"),
+            TrackTemplateResult(template_4, None, "['switch.test']"),
         ]
     ]
 
@@ -1166,9 +1191,9 @@ async def test_async_track_template_result_multiple_templates_mixing_domain(hass
 
     assert refresh_runs == [
         [
-            (template_1, "True", "False"),
-            (template_2, "True", "False"),
-            (template_3, "False", "True"),
+            TrackTemplateResult(template_1, "True", "False"),
+            TrackTemplateResult(template_2, "True", "False"),
+            TrackTemplateResult(template_3, "False", "True"),
         ]
     ]
 
@@ -1183,7 +1208,11 @@ async def test_async_track_template_result_multiple_templates_mixing_domain(hass
     await hass.async_block_till_done()
 
     assert refresh_runs == [
-        [(template_4, "['switch.test']", "['switch.new', 'switch.test']")]
+        [
+            TrackTemplateResult(
+                template_4, "['switch.test']", "['switch.new', 'switch.test']"
+            )
+        ]
     ]
 
 

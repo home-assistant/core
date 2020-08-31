@@ -15,7 +15,7 @@ from homeassistant.exceptions import (
     Unauthorized,
 )
 from homeassistant.helpers import config_validation as cv, entity
-from homeassistant.helpers.event import async_track_template_result
+from homeassistant.helpers.event import TrackTemplate, async_track_template_result
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.loader import IntegrationNotFound, async_get_integration
 
@@ -256,12 +256,13 @@ def handle_render_template(hass, connection, msg):
 
     @callback
     def _template_listener(event, updates):
-        template, _, result = updates.pop()
+        track_template_result = updates.pop()
+        result = track_template_result.result
         if isinstance(result, TemplateError):
             _LOGGER.error(
                 "TemplateError('%s') " "while processing template '%s'",
                 result,
-                template,
+                track_template_result.template,
             )
 
             result = None
@@ -269,7 +270,7 @@ def handle_render_template(hass, connection, msg):
         connection.send_message(messages.event_message(msg["id"], {"result": result}))
 
     info = async_track_template_result(
-        hass, [(template, variables)], _template_listener
+        hass, [TrackTemplate(template, variables)], _template_listener
     )
 
     connection.subscriptions[msg["id"]] = info.async_remove
