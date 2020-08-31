@@ -974,7 +974,7 @@ class XiaomiGatewayLight(LightEntity):
         self._gateway = gateway_device
         self._name = f"{gateway_name} Light"
         self._gateway_device_id = gateway_device_id
-        self._unique_id = f"{gateway_device_id}-light"
+        self._unique_id = gateway_device_id
         self._available = False
         self._is_on = None
         self._brightness_pct = 100
