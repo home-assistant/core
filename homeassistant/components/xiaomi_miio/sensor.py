@@ -3,7 +3,13 @@ from dataclasses import dataclass
 import logging
 
 from miio import AirQualityMonitor, DeviceException  # pylint: disable=import-error
-from miio.gateway import DeviceType
+from miio.gateway import (
+    GATEWAY_MODEL_AC_V1,
+    GATEWAY_MODEL_AC_V2,
+    GATEWAY_MODEL_AC_V3,
+    DeviceType,
+    GatewayException,
+)
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -12,6 +18,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_TOKEN,
     DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
     PRESSURE_HPA,
@@ -78,9 +85,20 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Xiaomi sensor from a config entry."""
     entities = []
 
-    # Gateway sub devices
     if config_entry.data[CONF_FLOW_TYPE] == CONF_GATEWAY:
         gateway = hass.data[DOMAIN][config_entry.entry_id]
+        # Gateway illuminance sensor
+        if gateway.model not in [
+            GATEWAY_MODEL_AC_V1,
+            GATEWAY_MODEL_AC_V2,
+            GATEWAY_MODEL_AC_V3,
+        ]:
+            entities.append(
+                XiaomiGatewayIlluminanceSensor(
+                    gateway, config_entry.title, config_entry.unique_id
+                )
+            )
+        # Gateway sub devices
         sub_devices = gateway.devices
         for sub_device in sub_devices.values():
             sensor_variables = None
@@ -250,3 +268,67 @@ class XiaomiGatewaySensor(XiaomiGatewayDevice):
     def state(self):
         """Return the state of the sensor."""
         return self._sub_device.status[self._data_key]
+
+
+class XiaomiGatewayIlluminanceSensor(Entity):
+    """Representation of the gateway device's illuminance sensor."""
+
+    def __init__(self, gateway_device, gateway_name, gateway_device_id):
+        """Initialize the entity."""
+        self._gateway = gateway_device
+        self._name = f"{gateway_name} Illuminance"
+        self._gateway_device_id = gateway_device_id
+        self._unique_id = f"{gateway_device_id}-illuminance"
+        self._available = False
+        self._state = None
+
+    @property
+    def unique_id(self):
+        """Return an unique ID."""
+        return self._unique_id
+
+    @property
+    def device_info(self):
+        """Return the device info of the gateway."""
+        return {
+            "identifiers": {(DOMAIN, self._gateway_device_id)},
+        }
+
+    @property
+    def name(self):
+        """Return the name of this entity, if any."""
+        return self._name
+
+    @property
+    def available(self):
+        """Return true when state is known."""
+        return self._available
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of this entity."""
+        return "lux"
+
+    @property
+    def device_class(self):
+        """Return the device class of this entity."""
+        return DEVICE_CLASS_ILLUMINANCE
+
+    @property
+    def state(self):
+        """Return the state of the device."""
+        return self._state
+
+    async def async_update(self):
+        """Fetch state from the device."""
+        try:
+            self._state = await self.hass.async_add_executor_job(
+                self._gateway.get_illumination
+            )
+            self._available = True
+        except GatewayException as ex:
+            if self._available:
+                self._available = False
+                _LOGGER.error(
+                    "Got exception while fetching the gateway illuminance state: %s", ex
+                )
