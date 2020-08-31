@@ -50,8 +50,7 @@ def mock_dummy_device_from_host_light_fan():
     device.set_dummy(True)
 
     with patch(
-        "pywilight.device_from_host", 
-        return_value=device,
+        "pywilight.device_from_host", return_value=device,
     ):
         yield device
 
