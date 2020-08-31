@@ -93,11 +93,14 @@ async def async_setup_entry(hass, config_entry):
         update_interval=timedelta(seconds=_refresh_timer),
     )
 
+    def listener():
+        """Listen to coordinator."""
+
     hass.data[DOMAIN][_server_name]["coordinator"] = coordinator.data
 
     await coordinator.async_refresh()
 
-    coordinator.async_add_listener(_server_name)
+    coordinator.async_add_listener(listener)
 
     return True
 
