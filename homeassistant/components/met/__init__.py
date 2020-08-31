@@ -22,7 +22,6 @@ import homeassistant.util.dt as dt_util
 
 from .const import CONF_TRACK_HOME, DOMAIN
 
-
 _LOGGER = logging.getLogger(__name__)
 
 
