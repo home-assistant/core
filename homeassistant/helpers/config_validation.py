@@ -54,6 +54,7 @@ from homeassistant.const import (
     CONF_EVENT_DATA,
     CONF_EVENT_DATA_TEMPLATE,
     CONF_FOR,
+    CONF_FOR_EACH,
     CONF_PLATFORM,
     CONF_REPEAT,
     CONF_SCAN_INTERVAL,
@@ -1074,9 +1075,10 @@ _SCRIPT_REPEAT_SCHEMA = vol.Schema(
                 vol.Exclusive(CONF_UNTIL, "repeat"): vol.All(
                     ensure_list, [CONDITION_SCHEMA]
                 ),
+                vol.Exclusive(CONF_FOR_EACH, "repeat"): vol.Any(template, [template]),
                 vol.Required(CONF_SEQUENCE): SCRIPT_SCHEMA,
             },
-            has_at_least_one_key(CONF_COUNT, CONF_WHILE, CONF_UNTIL),
+            has_at_least_one_key(CONF_COUNT, CONF_WHILE, CONF_UNTIL, CONF_FOR_EACH),
         ),
     }
 )

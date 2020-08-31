@@ -40,6 +40,7 @@ from homeassistant.const import (
     CONF_EVENT,
     CONF_EVENT_DATA,
     CONF_EVENT_DATA_TEMPLATE,
+    CONF_FOR_EACH,
     CONF_MODE,
     CONF_REPEAT,
     CONF_SCENE,
@@ -475,10 +476,12 @@ class _ScriptRun:
 
         saved_repeat_vars = self._variables.get("repeat")
 
-        def set_repeat_var(iteration, count=None):
+        def set_repeat_var(iteration, count=None, value=None):
             repeat_vars = {"first": iteration == 1, "index": iteration}
             if count:
                 repeat_vars["last"] = iteration == count
+            if value is not None:
+                repeat_vars["value"] = value
             self._variables["repeat"] = repeat_vars
 
         # pylint: disable=protected-access
@@ -530,6 +533,33 @@ class _ScriptRun:
                 if self._stop.is_set() or all(
                     cond(self._hass, self._variables) for cond in conditions
                 ):
+                    break
+
+        elif CONF_FOR_EACH in repeat:
+            for_each = repeat[CONF_FOR_EACH]
+            split_csv_list = isinstance(for_each, template.Template)
+            if split_csv_list:
+                for_each = [for_each]
+            items = []
+            for item in for_each:
+                try:
+                    items.append(item.async_render(self._variables))
+                except (exceptions.TemplateError, ValueError) as ex:
+                    self._log(
+                        "Error rendering %s repeat for_each template: %s",
+                        self._script.name,
+                        ex,
+                        level=logging.ERROR,
+                    )
+                    raise _StopScript from ex
+            if split_csv_list:
+                items = [item.strip() for item in items[0].split(",")]
+            count = len(items)
+            extra_msg = f" of {count}"
+            for iteration, value in enumerate(items, start=1):
+                set_repeat_var(iteration, count, value)
+                await async_run_sequence(iteration, extra_msg)
+                if self._stop.is_set():
                     break
 
         if saved_repeat_vars:
