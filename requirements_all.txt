@@ -163,7 +163,7 @@ aioeafm==0.1.2
 aioesphomeapi==2.6.1
 
 # homeassistant.components.flo
-aioflo==0.4.0
+aioflo==0.4.1
 
 # homeassistant.components.freebox
 aiofreepybox==0.0.8
