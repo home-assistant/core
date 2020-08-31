@@ -537,22 +537,24 @@ class _ScriptRun:
 
         elif CONF_FOR_EACH in repeat:
             for_each = repeat[CONF_FOR_EACH]
-            split_csv_list = isinstance(for_each, template.Template)
-            if split_csv_list:
+            single_template = isinstance(for_each, template.Template)
+            if single_template:
                 for_each = [for_each]
             items = []
             for item in for_each:
-                try:
-                    items.append(item.async_render(self._variables))
-                except (exceptions.TemplateError, ValueError) as ex:
-                    self._log(
-                        "Error rendering %s repeat for_each template: %s",
-                        self._script.name,
-                        ex,
-                        level=logging.ERROR,
-                    )
-                    raise _StopScript from ex
-            if split_csv_list:
+                if isinstance(item, template.Template):
+                    try:
+                        item = item.async_render(self._variables)
+                    except (exceptions.TemplateError, ValueError) as ex:
+                        self._log(
+                            "Error rendering %s repeat for_each template: %s",
+                            self._script.name,
+                            ex,
+                            level=logging.ERROR,
+                        )
+                        raise _StopScript from ex
+                items.append(item)
+            if single_template:
                 items = [item.strip() for item in items[0].split(",")]
             count = len(items)
             extra_msg = f" of {count}"

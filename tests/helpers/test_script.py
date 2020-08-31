@@ -981,6 +981,79 @@ async def test_repeat_count(hass):
         assert event.data.get("last") == str(index == count - 1)
 
 
+async def test_repeat_for_each_list(hass):
+    """Test repeat for_each with list."""
+    event = "test_event"
+    events = async_capture_events(hass, event)
+    items = [123, "456", 7.89, "{{ test_value }}"]
+    results = [
+        ("123", "True", "False"),
+        ("456", "False", "True"),
+        ("7.89", "True", "False"),
+        ("4", "False", "True"),
+    ]
+    sequence = {
+        "repeat": {
+            "for_each": items,
+            "sequence": {
+                "event": event,
+                "event_data_template": {
+                    "value": "{{ repeat.value }}",
+                    "is_number": "{{ repeat.value is number }}",
+                    "is_string": "{{ repeat.value is string }}",
+                },
+            },
+        }
+    }
+    script_obj = script.Script(
+        hass, cv.SCRIPT_SCHEMA(sequence), "Test Name", "test_domain"
+    )
+
+    await script_obj.async_run({"test_value": 4}, context=Context())
+    await hass.async_block_till_done()
+
+    assert len(events) == len(items)
+    for idx, event in enumerate(events):
+        assert event.data.get("value") == results[idx][0]
+        assert event.data.get("is_number") == results[idx][1]
+        assert event.data.get("is_string") == results[idx][2]
+
+
+@pytest.mark.parametrize(
+    "for_each",
+    [
+        "{{ state_attr('group.test', 'entity_id')|join(',') }}",
+        "sensor.abc, sensor.def",
+    ],
+)
+async def test_repeat_for_each_csv(hass, for_each):
+    """Test repeat for_each with comma separated value list."""
+    event = "test_event"
+    events = async_capture_events(hass, event)
+    sequence = {
+        "repeat": {
+            "for_each": for_each,
+            "sequence": {
+                "event": event,
+                "event_data_template": {"value": "{{ repeat.value }}"},
+            },
+        }
+    }
+    script_obj = script.Script(
+        hass, cv.SCRIPT_SCHEMA(sequence), "Test Name", "test_domain"
+    )
+
+    hass.states.async_set(
+        "group.test", "on", {"entity_id": ["sensor.abc", "sensor.def"]}
+    )
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert len(events) == 2
+    assert events[0].data.get("value") == "sensor.abc"
+    assert events[1].data.get("value") == "sensor.def"
+
+
 @pytest.mark.parametrize("condition", ["while", "until"])
 async def test_repeat_conditional(hass, condition):
     """Test repeat action w/ while option."""

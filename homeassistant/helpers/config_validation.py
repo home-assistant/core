@@ -1075,7 +1075,12 @@ _SCRIPT_REPEAT_SCHEMA = vol.Schema(
                 vol.Exclusive(CONF_UNTIL, "repeat"): vol.All(
                     ensure_list, [CONDITION_SCHEMA]
                 ),
-                vol.Exclusive(CONF_FOR_EACH, "repeat"): vol.Any(template, [template]),
+                vol.Exclusive(CONF_FOR_EACH, "repeat"): vol.Any(
+                    dynamic_template,
+                    vol.All(
+                        ensure_list_csv, [vol.Any(dynamic_template, int, float, str)]
+                    ),
+                ),
                 vol.Required(CONF_SEQUENCE): SCRIPT_SCHEMA,
             },
             has_at_least_one_key(CONF_COUNT, CONF_WHILE, CONF_UNTIL, CONF_FOR_EACH),
