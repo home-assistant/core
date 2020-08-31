@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+            "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+        },
+        "error": {
+            "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+        },
+        "step": {
+            "pick_device": {
+                "data": {
+                    "device": "Device"
+                }
+            },
+            "user": {
+                "data": {
+                    "ip_address": "[%key:common::config_flow::data::ip%]"
+                },
+                "description": "If you leave IP address empty, discovery will be used to find devices."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "model": "Model (Optional)",
+                    "nightlight_switch": "Use Nightlight Switch",
+                    "save_on_change": "Save Status On Change",
+                    "transition": "Transition Time (ms)",
+                    "use_music_mode": "Enable Music Mode"
+                },
+                "description": "If you leave model empty, it will be automatically detected."
+            }
+        }
+    },
+    "title": "Yeelight"
+}

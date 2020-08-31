@@ -64,7 +64,6 @@ SERVICE_HANDLERS = {
     SERVICE_KONNECTED: ("konnected", None),
     SERVICE_OCTOPRINT: ("octoprint", None),
     SERVICE_FREEBOX: ("freebox", None),
-    SERVICE_YEELIGHT: ("yeelight", None),
     "yamaha": ("media_player", "yamaha"),
     "frontier_silicon": ("media_player", "frontier_silicon"),
     "openhome": ("media_player", "openhome"),
@@ -93,6 +92,7 @@ MIGRATED_SERVICE_HANDLERS = [
     SERVICE_WEMO,
     SERVICE_XIAOMI_GW,
     "volumio",
+    SERVICE_YEELIGHT,
 ]
 
 DEFAULT_ENABLED = (
