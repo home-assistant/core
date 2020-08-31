@@ -34,7 +34,8 @@ def mock_dummy_get_components_from_model_clear():
     """Mock a clear components list."""
     components = []
     with patch(
-        "pywilight.get_components_from_model", return_value=components,
+        "pywilight.get_components_from_model", 
+        return_value=components,
     ):
         yield components
 
@@ -44,7 +45,8 @@ def mock_dummy_get_components_from_model_wrong():
     """Mock a clear components list."""
     components = ["wrong"]
     with patch(
-        "pywilight.get_components_from_model", return_value=components,
+        "pywilight.get_components_from_model", 
+        return_value=components,
     ):
         yield components
 
