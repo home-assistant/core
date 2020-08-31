@@ -52,14 +52,20 @@ async def test_refresh_library(hass):
     # Test with non-existent library
     with patch.object(MockPlexLibrarySection, "update") as mock_update:
         assert await hass.services.async_call(
-            DOMAIN, SERVICE_REFRESH_LIBRARY, {"library_name": "Not a Library"}, True,
+            DOMAIN,
+            SERVICE_REFRESH_LIBRARY,
+            {"library_name": "Not a Library"},
+            True,
         )
         assert not mock_update.called
 
     # Test with valid library
     with patch.object(MockPlexLibrarySection, "update") as mock_update:
         assert await hass.services.async_call(
-            DOMAIN, SERVICE_REFRESH_LIBRARY, {"library_name": "Movies"}, True,
+            DOMAIN,
+            SERVICE_REFRESH_LIBRARY,
+            {"library_name": "Movies"},
+            True,
         )
         assert mock_update.called
 
@@ -88,6 +94,9 @@ async def test_refresh_library(hass):
     # Test multiple servers available but none specified
     with patch.object(MockPlexLibrarySection, "update") as mock_update:
         assert await hass.services.async_call(
-            DOMAIN, SERVICE_REFRESH_LIBRARY, {"library_name": "Movies"}, True,
+            DOMAIN,
+            SERVICE_REFRESH_LIBRARY,
+            {"library_name": "Movies"},
+            True,
         )
         assert not mock_update.called
