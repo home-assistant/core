@@ -77,7 +77,7 @@ class TestTTSMaryTTSPlatform:
                     tts.ATTR_MESSAGE: "HomeAssistant",
                 },
             )
-        self.hass.block_till_done()
+            self.hass.block_till_done()
 
         assert len(calls) == 1
         assert calls[0].data[ATTR_MEDIA_CONTENT_ID].find(".wav") != -1
@@ -108,7 +108,7 @@ class TestTTSMaryTTSPlatform:
                     tts.ATTR_MESSAGE: "HomeAssistant",
                 },
             )
-        self.hass.block_till_done()
+            self.hass.block_till_done()
 
         assert len(calls) == 1
         assert calls[0].data[ATTR_MEDIA_CONTENT_ID].find(".wav") != -1
@@ -137,7 +137,7 @@ class TestTTSMaryTTSPlatform:
                     tts.ATTR_MESSAGE: "HomeAssistant",
                 },
             )
-        self.hass.block_till_done()
+            self.hass.block_till_done()
 
         assert len(calls) == 0
 
