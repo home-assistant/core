@@ -399,11 +399,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         entry = await self.async_set_unique_id(DOMAIN)
         # In version 0.113 devices is not stored in entry.data, to be safe update data for all VERSION=1 entries
-        if entry.version == 1:
-            entry.version = 2
-            self._abort_if_unique_id_configured(import_config)
-        else:
-            self._abort_if_unique_id_configured()
+        if entry:
+            if entry.version == 1:
+                entry.version = 2
+                self._abort_if_unique_id_configured(import_config)
+            else:
+                self._abort_if_unique_id_configured()
         return self.async_create_entry(title="RFXTRX", data=import_config)
 
     async def async_validate_rfx(self, host=None, port=None, device=None):
