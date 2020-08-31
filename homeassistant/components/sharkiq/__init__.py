@@ -86,7 +86,6 @@ async def async_disconnect_or_timeout(coordinator: SharkIqUpdateCoordinator):
             await coordinator.ayla_api.async_sign_out()
         except (SharkIqAuthError, SharkIqAuthExpiringError, SharkIqNotAuthedError):
             pass
-    return True
 
 
 async def async_update_options(hass, config_entry):
