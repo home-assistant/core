@@ -245,7 +245,7 @@ class ArcamFmj(MediaPlayerEntity):
 
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
         """Implement the websocket media browsing helper."""
-        if media_content_id is not None:
+        if media_content_id not in (None, "root"):
             raise BrowseError(
                 f"Media not found: {media_content_type} / {media_content_id}"
             )
@@ -255,7 +255,7 @@ class ArcamFmj(MediaPlayerEntity):
         radio = [
             {
                 "title": preset.name,
-                "media_content_id": f"radio:{preset.index}",
+                "media_content_id": f"preset:{preset.index}",
                 "media_content_type": MEDIA_TYPE_MUSIC,
                 "can_play": True,
             }
@@ -264,7 +264,7 @@ class ArcamFmj(MediaPlayerEntity):
 
         root = {
             "title": "Root",
-            "media_content_id": "radio",
+            "media_content_id": "root",
             "media_content_type": "library",
             "can_play": False,
             "children": radio,
@@ -275,7 +275,7 @@ class ArcamFmj(MediaPlayerEntity):
     async def async_play_media(self, media_type: str, media_id: str, **kwargs) -> None:
         """Play media."""
 
-        if media_id.startswith("radio:"):
+        if media_id.startswith("preset:"):
             preset = int(media_id[6:])
             await self._state.set_tuner_preset(preset)
         else:
@@ -354,7 +354,7 @@ class ArcamFmj(MediaPlayerEntity):
         if source in (SourceCodes.DAB, SourceCodes.FM):
             preset = self._state.get_tuner_preset()
             if preset:
-                value = f"radio:{preset}"
+                value = f"preset:{preset}"
             else:
                 value = None
         else:
