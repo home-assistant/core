@@ -101,7 +101,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 return self.async_create_entry(
                     title=device_info["title"] or self.host,
-                    data={**user_input, **{CONF_HOST: self.host}},
+                    data={**user_input, CONF_HOST: self.host},
                 )
             schema = vol.Schema(
                 {
