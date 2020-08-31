@@ -37,7 +37,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     for block in wrapper.device.blocks:
         for attr in SENSORS:
-            if not hasattr(block, attr):
+            # Filter out non-existing sensors and sensors without a value
+            if getattr(block, attr, None) is None:
                 continue
 
             sensors.append(ShellySensor(wrapper, block, attr))
