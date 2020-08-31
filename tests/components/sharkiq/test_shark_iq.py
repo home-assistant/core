@@ -1,6 +1,7 @@
 """Test the Shark IQ vacuum entity."""
 from copy import deepcopy
 import enum
+import json
 from typing import Dict, List
 
 from sharkiqpy import AylaApi, Properties, SharkIqAuthError, SharkIqVacuum, get_ayla_api
@@ -43,11 +44,6 @@ from .const import (
 )
 
 from tests.async_mock import MagicMock, patch
-
-try:
-    import ujson as json
-except ImportError:
-    import json
 
 
 MockAyla = MagicMock(spec=AylaApi)  # pylint: disable=invalid-name

@@ -178,8 +178,6 @@ class SharkVacuumEntity(CoordinatorEntity, StateVacuumEntity):
         In the app, these are (usually) handled by showing the robot as stopped and sending the
         user a notification.
         """
-        if self.recharging_to_resume:
-            return STATE_RECHARGING_TO_RESUME
         if self.is_docked:
             return STATE_DOCKED
         return self.operating_mode

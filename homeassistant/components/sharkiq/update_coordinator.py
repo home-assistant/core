@@ -1,5 +1,6 @@
 """Data update coordinator for shark iq vacuums."""
 
+import asyncio
 from typing import Dict, List, Set
 
 from async_timeout import timeout
@@ -30,7 +31,7 @@ class SharkIqUpdateCoordinator(DataUpdateCoordinator):
     ) -> None:
         """Set up the SharkIqUpdateCoordinator class."""
         self.ayla_api = ayla_api
-        self.shark_vacs: Dict[SharkIqVacuum] = {
+        self.shark_vacs: Dict[str, SharkIqVacuum] = {
             sharkiq.serial_number: sharkiq for sharkiq in shark_vacs
         }
         self._config_entry = config_entry
@@ -66,8 +67,8 @@ class SharkIqUpdateCoordinator(DataUpdateCoordinator):
             }
 
             LOGGER.debug("Updating sharkiq data")
-            for dsn in self._online_dsns:
-                await self._async_update_vacuum(self.shark_vacs[dsn])
+            online_vacs = (self.shark_vacs[dsn] for dsn in self.online_dsns)
+            await asyncio.gather(*[self._async_update_vacuum(v) for v in online_vacs])
         except (
             SharkIqAuthError,
             SharkIqNotAuthedError,
