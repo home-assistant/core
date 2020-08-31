@@ -1,4 +1,5 @@
 """The myIO integration."""
+import asyncio
 from datetime import timedelta
 import logging
 
@@ -9,11 +10,11 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import slugify
 
-from .const import CONF_REFRESH_TIME, DOMAIN
+from .const import CONF_REFRESH_TIME, DOMAIN, SENSOR
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [SENSOR]
 
 COMMS_THREAD = CommsThread()
 
@@ -25,14 +26,10 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up config entry."""
-    _LOGGER.debug(DOMAIN)
     _server_name = slugify(config_entry.data[CONF_NAME])
+    _LOGGER.debug(config_entry)
 
-    try:
-        hass.data[DOMAIN][_server_name] = {}
-    except (KeyError):
-        hass.data[DOMAIN] = {}
-        hass.data[DOMAIN][_server_name] = {}
+    hass.data.setdefault(DOMAIN, {})[_server_name] = {}
 
     hass.data[DOMAIN][_server_name]["state"] = "Offline"
 
@@ -48,8 +45,6 @@ async def async_setup_entry(hass, config_entry):
     async def setup_config_entries():
         """Set up myIO platforms with config entry."""
 
-        # Use `hass.async_add_job` to avoid a circular dependency
-        # between the platform and the component
         for component in PLATFORMS:
             hass.async_add_job(
                 hass.config_entries.async_forward_entry_setup(config_entry, component)
@@ -67,10 +62,6 @@ async def async_setup_entry(hass, config_entry):
         if _temp_server_state == "Offline":
             hass.states.async_set(f"{_server_name}.available", False)
             was_offline = True
-            for component in PLATFORMS:
-                await hass.config_entries.async_forward_entry_unload(
-                    config_entry, component
-                )
 
         # Pull fresh data from server.
         [hass.data[DOMAIN][_server_name], _temp_server_state] = await COMMS_THREAD.send(
@@ -86,9 +77,7 @@ async def async_setup_entry(hass, config_entry):
         if _temp_server_state.startswith("Online") and was_offline:
             hass.states.async_set(f"{_server_name}.available", True)
             await setup_config_entries()
-            _LOGGER.debug("Online")
         elif not was_offline and _temp_server_state == "Offline":
-            _LOGGER.debug("PlatformNotReady")
             hass.data[DOMAIN][_server_name]["coordinator"] = _temp_coordinator
             raise PlatformNotReady
 
@@ -104,7 +93,7 @@ async def async_setup_entry(hass, config_entry):
         update_interval=timedelta(seconds=_refresh_timer),
     )
 
-    hass.data[DOMAIN][_server_name]["coordinator"] = coordinator
+    hass.data[DOMAIN][_server_name]["coordinator"] = coordinator.data
 
     await coordinator.async_refresh()
 
@@ -117,6 +106,12 @@ async def async_unload_entry(
     hass, config_entry, async_add_devices
 ):  # async_add_devices because platforms
     """Unload a config entry."""
-    for component in PLATFORMS:
-        await hass.config_entries.async_forward_entry_unload(config_entry, component)
-    return True
+    unload_ok = all(
+        await asyncio.gather(
+            *(
+                hass.config_entries.async_forward_entry_unload(config_entry, component)
+                for component in PLATFORMS
+            )
+        )
+    )
+    return unload_ok
