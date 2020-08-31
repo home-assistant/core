@@ -343,6 +343,8 @@ async def test_import_migrate(hass):
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
 
+    assert entry.version == 2
+
 
 async def test_options_global(hass):
     """Test if we can set global options."""
