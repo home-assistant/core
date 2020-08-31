@@ -102,6 +102,10 @@ class BondFan(BondEntity, FanEntity):
         """Set the desired speed for the fan."""
         _LOGGER.debug("async_set_speed called with speed %s", speed)
 
+        if speed == SPEED_OFF:
+            await self.async_turn_off()
+            return
+
         max_speed = self._device.props.get("max_speed", 3)
         if speed == SPEED_LOW:
             bond_speed = 1
