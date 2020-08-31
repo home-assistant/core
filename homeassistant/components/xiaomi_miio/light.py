@@ -987,11 +987,6 @@ class XiaomiGatewayLight(LightEntity):
         return self._unique_id
 
     @property
-    def device_id(self):
-        """Return the device id of the gateway."""
-        return self._gateway_device_id
-
-    @property
     def device_info(self):
         """Return the device info of the gateway."""
         return {
