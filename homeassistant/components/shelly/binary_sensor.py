@@ -5,6 +5,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_MOISTURE,
     DEVICE_CLASS_OPENING,
     DEVICE_CLASS_SMOKE,
+    DEVICE_CLASS_GAS,
     BinarySensorEntity,
 )
 
@@ -16,6 +17,8 @@ SENSORS = {
     "flood": DEVICE_CLASS_MOISTURE,
     "overpower": None,
     "smoke": DEVICE_CLASS_SMOKE,
+    "gas": DEVICE_CLASS_GAS,
+    "overtemp": None,
 }
 
 
