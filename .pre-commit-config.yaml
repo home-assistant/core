@@ -27,7 +27,7 @@ repos:
       - id: flake8
         additional_dependencies:
           - flake8-docstrings==1.5.0
-          - pydocstyle==5.1.0
+          - pydocstyle==5.1.1
         files: ^(homeassistant|script|tests)/.+\.py$
   - repo: https://github.com/PyCQA/bandit
     rev: 1.6.2
