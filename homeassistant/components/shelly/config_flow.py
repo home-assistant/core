@@ -62,6 +62,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             else:
                 await self.async_set_unique_id(info["mac"])
+                self._abort_if_unique_id_configured()
                 if info["auth"]:
                     return await self.async_step_credentials()
 
