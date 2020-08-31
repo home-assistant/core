@@ -40,7 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             await api.close()
             return data
         except LoginException:
-            raise PlatformNotReady
+            raise PlatformNotReady from LoginException
 
     coordinator = DataUpdateCoordinator(
         hass,
