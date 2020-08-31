@@ -653,7 +653,7 @@ georss_qld_bushfire_alert_client==0.3
 getmac==0.8.2
 
 # homeassistant.components.gios
-gios==0.1.1
+gios==0.1.3
 
 # homeassistant.components.gitter
 gitterpy==0.1.7
