@@ -37,6 +37,7 @@ from .schema import (
     SceneSchema,
     SensorSchema,
     SwitchSchema,
+    WeatherSchema,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -101,6 +102,9 @@ CONFIG_SCHEMA = vol.Schema(
                 ),
                 vol.Optional(SupportedPlatforms.scene.value): vol.All(
                     cv.ensure_list, [SceneSchema.SCHEMA]
+                ),
+                vol.Optional(SupportedPlatforms.weather.value): vol.All(
+                    cv.ensure_list, [WeatherSchema.SCHEMA]
                 ),
             }
         )
