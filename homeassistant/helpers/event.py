@@ -711,7 +711,11 @@ class _TrackTemplateResultInfo:
 
 
 TrackTemplateResultListener = Callable[
-    [Event, List[TrackTemplateResult],], None,
+    [
+        Event,
+        List[TrackTemplateResult],
+    ],
+    None,
 ]
 """Type for the listener for template results.
 
