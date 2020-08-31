@@ -4,7 +4,6 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.weather import PLATFORM_SCHEMA, WeatherEntity
-from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_ELEVATION,
     CONF_LATITUDE,
@@ -47,23 +46,6 @@ def format_condition(condition: str):
             if condition in value:
                 return key
     return condition
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Met Éireann weather platform."""
-    _LOGGER.warning("Loading Met Éireann via platform config is not supported")
-
-    # Add defaults.
-    config = {CONF_ELEVATION: hass.config.elevation, **config}
-
-    if config.get(CONF_LATITUDE) is None:
-        config[CONF_TRACK_HOME] = True
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-        )
-    )
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
