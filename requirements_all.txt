@@ -752,7 +752,7 @@ homeassistant-pyozw==0.1.10
 homeconnect==0.5
 
 # homeassistant.components.homematicip_cloud
-homematicip==0.10.19
+homematicip==0.11.0
 
 # homeassistant.components.horizon
 horimote==0.4.1
