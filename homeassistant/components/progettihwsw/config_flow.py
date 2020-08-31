@@ -71,10 +71,10 @@ class ProgettiHWSWConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
 
-            config_entries = self.hass.config_entries.async_entries(DOMAIN)
+            confs = self.hass.config_entries.async_entries(DOMAIN)
             same_entries = [
                 True
-                for entry in config_entries
+                for entry in confs
                 if entry.data["host"] == user_input["host"]
                 and entry.data["port"] == user_input["port"]
             ]
