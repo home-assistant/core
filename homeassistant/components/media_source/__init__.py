@@ -1,26 +1,37 @@
 """The media_source integration."""
-import re
+from typing import Optional
 
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.media_player.const import ATTR_MEDIA_CONTENT_ID
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
 )
 from homeassistant.loader import bind_hass
 
+from . import local_source, models
 from .const import DOMAIN, URI_SCHEME, URI_SCHEME_REGEX
-from .models import Media
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
+
+
+def is_media_source_id(media_content_id: str):
+    """Test if identifier is a media source."""
+    return URI_SCHEME_REGEX.match(media_content_id) is not None
+
+
+def generate_media_source_id(domain: str, identifier: str) -> str:
+    """Generate a media source ID."""
+    return f"{URI_SCHEME}{domain}/{identifier}"
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the media_source component."""
     hass.data[DOMAIN] = {}
-    hass.components.websocket_api.async_register_command(websocket_browse_media)
+    # hass.components.websocket_api.async_register_command(websocket_browse_media)
+    local_source.async_setup(hass)
     await async_process_integration_platforms(
         hass, DOMAIN, _process_media_source_platform
     )
@@ -29,33 +40,36 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def _process_media_source_platform(hass, domain, platform):
     """Process a media source platform."""
-    platform, cb = await platform.async_setup_media_source(hass)
-    hass.data[DOMAIN][platform] = cb
+    hass.data[DOMAIN][domain] = await platform.async_get_media_source(hass)
+
+
+@callback
+def _get_media_item(
+    hass: HomeAssistant, media_content_id: Optional[str]
+) -> models.MediaSourceItem:
+    """Return media item."""
+    if media_content_id is not None:
+        return models.MediaSourceItem.from_uri(hass, media_content_id)
+
+    # We default to our own domain if its only one registered
+    domain = None if len(hass.data[DOMAIN]) > 1 else DOMAIN
+    return models.MediaSourceItem(domain, "")
 
 
 @bind_hass
-async def async_find_media(hass: HomeAssistant, location=None):
-    """Iterate platform integrations to build media list."""
-    if not location or location == URI_SCHEME:
-        media = Media(None, "Media Sources", URI_SCHEME)
-        media.is_dir = True
-        media.children = [
-            Media(platform, platform, f"{URI_SCHEME}{platform}", is_dir=True)
-            for platform in hass.data[DOMAIN].keys()
-        ]
-        return media
+async def async_browse_media(
+    hass: HomeAssistant, media_content_id: str
+) -> models.BrowseMedia:
+    """Return media player browse media results."""
+    return await _get_media_item(hass, media_content_id).async_browse()
 
-    matches = re.match(URI_SCHEME_REGEX, location)
-    if not matches:
-        return None
 
-    platform = matches.group("platform")
-    path = matches.group("path")
-
-    if not platform:
-        return None
-
-    return await hass.data[DOMAIN][platform](hass, path)
+@bind_hass
+async def async_resolve_media(
+    hass: HomeAssistant, media_content_id: str
+) -> models.PlayMedia:
+    """Get info to play media."""
+    return await _get_media_item(hass, media_content_id).async_resolve()
 
 
 @websocket_api.websocket_command(
@@ -75,6 +89,6 @@ async def websocket_browse_media(hass, connection, msg):
 
     To use, media_player integrations can implement MediaPlayerEntity.async_browse_media()
     """
-    media_content_id = msg.get(ATTR_MEDIA_CONTENT_ID)
-
-    return await async_find_media(hass, media_content_id)
+    connection.send_result(
+        msg["id"], await async_browse_media(hass, msg.get("media_content_id"))
+    )

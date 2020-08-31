@@ -4,7 +4,6 @@ from datetime import timedelta
 import functools as ft
 import json
 import logging
-import re
 from typing import Optional
 
 import pychromecast
@@ -18,7 +17,7 @@ from pychromecast.socket_client import (
 import voluptuous as vol
 
 from homeassistant.auth.models import RefreshToken
-from homeassistant.components import zeroconf
+from homeassistant.components import media_source, zeroconf
 from homeassistant.components.http.auth import async_sign_path
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
@@ -38,9 +37,6 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
 )
-from homeassistant.components.media_player.errors import BrowseError
-from homeassistant.components.media_source.const import URI_SCHEME, URI_SCHEME_REGEX
-from homeassistant.components.media_source.models import Media
 from homeassistant.const import (
     CONF_HOST,
     EVENT_HOMEASSISTANT_STOP,
@@ -513,49 +509,32 @@ class CastDevice(MediaPlayerEntity):
 
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
         """Implement the websocket media browsing helper."""
-        media: Media = await self.hass.components.media_source.async_find_media(
-            media_content_id
-        )
-        if not media:
-            raise BrowseError("Could not find media for given path.")
-
-        def media_to_dict(media: Media):
-            """Convert Media class to browse media dictionary."""
-            response = {
-                "title": media.name,
-                "media_content_type": media.mime_type or "",
-                "media_content_id": media.location,
-                "can_play": media.is_file,
-                "can_expand": media.is_dir,
-            }
-
-            if media.children:
-                response["children"] = [
-                    media_to_dict(child) for child in media.children
-                ]
-
-            return response
-
-        return media_to_dict(media)
+        return await media_source.async_browse_media(self.hass, media_content_id)
 
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
         # Handle media_source
-        if media_id.startswith(URI_SCHEME):
-            matches = re.match(URI_SCHEME_REGEX, media_id)
-            media_id = matches.group("path")
+        if media_source.is_media_source_id(media_id):
+            sourced_media = await media_source.async_resolve_media(self.hass, media_id)
+            media_type = sourced_media.mime_type
+            media_id = sourced_media.url
 
+        # If media ID is a relative URL, we serve it from HA.
+        # Create a signed path.
+        if media_id[0] == "/":
             # Sign URL with Home Assistant Cast User
             config_entries = self.hass.config_entries.async_entries(CAST_DOMAIN)
-            if config_entries:
-                user_id = config_entries[0].data["user_id"]
-                user = await self.hass.auth.async_get_user(user_id)
-                if user.refresh_tokens:
-                    refresh_token: RefreshToken = list(user.refresh_tokens.values())[0]
+            user_id = config_entries[0].data["user_id"]
+            user = await self.hass.auth.async_get_user(user_id)
+            if user.refresh_tokens:
+                refresh_token: RefreshToken = list(user.refresh_tokens.values())[0]
 
-                    media_id = async_sign_path(
-                        self.hass, refresh_token.id, media_id, timedelta(minutes=5),
-                    )
+                media_id = async_sign_path(
+                    self.hass,
+                    refresh_token.id,
+                    media_id,
+                    timedelta(minutes=5),
+                )
 
             # prepend external URL
             hass_url = get_url(self.hass, prefer_external=True)
