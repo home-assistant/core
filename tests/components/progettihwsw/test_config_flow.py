@@ -1,6 +1,5 @@
 """Test the ProgettiHWSW Automation config flow."""
 from homeassistant import config_entries, setup
-from homeassistant.components.progettihwsw.config_flow import ExistingEntry
 from homeassistant.components.progettihwsw.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.data_entry_flow import (
@@ -10,6 +9,7 @@ from homeassistant.data_entry_flow import (
 )
 
 from tests.async_mock import patch
+from tests.common import MockConfigEntry
 
 mock_value_step_user = {
     "title": "1R & 1IN Board",
@@ -87,7 +87,7 @@ async def test_form_cannot_connect(hass):
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_existing_board(hass):
+async def test_form_existing_entry_exception(hass):
     """Test we handle existing board."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -95,14 +95,19 @@ async def test_form_existing_board(hass):
 
     assert result["step_id"] == "user"
 
-    with patch(
-        "homeassistant.components.progettihwsw.config_flow.validate_input",
-        side_effect=ExistingEntry,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_HOST: "", CONF_PORT: 80},
-        )
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "",
+            CONF_PORT: 80,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "", CONF_PORT: 80},
+    )
 
     assert result2["type"] == RESULT_TYPE_ABORT
     assert result2["reason"] == "already_setup"
