@@ -1959,7 +1959,7 @@ sense-hat==2.2.0
 sense_energy==0.7.2
 
 # homeassistant.components.sentry
-sentry-sdk==0.16.5
+sentry-sdk==0.17.1
 
 # homeassistant.components.sharkiq
 sharkiqpy==0.1.8
