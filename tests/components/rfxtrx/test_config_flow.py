@@ -305,6 +305,7 @@ async def test_import_update(hass):
         domain=DOMAIN,
         data={"host": None, "port": None, "device": "/dev/tty123", "debug": False},
         unique_id=DOMAIN,
+        version=2,
     )
     entry.add_to_hass(hass)
 
@@ -313,6 +314,31 @@ async def test_import_update(hass):
         context={"source": config_entries.SOURCE_IMPORT},
         data={"host": None, "port": None, "device": "/dev/tty123", "debug": True},
     )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+
+
+async def test_import_migrate(hass):
+    """Test we can import."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"host": None, "port": None, "device": "/dev/tty123", "debug": False},
+        unique_id=DOMAIN,
+        version=1,
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_reload", return_value=True
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={"host": None, "port": None, "device": "/dev/tty123", "debug": True},
+        )
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
@@ -333,6 +359,7 @@ async def test_options_global(hass):
             "devices": {},
         },
         unique_id=DOMAIN,
+        version=2,
     )
     entry.add_to_hass(hass)
 
@@ -368,6 +395,7 @@ async def test_options_add_device(hass):
             "devices": {},
         },
         unique_id=DOMAIN,
+        version=2,
     )
     entry.add_to_hass(hass)
 
@@ -437,6 +465,7 @@ async def test_options_add_remove_device(hass):
             "devices": {},
         },
         unique_id=DOMAIN,
+        version=2,
     )
     entry.add_to_hass(hass)
 
@@ -526,6 +555,7 @@ async def test_options_add_and_configure_device(hass):
             "devices": {},
         },
         unique_id=DOMAIN,
+        version=2,
     )
     entry.add_to_hass(hass)
 
