@@ -91,12 +91,12 @@ async def _async_unregister_notify_services(hass, data):
     targets = data[TARGETS]
 
     if targets:
-        stale_targets = set(targets)
-        for stale_target_name, target in stale_targets:
-            del targets[stale_target_name]
+        remove_targets = set(targets)
+        for remove_target_name in remove_targets:
+            del targets[remove_target_name]
             hass.services.async_remove(
                 DOMAIN,
-                stale_target_name,
+                remove_target_name,
             )
 
     friendly_name_slug = slugify(data[FRIENDLY_NAME])
