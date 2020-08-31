@@ -86,7 +86,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_credentials(self, user_input=None):
         """Handle the credentials step."""
         errors = {}
-        schema = None
         if user_input is not None:
             try:
                 device_info = await validate_input(self.hass, self.host, user_input)
