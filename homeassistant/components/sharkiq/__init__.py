@@ -10,7 +10,6 @@ from sharkiqpy import (
     SharkIqNotAuthedError,
     get_ayla_api,
 )
-import voluptuous as vol
 
 from homeassistant import exceptions
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -35,7 +34,7 @@ async def async_connect_or_timeout(ayla_api: AylaApi) -> bool:
         with async_timeout.timeout(API_TIMEOUT):
             LOGGER.debug("Initialize connection to Ayla networks API")
             await ayla_api.async_sign_in()
-    except SharkIqAuthError as exc:
+    except SharkIqAuthError:
         LOGGER.error("Authentication error connecting to Shark IQ api")
         return False
     except asyncio.TimeoutError as exc:

@@ -12,7 +12,6 @@ from homeassistant.components.sharkiq.vacuum import (
     ATTR_ERROR_MSG,
     ATTR_LOW_LIGHT,
     ATTR_RECHARGE_RESUME,
-    STATE_RECHARGING_TO_RESUME,
     SharkVacuumEntity,
 )
 from homeassistant.components.vacuum import (
@@ -44,7 +43,6 @@ from .const import (
 )
 
 from tests.async_mock import MagicMock, patch
-
 
 MockAyla = MagicMock(spec=AylaApi)  # pylint: disable=invalid-name
 
@@ -105,7 +103,7 @@ async def test_shark_operation_modes(hass: HomeAssistant) -> None:
     shark.sharkiq.set_property_value(Properties.DOCKED_STATUS, 1)
     assert isinstance(shark.is_docked, bool) and shark.is_docked
     assert isinstance(shark.recharging_to_resume, bool) and shark.recharging_to_resume
-    assert shark.state == STATE_RECHARGING_TO_RESUME
+    assert shark.state == STATE_DOCKED
 
     shark.sharkiq.set_property_value(Properties.RECHARGING_TO_RESUME, 0)
     assert shark.state == STATE_DOCKED
@@ -171,9 +169,8 @@ async def test_shark_metadata(hass: HomeAssistant) -> None:
         "model": "RV1001AE",
         "sw_version": "Dummy Firmware 1.0",
     }
-    state_json = json.dumps(shark.device_info, sort_keys=True)
-    target_json = json.dumps(target_device_info, sort_keys=True)
-    assert state_json == target_json
+
+    assert shark.device_info == target_device_info
 
 
 def _get_async_update(err=None):
