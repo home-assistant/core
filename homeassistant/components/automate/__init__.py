@@ -7,12 +7,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
+from .hub import PulseHub
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
-# TODO List the platforms that you want to support.
-# For your initial PR, limit it to 1 platform.
-PLATFORMS = ["light"]
+PLATFORMS = ["cover", "sensor"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -20,10 +19,15 @@ async def async_setup(hass: HomeAssistant, config: dict):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Automate Pulse Hub v2 from a config entry."""
-    # TODO Store an API object for your platforms to access
-    # hass.data[DOMAIN][entry.entry_id] = MyApi(...)
+    hub = PulseHub(hass, entry)
+
+    if not await hub.async_setup():
+        return False
+
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = hub
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -33,8 +37,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
+    hub = hass.data[DOMAIN][entry.entry_id]
+
     unload_ok = all(
         await asyncio.gather(
             *[
@@ -43,6 +49,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
             ]
         )
     )
+
+    if not await hub.async_reset():
+        return False
+
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
 
