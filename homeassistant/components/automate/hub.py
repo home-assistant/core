@@ -51,7 +51,6 @@ class PulseHub:
 
     async def async_reset(self):
         """Reset this hub to default state."""
-
         for cleanup_callback in self.cleanup_callbacks:
             cleanup_callback()
 

@@ -18,12 +18,11 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
-
     hub = aiopulse2.Hub(data["host"])
     try:
         await hub.test()
     except Exception as err:
-        raise CannotConnect(str(err))
+        raise CannotConnect(str(err))  # pylint: disable=raise-missing-from
 
     # Return info that you want to store in the config entry.
     return {"title": hub.name}
