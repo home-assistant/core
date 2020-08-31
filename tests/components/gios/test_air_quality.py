@@ -5,6 +5,7 @@ import json
 from gios import ApiError
 
 from homeassistant.components.air_quality import (
+    ATTR_AQI,
     ATTR_CO,
     ATTR_NO2,
     ATTR_OZONE,
@@ -13,6 +14,7 @@ from homeassistant.components.air_quality import (
     ATTR_SO2,
 )
 from homeassistant.components.gios.air_quality import ATTRIBUTION
+from homeassistant.components.gios.const import AQI_GOOD
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_ICON,
@@ -36,6 +38,7 @@ async def test_air_quality(hass):
     assert state
     assert state.state == "4"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
+    assert state.attributes.get(ATTR_AQI) == AQI_GOOD
     assert state.attributes.get(ATTR_PM_10) == 17
     assert state.attributes.get(ATTR_PM_2_5) == 4
     assert state.attributes.get(ATTR_CO) == 252
@@ -63,6 +66,7 @@ async def test_air_quality_with_incomplete_data(hass):
     assert state
     assert state.state == "4"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
+    assert state.attributes.get(ATTR_AQI) == AQI_GOOD
     assert state.attributes.get(ATTR_PM_10) is None
     assert state.attributes.get(ATTR_PM_2_5) == 4
     assert state.attributes.get(ATTR_CO) == 252
