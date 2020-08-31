@@ -1,0 +1,16 @@
+{
+  "domain": "automate",
+  "name": "Automate Pulse Hub v2",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/automate",
+  "requirements": [
+    "aiopulse2==0.5.0"
+  ],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@sillyfrog"
+  ]
+}
