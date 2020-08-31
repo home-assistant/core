@@ -23,7 +23,7 @@ COMMS_THREAD = CommsThread()
 CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME, default="myIO-Server"): str,
-        vol.Required(CONF_HOST, default="192.168.1.170"): str,
+        vol.Required(CONF_HOST): str,
         vol.Required(CONF_PORT, default="80"): int,
         vol.Required(CONF_PORT_APP, default="843"): int,
         vol.Required(CONF_USERNAME, default="admin"): str,
