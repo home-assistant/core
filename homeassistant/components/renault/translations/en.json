@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {},
+        "error": {
+            "invalid_credentials": "Invalid credentials.",
+            "preload_failed": "Unable to preload Renault keys."
+        },
+        "step": {
+            "kamereon": {
+                "data": {
+                    "kamereon_account_id": "Kamereon account id"
+                },
+                "title": "Select Kamereon account id"
+            },
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Email"
+                },
+                "title": "Set Renault credentials"
+            }
+        }
+    }
+}

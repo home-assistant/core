@@ -1,0 +1,8 @@
+{
+  "domain": "renault",
+  "name": "Renault",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/renault",
+  "requirements": ["pyze==0.6.0"],
+  "codeowners": ["@epenet"]
+}
