@@ -22,7 +22,7 @@ DEV_TYPE_TO_HA = {
 }
 
 SPEED_AUTO = "auto"
-FAN_SPEEDS = [SPEED_AUTO, SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
+FAN_SPEEDS = [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -102,6 +102,9 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
 
     def set_speed(self, speed):
         """Set the speed of the device."""
+        if not self.smartfan.is_on:
+            self.smartfan.turn_on()
+
         if speed is None or speed == SPEED_AUTO:
             self.smartfan.auto_mode()
         else:

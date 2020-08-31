@@ -55,7 +55,15 @@ def _async_setup_entities(devices, async_add_entities):
     async_add_entities(dev_list, update_before_add=True)
 
 
-class VeSyncSwitchHA(VeSyncDevice, SwitchEntity):
+class VeSyncBaseSwitch(VeSyncDevice, SwitchEntity):
+    """Base class for VeSync switch Device Representations."""
+
+    def turn_on(self, **kwargs):
+        """Turn the device on."""
+        self.device.turn_on()
+
+
+class VeSyncSwitchHA(VeSyncBaseSwitch, SwitchEntity):
     """Representation of a VeSync switch."""
 
     def __init__(self, plug):
@@ -89,19 +97,11 @@ class VeSyncSwitchHA(VeSyncDevice, SwitchEntity):
         self.smartplug.update()
         self.smartplug.update_energy()
 
-    def turn_on(self, **kwargs):
-        """Turn the device on."""
-        self.device.turn_on()
 
-
-class VeSyncLightSwitch(VeSyncDevice, SwitchEntity):
+class VeSyncLightSwitch(VeSyncBaseSwitch, SwitchEntity):
     """Handle representation of VeSync Light Switch."""
 
     def __init__(self, switch):
         """Initialize Light Switch device class."""
         super().__init__(switch)
         self.switch = switch
-
-    def turn_on(self, **kwargs):
-        """Turn the device on."""
-        self.device.turn_on()
