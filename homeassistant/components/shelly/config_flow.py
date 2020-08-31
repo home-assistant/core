@@ -51,23 +51,23 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
+            host = user_input[CONF_HOST]
             try:
-                self.host = user_input[CONF_HOST]
-                info = await self._async_get_info(self.host)
+                info = await self._async_get_info(host)
             except HTTP_CONNECT_ERRORS:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
-
             else:
                 await self.async_set_unique_id(info["mac"])
-                self._abort_if_unique_id_configured()
+                self._abort_if_unique_id_configured({CONF_HOST: host})
+                self.host = host
                 if info["auth"]:
                     return await self.async_step_credentials()
 
                 try:
-                    device_info = await validate_input(self.hass, self.host, user_input)
+                    device_info = await validate_input(self.hass, self.host, {})
                 except HTTP_CONNECT_ERRORS:
                     errors["base"] = "cannot_connect"
                 except Exception:  # pylint: disable=broad-except
@@ -95,6 +95,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     errors["base"] = "invalid_auth"
                 else:
                     errors["base"] = "cannot_connect"
+            except HTTP_CONNECT_ERRORS:
+                errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -128,7 +130,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="cannot_connect")
 
         await self.async_set_unique_id(info["mac"])
-        self._abort_if_unique_id_configured({"host": zeroconf_info["host"]})
+        self._abort_if_unique_id_configured({CONF_HOST: zeroconf_info["host"]})
         self.host = zeroconf_info["host"]
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {"name": zeroconf_info["host"]}

@@ -147,11 +147,40 @@ async def test_form_errors_test_connection(hass, error):
     assert result2["errors"] == {"base": base_error}
 
 
+async def form_already_configured(hass):
+    """Test we get the form."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    entry = MockConfigEntry(
+        domain="shelly", unique_id="test-mac", data={"host": "0.0.0.0"}
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "aioshelly.get_info",
+        return_value={"mac": "test-mac", "type": "SHSW-1", "auth": False},
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"host": "1.1.1.1"},
+        )
+
+        assert result2["type"] == "abort"
+        assert result2["reason"] == "already_configured"
+
+    # Test config entry got updated with latest IP
+    assert entry.data["host"] == "1.1.1.1"
+
+
 @pytest.mark.parametrize(
     "error",
     [
         (aiohttp.ClientResponseError(Mock(), (), status=400), "cannot_connect"),
         (aiohttp.ClientResponseError(Mock(), (), status=401), "invalid_auth"),
+        (asyncio.TimeoutError, "cannot_connect"),
         (ValueError, "unknown"),
     ],
 )
