@@ -278,7 +278,7 @@ class XiaomiGatewayIlluminanceSensor(Entity):
         self._gateway = gateway_device
         self._name = f"{gateway_name} Illuminance"
         self._gateway_device_id = gateway_device_id
-        self._unique_id = gateway_device_id
+        self._unique_id = f"{gateway_device_id}-illuminance"
         self._available = False
         self._state = None
 
