@@ -77,13 +77,13 @@ class TestTTSMaryTTSPlatform:
                     tts.ATTR_MESSAGE: "HomeAssistant",
                 },
             )
-        self.hass.block_till_done()
-
-        assert len(calls) == 1
-        assert calls[0].data[ATTR_MEDIA_CONTENT_ID].find(".wav") != -1
+            self.hass.block_till_done()
 
         mock_speak.assert_called_once()
         mock_speak.assert_called_with("HomeAssistant", {})
+
+        assert len(calls) == 1
+        assert calls[0].data[ATTR_MEDIA_CONTENT_ID].find(".wav") != -1
 
     def test_service_say_with_effect(self):
         """Test service call say with effects."""
@@ -108,13 +108,13 @@ class TestTTSMaryTTSPlatform:
                     tts.ATTR_MESSAGE: "HomeAssistant",
                 },
             )
-        self.hass.block_till_done()
-
-        assert len(calls) == 1
-        assert calls[0].data[ATTR_MEDIA_CONTENT_ID].find(".wav") != -1
+            self.hass.block_till_done()
 
         mock_speak.assert_called_once()
         mock_speak.assert_called_with("HomeAssistant", {"Volume": "amount:2.0;"})
+
+        assert len(calls) == 1
+        assert calls[0].data[ATTR_MEDIA_CONTENT_ID].find(".wav") != -1
 
     def test_service_say_http_error(self):
         """Test service call say."""
@@ -137,8 +137,7 @@ class TestTTSMaryTTSPlatform:
                     tts.ATTR_MESSAGE: "HomeAssistant",
                 },
             )
-        self.hass.block_till_done()
-
-        assert len(calls) == 0
+            self.hass.block_till_done()
 
         mock_speak.assert_called_once()
+        assert len(calls) == 0
