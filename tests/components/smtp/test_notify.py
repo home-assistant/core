@@ -122,7 +122,9 @@ async def test_reload_notify(hass):
         "fixtures",
         "smtp/configuration.yaml",
     )
-    with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
+    with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path), patch(
+        "homeassistant.components.smtp.notify.MailNotificationService.connection_is_valid"
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_RELOAD,
