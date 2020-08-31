@@ -60,17 +60,53 @@ NOTIFY_SERVICE_SCHEMA = vol.Schema(
 @bind_hass
 async def async_reload(hass, integration_name):
     """Register notify services for an integration."""
+    await _do_with_notify_services(hass, integration_name, _async_setup_notify_services)
+
+
+@bind_hass
+async def async_reset_platform(hass, integration_name):
+    """Unregister notify services for an integration."""
+    if not await _do_with_notify_services(
+        hass, integration_name, _async_unregister_notify_services
+    ):
+        return
+    del hass.data[NOTIFY_SERVICES][integration_name]
+
+
+async def _do_with_notify_services(hass, integration_name, call):
+    """Call a method on all notify services for an integration."""
     if (
         NOTIFY_SERVICES not in hass.data
         or integration_name not in hass.data[NOTIFY_SERVICES]
     ):
+        return False
+
+    tasks = [call(hass, data) for data in hass.data[NOTIFY_SERVICES][integration_name]]
+    await asyncio.gather(*tasks)
+    return True
+
+
+async def _async_unregister_notify_services(hass, data):
+    """Remove the notify services."""
+    targets = data[TARGETS]
+
+    if targets:
+        stale_targets = set(targets)
+        for stale_target_name, target in stale_targets:
+            del targets[stale_target_name]
+            hass.services.async_remove(
+                DOMAIN,
+                stale_target_name,
+            )
+
+    friendly_name_slug = slugify(data[FRIENDLY_NAME])
+    if not hass.services.has_service(DOMAIN, friendly_name_slug):
         return
 
-    tasks = [
-        _async_setup_notify_services(hass, data)
-        for data in hass.data[NOTIFY_SERVICES][integration_name]
-    ]
-    await asyncio.gather(*tasks)
+    hass.services.async_remove(
+        DOMAIN,
+        friendly_name_slug,
+    )
 
 
 async def _async_setup_notify_services(hass, data):

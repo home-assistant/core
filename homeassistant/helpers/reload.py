@@ -34,29 +34,62 @@ async def async_reload_integration_platforms(
         _LOGGER.error(err)
         return
 
-    for integration_platform in integration_platforms:
-        platform = async_get_platform(hass, integration_name, integration_platform)
-
-        if not platform:
-            continue
-
-        integration = await async_get_integration(hass, integration_platform)
-
-        conf = await conf_util.async_process_component_config(
-            hass, unprocessed_conf, integration
+    tasks = [
+        _resetup_platform(
+            hass, integration_name, integration_platform, unprocessed_conf
         )
+        for integration_platform in integration_platforms
+    ]
 
-        if not conf:
+    await asyncio.gather(*tasks)
+
+
+async def _resetup_platform(
+    hass: HomeAssistantType,
+    integration_name: str,
+    integration_platform: str,
+    unprocessed_conf: Dict,
+) -> None:
+    """Resetup a platform."""
+    integration = await async_get_integration(hass, integration_platform)
+
+    conf = await conf_util.async_process_component_config(
+        hass, unprocessed_conf, integration
+    )
+
+    if not conf:
+        return
+
+    root_config: Dict = {integration_platform: []}
+    # Extract only the config for template, ignore the rest.
+    for p_type, p_config in config_per_platform(conf, integration_platform):
+        if p_type != integration_name:
             continue
 
-        await platform.async_reset()
+        root_config[integration_platform].append(p_config)
 
-        # Extract only the config for template, ignore the rest.
-        for p_type, p_config in config_per_platform(conf, integration_platform):
-            if p_type != integration_name:
-                continue
+    if not root_config[integration_platform]:
+        return
 
-            await platform.async_setup(p_config)  # type: ignore
+    component = integration.get_component()
+
+    if hasattr(component, "async_reset_platform"):
+        # If the integration has its own way to reset
+        # use this method.
+        await component.async_reset_platform(hass, integration_name)  # type: ignore
+        await component.async_setup(hass, root_config)  # type: ignore
+        return
+
+    # If its an entity platform, we use the entity_platform
+    # async_reset method
+    platform = async_get_platform(hass, integration_name, integration_platform)
+    if not platform:
+        return
+
+    await platform.async_reset()
+
+    tasks = [platform.async_setup(p_config) for p_config in root_config[integration_platform]]  # type: ignore
+    await asyncio.gather(*tasks)
 
 
 async def async_integration_yaml_config(
