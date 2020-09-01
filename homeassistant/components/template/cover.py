@@ -66,6 +66,7 @@ TILT_FEATURES = (
 )
 
 COVER_SCHEMA = vol.All(
+    cv.deprecated(CONF_ENTITY_ID),
     vol.Schema(
         {
             vol.Inclusive(OPEN_ACTION, CONF_OPEN_OR_CLOSE): cv.SCRIPT_SCHEMA,
