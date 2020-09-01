@@ -191,6 +191,14 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         return None
 
     @property
+    def media_position_updated_at(self):
+        """When was the position of the current playing media valid.."""
+        if self.coordinator.data.media:
+            return self.coordinator.data.media.at
+
+        return None
+
+    @property
     def source(self) -> str:
         """Return the current input source."""
         if self.coordinator.data.app is not None:
