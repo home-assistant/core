@@ -50,17 +50,16 @@ class SharkIqConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         info = None
 
-        if user_input is not None:
-            # noinspection PyBroadException
-            try:
-                info = await validate_input(self.hass, user_input)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
-                LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+        # noinspection PyBroadException
+        try:
+            info = await validate_input(self.hass, user_input)
+        except CannotConnect:
+            errors["base"] = "cannot_connect"
+        except InvalidAuth:
+            errors["base"] = "invalid_auth"
+        except Exception:  # pylint: disable=broad-except
+            LOGGER.exception("Unexpected exception")
+            errors["base"] = "unknown"
         return info, errors
 
     async def async_step_user(self, user_input: Optional[Dict] = None):
@@ -69,6 +68,8 @@ class SharkIqConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             info, errors = await self._async_validate_input(user_input)
             if info:
+                await self.async_set_unique_id(user_input[CONF_USERNAME])
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(

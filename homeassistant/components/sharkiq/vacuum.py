@@ -66,16 +66,25 @@ ATTR_RECHARGE_RESUME = "recharge_and_resume"
 ATTR_RSSI = "rssi"
 
 
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Shark IQ vacuum cleaner."""
+    coordinator: SharkIqUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    devices: Iterable["SharkIqVacuum"] = coordinator.shark_vacs.values()
+    device_names = [d.name for d in devices]
+    LOGGER.debug(
+        "Found %d Shark IQ device(s): %s",
+        len(device_names),
+        ", ".join([d.name for d in devices]),
+    )
+    async_add_entities([SharkVacuumEntity(d, coordinator) for d in devices])
+
+
 class SharkVacuumEntity(CoordinatorEntity, StateVacuumEntity):
     """Shark IQ vacuum entity."""
 
     def __init__(self, sharkiq: SharkIqVacuum, coordinator: SharkIqUpdateCoordinator):
         """Create a new SharkVacuumEntity."""
         super().__init__(coordinator)
-        if sharkiq.serial_number not in coordinator.shark_vacs:
-            raise RuntimeError(
-                f"Shark IQ robot {sharkiq.serial_number} is not known to the coordinator"
-            )
         self.sharkiq = sharkiq
 
     def clean_spot(self, **kwargs):
@@ -163,8 +172,6 @@ class SharkVacuumEntity(CoordinatorEntity, StateVacuumEntity):
         In the app, these are (usually) handled by showing the robot as stopped and sending the
         user a notification.
         """
-        if self.recharging_to_resume:
-            return STATE_RECHARGING_TO_RESUME
         if self.is_docked:
             return STATE_DOCKED
         return self.operating_mode
@@ -229,7 +236,7 @@ class SharkVacuumEntity(CoordinatorEntity, StateVacuumEntity):
     @property
     def fan_speed_list(self):
         """Get the list of available fan speed steps of the vacuum cleaner."""
-        return list(FAN_SPEEDS_MAP.keys())
+        return list(FAN_SPEEDS_MAP)
 
     # Various attributes we want to expose
     @property
@@ -257,16 +264,3 @@ class SharkVacuumEntity(CoordinatorEntity, StateVacuumEntity):
             ATTR_RECHARGE_RESUME: self.recharge_resume,
         }
         return data
-
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up the Shark IQ vacuum cleaner."""
-    coordinator: SharkIqUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-    devices: Iterable["SharkIqVacuum"] = coordinator.shark_vacs.values()
-    device_names = [d.name for d in devices]
-    LOGGER.debug(
-        "Found %d Shark IQ device(s): %s",
-        len(device_names),
-        ", ".join([d.name for d in devices]),
-    )
-    async_add_entities([SharkVacuumEntity(d, coordinator) for d in devices])
