@@ -330,9 +330,7 @@ async def test_import_migrate(hass):
     )
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.config_entries.ConfigEntries.async_reload", return_value=True
-    ):
+    with patch("homeassistant.components.rfxtrx.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
