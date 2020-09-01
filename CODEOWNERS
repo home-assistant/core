@@ -281,6 +281,7 @@ homeassistant/components/nilu/* @hfurubotten
 homeassistant/components/nissan_leaf/* @filcole
 homeassistant/components/nmbs/* @thibmaek
 homeassistant/components/no_ip/* @fabaff
+homeassistant/components/noaa_tides/* @jdelaney72
 homeassistant/components/notify/* @home-assistant/core
 homeassistant/components/notify_events/* @matrozov @papajojo
 homeassistant/components/notion/* @bachya
