@@ -1270,7 +1270,7 @@ pycocotools==2.0.1
 pycomfoconnect==0.3
 
 # homeassistant.components.coolmaster
-pycoolmasternet-async==0.1.0
+pycoolmasternet-async==0.1.1
 
 # homeassistant.components.avri
 pycountry==19.8.18
