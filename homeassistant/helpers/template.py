@@ -192,7 +192,7 @@ class RenderInfo:
         self.entities = frozenset(self.entities)
         self.domains = frozenset(self.domains)
 
-        if self.all_states:
+        if self.all_states or self.exception:
             return
 
         if not self.domains:
