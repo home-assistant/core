@@ -1,6 +1,7 @@
 """Test the Shark IQ vacuum entity."""
 from copy import deepcopy
 import enum
+import json
 from typing import Dict, List
 
 from sharkiqpy import AylaApi, Properties, SharkIqAuthError, SharkIqVacuum, get_ayla_api
@@ -11,7 +12,6 @@ from homeassistant.components.sharkiq.vacuum import (
     ATTR_ERROR_MSG,
     ATTR_LOW_LIGHT,
     ATTR_RECHARGE_RESUME,
-    STATE_RECHARGING_TO_RESUME,
     SharkVacuumEntity,
 )
 from homeassistant.components.vacuum import (
@@ -43,12 +43,6 @@ from .const import (
 )
 
 from tests.async_mock import MagicMock, patch
-
-try:
-    import ujson as json
-except ImportError:
-    import json
-
 
 MockAyla = MagicMock(spec=AylaApi)  # pylint: disable=invalid-name
 
@@ -109,7 +103,7 @@ async def test_shark_operation_modes(hass: HomeAssistant) -> None:
     shark.sharkiq.set_property_value(Properties.DOCKED_STATUS, 1)
     assert isinstance(shark.is_docked, bool) and shark.is_docked
     assert isinstance(shark.recharging_to_resume, bool) and shark.recharging_to_resume
-    assert shark.state == STATE_RECHARGING_TO_RESUME
+    assert shark.state == STATE_DOCKED
 
     shark.sharkiq.set_property_value(Properties.RECHARGING_TO_RESUME, 0)
     assert shark.state == STATE_DOCKED
@@ -175,9 +169,8 @@ async def test_shark_metadata(hass: HomeAssistant) -> None:
         "model": "RV1001AE",
         "sw_version": "Dummy Firmware 1.0",
     }
-    state_json = json.dumps(shark.device_info, sort_keys=True)
-    target_json = json.dumps(target_device_info, sort_keys=True)
-    assert state_json == target_json
+
+    assert shark.device_info == target_device_info
 
 
 def _get_async_update(err=None):
@@ -225,29 +218,20 @@ async def test_coordinator_match(hass: HomeAssistant):
 
     coordinator = SharkIqUpdateCoordinator(hass, None, ayla_api, [shark_vac1])
 
-    # The first should succeed, the second should fail
-    api1 = SharkVacuumEntity(shark_vac1, coordinator)
-    try:
-        _ = SharkVacuumEntity(shark_vac2, coordinator)
-    except RuntimeError:
-        api2_failed = True
-    else:
-        api2_failed = False
-    assert api2_failed
-
+    api = SharkVacuumEntity(shark_vac1, coordinator)
     coordinator.last_update_success = True
     coordinator._online_dsns = set()  # pylint: disable=protected-access
-    assert not api1.is_online
-    assert not api1.available
+    assert not api.is_online
+    assert not api.available
 
     coordinator._online_dsns = {  # pylint: disable=protected-access
         shark_vac1.serial_number
     }
-    assert api1.is_online
-    assert api1.available
+    assert api.is_online
+    assert api.available
 
     coordinator.last_update_success = False
-    assert not api1.available
+    assert not api.available
 
 
 async def test_simple_properties(hass: HomeAssistant):
