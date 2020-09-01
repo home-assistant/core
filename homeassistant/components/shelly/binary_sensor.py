@@ -18,7 +18,6 @@ SENSORS = {
     "overpower": None,
     "overtemp": None,
     "smoke": DEVICE_CLASS_SMOKE,
-    "tilt": None,
     "vibration": DEVICE_CLASS_VIBRATION,
 }
 
