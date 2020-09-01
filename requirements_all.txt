@@ -966,6 +966,9 @@ niko-home-control==0.2.1
 # homeassistant.components.nilu
 niluclient==0.1.2
 
+# homeassistant.components.noaa_tides
+noaa-coops==0.1.8
+
 # homeassistant.components.notify_events
 notify-events==1.0.4
 
@@ -1202,9 +1205,6 @@ pyW800rf32==0.1
 
 # homeassistant.components.nextbus
 py_nextbusnext==0.1.4
-
-# homeassistant.components.noaa_tides
-# py_noaa==0.3.0
 
 # homeassistant.components.ads
 pyads==3.2.2
