@@ -2273,7 +2273,7 @@ xs1-api-client==3.0.0
 yalesmartalarmclient==0.1.6
 
 # homeassistant.components.yeelight
-yeelight==0.5.2
+yeelight==0.5.3
 
 # homeassistant.components.yeelightsunflower
 yeelightsunflower==0.0.10
