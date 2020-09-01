@@ -90,8 +90,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if unique_id in configured_devices:
                     continue  # ignore configured devices
                 model = capabilities["model"]
-                ipaddr = device["ip"]
-                name = f"{ipaddr} {model} {unique_id}"
+                ip_addr = device["ip"]
+                name = f"{ip_addr} {model} {unique_id}"
                 self._discovered_devices[unique_id] = capabilities
                 devices_name[unique_id] = name
 
@@ -105,11 +105,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input=None):
         """Handle import step."""
-        ipaddr = user_input[CONF_IP_ADDRESS]
+        ip_addr = user_input[CONF_IP_ADDRESS]
         try:
-            await self._async_try_connect(ipaddr)
+            await self._async_try_connect(ip_addr)
         except CannotConnect:
-            _LOGGER.error("Failed to import %s: cannot connect", ipaddr)
+            _LOGGER.error("Failed to import %s: cannot connect", ip_addr)
             return self.async_abort(reason="cannot_connect")
         except AlreadyConfigured:
             return self.async_abort(reason="already_configured")
@@ -120,16 +120,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
         return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
 
-    async def _async_try_connect(self, ipaddr):
+    async def _async_try_connect(self, ip_addr):
         """Set up with options."""
-        bulb = yeelight.Bulb(ipaddr)
+        bulb = yeelight.Bulb(ip_addr)
         try:
             capabilities = await self.hass.async_add_executor_job(bulb.get_capabilities)
             if capabilities is None:  # timeout
-                _LOGGER.error("Failed to get capabilities from %s: timeout", ipaddr)
+                _LOGGER.error("Failed to get capabilities from %s: timeout", ip_addr)
                 raise CannotConnect
         except OSError as err:
-            _LOGGER.error("Failed to get capabilities from %s: %s", ipaddr, err)
+            _LOGGER.error("Failed to get capabilities from %s: %s", ip_addr, err)
             raise CannotConnect from err
         _LOGGER.debug("Get capabilities: %s", capabilities)
         self._capabilities = capabilities
