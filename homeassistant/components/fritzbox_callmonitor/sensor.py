@@ -16,20 +16,18 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
-    EVENT_HOMEASSISTANT_STOP,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
+from .const import CONF_PHONEBOOK, DEFAULT_HOST, DEFAULT_PORT, DOMAIN
+
 _LOGGER = logging.getLogger(__name__)
 
-CONF_PHONEBOOK = "phonebook"
 CONF_PREFIXES = "prefixes"
 
-DEFAULT_HOST = "169.254.1.1"  # IP valid for all Fritz!Box routers
 DEFAULT_NAME = "Phone"
-DEFAULT_PORT = 1012
 
 INTERVAL_RECONNECT = 60
 
@@ -56,48 +54,80 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up Fritz!Box call monitor sensor platform."""
-    name = config.get(CONF_NAME)
-    host = config.get(CONF_HOST)
-    # Try to resolve a hostname; if it is already an IP, it will be returned as-is
-    try:
-        host = socket.gethostbyname(host)
-    except OSError:
-        _LOGGER.error("Could not resolve hostname %s", host)
-        return
-    port = config.get(CONF_PORT)
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
-    phonebook_id = config.get(CONF_PHONEBOOK)
-    prefixes = config.get(CONF_PREFIXES)
+# def setup_platform(hass, config, add_entities, discovery_info=None):
+#     """Set up Fritz!Box call monitor sensor platform."""
+#     name = config.get(CONF_NAME)
+#     host = config.get(CONF_HOST)
+#     # Try to resolve a hostname; if it is already an IP, it will be returned as-is
+#     try:
+#         host = socket.gethostbyname(host)
+#     except OSError:
+#         _LOGGER.error("Could not resolve hostname %s", host)
+#         return
+#     port = config.get(CONF_PORT)
+#     username = config.get(CONF_USERNAME)
+#     password = config.get(CONF_PASSWORD)
+#     phonebook_id = config.get(CONF_PHONEBOOK)
+#     prefixes = config.get(CONF_PREFIXES)
+
+#     try:
+#         phonebook = FritzBoxPhonebook(
+#             host=host,
+#             port=port,
+#             username=username,
+#             password=password,
+#             phonebook_id=phonebook_id,
+#             prefixes=prefixes,
+#         )
+#     except:  # noqa: E722 pylint: disable=bare-except
+#         phonebook = None
+#         _LOGGER.warning("Phonebook with ID %s not found on Fritz!Box", phonebook_id)
+
+#     sensor = FritzBoxCallSensor(name=name, phonebook=phonebook)
+
+#     add_entities([sensor])
+
+#     monitor = FritzBoxCallMonitor(host=host, port=port, sensor=sensor)
+#     monitor.connect()
+
+#     def _stop_listener(_event):
+#         monitor.stopped.set()
+
+#     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _stop_listener)
+
+#     return monitor.sock is not None
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Fritzbox smarthome sensor from config_entry."""
+    phonebook = hass.data[DOMAIN][config_entry.entry_id]
 
     try:
         phonebook = FritzBoxPhonebook(
-            host=host,
-            port=port,
-            username=username,
-            password=password,
-            phonebook_id=phonebook_id,
-            prefixes=prefixes,
+            host=config_entry.data[CONF_HOST],
+            port=config_entry.data[CONF_PORT],
+            username=config_entry.data[CONF_USERNAME],
+            password=config_entry.data[CONF_PASSWORD],
+            phonebook_id=config_entry.data[CONF_PHONEBOOK],
+            prefixes=None,
         )
     except:  # noqa: E722 pylint: disable=bare-except
         phonebook = None
-        _LOGGER.warning("Phonebook with ID %s not found on Fritz!Box", phonebook_id)
+        _LOGGER.warning(
+            "Phonebook with ID %s not found on Fritz!Box",
+            config_entry.data[CONF_PHONEBOOK],
+        )
 
-    sensor = FritzBoxCallSensor(name=name, phonebook=phonebook)
+    sensor = FritzBoxCallSensor(name=config_entry.title, phonebook=phonebook)
 
-    add_entities([sensor])
-
-    monitor = FritzBoxCallMonitor(host=host, port=port, sensor=sensor)
+    monitor = FritzBoxCallMonitor(
+        host=config_entry.data[CONF_HOST],
+        port=config_entry.data[CONF_PORT],
+        sensor=sensor,
+    )
     monitor.connect()
 
-    def _stop_listener(_event):
-        monitor.stopped.set()
-
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _stop_listener)
-
-    return monitor.sock is not None
+    async_add_entities([sensor])
 
 
 class FritzBoxCallSensor(Entity):
