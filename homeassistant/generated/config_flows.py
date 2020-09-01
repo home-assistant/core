@@ -21,6 +21,7 @@ FLOWS = [
     "august",
     "avri",
     "awair",
+    "awair_local",
     "axis",
     "azure_devops",
     "blebox",

@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Kontoen er allerede konfigurert",
+            "no_devices": "Ingen enheter funnet p\u00e5 nettverket",
+            "reauth_successful": "Tilgangstoken oppdatert"
+        },
+        "error": {
+            "auth": "Ugyldig tilgangstoken",
+            "unknown": "Ukjent Awair API-feil."
+        },
+        "step": {
+            "reauth": {
+                "data": {
+                    "access_token": "Tilgangstoken",
+                    "email": "Epost"
+                },
+                "description": "Skriv inn tilgangstokenet for Awair-utviklere p\u00e5 nytt."
+            },
+            "user": {
+                "data": {
+                    "access_token": "Tilgangstoken",
+                    "email": "Epost "
+                },
+                "description": "Du m\u00e5 registrere deg for et Awair-utviklertilgangstoken p\u00e5: https://developer.getawair.com/onboard/login"
+            }
+        }
+    }
+}

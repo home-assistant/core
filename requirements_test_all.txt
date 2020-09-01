@@ -830,6 +830,7 @@ python-twitch-client==0.6.0
 python-velbus==2.0.44
 
 # homeassistant.components.awair
+# homeassistant.components.awair_local
 python_awair==0.1.1
 
 # homeassistant.components.tile

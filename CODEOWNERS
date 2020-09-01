@@ -47,6 +47,7 @@ homeassistant/components/automation/* @home-assistant/core
 homeassistant/components/avea/* @pattyland
 homeassistant/components/avri/* @timvancann
 homeassistant/components/awair/* @ahayworth @danielsjf
+homeassistant/components/awair_local/* @ahayworth @bobby @danielsjf
 homeassistant/components/aws/* @awarecan
 homeassistant/components/axis/* @Kane610
 homeassistant/components/azure_devops/* @timmo001

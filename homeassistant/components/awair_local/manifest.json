@@ -1,0 +1,8 @@
+{
+  "domain": "awair_local",
+  "name": "Awair Local",
+  "documentation": "https://www.home-assistant.io/integrations/awair_local",
+  "requirements": ["python_awair==0.1.1"],
+  "codeowners": ["@ahayworth", "@bobby", "@danielsjf"],
+  "config_flow": true
+}

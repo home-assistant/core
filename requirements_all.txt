@@ -1778,6 +1778,7 @@ python-whois==0.7.3
 python-wink==1.10.5
 
 # homeassistant.components.awair
+# homeassistant.components.awair_local
 python_awair==0.1.1
 
 # homeassistant.components.swiss_public_transport
