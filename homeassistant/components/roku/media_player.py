@@ -80,7 +80,10 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
 
     def _is_media_playback_trackable(self) -> bool:
         """Detect if we have enough media data to track playback."""
-        if self.coordinator.data.media.live:
+        if (
+            self.coordinator.data.media is None
+            or self.coordinator.data.media.live
+        ):
             return False
 
         return (
