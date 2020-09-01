@@ -210,7 +210,7 @@ async def test_attributes_app(
     await setup_integration(hass, aioclient_mock, app="netflix")
 
     state = hass.states.get(MAIN_ENTITY_ID)
-    assert state.state == STATE_PLAYING
+    assert state.state == STATE_ON
 
     assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) == MEDIA_TYPE_APP
     assert state.attributes.get(ATTR_APP_ID) == "12"
