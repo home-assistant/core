@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 import logging
 
 import noaa_coops as coops  # pylint: disable=import-error
+import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -12,6 +13,7 @@ from homeassistant.const import (
     CONF_TIME_ZONE,
     CONF_UNIT_SYSTEM,
 )
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -51,13 +53,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     else:
         unit_system = UNIT_SYSTEMS[0]
 
-    station = coops.Station(station_id, unit_system)
-
-    if station.name is None:
-        _LOGGER.error(
-            "Unable to setup NOAA Tides Sensor for station_id: %s", station_id
-        )
+    try:
+        station = coops.Station(station_id, unit_system)
+    except KeyError:
+        _LOGGER.error("NOAA Tides Sensor station_id %s does not exist", station_id)
         return
+    except requests.exceptions.ConnectionError as exception:
+        _LOGGER.error(
+            "Connection error during setup in NOAA Tides Sensor for station_id: %s",
+            station_id,
+        )
+        raise PlatformNotReady from exception
 
     noaa_sensor = NOAATidesAndCurrentsSensor(
         name, station_id, timezone, unit_system, station
