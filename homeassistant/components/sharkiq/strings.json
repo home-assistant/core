@@ -21,7 +21,9 @@
     },
     "abort": {
       "already_configured_account": "[%key:common::config_flow::abort::already_configured_account%]",
-      "reauth_successful": "[%key:common::config_flow::data::access_token%] updated successfully"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "reauth_successful": "[%key:common::config_flow::data::access_token%] updated successfully",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   }
 }
