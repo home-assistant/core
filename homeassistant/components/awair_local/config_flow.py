@@ -38,13 +38,10 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            user, error = await self._check_connection(user_input[CONF_HOSTS])
+            devices, error = await self._check_connection(user_input[CONF_HOSTS])
 
-            if user is not None:
-                await self.async_set_unique_id(user.email)
-                self._abort_if_unique_id_configured()
-
-                title = f"{user.email} ({user.user_id})"
+            if devices is not None:
+                title = "Awair Local Sensors"
                 return self.async_create_entry(title=title, data=user_input)
 
             if error != "auth":
