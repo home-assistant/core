@@ -509,7 +509,8 @@ class CastDevice(MediaPlayerEntity):
 
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
         """Implement the websocket media browsing helper."""
-        return await media_source.async_browse_media(self.hass, media_content_id)
+        result = await media_source.async_browse_media(self.hass, media_content_id)
+        return result.to_media_player_item()
 
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""

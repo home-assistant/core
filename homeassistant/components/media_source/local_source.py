@@ -21,7 +21,7 @@ def async_setup(hass: HomeAssistant):
     """Set up local media source."""
     source = LocalSource(hass)
     hass.data[DOMAIN][DOMAIN] = source
-    hass.http.register_view(LocalMediaView(hass, source))
+    hass.http.register_view(LocalMediaView(hass))
 
 
 class LocalSource(MediaSource):
@@ -40,7 +40,9 @@ class LocalSource(MediaSource):
             location = ""
 
         else:
-            source_dir_id, location = item.identifier.split("/", 1)
+            source_dir_id, location = item.identifier[
+                item.identifier.startswith("/") and 1 :
+            ].split("/", 1)
 
         if source_dir_id != "media":
             raise Unresolvable("Unknown source directory.")
@@ -61,7 +63,7 @@ class LocalSource(MediaSource):
         mime_type, _ = await self.hass.async_add_executor_job(
             mimetypes.guess_type, self.async_full_path(source_dir_id, location)
         )
-        return PlayMedia(f"/media/{item.identifier}", mime_type)
+        return PlayMedia(item.identifier, mime_type)
 
     async def async_browse_media(
         self, item: MediaSourceItem, media_types: Tuple[str] = MEDIA_MIME_TYPES
@@ -137,22 +139,19 @@ class LocalMediaView(HomeAssistantView):
     Returns media files in config/media.
     """
 
-    url = "/media/{identifier:.*}"
+    url = "/media/{location:.*}"
     name = "media"
 
-    def __init__(self, hass: HomeAssistant, source: LocalSource):
+    def __init__(self, hass: HomeAssistant):
         """Initialize the media view."""
         self.hass = hass
-        self.source = source
 
-    async def get(self, request: web.Request, identifier: str) -> web.FileResponse:
+    async def get(self, request: web.Request, location: str) -> web.FileResponse:
         """Start a GET request."""
-        try:
-            source_dir_id, location = self.source.async_parse_identifier(identifier)
-        except Unresolvable:
-            raise web.HTTPNotFound()
+        if location != sanitize_path(location):
+            return web.HTTPNotFound()
 
-        media_path = self.source.full_path(source_dir_id, location)
+        media_path = Path(self.hass.config.path("media", location))
 
         # Check that the file exists
         if not media_path.is_file():
