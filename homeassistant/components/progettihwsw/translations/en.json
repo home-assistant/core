@@ -5,7 +5,7 @@
             "unknown": "Unknown error"
         },
         "abort": {
-            "already_setup": "This board has already been set up."
+            "already_configured": "This board has already been set up."
         },
         "step": {
             "relay_modes": {

@@ -110,7 +110,7 @@ async def test_form_existing_entry_exception(hass):
     )
 
     assert result2["type"] == RESULT_TYPE_ABORT
-    assert result2["reason"] == "already_setup"
+    assert result2["reason"] == "already_configured"
 
 
 async def test_form_user_exception(hass):

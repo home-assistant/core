@@ -88,7 +88,7 @@ class ProgettiHWSWConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except ExistingEntry:
-                return self.async_abort(reason="already_setup")
+                return self.async_abort(reason="already_configured")
             except Exception:  # pylint: disable=broad-except
                 errors["base"] = "unknown"
             else:
