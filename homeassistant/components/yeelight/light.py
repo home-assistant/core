@@ -59,15 +59,12 @@ from . import (
     DATA_CUSTOM_EFFECTS,
     DATA_DEVICE,
     DATA_UPDATED,
-    DATA_YEELIGHT,
     DOMAIN,
     YEELIGHT_FLOW_TRANSITION_SCHEMA,
     YeelightEntity,
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-PLATFORM_DATA_KEY = f"{DATA_YEELIGHT}_lights"
 
 SUPPORT_YEELIGHT = (
     SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION | SUPPORT_FLASH | SUPPORT_EFFECT
@@ -232,9 +229,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up Yeelight from a config entry."""
 
-    if PLATFORM_DATA_KEY not in hass.data:
-        hass.data[PLATFORM_DATA_KEY] = []
-
     custom_effects = _parse_custom_effects(hass.data[DOMAIN][DATA_CUSTOM_EFFECTS])
 
     device = hass.data[DOMAIN][DATA_CONFIG_ENTRIES][config_entry.entry_id][DATA_DEVICE]
@@ -278,7 +272,6 @@ async def async_setup_entry(
             device.name,
         )
 
-    hass.data[PLATFORM_DATA_KEY] += lights
     async_add_entities(lights, True)
     await _async_setup_services(hass)
 
