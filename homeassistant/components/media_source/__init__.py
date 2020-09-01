@@ -98,5 +98,5 @@ async def websocket_browse_media(hass, connection, msg):
 @websocket_api.async_response
 async def websocket_resolve_media(hass, connection, msg):
     """Resolve media."""
-    media = await async_resolve_media(hass, msg.get("media_content_id"))
+    media = await async_resolve_media(hass, msg["media_content_id"])
     connection.send_result(msg["id"], {"url": media.url, "mime_type": media.mime_type})
