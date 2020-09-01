@@ -41,6 +41,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     hass.data[DOMAIN][entry.entry_id] = hub
 
+    if not entry.unique_id:
+        hass.config_entries.async_update_entry(entry, unique_id=hub.bond_id)
+
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,

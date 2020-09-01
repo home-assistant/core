@@ -433,7 +433,6 @@ def esphome_state_property(func):
 
     @property
     def _wrapper(self):
-        # pylint: disable=protected-access
         if self._state is None:
             return None
         val = func(self)

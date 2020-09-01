@@ -146,8 +146,8 @@ class FibaroThermostat(FibaroDevice, ClimateEntity):
             self._unit_of_temp = TEMP_CELSIUS
 
         if self._fan_mode_device:
-            fan_modes = self._fan_mode_device.fibaro_device.properties.supportedModes.split(
-                ","
+            fan_modes = (
+                self._fan_mode_device.fibaro_device.properties.supportedModes.split(",")
             )
             for mode in fan_modes:
                 mode = int(mode)

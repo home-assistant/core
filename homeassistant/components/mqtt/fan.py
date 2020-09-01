@@ -21,6 +21,7 @@ from homeassistant.const import (
     CONF_PAYLOAD_OFF,
     CONF_PAYLOAD_ON,
     CONF_STATE,
+    CONF_UNIQUE_ID,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -33,7 +34,6 @@ from . import (
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
-    CONF_UNIQUE_ID,
     MqttAttributes,
     MqttAvailability,
     MqttDiscoveryUpdate,

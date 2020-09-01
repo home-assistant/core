@@ -65,9 +65,11 @@ async def test_import(hass, tuya):
     """Test import step."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     with patch(
-        "homeassistant.components.tuya.async_setup", return_value=True,
+        "homeassistant.components.tuya.async_setup",
+        return_value=True,
     ) as mock_setup, patch(
-        "homeassistant.components.tuya.async_setup_entry", return_value=True,
+        "homeassistant.components.tuya.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

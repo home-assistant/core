@@ -85,17 +85,23 @@ class FlowHandler(config_entries.ConfigFlow):
             )
         except web_exceptions.HTTPForbidden:
             return self.async_show_form(
-                step_id="user", data_schema=self.schema, errors={"base": "forbidden"},
+                step_id="user",
+                data_schema=self.schema,
+                errors={"base": "forbidden"},
             )
         except ClientError:
             _LOGGER.exception("ClientError")
             return self.async_show_form(
-                step_id="user", data_schema=self.schema, errors={"base": "device_fail"},
+                step_id="user",
+                data_schema=self.schema,
+                errors={"base": "device_fail"},
             )
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected error creating device")
             return self.async_show_form(
-                step_id="user", data_schema=self.schema, errors={"base": "device_fail"},
+                step_id="user",
+                data_schema=self.schema,
+                errors={"base": "device_fail"},
             )
 
         mac = device.mac
@@ -130,6 +136,13 @@ class FlowHandler(config_entries.ConfigFlow):
         """Prepare configuration for a discovered Daikin device."""
         _LOGGER.debug("Zeroconf user_input: %s", discovery_info)
         devices = Discovery().poll(ip=discovery_info[CONF_HOST])
+        if not devices:
+            _LOGGER.debug(
+                "Could not find MAC-address for %s,"
+                " make sure the required UDP ports are open (see integration documentation)",
+                discovery_info[CONF_HOST],
+            )
+            return self.async_abort(reason="cannot_connect")
         await self.async_set_unique_id(next(iter(devices))[KEY_MAC])
         self._abort_if_unique_id_configured()
         self.host = discovery_info[CONF_HOST]

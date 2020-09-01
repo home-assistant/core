@@ -268,7 +268,9 @@ async def test_temp_uom(
 
 
 async def test_electrical_measurement_init(
-    hass, zigpy_device_mock, zha_device_joined,
+    hass,
+    zigpy_device_mock,
+    zha_device_joined,
 ):
     """Test proper initialization of the electrical measurement cluster."""
 

@@ -2,7 +2,7 @@
 
 import logging
 
-from pysyncthru import SyncThru
+from pysyncthru import SYNCTHRU_STATE_HUMAN, SyncThru
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -101,7 +101,7 @@ class SyncThruSensor(Entity):
 
     def __init__(self, syncthru, name):
         """Initialize the sensor."""
-        self.syncthru = syncthru
+        self.syncthru: SyncThru = syncthru
         self._attributes = {}
         self._state = None
         self._name = name
@@ -164,7 +164,8 @@ class SyncThruMainSensor(SyncThruSensor):
                 self.syncthru.url,
             )
             self._active = False
-        self._state = self.syncthru.device_status()
+        self._state = SYNCTHRU_STATE_HUMAN[self.syncthru.device_status()]
+        self._attributes = {"display_text": self.syncthru.device_status_details()}
 
 
 class SyncThruTonerSensor(SyncThruSensor):

@@ -255,10 +255,12 @@ class ScriptEntity(ToggleEntity):
             hass,
             cfg[CONF_SEQUENCE],
             cfg.get(CONF_ALIAS, object_id),
-            self.async_change_listener,
-            cfg[CONF_MODE],
-            cfg[CONF_MAX],
-            logging.getLogger(f"{__name__}.{object_id}"),
+            DOMAIN,
+            running_description="script sequence",
+            change_listener=self.async_change_listener,
+            script_mode=cfg[CONF_MODE],
+            max_runs=cfg[CONF_MAX],
+            logger=logging.getLogger(f"{__name__}.{object_id}"),
         )
         self._changed = asyncio.Event()
 
@@ -278,11 +280,10 @@ class ScriptEntity(ToggleEntity):
         attrs = {
             ATTR_LAST_TRIGGERED: self.script.last_triggered,
             ATTR_MODE: self.script.script_mode,
+            ATTR_CUR: self.script.runs,
         }
         if self.script.supports_max:
             attrs[ATTR_MAX] = self.script.max_runs
-            if self.is_on:
-                attrs[ATTR_CUR] = self.script.runs
         if self.script.last_action:
             attrs[ATTR_LAST_ACTION] = self.script.last_action
         return attrs

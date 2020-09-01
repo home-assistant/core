@@ -51,7 +51,6 @@ from .const import (
     NAME2,
     UNIQUE_ID,
     VOLUME_STEP,
-    ZEROCONF_HOST,
 )
 
 from tests.common import MockConfigEntry
@@ -223,7 +222,10 @@ async def test_user_host_already_configured(
 ) -> None:
     """Test host is already configured during user setup."""
     entry = MockConfigEntry(
-        domain=DOMAIN, data=MOCK_SPEAKER_CONFIG, options={CONF_VOLUME_STEP: VOLUME_STEP}
+        domain=DOMAIN,
+        data=MOCK_SPEAKER_CONFIG,
+        options={CONF_VOLUME_STEP: VOLUME_STEP},
+        unique_id=UNIQUE_ID,
     )
     entry.add_to_hass(hass)
     fail_entry = MOCK_SPEAKER_CONFIG.copy()
@@ -234,61 +236,15 @@ async def test_user_host_already_configured(
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] == {CONF_HOST: "host_exists"}
+    assert result["errors"] == {CONF_HOST: "existing_config_entry_found"}
 
 
-async def test_user_host_already_configured_no_port(
+async def test_user_serial_number_already_exists(
     hass: HomeAssistantType,
     vizio_connect: pytest.fixture,
     vizio_bypass_setup: pytest.fixture,
 ) -> None:
-    """Test host is already configured during user setup when existing entry has no port."""
-    # Mock entry without port so we can test that the same entry WITH a port will fail
-    no_port_entry = MOCK_SPEAKER_CONFIG.copy()
-    no_port_entry[CONF_HOST] = no_port_entry[CONF_HOST].split(":")[0]
-    entry = MockConfigEntry(
-        domain=DOMAIN, data=no_port_entry, options={CONF_VOLUME_STEP: VOLUME_STEP}
-    )
-    entry.add_to_hass(hass)
-    fail_entry = MOCK_SPEAKER_CONFIG.copy()
-    fail_entry[CONF_NAME] = "newtestname"
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=fail_entry
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] == {CONF_HOST: "host_exists"}
-
-
-async def test_user_name_already_configured(
-    hass: HomeAssistantType,
-    vizio_connect: pytest.fixture,
-    vizio_bypass_setup: pytest.fixture,
-) -> None:
-    """Test name is already configured during user setup."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, data=MOCK_SPEAKER_CONFIG, options={CONF_VOLUME_STEP: VOLUME_STEP}
-    )
-    entry.add_to_hass(hass)
-
-    fail_entry = MOCK_SPEAKER_CONFIG.copy()
-    fail_entry[CONF_HOST] = "0.0.0.0"
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=fail_entry
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] == {CONF_NAME: "name_exists"}
-
-
-async def test_user_esn_already_exists(
-    hass: HomeAssistantType,
-    vizio_connect: pytest.fixture,
-    vizio_bypass_setup: pytest.fixture,
-) -> None:
-    """Test ESN is already configured with different host and name during user setup."""
+    """Test serial_number is already configured with different host and name during user setup."""
     # Set up new entry
     MockConfigEntry(
         domain=DOMAIN, data=MOCK_SPEAKER_CONFIG, unique_id=UNIQUE_ID
@@ -303,14 +259,26 @@ async def test_user_esn_already_exists(
         DOMAIN, context={"source": SOURCE_USER}, data=fail_entry
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured"
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"] == {CONF_HOST: "existing_config_entry_found"}
 
 
 async def test_user_error_on_could_not_connect(
+    hass: HomeAssistantType, vizio_no_unique_id: pytest.fixture
+) -> None:
+    """Test with could_not_connect during user setup due to no connectivity."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=MOCK_USER_VALID_TV_CONFIG
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"] == {CONF_HOST: "cannot_connect"}
+
+
+async def test_user_error_on_could_not_connect_invalid_token(
     hass: HomeAssistantType, vizio_cant_connect: pytest.fixture
 ) -> None:
-    """Test with could_not_connect during user_setup."""
+    """Test with could_not_connect during user setup due to invalid token."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=MOCK_USER_VALID_TV_CONFIG
     )
@@ -683,6 +651,7 @@ async def test_import_error(
         domain=DOMAIN,
         data=vol.Schema(VIZIO_SCHEMA)(MOCK_SPEAKER_CONFIG),
         options={CONF_VOLUME_STEP: VOLUME_STEP},
+        unique_id=UNIQUE_ID,
     )
     entry.add_to_hass(hass)
     fail_entry = MOCK_SPEAKER_CONFIG.copy()
@@ -763,10 +732,14 @@ async def test_zeroconf_flow_already_configured(
     hass: HomeAssistantType,
     vizio_connect: pytest.fixture,
     vizio_bypass_setup: pytest.fixture,
+    vizio_guess_device_type: pytest.fixture,
 ) -> None:
     """Test entity is already configured during zeroconf setup."""
     entry = MockConfigEntry(
-        domain=DOMAIN, data=MOCK_SPEAKER_CONFIG, options={CONF_VOLUME_STEP: VOLUME_STEP}
+        domain=DOMAIN,
+        data=MOCK_SPEAKER_CONFIG,
+        options={CONF_VOLUME_STEP: VOLUME_STEP},
+        unique_id=UNIQUE_ID,
     )
     entry.add_to_hass(hass)
 
@@ -778,7 +751,7 @@ async def test_zeroconf_flow_already_configured(
 
     # Flow should abort because device is already setup
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured_device"
+    assert result["reason"] == "already_configured"
 
 
 async def test_zeroconf_dupe_fail(
@@ -842,7 +815,7 @@ async def test_zeroconf_abort_when_ignored(
         data=MOCK_SPEAKER_CONFIG,
         options={CONF_VOLUME_STEP: VOLUME_STEP},
         source=SOURCE_IGNORE,
-        unique_id=ZEROCONF_HOST,
+        unique_id=UNIQUE_ID,
     )
     entry.add_to_hass(hass)
 
@@ -860,12 +833,16 @@ async def test_zeroconf_flow_already_configured_hostname(
     vizio_connect: pytest.fixture,
     vizio_bypass_setup: pytest.fixture,
     vizio_hostname_check: pytest.fixture,
+    vizio_guess_device_type: pytest.fixture,
 ) -> None:
     """Test entity is already configured during zeroconf setup when existing entry uses hostname."""
     config = MOCK_SPEAKER_CONFIG.copy()
     config[CONF_HOST] = "hostname"
     entry = MockConfigEntry(
-        domain=DOMAIN, data=config, options={CONF_VOLUME_STEP: VOLUME_STEP}
+        domain=DOMAIN,
+        data=config,
+        options={CONF_VOLUME_STEP: VOLUME_STEP},
+        unique_id=UNIQUE_ID,
     )
     entry.add_to_hass(hass)
 
@@ -877,7 +854,7 @@ async def test_zeroconf_flow_already_configured_hostname(
 
     # Flow should abort because device is already setup
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured_device"
+    assert result["reason"] == "already_configured"
 
 
 async def test_import_flow_already_configured_hostname(

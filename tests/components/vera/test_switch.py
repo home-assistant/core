@@ -28,7 +28,9 @@ async def test_switch(
     assert hass.states.get(entity_id).state == "off"
 
     await hass.services.async_call(
-        "switch", "turn_on", {"entity_id": entity_id},
+        "switch",
+        "turn_on",
+        {"entity_id": entity_id},
     )
     await hass.async_block_till_done()
     vera_device.switch_on.assert_called()
@@ -38,7 +40,9 @@ async def test_switch(
     assert hass.states.get(entity_id).state == "on"
 
     await hass.services.async_call(
-        "switch", "turn_off", {"entity_id": entity_id},
+        "switch",
+        "turn_off",
+        {"entity_id": entity_id},
     )
     await hass.async_block_till_done()
     vera_device.switch_off.assert_called()

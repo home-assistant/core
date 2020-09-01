@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Apparat ass scho konfigur\u00e9iert"
+            "already_configured": "Apparat ass scho konfigur\u00e9iert",
+            "cannot_connect": "Feeler beim verbannen"
         },
         "error": {
             "device_fail": "Onerwaarte Feeler",

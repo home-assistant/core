@@ -196,7 +196,9 @@ async def test_fixing_unique_id_other_ignored(hass, mock_bridge_setup):
         source=config_entries.SOURCE_IGNORE,
     ).add_to_hass(hass)
     entry = MockConfigEntry(
-        domain=hue.DOMAIN, data={"host": "0.0.0.0"}, unique_id="invalid-id",
+        domain=hue.DOMAIN,
+        data={"host": "0.0.0.0"},
+        unique_id="invalid-id",
     )
     entry.add_to_hass(hass)
     assert await async_setup_component(hass, hue.DOMAIN, {}) is True
@@ -208,11 +210,15 @@ async def test_fixing_unique_id_other_ignored(hass, mock_bridge_setup):
 async def test_fixing_unique_id_other_correct(hass, mock_bridge_setup):
     """Test we remove config entry if another one has correct ID."""
     correct_entry = MockConfigEntry(
-        domain=hue.DOMAIN, data={"host": "0.0.0.0"}, unique_id="mock-id",
+        domain=hue.DOMAIN,
+        data={"host": "0.0.0.0"},
+        unique_id="mock-id",
     )
     correct_entry.add_to_hass(hass)
     entry = MockConfigEntry(
-        domain=hue.DOMAIN, data={"host": "0.0.0.0"}, unique_id="invalid-id",
+        domain=hue.DOMAIN,
+        data={"host": "0.0.0.0"},
+        unique_id="invalid-id",
     )
     entry.add_to_hass(hass)
     assert await async_setup_component(hass, hue.DOMAIN, {}) is True

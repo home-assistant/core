@@ -153,8 +153,8 @@ async def test_v4_meter(hass, mock_connection_factory):
     (connection_factory, transport, protocol) = mock_connection_factory
 
     from dsmr_parser.obis_references import (
-        HOURLY_GAS_METER_READING,
         ELECTRICITY_ACTIVE_TARIFF,
+        HOURLY_GAS_METER_READING,
     )
     from dsmr_parser.objects import CosemObject, MBusObject
 
@@ -198,8 +198,8 @@ async def test_v5_meter(hass, mock_connection_factory):
     (connection_factory, transport, protocol) = mock_connection_factory
 
     from dsmr_parser.obis_references import (
-        HOURLY_GAS_METER_READING,
         ELECTRICITY_ACTIVE_TARIFF,
+        HOURLY_GAS_METER_READING,
     )
     from dsmr_parser.objects import CosemObject, MBusObject
 
@@ -366,6 +366,7 @@ async def test_reconnect(hass, monkeypatch, mock_connection_factory):
     protocol.wait_closed = wait_closed
 
     await async_setup_component(hass, "sensor", {"sensor": config})
+    await hass.async_block_till_done()
 
     assert connection_factory.call_count == 1
 

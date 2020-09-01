@@ -76,11 +76,11 @@ class PowerViewShadeBatterySensor(ShadeEntity):
     async def async_added_to_hass(self):
         """When entity is added to hass."""
         self.async_on_remove(
-            self._coordinator.async_add_listener(self._async_update_shade_from_group)
+            self.coordinator.async_add_listener(self._async_update_shade_from_group)
         )
 
     @callback
     def _async_update_shade_from_group(self):
         """Update with new data from the coordinator."""
-        self._shade.raw_data = self._coordinator.data[self._shade.id]
+        self._shade.raw_data = self.coordinator.data[self._shade.id]
         self.async_write_ha_state()

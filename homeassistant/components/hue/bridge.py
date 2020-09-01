@@ -94,9 +94,9 @@ class HueBridge:
             create_config_flow(hass, host)
             return False
 
-        except CannotConnect:
+        except CannotConnect as err:
             LOGGER.error("Error connecting to the Hue bridge at %s", host)
-            raise ConfigEntryNotReady
+            raise ConfigEntryNotReady from err
 
         except Exception:  # pylint: disable=broad-except
             LOGGER.exception("Unknown error connecting with Hue bridge at %s", host)
@@ -269,18 +269,18 @@ async def authenticate_bridge(hass: core.HomeAssistant, bridge: aiohue.Bridge):
             # Initialize bridge (and validate our username)
             await bridge.initialize()
 
-    except (aiohue.LinkButtonNotPressed, aiohue.Unauthorized):
-        raise AuthenticationRequired
+    except (aiohue.LinkButtonNotPressed, aiohue.Unauthorized) as err:
+        raise AuthenticationRequired from err
     except (
         asyncio.TimeoutError,
         client_exceptions.ClientOSError,
         client_exceptions.ServerDisconnectedError,
         client_exceptions.ContentTypeError,
-    ):
-        raise CannotConnect
-    except aiohue.AiohueException:
+    ) as err:
+        raise CannotConnect from err
+    except aiohue.AiohueException as err:
         LOGGER.exception("Unknown Hue linking error occurred")
-        raise AuthenticationRequired
+        raise AuthenticationRequired from err
 
 
 async def _update_listener(hass, entry):

@@ -74,6 +74,11 @@ class Integration:
         return self.path.name
 
     @property
+    def disabled(self) -> Optional[str]:
+        """List of disabled."""
+        return self.manifest.get("disabled")
+
+    @property
     def requirements(self) -> List[str]:
         """List of requirements."""
         return self.manifest.get("requirements", [])

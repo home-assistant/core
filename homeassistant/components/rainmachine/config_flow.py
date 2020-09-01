@@ -1,5 +1,5 @@
 """Config flow to configure the RainMachine component."""
-from regenmaschine import login
+from regenmaschine import Client
 from regenmaschine.errors import RainMachineError
 import voluptuous as vol
 
@@ -59,12 +59,12 @@ class RainMachineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         websession = aiohttp_client.async_get_clientsession(self.hass)
+        client = Client(session=websession)
 
         try:
-            await login(
+            await client.load_local(
                 user_input[CONF_IP_ADDRESS],
                 user_input[CONF_PASSWORD],
-                websession,
                 port=user_input[CONF_PORT],
                 ssl=user_input.get(CONF_SSL, True),
             )

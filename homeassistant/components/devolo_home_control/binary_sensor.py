@@ -58,7 +58,7 @@ class DevoloBinaryDeviceEntity(DevoloDeviceEntity, BinarySensorEntity):
             self._binary_sensor_property.sub_type
             or self._binary_sensor_property.sensor_type
         )
-        name = device_instance.itemName
+        name = device_instance.item_name
 
         if self._device_class is None:
             if device_instance.binary_sensor_property.get(element_uid).sub_type != "":

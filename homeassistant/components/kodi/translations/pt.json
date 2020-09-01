@@ -1,0 +1,9 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "Informa\u00e7\u00f5es de conex\u00e3o Kodi. Certifique-se de habilitar \"Permitir controle do Kodi via HTTP\" em Sistema / Configura\u00e7\u00f5es / Rede / Servi\u00e7os."
+            }
+        }
+    }
+}

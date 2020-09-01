@@ -60,6 +60,11 @@ class BondDevice:
             ]
         )
 
+    def supports_set_brightness(self) -> bool:
+        """Return True if this device supports setting a light brightness."""
+        actions: List[str] = self._attrs["actions"]
+        return bool([action for action in actions if action in [Action.SET_BRIGHTNESS]])
+
 
 class BondHub:
     """Hub device representing Bond Bridge."""
@@ -73,6 +78,7 @@ class BondHub:
     async def setup(self):
         """Read hub version information."""
         self._version = await self.bond.version()
+        _LOGGER.debug("Bond reported the following version info: %s", self._version)
 
         # Fetch all available devices using Bond API.
         device_ids = await self.bond.devices()

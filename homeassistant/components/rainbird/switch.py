@@ -45,7 +45,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             name = zone_config.get(CONF_FRIENDLY_NAME)
             devices.append(
                 RainBirdSwitch(
-                    controller, zone, time, name if name else f"Sprinkler {zone}",
+                    controller,
+                    zone,
+                    time,
+                    name if name else f"Sprinkler {zone}",
                 )
             )
 

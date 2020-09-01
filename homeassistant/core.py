@@ -12,7 +12,6 @@ from ipaddress import ip_address
 import logging
 import os
 import pathlib
-import random
 import re
 import threading
 from time import monotonic
@@ -33,9 +32,7 @@ from typing import (
     Union,
     cast,
 )
-import uuid
 
-from async_timeout import timeout
 import attr
 import voluptuous as vol
 import yarl
@@ -76,13 +73,15 @@ from homeassistant.util import location, network
 from homeassistant.util.async_ import fire_coroutine_threadsafe, run_callback_threadsafe
 import homeassistant.util.dt as dt_util
 from homeassistant.util.thread import fix_threading_exception_logging
+from homeassistant.util.timeout import TimeoutManager
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
+import homeassistant.util.uuid as uuid_util
 
 # Typing imports that create a circular dependency
 if TYPE_CHECKING:
     from homeassistant.auth import AuthManager
-    from homeassistant.config_entries import ConfigEntries
     from homeassistant.components.http import HomeAssistantHTTP
+    from homeassistant.config_entries import ConfigEntries
 
 
 block_async_io.enable()
@@ -159,7 +158,7 @@ class CoreState(enum.Enum):
     final_write = "FINAL_WRITE"
     stopped = "STOPPED"
 
-    def __str__(self) -> str:
+    def __str__(self) -> str:  # pylint: disable=invalid-str-returned
         """Return the event."""
         return self.value  # type: ignore
 
@@ -184,10 +183,12 @@ class HomeAssistant:
         self.helpers = loader.Helpers(self)
         # This is a dictionary that any component can store any data on.
         self.data: dict = {}
-        self.state = CoreState.not_running
-        self.exit_code = 0
+        self.state: CoreState = CoreState.not_running
+        self.exit_code: int = 0
         # If not None, use to signal end-of-loop
         self._stopped: Optional[asyncio.Event] = None
+        # Timeout handler for Core/Helper namespace
+        self.timeout: TimeoutManager = TimeoutManager()
 
     @property
     def is_running(self) -> bool:
@@ -255,7 +256,7 @@ class HomeAssistant:
         try:
             # Only block for EVENT_HOMEASSISTANT_START listener
             self.async_stop_track_tasks()
-            async with timeout(TIMEOUT_EVENT_START):
+            async with self.timeout.async_timeout(TIMEOUT_EVENT_START):
                 await self.async_block_till_done()
         except asyncio.TimeoutError:
             _LOGGER.warning(
@@ -301,6 +302,9 @@ class HomeAssistant:
         target: target to call.
         args: parameters for method to call.
         """
+        if target is None:
+            raise ValueError("Don't call async_add_job with None")
+
         task = None
 
         # Check for partials to properly determine if coroutine function
@@ -315,9 +319,7 @@ class HomeAssistant:
         elif is_callback(check_target):
             self.loop.call_soon(target, *args)
         else:
-            task = self.loop.run_in_executor(  # type: ignore
-                None, target, *args
-            )
+            task = self.loop.run_in_executor(None, target, *args)  # type: ignore
 
         # If a task is scheduled
         if self._track_task and task is not None:
@@ -460,17 +462,35 @@ class HomeAssistant:
         self.state = CoreState.stopping
         self.async_track_tasks()
         self.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-        await self.async_block_till_done()
+        try:
+            async with self.timeout.async_timeout(120):
+                await self.async_block_till_done()
+        except asyncio.TimeoutError:
+            _LOGGER.warning(
+                "Timed out waiting for shutdown stage 1 to complete, the shutdown will continue"
+            )
 
         # stage 2
         self.state = CoreState.final_write
         self.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
-        await self.async_block_till_done()
+        try:
+            async with self.timeout.async_timeout(60):
+                await self.async_block_till_done()
+        except asyncio.TimeoutError:
+            _LOGGER.warning(
+                "Timed out waiting for shutdown stage 2 to complete, the shutdown will continue"
+            )
 
         # stage 3
         self.state = CoreState.not_running
         self.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
-        await self.async_block_till_done()
+        try:
+            async with self.timeout.async_timeout(30):
+                await self.async_block_till_done()
+        except asyncio.TimeoutError:
+            _LOGGER.warning(
+                "Timed out waiting for shutdown stage 3 to complete, the shutdown will continue"
+            )
 
         # Python 3.9+ and backported in runner.py
         await self.loop.shutdown_default_executor()  # type: ignore
@@ -490,13 +510,7 @@ class Context:
 
     user_id: str = attr.ib(default=None)
     parent_id: Optional[str] = attr.ib(default=None)
-    # The uuid1 uses a random multicast MAC address instead of the real MAC address
-    # of the machine without the overhead of calling the getrandom() system call.
-    #
-    # This is effectively equivalent to PostgreSQL's uuid_generate_v1mc() function
-    id: str = attr.ib(
-        factory=lambda: uuid.uuid1(node=random.getrandbits(48) | (1 << 40)).hex
-    )
+    id: str = attr.ib(factory=uuid_util.uuid_v1mc_hex)
 
     def as_dict(self) -> dict:
         """Return a dictionary representation of the context."""
@@ -509,7 +523,7 @@ class EventOrigin(enum.Enum):
     local = "LOCAL"
     remote = "REMOTE"
 
-    def __str__(self) -> str:
+    def __str__(self) -> str:  # pylint: disable=invalid-str-returned
         """Return the event."""
         return self.value  # type: ignore
 
@@ -739,6 +753,7 @@ class State:
     last_changed: last time the state was changed, not the attributes.
     last_updated: last time this object was updated.
     context: Context in which it was created
+    domain: Domain of this state.
     """
 
     __slots__ = [
@@ -748,6 +763,7 @@ class State:
         "last_changed",
         "last_updated",
         "context",
+        "domain",
     ]
 
     def __init__(
@@ -781,11 +797,7 @@ class State:
         self.last_updated = last_updated or dt_util.utcnow()
         self.last_changed = last_changed or self.last_updated
         self.context = context or Context()
-
-    @property
-    def domain(self) -> str:
-        """Domain of this state."""
-        return split_entity_id(self.entity_id)[0]
+        self.domain = split_entity_id(self.entity_id)[0]
 
     @property
     def object_id(self) -> str:
@@ -887,7 +899,9 @@ class StateMachine:
         return future.result()
 
     @callback
-    def async_entity_ids(self, domain_filter: Optional[str] = None) -> List[str]:
+    def async_entity_ids(
+        self, domain_filter: Optional[Union[str, Iterable]] = None
+    ) -> List[str]:
         """List of entity ids that are being tracked.
 
         This method must be run in the event loop.
@@ -895,12 +909,13 @@ class StateMachine:
         if domain_filter is None:
             return list(self._states.keys())
 
-        domain_filter = domain_filter.lower()
+        if isinstance(domain_filter, str):
+            domain_filter = (domain_filter.lower(),)
 
         return [
             state.entity_id
             for state in self._states.values()
-            if state.domain == domain_filter
+            if state.domain in domain_filter
         ]
 
     def all(self) -> List[State]:
@@ -1468,6 +1483,7 @@ class Config:
         unit_system: Optional[str] = None,
         location_name: Optional[str] = None,
         time_zone: Optional[str] = None,
+        # pylint: disable=dangerous-default-value # _UNDEFs not modified
         external_url: Optional[Union[str, dict]] = _UNDEF,
         internal_url: Optional[Union[str, dict]] = _UNDEF,
     ) -> None:
