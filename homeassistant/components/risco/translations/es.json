@@ -27,6 +27,15 @@
                     "scan_interval": "Con qu\u00e9 frecuencia sondear Risco (en segundos)"
                 },
                 "title": "Configurar opciones"
+            },
+            "risco_to_ha": {
+                "data": {
+                    "A": "Grupo A",
+                    "B": "Grupo B",
+                    "C": "Grupo C",
+                    "D": "Grupo D"
+                },
+                "title": "Asignar estados de Risco a estados de Home Assistant"
             }
         }
     }

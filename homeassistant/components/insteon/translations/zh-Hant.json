@@ -2,10 +2,11 @@
     "config": {
         "abort": {
             "already_configured": "Insteon \u6578\u64da\u6a5f\u9023\u7dda\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
-            "cannot_connect": "\u7121\u6cd5\u9023\u7dda\u81f3 Insteon \u6578\u64da\u6a5f"
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed"
         },
         "error": {
-            "cannot_connect": "Insteon \u6578\u64da\u6a5f\u9023\u7dda\u5931\u6557\uff0c\u8acb\u518d\u8a66\u4e00\u6b21\u3002",
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "select_single": "\u9078\u64c7\u9078\u9805\u3002"
         },
         "step": {
@@ -27,6 +28,24 @@
                 "description": "\u8a2d\u5b9a Insteon Hub \u7b2c 2 \u7248\u3002",
                 "title": "Insteon Hub  \u7b2c 2 \u7248"
             },
+            "hubv1": {
+                "data": {
+                    "host": "IP \u4f4d\u5740",
+                    "port": "\u901a\u8a0a\u57e0"
+                },
+                "description": "\u8a2d\u5b9a Insteon Hub \u7b2c 1 \u7248\uff082014 \u5e74\u4ee5\u524d\uff09\u3002",
+                "title": "Insteon Hub \u7b2c 1 \u7248"
+            },
+            "hubv2": {
+                "data": {
+                    "host": "IP \u4f4d\u5740",
+                    "password": "\u5bc6\u78bc",
+                    "port": "\u901a\u8a0a\u57e0",
+                    "username": "\u4f7f\u7528\u8005\u540d\u7a31"
+                },
+                "description": "\u8a2d\u5b9a Insteon Hub \u7b2c 2 \u7248\u3002",
+                "title": "Insteon Hub  \u7b2c 2 \u7248"
+            },
             "init": {
                 "data": {
                     "hubv1": "Insteon Hub \u7b2c 1 \u7248\uff082014 \u5e74\u4ee5\u524d\uff09",
@@ -38,10 +57,17 @@
             },
             "plm": {
                 "data": {
-                    "device": "PLM \u8a2d\u5099\uff08\u4f8b\u5982 /dev/ttyUSB0 \u6216 COM3\uff09"
+                    "device": "USB \u8a2d\u5099\u8def\u5f91"
                 },
                 "description": "\u8a2d\u5b9a PowerLink Modem (PLM)\u3002",
                 "title": "Insteon PLM"
+            },
+            "user": {
+                "data": {
+                    "modem_type": "\u6578\u64da\u6a5f\u985e\u578b\u3002"
+                },
+                "description": "\u9078\u64c7 Insteon \u6578\u64da\u6a5f\u985e\u578b\u3002",
+                "title": "Insteon"
             }
         }
     },
@@ -51,7 +77,7 @@
             "cannot_connect": "\u7121\u6cd5\u9023\u7dda\u81f3 Insteon \u6578\u64da\u6a5f\u3002"
         },
         "error": {
-            "cannot_connect": "Insteon \u6578\u64da\u6a5f\u9023\u7dda\u5931\u6557\uff0c\u8acb\u518d\u8a66\u4e00\u6b21\u3002",
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "input_error": "\u7269\u4ef6\u7121\u6548\uff0c\u8acb\u6aa2\u67e5\u8a2d\u5b9a\u503c\u3002",
             "select_single": "\u9078\u64c7\u9078\u9805\u3002"
         },
@@ -77,10 +103,10 @@
             },
             "change_hub_config": {
                 "data": {
-                    "host": "\u65b0\u589e\u4e3b\u6a5f\u540d\u7a31\u6216 IP \u4f4d\u5740",
-                    "password": "\u65b0\u589e\u5bc6\u78bc",
-                    "port": "\u65b0\u589e\u901a\u8a0a\u57e0\u865f",
-                    "username": "\u65b0\u589e\u4f7f\u7528\u8005\u540d\u7a31"
+                    "host": "IP \u4f4d\u5740",
+                    "password": "\u5bc6\u78bc",
+                    "port": "\u901a\u8a0a\u57e0",
+                    "username": "\u4f7f\u7528\u8005\u540d\u7a31"
                 },
                 "description": "\u8b8a\u66f4 Insteon Hub \u9023\u7dda\u8cc7\u8a0a\u3002\u65bc\u8b8a\u66f4\u4e4b\u5f8c\u3001\u5fc5\u9808\u91cd\u555f Home Assistant\u3002\u6b64\u4e9b\u8a2d\u5b9a\u4e0d\u6703\u8b8a\u66f4 Hub \u8a2d\u5099\u672c\u8eab\u7684\u8a2d\u5b9a\uff0c\u5982\u6b32\u8b8a\u66f4 Hub \u8a2d\u5b9a\u3001\u5247\u8acb\u4f7f\u7528 Hub app\u3002",
                 "title": "Insteon"

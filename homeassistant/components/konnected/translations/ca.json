@@ -32,7 +32,9 @@
             "not_konn_panel": "No s'ha reconegut com a un dispositiu Konnected.io"
         },
         "error": {
-            "bad_host": "L'URL de sustituci\u00f3 de l'amfitri\u00f3 de l'API \u00e9s inv\u00e0lid"
+            "bad_host": "L'URL de sustituci\u00f3 de l'amfitri\u00f3 de l'API \u00e9s inv\u00e0lid",
+            "one": "Un",
+            "other": "Altres"
         },
         "step": {
             "options_binary": {
