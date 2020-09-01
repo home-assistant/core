@@ -2,10 +2,10 @@
     "config": {
         "abort": {
             "already_configured": "En Insteon-modemtilkobling er allerede konfigurert",
-            "cannot_connect": "Kan ikke koble til Insteon-modemet"
+            "cannot_connect": "Tilkobling mislyktes."
         },
         "error": {
-            "cannot_connect": "Kan ikke koble til Insteon-modemet, pr\u00f8v p\u00e5 nytt.",
+            "cannot_connect": "Tilkobling mislyktes.",
             "select_single": "Velg ett alternativ."
         },
         "step": {
@@ -27,6 +27,24 @@
                 "description": "Konfigurer Insteon Hub versjon 2.",
                 "title": "Insteon Hub versjon 2"
             },
+            "hubv1": {
+                "data": {
+                    "host": "IP adresse",
+                    "port": "Port"
+                },
+                "description": "Konfigurer Insteon Hub versjon 1 (f\u00f8r 2014).",
+                "title": "Insteon Hub versjon 1"
+            },
+            "hubv2": {
+                "data": {
+                    "host": "IP adresse",
+                    "password": "Passord",
+                    "port": "Port",
+                    "username": "Brukernavn"
+                },
+                "description": "Konfigurer Insteon Hub versjon 2.",
+                "title": "Insteon Hub versjon 2"
+            },
             "init": {
                 "data": {
                     "hubv1": "Hub versjon 1 (f\u00f8r 2014)",
@@ -38,10 +56,17 @@
             },
             "plm": {
                 "data": {
-                    "device": "PLM-enhet (dvs. /dev/ttyUSB0 eller COM3)"
+                    "device": "USB enhetsbane"
                 },
                 "description": "Konfigurer Insteon PowerLink-modem (PLM).",
                 "title": "Insteon PLM"
+            },
+            "user": {
+                "data": {
+                    "modem_type": "Modemtype."
+                },
+                "description": "Velg Insteon modemtype.",
+                "title": "Insteon"
             }
         }
     },
@@ -51,7 +76,7 @@
             "cannot_connect": "Kan ikke koble til Insteon-modemet"
         },
         "error": {
-            "cannot_connect": "Kan ikke koble til Insteon-modemet, pr\u00f8v p\u00e5 nytt.",
+            "cannot_connect": "Tilkobling mislyktes.",
             "input_error": "Ugyldige oppf\u00f8ringer, vennligst sjekk verdiene dine.",
             "select_single": "Velg ett alternativ."
         },
@@ -77,10 +102,10 @@
             },
             "change_hub_config": {
                 "data": {
-                    "host": "Nytt vertsnavn eller IP-adresse",
-                    "password": "Nytt passord",
-                    "port": "Nytt portnummer",
-                    "username": "Nytt brukernavn"
+                    "host": "IP adresse",
+                    "password": "Passord",
+                    "port": "Port",
+                    "username": "Brukernavn"
                 },
                 "description": "Endre Insteon Hub-tilkoblingsinformasjonen. Du m\u00e5 starte Home Assistant p\u00e5 nytt n\u00e5r du har gjort denne endringen. Dette endrer ikke konfigurasjonen av selve huben. For \u00e5 endre konfigurasjonen i huben bruker du hub-appen.",
                 "title": "Insteon"
