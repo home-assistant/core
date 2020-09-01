@@ -1,7 +1,8 @@
 {
   "domain": "goalzero",
-  "name": "Goal Zero",
+  "name": "Goal Zero Yeti",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/goalzero",
-  "requirements": [],
-  "codeowners": ["@tkdrob"],
+  "requirements": ["goalzero==0.1.0"],
+  "codeowners": ["@tkdrob"]
 }

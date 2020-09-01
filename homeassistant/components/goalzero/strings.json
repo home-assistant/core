@@ -1,0 +1,24 @@
+{
+  "title": "Goal Zero Yeti",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Goal Zero Yeti",
+        "data": {
+          "host": "host",
+          "name": "name"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "cannot connect",
+      "connect_timeout": "connect timeout",
+      "host_required": "host required",
+      "invalid_host": "invalid host",
+      "unknown": "unknown error"
+    },
+    "abort": {
+      "already_configured": "already onfigured"
+    }
+  }
+}
