@@ -1,16 +1,13 @@
 """Support for Supla devices."""
-import logging
 from datetime import timedelta
+import logging
 from typing import Optional
 
 import async_timeout
 from asyncpysupla import SuplaAPI
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_ACCESS_TOKEN,
-    EVENT_HOMEASSISTANT_STOP,
-)
+from homeassistant.const import CONF_ACCESS_TOKEN, EVENT_HOMEASSISTANT_STOP
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.entity import Entity
