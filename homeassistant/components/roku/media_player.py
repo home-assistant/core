@@ -22,6 +22,7 @@ from homeassistant.components.media_player.const import (
 from homeassistant.const import (
     STATE_HOME,
     STATE_IDLE,
+    STATE_ON,
     STATE_PAUSED,
     STATE_PLAYING,
     STATE_STANDBY,
@@ -100,11 +101,14 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         if self.coordinator.data.app.name == "Roku":
             return STATE_HOME
 
-        if self.coordinator.data.media and self.coordinator.data.media.paused:
-            return STATE_PAUSED
+        if self.coordinator.data.media:
+            if self.coordinator.data.media.paused:
+                return STATE_PAUSED
+            else:
+                return STATE_PLAYING
 
         if self.coordinator.data.app.name:
-            return STATE_PLAYING
+            return STATE_ON
 
         return None
 
@@ -167,6 +171,22 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
 
         if self.coordinator.data.channel.program_title is not None:
             return self.coordinator.data.channel.program_title
+
+        return None
+
+    @property
+    def media_duration(self):
+        """Duration of current playing media in seconds."""
+        if self.coordinator.data.media:
+           return self.coordinator.data.media.duration
+
+        return None
+
+    @property
+    def media_position(self):
+        """Position of current playing media in seconds."""
+        if self.coordinator.data.media:
+           return self.coordinator.data.media.position
 
         return None
 
