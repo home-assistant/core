@@ -51,6 +51,7 @@ from homeassistant.helpers.integration_platform import (
 from homeassistant.loader import bind_hass
 import homeassistant.util.dt as dt_util
 
+ENTITY_ID_JSON_TEMPLATE = '"entity_id": "{}"'
 ENTITY_ID_JSON_EXTRACT = re.compile('"entity_id": "([^"]+)"')
 DOMAIN_JSON_EXTRACT = re.compile('"domain": "([^"]+)"')
 
@@ -86,7 +87,6 @@ ALL_EVENT_TYPES = [
 ]
 
 SCRIPT_AUTOMATION_EVENTS = [EVENT_AUTOMATION_TRIGGERED, EVENT_SCRIPT_STARTED]
-
 
 LOG_MESSAGE_SCHEMA = vol.Schema(
     {
@@ -214,6 +214,8 @@ class LogbookView(HomeAssistantView):
 
         hass = request.app["hass"]
 
+        entity_matches_only = "entity_matches_only" in request.query
+
         def json_events():
             """Fetch events and generate JSON."""
             return self.json(
@@ -224,6 +226,7 @@ class LogbookView(HomeAssistantView):
                     entity_id,
                     self.filters,
                     self.entities_filter,
+                    entity_matches_only,
                 )
             )
 
@@ -390,7 +393,13 @@ def humanify(hass, events, entity_attr_cache, context_lookup):
 
 
 def _get_events(
-    hass, start_day, end_day, entity_id=None, filters=None, entities_filter=None
+    hass,
+    start_day,
+    end_day,
+    entity_id=None,
+    filters=None,
+    entities_filter=None,
+    entity_matches_only=None,
 ):
     """Get events for a period of time."""
     entity_attr_cache = EntityAttributeCache(hass)
@@ -458,7 +467,22 @@ def _get_events(
             .filter((Events.time_fired > start_day) & (Events.time_fired < end_day))
         )
 
-        if entity_ids:
+        if entity_matches_only and entity_ids and len(entity_ids) == 1:
+            # When entity_matches_only is provided, contexts and events that do not
+            # contain the entity_id are not included in the logbook response.
+            entity_id = entity_ids[0]
+            entity_id_json = ENTITY_ID_JSON_TEMPLATE.format(entity_id)
+            query = query.filter(
+                (
+                    (States.last_updated == States.last_changed)
+                    & States.entity_id.in_(entity_ids)
+                )
+                | (
+                    States.state_id.is_(None)
+                    & Events.event_data.contains(entity_id_json)
+                )
+            )
+        elif entity_ids:
             query = query.filter(
                 (
                     (States.last_updated == States.last_changed)
