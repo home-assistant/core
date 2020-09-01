@@ -228,7 +228,7 @@ async def test_attributes_app_media_paused(
     assert state.state == STATE_PAUSED
 
     assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) == MEDIA_TYPE_APP
-    assert state.attributes.get(ATTR_MEDIA_DURATION) == 650
+    assert state.attributes.get(ATTR_MEDIA_DURATION) == 6496
     assert state.attributes.get(ATTR_MEDIA_POSITION) == 314
     assert state.attributes.get(ATTR_APP_ID) == "74519"
     assert state.attributes.get(ATTR_APP_NAME) == "Pluto TV - It's Free TV"
@@ -264,7 +264,7 @@ async def test_tv_attributes(
     )
 
     state = hass.states.get(TV_ENTITY_ID)
-    assert state.state == STATE_PLAYING
+    assert state.state == STATE_ON
 
     assert state.attributes.get(ATTR_APP_ID) == "tvinput.dtv"
     assert state.attributes.get(ATTR_APP_NAME) == "Antenna TV"
