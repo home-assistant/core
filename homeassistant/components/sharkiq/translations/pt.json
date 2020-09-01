@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_account": "Conta j\u00e1 se encontra configurada"
+        },
+        "error": {
+            "cannot_connect": "Erro ao conectar-se",
+            "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida",
+            "unknown": "Erro inesperado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Senha",
+                    "username": "Utilizador"
+                }
+            }
+        }
+    }
+}

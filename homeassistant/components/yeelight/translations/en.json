@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-            "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+            "already_configured": "Device is already configured",
+            "no_devices_found": "No devices found on the network"
         },
         "error": {
-            "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+            "cannot_connect": "Failed to connect"
         },
         "step": {
             "pick_device": {
@@ -15,7 +15,7 @@
             },
             "user": {
                 "data": {
-                    "ip_address": "[%key:common::config_flow::data::ip%]"
+                    "ip_address": "IP Address"
                 },
                 "description": "If you leave IP address empty, discovery will be used to find devices."
             }
