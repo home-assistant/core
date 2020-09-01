@@ -10,15 +10,12 @@ from sharkiqpy import (
     SharkIqNotAuthedError,
     get_ayla_api,
 )
-import voluptuous as vol
 
 from homeassistant import exceptions
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from .const import API_TIMEOUT, COMPONENTS, DOMAIN, LOGGER
 from .update_coordinator import SharkIqUpdateCoordinator
-
-CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
 
 class CannotConnect(exceptions.HomeAssistantError):
@@ -28,8 +25,7 @@ class CannotConnect(exceptions.HomeAssistantError):
 async def async_setup(hass, config):
     """Set up the sharkiq environment."""
     hass.data.setdefault(DOMAIN, {})
-    if DOMAIN not in config:
-        return True
+    return True
 
 
 async def async_connect_or_timeout(ayla_api: AylaApi) -> bool:
@@ -38,11 +34,11 @@ async def async_connect_or_timeout(ayla_api: AylaApi) -> bool:
         with async_timeout.timeout(API_TIMEOUT):
             LOGGER.debug("Initialize connection to Ayla networks API")
             await ayla_api.async_sign_in()
-    except SharkIqAuthError as exc:
-        LOGGER.error("Authentication error connecting to Shark IQ api", exc_info=exc)
+    except SharkIqAuthError:
+        LOGGER.error("Authentication error connecting to Shark IQ api")
         return False
     except asyncio.TimeoutError as exc:
-        LOGGER.error("Timeout expired", exc_info=exc)
+        LOGGER.error("Timeout expired")
         raise CannotConnect from exc
 
     return True
@@ -90,7 +86,6 @@ async def async_disconnect_or_timeout(coordinator: SharkIqUpdateCoordinator):
             await coordinator.ayla_api.async_sign_out()
         except (SharkIqAuthError, SharkIqAuthExpiringError, SharkIqNotAuthedError):
             pass
-    return True
 
 
 async def async_update_options(hass, config_entry):

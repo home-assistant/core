@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured_account": "Account is already configured"
+            "already_configured_account": "Account is already configured",
+            "reauth_successful": "Reauthentication successful"
         },
         "error": {
             "cannot_connect": "Failed to connect",
@@ -9,6 +10,12 @@
             "unknown": "Unexpected error"
         },
         "step": {
+            "reauth": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                }
+            },
             "user": {
                 "data": {
                     "password": "Password",
