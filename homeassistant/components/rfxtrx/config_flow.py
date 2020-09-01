@@ -404,6 +404,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured(import_config)
             else:
                 self._abort_if_unique_id_configured()
+
+        host = import_config[CONF_HOST]
+        port = import_config[CONF_PORT]
+        device = import_config[CONF_DEVICE]
+
+        try:
+            if import_config[CONF_HOST] is not None:
+                await self.async_validate_rfx(host=host, port=port)
+            else:
+                await self.async_validate_rfx(device=device)
+        except CannotConnect:
+            return self.async_abort(reason="cannot_connect")
+
         return self.async_create_entry(title="RFXTRX", data=import_config)
 
     async def async_validate_rfx(self, host=None, port=None, device=None):

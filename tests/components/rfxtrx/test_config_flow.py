@@ -277,15 +277,24 @@ async def test_setup_serial_manual_fail(com_mock, hass):
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_import(hass):
+@patch(
+    "homeassistant.components.rfxtrx.rfxtrxmod.PySerialTransport.connect",
+    serial_connect,
+)
+@patch(
+    "homeassistant.components.rfxtrx.rfxtrxmod.PySerialTransport.close",
+    return_value=None,
+)
+async def test_import_serial(connect_mock, hass):
     """Test we can import."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={"host": None, "port": None, "device": "/dev/tty123", "debug": False},
-    )
+    with patch("homeassistant.components.rfxtrx.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={"host": None, "port": None, "device": "/dev/tty123", "debug": False},
+        )
 
     assert result["type"] == "create_entry"
     assert result["title"] == "RFXTRX"
@@ -295,6 +304,50 @@ async def test_import(hass):
         "device": "/dev/tty123",
         "debug": False,
     }
+
+
+@patch(
+    "homeassistant.components.rfxtrx.rfxtrxmod.PyNetworkTransport.connect",
+    return_value=None,
+)
+async def test_import_network(connect_mock, hass):
+    """Test we can import."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    with patch("homeassistant.components.rfxtrx.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={"host": "localhost", "port": 1234, "device": None, "debug": False},
+        )
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == "RFXTRX"
+    assert result["data"] == {
+        "host": "localhost",
+        "port": 1234,
+        "device": None,
+        "debug": False,
+    }
+
+
+@patch(
+    "homeassistant.components.rfxtrx.rfxtrxmod.PyNetworkTransport.connect",
+    side_effect=OSError,
+)
+async def test_import_network_connection_fail(connect_mock, hass):
+    """Test we can import."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    with patch("homeassistant.components.rfxtrx.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={"host": "localhost", "port": 1234, "device": None, "debug": False},
+        )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "cannot_connect"
 
 
 async def test_import_update(hass):
@@ -330,9 +383,7 @@ async def test_import_migrate(hass):
     )
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.config_entries.ConfigEntries.async_reload", return_value=True
-    ):
+    with patch("homeassistant.components.rfxtrx.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
@@ -345,6 +396,8 @@ async def test_import_migrate(hass):
                 "devices": {},
             },
         )
+
+    await hass.async_block_till_done()
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
