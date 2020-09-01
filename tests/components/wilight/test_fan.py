@@ -177,7 +177,7 @@ async def test_direction_fan_state(
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_DIRECTION) == DIRECTION_FORWARD
 
-    # Set speed Medium
+    # Set direction Reverse
     await hass.services.async_call(
         FAN_DOMAIN,
         SERVICE_SET_DIRECTION,

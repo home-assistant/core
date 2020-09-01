@@ -93,9 +93,8 @@ class WiLightFan(WiLightDevice, FanEntity):
 
     async def async_turn_on(self, speed: str = None, **kwargs):
         """Turn on the fan."""
-        if speed is None:
-            await self._client.set_fan_direction(self._index, self._direction)
-        else:
+        await self._client.set_fan_direction(self._index, self._direction)
+        if speed is not None:
             await self.async_set_speed(speed)
 
     async def async_set_speed(self, speed: str):
