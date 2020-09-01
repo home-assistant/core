@@ -218,29 +218,20 @@ async def test_coordinator_match(hass: HomeAssistant):
 
     coordinator = SharkIqUpdateCoordinator(hass, None, ayla_api, [shark_vac1])
 
-    # The first should succeed, the second should fail
-    api1 = SharkVacuumEntity(shark_vac1, coordinator)
-    try:
-        _ = SharkVacuumEntity(shark_vac2, coordinator)
-    except RuntimeError:
-        api2_failed = True
-    else:
-        api2_failed = False
-    assert api2_failed
-
+    api = SharkVacuumEntity(shark_vac1, coordinator)
     coordinator.last_update_success = True
     coordinator._online_dsns = set()  # pylint: disable=protected-access
-    assert not api1.is_online
-    assert not api1.available
+    assert not api.is_online
+    assert not api.available
 
     coordinator._online_dsns = {  # pylint: disable=protected-access
         shark_vac1.serial_number
     }
-    assert api1.is_online
-    assert api1.available
+    assert api.is_online
+    assert api.available
 
     coordinator.last_update_success = False
-    assert not api1.available
+    assert not api.available
 
 
 async def test_simple_properties(hass: HomeAssistant):
