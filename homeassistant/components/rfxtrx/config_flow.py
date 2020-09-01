@@ -297,7 +297,7 @@ class OptionsFlow(config_entries.OptionsFlow):
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for RFXCOM RFXtrx."""
 
-    VERSION = 2
+    VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     async def async_step_user(self, user_input=None):
@@ -398,10 +398,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_config=None):
         """Handle the initial step."""
         entry = await self.async_set_unique_id(DOMAIN)
-        # In version 0.113 devices is not stored in entry.data, to be safe update data for all VERSION=1 entries
         if entry:
-            if entry.version == 1:
-                entry.version = 2
+            if CONF_DEVICES not in entry.data:
+                # In version 0.113, devices key was not written to config entry. Update the entry with import data
                 self._abort_if_unique_id_configured(import_config)
             else:
                 self._abort_if_unique_id_configured()
