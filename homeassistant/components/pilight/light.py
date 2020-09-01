@@ -67,6 +67,9 @@ class PilightLight(PilightBaseDevice, LightEntity):
         if ATTR_BRIGHTNESS in kwargs:
             self._brightness = kwargs[ATTR_BRIGHTNESS]
             """Calculate pilight brightness (a 0 to 15 range), by basing a percentage on the min and max dimlevel"""
-            dimlevel = int((self._brightness / 255) * (self._dimlevel_max - self._dimlevel_min) + self._dimlevel_min)
-        
+            dimlevel = int(
+                (self._brightness / 255) * (self._dimlevel_max - self._dimlevel_min)
+                + self._dimlevel_min
+            )
+
         self.set_state(turn_on=True, dimlevel=dimlevel)
