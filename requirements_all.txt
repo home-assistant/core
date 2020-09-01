@@ -1652,7 +1652,7 @@ pysonos==0.0.32
 pyspcwebgw==0.4.0
 
 # homeassistant.components.squeezebox
-pysqueezebox==0.2.4
+pysqueezebox==0.3.1
 
 # homeassistant.components.stiebel_eltron
 pystiebeleltron==0.0.1.dev2
