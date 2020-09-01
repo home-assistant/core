@@ -1,9 +1,11 @@
 """The media_source integration."""
+from datetime import timedelta
 from typing import Optional
 
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
+from homeassistant.components.http.auth import async_sign_path
 from homeassistant.components.media_player.const import ATTR_MEDIA_CONTENT_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.integration_platform import (
@@ -93,10 +95,20 @@ async def websocket_browse_media(hass, connection, msg):
     {
         vol.Required("type"): "media_source/resolve_media",
         vol.Required(ATTR_MEDIA_CONTENT_ID): str,
+        vol.Optional("expires", default=30): int,
     }
 )
 @websocket_api.async_response
 async def websocket_resolve_media(hass, connection, msg):
     """Resolve media."""
     media = await async_resolve_media(hass, msg["media_content_id"])
-    connection.send_result(msg["id"], {"url": media.url, "mime_type": media.mime_type})
+    url = media.url
+    if url[0] == "/":
+        url = async_sign_path(
+            hass,
+            connection.refresh_token_id,
+            url,
+            timedelta(seconds=msg["expires"]),
+        )
+
+    connection.send_result(msg["id"], {"url": url, "mime_type": media.mime_type})
