@@ -1,5 +1,6 @@
 """Support for Supla devices."""
 import logging
+from datetime import timedelta
 from typing import Optional
 
 import async_timeout
@@ -8,7 +9,6 @@ import voluptuous as vol
 
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
-    CONF_SCAN_INTERVAL,
     EVENT_HOMEASSISTANT_STOP,
 )
 import homeassistant.helpers.config_validation as cv
@@ -22,6 +22,8 @@ DOMAIN = "supla"
 CONF_SERVER = "server"
 CONF_SERVERS = "servers"
 
+SCAN_INTERVAL = timedelta(seconds=10)
+
 SUPLA_FUNCTION_HA_CMP_MAP = {
     "CONTROLLINGTHEROLLERSHUTTER": "cover",
     "CONTROLLINGTHEGATE": "cover",
@@ -34,8 +36,7 @@ SUPLA_COORDINATORS = "supla_coordinators"
 SERVER_CONFIG = vol.Schema(
     {
         vol.Required(CONF_SERVER): cv.string,
-        vol.Required(CONF_ACCESS_TOKEN): cv.string,
-        vol.Optional(CONF_SCAN_INTERVAL, default=10): cv.time_period,
+        vol.Required(CONF_ACCESS_TOKEN): cv.string,        
     }
 )
 
@@ -60,8 +61,7 @@ async def async_setup(hass, base_config):
 
         server_address = server_conf[CONF_SERVER]
 
-        server = SuplaAPI(server_address, server_conf[CONF_ACCESS_TOKEN])
-        server.update_interval = server_conf[CONF_SCAN_INTERVAL]
+        server = SuplaAPI(server_address, server_conf[CONF_ACCESS_TOKEN])        
 
         # Test connection
         try:
@@ -106,7 +106,7 @@ async def discover_devices(hass, hass_config):
     for server_name, server in hass.data[DOMAIN][SUPLA_SERVERS].items():
 
         async def _fetch_channels():
-            async with async_timeout.timeout(30):
+            async with async_timeout.timeout(SCAN_INTERVAL):
                 channels = {
                     channel["id"]: channel
                     for channel in await server.get_channels(
@@ -120,7 +120,7 @@ async def discover_devices(hass, hass_config):
             _LOGGER,
             name=DOMAIN,
             update_method=_fetch_channels,
-            update_interval=server.update_interval,
+            update_interval=SCAN_INTERVAL,
         )
 
         await coordinator.async_refresh()
