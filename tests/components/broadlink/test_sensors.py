@@ -8,6 +8,14 @@ from tests.async_mock import patch
 from tests.common import mock_device_registry, mock_registry
 
 
+def _patch_broadlink_gendevice(return_value):
+    """Patch the broadlink gendevice method."""
+    return patch(
+        "homeassistant.components.broadlink.device.blk.gendevice",
+        return_value=return_value,
+    )
+
+
 async def test_a1_sensor_setup(hass):
     """Test a successful e-Sensor setup."""
     device = get_device("Bedroom")
@@ -25,7 +33,7 @@ async def test_a1_sensor_setup(hass):
     device_registry = mock_device_registry(hass)
     entity_registry = mock_registry(hass)
 
-    with patch("broadlink.gendevice", return_value=mock_api):
+    with _patch_broadlink_gendevice(return_value=mock_api):
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -67,7 +75,7 @@ async def test_a1_sensor_update(hass):
     device_registry = mock_device_registry(hass)
     entity_registry = mock_registry(hass)
 
-    with patch("broadlink.gendevice", return_value=mock_api):
+    with _patch_broadlink_gendevice(return_value=mock_api):
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -114,7 +122,7 @@ async def test_rm_pro_sensor_setup(hass):
     device_registry = mock_device_registry(hass)
     entity_registry = mock_registry(hass)
 
-    with patch("broadlink.gendevice", return_value=mock_api):
+    with _patch_broadlink_gendevice(return_value=mock_api):
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -144,7 +152,7 @@ async def test_rm_pro_sensor_update(hass):
     device_registry = mock_device_registry(hass)
     entity_registry = mock_registry(hass)
 
-    with patch("broadlink.gendevice", return_value=mock_api):
+    with _patch_broadlink_gendevice(return_value=mock_api):
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -179,7 +187,7 @@ async def test_rm_mini3_no_sensor(hass):
     device_registry = mock_device_registry(hass)
     entity_registry = mock_registry(hass)
 
-    with patch("broadlink.gendevice", return_value=mock_api):
+    with _patch_broadlink_gendevice(return_value=mock_api):
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -203,7 +211,7 @@ async def test_rm4_pro_hts2_sensor_setup(hass):
     device_registry = mock_device_registry(hass)
     entity_registry = mock_registry(hass)
 
-    with patch("broadlink.gendevice", return_value=mock_api):
+    with _patch_broadlink_gendevice(return_value=mock_api):
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -236,7 +244,7 @@ async def test_rm4_pro_hts2_sensor_update(hass):
     device_registry = mock_device_registry(hass)
     entity_registry = mock_registry(hass)
 
-    with patch("broadlink.gendevice", return_value=mock_api):
+    with _patch_broadlink_gendevice(return_value=mock_api):
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -274,7 +282,7 @@ async def test_rm4_pro_no_sensor(hass):
     device_registry = mock_device_registry(hass)
     entity_registry = mock_registry(hass)
 
-    with patch("broadlink.gendevice", return_value=mock_api):
+    with _patch_broadlink_gendevice(return_value=mock_api):
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 

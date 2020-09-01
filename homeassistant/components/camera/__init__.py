@@ -539,8 +539,8 @@ class CameraMjpegStream(CameraView):
             if interval < MIN_STREAM_INTERVAL:
                 raise ValueError(f"Stream interval must be be > {MIN_STREAM_INTERVAL}")
             return await camera.handle_async_still_stream(request, interval)
-        except ValueError:
-            raise web.HTTPBadRequest()
+        except ValueError as err:
+            raise web.HTTPBadRequest() from err
 
 
 @websocket_api.async_response

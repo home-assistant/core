@@ -27,6 +27,24 @@
                 "description": "Configure el Insteon Hub versi\u00f3n 2.",
                 "title": "Insteon Hub Versi\u00f3n 2"
             },
+            "hubv1": {
+                "data": {
+                    "host": "Direcci\u00f3n IP",
+                    "port": "Puerto"
+                },
+                "description": "Configure el Insteon Hub Versi\u00f3n 1 (anterior a 2014).",
+                "title": "Insteon Hub Versi\u00f3n 1"
+            },
+            "hubv2": {
+                "data": {
+                    "host": "Direcci\u00f3n IP",
+                    "password": "Contrase\u00f1a",
+                    "port": "Puerto",
+                    "username": "Usuario"
+                },
+                "description": "Configure el Insteon Hub versi\u00f3n 2.",
+                "title": "Insteon Hub Versi\u00f3n 2"
+            },
             "init": {
                 "data": {
                     "hubv1": "Hub versi\u00f3n 1 (anterior a 2014)",
@@ -42,6 +60,13 @@
                 },
                 "description": "Configure el M\u00f3dem Insteon PowerLink (PLM).",
                 "title": "Insteon PLM"
+            },
+            "user": {
+                "data": {
+                    "modem_type": "Tipo de m\u00f3dem."
+                },
+                "description": "Seleccione el tipo de m\u00f3dem Insteon.",
+                "title": "Insteon"
             }
         }
     },

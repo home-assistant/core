@@ -19,7 +19,7 @@ async def test_binary_sensors(hass, config_entry, aioclient_mock_fixture):
     )
     await hass.async_block_till_done()
 
-    assert len(hass.data[FLO_DOMAIN]["devices"]) == 1
+    assert len(hass.data[FLO_DOMAIN][config_entry.entry_id]["devices"]) == 1
 
     # we should have 6 entities for the device
     state = hass.states.get("binary_sensor.pending_system_alerts")

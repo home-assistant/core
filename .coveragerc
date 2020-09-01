@@ -394,7 +394,6 @@ omit =
     homeassistant/components/ihc/*
     homeassistant/components/imap/sensor.py
     homeassistant/components/imap_email_content/sensor.py
-    homeassistant/components/insteon/__init__.py
     homeassistant/components/insteon/binary_sensor.py
     homeassistant/components/insteon/climate.py
     homeassistant/components/insteon/const.py
@@ -589,7 +588,7 @@ omit =
     homeassistant/components/nuki/lock.py
     homeassistant/components/nut/sensor.py
     homeassistant/components/nx584/alarm_control_panel.py
-    homeassistant/components/nzbget/__init__.py
+    homeassistant/components/nzbget/coordinator.py
     homeassistant/components/nzbget/sensor.py
     homeassistant/components/obihai/*
     homeassistant/components/octoprint/*
@@ -667,6 +666,9 @@ omit =
     homeassistant/components/poolsense/sensor.py
     homeassistant/components/poolsense/binary_sensor.py
     homeassistant/components/proliphix/climate.py
+    homeassistant/components/progettihwsw/__init__.py
+    homeassistant/components/progettihwsw/binary_sensor.py
+    homeassistant/components/progettihwsw/switch.py
     homeassistant/components/prometheus/*
     homeassistant/components/prowl/notify.py
     homeassistant/components/proxmoxve/*
@@ -751,9 +753,13 @@ omit =
     homeassistant/components/sesame/lock.py
     homeassistant/components/seven_segments/image_processing.py
     homeassistant/components/seventeentrack/sensor.py
+    homeassistant/components/sharkiq/vacuum.py
     homeassistant/components/shiftr/*
     homeassistant/components/shodan/sensor.py
     homeassistant/components/shelly/__init__.py
+    homeassistant/components/shelly/binary_sensor.py
+    homeassistant/components/shelly/light.py
+    homeassistant/components/shelly/sensor.py
     homeassistant/components/shelly/switch.py
     homeassistant/components/sht31/sensor.py
     homeassistant/components/sigfox/sensor.py

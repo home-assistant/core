@@ -1,0 +1,35 @@
+{
+  "config": {
+    "flow_title": "NZBGet: {name}",
+    "step": {
+      "user": {
+        "title": "Connect to NZBGet",
+        "data": {
+          "name": "Name",
+          "host": "[%key:common::config_flow::data::host%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "ssl": "NZBGet uses a SSL certificate",
+          "verify_ssl": "NZBGet uses a proper certificate"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "scan_interval": "Update frequency (seconds)"
+        }
+      }
+    }
+  }
+}

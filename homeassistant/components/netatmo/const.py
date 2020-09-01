@@ -67,7 +67,9 @@ ATTR_IS_KNOWN = "is_known"
 ATTR_FACE_URL = "face_url"
 ATTR_SCHEDULE_ID = "schedule_id"
 ATTR_SCHEDULE_NAME = "schedule_name"
+ATTR_CAMERA_LIGHT_MODE = "camera_light_mode"
 
+SERVICE_SET_CAMERA_LIGHT = "set_camera_light"
 SERVICE_SET_SCHEDULE = "set_schedule"
 SERVICE_SET_PERSONS_HOME = "set_persons_home"
 SERVICE_SET_PERSON_AWAY = "set_person_away"
@@ -78,3 +80,8 @@ EVENT_TYPE_OFF = "off"
 EVENT_TYPE_ON = "on"
 EVENT_TYPE_SET_POINT = "set_point"
 EVENT_TYPE_THERM_MODE = "therm_mode"
+
+MODE_LIGHT_ON = "on"
+MODE_LIGHT_OFF = "off"
+MODE_LIGHT_AUTO = "auto"
+CAMERA_LIGHT_MODES = [MODE_LIGHT_ON, MODE_LIGHT_OFF, MODE_LIGHT_AUTO]

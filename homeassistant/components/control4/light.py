@@ -45,14 +45,14 @@ async def async_setup_entry(
         try:
             return await director_update_data(hass, entry, CONTROL4_NON_DIMMER_VAR)
         except C4Exception as err:
-            raise UpdateFailed(f"Error communicating with API: {err}")
+            raise UpdateFailed(f"Error communicating with API: {err}") from err
 
     async def async_update_data_dimmer():
         """Fetch data from Control4 director for dimmer lights."""
         try:
             return await director_update_data(hass, entry, CONTROL4_DIMMER_VAR)
         except C4Exception as err:
-            raise UpdateFailed(f"Error communicating with API: {err}")
+            raise UpdateFailed(f"Error communicating with API: {err}") from err
 
     non_dimmer_coordinator = DataUpdateCoordinator(
         hass,
@@ -175,13 +175,13 @@ class Control4Light(Control4Entity, LightEntity):
     @property
     def is_on(self):
         """Return whether this light is on or off."""
-        return self._coordinator.data[self._idx]["value"] > 0
+        return self.coordinator.data[self._idx]["value"] > 0
 
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
         if self._is_dimmer:
-            return round(self._coordinator.data[self._idx]["value"] * 2.55)
+            return round(self.coordinator.data[self._idx]["value"] * 2.55)
         return None
 
     @property
@@ -213,7 +213,7 @@ class Control4Light(Control4Entity, LightEntity):
         delay_time = (transition_length / 1000) + 0.7
         _LOGGER.debug("Delaying light update by %s seconds", delay_time)
         await asyncio.sleep(delay_time)
-        await self._coordinator.async_request_refresh()
+        await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the entity off."""
@@ -232,4 +232,4 @@ class Control4Light(Control4Entity, LightEntity):
         delay_time = (transition_length / 1000) + 0.7
         _LOGGER.debug("Delaying light update by %s seconds", delay_time)
         await asyncio.sleep(delay_time)
-        await self._coordinator.async_request_refresh()
+        await self.coordinator.async_request_refresh()

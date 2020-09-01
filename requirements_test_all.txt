@@ -91,7 +91,7 @@ aioeafm==0.1.2
 aioesphomeapi==2.6.1
 
 # homeassistant.components.flo
-aioflo==0.4.0
+aioflo==0.4.1
 
 # homeassistant.components.freebox
 aiofreepybox==0.0.8
@@ -131,7 +131,7 @@ aiopvpc==2.0.2
 aiopylgtv==0.3.3
 
 # homeassistant.components.shelly
-aioshelly==0.1.2
+aioshelly==0.2.1
 
 # homeassistant.components.switcher_kis
 aioswitcher==1.2.0
@@ -161,7 +161,7 @@ apprise==0.8.7
 aprslib==0.6.46
 
 # homeassistant.components.arcam_fmj
-arcam-fmj==0.5.1
+arcam-fmj==0.5.2
 
 # homeassistant.components.dlna_dmr
 # homeassistant.components.upnp
@@ -328,7 +328,7 @@ georss_qld_bushfire_alert_client==0.3
 getmac==0.8.2
 
 # homeassistant.components.gios
-gios==0.1.1
+gios==0.1.3
 
 # homeassistant.components.glances
 glances_api==0.2.0
@@ -379,7 +379,7 @@ homeassistant-pyozw==0.1.10
 homeconnect==0.5
 
 # homeassistant.components.homematicip_cloud
-homematicip==0.10.19
+homematicip==0.11.0
 
 # homeassistant.components.google
 # homeassistant.components.remember_the_milk
@@ -390,6 +390,9 @@ huawei-lte-api==1.4.12
 
 # homeassistant.components.iaqualink
 iaqualink==0.3.4
+
+# homeassistant.components.ping
+icmplib==1.1.1
 
 # homeassistant.components.influxdb
 influxdb-client==1.8.0
@@ -535,6 +538,9 @@ praw==7.1.0
 
 # homeassistant.components.islamic_prayer_times
 prayer_times_calculator==0.0.3
+
+# homeassistant.components.progettihwsw
+progettihwsw==0.1.1
 
 # homeassistant.components.prometheus
 prometheus_client==0.7.1
@@ -686,7 +692,7 @@ pyisy==2.0.2
 pykira==0.1.1
 
 # homeassistant.components.kodi
-pykodi==0.1
+pykodi==0.1.1
 
 # homeassistant.components.lastfm
 pylast==3.3.0
@@ -733,6 +739,9 @@ pynws==1.2.1
 # homeassistant.components.nx584
 pynx584==0.5
 
+# homeassistant.components.nzbget
+pynzbgetapi==0.2.0
+
 # homeassistant.components.openuv
 pyopenuv==1.0.9
 
@@ -757,7 +766,7 @@ pyps4-2ndscreen==1.1.1
 pyqwikswitch==0.93
 
 # homeassistant.components.risco
-pyrisco==0.2.3
+pyrisco==0.2.4
 
 # homeassistant.components.acer_projector
 # homeassistant.components.zha
@@ -851,7 +860,7 @@ pyvesync==1.1.0
 pyvizio==0.1.51
 
 # homeassistant.components.volumio
-pyvolumio==0.1.1
+pyvolumio==0.1.2
 
 # homeassistant.components.html5
 pywebpush==1.9.2
@@ -899,7 +908,10 @@ samsungtvws[websocket]==1.4.0
 sense_energy==0.7.2
 
 # homeassistant.components.sentry
-sentry-sdk==0.16.5
+sentry-sdk==0.17.1
+
+# homeassistant.components.sharkiq
+sharkiqpy==0.1.8
 
 # homeassistant.components.sighthound
 simplehound==0.3
@@ -1034,10 +1046,10 @@ wolf_smartset==0.1.4
 xmltodict==0.12.0
 
 # homeassistant.components.yeelight
-yeelight==0.5.2
+yeelight==0.5.3
 
 # homeassistant.components.zeroconf
-zeroconf==0.28.2
+zeroconf==0.28.3
 
 # homeassistant.components.zha
 zha-quirks==0.0.43

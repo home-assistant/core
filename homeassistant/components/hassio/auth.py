@@ -111,7 +111,7 @@ class HassIOPasswordReset(HassIOBaseAuth):
             await provider.async_change_password(
                 data[ATTR_USERNAME], data[ATTR_PASSWORD]
             )
-        except auth_ha.InvalidUser:
-            raise HTTPNotFound()
+        except auth_ha.InvalidUser as err:
+            raise HTTPNotFound() from err
 
         return web.Response(status=HTTP_OK)

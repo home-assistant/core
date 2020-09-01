@@ -28,10 +28,10 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     try:
         await pymyq.login(data[CONF_USERNAME], data[CONF_PASSWORD], websession)
-    except InvalidCredentialsError:
-        raise InvalidAuth
-    except MyQError:
-        raise CannotConnect
+    except InvalidCredentialsError as err:
+        raise InvalidAuth from err
+    except MyQError as err:
+        raise CannotConnect from err
 
     return {"title": data[CONF_USERNAME]}
 

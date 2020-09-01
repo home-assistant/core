@@ -122,7 +122,7 @@ async def test_sensor_id_no_dupes(hass, create_registrations, webhook_client, ca
     assert reg_json == {"success": True}
     await hass.async_block_till_done()
 
-    assert "Re-register existing sensor" not in caplog.text
+    assert "Re-register" not in caplog.text
 
     entity = hass.states.get("sensor.test_1_battery_state")
     assert entity is not None
@@ -143,7 +143,7 @@ async def test_sensor_id_no_dupes(hass, create_registrations, webhook_client, ca
     assert dupe_reg_json == {"success": True}
     await hass.async_block_till_done()
 
-    assert "Re-register existing sensor" in caplog.text
+    assert "Re-register" in caplog.text
 
     entity = hass.states.get("sensor.test_1_battery_state")
     assert entity is not None

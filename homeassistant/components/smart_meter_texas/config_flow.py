@@ -35,10 +35,10 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     try:
         await client.authenticate()
-    except (asyncio.TimeoutError, ClientError, SmartMeterTexasAPIError):
-        raise CannotConnect
+    except (asyncio.TimeoutError, ClientError, SmartMeterTexasAPIError) as error:
+        raise CannotConnect from error
     except SmartMeterTexasAuthError as error:
-        raise InvalidAuth(error)
+        raise InvalidAuth(error) from error
 
     # Return info that you want to store in the config entry.
     return {"title": account.username}

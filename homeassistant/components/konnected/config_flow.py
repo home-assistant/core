@@ -186,8 +186,8 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             status = await get_status(self.hass, host, port)
             self.data[CONF_ID] = status.get("chipId", status["mac"].replace(":", ""))
-        except (CannotConnect, KeyError):
-            raise CannotConnect
+        except (CannotConnect, KeyError) as err:
+            raise CannotConnect from err
         else:
             self.data[CONF_MODEL] = status.get("model", KONN_MODEL)
             self.data[CONF_ACCESS_TOKEN] = "".join(

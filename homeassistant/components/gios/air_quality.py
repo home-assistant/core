@@ -9,6 +9,7 @@ from homeassistant.components.air_quality import (
     AirQualityEntity,
 )
 from homeassistant.const import CONF_NAME
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTR_STATION, DEFAULT_NAME, DOMAIN, ICONS_MAP, MANUFACTURER
 
@@ -45,12 +46,12 @@ def round_state(func):
     return _decorator
 
 
-class GiosAirQuality(AirQualityEntity):
+class GiosAirQuality(CoordinatorEntity, AirQualityEntity):
     """Define an GIOS sensor."""
 
     def __init__(self, coordinator, name):
         """Initialize."""
-        self.coordinator = coordinator
+        super().__init__(coordinator)
         self._name = name
         self._attrs = {}
 
@@ -128,16 +129,6 @@ class GiosAirQuality(AirQualityEntity):
         }
 
     @property
-    def should_poll(self):
-        """Return the polling requirement of the entity."""
-        return False
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return self.coordinator.last_update_success
-
-    @property
     def device_state_attributes(self):
         """Return the state attributes."""
         # Different measuring stations have different sets of sensors. We don't know
@@ -149,16 +140,6 @@ class GiosAirQuality(AirQualityEntity):
                 ]["index"]
         self._attrs[ATTR_STATION] = self.coordinator.gios.station_name
         return self._attrs
-
-    async def async_added_to_hass(self):
-        """Connect to dispatcher listening for entity data notifications."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
-        )
-
-    async def async_update(self):
-        """Update GIOS entity."""
-        await self.coordinator.async_request_refresh()
 
     def _get_sensor_value(self, sensor):
         """Return value of specified sensor."""

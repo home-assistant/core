@@ -11,12 +11,12 @@ from .const import DOMAIN as FLO_DOMAIN
 from .device import FloDeviceDataUpdateCoordinator
 from .entity import FloEntity
 
-DEPENDENCIES = ["flo"]
-
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Flo sensors from config entry."""
-    devices: List[FloDeviceDataUpdateCoordinator] = hass.data[FLO_DOMAIN]["devices"]
+    devices: List[FloDeviceDataUpdateCoordinator] = hass.data[FLO_DOMAIN][
+        config_entry.entry_id
+    ]["devices"]
     entities = [FloPendingAlertsBinarySensor(device) for device in devices]
     async_add_entities(entities)
 

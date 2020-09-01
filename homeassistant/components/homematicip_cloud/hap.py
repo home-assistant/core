@@ -92,8 +92,8 @@ class HomematicipHAP:
                 self.config_entry.data.get(HMIPC_AUTHTOKEN),
                 self.config_entry.data.get(HMIPC_NAME),
             )
-        except HmipcConnectionError:
-            raise ConfigEntryNotReady
+        except HmipcConnectionError as err:
+            raise ConfigEntryNotReady from err
         except Exception as err:  # pylint: disable=broad-except
             _LOGGER.error("Error connecting with HomematicIP Cloud: %s", err)
             return False
@@ -247,8 +247,8 @@ class HomematicipHAP:
         try:
             await home.init(hapid)
             await home.get_current_state()
-        except HmipConnectionError:
-            raise HmipcConnectionError
+        except HmipConnectionError as err:
+            raise HmipcConnectionError from err
         home.on_update(self.async_update)
         home.on_create(self.async_create_entity)
         hass.loop.create_task(self.async_connect())

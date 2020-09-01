@@ -184,7 +184,7 @@ class PlexServer:
                         if _update_plexdirect_hostname():
                             config_entry_update_needed = True
                         else:
-                            raise Unauthorized(
+                            raise Unauthorized(  # pylint: disable=raise-missing-from
                                 "New certificate cannot be validated with provided token"
                             )
                     else:

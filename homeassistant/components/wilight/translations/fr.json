@@ -1,12 +1,14 @@
 {
     "config": {
         "abort": {
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
             "not_supported_device": "Ce WiLight n'est actuellement pas pris en charge",
             "not_wilight_device": "Cet appareil n'est pas WiLight"
         },
         "flow_title": "WiLight: {name}",
         "step": {
             "confirm": {
+                "description": "Voulez-vous configurer WiLight {name} ? \n\n Il prend en charge: {components}",
                 "title": "WiLight"
             }
         }

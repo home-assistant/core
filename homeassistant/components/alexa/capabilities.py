@@ -1,5 +1,6 @@
 """Alexa capabilities."""
 import logging
+from typing import List, Optional
 
 from homeassistant.components import (
     cover,
@@ -36,6 +37,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     STATE_UNLOCKED,
 )
+from homeassistant.core import State
 import homeassistant.util.color as color_util
 import homeassistant.util.dt as dt_util
 
@@ -71,32 +73,32 @@ class AlexaCapability:
 
     supported_locales = {"en-US"}
 
-    def __init__(self, entity, instance=None):
+    def __init__(self, entity: State, instance: Optional[str] = None):
         """Initialize an Alexa capability."""
         self.entity = entity
         self.instance = instance
 
-    def name(self):
+    def name(self) -> str:
         """Return the Alexa API name of this interface."""
         raise NotImplementedError
 
     @staticmethod
-    def properties_supported():
+    def properties_supported() -> List[dict]:
         """Return what properties this entity supports."""
         return []
 
     @staticmethod
-    def properties_proactively_reported():
+    def properties_proactively_reported() -> bool:
         """Return True if properties asynchronously reported."""
         return False
 
     @staticmethod
-    def properties_retrievable():
+    def properties_retrievable() -> bool:
         """Return True if properties can be retrieved."""
         return False
 
     @staticmethod
-    def properties_non_controllable():
+    def properties_non_controllable() -> bool:
         """Return True if non controllable."""
         return None
 
@@ -237,20 +239,34 @@ class AlexaCapability:
         """Return properties serialized for an API response."""
         for prop in self.properties_supported():
             prop_name = prop["name"]
-            prop_value = self.get_property(prop_name)
-            if prop_value is not None:
-                result = {
-                    "name": prop_name,
-                    "namespace": self.name(),
-                    "value": prop_value,
-                    "timeOfSample": dt_util.utcnow().strftime(DATE_FORMAT),
-                    "uncertaintyInMilliseconds": 0,
-                }
-                instance = self.instance
-                if instance is not None:
-                    result["instance"] = instance
+            try:
+                prop_value = self.get_property(prop_name)
+            except UnsupportedProperty:
+                raise
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception(
+                    "Unexpected error getting %s.%s property from %s",
+                    self.name(),
+                    prop_name,
+                    self.entity,
+                )
+                prop_value = None
 
-                yield result
+            if prop_value is None:
+                continue
+
+            result = {
+                "name": prop_name,
+                "namespace": self.name(),
+                "value": prop_value,
+                "timeOfSample": dt_util.utcnow().strftime(DATE_FORMAT),
+                "uncertaintyInMilliseconds": 0,
+            }
+            instance = self.instance
+            if instance is not None:
+                result["instance"] = instance
+
+            yield result
 
 
 class Alexa(AlexaCapability):

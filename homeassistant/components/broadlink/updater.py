@@ -63,7 +63,7 @@ class BroadlinkUpdateManager(ABC):
                 _LOGGER.warning(
                     "Disconnected from the device at %s", self.device.api.host[0]
                 )
-            raise UpdateFailed(err)
+            raise UpdateFailed(err) from err
 
         else:
             if self.available is False:

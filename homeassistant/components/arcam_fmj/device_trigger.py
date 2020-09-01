@@ -59,11 +59,16 @@ async def async_attach_trigger(
     config = TRIGGER_SCHEMA(config)
 
     if config[CONF_TYPE] == "turn_on":
+        entity_id = config[CONF_ENTITY_ID]
 
         @callback
         def _handle_event(event: Event):
-            if event.data[ATTR_ENTITY_ID] == config[CONF_ENTITY_ID]:
-                hass.async_run_job(action({"trigger": config}, context=event.context))
+            if event.data[ATTR_ENTITY_ID] == entity_id:
+                hass.async_run_job(
+                    action,
+                    {"trigger": {**config, "description": f"{DOMAIN} - {entity_id}"}},
+                    event.context,
+                )
 
         return hass.bus.async_listen(EVENT_TURN_ON, _handle_event)
 

@@ -169,8 +169,8 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator):
         """Update Speedtest data."""
         try:
             return await self.hass.async_add_executor_job(self.update_data)
-        except (speedtest.ConfigRetrievalError, speedtest.NoMatchedServers):
-            raise UpdateFailed
+        except (speedtest.ConfigRetrievalError, speedtest.NoMatchedServers) as err:
+            raise UpdateFailed from err
 
     async def async_set_options(self):
         """Set options for entry."""
@@ -189,8 +189,8 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator):
         """Set up SpeedTest."""
         try:
             self.api = await self.hass.async_add_executor_job(speedtest.Speedtest)
-        except speedtest.ConfigRetrievalError:
-            raise ConfigEntryNotReady
+        except speedtest.ConfigRetrievalError as err:
+            raise ConfigEntryNotReady from err
 
         async def request_update(call):
             """Request update."""

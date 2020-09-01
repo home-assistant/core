@@ -2279,3 +2279,12 @@ async def test_cache_garbage_collection():
     assert not template._NO_HASS_ENV.template_cache.get(
         template_string
     )  # pylint: disable=protected-access
+
+
+def test_is_template_string():
+    """Test is template string."""
+    assert template.is_template_string("{{ x }}") is True
+    assert template.is_template_string("{% if x == 2 %}1{% else %}0{%end if %}") is True
+    assert template.is_template_string("{# a comment #} Hey") is True
+    assert template.is_template_string("1") is False
+    assert template.is_template_string("Some Text") is False

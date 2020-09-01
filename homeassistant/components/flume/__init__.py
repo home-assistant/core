@@ -67,8 +67,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 http_session=http_session,
             )
         )
-    except RequestException:
-        raise ConfigEntryNotReady
+    except RequestException as ex:
+        raise ConfigEntryNotReady from ex
     except Exception as ex:  # pylint: disable=broad-except
         _LOGGER.error("Invalid credentials for flume: %s", ex)
         return False
