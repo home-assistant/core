@@ -85,12 +85,6 @@ class SharkVacuumEntity(CoordinatorEntity, StateVacuumEntity):
     def __init__(self, sharkiq: SharkIqVacuum, coordinator: SharkIqUpdateCoordinator):
         """Create a new SharkVacuumEntity."""
         super().__init__(coordinator)
-        # This should never be a problem, but checking doesn't hurt
-        # This should never be a problem, but checking doesn't hurt
-        if sharkiq.serial_number not in coordinator.shark_vacs:
-            raise RuntimeError(
-                f"Shark IQ robot {sharkiq.serial_number} is not known to the coordinator"
-            )
         self.sharkiq = sharkiq
 
     def clean_spot(self, **kwargs):
