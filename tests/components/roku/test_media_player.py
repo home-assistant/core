@@ -229,7 +229,7 @@ async def test_attributes_app_media_playing(
 
     assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) == MEDIA_TYPE_APP
     assert state.attributes.get(ATTR_MEDIA_DURATION) == 6496
-    assert state.attributes.get(ATTR_MEDIA_POSITION) == 388
+    assert state.attributes.get(ATTR_MEDIA_POSITION) == 38
     assert state.attributes.get(ATTR_APP_ID) == "74519"
     assert state.attributes.get(ATTR_APP_NAME) == "Pluto TV - It's Free TV"
     assert state.attributes.get(ATTR_INPUT_SOURCE) == "Pluto TV - It's Free TV"
