@@ -16,8 +16,11 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
+
+from hyperion import client, const
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,48 +31,13 @@ CONF_EFFECT_LIST = "effect_list"
 CONF_TOKEN = "token"
 CONF_INSTANCE = "instance"
 
-KEY_ADJUSTMENT = "adjustment"
-KEY_AUTHORIZE = "authorize"
-KEY_AUTHORIZE_LOGIN = "authorize-login"
-KEY_BRIGHTNESS = "brightness"
-KEY_CLEAR = "clear"
-KEY_COLOR = "color"
-KEY_COMMAND = "command"
-KEY_COMPONENT = "component"
-KEY_COMPONENTSTATE = "componentstate"
-KEY_COMPONENTS = "components"
-KEY_DATA = "data"
-KEY_EFFECT = "effect"
-KEY_EFFECTS = "effects"
-KEY_ENABLED = "enabled"
-KEY_INFO = "info"
-KEY_INSTANCE = "instance"
-KEY_LOGIN = "login"
-KEY_NAME = "name"
-KEY_ORIGIN = "origin"
-KEY_OWNER = "owner"
-KEY_PRIORITY = "priority"
-KEY_PRIORITIES = "priorities"
-KEY_RGB = "RGB"
-KEY_SERVERINFO = "serverinfo"
-KEY_SUBCOMMAND = "subcommand"
-KEY_SUBSCRIBE = "subscribe"
-KEY_SUCCESS = "success"
-KEY_SWITCH_TO = "switchTo"
-KEY_STATE = "state"
-KEY_TOKEN = "token"
-KEY_UPDATE = "update"
-KEY_VALUE = "value"
-KEY_VISIBLE = "visible"
+KEY_COMPONENTID_EXTERNAL_SOURCES = [
+    const.KEY_COMPONENTID_BOBLIGHTSERVER,
+    const.KEY_COMPONENTID_GRABBER,
+    const.KEY_COMPONENTID_V4L
+]
 
-# ComponentIDs from: https://docs.hyperion-project.org/en/json/Control.html#components-ids-explained
-KEY_COMPONENTID = "componentId"
-KEY_COMPONENTID_ALL = "ALL"
-KEY_COMPONENTID_COLOR = "COLOR"
-KEY_COMPONENTID_EFFECT = "EFFECT"
-
-KEY_COMPONENTID_EXTERNAL_SOURCES = ["BOBLIGHTSERVER", "GRABBER", "V4L"]
-KEY_COMPONENTID_LEDDEVICE = "LEDDEVICE"
+KEY_COMPONENTID_LEDDEVICE = const.KEY_COMPONENTID_LEDDEVICE
 
 # As we want to preserve brightness control for effects (e.g. to reduce the
 # brightness for V4L), we need to persist the effect that is in flight, so
@@ -88,9 +56,7 @@ DEFAULT_ORIGIN = "Home Assistant"
 DEFAULT_PORT = 19444
 DEFAULT_PRIORITY = 128
 DEFAULT_HDMI_PRIORITY = 880
-DEFAULT_INSTANCE = 0
-DEFAULT_CONNECTION_RETRY_DELAY = 30
-DEFAULT_CONNECTION_TIMEOUT_SECS = 5
+
 SUPPORT_HYPERION = SUPPORT_COLOR | SUPPORT_BRIGHTNESS | SUPPORT_EFFECT
 
 PLATFORM_SCHEMA = vol.All(
@@ -130,42 +96,31 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     host = config[CONF_HOST]
     port = config[CONF_PORT]
     priority = config[CONF_PRIORITY]
-    effect_list = config[CONF_EFFECT_LIST]
     token = config.get(CONF_TOKEN)
     instance = config.get(CONF_INSTANCE)
 
-    device = Hyperion(name, host, port, priority, effect_list, token, instance)
+    device = Hyperion(name, host, port, priority, token, instance)
 
-    if await device.async_setup(hass):
+    if not await device.async_setup(hass):
+        raise PlatformNotReady
+    else:
         async_add_entities([device])
 
 
 class Hyperion(LightEntity):
     """Representation of a Hyperion remote."""
 
-    def __init__(self, name, host, port, priority, static_effect_list, token, instance):
+    def __init__(self, name, host, port, priority, token, instance):
         """Initialize the light."""
-        self._host = host
-        self._port = port
+        self._hyperion_client = client(host, port, token=token, instance=instance)
         self._name = name
         self._priority = priority
-        self._static_effect_list = static_effect_list
-        self._effect_list = static_effect_list
-        self._token = token
-        self._instance = instance
 
         # Active state representing the Hyperion instance.
         self._brightness = 255
-        self._components = {}
         self._effect = KEY_EFFECT_SOLID
         self._icon = ICON_LIGHTBULB
-        self._on = False
         self._rgb_color = DEFAULT_COLOR
-
-        # Server connection state.
-        self._is_connected = False
-        self._reader = None
-        self._writer = None
 
     @property
     def should_poll(self):
@@ -190,7 +145,7 @@ class Hyperion(LightEntity):
     @property
     def is_on(self):
         """Return true if not black."""
-        return self._on
+        return self._hyperion_client.is_on()
 
     @property
     def icon(self):
@@ -215,7 +170,7 @@ class Hyperion(LightEntity):
     @property
     def available(self):
         """Return server availability."""
-        return self._is_connected
+        return self._hyperion_client.is_connected
 
     @property
     def unique_id(self):
