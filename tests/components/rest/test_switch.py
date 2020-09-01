@@ -99,6 +99,7 @@ class TestRestSwitch:
         self.name = "foo"
         self.method = "post"
         self.resource = "http://localhost/"
+        self.state_resource = self.resource
         self.headers = {"Content-type": "application/json"}
         self.auth = None
         self.body_on = Template("on", self.hass)
@@ -106,6 +107,7 @@ class TestRestSwitch:
         self.switch = rest.RestSwitch(
             self.name,
             self.resource,
+            self.state_resource,
             self.method,
             self.headers,
             self.auth,
