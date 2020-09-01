@@ -65,7 +65,8 @@ class AwairDataUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass, config_entry, session) -> None:
         """Set up the AwairDataUpdateCoordinator class."""
-        device_addrs = config_entry.data[CONF_HOSTS]
+        device_addrs_str = config_entry.data[CONF_HOSTS]
+        device_addrs = [addr.strip() for addr in device_addrs_str.split(",")]
         self._awair = AwairLocal(session=session, device_addrs=device_addrs)
         self._config_entry = config_entry
 

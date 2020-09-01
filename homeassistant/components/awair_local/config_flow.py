@@ -1,6 +1,6 @@
 """Config flow for Awair."""
 
-from typing import List, Optional
+from typing import Optional
 
 from python_awair import AwairLocal
 from python_awair.exceptions import AwairError
@@ -54,12 +54,13 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_HOSTS): [str]}),
+            data_schema=vol.Schema({vol.Required(CONF_HOSTS): str}),
             errors=errors,
         )
 
-    async def _check_connection(self, device_addrs: List[str]):
+    async def _check_connection(self, device_addrs_str: str):
         """Check the access token is valid."""
+        device_addrs = [addr.strip() for addr in device_addrs_str.split(",")]
         session = async_get_clientsession(self.hass)
         awair = AwairLocal(session=session, device_addrs=device_addrs)
 
