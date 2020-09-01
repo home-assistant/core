@@ -36,7 +36,7 @@ SUPLA_COORDINATORS = "supla_coordinators"
 SERVER_CONFIG = vol.Schema(
     {
         vol.Required(CONF_SERVER): cv.string,
-        vol.Required(CONF_ACCESS_TOKEN): cv.string,        
+        vol.Required(CONF_ACCESS_TOKEN): cv.string,
     }
 )
 
@@ -61,7 +61,7 @@ async def async_setup(hass, base_config):
 
         server_address = server_conf[CONF_SERVER]
 
-        server = SuplaAPI(server_address, server_conf[CONF_ACCESS_TOKEN])        
+        server = SuplaAPI(server_address, server_conf[CONF_ACCESS_TOKEN])
 
         # Test connection
         try:
