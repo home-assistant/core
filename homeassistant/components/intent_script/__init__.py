@@ -84,7 +84,7 @@ class ScriptIntentHandler(intent.IntentHandler):
                     action.async_run(slots, intent_obj.context)
                 )
             else:
-                await action.async_run(slots)
+                await action.async_run(slots, intent_obj.context)
 
         response = intent_obj.create_response()
 

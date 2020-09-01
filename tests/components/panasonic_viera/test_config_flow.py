@@ -27,7 +27,8 @@ def panasonic_viera_setup_fixture():
     with patch(
         "homeassistant.components.panasonic_viera.async_setup", return_value=True
     ), patch(
-        "homeassistant.components.panasonic_viera.async_setup_entry", return_value=True,
+        "homeassistant.components.panasonic_viera.async_setup_entry",
+        return_value=True,
     ):
         yield
 
@@ -80,7 +81,8 @@ async def test_flow_non_encrypted(hass):
         return_value=mock_remote,
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_HOST: "1.2.3.4", CONF_NAME: DEFAULT_NAME},
+            result["flow_id"],
+            {CONF_HOST: "1.2.3.4", CONF_NAME: DEFAULT_NAME},
         )
 
     assert result["type"] == "create_entry"
@@ -108,7 +110,8 @@ async def test_flow_not_connected_error(hass):
         side_effect=TimeoutError,
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_HOST: "1.2.3.4", CONF_NAME: DEFAULT_NAME},
+            result["flow_id"],
+            {CONF_HOST: "1.2.3.4", CONF_NAME: DEFAULT_NAME},
         )
 
     assert result["type"] == "form"
@@ -131,7 +134,8 @@ async def test_flow_unknown_abort(hass):
         side_effect=Exception,
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_HOST: "1.2.3.4", CONF_NAME: DEFAULT_NAME},
+            result["flow_id"],
+            {CONF_HOST: "1.2.3.4", CONF_NAME: DEFAULT_NAME},
         )
 
     assert result["type"] == "abort"
@@ -149,7 +153,9 @@ async def test_flow_encrypted_valid_pin_code(hass):
     assert result["step_id"] == "user"
 
     mock_remote = get_mock_remote(
-        encrypted=True, app_id="test-app-id", encryption_key="test-encryption-key",
+        encrypted=True,
+        app_id="test-app-id",
+        encryption_key="test-encryption-key",
     )
 
     with patch(
@@ -157,14 +163,16 @@ async def test_flow_encrypted_valid_pin_code(hass):
         return_value=mock_remote,
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_HOST: "1.2.3.4", CONF_NAME: DEFAULT_NAME},
+            result["flow_id"],
+            {CONF_HOST: "1.2.3.4", CONF_NAME: DEFAULT_NAME},
         )
 
     assert result["type"] == "form"
     assert result["step_id"] == "pairing"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_PIN: "1234"},
+        result["flow_id"],
+        {CONF_PIN: "1234"},
     )
 
     assert result["type"] == "create_entry"
@@ -196,7 +204,8 @@ async def test_flow_encrypted_invalid_pin_code_error(hass):
         return_value=mock_remote,
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_HOST: "1.2.3.4", CONF_NAME: DEFAULT_NAME},
+            result["flow_id"],
+            {CONF_HOST: "1.2.3.4", CONF_NAME: DEFAULT_NAME},
         )
 
     assert result["type"] == "form"
@@ -207,7 +216,8 @@ async def test_flow_encrypted_invalid_pin_code_error(hass):
         return_value=mock_remote,
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_PIN: "0000"},
+            result["flow_id"],
+            {CONF_PIN: "0000"},
         )
 
     assert result["type"] == "form"
@@ -232,14 +242,16 @@ async def test_flow_encrypted_not_connected_abort(hass):
         return_value=mock_remote,
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_HOST: "1.2.3.4", CONF_NAME: DEFAULT_NAME},
+            result["flow_id"],
+            {CONF_HOST: "1.2.3.4", CONF_NAME: DEFAULT_NAME},
         )
 
     assert result["type"] == "form"
     assert result["step_id"] == "pairing"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_PIN: "0000"},
+        result["flow_id"],
+        {CONF_PIN: "0000"},
     )
 
     assert result["type"] == "abort"
@@ -263,14 +275,16 @@ async def test_flow_encrypted_unknown_abort(hass):
         return_value=mock_remote,
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_HOST: "1.2.3.4", CONF_NAME: DEFAULT_NAME},
+            result["flow_id"],
+            {CONF_HOST: "1.2.3.4", CONF_NAME: DEFAULT_NAME},
         )
 
     assert result["type"] == "form"
     assert result["step_id"] == "pairing"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_PIN: "0000"},
+        result["flow_id"],
+        {CONF_PIN: "0000"},
     )
 
     assert result["type"] == "abort"
@@ -355,7 +369,9 @@ async def test_imported_flow_encrypted_valid_pin_code(hass):
     """Test imported flow with encryption and valid PIN code."""
 
     mock_remote = get_mock_remote(
-        encrypted=True, app_id="test-app-id", encryption_key="test-encryption-key",
+        encrypted=True,
+        app_id="test-app-id",
+        encryption_key="test-encryption-key",
     )
 
     with patch(
@@ -377,7 +393,8 @@ async def test_imported_flow_encrypted_valid_pin_code(hass):
     assert result["step_id"] == "pairing"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_PIN: "1234"},
+        result["flow_id"],
+        {CONF_PIN: "1234"},
     )
 
     assert result["type"] == "create_entry"
@@ -420,7 +437,8 @@ async def test_imported_flow_encrypted_invalid_pin_code_error(hass):
         return_value=mock_remote,
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_PIN: "0000"},
+            result["flow_id"],
+            {CONF_PIN: "0000"},
         )
 
     assert result["type"] == "form"
@@ -452,7 +470,8 @@ async def test_imported_flow_encrypted_not_connected_abort(hass):
     assert result["step_id"] == "pairing"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_PIN: "0000"},
+        result["flow_id"],
+        {CONF_PIN: "0000"},
     )
 
     assert result["type"] == "abort"
@@ -483,7 +502,8 @@ async def test_imported_flow_encrypted_unknown_abort(hass):
     assert result["step_id"] == "pairing"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_PIN: "0000"},
+        result["flow_id"],
+        {CONF_PIN: "0000"},
     )
 
     assert result["type"] == "abort"

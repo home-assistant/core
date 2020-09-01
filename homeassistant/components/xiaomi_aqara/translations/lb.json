@@ -7,8 +7,10 @@
         },
         "error": {
             "discovery_error": "Feeler beim entdecken vun enger Xiaomi Aqara Gateway, prob\u00e9ier d'IP vum Apparat op deem Home Assistant leeft als Interface ze benotzen",
+            "invalid_host": "Ong\u00eblteg IP Adress",
             "invalid_interface": "Ong\u00ebltege Netzwierk Interface",
             "invalid_key": "Ong\u00ebltegen Gateway Schl\u00ebssel",
+            "invalid_mac": "Ong\u00eblteg Mac Adresse",
             "not_found_error": "D\u00e9i Gateway d\u00e9i duerch de Zeroconf entdeckt gouf konnt net lokalis\u00e9iert ginn, prob\u00e9ier d'IP vum Apparat op deem Home Assistant leeft als Interface ze benotzen"
         },
         "flow_title": "Xiaomi Aqara Gateway: {name}",
@@ -30,7 +32,9 @@
             },
             "user": {
                 "data": {
-                    "interface": "Netzwierk Interface dee soll benotzt ginn"
+                    "host": "IP Adress (Optionell)",
+                    "interface": "Netzwierk Interface dee soll benotzt ginn",
+                    "mac": "Mac Adress (Optionell)"
                 },
                 "description": "Mat denger Xiaomi Aqara Gateway verbannen",
                 "title": "Xiaomi Aqara Gateway"

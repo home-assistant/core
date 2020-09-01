@@ -100,11 +100,11 @@ omit =
     homeassistant/components/braviatv/__init__.py
     homeassistant/components/braviatv/const.py
     homeassistant/components/braviatv/media_player.py
+    homeassistant/components/broadlink/__init__.py
     homeassistant/components/broadlink/const.py
-    homeassistant/components/broadlink/device.py
     homeassistant/components/broadlink/remote.py
-    homeassistant/components/broadlink/sensor.py
     homeassistant/components/broadlink/switch.py
+    homeassistant/components/broadlink/updater.py
     homeassistant/components/brottsplatskartan/sensor.py
     homeassistant/components/browser/*
     homeassistant/components/brunt/cover.py
@@ -219,7 +219,6 @@ omit =
     homeassistant/components/emby/media_player.py
     homeassistant/components/emoncms/sensor.py
     homeassistant/components/emoncms_history/*
-    homeassistant/components/emulated_hue/upnp.py
     homeassistant/components/enigma2/media_player.py
     homeassistant/components/enocean/__init__.py
     homeassistant/components/enocean/binary_sensor.py
@@ -395,7 +394,6 @@ omit =
     homeassistant/components/ihc/*
     homeassistant/components/imap/sensor.py
     homeassistant/components/imap_email_content/sensor.py
-    homeassistant/components/insteon/__init__.py
     homeassistant/components/insteon/binary_sensor.py
     homeassistant/components/insteon/climate.py
     homeassistant/components/insteon/const.py
@@ -590,7 +588,7 @@ omit =
     homeassistant/components/nuki/lock.py
     homeassistant/components/nut/sensor.py
     homeassistant/components/nx584/alarm_control_panel.py
-    homeassistant/components/nzbget/__init__.py
+    homeassistant/components/nzbget/coordinator.py
     homeassistant/components/nzbget/sensor.py
     homeassistant/components/obihai/*
     homeassistant/components/octoprint/*
@@ -668,6 +666,9 @@ omit =
     homeassistant/components/poolsense/sensor.py
     homeassistant/components/poolsense/binary_sensor.py
     homeassistant/components/proliphix/climate.py
+    homeassistant/components/progettihwsw/__init__.py
+    homeassistant/components/progettihwsw/binary_sensor.py
+    homeassistant/components/progettihwsw/switch.py
     homeassistant/components/prometheus/*
     homeassistant/components/prowl/notify.py
     homeassistant/components/proxmoxve/*
@@ -747,14 +748,19 @@ omit =
     homeassistant/components/sensehat/light.py
     homeassistant/components/sensehat/sensor.py
     homeassistant/components/sensibo/climate.py
-    homeassistant/components/sentry/__init__.py
     homeassistant/components/serial/sensor.py
     homeassistant/components/serial_pm/sensor.py
     homeassistant/components/sesame/lock.py
     homeassistant/components/seven_segments/image_processing.py
     homeassistant/components/seventeentrack/sensor.py
+    homeassistant/components/sharkiq/vacuum.py
     homeassistant/components/shiftr/*
     homeassistant/components/shodan/sensor.py
+    homeassistant/components/shelly/__init__.py
+    homeassistant/components/shelly/binary_sensor.py
+    homeassistant/components/shelly/light.py
+    homeassistant/components/shelly/sensor.py
+    homeassistant/components/shelly/switch.py
     homeassistant/components/sht31/sensor.py
     homeassistant/components/sigfox/sensor.py
     homeassistant/components/simplepush/notify.py
@@ -813,7 +819,8 @@ omit =
     homeassistant/components/streamlabswater/*
     homeassistant/components/suez_water/*
     homeassistant/components/supervisord/sensor.py
-    homeassistant/components/surepetcare/*.py
+    homeassistant/components/surepetcare/__init__.py
+    homeassistant/components/surepetcare/sensor.py
     homeassistant/components/swiss_hydrological_data/sensor.py
     homeassistant/components/swiss_public_transport/sensor.py
     homeassistant/components/swisscom/device_tracker.py
@@ -1022,7 +1029,6 @@ omit =
     homeassistant/components/supla/*
     homeassistant/components/zwave/util.py
     homeassistant/components/ozw/__init__.py
-    homeassistant/components/ozw/discovery.py
     homeassistant/components/ozw/entity.py
     homeassistant/components/ozw/services.py
 

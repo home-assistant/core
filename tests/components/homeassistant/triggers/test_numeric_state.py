@@ -1239,3 +1239,61 @@ def test_below_above():
         numeric_state_trigger.TRIGGER_SCHEMA(
             {"platform": "numeric_state", "above": 1200, "below": 1000}
         )
+
+
+async def test_attribute_if_fires_on_entity_change_with_both_filters(hass, calls):
+    """Test for firing if both filters are match attribute."""
+    hass.states.async_set("test.entity", "bla", {"test-measurement": 1})
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "numeric_state",
+                    "entity_id": "test.entity",
+                    "above": 3,
+                    "attribute": "test-measurement",
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    hass.states.async_set("test.entity", "bla", {"test-measurement": 4})
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+
+async def test_attribute_if_not_fires_on_entities_change_with_for_after_stop(
+    hass, calls
+):
+    """Test for not firing on entity change with for after stop trigger."""
+    hass.states.async_set("test.entity", "bla", {"test-measurement": 1})
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "numeric_state",
+                    "entity_id": "test.entity",
+                    "above": 3,
+                    "attribute": "test-measurement",
+                    "for": 5,
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    hass.states.async_set("test.entity", "bla", {"test-measurement": 4})
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
+    await hass.async_block_till_done()
+    assert len(calls) == 1

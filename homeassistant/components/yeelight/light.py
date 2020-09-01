@@ -1,4 +1,5 @@
 """Light platform support for yeelight."""
+from functools import partial
 import logging
 from typing import Optional
 
@@ -32,8 +33,9 @@ from homeassistant.components.light import (
     SUPPORT_TRANSITION,
     LightEntity,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, CONF_HOST, CONF_NAME
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, CONF_NAME
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.service import extract_entity_ids
@@ -48,18 +50,20 @@ from . import (
     ATTR_ACTION,
     ATTR_COUNT,
     ATTR_TRANSITIONS,
-    CONF_CUSTOM_EFFECTS,
     CONF_FLOW_PARAMS,
     CONF_MODE_MUSIC,
-    CONF_NIGHTLIGHT_SWITCH_TYPE,
+    CONF_NIGHTLIGHT_SWITCH,
     CONF_SAVE_ON_CHANGE,
     CONF_TRANSITION,
+    DATA_CONFIG_ENTRIES,
+    DATA_CUSTOM_EFFECTS,
+    DATA_DEVICE,
     DATA_UPDATED,
     DATA_YEELIGHT,
     DOMAIN,
-    NIGHTLIGHT_SWITCH_TYPE_LIGHT,
     YEELIGHT_FLOW_TRANSITION_SCHEMA,
     YEELIGHT_SERVICE_SCHEMA,
+    YeelightEntity,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -236,22 +240,20 @@ def _cmd(func):
     return _wrap
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Yeelight bulbs."""
-
-    if not discovery_info:
-        return
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+) -> None:
+    """Set up Yeelight from a config entry."""
 
     if PLATFORM_DATA_KEY not in hass.data:
         hass.data[PLATFORM_DATA_KEY] = []
 
-    device = hass.data[DATA_YEELIGHT][discovery_info[CONF_HOST]]
+    custom_effects = _parse_custom_effects(hass.data[DOMAIN][DATA_CUSTOM_EFFECTS])
+
+    device = hass.data[DOMAIN][DATA_CONFIG_ENTRIES][config_entry.entry_id][DATA_DEVICE]
     _LOGGER.debug("Adding %s", device.name)
 
-    custom_effects = _parse_custom_effects(discovery_info[CONF_CUSTOM_EFFECTS])
-    nl_switch_light = (
-        discovery_info.get(CONF_NIGHTLIGHT_SWITCH_TYPE) == NIGHTLIGHT_SWITCH_TYPE_LIGHT
-    )
+    nl_switch_light = device.config.get(CONF_NIGHTLIGHT_SWITCH)
 
     lights = []
 
@@ -290,8 +292,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         )
 
     hass.data[PLATFORM_DATA_KEY] += lights
-    add_entities(lights, True)
-    setup_services(hass)
+    async_add_entities(lights, True)
+    await hass.async_add_executor_job(partial(setup_services, hass))
 
 
 def setup_services(hass):
@@ -406,13 +408,14 @@ def setup_services(hass):
     )
 
 
-class YeelightGenericLight(LightEntity):
+class YeelightGenericLight(YeelightEntity, LightEntity):
     """Representation of a Yeelight generic light."""
 
     def __init__(self, device, custom_effects=None):
         """Initialize the Yeelight light."""
+        super().__init__(device)
+
         self.config = device.config
-        self._device = device
 
         self._brightness = None
         self._color_temp = None
@@ -445,20 +448,10 @@ class YeelightGenericLight(LightEntity):
         )
 
     @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
     def unique_id(self) -> Optional[str]:
         """Return a unique ID."""
 
         return self.device.unique_id
-
-    @property
-    def available(self) -> bool:
-        """Return if bulb is available."""
-        return self.device.available
 
     @property
     def supported_features(self) -> int:

@@ -17,6 +17,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.distance import convert as convert_distance
 from homeassistant.util.pressure import convert as convert_pressure
 
@@ -77,36 +78,21 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class MetWeather(WeatherEntity):
+class MetWeather(CoordinatorEntity, WeatherEntity):
     """Implementation of a Met.no weather condition."""
 
     def __init__(self, coordinator, config, is_metric, hourly):
         """Initialise the platform with a data instance and site."""
+        super().__init__(coordinator)
         self._config = config
-        self._coordinator = coordinator
         self._is_metric = is_metric
         self._hourly = hourly
         self._name_appendix = "-hourly" if hourly else ""
-
-    async def async_added_to_hass(self):
-        """Start fetching data."""
-        self.async_on_remove(
-            self._coordinator.async_add_listener(self.async_write_ha_state)
-        )
-
-    async def async_update(self):
-        """Only used by the generic entity update service."""
-        await self._coordinator.async_request_refresh()
 
     @property
     def track_home(self):
         """Return if we are tracking home."""
         return self._config.get(CONF_TRACK_HOME, False)
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def unique_id(self):
@@ -132,12 +118,12 @@ class MetWeather(WeatherEntity):
     @property
     def condition(self):
         """Return the current condition."""
-        return self._coordinator.data.current_weather_data.get("condition")
+        return self.coordinator.data.current_weather_data.get("condition")
 
     @property
     def temperature(self):
         """Return the temperature."""
-        return self._coordinator.data.current_weather_data.get("temperature")
+        return self.coordinator.data.current_weather_data.get("temperature")
 
     @property
     def temperature_unit(self):
@@ -147,7 +133,7 @@ class MetWeather(WeatherEntity):
     @property
     def pressure(self):
         """Return the pressure."""
-        pressure_hpa = self._coordinator.data.current_weather_data.get("pressure")
+        pressure_hpa = self.coordinator.data.current_weather_data.get("pressure")
         if self._is_metric or pressure_hpa is None:
             return pressure_hpa
 
@@ -156,12 +142,12 @@ class MetWeather(WeatherEntity):
     @property
     def humidity(self):
         """Return the humidity."""
-        return self._coordinator.data.current_weather_data.get("humidity")
+        return self.coordinator.data.current_weather_data.get("humidity")
 
     @property
     def wind_speed(self):
         """Return the wind speed."""
-        speed_m_s = self._coordinator.data.current_weather_data.get("wind_speed")
+        speed_m_s = self.coordinator.data.current_weather_data.get("wind_speed")
         if self._is_metric or speed_m_s is None:
             return speed_m_s
 
@@ -172,7 +158,7 @@ class MetWeather(WeatherEntity):
     @property
     def wind_bearing(self):
         """Return the wind direction."""
-        return self._coordinator.data.current_weather_data.get("wind_bearing")
+        return self.coordinator.data.current_weather_data.get("wind_bearing")
 
     @property
     def attribution(self):
@@ -183,5 +169,5 @@ class MetWeather(WeatherEntity):
     def forecast(self):
         """Return the forecast array."""
         if self._hourly:
-            return self._coordinator.data.hourly_forecast
-        return self._coordinator.data.daily_forecast
+            return self.coordinator.data.hourly_forecast
+        return self.coordinator.data.daily_forecast

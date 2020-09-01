@@ -50,8 +50,8 @@ class EcobeeWeather(WeatherEntity):
         try:
             forecast = self.weather["forecasts"][index]
             return forecast[param]
-        except (ValueError, IndexError, KeyError):
-            raise ValueError
+        except (IndexError, KeyError) as err:
+            raise ValueError from err
 
     @property
     def name(self):

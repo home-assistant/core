@@ -70,7 +70,9 @@ class NetatmoDataHandler:
 
         self.listeners.append(
             async_dispatcher_connect(
-                self.hass, f"signal-{DOMAIN}-webhook-None", self.handle_event,
+                self.hass,
+                f"signal-{DOMAIN}-webhook-None",
+                self.handle_event,
             )
         )
 
@@ -113,7 +115,8 @@ class NetatmoDataHandler:
         """Fetch data and notify."""
         try:
             self.data[data_class_entry] = await self.hass.async_add_executor_job(
-                partial(data_class, **kwargs), self._auth,
+                partial(data_class, **kwargs),
+                self._auth,
             )
             for update_callback in self._data_classes[data_class_entry][
                 "subscriptions"

@@ -70,7 +70,9 @@ async def async_setup_entry(
     for location in dtv.device.locations:
         entities.append(
             DIRECTVMediaPlayer(
-                dtv=dtv, name=str.title(location.name), address=location.address,
+                dtv=dtv,
+                name=str.title(location.name),
+                address=location.address,
             )
         )
 
@@ -83,7 +85,9 @@ class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerEntity):
     def __init__(self, *, dtv: DIRECTV, name: str, address: str = "0") -> None:
         """Initialize DirecTV media player."""
         super().__init__(
-            dtv=dtv, name=name, address=address,
+            dtv=dtv,
+            name=name,
+            address=address,
         )
 
         self._assumed_state = None

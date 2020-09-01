@@ -2,6 +2,6 @@
   "domain": "noaa_tides",
   "name": "NOAA Tides",
   "documentation": "https://www.home-assistant.io/integrations/noaa_tides",
-  "requirements": ["py_noaa==0.3.0"],
-  "codeowners": []
+  "requirements": ["noaa-coops==0.1.8"],
+  "codeowners": ["@jdelaney72"]
 }

@@ -74,8 +74,8 @@ def request_stream(hass, stream_source, *, fmt="hls", keepalive=False, options=N
             stream.access_token = secrets.token_hex()
             stream.start()
         return hass.data[DOMAIN][ATTR_ENDPOINTS][fmt].format(stream.access_token)
-    except Exception:
-        raise HomeAssistantError("Unable to get stream")
+    except Exception as err:
+        raise HomeAssistantError("Unable to get stream") from err
 
 
 async def async_setup(hass, config):

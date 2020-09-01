@@ -1,11 +1,6 @@
 {
     "config": {
         "step": {
-            "select": {
-                "data": {
-                    "select_ip": ""
-                }
-            },
             "settings": {
                 "data": {
                     "name": "Nome da Gateway"

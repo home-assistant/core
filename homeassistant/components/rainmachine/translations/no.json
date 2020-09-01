@@ -11,8 +11,7 @@
             "user": {
                 "data": {
                     "ip_address": "Vertsnavn eller IP-adresse",
-                    "password": "Passord",
-                    "port": ""
+                    "password": "Passord"
                 },
                 "title": "Fyll ut informasjonen din"
             }

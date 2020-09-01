@@ -1,16 +1,22 @@
 """The test for the min/max sensor platform."""
+from os import path
 import statistics
 import unittest
 
+from asynctest.mock import patch
+
+from homeassistant import config as hass_config
+from homeassistant.components.min_max import DOMAIN
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
+    SERVICE_RELOAD,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     UNIT_PERCENTAGE,
 )
-from homeassistant.setup import setup_component
+from homeassistant.setup import async_setup_component, setup_component
 
 from tests.common import get_test_home_assistant
 
@@ -332,3 +338,50 @@ class TestMinMaxSensor(unittest.TestCase):
         assert self.max == state.attributes.get("max_value")
         assert self.mean == state.attributes.get("mean")
         assert self.median == state.attributes.get("median")
+
+
+async def test_reload(hass):
+    """Verify we can reload filter sensors."""
+    hass.states.async_set("sensor.test_1", 12345)
+    hass.states.async_set("sensor.test_2", 45678)
+
+    await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": {
+                "platform": "min_max",
+                "name": "test",
+                "type": "mean",
+                "entity_ids": ["sensor.test_1", "sensor.test_2"],
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 3
+
+    assert hass.states.get("sensor.test")
+
+    yaml_path = path.join(
+        _get_fixtures_base_path(),
+        "fixtures",
+        "min_max/configuration.yaml",
+    )
+    with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RELOAD,
+            {},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 3
+
+    assert hass.states.get("sensor.test") is None
+    assert hass.states.get("sensor.second_test")
+
+
+def _get_fixtures_base_path():
+    return path.dirname(path.dirname(path.dirname(__file__)))

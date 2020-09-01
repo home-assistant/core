@@ -5,7 +5,7 @@
         },
         "error": {
             "connection_error": "No s'ha pogut connectar, torna-ho a provar",
-            "unauthorized": "L'emparellament s'ha denegat, comprova si hi ha una sol\u00b7licitud d'autenticaci\u00f3 al dispositiu"
+            "unauthorized": "La vinculaci\u00f3 s'ha denegat, comprova si hi ha una sol\u00b7licitud d'autenticaci\u00f3 al dispositiu"
         },
         "step": {
             "user": {

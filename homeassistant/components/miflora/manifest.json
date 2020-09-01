@@ -1,4 +1,5 @@
 {
+  "disabled": "Dependency contains code that breaks Home Assistant.",
   "domain": "miflora",
   "name": "Mi Flora",
   "documentation": "https://www.home-assistant.io/integrations/miflora",

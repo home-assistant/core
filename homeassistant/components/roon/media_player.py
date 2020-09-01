@@ -161,8 +161,73 @@ class RoonDevice(MediaPlayerEntity):
             if self.state == STATE_PLAYING:
                 self._last_position_update = utcnow()
 
+    @classmethod
+    def _parse_volume(cls, player_data):
+        """Parse volume data to determine volume levels and mute state."""
+        volume = {
+            "level": 0,
+            "step": 0,
+            "muted": False,
+        }
+
+        try:
+            volume_data = player_data["volume"]
+            volume_muted = volume_data["is_muted"]
+            volume_step = convert(volume_data["step"], int, 0)
+
+            if volume_data["type"] == "db":
+                level = convert(volume_data["value"], float, 0.0) / 80 * 100 + 100
+            else:
+                level = convert(volume_data["value"], float, 0.0)
+
+            volume_level = convert(level, int, 0) / 100
+        except KeyError:
+            # catch KeyError
+            pass
+        else:
+            volume["muted"] = volume_muted
+            volume["step"] = volume_step
+            volume["level"] = volume_level
+
+        return volume
+
+    def _parse_now_playing(self, player_data):
+        """Parse now playing data to determine title, artist, position, duration and artwork."""
+        now_playing = {
+            "title": None,
+            "artist": None,
+            "album": None,
+            "position": 0,
+            "duration": 0,
+            "image": None,
+        }
+        now_playing_data = None
+
+        try:
+            now_playing_data = player_data["now_playing"]
+            media_title = now_playing_data["three_line"]["line1"]
+            media_artist = now_playing_data["three_line"]["line2"]
+            media_album_name = now_playing_data["three_line"]["line3"]
+            media_position = convert(now_playing_data["seek_position"], int, 0)
+            media_duration = convert(now_playing_data["length"], int, 0)
+            image_id = now_playing_data.get("image_key")
+        except KeyError:
+            # catch KeyError
+            pass
+        else:
+            now_playing["title"] = media_title
+            now_playing["artist"] = media_artist
+            now_playing["album"] = media_album_name
+            now_playing["position"] = media_position
+            now_playing["duration"] = media_duration
+            if image_id:
+                now_playing["image"] = self._server.roonapi.get_image(image_id)
+
+        return now_playing
+
     def update_state(self):
         """Update the power state and player state."""
+
         new_state = ""
         # power state from source control (if supported)
         if "source_controls" in self.player_data:
@@ -188,44 +253,22 @@ class RoonDevice(MediaPlayerEntity):
         self._unique_id = self.player_data["dev_id"]
         self._zone_id = self.player_data["zone_id"]
         self._output_id = self.player_data["output_id"]
-        self._name = self.player_data["display_name"]
-        self._is_volume_muted = self.player_data["volume"]["is_muted"]
-        self._volume_step = convert(self.player_data["volume"]["step"], int, 0)
         self._shuffle = self.player_data["settings"]["shuffle"]
+        self._name = self.player_data["display_name"]
 
-        if self.player_data["volume"]["type"] == "db":
-            volume = (
-                convert(self.player_data["volume"]["value"], float, 0.0) / 80 * 100
-                + 100
-            )
-        else:
-            volume = convert(self.player_data["volume"]["value"], float, 0.0)
-        self._volume_level = convert(volume, int, 0) / 100
+        volume = RoonDevice._parse_volume(self.player_data)
+        self._is_volume_muted = volume["muted"]
+        self._volume_step = volume["step"]
+        self._is_volume_muted = volume["muted"]
+        self._volume_level = volume["level"]
 
-        try:
-            self._media_title = self.player_data["now_playing"]["three_line"]["line1"]
-            self._media_artist = self.player_data["now_playing"]["three_line"]["line2"]
-            self._media_album_name = self.player_data["now_playing"]["three_line"][
-                "line3"
-            ]
-            self._media_position = convert(
-                self.player_data["now_playing"]["seek_position"], int, 0
-            )
-            self._media_duration = convert(
-                self.player_data["now_playing"]["length"], int, 0
-            )
-            try:
-                image_id = self.player_data["now_playing"]["image_key"]
-                self._media_image_url = self._server.roonapi.get_image(image_id)
-            except KeyError:
-                self._media_image_url = None
-        except KeyError:
-            self._media_title = None
-            self._media_album_name = None
-            self._media_artist = None
-            self._media_position = 0
-            self._media_duration = 0
-            self._media_image_url = None
+        now_playing = self._parse_now_playing(self.player_data)
+        self._media_title = now_playing["title"]
+        self._media_artist = now_playing["artist"]
+        self._media_album_name = now_playing["album"]
+        self._media_position = now_playing["position"]
+        self._media_duration = now_playing["duration"]
+        self._media_image_url = now_playing["image"]
 
     @property
     def media_position_updated_at(self):

@@ -29,7 +29,8 @@ async def test_if_fires_on_hass_start(hass):
     assert len(calls) == 1
 
     with patch(
-        "homeassistant.config.async_hass_config_yaml", AsyncMock(return_value=config),
+        "homeassistant.config.async_hass_config_yaml",
+        AsyncMock(return_value=config),
     ):
         await hass.services.async_call(
             automation.DOMAIN, automation.SERVICE_RELOAD, blocking=True

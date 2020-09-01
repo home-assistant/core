@@ -50,6 +50,7 @@ async def async_attach_trigger(hass, config, action, automation_info):
                     CONF_NUMBER: number,
                     CONF_HELD_MORE_THAN: held_more_than,
                     CONF_HELD_LESS_THAN: held_less_than,
+                    "description": f"litejet switch #{number}",
                 }
             },
         )

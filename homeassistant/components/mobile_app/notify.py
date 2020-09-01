@@ -144,6 +144,14 @@ class MobileAppNotificationService(BaseNotificationService):
                     f"Internal server error, please try again later: {fallback_error}"
                 )
                 message = result.get("message", fallback_message)
+
+                if "message" in result:
+                    if message[-1] not in [".", "?", "!"]:
+                        message += "."
+                    message += (
+                        " This message is generated externally to Home Assistant."
+                    )
+
                 if response.status == 429:
                     _LOGGER.warning(message)
                     log_rate_limits(

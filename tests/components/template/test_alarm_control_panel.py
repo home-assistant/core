@@ -148,6 +148,7 @@ async def test_optimistic_states(hass):
     await common.async_alarm_arm_away(
         hass, entity_id="alarm_control_panel.test_template_panel"
     )
+    await hass.async_block_till_done()
     state = hass.states.get("alarm_control_panel.test_template_panel")
     await hass.async_block_till_done()
     assert state.state == STATE_ALARM_ARMED_AWAY
@@ -201,6 +202,7 @@ async def test_no_action_scripts(hass):
     await common.async_alarm_arm_away(
         hass, entity_id="alarm_control_panel.test_template_panel"
     )
+    await hass.async_block_till_done()
     state = hass.states.get("alarm_control_panel.test_template_panel")
     await hass.async_block_till_done()
     assert state.state == STATE_ALARM_ARMED_AWAY
@@ -208,6 +210,7 @@ async def test_no_action_scripts(hass):
     await common.async_alarm_arm_home(
         hass, entity_id="alarm_control_panel.test_template_panel"
     )
+    await hass.async_block_till_done()
     state = hass.states.get("alarm_control_panel.test_template_panel")
     await hass.async_block_till_done()
     assert state.state == STATE_ALARM_ARMED_AWAY
@@ -215,6 +218,7 @@ async def test_no_action_scripts(hass):
     await common.async_alarm_arm_night(
         hass, entity_id="alarm_control_panel.test_template_panel"
     )
+    await hass.async_block_till_done()
     state = hass.states.get("alarm_control_panel.test_template_panel")
     await hass.async_block_till_done()
     assert state.state == STATE_ALARM_ARMED_AWAY
@@ -222,6 +226,7 @@ async def test_no_action_scripts(hass):
     await common.async_alarm_disarm(
         hass, entity_id="alarm_control_panel.test_template_panel"
     )
+    await hass.async_block_till_done()
     state = hass.states.get("alarm_control_panel.test_template_panel")
     await hass.async_block_till_done()
     assert state.state == STATE_ALARM_ARMED_AWAY
@@ -341,7 +346,9 @@ async def test_invalid_panel_does_not_create(hass, caplog):
 async def test_no_panels_does_not_create(hass, caplog):
     """Test if there are no panels -> no creation."""
     await setup.async_setup_component(
-        hass, "alarm_control_panel", {"alarm_control_panel": {"platform": "template"}},
+        hass,
+        "alarm_control_panel",
+        {"alarm_control_panel": {"platform": "template"}},
     )
 
     await hass.async_block_till_done()
