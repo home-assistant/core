@@ -78,6 +78,16 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
 
         self._unique_id = unique_id
 
+    def _is_media_playback_trackable(self) -> bool:
+        """Detect if we have enough media data to track playback."""
+        if self.coordinator.data.media.live:
+            return False
+
+        return (
+           self.coordinator.data.media
+           and self.coordinator.data.media.duration > 0
+        ):
+
     @property
     def unique_id(self) -> str:
         """Return the unique ID for this entity."""
@@ -177,7 +187,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     @property
     def media_duration(self):
         """Duration of current playing media in seconds."""
-        if self.coordinator.data.media:
+        if _is_media_playback_trackable():
            return self.coordinator.data.media.duration
 
         return None
@@ -185,7 +195,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     @property
     def media_position(self):
         """Position of current playing media in seconds."""
-        if self.coordinator.data.media:
+        if _is_media_playback_trackable():
            return self.coordinator.data.media.position
 
         return None
@@ -193,7 +203,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     @property
     def media_position_updated_at(self):
         """When was the position of the current playing media valid."""
-        if self.coordinator.data.media:
+        if _is_media_playback_trackable():
             return self.coordinator.data.media.at
 
         return None
