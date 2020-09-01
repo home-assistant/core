@@ -111,8 +111,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         if self.coordinator.data.media:
             if self.coordinator.data.media.paused:
                 return STATE_PAUSED
-            else:
-                return STATE_PLAYING
+            return STATE_PLAYING
 
         if self.coordinator.data.app.name:
             return STATE_ON
