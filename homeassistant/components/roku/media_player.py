@@ -80,10 +80,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
 
     def _media_playback_trackable(self) -> bool:
         """Detect if we have enough media data to track playback."""
-        if (
-            self.coordinator.data.media is None
-            or self.coordinator.data.media.live
-        ):
+        if self.coordinator.data.media is None or self.coordinator.data.media.live:
             return False
 
         return self.coordinator.data.media.duration > 0
@@ -188,7 +185,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     def media_duration(self):
         """Duration of current playing media in seconds."""
         if _media_playback_trackable():
-           return self.coordinator.data.media.duration
+            return self.coordinator.data.media.duration
 
         return None
 
@@ -196,7 +193,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     def media_position(self):
         """Position of current playing media in seconds."""
         if _media_playback_trackable():
-           return self.coordinator.data.media.position
+            return self.coordinator.data.media.position
 
         return None
 
