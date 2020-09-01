@@ -34,7 +34,8 @@ async def test_form(hass):
     ), patch(
         "homeassistant.components.myio.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.myio.async_setup_entry", return_value=True,
+        "homeassistant.components.myio.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], TEST_DATA
@@ -136,11 +137,13 @@ async def test_form_validate(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.myio.config_flow.validate_input", return_value=True,
+        "homeassistant.components.myio.config_flow.validate_input",
+        return_value=True,
     ), patch(
         "homeassistant.components.myio.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.myio.async_setup_entry", return_value=True,
+        "homeassistant.components.myio.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], TEST_DATA
