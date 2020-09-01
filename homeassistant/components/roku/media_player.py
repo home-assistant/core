@@ -86,10 +86,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         ):
             return False
 
-        return (
-           self.coordinator.data.media
-           and self.coordinator.data.media.duration > 0
-        ):
+        return self.coordinator.data.media.duration > 0
 
     @property
     def unique_id(self) -> str:
