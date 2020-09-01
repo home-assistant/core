@@ -8,14 +8,20 @@
           "host": "[%key:common::config_flow::data::host%]"
         }
       },
+      "credentials": {
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
       "confirm_discovery": {
         "description": "Do you want to set up the {model} at {host}?"
       }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]",
-      "auth_not_supported": "Shelly devices requiring authentication are not currently supported."
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
