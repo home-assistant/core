@@ -83,8 +83,6 @@ class ProgettiHWSWConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 info = await validate_input(self.hass, user_input)
-                user_input.update(info)
-                self.s1_in = user_input
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except ExistingEntry:
@@ -92,6 +90,8 @@ class ProgettiHWSWConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except Exception:  # pylint: disable=broad-except
                 errors["base"] = "unknown"
             else:
+                user_input.update(info)
+                self.s1_in = user_input
                 return await self.async_step_relay_modes()
 
         return self.async_show_form(
