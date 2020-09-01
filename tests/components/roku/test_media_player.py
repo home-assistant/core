@@ -10,6 +10,8 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CHANNEL,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
+    ATTR_MEDIA_DURATION,
+    ATTR_MEDIA_POSITION,
     ATTR_MEDIA_TITLE,
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MP_DOMAIN,
@@ -43,6 +45,7 @@ from homeassistant.const import (
     SERVICE_VOLUME_UP,
     STATE_HOME,
     STATE_IDLE,
+    STATE_ON,
     STATE_PAUSED,
     STATE_PLAYING,
     STATE_STANDBY,
@@ -225,6 +228,8 @@ async def test_attributes_app_media_paused(
     assert state.state == STATE_PAUSED
 
     assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) == MEDIA_TYPE_APP
+    assert state.attributes.get(ATTR_MEDIA_DURATION) == 650
+    assert state.attributes.get(ATTR_MEDIA_POSITION) == 314
     assert state.attributes.get(ATTR_APP_ID) == "74519"
     assert state.attributes.get(ATTR_APP_NAME) == "Pluto TV - It's Free TV"
     assert state.attributes.get(ATTR_INPUT_SOURCE) == "Pluto TV - It's Free TV"
