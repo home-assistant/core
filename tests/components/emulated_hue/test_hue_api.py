@@ -283,7 +283,37 @@ async def test_light_without_brightness_supported(hass_hue, hue_client):
     assert light_without_brightness_json["state"][HUE_API_STATE_ON] is True
     assert light_without_brightness_json["type"] == "On/Off light"
 
-    # BRI required for alexa compat
+
+async def test_lights_all_dimmable(hass, aiohttp_client):
+    """Test CONF_LIGHTS_ALL_DIMMABLE."""
+    # create a lamp without brightness support
+    hass.states.async_set("light.no_brightness", "on", {})
+    await setup.async_setup_component(
+        hass, http.DOMAIN, {http.DOMAIN: {http.CONF_SERVER_PORT: HTTP_SERVER_PORT}}
+    )
+    await hass.async_block_till_done()
+    hue_config = {
+        emulated_hue.CONF_LISTEN_PORT: BRIDGE_SERVER_PORT,
+        emulated_hue.CONF_EXPOSE_BY_DEFAULT: True,
+        emulated_hue.CONF_LIGHTS_ALL_DIMMABLE: True,
+    }
+    with patch("homeassistant.components.emulated_hue.create_upnp_datagram_endpoint"):
+        await setup.async_setup_component(
+            hass,
+            emulated_hue.DOMAIN,
+            {emulated_hue.DOMAIN: hue_config},
+        )
+        await hass.async_block_till_done()
+    config = Config(None, hue_config)
+    config.numbers = ENTITY_IDS_BY_NUMBER
+    web_app = hass.http.app
+    HueOneLightStateView(config).register(web_app, web_app.router)
+    client = await aiohttp_client(web_app)
+    light_without_brightness_json = await perform_get_light_state(
+        client, "light.no_brightness", HTTP_OK
+    )
+    assert light_without_brightness_json["state"][HUE_API_STATE_ON] is True
+    assert light_without_brightness_json["type"] == "Dimmable light"
     assert (
         light_without_brightness_json["state"][HUE_API_STATE_BRI]
         == HUE_API_STATE_BRI_MAX
