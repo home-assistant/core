@@ -31,7 +31,9 @@ async def test_show_form(hass):
 
 async def test_invalid_station_id(hass):
     """Test that errors are shown when measuring station ID is invalid."""
-    with patch("gios.Gios._get_stations", return_value=STATIONS):
+    with patch(
+        "homeassistant.components.gios.Gios._get_stations", return_value=STATIONS
+    ):
         flow = config_flow.GiosFlowHandler()
         flow.hass = hass
         flow.context = {}
@@ -45,10 +47,14 @@ async def test_invalid_station_id(hass):
 
 async def test_invalid_sensor_data(hass):
     """Test that errors are shown when sensor data is invalid."""
-    with patch("gios.Gios._get_stations", return_value=STATIONS), patch(
-        "gios.Gios._get_station",
+    with patch(
+        "homeassistant.components.gios.Gios._get_stations", return_value=STATIONS
+    ), patch(
+        "homeassistant.components.gios.Gios._get_station",
         return_value=json.loads(load_fixture("gios/station.json")),
-    ), patch("gios.Gios._get_sensor", return_value={}):
+    ), patch(
+        "homeassistant.components.gios.Gios._get_sensor", return_value={}
+    ):
         flow = config_flow.GiosFlowHandler()
         flow.hass = hass
         flow.context = {}
@@ -60,7 +66,9 @@ async def test_invalid_sensor_data(hass):
 
 async def test_cannot_connect(hass):
     """Test that errors are shown when cannot connect to GIOS server."""
-    with patch("gios.Gios._async_get", side_effect=ApiError("error")):
+    with patch(
+        "homeassistant.components.gios.Gios._async_get", side_effect=ApiError("error")
+    ):
         flow = config_flow.GiosFlowHandler()
         flow.hass = hass
         flow.context = {}
@@ -72,14 +80,16 @@ async def test_cannot_connect(hass):
 
 async def test_create_entry(hass):
     """Test that the user step works."""
-    with patch("gios.Gios._get_stations", return_value=STATIONS), patch(
-        "gios.Gios._get_station",
+    with patch(
+        "homeassistant.components.gios.Gios._get_stations", return_value=STATIONS
+    ), patch(
+        "homeassistant.components.gios.Gios._get_station",
         return_value=json.loads(load_fixture("gios/station.json")),
     ), patch(
-        "gios.Gios._get_all_sensors",
+        "homeassistant.components.gios.Gios._get_all_sensors",
         return_value=json.loads(load_fixture("gios/sensors.json")),
     ), patch(
-        "gios.Gios._get_indexes",
+        "homeassistant.components.gios.Gios._get_indexes",
         return_value=json.loads(load_fixture("gios/indexes.json")),
     ):
         flow = config_flow.GiosFlowHandler()

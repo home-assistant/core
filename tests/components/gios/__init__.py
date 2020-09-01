@@ -29,11 +29,16 @@ async def init_integration(hass, incomplete_data=False) -> MockConfigEntry:
         sensors["PM10"]["values"][0]["value"] = None
         sensors["PM10"]["values"][1]["value"] = None
 
-    with patch("gios.Gios._get_stations", return_value=STATIONS), patch(
-        "gios.Gios._get_station",
+    with patch(
+        "homeassistant.components.gios.Gios._get_stations", return_value=STATIONS
+    ), patch(
+        "homeassistant.components.gios.Gios._get_station",
         return_value=station,
-    ), patch("gios.Gios._get_all_sensors", return_value=sensors,), patch(
-        "gios.Gios._get_indexes", return_value=indexes
+    ), patch(
+        "homeassistant.components.gios.Gios._get_all_sensors",
+        return_value=sensors,
+    ), patch(
+        "homeassistant.components.gios.Gios._get_indexes", return_value=indexes
     ):
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)

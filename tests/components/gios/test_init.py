@@ -31,7 +31,10 @@ async def test_config_not_ready(hass):
         data={"station_id": 123, "name": "Home"},
     )
 
-    with patch("gios.Gios._get_stations", side_effect=ConnectionError()):
+    with patch(
+        "homeassistant.components.gios.Gios._get_stations",
+        side_effect=ConnectionError(),
+    ):
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
         assert entry.state == ENTRY_STATE_SETUP_RETRY

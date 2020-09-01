@@ -95,7 +95,10 @@ async def test_availability(hass):
     assert state.state == "4"
 
     future = utcnow() + timedelta(minutes=60)
-    with patch("gios.Gios._get_all_sensors", side_effect=ApiError("Unexpected error")):
+    with patch(
+        "homeassistant.components.gios.Gios._get_all_sensors",
+        side_effect=ApiError("Unexpected error"),
+    ):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
@@ -105,10 +108,10 @@ async def test_availability(hass):
 
     future = utcnow() + timedelta(minutes=120)
     with patch(
-        "gios.Gios._get_all_sensors",
+        "homeassistant.components.gios.Gios._get_all_sensors",
         return_value=json.loads(load_fixture("gios/sensors.json")),
     ), patch(
-        "gios.Gios._get_indexes",
+        "homeassistant.components.gios.Gios._get_indexes",
         return_value=json.loads(load_fixture("gios/indexes.json")),
     ):
         async_fire_time_changed(hass, future)
