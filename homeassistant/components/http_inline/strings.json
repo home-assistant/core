@@ -1,0 +1,61 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "HTTP inline",
+                "description": "Set up a Webcontroller-Relay - https://github.com/1e1/arduino-webcontroller-relay",
+                "data": {
+                    "host": "Host URL",
+                    "name": "Name of the integration",
+                    "path_read": "path URL for reading",
+                    "path_write": "path URL for writing",
+                    "nb_relays": "number of relays"
+                }
+            },
+            "relay": {
+                "title": "HTTP inline - Relays",
+                "description": "list of relaynames",
+                "data": {
+                    "relay_name_0": "#0",
+                    "relay_name_1": "#1",
+                    "relay_name_2": "#2",
+                    "relay_name_3": "#3",
+                    "relay_name_4": "#4",
+                    "relay_name_5": "#5",
+                    "relay_name_6": "#6",
+                    "relay_name_7": "#7",
+                    "relay_name_8": "#8",
+                    "relay_name_9": "#9",
+                    "relay_name_10": "#10",
+                    "relay_name_11": "#11",
+                    "relay_name_12": "#12",
+                    "relay_name_13": "#13",
+                    "relay_name_14": "#14",
+                    "relay_name_15": "#15",
+                    "relay_name_16": "#16",
+                    "relay_name_17": "#17",
+                    "relay_name_18": "#18",
+                    "relay_name_19": "#19",
+                    "relay_name_20": "#20",
+                    "relay_name_21": "#21",
+                    "relay_name_22": "#22",
+                    "relay_name_23": "#23",
+                    "relay_name_24": "#24",
+                    "relay_name_25": "#25",
+                    "relay_name_26": "#26",
+                    "relay_name_27": "#27",
+                    "relay_name_28": "#28",
+                    "relay_name_29": "#29",
+                    "relay_name_30": "#30",
+                    "relay_name_31": "#31"
+                }
+            }
+        },
+        "error": {
+            "unknown": "Unknown error: please retry later"
+        },
+        "abort": {
+            "already_configured": "Host already configured"
+        }
+    }
+}
