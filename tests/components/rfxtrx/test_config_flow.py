@@ -303,16 +303,27 @@ async def test_import_update(hass):
 
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={"host": None, "port": None, "device": "/dev/tty123", "debug": False},
+        data={
+            "host": None,
+            "port": None,
+            "device": "/dev/tty123",
+            "debug": False,
+            "devices": {},
+        },
         unique_id=DOMAIN,
-        version=2,
     )
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_IMPORT},
-        data={"host": None, "port": None, "device": "/dev/tty123", "debug": True},
+        data={
+            "host": None,
+            "port": None,
+            "device": "/dev/tty123",
+            "debug": True,
+            "devices": {},
+        },
     )
 
     assert result["type"] == "abort"
