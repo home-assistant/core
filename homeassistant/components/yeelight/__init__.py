@@ -9,7 +9,6 @@ from yeelight import Bulb, BulbException, discover_bulbs
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry, ConfigEntryNotReady
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_DEVICES,
     CONF_ID,
     CONF_IP_ADDRESS,
@@ -125,8 +124,6 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
-
-YEELIGHT_SERVICE_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.entity_ids})
 
 UPDATE_REQUEST_PROPERTIES = [
     "power",
