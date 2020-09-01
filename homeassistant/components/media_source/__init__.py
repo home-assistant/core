@@ -31,6 +31,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the media_source component."""
     hass.data[DOMAIN] = {}
     hass.components.websocket_api.async_register_command(websocket_browse_media)
+    hass.components.websocket_api.async_register_command(websocket_resolve_media)
     local_source.async_setup(hass)
     await async_process_integration_platforms(
         hass, DOMAIN, _process_media_source_platform
