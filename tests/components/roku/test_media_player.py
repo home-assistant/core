@@ -218,6 +218,23 @@ async def test_attributes_app(
     assert state.attributes.get(ATTR_INPUT_SOURCE) == "Netflix"
 
 
+async def test_attributes_app_media_playing(
+    hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test attributes for app with playing media."""
+    await setup_integration(hass, aioclient_mock, app="pluto", media_state="play")
+
+    state = hass.states.get(MAIN_ENTITY_ID)
+    assert state.state == STATE_PLAYING
+
+    assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) == MEDIA_TYPE_APP
+    assert state.attributes.get(ATTR_MEDIA_DURATION) == 6496
+    assert state.attributes.get(ATTR_MEDIA_POSITION) == 388
+    assert state.attributes.get(ATTR_APP_ID) == "74519"
+    assert state.attributes.get(ATTR_APP_NAME) == "Pluto TV - It's Free TV"
+    assert state.attributes.get(ATTR_INPUT_SOURCE) == "Pluto TV - It's Free TV"
+
+
 async def test_attributes_app_media_paused(
     hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
 ) -> None:
@@ -229,7 +246,7 @@ async def test_attributes_app_media_paused(
 
     assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) == MEDIA_TYPE_APP
     assert state.attributes.get(ATTR_MEDIA_DURATION) == 6496
-    assert state.attributes.get(ATTR_MEDIA_POSITION) == 314
+    assert state.attributes.get(ATTR_MEDIA_POSITION) == 313
     assert state.attributes.get(ATTR_APP_ID) == "74519"
     assert state.attributes.get(ATTR_APP_NAME) == "Pluto TV - It's Free TV"
     assert state.attributes.get(ATTR_INPUT_SOURCE) == "Pluto TV - It's Free TV"
