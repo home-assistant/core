@@ -2,8 +2,10 @@
   "config": {
       "error": {
           "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-          "unknown": "[%key:common::config_flow::error::unknown%]",
-          "wrong_info_relay_modes": "Relay mode selection must be monostable or bistable."
+          "unknown": "[%key:common::config_flow::error::unknown%]"
+      },
+      "abort": {
+          "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
       },
       "step": {
           "user": {
