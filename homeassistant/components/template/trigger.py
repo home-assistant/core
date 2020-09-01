@@ -7,7 +7,11 @@ from homeassistant import exceptions
 from homeassistant.const import CONF_FOR, CONF_PLATFORM, CONF_VALUE_TEMPLATE
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, template
-from homeassistant.helpers.event import async_call_later, async_track_template_result
+from homeassistant.helpers.event import (
+    TrackTemplate,
+    async_call_later,
+    async_track_template_result,
+)
 from homeassistant.helpers.template import result_as_boolean
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
@@ -34,9 +38,10 @@ async def async_attach_trigger(
     delay_cancel = None
 
     @callback
-    def template_listener(event, _, last_result, result):
+    def template_listener(event, updates):
         """Listen for state changes and calls action."""
         nonlocal delay_cancel
+        result = updates.pop().result
 
         if delay_cancel:
             # pylint: disable=not-callable
@@ -94,7 +99,9 @@ async def async_attach_trigger(
         delay_cancel = async_call_later(hass, period.seconds, call_action)
 
     info = async_track_template_result(
-        hass, value_template, template_listener, automation_info["variables"]
+        hass,
+        [TrackTemplate(value_template, automation_info["variables"])],
+        template_listener,
     )
     unsub = info.async_remove
 

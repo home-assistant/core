@@ -1,14 +1,27 @@
 """Helpers for listening to events."""
 import asyncio
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 import functools as ft
 import logging
 import time
-from typing import Any, Awaitable, Callable, Iterable, Optional, Union
+from typing import (
+    Any,
+    Awaitable,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    Union,
+)
 
 import attr
 
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     ATTR_NOW,
     EVENT_CORE_CONFIG_UPDATE,
     EVENT_STATE_CHANGED,
@@ -46,6 +59,37 @@ TRACK_ENTITY_REGISTRY_UPDATED_CALLBACKS = "track_entity_registry_updated_callbac
 TRACK_ENTITY_REGISTRY_UPDATED_LISTENER = "track_entity_registry_updated_listener"
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class TrackTemplate:
+    """Class for keeping track of a template with variables.
+
+    The template is template to calculate.
+    The variables are variables to pass to the template.
+    """
+
+    template: Template
+    variables: TemplateVarsType
+
+
+@dataclass
+class TrackTemplateResult:
+    """Class for result of template tracking.
+
+    template
+        The template that has changed.
+    last_result
+        The output from the template on the last successful run, or None
+        if no previous successful run.
+    result
+        Result from the template run. This will be a string or an
+        TemplateError if the template resulted in an error.
+    """
+
+    template: Template
+    last_result: Union[str, None, TemplateError]
+    result: Union[str, TemplateError]
 
 
 def threaded_listener_factory(async_factory: Callable[..., Any]) -> CALLBACK_TYPE:
@@ -396,13 +440,16 @@ def async_track_template(
     """
 
     @callback
-    def state_changed_listener(
-        event: Event,
-        template: Template,
-        last_result: Optional[str],
-        result: Union[str, TemplateError],
+    def _template_changed_listener(
+        event: Event, updates: List[TrackTemplateResult]
     ) -> None:
         """Check if condition is correct and run action."""
+        track_result = updates.pop()
+
+        template = track_result.template
+        last_result = track_result.last_result
+        result = track_result.result
+
         if isinstance(result, TemplateError):
             _LOGGER.error(
                 "Error while processing template: %s",
@@ -411,7 +458,11 @@ def async_track_template(
             )
             return
 
-        if result_as_boolean(last_result) or not result_as_boolean(result):
+        if (
+            not isinstance(last_result, TemplateError)
+            and result_as_boolean(last_result)
+            or not result_as_boolean(result)
+        ):
             return
 
         hass.async_run_job(
@@ -422,7 +473,7 @@ def async_track_template(
         )
 
     info = async_track_template_result(
-        hass, template, state_changed_listener, variables
+        hass, [TrackTemplate(template, variables)], _template_changed_listener
     )
 
     return info.async_remove
@@ -431,76 +482,89 @@ def async_track_template(
 track_template = threaded_listener_factory(async_track_template)
 
 
-_UNCHANGED = object()
-
-
 class _TrackTemplateResultInfo:
     """Handle removal / refresh of tracker."""
 
     def __init__(
         self,
         hass: HomeAssistant,
-        template: Template,
+        track_templates: Iterable[TrackTemplate],
         action: Callable,
-        variables: Optional[TemplateVarsType],
     ):
         """Handle removal / refresh of tracker init."""
         self.hass = hass
-        self._template = template
-        self._template.hass = hass
         self._action = action
-        self._variables = variables
-        self._last_result: Optional[Union[str, TemplateError]] = None
+
+        for track_template_ in track_templates:
+            track_template_.template.hass = hass
+        self._track_templates = track_templates
+
         self._all_listener: Optional[Callable] = None
         self._domains_listener: Optional[Callable] = None
         self._entities_listener: Optional[Callable] = None
-        self._info: Optional[RenderInfo] = None
-        self._last_info: Optional[RenderInfo] = None
+
+        self._last_result: Dict[Template, Union[str, TemplateError]] = {}
+        self._last_info: Dict[Template, RenderInfo] = {}
+        self._info: Dict[Template, RenderInfo] = {}
+        self._last_domains: Set = set()
+        self._last_entities: Set = set()
 
     def async_setup(self) -> None:
         """Activation of template tracking."""
-        self._info = self._template.async_render_to_info(self._variables)
-        if self._info.exception:
-            _LOGGER.error(
-                "Error while processing template: %s",
-                self._template.template,
-                exc_info=self._info.exception,
-            )
+        for track_template_ in self._track_templates:
+            template = track_template_.template
+            variables = track_template_.variables
+
+            self._info[template] = template.async_render_to_info(variables)
+            if self._info[template].exception:
+                _LOGGER.error(
+                    "Error while processing template: %s",
+                    track_template_.template,
+                    exc_info=self._info[template].exception,
+                )
+
+        self._last_info = self._info.copy()
         self._create_listeners()
-        self._last_info = self._info
 
     @property
     def _needs_all_listener(self) -> bool:
-        assert self._info
+        for track_template_ in self._track_templates:
+            template = track_template_.template
 
-        # Tracking all states
-        if self._info.all_states:
-            return True
+            # Tracking all states
+            if self._info[template].all_states:
+                return True
 
-        # Previous call had an exception
-        # so we do not know which states
-        # to track
-        if self._info.exception:
-            return True
+            # Previous call had an exception
+            # so we do not know which states
+            # to track
+            if self._info[template].exception:
+                return True
 
         return False
 
+    @property
+    def _all_templates_are_static(self) -> bool:
+        for track_template_ in self._track_templates:
+            if not self._info[track_template_.template].is_static:
+                return False
+
+        return True
+
     @callback
     def _create_listeners(self) -> None:
-        assert self._info
-
-        if self._info.is_static:
+        if self._all_templates_are_static:
             return
 
         if self._needs_all_listener:
             self._setup_all_listener()
             return
 
-        if self._info.domains:
-            self._setup_domains_listener()
-
-        if self._info.entities or self._info.domains:
-            self._setup_entities_listener()
+        self._last_entities, self._last_domains = _entities_domains_from_info(
+            self._info.values()
+        )
+        self._setup_domains_listener(self._last_domains)
+        self._setup_entities_listener(self._last_domains, self._last_entities)
 
     @callback
     def _cancel_domains_listener(self) -> None:
@@ -525,12 +589,11 @@ class _TrackTemplateResultInfo:
 
     @callback
     def _update_listeners(self) -> None:
-        assert self._info
-        assert self._last_info
-
         if self._needs_all_listener:
             if self._all_listener:
                 return
+            self._last_domains = set()
+            self._last_entities = set()
             self._cancel_domains_listener()
             self._cancel_entities_listener()
             self._setup_all_listener()
@@ -540,27 +603,26 @@ class _TrackTemplateResultInfo:
         if had_all_listener:
             self._cancel_all_listener()
 
-        domains_changed = self._info.domains != self._last_info.domains
+        entities, domains = _entities_domains_from_info(self._info.values())
+        domains_changed = domains != self._last_domains
+
         if had_all_listener or domains_changed:
             domains_changed = True
             self._cancel_domains_listener()
-            self._setup_domains_listener()
+            self._setup_domains_listener(domains)
 
-        if (
-            had_all_listener
-            or domains_changed
-            or self._info.entities != self._last_info.entities
-        ):
+        if had_all_listener or domains_changed or entities != self._last_entities:
             self._cancel_entities_listener()
-            self._setup_entities_listener()
+            self._setup_entities_listener(domains, entities)
+
+        self._last_domains = domains
+        self._last_entities = entities
 
     @callback
-    def _setup_entities_listener(self) -> None:
-        assert self._info
-
-        entities = set(self._info.entities)
-        for entity_id in self.hass.states.async_entity_ids(self._info.domains):
-            entities.add(entity_id)
+    def _setup_entities_listener(self, domains: Set, entities: Set) -> None:
+        if domains:
+            entities = entities.copy()
+            entities.update(self.hass.states.async_entity_ids(domains))
 
         # Entities has changed to none
         if not entities:
@@ -571,15 +633,12 @@ class _TrackTemplateResultInfo:
         )
 
     @callback
-    def _setup_domains_listener(self) -> None:
-        assert self._info
-
-        # Domains has changed to none
-        if not self._info.domains:
+    def _setup_domains_listener(self, domains: Set) -> None:
+        if not domains:
             return
 
         self._domains_listener = async_track_state_added_domain(
-            self.hass, self._info.domains, self._refresh
+            self.hass, domains, self._refresh
         )
 
     @callback
@@ -596,40 +655,67 @@ class _TrackTemplateResultInfo:
         self._cancel_entities_listener()
 
     @callback
-    def async_refresh(self, variables: Any = _UNCHANGED) -> None:
+    def async_refresh(self) -> None:
         """Force recalculate the template."""
-        if variables is not _UNCHANGED:
-            self._variables = variables
         self._refresh(None)
 
     @callback
     def _refresh(self, event: Optional[Event]) -> None:
-        self._info = self._template.async_render_to_info(self._variables)
-        self._update_listeners()
-        self._last_info = self._info
+        entity_id = event and event.data.get(ATTR_ENTITY_ID)
+        updates = []
+        info_changed = False
 
-        try:
-            result: Union[str, TemplateError] = self._info.result
-        except TemplateError as ex:
-            result = ex
+        for track_template_ in self._track_templates:
+            template = track_template_.template
+            if (
+                entity_id
+                and len(self._last_info) > 1
+                and not self._last_info[template].filter_lifecycle(entity_id)
+            ):
+                continue
 
-        # Check to see if the result has changed
-        if result == self._last_result:
+            self._info[template] = template.async_render_to_info(
+                track_template_.variables
+            )
+            info_changed = True
+
+            try:
+                result: Union[str, TemplateError] = self._info[template].result
+            except TemplateError as ex:
+                result = ex
+
+            last_result = self._last_result.get(template)
+
+            # Check to see if the result has changed
+            if result == last_result:
+                continue
+
+            if isinstance(result, TemplateError) and isinstance(
+                last_result, TemplateError
+            ):
+                continue
+
+            updates.append(TrackTemplateResult(template, last_result, result))
+
+        if info_changed:
+            self._update_listeners()
+            self._last_info = self._info.copy()
+
+        if not updates:
             return
 
-        if isinstance(result, TemplateError) and isinstance(
-            self._last_result, TemplateError
-        ):
-            return
+        for track_result in updates:
+            self._last_result[track_result.template] = track_result.result
 
-        self.hass.async_run_job(
-            self._action, event, self._template, self._last_result, result
-        )
-        self._last_result = result
+        self.hass.async_run_job(self._action, event, updates)
 
 
 TrackTemplateResultListener = Callable[
-    [Event, Template, Optional[str], Union[str, TemplateError]], None
+    [
+        Event,
+        List[TrackTemplateResult],
+    ],
+    None,
 ]
 """Type for the listener for template results.
 
@@ -638,14 +724,8 @@ TrackTemplateResultListener = Callable[
     event
         Event that caused the template to change output. None if not
         triggered by an event.
-    template
-        The template that has changed.
-    last_result
-        The output from the template on the last successful run, or None
-        if no previous successful run.
-    result
-        Result from the template run. This will be a string or an
-        TemplateError if the template resulted in an error.
+    updates
+        A list of TrackTemplateResult
 """
 
 
@@ -653,9 +733,8 @@ TrackTemplateResultListener = Callable[
 @bind_hass
 def async_track_template_result(
     hass: HomeAssistant,
-    template: Template,
+    track_templates: Iterable[TrackTemplate],
     action: TrackTemplateResultListener,
-    variables: Optional[TemplateVarsType] = None,
 ) -> _TrackTemplateResultInfo:
     """Add a listener that fires when a the result of a template changes.
 
@@ -675,19 +754,18 @@ def async_track_template_result(
     ----------
     hass
         Home assistant object.
-    template
-        The template to calculate.
+    track_templates
+        An iterable of TrackTemplate.
+
     action
         Callable to call with results.
-    variables
-        Variables to pass to the template.
 
     Returns
     -------
     Info object used to unregister the listener, and refresh the template.
 
     """
-    tracker = _TrackTemplateResultInfo(hass, template, action, variables)
+    tracker = _TrackTemplateResultInfo(hass, track_templates, action)
     tracker.async_setup()
     return tracker
 
@@ -1073,3 +1151,16 @@ def process_state_match(
 
     parameter_set = set(parameter)
     return lambda state: state in parameter_set
+
+
+def _entities_domains_from_info(render_infos: Iterable[RenderInfo]) -> Tuple[Set, Set]:
+    """Combine from multiple RenderInfo."""
+    entities = set()
+    domains = set()
+
+    for render_info in render_infos:
+        if render_info.entities:
+            entities.update(render_info.entities)
+        if render_info.domains:
+            domains.update(render_info.domains)
+    return entities, domains
