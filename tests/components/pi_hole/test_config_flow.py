@@ -83,7 +83,8 @@ async def test_flow_user(hass):
         _flow_next(hass, result["flow_id"])
 
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=CONF_CONFIG_FLOW_USER,
+            result["flow_id"],
+            user_input=CONF_CONFIG_FLOW_USER,
         )
         assert result["type"] == RESULT_TYPE_FORM
         assert result["step_id"] == "api_key"
@@ -91,7 +92,8 @@ async def test_flow_user(hass):
         _flow_next(hass, result["flow_id"])
 
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=CONF_CONFIG_FLOW_API_KEY,
+            result["flow_id"],
+            user_input=CONF_CONFIG_FLOW_API_KEY,
         )
         assert result["type"] == RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == NAME
@@ -99,7 +101,9 @@ async def test_flow_user(hass):
 
         # duplicated server
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONF_CONFIG_FLOW_USER,
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data=CONF_CONFIG_FLOW_USER,
         )
         assert result["type"] == RESULT_TYPE_ABORT
         assert result["reason"] == "already_configured"
@@ -110,7 +114,8 @@ async def test_flow_statistics_only(hass):
     mocked_hole = _create_mocked_hole()
     with _patch_config_flow_hole(mocked_hole), _patch_setup():
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER},
+            DOMAIN,
+            context={"source": SOURCE_USER},
         )
         assert result["type"] == RESULT_TYPE_FORM
         assert result["step_id"] == "user"
@@ -123,7 +128,8 @@ async def test_flow_statistics_only(hass):
         config_entry_data[CONF_STATISTICS_ONLY] = True
         config_entry_data.pop(CONF_API_KEY)
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=user_input,
+            result["flow_id"],
+            user_input=user_input,
         )
         assert result["type"] == RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == NAME
