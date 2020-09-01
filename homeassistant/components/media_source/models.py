@@ -24,8 +24,8 @@ class BrowseMedia:
     identifier: str
 
     name: str
-    can_play: bool
-    can_expand: bool
+    can_play: bool = False
+    can_expand: bool = False
     media_content_type: str = None
     children: List = None
 

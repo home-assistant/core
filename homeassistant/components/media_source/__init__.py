@@ -30,7 +30,7 @@ def generate_media_source_id(domain: str, identifier: str) -> str:
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the media_source component."""
     hass.data[DOMAIN] = {}
-    # hass.components.websocket_api.async_register_command(websocket_browse_media)
+    hass.components.websocket_api.async_register_command(websocket_browse_media)
     local_source.async_setup(hass)
     await async_process_integration_platforms(
         hass, DOMAIN, _process_media_source_platform
@@ -48,12 +48,12 @@ def _get_media_item(
     hass: HomeAssistant, media_content_id: Optional[str]
 ) -> models.MediaSourceItem:
     """Return media item."""
-    if media_content_id is not None:
+    if media_content_id:
         return models.MediaSourceItem.from_uri(hass, media_content_id)
 
     # We default to our own domain if its only one registered
     domain = None if len(hass.data[DOMAIN]) > 1 else DOMAIN
-    return models.MediaSourceItem(domain, "")
+    return models.MediaSourceItem(hass, domain, "")
 
 
 @bind_hass
@@ -89,6 +89,5 @@ async def websocket_browse_media(hass, connection, msg):
 
     To use, media_player integrations can implement MediaPlayerEntity.async_browse_media()
     """
-    connection.send_result(
-        msg["id"], await async_browse_media(hass, msg.get("media_content_id"))
-    )
+    media = await async_browse_media(hass, msg.get("media_content_id"))
+    connection.send_result(msg["id"], media.to_media_player_item())

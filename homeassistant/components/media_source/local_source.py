@@ -64,7 +64,7 @@ class LocalSource(MediaSource):
         return PlayMedia(f"/media/{item.identifier}", mime_type)
 
     async def async_browse_media(
-        self, item: MediaSourceItem, media_types: Tuple[str]
+        self, item: MediaSourceItem, media_types: Tuple[str] = MEDIA_MIME_TYPES
     ) -> BrowseMedia:
         """Return media."""
         try:
@@ -123,7 +123,7 @@ class LocalSource(MediaSource):
         if not is_child:
             media.children = []
             for child_path in path.iterdir():
-                child = self._build_item_response(child_path, True)
+                child = self._build_item_response(source_dir_id, child_path, True)
                 if child:
                     media.children.append(child)
 
