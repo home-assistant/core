@@ -88,6 +88,10 @@ class ShellySensor(ShellyBlockEntity, Entity):
     @property
     def state(self):
         """Value of sensor."""
+        value = getattr(self.block, self.attribute)
+        if value is None:
+            return None
+
         if self.attribute in [
             "deviceTemp",
             "extTemp",
@@ -95,13 +99,13 @@ class ShellySensor(ShellyBlockEntity, Entity):
             "overpowerValue",
             "power",
         ]:
-            return round(getattr(self.block, self.attribute), 1)
+            return round(value, 1)
         # Energy unit change from Wmin or Wh to kWh
         if self.info[aioshelly.BLOCK_VALUE_UNIT] == "Wmin":
-            return round(getattr(self.block, self.attribute) / 60 / 1000, 2)
+            return round(value / 60 / 1000, 2)
         if self.info[aioshelly.BLOCK_VALUE_UNIT] == "Wh":
-            return round(getattr(self.block, self.attribute) / 1000, 2)
-        return getattr(self.block, self.attribute)
+            return round(value / 1000, 2)
+        return value
 
     @property
     def unit_of_measurement(self):
