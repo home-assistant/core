@@ -182,7 +182,8 @@ async def _test_setup_speaker(
     }
 
     async with _cm_for_test_setup_without_apps(
-        audio_settings, vizio_power_state,
+        audio_settings,
+        vizio_power_state,
     ):
         with patch(
             "homeassistant.components.vizio.media_player.VizioAsync.get_current_app_config",
@@ -208,7 +209,8 @@ async def _cm_for_test_setup_tv_with_apps(
     )
 
     async with _cm_for_test_setup_without_apps(
-        {"volume": int(MAX_VOLUME[VIZIO_DEVICE_CLASS_TV] / 2), "mute": "Off"}, True,
+        {"volume": int(MAX_VOLUME[VIZIO_DEVICE_CLASS_TV] / 2), "mute": "Off"},
+        True,
     ):
         with patch(
             "homeassistant.components.vizio.media_player.VizioAsync.get_current_app_config",
@@ -266,7 +268,10 @@ async def _test_service(
         f"homeassistant.components.vizio.media_player.VizioAsync.{vizio_func_name}"
     ) as service_call:
         await hass.services.async_call(
-            domain, ha_service_name, service_data=service_data, blocking=True,
+            domain,
+            ha_service_name,
+            service_data=service_data,
+            blocking=True,
         )
         assert service_call.called
 
@@ -423,7 +428,8 @@ async def test_options_update(
     updated_options = {CONF_VOLUME_STEP: VOLUME_STEP}
     new_options.update(updated_options)
     hass.config_entries.async_update_entry(
-        entry=config_entry, options=new_options,
+        entry=config_entry,
+        options=new_options,
     )
     assert config_entry.options == updated_options
     await _test_service(
@@ -565,7 +571,9 @@ async def test_setup_with_apps_additional_apps_config(
 ) -> None:
     """Test device setup with apps and apps["additional_configs"] in config."""
     async with _cm_for_test_setup_tv_with_apps(
-        hass, MOCK_TV_WITH_ADDITIONAL_APPS_CONFIG, ADDITIONAL_APP_CONFIG["config"],
+        hass,
+        MOCK_TV_WITH_ADDITIONAL_APPS_CONFIG,
+        ADDITIONAL_APP_CONFIG["config"],
     ):
         attr = hass.states.get(ENTITY_ID).attributes
         assert attr["source_list"].count(CURRENT_APP) == 1
@@ -677,7 +685,8 @@ async def test_setup_tv_without_mute(
     )
 
     async with _cm_for_test_setup_without_apps(
-        {"volume": int(MAX_VOLUME[VIZIO_DEVICE_CLASS_TV] / 2)}, STATE_ON,
+        {"volume": int(MAX_VOLUME[VIZIO_DEVICE_CLASS_TV] / 2)},
+        STATE_ON,
     ):
         await _add_config_entry_to_hass(hass, config_entry)
 

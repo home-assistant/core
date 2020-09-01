@@ -25,9 +25,10 @@ from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
+from homeassistant.helpers.reload import async_setup_reload_service
 
-from .const import CONF_AVAILABILITY_TEMPLATE
-from .template_entity import TemplateEntityWithAttributesAvailabilityAndImages
+from .const import CONF_AVAILABILITY_TEMPLATE, DOMAIN, PLATFORMS
+from .template_entity import TemplateEntity
 
 CONF_ATTRIBUTE_TEMPLATES = "attribute_templates"
 
@@ -56,8 +57,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the template sensors."""
+async def _async_create_entities(hass, config):
+    """Create the template sensors."""
+
     sensors = []
 
     for device, device_config in config[CONF_SENSORS].items():
@@ -89,12 +91,17 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             )
         )
 
-    async_add_entities(sensors)
-
-    return True
+    return sensors
 
 
-class SensorTemplate(TemplateEntityWithAttributesAvailabilityAndImages, Entity):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Set up the template sensors."""
+
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+    async_add_entities(await _async_create_entities(hass, config))
+
+
+class SensorTemplate(TemplateEntity, Entity):
     """Representation of a Template Sensor."""
 
     def __init__(
@@ -114,10 +121,10 @@ class SensorTemplate(TemplateEntityWithAttributesAvailabilityAndImages, Entity):
     ):
         """Initialize the sensor."""
         super().__init__(
-            attribute_templates,
-            availability_template,
-            icon_template,
-            entity_picture_template,
+            attribute_templates=attribute_templates,
+            availability_template=availability_template,
+            icon_template=icon_template,
+            entity_picture_template=entity_picture_template,
         )
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, device_id, hass=hass

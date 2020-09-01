@@ -142,7 +142,14 @@ async def test_camera_stream_source_configured(hass, run_driver, events):
         2,
         {CONF_STREAM_SOURCE: "/dev/null", CONF_SUPPORT_AUDIO: True},
     )
-    not_camera_acc = Switch(hass, run_driver, "Switch", entity_id, 4, {},)
+    not_camera_acc = Switch(
+        hass,
+        run_driver,
+        "Switch",
+        entity_id,
+        4,
+        {},
+    )
     bridge = HomeBridge("hass", run_driver, "Test Bridge")
     bridge.add_accessory(acc)
     bridge.add_accessory(not_camera_acc)
@@ -247,7 +254,14 @@ async def test_camera_stream_source_configured_with_failing_ffmpeg(
         2,
         {CONF_STREAM_SOURCE: "/dev/null", CONF_SUPPORT_AUDIO: True},
     )
-    not_camera_acc = Switch(hass, run_driver, "Switch", entity_id, 4, {},)
+    not_camera_acc = Switch(
+        hass,
+        run_driver,
+        "Switch",
+        entity_id,
+        4,
+        {},
+    )
     bridge = HomeBridge("hass", run_driver, "Test Bridge")
     bridge.add_accessory(acc)
     bridge.add_accessory(not_camera_acc)
@@ -284,7 +298,14 @@ async def test_camera_stream_source_found(hass, run_driver, events):
 
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
-    acc = Camera(hass, run_driver, "Camera", entity_id, 2, {},)
+    acc = Camera(
+        hass,
+        run_driver,
+        "Camera",
+        entity_id,
+        2,
+        {},
+    )
     await acc.run_handler()
 
     assert acc.aid == 2
@@ -327,7 +348,14 @@ async def test_camera_stream_source_fails(hass, run_driver, events):
 
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
-    acc = Camera(hass, run_driver, "Camera", entity_id, 2, {},)
+    acc = Camera(
+        hass,
+        run_driver,
+        "Camera",
+        entity_id,
+        2,
+        {},
+    )
     await acc.run_handler()
 
     assert acc.aid == 2
@@ -355,7 +383,14 @@ async def test_camera_with_no_stream(hass, run_driver, events):
 
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
-    acc = Camera(hass, run_driver, "Camera", entity_id, 2, {},)
+    acc = Camera(
+        hass,
+        run_driver,
+        "Camera",
+        entity_id,
+        2,
+        {},
+    )
     await acc.run_handler()
 
     assert acc.aid == 2

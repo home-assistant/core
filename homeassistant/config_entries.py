@@ -4,7 +4,6 @@ import functools
 import logging
 from types import MappingProxyType
 from typing import Any, Callable, Dict, List, Optional, Set, Union, cast
-import uuid
 import weakref
 
 import attr
@@ -16,6 +15,7 @@ from homeassistant.helpers import entity_registry
 from homeassistant.helpers.event import Event
 from homeassistant.setup import async_process_deps_reqs, async_setup_component
 from homeassistant.util.decorator import Registry
+import homeassistant.util.uuid as uuid_util
 
 _LOGGER = logging.getLogger(__name__)
 _UNDEF: dict = {}
@@ -110,6 +110,7 @@ class ConfigEntry:
         "data",
         "options",
         "unique_id",
+        "supports_unload",
         "system_options",
         "source",
         "connection_class",
@@ -135,7 +136,7 @@ class ConfigEntry:
     ) -> None:
         """Initialize a config entry."""
         # Unique id of the config entry
-        self.entry_id = entry_id or uuid.uuid4().hex
+        self.entry_id = entry_id or uuid_util.uuid_v1mc_hex()
 
         # Version of the configuration.
         self.version = version
@@ -167,6 +168,9 @@ class ConfigEntry:
         # Unique ID of this entry.
         self.unique_id = unique_id
 
+        # Supports unload
+        self.supports_unload = False
+
         # Listeners to call on update
         self.update_listeners: List[weakref.ReferenceType[UpdateListenerType]] = []
 
@@ -186,6 +190,8 @@ class ConfigEntry:
 
         if integration is None:
             integration = await loader.async_get_integration(hass, self.domain)
+
+        self.supports_unload = await support_entry_unload(hass, self.domain)
 
         try:
             component = integration.get_component()
@@ -219,9 +225,7 @@ class ConfigEntry:
                 return
 
         try:
-            result = await component.async_setup_entry(  # type: ignore
-                hass, self
-            )
+            result = await component.async_setup_entry(hass, self)  # type: ignore
 
             if not isinstance(result, bool):
                 _LOGGER.error(
@@ -306,9 +310,7 @@ class ConfigEntry:
             return False
 
         try:
-            result = await component.async_unload_entry(  # type: ignore
-                hass, self
-            )
+            result = await component.async_unload_entry(hass, self)  # type: ignore
 
             assert isinstance(result, bool)
 
@@ -343,9 +345,7 @@ class ConfigEntry:
         if not hasattr(component, "async_remove_entry"):
             return
         try:
-            await component.async_remove_entry(  # type: ignore
-                hass, self
-            )
+            await component.async_remove_entry(hass, self)  # type: ignore
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
                 "Error calling entry remove callback %s for %s",
@@ -383,9 +383,7 @@ class ConfigEntry:
             return False
 
         try:
-            result = await component.async_migrate_entry(  # type: ignore
-                hass, self
-            )
+            result = await component.async_migrate_entry(hass, self)  # type: ignore
             if not isinstance(result, bool):
                 _LOGGER.error(
                     "%s.async_migrate_entry did not return boolean", self.domain
@@ -518,9 +516,9 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         """
         try:
             integration = await loader.async_get_integration(self.hass, handler_key)
-        except loader.IntegrationNotFound:
+        except loader.IntegrationNotFound as err:
             _LOGGER.error("Cannot find integration %s", handler_key)
-            raise data_entry_flow.UnknownHandler
+            raise data_entry_flow.UnknownHandler from err
 
         # Make sure requirements and dependencies of component are resolved
         await async_process_deps_reqs(self.hass, self._hass_config, integration)
@@ -745,6 +743,7 @@ class ConfigEntries:
         self,
         entry: ConfigEntry,
         *,
+        # pylint: disable=dangerous-default-value # _UNDEFs not modified
         unique_id: Union[str, dict, None] = _UNDEF,
         title: Union[str, dict] = _UNDEF,
         data: dict = _UNDEF,
@@ -872,7 +871,9 @@ class ConfigFlow(data_entry_flow.FlowHandler):
 
     @callback
     def _abort_if_unique_id_configured(
-        self, updates: Optional[Dict[Any, Any]] = None, reload_on_update: bool = True,
+        self,
+        updates: Optional[Dict[Any, Any]] = None,
+        reload_on_update: bool = True,
     ) -> None:
         """Abort if the unique ID is already configured."""
         assert self.hass
@@ -885,7 +886,11 @@ class ConfigFlow(data_entry_flow.FlowHandler):
                     changed = self.hass.config_entries.async_update_entry(
                         entry, data={**entry.data, **updates}
                     )
-                    if changed and reload_on_update:
+                    if (
+                        changed
+                        and reload_on_update
+                        and entry.state in (ENTRY_STATE_LOADED, ENTRY_STATE_SETUP_RETRY)
+                    ):
                         self.hass.async_create_task(
                             self.hass.config_entries.async_reload(entry.entry_id)
                         )
@@ -1112,9 +1117,7 @@ class EntityRegistryDisabledHandler:
         )
         assert config_entry is not None
 
-        if config_entry.entry_id not in self.changed and await support_entry_unload(
-            self.hass, config_entry.domain
-        ):
+        if config_entry.entry_id not in self.changed and config_entry.supports_unload:
             self.changed.add(config_entry.entry_id)
 
         if not self.changed:

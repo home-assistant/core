@@ -10,7 +10,7 @@
     }
   ],
   "homekit": {
-    "models": ["Wemo"]
+    "models": ["Socket", "Wemo"]
   },
   "codeowners": []
 }

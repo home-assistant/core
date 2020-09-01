@@ -58,7 +58,9 @@ async def test_already_configured_by_url(hass, aioclient_mock):
     mock_connection(aioclient_mock)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=FIXTURE_USER_INPUT,
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+        data=FIXTURE_USER_INPUT,
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY

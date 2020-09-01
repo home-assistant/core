@@ -87,7 +87,8 @@ async def test_flow_manual_configuration_decision(hass, aioclient_mock):
     assert result["step_id"] == "manual_input"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_HOST: "1.2.3.4", CONF_PORT: 80},
+        result["flow_id"],
+        user_input={CONF_HOST: "1.2.3.4", CONF_PORT: 80},
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -134,7 +135,8 @@ async def test_flow_manual_configuration(hass, aioclient_mock):
     assert result["step_id"] == "manual_input"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_HOST: "1.2.3.4", CONF_PORT: 80},
+        result["flow_id"],
+        user_input={CONF_HOST: "1.2.3.4", CONF_PORT: 80},
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -209,7 +211,8 @@ async def test_manual_configuration_update_configuration(hass, aioclient_mock):
     assert result["step_id"] == "manual_input"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_HOST: "2.3.4.5", CONF_PORT: 80},
+        result["flow_id"],
+        user_input={CONF_HOST: "2.3.4.5", CONF_PORT: 80},
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -254,7 +257,8 @@ async def test_manual_configuration_dont_update_configuration(hass, aioclient_mo
     assert result["step_id"] == "manual_input"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_HOST: "1.2.3.4", CONF_PORT: 80},
+        result["flow_id"],
+        user_input={CONF_HOST: "1.2.3.4", CONF_PORT: 80},
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -296,7 +300,8 @@ async def test_manual_configuration_timeout_get_bridge(hass, aioclient_mock):
     assert result["step_id"] == "manual_input"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_HOST: "1.2.3.4", CONF_PORT: 80},
+        result["flow_id"],
+        user_input={CONF_HOST: "1.2.3.4", CONF_PORT: 80},
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -401,7 +406,8 @@ async def test_ssdp_discovery_update_configuration(hass):
     gateway = await setup_deconz_integration(hass)
 
     with patch(
-        "homeassistant.components.deconz.async_setup_entry", return_value=True,
+        "homeassistant.components.deconz.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -478,7 +484,8 @@ async def test_flow_hassio_discovery(hass):
     with patch(
         "homeassistant.components.deconz.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.deconz.async_setup_entry", return_value=True,
+        "homeassistant.components.deconz.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
@@ -500,7 +507,8 @@ async def test_hassio_discovery_update_configuration(hass):
     gateway = await setup_deconz_integration(hass)
 
     with patch(
-        "homeassistant.components.deconz.async_setup_entry", return_value=True,
+        "homeassistant.components.deconz.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

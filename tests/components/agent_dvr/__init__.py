@@ -9,7 +9,9 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def init_integration(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, skip_setup: bool = False,
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    skip_setup: bool = False,
 ) -> MockConfigEntry:
     """Set up the Agent DVR integration in Home Assistant."""
 

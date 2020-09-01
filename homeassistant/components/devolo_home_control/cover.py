@@ -46,12 +46,12 @@ class DevoloCoverDeviceEntity(DevoloDeviceEntity, CoverEntity):
             homecontrol=homecontrol,
             device_instance=device_instance,
             element_uid=element_uid,
-            name=device_instance.itemName,
+            name=device_instance.item_name,
             sync=self._sync,
         )
 
-        self._multi_level_switch_property = device_instance.multi_level_switch_property.get(
-            element_uid
+        self._multi_level_switch_property = (
+            device_instance.multi_level_switch_property.get(element_uid)
         )
 
         self._position = self._multi_level_switch_property.value

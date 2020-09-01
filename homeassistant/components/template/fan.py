@@ -32,10 +32,11 @@ from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
+from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.script import Script
 
-from .const import CONF_AVAILABILITY_TEMPLATE
-from .template_entity import TemplateEntityWithAvailability
+from .const import CONF_AVAILABILITY_TEMPLATE, DOMAIN, PLATFORMS
+from .template_entity import TemplateEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,8 +81,8 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Template Fans."""
+async def _async_create_entities(hass, config):
+    """Create the Template Fans."""
     fans = []
 
     for device, device_config in config[CONF_FANS].items():
@@ -122,10 +123,17 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             )
         )
 
-    async_add_entities(fans)
+    return fans
 
 
-class TemplateFan(TemplateEntityWithAvailability, FanEntity):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Set up the template fans."""
+
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+    async_add_entities(await _async_create_entities(hass, config))
+
+
+class TemplateFan(TemplateEntity, FanEntity):
     """A template fan component."""
 
     def __init__(
@@ -147,7 +155,7 @@ class TemplateFan(TemplateEntityWithAvailability, FanEntity):
         unique_id,
     ):
         """Initialize the fan."""
-        super().__init__(availability_template)
+        super().__init__(availability_template=availability_template)
         self.hass = hass
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, device_id, hass=hass
@@ -377,7 +385,8 @@ class TemplateFan(TemplateEntityWithAvailability, FanEntity):
             self._oscillating = None
         else:
             _LOGGER.error(
-                "Received invalid oscillating: %s. Expected: True/False", oscillating,
+                "Received invalid oscillating: %s. Expected: True/False",
+                oscillating,
             )
             self._oscillating = None
 

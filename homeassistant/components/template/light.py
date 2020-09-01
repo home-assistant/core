@@ -31,10 +31,11 @@ from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import async_generate_entity_id
+from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.script import Script
 
-from .const import CONF_AVAILABILITY_TEMPLATE
-from .template_entity import TemplateEntityWithAvailabilityAndImages
+from .const import CONF_AVAILABILITY_TEMPLATE, DOMAIN, PLATFORMS
+from .template_entity import TemplateEntity
 
 _LOGGER = logging.getLogger(__name__)
 _VALID_STATES = [STATE_ON, STATE_OFF, "true", "false"]
@@ -77,8 +78,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Template Lights."""
+async def _async_create_entities(hass, config):
+    """Create the Template Lights."""
     lights = []
 
     for device, device_config in config[CONF_LIGHTS].items():
@@ -128,10 +129,17 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             )
         )
 
-    async_add_entities(lights)
+    return lights
 
 
-class LightTemplate(TemplateEntityWithAvailabilityAndImages, LightEntity):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Set up the template lights."""
+
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+    async_add_entities(await _async_create_entities(hass, config))
+
+
+class LightTemplate(TemplateEntity, LightEntity):
     """Representation of a templated Light, including dimmable."""
 
     def __init__(
@@ -157,7 +165,9 @@ class LightTemplate(TemplateEntityWithAvailabilityAndImages, LightEntity):
     ):
         """Initialize the light."""
         super().__init__(
-            availability_template, icon_template, entity_picture_template,
+            availability_template=availability_template,
+            icon_template=icon_template,
+            entity_picture_template=entity_picture_template,
         )
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, device_id, hass=hass
@@ -334,7 +344,7 @@ class LightTemplate(TemplateEntityWithAvailabilityAndImages, LightEntity):
                 context=self._context,
             )
         else:
-            await self._on_script.async_run()
+            await self._on_script.async_run(context=self._context)
 
         if optimistic_set:
             self.async_write_ha_state()

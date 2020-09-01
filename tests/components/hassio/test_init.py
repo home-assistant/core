@@ -213,7 +213,8 @@ async def test_fail_setup_without_environ_var(hass):
 async def test_warn_when_cannot_connect(hass, caplog):
     """Fail warn when we cannot connect."""
     with patch.dict(os.environ, MOCK_ENVIRON), patch(
-        "homeassistant.components.hassio.HassIO.is_connected", return_value=None,
+        "homeassistant.components.hassio.HassIO.is_connected",
+        return_value=None,
     ):
         result = await async_setup_component(hass, "hassio", {})
         assert result

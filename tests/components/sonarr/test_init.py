@@ -25,7 +25,8 @@ async def test_unload_config_entry(
 ) -> None:
     """Test the configuration entry unloading."""
     with patch(
-        "homeassistant.components.sonarr.sensor.async_setup_entry", return_value=True,
+        "homeassistant.components.sonarr.sensor.async_setup_entry",
+        return_value=True,
     ):
         entry = await setup_integration(hass, aioclient_mock)
 

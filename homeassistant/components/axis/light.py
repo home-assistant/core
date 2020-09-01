@@ -54,8 +54,8 @@ class AxisLight(AxisEventBase, LightEntity):
 
         def get_light_capabilities():
             """Get light capabilities."""
-            current_intensity = self.device.api.vapix.light_control.get_current_intensity(
-                self.light_id
+            current_intensity = (
+                self.device.api.vapix.light_control.get_current_intensity(self.light_id)
             )
             self.current_intensity = current_intensity["data"]["intensity"]
 

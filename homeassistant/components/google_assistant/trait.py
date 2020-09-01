@@ -1715,7 +1715,7 @@ class VolumeTrait(_Trait):
                 svc = media_player.SERVICE_VOLUME_DOWN
                 relative = -relative
 
-            for i in range(relative):
+            for _ in range(relative):
                 await self.hass.services.async_call(
                     media_player.DOMAIN,
                     svc,

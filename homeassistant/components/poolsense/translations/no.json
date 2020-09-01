@@ -12,8 +12,7 @@
                     "email": "E-post",
                     "password": "Passord"
                 },
-                "description": "[%key:common::config_flow::description%]",
-                "title": ""
+                "description": "[%key:common::config_flow::description%]"
             }
         }
     }

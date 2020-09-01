@@ -1,4 +1,9 @@
 """Mock classes used in tests."""
+from functools import lru_cache
+
+from aiohttp.helpers import reify
+from plexapi.exceptions import NotFound
+
 from homeassistant.components.plex.const import (
     CONF_SERVER,
     CONF_SERVER_IDENTIFIER,
@@ -116,10 +121,14 @@ class MockPlexServer:
 
         self._systemAccounts = list(map(MockPlexSystemAccount, range(num_users)))
 
+        self._library = None
+
         self._clients = []
         self._sessions = []
         self.set_clients(num_users)
         self.set_sessions(num_users, session_type)
+
+        self._cache = {}
 
     def set_clients(self, num_clients):
         """Set up mock PlexClients for this PlexServer."""
@@ -166,18 +175,32 @@ class MockPlexServer:
         """Mock version of PlexServer."""
         return "1.0"
 
-    @property
+    @reify
     def library(self):
         """Mock library object of PlexServer."""
-        return MockPlexLibrary()
+        return MockPlexLibrary(self)
 
     def playlist(self, playlist):
         """Mock the playlist lookup method."""
         return MockPlexMediaItem(playlist, mediatype="playlist")
 
+    @lru_cache()
+    def playlists(self):
+        """Mock the playlists lookup method with a lazy init."""
+        return [
+            MockPlexPlaylist(
+                self.library.section("Movies").all()
+                + self.library.section("TV Shows").all()
+            ),
+            MockPlexPlaylist(self.library.section("Music").all()),
+        ]
+
     def fetchItem(self, item):
         """Mock the fetchItem method."""
-        return MockPlexMediaItem("Item Name")
+        for section in self.library.sections():
+            result = section.fetchItem(item)
+            if result:
+                return result
 
 
 class MockPlexClient:
@@ -247,7 +270,7 @@ class MockPlexSession:
         self.TYPE = mediatype
         self.usernames = [list(MOCK_USERS)[index]]
         self.players = [player]
-        self._section = MockPlexLibrarySection()
+        self._section = MockPlexLibrarySection("Movies")
 
     @property
     def duration(self):
@@ -302,26 +325,80 @@ class MockPlexSession:
 class MockPlexLibrary:
     """Mock a Plex Library instance."""
 
-    def __init__(self):
+    def __init__(self, plex_server):
         """Initialize the object."""
+        self._plex_server = plex_server
+        self._sections = {}
 
-    def section(self, library_name):
+        for kind in ["Movies", "Music", "TV Shows", "Photos"]:
+            self._sections[kind] = MockPlexLibrarySection(kind)
+
+    def section(self, title):
         """Mock the LibrarySection lookup."""
-        return MockPlexLibrarySection(library_name)
+        section = self._sections.get(title)
+        if section:
+            return section
+        raise NotFound
+
+    def sections(self):
+        """Return all available sections."""
+        return self._sections.values()
+
+    def sectionByID(self, section_id):
+        """Mock the sectionByID lookup."""
+        return [x for x in self.sections() if x.key == section_id][0]
 
 
 class MockPlexLibrarySection:
     """Mock a Plex LibrarySection instance."""
 
-    def __init__(self, library="Movies"):
+    def __init__(self, library):
         """Initialize the object."""
         self.title = library
 
+        if library == "Music":
+            self._item = MockPlexArtist("Artist")
+        elif library == "TV Shows":
+            self._item = MockPlexShow("TV Show")
+        else:
+            self._item = MockPlexMediaItem(library[:-1])
+
     def get(self, query):
         """Mock the get lookup method."""
+        if self._item.title == query:
+            return self._item
+        raise NotFound
+
+    def all(self):
+        """Mock the all method."""
+        return [self._item]
+
+    def fetchItem(self, ratingKey):
+        """Return a specific item."""
+        for item in self.all():
+            if item.ratingKey == ratingKey:
+                return item
+            if item._children:
+                for child in item._children:
+                    if child.ratingKey == ratingKey:
+                        return child
+
+    @property
+    def type(self):
+        """Mock the library type."""
+        if self.title == "Movies":
+            return "movie"
         if self.title == "Music":
-            return MockPlexArtist(query)
-        return MockPlexMediaItem(query)
+            return "artist"
+        if self.title == "TV Shows":
+            return "show"
+        if self.title == "Photos":
+            return "photo"
+
+    @property
+    def key(self):
+        """Mock the key identifier property."""
+        return str(id(self.title))
 
 
 class MockPlexMediaItem:
@@ -331,27 +408,76 @@ class MockPlexMediaItem:
         """Initialize the object."""
         self.title = str(title)
         self.type = mediatype
+        self.thumbUrl = "http://1.2.3.4/thumb.png"
+        self._children = []
 
-    def album(self, album):
-        """Mock the album lookup method."""
-        return MockPlexMediaItem(album, mediatype="album")
+    def __iter__(self):
+        """Provide iterator."""
+        yield from self._children
 
-    def track(self, track):
-        """Mock the track lookup method."""
-        return MockPlexMediaTrack()
+    @property
+    def ratingKey(self):
+        """Mock the ratingKey property."""
+        return id(self.title)
 
-    def tracks(self):
-        """Mock the tracks lookup method."""
-        for index in range(1, 10):
-            yield MockPlexMediaTrack(index)
 
-    def episode(self, episode):
-        """Mock the episode lookup method."""
-        return MockPlexMediaItem(episode, mediatype="episode")
+class MockPlexPlaylist(MockPlexMediaItem):
+    """Mock a Plex Playlist instance."""
+
+    def __init__(self, items):
+        """Initialize the object."""
+        super().__init__(f"Playlist ({len(items)} Items)", "playlist")
+        for item in items:
+            self._children.append(item)
+
+
+class MockPlexShow(MockPlexMediaItem):
+    """Mock a Plex Show instance."""
+
+    def __init__(self, show):
+        """Initialize the object."""
+        super().__init__(show, "show")
+        for index in range(1, 5):
+            self._children.append(MockPlexSeason(index))
 
     def season(self, season):
         """Mock the season lookup method."""
-        return MockPlexMediaItem(season, mediatype="season")
+        return [x for x in self._children if x.title == f"Season {season}"][0]
+
+
+class MockPlexSeason(MockPlexMediaItem):
+    """Mock a Plex Season instance."""
+
+    def __init__(self, season):
+        """Initialize the object."""
+        super().__init__(f"Season {season}", "season")
+        for index in range(1, 10):
+            self._children.append(MockPlexMediaItem(f"Episode {index}", "episode"))
+
+    def episode(self, episode):
+        """Mock the episode lookup method."""
+        return self._children[episode - 1]
+
+
+class MockPlexAlbum(MockPlexMediaItem):
+    """Mock a Plex Album instance."""
+
+    def __init__(self, album):
+        """Initialize the object."""
+        super().__init__(album, "album")
+        for index in range(1, 10):
+            self._children.append(MockPlexMediaTrack(index))
+
+    def track(self, track):
+        """Mock the track lookup method."""
+        try:
+            return [x for x in self._children if x.title == track][0]
+        except IndexError:
+            raise NotFound
+
+    def tracks(self):
+        """Mock the tracks lookup method."""
+        return self._children
 
 
 class MockPlexArtist(MockPlexMediaItem):
@@ -359,12 +485,16 @@ class MockPlexArtist(MockPlexMediaItem):
 
     def __init__(self, artist):
         """Initialize the object."""
-        super().__init__(artist)
-        self.type = "artist"
+        super().__init__(artist, "artist")
+        self._album = MockPlexAlbum("Album")
+
+    def album(self, album):
+        """Mock the album lookup method."""
+        return self._album
 
     def get(self, track):
         """Mock the track lookup method."""
-        return MockPlexMediaTrack()
+        return self._album.track(track)
 
 
 class MockPlexMediaTrack(MockPlexMediaItem):

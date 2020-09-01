@@ -11,6 +11,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import CoreState
 import homeassistant.util.dt as dt_util
 
 from tests.common import (
@@ -504,6 +505,8 @@ async def test_invalid_availability_template_keeps_component_available(hass, cap
 async def test_no_update_template_match_all(hass, caplog):
     """Test that we do not update sensors that match on all."""
     hass.states.async_set("binary_sensor.test_sensor", "true")
+
+    hass.state = CoreState.not_running
 
     await setup.async_setup_component(
         hass,

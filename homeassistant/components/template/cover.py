@@ -35,10 +35,11 @@ from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
+from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.script import Script
 
-from .const import CONF_AVAILABILITY_TEMPLATE
-from .template_entity import TemplateEntityWithAvailabilityAndImages
+from .const import CONF_AVAILABILITY_TEMPLATE, DOMAIN, PLATFORMS
+from .template_entity import TemplateEntity
 
 _LOGGER = logging.getLogger(__name__)
 _VALID_STATES = [STATE_OPEN, STATE_CLOSED, "true", "false"]
@@ -99,8 +100,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Template cover."""
+async def _async_create_entities(hass, config):
+    """Create the Template cover."""
     covers = []
 
     for device, device_config in config[CONF_COVERS].items():
@@ -145,10 +146,17 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             )
         )
 
-    async_add_entities(covers)
+    return covers
 
 
-class CoverTemplate(TemplateEntityWithAvailabilityAndImages, CoverEntity):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Set up the Template cover."""
+
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+    async_add_entities(await _async_create_entities(hass, config))
+
+
+class CoverTemplate(TemplateEntity, CoverEntity):
     """Representation of a Template cover."""
 
     def __init__(
@@ -174,7 +182,9 @@ class CoverTemplate(TemplateEntityWithAvailabilityAndImages, CoverEntity):
     ):
         """Initialize the Template cover."""
         super().__init__(
-            availability_template, icon_template, entity_picture_template,
+            availability_template=availability_template,
+            icon_template=icon_template,
+            entity_picture_template=entity_picture_template,
         )
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, device_id, hass=hass
@@ -281,7 +291,8 @@ class CoverTemplate(TemplateEntityWithAvailabilityAndImages, CoverEntity):
         if state < 0 or state > 100:
             self._tilt_value = None
             _LOGGER.error(
-                "Tilt value must be between 0 and 100. Value was: %.2f", state,
+                "Tilt value must be between 0 and 100. Value was: %.2f",
+                state,
             )
         else:
             self._tilt_value = state

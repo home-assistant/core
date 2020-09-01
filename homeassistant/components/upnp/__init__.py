@@ -109,8 +109,8 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
     st = config_entry.data.get(CONFIG_ENTRY_ST)  # pylint: disable=invalid-name
     try:
         device = await async_discover_and_construct(hass, udn, st)
-    except asyncio.TimeoutError:
-        raise ConfigEntryNotReady
+    except asyncio.TimeoutError as err:
+        raise ConfigEntryNotReady from err
 
     if not device:
         _LOGGER.info("Unable to create UPnP/IGD, aborting")
@@ -122,7 +122,8 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
     # Ensure entry has proper unique_id.
     if config_entry.unique_id != device.unique_id:
         hass.config_entries.async_update_entry(
-            entry=config_entry, unique_id=device.unique_id,
+            entry=config_entry,
+            unique_id=device.unique_id,
         )
 
     # Create device registry entry.

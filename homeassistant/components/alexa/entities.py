@@ -1,6 +1,6 @@
 """Alexa entity adapters."""
 import logging
-from typing import List
+from typing import TYPE_CHECKING, List
 
 from homeassistant.components import (
     alarm_control_panel,
@@ -34,7 +34,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import network
 from homeassistant.util.decorator import Registry
 
@@ -42,6 +42,7 @@ from .capabilities import (
     Alexa,
     AlexaBrightnessController,
     AlexaCameraStreamController,
+    AlexaCapability,
     AlexaChannelController,
     AlexaColorController,
     AlexaColorTemperatureController,
@@ -71,6 +72,9 @@ from .capabilities import (
     AlexaToggleController,
 )
 from .const import CONF_DESCRIPTION, CONF_DISPLAY_CATEGORIES
+
+if TYPE_CHECKING:
+    from .config import AbstractConfig
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -203,7 +207,7 @@ class AlexaEntity:
     The API handlers should manipulate entities only through this interface.
     """
 
-    def __init__(self, hass, config, entity):
+    def __init__(self, hass: HomeAssistant, config: "AbstractConfig", entity: State):
         """Initialize Alexa Entity."""
         self.hass = hass
         self.config = config
@@ -246,13 +250,13 @@ class AlexaEntity:
         """
         raise NotImplementedError
 
-    def get_interface(self, capability):
+    def get_interface(self, capability) -> AlexaCapability:
         """Return the given AlexaInterface.
 
         Raises _UnsupportedInterface.
         """
 
-    def interfaces(self):
+    def interfaces(self) -> List[AlexaCapability]:
         """Return a list of supported interfaces.
 
         Used for discovery. The list should contain AlexaInterface instances.
@@ -280,11 +284,18 @@ class AlexaEntity:
         }
 
         locale = self.config.locale
-        capabilities = [
-            i.serialize_discovery()
-            for i in self.interfaces()
-            if locale in i.supported_locales
-        ]
+        capabilities = []
+
+        for i in self.interfaces():
+            if locale not in i.supported_locales:
+                continue
+
+            try:
+                capabilities.append(i.serialize_discovery())
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception(
+                    "Error serializing %s discovery for %s", i.name(), self.entity
+                )
 
         result["capabilities"] = capabilities
 

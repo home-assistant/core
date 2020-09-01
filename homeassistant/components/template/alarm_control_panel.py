@@ -31,8 +31,10 @@ from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
+from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.script import Script
 
+from .const import DOMAIN, PLATFORMS
 from .template_entity import TemplateEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -75,8 +77,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Template Alarm Control Panels."""
+async def _async_create_entities(hass, config):
+    """Create Template Alarm Control Panels."""
+
     alarm_control_panels = []
 
     for device, device_config in config[CONF_ALARM_CONTROL_PANELS].items():
@@ -104,7 +107,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             )
         )
 
-    async_add_entities(alarm_control_panels)
+    return alarm_control_panels
+
+
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Set up the Template Alarm Control Panels."""
+
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+    async_add_entities(await _async_create_entities(hass, config))
 
 
 class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity):
@@ -189,20 +199,20 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity):
         return self._code_arm_required
 
     @callback
-    def _update_state(self, state):
-        if isinstance(state, TemplateError):
+    def _update_state(self, result):
+        if isinstance(result, TemplateError):
             self._state = None
             return
 
         # Validate state
-        if state in _VALID_STATES:
-            self._state = state
-            _LOGGER.debug("Valid state - %s", state)
+        if result in _VALID_STATES:
+            self._state = result
+            _LOGGER.debug("Valid state - %s", result)
             return
 
         _LOGGER.error(
             "Received invalid alarm panel state: %s. Expected: %s",
-            state,
+            result,
             ", ".join(_VALID_STATES),
         )
         self._state = None

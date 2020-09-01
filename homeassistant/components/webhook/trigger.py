@@ -30,6 +30,7 @@ async def _handle_webhook(action, hass, webhook_id, request):
         result["data"] = await request.post()
 
     result["query"] = request.query
+    result["description"] = "webhook"
     hass.async_run_job(action, {"trigger": result})
 
 

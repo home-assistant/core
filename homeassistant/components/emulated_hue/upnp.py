@@ -1,8 +1,7 @@
 """Support UPNP discovery method that mimics Hue hubs."""
+import asyncio
 import logging
-import select
 import socket
-import threading
 
 from aiohttp import web
 
@@ -12,6 +11,9 @@ from homeassistant.components.http import HomeAssistantView
 from .const import HUE_SERIAL_NUMBER, HUE_UUID
 
 _LOGGER = logging.getLogger(__name__)
+
+BROADCAST_PORT = 1900
+BROADCAST_ADDR = "239.255.255.250"
 
 
 class DescriptionXmlView(HomeAssistantView):
@@ -53,105 +55,97 @@ class DescriptionXmlView(HomeAssistantView):
         return web.Response(text=resp_text, content_type="text/xml")
 
 
-class UPNPResponderThread(threading.Thread):
+@core.callback
+def create_upnp_datagram_endpoint(
+    host_ip_addr,
+    upnp_bind_multicast,
+    advertise_ip,
+    advertise_port,
+):
+    """Create the UPNP socket and protocol."""
+
+    # Listen for UDP port 1900 packets sent to SSDP multicast address
+    ssdp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    ssdp_socket.setblocking(False)
+
+    # Required for receiving multicast
+    ssdp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
+    ssdp_socket.setsockopt(
+        socket.SOL_IP, socket.IP_MULTICAST_IF, socket.inet_aton(host_ip_addr)
+    )
+
+    ssdp_socket.setsockopt(
+        socket.SOL_IP,
+        socket.IP_ADD_MEMBERSHIP,
+        socket.inet_aton(BROADCAST_ADDR) + socket.inet_aton(host_ip_addr),
+    )
+
+    ssdp_socket.bind(("" if upnp_bind_multicast else host_ip_addr, BROADCAST_PORT))
+
+    loop = asyncio.get_event_loop()
+
+    return loop.create_datagram_endpoint(
+        lambda: UPNPResponderProtocol(loop, ssdp_socket, advertise_ip, advertise_port),
+        sock=ssdp_socket,
+    )
+
+
+class UPNPResponderProtocol:
     """Handle responding to UPNP/SSDP discovery requests."""
 
-    _interrupted = False
-
-    def __init__(
-        self,
-        host_ip_addr,
-        listen_port,
-        upnp_bind_multicast,
-        advertise_ip,
-        advertise_port,
-    ):
+    def __init__(self, loop, ssdp_socket, advertise_ip, advertise_port):
         """Initialize the class."""
-        threading.Thread.__init__(self)
-
-        self.host_ip_addr = host_ip_addr
-        self.listen_port = listen_port
-        self.upnp_bind_multicast = upnp_bind_multicast
+        self.transport = None
+        self._loop = loop
+        self._sock = ssdp_socket
         self.advertise_ip = advertise_ip
         self.advertise_port = advertise_port
-        self._ssdp_socket = None
-
-    def run(self):
-        """Run the server."""
-        # Listen for UDP port 1900 packets sent to SSDP multicast address
-        self._ssdp_socket = ssdp_socket = socket.socket(
-            socket.AF_INET, socket.SOCK_DGRAM
+        self._upnp_root_response = self._prepare_response(
+            "upnp:rootdevice", f"uuid:{HUE_UUID}::upnp:rootdevice"
         )
-        ssdp_socket.setblocking(False)
-
-        # Required for receiving multicast
-        ssdp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-
-        ssdp_socket.setsockopt(
-            socket.SOL_IP, socket.IP_MULTICAST_IF, socket.inet_aton(self.host_ip_addr)
-        )
-
-        ssdp_socket.setsockopt(
-            socket.SOL_IP,
-            socket.IP_ADD_MEMBERSHIP,
-            socket.inet_aton("239.255.255.250") + socket.inet_aton(self.host_ip_addr),
-        )
-
-        if self.upnp_bind_multicast:
-            ssdp_socket.bind(("", 1900))
-        else:
-            ssdp_socket.bind((self.host_ip_addr, 1900))
-
-        while True:
-            if self._interrupted:
-                return
-
-            try:
-                read, _, _ = select.select([ssdp_socket], [], [ssdp_socket], 2)
-
-                if ssdp_socket in read:
-                    data, addr = ssdp_socket.recvfrom(1024)
-                else:
-                    # most likely the timeout, so check for interrupt
-                    continue
-            except OSError as ex:
-                if self._interrupted:
-                    return
-
-                _LOGGER.error(
-                    "UPNP Responder socket exception occurred: %s", ex.__str__
-                )
-                # without the following continue, a second exception occurs
-                # because the data object has not been initialized
-                continue
-
-            if "M-SEARCH" in data.decode("utf-8", errors="ignore"):
-                _LOGGER.debug("UPNP Responder M-SEARCH method received: %s", data)
-                # SSDP M-SEARCH method received, respond to it with our info
-                response = self._handle_request(data)
-
-                resp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-                resp_socket.sendto(response, addr)
-                _LOGGER.debug("UPNP Responder responding with: %s", response)
-                resp_socket.close()
-
-    def stop(self):
-        """Stop the server."""
-        # Request for server
-        self._interrupted = True
-        if self._ssdp_socket:
-            clean_socket_close(self._ssdp_socket)
-        self.join()
-
-    def _handle_request(self, data):
-        if "upnp:rootdevice" in data.decode("utf-8", errors="ignore"):
-            return self._prepare_response(
-                "upnp:rootdevice", f"uuid:{HUE_UUID}::upnp:rootdevice"
-            )
-
-        return self._prepare_response(
+        self._upnp_device_response = self._prepare_response(
             "urn:schemas-upnp-org:device:basic:1", f"uuid:{HUE_UUID}"
         )
+
+    def connection_made(self, transport):
+        """Set the transport."""
+        self.transport = transport
+
+    def connection_lost(self, exc):
+        """Handle connection lost."""
+
+    def datagram_received(self, data, addr):
+        """Respond to msearch packets."""
+        decoded_data = data.decode("utf-8", errors="ignore")
+
+        if "M-SEARCH" not in decoded_data:
+            return
+
+        _LOGGER.debug("UPNP Responder M-SEARCH method received: %s", data)
+        # SSDP M-SEARCH method received, respond to it with our info
+        response = self._handle_request(decoded_data)
+        _LOGGER.debug("UPNP Responder responding with: %s", response)
+        self.transport.sendto(response, addr)
+
+    def error_received(self, exc):  # pylint: disable=no-self-use
+        """Log UPNP errors."""
+        _LOGGER.error("UPNP Error received: %s", exc)
+
+    def close(self):
+        """Stop the server."""
+        _LOGGER.info("UPNP responder shutting down")
+        if self.transport:
+            self.transport.close()
+        self._loop.remove_writer(self._sock.fileno())
+        self._loop.remove_reader(self._sock.fileno())
+        self._sock.close()
+
+    def _handle_request(self, decoded_data):
+        if "upnp:rootdevice" in decoded_data:
+            return self._upnp_root_response
+
+        return self._upnp_device_response
 
     def _prepare_response(self, search_target, unique_service_name):
         # Note that the double newline at the end of
@@ -167,10 +161,3 @@ USN: {unique_service_name}
 
 """
         return response.replace("\n", "\r\n").encode("utf-8")
-
-
-def clean_socket_close(sock):
-    """Close a socket connection and logs its closure."""
-    _LOGGER.info("UPNP responder shutting down")
-
-    sock.close()

@@ -1,0 +1,55 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "pin": "Pin code"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure options",
+        "data": {
+          "scan_interval": "How often to poll Risco (in seconds)",
+          "code_arm_required": "Require pin code to arm",
+          "code_disarm_required": "Require pin code to disarm"
+        }
+      },
+      "risco_to_ha": {
+        "title": "Map Risco states to Home Assistant states",
+        "description": "Select what state your Home Assistant alarm will report for every state reported by Risco",
+        "data": {
+          "arm": "Armed (AWAY)",
+          "partial_arm": "Partially Armed (STAY)",
+          "A": "Group A",
+          "B": "Group B",
+          "C": "Group C",
+          "D": "Group D"
+        }
+      },
+      "ha_to_risco": {
+        "title": "Map Home Assistant states to Risco states",
+        "description": "Select what state to set your Risco alarm to when arming the Home Assistant alarm",
+        "data": {
+          "armed_away": "Armed Away",
+          "armed_home": "Armed Home",
+          "armed_night": "Armed Night",
+          "armed_custom_bypass": "Armed Custom Bypass"
+        }
+      }
+    }
+  }
+}

@@ -53,9 +53,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             values = await wolf_client.fetch_value(gateway_id, device_id, parameters)
             return {v.value_id: v.value for v in values}
         except ConnectError as exception:
-            raise UpdateFailed(f"Error communicating with API: {exception}")
-        except InvalidAuth:
-            raise UpdateFailed("Invalid authentication during update.")
+            raise UpdateFailed(
+                f"Error communicating with API: {exception}"
+            ) from exception
+        except InvalidAuth as exception:
+            raise UpdateFailed("Invalid authentication during update.") from exception
 
     coordinator = DataUpdateCoordinator(
         hass,
@@ -98,6 +100,6 @@ async def fetch_parameters(client: WolfClient, gateway_id: int, device_id: int):
         fetched_parameters = await client.fetch_parameters(gateway_id, device_id)
         return [param for param in fetched_parameters if param.name != "Reglertyp"]
     except ConnectError as exception:
-        raise UpdateFailed(f"Error communicating with API: {exception}")
-    except InvalidAuth:
-        raise UpdateFailed("Invalid authentication during update.")
+        raise UpdateFailed(f"Error communicating with API: {exception}") from exception
+    except InvalidAuth as exception:
+        raise UpdateFailed("Invalid authentication during update.") from exception
