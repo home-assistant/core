@@ -80,13 +80,22 @@ async def async_resolve_media(
 )
 @websocket_api.async_response
 async def websocket_browse_media(hass, connection, msg):
-    """
-    Browse available media.
-
-    To use, media_player integrations can implement MediaPlayerEntity.async_browse_media()
-    """
+    """Browse available media."""
     media = await async_browse_media(hass, msg.get("media_content_id"))
     connection.send_result(
         msg["id"],
         media.to_media_player_item(),
     )
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "media_source/resolve_media",
+        vol.Required(ATTR_MEDIA_CONTENT_ID): str,
+    }
+)
+@websocket_api.async_response
+async def websocket_resolve_media(hass, connection, msg):
+    """Resolve media."""
+    media = await async_resolve_media(hass, msg.get("media_content_id"))
+    connection.send_result(msg["id"], {"url": media.url, "mime_type": media.mime_type})
