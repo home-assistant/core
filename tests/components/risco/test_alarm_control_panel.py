@@ -11,9 +11,6 @@ from homeassistant.components.alarm_control_panel.const import (
 from homeassistant.components.risco import CannotConnectError, UnauthorizedError
 from homeassistant.components.risco.const import DOMAIN
 from homeassistant.const import (
-    CONF_PASSWORD,
-    CONF_PIN,
-    CONF_USERNAME,
     SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_CUSTOM_BYPASS,
     SERVICE_ALARM_ARM_HOME,
@@ -30,16 +27,11 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.entity_component import async_update_entity
 
+from .util import TEST_CONFIG, TEST_SITE_UUID, setup_risco
+
 from tests.async_mock import MagicMock, PropertyMock, patch
 from tests.common import MockConfigEntry
 
-TEST_CONFIG = {
-    CONF_USERNAME: "test-username",
-    CONF_PASSWORD: "test-password",
-    CONF_PIN: "1234",
-}
-TEST_SITE_UUID = "test-site-uuid"
-TEST_SITE_NAME = "test-site-name"
 FIRST_ENTITY_ID = "alarm_control_panel.risco_test_site_name_partition_0"
 SECOND_ENTITY_ID = "alarm_control_panel.risco_test_site_name_partition_1"
 
@@ -110,28 +102,6 @@ def two_part_alarm():
         yield alarm_mock
 
 
-async def _setup_risco(hass, options={}):
-    config_entry = MockConfigEntry(domain=DOMAIN, data=TEST_CONFIG, options=options)
-    config_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.risco.RiscoAPI.login",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.risco.RiscoAPI.site_uuid",
-        new_callable=PropertyMock(return_value=TEST_SITE_UUID),
-    ), patch(
-        "homeassistant.components.risco.RiscoAPI.site_name",
-        new_callable=PropertyMock(return_value=TEST_SITE_NAME),
-    ), patch(
-        "homeassistant.components.risco.RiscoAPI.close"
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    return config_entry
-
-
 async def test_cannot_connect(hass):
     """Test connection error."""
 
@@ -171,7 +141,7 @@ async def test_setup(hass, two_part_alarm):
     assert not registry.async_is_registered(FIRST_ENTITY_ID)
     assert not registry.async_is_registered(SECOND_ENTITY_ID)
 
-    await _setup_risco(hass)
+    await setup_risco(hass)
 
     assert registry.async_is_registered(FIRST_ENTITY_ID)
     assert registry.async_is_registered(SECOND_ENTITY_ID)
@@ -196,7 +166,7 @@ async def _check_state(hass, alarm, property, state, entity_id, partition_id):
 
 async def test_states(hass, two_part_alarm):
     """Test the various alarm states."""
-    await _setup_risco(hass, CUSTOM_MAPPING_OPTIONS)
+    await setup_risco(hass, CUSTOM_MAPPING_OPTIONS)
 
     assert hass.states.get(FIRST_ENTITY_ID).state == STATE_UNKNOWN
     for partition_id, entity_id in {0: FIRST_ENTITY_ID, 1: SECOND_ENTITY_ID}.items():
@@ -278,7 +248,7 @@ async def _call_alarm_service(hass, service, entity_id, **kwargs):
 
 async def test_sets_custom_mapping(hass, two_part_alarm):
     """Test settings the various modes when mapping some states."""
-    await _setup_risco(hass, CUSTOM_MAPPING_OPTIONS)
+    await setup_risco(hass, CUSTOM_MAPPING_OPTIONS)
 
     registry = await hass.helpers.entity_registry.async_get_registry()
     entity = registry.async_get(FIRST_ENTITY_ID)
@@ -304,7 +274,7 @@ async def test_sets_custom_mapping(hass, two_part_alarm):
 
 async def test_sets_full_custom_mapping(hass, two_part_alarm):
     """Test settings the various modes when mapping all states."""
-    await _setup_risco(hass, FULL_CUSTOM_MAPPING)
+    await setup_risco(hass, FULL_CUSTOM_MAPPING)
 
     registry = await hass.helpers.entity_registry.async_get_registry()
     entity = registry.async_get(FIRST_ENTITY_ID)
@@ -338,7 +308,7 @@ async def test_sets_full_custom_mapping(hass, two_part_alarm):
 
 async def test_sets_with_correct_code(hass, two_part_alarm):
     """Test settings the various modes when code is required."""
-    await _setup_risco(hass, {**CUSTOM_MAPPING_OPTIONS, **CODES_REQUIRED_OPTIONS})
+    await setup_risco(hass, {**CUSTOM_MAPPING_OPTIONS, **CODES_REQUIRED_OPTIONS})
 
     code = {"code": 1234}
     await _test_service_call(
@@ -380,7 +350,7 @@ async def test_sets_with_correct_code(hass, two_part_alarm):
 
 async def test_sets_with_incorrect_code(hass, two_part_alarm):
     """Test settings the various modes when code is required and incorrect."""
-    await _setup_risco(hass, {**CUSTOM_MAPPING_OPTIONS, **CODES_REQUIRED_OPTIONS})
+    await setup_risco(hass, {**CUSTOM_MAPPING_OPTIONS, **CODES_REQUIRED_OPTIONS})
 
     code = {"code": 4321}
     await _test_no_service_call(

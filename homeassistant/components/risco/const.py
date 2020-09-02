@@ -8,7 +8,10 @@ from homeassistant.const import (
 
 DOMAIN = "risco"
 
+RISCO_EVENT = "risco_event"
+
 DATA_COORDINATOR = "risco"
+EVENTS_COORDINATOR = "risco_events"
 
 DEFAULT_SCAN_INTERVAL = 30
 
