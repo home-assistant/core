@@ -62,7 +62,8 @@ def vizio_get_unique_id_fixture():
 def vizio_data_coordinator_update_fixture():
     """Mock get data coordinator update."""
     with patch(
-        "homeassistant.components.vizio.gen_apps_list_from_url", return_value=APP_LIST,
+        "homeassistant.components.vizio.gen_apps_list_from_url",
+        return_value=APP_LIST,
     ):
         yield
 

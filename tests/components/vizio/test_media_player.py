@@ -712,7 +712,8 @@ async def test_apps_update(
 ) -> None:
     """Test device setup with apps where no app is running."""
     with patch(
-        "homeassistant.components.vizio.gen_apps_list_from_url", return_value=None,
+        "homeassistant.components.vizio.gen_apps_list_from_url",
+        return_value=None,
     ):
         async with _cm_for_test_setup_tv_with_apps(
             hass, MOCK_USER_VALID_TV_CONFIG, vars(AppConfig())
