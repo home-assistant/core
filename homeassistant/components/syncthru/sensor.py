@@ -8,13 +8,11 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_NAME, CONF_RESOURCE, CONF_URL, UNIT_PERCENTAGE
-from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers import aiohttp_client
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
+from . import device_identifiers
 from .const import DEFAULT_MODEL, DEFAULT_NAME_TEMPLATE, DOMAIN
-from .exceptions import SyncThruNotSupported
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,25 +59,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up from config entry."""
 
-    session = aiohttp_client.async_get_clientsession(hass)
+    printer = hass.data[DOMAIN][config_entry.entry_id]
 
-    printer = SyncThru(config_entry.data[CONF_URL], session)
-    # Test if the discovered device actually is a syncthru printer
-    # and fetch the available toner/drum/etc
-    try:
-        # No error is thrown when the device is off
-        # (only after user added it manually)
-        # therefore additional catches are inside the Sensor below
-        await printer.update()
-        supp_toner = printer.toner_status(filter_supported=True)
-        supp_drum = printer.drum_status(filter_supported=True)
-        supp_tray = printer.input_tray_status(filter_supported=True)
-        supp_output_tray = printer.output_tray_status()
-    except ValueError as ex:
-        raise SyncThruNotSupported from ex
-    else:
-        if printer.is_unknown_state():
-            raise PlatformNotReady
+    supp_toner = printer.toner_status(filter_supported=True)
+    supp_drum = printer.drum_status(filter_supported=True)
+    supp_tray = printer.input_tray_status(filter_supported=True)
+    supp_output_tray = printer.output_tray_status()
 
     name = config_entry.data[CONF_NAME]
     devices = [SyncThruMainSensor(printer, name)]
@@ -139,6 +124,11 @@ class SyncThruSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes of the device."""
         return self._attributes
+
+    @property
+    def device_info(self):
+        """Return device information."""
+        return {"identifiers": device_identifiers(self.syncthru)}
 
 
 class SyncThruMainSensor(SyncThruSensor):
