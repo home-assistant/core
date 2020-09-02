@@ -1,7 +1,7 @@
 """Test the Shark IQ vacuum entity."""
 from copy import deepcopy
 import enum
-from typing import List
+from typing import Iterable, List, Optional
 
 import pytest
 from sharkiqpy import AylaApi, SharkIqAuthError, SharkIqVacuum, get_ayla_api
@@ -64,34 +64,35 @@ class MockAyla(AylaApi):
 
     async def async_get_devices(self, update: bool = True) -> List[SharkIqVacuum]:
         """Get the list of devices."""
-        shark = SharkIqVacuum(self, SHARK_DEVICE_DICT)
+        shark = MockShark(self, SHARK_DEVICE_DICT)
         shark.properties_full = deepcopy(SHARK_PROPERTIES_DICT)
         shark._update_metadata(SHARK_METADATA_DICT)  # pylint: disable=protected-access
         return [shark]
 
-
-def _set_property(self, property_name, value):
-    """Set a property locally without hitting the API."""
-    if isinstance(property_name, enum.Enum):
-        property_name = property_name.value
-    if isinstance(value, enum.Enum):
-        value = value.value
-    self.properties_full[property_name]["value"] = value
+    async def async_request(self, http_method: str, url: str, **kwargs):
+        """Don't make an HTTP request"""
 
 
-async def _async_set_property(self, property_name, value):
-    """Set a property locally without hitting the API."""
-    print(f"Setting {id(self)}/{property_name} to {value}")
-    _set_property(self, property_name, value)
+class MockShark(SharkIqVacuum):
+    """Mocked SharkIqVacuum that won't hit the API."""
+    async def async_update(self, property_list: Optional[Iterable[str]] = None):
+        """Don't do anything."""
 
+    def set_property_value(self, property_name, value):
+        """Set a property locally without hitting the API."""
+        if isinstance(property_name, enum.Enum):
+            property_name = property_name.value
+        if isinstance(value, enum.Enum):
+            value = value.value
+        self.properties_full[property_name]["value"] = value
 
-async def async_nop(*args, **kwargs):
-    """Don't do nothin'."""
+    async def async_set_property_value(self, property_name, value):
+        """Set a property locally without hitting the API."""
+        self.set_property_value(property_name, value)
 
 
 @pytest.fixture(autouse=True)
 @patch("sharkiqpy.ayla_api.AylaApi", MockAyla)
-@patch.object(SharkIqUpdateCoordinator, "_async_update_vacuum", new=async_nop)
 async def setup_integration(hass):
     """Build the mock integration."""
     entry = MockConfigEntry(domain=DOMAIN, unique_id=TEST_USERNAME, data=CONFIG)
@@ -135,9 +136,6 @@ async def test_simple_properties(hass: HomeAssistant):
     assert state.attributes.get(ATTR_RECHARGE_RESUME)
 
 
-@patch.object(SharkIqVacuum, "set_property_value", new=_set_property)
-@patch.object(SharkIqVacuum, "async_set_property_value", new=_async_set_property)
-@patch.object(SharkIqUpdateCoordinator, "_async_update_vacuum", new=async_nop)
 async def test_shark_methods(hass: HomeAssistant) -> None:
     """Test all of the shark vacuum operation modes."""
 
@@ -206,7 +204,7 @@ async def test_updates(hass: HomeAssistant) -> None:
 
     update_failed = False
     with patch.object(
-        SharkIqVacuum, "async_update", new=_get_async_update(SharkIqAuthError)
+        MockShark, "async_update", new=_get_async_update(SharkIqAuthError)
     ), patch.object(HomeAssistant, "async_create_task"), patch.object(
         ConfigEntriesFlowManager, "async_init"
     ):
@@ -216,7 +214,7 @@ async def test_updates(hass: HomeAssistant) -> None:
             update_failed = True
 
     with patch.object(
-        SharkIqVacuum, "async_update", new=_get_async_update(RuntimeError)
+        MockShark, "async_update", new=_get_async_update(RuntimeError)
     ), patch.object(HomeAssistant, "async_create_task"), patch.object(
         ConfigEntriesFlowManager, "async_init"
     ):
