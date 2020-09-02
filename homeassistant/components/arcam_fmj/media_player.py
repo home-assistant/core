@@ -276,7 +276,7 @@ class ArcamFmj(MediaPlayerEntity):
         """Play media."""
 
         if media_id.startswith("preset:"):
-            preset = int(media_id[6:])
+            preset = int(media_id[7:])
             await self._state.set_tuner_preset(preset)
         else:
             _LOGGER.error("Media %s is not supported", media_id)
