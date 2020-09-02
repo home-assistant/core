@@ -399,7 +399,7 @@ def _get_events(
     entity_id=None,
     filters=None,
     entities_filter=None,
-    entity_matches_only=None,
+    entity_matches_only=False,
 ):
     """Get events for a period of time."""
     entity_attr_cache = EntityAttributeCache(hass)
