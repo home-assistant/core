@@ -380,7 +380,7 @@ class YeelightDevice:
 
     @property
     def host(self):
-        """Return ip address."""
+        """Return hostname."""
         return self._host
 
     @property
@@ -469,7 +469,7 @@ class YeelightDevice:
             self.bulb.turn_off(duration=duration, light_type=light_type)
         except BulbException as ex:
             _LOGGER.error(
-                "Unable to turn the bulb off: %s, %s: %s", self.host, self.name, ex
+                "Unable to turn the bulb off: %s, %s: %s", self._host, self.name, ex
             )
 
     def _update_properties(self):
@@ -483,7 +483,7 @@ class YeelightDevice:
         except BulbException as ex:
             if self._available:  # just inform once
                 _LOGGER.error(
-                    "Unable to update device %s, %s: %s", self.host, self.name, ex
+                    "Unable to update device %s, %s: %s", self._host, self.name, ex
                 )
             self._available = False
 
@@ -495,14 +495,14 @@ class YeelightDevice:
             self.bulb.get_capabilities()
             _LOGGER.debug(
                 "Device %s, %s capabilities: %s",
-                self.host,
+                self._host,
                 self.name,
                 self.bulb.capabilities,
             )
         except BulbException as ex:
             _LOGGER.error(
                 "Unable to get device capabilities %s, %s: %s",
-                self.host,
+                self._host,
                 self.name,
                 ex,
             )
