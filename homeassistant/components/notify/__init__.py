@@ -102,12 +102,6 @@ class BaseNotificationService:
 
     hass: Optional[HomeAssistantType] = None
 
-    def __init__(self):
-        """Init the notification service."""
-        self._service_name = None
-        self._target_service_name_prefix = None
-        self._registered_targets: Dict = {}
-
     def send_message(self, message, **kwargs):
         """Send a message.
 
@@ -150,10 +144,11 @@ class BaseNotificationService:
         target_service_name_prefix: str,
     ) -> None:
         """Store the data for the notify service."""
+        # pylint: disable=attribute-defined-outside-init
         self.hass = hass
         self._service_name = service_name
         self._target_service_name_prefix = target_service_name_prefix
-        self._registered_targets = {}
+        self._registered_targets: Dict = {}
 
     async def async_register_services(self) -> None:
         """Create or update the notify services."""
