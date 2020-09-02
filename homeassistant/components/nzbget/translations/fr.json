@@ -1,0 +1,22 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "ssl": "NZBGet utilise un certificat SSL",
+                    "verify_ssl": "NZBGet utilise un certificat appropri\u00e9"
+                },
+                "title": "Se connecter \u00e0 NZBGet"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Fr\u00e9quence de mise \u00e0 jour (en secondes)"
+                }
+            }
+        }
+    }
+}

@@ -5,14 +5,14 @@
             "authorize_url_fail": "Erreur inconnue lors de la g\u00e9n\u00e9ration d'une URL d'autorisation.",
             "authorize_url_timeout": "D\u00e9lai de g\u00e9n\u00e9ration de l'URL d'authentification d\u00e9pass\u00e9.",
             "external_setup": "Point correctement configur\u00e9 \u00e0 partir d\u2019un autre flux.",
-            "no_flows": "Vous devez configurer Point avant de pouvoir vous authentifier avec celui-ci. [Veuillez lire les instructions] (https://www.home-assistant.io/components/point/)."
+            "no_flows": "Le composant n'est pas configur\u00e9. Veuillez suivre la documentation."
         },
         "create_entry": {
-            "default": "Authentification r\u00e9ussie avec Minut pour votre (vos) p\u00e9riph\u00e9rique (s) Point"
+            "default": "Authentification r\u00e9ussie"
         },
         "error": {
             "follow_link": "Veuillez suivre le lien et vous authentifier avant d'appuyer sur Soumettre.",
-            "no_token": "Non authentifi\u00e9 avec Minut"
+            "no_token": "Jeton d'acc\u00e8s non valide"
         },
         "step": {
             "auth": {
@@ -23,8 +23,8 @@
                 "data": {
                     "flow_impl": "Fournisseur"
                 },
-                "description": "Choisissez via quel fournisseur d'authentification vous souhaitez vous authentifier avec Point.",
-                "title": "Fournisseur d'authentification"
+                "description": "Voulez-vous commencer la configuration?",
+                "title": "S\u00e9lectionner une m\u00e9thode d'authentification"
             }
         }
     }

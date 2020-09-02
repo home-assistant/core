@@ -1,12 +1,13 @@
 {
     "config": {
         "abort": {
-            "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+            "already_configured": "Device is already configured"
         },
         "error": {
-            "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-            "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-            "unknown": "[%key:common::config_flow::error::unknown%]"
+            "auth_not_supported": "Shelly devices requiring authentication are not currently supported.",
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
         },
         "flow_title": "Shelly: {name}",
         "step": {
@@ -15,13 +16,13 @@
             },
             "credentials": {
                 "data": {
-                    "password": "[%key:common::config_flow::data::password%]",
-                    "username": "[%key:common::config_flow::data::username%]"
+                    "password": "Password",
+                    "username": "Username"
                 }
             },
             "user": {
                 "data": {
-                    "host": "[%key:common::config_flow::data::host%]"
+                    "host": "Host"
                 }
             }
         }
