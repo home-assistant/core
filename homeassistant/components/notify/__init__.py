@@ -205,7 +205,7 @@ class NotifyServiceData:
     """Class for storing notify service data.
 
     service
-        The NotifyService
+        The NotificationService
     service_name
         The name of the notify service.
     target_service_name_prefix
