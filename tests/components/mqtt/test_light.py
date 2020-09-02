@@ -716,9 +716,8 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
         hass, "light.test", brightness=50, xy_color=[0.123, 0.123]
     )
     await common.async_turn_on(hass, "light.test", brightness=50, hs_color=[359, 78])
-    await common.async_turn_on(
-        hass, "light.test", rgb_color=[255, 128, 0], white_value=80
-    )
+    await common.async_turn_on(hass, "light.test", rgb_color=[255, 128, 0])
+    await common.async_turn_on(hass, "light.test", white_value=80, color_temp=125)
 
     mqtt_mock.async_publish.assert_has_calls(
         [
@@ -728,6 +727,7 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
             call("test_light_rgb/hs/set", "359.0,78.0", 2, False),
             call("test_light_rgb/white_value/set", 80, 2, False),
             call("test_light_rgb/xy/set", "0.14,0.131", 2, False),
+            call("test_light_rgb/color_temp/set", 125, 2, False),
         ],
         any_order=True,
     )
@@ -1439,15 +1439,26 @@ async def test_discovery_update_light(hass, mqtt_mock, caplog):
     data1 = (
         '{ "name": "Beer",'
         '  "state_topic": "test_topic",'
-        '  "command_topic": "test_topic" }'
+        '  "command_topic": "test_topic",'
+        '  "state_value_template": "{{value_json.power1}}" }'
     )
     data2 = (
         '{ "name": "Milk",'
         '  "state_topic": "test_topic",'
-        '  "command_topic": "test_topic" }'
+        '  "command_topic": "test_topic",'
+        '  "state_value_template": "{{value_json.power2}}" }'
     )
     await help_test_discovery_update(
-        hass, mqtt_mock, caplog, light.DOMAIN, data1, data2
+        hass,
+        mqtt_mock,
+        caplog,
+        light.DOMAIN,
+        data1,
+        data2,
+        state_data1=[("test_topic", '{"power1":"ON"}')],
+        state1="on",
+        state_data2=[("test_topic", '{"power2":"OFF"}')],
+        state2="off",
     )
 
 
