@@ -22,9 +22,6 @@ import homeassistant.util.dt as dt_util
 
 from .const import CONF_TRACK_HOME, DOMAIN
 
-URL = "https://api.met.no/weatherapi/locationforecast/2.0/classic"
-
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -142,7 +139,7 @@ class MetWeatherData:
         }
 
         self._weather_data = metno.MetWeatherData(
-            coordinates, async_get_clientsession(self.hass), URL
+            coordinates, async_get_clientsession(self.hass)
         )
 
     async def fetch_data(self):
