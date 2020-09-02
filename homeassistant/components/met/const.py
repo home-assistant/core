@@ -21,7 +21,6 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_WIND_BEARING,
     ATTR_FORECAST_WIND_SPEED,
     ATTR_WEATHER_ATTRIBUTION,
-    ATTR_WEATHER_CONDITION,
     ATTR_WEATHER_HUMIDITY,
     ATTR_WEATHER_PRESSURE,
     ATTR_WEATHER_TEMPERATURE,
@@ -185,7 +184,6 @@ FORECAST_MAP = {
 
 ATTR_MAP = {
     ATTR_WEATHER_ATTRIBUTION: "attribution",
-    ATTR_WEATHER_CONDITION: "condition",
     ATTR_WEATHER_HUMIDITY: "humidity",
     ATTR_WEATHER_PRESSURE: "pressure",
     ATTR_WEATHER_TEMPERATURE: "temperature",
@@ -193,24 +191,5 @@ ATTR_MAP = {
     ATTR_WEATHER_WIND_BEARING: "wind_bearing",
     ATTR_WEATHER_WIND_SPEED: "wind_speed",
 }
-
-COMPASS_CODES = [
-    "N",
-    "NNE",
-    "NE",
-    "ENE",
-    "E",
-    "ESE",
-    "SE",
-    "SSE",
-    "S",
-    "SSW",
-    "SW",
-    "WSW",
-    "W",
-    "WNW",
-    "NW",
-    "NNW",
-]
 
 _LOGGER = logging.getLogger(".")

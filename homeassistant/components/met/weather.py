@@ -5,8 +5,6 @@ import voluptuous as vol
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
-    ATTR_FORECAST_WIND_BEARING,
-    ATTR_WEATHER_CONDITION,
     ATTR_WEATHER_HUMIDITY,
     ATTR_WEATHER_PRESSURE,
     ATTR_WEATHER_TEMPERATURE,
@@ -32,14 +30,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.distance import convert as convert_distance
 from homeassistant.util.pressure import convert as convert_pressure
 
-from .const import (
-    ATTR_MAP,
-    COMPASS_CODES,
-    CONDITIONS_MAP,
-    CONF_TRACK_HOME,
-    DOMAIN,
-    FORECAST_MAP,
-)
+from .const import ATTR_MAP, CONDITIONS_MAP, CONF_TRACK_HOME, DOMAIN, FORECAST_MAP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -96,18 +87,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-def compass_degrees_to_code(compass_value: float) -> str:
-    """Convert a compass heading in degrees to a 1-3 letter code."""
-    compass_degrees = 360.0
-    segment_angle = compass_degrees / len(COMPASS_CODES)
-    offset = segment_angle / 2.0
-    for idx, code in enumerate(COMPASS_CODES):
-        angle = segment_angle * idx
-        if angle - offset < compass_value < angle + offset:
-            return code
-    return COMPASS_CODES[0]
-
-
 def format_condition(condition: str) -> str:
     """Return condition from dict CONDITIONS_MAP."""
     for key, value in CONDITIONS_MAP.items():
@@ -156,9 +135,7 @@ class MetWeather(CoordinatorEntity, WeatherEntity):
     @property
     def condition(self):
         """Return the current condition."""
-        condition = self.coordinator.data.current_weather_data.get(
-            ATTR_MAP[ATTR_WEATHER_CONDITION]
-        )
+        condition = self.coordinator.data.current_weather_data.get("condition")
         return format_condition(condition)
 
     @property
@@ -206,12 +183,9 @@ class MetWeather(CoordinatorEntity, WeatherEntity):
     @property
     def wind_bearing(self):
         """Return the wind direction."""
-        degrees = self.coordinator.data.current_weather_data.get(
+        return self.coordinator.data.current_weather_data.get(
             ATTR_MAP[ATTR_WEATHER_WIND_BEARING]
         )
-        if degrees is None:
-            return
-        return compass_degrees_to_code(degrees)
 
     @property
     def attribution(self):
@@ -227,12 +201,11 @@ class MetWeather(CoordinatorEntity, WeatherEntity):
             met_forecast = self.coordinator.data.daily_forecast
         ha_forecast = []
         for met_item in met_forecast:
-            ha_item = {k: met_item.get(v) for k, v in FORECAST_MAP.items()}
+            ha_item = {
+                k: met_item[v] for k, v in FORECAST_MAP.items() if met_item.get(v)
+            }
             ha_item[ATTR_FORECAST_CONDITION] = format_condition(
                 ha_item[ATTR_FORECAST_CONDITION]
-            )
-            ha_item[ATTR_FORECAST_WIND_BEARING] = compass_degrees_to_code(
-                ha_item[ATTR_FORECAST_WIND_BEARING]
             )
             ha_forecast.append(ha_item)
         return ha_forecast
