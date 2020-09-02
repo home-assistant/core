@@ -28,7 +28,6 @@ SENSORS = {
     "humidity": [UNIT_PERCENTAGE, sensor.DEVICE_CLASS_HUMIDITY],
     "overpowerValue": [POWER_WATT, sensor.DEVICE_CLASS_POWER],
     "power": [POWER_WATT, sensor.DEVICE_CLASS_POWER],
-    "sensorOp": [None, "shelly__gas_sensor_operation"],
     "voltage": [VOLT, sensor.DEVICE_CLASS_VOLTAGE],
 }
 
@@ -115,3 +114,12 @@ class ShellySensor(ShellyBlockEntity, Entity):
     def device_class(self):
         """Device class of sensor."""
         return self._device_class
+
+    @property
+    def available(self):
+        """Available."""
+        if self.attribute == "concentration":
+            # "sensorOp" is "normal" when the Shelly Gas is working properly and taking
+            # measurements.
+            return super().available and getattr(self.block, "sensorOp") == "normal"
+        return super().available

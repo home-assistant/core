@@ -1,9 +1,0 @@
-{
-  "state": {
-    "shelly__gas_sensor_operation": {
-      "warmup": "Warmup",
-      "normal": "Normal",
-      "fault": "Fault"
-    }
-  }
-}

@@ -83,3 +83,12 @@ class ShellySensor(ShellyBlockEntity, BinarySensorEntity):
         if self.attribute == "gas":
             # We return raw value of the gas sensor as an attribute.
             return {"detected": getattr(self.block, self.attribute)}
+
+    @property
+    def available(self):
+        """Available."""
+        if self.attribute == "gas":
+            # "sensorOp" is "normal" when Shelly Gas is working properly and taking
+            # measurements.
+            return super().available and getattr(self.block, "sensorOp") == "normal"
+        return super().available
