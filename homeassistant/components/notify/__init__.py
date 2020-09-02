@@ -268,13 +268,11 @@ async def async_setup(hass, config):
         service_name = slugify(conf_name or SERVICE_NOTIFY)
 
         await notify_service.async_setup(service_name, target_service_name_prefix)
+        await notify_service.async_register_services()
 
         hass.data[NOTIFY_SERVICES].setdefault(integration_name, []).append(
             notify_service
         )
-
-        await notify_service.async_register_services()
-
         hass.config.components.add(f"{DOMAIN}.{integration_name}")
 
         return True
