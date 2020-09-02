@@ -85,6 +85,12 @@ LIBRARY_MAP = {
     "current_user_recently_played": "Recently played",
 }
 
+AUDIO_FEATURE_LIST = [
+    'acousticness', 'danceability', 'energy',
+    'instrumentalness', 'key', 'liveness', 'loudness', 'mode',
+    'speechiness', 'tempo', 'time_signature', 'valence',
+]
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -138,6 +144,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         self._session = session
         self._spotify = spotify
         self._scope_ok = set(session.token["scope"].split(" ")) == set(SPOTIFY_SCOPES)
+        self._state_attributes = {}
 
         self._currently_playing: Optional[dict] = {}
         self._devices: Optional[List[dict]] = []
@@ -299,6 +306,11 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
             return 0
         return SUPPORT_SPOTIFY
 
+    @property
+    def device_state_attributes(self):
+        """Return device state attributes."""
+        return self._state_attributes
+
     @spotify_exception_handler
     def set_volume_level(self, volume: int) -> None:
         """Set the volume level."""
@@ -377,6 +389,15 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
 
         current = self._spotify.current_playback()
         self._currently_playing = current or {}
+
+        item = self._currently_playing.get("item") or {}
+        if item is not None:
+            self._state_attributes['audio_features'] = {}
+            uri = item.get("uri")
+            audio_features = self._spotify.audio_features(uri)[0]
+            for feature, value in audio_features.items():
+                if feature in AUDIO_FEATURE_LIST:
+                    self._state_attributes['audio_features'][feature] = value
 
         self._playlist = None
         context = self._currently_playing.get("context")
