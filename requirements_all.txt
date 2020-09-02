@@ -513,7 +513,7 @@ dwdwfsapi==1.0.2
 dweepy==0.3.0
 
 # homeassistant.components.dynalite
-dynalite_devices==0.1.45
+dynalite_devices==0.1.46
 
 # homeassistant.components.rainforest_eagle
 eagle200_reader==0.2.4
