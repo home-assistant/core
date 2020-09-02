@@ -58,7 +58,7 @@ ATTR_ALL = "all"
 SERVICE_SET = "set"
 SERVICE_REMOVE = "remove"
 
-PLATFORMS = ["light", "cover"]
+PLATFORMS = ["light", "cover", "notify"]
 
 _LOGGER = logging.getLogger(__name__)
 
