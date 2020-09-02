@@ -6,6 +6,7 @@ from homeassistant.components.rfxtrx.const import ATTR_EVENT
 from homeassistant.core import State
 
 from tests.common import MockConfigEntry, mock_restore_cache
+from tests.components.rfxtrx.conftest import RFXTRX_DATA
 
 EVENT_SMOKE_DETECTOR_PANIC = "08200300a109000670"
 EVENT_SMOKE_DETECTOR_NO_PANIC = "08200300a109000770"
@@ -17,15 +18,6 @@ EVENT_LIGHT_DETECTOR_LIGHT = "08200100a109001570"
 EVENT_LIGHT_DETECTOR_DARK = "08200100a109001470"
 
 EVENT_AC_118CDEA_2_ON = "0b1100100118cdea02010f70"
-
-RFXTRX_DATA = {
-    "device": "abcd",
-    "host": None,
-    "port": None,
-    "automatic_add": False,
-    "debug": False,
-    "devices": {},
-}
 
 
 async def test_one(hass, rfxtrx):
