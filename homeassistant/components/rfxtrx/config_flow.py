@@ -418,7 +418,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         device = import_config[CONF_DEVICE]
 
         try:
-            if import_config[CONF_HOST] is not None:
+            if host is not None:
                 await self.async_validate_rfx(host=host, port=port)
             else:
                 await self.async_validate_rfx(device=device)
