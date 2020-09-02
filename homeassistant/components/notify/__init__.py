@@ -211,7 +211,7 @@ class NotifyServiceData:
     target_service_name_prefix
         The prefix used to create new service for tagets.
     targets
-        A dict of targets index by service names.
+        A dict of targets indexed by service names.
     """
 
     service: BaseNotificationService
