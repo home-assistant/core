@@ -1,8 +1,6 @@
 """The tests for the Group Light platform."""
 from os import path
 
-from asynctest.mock import patch
-
 from homeassistant import config as hass_config
 from homeassistant.components.group import DOMAIN, SERVICE_RELOAD
 import homeassistant.components.group.light as group
@@ -34,7 +32,7 @@ from homeassistant.const import (
 from homeassistant.setup import async_setup_component
 
 import tests.async_mock
-from tests.async_mock import MagicMock
+from tests.async_mock import MagicMock, patch
 
 
 async def test_default_state(hass):
