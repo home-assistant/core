@@ -14,6 +14,7 @@ import requests.exceptions
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_EPISODE,
+    MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_PLAYLIST,
     MEDIA_TYPE_VIDEO,
@@ -487,7 +488,7 @@ class PlexServer:
                 return None
 
         try:
-            library_name = kwargs["library_name"]
+            library_name = kwargs.pop("library_name")
             library_section = self.library.section(library_name)
         except KeyError:
             _LOGGER.error("Must specify 'library_name' for this search")
@@ -602,11 +603,45 @@ class PlexServer:
                 )
                 return None
 
+        def lookup_movie():
+            """Find a specific movie and return a Plex media object."""
+            if "title" not in kwargs:
+                _LOGGER.error("Must specify 'title' for this search")
+                return None
+
+            try:
+                movies = library_section.search(**kwargs, libtype="movie", maxresults=3)
+            except BadRequest as err:
+                _LOGGER.error("Invalid search payload provided: %s", err)
+                return None
+            except NotFound:
+                _LOGGER.error(
+                    "Movie '%s' not found in '%s'",
+                    kwargs["title"],
+                    library_name,
+                )
+                return None
+
+            if len(movies) > 1:
+                exact_matches = [
+                    x for x in movies if x.title.lower() == kwargs["title"].lower()
+                ]
+                if len(exact_matches) == 1:
+                    return exact_matches[0]
+                match_list = [f"{x.title} ({x.year})" for x in movies]
+                _LOGGER.warning("Multiple matches found during search:", match_list)
+                return None
+
+            return movies[0]
+
         if media_type == MEDIA_TYPE_MUSIC:
             return lookup_music()
         if media_type == MEDIA_TYPE_EPISODE:
             return lookup_tv()
+        if media_type == MEDIA_TYPE_MOVIE:
+            return lookup_movie()
         if media_type == MEDIA_TYPE_VIDEO:
+            # Legacy method for compatibility
             try:
                 video_name = kwargs["video_name"]
                 return library_section.get(video_name)
