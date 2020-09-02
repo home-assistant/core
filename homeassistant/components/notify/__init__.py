@@ -282,11 +282,11 @@ async def async_setup(hass, config):
 
         conf_name = p_config.get(CONF_NAME) or discovery_info.get(CONF_NAME)
         target_service_name_prefix = conf_name or integration_name
-        service_name = conf_name or SERVICE_NOTIFY
+        service_name = slugify(conf_name or SERVICE_NOTIFY)
         targets = {}
 
         data = NotifyServiceData(
-            notify_service, slugify(service_name), target_service_name_prefix, targets
+            notify_service, service_name, target_service_name_prefix, targets
         )
         hass.data[NOTIFY_SERVICES].setdefault(integration_name, []).append(data)
 
