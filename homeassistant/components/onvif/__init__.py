@@ -131,7 +131,7 @@ async def _get_snapshot_auth(hass, device, entry):
 
     def _get():
         # so we can handle keyword arguments
-        requests.get(snapshot_uri, timeout=1, auth=auth)
+        return requests.get(snapshot_uri, timeout=1, auth=auth)
 
     try:
         response = await hass.async_add_executor_job(_get)
