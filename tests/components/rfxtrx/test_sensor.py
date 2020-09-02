@@ -1,19 +1,23 @@
 """The tests for the Rfxtrx sensor platform."""
 import pytest
 
+from homeassistant.components.rfxtrx import DOMAIN
 from homeassistant.components.rfxtrx.const import ATTR_EVENT
 from homeassistant.const import TEMP_CELSIUS, UNIT_PERCENTAGE
 from homeassistant.core import State
-from homeassistant.setup import async_setup_component
 
-from tests.common import mock_restore_cache
+from tests.common import MockConfigEntry, mock_restore_cache
+from tests.components.rfxtrx.conftest import RFXTRX_DATA
 
 
 async def test_default_config(hass, rfxtrx):
     """Test with 0 sensor."""
-    await async_setup_component(
-        hass, "sensor", {"sensor": {"platform": "rfxtrx", "devices": {}}}
-    )
+    entry_data = RFXTRX_DATA.copy()
+    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 0
@@ -21,11 +25,13 @@ async def test_default_config(hass, rfxtrx):
 
 async def test_one_sensor(hass, rfxtrx):
     """Test with 1 sensor."""
-    assert await async_setup_component(
-        hass,
-        "rfxtrx",
-        {"rfxtrx": {"device": "abcd", "devices": {"0a52080705020095220269": {}}}},
-    )
+    entry_data = RFXTRX_DATA.copy()
+    entry_data["devices"] = {"0a52080705020095220269": {}}
+    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.wt260_wt260h_wt440h_wt450_wt450h_05_02_temperature")
@@ -49,11 +55,13 @@ async def test_state_restore(hass, rfxtrx, state, event):
 
     mock_restore_cache(hass, [State(entity_id, state, attributes={ATTR_EVENT: event})])
 
-    assert await async_setup_component(
-        hass,
-        "rfxtrx",
-        {"rfxtrx": {"device": "abcd", "devices": {"0a520801070100b81b0279": {}}}},
-    )
+    entry_data = RFXTRX_DATA.copy()
+    entry_data["devices"] = {"0a520801070100b81b0279": {}}
+    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == state
@@ -61,11 +69,13 @@ async def test_state_restore(hass, rfxtrx, state, event):
 
 async def test_one_sensor_no_datatype(hass, rfxtrx):
     """Test with 1 sensor."""
-    assert await async_setup_component(
-        hass,
-        "rfxtrx",
-        {"rfxtrx": {"device": "abcd", "devices": {"0a52080705020095220269": {}}}},
-    )
+    entry_data = RFXTRX_DATA.copy()
+    entry_data["devices"] = {"0a52080705020095220269": {}}
+    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
 
     base_id = "sensor.wt260_wt260h_wt440h_wt450_wt450h_05_02"
@@ -104,19 +114,16 @@ async def test_one_sensor_no_datatype(hass, rfxtrx):
 
 async def test_several_sensors(hass, rfxtrx):
     """Test with 3 sensors."""
-    assert await async_setup_component(
-        hass,
-        "rfxtrx",
-        {
-            "rfxtrx": {
-                "device": "abcd",
-                "devices": {
-                    "0a52080705020095220269": {},
-                    "0a520802060100ff0e0269": {},
-                },
-            }
-        },
-    )
+    entry_data = RFXTRX_DATA.copy()
+    entry_data["devices"] = {
+        "0a52080705020095220269": {},
+        "0a520802060100ff0e0269": {},
+    }
+    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
     await hass.async_start()
 
@@ -244,19 +251,16 @@ async def test_discover_sensor(hass, rfxtrx_automatic):
 
 async def test_update_of_sensors(hass, rfxtrx):
     """Test with 3 sensors."""
-    assert await async_setup_component(
-        hass,
-        "rfxtrx",
-        {
-            "rfxtrx": {
-                "device": "abcd",
-                "devices": {
-                    "0a52080705020095220269": {},
-                    "0a520802060100ff0e0269": {},
-                },
-            }
-        },
-    )
+    entry_data = RFXTRX_DATA.copy()
+    entry_data["devices"] = {
+        "0a52080705020095220269": {},
+        "0a520802060100ff0e0269": {},
+    }
+    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
     await hass.async_start()
 
@@ -290,23 +294,20 @@ async def test_update_of_sensors(hass, rfxtrx):
 
 async def test_rssi_sensor(hass, rfxtrx):
     """Test with 1 sensor."""
-    assert await async_setup_component(
-        hass,
-        "rfxtrx",
-        {
-            "rfxtrx": {
-                "device": "abcd",
-                "devices": {
-                    "0913000022670e013b70": {
-                        "data_bits": 4,
-                        "command_on": 0xE,
-                        "command_off": 0x7,
-                    },
-                    "0b1100cd0213c7f230010f71": {},
-                },
-            }
+    entry_data = RFXTRX_DATA.copy()
+    entry_data["devices"] = {
+        "0913000022670e013b70": {
+            "data_bits": 4,
+            "command_on": 0xE,
+            "command_off": 0x7,
         },
-    )
+        "0b1100cd0213c7f230010f71": {},
+    }
+    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
     await hass.async_start()
 
