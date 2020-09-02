@@ -147,7 +147,7 @@ class BaseNotificationService:
         self._registered_targets: Dict = {}
 
     async def async_register_services(self) -> None:
-        """Create or remove the notify services."""
+        """Create or update the notify services."""
         assert self.hass
 
         if hasattr(self, "targets"):
