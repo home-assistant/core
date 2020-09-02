@@ -60,7 +60,7 @@ async def test_form(hass):
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": "1.1.1.1", "password": "test-password"},
+            {"host": TEST_HOST, "password": TEST_PASSWORD},
         )
 
     assert result2["type"] == "create_entry"
@@ -84,7 +84,7 @@ async def test_form_invalid_auth(hass, mock_smile):
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"host": "1.1.1.1", "password": "test-password"},
+        {"host": TEST_HOST, "password": TEST_PASSWORD},
     )
 
     assert result2["type"] == "form"
@@ -102,7 +102,7 @@ async def test_form_cannot_connect(hass, mock_smile):
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"host": "1.1.1.1", "password": "test-password"},
+        {"host": TEST_HOST, "password": TEST_PASSWORD},
     )
 
     assert result2["type"] == "form"
