@@ -11,8 +11,10 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .const import (
     API_SENSOR_PAIR_DUMP,
@@ -250,7 +252,7 @@ class PairedSensorManager:
         dev_reg.async_remove_device(device.id)
 
 
-class GuardianEntity(Entity):
+class GuardianEntity(CoordinatorEntity):
     """Define a base Guardian entity."""
 
     def __init__(
@@ -286,11 +288,6 @@ class GuardianEntity(Entity):
         """Return the icon."""
         return self._icon
 
-    @property
-    def should_poll(self) -> bool:
-        """Return True if entity has to be polled for state."""
-        return False
-
     @callback
     def _async_update_from_latest_data(self):
         """Update the entity.
@@ -321,12 +318,13 @@ class PairedSensorEntity(GuardianEntity):
         """Initialize."""
         super().__init__(entry, kind, name, device_class, icon)
 
-        self._coordinator = coordinator
         self._paired_sensor_uid = coordinator.data["uid"]
 
         self._device_info["identifiers"] = {(DOMAIN, self._paired_sensor_uid)}
         self._device_info["name"] = f"Guardian Paired Sensor {self._paired_sensor_uid}"
         self._device_info["via_device"] = (DOMAIN, self._entry.data[CONF_UID])
+
+        self.coordinator = coordinator
 
     @property
     def name(self) -> str:
@@ -340,10 +338,7 @@ class PairedSensorEntity(GuardianEntity):
 
     async def async_added_to_hass(self) -> None:
         """Perform tasks when the entity is added."""
-        self.async_on_remove(
-            self._coordinator.async_add_listener(self._async_update_state_callback)
-        )
-
+        super().async_added_to_hass()
         self._async_update_from_latest_data()
 
 
@@ -362,15 +357,20 @@ class ValveControllerEntity(GuardianEntity):
         """Initialize."""
         super().__init__(entry, kind, name, device_class, icon)
 
-        self._coordinators = coordinators
-
         self._device_info["identifiers"] = {(DOMAIN, self._entry.data[CONF_UID])}
         self._device_info[
             "name"
         ] = f"Guardian Valve Controller {self._entry.data[CONF_UID]}"
-        self._device_info["model"] = self._coordinators[API_SYSTEM_DIAGNOSTICS].data[
+        self._device_info["model"] = self.coordinators[API_SYSTEM_DIAGNOSTICS].data[
             "firmware"
         ]
+
+        self.coordinators = coordinators
+
+    @property
+    def availabile(self) -> bool:
+        """Return if entity is available."""
+        return any(coordinator.last_update_success for coordinator in self.coordinators)
 
     @property
     def name(self) -> str:
@@ -393,9 +393,7 @@ class ValveControllerEntity(GuardianEntity):
     def async_add_coordinator_update_listener(self, api: str) -> None:
         """Add a listener to a DataUpdateCoordinator based on the API referenced."""
         self.async_on_remove(
-            self._coordinators[api].async_add_listener(
-                self._async_update_state_callback
-            )
+            self.coordinators[api].async_add_listener(self._async_update_state_callback)
         )
 
     async def async_added_to_hass(self) -> None:
@@ -403,3 +401,18 @@ class ValveControllerEntity(GuardianEntity):
         await self._async_continue_entity_setup()
         self.async_add_coordinator_update_listener(API_SYSTEM_DIAGNOSTICS)
         self._async_update_from_latest_data()
+
+    async def async_update(self) -> None:
+        """Update the entity.
+
+        Only used by the generic entity update service.
+        """
+
+        # Ignore manual update requests if the entity is disabled
+        if not self.enabled:
+            return
+
+        refresh_tasks = [
+            coordinator.async_request_refresh() for coordinator in self.coordinators
+        ]
+        await asyncio.gather(*refresh_tasks)

@@ -130,7 +130,7 @@ class PairedSensorSensor(PairedSensorEntity):
     @property
     def available(self) -> bool:
         """Return whether the entity is available."""
-        return self._coordinator.last_update_success
+        return self.coordinator.last_update_success
 
     @property
     def state(self) -> str:
@@ -146,9 +146,9 @@ class PairedSensorSensor(PairedSensorEntity):
     def _async_update_from_latest_data(self) -> None:
         """Update the entity."""
         if self._kind == SENSOR_KIND_BATTERY:
-            self._state = self._coordinator.data["battery"]
+            self._state = self.coordinator.data["battery"]
         elif self._kind == SENSOR_KIND_TEMPERATURE:
-            self._state = self._coordinator.data["temperature"]
+            self._state = self.coordinator.data["temperature"]
 
 
 class ValveControllerSensor(ValveControllerEntity):
@@ -174,11 +174,11 @@ class ValveControllerSensor(ValveControllerEntity):
     def available(self) -> bool:
         """Return whether the entity is available."""
         if self._kind == SENSOR_KIND_TEMPERATURE:
-            return self._coordinators[
+            return self.coordinators[
                 API_SYSTEM_ONBOARD_SENSOR_STATUS
             ].last_update_success
         if self._kind == SENSOR_KIND_UPTIME:
-            return self._coordinators[API_SYSTEM_DIAGNOSTICS].last_update_success
+            return self.coordinators[API_SYSTEM_DIAGNOSTICS].last_update_success
         return False
 
     @property
@@ -200,8 +200,8 @@ class ValveControllerSensor(ValveControllerEntity):
     def _async_update_from_latest_data(self) -> None:
         """Update the entity."""
         if self._kind == SENSOR_KIND_TEMPERATURE:
-            self._state = self._coordinators[API_SYSTEM_ONBOARD_SENSOR_STATUS].data[
+            self._state = self.coordinators[API_SYSTEM_ONBOARD_SENSOR_STATUS].data[
                 "temperature"
             ]
         elif self._kind == SENSOR_KIND_UPTIME:
-            self._state = self._coordinators[API_SYSTEM_DIAGNOSTICS].data["uptime"]
+            self._state = self.coordinators[API_SYSTEM_DIAGNOSTICS].data["uptime"]

@@ -99,7 +99,7 @@ class ValveControllerSwitch(ValveControllerEntity, SwitchEntity):
     @property
     def available(self) -> bool:
         """Return whether the entity is available."""
-        return self._coordinators[API_VALVE_STATUS].last_update_success
+        return self.coordinators[API_VALVE_STATUS].last_update_success
 
     @property
     def is_on(self) -> bool:
@@ -113,7 +113,7 @@ class ValveControllerSwitch(ValveControllerEntity, SwitchEntity):
     @callback
     def _async_update_from_latest_data(self) -> None:
         """Update the entity."""
-        self._is_on = self._coordinators[API_VALVE_STATUS].data["state"] in (
+        self._is_on = self.coordinators[API_VALVE_STATUS].data["state"] in (
             "start_opening",
             "opening",
             "finish_opening",
@@ -122,16 +122,16 @@ class ValveControllerSwitch(ValveControllerEntity, SwitchEntity):
 
         self._attrs.update(
             {
-                ATTR_AVG_CURRENT: self._coordinators[API_VALVE_STATUS].data[
+                ATTR_AVG_CURRENT: self.coordinators[API_VALVE_STATUS].data[
                     "average_current"
                 ],
-                ATTR_INST_CURRENT: self._coordinators[API_VALVE_STATUS].data[
+                ATTR_INST_CURRENT: self.coordinators[API_VALVE_STATUS].data[
                     "instantaneous_current"
                 ],
-                ATTR_INST_CURRENT_DDT: self._coordinators[API_VALVE_STATUS].data[
+                ATTR_INST_CURRENT_DDT: self.coordinators[API_VALVE_STATUS].data[
                     "instantaneous_current_ddt"
                 ],
-                ATTR_TRAVEL_COUNT: self._coordinators[API_VALVE_STATUS].data[
+                ATTR_TRAVEL_COUNT: self.coordinators[API_VALVE_STATUS].data[
                     "travel_count"
                 ],
             }

@@ -133,7 +133,7 @@ class PairedSensorBinarySensor(PairedSensorEntity, BinarySensorEntity):
     @property
     def available(self) -> bool:
         """Return whether the entity is available."""
-        return self._coordinator.last_update_success
+        return self.coordinator.last_update_success
 
     @property
     def is_on(self) -> bool:
@@ -144,9 +144,9 @@ class PairedSensorBinarySensor(PairedSensorEntity, BinarySensorEntity):
     def _async_update_from_latest_data(self) -> None:
         """Update the entity."""
         if self._kind == SENSOR_KIND_LEAK_DETECTED:
-            self._is_on = self._coordinator.data["wet"]
+            self._is_on = self.coordinator.data["wet"]
         elif self._kind == SENSOR_KIND_MOVED:
-            self._is_on = self._coordinator.data["moved"]
+            self._is_on = self.coordinator.data["moved"]
 
 
 class ValveControllerBinarySensor(ValveControllerEntity, BinarySensorEntity):
@@ -170,9 +170,9 @@ class ValveControllerBinarySensor(ValveControllerEntity, BinarySensorEntity):
     def available(self) -> bool:
         """Return whether the entity is available."""
         if self._kind == SENSOR_KIND_AP_INFO:
-            return self._coordinators[API_WIFI_STATUS].last_update_success
+            return self.coordinators[API_WIFI_STATUS].last_update_success
         if self._kind == SENSOR_KIND_LEAK_DETECTED:
-            return self._coordinators[
+            return self.coordinators[
                 API_SYSTEM_ONBOARD_SENSOR_STATUS
             ].last_update_success
         return False
@@ -193,15 +193,15 @@ class ValveControllerBinarySensor(ValveControllerEntity, BinarySensorEntity):
     def _async_update_from_latest_data(self) -> None:
         """Update the entity."""
         if self._kind == SENSOR_KIND_AP_INFO:
-            self._is_on = self._coordinators[API_WIFI_STATUS].data["station_connected"]
+            self._is_on = self.coordinators[API_WIFI_STATUS].data["station_connected"]
             self._attrs.update(
                 {
-                    ATTR_CONNECTED_CLIENTS: self._coordinators[
-                        API_WIFI_STATUS
-                    ].data.get("ap_clients")
+                    ATTR_CONNECTED_CLIENTS: self.coordinators[API_WIFI_STATUS].data.get(
+                        "ap_clients"
+                    )
                 }
             )
         elif self._kind == SENSOR_KIND_LEAK_DETECTED:
-            self._is_on = self._coordinators[API_SYSTEM_ONBOARD_SENSOR_STATUS].data[
+            self._is_on = self.coordinators[API_SYSTEM_ONBOARD_SENSOR_STATUS].data[
                 "wet"
             ]
