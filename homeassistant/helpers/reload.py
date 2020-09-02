@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from typing import Any, Dict, Iterable, Optional
+from typing import Any, Dict, Iterable, List, Optional
 
 from homeassistant import config as conf_util
 from homeassistant.const import SERVICE_RELOAD
@@ -12,6 +12,7 @@ from homeassistant.helpers import config_per_platform
 from homeassistant.helpers.entity_platform import DATA_ENTITY_PLATFORM, EntityPlatform
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import async_get_integration
+from homeassistant.setup import async_setup_component
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,12 +81,47 @@ async def _resetup_platform(
     # If its an entity platform, we use the entity_platform
     # async_reset method
     platform = async_get_platform(hass, integration_name, integration_platform)
-    if not platform:
+    if platform:
+        await _async_reconfig_platform(platform, root_config[integration_platform])
         return
 
-    await platform.async_reset()
+    if not root_config[integration_platform]:
+        # No config for this platform
+        # and its not loaded.  Nothing to do
+        return
 
-    tasks = [platform.async_setup(p_config) for p_config in root_config[integration_platform]]  # type: ignore
+    await _async_setup_platform(
+        hass, integration_name, integration_platform, root_config[integration_platform]
+    )
+
+
+async def _async_setup_platform(
+    hass: HomeAssistantType,
+    integration_name: str,
+    integration_platform: str,
+    platform_configs: List[Dict],
+) -> None:
+    """Platform for the first time when new configuration is added."""
+    if integration_platform not in hass.data:
+        await async_setup_component(
+            hass, integration_platform, {integration_platform: platform_configs}
+        )
+        return
+
+    entity_component = hass.data[integration_platform]
+    tasks = [
+        entity_component.async_setup_platform(integration_name, p_config)
+        for p_config in platform_configs
+    ]
+    await asyncio.gather(*tasks)
+
+
+async def _async_reconfig_platform(
+    platform: EntityPlatform, platform_configs: List[Dict]
+) -> None:
+    """Reconfigure an already loaded platform."""
+    await platform.async_reset()
+    tasks = [platform.async_setup(p_config) for p_config in platform_configs]  # type: ignore
     await asyncio.gather(*tasks)
 
 

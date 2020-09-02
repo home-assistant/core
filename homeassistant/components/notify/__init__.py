@@ -39,8 +39,8 @@ SERVICE_NOTIFY = "notify"
 NOTIFY_SERVICES = "notify_services"
 SERVICE = "service"
 TARGETS = "targets"
-FRIENDLY_NAME = "friendly_name"
-TARGET_FRIENDLY_NAME = "target_friendly_name"
+SERVICE_NAME = "service_name"
+TARGET_SERVICE_NAME_PREFIX = "target_service_name_prefix"
 
 PLATFORM_SCHEMA = vol.Schema(
     {vol.Required(CONF_PLATFORM): cv.string, vol.Optional(CONF_NAME): cv.string},
@@ -99,20 +99,19 @@ async def _async_unregister_notify_services(hass, data):
                 remove_target_name,
             )
 
-    friendly_name_slug = slugify(data[FRIENDLY_NAME])
-    if not hass.services.has_service(DOMAIN, friendly_name_slug):
+    service_name = data[SERVICE_NAME]
+    if not hass.services.has_service(DOMAIN, service_name):
         return
 
     hass.services.async_remove(
         DOMAIN,
-        friendly_name_slug,
+        service_name,
     )
 
 
 async def _async_setup_notify_services(hass, data):
     """Create or remove the notify services."""
     notify_service = data[SERVICE]
-    friendly_name = data[FRIENDLY_NAME]
     targets = data[TARGETS]
 
     async def _async_notify_message(service):
@@ -120,11 +119,11 @@ async def _async_setup_notify_services(hass, data):
         await _async_notify_message_service(hass, service, notify_service, targets)
 
     if hasattr(notify_service, "targets"):
-        target_friendly_name = data[TARGET_FRIENDLY_NAME]
+        target_service_name_prefix = data[TARGET_SERVICE_NAME_PREFIX]
         stale_targets = set(targets)
 
         for name, target in notify_service.targets.items():
-            target_name = slugify(f"{target_friendly_name}_{name}")
+            target_name = slugify(f"{target_service_name_prefix}_{name}")
             if target_name in stale_targets:
                 stale_targets.remove(target_name)
             if target_name in targets:
@@ -144,13 +143,12 @@ async def _async_setup_notify_services(hass, data):
                 stale_target_name,
             )
 
-    friendly_name_slug = slugify(friendly_name)
-    if hass.services.has_service(DOMAIN, friendly_name_slug):
+    if hass.services.has_service(DOMAIN, data[SERVICE_NAME]):
         return
 
     hass.services.async_register(
         DOMAIN,
-        friendly_name_slug,
+        data[SERVICE_NAME],
         _async_notify_message,
         schema=NOTIFY_SERVICE_SCHEMA,
     )
@@ -229,18 +227,15 @@ async def async_setup(hass, config):
         if discovery_info is None:
             discovery_info = {}
 
-        target_friendly_name = (
-            p_config.get(CONF_NAME) or discovery_info.get(CONF_NAME) or integration_name
-        )
-        friendly_name = (
-            p_config.get(CONF_NAME) or discovery_info.get(CONF_NAME) or SERVICE_NOTIFY
-        )
+        conf_name = p_config.get(CONF_NAME) or discovery_info.get(CONF_NAME)
+        target_service_name_prefix = conf_name or integration_name
+        service_name = conf_name or SERVICE_NOTIFY
 
         data = {
-            FRIENDLY_NAME: friendly_name,
+            SERVICE_NAME: slugify(service_name),
             # The targets use a slightly different friendly name
             # selection pattern than the base service
-            TARGET_FRIENDLY_NAME: target_friendly_name,
+            TARGET_SERVICE_NAME_PREFIX: target_service_name_prefix,
             SERVICE: notify_service,
             TARGETS: {},
         }

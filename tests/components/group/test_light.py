@@ -683,5 +683,79 @@ async def test_reload(hass):
     assert hass.states.get("light.outside_patio_lights_g") is not None
 
 
+async def test_reload_with_platform_not_setup(hass):
+    """Test the ability to reload lights."""
+    hass.states.async_set("light.bowl", STATE_ON)
+    await async_setup_component(
+        hass,
+        LIGHT_DOMAIN,
+        {
+            LIGHT_DOMAIN: [
+                {"platform": "demo"},
+            ]
+        },
+    )
+    assert await async_setup_component(
+        hass,
+        "group",
+        {
+            "group": {
+                "group_zero": {"entities": "light.Bowl", "icon": "mdi:work"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    yaml_path = path.join(
+        _get_fixtures_base_path(),
+        "fixtures",
+        "group/configuration.yaml",
+    )
+    with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RELOAD,
+            {},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    assert hass.states.get("light.light_group") is None
+    assert hass.states.get("light.master_hall_lights_g") is not None
+    assert hass.states.get("light.outside_patio_lights_g") is not None
+
+
+async def test_reload_with_base_integration_platform_not_setup(hass):
+    """Test the ability to reload lights."""
+    assert await async_setup_component(
+        hass,
+        "group",
+        {
+            "group": {
+                "group_zero": {"entities": "light.Bowl", "icon": "mdi:work"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    yaml_path = path.join(
+        _get_fixtures_base_path(),
+        "fixtures",
+        "group/configuration.yaml",
+    )
+    with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RELOAD,
+            {},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    assert hass.states.get("light.light_group") is None
+    assert hass.states.get("light.master_hall_lights_g") is not None
+    assert hass.states.get("light.outside_patio_lights_g") is not None
+
+
 def _get_fixtures_base_path():
     return path.dirname(path.dirname(path.dirname(__file__)))
