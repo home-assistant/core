@@ -32,6 +32,11 @@ PyTurboJPEG==1.4.0
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.13.2
 
+# homeassistant.components.bmp280
+# homeassistant.components.mcp23017
+# homeassistant.components.rpi_gpio
+# RPi.GPIO==0.7.0
+
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.2
 
