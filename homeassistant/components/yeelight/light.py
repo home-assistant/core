@@ -273,10 +273,11 @@ async def async_setup_entry(
         )
 
     async_add_entities(lights, True)
-    await _async_setup_services(hass)
+    _async_setup_services(hass)
 
 
-async def _async_setup_services(hass: HomeAssistant):
+@callback
+def _async_setup_services(hass: HomeAssistant):
     """Set up custom services."""
 
     async def _async_start_flow(entity, service_call):
