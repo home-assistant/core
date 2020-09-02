@@ -137,7 +137,8 @@ class OptionsFlow(config_entries.OptionsFlow):
         options = {
             vol.Optional(CONF_DEBUG, default=self._config_entry.data[CONF_DEBUG]): bool,
             vol.Optional(
-                CONF_AUTOMATIC_ADD, default=self._config_entry.data[CONF_AUTOMATIC_ADD],
+                CONF_AUTOMATIC_ADD,
+                default=self._config_entry.data[CONF_AUTOMATIC_ADD],
             ): bool,
             vol.Optional(CONF_EVENT_CODE): str,
             vol.Optional(CONF_DEVICE): vol.In(devices),
@@ -338,7 +339,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             {vol.Required(CONF_HOST): str, vol.Required(CONF_PORT): int}
         )
         return self.async_show_form(
-            step_id="setup_network", data_schema=schema, errors=errors,
+            step_id="setup_network",
+            data_schema=schema,
+            errors=errors,
         )
 
     async def async_step_setup_serial(self, user_input=None):
@@ -365,15 +368,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         ports = await self.hass.async_add_executor_job(serial.tools.list_ports.comports)
         list_of_ports = {}
         for port in ports:
-            list_of_ports[port.device] = (
-                f"{port}, s/n: {port.serial_number or 'n/a'}"
-                + (f" - {port.manufacturer}" if port.manufacturer else "")
+            list_of_ports[
+                port.device
+            ] = f"{port}, s/n: {port.serial_number or 'n/a'}" + (
+                f" - {port.manufacturer}" if port.manufacturer else ""
             )
         list_of_ports[CONF_MANUAL_PATH] = CONF_MANUAL_PATH
 
         schema = vol.Schema({vol.Required(CONF_DEVICE): vol.In(list_of_ports)})
         return self.async_show_form(
-            step_id="setup_serial", data_schema=schema, errors=errors,
+            step_id="setup_serial",
+            data_schema=schema,
+            errors=errors,
         )
 
     async def async_step_setup_serial_manual_path(self, user_input=None):
@@ -392,19 +398,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         schema = vol.Schema({vol.Required(CONF_DEVICE): str})
         return self.async_show_form(
-            step_id="setup_serial_manual_path", data_schema=schema, errors=errors,
+            step_id="setup_serial_manual_path",
+            data_schema=schema,
+            errors=errors,
         )
 
     async def async_step_import(self, import_config=None):
         """Handle the initial step."""
-        entry = await self.async_set_unique_id(DOMAIN)
-        if entry:
-            if CONF_DEVICES not in entry.data:
-                # In version 0.113, devices key was not written to config entry. Update the entry with import data
-                self._abort_if_unique_id_configured(import_config)
-            else:
-                self._abort_if_unique_id_configured()
-        return self.async_create_entry(title="RFXTRX", data=import_config)
 
     async def async_validate_rfx(self, host=None, port=None, device=None):
         """Create data for rfxtrx entry."""
