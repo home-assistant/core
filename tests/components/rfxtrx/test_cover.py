@@ -7,13 +7,14 @@ from homeassistant.components.rfxtrx import DOMAIN
 from homeassistant.core import State
 
 from tests.common import MockConfigEntry, mock_restore_cache
-from tests.components.rfxtrx.conftest import RFXTRX_DATA
+from tests.components.rfxtrx.conftest import create_rfx_test_cfg
 
 
 async def test_one_cover(hass, rfxtrx):
     """Test with 1 cover."""
-    entry_data = RFXTRX_DATA.copy()
-    entry_data["devices"] = {"0b1400cd0213c7f20d010f51": {"signal_repetitions": 1}}
+    entry_data = create_rfx_test_cfg(
+        devices={"0b1400cd0213c7f20d010f51": {"signal_repetitions": 1}}
+    )
     mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
 
     mock_entry.add_to_hass(hass)
@@ -60,8 +61,9 @@ async def test_state_restore(hass, rfxtrx, state):
 
     mock_restore_cache(hass, [State(entity_id, state)])
 
-    entry_data = RFXTRX_DATA.copy()
-    entry_data["devices"] = {"0b1400cd0213c7f20d010f51": {"signal_repetitions": 1}}
+    entry_data = create_rfx_test_cfg(
+        devices={"0b1400cd0213c7f20d010f51": {"signal_repetitions": 1}}
+    )
     mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
 
     mock_entry.add_to_hass(hass)
@@ -74,12 +76,13 @@ async def test_state_restore(hass, rfxtrx, state):
 
 async def test_several_covers(hass, rfxtrx):
     """Test with 3 covers."""
-    entry_data = RFXTRX_DATA.copy()
-    entry_data["devices"] = {
-        "0b1400cd0213c7f20d010f51": {"signal_repetitions": 1},
-        "0A1400ADF394AB010D0060": {"signal_repetitions": 1},
-        "09190000009ba8010100": {"signal_repetitions": 1},
-    }
+    entry_data = create_rfx_test_cfg(
+        devices={
+            "0b1400cd0213c7f20d010f51": {"signal_repetitions": 1},
+            "0A1400ADF394AB010D0060": {"signal_repetitions": 1},
+            "09190000009ba8010100": {"signal_repetitions": 1},
+        }
+    )
     mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
 
     mock_entry.add_to_hass(hass)
@@ -120,11 +123,12 @@ async def test_discover_covers(hass, rfxtrx_automatic):
 
 async def test_duplicate_cover(hass, rfxtrx):
     """Test with 2 duplicate covers."""
-    entry_data = RFXTRX_DATA.copy()
-    entry_data["devices"] = {
-        "0b1400cd0213c7f20d010f51": {"signal_repetitions": 1},
-        "0b1400cd0213c7f20d010f50": {"signal_repetitions": 1},
-    }
+    entry_data = create_rfx_test_cfg(
+        devices={
+            "0b1400cd0213c7f20d010f51": {"signal_repetitions": 1},
+            "0b1400cd0213c7f20d010f50": {"signal_repetitions": 1},
+        }
+    )
     mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
 
     mock_entry.add_to_hass(hass)

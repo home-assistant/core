@@ -7,7 +7,7 @@ from homeassistant.setup import async_setup_component
 
 from tests.async_mock import call
 from tests.common import MockConfigEntry
-from tests.components.rfxtrx.conftest import RFXTRX_DATA
+from tests.components.rfxtrx.conftest import create_rfx_test_cfg
 
 
 async def test_valid_config(hass):
@@ -58,15 +58,14 @@ async def test_invalid_config(hass):
 
 async def test_fire_event(hass, rfxtrx):
     """Test fire event."""
-    entry_data = RFXTRX_DATA.copy()
-    entry_data["device"] = (
-        "/dev/serial/by-id/usb" + "-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0"
+    entry_data = create_rfx_test_cfg(
+        device=("/dev/serial/by-id/usb" + "-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0"),
+        automatic_add=True,
+        devices={
+            "0b1100cd0213c7f210010f51": {"fire_event": True},
+            "0716000100900970": {"fire_event": True},
+        },
     )
-    entry_data["automatic_add"] = True
-    entry_data["devices"] = {
-        "0b1100cd0213c7f210010f51": {"fire_event": True},
-        "0716000100900970": {"fire_event": True},
-    }
     mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
 
     mock_entry.add_to_hass(hass)
@@ -110,8 +109,7 @@ async def test_fire_event(hass, rfxtrx):
 
 async def test_send(hass, rfxtrx):
     """Test configuration."""
-    entry_data = RFXTRX_DATA.copy()
-    entry_data["device"] = "/dev/null"
+    entry_data = create_rfx_test_cfg(device="/dev/null", devices={})
     mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
 
     mock_entry.add_to_hass(hass)

@@ -8,13 +8,14 @@ from homeassistant.components.rfxtrx import DOMAIN
 from homeassistant.core import State
 
 from tests.common import MockConfigEntry, mock_restore_cache
-from tests.components.rfxtrx.conftest import RFXTRX_DATA
+from tests.components.rfxtrx.conftest import create_rfx_test_cfg
 
 
 async def test_one_light(hass, rfxtrx):
     """Test with 1 light."""
-    entry_data = RFXTRX_DATA.copy()
-    entry_data["devices"] = {"0b1100cd0213c7f210020f51": {"signal_repetitions": 1}}
+    entry_data = create_rfx_test_cfg(
+        devices={"0b1100cd0213c7f210020f51": {"signal_repetitions": 1}}
+    )
     mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
 
     mock_entry.add_to_hass(hass)
@@ -98,8 +99,9 @@ async def test_state_restore(hass, rfxtrx, state, brightness):
         hass, [State(entity_id, state, attributes={ATTR_BRIGHTNESS: brightness})]
     )
 
-    entry_data = RFXTRX_DATA.copy()
-    entry_data["devices"] = {"0b1100cd0213c7f210020f51": {"signal_repetitions": 1}}
+    entry_data = create_rfx_test_cfg(
+        devices={"0b1100cd0213c7f210020f51": {"signal_repetitions": 1}}
+    )
     mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
 
     mock_entry.add_to_hass(hass)
@@ -113,12 +115,13 @@ async def test_state_restore(hass, rfxtrx, state, brightness):
 
 async def test_several_lights(hass, rfxtrx):
     """Test with 3 lights."""
-    entry_data = RFXTRX_DATA.copy()
-    entry_data["devices"] = {
-        "0b1100cd0213c7f230020f71": {"signal_repetitions": 1},
-        "0b1100100118cdea02020f70": {"signal_repetitions": 1},
-        "0b1100101118cdea02050f70": {"signal_repetitions": 1},
-    }
+    entry_data = create_rfx_test_cfg(
+        devices={
+            "0b1100cd0213c7f230020f71": {"signal_repetitions": 1},
+            "0b1100100118cdea02020f70": {"signal_repetitions": 1},
+            "0b1100101118cdea02050f70": {"signal_repetitions": 1},
+        }
+    )
     mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
 
     mock_entry.add_to_hass(hass)
@@ -162,10 +165,9 @@ async def test_several_lights(hass, rfxtrx):
 @pytest.mark.parametrize("repetitions", [1, 3])
 async def test_repetitions(hass, rfxtrx, repetitions):
     """Test signal repetitions."""
-    entry_data = RFXTRX_DATA.copy()
-    entry_data["devices"] = {
-        "0b1100cd0213c7f230020f71": {"signal_repetitions": repetitions}
-    }
+    entry_data = create_rfx_test_cfg(
+        devices={"0b1100cd0213c7f230020f71": {"signal_repetitions": repetitions}}
+    )
     mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
 
     mock_entry.add_to_hass(hass)

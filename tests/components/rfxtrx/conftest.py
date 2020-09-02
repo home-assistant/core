@@ -10,14 +10,17 @@ from homeassistant.util.dt import utcnow
 from tests.async_mock import patch
 from tests.common import MockConfigEntry, async_fire_time_changed
 
-RFXTRX_DATA = {
-    "device": "abcd",
-    "host": None,
-    "port": None,
-    "automatic_add": False,
-    "debug": False,
-    "devices": {},
-}
+
+def create_rfx_test_cfg(device="abcd", automatic_add=False, devices=None):
+    """Create rfxtrx config entry data."""
+    return {
+        "device": device,
+        "host": None,
+        "port": None,
+        "automatic_add": automatic_add,
+        "debug": False,
+        "devices": devices,
+    }
 
 
 @pytest.fixture(autouse=True, name="rfxtrx")
@@ -46,8 +49,7 @@ async def rfxtrx_fixture(hass):
 @pytest.fixture(name="rfxtrx_automatic")
 async def rfxtrx_automatic_fixture(hass, rfxtrx):
     """Fixture that starts up with automatic additions."""
-    entry_data = RFXTRX_DATA.copy()
-    entry_data["automatic_add"] = True
+    entry_data = create_rfx_test_cfg(automatic_add=True, devices={})
     mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
 
     mock_entry.add_to_hass(hass)
