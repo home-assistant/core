@@ -1,6 +1,5 @@
 """Provides functionality to notify people."""
 import asyncio
-from dataclasses import dataclass
 from functools import partial
 import logging
 from typing import Any, Dict, Optional
@@ -62,10 +61,8 @@ async def async_reload(hass: HomeAssistantType, integration_name: str) -> None:
         return
 
     tasks = [
-        data.service.async_register_services(
-            data.service_name, data.target_service_name_prefix, data.targets
-        )
-        for data in hass.data[NOTIFY_SERVICES][integration_name]
+        notify_service.async_register_services()
+        for notify_service in hass.data[NOTIFY_SERVICES][integration_name]
     ]
 
     await asyncio.gather(*tasks)
@@ -78,8 +75,8 @@ async def async_reset_platform(hass: HomeAssistantType, integration_name: str) -
         return
 
     tasks = [
-        data.service.async_unregister_services(data.service_name, data.targets)
-        for data in hass.data[NOTIFY_SERVICES][integration_name]
+        notify_service.async_unregister_services()
+        for notify_service in hass.data[NOTIFY_SERVICES][integration_name]
     ]
 
     await asyncio.gather(*tasks)
@@ -119,9 +116,7 @@ class BaseNotificationService:
         """
         await self.hass.async_add_job(partial(self.send_message, message, **kwargs))  # type: ignore
 
-    async def _async_notify_message_service(
-        self, service: ServiceCall, targets: Dict
-    ) -> None:
+    async def _async_notify_message_service(self, service: ServiceCall) -> None:
         """Handle sending notification message service calls."""
         kwargs = {}
         message = service.data[ATTR_MESSAGE]
@@ -131,8 +126,8 @@ class BaseNotificationService:
             title.hass = self.hass
             kwargs[ATTR_TITLE] = title.async_render()
 
-        if targets.get(service.service) is not None:
-            kwargs[ATTR_TARGET] = [targets[service.service]]
+        if self._targets.get(service.service) is not None:
+            kwargs[ATTR_TARGET] = [self._targets[service.service]]
         elif service.data.get(ATTR_TARGET) is not None:
             kwargs[ATTR_TARGET] = service.data.get(ATTR_TARGET)
 
@@ -142,91 +137,74 @@ class BaseNotificationService:
 
         await self.async_send_message(**kwargs)
 
-    async def async_register_services(
-        self, service_name: str, target_service_name_prefix: str, targets: Dict
+    async def async_setup(
+        self, service_name: str, target_service_name_prefix: str
     ) -> None:
+        """Store the data for the notify service."""
+        # pylint: disable=attribute-defined-outside-init
+        self._service_name = service_name
+        self._target_service_name_prefix = target_service_name_prefix
+        self._targets: Dict = {}
+
+    async def async_register_services(self) -> None:
         """Create or remove the notify services."""
         assert self.hass
 
-        async def _async_notify_message(service):
-            """Handle sending notification message service calls."""
-            await self._async_notify_message_service(service, targets)
-
         if hasattr(self, "targets"):
-            stale_targets = set(targets)
+            stale_targets = set(self._targets)
 
             # pylint: disable=no-member
             for name, target in self.targets.items():  # type: ignore
-                target_name = slugify(f"{target_service_name_prefix}_{name}")
+                target_name = slugify(f"{self._target_service_name_prefix}_{name}")
                 if target_name in stale_targets:
                     stale_targets.remove(target_name)
-                if target_name in targets:
+                if target_name in self._targets:
                     continue
-                targets[target_name] = target
+                self._targets[target_name] = target
                 self.hass.services.async_register(
                     DOMAIN,
                     target_name,
-                    _async_notify_message,
+                    self._async_notify_message_service,
                     schema=NOTIFY_SERVICE_SCHEMA,
                 )
 
             for stale_target_name in stale_targets:
-                del targets[stale_target_name]
+                del self._targets[stale_target_name]
                 self.hass.services.async_remove(
                     DOMAIN,
                     stale_target_name,
                 )
 
-        if self.hass.services.has_service(DOMAIN, service_name):
+        if self.hass.services.has_service(DOMAIN, self._service_name):
             return
 
         self.hass.services.async_register(
             DOMAIN,
-            service_name,
-            _async_notify_message,
+            self._service_name,
+            self._async_notify_message_service,
             schema=NOTIFY_SERVICE_SCHEMA,
         )
 
-    async def async_unregister_services(self, service_name: str, targets: Dict) -> None:
+    async def async_unregister_services(self) -> None:
         """Unregister the notify services."""
         assert self.hass
 
-        if targets:
-            remove_targets = set(targets)
+        if self._targets:
+            remove_targets = set(self._targets)
             for remove_target_name in remove_targets:
-                del targets[remove_target_name]
+                del self._targets[remove_target_name]
                 self.hass.services.async_remove(
                     DOMAIN,
                     remove_target_name,
                 )
 
-        if not self.hass.services.has_service(DOMAIN, service_name):
+        if not self.hass.services.has_service(DOMAIN, self._service_name):
             return
 
         self.hass.services.async_remove(
             DOMAIN,
-            service_name,
+            self._service_name,
         )
-
-
-@dataclass
-class NotifyServiceData:
-    """Class for storing notify service data.
-
-    service
-        The NotificationService
-    service_name
-        The name of the notify service.
-    target_service_name_prefix
-        The prefix used to create new service for tagets.
-    targets
-        A dict of targets indexed by service names.
-    """
-
-    service: BaseNotificationService
-    service_name: str
-    target_service_name_prefix: str
-    targets: Dict
 
 
 async def async_setup(hass, config):
@@ -283,16 +261,14 @@ async def async_setup(hass, config):
         conf_name = p_config.get(CONF_NAME) or discovery_info.get(CONF_NAME)
         target_service_name_prefix = conf_name or integration_name
         service_name = slugify(conf_name or SERVICE_NOTIFY)
-        targets = {}
 
-        data = NotifyServiceData(
-            notify_service, service_name, target_service_name_prefix, targets
-        )
-        hass.data[NOTIFY_SERVICES].setdefault(integration_name, []).append(data)
+        await notify_service.async_setup(service_name, target_service_name_prefix)
 
-        await notify_service.async_register_services(
-            service_name, target_service_name_prefix, targets
+        hass.data[NOTIFY_SERVICES].setdefault(integration_name, []).append(
+            notify_service
         )
+
+        await notify_service.async_register_services()
 
         hass.config.components.add(f"{DOMAIN}.{integration_name}")
 
