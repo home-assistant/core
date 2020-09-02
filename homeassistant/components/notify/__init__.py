@@ -86,6 +86,17 @@ async def async_reset_platform(hass, integration_name):
     del hass.data[NOTIFY_SERVICES][integration_name]
 
 
+def _async_integration_has_notify_services(hass, integration_name):
+    """Determine if an integration has notify services registered."""
+    if (
+        NOTIFY_SERVICES not in hass.data
+        or integration_name not in hass.data[NOTIFY_SERVICES]
+    ):
+        return False
+
+    return True
+
+
 class BaseNotificationService:
     """An abstract class for notification services."""
 
@@ -207,17 +218,6 @@ class NotifyServiceData:
     service_name: str
     target_service_name_prefix: str
     targets: Dict
-
-
-def _async_integration_has_notify_services(hass, integration_name):
-    """Call a method on all notify services for an integration."""
-    if (
-        NOTIFY_SERVICES not in hass.data
-        or integration_name not in hass.data[NOTIFY_SERVICES]
-    ):
-        return False
-
-    return True
 
 
 async def async_setup(hass, config):
