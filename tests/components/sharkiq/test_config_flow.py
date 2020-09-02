@@ -68,7 +68,7 @@ async def test_form_error(hass: HomeAssistant, exc: Exception, base_error: str):
     assert result2["errors"].get("base") == base_error
 
 
-async def test_reauth_sucess(hass: HomeAssistant):
+async def test_reauth_success(hass: HomeAssistant):
     """Test reauth flow."""
     with patch("sharkiqpy.AylaApi.async_sign_in", return_value=True):
         mock_config = MockConfigEntry(domain=DOMAIN, unique_id=UNIQUE_ID, data=CONFIG)
