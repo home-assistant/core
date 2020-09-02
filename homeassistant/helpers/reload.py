@@ -141,6 +141,12 @@ def async_get_platform(
     hass: HomeAssistantType, integration_name: str, integration_platform_name: str
 ) -> Optional[EntityPlatform]:
     """Find an existing platform."""
+    if (
+        DATA_ENTITY_PLATFORM not in hass.data
+        or integration_name not in hass.data[DATA_ENTITY_PLATFORM]
+    ):
+        return None
+
     for integration_platform in hass.data[DATA_ENTITY_PLATFORM][integration_name]:
         if integration_platform.domain == integration_platform_name:
             platform: EntityPlatform = integration_platform
