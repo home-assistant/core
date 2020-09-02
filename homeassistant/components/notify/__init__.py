@@ -60,20 +60,43 @@ NOTIFY_SERVICE_SCHEMA = vol.Schema(
 @bind_hass
 async def async_reload(hass, integration_name):
     """Register notify services for an integration."""
-    await _do_with_notify_services(hass, integration_name, _async_setup_notify_services)
+    if not _async_integration_has_notify_services(hass, integration_name):
+        return
+
+    await _async_call_notify_service_tasks(
+        hass, integration_name, _async_register_from_notify_data
+    )
+
+
+def _async_register_from_notify_data(data):
+    return data[SERVICE].async_register_services(
+        data[SERVICE_NAME], data[TARGET_SERVICE_NAME_PREFIX], data[TARGETS]
+    )
 
 
 @bind_hass
 async def async_reset_platform(hass, integration_name):
     """Unregister notify services for an integration."""
-    if not await _do_with_notify_services(
-        hass, integration_name, _async_unregister_notify_services
-    ):
+    if not _async_integration_has_notify_services(hass, integration_name):
         return
+
+    await _async_call_notify_service_tasks(
+        hass, integration_name, _async_unregister_from_notify_data
+    )
     del hass.data[NOTIFY_SERVICES][integration_name]
 
 
-async def _do_with_notify_services(hass, integration_name, call):
+def _async_unregister_from_notify_data(data):
+    return data[SERVICE].async_unregister_services(data[SERVICE_NAME], data[TARGETS])
+
+
+async def _async_call_notify_service_tasks(hass, integration_name, call):
+    tasks = [call(data) for data in hass.data[NOTIFY_SERVICES][integration_name]]
+
+    await asyncio.gather(*tasks)
+
+
+def _async_integration_has_notify_services(hass, integration_name):
     """Call a method on all notify services for an integration."""
     if (
         NOTIFY_SERVICES not in hass.data
@@ -81,99 +104,7 @@ async def _do_with_notify_services(hass, integration_name, call):
     ):
         return False
 
-    tasks = [call(hass, data) for data in hass.data[NOTIFY_SERVICES][integration_name]]
-    await asyncio.gather(*tasks)
     return True
-
-
-async def _async_unregister_notify_services(hass, data):
-    """Remove the notify services."""
-    targets = data[TARGETS]
-
-    if targets:
-        remove_targets = set(targets)
-        for remove_target_name in remove_targets:
-            del targets[remove_target_name]
-            hass.services.async_remove(
-                DOMAIN,
-                remove_target_name,
-            )
-
-    service_name = data[SERVICE_NAME]
-    if not hass.services.has_service(DOMAIN, service_name):
-        return
-
-    hass.services.async_remove(
-        DOMAIN,
-        service_name,
-    )
-
-
-async def _async_setup_notify_services(hass, data):
-    """Create or remove the notify services."""
-    notify_service = data[SERVICE]
-    targets = data[TARGETS]
-
-    async def _async_notify_message(service):
-        """Handle sending notification message service calls."""
-        await _async_notify_message_service(hass, service, notify_service, targets)
-
-    if hasattr(notify_service, "targets"):
-        target_service_name_prefix = data[TARGET_SERVICE_NAME_PREFIX]
-        stale_targets = set(targets)
-
-        for name, target in notify_service.targets.items():
-            target_name = slugify(f"{target_service_name_prefix}_{name}")
-            if target_name in stale_targets:
-                stale_targets.remove(target_name)
-            if target_name in targets:
-                continue
-            targets[target_name] = target
-            hass.services.async_register(
-                DOMAIN,
-                target_name,
-                _async_notify_message,
-                schema=NOTIFY_SERVICE_SCHEMA,
-            )
-
-        for stale_target_name in stale_targets:
-            del targets[stale_target_name]
-            hass.services.async_remove(
-                DOMAIN,
-                stale_target_name,
-            )
-
-    if hass.services.has_service(DOMAIN, data[SERVICE_NAME]):
-        return
-
-    hass.services.async_register(
-        DOMAIN,
-        data[SERVICE_NAME],
-        _async_notify_message,
-        schema=NOTIFY_SERVICE_SCHEMA,
-    )
-
-
-async def _async_notify_message_service(hass, service, notify_service, targets):
-    """Handle sending notification message service calls."""
-    kwargs = {}
-    message = service.data[ATTR_MESSAGE]
-    title = service.data.get(ATTR_TITLE)
-
-    if title:
-        title.hass = hass
-        kwargs[ATTR_TITLE] = title.async_render()
-
-    if targets.get(service.service) is not None:
-        kwargs[ATTR_TARGET] = [targets[service.service]]
-    elif service.data.get(ATTR_TARGET) is not None:
-        kwargs[ATTR_TARGET] = service.data.get(ATTR_TARGET)
-
-    message.hass = hass
-    kwargs[ATTR_MESSAGE] = message.async_render()
-    kwargs[ATTR_DATA] = service.data.get(ATTR_DATA)
-
-    await notify_service.async_send_message(**kwargs)
 
 
 async def async_setup(hass, config):
@@ -242,7 +173,7 @@ async def async_setup(hass, config):
         hass.data[NOTIFY_SERVICES].setdefault(integration_name, [])
         hass.data[NOTIFY_SERVICES][integration_name].append(data)
 
-        await _async_setup_notify_services(hass, data)
+        await _async_register_from_notify_data(data)
 
         hass.config.components.add(f"{DOMAIN}.{integration_name}")
 
@@ -265,6 +196,28 @@ async def async_setup(hass, config):
     return True
 
 
+async def _async_notify_message_service(hass, service, notify_service, targets):
+    """Handle sending notification message service calls."""
+    kwargs = {}
+    message = service.data[ATTR_MESSAGE]
+    title = service.data.get(ATTR_TITLE)
+
+    if title:
+        title.hass = hass
+        kwargs[ATTR_TITLE] = title.async_render()
+
+    if targets.get(service.service) is not None:
+        kwargs[ATTR_TARGET] = [targets[service.service]]
+    elif service.data.get(ATTR_TARGET) is not None:
+        kwargs[ATTR_TARGET] = service.data.get(ATTR_TARGET)
+
+    message.hass = hass
+    kwargs[ATTR_MESSAGE] = message.async_render()
+    kwargs[ATTR_DATA] = service.data.get(ATTR_DATA)
+
+    await notify_service.async_send_message(**kwargs)
+
+
 class BaseNotificationService:
     """An abstract class for notification services."""
 
@@ -283,3 +236,65 @@ class BaseNotificationService:
         kwargs can contain ATTR_TITLE to specify a title.
         """
         await self.hass.async_add_job(partial(self.send_message, message, **kwargs))
+
+    async def async_register_services(
+        self, service_name, target_service_name_prefix, targets
+    ):
+        """Create or remove the notify services."""
+
+        async def _async_notify_message(service):
+            """Handle sending notification message service calls."""
+            await _async_notify_message_service(self.hass, service, self, targets)
+
+        if hasattr(self, "targets"):
+            stale_targets = set(targets)
+
+            for name, target in self.targets.items():  # pylint: disable=no-member
+                target_name = slugify(f"{target_service_name_prefix}_{name}")
+                if target_name in stale_targets:
+                    stale_targets.remove(target_name)
+                if target_name in targets:
+                    continue
+                targets[target_name] = target
+                self.hass.services.async_register(
+                    DOMAIN,
+                    target_name,
+                    _async_notify_message,
+                    schema=NOTIFY_SERVICE_SCHEMA,
+                )
+
+            for stale_target_name in stale_targets:
+                del targets[stale_target_name]
+                self.hass.services.async_remove(
+                    DOMAIN,
+                    stale_target_name,
+                )
+
+        if self.hass.services.has_service(DOMAIN, service_name):
+            return
+
+        self.hass.services.async_register(
+            DOMAIN,
+            service_name,
+            _async_notify_message,
+            schema=NOTIFY_SERVICE_SCHEMA,
+        )
+
+    async def async_unregister_services(self, service_name, targets):
+        """Unregister the notify services."""
+        if targets:
+            remove_targets = set(targets)
+            for remove_target_name in remove_targets:
+                del targets[remove_target_name]
+                self.hass.services.async_remove(
+                    DOMAIN,
+                    remove_target_name,
+                )
+
+        if not self.hass.services.has_service(DOMAIN, service_name):
+            return
+
+        self.hass.services.async_remove(
+            DOMAIN,
+            service_name,
+        )
