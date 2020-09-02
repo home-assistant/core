@@ -104,10 +104,10 @@ async def test_reauth(
             context={"source": "reauth", "unique_id": UNIQUE_ID},
             data=CONFIG,
         )
+
+        msg_value = result[msg_field]
         if msg_field == "errors":
-            msg_value = result["errors"].get("base")
-        else:
-            msg_value = result[msg_field]
+            msg_value = msg_value.get("base")
 
         assert result["type"] == result_type
         assert msg_value == msg
