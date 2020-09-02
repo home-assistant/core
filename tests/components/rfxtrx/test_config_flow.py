@@ -336,6 +336,37 @@ async def test_import_update(hass):
     assert result["reason"] == "already_configured"
 
 
+async def test_import_migrate(hass):
+    """Test we can import."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"host": None, "port": None, "device": "/dev/tty123", "debug": False},
+        unique_id=DOMAIN,
+    )
+    entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.rfxtrx.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={
+                "host": None,
+                "port": None,
+                "device": "/dev/tty123",
+                "debug": True,
+                "automatic_add": True,
+                "devices": {},
+            },
+        )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+
+    assert entry.data["devices"] == {}
+
+
 async def test_options_global(hass):
     """Test if we can set global options."""
     await setup.async_setup_component(hass, "persistent_notification", {})
