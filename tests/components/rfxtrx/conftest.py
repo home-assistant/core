@@ -4,11 +4,11 @@ from datetime import timedelta
 import pytest
 
 from homeassistant.components import rfxtrx
-from homeassistant.setup import async_setup_component
+from homeassistant.components.rfxtrx import DOMAIN
 from homeassistant.util.dt import utcnow
 
 from tests.async_mock import patch
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture(autouse=True, name="rfxtrx")
@@ -37,12 +37,19 @@ async def rfxtrx_fixture(hass):
 @pytest.fixture(name="rfxtrx_automatic")
 async def rfxtrx_automatic_fixture(hass, rfxtrx):
     """Fixture that starts up with automatic additions."""
+    entry_data = {
+        "device": "abcd",
+        "host": None,
+        "port": None,
+        "automatic_add": True,
+        "debug": False,
+        "devices": {},
+    }
+    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
 
-    assert await async_setup_component(
-        hass,
-        "rfxtrx",
-        {"rfxtrx": {"device": "abcd", "automatic_add": True}},
-    )
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
     await hass.async_start()
     yield rfxtrx
