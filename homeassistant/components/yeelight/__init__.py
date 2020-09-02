@@ -10,8 +10,8 @@ from yeelight import Bulb, BulbException, discover_bulbs
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry, ConfigEntryNotReady
 from homeassistant.const import (
     CONF_DEVICES,
+    CONF_HOST,
     CONF_ID,
-    CONF_IP_ADDRESS,
     CONF_NAME,
     CONF_SCAN_INTERVAL,
 )
@@ -160,10 +160,10 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     }
 
     # Import manually configured devices
-    for ip_addr, device_config in config.get(DOMAIN, {}).get(CONF_DEVICES, {}).items():
-        _LOGGER.debug("Importing configured %s", ip_addr)
+    for host, device_config in config.get(DOMAIN, {}).get(CONF_DEVICES, {}).items():
+        _LOGGER.debug("Importing configured %s", host)
         entry_config = {
-            CONF_IP_ADDRESS: ip_addr,
+            CONF_HOST: host,
             **device_config,
         }
         hass.async_create_task(
@@ -180,8 +180,8 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Yeelight from a config entry."""
 
-    async def _initialize(ip_addr: str) -> None:
-        device = await _async_setup_device(hass, ip_addr, entry.options)
+    async def _initialize(host: str) -> None:
+        device = await _async_setup_device(hass, host, entry.options)
         hass.data[DOMAIN][DATA_CONFIG_ENTRIES][entry.entry_id][DATA_DEVICE] = device
         for component in PLATFORMS:
             hass.async_create_task(
@@ -194,7 +194,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.config_entries.async_update_entry(
             entry,
             data={
-                CONF_IP_ADDRESS: entry.data.get(CONF_IP_ADDRESS),
+                CONF_HOST: entry.data.get(CONF_HOST),
                 CONF_ID: entry.data.get(CONF_ID),
             },
             options={
@@ -215,9 +215,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         DATA_UNSUB_UPDATE_LISTENER: entry.add_update_listener(_async_update_listener)
     }
 
-    if entry.data.get(CONF_IP_ADDRESS):
+    if entry.data.get(CONF_HOST):
         # manually added device
-        await _initialize(entry.data[CONF_IP_ADDRESS])
+        await _initialize(entry.data[CONF_HOST])
     else:
         # discovery
         scanner = YeelightScanner.async_get(hass)
@@ -251,16 +251,16 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def _async_setup_device(
     hass: HomeAssistant,
-    ip_addr: str,
+    host: str,
     config: dict,
 ) -> None:
     # Set up device
-    bulb = Bulb(ip_addr, model=config.get(CONF_MODEL) or None)
+    bulb = Bulb(host, model=config.get(CONF_MODEL) or None)
     capabilities = await hass.async_add_executor_job(bulb.get_capabilities)
     if capabilities is None:  # timeout
-        _LOGGER.error("Failed to get capabilities from %s", ip_addr)
+        _LOGGER.error("Failed to get capabilities from %s", host)
         raise ConfigEntryNotReady
-    device = YeelightDevice(hass, ip_addr, config, bulb)
+    device = YeelightDevice(hass, host, config, bulb)
     await hass.async_add_executor_job(device.update)
     await device.async_setup()
     return device
@@ -300,11 +300,11 @@ class YeelightScanner:
                 unique_id = device["capabilities"]["id"]
                 if unique_id in self._seen:
                     continue
-                ip_addr = device["ip"]
-                self._seen[unique_id] = ip_addr
-                _LOGGER.debug("Yeelight discovered at %s", ip_addr)
+                host = device["ip"]
+                self._seen[unique_id] = host
+                _LOGGER.debug("Yeelight discovered at %s", host)
                 if unique_id in self._callbacks:
-                    self._hass.async_create_task(self._callbacks[unique_id](ip_addr))
+                    self._hass.async_create_task(self._callbacks[unique_id](host))
                     self._callbacks.pop(unique_id)
                     if len(self._callbacks) == 0:
                         self._async_stop_scan()
@@ -330,9 +330,9 @@ class YeelightScanner:
     @callback
     def async_register_callback(self, unique_id, callback_func):
         """Register callback function."""
-        ip_addr = self._seen.get(unique_id)
-        if ip_addr is not None:
-            self._hass.async_add_job(callback_func(ip_addr))
+        host = self._seen.get(unique_id)
+        if host is not None:
+            self._hass.async_add_job(callback_func(host))
         else:
             self._callbacks[unique_id] = callback_func
             if len(self._callbacks) == 1:
@@ -351,11 +351,11 @@ class YeelightScanner:
 class YeelightDevice:
     """Represents single Yeelight device."""
 
-    def __init__(self, hass, ip_addr, config, bulb):
+    def __init__(self, hass, host, config, bulb):
         """Initialize device."""
         self._hass = hass
         self._config = config
-        self._ip_addr = ip_addr
+        self._host = host
         unique_id = bulb.capabilities.get("id")
         self._name = config.get(CONF_NAME) or f"yeelight_{bulb.model}_{unique_id}"
         self._bulb_device = bulb
@@ -379,9 +379,9 @@ class YeelightDevice:
         return self._config
 
     @property
-    def ip_addr(self):
+    def host(self):
         """Return ip address."""
-        return self._ip_addr
+        return self._host
 
     @property
     def available(self):
@@ -469,7 +469,7 @@ class YeelightDevice:
             self.bulb.turn_off(duration=duration, light_type=light_type)
         except BulbException as ex:
             _LOGGER.error(
-                "Unable to turn the bulb off: %s, %s: %s", self.ip_addr, self.name, ex
+                "Unable to turn the bulb off: %s, %s: %s", self.host, self.name, ex
             )
 
     def _update_properties(self):
@@ -483,7 +483,7 @@ class YeelightDevice:
         except BulbException as ex:
             if self._available:  # just inform once
                 _LOGGER.error(
-                    "Unable to update device %s, %s: %s", self.ip_addr, self.name, ex
+                    "Unable to update device %s, %s: %s", self.host, self.name, ex
                 )
             self._available = False
 
@@ -495,14 +495,14 @@ class YeelightDevice:
             self.bulb.get_capabilities()
             _LOGGER.debug(
                 "Device %s, %s capabilities: %s",
-                self.ip_addr,
+                self.host,
                 self.name,
                 self.bulb.capabilities,
             )
         except BulbException as ex:
             _LOGGER.error(
                 "Unable to get device capabilities %s, %s: %s",
-                self.ip_addr,
+                self.host,
                 self.name,
                 ex,
             )
@@ -510,7 +510,7 @@ class YeelightDevice:
     def update(self):
         """Update device properties and send data updated signal."""
         self._update_properties()
-        dispatcher_send(self._hass, DATA_UPDATED.format(self._ip_addr))
+        dispatcher_send(self._hass, DATA_UPDATED.format(self._host))
 
     async def async_setup(self):
         """Set up the device."""

@@ -268,7 +268,7 @@ async def async_setup_entry(
         _lights_setup_helper(YeelightGenericLight)
         _LOGGER.warning(
             "Cannot determine device type for %s, %s. Falling back to white only",
-            device.ip_addr,
+            device.host,
             device.name,
         )
 
@@ -413,7 +413,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                DATA_UPDATED.format(self._device.ip_addr),
+                DATA_UPDATED.format(self._device.host),
                 self._schedule_immediate_update,
             )
         )
