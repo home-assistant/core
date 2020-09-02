@@ -288,7 +288,7 @@ asterisk_mbox==0.5.0
 async-upnp-client==0.14.13
 
 # homeassistant.components.supla
-asyncpysupla==0.0.3
+asyncpysupla==0.0.5
 
 # homeassistant.components.aten_pe
 atenpdu==0.3.0

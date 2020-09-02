@@ -7,7 +7,8 @@ import async_timeout
 from asyncpysupla import SuplaAPI
 import voluptuous as vol
 
-from homeassistant.const import CONF_ACCESS_TOKEN, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.entity import Entity
@@ -54,11 +55,13 @@ async def async_setup(hass, base_config):
 
     hass.data[DOMAIN] = {SUPLA_SERVERS: {}, SUPLA_COORDINATORS: {}}
 
+    session = async_get_clientsession(hass)
+
     for server_conf in server_confs:
 
         server_address = server_conf[CONF_SERVER]
 
-        server = SuplaAPI(server_address, server_conf[CONF_ACCESS_TOKEN])
+        server = SuplaAPI(server_address, server_conf[CONF_ACCESS_TOKEN], session)
 
         # Test connection
         try:
@@ -79,14 +82,6 @@ async def async_setup(hass, base_config):
             )
             return False
 
-    # Register a cleanup callback
-    async def _async_close_supla_servers(event):
-        for server_name, server in hass.data[DOMAIN][SUPLA_SERVERS].items():
-            _LOGGER.info("Closing up Supla server: %s", server_name)
-            await server.close()
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_close_supla_servers)
-
     await discover_devices(hass, base_config)
 
     return True
@@ -103,7 +98,7 @@ async def discover_devices(hass, hass_config):
     for server_name, server in hass.data[DOMAIN][SUPLA_SERVERS].items():
 
         async def _fetch_channels():
-            async with async_timeout.timeout(SCAN_INTERVAL):
+            async with async_timeout.timeout(SCAN_INTERVAL.total_seconds()):
                 channels = {
                     channel["id"]: channel
                     for channel in await server.get_channels(
@@ -115,7 +110,7 @@ async def discover_devices(hass, hass_config):
         coordinator = DataUpdateCoordinator(
             hass,
             _LOGGER,
-            name=DOMAIN,
+            name=f'{DOMAIN}-{server_name}',
             update_method=_fetch_channels,
             update_interval=SCAN_INTERVAL,
         )
@@ -173,6 +168,11 @@ class SuplaChannel(Entity):
     def channel_data(self):
         """Return channel data taken from coordinator."""
         return self.coordinator.data.get(self.channel_id)
+
+    @property
+    def should_poll(self):
+        """Supla uses DataUpdateCoordinator, so no additional polling needed."""
+        return False
 
     @property
     def unique_id(self) -> str:
