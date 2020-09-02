@@ -1,7 +1,6 @@
 """Test the Shark IQ vacuum entity."""
 from copy import deepcopy
 import enum
-import logging
 from typing import List
 
 import pytest
@@ -51,7 +50,6 @@ from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 VAC_ENTITY_ID = f"vacuum.{SHARK_DEVICE_DICT['product_name'].lower()}"
-_LOGGER = logging.getLogger(__name__)
 
 
 class MockAyla(AylaApi):
