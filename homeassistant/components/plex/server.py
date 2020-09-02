@@ -185,7 +185,7 @@ class PlexServer:
                         if _update_plexdirect_hostname():
                             config_entry_update_needed = True
                         else:
-                            raise Unauthorized(  # pylint: disable=raise-missing-from
+                            raise Unauthorized(
                                 "New certificate cannot be validated with provided token"
                             )
                     else:
@@ -630,7 +630,7 @@ class PlexServer:
                 if len(exact_matches) == 1:
                     return exact_matches[0]
                 match_list = [f"{x.title} ({x.year})" for x in movies]
-                _LOGGER.warning("Multiple matches found during search:", match_list)
+                _LOGGER.warning("Multiple matches found during search: %s", match_list)
                 return None
 
             return movies[0]
