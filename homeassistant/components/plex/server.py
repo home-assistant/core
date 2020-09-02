@@ -614,7 +614,8 @@ class PlexServer:
             except BadRequest as err:
                 _LOGGER.error("Invalid search payload provided: %s", err)
                 return None
-            except NotFound:
+
+            if not movies:
                 _LOGGER.error(
                     "Movie '%s' not found in '%s'",
                     kwargs["title"],

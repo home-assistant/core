@@ -483,7 +483,7 @@ async def test_media_lookups(hass):
             )
             is None
         )
-    with patch.object(MockPlexLibrarySection, "search", side_effect=NotFound):
+    with patch.object(MockPlexLibrarySection, "search", return_value=[]):
         assert (
             loaded_server.lookup_media(
                 MEDIA_TYPE_MOVIE, library_name="Movies", title="Not a Movie"
