@@ -1419,6 +1419,60 @@ async def test_script_mode_single(hass, caplog):
         assert events[1].data["value"] == 2
 
 
+@pytest.mark.parametrize("max_exceeded", [None, "WARNING", "INFO", "ERROR", "SILENT"])
+@pytest.mark.parametrize(
+    "script_mode,max_runs", [("single", 1), ("parallel", 2), ("queued", 2)]
+)
+async def test_max_exceeded(hass, caplog, max_exceeded, script_mode, max_runs):
+    """Test max_exceeded option."""
+    sequence = cv.SCRIPT_SCHEMA(
+        {"wait_template": "{{ states.switch.test.state == 'off' }}"}
+    )
+    if max_exceeded is None:
+        script_obj = script.Script(
+            hass,
+            sequence,
+            "Test Name",
+            "test_domain",
+            script_mode=script_mode,
+            max_runs=max_runs,
+        )
+    else:
+        script_obj = script.Script(
+            hass,
+            sequence,
+            "Test Name",
+            "test_domain",
+            script_mode=script_mode,
+            max_runs=max_runs,
+            max_exceeded=max_exceeded,
+        )
+    hass.states.async_set("switch.test", "on")
+    for _ in range(max_runs + 1):
+        hass.async_create_task(script_obj.async_run(context=Context()))
+    hass.states.async_set("switch.test", "off")
+    await hass.async_block_till_done()
+    if max_exceeded is None:
+        max_exceeded = "WARNING"
+    if max_exceeded == "SILENT":
+        assert not any(
+            any(
+                message in rec.message
+                for message in ("Already running", "Maximum number of runs exceeded")
+            )
+            for rec in caplog.records
+        )
+    else:
+        assert any(
+            rec.levelname == max_exceeded
+            and any(
+                message in rec.message
+                for message in ("Already running", "Maximum number of runs exceeded")
+            )
+            for rec in caplog.records
+        )
+
+
 @pytest.mark.parametrize(
     "script_mode,messages,last_events",
     [("restart", ["Restarting"], [2]), ("parallel", [], [2, 2])],
