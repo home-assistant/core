@@ -106,7 +106,7 @@ class ValveControllerSwitch(ValveControllerEntity, SwitchEntity):
         """Return True if the valve is open."""
         return self._is_on
 
-    async def _async_internal_added_to_hass(self):
+    async def _async_continue_entity_setup(self):
         """Register API interest (and related tasks) when the entity is added."""
         self.async_add_coordinator_update_listener(API_VALVE_STATUS)
 

@@ -382,7 +382,7 @@ class ValveControllerEntity(GuardianEntity):
         """Return the unique ID of the entity."""
         return f"{self._entry.data[CONF_UID]}_{self._kind}"
 
-    async def _async_internal_added_to_hass(self):
+    async def _async_continue_entity_setup(self):
         """Perform additional, internal tasks when the entity is about to be added.
 
         This should be extended by Guardian platforms.
@@ -400,6 +400,6 @@ class ValveControllerEntity(GuardianEntity):
 
     async def async_added_to_hass(self) -> None:
         """Perform tasks when the entity is added."""
-        await self._async_internal_added_to_hass()
+        await self._async_continue_entity_setup()
         self.async_add_coordinator_update_listener(API_SYSTEM_DIAGNOSTICS)
         self._async_update_from_latest_data()

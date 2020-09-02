@@ -58,7 +58,12 @@ async def async_setup_entry(
             name, device_class = SENSOR_ATTRS_MAP[kind]
             entities.append(
                 PairedSensorBinarySensor(
-                    entry, coordinator, kind, name, device_class, None,
+                    entry,
+                    coordinator,
+                    kind,
+                    name,
+                    device_class,
+                    None,
                 )
             )
 
@@ -96,7 +101,12 @@ async def async_setup_entry(
             name, device_class = SENSOR_ATTRS_MAP[kind]
             sensors.append(
                 PairedSensorBinarySensor(
-                    entry, coordinator, kind, name, device_class, None,
+                    entry,
+                    coordinator,
+                    kind,
+                    name,
+                    device_class,
+                    None,
                 )
             )
 
@@ -172,7 +182,7 @@ class ValveControllerBinarySensor(ValveControllerEntity, BinarySensorEntity):
         """Return True if the binary sensor is on."""
         return self._is_on
 
-    async def _async_internal_added_to_hass(self) -> None:
+    async def _async_continue_entity_setup(self) -> None:
         """Add an API listener."""
         if self._kind == SENSOR_KIND_AP_INFO:
             self.async_add_coordinator_update_listener(API_WIFI_STATUS)

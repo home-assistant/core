@@ -191,7 +191,7 @@ class ValveControllerSensor(ValveControllerEntity):
         """Return the unit of measurement of this entity, if any."""
         return self._unit
 
-    async def _async_internal_added_to_hass(self) -> None:
+    async def _async_continue_entity_setup(self) -> None:
         """Register API interest (and related tasks) when the entity is added."""
         if self._kind == SENSOR_KIND_TEMPERATURE:
             self.async_add_coordinator_update_listener(API_SYSTEM_ONBOARD_SENSOR_STATUS)
