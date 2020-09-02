@@ -4,9 +4,9 @@ import enum
 from typing import Any, Iterable, List, Optional
 
 import pytest
-from sharkiqpy import AylaApi, SharkIqAuthError, SharkIqVacuum, get_ayla_api
+from sharkiqpy import AylaApi, SharkIqAuthError, SharkIqVacuum
 
-from homeassistant.components.sharkiq import DOMAIN, SharkIqUpdateCoordinator
+from homeassistant.components.sharkiq import DOMAIN
 from homeassistant.components.sharkiq.vacuum import (
     ATTR_ERROR_CODE,
     ATTR_ERROR_MSG,
@@ -38,17 +38,15 @@ from homeassistant.components.vacuum import (
     SUPPORT_STATUS,
     SUPPORT_STOP,
 )
-from homeassistant.config_entries import ConfigEntriesFlowManager
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import (
     CONFIG,
+    ENTRY_ID,
     SHARK_DEVICE_DICT,
     SHARK_METADATA_DICT,
     SHARK_PROPERTIES_DICT,
-    TEST_PASSWORD,
     TEST_USERNAME,
 )
 
@@ -113,7 +111,9 @@ class MockShark(SharkIqVacuum):
 @patch("sharkiqpy.ayla_api.AylaApi", MockAyla)
 async def setup_integration(hass):
     """Build the mock integration."""
-    entry = MockConfigEntry(domain=DOMAIN, unique_id=TEST_USERNAME, data=CONFIG)
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=TEST_USERNAME, data=CONFIG, entry_id=ENTRY_ID
+    )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -208,49 +208,16 @@ async def test_locate(hass):
         mock_locate.assert_called_once()
 
 
-def _get_async_update(err=None):
-    """Fake an update."""
-
-    async def _async_update(_) -> bool:
-        if err is not None:
-            raise err
-        return True
-
-    return _async_update
-
-
-@patch("sharkiqpy.ayla_api.AylaApi", MockAyla)
-async def test_updates(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "side_effect,success",
+    [(None, True), (SharkIqAuthError, False), (RuntimeError, False)],
+)
+async def test_coordinator_updates(
+    hass: HomeAssistant, side_effect: Optional[Exception], success: bool
+) -> None:
     """Test the update coordinator update functions."""
-    ayla_api = get_ayla_api(TEST_USERNAME, TEST_PASSWORD)
-    shark_vacs = await ayla_api.async_get_devices()
-    mock_config = MockConfigEntry(domain=DOMAIN, unique_id=TEST_USERNAME, data=CONFIG)
-    coordinator = SharkIqUpdateCoordinator(hass, mock_config, ayla_api, shark_vacs)
+    coordinator = hass.data[DOMAIN][ENTRY_ID]
 
-    with patch.object(SharkIqVacuum, "async_update", new=_get_async_update()):
-        update_called = (
-            await coordinator._async_update_data()  # pylint: disable=protected-access
-        )
-        assert update_called
-
-    update_failed = False
-    with patch.object(
-        MockShark, "async_update", new=_get_async_update(SharkIqAuthError)
-    ), patch.object(HomeAssistant, "async_create_task"), patch.object(
-        ConfigEntriesFlowManager, "async_init"
-    ):
-        try:
-            await coordinator._async_update_data()  # pylint: disable=protected-access
-        except UpdateFailed:
-            update_failed = True
-
-    with patch.object(
-        MockShark, "async_update", new=_get_async_update(RuntimeError)
-    ), patch.object(HomeAssistant, "async_create_task"), patch.object(
-        ConfigEntriesFlowManager, "async_init"
-    ):
-        try:
-            await coordinator._async_update_data()  # pylint: disable=protected-access
-        except UpdateFailed:
-            update_failed = True
-    assert update_failed
+    with patch.object(MockShark, "async_update", side_effect=side_effect):
+        await coordinator.async_refresh()
+        assert coordinator.last_update_success == success
