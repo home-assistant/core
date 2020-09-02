@@ -2,16 +2,12 @@
 import asyncio
 import logging
 
+from goalzero import GoalZero, exceptions
 import voluptuous as vol
 
-from homeassistant.core import callback
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-)
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -20,14 +16,13 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailed,
 )
-from goalzero import GoalZero, exceptions
 
 from .const import (
-    DOMAIN,
-    DEFAULT_NAME,
-    MIN_TIME_BETWEEN_UPDATES,
-    DATA_KEY_COORDINATOR,
     DATA_KEY_API,
+    DATA_KEY_COORDINATOR,
+    DEFAULT_NAME,
+    DOMAIN,
+    MIN_TIME_BETWEEN_UPDATES,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -81,7 +76,7 @@ async def async_setup_entry(hass, entry):
         session = async_get_clientsession(hass)
         api = GoalZero(host, hass.loop, session)
         await api.get_state()
-    except exceptions.RequestException as ex:
+    except exceptions.ConnectError as ex:
         _LOGGER.warning("Failed to connect: %s", ex)
         raise ConfigEntryNotReady
 
@@ -89,7 +84,7 @@ async def async_setup_entry(hass, entry):
         """Fetch data from API endpoint."""
         try:
             await api.get_state()
-        except exceptions.RequestException as err:
+        except exceptions.ConnectError as err:
             _LOGGER.warning("Failed to update data from Yeti")
             raise UpdateFailed(f"Failed to communicating with API: {err}")
 

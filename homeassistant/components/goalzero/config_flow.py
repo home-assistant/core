@@ -1,16 +1,14 @@
 """Config flow for Goal Zero Yeti integration."""
 import logging
 
-import voluptuous as vol
 from goalzero import GoalZero
+import voluptuous as vol
+
 from homeassistant import config_entries, exceptions
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-)
+from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, DEFAULT_NAME  # pylint:disable=unused-import
+from .const import DEFAULT_NAME, DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +44,8 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 await self._async_try_connect(host)
                 return self.async_create_entry(
-                    title=name, data={CONF_HOST: host, CONF_NAME: name},
+                    title=name,
+                    data={CONF_HOST: host, CONF_NAME: name},
                 )
             except CannotConnect:
                 errors["base"] = "cannot_connect"

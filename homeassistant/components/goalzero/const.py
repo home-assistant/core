@@ -2,11 +2,11 @@
 from datetime import timedelta
 
 from homeassistant.const import (
-    CONF_NAME,
-    CONF_BINARY_SENSORS,
-    POWER_WATT,
-    ENERGY_WATT_HOUR,
     ATTR_VOLTAGE,
+    CONF_BINARY_SENSORS,
+    CONF_NAME,
+    ENERGY_WATT_HOUR,
+    POWER_WATT,
     TEMP_CELSIUS,
     TIME_MINUTES,
     TIME_SECONDS,

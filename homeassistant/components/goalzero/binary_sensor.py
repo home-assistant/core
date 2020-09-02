@@ -6,11 +6,11 @@ from homeassistant.const import CONF_NAME
 
 from . import YetiEntity
 from .const import (
-    DOMAIN,
-    DATA_KEY_API,
-    DATA_KEY_COORDINATOR,
     BINARY_SENSOR_DICT,
     BINARY_SENSOR_LIST,
+    DATA_KEY_API,
+    DATA_KEY_COORDINATOR,
+    DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
