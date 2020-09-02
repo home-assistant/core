@@ -110,7 +110,7 @@ async def discover_devices(hass, hass_config):
         coordinator = DataUpdateCoordinator(
             hass,
             _LOGGER,
-            name=f'{DOMAIN}-{server_name}',
+            name=f"{DOMAIN}-{server_name}",
             update_method=_fetch_channels,
             update_interval=SCAN_INTERVAL,
         )
