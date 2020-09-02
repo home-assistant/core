@@ -126,8 +126,8 @@ class BaseNotificationService:
             title.hass = self.hass
             kwargs[ATTR_TITLE] = title.async_render()
 
-        if self._targets.get(service.service) is not None:
-            kwargs[ATTR_TARGET] = [self._targets[service.service]]
+        if self._registered_targets.get(service.service) is not None:
+            kwargs[ATTR_TARGET] = [self._registered_targets[service.service]]
         elif service.data.get(ATTR_TARGET) is not None:
             kwargs[ATTR_TARGET] = service.data.get(ATTR_TARGET)
 
@@ -144,23 +144,23 @@ class BaseNotificationService:
         # pylint: disable=attribute-defined-outside-init
         self._service_name = service_name
         self._target_service_name_prefix = target_service_name_prefix
-        self._targets: Dict = {}
+        self._registered_targets: Dict = {}
 
     async def async_register_services(self) -> None:
         """Create or remove the notify services."""
         assert self.hass
 
         if hasattr(self, "targets"):
-            stale_targets = set(self._targets)
+            stale_targets = set(self._registered_targets)
 
             # pylint: disable=no-member
             for name, target in self.targets.items():  # type: ignore
                 target_name = slugify(f"{self._target_service_name_prefix}_{name}")
                 if target_name in stale_targets:
                     stale_targets.remove(target_name)
-                if target_name in self._targets:
+                if target_name in self._registered_targets:
                     continue
-                self._targets[target_name] = target
+                self._registered_targets[target_name] = target
                 self.hass.services.async_register(
                     DOMAIN,
                     target_name,
@@ -169,7 +169,7 @@ class BaseNotificationService:
                 )
 
             for stale_target_name in stale_targets:
-                del self._targets[stale_target_name]
+                del self._registered_targets[stale_target_name]
                 self.hass.services.async_remove(
                     DOMAIN,
                     stale_target_name,
@@ -189,10 +189,10 @@ class BaseNotificationService:
         """Unregister the notify services."""
         assert self.hass
 
-        if self._targets:
-            remove_targets = set(self._targets)
+        if self._registered_targets:
+            remove_targets = set(self._registered_targets)
             for remove_target_name in remove_targets:
-                del self._targets[remove_target_name]
+                del self._registered_targets[remove_target_name]
                 self.hass.services.async_remove(
                     DOMAIN,
                     remove_target_name,
