@@ -51,7 +51,7 @@ def extract_entities(hass, template_str, variables=None):
 
 def assert_result_info(info, result, entities=None, domains=None, all_states=False):
     """Check result info."""
-    assert info.result == result
+    assert info.result() == result
     assert info.all_states == all_states
     assert info.filter_lifecycle("invalid_entity_name.somewhere") == all_states
     if entities is not None:
@@ -96,7 +96,7 @@ def test_invalid_template(hass):
 
     info = tmpl.async_render_to_info()
     with pytest.raises(TemplateError):
-        assert info.result == "impossible"
+        assert info.result() == "impossible"
 
     tmpl = template.Template("{{states(keyword)}}", hass)
 
