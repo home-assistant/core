@@ -210,7 +210,11 @@ async def test_locate(hass):
 
 @pytest.mark.parametrize(
     "side_effect,success",
-    [(None, True), (SharkIqAuthError, False), (RuntimeError, False)],
+    [
+        (None, True),
+        (SharkIqAuthError, False),
+        (RuntimeError, False),
+    ],
 )
 async def test_coordinator_updates(
     hass: HomeAssistant, side_effect: Optional[Exception], success: bool
