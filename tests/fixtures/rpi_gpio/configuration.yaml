@@ -1,5 +1,0 @@
-binary_sensor:
-  - platform: rpi_gpio
-    ports:
-      10: PIR Office
-      11: PIR Bedroom
