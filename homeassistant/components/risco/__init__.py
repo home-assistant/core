@@ -116,11 +116,11 @@ class RiscoDataUpdateCoordinator(DataUpdateCoordinator):
 class RiscoEventsDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching risco data."""
 
-    def __init__(self, hass, risco, id, scan_interval):
+    def __init__(self, hass, risco, eid, scan_interval):
         """Initialize global risco data updater."""
         self.risco = risco
         self._store = Store(
-            hass, LAST_EVENT_STORAGE_VERSION, f"risco_{id}_last_event_timestamp"
+            hass, LAST_EVENT_STORAGE_VERSION, f"risco_{eid}_last_event_timestamp"
         )
         interval = timedelta(seconds=scan_interval)
         super().__init__(
