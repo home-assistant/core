@@ -258,7 +258,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             connect_callback=async_onkyo_connect_callback,
         )
     except Exception:
-        raise PlatformNotReady
+        raise PlatformNotReady from Exception
 
     for zone in ["main"] + zones:
         active_zones.append(OnkyoAVR(avr, name, sources, zone, max_volume))
