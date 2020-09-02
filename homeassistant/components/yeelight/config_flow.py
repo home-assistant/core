@@ -5,7 +5,7 @@ import voluptuous as vol
 import yeelight
 
 from homeassistant import config_entries, exceptions
-from homeassistant.const import CONF_ID, CONF_IP_ADDRESS, CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_ID, CONF_NAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
@@ -45,9 +45,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
-            if user_input.get(CONF_IP_ADDRESS):
+            if user_input.get(CONF_HOST):
                 try:
-                    await self._async_try_connect(user_input[CONF_IP_ADDRESS])
+                    await self._async_try_connect(user_input[CONF_HOST])
                     return self.async_create_entry(
                         title=self._async_default_name(),
                         data=user_input,
@@ -61,7 +61,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Optional(CONF_IP_ADDRESS): str}),
+            data_schema=vol.Schema({vol.Optional(CONF_HOST): str}),
             errors=errors,
         )
 
@@ -90,8 +90,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if unique_id in configured_devices:
                     continue  # ignore configured devices
                 model = capabilities["model"]
-                ipaddr = device["ip"]
-                name = f"{ipaddr} {model} {unique_id}"
+                host = device["ip"]
+                name = f"{host} {model} {unique_id}"
                 self._discovered_devices[unique_id] = capabilities
                 devices_name[unique_id] = name
 
@@ -105,11 +105,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input=None):
         """Handle import step."""
-        ipaddr = user_input[CONF_IP_ADDRESS]
+        host = user_input[CONF_HOST]
         try:
-            await self._async_try_connect(ipaddr)
+            await self._async_try_connect(host)
         except CannotConnect:
-            _LOGGER.error("Failed to import %s: cannot connect", ipaddr)
+            _LOGGER.error("Failed to import %s: cannot connect", host)
             return self.async_abort(reason="cannot_connect")
         except AlreadyConfigured:
             return self.async_abort(reason="already_configured")
@@ -120,16 +120,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
         return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
 
-    async def _async_try_connect(self, ipaddr):
+    async def _async_try_connect(self, host):
         """Set up with options."""
-        bulb = yeelight.Bulb(ipaddr)
+        bulb = yeelight.Bulb(host)
         try:
             capabilities = await self.hass.async_add_executor_job(bulb.get_capabilities)
             if capabilities is None:  # timeout
-                _LOGGER.error("Failed to get capabilities from %s: timeout", ipaddr)
+                _LOGGER.error("Failed to get capabilities from %s: timeout", host)
                 raise CannotConnect
         except OSError as err:
-            _LOGGER.error("Failed to get capabilities from %s: %s", ipaddr, err)
+            _LOGGER.error("Failed to get capabilities from %s: %s", host, err)
             raise CannotConnect from err
         _LOGGER.debug("Get capabilities: %s", capabilities)
         self._capabilities = capabilities
