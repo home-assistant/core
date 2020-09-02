@@ -6,6 +6,7 @@ from typing import Any, Iterable, List, Optional
 import pytest
 from sharkiqpy import AylaApi, SharkIqAuthError, SharkIqVacuum
 
+from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
 from homeassistant.components.sharkiq import DOMAIN
 from homeassistant.components.sharkiq.vacuum import (
     ATTR_ERROR_CODE,
@@ -38,8 +39,13 @@ from homeassistant.components.vacuum import (
     SUPPORT_STATUS,
     SUPPORT_STOP,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from .const import (
     CONFIG,
@@ -222,6 +228,17 @@ async def test_coordinator_updates(
     """Test the update coordinator update functions."""
     coordinator = hass.data[DOMAIN][ENTRY_ID]
 
-    with patch.object(MockShark, "async_update", side_effect=side_effect):
-        await coordinator.async_refresh()
+    await async_setup_component(hass, "homeassistant", {})
+
+    with patch.object(
+        MockShark, "async_update", side_effect=side_effect
+    ) as mock_update:
+        data = {ATTR_ENTITY_ID: [VAC_ENTITY_ID]}
+        await hass.services.async_call(
+            "homeassistant", SERVICE_UPDATE_ENTITY, data, blocking=True
+        )
         assert coordinator.last_update_success == success
+        mock_update.assert_called_once()
+
+    state = hass.states.get(VAC_ENTITY_ID)
+    assert (state.state == STATE_UNAVAILABLE) != success
