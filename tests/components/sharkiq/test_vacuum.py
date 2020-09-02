@@ -18,16 +18,16 @@ from homeassistant.components.vacuum import (
     ATTR_BATTERY_LEVEL,
     ATTR_FAN_SPEED,
     ATTR_FAN_SPEED_LIST,
+    SERVICE_LOCATE,
+    SERVICE_PAUSE,
+    SERVICE_RETURN_TO_BASE,
+    SERVICE_SET_FAN_SPEED,
+    SERVICE_START,
+    SERVICE_STOP,
     STATE_CLEANING,
     STATE_IDLE,
     STATE_PAUSED,
     STATE_RETURNING,
-    SERVICE_LOCATE,
-    SERVICE_RETURN_TO_BASE,
-    SERVICE_SET_FAN_SPEED,
-    SERVICE_START,
-    SERVICE_PAUSE,
-    SERVICE_STOP,
     SUPPORT_BATTERY,
     SUPPORT_FAN_SPEED,
     SUPPORT_LOCATE,
@@ -87,11 +87,12 @@ class MockAyla(AylaApi):
         return [shark]
 
     async def async_request(self, http_method: str, url: str, **kwargs):
-        """Don't make an HTTP request"""
+        """Don't make an HTTP request."""
 
 
 class MockShark(SharkIqVacuum):
     """Mocked SharkIqVacuum that won't hit the API."""
+
     async def async_update(self, property_list: Optional[Iterable[str]] = None):
         """Don't do anything."""
 
@@ -130,28 +131,36 @@ async def test_simple_properties(hass: HomeAssistant):
     assert entity.unique_id == "AC000Wxxxxxxxxx"
 
 
-@pytest.mark.parametrize("attribute,target_value", [
-    (ATTR_SUPPORTED_FEATURES, EXPECTED_FEATURES),
-    (ATTR_BATTERY_LEVEL, 50),
-    (ATTR_FAN_SPEED, "Eco"),
-    (ATTR_FAN_SPEED_LIST, list(FAN_SPEEDS_MAP)),
-    (ATTR_ERROR_CODE, 7),
-    (ATTR_ERROR_MSG, "Cliff sensor is blocked"),
-    (ATTR_LOW_LIGHT, False),
-    (ATTR_RECHARGE_RESUME, True),
-])
-async def test_initial_attributes(hass: HomeAssistant, attribute: str, target_value: Any):
+@pytest.mark.parametrize(
+    "attribute,target_value",
+    [
+        (ATTR_SUPPORTED_FEATURES, EXPECTED_FEATURES),
+        (ATTR_BATTERY_LEVEL, 50),
+        (ATTR_FAN_SPEED, "Eco"),
+        (ATTR_FAN_SPEED_LIST, list(FAN_SPEEDS_MAP)),
+        (ATTR_ERROR_CODE, 7),
+        (ATTR_ERROR_MSG, "Cliff sensor is blocked"),
+        (ATTR_LOW_LIGHT, False),
+        (ATTR_RECHARGE_RESUME, True),
+    ],
+)
+async def test_initial_attributes(
+    hass: HomeAssistant, attribute: str, target_value: Any
+):
     """Test initial config attributes."""
     state = hass.states.get(VAC_ENTITY_ID)
     assert state.attributes.get(attribute) == target_value
 
 
-@pytest.mark.parametrize("service,target_state", [
-    (SERVICE_STOP, STATE_IDLE),
-    (SERVICE_PAUSE, STATE_PAUSED),
-    (SERVICE_RETURN_TO_BASE, STATE_RETURNING),
-    (SERVICE_START, STATE_CLEANING),
-])
+@pytest.mark.parametrize(
+    "service,target_state",
+    [
+        (SERVICE_STOP, STATE_IDLE),
+        (SERVICE_PAUSE, STATE_PAUSED),
+        (SERVICE_RETURN_TO_BASE, STATE_RETURNING),
+        (SERVICE_START, STATE_CLEANING),
+    ],
+)
 async def test_cleaning_states(hass: HomeAssistant, service: str, target_state: str):
     """Test cleaning states."""
     service_data = {ATTR_ENTITY_ID: VAC_ENTITY_ID}
@@ -164,18 +173,25 @@ async def test_cleaning_states(hass: HomeAssistant, service: str, target_state: 
 async def test_fan_speed(hass: HomeAssistant, fan_speed: str) -> None:
     """Test setting fan speeds."""
     service_data = {ATTR_ENTITY_ID: VAC_ENTITY_ID, ATTR_FAN_SPEED: fan_speed}
-    await hass.services.async_call("vacuum", SERVICE_SET_FAN_SPEED, service_data, blocking=True)
+    await hass.services.async_call(
+        "vacuum", SERVICE_SET_FAN_SPEED, service_data, blocking=True
+    )
     state = hass.states.get(VAC_ENTITY_ID)
     assert state.attributes.get(ATTR_FAN_SPEED) == fan_speed
 
 
-@pytest.mark.parametrize("device_property,target_value", [
-    ("manufacturer", "Shark"),
-    ("model", "RV1001AE"),
-    ("name", "Sharknado"),
-    ("sw_version", "Dummy Firmware 1.0"),
-])
-async def test_device_properties(hass: HomeAssistant, device_property: str, target_value: str):
+@pytest.mark.parametrize(
+    "device_property,target_value",
+    [
+        ("manufacturer", "Shark"),
+        ("model", "RV1001AE"),
+        ("name", "Sharknado"),
+        ("sw_version", "Dummy Firmware 1.0"),
+    ],
+)
+async def test_device_properties(
+    hass: HomeAssistant, device_property: str, target_value: str
+):
     """Test device properties."""
     registry = await hass.helpers.device_registry.async_get_registry()
     device = registry.async_get_device({(DOMAIN, "AC000Wxxxxxxxxx")}, [])
@@ -184,7 +200,9 @@ async def test_device_properties(hass: HomeAssistant, device_property: str, targ
 
 async def test_locate(hass):
     """Test that the locate command works."""
-    with patch.object(SharkIqVacuum, "async_find_device", return_value=None) as mock_locate:
+    with patch.object(
+        SharkIqVacuum, "async_find_device", return_value=None
+    ) as mock_locate:
         data = {ATTR_ENTITY_ID: VAC_ENTITY_ID}
         await hass.services.async_call("vacuum", SERVICE_LOCATE, data, blocking=True)
         mock_locate.assert_called_once()
