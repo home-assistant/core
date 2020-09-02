@@ -334,17 +334,38 @@ async def async_setup(hass, config):
 
 async def _async_process_config(hass, config, component):
     """Process group configuration."""
+    hass.data.setdefault(GROUP_ORDER, 0)
+
+    tasks = []
+
     for object_id, conf in config.get(DOMAIN, {}).items():
         name = conf.get(CONF_NAME, object_id)
         entity_ids = conf.get(CONF_ENTITIES) or []
         icon = conf.get(CONF_ICON)
         mode = conf.get(CONF_ALL)
 
-        # Don't create tasks and await them all. The order is important as
-        # groups get a number based on creation order.
-        await Group.async_create_group(
-            hass, name, entity_ids, icon=icon, object_id=object_id, mode=mode
+        # We keep track of the order when we are creating the tasks
+        # in the same way that async_create_group does to make
+        # sure we use the same ordering system.  This overcomes
+        # the problem with concurrently creating the groups
+        tasks.append(
+            Group.async_create_group(
+                hass,
+                name,
+                entity_ids,
+                icon=icon,
+                object_id=object_id,
+                mode=mode,
+                order=hass.data[GROUP_ORDER],
+            )
         )
+
+        # Keep track of the group order without iterating
+        # every state in the state machine every time
+        # we setup a new group
+        hass.data[GROUP_ORDER] += 1
+
+    await asyncio.gather(*tasks)
 
 
 class GroupEntity(Entity):
@@ -418,11 +439,12 @@ class Group(Entity):
         icon=None,
         object_id=None,
         mode=None,
+        order=None,
     ):
         """Initialize a group."""
         return asyncio.run_coroutine_threadsafe(
             Group.async_create_group(
-                hass, name, entity_ids, user_defined, icon, object_id, mode
+                hass, name, entity_ids, user_defined, icon, object_id, mode, order
             ),
             hass.loop,
         ).result()
@@ -436,27 +458,29 @@ class Group(Entity):
         icon=None,
         object_id=None,
         mode=None,
+        order=None,
     ):
         """Initialize a group.
 
         This method must be run in the event loop.
         """
-        hass.data.setdefault(GROUP_ORDER, 0)
+        if order is None:
+            hass.data.setdefault(GROUP_ORDER, 0)
+            order = hass.data[GROUP_ORDER]
+            # Keep track of the group order without iterating
+            # every state in the state machine every time
+            # we setup a new group
+            hass.data[GROUP_ORDER] += 1
 
         group = Group(
             hass,
             name,
-            order=hass.data[GROUP_ORDER],
+            order=order,
             icon=icon,
             user_defined=user_defined,
             entity_ids=entity_ids,
             mode=mode,
         )
-
-        # Keep track of the group order without iterating
-        # every state in the state machine every time
-        # we setup a new group
-        hass.data[GROUP_ORDER] += 1
 
         group.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, object_id or name, hass=hass
