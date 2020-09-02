@@ -11,3 +11,13 @@ play_on_sonos:
     media_content_type:
       description: The type of content to play. Must be "music".
       example: "music"
+
+refresh_library:
+  description: Refresh a Plex library to scan for new and updated media.
+  fields:
+    server_name:
+      description: Name of a Plex server if multiple Plex servers configured.
+      example: "My Plex Server"
+    library_name:
+      description: Name of the Plex library to refresh.
+      example: "TV Shows"
