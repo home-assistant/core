@@ -4,6 +4,7 @@ import datetime
 import functools as ft
 import logging
 import socket
+import urllib.parse
 
 import async_timeout
 import pysonos
@@ -16,8 +17,15 @@ import voluptuous as vol
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_ENQUEUE,
+    MEDIA_TYPE_ALBUM,
+    MEDIA_TYPE_ARTIST,
+    MEDIA_TYPE_COMPOSER,
+    MEDIA_TYPE_CONTRIBUTING_ARTIST,
+    MEDIA_TYPE_GENRE,
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_PLAYLIST,
+    MEDIA_TYPE_TRACK,
+    SUPPORT_BROWSE_MEDIA,
     SUPPORT_CLEAR_PLAYLIST,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -31,6 +39,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
 )
+from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.const import (
     ATTR_TIME,
     EVENT_HOMEASSISTANT_STOP,
@@ -43,12 +52,17 @@ from homeassistant.helpers import config_validation as cv, entity_platform, serv
 import homeassistant.helpers.device_registry as dr
 from homeassistant.util.dt import utcnow
 
-from . import (
-    CONF_ADVERTISE_ADDR,
-    CONF_HOSTS,
-    CONF_INTERFACE_ADDR,
+from . import CONF_ADVERTISE_ADDR, CONF_HOSTS, CONF_INTERFACE_ADDR
+from .const import (
     DATA_SONOS,
     DOMAIN as SONOS_DOMAIN,
+    SONOS_ALBUM,
+    SONOS_ALBUM_ARTIST,
+    SONOS_ARTIST,
+    SONOS_COMPOSER,
+    SONOS_GENRE,
+    SONOS_PLAYLISTS,
+    SONOS_TRACKS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -57,22 +71,101 @@ SCAN_INTERVAL = 10
 DISCOVERY_INTERVAL = 60
 
 SUPPORT_SONOS = (
-    SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_PLAY
-    | SUPPORT_PAUSE
-    | SUPPORT_STOP
-    | SUPPORT_SELECT_SOURCE
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_SEEK
-    | SUPPORT_PLAY_MEDIA
-    | SUPPORT_SHUFFLE_SET
+    SUPPORT_BROWSE_MEDIA
     | SUPPORT_CLEAR_PLAYLIST
+    | SUPPORT_NEXT_TRACK
+    | SUPPORT_PAUSE
+    | SUPPORT_PLAY
+    | SUPPORT_PLAY_MEDIA
+    | SUPPORT_PREVIOUS_TRACK
+    | SUPPORT_SEEK
+    | SUPPORT_SELECT_SOURCE
+    | SUPPORT_SHUFFLE_SET
+    | SUPPORT_STOP
+    | SUPPORT_VOLUME_MUTE
+    | SUPPORT_VOLUME_SET
 )
 
 SOURCE_LINEIN = "Line-in"
 SOURCE_TV = "TV"
+
+EXPANDABLE_MEDIA_TYPES = [
+    MEDIA_TYPE_ALBUM,
+    MEDIA_TYPE_ARTIST,
+    MEDIA_TYPE_COMPOSER,
+    MEDIA_TYPE_GENRE,
+    MEDIA_TYPE_PLAYLIST,
+    SONOS_ALBUM,
+    SONOS_ALBUM_ARTIST,
+    SONOS_ARTIST,
+    SONOS_GENRE,
+    SONOS_COMPOSER,
+    SONOS_PLAYLISTS,
+]
+
+SONOS_TO_MEDIA_TYPES = {
+    SONOS_ALBUM: MEDIA_TYPE_ALBUM,
+    SONOS_ALBUM_ARTIST: MEDIA_TYPE_ARTIST,
+    SONOS_ARTIST: MEDIA_TYPE_CONTRIBUTING_ARTIST,
+    SONOS_COMPOSER: MEDIA_TYPE_COMPOSER,
+    SONOS_GENRE: MEDIA_TYPE_GENRE,
+    SONOS_PLAYLISTS: MEDIA_TYPE_PLAYLIST,
+    SONOS_TRACKS: MEDIA_TYPE_TRACK,
+    "object.container.album.musicAlbum": MEDIA_TYPE_ALBUM,
+    "object.container.genre.musicGenre": MEDIA_TYPE_PLAYLIST,
+    "object.container.person.composer": MEDIA_TYPE_PLAYLIST,
+    "object.container.person.musicArtist": MEDIA_TYPE_ARTIST,
+    "object.container.playlistContainer.sameArtist": MEDIA_TYPE_ARTIST,
+    "object.container.playlistContainer": MEDIA_TYPE_PLAYLIST,
+    "object.item.audioItem.musicTrack": MEDIA_TYPE_TRACK,
+}
+
+MEDIA_TYPES_TO_SONOS = {
+    MEDIA_TYPE_ALBUM: SONOS_ALBUM,
+    MEDIA_TYPE_ARTIST: SONOS_ALBUM_ARTIST,
+    MEDIA_TYPE_CONTRIBUTING_ARTIST: SONOS_ARTIST,
+    MEDIA_TYPE_COMPOSER: SONOS_COMPOSER,
+    MEDIA_TYPE_GENRE: SONOS_GENRE,
+    MEDIA_TYPE_PLAYLIST: SONOS_PLAYLISTS,
+    MEDIA_TYPE_TRACK: SONOS_TRACKS,
+}
+
+SONOS_TYPES_MAPPING = {
+    "A:ALBUM": SONOS_ALBUM,
+    "A:ALBUMARTIST": SONOS_ALBUM_ARTIST,
+    "A:ARTIST": SONOS_ARTIST,
+    "A:COMPOSER": SONOS_COMPOSER,
+    "A:GENRE": SONOS_GENRE,
+    "A:PLAYLISTS": SONOS_PLAYLISTS,
+    "A:TRACKS": SONOS_TRACKS,
+    "object.container.album.musicAlbum": SONOS_ALBUM,
+    "object.container.genre.musicGenre": SONOS_GENRE,
+    "object.container.person.composer": SONOS_COMPOSER,
+    "object.container.person.musicArtist": SONOS_ALBUM_ARTIST,
+    "object.container.playlistContainer.sameArtist": SONOS_ARTIST,
+    "object.container.playlistContainer": SONOS_PLAYLISTS,
+    "object.item.audioItem.musicTrack": SONOS_TRACKS,
+}
+
+LIBRARY_TITLES_MAPPING = {
+    "A:ALBUM": "Albums",
+    "A:ALBUMARTIST": "Artists",
+    "A:ARTIST": "Contributing Artists",
+    "A:COMPOSER": "Composers",
+    "A:GENRE": "Genres",
+    "A:PLAYLISTS": "Playlists",
+    "A:TRACKS": "Tracks",
+}
+
+PLAYABLE_MEDIA_TYPES = [
+    MEDIA_TYPE_ALBUM,
+    MEDIA_TYPE_ARTIST,
+    MEDIA_TYPE_COMPOSER,
+    MEDIA_TYPE_CONTRIBUTING_ARTIST,
+    MEDIA_TYPE_GENRE,
+    MEDIA_TYPE_PLAYLIST,
+    MEDIA_TYPE_TRACK,
+]
 
 ATTR_SONOS_GROUP = "sonos_group"
 
@@ -384,6 +477,7 @@ class SonosEntity(MediaPlayerEntity):
         self._sonos_group = [self]
         self._status = None
         self._uri = None
+        self._media_library = pysonos.music_library.MusicLibrary(self.soco)
         self._media_duration = None
         self._media_position = None
         self._media_position_updated_at = None
@@ -648,9 +742,10 @@ class SonosEntity(MediaPlayerEntity):
         self._clear_media_position()
 
         try:
-            library = pysonos.music_library.MusicLibrary(self.soco)
             album_art_uri = variables["current_track_meta_data"].album_art_uri
-            self._media_image_url = library.build_album_art_full_uri(album_art_uri)
+            self._media_image_url = self._media_library.build_album_art_full_uri(
+                album_art_uri
+            )
         except (TypeError, KeyError, AttributeError):
             pass
 
@@ -1014,7 +1109,7 @@ class SonosEntity(MediaPlayerEntity):
 
         If ATTR_MEDIA_ENQUEUE is True, add `media_id` to the queue.
         """
-        if media_type == MEDIA_TYPE_MUSIC:
+        if media_type in (MEDIA_TYPE_MUSIC, MEDIA_TYPE_TRACK):
             if kwargs.get(ATTR_MEDIA_ENQUEUE):
                 try:
                     self.soco.add_uri_to_queue(media_id)
@@ -1028,6 +1123,10 @@ class SonosEntity(MediaPlayerEntity):
             else:
                 self.soco.play_uri(media_id)
         elif media_type == MEDIA_TYPE_PLAYLIST:
+            if media_id.startswith("S:"):
+                item = get_media(self._media_library, media_id, media_type)
+                self.soco.play_uri(item.get_uri())
+                return
             try:
                 playlists = self.soco.get_sonos_playlists()
                 playlist = next(p for p in playlists if p.title == media_id)
@@ -1036,6 +1135,14 @@ class SonosEntity(MediaPlayerEntity):
                 self.soco.play_from_queue(0)
             except StopIteration:
                 _LOGGER.error('Could not find a Sonos playlist named "%s"', media_id)
+        elif media_type in PLAYABLE_MEDIA_TYPES:
+            item = get_media(self._media_library, media_id, media_type)
+
+            if not item:
+                _LOGGER.error('Could not find "%s" in the library', media_id)
+                return
+
+            self.soco.play_uri(item.get_uri())
         else:
             _LOGGER.error('Sonos does not support a media type of "%s"', media_type)
 
@@ -1284,3 +1391,169 @@ class SonosEntity(MediaPlayerEntity):
             attributes[ATTR_QUEUE_POSITION] = self.queue_position
 
         return attributes
+
+    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+        """Implement the websocket media browsing helper."""
+        if media_content_type in [None, "library"]:
+            return await self.hass.async_add_executor_job(
+                library_payload, self._media_library
+            )
+
+        payload = {
+            "search_type": media_content_type,
+            "idstring": media_content_id,
+        }
+        response = await self.hass.async_add_executor_job(
+            build_item_response, self._media_library, payload
+        )
+        if response is None:
+            raise BrowseError(
+                f"Media not found: {media_content_type} / {media_content_id}"
+            )
+        return response
+
+
+def build_item_response(media_library, payload):
+    """Create response payload for the provided media query."""
+    if payload["search_type"] == MEDIA_TYPE_ALBUM and payload["idstring"].startswith(
+        ("A:GENRE", "A:COMPOSER")
+    ):
+        payload["idstring"] = "A:ALBUMARTIST/" + "/".join(
+            payload["idstring"].split("/")[2:]
+        )
+
+    media = media_library.browse_by_idstring(
+        MEDIA_TYPES_TO_SONOS[payload["search_type"]],
+        payload["idstring"],
+        full_album_art_uri=True,
+        max_items=0,
+    )
+
+    if media is None:
+        return
+
+    thumbnail = None
+    title = None
+
+    # Fetch album info for titles and thumbnails
+    # Can't be extracted from track info
+    if (
+        payload["search_type"] == MEDIA_TYPE_ALBUM
+        and media[0].item_class == "object.item.audioItem.musicTrack"
+    ):
+        item = get_media(media_library, payload["idstring"], SONOS_ALBUM_ARTIST)
+        title = getattr(item, "title", None)
+        thumbnail = getattr(item, "album_art_uri", media[0].album_art_uri)
+
+    if not title:
+        try:
+            title = urllib.parse.unquote(payload["idstring"].split("/")[1])
+        except IndexError:
+            title = LIBRARY_TITLES_MAPPING[payload["idstring"]]
+
+    return {
+        "title": title,
+        "thumbnail": thumbnail,
+        "media_content_id": payload["idstring"],
+        "media_content_type": payload["search_type"],
+        "children": [item_payload(item) for item in media],
+        "can_play": can_play(payload["search_type"]),
+        "can_expand": can_expand(payload["search_type"]),
+    }
+
+
+def item_payload(item):
+    """
+    Create response payload for a single media item.
+
+    Used by async_browse_media.
+    """
+    return {
+        "title": item.title,
+        "thumbnail": getattr(item, "album_art_uri", None),
+        "media_content_id": get_content_id(item),
+        "media_content_type": SONOS_TO_MEDIA_TYPES[get_media_type(item)],
+        "can_play": can_play(item.item_class),
+        "can_expand": can_expand(item),
+    }
+
+
+def library_payload(media_library):
+    """
+    Create response payload to describe contents of a specific library.
+
+    Used by async_browse_media.
+    """
+    return {
+        "title": "Music Library",
+        "media_content_id": "library",
+        "media_content_type": "library",
+        "can_play": False,
+        "can_expand": True,
+        "children": [item_payload(item) for item in media_library.browse()],
+    }
+
+
+def get_media_type(item):
+    """Extract media type of item."""
+    if item.item_class == "object.item.audioItem.musicTrack":
+        return SONOS_TRACKS
+
+    if (
+        item.item_class == "object.container.album.musicAlbum"
+        and SONOS_TYPES_MAPPING.get(item.item_id.split("/")[0])
+        in [
+            SONOS_ALBUM_ARTIST,
+            SONOS_GENRE,
+        ]
+    ):
+        return SONOS_TYPES_MAPPING[item.item_class]
+
+    return SONOS_TYPES_MAPPING.get(item.item_id.split("/")[0], item.item_class)
+
+
+def can_play(item):
+    """
+    Test if playable.
+
+    Used by async_browse_media.
+    """
+    return SONOS_TO_MEDIA_TYPES.get(item) in PLAYABLE_MEDIA_TYPES
+
+
+def can_expand(item):
+    """
+    Test if expandable.
+
+    Used by async_browse_media.
+    """
+    if isinstance(item, str):
+        return SONOS_TYPES_MAPPING.get(item) in EXPANDABLE_MEDIA_TYPES
+
+    if SONOS_TO_MEDIA_TYPES.get(item.item_class) in EXPANDABLE_MEDIA_TYPES:
+        return True
+
+    return SONOS_TYPES_MAPPING.get(item.item_id) in EXPANDABLE_MEDIA_TYPES
+
+
+def get_content_id(item):
+    """Extract content id or uri."""
+    if item.item_class == "object.item.audioItem.musicTrack":
+        return item.get_uri()
+    return item.item_id
+
+
+def get_media(media_library, item_id, search_type):
+    """Fetch media/album."""
+    search_type = MEDIA_TYPES_TO_SONOS.get(search_type, search_type)
+
+    if not item_id.startswith("A:ALBUM") and search_type == SONOS_ALBUM:
+        item_id = "A:ALBUMARTIST/" + "/".join(item_id.split("/")[2:])
+
+    for item in media_library.browse_by_idstring(
+        search_type,
+        "/".join(item_id.split("/")[:-1]),
+        full_album_art_uri=True,
+    ):
+        if item.item_id == item_id:
+            return item
