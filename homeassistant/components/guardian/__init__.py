@@ -318,13 +318,13 @@ class PairedSensorEntity(GuardianEntity):
         """Initialize."""
         super().__init__(entry, kind, name, device_class, icon)
 
+        self.coordinator = coordinator
+
         self._paired_sensor_uid = coordinator.data["uid"]
 
         self._device_info["identifiers"] = {(DOMAIN, self._paired_sensor_uid)}
         self._device_info["name"] = f"Guardian Paired Sensor {self._paired_sensor_uid}"
         self._device_info["via_device"] = (DOMAIN, self._entry.data[CONF_UID])
-
-        self.coordinator = coordinator
 
     @property
     def name(self) -> str:
@@ -357,6 +357,8 @@ class ValveControllerEntity(GuardianEntity):
         """Initialize."""
         super().__init__(entry, kind, name, device_class, icon)
 
+        self.coordinators = coordinators
+
         self._device_info["identifiers"] = {(DOMAIN, self._entry.data[CONF_UID])}
         self._device_info[
             "name"
@@ -364,8 +366,6 @@ class ValveControllerEntity(GuardianEntity):
         self._device_info["model"] = self.coordinators[API_SYSTEM_DIAGNOSTICS].data[
             "firmware"
         ]
-
-        self.coordinators = coordinators
 
     @property
     def availabile(self) -> bool:
