@@ -10,9 +10,8 @@ from homeassistant.const import (
 def is_invalid_auth_code(http_status_code):
     """HTTP status codes that mean invalid auth."""
     if (
-        http_status_code >= HTTP_BAD_REQUEST
+        HTTP_BAD_REQUEST =< http_status_code < HTTP_INTERNAL_SERVER_ERROR
         and http_status_code != HTTP_NOT_FOUND
-        and http_status_code < HTTP_INTERNAL_SERVER_ERROR
     ):
         return True
 
