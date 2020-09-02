@@ -1,6 +1,4 @@
 """Support for Hyperion-NG remotes."""
-import asyncio
-import json
 import logging
 
 import voluptuous as vol
@@ -30,14 +28,6 @@ CONF_HDMI_PRIORITY = "hdmi_priority"
 CONF_EFFECT_LIST = "effect_list"
 CONF_TOKEN = "token"
 CONF_INSTANCE = "instance"
-
-KEY_COMPONENTID_EXTERNAL_SOURCES = [
-    const.KEY_COMPONENTID_BOBLIGHTSERVER,
-    const.KEY_COMPONENTID_GRABBER,
-    const.KEY_COMPONENTID_V4L
-]
-
-KEY_COMPONENTID_LEDDEVICE = const.KEY_COMPONENTID_LEDDEVICE
 
 # As we want to preserve brightness control for effects (e.g. to reduce the
 # brightness for V4L), we need to persist the effect that is in flight, so
@@ -80,7 +70,9 @@ PLATFORM_SCHEMA = vol.All(
                 cv.ensure_list, [cv.string]
             ),
             vol.Optional(CONF_TOKEN): cv.string,
-            vol.Optional(CONF_INSTANCE, default=DEFAULT_INSTANCE): cv.positive_int,
+            vol.Optional(
+                CONF_INSTANCE, default=const.DEFAULT_INSTANCE
+            ): cv.positive_int,
         }
     ),
 )
@@ -99,20 +91,33 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     token = config.get(CONF_TOKEN)
     instance = config.get(CONF_INSTANCE)
 
-    device = Hyperion(name, host, port, priority, token, instance)
+    # Use loop outside of HA's tracked task in order not to delay startup.
+    device = Hyperion(name, host, port, priority, token, instance, hass.loop)
 
-    if not await device.async_setup(hass):
+    if not await device.async_connect_client(hass):
         raise PlatformNotReady
     else:
+        await device.async_complete_setup()
         async_add_entities([device])
 
 
 class Hyperion(LightEntity):
     """Representation of a Hyperion remote."""
 
-    def __init__(self, name, host, port, priority, token, instance):
+    def __init__(self, name, host, port, priority, token, instance, loop):
         """Initialize the light."""
-        self._hyperion_client = client(host, port, token=token, instance=instance)
+        self._client = client.HyperionClient(
+            host,
+            port,
+            token=token,
+            instance=instance,
+            callbacks={
+                f"{const.KEY_ADJUSTMENT}-{const.KEY_UPDATE}": self._update_adjustment,
+                f"{const.KEY_EFFECTS}-{const.KEY_UPDATE}": self._update_effect_list,
+                f"{const.KEY_PRIORITIES}-{const.KEY_UPDATE}": self._update_priorities,
+            },
+            loop=loop,
+        )
         self._name = name
         self._priority = priority
 
@@ -145,7 +150,7 @@ class Hyperion(LightEntity):
     @property
     def is_on(self):
         """Return true if not black."""
-        return self._hyperion_client.is_on()
+        return self._client.is_on()
 
     @property
     def icon(self):
@@ -160,7 +165,11 @@ class Hyperion(LightEntity):
     @property
     def effect_list(self):
         """Return the list of supported effects."""
-        return self._effect_list + KEY_COMPONENTID_EXTERNAL_SOURCES + [KEY_EFFECT_SOLID]
+        return (
+            self._effect_list
+            + const.KEY_COMPONENTID_EXTERNAL_SOURCES
+            + [KEY_EFFECT_SOLID]
+        )
 
     @property
     def supported_features(self):
@@ -170,192 +179,160 @@ class Hyperion(LightEntity):
     @property
     def available(self):
         """Return server availability."""
-        return self._hyperion_client.is_connected
+        return self._client.is_connected
 
     @property
     def unique_id(self):
         """Return a unique id for this instance."""
-        return "%s:%i-%i" % (self._host, self._port, self._instance)
+        return self._client.id
 
     async def async_turn_on(self, **kwargs):
         """Turn the lights on."""
         _LOGGER.debug("Turning On: %s", kwargs)
-        if not self._is_connected:
-            return False
+        if not self._client.is_connected:
+            return
 
         # == Turn device on ==
         # Turn on both ALL (Hyperion itself) and LEDDEVICE. It would be
         # preferable to enable LEDDEVICE after the settings (e.g. brightness,
         # color, effect), but this is not possible due to:
         # https://github.com/hyperion-project/hyperion.ng/issues/967
-        await self._async_send_json(
-            {
-                KEY_COMMAND: KEY_COMPONENTSTATE,
-                KEY_COMPONENTSTATE: {
-                    KEY_COMPONENT: KEY_COMPONENTID_ALL,
-                    KEY_STATE: True,
-                },
+        if not await self._client.async_set_component(
+            **{
+                const.KEY_COMPONENTSTATE: {
+                    const.KEY_COMPONENT: const.KEY_COMPONENTID_ALL,
+                    const.KEY_STATE: True,
+                }
             }
-        )
-        await self._async_send_json(
-            {
-                KEY_COMMAND: KEY_COMPONENTSTATE,
-                KEY_COMPONENTSTATE: {
-                    KEY_COMPONENT: KEY_COMPONENTID_LEDDEVICE,
-                    KEY_STATE: True,
-                },
+        ):
+            return
+
+        # TODO: Do these failures emit errors in the log?
+        if not await self._client.async_set_component(
+            **{
+                const.KEY_COMPONENTSTATE: {
+                    const.KEY_COMPONENT: const.KEY_COMPONENTID_LEDDEVICE,
+                    const.KEY_STATE: True,
+                }
             }
-        )
-        self._on = True
+        ):
+            return
 
         # == Set brightness ==
         brightness = kwargs.get(ATTR_BRIGHTNESS, self._brightness)
-        await self._async_send_json(
-            {
-                KEY_COMMAND: KEY_ADJUSTMENT,
-                KEY_ADJUSTMENT: {
-                    KEY_BRIGHTNESS: int(round((float(brightness) * 100) / 255))
-                },
+        if not await self.async_set_adjustment(
+            **{
+                const.KEY_ADJUSTMENT: {
+                    const.KEY_BRIGHTNESS: int(round((float(brightness) * 100) / 255))
+                }
             }
-        )
-        self._brightness = brightness
+        ):
+            return
 
         effect = kwargs.get(ATTR_EFFECT, self._effect)
-        if effect and effect in KEY_COMPONENTID_EXTERNAL_SOURCES:
+        if effect and effect in const.KEY_COMPONENTID_EXTERNAL_SOURCES:
             # Clear any color/effect.
-            await self._async_send_json(
-                {KEY_COMMAND: KEY_CLEAR, KEY_PRIORITY: self._priority}
-            )
+            if not await self.async_clear(**{const.KEY_PRIORITY: self._priority}):
+                return
 
             # Turn off all external sources, except the intended.
-            for key in KEY_COMPONENTID_EXTERNAL_SOURCES:
-                await self._async_send_json(
-                    {
-                        KEY_COMMAND: KEY_COMPONENTSTATE,
-                        KEY_COMPONENTSTATE: {
-                            KEY_COMPONENT: key,
-                            KEY_STATE: effect == key,
-                        },
+            for key in const.KEY_COMPONENTID_EXTERNAL_SOURCES:
+                if not await self._client.async_set_component(
+                    **{
+                        const.KEY_COMPONENTSTATE: {
+                            const.KEY_COMPONENT: const.KEY_COMPONENTID_ALL,
+                            const.KEY_STATE: effect == key,
+                        }
                     }
-                )
-
-            self._icon = ICON_EXTERNAL_SOURCE
+                ):
+                    return
         elif effect and effect != KEY_EFFECT_SOLID:
-            await self._async_send_json(
-                {
-                    KEY_COMMAND: KEY_EFFECT,
-                    KEY_PRIORITY: self._priority,
-                    KEY_EFFECT: {KEY_NAME: effect},
-                    KEY_ORIGIN: DEFAULT_ORIGIN,
+            if not await self._client.async_set_effect(
+                **{
+                    const.KEY_PRIORITY: self._priority,
+                    const.KEY_EFFECT: {const.KEY_NAME: effect},
+                    const.KEY_ORIGIN: DEFAULT_ORIGIN,
                 }
-            )
-            self._icon = ICON_EFFECT
+            ):
+                return
         else:
             if ATTR_HS_COLOR in kwargs:
                 rgb_color = color_util.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
             else:
                 rgb_color = self._rgb_color
 
-            await self._async_send_json(
-                {
-                    KEY_COMMAND: KEY_COLOR,
-                    KEY_PRIORITY: self._priority,
-                    KEY_COLOR: rgb_color,
-                    KEY_ORIGIN: DEFAULT_ORIGIN,
+            if not await self.async_set_color(
+                **{
+                    const.KEY_PRIORITY: self._priority,
+                    const.KEY_COLOR: rgb_color,
+                    const.KEY_ORIGIN: DEFAULT_ORIGIN,
                 }
-            )
-            self._rgb_color = rgb_color
-            self._icon = ICON_LIGHTBULB
-        self._effect = effect
-        self.async_write_ha_state()
+            ):
+                return
 
     async def async_turn_off(self, **kwargs):
         """Disable the LED output component."""
         _LOGGER.debug("Turning Off: %s", kwargs)
 
-        if not self._is_connected:
-            return False
+        if not self._client.is_connected:
+            return
 
-        await self._async_send_json(
-            {
-                KEY_COMMAND: KEY_COMPONENTSTATE,
-                KEY_COMPONENTSTATE: {
-                    KEY_COMPONENT: KEY_COMPONENTID_LEDDEVICE,
-                    KEY_STATE: False,
-                },
+        if not await self._client.async_set_component(
+            **{
+                const.KEY_COMPONENTSTATE: {
+                    const.KEY_COMPONENT: const.KEY_COMPONENTID_LEDDEVICE,
+                    const.KEY_STATE: False,
+                }
             }
-        )
-        self._on = False
-        self.async_write_ha_state()
-
-    async def _async_update_components(self, components):
-        """Update Hyperion components."""
-        for component in components:
-            if KEY_NAME in component and KEY_ENABLED in component:
-                self._components[component[KEY_NAME]] = component[KEY_ENABLED]
-
-        if (
-            KEY_COMPONENTID_ALL in self._components
-            and KEY_COMPONENTID_LEDDEVICE in self._components
         ):
-            self._on = (
-                self._components[KEY_COMPONENTID_ALL]
-                and self._components[KEY_COMPONENTID_LEDDEVICE]
-            )
+            return
 
-    async def _async_update_adjustment(self, adjustment):
+    def _update_adjustment(self, _=None):
         """Update Hyperion adjustments."""
-        brightness_pct = adjustment.get(KEY_BRIGHTNESS, DEFAULT_BRIGHTNESS)
-        self._brightness = int(round((brightness_pct * 255) / float(100)))
+        if self._client.adjustment:
+            brightness_pct = self._client.adjustment[0].get(
+                const.KEY_BRIGHTNESS, DEFAULT_BRIGHTNESS
+            )
+            self._brightness = int(round((brightness_pct * 255) / float(100)))
+            self.async_write_ha_state()
 
-    async def _async_update_priorities(self, priorities):
+    def _update_priorities(self, _=None):
         """Update Hyperion priorities."""
-        # The visible priority is supposed to be the first returned by the
-        # API, but due to a bug the ordering is incorrect search for it
-        # instead, see:
-        # https://github.com/hyperion-project/hyperion.ng/issues/964
-        visible_priority = None
-        for priority in priorities:
-            if priority.get(KEY_VISIBLE, False):
-                visible_priority = priority
-                break
-
+        visible_priority = self._client.visible_priority()
         if visible_priority:
-            componentid = visible_priority.get(KEY_COMPONENTID)
-            if componentid in KEY_COMPONENTID_EXTERNAL_SOURCES:
+            componentid = visible_priority.get(const.KEY_COMPONENTID)
+            if componentid in const.KEY_COMPONENTID_EXTERNAL_SOURCES:
                 self._rgb_color = DEFAULT_COLOR
                 self._icon = ICON_EXTERNAL_SOURCE
                 self._effect = componentid
-            elif componentid == KEY_COMPONENTID_EFFECT:
+            elif componentid == const.KEY_COMPONENTID_EFFECT:
                 self._rgb_color = DEFAULT_COLOR
                 self._icon = ICON_EFFECT
 
                 # Owner is the effect name.
                 # See: https://docs.hyperion-project.org/en/json/ServerInfo.html#priorities
-                self._effect = visible_priority[KEY_OWNER]
-            elif componentid == KEY_COMPONENTID_COLOR:
-                self._rgb_color = visible_priority[KEY_VALUE][KEY_RGB]
+                self._effect = visible_priority[const.KEY_OWNER]
+            elif componentid == const.KEY_COMPONENTID_COLOR:
+                self._rgb_color = visible_priority[const.KEY_VALUE][const.KEY_RGB]
                 self._icon = ICON_LIGHTBULB
                 self._effect = KEY_EFFECT_SOLID
+            self.async_write_ha_state()
 
-    async def _async_update_effect_list(self, effects):
+    def _update_effect_list(self, _=None):
         """Update Hyperion effects."""
-        if self._static_effect_list:
-            return
         effect_list = []
-        for effect in effects:
-            if KEY_NAME in effect:
-                effect_list.append(effect[KEY_NAME])
+        for effect in self._client.effects or []:
+            if const.KEY_NAME in effect:
+                effect_list.append(effect[const.KEY_NAME])
         if effect_list:
             self._effect_list = effect_list
+            self.async_write_ha_state()
 
-    async def _async_update_full_state(self, state):
+    def _update_full_state(self):
         """Update full Hyperion state."""
-        await self._async_update_components(state.get(KEY_COMPONENTS, []))
-        if state.get(KEY_ADJUSTMENT, []):
-            await self._async_update_adjustment(state[KEY_ADJUSTMENT][0])
-        await self._async_update_priorities(state.get(KEY_PRIORITIES, []))
-        await self._async_update_effect_list(state.get(KEY_EFFECTS, []))
+        self._update_adjustment()
+        self._update_priorities()
+        self._update_effect_list()
 
         _LOGGER.debug(
             "Hyperion full state update: On=%s,Brightness=%i,Effect=%s "
@@ -367,220 +344,15 @@ class Hyperion(LightEntity):
             self._rgb_color,
         )
 
-    async def _async_connect(self):
-        """Connect to the Hyperion server."""
-        future_streams = asyncio.open_connection(self._host, self._port)
-        try:
-            self._reader, self._writer = await asyncio.wait_for(
-                future_streams, timeout=DEFAULT_CONNECTION_TIMEOUT_SECS
-            )
-        except (asyncio.TimeoutError, ConnectionError):
-            return False
+    async def async_connect_client(self):
+        """Connect the Hyperion Client."""
+        return await self._client.async_connect():
 
-        _LOGGER.debug(
-            "Connected to Hyperion server (%s): %s:%i",
-            self._name,
-            self._host,
-            self._port,
-        )
-
-        # == Request: authorize ==
-        if self._token is not None:
-            data = {
-                KEY_COMMAND: KEY_AUTHORIZE,
-                KEY_SUBCOMMAND: KEY_LOGIN,
-                KEY_TOKEN: self._token,
-            }
-            await self._async_send_json(data)
-            resp_json = await self._async_safely_read_command()
-            if (
-                not resp_json
-                or resp_json.get(KEY_COMMAND) != KEY_AUTHORIZE_LOGIN
-                or not resp_json.get(KEY_SUCCESS, False)
-            ):
-                _LOGGER.warning(
-                    "Authorization failed for Hyperion (%s). "
-                    "Check token is valid: %s",
-                    self._name,
-                    resp_json,
-                )
-                return False
-
-        # == Request: instance ==
-        if self._instance != 0:
-            data = {
-                KEY_COMMAND: KEY_INSTANCE,
-                KEY_SUBCOMMAND: KEY_SWITCH_TO,
-                KEY_INSTANCE: self._instance,
-            }
-            await self._async_send_json(data)
-            resp_json = await self._async_safely_read_command()
-            if (
-                not resp_json
-                or resp_json.get(KEY_COMMAND) != (f"{KEY_INSTANCE}-{KEY_SWITCH_TO}")
-                or not resp_json.get(KEY_SUCCESS, False)
-            ):
-                _LOGGER.warning(
-                    "Changing instqnce failed for Hyperion (%s): %s ",
-                    self._name,
-                    resp_json,
-                )
-                return False
-
-        # == Request: serverinfo ==
-        # Request full state ('serverinfo') and subscribe to relevant
-        # future updates to keep this object state accurate without the need to
-        # poll.
-        data = {
-            KEY_COMMAND: KEY_SERVERINFO,
-            KEY_SUBSCRIBE: [
-                f"{KEY_ADJUSTMENT}-{KEY_UPDATE}",
-                f"{KEY_COMPONENTS}-{KEY_UPDATE}",
-                f"{KEY_EFFECTS}-{KEY_UPDATE}",
-                f"{KEY_INSTANCE}-{KEY_UPDATE}",
-                f"{KEY_PRIORITIES}-{KEY_UPDATE}",
-            ],
-        }
-
-        await self._async_send_json(data)
-        resp_json = await self._async_safely_read_command()
-        if (
-            not resp_json
-            or resp_json.get(KEY_COMMAND) != KEY_SERVERINFO
-            or not resp_json.get(KEY_INFO)
-            or not resp_json.get(KEY_SUCCESS, False)
-        ):
-            _LOGGER.warning(
-                "Could not load initial state for Hyperion (%s): %s",
-                self._name,
-                resp_json,
-            )
-            return False
-
-        await self._async_update_full_state(resp_json[KEY_INFO])
-        self._is_connected = True
-        self.async_write_ha_state()
-        return True
-
-    async def _async_close_streams(self):
-        """Close streams to the Hyperion server."""
-        self._is_connected = False
-        if self._writer is not None:
-            self._writer.close()
-            await self._writer.wait_closed()
-        self._reader, self._writer = None, None
-        self.async_write_ha_state()
-
-    async def async_setup(self, hass):
+    async def async_complete_setup(self):
         """Set up the entity."""
-        # Create connection attempt outside of HA's tracked task in order not
-        # to delay startup.
-        hass.loop.create_task(self._async_manage_connection())
+        # Load initial state.
+        self._update_full_state()
+
+        # Start "background" task.
+        self._client.run()
         return True
-
-    async def _async_send_json(self, request):
-        """Send JSON to the server."""
-        _LOGGER.debug("Send to server (%s): %s", self._name, request)
-        output = json.dumps(request).encode("UTF-8") + b"\n"
-        self._writer.write(output)
-        await self._writer.drain()
-
-    async def _async_safely_read_command(self):
-        """Safely read a command from the stream."""
-        connection_error = False
-        try:
-            resp = await self._reader.readline()
-        except ConnectionError:
-            connection_error = True
-
-        if connection_error or not resp:
-            _LOGGER.warning("Connection to Hyperion lost (%s) ...", self._name)
-            await self._async_close_streams()
-            return None
-
-        _LOGGER.debug("Read from server (%s): %s", self._name, resp)
-
-        try:
-            resp_json = json.loads(resp)
-        except json.decoder.JSONDecodeError:
-            _LOGGER.warning(
-                "Could not decode JSON from Hyperion (%s), skipping...", self._name
-            )
-            return None
-
-        if KEY_COMMAND not in resp_json:
-            _LOGGER.warning(
-                "JSON from Hyperion (%s) did not include expected '%s' "
-                "parameter, skipping...",
-                self._name,
-                KEY_COMMAND,
-            )
-            return None
-        return resp_json
-
-    async def _async_verify_instance_or_close(self, instances):
-        """Verify the instance still exists on the server."""
-        for instance in instances:
-            if instance[KEY_INSTANCE] == self._instance:
-                return
-
-        # If the instance this entity is using no longer exists, close the
-        # connection immediately (as the instance used in the connection may
-        # change, so controls would impact a different instance). See caution
-        # note here:
-        #
-        # https://docs.hyperion-project.org/en/json/Control.html#api-instance-handling
-
-        _LOGGER.warning(
-            "Hyperion (%s) instance %i disappeared, closing connection ...",
-            self._name,
-            self._instance,
-        )
-        await self._async_close_streams()
-
-    async def _async_manage_connection(self):
-        """Manage the bidirectional connection to the server."""
-        while True:
-            if not self._is_connected:
-                if not await self._async_connect():
-                    _LOGGER.warning(
-                        "Could not estalish valid connection to Hyperion (%s), "
-                        "retrying in %i seconds...",
-                        self._name,
-                        DEFAULT_CONNECTION_RETRY_DELAY,
-                    )
-                    await self._async_close_streams()
-                    await asyncio.sleep(DEFAULT_CONNECTION_RETRY_DELAY)
-                    continue
-
-            resp_json = await self._async_safely_read_command()
-            if not resp_json:
-                continue
-            command = resp_json[KEY_COMMAND]
-
-            should_update_state = True
-            if not resp_json.get(KEY_SUCCESS, True):
-                _LOGGER.warning(
-                    "Failed Hyperion (%s) command: %s", self._name, resp_json
-                )
-                should_update_state = False
-            elif command == f"{KEY_COMPONENTS}-{KEY_UPDATE}" and KEY_DATA in resp_json:
-                await self._async_update_components([resp_json[KEY_DATA]])
-            elif command == f"{KEY_ADJUSTMENT}-{KEY_UPDATE}" and resp_json.get(
-                KEY_DATA, []
-            ):
-                await self._async_update_adjustment(resp_json[KEY_DATA][0])
-            elif command == f"{KEY_EFFECTS}-{KEY_UPDATE}" and resp_json.get(
-                KEY_DATA, []
-            ):
-                await self._async_update_effect_list(resp_json[KEY_DATA])
-            elif command == f"{KEY_PRIORITIES}-{KEY_UPDATE}" and resp_json.get(
-                KEY_DATA, {}
-            ).get(KEY_PRIORITIES, {}):
-                await self._async_update_priorities(resp_json[KEY_DATA][KEY_PRIORITIES])
-            elif command == f"{KEY_INSTANCE}-{KEY_UPDATE}" and KEY_DATA in resp_json:
-                await self._async_verify_instance_or_close(resp_json[KEY_DATA])
-                should_update_state = False
-
-            if should_update_state:
-                self.async_write_ha_state()
