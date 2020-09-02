@@ -214,4 +214,14 @@ async def test_updates(hass: HomeAssistant) -> None:
             await coordinator._async_update_data()  # pylint: disable=protected-access
         except UpdateFailed:
             update_failed = True
+
+    with patch.object(
+        SharkIqVacuum, "async_update", new=_get_async_update(RuntimeError)
+    ), patch.object(HomeAssistant, "async_create_task"), patch.object(
+        ConfigEntriesFlowManager, "async_init"
+    ):
+        try:
+            await coordinator._async_update_data()  # pylint: disable=protected-access
+        except UpdateFailed:
+            update_failed = True
     assert update_failed
