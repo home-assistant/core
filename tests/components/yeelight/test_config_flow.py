@@ -16,7 +16,7 @@ from homeassistant.components.yeelight import (
     DOMAIN,
     NIGHTLIGHT_SWITCH_TYPE_LIGHT,
 )
-from homeassistant.const import CONF_ID, CONF_IP_ADDRESS, CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_ID, CONF_NAME
 from homeassistant.core import HomeAssistant
 
 from . import (
@@ -112,7 +112,7 @@ async def test_import(hass: HomeAssistant):
     """Test import from yaml."""
     config = {
         CONF_NAME: DEFAULT_NAME,
-        CONF_IP_ADDRESS: IP_ADDRESS,
+        CONF_HOST: IP_ADDRESS,
         CONF_TRANSITION: DEFAULT_TRANSITION,
         CONF_MODE_MUSIC: DEFAULT_MODE_MUSIC,
         CONF_SAVE_ON_CHANGE: DEFAULT_SAVE_ON_CHANGE,
@@ -145,7 +145,7 @@ async def test_import(hass: HomeAssistant):
     assert result["title"] == DEFAULT_NAME
     assert result["data"] == {
         CONF_NAME: DEFAULT_NAME,
-        CONF_IP_ADDRESS: IP_ADDRESS,
+        CONF_HOST: IP_ADDRESS,
         CONF_TRANSITION: DEFAULT_TRANSITION,
         CONF_MODE_MUSIC: DEFAULT_MODE_MUSIC,
         CONF_SAVE_ON_CHANGE: DEFAULT_SAVE_ON_CHANGE,
@@ -178,7 +178,7 @@ async def test_manual(hass: HomeAssistant):
     mocked_bulb = _mocked_bulb(cannot_connect=True)
     with patch(f"{MODULE_CONFIG_FLOW}.yeelight.Bulb", return_value=mocked_bulb):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_IP_ADDRESS: IP_ADDRESS}
+            result["flow_id"], {CONF_HOST: IP_ADDRESS}
         )
     assert result2["type"] == "form"
     assert result2["step_id"] == "user"
@@ -188,7 +188,7 @@ async def test_manual(hass: HomeAssistant):
     type(mocked_bulb).get_capabilities = MagicMock(side_effect=OSError)
     with patch(f"{MODULE_CONFIG_FLOW}.yeelight.Bulb", return_value=mocked_bulb):
         result3 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_IP_ADDRESS: IP_ADDRESS}
+            result["flow_id"], {CONF_HOST: IP_ADDRESS}
         )
     assert result3["errors"] == {"base": "cannot_connect"}
 
@@ -201,10 +201,10 @@ async def test_manual(hass: HomeAssistant):
         return_value=True,
     ):
         result4 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_IP_ADDRESS: IP_ADDRESS}
+            result["flow_id"], {CONF_HOST: IP_ADDRESS}
         )
     assert result4["type"] == "create_entry"
-    assert result4["data"] == {CONF_IP_ADDRESS: IP_ADDRESS}
+    assert result4["data"] == {CONF_HOST: IP_ADDRESS}
 
     # Duplicate
     result = await hass.config_entries.flow.async_init(
@@ -213,7 +213,7 @@ async def test_manual(hass: HomeAssistant):
     mocked_bulb = _mocked_bulb()
     with patch(f"{MODULE_CONFIG_FLOW}.yeelight.Bulb", return_value=mocked_bulb):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_IP_ADDRESS: IP_ADDRESS}
+            result["flow_id"], {CONF_HOST: IP_ADDRESS}
         )
     assert result2["type"] == "abort"
     assert result2["reason"] == "already_configured"
@@ -221,7 +221,7 @@ async def test_manual(hass: HomeAssistant):
 
 async def test_options(hass: HomeAssistant):
     """Test options flow."""
-    config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_IP_ADDRESS: IP_ADDRESS})
+    config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: IP_ADDRESS})
     config_entry.add_to_hass(hass)
 
     mocked_bulb = _mocked_bulb()
