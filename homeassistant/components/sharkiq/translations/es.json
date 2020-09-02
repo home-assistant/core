@@ -1,7 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured_account": "La cuenta ya ha sido configurada"
+            "already_configured_account": "La cuenta ya ha sido configurada",
+            "cannot_connect": "No se pudo conectar",
+            "reauth_successful": "Token de acceso actualizado correctamente",
+            "unknown": "Error inesperado"
         },
         "error": {
             "cannot_connect": "No se pudo conectar",
@@ -9,6 +12,12 @@
             "unknown": "Error inesperado"
         },
         "step": {
+            "reauth": {
+                "data": {
+                    "password": "Contrase\u00f1a",
+                    "username": "Nombre de usuario"
+                }
+            },
             "user": {
                 "data": {
                     "password": "Contrase\u00f1a",

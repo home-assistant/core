@@ -1,13 +1,72 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Une connexion Insteon par modem est d\u00e9j\u00e0 configur\u00e9e",
+            "cannot_connect": "\u00c9chec de connexion"
+        },
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion",
+            "select_single": "S\u00e9lectionnez une option."
+        },
         "step": {
+            "hub1": {
+                "data": {
+                    "host": "Adresse IP du hub",
+                    "port": "Port IP"
+                },
+                "description": "Configurer le Hub Insteon Version 1 (avant 2014).",
+                "title": "Hub Insteon Version 1"
+            },
+            "hub2": {
+                "data": {
+                    "host": "Adresse IP du hub",
+                    "password": "Mot de passe",
+                    "port": "Port IP",
+                    "username": "Nom d'utilisateur"
+                },
+                "description": "Configurez le Hub Insteon version 2.",
+                "title": "Hub Insteon Version 2"
+            },
+            "hubv1": {
+                "data": {
+                    "host": "Adresse IP",
+                    "port": "Port"
+                },
+                "description": "Configurer le Hub Insteon Version 1 (avant 2014).",
+                "title": "Hub Insteon Version 1"
+            },
+            "hubv2": {
+                "data": {
+                    "host": "Adresse IP",
+                    "password": "Mot de passe",
+                    "port": "Port",
+                    "username": "Nom d'utilisateur"
+                },
+                "description": "Configurez le Hub Insteon version 2.",
+                "title": "Hub Insteon Version 2"
+            },
             "init": {
+                "data": {
+                    "hubv1": "Hub Version 1 (avant 2014)"
+                },
+                "title": "Insteon"
+            },
+            "plm": {
+                "data": {
+                    "device": "Chemin du p\u00e9riph\u00e9rique USB"
+                }
+            },
+            "user": {
+                "data": {
+                    "modem_type": "Type de modem."
+                },
                 "title": "Insteon"
             }
         }
     },
     "options": {
         "error": {
+            "cannot_connect": "\u00c9chec de connexion",
             "select_single": "S\u00e9lectionnez une option"
         },
         "step": {
@@ -22,10 +81,10 @@
             },
             "change_hub_config": {
                 "data": {
-                    "host": "Nouveau nom d\u2019h\u00f4te ou adresse IP",
-                    "password": "Nouveau mot de passe",
-                    "port": "Nouveau num\u00e9ro de port",
-                    "username": "Nouveau nom d\u2019utilisateur"
+                    "host": "Adresse IP",
+                    "password": "Mot de passe",
+                    "port": "Port",
+                    "username": "Nom d'utilisateur"
                 },
                 "title": "Insteon"
             },
