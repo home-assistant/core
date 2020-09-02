@@ -5,6 +5,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_MOISTURE,
     DEVICE_CLASS_OPENING,
     DEVICE_CLASS_SMOKE,
+    DEVICE_CLASS_VIBRATION,
     BinarySensorEntity,
 )
 
@@ -15,7 +16,9 @@ SENSORS = {
     "dwIsOpened": DEVICE_CLASS_OPENING,
     "flood": DEVICE_CLASS_MOISTURE,
     "overpower": None,
+    "overtemp": None,
     "smoke": DEVICE_CLASS_SMOKE,
+    "vibration": DEVICE_CLASS_VIBRATION,
 }
 
 
