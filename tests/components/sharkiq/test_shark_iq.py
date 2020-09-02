@@ -1,13 +1,11 @@
 """Test the Shark IQ vacuum entity."""
 from copy import deepcopy
-from pprint import pprint, pformat
 import enum
-import json
 import logging
-from typing import Dict, List
+from typing import List
 
 import pytest
-from sharkiqpy import AylaApi, Properties, SharkIqAuthError, SharkIqVacuum, get_ayla_api
+from sharkiqpy import AylaApi, SharkIqAuthError, SharkIqVacuum, get_ayla_api
 
 from homeassistant.components.sharkiq import DOMAIN, SharkIqUpdateCoordinator
 from homeassistant.components.sharkiq.vacuum import (
@@ -15,16 +13,12 @@ from homeassistant.components.sharkiq.vacuum import (
     ATTR_ERROR_MSG,
     ATTR_LOW_LIGHT,
     ATTR_RECHARGE_RESUME,
-    SharkVacuumEntity,
 )
 from homeassistant.components.vacuum import (
     ATTR_BATTERY_LEVEL,
     ATTR_FAN_SPEED,
     ATTR_FAN_SPEED_LIST,
-    ATTR_PARAMS,
-    ATTR_STATUS,
     STATE_CLEANING,
-    STATE_DOCKED,
     STATE_IDLE,
     STATE_PAUSED,
     STATE_RETURNING,
@@ -38,16 +32,12 @@ from homeassistant.components.vacuum import (
     SUPPORT_STATUS,
     SUPPORT_STOP,
 )
-from homeassistant.config_entries import ConfigEntriesFlowManager, ConfigEntry
-from homeassistant.const import (
-    ATTR_SUPPORTED_FEATURES,
-    CONF_PLATFORM,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.config_entries import ConfigEntriesFlowManager
+from homeassistant.const import ATTR_SUPPORTED_FEATURES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
+from ..vacuum import common
 from .const import (
     CONFIG,
     SHARK_DEVICE_DICT,
@@ -56,7 +46,6 @@ from .const import (
     TEST_PASSWORD,
     TEST_USERNAME,
 )
-from ..vacuum import common
 
 from tests.async_mock import patch
 from tests.common import MockConfigEntry
@@ -67,9 +56,9 @@ _LOGGER = logging.getLogger(__name__)
 
 class MockAyla(AylaApi):
     """Mocked AylaApi that doesn't do anything."""
+
     async def async_sign_in(self):
         """Instead of signing in, just return."""
-        pass
 
     async def async_list_devices(self) -> List[dict]:
         """Return the device list."""
@@ -100,21 +89,20 @@ async def _async_set_property(self, property_name, value):
 
 async def async_nop(*args, **kwargs):
     """Don't do nothin'."""
-    pass
 
 
 @pytest.fixture(autouse=True)
-@patch('sharkiqpy.ayla_api.AylaApi', MockAyla)
+@patch("sharkiqpy.ayla_api.AylaApi", MockAyla)
 @patch.object(SharkIqUpdateCoordinator, "_async_update_vacuum", new=async_nop)
 async def setup_integration(hass):
-    """Setup the mock integration"""
+    """Build the mock integration."""
     entry = MockConfigEntry(domain=DOMAIN, unique_id=TEST_USERNAME, data=CONFIG)
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
 
-def assert_attributes(state,  **kwargs):
+def assert_attributes(state, **kwargs):
     """Assert expected properties."""
     for attr, value in kwargs.items():
         assert state.attributes.get(attr) == value
@@ -170,27 +158,21 @@ async def test_shark_methods(hass: HomeAssistant) -> None:
     state = hass.states.get(VAC_ENTITY_ID)
     assert state.state == STATE_RETURNING
 
-    await common.async_set_fan_speed(
-        hass, "Max", entity_id=VAC_ENTITY_ID
-    )
+    await common.async_set_fan_speed(hass, "Max", entity_id=VAC_ENTITY_ID)
     state = hass.states.get(VAC_ENTITY_ID)
     assert state.attributes.get(ATTR_FAN_SPEED) == "Max"
 
-    await common.async_set_fan_speed(
-        hass, "Normal", entity_id=VAC_ENTITY_ID
-    )
+    await common.async_set_fan_speed(hass, "Normal", entity_id=VAC_ENTITY_ID)
     state = hass.states.get(VAC_ENTITY_ID)
     assert state.attributes.get(ATTR_FAN_SPEED) == "Normal"
 
-    await common.async_set_fan_speed(
-        hass, "Eco", entity_id=VAC_ENTITY_ID
-    )
+    await common.async_set_fan_speed(hass, "Eco", entity_id=VAC_ENTITY_ID)
     state = hass.states.get(VAC_ENTITY_ID)
     assert state.attributes.get(ATTR_FAN_SPEED) == "Eco"
 
 
 async def test_device(hass: HomeAssistant):
-    """Test device properties"""
+    """Test device properties."""
     registry = await hass.helpers.device_registry.async_get_registry()
     device = registry.async_get_device({(DOMAIN, "AC000Wxxxxxxxxx")}, [])
     assert device.manufacturer == "Shark"
@@ -199,20 +181,18 @@ async def test_device(hass: HomeAssistant):
     assert device.sw_version == "Dummy Firmware 1.0"
 
 
-#     assert not shark.should_poll
-#
-#
-#
-#
 def _get_async_update(err=None):
+    """Fake an update."""
+
     async def _async_update(_) -> bool:
         if err is not None:
             raise err
         return True
+
     return _async_update
 
 
-@patch('sharkiqpy.ayla_api.AylaApi', MockAyla)
+@patch("sharkiqpy.ayla_api.AylaApi", MockAyla)
 async def test_updates(hass: HomeAssistant) -> None:
     """Test the update coordinator update functions."""
     ayla_api = get_ayla_api(TEST_USERNAME, TEST_PASSWORD)
@@ -221,7 +201,9 @@ async def test_updates(hass: HomeAssistant) -> None:
     coordinator = SharkIqUpdateCoordinator(hass, mock_config, ayla_api, shark_vacs)
 
     with patch.object(SharkIqVacuum, "async_update", new=_get_async_update()):
-        update_called = await coordinator._async_update_data()  # pylint: disable=protected-access
+        update_called = (
+            await coordinator._async_update_data()  # pylint: disable=protected-access
+        )
         assert update_called
 
     update_failed = False
