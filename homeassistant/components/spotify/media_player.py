@@ -86,9 +86,18 @@ LIBRARY_MAP = {
 }
 
 AUDIO_FEATURE_LIST = [
-    'acousticness', 'danceability', 'energy',
-    'instrumentalness', 'key', 'liveness', 'loudness', 'mode',
-    'speechiness', 'tempo', 'time_signature', 'valence',
+    "acousticness",
+    "danceability",
+    "energy",
+    "instrumentalness",
+    "key",
+    "liveness",
+    "loudness",
+    "mode",
+    "speechiness",
+    "tempo",
+    "time_signature",
+    "valence",
 ]
 
 
@@ -392,12 +401,12 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
 
         item = self._currently_playing.get("item") or {}
         if item is not None:
-            self._state_attributes['audio_features'] = {}
+            self._state_attributes["audio_features"] = {}
             uri = item.get("uri")
             audio_features = self._spotify.audio_features(uri)[0]
             for feature, value in audio_features.items():
                 if feature in AUDIO_FEATURE_LIST:
-                    self._state_attributes['audio_features'][feature] = value
+                    self._state_attributes["audio_features"][feature] = value
 
         self._playlist = None
         context = self._currently_playing.get("context")
