@@ -2157,6 +2157,25 @@ async def test_logbook_entity_matches_only(hass, hass_client):
     assert json_dict[1]["message"] == "turned on"
 
 
+async def test_logbook_invalid_entity(hass, hass_client):
+    """Test the logbook view with requesting an invalid entity."""
+    await hass.async_add_executor_job(init_recorder_component, hass)
+    await async_setup_component(hass, "logbook", {})
+    await hass.async_block_till_done()
+    client = await hass_client()
+
+    # Today time 00:00:00
+    start = dt_util.utcnow().date()
+    start_date = datetime(start.year, start.month, start.day)
+
+    # Test today entries with filter by end_time
+    end_time = start + timedelta(hours=24)
+    response = await client.get(
+        f"/api/logbook/{start_date.isoformat()}?end_time={end_time}&entity=invalid&entity_matches_only"
+    )
+    assert response.status == 500
+
+
 class MockLazyEventPartialState(ha.Event):
     """Minimal mock of a Lazy event."""
 
