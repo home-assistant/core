@@ -50,7 +50,9 @@ def stream_worker(hass, stream, quit_event):
         # To avoid excessive restarts, don't restart faster than once every 40 seconds.
         wait_timeout = max(40 - (time.time() - start_time), 0)
         _LOGGER.debug(
-            "Restarting stream worker in %d seconds: %s", wait_timeout, stream.source,
+            "Restarting stream worker in %d seconds: %s",
+            wait_timeout,
+            stream.source,
         )
 
 
