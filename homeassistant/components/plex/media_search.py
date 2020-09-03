@@ -23,7 +23,7 @@ def lookup_movie(library_section, **kwargs):
         return None
 
     if not movies:
-        raise MediaNotFound(f"Movie {title}")
+        raise MediaNotFound(f"Movie {title}") from None
 
     if len(movies) > 1:
         exact_matches = [x for x in movies if x.title.lower() == title.lower()]
@@ -47,25 +47,25 @@ def lookup_tv(library_section, **kwargs):
     except KeyError:
         _LOGGER.error("Must specify 'show_name' for this search")
         return None
-    except NotFound:
-        raise MediaNotFound(f"Show {show_name}")
+    except NotFound as err:
+        raise MediaNotFound(f"Show {show_name}") from err
 
     if not season_number:
         return show
 
     try:
         season = show.season(int(season_number))
-    except NotFound:
-        raise MediaNotFound(f"Season {season_number} of {show_name}")
+    except NotFound as err:
+        raise MediaNotFound(f"Season {season_number} of {show_name}") from err
 
     if not episode_number:
         return season
 
     try:
         return season.episode(episode=int(episode_number))
-    except NotFound:
+    except NotFound as err:
         episode = f"S{str(season_number).zfill(2)}E{str(episode_number).zfill(2)}"
-        raise MediaNotFound(f"Episode {episode} of {show_name}")
+        raise MediaNotFound(f"Episode {episode} of {show_name}") from err
 
 
 def lookup_music(library_section, **kwargs):
@@ -80,22 +80,22 @@ def lookup_music(library_section, **kwargs):
     except KeyError:
         _LOGGER.error("Must specify 'artist_name' for this search")
         return None
-    except NotFound:
-        raise MediaNotFound(f"Artist {artist_name}")
+    except NotFound as err:
+        raise MediaNotFound(f"Artist {artist_name}") from err
 
     if album_name:
         try:
             album = artist.album(album_name)
-        except NotFound:
-            raise MediaNotFound(f"Album {album_name} by {artist_name}")
+        except NotFound as err:
+            raise MediaNotFound(f"Album {album_name} by {artist_name}") from err
 
         if track_name:
             try:
                 return album.track(track_name)
-            except NotFound:
+            except NotFound as err:
                 raise MediaNotFound(
                     f"Track {track_name} on {album_name} by {artist_name}"
-                )
+                ) from err
 
         if track_number:
             for track in album.tracks():
@@ -104,13 +104,13 @@ def lookup_music(library_section, **kwargs):
 
             raise MediaNotFound(
                 f"Track {track_number} on {album_name} by {artist_name}"
-            )
+            ) from None
         return album
 
     if track_name:
         try:
             return artist.get(track_name)
-        except NotFound:
-            raise MediaNotFound(f"Track {track_name} by {artist_name}")
+        except NotFound as err:
+            raise MediaNotFound(f"Track {track_name} by {artist_name}") from err
 
     return artist

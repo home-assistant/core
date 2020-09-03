@@ -518,8 +518,8 @@ class PlexServer:
                 except KeyError:
                     _LOGGER.error("Must specify 'video_name' for this search")
                     return None
-                except NotFound:
-                    raise MediaNotFound(f"Video {video_name}")
+                except NotFound as err:
+                    raise MediaNotFound(f"Video {video_name}") from err
         except MediaNotFound as failed_item:
             _LOGGER.error("%s not found in %s", failed_item, library_name)
             return None
