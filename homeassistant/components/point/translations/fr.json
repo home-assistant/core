@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Vous ne pouvez configurer qu'un compte Point.",
+            "already_setup": "D\u00e9j\u00e0 configur\u00e9. Une seule configuration possible.",
             "authorize_url_fail": "Erreur inconnue lors de la g\u00e9n\u00e9ration d'une URL d'autorisation.",
             "authorize_url_timeout": "D\u00e9lai de g\u00e9n\u00e9ration de l'URL d'authentification d\u00e9pass\u00e9.",
             "external_setup": "Point correctement configur\u00e9 \u00e0 partir d\u2019un autre flux.",
@@ -16,14 +16,14 @@
         },
         "step": {
             "auth": {
-                "description": "Suivez le lien ci-dessous et <b> acceptez </b> l'acc\u00e8s \u00e0 votre compte Minut, puis revenez et appuyez sur <b> Envoyer </b> ci-dessous. \n\n [Lien] ( {authorization_url} )",
+                "description": "Suivez le lien ci-dessous et **acceptez** l'acc\u00e8s \u00e0 votre compte Minut, puis revenez et appuyez sur **Envoyer** ci-dessous. \n\n [Lien] ( {authorization_url} )",
                 "title": "Point d'authentification"
             },
             "user": {
                 "data": {
                     "flow_impl": "Fournisseur"
                 },
-                "description": "Voulez-vous commencer la configuration?",
+                "description": "Voulez-vous commencer la configuration ?",
                 "title": "S\u00e9lectionner une m\u00e9thode d'authentification"
             }
         }
