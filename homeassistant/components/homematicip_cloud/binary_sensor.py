@@ -16,6 +16,7 @@ from homematicip.aio.device import (
     AsyncShutterContact,
     AsyncShutterContactMagnetic,
     AsyncSmokeDetector,
+    AsyncTiltVibrationSensor,
     AsyncWaterSensor,
     AsyncWeatherSensor,
     AsyncWeatherSensorPlus,
@@ -85,6 +86,8 @@ async def async_setup_entry(
     for device in hap.home.devices:
         if isinstance(device, AsyncAccelerationSensor):
             entities.append(HomematicipAccelerationSensor(hap, device))
+        if isinstance(device, AsyncTiltVibrationSensor):
+            entities.append(HomematicipTiltVibrationSensor(hap, device))
         if isinstance(device, (AsyncContactInterface, AsyncFullFlushContactInterface)):
             entities.append(HomematicipContactInterface(hap, device))
         if isinstance(
@@ -133,8 +136,8 @@ async def async_setup_entry(
         async_add_entities(entities)
 
 
-class HomematicipAccelerationSensor(HomematicipGenericEntity, BinarySensorEntity):
-    """Representation of the HomematicIP acceleration sensor."""
+class HomematicipBaseActionSensor(HomematicipGenericEntity, BinarySensorEntity):
+    """Representation of the HomematicIP base action sensor."""
 
     @property
     def device_class(self) -> str:
@@ -157,6 +160,14 @@ class HomematicipAccelerationSensor(HomematicipGenericEntity, BinarySensorEntity
                 state_attr[attr_key] = attr_value
 
         return state_attr
+
+
+class HomematicipAccelerationSensor(HomematicipBaseActionSensor):
+    """Representation of the HomematicIP acceleration sensor."""
+
+
+class HomematicipTiltVibrationSensor(HomematicipBaseActionSensor):
+    """Representation of the HomematicIP tilt vibration sensor."""
 
 
 class HomematicipContactInterface(HomematicipGenericEntity, BinarySensorEntity):

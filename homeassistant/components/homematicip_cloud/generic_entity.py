@@ -17,6 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_MODEL_TYPE = "model_type"
 ATTR_LOW_BATTERY = "low_battery"
 ATTR_CONFIG_PENDING = "config_pending"
+ATTR_CONNECTION_TYPE = "connection_type"
 ATTR_DUTY_CYCLE_REACHED = "duty_cycle_reached"
 ATTR_ID = "id"
 ATTR_IS_GROUP = "is_group"
@@ -43,6 +44,7 @@ DEVICE_ATTRIBUTE_ICONS = {
 
 DEVICE_ATTRIBUTES = {
     "modelType": ATTR_MODEL_TYPE,
+    "connectionType": ATTR_CONNECTION_TYPE,
     "sabotage": ATTR_SABOTAGE,
     "dutyCycle": ATTR_DUTY_CYCLE_REACHED,
     "rssiDeviceValue": ATTR_RSSI_DEVICE,
