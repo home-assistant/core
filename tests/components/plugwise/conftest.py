@@ -26,7 +26,9 @@ def _read_pickle(environment, call):
 @pytest.fixture(name="mock_smile")
 def mock_smile():
     """Create a Mock Smile for testing exceptions."""
-    with patch("homeassistant.components.plugwise.config_flow.Smile",) as smile_mock:
+    with patch(
+        "homeassistant.components.plugwise.config_flow.Smile",
+    ) as smile_mock:
         smile_mock.InvalidAuthentication = Smile.InvalidAuthentication
         smile_mock.ConnectionFailedError = Smile.ConnectionFailedError
         smile_mock.return_value.connect.return_value = True
