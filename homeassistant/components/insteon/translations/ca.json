@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Ja hi ha una connexi\u00f3 amb un m\u00f2dem Insteon configurada",
-            "cannot_connect": "No es pot connectar amb el m\u00f2dem Insteon"
+            "cannot_connect": "No es pot connectar amb el m\u00f2dem Insteon",
+            "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
         },
         "error": {
             "cannot_connect": "No s'ha pogut connectar al m\u00f2dem Insteon, torna-ho a provar.",

@@ -8,7 +8,7 @@
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
-            "invalid_auth": "Authentification non valide",
+            "invalid_auth": "Authentification invalide",
             "unknown": "Erreur inattendue"
         },
         "flow_title": "Kodi: {name}",

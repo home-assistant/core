@@ -1,5 +1,13 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9"
+        },
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion",
+            "unknown": "Erreur inattendue",
+            "wrong_info_relay_modes": "La s\u00e9lection du mode de relais doit \u00eatre monostable ou bistable."
+        },
         "step": {
             "relay_modes": {
                 "data": {
@@ -17,12 +25,14 @@
                     "relay_5": "Relais 5",
                     "relay_6": "Relais 6",
                     "relay_7": "Relais 7",
-                    "relay_8": "Relais 8"
+                    "relay_8": "Relais 8",
+                    "relay_9": "Relais 9"
                 },
                 "title": "Configurer les relais"
             },
             "user": {
                 "data": {
+                    "host": "H\u00f4te",
                     "port": "Port"
                 },
                 "title": "Configurer le tableau"
