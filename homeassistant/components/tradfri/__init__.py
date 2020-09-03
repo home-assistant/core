@@ -120,8 +120,8 @@ async def async_setup_entry(hass, entry):
         await factory.shutdown()
         raise ConfigEntryNotReady from err
 
-    hass.data.setdefault(KEY_API, {})[entry.entry_id] = api
-    hass.data.setdefault(KEY_GATEWAY, {})[entry.entry_id] = gateway
+    tradfri_data[KEY_API] = api
+    tradfri_data[KEY_GATEWAY] = gateway
     tradfri_data[FACTORY] = factory
 
     dev_reg = await hass.helpers.device_registry.async_get_registry()
@@ -155,8 +155,6 @@ async def async_unload_entry(hass, entry):
         )
     )
     if unload_ok:
-        hass.data[KEY_API].pop(entry.entry_id)
-        hass.data[KEY_GATEWAY].pop(entry.entry_id)
         tradfri_data = hass.data[DOMAIN].pop(entry.entry_id)
         factory = tradfri_data[FACTORY]
         await factory.shutdown()
