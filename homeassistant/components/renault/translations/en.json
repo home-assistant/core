@@ -1,6 +1,8 @@
 {
     "config": {
-        "abort": {},
+        "abort": {
+            "kamereon_no_account": "Unable to find Kamereon account."
+          },
         "error": {
             "invalid_credentials": "Invalid credentials.",
             "preload_failed": "Unable to preload Renault keys."

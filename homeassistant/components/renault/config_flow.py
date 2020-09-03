@@ -57,6 +57,8 @@ class RenaultFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(title=account_id, data=self.renault_config)
 
         accounts = await self.pyzeproxy.get_account_ids()
+        if len(accounts) == 0:
+            return self.async_abort(reason="kamereon_no_account")
         if len(accounts) == 1:
             self.renault_config[CONF_KAMEREON_ACCOUNT_ID] = accounts[0]
             return self.async_create_entry(

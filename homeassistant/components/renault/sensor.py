@@ -2,7 +2,6 @@
 from pyze.api import ChargeState, PlugState
 
 from homeassistant.const import DEVICE_CLASS_BATTERY, POWER_KILO_WATT, UNIT_PERCENTAGE
-
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.util.distance import LENGTH_KILOMETERS, LENGTH_MILES
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
