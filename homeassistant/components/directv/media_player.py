@@ -4,7 +4,10 @@ from typing import Callable, List, Optional
 
 from directv import DIRECTV
 
-from homeassistant.components.media_player import DEVICE_CLASS_RECEIVER, MediaPlayerEntity
+from homeassistant.components.media_player import (
+    DEVICE_CLASS_RECEIVER,
+    MediaPlayerEntity,
+)
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_MOVIE,
