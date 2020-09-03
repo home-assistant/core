@@ -484,3 +484,12 @@ async def test_get_version(hass, hass_ws_client):
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
     assert msg["result"] == {"version": cur_version}
+
+
+async def test_static_paths(hass, mock_http_client):
+    """Test static paths."""
+    resp = await mock_http_client.get(
+        "/.well-known/change-password", allow_redirects=False
+    )
+    assert resp.status == 302
+    assert resp.headers["location"] == "/profile"
