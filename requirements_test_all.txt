@@ -1100,6 +1100,9 @@ pywemo==0.6.5
 # homeassistant.components.wilight
 pywilight==0.0.70
 
+# homeassistant.components.renault
+pyze==0.6.0
+
 # homeassistant.components.zerproc
 pyzerproc==0.4.8
 

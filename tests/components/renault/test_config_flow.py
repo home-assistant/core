@@ -1,16 +1,9 @@
 """Test the Renault config flow."""
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.renault.const import (
-    CONF_KAMEREON_ACCOUNT_ID,
-    DOMAIN,
-)
-from homeassistant.const import (
-    CONF_PASSWORD,
-    CONF_USERNAME,
-)
+from homeassistant.components.renault.const import CONF_KAMEREON_ACCOUNT_ID, DOMAIN
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from tests.async_mock import patch
-from tests.common import MockConfigEntry
 
 
 async def test_config_flow_single_account(hass):
