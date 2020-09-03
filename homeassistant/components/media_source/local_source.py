@@ -23,6 +23,25 @@ def async_setup(hass: HomeAssistant):
     hass.http.register_view(LocalMediaView(hass))
 
 
+@callback
+def async_parse_identifier(item: MediaSourceItem) -> Tuple[str, str]:
+    """Parse identifier."""
+    if not item.identifier:
+        source_dir_id = "media"
+        location = ""
+
+    else:
+        source_dir_id, location = item.identifier.lstrip("/").split("/", 1)
+
+    if source_dir_id != "media":
+        raise Unresolvable("Unknown source directory.")
+
+    if location != sanitize_path(location):
+        raise Unresolvable("Invalid path.")
+
+    return source_dir_id, location
+
+
 class LocalSource(MediaSource):
     """Provide local directories as media sources."""
 
@@ -32,33 +51,13 @@ class LocalSource(MediaSource):
         self.hass = hass
 
     @callback
-    def async_parse_identifier(self, item: MediaSourceItem):
-        """Parse identifier."""
-        if not item.identifier:
-            source_dir_id = "media"
-            location = ""
-
-        else:
-            source_dir_id, location = item.identifier[
-                item.identifier.startswith("/") and 1 :
-            ].split("/", 1)
-
-        if source_dir_id != "media":
-            raise Unresolvable("Unknown source directory.")
-
-        if location != sanitize_path(location):
-            raise Unresolvable("Invalid path.")
-
-        return source_dir_id, location
-
-    @callback
     def async_full_path(self, source_dir_id, location) -> Path:
         """Return full path."""
         return self.hass.config.path("media", location)
 
     async def async_resolve_media(self, item: MediaSourceItem) -> str:
         """Resolve media to a url."""
-        source_dir_id, location = self.async_parse_identifier(item)
+        source_dir_id, location = async_parse_identifier(item)
         mime_type, _ = await self.hass.async_add_executor_job(
             mimetypes.guess_type, self.async_full_path(source_dir_id, location)
         )
@@ -69,7 +68,7 @@ class LocalSource(MediaSource):
     ) -> BrowseMedia:
         """Return media."""
         try:
-            source_dir_id, location = self.async_parse_identifier(item)
+            source_dir_id, location = async_parse_identifier(item)
         except Unresolvable as err:
             raise BrowseError(str(err)) from err
 
