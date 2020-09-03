@@ -3,6 +3,7 @@ from datetime import timedelta
 
 from rokuecp import RokuError
 
+from homeassistant.components.media_player import DEVICE_CLASS_RECEIVER, DEVICE_CLASS_TV
 from homeassistant.components.media_player.const import (
     ATTR_APP_ID,
     ATTR_APP_NAME,
