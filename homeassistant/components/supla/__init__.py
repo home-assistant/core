@@ -11,8 +11,10 @@ from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -154,25 +156,20 @@ async def discover_devices(hass, hass_config):
         await async_load_platform(hass, component_name, DOMAIN, config, hass_config)
 
 
-class SuplaChannel(Entity):
+class SuplaChannel(CoordinatorEntity):
     """Base class of a Supla Channel (an equivalent of HA's Entity)."""
 
     def __init__(self, config, server, coordinator):
         """Init from config, hookup[ server and coordinator."""
+        super().__init__(coordinator)
         self.server_name = config["server_name"]
         self.channel_id = config["channel_id"]
         self.server = server
-        self.coordinator = coordinator
 
     @property
     def channel_data(self):
         """Return channel data taken from coordinator."""
         return self.coordinator.data.get(self.channel_id)
-
-    @property
-    def should_poll(self):
-        """Supla uses DataUpdateCoordinator, so no additional polling needed."""
-        return False
 
     @property
     def unique_id(self) -> str:
@@ -197,12 +194,6 @@ class SuplaChannel(Entity):
             return False
         return state.get("connected")
 
-    async def async_added_to_hass(self):
-        """When entity is added to hass."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
-        )
-
     async def async_action(self, action, **add_pars):
         """
         Run server action.
@@ -219,11 +210,4 @@ class SuplaChannel(Entity):
         await self.server.execute_action(self.channel_data["id"], action, **add_pars)
 
         # Update state
-        await self.coordinator.async_request_refresh()
-
-    async def async_update(self):
-        """Update the entity.
-
-        Only used by the generic entity update service.
-        """
         await self.coordinator.async_request_refresh()
