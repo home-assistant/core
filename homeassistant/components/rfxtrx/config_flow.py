@@ -1,4 +1,5 @@
 """Config flow for RFXCOM RFXtrx integration."""
+import copy
 import logging
 import os
 
@@ -284,7 +285,9 @@ class OptionsFlow(config_entries.OptionsFlow):
     @callback
     def update_config_data(self, global_options=None, devices=None):
         """Update data in ConfigEntry."""
+        # entry_data = copy.deepcopy(self._config_entry.data)
         entry_data = self._config_entry.data.copy()
+        entry_data[CONF_DEVICES] = copy.deepcopy(self._config_entry.data[CONF_DEVICES])
         if global_options:
             entry_data.update(global_options)
         if devices:
