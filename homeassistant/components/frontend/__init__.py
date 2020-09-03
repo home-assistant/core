@@ -7,7 +7,6 @@ import pathlib
 from typing import Any, Dict, Optional, Set, Tuple
 
 from aiohttp import hdrs, web, web_urldispatcher
-from aiohttp.web_exceptions import HTTPFound
 import jinja2
 import voluptuous as vol
 from yarl import URL
@@ -287,7 +286,7 @@ async def async_setup(hass, config):
     )
     # https://wicg.github.io/change-password-url/
     hass.http.register_redirect(
-        "/.well-known/change-password", "/profile", redirect_exc=HTTPFound
+        "/.well-known/change-password", "/profile", redirect_exc=web.HTTPFound
     )
 
     local = hass.config.path("www")
