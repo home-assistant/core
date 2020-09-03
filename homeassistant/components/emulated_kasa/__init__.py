@@ -83,7 +83,6 @@ def get_plug_devices(hass):
 
         if comps.is_on(hass, entity_id):
             power_val = entities[entity_id][CONF_POWER]
-            print(power_val, type(power_val))
             if isinstance(power_val, (float, int)):
                 power = float(power_val)
             elif isinstance(power_val, str):
