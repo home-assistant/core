@@ -795,7 +795,10 @@ async def test_device_class_binary_sensor(hass, device_class, google_type):
             "agentUserId": "test-agent",
             "devices": [
                 {
-                    "attributes": {"queryOnlyOpenClose": True},
+                    "attributes": {
+                        "queryOnlyOpenClose": True,
+                        "discreteOnlyOpenClose": True,
+                    },
                     "id": "binary_sensor.demo_sensor",
                     "name": {"name": "Demo Sensor"},
                     "traits": ["action.devices.traits.OpenClose"],
