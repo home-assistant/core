@@ -78,7 +78,7 @@ async def async_setup_entry(hass, entry):
         await api.get_state()
     except exceptions.ConnectError as ex:
         _LOGGER.warning("Failed to connect: %s", ex)
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from ex
 
     async def async_update_data():
         """Fetch data from API endpoint."""
@@ -86,7 +86,7 @@ async def async_setup_entry(hass, entry):
             await api.get_state()
         except exceptions.ConnectError as err:
             _LOGGER.warning("Failed to update data from Yeti")
-            raise UpdateFailed(f"Failed to communicating with API: {err}")
+            raise UpdateFailed(f"Failed to communicating with API: {err}") from err
 
     coordinator = DataUpdateCoordinator(
         hass,
