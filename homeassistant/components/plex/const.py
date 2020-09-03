@@ -46,3 +46,4 @@ MANUAL_SETUP_STRING = "Configure Plex server manually"
 
 SERVICE_PLAY_ON_SONOS = "play_on_sonos"
 SERVICE_REFRESH_LIBRARY = "refresh_library"
+SERVICE_SCAN_CLIENTS = "scan_for_clients"
