@@ -24,7 +24,7 @@ CONFIG_ENTITY_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_NAME): cv.string,
         vol.Required(CONF_POWER): vol.Any(
-            vol.Coerce(float), 
+            vol.Coerce(float),
             cv.template,
         ),
     }
