@@ -45,7 +45,7 @@ async def test_import_from_sensor_component(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
 
-    assert entry.state == ENTRY_STATE_LOADED
+    assert entries[0].state == ENTRY_STATE_LOADED
     assert entries[0].data[CONF_BASE_PATH] == "/api"
 
 
