@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/gios",
   "codeowners": ["@bieniu"],
   "requirements": ["gios==0.1.3"],
-  "config_flow": true
+  "config_flow": true,
+  "quality_scale": "platinum"
 }

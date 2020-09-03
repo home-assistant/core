@@ -24,6 +24,8 @@ SENSOR_MAP = {
     "SO2": ATTR_SO2,
 }
 
+PARALLEL_UPDATES = 1
+
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add a GIOS entities from a config_entry."""
