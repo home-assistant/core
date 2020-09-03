@@ -239,7 +239,7 @@ def play_on_sonos(hass, service_call):
             _LOGGER.error(
                 "Requested Plex server '%s' not found in %s",
                 plex_server_name,
-                list(map(lambda x: x.friendly_name, plex_servers)),
+                [x.friendly_name for x in plex_servers],
             )
             return
     else:

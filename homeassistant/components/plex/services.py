@@ -62,7 +62,7 @@ def get_plex_server(hass, plex_server_name=None):
             _LOGGER.error(
                 "Requested Plex server '%s' not found in %s",
                 plex_server_name,
-                list(map(lambda x: x.friendly_name, plex_servers)),
+                [x.friendly_name for x in plex_servers],
             )
             return None
     elif len(plex_servers) == 1:
@@ -70,6 +70,6 @@ def get_plex_server(hass, plex_server_name=None):
 
     _LOGGER.error(
         "Multiple Plex servers configured and no selection made: %s",
-        list(map(lambda x: x.friendly_name, plex_servers)),
+        [x.friendly_name for x in plex_servers],
     )
     return None
