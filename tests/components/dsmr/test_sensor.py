@@ -67,10 +67,9 @@ async def test_setup_platform(hass, mock_connection_factory):
         assert await async_setup_component(
             hass, SENSOR_DOMAIN, {SENSOR_DOMAIN: entry_data}
         )
+        await hass.async_block_till_done()
 
     assert not async_add_entities.called
-
-    await hass.async_block_till_done()
 
     # Check config entry
     conf_entries = hass.config_entries.async_entries(DOMAIN)
