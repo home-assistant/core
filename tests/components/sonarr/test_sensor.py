@@ -23,6 +23,8 @@ from tests.async_mock import patch
 from tests.common import async_fire_time_changed
 from tests.components.sonarr import (
     MOCK_SENSOR_CONFIG,
+    _patch_async_setup,
+    _patch_async_setup_entry,
     mock_connection,
     setup_integration,
 )
