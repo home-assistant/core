@@ -5,6 +5,7 @@ import pytest
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.sonarr.const import CONF_BASE_PATH, DOMAIN
+from homeassistant.config_entries import ENTRY_STATE_LOADED
 from homeassistant.const import (
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -44,9 +45,8 @@ async def test_import_from_sensor_component(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
 
+    assert entry.state == ENTRY_STATE_LOADED
     assert entries[0].data[CONF_BASE_PATH] == "/api"
-
-    assert hass.states.get(UPCOMING_ENTITY_ID)
 
 
 async def test_sensors(
