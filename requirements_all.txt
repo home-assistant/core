@@ -716,7 +716,7 @@ habitipy==0.2.0
 hangups==0.4.10
 
 # homeassistant.components.cloud
-hass-nabucasa==0.35.0
+hass-nabucasa==0.36.1
 
 # homeassistant.components.jewish_calendar
 hdate==0.9.5
