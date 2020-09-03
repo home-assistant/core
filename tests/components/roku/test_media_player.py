@@ -108,6 +108,7 @@ async def test_tv_setup(
 
     assert hass.states.get(TV_ENTITY_ID)
     assert tv
+    assert tv.device_class == DEVICE_CLASS_TV
     assert tv.unique_id == TV_SERIAL
 
 
