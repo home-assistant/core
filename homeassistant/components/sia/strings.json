@@ -4,7 +4,7 @@
     "step": {
       "user": {
         "data": {
-          "port": "Port",
+          "port": "[%key:common::config_flow::data::port%]",
           "account": "Account",
           "encryption_key": "Encryption Key",
           "ping_interval": "Ping Interval (min)",
