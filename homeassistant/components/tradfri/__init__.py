@@ -1,6 +1,5 @@
 """Support for IKEA Tradfri."""
 import asyncio
-import logging
 
 from pytradfri import Gateway, RequestError
 from pytradfri.api.aiocoap_api import APIFactory
@@ -30,8 +29,6 @@ from .const import (
     KEY_GATEWAY,
     PLATFORMS,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 FACTORY = "tradfri_factory"
 LISTENERS = "tradfri_listeners"
