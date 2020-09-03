@@ -346,6 +346,14 @@ class MockPlexLibrary:
         """Mock the sectionByID lookup."""
         return [x for x in self.sections() if x.key == section_id][0]
 
+    def onDeck(self):
+        """Mock an empty On Deck folder."""
+        return []
+
+    def recentlyAdded(self):
+        """Mock an empty Recently Added folder."""
+        return []
+
 
 class MockPlexLibrarySection:
     """Mock a Plex LibrarySection instance."""
@@ -380,6 +388,14 @@ class MockPlexLibrarySection:
                 for child in item._children:
                     if child.ratingKey == ratingKey:
                         return child
+
+    def onDeck(self):
+        """Mock an empty On Deck folder."""
+        return []
+
+    def recentlyAdded(self):
+        """Mock an empty Recently Added folder."""
+        return self.all()
 
     @property
     def type(self):
