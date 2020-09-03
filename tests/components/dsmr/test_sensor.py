@@ -20,7 +20,7 @@ from homeassistant.setup import async_setup_component
 
 import tests.async_mock
 from tests.async_mock import DEFAULT, MagicMock, Mock
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, patch
 
 
 @pytest.fixture
@@ -61,7 +61,13 @@ async def test_setup_platform(hass, mock_connection_factory):
         "reconnect_interval": 30,
     }
 
-    assert await async_setup_component(hass, SENSOR_DOMAIN, {SENSOR_DOMAIN: entry_data})
+    with patch("homeassistant.components.dsmr.async_setup", return_value=True), patch(
+        "homeassistant.components.dsmr.async_setup_entry", return_value=True
+    ):
+        assert await async_setup_component(
+            hass, SENSOR_DOMAIN, {SENSOR_DOMAIN: entry_data}
+        )
+
     assert not async_add_entities.called
 
     await hass.async_block_till_done()
