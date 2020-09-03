@@ -4,7 +4,6 @@ from homeassistant.helpers.entity_registry import async_entries_for_device
 
 from . import get_device
 
-from tests.async_mock import patch
 from tests.common import mock_device_registry, mock_registry
 
 
