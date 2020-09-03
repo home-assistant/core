@@ -159,9 +159,9 @@ class AuthManager:
                 ext_provider = OrderedDict()  # type: _ProviderDict
                 for p in self._providers:
                     (key, value) = p
-                    if key == "homeassistant":
+                    if key in ("homeassistant", "ais_demo"):
                         ext_provider[p] = self._providers[p]
-                # Return only homeassistant provider
+                # Return only homeassistant and ais_demo provider
                 return list(ext_provider.values())
         except Exception as e:
             _LOGGER.info("Can not get remote access on start: " + str(e))
