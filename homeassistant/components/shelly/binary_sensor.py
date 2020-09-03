@@ -90,5 +90,5 @@ class ShellySensor(ShellyBlockEntity, BinarySensorEntity):
         if self.attribute == "gas":
             # "sensorOp" is "normal" when Shelly Gas is working properly and taking
             # measurements.
-            return super().available and getattr(self.block, "sensorOp") == "normal"
+            return super().available and self.block.sensorOp == "normal"
         return super().available
