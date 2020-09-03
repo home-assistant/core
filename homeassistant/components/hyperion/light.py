@@ -92,34 +92,38 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     instance = config.get(CONF_INSTANCE)
 
     # Use loop outside of HA's tracked task in order not to delay startup.
-    device = Hyperion(name, host, port, priority, token, instance, hass.loop)
+    # device = Hyperion(name, host, port, priority, token, instance, hass.loop)
+    hyperion_client = client.HyperionClient(
+        host, port, token=token, instance=instance, loop=hass.loop
+    )
 
-    if not await device.async_connect_client(hass):
+    if not await hyperion_client.async_connect():
         raise PlatformNotReady
-    else:
-        await device.async_complete_setup()
-        async_add_entities([device])
+
+    entity = Hyperion(name, priority, hyperion_client)
+    await entity.async_setup()
+    async_add_entities([entity])
 
 
 class Hyperion(LightEntity):
     """Representation of a Hyperion remote."""
 
-    def __init__(self, name, host, port, priority, token, instance, loop):
+    def __init__(self, name, priority, client):
         """Initialize the light."""
-        self._client = client.HyperionClient(
-            host,
-            port,
-            token=token,
-            instance=instance,
-            callbacks={
-                f"{const.KEY_ADJUSTMENT}-{const.KEY_UPDATE}": self._update_adjustment,
-                f"{const.KEY_EFFECTS}-{const.KEY_UPDATE}": self._update_effect_list,
-                f"{const.KEY_PRIORITIES}-{const.KEY_UPDATE}": self._update_priorities,
-            },
-            loop=loop,
-        )
         self._name = name
         self._priority = priority
+        self._client = client
+
+        # TODO: Need to add connect/disconnect callbacks.
+
+        client.set_callbacks(
+            {
+                f"{const.KEY_ADJUSTMENT}-{const.KEY_UPDATE}": self._update_adjustment,
+                f"{const.KEY_COMPONENTS}-{const.KEY_UPDATE}": self._update_components,
+                f"{const.KEY_EFFECTS}-{const.KEY_UPDATE}": self._update_effect_list,
+                f"{const.KEY_PRIORITIES}-{const.KEY_UPDATE}": self._update_priorities,
+            }
+        )
 
         # Active state representing the Hyperion instance.
         self._brightness = 255
@@ -220,7 +224,7 @@ class Hyperion(LightEntity):
 
         # == Set brightness ==
         brightness = kwargs.get(ATTR_BRIGHTNESS, self._brightness)
-        if not await self.async_set_adjustment(
+        if not await self._client.async_set_adjustment(
             **{
                 const.KEY_ADJUSTMENT: {
                     const.KEY_BRIGHTNESS: int(round((float(brightness) * 100) / 255))
@@ -232,7 +236,7 @@ class Hyperion(LightEntity):
         effect = kwargs.get(ATTR_EFFECT, self._effect)
         if effect and effect in const.KEY_COMPONENTID_EXTERNAL_SOURCES:
             # Clear any color/effect.
-            if not await self.async_clear(**{const.KEY_PRIORITY: self._priority}):
+            if not await self._client.async_clear(**{const.KEY_PRIORITY: self._priority}):
                 return
 
             # Turn off all external sources, except the intended.
@@ -240,7 +244,7 @@ class Hyperion(LightEntity):
                 if not await self._client.async_set_component(
                     **{
                         const.KEY_COMPONENTSTATE: {
-                            const.KEY_COMPONENT: const.KEY_COMPONENTID_ALL,
+                            const.KEY_COMPONENT: key,
                             const.KEY_STATE: effect == key,
                         }
                     }
@@ -261,7 +265,7 @@ class Hyperion(LightEntity):
             else:
                 rgb_color = self._rgb_color
 
-            if not await self.async_set_color(
+            if not await self._client.async_set_color(
                 **{
                     const.KEY_PRIORITY: self._priority,
                     const.KEY_COLOR: rgb_color,
@@ -287,6 +291,16 @@ class Hyperion(LightEntity):
         ):
             return
 
+    def _update_ha_state(self):
+        """Update the internal Home Assistant state."""
+        if not hasattr(self, 'hass') or self.hass is None:
+            return
+        self.schedule_update_ha_state()
+
+    def _update_components(self, _=None):
+        """Update Hyperion components."""
+        self._update_ha_state()
+
     def _update_adjustment(self, _=None):
         """Update Hyperion adjustments."""
         if self._client.adjustment:
@@ -294,11 +308,11 @@ class Hyperion(LightEntity):
                 const.KEY_BRIGHTNESS, DEFAULT_BRIGHTNESS
             )
             self._brightness = int(round((brightness_pct * 255) / float(100)))
-            self.async_write_ha_state()
+            self._update_ha_state()
 
     def _update_priorities(self, _=None):
         """Update Hyperion priorities."""
-        visible_priority = self._client.visible_priority()
+        visible_priority = self._client.visible_priority
         if visible_priority:
             componentid = visible_priority.get(const.KEY_COMPONENTID)
             if componentid in const.KEY_COMPONENTID_EXTERNAL_SOURCES:
@@ -316,7 +330,7 @@ class Hyperion(LightEntity):
                 self._rgb_color = visible_priority[const.KEY_VALUE][const.KEY_RGB]
                 self._icon = ICON_LIGHTBULB
                 self._effect = KEY_EFFECT_SOLID
-            self.async_write_ha_state()
+            self._update_ha_state()
 
     def _update_effect_list(self, _=None):
         """Update Hyperion effects."""
@@ -326,7 +340,7 @@ class Hyperion(LightEntity):
                 effect_list.append(effect[const.KEY_NAME])
         if effect_list:
             self._effect_list = effect_list
-            self.async_write_ha_state()
+            self._update_ha_state()
 
     def _update_full_state(self):
         """Update full Hyperion state."""
@@ -337,18 +351,14 @@ class Hyperion(LightEntity):
         _LOGGER.debug(
             "Hyperion full state update: On=%s,Brightness=%i,Effect=%s "
             "(%i effects total),Color=%s",
-            self._on,
+            self.is_on,
             self._brightness,
             self._effect,
             len(self._effect_list),
             self._rgb_color,
         )
 
-    async def async_connect_client(self):
-        """Connect the Hyperion Client."""
-        return await self._client.async_connect():
-
-    async def async_complete_setup(self):
+    async def async_setup(self):
         """Set up the entity."""
         # Load initial state.
         self._update_full_state()
