@@ -79,8 +79,7 @@ class OpenWeatherMapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=user_input[CONF_NAME], data=user_input
                 )
-
-        return self.async_show_form(step_id="user", data_schema=SCHEMA, errors=errors,)
+        return self.async_show_form(step_id="user", data_schema=SCHEMA, errors=errors)
 
     async def async_step_import(self, import_input=None):
         """Set the config entry up from yaml."""
@@ -111,7 +110,8 @@ class OpenWeatherMapOptionsFlow(config_entries.OptionsFlow):
             return self.async_create_entry(title="", data=user_input)
 
         return self.async_show_form(
-            step_id="init", data_schema=self._get_options_schema(),
+            step_id="init",
+            data_schema=self._get_options_schema(),
         )
 
     def _get_options_schema(self):

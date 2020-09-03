@@ -111,7 +111,9 @@ def _import_configs(hass, configs):
         _LOGGER.debug("Importing OpenWeatherMap %s", config)
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=config,
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data=config,
             )
         )
 

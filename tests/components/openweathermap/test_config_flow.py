@@ -86,10 +86,13 @@ async def test_form_import(hass):
     ), patch(
         "homeassistant.components.openweathermap.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.openweathermap.async_setup_entry", return_value=True,
+        "homeassistant.components.openweathermap.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=VALID_YAML_CONFIG.copy(),
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=VALID_YAML_CONFIG.copy(),
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -208,7 +211,7 @@ async def test_form_api_call_error(hass):
 
 def _create_mocked_owm(is_api_online: bool):
     mocked_owm = MagicMock()
-    type(mocked_owm).is_API_online = MagicMock(return_value=is_api_online)
+    mocked_owm.is_API_online = MagicMock(return_value=is_api_online)
     return mocked_owm
 
 
