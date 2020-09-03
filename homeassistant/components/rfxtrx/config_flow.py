@@ -92,6 +92,7 @@ class OptionsFlow(config_entries.OptionsFlow):
                 return await self.async_step_set_device_options()
             if CONF_REMOVE_DEVICE in user_input:
                 remove_devices = user_input[CONF_REMOVE_DEVICE]
+                devices = {}
                 for entry_id in remove_devices:
                     device_data = self._get_device_data(entry_id)
 
@@ -101,7 +102,7 @@ class OptionsFlow(config_entries.OptionsFlow):
                         f"{DOMAIN}_{CONF_REMOVE_DEVICE}_{device_id}"
                     )
                     self._device_registry.async_remove_device(entry_id)
-                    devices = {event_code: None}
+                    devices[event_code] = None
 
                 self.update_config_data(
                     global_options=self._global_options, devices=devices
