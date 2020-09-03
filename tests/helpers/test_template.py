@@ -511,6 +511,19 @@ def test_timestamp_local(hass):
         )
 
 
+def test_as_local(hass):
+    """Test converting time to local."""
+
+    hass.states.async_set("test.object", "available")
+    last_updated = hass.states.get("test.object").last_updated
+    assert template.Template(
+        "{{ as_local(states.test.object.last_updated) }}", hass
+    ).async_render() == str(dt_util.as_local(last_updated))
+    assert template.Template(
+        "{{ states.test.object.last_updated | as_local }}", hass
+    ).async_render() == str(dt_util.as_local(last_updated))
+
+
 def test_to_json(hass):
     """Test the object to JSON string filter."""
 
