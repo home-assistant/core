@@ -6,11 +6,11 @@
       "invalid_path": "Directory not found."
     },
     "step": {
-      "owfs": {
+      "mount_dir": {
         "data": {
           "mount_dir": "Mount directory"
         },
-        "title": "Set owfs mount directory"
+        "title": "Set mount directory"
       },
       "owserver": {
         "data": {

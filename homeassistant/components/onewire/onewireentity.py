@@ -2,13 +2,20 @@
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
+from .onewireproxy import OneWireProxy
 
 
 class OneWireEntity(Entity):
     """Implementation of a 1-Wire Entity."""
 
     def __init__(
-        self, device_id, device_file, device_type, entity_type, proxy, initial_value
+        self,
+        device_id,
+        device_file,
+        device_type,
+        entity_type,
+        proxy: OneWireProxy,
+        initial_value,
     ):
         """Initialize the entity."""
         self._parent_device_id = device_id

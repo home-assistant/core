@@ -5,7 +5,7 @@ from pyownet import protocol
 
 from homeassistant.const import VOLT
 
-from .const import LOGGER, SENSOR_TYPES
+from .const import CONF_TYPE_SYSBUS, LOGGER, SENSOR_TYPES
 from .onewireentity import OneWireEntity
 from .onewireproxy import OneWireProxy, get_proxy_from_config_entry
 
@@ -168,7 +168,7 @@ class OneWireSensor(OneWireEntity):
 
     def get_state_value(self, raw_value):
         """Compute state value based on raw_value."""
-        if self._proxy.is_sysbus:
+        if self._proxy.conf_type == CONF_TYPE_SYSBUS:
             raw_value = float(raw_value) / 1000.0
         if self._unit_of_measurement is not None:
             if self._unit_of_measurement == VOLT:
