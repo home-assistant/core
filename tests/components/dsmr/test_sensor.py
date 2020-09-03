@@ -12,10 +12,11 @@ from itertools import chain, repeat
 
 import pytest
 
-from homeassistant.components.dsmr import sensor
 from homeassistant.components.dsmr.const import DOMAIN
 from homeassistant.components.dsmr.sensor import DerivativeDSMREntity
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import ENERGY_KILO_WATT_HOUR, TIME_HOURS, VOLUME_CUBIC_METERS
+from homeassistant.setup import async_setup_component
 
 import tests.async_mock
 from tests.async_mock import DEFAULT, MagicMock, Mock
@@ -53,16 +54,14 @@ async def test_setup_platform(hass, mock_connection_factory):
     async_add_entities = MagicMock()
 
     entry_data = {
+        "platform": DOMAIN,
         "port": "/dev/ttyUSB0",
         "dsmr_version": "2.2",
         "precision": 4,
         "reconnect_interval": 30,
     }
 
-    result = await sensor.async_setup_platform(
-        hass, entry_data, async_add_entities, None
-    )
-    assert not result
+    assert await async_setup_component(hass, SENSOR_DOMAIN, {SENSOR_DOMAIN: entry_data})
     assert not async_add_entities.called
 
     await hass.async_block_till_done()
