@@ -46,13 +46,13 @@ async def test_p1_dsmr_sensor_entities(hass, mock_smile_p1):
     await async_init_integration(hass, mock_smile_p1)
 
     state = hass.states.get("sensor.p1_net_electricity_point")
-    assert float(state.state) == -2809.0
+    assert float(state.state) == -2761.0
 
     state = hass.states.get("sensor.p1_electricity_consumed_off_peak_cumulative")
     assert int(state.state) == 551
 
     state = hass.states.get("sensor.p1_electricity_produced_peak_point")
-    assert float(state.state) == 2809.0
+    assert float(state.state) == 2761.0
 
     state = hass.states.get("sensor.p1_electricity_consumed_peak_cumulative")
     assert int(state.state) == 442
