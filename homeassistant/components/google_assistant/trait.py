@@ -1541,6 +1541,7 @@ class OpenCloseTrait(_Trait):
         response = {}
         if self.state.domain == binary_sensor.DOMAIN:
             response["queryOnlyOpenClose"] = True
+            response["discreteOnlyOpenClose"] = True
         return response
 
     def query_attributes(self):

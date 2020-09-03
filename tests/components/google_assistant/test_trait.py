@@ -2022,7 +2022,10 @@ async def test_openclose_binary_sensor(hass, device_class):
         BASIC_CONFIG,
     )
 
-    assert trt.sync_attributes() == {"queryOnlyOpenClose": True}
+    assert trt.sync_attributes() == {
+        "queryOnlyOpenClose": True,
+        "discreteOnlyOpenClose": True,
+    }
 
     assert trt.query_attributes() == {"openPercent": 100}
 
@@ -2032,7 +2035,10 @@ async def test_openclose_binary_sensor(hass, device_class):
         BASIC_CONFIG,
     )
 
-    assert trt.sync_attributes() == {"queryOnlyOpenClose": True}
+    assert trt.sync_attributes() == {
+        "queryOnlyOpenClose": True,
+        "discreteOnlyOpenClose": True,
+    }
 
     assert trt.query_attributes() == {"openPercent": 0}
 
