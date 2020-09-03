@@ -54,6 +54,10 @@ DEFAULT_SCAN_INTERVAL = 30
 DELAY_ACTION_DEFAULT = 2.0
 DELAY_ACTION_ON = 10.0
 
+PREFIX_SEPARATOR = ": "
+PREFIX_SOURCE = "Input"
+PREFIX_CHANNEL = "Channel"
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
@@ -154,9 +158,29 @@ class PhilipsTVMediaPlayer(MediaPlayerEntity):
 
     def select_source(self, source):
         """Set the input source."""
-        source_id = _inverted(self._sources).get(source)
-        if source_id:
-            self._tv.setSource(source_id)
+        data = source.split(PREFIX_SEPARATOR, 1)
+        if data[0] == PREFIX_SOURCE:
+            _LOGGER.warning(
+                "Use of '%s%s' prefix is deprecated, call without prefix",
+                PREFIX_CHANNEL,
+                PREFIX_SEPARATOR,
+            )
+            source_id = _inverted(self._sources).get(data[1])
+            if source_id:
+                self._tv.setSource(source_id)
+        elif data[0] == PREFIX_CHANNEL:
+            _LOGGER.warning(
+                "Use of '%s%s' prefix is deprecated, use play_media with channel media type instead",
+                PREFIX_CHANNEL,
+                PREFIX_SEPARATOR,
+            )
+            channel_id = _inverted(self._channels).get(data[1])
+            if channel_id:
+                self._tv.setChannel(channel_id)
+        else:
+            source_id = _inverted(self._sources).get(source)
+            if source_id:
+                self._tv.setSource(source_id)
         self._update_soon(DELAY_ACTION_DEFAULT)
 
     @property
