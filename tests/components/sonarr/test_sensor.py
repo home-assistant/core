@@ -49,7 +49,6 @@ async def test_import_from_sensor_component(
     assert len(entries) == 1
 
     assert entries[0].data[CONF_BASE_PATH] == "/api"
-    assert entries[0].options[CONF_UPCOMING_DAYS] == 3
 
     assert hass.states.get(UPCOMING_ENTITY_ID)
 
