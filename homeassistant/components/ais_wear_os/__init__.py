@@ -1,7 +1,5 @@
 """Support for the definition of AIS Ware OS."""
 
-from .config_flow import configured_host
-
 DOMAIN = "ais_host"
 
 

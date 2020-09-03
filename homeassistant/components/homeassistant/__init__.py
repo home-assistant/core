@@ -104,7 +104,10 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:
         # return on demo
         import homeassistant.components.ais_dom.ais_global as ais_global
 
-        if ais_global.get_sercure_android_id_dom() == "dom-274973439829002":
+        if ais_global.get_sercure_android_id_dom() in (
+            "dom-274973439829002",
+            "ais-demo",
+        ):
             return
         ais_command = None
         if "ais_command" in call.data:

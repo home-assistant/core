@@ -1,6 +1,6 @@
 {
   "domain": "ais_wear_os",
-  "name": "AIS Konfiguracja Wear OS",
+  "name": "AIS Wear OS",
   "config_flow": true,
   "documentation": "https://www.ai-speaker.com",
   "issue_tracker": "https://github.com/sviete/AIS-home-assistant",

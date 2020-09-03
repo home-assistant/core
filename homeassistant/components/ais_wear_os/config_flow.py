@@ -1,27 +1,20 @@
 """Config flow to configure ais wear os component."""
 
-import voluptuous as vol
+import asyncio
+import logging
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_NAME
-from homeassistant.core import callback
-from homeassistant.util import slugify
+from homeassistant.components.ais_dom import ais_global
 
 from .const import DOMAIN
 
-
-@callback
-def configured_host(hass):
-    """Return a set of the configured hosts."""
-    return {
-        (slugify(entry.data[CONF_NAME]))
-        for entry in hass.config_entries.async_entries(DOMAIN)
-    }
+_LOGGER = logging.getLogger(__name__)
+G_AIS_PIN_CHECK = 0
 
 
 @config_entries.HANDLERS.register(DOMAIN)
 class HostFlowHandler(config_entries.ConfigFlow):
-    """Zone config flow."""
+    """AIS Wear OS config flow."""
 
     VERSION = 1
 
@@ -31,8 +24,6 @@ class HostFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
-        # if self._async_current_entries():
-        #     return self.async_abort(reason='single_instance_allowed')
         return await self.async_step_confirm(user_input)
 
     async def async_step_confirm(self, user_input=None):
@@ -44,41 +35,48 @@ class HostFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_init(self, user_input=None):
         """Handle a flow start."""
+        global G_AIS_PIN_CHECK
         errors = {}
         if user_input is not None:
-            l_valid = True
-            l_current_host_name = self.hass.states.get("sensor.local_host_name").state
-            if slugify(user_input[CONF_NAME].replace("-", "")) != user_input[
-                CONF_NAME
-            ].replace("-", ""):
-                errors["base"] = "name_not_correct"
-                l_valid = False
-            elif user_input[CONF_NAME] == l_current_host_name:
-                errors["base"] = "name_the_same"
-                l_valid = False
+            # reset PIN
+            G_AIS_PIN_CHECK = 0
+            ais_global.G_AIS_DOM_PIN = ""
+            await self.hass.services.async_call(
+                "ais_cloud", "enable_gate_pairing_by_pin"
+            )
+            return await self.async_step_generate_pin(user_input=None)
+        return self.async_show_form(step_id="init", errors=errors,)
 
-            if l_valid:
-                # change host name
-                await self.hass.services.async_call(
-                    "ais_ai_service",
-                    "say_it",
-                    {
-                        "text": "Aktualizuje nazwę hosta. Zrestartuj urządzenie żeby zobaczyć zmiany."
-                    },
-                )
+    async def async_step_generate_pin(self, user_input=None):
+        """Handle a flow start."""
+        global G_AIS_PIN_CHECK
+        errors = {}
 
-                await self.hass.services.async_call(
-                    "ais_shell_command",
-                    "change_host_name",
-                    {"hostname": user_input[CONF_NAME]},
-                )
+        while len(ais_global.G_AIS_DOM_PIN) < 6 and G_AIS_PIN_CHECK < 10:
+            await asyncio.sleep(1)
+            G_AIS_PIN_CHECK += 1
+            _LOGGER.error(" G_AIS_PIN_CHECK: " + str(G_AIS_PIN_CHECK))
 
+        if len(ais_global.G_AIS_DOM_PIN) < 6:
+            return self.async_abort(reason="pin_error")
+        else:
+            return self.async_show_form(
+                step_id="enter_pin",
+                errors=errors,
+                description_placeholders={"pin_code": ais_global.G_AIS_DOM_PIN},
+            )
+
+    async def async_step_enter_pin(self, user_input=None):
+        """Handle a flow start."""
+        global G_AIS_PIN_CHECK
+        errors = {}
+        if user_input is not None:
             """Finish config flow"""
-            if l_valid:
-                return self.async_abort(reason="do_the_restart")
+            return self.async_abort(reason="go_to_device")
 
+        # wait for pin
         return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema({vol.Required(CONF_NAME): str,}),
+            step_id="enter_pin",
             errors=errors,
+            description_placeholders={"pin_code": ais_global.G_AIS_DOM_PIN},
         )

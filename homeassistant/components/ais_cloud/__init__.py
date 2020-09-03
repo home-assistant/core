@@ -278,6 +278,9 @@ class AisCloudWS:
         self.url = "https://powiedz.co/ords/dom/dom/"
         self.url_gh = "https://powiedz.co/ords/dom/gh/"
         self.hass = hass
+        ais_global.set_ais_android_id_dom_file_path(
+            hass.config.config_dir + "/.dom/.ais_secure_android_id_dom"
+        )
         self.cloud_ws_token = ais_global.get_sercure_android_id_dom()
         self.cloud_ws_header = {"Authorization": f"{self.cloud_ws_token}"}
         self.cache_key_path = "/data/data/pl.sviete.dom/files/home/AIS/.dom/"
@@ -468,11 +471,12 @@ class AisCloudWS:
                 f.write(chunk)
         return ws_resp
 
-    def get_gate_parring_pin(self):
+    def get_gate_parring_pin(self, user_id):
         rest_url = self.url + "gate_id_from_pin"
-        # payload = {}
-        # json=payload,
-        ws_resp = requests.post(rest_url, headers=self.cloud_ws_header, timeout=5)
+        payload = {"user_id": user_id}
+        ws_resp = requests.post(
+            rest_url, headers=self.cloud_ws_header, json=payload, timeout=5
+        )
         return ws_resp
 
 
@@ -1908,11 +1912,13 @@ class AisColudData:
 
     def enable_gate_pairing_by_pin(self, call):
         # create token
-
+        user_id = call.context.user_id
         # send token to cloud and get the pin
-        ws_resp = self.cloud.get_gate_parring_pin()
+        ws_resp = self.cloud.get_gate_parring_pin(user_id)
         json_ws_resp = ws_resp.json()
         pin = json_ws_resp["pin"]
+        # remember pin in session to compare
+        ais_global.G_AIS_DOM_PIN = pin
         # set gate_parring_pin
         self.hass.states.set("sensor.gate_pairing_pin", pin)
         # run timer

@@ -236,6 +236,9 @@ async def async_from_config_dict(
     _LOGGER.info("Home Assistant initialized in %.2fs", stop - start)
     from homeassistant.components.ais_dom import ais_global
 
+    ais_global.set_ais_android_id_dom_file_path(
+        hass.config.config_dir + "/.dom/.ais_secure_android_id_dom"
+    )
     ais_global.say_direct(
         "Asystent domowy, inicjalizacja: %.2f sekundy. Trwa uruchamianie konfiguracji. Poczekaj..."
         % (stop - start)

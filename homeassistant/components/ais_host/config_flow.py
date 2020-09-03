@@ -83,6 +83,6 @@ class HostFlowHandler(config_entries.ConfigFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema({vol.Required(CONF_NAME): str,}),
+            data_schema=vol.Schema({vol.Required(CONF_NAME): str}),
             errors=errors,
         )

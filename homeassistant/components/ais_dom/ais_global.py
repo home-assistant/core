@@ -7,6 +7,8 @@ import socket
 
 import requests
 
+import homeassistant.config as config_util
+
 # LV settings
 G_EMPTY_OPTION = "-"
 G_FAVORITE_OPTION = "Ulubione"
@@ -112,6 +114,14 @@ G_AIS_HOME_DIR = "/data/data/pl.sviete.dom/files/home"
 G_REMOTE_DRIVES_DOM_PATH = "/data/data/pl.sviete.dom/files/home/dom/dyski-wymienne"
 G_LOG_SETTINGS_INFO = None
 G_DB_SETTINGS_INFO = None
+
+#
+G_AIS_DOM_PIN = ""
+
+
+def set_ais_android_id_dom_file_path(path):
+    global G_AIS_SECURE_ANDROID_ID_DOM_FILE
+    G_AIS_SECURE_ANDROID_ID_DOM_FILE = path
 
 
 def get_pass_for_ssid(ssid):

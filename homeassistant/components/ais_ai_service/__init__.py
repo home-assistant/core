@@ -2282,10 +2282,28 @@ async def async_process_json_from_frame(hass, json_req):
             )
         )
     elif topic == "ais/register_wear_os":
-        # TODO
         # 1. check pin
         pin = payload["ais_dom_pin"]
+        if pin != ais_global.G_AIS_DOM_PIN:
+            return json_response({"ais": "nok"})
+
         # 2. register device and return webhook
+        import secrets
+        from homeassistant.const import CONF_WEBHOOK_ID
+
+        webhook_id = secrets.token_hex()
+        payload[CONF_WEBHOOK_ID] = webhook_id
+        payload["user_id"] = ""
+
+        await hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                "mobile_app", data=payload, context={"source": "registration"}
+            )
+        )
+
+        res = {
+            CONF_WEBHOOK_ID: payload[CONF_WEBHOOK_ID],
+        }
         pass
 
     # add player satus for some topics
