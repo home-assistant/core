@@ -299,6 +299,12 @@ class OnkyoAVR(MediaPlayerEntity):
         """Entity has been added to hass."""
         self.backfill_state()
 
+    async def async_will_remove_from_hass(self):
+        """Cancel the query timer when the entity is removed."""
+        if self._query_timer:
+            self._query_timer()
+            self._query_timer = None
+
     @callback
     def process_update(self, update):
         """Store relevant updates so they can be queried later."""
