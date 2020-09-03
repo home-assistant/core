@@ -47,10 +47,10 @@ async def validate_input(hass: core.HomeAssistant, data):
             setup_account, entry, hass, entry.data[CONF_USERNAME]
         )
         await hass.async_add_executor_job(account.update)
-    except OSError:
-        raise InvalidAuth
-    except Exception:
-        raise CannotConnect
+    except OSError as ex:
+        raise InvalidAuth from ex
+    except Exception as ex:
+        raise CannotConnect from ex
 
     # Return info that you want to store in the config entry.
     return {"title": f"{data[CONF_USERNAME]}{data.get(CONF_SOURCE, '')}"}

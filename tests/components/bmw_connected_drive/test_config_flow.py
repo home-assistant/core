@@ -1,10 +1,15 @@
 """Test the for the BMW Connected Drive config flow."""
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.bmw_connected_drive.config_flow import DOMAIN
-from homeassistant.components.bmw_connected_drive.const import CONF_REGION
+from homeassistant.components.bmw_connected_drive.const import (
+    CONF_READ_ONLY,
+    CONF_REGION,
+    CONF_USE_LOCATION,
+)
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from tests.async_mock import patch
+from tests.common import MockConfigEntry
 
 FIXTURE_USER_INPUT = {
     CONF_USERNAME: "user@domain.com",
@@ -13,6 +18,22 @@ FIXTURE_USER_INPUT = {
 }
 FIXTURE_COMPLETE_ENTRY = FIXTURE_USER_INPUT.copy()
 FIXTURE_IMPORT_ENTRY = FIXTURE_USER_INPUT.copy()
+
+FIXTURE_CONFIG_ENTRY = {
+    "entry_id": "1",
+    "domain": DOMAIN,
+    "title": FIXTURE_USER_INPUT[CONF_USERNAME],
+    "data": {
+        CONF_USERNAME: FIXTURE_USER_INPUT[CONF_USERNAME],
+        CONF_PASSWORD: FIXTURE_USER_INPUT[CONF_PASSWORD],
+        CONF_REGION: FIXTURE_USER_INPUT[CONF_REGION],
+    },
+    "options": {CONF_READ_ONLY: False, CONF_USE_LOCATION: False},
+    "system_options": {"disable_new_entities": False},
+    "source": "user",
+    "connection_class": config_entries.CONN_CLASS_CLOUD_POLL,
+    "unique_id": f"{FIXTURE_USER_INPUT[CONF_REGION]}-{FIXTURE_USER_INPUT[CONF_REGION]}",
+}
 
 
 async def test_show_form(hass):
@@ -25,8 +46,8 @@ async def test_show_form(hass):
     assert result["step_id"] == "user"
 
 
-async def test_connection_error(hass):
-    """Test we show user form on Atag connection error."""
+async def test_auth_error(hass):
+    """Test we show user form on BMW connected drive connection error."""
 
     with patch(
         "bimmer_connected.account.ConnectedDriveAccount._get_oauth_token",
@@ -43,10 +64,47 @@ async def test_connection_error(hass):
     assert result["errors"] == {"base": "invalid_auth"}
 
 
+async def test_connection_error(hass):
+    """Test we show user form on BMW connected drive connection error."""
+
+    with patch(
+        "bimmer_connected.account.ConnectedDriveAccount._get_oauth_token",
+        side_effect=Exception,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data=FIXTURE_USER_INPUT,
+        )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_general_error(hass):
+    """Test we show user form on BMW connected drive connection error."""
+
+    with patch(
+        "homeassistant.config_entries.ConfigEntry",
+        side_effect=Exception,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data=FIXTURE_USER_INPUT,
+        )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "unknown"}
+
+
 async def test_full_user_flow_implementation(hass):
     """Test registering an integration and finishing flow works."""
     with patch(
-        "bimmer_connected.account.ConnectedDriveAccount._get_vehicles", return_value=[],
+        "bimmer_connected.account.ConnectedDriveAccount._get_vehicles",
+        return_value=[],
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -61,7 +119,8 @@ async def test_full_user_flow_implementation(hass):
 async def test_full_config_flow_implementation(hass):
     """Test registering an integration and finishing flow works."""
     with patch(
-        "bimmer_connected.account.ConnectedDriveAccount._get_vehicles", return_value=[],
+        "bimmer_connected.account.ConnectedDriveAccount._get_vehicles",
+        return_value=[],
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -75,3 +134,31 @@ async def test_full_config_flow_implementation(hass):
             == FIXTURE_IMPORT_ENTRY[CONF_USERNAME] + " (configuration.yaml)"
         )
         assert result["data"] == FIXTURE_IMPORT_ENTRY
+
+
+async def test_options_flow_implementation(hass):
+    """Test config flow options."""
+    with patch(
+        "bimmer_connected.account.ConnectedDriveAccount._get_vehicles",
+        return_value=[],
+    ):
+        config_entry = MockConfigEntry(**FIXTURE_CONFIG_ENTRY)
+        config_entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "account_options"
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={CONF_READ_ONLY: False, CONF_USE_LOCATION: False},
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["data"] == {
+            CONF_READ_ONLY: False,
+            CONF_USE_LOCATION: False,
+        }

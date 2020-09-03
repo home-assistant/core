@@ -87,8 +87,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             setup_account, entry, hass, entry.data[CONF_USERNAME]
         )
         await hass.async_add_executor_job(account.update)
-    except Exception:
-        raise ConfigEntryNotReady
+    except Exception as ex:
+        raise ConfigEntryNotReady from ex
 
     hass.data[DOMAIN][entry.entry_id] = account
 
