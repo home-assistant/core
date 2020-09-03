@@ -14,6 +14,7 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_POSITION,
     ATTR_MEDIA_TITLE,
     ATTR_MEDIA_VOLUME_MUTED,
+    DEVICE_CLASS_RECEIVER,
     DEVICE_CLASS_TV,
     DOMAIN as MP_DOMAIN,
     MEDIA_TYPE_APP,
@@ -78,6 +79,7 @@ async def test_setup(
 
     assert hass.states.get(MAIN_ENTITY_ID)
     assert main
+    assert main.device_class == DEVICE_CLASS_RECEIVER
     assert main.unique_id == UPNP_SERIAL
 
 
