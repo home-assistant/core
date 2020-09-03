@@ -7,14 +7,15 @@ from sense_energy import PlugInstance, SenseLink
 import voluptuous as vol
 
 import homeassistant.components as comps
+import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    ATTR_FRIENDLY_NAME, 
-    CONF_ENTITIES, 
-    CONF_NAME, 
-    EVENT_HOMEASSISTANT_STOP
+    ATTR_FRIENDLY_NAME,
+    CONF_ENTITIES,
+    CONF_NAME,
+    EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.template import Template
 
 from .const import CONF_POWER, DOMAIN
 
@@ -23,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 CONFIG_ENTITY_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_POWER): vol.Any(vol.Coerce(float), cv.template,),
+        vol.Required(CONF_POWER): vol.Any(vol.Coerce(float), cv.template,),
     }
 )
 
@@ -31,7 +32,7 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
-                vol.Optional(CONF_ENTITIES): vol.Schema(
+                vol.Required(CONF_ENTITIES): vol.Schema(
                     {cv.entity_id: CONFIG_ENTITY_SCHEMA}
                 ),
             }
@@ -54,19 +55,16 @@ async def async_setup(hass: HomeAssistant, config: dict):
         yield from get_plug_devices(hass)
 
     server = SenseLink(devices)
-    async def start_emulated_kasa(event):
+
+    async def stop_emulated_kasa(event):
         await server.stop()
-        
+
     try:
         await server.start()
     except OSError as error:
-        _LOGGER.error(
-            "Failed to create UDP server at port 9999: %s", error
-        )
+        _LOGGER.error("Failed to create UDP server at port 9999: %s", error)
     else:
-        hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, start_emulated_kasa
-        )
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_emulated_kasa)
 
     return True
 
@@ -82,11 +80,18 @@ def get_plug_devices(hass):
         name = entities[entity_id].get(CONF_NAME, name)
 
         if comps.is_on(hass, entity_id):
-            try:
-                power = float(entities[entity_id][CONF_POWER])
-            except TypeError:
-                entities[entity_id][CONF_POWER].hass = hass
-                power = float(entities[entity_id][CONF_POWER].async_render())
+            power_val = entities[entity_id][CONF_POWER]
+            print(power_val, type(power_val))
+            if isinstance(power_val, float) or isinstance(power_val, int):
+                power = float(power_val)
+            elif isinstance(power_val, str):
+                if "{" in power_val:
+                    power = float(Template(power_val, hass).async_render())
+                else:
+                    power = float(hass.states.get(power_val).state)
+            elif isinstance(power_val, Template):
+                power_val.hass = hass
+                power = float(power_val.async_render())
 
             if state.last_changed:
                 last_changed = state.last_changed.timestamp()
@@ -96,6 +101,3 @@ def get_plug_devices(hass):
             power = 0.0
             last_changed = time()
         yield PlugInstance(entity_id, start_time=last_changed, alias=name, power=power)
-
-
-    
