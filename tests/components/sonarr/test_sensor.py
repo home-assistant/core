@@ -36,10 +36,12 @@ async def test_import_from_sensor_component(
 ) -> None:
     """Test import from sensor platform."""
     mock_connection(aioclient_mock)
-    assert await async_setup_component(
-        hass, SENSOR_DOMAIN, {SENSOR_DOMAIN: MOCK_SENSOR_CONFIG}
-    )
-    await hass.async_block_till_done()
+    
+    with _patch_async_setup(), _patch_async_setup_entry():
+        assert await async_setup_component(
+            hass, SENSOR_DOMAIN, {SENSOR_DOMAIN: MOCK_SENSOR_CONFIG}
+        )
+        await hass.async_block_till_done()
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
