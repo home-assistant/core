@@ -31,7 +31,10 @@ class BrowseMedia:
 
     def to_uri(self):
         """Return URI of media."""
-        return f"{URI_SCHEME}{self.domain}/{self.identifier}"
+        uri = f"{URI_SCHEME}{self.domain or ''}"
+        if self.identifier:
+            uri += f"/{self.identifier}"
+        return uri
 
     def to_media_player_item(self):
         """Convert Media class to browse media dictionary."""
@@ -66,7 +69,14 @@ class MediaSourceItem:
 
     async def async_browse(self) -> BrowseMedia:
         """Browse this item."""
-        # Future: handle `domain` is None (multiple sources available)
+        if self.domain is None:
+            base = BrowseMedia(None, None, "Media Sources", False, True)
+            base.children = [
+                BrowseMedia(domain, None, domain, False, True)
+                for domain in self.hass.data[DOMAIN].keys()
+            ]
+            return base
+
         return await self.async_media_source().async_browse_media(self)
 
     async def async_resolve(self) -> PlayMedia:

@@ -16,8 +16,6 @@ from homeassistant.loader import bind_hass
 from . import local_source, models
 from .const import DOMAIN, URI_SCHEME, URI_SCHEME_REGEX
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
-
 
 def is_media_source_id(media_content_id: str):
     """Test if identifier is a media source."""

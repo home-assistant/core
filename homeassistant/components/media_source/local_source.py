@@ -1,5 +1,4 @@
 """Local Media Source Implementation."""
-import datetime as dt
 import mimetypes
 from pathlib import Path
 from typing import Tuple
@@ -35,7 +34,7 @@ class LocalSource(MediaSource):
     @callback
     def async_parse_identifier(self, item: MediaSourceItem):
         """Parse identifier."""
-        if item.identifier == "":
+        if not item.identifier:
             source_dir_id = "media"
             location = ""
 
@@ -72,7 +71,7 @@ class LocalSource(MediaSource):
         try:
             source_dir_id, location = self.async_parse_identifier(item)
         except Unresolvable as err:
-            raise BrowseError(str(err))
+            raise BrowseError(str(err)) from err
 
         return await self.hass.async_add_executor_job(
             self._browse_media, source_dir_id, location
@@ -96,19 +95,14 @@ class LocalSource(MediaSource):
             DOMAIN,
             f"{source_dir_id}/{path.relative_to(self.hass.config.path('media'))}",
             path.name,
+            path.is_file(),
+            path.is_dir(),
             mime_type,
         )
-        media.can_play = path.is_file()
-        media.can_expand = path.is_dir()
 
         # Make sure it's a file or directory
         if not media.can_play and not media.can_expand:
             return None
-
-        # Stat Results
-        stat = path.stat()
-        media.created = dt.datetime.fromtimestamp(stat.st_ctime)
-        media.modified = dt.datetime.fromtimestamp(stat.st_mtime)
 
         # Check that it's a media file
         if media.can_play and (
