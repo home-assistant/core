@@ -482,6 +482,7 @@ class SonosEntity(MediaPlayerEntity):
         self._media_position = None
         self._media_position_updated_at = None
         self._media_image_url = None
+        self._media_channel = None
         self._media_artist = None
         self._media_album_name = None
         self._media_title = None
@@ -692,6 +693,7 @@ class SonosEntity(MediaPlayerEntity):
         self._uri = None
         self._media_duration = None
         self._media_image_url = None
+        self._media_channel = None
         self._media_artist = None
         self._media_album_name = None
         self._media_title = None
@@ -765,10 +767,13 @@ class SonosEntity(MediaPlayerEntity):
         except (TypeError, KeyError, AttributeError):
             pass
 
+        media_info = self.soco.get_current_media_info()
+
+        self._media_channel = media_info["channel"]
+
         # Check if currently playing radio station is in favorites
-        media_info = self.soco.avTransport.GetMediaInfo([("InstanceID", 0)])
         for fav in self._favorites:
-            if fav.reference.get_uri() == media_info["CurrentURI"]:
+            if fav.reference.get_uri() == media_info["uri"]:
                 self._source_name = fav.title
 
     def update_media_music(self, update_media_position, track_info):
@@ -954,6 +959,12 @@ class SonosEntity(MediaPlayerEntity):
     def media_image_url(self):
         """Image url of current playing media."""
         return self._media_image_url or None
+
+    @property
+    @soco_coordinator
+    def media_channel(self):
+        """Channel currently playing."""
+        return self._media_channel or None
 
     @property
     @soco_coordinator
