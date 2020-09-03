@@ -3,6 +3,7 @@ import aioshelly
 
 from homeassistant.components import sensor
 from homeassistant.const import (
+    CONCENTRATION_PARTS_PER_MILLION,
     ELECTRICAL_CURRENT_AMPERE,
     ENERGY_KILO_WATT_HOUR,
     POWER_WATT,
@@ -18,6 +19,7 @@ from .const import DOMAIN
 
 SENSORS = {
     "battery": [UNIT_PERCENTAGE, sensor.DEVICE_CLASS_BATTERY],
+    "concentration": [CONCENTRATION_PARTS_PER_MILLION, None],
     "current": [ELECTRICAL_CURRENT_AMPERE, sensor.DEVICE_CLASS_CURRENT],
     "deviceTemp": [None, sensor.DEVICE_CLASS_TEMPERATURE],
     "energy": [ENERGY_KILO_WATT_HOUR, sensor.DEVICE_CLASS_ENERGY],
@@ -117,3 +119,12 @@ class ShellySensor(ShellyBlockEntity, Entity):
     def device_class(self):
         """Device class of sensor."""
         return self._device_class
+
+    @property
+    def available(self):
+        """Available."""
+        if self.attribute == "concentration":
+            # "sensorOp" is "normal" when the Shelly Gas is working properly and taking
+            # measurements.
+            return super().available and self.block.sensorOp == "normal"
+        return super().available
