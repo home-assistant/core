@@ -208,6 +208,13 @@ async def test_onoff_switch(hass):
 
     assert trt_off.query_attributes() == {"on": False}
 
+    trt_assumed = trait.OnOffTrait(
+        hass, State("switch.bla", STATE_OFF, {"assumed_state": True}), BASIC_CONFIG
+    )
+    assert trt_assumed.sync_attributes() == {"commandOnlyOnOff": True}
+
+    assert trt_off.query_attributes() == {}
+
     on_calls = async_mock_service(hass, switch.DOMAIN, SERVICE_TURN_ON)
     await trt_on.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": True}, {})
     assert len(on_calls) == 1

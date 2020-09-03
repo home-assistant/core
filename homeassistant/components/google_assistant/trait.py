@@ -315,7 +315,10 @@ class OnOffTrait(_Trait):
 
     def sync_attributes(self):
         """Return OnOff attributes for a sync request."""
-        return {}
+        if self.state.attributes.get(ATTR_ASSUMED_STATE, False):
+            return {"commandOnlyOnOff": True}
+        else:
+            return {}
 
     def query_attributes(self):
         """Return OnOff query attributes."""
