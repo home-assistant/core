@@ -209,6 +209,21 @@ async def test_form_api_call_error(hass):
         assert result["errors"] == {"base": "connection"}
 
 
+async def test_form_api_offline(hass):
+    """Test setting up with api call error."""
+    mocked_owm = _create_mocked_owm(False)
+
+    with patch(
+        "homeassistant.components.openweathermap.config_flow.OWM",
+        return_value=mocked_owm,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+        )
+
+        assert result["errors"] == {"base": "auth"}
+
+
 def _create_mocked_owm(is_api_online: bool):
     mocked_owm = MagicMock()
     mocked_owm.is_API_online = MagicMock(return_value=is_api_online)
