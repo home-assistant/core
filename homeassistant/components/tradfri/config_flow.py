@@ -170,6 +170,8 @@ async def authenticate(hass, host, security_code):
         raise AuthError("invalid_security_code") from err
     except asyncio.TimeoutError as err:
         raise AuthError("timeout") from err
+    finally:
+        await api_factory.shutdown()
 
     return await get_gateway_info(hass, host, identity, key)
 
