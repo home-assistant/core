@@ -2,11 +2,10 @@
 import math
 
 from homeassistant.components import emulated_kasa
-
 from homeassistant.components.fan import (
     ATTR_SPEED,
-    SERVICE_SET_SPEED,
     DOMAIN as FAN_DOMAIN,
+    SERVICE_SET_SPEED,
 )
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -20,6 +19,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.setup import async_setup_component
+
 from tests.common import mock_coro
 from unittest.mock import Mock, patch
 
@@ -42,7 +42,7 @@ CONFIG = {
                 CONF_NAME: ENTITY_SWITCH_NAME,
                 CONF_POWER: ENTITY_SWITCH_POWER,
             },
-            ENTITY_LIGHT: {CONF_NAME: ENTITY_LIGHT_NAME, CONF_POWER: ENTITY_SENSOR,},
+            ENTITY_LIGHT: {CONF_NAME: ENTITY_LIGHT_NAME, CONF_POWER: ENTITY_SENSOR},
             ENTITY_FAN: {
                 CONF_POWER: "{% if is_state_attr('"
                 + ENTITY_FAN
@@ -76,10 +76,7 @@ CONFIG_SWITCH = {
 CONFIG_LIGHT = {
     DOMAIN: {
         CONF_ENTITIES: {
-            ENTITY_LIGHT: {
-                CONF_NAME: ENTITY_LIGHT_NAME,
-                CONF_POWER: ENTITY_SENSOR,
-            },
+            ENTITY_LIGHT: {CONF_NAME: ENTITY_LIGHT_NAME, CONF_POWER: ENTITY_SENSOR},
         }
     }
 }
@@ -127,7 +124,7 @@ async def test_setup(hass):
 
 
 async def test_float(hass):
-    """Test a configuration using a simple float"""
+    """Test a configuration using a simple float."""
     assert await async_setup_component(
         hass, SWITCH_DOMAIN, {SWITCH_DOMAIN: {"platform": "demo"}},
     )
@@ -166,9 +163,9 @@ async def test_float(hass):
 
 
 async def test_template(hass):
-    """Test a configuration using a complex template"""
+    """Test a configuration using a complex template."""
     assert await async_setup_component(
-        hass, FAN_DOMAIN, {FAN_DOMAIN: {"platform": "demo", "name": ENTITY_FAN_NAME,}}
+        hass, FAN_DOMAIN, {FAN_DOMAIN: {"platform": "demo", "name": ENTITY_FAN_NAME}}
     )
     with patch(
         "sense_energy.SenseLink",
@@ -223,9 +220,9 @@ async def test_template(hass):
 
 
 async def test_sensor(hass):
-    """Test a configuration using a sensor in a template"""
+    """Test a configuration using a sensor in a template."""
     assert await async_setup_component(
-        hass, LIGHT_DOMAIN, {LIGHT_DOMAIN: {"platform": "demo", "name": "bed_light",}}
+        hass, LIGHT_DOMAIN, {LIGHT_DOMAIN: {"platform": "demo", "name": "bed_light"}}
     )
     with patch(
         "sense_energy.SenseLink",
@@ -275,13 +272,13 @@ async def test_sensor(hass):
 async def test_multiple_devices(hass):
     """Test that devices are reported correctly."""
     assert await async_setup_component(
-        hass, SWITCH_DOMAIN, {SWITCH_DOMAIN: {"platform": "demo", "name": "heater",}}
+        hass, SWITCH_DOMAIN, {SWITCH_DOMAIN: {"platform": "demo", "name": "heater"}}
     )
     assert await async_setup_component(
-        hass, LIGHT_DOMAIN, {LIGHT_DOMAIN: {"platform": "demo", "name": "bed_light",}}
+        hass, LIGHT_DOMAIN, {LIGHT_DOMAIN: {"platform": "demo", "name": "bed_light"}}
     )
     assert await async_setup_component(
-        hass, FAN_DOMAIN, {FAN_DOMAIN: {"platform": "demo", "name": ENTITY_FAN_NAME,}}
+        hass, FAN_DOMAIN, {FAN_DOMAIN: {"platform": "demo", "name": ENTITY_FAN_NAME}}
     )
     with patch(
         "sense_energy.SenseLink",

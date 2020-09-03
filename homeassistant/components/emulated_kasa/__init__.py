@@ -3,11 +3,9 @@ import logging
 from time import time
 
 from sense_energy import PlugInstance, SenseLink
-
 import voluptuous as vol
 
 import homeassistant.components as comps
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     CONF_ENTITIES,
@@ -15,6 +13,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.template import Template
 
 from .const import CONF_POWER, DOMAIN
@@ -82,7 +81,7 @@ def get_plug_devices(hass):
         if comps.is_on(hass, entity_id):
             power_val = entities[entity_id][CONF_POWER]
             print(power_val, type(power_val))
-            if isinstance(power_val, float) or isinstance(power_val, int):
+            if isinstance(power_val, (float, int)):
                 power = float(power_val)
             elif isinstance(power_val, str):
                 if "{" in power_val:
