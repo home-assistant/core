@@ -1,6 +1,8 @@
 """Common tradfri test fixtures."""
 import pytest
 
+from . import MOCK_GATEWAY_ID
+
 from tests.async_mock import Mock, patch
 
 # pylint: disable=protected-access
@@ -23,8 +25,14 @@ def mock_entry_setup():
         yield mock_setup
 
 
+@pytest.fixture(name="gateway_id")
+def mock_gateway_id_fixture():
+    """Return mock gateway_id."""
+    return MOCK_GATEWAY_ID
+
+
 @pytest.fixture(name="mock_gateway")
-def mock_gateway_fixture():
+def mock_gateway_fixture(gateway_id):
     """Mock a Tradfri gateway."""
 
     def get_devices():
@@ -35,7 +43,7 @@ def mock_gateway_fixture():
         """Return mock groups."""
         return gateway.mock_groups
 
-    gateway_info = Mock(id="mock_gateway_id", firmware_version="1.2.1234")
+    gateway_info = Mock(id=gateway_id, firmware_version="1.2.1234")
 
     def get_gateway_info():
         """Return mock gateway info."""

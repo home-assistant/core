@@ -53,13 +53,15 @@ async def test_config_json_host_not_imported(hass):
     assert len(mock_init.mock_calls) == 0
 
 
-async def test_config_json_host_imported(hass, mock_gateway_info, mock_entry_setup):
+async def test_config_json_host_imported(
+    hass, mock_gateway_info, mock_entry_setup, gateway_id
+):
     """Test that we import a configured host."""
     mock_gateway_info.side_effect = lambda hass, host, identity, key: {
         "host": host,
         "identity": identity,
         "key": key,
-        "gateway_id": "mock-gateway",
+        "gateway_id": gateway_id,
     }
 
     with patch(
@@ -75,7 +77,7 @@ async def test_config_json_host_imported(hass, mock_gateway_info, mock_entry_set
     assert config_entry.title == "mock-host"
 
 
-async def test_entry_setup(hass, api_factory):
+async def test_entry_setup(hass, api_factory, gateway_id):
     """Test config entry setup."""
     entry = MockConfigEntry(
         domain=tradfri.DOMAIN,
@@ -84,7 +86,7 @@ async def test_entry_setup(hass, api_factory):
             tradfri.CONF_IDENTITY: "mock-identity",
             tradfri.CONF_KEY: "mock-key",
             tradfri.CONF_IMPORT_GROUPS: True,
-            tradfri.CONF_GATEWAY_ID: "mock-gateway-id",
+            tradfri.CONF_GATEWAY_ID: gateway_id,
         },
     )
 

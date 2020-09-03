@@ -9,6 +9,8 @@ from pytradfri.device.light_control import LightControl
 
 from homeassistant.components import tradfri
 
+from . import MOCK_GATEWAY_ID
+
 from tests.async_mock import MagicMock, Mock, PropertyMock, patch
 from tests.common import MockConfigEntry
 
@@ -107,7 +109,7 @@ async def setup_gateway(hass, mock_gateway, mock_api):
             "identity": "mock-identity",
             "key": "mock-key",
             "import_groups": True,
-            "gateway_id": "mock-gateway-id",
+            "gateway_id": MOCK_GATEWAY_ID,
         },
     )
     tradfri_data = {}
