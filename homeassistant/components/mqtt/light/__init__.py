@@ -10,8 +10,10 @@ from homeassistant.components.mqtt.discovery import (
     clear_discovery_hash,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
+from .. import DOMAIN, PLATFORMS
 from .schema import CONF_SCHEMA, MQTT_LIGHT_SCHEMA_SCHEMA
 from .schema_basic import PLATFORM_SCHEMA_BASIC, async_setup_entity_basic
 from .schema_json import PLATFORM_SCHEMA_JSON, async_setup_entity_json
@@ -39,6 +41,7 @@ async def async_setup_platform(
     hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
 ):
     """Set up MQTT light through configuration.yaml."""
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
     await _async_setup_entity(hass, config, async_add_entities)
 
 

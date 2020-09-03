@@ -153,11 +153,14 @@ light:
   payload_off: "off"
 
 """
+from os import path
+
 import pytest
 
+from homeassistant import config as hass_config
 from homeassistant.components import light, mqtt
 from homeassistant.components.mqtt.discovery import async_start
-from homeassistant.const import ATTR_ASSUMED_STATE, STATE_OFF, STATE_ON
+from homeassistant.const import ATTR_ASSUMED_STATE, SERVICE_RELOAD, STATE_OFF, STATE_ON
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
 
@@ -1558,3 +1561,43 @@ async def test_max_mireds(hass, mqtt_mock):
     state = hass.states.get("light.test")
     assert state.attributes.get("min_mireds") == 153
     assert state.attributes.get("max_mireds") == 370
+
+
+async def test_reloadable(hass, mqtt_mock):
+    """Test reloading an mqtt light."""
+    config = {
+        light.DOMAIN: {
+            "platform": "mqtt",
+            "name": "test",
+            "command_topic": "test/set",
+        }
+    }
+
+    assert await async_setup_component(hass, light.DOMAIN, config)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("light.test")
+    assert len(hass.states.async_all()) == 1
+
+    yaml_path = path.join(
+        _get_fixtures_base_path(),
+        "fixtures",
+        "mqtt/configuration.yaml",
+    )
+    with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
+        await hass.services.async_call(
+            "mqtt",
+            SERVICE_RELOAD,
+            {},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 1
+
+    assert hass.states.get("light.test") is None
+    assert hass.states.get("light.reload")
+
+
+def _get_fixtures_base_path():
+    return path.dirname(path.dirname(path.dirname(__file__)))
