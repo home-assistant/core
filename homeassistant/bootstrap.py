@@ -327,9 +327,7 @@ def async_enable_logging(
         import json
         from homeassistant.components.ais_dom import ais_global
 
-        with open(
-            "/data/data/pl.sviete.dom/files/home/AIS/.dom/.ais_log_settings_info"
-        ) as json_file:
+        with open(hass.config.config_dir + "/.dom/.ais_log_settings_info") as json_file:
             ais_logs_settings = json.load(json_file)
             log_drive = ais_logs_settings["logDrive"]
     except Exception:

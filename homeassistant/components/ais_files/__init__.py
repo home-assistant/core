@@ -5,27 +5,25 @@ For more details about this platform, please refer to the documentation at
 https://www.ai-speaker.com/
 """
 import asyncio
-import os
+import json
 import logging
+import os
+
 from PIL import Image
 from aiohttp.web import Request, Response
 from sqlalchemy import create_engine
-import json
 from sqlalchemy.pool import StaticPool
+
+import homeassistant.components.ais_dom.ais_global as ais_global
 from homeassistant.components.http import HomeAssistantView
+
 from . import sensor
 from .const import DOMAIN
-import homeassistant.components.ais_dom.ais_global as ais_global
-
 
 _LOGGER = logging.getLogger(__name__)
 IMG_PATH = "/data/data/pl.sviete.dom/files/home/AIS/www/img/"
-G_LOG_SETTINGS_INFO_FILE = (
-    "/data/data/pl.sviete.dom/files/home/AIS/.dom/.ais_log_settings_info"
-)
-G_DB_SETTINGS_INFO_FILE = (
-    "/data/data/pl.sviete.dom/files/home/AIS/.dom/.ais_db_settings_info"
-)
+G_LOG_SETTINGS_INFO_FILE = "/.dom/.ais_log_settings_info"
+G_DB_SETTINGS_INFO_FILE = "/.dom/.ais_db_settings_info"
 
 
 @asyncio.coroutine
@@ -138,7 +136,7 @@ async def _async_change_logger_settings(hass, call):
             chaged_settings = "log_rotating"
 
     # store settings in file
-    await _async_save_logs_settings_info(log_drive, log_level, log_rotating)
+    await _async_save_logs_settings_info(hass, log_drive, log_level, log_rotating)
 
     # set the logs settings info
     hass.states.async_set(
@@ -292,7 +290,7 @@ async def _async_check_db_connection(hass, call):
     elif state == "db_url_valid":
         # buttonName = "Zapisz połączenie";
         # save to file
-        await _async_save_db_settings_info(db_connection)
+        await _async_save_db_settings_info(hass, db_connection)
 
         hass.states.async_set(
             "sensor.ais_db_connection_info", "db_url_saved", db_connection
@@ -301,7 +299,7 @@ async def _async_check_db_connection(hass, call):
     elif state == "db_url_saved":
         # buttonName = "Usuń polączenie";
         # save to file
-        await _async_save_db_settings_info({})
+        await _async_save_db_settings_info(hass, {})
 
         hass.states.async_set(
             "sensor.ais_db_connection_info",
@@ -320,7 +318,7 @@ async def _async_get_db_log_settings_info(hass, call):
     if ais_global.G_LOG_SETTINGS_INFO is None:
         # get the info from file
         try:
-            with open(G_LOG_SETTINGS_INFO_FILE) as json_file:
+            with open(hass.config.config_dir + G_LOG_SETTINGS_INFO_FILE) as json_file:
                 log_settings = json.load(json_file)
             ais_global.G_LOG_SETTINGS_INFO = log_settings
         except Exception as e:
@@ -330,7 +328,7 @@ async def _async_get_db_log_settings_info(hass, call):
 
     if ais_global.G_DB_SETTINGS_INFO is None:
         try:
-            with open(G_DB_SETTINGS_INFO_FILE) as json_file:
+            with open(hass.config.config_dir + G_DB_SETTINGS_INFO_FILE) as json_file:
                 db_settings = json.load(json_file)
             ais_global.G_DB_SETTINGS_INFO = db_settings
             if "dbKeepDays" not in ais_global.G_DB_SETTINGS_INFO:
@@ -375,7 +373,7 @@ async def _async_get_db_log_settings_info(hass, call):
     hass.states.async_set("sensor.ais_db_connection_info", db_conn_step, db_settings)
 
 
-async def _async_save_logs_settings_info(log_drive, log_level, log_rotating):
+async def _async_save_logs_settings_info(hass, log_drive, log_level, log_rotating):
     """save log path info in a file."""
     try:
         logs_settings = {
@@ -383,17 +381,17 @@ async def _async_save_logs_settings_info(log_drive, log_level, log_rotating):
             "logLevel": log_level,
             "logRotating": log_rotating,
         }
-        with open(G_LOG_SETTINGS_INFO_FILE, "w") as outfile:
+        with open(hass.config.config_dir + G_LOG_SETTINGS_INFO_FILE, "w") as outfile:
             json.dump(logs_settings, outfile)
         ais_global.G_LOG_SETTINGS_INFO = logs_settings
     except Exception as e:
         _LOGGER.error("Error save_log_settings_info " + str(e))
 
 
-async def _async_save_db_settings_info(db_settings):
+async def _async_save_db_settings_info(hass, db_settings):
     """save db url info in a file."""
     try:
-        with open(G_DB_SETTINGS_INFO_FILE, "w") as outfile:
+        with open(hass.config.config_dir + G_DB_SETTINGS_INFO_FILE, "w") as outfile:
             json.dump(db_settings, outfile)
         ais_global.G_DB_SETTINGS_INFO = db_settings
     except Exception as e:

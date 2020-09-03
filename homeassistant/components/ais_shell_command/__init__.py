@@ -158,7 +158,20 @@ async def _change_host_name(hass, call):
 async def _change_remote_access(hass, call):
     text = " zdalny dostęp do bramki z Internetu"
     access = hass.states.get("input_boolean.ais_remote_access").state
-    gate_id = hass.states.get("sensor.ais_secure_android_id_dom").state
+    # not allow to off on demo
+    gate_id = ais_global.get_sercure_android_id_dom()
+    if (
+        ais_global.get_sercure_android_id_dom()
+        in ("dom-274973439829002", "dom-demo", "dom-dev")
+        and access != "on"
+    ):
+        await hass.services.async_call(
+            "ais_ai_service",
+            "say_it",
+            {"text": "Nie można zatrzymać zdalnego dostępu na instancji demo."},
+        )
+        hass.states.async_set("input_boolean.ais_remote_access", "on")
+        return
     if access == "on":
         text = "Aktywuje " + text
     else:
