@@ -5,16 +5,16 @@ from time import time
 from sense_energy import PlugInstance, SenseLink
 import voluptuous as vol
 
-import homeassistant.components as comps
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     CONF_ENTITIES,
     CONF_NAME,
     EVENT_HOMEASSISTANT_STOP,
+    STATE_ON,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.template import Template
+from homeassistant.helpers.template import Template, is_template_string
 
 from .const import CONF_POWER, DOMAIN
 
@@ -23,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 CONFIG_ENTITY_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_NAME): cv.string,
-        vol.Required(CONF_POWER): vol.Any(
+        vol.Optional(CONF_POWER): vol.Any(
             vol.Coerce(float),
             cv.template,
         ),
@@ -50,11 +50,11 @@ async def async_setup(hass: HomeAssistant, config: dict):
     conf = config.get(DOMAIN)
     if not conf:
         return True
-    hass.data[DOMAIN][CONF_ENTITIES] = conf.get(CONF_ENTITIES, {})
+    entity_configs = conf.get(CONF_ENTITIES, {})
 
     def devices():
-        """Drvices to be emulated."""
-        yield from get_plug_devices(hass)
+        """Devices to be emulated."""
+        yield from get_plug_devices(hass, entity_configs)
 
     server = SenseLink(devices)
 
@@ -71,22 +71,20 @@ async def async_setup(hass: HomeAssistant, config: dict):
     return True
 
 
-def get_plug_devices(hass):
+def get_plug_devices(hass, entity_configs):
     """Produce list of plug devices from config entities."""
-    entity_ids = hass.data[DOMAIN][CONF_ENTITIES]
-    for entity_id in entity_ids:
+    for entity_id, entity_config in entity_configs:
         state = hass.states.get(entity_id)
         if state is None:
             continue
-        name = state.attributes.get(ATTR_FRIENDLY_NAME, entity_id)
-        name = entities[entity_id].get(CONF_NAME, name)
+        name = entity_config.get(CONF_NAME, state.name)
 
-        if comps.is_on(hass, entity_id):
-            power_val = entities[entity_id][CONF_POWER]
+        if state.state == STATE_ON:
+            power_val = entity_config[CONF_POWER]
             if isinstance(power_val, (float, int)):
                 power = float(power_val)
             elif isinstance(power_val, str):
-                if "{" in power_val:
+                if is_template_string(power_val):
                     power = float(Template(power_val, hass).async_render())
                 else:
                     power = float(hass.states.get(power_val).state)

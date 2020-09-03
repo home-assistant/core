@@ -1,6 +1,6 @@
 """Tests for emulated_kasa library bindings."""
 import math
-from unittest.mock import Mock, patch
+from tests.async_mock import AsyncMock, Mock, patch
 
 from homeassistant.components import emulated_kasa
 from homeassistant.components.emulated_kasa.const import CONF_POWER, DOMAIN
@@ -20,8 +20,6 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.setup import async_setup_component
-
-from tests.common import mock_coro
 
 ENTITY_SWITCH = "switch.ac"
 ENTITY_SWITCH_NAME = "A/C"
@@ -118,23 +116,21 @@ async def test_setup(hass):
     """Test that devices are reported correctly."""
     with patch(
         "sense_energy.SenseLink",
-        return_value=Mock(start=mock_coro(), close=mock_coro()),
+        return_value=Mock(start=AsyncMock(), close=AsyncMock()),
     ):
-        assert await emulated_kasa.async_setup(hass, CONFIG) is True
+        assert await async_setup_component(hass, DOMAIN, CONFIG) is True
 
 
 async def test_float(hass):
     """Test a configuration using a simple float."""
     assert await async_setup_component(
-        hass,
-        SWITCH_DOMAIN,
-        {SWITCH_DOMAIN: {"platform": "demo"}},
+        hass, SWITCH_DOMAIN, {SWITCH_DOMAIN: {"platform": "demo"}},
     )
     with patch(
         "sense_energy.SenseLink",
-        return_value=Mock(start=mock_coro(), close=mock_coro()),
+        return_value=Mock(start=AsyncMock(), close=AsyncMock()),
     ):
-        assert await emulated_kasa.async_setup(hass, CONFIG_SWITCH) is True
+        assert await async_setup_component(hass, DOMAIN, CONFIG) is True
     await hass.async_block_till_done()
 
     # Turn switch on
@@ -147,7 +143,7 @@ async def test_float(hass):
 
     plug_it = emulated_kasa.get_plug_devices(hass)
     plug = next(plug_it).generate_response()
-    print(plug)
+
     assert nested_value(plug, "system", "get_sysinfo", "alias") == ENTITY_SWITCH_NAME
     power = nested_value(plug, "emeter", "get_realtime", "power")
     assert math.isclose(power, ENTITY_SWITCH_POWER)
@@ -171,9 +167,9 @@ async def test_template(hass):
     )
     with patch(
         "sense_energy.SenseLink",
-        return_value=Mock(start=mock_coro(), close=mock_coro()),
+        return_value=Mock(start=AsyncMock(), close=AsyncMock()),
     ):
-        assert await emulated_kasa.async_setup(hass, CONFIG_FAN) is True
+        assert await async_setup_component(hass, DOMAIN, CONFIG) is True
     await hass.async_block_till_done()
 
     # Turn all devices on to known state
@@ -228,9 +224,9 @@ async def test_sensor(hass):
     )
     with patch(
         "sense_energy.SenseLink",
-        return_value=Mock(start=mock_coro(), close=mock_coro()),
+        return_value=Mock(start=AsyncMock(), close=AsyncMock()),
     ):
-        assert await emulated_kasa.async_setup(hass, CONFIG_LIGHT) is True
+        assert await async_setup_component(hass, DOMAIN, CONFIG) is True
     await hass.async_block_till_done()
 
     await hass.services.async_call(
@@ -284,7 +280,7 @@ async def test_multiple_devices(hass):
     )
     with patch(
         "sense_energy.SenseLink",
-        return_value=Mock(start=mock_coro(), close=mock_coro()),
+        return_value=Mock(start=AsyncMock(), close=AsyncMock()),
     ):
         assert await emulated_kasa.async_setup(hass, CONFIG) is True
     await hass.async_block_till_done()
