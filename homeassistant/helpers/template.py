@@ -1,7 +1,7 @@
 """Template helper methods for rendering strings with Home Assistant data."""
 import base64
 import collections.abc
-from datetime import datetime
+from datetime import datetime, timedelta
 from functools import wraps
 import json
 import logging
@@ -1026,6 +1026,17 @@ def relative_time(value):
     return dt_util.get_age(value)
 
 
+def timedelta_seconds(value):
+    """
+    Take seconds as an integer and return a timedelta.
+
+    If the input is not an integer the input will be returned unmodified.
+    """
+    if not isinstance(value, int):
+        return value
+    return timedelta(seconds=value)
+
+
 def urlencode(value):
     """Urlencode dictionary and return as UTF-8 string."""
     return urllib_urlencode(value).encode("utf-8")
@@ -1087,6 +1098,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["utcnow"] = dt_util.utcnow
         self.globals["as_timestamp"] = forgiving_as_timestamp
         self.globals["relative_time"] = relative_time
+        self.globals["timedelta_seconds"] = timedelta_seconds
         self.globals["strptime"] = strptime
         self.globals["urlencode"] = urlencode
         if hass is None:
