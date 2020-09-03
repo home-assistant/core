@@ -1,6 +1,11 @@
 """Test Zeroconf component setup process."""
-import pytest
-from zeroconf import InterfaceChoice, IPVersion, ServiceInfo, ServiceStateChange
+from zeroconf import (
+    BadTypeInNameException,
+    InterfaceChoice,
+    IPVersion,
+    ServiceInfo,
+    ServiceStateChange,
+)
 
 from homeassistant.components import zeroconf
 from homeassistant.components.zeroconf import CONF_DEFAULT_INTERFACE, CONF_IPV6
@@ -20,13 +25,6 @@ PROPERTIES = {
 
 HOMEKIT_STATUS_UNPAIRED = b"1"
 HOMEKIT_STATUS_PAIRED = b"0"
-
-
-@pytest.fixture
-def mock_zeroconf():
-    """Mock zeroconf."""
-    with patch("homeassistant.components.zeroconf.HaZeroconf") as mock_zc:
-        yield mock_zc.return_value
 
 
 def service_update_mock(zeroconf, services, handlers):
@@ -104,6 +102,28 @@ async def test_setup(hass, mock_zeroconf):
     assert await hass.components.zeroconf.async_get_instance() is mock_zeroconf
 
 
+async def test_setup_with_overly_long_url_and_name(hass, mock_zeroconf, caplog):
+    """Test we still setup with long urls and names."""
+    with patch.object(hass.config_entries.flow, "async_init"), patch.object(
+        zeroconf, "HaServiceBrowser", side_effect=service_update_mock
+    ) as mock_service_browser, patch(
+        "homeassistant.components.zeroconf.get_url",
+        return_value="https://this.url.is.way.too.long/very/deep/path/that/will/make/us/go/over/the/maximum/string/length/and/would/cause/zeroconf/to/fail/to/startup/because/the/key/and/value/can/only/be/255/bytes/and/this/string/is/a/bit/longer/than/the/maximum/length/that/we/allow/for/a/value",
+    ), patch.object(
+        hass.config,
+        "location_name",
+        "\u00dcBER \u00dcber German Umlaut long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string",
+    ):
+        mock_zeroconf.get_service_info.side_effect = get_service_info_mock
+        assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    assert len(mock_service_browser.mock_calls) == 1
+    assert "https://this.url.is.way.too.long" in caplog.text
+    assert "German Umlaut" in caplog.text
+
+
 async def test_setup_with_default_interface(hass, mock_zeroconf):
     """Test default interface config."""
     with patch.object(hass.config_entries.flow, "async_init"), patch.object(
@@ -173,6 +193,20 @@ async def test_setup_with_ipv6_default(hass, mock_zeroconf):
         await hass.async_block_till_done()
 
     assert mock_zeroconf.called_with()
+
+
+async def test_service_with_invalid_name(hass, mock_zeroconf, caplog):
+    """Test we do not crash on service with an invalid name."""
+    with patch.object(
+        zeroconf, "HaServiceBrowser", side_effect=service_update_mock
+    ) as mock_service_browser:
+        mock_zeroconf.get_service_info.side_effect = BadTypeInNameException
+        assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    assert len(mock_service_browser.mock_calls) == 1
+    assert "Failed to get info for device name" in caplog.text
 
 
 async def test_homekit_match_partial_space(hass, mock_zeroconf):

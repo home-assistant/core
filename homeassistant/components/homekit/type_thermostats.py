@@ -325,7 +325,10 @@ class Thermostat(HomeAccessory):
         if service:
             params[ATTR_ENTITY_ID] = self.entity_id
             self.call_service(
-                DOMAIN_CLIMATE, service, params, ", ".join(events),
+                DOMAIN_CLIMATE,
+                service,
+                params,
+                ", ".join(events),
             )
 
         if CHAR_TARGET_HUMIDITY in char_values:

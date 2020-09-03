@@ -6,7 +6,7 @@
             "unknown": "Unknown error occurred."
         },
         "error": {
-            "invalid_pin": "Invalid PIN, please try again.",
+            "invalid_sgtin_or_pin": "Invalid SGTIN or PIN, please try again.",
             "press_the_button": "Please press the blue button.",
             "register_failed": "Failed to register, please try again.",
             "timeout_button": "Blue button press timeout, please try again."

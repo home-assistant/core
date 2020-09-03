@@ -28,6 +28,7 @@ from homeassistant.helpers.script import (
     ATTR_MAX,
     ATTR_MODE,
     CONF_MAX,
+    CONF_MAX_EXCEEDED,
     SCRIPT_MODE_SINGLE,
     Script,
     make_script_schema,
@@ -255,10 +256,13 @@ class ScriptEntity(ToggleEntity):
             hass,
             cfg[CONF_SEQUENCE],
             cfg.get(CONF_ALIAS, object_id),
-            self.async_change_listener,
-            cfg[CONF_MODE],
-            cfg[CONF_MAX],
-            logging.getLogger(f"{__name__}.{object_id}"),
+            DOMAIN,
+            running_description="script sequence",
+            change_listener=self.async_change_listener,
+            script_mode=cfg[CONF_MODE],
+            max_runs=cfg[CONF_MAX],
+            max_exceeded=cfg[CONF_MAX_EXCEEDED],
+            logger=logging.getLogger(f"{__name__}.{object_id}"),
         )
         self._changed = asyncio.Event()
 

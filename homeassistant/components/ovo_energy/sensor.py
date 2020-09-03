@@ -27,17 +27,34 @@ async def async_setup_entry(
     ]
     client: OVOEnergy = hass.data[DOMAIN][entry.entry_id][DATA_CLIENT]
 
-    currency = coordinator.data.electricity[
-        len(coordinator.data.electricity) - 1
-    ].cost.currency_unit
+    entities = []
+
+    if coordinator.data:
+        if coordinator.data.electricity:
+            entities.append(OVOEnergyLastElectricityReading(coordinator, client))
+            entities.append(
+                OVOEnergyLastElectricityCost(
+                    coordinator,
+                    client,
+                    coordinator.data.electricity[
+                        len(coordinator.data.electricity) - 1
+                    ].cost.currency_unit,
+                )
+            )
+        if coordinator.data.gas:
+            entities.append(OVOEnergyLastGasReading(coordinator, client))
+            entities.append(
+                OVOEnergyLastGasCost(
+                    coordinator,
+                    client,
+                    coordinator.data.gas[
+                        len(coordinator.data.gas) - 1
+                    ].cost.currency_unit,
+                )
+            )
 
     async_add_entities(
-        [
-            OVOEnergyLastElectricityReading(coordinator, client),
-            OVOEnergyLastGasReading(coordinator, client),
-            OVOEnergyLastElectricityCost(coordinator, client, currency),
-            OVOEnergyLastGasCost(coordinator, client, currency),
-        ],
+        entities,
         True,
     )
 
@@ -83,7 +100,7 @@ class OVOEnergyLastElectricityReading(OVOEnergySensor):
     @property
     def state(self) -> str:
         """Return the state of the sensor."""
-        usage: OVODailyUsage = self._coordinator.data
+        usage: OVODailyUsage = self.coordinator.data
         if usage is None or not usage.electricity:
             return None
         return usage.electricity[-1].consumption
@@ -91,7 +108,7 @@ class OVOEnergyLastElectricityReading(OVOEnergySensor):
     @property
     def device_state_attributes(self) -> object:
         """Return the attributes of the sensor."""
-        usage: OVODailyUsage = self._coordinator.data
+        usage: OVODailyUsage = self.coordinator.data
         if usage is None or not usage.electricity:
             return None
         return {
@@ -118,7 +135,7 @@ class OVOEnergyLastGasReading(OVOEnergySensor):
     @property
     def state(self) -> str:
         """Return the state of the sensor."""
-        usage: OVODailyUsage = self._coordinator.data
+        usage: OVODailyUsage = self.coordinator.data
         if usage is None or not usage.gas:
             return None
         return usage.gas[-1].consumption
@@ -126,7 +143,7 @@ class OVOEnergyLastGasReading(OVOEnergySensor):
     @property
     def device_state_attributes(self) -> object:
         """Return the attributes of the sensor."""
-        usage: OVODailyUsage = self._coordinator.data
+        usage: OVODailyUsage = self.coordinator.data
         if usage is None or not usage.gas:
             return None
         return {
@@ -154,7 +171,7 @@ class OVOEnergyLastElectricityCost(OVOEnergySensor):
     @property
     def state(self) -> str:
         """Return the state of the sensor."""
-        usage: OVODailyUsage = self._coordinator.data
+        usage: OVODailyUsage = self.coordinator.data
         if usage is None or not usage.electricity:
             return None
         return usage.electricity[-1].cost.amount
@@ -162,7 +179,7 @@ class OVOEnergyLastElectricityCost(OVOEnergySensor):
     @property
     def device_state_attributes(self) -> object:
         """Return the attributes of the sensor."""
-        usage: OVODailyUsage = self._coordinator.data
+        usage: OVODailyUsage = self.coordinator.data
         if usage is None or not usage.electricity:
             return None
         return {
@@ -190,7 +207,7 @@ class OVOEnergyLastGasCost(OVOEnergySensor):
     @property
     def state(self) -> str:
         """Return the state of the sensor."""
-        usage: OVODailyUsage = self._coordinator.data
+        usage: OVODailyUsage = self.coordinator.data
         if usage is None or not usage.gas:
             return None
         return usage.gas[-1].cost.amount
@@ -198,7 +215,7 @@ class OVOEnergyLastGasCost(OVOEnergySensor):
     @property
     def device_state_attributes(self) -> object:
         """Return the attributes of the sensor."""
-        usage: OVODailyUsage = self._coordinator.data
+        usage: OVODailyUsage = self.coordinator.data
         if usage is None or not usage.gas:
             return None
         return {

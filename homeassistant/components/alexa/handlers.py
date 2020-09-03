@@ -1542,8 +1542,10 @@ async def async_api_initialize_camera_stream(hass, config, directive, context):
             require_ssl=True,
             require_standard_port=True,
         )
-    except network.NoURLAvailableError:
-        raise AlexaInvalidValueError("Failed to find suitable URL to serve to Alexa")
+    except network.NoURLAvailableError as err:
+        raise AlexaInvalidValueError(
+            "Failed to find suitable URL to serve to Alexa"
+        ) from err
 
     payload = {
         "cameraStreams": [

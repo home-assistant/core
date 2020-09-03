@@ -29,7 +29,9 @@ async def async_setup_entry(
     for location in dtv.device.locations:
         entities.append(
             DIRECTVRemote(
-                dtv=dtv, name=str.title(location.name), address=location.address,
+                dtv=dtv,
+                name=str.title(location.name),
+                address=location.address,
             )
         )
 
@@ -42,7 +44,9 @@ class DIRECTVRemote(DIRECTVEntity, RemoteEntity):
     def __init__(self, *, dtv: DIRECTV, name: str, address: str = "0") -> None:
         """Initialize DirecTV remote."""
         super().__init__(
-            dtv=dtv, name=name, address=address,
+            dtv=dtv,
+            name=name,
+            address=address,
         )
 
         self._available = False

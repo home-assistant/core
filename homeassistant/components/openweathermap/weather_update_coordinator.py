@@ -79,8 +79,8 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
 
     @staticmethod
     def _get_rain(rain):
-        if "3h" in rain:
-            return round(rain["3h"], 0)
+        if "1h" in rain:
+            return round(rain["1h"], 0)
         return "not raining"
 
     @staticmethod

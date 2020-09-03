@@ -133,7 +133,7 @@ async def async_setup_entry(hass, config_entry):
     _verify_domain_control = verify_domain_control(hass, DOMAIN)
 
     websession = aiohttp_client.async_get_clientsession(hass)
-    client = Client(websession)
+    client = Client(session=websession)
 
     try:
         await client.load_local(
@@ -144,7 +144,7 @@ async def async_setup_entry(hass, config_entry):
         )
     except RainMachineError as err:
         _LOGGER.error("An error occurred: %s", err)
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from err
     else:
         # regenmaschine can load multiple controllers at once, but we only grab the one
         # we loaded above:

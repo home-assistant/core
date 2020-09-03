@@ -1,0 +1,26 @@
+request_area_preset:
+  description: "Requests Dynalite to report the preset for an area."
+  fields:
+    host:
+      description: "Host gateway IP to send to or all configured gateways if not specified."
+      example: "192.168.0.101"
+    area:
+      description: "Area to request the preset reported"
+      example: 2
+    channel:
+      description: "Channel to request the preset to be reported from. Default is channel 1"
+      example: 1
+
+request_channel_level:
+  description: "Requests Dynalite to report the level of a specific channel."
+  fields:
+    host:
+      description: "Host gateway IP to send to or all configured gateways if not specified."
+      example: "192.168.0.101"
+    area:
+      description: "Area for the requested channel"
+      example: 2
+    channel:
+      description: "Channel to request the level for."
+      example: 1
+

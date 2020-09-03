@@ -44,6 +44,7 @@ FIBARO_COMPONENTS = [
     "light",
     "scene",
     "sensor",
+    "lock",
     "switch",
 ]
 
@@ -67,6 +68,7 @@ FIBARO_TYPEMAP = {
     "com.fibaro.setpoint": "climate",
     "com.fibaro.FGT001": "climate",
     "com.fibaro.thermostatDanfoss": "climate",
+    "com.fibaro.doorLock": "lock",
 }
 
 DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema(
@@ -220,6 +222,8 @@ class FibaroController:
                 device_type = "switch"
             elif "open" in device.actions:
                 device_type = "cover"
+            elif "secure" in device.actions:
+                device_type = "lock"
             elif "value" in device.properties:
                 if device.properties.value in ("true", "false"):
                     device_type = "binary_sensor"
@@ -235,10 +239,10 @@ class FibaroController:
         scenes = self._client.scenes.list()
         self._scene_map = {}
         for device in scenes:
-            if "visible" in device and not device.visible:
+            if "name" not in device or "id" not in device:
                 continue
             device.fibaro_controller = self
-            if device.roomID == 0:
+            if "roomID" not in device or device.roomID == 0:
                 room_name = "Unknown"
             else:
                 room_name = self._room_map[device.roomID].name
@@ -250,6 +254,7 @@ class FibaroController:
             device.unique_id_str = f"{self.hub_serial}.scene.{device.id}"
             self._scene_map[device.id] = device
             self.fibaro_devices["scene"].append(device)
+            _LOGGER.debug("%s scene -> %s", device.ha_id, device)
 
     def _read_devices(self):
         """Read and process the device list."""
@@ -259,8 +264,10 @@ class FibaroController:
         last_climate_parent = None
         for device in devices:
             try:
+                if "name" not in device or "id" not in device:
+                    continue
                 device.fibaro_controller = self
-                if device.roomID == 0:
+                if "roomID" not in device or device.roomID == 0:
                     room_name = "Unknown"
                 else:
                     room_name = self._room_map[device.roomID].name

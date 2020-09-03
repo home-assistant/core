@@ -21,7 +21,7 @@
             "user": {
                 "data": {
                     "host": "Adresse IP",
-                    "port": "Port de l'appareil Konnected"
+                    "port": "Port"
                 },
                 "description": "Veuillez saisir les informations de l\u2019h\u00f4te de votre panneau Konnected."
             }
@@ -83,7 +83,8 @@
             },
             "options_misc": {
                 "data": {
-                    "blink": "Voyant du panneau clignotant lors de l'envoi d'un changement d'\u00e9tat"
+                    "blink": "Voyant du panneau clignotant lors de l'envoi d'un changement d'\u00e9tat",
+                    "discovery": "R\u00e9pondre aux demandes de d\u00e9couverte sur votre r\u00e9seau"
                 },
                 "description": "Veuillez s\u00e9lectionner le comportement souhat\u00e9 de votre panneau",
                 "title": "Configurer divers"

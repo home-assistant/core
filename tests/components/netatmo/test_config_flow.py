@@ -39,10 +39,10 @@ async def test_abort_if_existing_entry(hass):
         data={"host": "0.0.0.0", "properties": {"id": "aa:bb:cc:dd:ee:ff"}},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "single_instance_allowed"
+    assert result["reason"] == "already_configured"
 
 
-async def test_full_flow(hass, aiohttp_client, aioclient_mock):
+async def test_full_flow(hass, aiohttp_client, aioclient_mock, current_request):
     """Check full flow."""
     assert await setup.async_setup_component(
         hass,
@@ -127,7 +127,10 @@ async def test_option_flow(hass):
     }
 
     config_entry = MockConfigEntry(
-        domain=DOMAIN, unique_id=DOMAIN, data=VALID_CONFIG, options={},
+        domain=DOMAIN,
+        unique_id=DOMAIN,
+        data=VALID_CONFIG,
+        options={},
     )
     config_entry.add_to_hass(hass)
 
@@ -182,7 +185,10 @@ async def test_option_flow_wrong_coordinates(hass):
     }
 
     config_entry = MockConfigEntry(
-        domain=DOMAIN, unique_id=DOMAIN, data=VALID_CONFIG, options={},
+        domain=DOMAIN,
+        unique_id=DOMAIN,
+        data=VALID_CONFIG,
+        options={},
     )
     config_entry.add_to_hass(hass)
 

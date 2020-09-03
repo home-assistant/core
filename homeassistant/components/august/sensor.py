@@ -70,7 +70,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             )
             continue
         _LOGGER.debug(
-            "Adding battery sensor for %s", device.device_name,
+            "Adding battery sensor for %s",
+            device.device_name,
         )
         devices.append(AugustBatterySensor(data, "device_battery", device, device))
 
@@ -84,7 +85,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             )
             continue
         _LOGGER.debug(
-            "Adding keypad battery sensor for %s", device.device_name,
+            "Adding keypad battery sensor for %s",
+            device.device_name,
         )
         keypad_battery_sensor = AugustBatterySensor(
             data, "linked_keypad_battery", detail.keypad, device

@@ -1,4 +1,5 @@
 """Open ports in your router for Home Assistant and provide statistics."""
+import asyncio
 from ipaddress import ip_address
 from operator import itemgetter
 
@@ -106,7 +107,11 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
     # discover and construct
     udn = config_entry.data.get(CONFIG_ENTRY_UDN)
     st = config_entry.data.get(CONFIG_ENTRY_ST)  # pylint: disable=invalid-name
-    device = await async_discover_and_construct(hass, udn, st)
+    try:
+        device = await async_discover_and_construct(hass, udn, st)
+    except asyncio.TimeoutError as err:
+        raise ConfigEntryNotReady from err
+
     if not device:
         _LOGGER.info("Unable to create UPnP/IGD, aborting")
         raise ConfigEntryNotReady
@@ -117,7 +122,8 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
     # Ensure entry has proper unique_id.
     if config_entry.unique_id != device.unique_id:
         hass.config_entries.async_update_entry(
-            entry=config_entry, unique_id=device.unique_id,
+            entry=config_entry,
+            unique_id=device.unique_id,
         )
 
     # Create device registry entry.

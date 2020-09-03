@@ -126,9 +126,9 @@ class ForecastUpdateCoordinator(DataUpdateCoordinator):
     @staticmethod
     def _calc_precipitation(entry):
         return (
-            round(entry.get_rain().get("3h"), 1)
-            if entry.get_rain().get("3h") is not None
-            and (round(entry.get_rain().get("3h"), 1) > 0)
+            round(entry.get_rain().get("1h"), 1)
+            if entry.get_rain().get("1h") is not None
+            and (round(entry.get_rain().get("1h"), 1) > 0)
             else None
         )
 

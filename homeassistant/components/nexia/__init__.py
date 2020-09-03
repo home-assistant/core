@@ -79,7 +79,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
     except ConnectTimeout as ex:
         _LOGGER.error("Unable to connect to Nexia service: %s", ex)
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from ex
     except HTTPError as http_ex:
         if (
             http_ex.response.status_code >= HTTP_BAD_REQUEST
@@ -90,7 +90,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             )
             return False
         _LOGGER.error("HTTP error from Nexia service: %s", http_ex)
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from http_ex
 
     async def _async_update_data():
         """Fetch data from API endpoint."""

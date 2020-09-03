@@ -39,7 +39,10 @@ async def test_setup_with_config(hass, legacy_patchable_time):
 async def test_successful_config_entry(hass, legacy_patchable_time):
     """Test that Islamic Prayer Times is configured successfully."""
 
-    entry = MockConfigEntry(domain=islamic_prayer_times.DOMAIN, data={},)
+    entry = MockConfigEntry(
+        domain=islamic_prayer_times.DOMAIN,
+        data={},
+    )
     entry.add_to_hass(hass)
 
     with patch(
@@ -58,7 +61,10 @@ async def test_successful_config_entry(hass, legacy_patchable_time):
 async def test_setup_failed(hass, legacy_patchable_time):
     """Test Islamic Prayer Times failed due to an error."""
 
-    entry = MockConfigEntry(domain=islamic_prayer_times.DOMAIN, data={},)
+    entry = MockConfigEntry(
+        domain=islamic_prayer_times.DOMAIN,
+        data={},
+    )
     entry.add_to_hass(hass)
 
     # test request error raising ConfigEntryNotReady
@@ -73,7 +79,10 @@ async def test_setup_failed(hass, legacy_patchable_time):
 
 async def test_unload_entry(hass, legacy_patchable_time):
     """Test removing Islamic Prayer Times."""
-    entry = MockConfigEntry(domain=islamic_prayer_times.DOMAIN, data={},)
+    entry = MockConfigEntry(
+        domain=islamic_prayer_times.DOMAIN,
+        data={},
+    )
     entry.add_to_hass(hass)
 
     with patch(

@@ -261,8 +261,11 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         for room in home["rooms"]:
             if data["event_type"] == EVENT_TYPE_SET_POINT:
                 if self._id == room["id"]:
-                    if room["therm_setpoint_mode"] == "off":
+                    if room["therm_setpoint_mode"] == STATE_NETATMO_OFF:
                         self._hvac_mode = HVAC_MODE_OFF
+                    elif room["therm_setpoint_mode"] == STATE_NETATMO_MAX:
+                        self._hvac_mode = HVAC_MODE_HEAT
+                        self._target_temperature = DEFAULT_MAX_TEMP
                     else:
                         self._target_temperature = room["therm_setpoint_temperature"]
                     self.async_write_ha_state()
@@ -334,12 +337,15 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         """Set new preset mode."""
         if self.target_temperature == 0:
             self._home_status.set_room_thermpoint(
-                self._id, STATE_NETATMO_HOME,
+                self._id,
+                STATE_NETATMO_HOME,
             )
 
         if preset_mode in [PRESET_BOOST, STATE_NETATMO_MAX] and self._model == NA_VALVE:
             self._home_status.set_room_thermpoint(
-                self._id, STATE_NETATMO_MANUAL, DEFAULT_MAX_TEMP,
+                self._id,
+                STATE_NETATMO_MANUAL,
+                DEFAULT_MAX_TEMP,
             )
         elif preset_mode in [PRESET_BOOST, STATE_NETATMO_MAX]:
             self._home_status.set_room_thermpoint(
@@ -390,7 +396,9 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         """Turn the entity off."""
         if self._model == NA_VALVE:
             self._home_status.set_room_thermpoint(
-                self._id, STATE_NETATMO_MANUAL, DEFAULT_MIN_TEMP,
+                self._id,
+                STATE_NETATMO_MANUAL,
+                DEFAULT_MIN_TEMP,
             )
         elif self.hvac_mode != HVAC_MODE_OFF:
             self._home_status.set_room_thermpoint(self._id, STATE_NETATMO_OFF)

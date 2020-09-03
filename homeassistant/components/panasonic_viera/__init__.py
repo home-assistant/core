@@ -74,7 +74,7 @@ async def async_setup_entry(hass, config_entry):
 
     on_action = config[CONF_ON_ACTION]
     if on_action is not None:
-        on_action = Script(hass, on_action)
+        on_action = Script(hass, on_action, config[CONF_NAME], DOMAIN)
 
     params = {}
     if CONF_APP_ID in config and CONF_ENCRYPTION_KEY in config:
@@ -115,7 +115,13 @@ class Remote:
     """The Remote class. It stores the TV properties and the remote control connection itself."""
 
     def __init__(
-        self, hass, host, port, on_action=None, app_id=None, encryption_key=None,
+        self,
+        hass,
+        host,
+        port,
+        on_action=None,
+        app_id=None,
+        encryption_key=None,
     ):
         """Initialize the Remote class."""
         self._hass = hass
@@ -178,9 +184,6 @@ class Remote:
         self.muted = self._control.get_mute()
         self.volume = self._control.get_volume() / 100
 
-        self.state = STATE_ON
-        self.available = True
-
     async def async_send_key(self, key):
         """Send a key to the TV and handle exceptions."""
         try:
@@ -190,10 +193,10 @@ class Remote:
 
         await self._handle_errors(self._control.send_key, key)
 
-    async def async_turn_on(self):
+    async def async_turn_on(self, context):
         """Turn on the TV."""
         if self._on_action is not None:
-            await self._on_action.async_run()
+            await self._on_action.async_run(context=context)
             self.state = STATE_ON
         elif self.state != STATE_ON:
             await self.async_send_key(Keys.power)
@@ -231,7 +234,6 @@ class Remote:
         except (TimeoutError, URLError, SOAPError, OSError):
             self.state = STATE_OFF
             self.available = self._on_action is not None
-            await self.async_create_remote_control()
         except Exception as err:  # pylint: disable=broad-except
             _LOGGER.exception("An unknown error occurred: %s", err)
             self.state = STATE_OFF

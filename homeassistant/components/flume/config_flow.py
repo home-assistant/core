@@ -57,10 +57,10 @@ async def validate_input(hass: core.HomeAssistant, data):
             )
         )
         flume_devices = await hass.async_add_executor_job(FlumeDeviceList, flume_auth)
-    except RequestException:
-        raise CannotConnect
-    except Exception:  # pylint: disable=broad-except
-        raise InvalidAuth
+    except RequestException as err:
+        raise CannotConnect from err
+    except Exception as err:
+        raise InvalidAuth from err
     if not flume_devices or not flume_devices.device_list:
         raise CannotConnect
 
