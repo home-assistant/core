@@ -255,7 +255,7 @@ class PairedSensorManager:
 class GuardianEntity(CoordinatorEntity):
     """Define a base Guardian entity."""
 
-    def __init__(
+    def __init__(  # pylint: disable=super-init-not-called
         self, entry: ConfigEntry, kind: str, name: str, device_class: str, icon: str
     ) -> None:
         """Initialize."""
