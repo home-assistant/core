@@ -77,8 +77,8 @@ async def test_config_json_host_imported(
     assert config_entry.title == "mock-host"
 
 
-async def test_entry_setup(hass, api_factory, gateway_id):
-    """Test config entry setup."""
+async def test_entry_setup_unload(hass, api_factory, gateway_id):
+    """Test config entry setup and unload."""
     entry = MockConfigEntry(
         domain=tradfri.DOMAIN,
         data={
@@ -91,8 +91,12 @@ async def test_entry_setup(hass, api_factory, gateway_id):
     )
 
     entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    with patch.object(
+        hass.config_entries, "async_forward_entry_setup", return_value=True
+    ) as setup:
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        assert setup.call_count == len(tradfri.PLATFORMS)
 
     dev_reg = await async_get_device_registry(hass)
     dev_entries = async_entries_for_config_entry(dev_reg, entry.entry_id)
@@ -105,3 +109,11 @@ async def test_entry_setup(hass, api_factory, gateway_id):
     assert dev_entry.manufacturer == tradfri.ATTR_TRADFRI_MANUFACTURER
     assert dev_entry.name == tradfri.ATTR_TRADFRI_GATEWAY
     assert dev_entry.model == tradfri.ATTR_TRADFRI_GATEWAY_MODEL
+
+    with patch.object(
+        hass.config_entries, "async_forward_entry_unload", return_value=True
+    ) as unload:
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+        assert unload.call_count == len(tradfri.PLATFORMS)
+        assert api_factory.shutdown.call_count == 1

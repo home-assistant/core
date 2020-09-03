@@ -83,4 +83,4 @@ def mock_api_factory_fixture(mock_api):
     with patch("homeassistant.components.tradfri.APIFactory", autospec=True) as factory:
         factory.init.return_value = factory.return_value
         factory.return_value.request = mock_api
-        yield mock_api
+        yield factory.return_value
