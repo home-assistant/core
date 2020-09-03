@@ -13,8 +13,8 @@
         "step": {
             "auth": {
                 "data": {
-                    "password": "Password",
-                    "username": "Username"
+                    "password": "[%key:common::config_flow::data::password%]",
+                    "username": "[%key:common::config_flow::data::username%]"
                 },
                 "title": "Configure authentication"
             },
@@ -33,9 +33,9 @@
             },
             "manual_input": {
                 "data": {
-                    "host": "Host",
+                    "host": "[%key:common::config_flow::data::host%]",
                     "name": "Name",
-                    "port": "Port"
+                    "port": "[%key:common::config_flow::data::port%]"
                 },
                 "title": "Configure ONVIF device"
             },
