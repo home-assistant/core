@@ -203,18 +203,16 @@ class OpenWeatherMapWeather(WeatherEntity):
                     }
                 )
             else:
+                rain = entry.get_rain().get("1h")
+                if rain is not None:
+                    rain = round(rain, 1)
                 data.append(
                     {
                         ATTR_FORECAST_TIME: entry.get_reference_time("unix") * 1000,
                         ATTR_FORECAST_TEMP: entry.get_temperature("celsius").get(
                             "temp"
                         ),
-                        ATTR_FORECAST_PRECIPITATION: (
-                            round(entry.get_rain().get("3h"), 1)
-                            if entry.get_rain().get("3h") is not None
-                            and (round(entry.get_rain().get("3h"), 1) > 0)
-                            else None
-                        ),
+                        ATTR_FORECAST_PRECIPITATION: rain,
                         ATTR_FORECAST_CONDITION: [
                             k
                             for k, v in CONDITION_CLASSES.items()
