@@ -1,4 +1,5 @@
 """Support for IKEA Tradfri."""
+import asyncio
 import logging
 
 from pytradfri import Gateway, RequestError
@@ -27,10 +28,12 @@ from .const import (
     DOMAIN,
     KEY_API,
     KEY_GATEWAY,
-    TRADFRI_DEVICE_TYPES,
+    PLATFORMS,
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+FACTORY = "tradfri_factory"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -96,7 +99,7 @@ async def async_setup_entry(hass, entry):
     """Create a gateway."""
     # host, identity, key, allow_tradfri_groups
 
-    factory = APIFactory(
+    factory = await APIFactory.init(
         entry.data[CONF_HOST],
         psk_id=entry.data[CONF_IDENTITY],
         psk=entry.data[CONF_KEY],
@@ -119,6 +122,8 @@ async def async_setup_entry(hass, entry):
 
     hass.data.setdefault(KEY_API, {})[entry.entry_id] = api
     hass.data.setdefault(KEY_GATEWAY, {})[entry.entry_id] = gateway
+    tradfri_data = hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {}
+    tradfri_data[FACTORY] = factory
 
     dev_reg = await hass.helpers.device_registry.async_get_registry()
     dev_reg.async_get_or_create(
@@ -132,9 +137,29 @@ async def async_setup_entry(hass, entry):
         sw_version=gateway_info.firmware_version,
     )
 
-    for device in TRADFRI_DEVICE_TYPES:
+    for component in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, device)
+            hass.config_entries.async_forward_entry_setup(entry, component)
         )
 
     return True
+
+
+async def async_unload_entry(hass, entry):
+    """Unload a config entry."""
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, component)
+                for component in PLATFORMS
+            ]
+        )
+    )
+    if unload_ok:
+        hass.data[KEY_API].pop(entry.entry_id)
+        hass.data[KEY_GATEWAY].pop(entry.entry_id)
+        tradfri_data = hass.data[DOMAIN].pop(entry.entry_id)
+        factory = tradfri_data[FACTORY]
+        await factory.shutdown()
+
+    return unload_ok
