@@ -1,7 +1,9 @@
 """Tests for emulated_kasa library bindings."""
 import math
+from unittest.mock import Mock, patch
 
 from homeassistant.components import emulated_kasa
+from homeassistant.components.emulated_kasa.const import CONF_POWER, DOMAIN
 from homeassistant.components.fan import (
     ATTR_SPEED,
     DOMAIN as FAN_DOMAIN,
@@ -9,7 +11,6 @@ from homeassistant.components.fan import (
 )
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.components.emulated_kasa.const import CONF_POWER, DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_ENTITIES,
@@ -21,7 +22,6 @@ from homeassistant.const import (
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_coro
-from unittest.mock import Mock, patch
 
 ENTITY_SWITCH = "switch.ac"
 ENTITY_SWITCH_NAME = "A/C"
