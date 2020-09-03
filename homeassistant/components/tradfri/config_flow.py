@@ -141,8 +141,8 @@ class FlowHandler(config_entries.ConfigFlow):
         same_hub_entries = [
             entry.entry_id
             for entry in self._async_current_entries()
-            if entry.data[CONF_GATEWAY_ID] == gateway_id
-            or entry.data[CONF_HOST] == host
+            if entry.data.get(CONF_GATEWAY_ID) == gateway_id
+            or entry.data.get(CONF_HOST) == host
         ]
 
         if same_hub_entries:
