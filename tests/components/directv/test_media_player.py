@@ -10,6 +10,7 @@ from homeassistant.components.directv.media_player import (
     ATTR_MEDIA_RECORDED,
     ATTR_MEDIA_START_TIME,
 )
+from homeassistant.components.media_player import DEVICE_CLASS_RECEIVER
 from homeassistant.components.media_player.const import (
     ATTR_INPUT_SOURCE,
     ATTR_MEDIA_ALBUM_NAME,
@@ -23,7 +24,6 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_POSITION_UPDATED_AT,
     ATTR_MEDIA_SERIES_TITLE,
     ATTR_MEDIA_TITLE,
-    DEVICE_CLASS_RECEIVER,
     DOMAIN as MP_DOMAIN,
     MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_MUSIC,
