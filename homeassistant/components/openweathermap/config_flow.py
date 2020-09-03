@@ -27,6 +27,17 @@ from .const import (
 )
 from .const import DOMAIN  # pylint:disable=unused-import
 
+SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_API_KEY): str,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
+        vol.Optional(CONF_LATITUDE): cv.latitude,
+        vol.Optional(CONF_LONGITUDE): cv.longitude,
+        vol.Optional(CONF_MODE, default=DEFAULT_FORECAST_MODE): vol.In(FORECAST_MODES),
+        vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): vol.In(LANGUAGES),
+    }
+)
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -53,11 +64,15 @@ class OpenWeatherMapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(f"{latitude}-{longitude}")
             self._abort_if_unique_id_configured()
 
-            status = await _validate_owm_api(self.hass, user_input[CONF_API_KEY])
-
-            if not status.get("auth", True):
+            try:
+                api_online = await _is_owm_api_online(
+                    self.hass, user_input[CONF_API_KEY]
+                )
+                if not api_online:
+                    errors["base"] = "auth"
+            except UnauthorizedError:
                 errors["base"] = "auth"
-            if not status.get("connection", True):
+            except APICallError:
                 errors["base"] = "connection"
 
             if not errors:
@@ -65,9 +80,7 @@ class OpenWeatherMapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     title=user_input[CONF_NAME], data=user_input
                 )
 
-        return self.async_show_form(
-            step_id="user", data_schema=self._get_schema(), errors=errors,
-        )
+        return self.async_show_form(step_id="user", data_schema=SCHEMA, errors=errors,)
 
     async def async_step_import(self, import_input=None):
         """Set the config entry up from yaml."""
@@ -82,28 +95,7 @@ class OpenWeatherMapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             config[CONF_MODE] = DEFAULT_LANGUAGE
         if CONF_LANGUAGE not in config:
             config[CONF_LANGUAGE] = DEFAULT_LANGUAGE
-
         return await self.async_step_user(config)
-
-    def _get_schema(self):
-        return vol.Schema(
-            {
-                vol.Required(CONF_API_KEY): str,
-                vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
-                vol.Optional(
-                    CONF_LATITUDE, default=self.hass.config.latitude
-                ): cv.latitude,
-                vol.Optional(
-                    CONF_LONGITUDE, default=self.hass.config.longitude
-                ): cv.longitude,
-                vol.Optional(CONF_MODE, default=DEFAULT_FORECAST_MODE): vol.In(
-                    FORECAST_MODES
-                ),
-                vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): vol.In(
-                    LANGUAGES
-                ),
-            }
-        )
 
 
 class OpenWeatherMapOptionsFlow(config_entries.OptionsFlow):
@@ -119,31 +111,28 @@ class OpenWeatherMapOptionsFlow(config_entries.OptionsFlow):
             return self.async_create_entry(title="", data=user_input)
 
         return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_MODE,
-                        default=self.config_entry.options.get(
-                            CONF_MODE, DEFAULT_FORECAST_MODE
-                        ),
-                    ): vol.In(FORECAST_MODES),
-                    vol.Optional(
-                        CONF_LANGUAGE,
-                        default=self.config_entry.options.get(
-                            CONF_LANGUAGE, DEFAULT_LANGUAGE
-                        ),
-                    ): vol.In(LANGUAGES),
-                }
-            ),
+            step_id="init", data_schema=self._get_options_schema(),
+        )
+
+    def _get_options_schema(self):
+        return vol.Schema(
+            {
+                vol.Optional(
+                    CONF_MODE,
+                    default=self.config_entry.options.get(
+                        CONF_MODE, DEFAULT_FORECAST_MODE
+                    ),
+                ): vol.In(FORECAST_MODES),
+                vol.Optional(
+                    CONF_LANGUAGE,
+                    default=self.config_entry.options.get(
+                        CONF_LANGUAGE, DEFAULT_LANGUAGE
+                    ),
+                ): vol.In(LANGUAGES),
+            }
         )
 
 
-async def _validate_owm_api(hass, api_key):
-    try:
-        owm = OWM(api_key)
-        return {"auth": await hass.async_add_executor_job(owm.is_API_online)}
-    except APICallError:
-        return {"connection": False}
-    except UnauthorizedError:
-        return {"auth": False}
+async def _is_owm_api_online(hass, api_key):
+    owm = OWM(api_key)
+    return await hass.async_add_executor_job(owm.is_API_online)

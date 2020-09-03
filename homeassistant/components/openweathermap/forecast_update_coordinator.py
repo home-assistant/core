@@ -48,14 +48,14 @@ class ForecastUpdateCoordinator(DataUpdateCoordinator):
         data = {}
         with async_timeout.timeout(20):
             try:
-                forecast_response = await self._update_forecast()
+                forecast_response = await self._get_owm_forecast()
                 data = self._convert_forecast_response(forecast_response)
             except (APICallError, UnauthorizedError) as error:
                 raise UpdateFailed(error)
 
         return data
 
-    async def _update_forecast(self):
+    async def _get_owm_forecast(self):
         if self._forecast_mode == "daily":
             forecast_response = await self.hass.async_add_executor_job(
                 self._owm_client.daily_forecast_at_coords,
@@ -72,24 +72,24 @@ class ForecastUpdateCoordinator(DataUpdateCoordinator):
         return forecast_response.get_forecast()
 
     def _convert_forecast_response(self, forecast_response):
-        values = self._get_weathers(forecast_response)
+        weathers = self._get_weathers(forecast_response)
 
-        forecast_entries = self._convert_forecast_entries(values)
+        forecast_entries = self._convert_forecast_entries(weathers)
 
         return {
             ATTR_API_FORECAST: forecast_entries,
             ATTR_API_THIS_DAY_FORECAST: forecast_entries[0],
         }
 
-    def _convert_forecast_entries(self, values):
-        if self._forecast_mode == "daily":
-            return list(map(self._convert_daily_forecast, values))
-        return list(map(self._convert_forecast, values))
-
     def _get_weathers(self, forecast_response):
         if self._forecast_mode == "freedaily":
             return forecast_response.get_weathers()[::8]
         return forecast_response.get_weathers()
+
+    def _convert_forecast_entries(self, entries):
+        if self._forecast_mode == "daily":
+            return list(map(self._convert_daily_forecast, entries))
+        return list(map(self._convert_forecast, entries))
 
     def _convert_daily_forecast(self, entry):
         return {

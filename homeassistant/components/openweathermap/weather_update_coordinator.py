@@ -46,13 +46,13 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         data = {}
         with async_timeout.timeout(20):
             try:
-                weather_response = await self._update_weather()
+                weather_response = await self._get_owm_weather()
                 data = self._convert_weather_response(weather_response)
             except (APICallError, UnauthorizedError) as error:
                 raise UpdateFailed(error)
         return data
 
-    async def _update_weather(self):
+    async def _get_owm_weather(self):
         weather = await self.hass.async_add_executor_job(
             self._owm_client.weather_at_coords, self._latitude, self._longitude
         )
