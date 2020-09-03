@@ -90,7 +90,7 @@ class FlowHandler(config_entries.ConfigFlow):
         host = discovery_info["host"]
 
         for entry in self._async_current_entries():
-            if entry.data[CONF_HOST] != host:
+            if entry.data.get(CONF_HOST) != host:
                 continue
 
             # Backwards compat, we update old entries
@@ -107,7 +107,7 @@ class FlowHandler(config_entries.ConfigFlow):
     async def async_step_import(self, user_input):
         """Import a config entry."""
         for entry in self._async_current_entries():
-            if entry.data[CONF_HOST] == user_input["host"]:
+            if entry.data.get(CONF_HOST) == user_input["host"]:
                 return self.async_abort(reason="already_configured")
 
         # Happens if user has host directly in configuration.yaml
