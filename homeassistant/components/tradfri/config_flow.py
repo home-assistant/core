@@ -161,7 +161,7 @@ async def authenticate(hass, host, security_code):
 
     identity = uuid4().hex
 
-    api_factory = APIFactory(host, psk_id=identity)
+    api_factory = await APIFactory.init(host, psk_id=identity)
 
     try:
         with async_timeout.timeout(5):
@@ -178,7 +178,7 @@ async def get_gateway_info(hass, host, identity, key):
     """Return info for the gateway."""
 
     try:
-        factory = APIFactory(host, psk_id=identity, psk=key)
+        factory = await APIFactory.init(host, psk_id=identity, psk=key)
 
         api = factory.request
         gateway = Gateway()
