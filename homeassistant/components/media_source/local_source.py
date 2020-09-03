@@ -45,6 +45,8 @@ def async_parse_identifier(item: MediaSourceItem) -> Tuple[str, str]:
 class LocalSource(MediaSource):
     """Provide local directories as media sources."""
 
+    name: str = "Local Media"
+
     def __init__(self, hass: HomeAssistant):
         """Initialize local source."""
         super().__init__(DOMAIN)

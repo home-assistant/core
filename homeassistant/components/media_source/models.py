@@ -72,8 +72,8 @@ class MediaSourceItem:
         if self.domain is None:
             base = BrowseMedia(None, None, "Media Sources", False, True)
             base.children = [
-                BrowseMedia(domain, None, domain, False, True)
-                for domain in self.hass.data[DOMAIN].keys()
+                BrowseMedia(source.domain, None, source.name, False, True)
+                for source in self.hass.data[DOMAIN].values()
             ]
             return base
 
@@ -105,9 +105,13 @@ class MediaSourceItem:
 class MediaSource(ABC):
     """Represents a source of media files."""
 
+    name: str = None
+
     def __init__(self, domain: str):
         """Initialize a media source."""
         self.domain = domain
+        if not self.name:
+            self.name = domain
 
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve a media item to a playable item."""
