@@ -65,7 +65,7 @@ SENSOR_TYPES = {
         None,
     ],
     "process": ["Process", " ", CPU_ICON, None],
-    "processor_use": ["Processor use (percent)", UNIT_PERCENTAGE, CPU_ICON, None],
+    "processor_use": ["Processor use", UNIT_PERCENTAGE, CPU_ICON, None],
     "processor_temperature": ["Processor temperature", TEMP_CELSIUS, CPU_ICON, None],
     "swap_free": ["Swap free", DATA_MEBIBYTES, "mdi:harddisk", None],
     "swap_use": ["Swap use", DATA_MEBIBYTES, "mdi:harddisk", None],
