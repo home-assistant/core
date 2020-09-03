@@ -23,6 +23,7 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_POSITION_UPDATED_AT,
     ATTR_MEDIA_SERIES_TITLE,
     ATTR_MEDIA_TITLE,
+    DEVICE_CLASS_RECEIVER,
     DOMAIN as MP_DOMAIN,
     MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_MUSIC,
@@ -169,12 +170,15 @@ async def test_unique_id(
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
 
     main = entity_registry.async_get(MAIN_ENTITY_ID)
+    assert main.device_class == DEVICE_CLASS_RECEIVER
     assert main.unique_id == "028877455858"
 
     client = entity_registry.async_get(CLIENT_ENTITY_ID)
+    assert client.device_class == DEVICE_CLASS_RECEIVER
     assert client.unique_id == "2CA17D1CD30X"
 
     unavailable_client = entity_registry.async_get(UNAVAILABLE_ENTITY_ID)
+    assert unavailable_client.device_class == DEVICE_CLASS_RECEIVER
     assert unavailable_client.unique_id == "9XXXXXXXXXX9"
 
 
