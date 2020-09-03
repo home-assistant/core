@@ -9,6 +9,8 @@ from pytradfri.device.light_control import LightControl
 
 from homeassistant.components import tradfri
 
+from . import MOCK_GATEWAY_ID
+
 from tests.async_mock import MagicMock, Mock, PropertyMock, patch
 from tests.common import MockConfigEntry
 
@@ -93,42 +95,6 @@ def setup(request):
     request.addfinalizer(teardown)
 
 
-@pytest.fixture
-def mock_gateway():
-    """Mock a Tradfri gateway."""
-
-    def get_devices():
-        """Return mock devices."""
-        return gateway.mock_devices
-
-    def get_groups():
-        """Return mock groups."""
-        return gateway.mock_groups
-
-    gateway = Mock(
-        get_devices=get_devices,
-        get_groups=get_groups,
-        mock_devices=[],
-        mock_groups=[],
-        mock_responses=[],
-    )
-    return gateway
-
-
-@pytest.fixture
-def mock_api(mock_gateway):
-    """Mock api."""
-
-    async def api(command):
-        """Mock api function."""
-        # Store the data for "real" command objects.
-        if hasattr(command, "_data") and not isinstance(command, Mock):
-            mock_gateway.mock_responses.append(command._data)
-        return command
-
-    return api
-
-
 async def generate_psk(self, code):
     """Mock psk."""
     return "mock"
@@ -143,11 +109,14 @@ async def setup_gateway(hass, mock_gateway, mock_api):
             "identity": "mock-identity",
             "key": "mock-key",
             "import_groups": True,
-            "gateway_id": "mock-gateway-id",
+            "gateway_id": MOCK_GATEWAY_ID,
         },
     )
-    hass.data[tradfri.KEY_GATEWAY] = {entry.entry_id: mock_gateway}
-    hass.data[tradfri.KEY_API] = {entry.entry_id: mock_api}
+    tradfri_data = {}
+    hass.data[tradfri.DOMAIN] = {entry.entry_id: tradfri_data}
+    tradfri_data[tradfri.KEY_API] = mock_api
+    tradfri_data[tradfri.KEY_GATEWAY] = mock_gateway
+
     await hass.config_entries.async_forward_entry_setup(entry, "light")
     await hass.async_block_till_done()
 
