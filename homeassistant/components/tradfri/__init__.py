@@ -34,6 +34,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 FACTORY = "tradfri_factory"
+LISTENERS = "tradfri_listeners"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -98,6 +99,8 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass, entry):
     """Create a gateway."""
     # host, identity, key, allow_tradfri_groups
+    tradfri_data = hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {}
+    listeners = tradfri_data[LISTENERS] = []
 
     factory = await APIFactory.init(
         entry.data[CONF_HOST],
@@ -109,7 +112,7 @@ async def async_setup_entry(hass, entry):
         """Close connection when hass stops."""
         await factory.shutdown()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
+    listeners.append(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop))
 
     api = factory.request
     gateway = Gateway()
@@ -122,7 +125,6 @@ async def async_setup_entry(hass, entry):
 
     hass.data.setdefault(KEY_API, {})[entry.entry_id] = api
     hass.data.setdefault(KEY_GATEWAY, {})[entry.entry_id] = gateway
-    tradfri_data = hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {}
     tradfri_data[FACTORY] = factory
 
     dev_reg = await hass.helpers.device_registry.async_get_registry()
@@ -161,5 +163,8 @@ async def async_unload_entry(hass, entry):
         tradfri_data = hass.data[DOMAIN].pop(entry.entry_id)
         factory = tradfri_data[FACTORY]
         await factory.shutdown()
+        # unsubscribe listeners
+        for listener in tradfri_data[LISTENERS]:
+            listener()
 
     return unload_ok
