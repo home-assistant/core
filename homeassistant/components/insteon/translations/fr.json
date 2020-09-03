@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Une connexion Insteon par modem est d\u00e9j\u00e0 configur\u00e9e",
-            "cannot_connect": "\u00c9chec de connexion"
+            "cannot_connect": "\u00c9chec de connexion",
+            "single_instance_allowed": "D\u00e9j\u00e0 configur\u00e9. Une seule configuration possible."
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
@@ -60,6 +61,7 @@
                 "data": {
                     "modem_type": "Type de modem."
                 },
+                "description": "S\u00e9lectionnez le type de modem Insteon.",
                 "title": "Insteon"
             }
         }
@@ -77,6 +79,7 @@
                 "data": {
                     "platform": "Plate-forme"
                 },
+                "description": "Modifiez le mot de passe Insteon Hub.",
                 "title": "Insteon"
             },
             "change_hub_config": {

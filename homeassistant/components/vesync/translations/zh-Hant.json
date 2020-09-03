@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_setup": "\u50c5\u5141\u8a31\u8a2d\u5b9a\u4e00\u7d44 Vesync \u7269\u4ef6"
+            "already_setup": "\u50c5\u5141\u8a31\u8a2d\u5b9a\u4e00\u7d44 Vesync \u8a2d\u5099"
         },
         "error": {
             "invalid_login": "\u4f7f\u7528\u8005\u540d\u7a31\u6216\u5bc6\u78bc\u7121\u6548"

@@ -15,9 +15,10 @@
             },
             "user": {
                 "data": {
+                    "host": "Host",
                     "ip_address": "IP Address"
                 },
-                "description": "If you leave IP address empty, discovery will be used to find devices."
+                "description": "If you leave the host empty, discovery will be used to find devices."
             }
         }
     },

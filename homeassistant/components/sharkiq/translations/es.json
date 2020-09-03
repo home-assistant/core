@@ -15,7 +15,7 @@
             "reauth": {
                 "data": {
                     "password": "Contrase\u00f1a",
-                    "username": "Nombre de usuario"
+                    "username": "Usuario"
                 }
             },
             "user": {

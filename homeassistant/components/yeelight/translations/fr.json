@@ -15,6 +15,7 @@
             },
             "user": {
                 "data": {
+                    "host": "H\u00f4te",
                     "ip_address": "Adresse IP"
                 },
                 "description": "Si vous laissez l'adresse IP vide, la d\u00e9couverte sera utilis\u00e9e pour trouver des appareils."
