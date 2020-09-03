@@ -4,7 +4,11 @@ from typing import List, Optional
 
 import voluptuous as vol
 
-from homeassistant.components.media_player import DEVICE_CLASS_RECEIVER, DEVICE_CLASS_TV, MediaPlayerEntity
+from homeassistant.components.media_player import (
+    DEVICE_CLASS_RECEIVER,
+    DEVICE_CLASS_TV,
+    MediaPlayerEntity,
+)
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_APP,
     MEDIA_TYPE_CHANNEL,
