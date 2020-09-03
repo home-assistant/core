@@ -1,0 +1,18 @@
+{
+  "config": {
+    "step": {
+      "config": {
+        "description": "Please enter the Tasmot configuration.",
+        "data": {
+          "discovery_prefix": "Discovery topic"
+        }
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Only a single configuration of Tasmota is allowed."
+    },
+    "error": {
+      "invalid_discovery_topic": "Invalid disovery topic."
+    }
+  }
+}
