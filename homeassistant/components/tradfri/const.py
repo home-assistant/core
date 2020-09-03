@@ -23,4 +23,4 @@ KEY_GATEWAY = "tradfri_gateway"
 KEY_SECURITY_CODE = "security_code"
 SUPPORTED_GROUP_FEATURES = SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
 SUPPORTED_LIGHT_FEATURES = SUPPORT_TRANSITION
-TRADFRI_DEVICE_TYPES = ["cover", "light", "sensor", "switch"]
+PLATFORMS = ["cover", "light", "sensor", "switch"]
