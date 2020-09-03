@@ -1,4 +1,9 @@
 """Tests for Tradfri setup."""
+from homeassistant.components import tradfri
+from homeassistant.helpers.device_registry import (
+    async_entries_for_config_entry,
+    async_get_registry as async_get_device_registry,
+)
 from homeassistant.setup import async_setup_component
 
 from tests.async_mock import patch
@@ -68,3 +73,33 @@ async def test_config_json_host_imported(hass, mock_gateway_info, mock_entry_set
     assert config_entry.domain == "tradfri"
     assert config_entry.source == "import"
     assert config_entry.title == "mock-host"
+
+
+async def test_entry_setup(hass, api_factory):
+    """Test config entry setup."""
+    entry = MockConfigEntry(
+        domain=tradfri.DOMAIN,
+        data={
+            tradfri.CONF_HOST: "mock-host",
+            tradfri.CONF_IDENTITY: "mock-identity",
+            tradfri.CONF_KEY: "mock-key",
+            tradfri.CONF_IMPORT_GROUPS: True,
+            tradfri.CONF_GATEWAY_ID: "mock-gateway-id",
+        },
+    )
+
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    dev_reg = await async_get_device_registry(hass)
+    dev_entries = async_entries_for_config_entry(dev_reg, entry.entry_id)
+
+    assert dev_entries
+    dev_entry = dev_entries[0]
+    assert dev_entry.identifiers == {
+        (tradfri.DOMAIN, entry.data[tradfri.CONF_GATEWAY_ID])
+    }
+    assert dev_entry.manufacturer == tradfri.ATTR_TRADFRI_MANUFACTURER
+    assert dev_entry.name == tradfri.ATTR_TRADFRI_GATEWAY
+    assert dev_entry.model == tradfri.ATTR_TRADFRI_GATEWAY_MODEL
