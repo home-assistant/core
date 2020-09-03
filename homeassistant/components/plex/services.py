@@ -48,7 +48,7 @@ async def async_setup_services(hass):
 def refresh_library(hass, service_call):
     """Scan a Plex library for new and updated media."""
     plex_server_name = service_call.data.get("server_name")
-    library_name = service_call.data.get("library_name")
+    library_name = service_call.data["library_name"]
 
     plex_server = get_plex_server(hass, plex_server_name)
     if not plex_server:
@@ -60,11 +60,11 @@ def refresh_library(hass, service_call):
         _LOGGER.error(
             "Library with name '%s' not found in %s",
             library_name,
-            list(map(lambda x: x.title, plex_server.library.sections())),
+            [x.title for x in plex_server.library.sections()],
         )
         return
 
-    _LOGGER.info("Scanning %s for new and updated media", library_name)
+    _LOGGER.debug("Scanning %s for new and updated media", library_name)
     library.update()
 
 
@@ -78,7 +78,7 @@ def get_plex_server(hass, plex_server_name=None):
             _LOGGER.error(
                 "Requested Plex server '%s' not found in %s",
                 plex_server_name,
-                list(map(lambda x: x.friendly_name, plex_servers)),
+                [x.friendly_name for x in plex_servers],
             )
             return None
     elif len(plex_servers) == 1:
@@ -86,6 +86,6 @@ def get_plex_server(hass, plex_server_name=None):
 
     _LOGGER.error(
         "Multiple Plex servers configured and no selection made: %s",
-        list(map(lambda x: x.friendly_name, plex_servers)),
+        [x.friendly_name for x in plex_servers],
     )
     return None
