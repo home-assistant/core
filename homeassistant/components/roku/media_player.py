@@ -1,11 +1,12 @@
 """Support for the Roku media player."""
 import logging
-from typing import List
+from typing import List, Optional
 
 import voluptuous as vol
 
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
+    DEVICE_CLASS_TV,
     MEDIA_TYPE_APP,
     MEDIA_TYPE_CHANNEL,
     SUPPORT_NEXT_TRACK,
@@ -89,6 +90,14 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     def unique_id(self) -> str:
         """Return the unique ID for this entity."""
         return self._unique_id
+
+    @property
+    def device_class(self) -> Optional[str]:
+        """Return the class of this device."""
+        if self.coordinator.data.info.device_type == "tv":
+            return DEVICE_CLASS_TV
+
+        return None
 
     @property
     def state(self) -> str:
