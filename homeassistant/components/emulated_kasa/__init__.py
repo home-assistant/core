@@ -23,7 +23,10 @@ _LOGGER = logging.getLogger(__name__)
 CONFIG_ENTITY_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_NAME): cv.string,
-        vol.Required(CONF_POWER): vol.Any(vol.Coerce(float), cv.template,),
+        vol.Required(CONF_POWER): vol.Any(
+            vol.Coerce(float), 
+            cv.template,
+        ),
     }
 )
 

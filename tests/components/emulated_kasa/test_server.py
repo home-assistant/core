@@ -126,7 +126,9 @@ async def test_setup(hass):
 async def test_float(hass):
     """Test a configuration using a simple float."""
     assert await async_setup_component(
-        hass, SWITCH_DOMAIN, {SWITCH_DOMAIN: {"platform": "demo"}},
+        hass, 
+        SWITCH_DOMAIN, 
+        {SWITCH_DOMAIN: {"platform": "demo"}},
     )
     with patch(
         "sense_energy.SenseLink",
