@@ -650,6 +650,16 @@ async def test_options_remove_multiple_devices(hass):
 
     assert len(device_entries) == 3
 
+    def match_device_id(entry):
+        device_id = next(iter(entry.identifiers))[1:]
+        if device_id == ("11", "0", "213c7f2:48"):
+            return True
+        if device_id == ("11", "0", "118cdea:2"):
+            return True
+        return False
+
+    remove_devices = [elem.id for elem in device_entries if match_device_id(elem)]
+
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
     assert result["type"] == "form"
@@ -660,11 +670,7 @@ async def test_options_remove_multiple_devices(hass):
         user_input={
             "debug": False,
             "automatic_add": False,
-            "remove_device": [
-                device_entries[0].id,
-                device_entries[1].id,
-                device_entries[2].id,
-            ],
+            "remove_device": remove_devices,
         },
     )
 
@@ -677,7 +683,7 @@ async def test_options_remove_multiple_devices(hass):
     state = hass.states.get("binary_sensor.ac_118cdea_2")
     assert not state
     state = hass.states.get("binary_sensor.ac_1118cdea_2")
-    assert not state
+    assert state
 
 
 async def test_options_add_and_configure_device(hass):
