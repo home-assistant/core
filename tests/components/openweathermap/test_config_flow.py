@@ -74,10 +74,7 @@ async def test_form_import(hass):
     """Test we can import yaml config."""
     mocked_owm = _create_mocked_owm(True)
 
-    with patch("pyowm.weatherapi25.owm25.OWM25", return_value=mocked_owm,), patch(
-        "homeassistant.helpers.update_coordinator.DataUpdateCoordinator.async_refresh",
-        _async_refresh,
-    ), patch(
+    with patch("pyowm.weatherapi25.owm25.OWM25", return_value=mocked_owm), patch(
         "homeassistant.components.openweathermap.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.openweathermap.async_setup_entry",
