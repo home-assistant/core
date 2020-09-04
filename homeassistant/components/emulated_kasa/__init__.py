@@ -79,9 +79,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def validate_configs(hass, entity_configs):
     """Validate that entities exist and ensure templates are ready to use."""
-    entity_registry = (
-        await hass.helpers.entity_registry.async_get_registry()
-    )
+    entity_registry = await hass.helpers.entity_registry.async_get_registry()
     for entity_id, entity_config in entity_configs.items():
         state = hass.states.get(entity_id)
         if state is None:
@@ -89,7 +87,7 @@ async def validate_configs(hass, entity_configs):
             continue
 
         entity = entity_registry.async_get(entity_id)
-        if entity: 
+        if entity:
             entity_config[CONF_UNIQUE_ID] = get_system_unique_id(entity)
         else:
             entity_config[CONF_UNIQUE_ID] = entity_id
@@ -111,6 +109,7 @@ async def validate_configs(hass, entity_configs):
 def get_system_unique_id(entity: RegistryEntry):
     """Determine the system wide unique_id for an entity."""
     return f"{entity.platform}.{entity.domain}.{entity.unique_id}"
+
 
 def get_plug_devices(hass, entity_configs):
     """Produce list of plug devices from config entities."""
@@ -136,4 +135,8 @@ def get_plug_devices(hass, entity_configs):
         else:
             power = 0.0
         last_changed = state.last_changed.timestamp()
-        yield PlugInstance(entity_config[CONF_UNIQUE_ID], start_time=last_changed, alias=name, power=power)
+        yield PlugInstance(
+            entity_config[CONF_UNIQUE_ID],
+            start_time=last_changed,
+            alias=name,
+            power=power)
