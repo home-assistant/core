@@ -139,4 +139,5 @@ def get_plug_devices(hass, entity_configs):
             entity_config[CONF_UNIQUE_ID],
             start_time=last_changed,
             alias=name,
-            power=power)
+            power=power,
+        )
