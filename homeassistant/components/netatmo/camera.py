@@ -16,6 +16,8 @@ from .const import (
     ATTR_PERSONS,
     ATTR_PSEUDO,
     CAMERA_LIGHT_MODES,
+    DATA_CAMERAS,
+    DATA_EVENTS,
     DATA_HANDLER,
     DATA_PERSONS,
     DOMAIN,
@@ -157,6 +159,8 @@ class NetatmoCamera(NetatmoBase, Camera):
                 )
             )
 
+        self.hass.data[DOMAIN][DATA_CAMERAS][self._id] = self._device_name
+
     @callback
     def handle_event(self, event):
         """Handle webhook events."""
@@ -274,6 +278,30 @@ class NetatmoCamera(NetatmoBase, Camera):
         self._alim_status = camera.get("alim_status")
         self._is_local = camera.get("is_local")
         self.is_streaming = bool(self._status == "on")
+
+        if self._model == "NACamera":  # Smart Indoor Camera
+            self.hass.data[DOMAIN][DATA_EVENTS][self._id] = self.process_events(
+                self._data.events.get(self._id, {})
+            )
+        elif self._model == "NOC":  # Smart Outdoor Camera
+            self.hass.data[DOMAIN][DATA_EVENTS][
+                self._id
+            ] = self._data.outdoor_events.get(self._id, {})
+
+    def process_events(self, events):
+        """Add meta data to events."""
+        for event in events.values():
+            if "video_id" not in event:
+                continue
+            if self._is_local:
+                event[
+                    "media_url"
+                ] = f"{self._localurl}/vod/{event['video_id']}/files/{self._quality}/index.m3u8"
+            else:
+                event[
+                    "media_url"
+                ] = f"{self._vpnurl}/vod/{event['video_id']}/files/{self._quality}/index.m3u8"
+        return events
 
     def _service_set_persons_home(self, **kwargs):
         """Service to change current home schedule."""
