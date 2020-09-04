@@ -1,0 +1,20 @@
+{
+  "title": "File Size",
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "file_path": "File Path",
+          "unit_of_measurement": "Unit"
+        }
+      }
+    },
+    "error": {
+      "invalid_path": "File path is not valid or allowed. Check directory whitelisting.",
+      "unknown": "Unknown error"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  }
+}

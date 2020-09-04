@@ -3,49 +3,49 @@ import datetime
 import logging
 import os
 
-import voluptuous as vol
-
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import DATA_BYTES, DATA_MEGABYTES
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import CONF_FILE_PATH, CONF_UNIT_OF_MEASUREMENT, DATA_BYTES
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.reload import setup_reload_service
+
+# from homeassistant.helpers.reload import setup_reload_service
 import homeassistant.util.data_size as data_size
 
-from . import DOMAIN, PLATFORMS
+# from . import DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
-
-CONF_FILE_PATHS = "file_paths"
-CONF_UNIT_OF_MEASUREMENT = "unit"
 ICON = "mdi:file"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_FILE_PATHS): vol.All(cv.ensure_list, [cv.isfile]),
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=DATA_MEGABYTES): cv.string,
-    }
-)
+# def setup_platform(hass, config, add_entities, discovery_info=None):
+#     """Set up the filesize sensor."""
+
+#     setup_reload_service(hass, DOMAIN, PLATFORMS)
+
+#     sensors = []
+#     for path in config.get(CONF_FILE_PATHS):
+#         if not hass.config.is_allowed_path(path):
+#             _LOGGER.error(
+#                 "Filepath %s is not valid or allowed. Check directory whitelisting.",
+#                 path,
+#             )
+#             continue
+#         sensors.append(Filesize(path, config.get(CONF_UNIT_OF_MEASUREMENT)))
+
+#     if sensors:
+#         add_entities(sensors, True)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the file size sensor."""
-
-    setup_reload_service(hass, DOMAIN, PLATFORMS)
-
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the filesize sensor."""
     sensors = []
-    for path in config.get(CONF_FILE_PATHS):
-        if not hass.config.is_allowed_path(path):
-            _LOGGER.error(
-                "Filepath %s is not valid or allowed. Check directory whitelisting.",
-                path,
-            )
-            continue
-        sensors.append(Filesize(path, config.get(CONF_UNIT_OF_MEASUREMENT)))
 
-    if sensors:
-        add_entities(sensors, True)
+    sensors.append(
+        Filesize(
+            config_entry.data[CONF_FILE_PATH],
+            config_entry.data[CONF_UNIT_OF_MEASUREMENT],
+        )
+    )
+
+    async_add_entities(sensors, True)
 
 
 class Filesize(Entity):

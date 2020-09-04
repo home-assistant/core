@@ -2,5 +2,8 @@
   "domain": "filesize",
   "name": "File Size",
   "documentation": "https://www.home-assistant.io/integrations/filesize",
-  "codeowners": []
+  "codeowners": [
+    "@spacegaier"
+  ],
+  "config_flow": true
 }

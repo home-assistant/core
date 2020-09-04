@@ -134,6 +134,7 @@ homeassistant/components/evohome/* @zxdavb
 homeassistant/components/ezviz/* @baqs
 homeassistant/components/fastdotcom/* @rohankapoorcom
 homeassistant/components/file/* @fabaff
+homeassistant/components/filesize/* @spacegaier
 homeassistant/components/filter/* @dgomes
 homeassistant/components/firmata/* @DaAwesomeP
 homeassistant/components/fixer/* @fabaff
