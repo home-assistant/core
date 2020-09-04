@@ -86,9 +86,17 @@ def get_unique_prefix(
     havdalah_offset: Optional[int],
 ) -> str:
     """Create a prefix for unique ids."""
-    loc_str = repr(location)
-    config_str = str((loc_str, language, candle_lighting_offset, havdalah_offset))
-    prefix = hashlib.md5(config_str.encode()).hexdigest()
+    config_properties = [
+        location.latitude,
+        location.longitude,
+        location.timezone,
+        location.altitude,
+        location.diaspora,
+        language,
+        candle_lighting_offset,
+        havdalah_offset
+    ]
+    prefix = "_".join(map(str, config_properties))
     return f"{prefix}"
 
 

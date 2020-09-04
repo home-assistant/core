@@ -21,4 +21,4 @@ def test_prefix():
     prefix = jewish_calendar.get_unique_prefix(
         location, language, candle_lighting_offset, havdalah_offset
     )
-    assert prefix == "jcal_36dee62e059a0ad88a91af0824025175"
+    assert prefix == "31.778_35.235_Asia/Jerusalem_754_False_English_18_50"
