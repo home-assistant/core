@@ -88,7 +88,7 @@ class DevoloClimateDeviceEntity(DevoloDeviceEntity, ClimateEntity):
     @property
     def precision(self) -> float:
         """Return the precision of the set temperature."""
-        return 0.5
+        return PRECISION_HALVES
 
     @property
     def supported_features(self):
