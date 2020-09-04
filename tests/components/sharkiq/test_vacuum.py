@@ -206,9 +206,7 @@ async def test_device_properties(
 
 async def test_locate(hass):
     """Test that the locate command works."""
-    with patch.object(
-        SharkIqVacuum, "async_find_device", return_value=None
-    ) as mock_locate:
+    with patch.object(SharkIqVacuum, "async_find_device") as mock_locate:
         data = {ATTR_ENTITY_ID: VAC_ENTITY_ID}
         await hass.services.async_call("vacuum", SERVICE_LOCATE, data, blocking=True)
         mock_locate.assert_called_once()
