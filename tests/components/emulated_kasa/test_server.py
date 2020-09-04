@@ -37,7 +37,7 @@ ENTITY_FAN_NAME = "Ceiling Fan"
 ENTITY_FAN_SPEED_LOW = 5
 ENTITY_FAN_SPEED_MED = 10
 ENTITY_FAN_SPEED_HIGH = 50
-ENTITY_SENSOR = "sensor.light_power"
+ENTITY_SENSOR = "sensor.outside_temperature"
 ENTITY_SENSOR_NAME = "Power Sensor"
 
 CONFIG = {
@@ -158,7 +158,7 @@ async def test_float(hass):
     ):
         assert await async_setup_component(hass, DOMAIN, CONFIG_SWITCH) is True
     await hass.async_block_till_done()
-    emulated_kasa.validate_configs(hass, config)
+    await emulated_kasa.validate_configs(hass, config)
 
     # Turn switch on
     await hass.services.async_call(
@@ -201,7 +201,7 @@ async def test_switch_power(hass):
     ):
         assert await async_setup_component(hass, DOMAIN, CONFIG_SWITCH_NO_POWER) is True
     await hass.async_block_till_done()
-    emulated_kasa.validate_configs(hass, config)
+    await emulated_kasa.validate_configs(hass, config)
 
     # Turn switch on
     await hass.services.async_call(
@@ -250,7 +250,7 @@ async def test_template(hass):
     """Test a configuration using a complex template."""
     config = CONFIG_FAN[DOMAIN][CONF_ENTITIES]
     assert await async_setup_component(
-        hass, FAN_DOMAIN, {FAN_DOMAIN: {"platform": "demo", "name": ENTITY_FAN_NAME}}
+        hass, FAN_DOMAIN, {FAN_DOMAIN: {"platform": "demo"}}
     )
     with patch(
         "sense_energy.SenseLink",
@@ -258,7 +258,7 @@ async def test_template(hass):
     ):
         assert await async_setup_component(hass, DOMAIN, CONFIG_FAN) is True
     await hass.async_block_till_done()
-    emulated_kasa.validate_configs(hass, config)
+    await emulated_kasa.validate_configs(hass, config)
 
     # Turn all devices on to known state
     await hass.services.async_call(
@@ -309,7 +309,7 @@ async def test_sensor(hass):
     """Test a configuration using a sensor in a template."""
     config = CONFIG_LIGHT[DOMAIN][CONF_ENTITIES]
     assert await async_setup_component(
-        hass, LIGHT_DOMAIN, {LIGHT_DOMAIN: {"platform": "demo", "name": "bed_light"}}
+        hass, LIGHT_DOMAIN, {LIGHT_DOMAIN: {"platform": "demo"}}
     )
     with patch(
         "sense_energy.SenseLink",
@@ -317,7 +317,7 @@ async def test_sensor(hass):
     ):
         assert await async_setup_component(hass, DOMAIN, CONFIG_LIGHT) is True
     await hass.async_block_till_done()
-    emulated_kasa.validate_configs(hass, config)
+    await emulated_kasa.validate_configs(hass, config)
 
     await hass.services.async_call(
         LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_LIGHT}, blocking=True
@@ -363,7 +363,7 @@ async def test_sensor_state(hass):
     assert await async_setup_component(
         hass,
         SENSOR_DOMAIN,
-        {SENSOR_DOMAIN: {"platform": "demo", "name": "power_sensor"}},
+        {SENSOR_DOMAIN: {"platform": "demo"}},
     )
     with patch(
         "sense_energy.SenseLink",
@@ -371,7 +371,7 @@ async def test_sensor_state(hass):
     ):
         assert await async_setup_component(hass, DOMAIN, CONFIG_SENSOR) is True
     await hass.async_block_till_done()
-    emulated_kasa.validate_configs(hass, config)
+    await emulated_kasa.validate_configs(hass, config)
 
     hass.states.async_set(ENTITY_SENSOR, 35)
 
@@ -408,13 +408,13 @@ async def test_multiple_devices(hass):
     """Test that devices are reported correctly."""
     config = CONFIG[DOMAIN][CONF_ENTITIES]
     assert await async_setup_component(
-        hass, SWITCH_DOMAIN, {SWITCH_DOMAIN: {"platform": "demo", "name": "heater"}}
+        hass, SWITCH_DOMAIN, {SWITCH_DOMAIN: {"platform": "demo"}}
     )
     assert await async_setup_component(
-        hass, LIGHT_DOMAIN, {LIGHT_DOMAIN: {"platform": "demo", "name": "bed_light"}}
+        hass, LIGHT_DOMAIN, {LIGHT_DOMAIN: {"platform": "demo"}}
     )
     assert await async_setup_component(
-        hass, FAN_DOMAIN, {FAN_DOMAIN: {"platform": "demo", "name": ENTITY_FAN_NAME}}
+        hass, FAN_DOMAIN, {FAN_DOMAIN: {"platform": "demo"}}
     )
     with patch(
         "sense_energy.SenseLink",
@@ -422,7 +422,7 @@ async def test_multiple_devices(hass):
     ):
         assert await emulated_kasa.async_setup(hass, CONFIG) is True
     await hass.async_block_till_done()
-    emulated_kasa.validate_configs(hass, config)
+    await emulated_kasa.validate_configs(hass, config)
 
     # Turn all devices on to known state
     await hass.services.async_call(

@@ -9,12 +9,14 @@ from homeassistant.components.switch import ATTR_CURRENT_POWER_W
 from homeassistant.const import (
     CONF_ENTITIES,
     CONF_NAME,
+    CONF_UNIQUE_ID,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.template import Template, is_template_string
 
 from .const import CONF_POWER, DOMAIN
@@ -62,7 +64,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
         await server.stop()
 
     async def start_emulated_kasa(event):
-        validate_configs(hass, entity_configs)
+        await validate_configs(hass, entity_configs)
         try:
             await server.start()
         except OSError as error:
@@ -75,13 +77,23 @@ async def async_setup(hass: HomeAssistant, config: dict):
     return True
 
 
-def validate_configs(hass, entity_configs):
+async def validate_configs(hass, entity_configs):
     """Validate that entities exist and ensure templates are ready to use."""
+    entity_registry = (
+        await hass.helpers.entity_registry.async_get_registry()
+    )
     for entity_id, entity_config in entity_configs.items():
         state = hass.states.get(entity_id)
         if state is None:
             _LOGGER.debug("Entity not found: %s", entity_id)
             continue
+
+        entity = entity_registry.async_get(entity_id)
+        if entity: 
+            entity_config[CONF_UNIQUE_ID] = get_system_unique_id(entity)
+        else:
+            entity_config[CONF_UNIQUE_ID] = entity_id
+
         if CONF_POWER in entity_config:
             power_val = entity_config[CONF_POWER]
             if isinstance(power_val, str) and is_template_string(power_val):
@@ -89,12 +101,16 @@ def validate_configs(hass, entity_configs):
             elif isinstance(power_val, Template):
                 entity_config[CONF_POWER].hass = hass
         elif state.domain == SENSOR_DOMAIN:
-            continue
+            pass
         elif ATTR_CURRENT_POWER_W in state.attributes:
-            continue
+            pass
         else:
             _LOGGER.debug("No power value defined for: %s", entity_id)
 
+
+def get_system_unique_id(entity: RegistryEntry):
+    """Determine the system wide unique_id for an entity."""
+    return f"{entity.platform}.{entity.domain}.{entity.unique_id}"
 
 def get_plug_devices(hass, entity_configs):
     """Produce list of plug devices from config entities."""
@@ -120,4 +136,4 @@ def get_plug_devices(hass, entity_configs):
         else:
             power = 0.0
         last_changed = state.last_changed.timestamp()
-        yield PlugInstance(entity_id, start_time=last_changed, alias=name, power=power)
+        yield PlugInstance(entity_config[CONF_UNIQUE_ID], start_time=last_changed, alias=name, power=power)
