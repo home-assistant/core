@@ -8,10 +8,15 @@ from dsmr_parser import obis_references as obis_ref
 from dsmr_parser.clients.protocol import create_dsmr_reader, create_tcp_dsmr_reader
 import serial
 
-from homeassistant import config_entries, core
+from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_HOST, CONF_PORT
 
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import (  # pylint:disable=unused-import
+    CONF_DSMR_VERSION,
+    CONF_SERIAL_ID,
+    CONF_SERIAL_ID_GAS,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,13 +70,8 @@ class DSMRConnection:
             )
 
         try:
-            transport, protocol = await hass.loop.create_task(reader_factory())
-        except (
-            serial.serialutil.SerialException,
-            ConnectionRefusedError,
-            TimeoutError,
-            asyncio.TimeoutError,
-        ):
+            transport, protocol = await asyncio.create_task(reader_factory())
+        except (serial.serialutil.SerialException, OSError):
             _LOGGER.exception("Error connecting to DSMR")
             return False
 
@@ -79,6 +79,27 @@ class DSMRConnection:
             await protocol.wait_closed()
 
         return True
+
+
+async def validate_dsmr_connection(hass: core.HomeAssistant, data):
+    """Validate the user input allows us to connect."""
+    conn = DSMRConnection(data[CONF_HOST], data[CONF_PORT], data[CONF_DSMR_VERSION])
+
+    if not await conn.validate_connect(hass):
+        raise CannotConnect
+
+    equipment_identifier = conn.equipment_identifier()
+    equipment_identifier_gas = conn.equipment_identifier_gas()
+
+    if equipment_identifier is None:
+        raise CannotCommunicate
+
+    info = {
+        CONF_SERIAL_ID: equipment_identifier,
+        CONF_SERIAL_ID_GAS: equipment_identifier_gas,
+    }
+
+    return info
 
 
 class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -132,3 +153,11 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             name = port
 
         return self.async_create_entry(title=name, data=import_config)
+
+
+class CannotConnect(exceptions.HomeAssistantError):
+    """Error to indicate we cannot connect."""
+
+
+class CannotCommunicate(exceptions.HomeAssistantError):
+    """Error to indicate we cannot connect."""
