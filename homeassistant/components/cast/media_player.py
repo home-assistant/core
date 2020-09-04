@@ -1,5 +1,7 @@
 """Provide functionality to interact with Cast devices on the network."""
 import asyncio
+from datetime import timedelta
+import functools as ft
 import json
 import logging
 from typing import Optional
@@ -14,12 +16,15 @@ from pychromecast.socket_client import (
 )
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
+from homeassistant.auth.models import RefreshToken
+from homeassistant.components import media_source, zeroconf
+from homeassistant.components.http.auth import async_sign_path
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_TVSHOW,
+    SUPPORT_BROWSE_MEDIA,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -502,6 +507,44 @@ class CastDevice(MediaPlayerEntity):
         media_controller = self._media_controller()
         media_controller.seek(position)
 
+    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+        """Implement the websocket media browsing helper."""
+        result = await media_source.async_browse_media(self.hass, media_content_id)
+        return result.to_media_player_item()
+
+    async def async_play_media(self, media_type, media_id, **kwargs):
+        """Play a piece of media."""
+        # Handle media_source
+        if media_source.is_media_source_id(media_id):
+            sourced_media = await media_source.async_resolve_media(self.hass, media_id)
+            media_type = sourced_media.mime_type
+            media_id = sourced_media.url
+
+        # If media ID is a relative URL, we serve it from HA.
+        # Create a signed path.
+        if media_id[0] == "/":
+            # Sign URL with Home Assistant Cast User
+            config_entries = self.hass.config_entries.async_entries(CAST_DOMAIN)
+            user_id = config_entries[0].data["user_id"]
+            user = await self.hass.auth.async_get_user(user_id)
+            if user.refresh_tokens:
+                refresh_token: RefreshToken = list(user.refresh_tokens.values())[0]
+
+                media_id = async_sign_path(
+                    self.hass,
+                    refresh_token.id,
+                    media_id,
+                    timedelta(minutes=5),
+                )
+
+            # prepend external URL
+            hass_url = get_url(self.hass, prefer_external=True)
+            media_id = f"{hass_url}{media_id}"
+
+        await self.hass.async_add_job(
+            ft.partial(self.play_media, media_type, media_id, **kwargs)
+        )
+
     def play_media(self, media_type, media_id, **kwargs):
         """Play media from a URL."""
         # We do not want this to be forwarded to a group
@@ -725,6 +768,9 @@ class CastDevice(MediaPlayerEntity):
                 support |= SUPPORT_NEXT_TRACK
             if media_status.supports_seek:
                 support |= SUPPORT_SEEK
+
+        if "media_source" in self.hass.config.components:
+            support |= SUPPORT_BROWSE_MEDIA
 
         return support
 
