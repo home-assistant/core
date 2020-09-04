@@ -200,7 +200,7 @@ async def async_setup_entry(
                 return
 
     # Can't be hass.async_add_job because job runs forever
-    task = hass.loop.create_task(connect_and_reconnect())
+    task = asyncio.create_task(connect_and_reconnect())
 
     # Save the task to be able to cancel it when unloading
     hass.data[DOMAIN][entry.entry_id][DATA_TASK] = task
