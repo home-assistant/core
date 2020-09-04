@@ -33,6 +33,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.components.roku.const import ATTR_KEYWORD, DOMAIN, SERVICE_SEARCH
+from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_MEDIA_NEXT_TRACK,
@@ -450,6 +451,37 @@ async def test_tv_services(
         )
 
         tune_mock.assert_called_once_with("55")
+
+
+async def test_media_browse(hass, hass_ws_client):
+    """Test browsing media."""
+    await setup_integration(
+        hass,
+        aioclient_mock,
+        device="rokutv",
+        app="tvinput-dtv",
+        host=TV_HOST,
+        unique_id=TV_SERIAL,
+    )
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "media_player/browse_media",
+            "entity_id": TV_ENTITY_ID,
+            "media_content_type": "",
+            "media_content_id": "",
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["id"] == 5
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"] == {}
 
 
 async def test_integration_services(
