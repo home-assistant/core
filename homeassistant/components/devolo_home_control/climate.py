@@ -57,7 +57,7 @@ class DevoloClimateDeviceEntity(DevoloDeviceEntity, ClimateEntity):
 
         self._multi_level_switch_property = (
             device_instance.multi_level_switch_property.get(element_uid)
-         )
+        )
 
         self._temperature = self._multi_level_switch_property.value
 
