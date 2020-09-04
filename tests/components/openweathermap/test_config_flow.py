@@ -230,7 +230,3 @@ def _create_mocked_owm(is_api_online: bool):
     ]
 
     return mocked_owm
-
-
-async def _async_refresh(self):
-    return {}
