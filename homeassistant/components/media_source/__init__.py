@@ -110,6 +110,9 @@ async def websocket_resolve_media(hass, connection, msg):
     try:
         media = await async_resolve_media(hass, msg["media_content_id"])
         url = media.url
+    except Unresolvable as err:
+        connection.send_error(msg["id"], "resolve_media_failed", str(err))
+    else:
         if url[0] == "/":
             url = async_sign_path(
                 hass,
@@ -119,5 +122,3 @@ async def websocket_resolve_media(hass, connection, msg):
             )
 
         connection.send_result(msg["id"], {"url": url, "mime_type": media.mime_type})
-    except Unresolvable as err:
-        connection.send_error(msg["id"], "resolve_media_failed", str(err))
