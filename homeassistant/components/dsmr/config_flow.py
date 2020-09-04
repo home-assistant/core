@@ -81,7 +81,7 @@ class DSMRConnection:
         return True
 
 
-async def validate_dsmr_connection(hass: core.HomeAssistant, data):
+async def _validate_dsmr_connection(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect."""
     conn = DSMRConnection(data[CONF_HOST], data[CONF_PORT], data[CONF_DSMR_VERSION])
 
@@ -143,7 +143,16 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         host = import_config.get(CONF_HOST)
         port = import_config[CONF_PORT]
 
-        status = self._abort_if_host_port_configured(port, host, import_config)
+        try:
+            info = await _validate_dsmr_connection(self.hass, import_config)
+        except CannotConnect:
+            return self.async_abort(reason="cannot_connect")
+        except CannotCommunicate:
+            return self.async_abort(reason="cannot_communicate")
+
+        data = {**import_config, **info}
+
+        status = self._abort_if_host_port_configured(port, host, data)
         if status is not None:
             return status
 
@@ -152,7 +161,7 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         else:
             name = port
 
-        return self.async_create_entry(title=name, data=import_config)
+        return self.async_create_entry(title=name, data=data)
 
 
 class CannotConnect(exceptions.HomeAssistantError):
