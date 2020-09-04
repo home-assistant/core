@@ -28,6 +28,7 @@ class BrowseMedia:
     can_expand: bool = False
     media_content_type: str = None
     children: List = None
+    thumbnail: str = None
 
     def to_uri(self):
         """Return URI of media."""
@@ -49,6 +50,7 @@ class BrowseMedia:
             "media_content_id": self.to_uri(),
             "can_play": self.can_play,
             "can_expand": self.can_expand,
+            "thumbnail": self.thumbnail,
         }
 
         if self.children:
