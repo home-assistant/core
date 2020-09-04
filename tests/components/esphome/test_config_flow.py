@@ -22,11 +22,12 @@ def mock_client():
     """Mock APIClient."""
     with patch("homeassistant.components.esphome.config_flow.APIClient") as mock_client:
 
-        def mock_constructor(loop, host, port, password):
+        def mock_constructor(loop, host, port, password, zeroconf_instance=None):
             """Fake the client constructor."""
             mock_client.host = host
             mock_client.port = port
             mock_client.password = password
+            mock_client.zeroconf_instance = zeroconf_instance
             return mock_client
 
         mock_client.side_effect = mock_constructor
