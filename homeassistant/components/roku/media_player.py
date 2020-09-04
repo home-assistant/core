@@ -85,18 +85,22 @@ def browse_media_library(channels: bool = False) -> dict:
 
     library_info["children"].append(
         {
-            "name": "Apps",
-            "type": "apps",
-            "uri": "apps",
+            "title": "Apps",
+            "media_content_id": "apps",
+            "media_content_type": "apps",
+            "can_exoand": True,
+            "can_play": False,
         }
     )
 
     if channels:
         library_info["children"].append(
             {
-                "name": "Channels",
-                "type": "channels",
-                "uri": "channels",
+                "title": "Channels",
+                "media_content_id": "channels",
+                "media_content_type": "channels",
+                "can_exoand": True,
+                "can_play": False,
             }
         )
 
