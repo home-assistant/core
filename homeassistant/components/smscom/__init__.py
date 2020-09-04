@@ -1,0 +1,1 @@
+"""The SMS COM component."""
