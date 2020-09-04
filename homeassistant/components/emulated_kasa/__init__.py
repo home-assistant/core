@@ -62,11 +62,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
         await server.stop()
 
     async def start_emulated_kasa(event):
-        for entity_id, entity_config in entity_configs.items():
-            state = hass.states.get(entity_id)
-            if state is None:
-                _LOGGER.warning("Entity not found: %s", entity_id)
-                continue
+        validate_configs(hass, entity_configs)
         try:
             await server.start()
         except OSError as error:
@@ -77,6 +73,22 @@ async def async_setup(hass: HomeAssistant, config: dict):
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, start_emulated_kasa)
 
     return True
+
+
+def validate_configs(hass, entity_configs):
+    """Validates that entities exist and ensures templates are ready to use."""
+    for entity_id, entity_config in entity_configs.items():
+        state = hass.states.get(entity_id)
+        if state is None:
+            _LOGGER.warning("Entity not found: %s", entity_id)
+            continue
+        if CONF_POWER not in entity_config:
+            continue
+        power_val = entity_config[CONF_POWER]
+        if isinstance(power_val, str) and is_template_string(power_val):
+            entity_config[CONF_POWER] = Template(power_val, hass)
+        elif isinstance(power_val, Template):
+            entity_config[CONF_POWER].hass = hass
 
 
 def get_plug_devices(hass, entity_configs):
@@ -93,14 +105,8 @@ def get_plug_devices(hass, entity_configs):
                 if isinstance(power_val, (float, int)):
                     power = float(power_val)
                 elif isinstance(power_val, str):
-                    if is_template_string(power_val):
-                        power_val = Template(power_val, hass)
-                        entity_config[CONF_POWER] = power_val
-                        power = float(power_val.async_render())
-                    else:
-                        power = float(hass.states.get(power_val).state)
+                    power = float(hass.states.get(power_val).state)
                 elif isinstance(power_val, Template):
-                    power_val.hass = hass
                     power = float(power_val.async_render())
             elif ATTR_CURRENT_POWER_W in state.attributes:
                 power = float(state.attributes[ATTR_CURRENT_POWER_W])
