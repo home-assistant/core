@@ -17,7 +17,8 @@
       "user": {
         "data": {
           "username": "Email",
-          "password": "Password"
+          "password": "Password",
+          "locale": "Locale"
         },
         "title": "Set Renault credentials"
       }

@@ -4,7 +4,12 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from .const import CONF_KAMEREON_ACCOUNT_ID, DOMAIN  # pylint: disable=unused-import
+from .const import (  # pylint: disable=unused-import
+    AVAILABLE_LOCALES,
+    CONF_KAMEREON_ACCOUNT_ID,
+    CONF_LOCALE,
+    DOMAIN,
+)
 from .pyzeproxy import PyzeProxy
 
 
@@ -24,17 +29,15 @@ class RenaultFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         Ask the user for credentials.
         """
-        if not user_input:
-            return self._show_user_form()
+        if user_input:
+            self.renault_config.update(user_input)
+            self.pyzeproxy = PyzeProxy(self.hass, self.renault_config)
+            if not await self.pyzeproxy.attempt_login():
+                return self._show_user_form({"base": "invalid_credentials"})
 
-        self.pyzeproxy = PyzeProxy(self.hass)
-        if not await self.pyzeproxy.attempt_login(
-            user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
-        ):
-            return self._show_user_form({"base": "invalid_credentials"})
-
-        self.renault_config = user_input
-        return await self.async_step_kamereon()
+            self.renault_config = user_input
+            return await self.async_step_kamereon()
+        return self._show_user_form()
 
     def _show_user_form(self, errors=None):
         """Show the credentials form."""
@@ -44,6 +47,7 @@ class RenaultFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(CONF_USERNAME): str,
                     vol.Required(CONF_PASSWORD): str,
+                    vol.Required(CONF_LOCALE): vol.In(AVAILABLE_LOCALES),
                 }
             ),
             errors=errors if errors else {},
@@ -52,9 +56,10 @@ class RenaultFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_kamereon(self, user_input=None):
         """Select Kamereon account."""
         if user_input:
-            account_id = user_input[CONF_KAMEREON_ACCOUNT_ID]
-            self.renault_config[CONF_KAMEREON_ACCOUNT_ID] = account_id
-            return self.async_create_entry(title=account_id, data=self.renault_config)
+            self.renault_config.update(user_input)
+            return self.async_create_entry(
+                title=user_input[CONF_KAMEREON_ACCOUNT_ID], data=self.renault_config
+            )
 
         accounts = await self.pyzeproxy.get_account_ids()
         if len(accounts) == 0:

@@ -1,6 +1,10 @@
 """Test the Renault config flow."""
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.renault.const import CONF_KAMEREON_ACCOUNT_ID, DOMAIN
+from homeassistant.components.renault.const import (
+    CONF_KAMEREON_ACCOUNT_ID,
+    CONF_LOCALE,
+    DOMAIN,
+)
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from tests.async_mock import patch
@@ -21,7 +25,11 @@ async def test_config_flow_single_account(hass):
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={CONF_USERNAME: "email@test.com", CONF_PASSWORD: "test"},
+            user_input={
+                CONF_USERNAME: "email@test.com",
+                CONF_PASSWORD: "test",
+                CONF_LOCALE: "fr_FR",
+            },
         )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -37,7 +45,11 @@ async def test_config_flow_single_account(hass):
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={CONF_USERNAME: "email@test.com", CONF_PASSWORD: "test"},
+            user_input={
+                CONF_USERNAME: "email@test.com",
+                CONF_PASSWORD: "test",
+                CONF_LOCALE: "fr_FR",
+            },
         )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -46,6 +58,7 @@ async def test_config_flow_single_account(hass):
         CONF_USERNAME: "email@test.com",
         CONF_PASSWORD: "test",
         CONF_KAMEREON_ACCOUNT_ID: "account_id_1",
+        CONF_LOCALE: "fr_FR",
     }
 
 
@@ -67,7 +80,11 @@ async def test_config_flow_no_account(hass):
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={CONF_USERNAME: "email@test.com", CONF_PASSWORD: "test"},
+            user_input={
+                CONF_USERNAME: "email@test.com",
+                CONF_PASSWORD: "test",
+                CONF_LOCALE: "fr_FR",
+            },
         )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
@@ -92,7 +109,11 @@ async def test_config_flow_multiple_accounts(hass):
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={CONF_USERNAME: "email@test.com", CONF_PASSWORD: "test"},
+            user_input={
+                CONF_USERNAME: "email@test.com",
+                CONF_PASSWORD: "test",
+                CONF_LOCALE: "fr_FR",
+            },
         )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -109,4 +130,5 @@ async def test_config_flow_multiple_accounts(hass):
         CONF_USERNAME: "email@test.com",
         CONF_PASSWORD: "test",
         CONF_KAMEREON_ACCOUNT_ID: "account_id_2",
+        CONF_LOCALE: "fr_FR",
     }

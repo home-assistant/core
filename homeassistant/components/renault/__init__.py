@@ -18,8 +18,8 @@ async def async_setup_entry(hass, config_entry):
     """Load a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
-    pyzeproxy = PyzeProxy(hass)
-    if not await pyzeproxy.setup(config_entry.data, True):
+    pyzeproxy = PyzeProxy(hass, config_entry.data)
+    if not await pyzeproxy.setup(True):
         return False
 
     if config_entry.unique_id is None:

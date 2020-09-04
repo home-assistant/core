@@ -1,30 +1,29 @@
 """Proxy to handle account communication with Renault servers via PyZE."""
 import asyncio
+import json
 
 from pyze.api import BasicCredentialStore, Gigya, Kamereon, Vehicle
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.helpers import aiohttp_client
 
-from .const import (
-    CONF_KAMEREON_ACCOUNT_ID,
-    GIGYA_KEY,
-    GIGYA_URL,
-    KAMEREON_KEY,
-    KAMEREON_URL,
-    LOGGER,
-)
+from .const import CONF_KAMEREON_ACCOUNT_ID, CONF_LOCALE, LOGGER
 from .pyzevehicleproxy import PyzeVehicleProxy
+
+GIGYA_KEY = "gigya-key"
+GIGYA_URL = "gigya-url"
+KAMEREON_KEY = "kamereon-key"
+KAMEREON_URL = "kamereon-url"
 
 
 class PyzeProxy:
     """Handle account communication with Renault servers via PyZE."""
 
-    def __init__(self, hass):
+    def __init__(self, hass, config_data):
         """Initialise proxy."""
         LOGGER.debug("Creating PyzeProxy")
         self.hass = hass
-        self._preload_config = None
-        self._credential_store = BasicCredentialStore()
+        self._config_data = config_data
         self._gigya = None
         self._kamereon = None
         self._vehicle_links = None
@@ -32,33 +31,56 @@ class PyzeProxy:
         self._vehicles_lock = asyncio.Lock()
         self.entities = []
 
-    async def ensure_config_preloaded(self):
-        """Preload the configuration.
+    async def _async_init(self):
+        """Preload the configuration."""
+        locale = self._config_data[CONF_LOCALE]
+        api_keys = await self.get_api_keys(locale)
 
-        Will be removed once PR request on underlying PyZE module is merged.
-        https://github.com/jamesremuscat/pyze/pull/85
-        """
-        if self._preload_config is not None:
-            return
-
+        credential_store = BasicCredentialStore()
         self._gigya = Gigya(
-            api_key=GIGYA_KEY,
-            root_url=GIGYA_URL,
-            credentials=self._credential_store,
+            api_key=api_keys[GIGYA_KEY],
+            root_url=api_keys[GIGYA_URL],
+            credentials=credential_store,
         )
         self._kamereon = Kamereon(
-            api_key=KAMEREON_KEY,
-            root_url=KAMEREON_URL,
-            credentials=self._credential_store,
+            api_key=api_keys[KAMEREON_KEY],
+            root_url=api_keys[KAMEREON_URL],
+            credentials=credential_store,
             gigya=self._gigya,
+            country=locale[-2:],
         )
 
-    async def attempt_login(self, username, password) -> bool:
+    async def get_api_keys(self, locale) -> dict:
+        """Preload the configuration.
+
+        Hoping to remove this once PR request on underlying PyZE module is merged:
+        https://github.com/jamesremuscat/pyze/pull/85
+        """
+        session = aiohttp_client.async_get_clientsession(self.hass)
+
+        url = f"https://renault-wrd-prod-1-euw1-myrapp-one.s3-eu-west-1.amazonaws.com/configuration/android/config_{locale}.json"
+
+        async with session.get(url) as response:
+            responsetext = await response.text()
+            if responsetext == "":
+                responsetext = "{}"
+            jsonresponse = json.loads(responsetext)
+
+            return {
+                GIGYA_KEY: jsonresponse["servers"]["gigyaProd"]["apikey"],
+                GIGYA_URL: jsonresponse["servers"]["gigyaProd"]["target"],
+                KAMEREON_KEY: jsonresponse["servers"]["wiredProd"]["apikey"],
+                KAMEREON_URL: jsonresponse["servers"]["wiredProd"]["target"],
+            }
+
+    async def attempt_login(self) -> bool:
         """Attempt login to Renault servers."""
-        await self.ensure_config_preloaded()
+        await self._async_init()
         try:
             if await self.hass.async_add_executor_job(
-                self._gigya.login, username, password
+                self._gigya.login,
+                self._config_data[CONF_USERNAME],
+                self._config_data[CONF_PASSWORD],
             ):
                 return True
         except RuntimeError as ex:
@@ -80,14 +102,11 @@ class PyzeProxy:
         """Set Kamereon account id."""
         self._kamereon.set_account_id(accountid)
 
-    async def setup(self, config_entry, load_vehicles: bool):
+    async def setup(self, load_vehicles: bool):
         """Check credentials."""
-        await self.ensure_config_preloaded()
-        if not await self.attempt_login(
-            config_entry[CONF_USERNAME], config_entry[CONF_PASSWORD]
-        ):
+        if not await self.attempt_login():
             return False
-        self.set_kamereon_account_id(config_entry[CONF_KAMEREON_ACCOUNT_ID])
+        self.set_kamereon_account_id(self._config_data[CONF_KAMEREON_ACCOUNT_ID])
         if load_vehicles:
             vehicles = await self.hass.async_add_executor_job(
                 self._kamereon.get_vehicles
