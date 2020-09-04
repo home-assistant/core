@@ -44,6 +44,8 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_FAN_ACTION = "fan_action"
+ATTR_OUTDOOR_TEMP = "outdoor_temperature"
+ATTR_OUTDOOR_HUMIDITY = "outdoor_humdity"
 
 CONF_COOL_AWAY_TEMPERATURE = "away_cool_temperature"
 CONF_HEAT_AWAY_TEMPERATURE = "away_heat_temperature"
@@ -201,6 +203,10 @@ class HoneywellUSThermostat(ClimateEntity):
         data[ATTR_FAN_ACTION] = "running" if self._device.fan_running else "idle"
         if self._device.raw_dr_data:
             data["dr_phase"] = self._device.raw_dr_data.get("Phase")
+        if self._device.outdoor_temperature:
+            data[ATTR_OUTDOOR_TEMP] = self._device.outdoor_temperature
+        if self._device.outdoor_humidity:
+            data[ATTR_OUTDOOR_HUMIDITY] = self._device.outdoor_humidity
         return data
 
     @property
