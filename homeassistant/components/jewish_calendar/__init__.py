@@ -89,7 +89,7 @@ def get_unique_prefix(
     loc_str = repr(location)
     config_str = str((loc_str, language, candle_lighting_offset, havdalah_offset))
     prefix = hashlib.md5(config_str.encode()).hexdigest()
-    return f"jcal_{prefix}"
+    return f"{prefix}"
 
 
 async def async_setup(hass, config):
