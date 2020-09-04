@@ -2,7 +2,7 @@
 
 import logging
 
-from openzwavemqtt.const import EVENT_NODE_ADDED, EVENT_NODE_CHANGED, CommandClass
+from openzwavemqtt.const import EVENT_NODE_ADDED, EVENT_NODE_CHANGED
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
@@ -45,7 +45,6 @@ def async_register_api(hass):
     websocket_api.async_register_command(hass, websocket_node_status)
     websocket_api.async_register_command(hass, websocket_node_statistics)
     websocket_api.async_register_command(hass, websocket_refresh_node_info)
-    websocket_api.async_register_command(hass, websocket_get_config_values)
 
 
 @websocket_api.websocket_command({vol.Required(TYPE): "ozw/get_instances"})
@@ -287,26 +286,3 @@ def websocket_refresh_node_info(hass, connection, msg):
     instance = manager.get_instance(msg[OZW_INSTANCE])
     instance.refresh_node(msg[NODE_ID])
     connection.send_result(msg["id"])
-
-
-@websocket_api.require_admin
-@websocket_api.websocket_command(
-    {
-        vol.Required(TYPE): "ozw/get_config_values",
-        vol.Optional(OZW_INSTANCE, default=1): vol.Coerce(int),
-        vol.Required(NODE_ID): vol.Coerce(int),
-    }
-)
-def websocket_get_config_values(hass, connection, msg):
-    """Fetch configuration values for a node."""
-
-    manager = hass.data[DOMAIN][MANAGER]
-
-    configs = (
-        manager.get_instance(msg[OZW_INSTANCE])
-        .get_node(msg[NODE_ID])
-        .get_instance(1)
-        .get_command_class(CommandClass.CONFIGURATION)
-    )
-
-    connection.send_result(msg[ID], configs)
