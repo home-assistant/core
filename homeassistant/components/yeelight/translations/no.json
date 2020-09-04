@@ -15,9 +15,10 @@
             },
             "user": {
                 "data": {
+                    "host": "Vert",
                     "ip_address": "IP adresse"
                 },
-                "description": "Hvis du lar IP-adressen st\u00e5 tom, brukes oppdagelsen til \u00e5 finne enheter."
+                "description": "Hvis du lar verten st\u00e5 tom, brukes oppdagelsen til \u00e5 finne enheter."
             }
         }
     },
