@@ -373,7 +373,7 @@ async def test_services(
             MP_DOMAIN,
             SERVICE_PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: TV_ENTITY_ID,
+                ATTR_ENTITY_ID: MAIN_ENTITY_ID,
                 ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_APP,
                 ATTR_MEDIA_CONTENT_ID: "11",
             },
