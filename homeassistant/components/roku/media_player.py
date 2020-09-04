@@ -12,6 +12,7 @@ from homeassistant.components.media_player import (
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_APP,
     MEDIA_TYPE_CHANNEL,
+    SUPPORT_BROWSE_MEDIA,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -23,6 +24,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_STEP,
 )
+from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.const import (
     STATE_HOME,
     STATE_IDLE,
@@ -50,6 +52,8 @@ SUPPORT_ROKU = (
     | SUPPORT_TURN_ON
     | SUPPORT_TURN_OFF
 )
+
+SUPPORT_ROKU_TV = SUPPORT_ROKU | SUPPORT_BROWSE_MEDIA
 
 SEARCH_SCHEMA = {vol.Required(ATTR_KEYWORD): str}
 
@@ -133,6 +137,9 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
+        if self.coordinator.data.info.device_type == "tv":
+            return SUPPORT_ROKU_TV
+
         return SUPPORT_ROKU
 
     @property
@@ -233,6 +240,29 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     async def search(self, keyword):
         """Emulate opening the search screen and entering the search keyword."""
         await self.coordinator.roku.search(keyword)
+
+    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+        """Implement the websocket media browsing helper."""
+        if media_content_id not in (None, ""):
+            raise BrowseError(
+                f"Media not found: {media_content_type} / {media_content_id}"
+            )
+
+        return {
+            "title": "Channels",
+            "media_content_id": "",
+            "media_content_type": "library",
+            "can_play": False,
+            "children": [
+                {
+                    "title": channel.name,
+                    "media_content_id": channel.number,
+                    "media_content_type": MEDIA_TYPE_CHANNEL,
+                    "can_play": True,
+                }
+                for channel in self.coordinator.data.channels
+            ],
+        }
 
     @roku_exception_handler
     async def async_turn_on(self) -> None:
