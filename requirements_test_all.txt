@@ -756,6 +756,9 @@ pyotgw==0.6b1
 # homeassistant.components.otp
 pyotp==2.3.0
 
+# homeassistant.components.openweathermap
+pyowm==2.10.0
+
 # homeassistant.components.point
 pypoint==1.1.2
 
