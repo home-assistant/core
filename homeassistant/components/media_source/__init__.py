@@ -37,6 +37,9 @@ async def async_setup(hass: HomeAssistant, config: dict):
     hass.data[DOMAIN] = {}
     hass.components.websocket_api.async_register_command(websocket_browse_media)
     hass.components.websocket_api.async_register_command(websocket_resolve_media)
+    hass.components.frontend.async_register_built_in_panel(
+        "media-browser", "media-browser", "hass:play-box-multiple"
+    )
     local_source.async_setup(hass)
     await async_process_integration_platforms(
         hass, DOMAIN, _process_media_source_platform
