@@ -414,6 +414,11 @@ class MockPlexLibrarySection:
         """Mock the key identifier property."""
         return str(id(self.title))
 
+    def search(self, **kwargs):
+        """Mock the LibrarySection search method."""
+        if kwargs.get("libtype") == "movie":
+            return self.all()
+
     def update(self):
         """Mock the update call."""
         pass
@@ -422,11 +427,12 @@ class MockPlexLibrarySection:
 class MockPlexMediaItem:
     """Mock a Plex Media instance."""
 
-    def __init__(self, title, mediatype="video"):
+    def __init__(self, title, mediatype="video", year=2020):
         """Initialize the object."""
         self.title = str(title)
         self.type = mediatype
         self.thumbUrl = "http://1.2.3.4/thumb.png"
+        self.year = year
         self._children = []
 
     def __iter__(self):
