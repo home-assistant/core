@@ -38,8 +38,8 @@ repos:
           - --format=custom
           - --configfile=tests/bandit.yaml
         files: ^(homeassistant|script|tests)/.+\.py$
-  - repo: https://github.com/timothycrosley/isort
-    rev: 5.4.2
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.5.0
     hooks:
       - id: isort
   - repo: https://github.com/pre-commit/pre-commit-hooks
