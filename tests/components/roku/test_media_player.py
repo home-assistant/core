@@ -549,7 +549,7 @@ async def test_media_browse(hass, aioclient_mock, hass_ws_client):
 
     msg = await client.receive_json()
 
-    assert msg["id"] == 2
+    assert msg["id"] == 3
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
 
