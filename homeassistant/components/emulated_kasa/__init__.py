@@ -9,6 +9,7 @@ from homeassistant.components.switch import ATTR_CURRENT_POWER_W
 from homeassistant.const import (
     CONF_ENTITIES,
     CONF_NAME,
+    EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     STATE_ON,
 )
@@ -61,12 +62,20 @@ async def async_setup(hass: HomeAssistant, config: dict):
     async def stop_emulated_kasa(event):
         await server.stop()
 
-    try:
-        await server.start()
-    except OSError as error:
-        _LOGGER.error("Failed to create UDP server at port 9999: %s", error)
-    else:
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_emulated_kasa)
+    async def start_emulated_kasa(event):
+        for entity_id, entity_config in entity_configs.items():
+            state = hass.states.get(entity_id)
+            if state is None:
+                _LOGGER.warning("Entity not found: %s", entity_id)
+                continue
+        try:
+            await server.start()
+        except OSError as error:
+            _LOGGER.error("Failed to create UDP server at port 9999: %s", error)
+        else:
+            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_emulated_kasa)
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, start_emulated_kasa)
 
     return True
 
@@ -86,7 +95,9 @@ def get_plug_devices(hass, entity_configs):
                     power = float(power_val)
                 elif isinstance(power_val, str):
                     if is_template_string(power_val):
-                        power = float(Template(power_val, hass).async_render())
+                        power_val = Template(power_val, hass)
+                        entity_config[CONF_POWER] = power_val
+                        power = float(power_val.async_render())
                     else:
                         power = float(hass.states.get(power_val).state)
                 elif isinstance(power_val, Template):
