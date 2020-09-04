@@ -746,7 +746,7 @@ hole==0.5.1
 holidays==0.10.3
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200901.0
+home-assistant-frontend==20200904.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
