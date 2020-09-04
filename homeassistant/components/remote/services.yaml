@@ -58,6 +58,9 @@ learn_command:
     command:
       description: A single command or a list of commands to learn.
       example: "Turn on"
+    command_type:
+      description: The type of command to be learned.
+      example: "rf"
     alternative:
       description: If code must be stored as alternative (useful for discrete remotes).
       example: "True"
