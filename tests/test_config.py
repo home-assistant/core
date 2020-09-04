@@ -364,7 +364,7 @@ async def test_loading_configuration_from_storage(hass, hass_storage):
     assert hass.config.time_zone.zone == "Europe/Copenhagen"
     assert hass.config.external_url == "https://www.example.com"
     assert hass.config.internal_url == "http://example.local"
-    assert len(hass.config.allowlist_external_dirs) == 2
+    assert len(hass.config.allowlist_external_dirs) == 3
     assert "/etc" in hass.config.allowlist_external_dirs
     assert hass.config.config_source == SOURCE_STORAGE
 
@@ -421,7 +421,7 @@ async def test_override_stored_configuration(hass, hass_storage):
     assert hass.config.location_name == "Home"
     assert hass.config.units.name == CONF_UNIT_SYSTEM_METRIC
     assert hass.config.time_zone.zone == "Europe/Copenhagen"
-    assert len(hass.config.allowlist_external_dirs) == 2
+    assert len(hass.config.allowlist_external_dirs) == 3
     assert "/etc" in hass.config.allowlist_external_dirs
     assert hass.config.config_source == config_util.SOURCE_YAML
 
@@ -451,7 +451,7 @@ async def test_loading_configuration(hass):
     assert hass.config.time_zone.zone == "America/New_York"
     assert hass.config.external_url == "https://www.example.com"
     assert hass.config.internal_url == "http://example.local"
-    assert len(hass.config.allowlist_external_dirs) == 2
+    assert len(hass.config.allowlist_external_dirs) == 3
     assert "/etc" in hass.config.allowlist_external_dirs
     assert hass.config.config_source == config_util.SOURCE_YAML
 
