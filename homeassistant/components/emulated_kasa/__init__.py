@@ -82,13 +82,14 @@ def validate_configs(hass, entity_configs):
         if state is None:
             _LOGGER.warning("Entity not found: %s", entity_id)
             continue
-        if CONF_POWER not in entity_config:
-            continue
-        power_val = entity_config[CONF_POWER]
-        if isinstance(power_val, str) and is_template_string(power_val):
-            entity_config[CONF_POWER] = Template(power_val, hass)
-        elif isinstance(power_val, Template):
-            entity_config[CONF_POWER].hass = hass
+        if CONF_POWER in entity_config:
+            power_val = entity_config[CONF_POWER]
+            if isinstance(power_val, str) and is_template_string(power_val):
+                entity_config[CONF_POWER] = Template(power_val, hass)
+            elif isinstance(power_val, Template):
+                entity_config[CONF_POWER].hass = hass
+        elif ATTR_CURRENT_POWER_W not in state.attributes:
+            _LOGGER.warning("No power value defined for: %s", entity_id)
 
 
 def get_plug_devices(hass, entity_configs):
@@ -110,8 +111,6 @@ def get_plug_devices(hass, entity_configs):
                     power = float(power_val.async_render())
             elif ATTR_CURRENT_POWER_W in state.attributes:
                 power = float(state.attributes[ATTR_CURRENT_POWER_W])
-            else:
-                _LOGGER.warning("No power value defined for: %s", name)
         else:
             power = 0.0
         last_changed = state.last_changed.timestamp()
