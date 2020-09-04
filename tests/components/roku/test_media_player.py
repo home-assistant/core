@@ -453,7 +453,7 @@ async def test_tv_services(
         tune_mock.assert_called_once_with("55")
 
 
-async def test_media_browse(hass, hass_ws_client):
+async def test_media_browse(hass, aioclient_mock, hass_ws_client):
     """Test browsing media."""
     await setup_integration(
         hass,
