@@ -51,9 +51,8 @@ SUPPORT_ROKU = (
     | SUPPORT_PLAY_MEDIA
     | SUPPORT_TURN_ON
     | SUPPORT_TURN_OFF
+    | SUPPORT_BROWSE_MEDIA
 )
-
-SUPPORT_ROKU_TV = SUPPORT_ROKU | SUPPORT_BROWSE_MEDIA
 
 SEARCH_SCHEMA = {vol.Required(ATTR_KEYWORD): str}
 
@@ -71,6 +70,35 @@ async def async_setup_entry(hass, entry, async_add_entities):
         SEARCH_SCHEMA,
         "search",
     )
+
+
+def browse_media_library(channels: bool = False) -> dict:
+    """Create response payload to describe contents of a specific library."""
+    library_info = {
+        "title": "Media Library",
+        "media_content_id": "library",
+        "media_content_type": "library",
+        "can_play": False,
+        "can_expand": True,
+        "children": [],
+    }
+
+    library_info["children"].append(
+        {
+            "name": "Apps",
+            "type": "apps",
+            "uri": "apps",
+        )
+    )
+
+    if channels:
+        library_info["children"].append(
+            {
+                "name": "Channels",
+                "type": "channels",
+                "uri": "channels",
+            )
+        )
 
 
 class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
@@ -137,9 +165,6 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        if self.coordinator.data.info.device_type == "tv":
-            return SUPPORT_ROKU_TV
-
         return SUPPORT_ROKU
 
     @property
@@ -243,27 +268,55 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
 
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
         """Implement the websocket media browsing helper."""
-        if media_content_id not in (None, ""):
+        if media_content_type in [None, "library"]:
+            is_tv = self.coordinator.data.info.device_type == "tv"
+            return browse_media_library(channels=is_tv)
+
+        response = None
+
+        if media_content_type == "apps":
+            response = {
+                "title": "Apps",
+                "media_content_id": "apps",
+                "media_content_type": "apps",
+                "can_expand": True,
+                "can_play": False,
+                "children": [
+                    {
+                        "title": app.name,
+                        "thumbnail": self.coordinator.roku.app_icon_url(app.app_id),
+                        "media_content_id": app.app_id,
+                        "media_content_type": MEDIA_TYPE_APP,
+                        "can_play": True,
+                    }
+                    for app in self.coordinator.data.apps
+                ],
+            }
+
+        if media_content_type == "channels":
+            response = {
+                "title": "Channels",
+                "media_content_id": "channels",
+                "media_content_type": "channels",
+                "can_expand": True,
+                "can_play": False,
+                "children": [
+                    {
+                        "title": channel.name,
+                        "media_content_id": channel.number,
+                        "media_content_type": MEDIA_TYPE_CHANNEL,
+                        "can_play": True,
+                    }
+                    for channel in self.coordinator.data.channels
+                ],
+            }
+
+        if response is None:
             raise BrowseError(
                 f"Media not found: {media_content_type} / {media_content_id}"
             )
 
-        return {
-            "title": "Channels",
-            "media_content_id": "",
-            "media_content_type": "library",
-            "can_expand": True,
-            "can_play": False,
-            "children": [
-                {
-                    "title": channel.name,
-                    "media_content_id": channel.number,
-                    "media_content_type": MEDIA_TYPE_CHANNEL,
-                    "can_play": True,
-                }
-                for channel in self.coordinator.data.channels
-            ],
-        }
+        return response
 
     @roku_exception_handler
     async def async_turn_on(self) -> None:
@@ -329,15 +382,20 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     @roku_exception_handler
     async def async_play_media(self, media_type: str, media_id: str, **kwargs) -> None:
         """Tune to channel."""
-        if media_type != MEDIA_TYPE_CHANNEL:
+        if media_type not in (MEDIA_TYPE_APP, MEDIA_TYPE_CHANNEL):
             _LOGGER.error(
-                "Invalid media type %s. Only %s is supported",
+                "Invalid media type %s. Only %s and %s are supported",
                 media_type,
+                MEDIA_TYPE_APP,
                 MEDIA_TYPE_CHANNEL,
             )
             return
 
-        await self.coordinator.roku.tune(media_id)
+        if media_type == MEDIA_TYPE_APP:
+            await self.coordinator.roku.launch(media_id)
+        elif media_type == MEDIA_TYPE_CHANNEL:
+            await self.coordinator.roku.tune(media_id)
+
         await self.coordinator.async_request_refresh()
 
     @roku_exception_handler
