@@ -468,11 +468,9 @@ async def test_media_browse(hass, aioclient_mock, hass_ws_client):
 
     await client.send_json(
         {
-            "id": 5,
+            "id": 1,
             "type": "media_player/browse_media",
             "entity_id": TV_ENTITY_ID,
-            "media_content_type": "",
-            "media_content_id": "",
         }
     )
 
@@ -481,8 +479,16 @@ async def test_media_browse(hass, aioclient_mock, hass_ws_client):
     assert msg["id"] == 5
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
-    assert msg["result"] == {}
 
+    assert msg["result"]
+    assert msg["result"]["title"] == "Channels"
+    assert msg["result"]["type"] == "library"
+    assert len(msg["result"]["children"]) == 2
+
+    assert msg["result"]["children"][0]["title"] == "WhatsOn"
+    assert msg["result"]["children"][0]["media_content_type"] == MEDIA_TYPE_CHANNEL
+    assert msg["result"]["children"][0]["media_content_id"] == "1.1"
+    assert msg["result"]["children"][0]["can_play"]
 
 async def test_integration_services(
     hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
