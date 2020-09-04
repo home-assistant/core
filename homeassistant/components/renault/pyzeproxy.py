@@ -10,10 +10,10 @@ from homeassistant.helpers import aiohttp_client
 from .const import CONF_KAMEREON_ACCOUNT_ID, CONF_LOCALE, LOGGER
 from .pyzevehicleproxy import PyzeVehicleProxy
 
-GIGYA_KEY = "gigya-key"
-GIGYA_URL = "gigya-url"
-KAMEREON_KEY = "kamereon-key"
-KAMEREON_URL = "kamereon-url"
+GIGYA_KEY = "gigya-api-key"
+GIGYA_URL = "gigya-api-url"
+KAMEREON_KEY = "kamereon-api-key"
+KAMEREON_URL = "kamereon-api-url"
 
 
 class PyzeProxy:
