@@ -104,6 +104,8 @@ def browse_media_library(channels: bool = False) -> dict:
             }
         )
 
+    return library_info
+
 
 class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     """Representation of a Roku media player on the network."""
