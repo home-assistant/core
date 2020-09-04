@@ -24,7 +24,7 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         reload_on_update: bool = True,
     ):
         """Test if host and port are already configured."""
-        for entry in self.hass.config_entries.async_entries(DOMAIN):
+        for entry in self._async_current_entries():
             if entry.data.get(CONF_HOST) == host and entry.data[CONF_PORT] == port:
                 if updates is not None:
                     changed = self.hass.config_entries.async_update_entry(
@@ -43,6 +43,8 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                             self.hass.config_entries.async_reload(entry.entry_id)
                         )
                 return self.async_abort(reason="already_configured")
+
+        return None
 
     async def async_step_import(self, import_config=None):
         """Handle the initial step."""
