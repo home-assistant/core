@@ -51,7 +51,7 @@ class ForecastUpdateCoordinator(DataUpdateCoordinator):
                 forecast_response = await self._get_owm_forecast()
                 data = self._convert_forecast_response(forecast_response)
             except (APICallError, UnauthorizedError) as error:
-                raise UpdateFailed(error)
+                raise UpdateFailed(error) from error
 
         return data
 

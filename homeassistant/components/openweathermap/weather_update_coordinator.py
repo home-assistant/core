@@ -49,7 +49,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
                 weather_response = await self._get_owm_weather()
                 data = self._convert_weather_response(weather_response)
             except (APICallError, UnauthorizedError) as error:
-                raise UpdateFailed(error)
+                raise UpdateFailed(error) from error
         return data
 
     async def _get_owm_weather(self):
