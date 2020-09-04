@@ -14,7 +14,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.template import Template, is_template_string
+from homeassistant.helpers.template import Template, is_template_string, result_as_boolean
 
 from .const import CONF_POWER, DOMAIN
 
@@ -100,7 +100,7 @@ def get_plug_devices(hass, entity_configs):
             continue
         name = entity_config.get(CONF_NAME, state.name)
 
-        if state.state == STATE_ON:
+        if result_as_boolean(state.state):
             if CONF_POWER in entity_config:
                 power_val = entity_config[CONF_POWER]
                 if isinstance(power_val, (float, int)):
