@@ -9,6 +9,7 @@ from homeassistant.components.climate import (
     TEMP_CELSIUS,
     ClimateEntity,
 )
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PRECISION_HALVES
 from homeassistant.helpers.typing import HomeAssistantType
