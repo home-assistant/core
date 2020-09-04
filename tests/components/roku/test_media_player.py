@@ -573,6 +573,23 @@ async def test_media_browse(hass, aioclient_mock, hass_ws_client):
     assert msg["result"]["children"][0]["media_content_id"] == "1.1"
     assert msg["result"]["children"][0]["can_play"]
 
+    # test invalid media type
+    await client.send_json(
+        {
+            "id": 4,
+            "type": "media_player/browse_media",
+            "entity_id": TV_ENTITY_ID,
+            "media_content_type": "invalid",
+            "media_content_id": "invalid",
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["id"] == 4
+    assert msg["type"] == TYPE_RESULT
+    assert not msg["success"]
+
 
 async def test_integration_services(
     hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
