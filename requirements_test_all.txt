@@ -1033,7 +1033,7 @@ wiffi==1.0.1
 withings-api==2.1.6
 
 # homeassistant.components.wled
-wled==0.4.3
+wled==0.4.4
 
 # homeassistant.components.wolflink
 wolf_smartset==0.1.4
