@@ -38,7 +38,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
     hass.components.websocket_api.async_register_command(websocket_browse_media)
     hass.components.websocket_api.async_register_command(websocket_resolve_media)
     hass.components.frontend.async_register_built_in_panel(
-        "media-browser", "Media Browser", "hass:play"
+        "media-browser", "media-browser", "hass:folder-multiple-image"
     )
     local_source.async_setup(hass)
     await async_process_integration_platforms(
