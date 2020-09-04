@@ -252,6 +252,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
             "title": "Channels",
             "media_content_id": "",
             "media_content_type": "library",
+            "can_expand": True,
             "can_play": False,
             "children": [
                 {
