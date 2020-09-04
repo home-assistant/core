@@ -1,6 +1,5 @@
 """Test OpenZWave Websocket API."""
 
-from homeassistant.components import websocket_api
 from homeassistant.components.ozw.websocket_api import (
     ATTR_IS_AWAKE,
     ATTR_IS_BEAMING,
@@ -20,6 +19,7 @@ from homeassistant.components.ozw.websocket_api import (
     OZW_INSTANCE,
     TYPE,
 )
+from homeassistant.components.websocket_api.const import ERR_NOT_FOUND
 
 from .common import MQTTMessage, setup_ozw
 
@@ -72,7 +72,7 @@ async def test_websocket_api(hass, generic_data, hass_ws_client):
     await client.send_json({ID: 7, TYPE: "ozw/node_status", NODE_ID: 999})
     msg = await client.receive_json()
     result = msg["error"]
-    assert result["code"] == websocket_api.const.ERR_NOT_FOUND
+    assert result["code"] == ERR_NOT_FOUND
 
     # Test node statistics
     await client.send_json({ID: 8, TYPE: "ozw/node_statistics", NODE_ID: 39})
@@ -101,7 +101,7 @@ async def test_websocket_api(hass, generic_data, hass_ws_client):
     await client.send_json({ID: 10, TYPE: "ozw/node_metadata", NODE_ID: 999})
     msg = await client.receive_json()
     result = msg["error"]
-    assert result["code"] == websocket_api.const.ERR_NOT_FOUND
+    assert result["code"] == ERR_NOT_FOUND
 
     # Test network statistics
     await client.send_json({ID: 11, TYPE: "ozw/network_statistics"})
