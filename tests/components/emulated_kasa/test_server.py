@@ -361,9 +361,9 @@ async def test_sensor_state(hass):
     """Test a configuration using a sensor in a template."""
     config = CONFIG_SENSOR[DOMAIN][CONF_ENTITIES]
     assert await async_setup_component(
-        hass, 
-        SENSOR_DOMAIN, 
-        {SENSOR_DOMAIN: {"platform": "demo", "name": "power_sensor"}}
+        hass,
+        SENSOR_DOMAIN,
+        {SENSOR_DOMAIN: {"platform": "demo", "name": "power_sensor"}},
     )
     with patch(
         "sense_energy.SenseLink",
