@@ -91,6 +91,7 @@ async def _validate_dsmr_connection(hass: core.HomeAssistant, data):
     equipment_identifier = conn.equipment_identifier()
     equipment_identifier_gas = conn.equipment_identifier_gas()
 
+    # Check only for equipment identifier in case no gas meter is connected
     if equipment_identifier is None:
         raise CannotCommunicate
 
