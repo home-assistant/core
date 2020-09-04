@@ -1,24 +1,23 @@
 {
-  "title": "Goal Zero Yeti",
   "config": {
     "step": {
       "user": {
         "title": "Goal Zero Yeti",
         "data": {
-          "host": "host",
-          "name": "name"
+          "host": "[%key::common::config_flow::data::host%]",
+          "name": "Name"
         }
       }
     },
     "error": {
-      "cannot_connect": "cannot connect",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "connect_timeout": "connect timeout",
       "host_required": "host required",
       "invalid_host": "invalid host",
       "unknown": "unknown error"
     },
     "abort": {
-      "already_configured": "already onfigured"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     }
   }
 }
