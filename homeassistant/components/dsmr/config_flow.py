@@ -144,6 +144,10 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         host = import_config.get(CONF_HOST)
         port = import_config[CONF_PORT]
 
+        status = self._abort_if_host_port_configured(port, host, import_config)
+        if status is not None:
+            return status
+
         try:
             info = await _validate_dsmr_connection(self.hass, import_config)
         except CannotConnect:
@@ -151,16 +155,12 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         except CannotCommunicate:
             return self.async_abort(reason="cannot_communicate")
 
-        data = {**import_config, **info}
-
-        status = self._abort_if_host_port_configured(port, host, data)
-        if status is not None:
-            return status
-
         if host is not None:
             name = f"{host}:{port}"
         else:
             name = port
+
+        data = {**import_config, **info}
 
         return self.async_create_entry(title=name, data=data)
 
