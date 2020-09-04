@@ -59,6 +59,9 @@ class SkyHubDeviceScanner(DeviceScanner):
         device = next(
             (result for result in self.last_results if result.mac == device), None
         )
+        if device is None:
+            return {}
+
         return device.asdict()
 
     async def _async_update_info(self):
