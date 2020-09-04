@@ -9,6 +9,7 @@ from homeassistant.components.fan import (
     SERVICE_SET_SPEED,
 )
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import (
     ATTR_CURRENT_POWER_W,
     DOMAIN as SWITCH_DOMAIN,
@@ -37,6 +38,7 @@ ENTITY_FAN_SPEED_LOW = 5
 ENTITY_FAN_SPEED_MED = 10
 ENTITY_FAN_SPEED_HIGH = 50
 ENTITY_SENSOR = "sensor.light_power"
+ENTITY_SENSOR_NAME = "Power Sensor"
 
 CONFIG = {
     DOMAIN: {
@@ -114,6 +116,13 @@ CONFIG_FAN = {
     }
 }
 
+CONFIG_SENSOR = {
+    DOMAIN: {
+        CONF_ENTITIES: {
+            ENTITY_SENSOR: {CONF_NAME: ENTITY_SENSOR_NAME},
+        }
+    }
+}
 
 def nested_value(ndict, *keys):
     """Return a nested dict value  or None if it doesn't exist."""
@@ -343,6 +352,51 @@ async def test_sensor(hass):
     plug_it = emulated_kasa.get_plug_devices(hass, config)
     plug = next(plug_it).generate_response()
     assert nested_value(plug, "system", "get_sysinfo", "alias") == ENTITY_LIGHT_NAME
+    power = nested_value(plug, "emeter", "get_realtime", "power")
+    assert math.isclose(power, 0)
+
+
+async def test_sensor_state(hass):
+    """Test a configuration using a sensor in a template."""
+    config = CONFIG_SENSOR[DOMAIN][CONF_ENTITIES]
+    assert await async_setup_component(
+        hass, SENSOR_DOMAIN, {SENSOR_DOMAIN: {"platform": "demo", "name": "power_sensor"}}
+    )
+    with patch(
+        "sense_energy.SenseLink",
+        return_value=Mock(start=AsyncMock(), close=AsyncMock()),
+    ):
+        assert await async_setup_component(hass, DOMAIN, CONFIG_SENSOR) is True
+    await hass.async_block_till_done()
+    emulated_kasa.validate_configs(hass, config)
+
+    hass.states.async_set(ENTITY_SENSOR, 35)
+
+    sensor = hass.states.get(ENTITY_SENSOR)
+    assert sensor.state == "35"
+
+    # sensor
+    plug_it = emulated_kasa.get_plug_devices(hass, config)
+    plug = next(plug_it).generate_response()
+    assert nested_value(plug, "system", "get_sysinfo", "alias") == ENTITY_SENSOR_NAME
+    power = nested_value(plug, "emeter", "get_realtime", "power")
+    assert math.isclose(power, 35)
+
+    # change power sensor
+    hass.states.async_set(ENTITY_SENSOR, 40)
+
+    plug_it = emulated_kasa.get_plug_devices(hass, config)
+    plug = next(plug_it).generate_response()
+    assert nested_value(plug, "system", "get_sysinfo", "alias") == ENTITY_SENSOR_NAME
+    power = nested_value(plug, "emeter", "get_realtime", "power")
+    assert math.isclose(power, 40)
+
+    # report 0 if device is off
+    hass.states.async_set(ENTITY_SENSOR, 0)
+
+    plug_it = emulated_kasa.get_plug_devices(hass, config)
+    plug = next(plug_it).generate_response()
+    assert nested_value(plug, "system", "get_sysinfo", "alias") == ENTITY_SENSOR_NAME
     power = nested_value(plug, "emeter", "get_realtime", "power")
     assert math.isclose(power, 0)
 

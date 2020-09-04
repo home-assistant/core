@@ -4,6 +4,7 @@ import logging
 from sense_energy import PlugInstance, SenseLink
 import voluptuous as vol
 
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import ATTR_CURRENT_POWER_W
 from homeassistant.const import (
     CONF_ENTITIES,
@@ -14,7 +15,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.template import Template, is_template_string, result_as_boolean
+from homeassistant.helpers.template import Template, is_template_string
 
 from .const import CONF_POWER, DOMAIN
 
@@ -45,12 +46,11 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Sense component."""
-    hass.data.setdefault(DOMAIN, {})
+    """Set up the emulated_kasa component."""
     conf = config.get(DOMAIN)
     if not conf:
         return True
-    entity_configs = conf.get(CONF_ENTITIES, {})
+    entity_configs = conf[CONF_ENTITIES]
 
     def devices():
         """Devices to be emulated."""
@@ -80,7 +80,7 @@ def validate_configs(hass, entity_configs):
     for entity_id, entity_config in entity_configs.items():
         state = hass.states.get(entity_id)
         if state is None:
-            _LOGGER.warning("Entity not found: %s", entity_id)
+            _LOGGER.debug("Entity not found: %s", entity_id)
             continue
         if CONF_POWER in entity_config:
             power_val = entity_config[CONF_POWER]
@@ -88,8 +88,12 @@ def validate_configs(hass, entity_configs):
                 entity_config[CONF_POWER] = Template(power_val, hass)
             elif isinstance(power_val, Template):
                 entity_config[CONF_POWER].hass = hass
-        elif ATTR_CURRENT_POWER_W not in state.attributes:
-            _LOGGER.warning("No power value defined for: %s", entity_id)
+        elif state.domain == SENSOR_DOMAIN:
+            continue
+        elif ATTR_CURRENT_POWER_W in state.attributes:
+            continue
+        else:
+            _LOGGER.debug("No power value defined for: %s", entity_id)
 
 
 def get_plug_devices(hass, entity_configs):
@@ -100,7 +104,7 @@ def get_plug_devices(hass, entity_configs):
             continue
         name = entity_config.get(CONF_NAME, state.name)
 
-        if result_as_boolean(state.state):
+        if state.state == STATE_ON or state.domain == SENSOR_DOMAIN:
             if CONF_POWER in entity_config:
                 power_val = entity_config[CONF_POWER]
                 if isinstance(power_val, (float, int)):
@@ -111,6 +115,8 @@ def get_plug_devices(hass, entity_configs):
                     power = float(power_val.async_render())
             elif ATTR_CURRENT_POWER_W in state.attributes:
                 power = float(state.attributes[ATTR_CURRENT_POWER_W])
+            elif state.domain == SENSOR_DOMAIN:
+                power = float(state.state)
         else:
             power = 0.0
         last_changed = state.last_changed.timestamp()
