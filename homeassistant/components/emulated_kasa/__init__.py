@@ -5,6 +5,7 @@ from time import time
 from sense_energy import PlugInstance, SenseLink
 import voluptuous as vol
 
+from homeassistant.components.switch import ATTR_CURRENT_POWER_W
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     CONF_ENTITIES,
@@ -80,22 +81,25 @@ def get_plug_devices(hass, entity_configs):
         name = entity_config.get(CONF_NAME, state.name)
 
         if state.state == STATE_ON:
-            power_val = entity_config[CONF_POWER]
-            if isinstance(power_val, (float, int)):
-                power = float(power_val)
-            elif isinstance(power_val, str):
-                if is_template_string(power_val):
-                    power = float(Template(power_val, hass).async_render())
-                else:
-                    power = float(hass.states.get(power_val).state)
-            elif isinstance(power_val, Template):
-                power_val.hass = hass
-                power = float(power_val.async_render())
-
-            if state.last_changed:
-                last_changed = state.last_changed.timestamp()
+            if CONF_POWER in entity_config:
+                power_val = entity_config[CONF_POWER]
+                if isinstance(power_val, (float, int)):
+                    power = float(power_val)
+                elif isinstance(power_val, str):
+                    if is_template_string(power_val):
+                        power = float(Template(power_val, hass).async_render())
+                    else:
+                        power = float(hass.states.get(power_val).state)
+                elif isinstance(power_val, Template):
+                    power_val.hass = hass
+                    power = float(power_val.async_render())
+            elif ATTR_CURRENT_POWER_W in state.attributes:
+                power = float(state.attributes[ATTR_CURRENT_POWER_W])
             else:
-                last_changed = time() - 1
+                _LOGGER.warning("No power value defined for: %s", name)
+
+            last_changed = state.last_changed.timestamp()
+
         else:
             power = 0.0
             last_changed = time()
