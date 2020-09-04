@@ -88,7 +88,7 @@ def browse_media_library(channels: bool = False) -> dict:
             "title": "Apps",
             "media_content_id": "apps",
             "media_content_type": "apps",
-            "can_exoand": True,
+            "can_expand": True,
             "can_play": False,
         }
     )
@@ -99,7 +99,7 @@ def browse_media_library(channels: bool = False) -> dict:
                 "title": "Channels",
                 "media_content_id": "channels",
                 "media_content_type": "channels",
-                "can_exoand": True,
+                "can_expand": True,
                 "can_play": False,
             }
         )
