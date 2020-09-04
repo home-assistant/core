@@ -202,7 +202,7 @@ def test_core_config_schema():
 
 def test_customize_dict_schema():
     """Test basic customize config validation."""
-    values = ({ATTR_FRIENDLY_NAME: None}, {ATTR_ASSUMED_STATE: "2"})
+    values = ({ATTR_FRIENDLY_NAME: None}, {ATTR_ASSUMED_STATE: "not_a_number"})
 
     for val in values:
         print(val)

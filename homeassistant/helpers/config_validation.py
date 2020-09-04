@@ -151,6 +151,10 @@ def boolean(value: Any) -> bool:
             return True
         if value in ("0", "false", "no", "off", "disable"):
             return False
+        try:
+            return float(value) != 0
+        except ValueError:
+            pass
     elif isinstance(value, Number):
         # type ignore: https://github.com/python/mypy/issues/3186
         return value != 0  # type: ignore

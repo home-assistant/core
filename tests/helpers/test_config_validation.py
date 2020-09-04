@@ -32,10 +32,22 @@ def test_boolean():
         with pytest.raises(vol.MultipleInvalid):
             schema(value)
 
-    for value in ("true", "On", "1", "YES", "   true  ", "enable", 1, 50, True, 0.1):
+    for value in (
+        "true",
+        "On",
+        "1",
+        "YES",
+        "   true  ",
+        "enable",
+        1,
+        50,
+        True,
+        0.1,
+        "0.1",
+    ):
         assert schema(value)
 
-    for value in ("false", "Off", "0", "NO", "disable", 0, False):
+    for value in ("false", "Off", "0", "NO", "disable", 0, False, "0.00"):
         assert not schema(value)
 
 
