@@ -88,7 +88,7 @@ def browse_media_library(channels: bool = False) -> dict:
             "name": "Apps",
             "type": "apps",
             "uri": "apps",
-        )
+        }
     )
 
     if channels:
@@ -97,7 +97,7 @@ def browse_media_library(channels: bool = False) -> dict:
                 "name": "Channels",
                 "type": "channels",
                 "uri": "channels",
-            )
+            }
         )
 
 
