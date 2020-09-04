@@ -72,8 +72,6 @@ class ShellySensor(ShellyBlockEntity, Entity):
                 unit = TEMP_CELSIUS
             else:
                 unit = TEMP_FAHRENHEIT
-        elif self.info[aioshelly.BLOCK_VALUE_TYPE] == aioshelly.BLOCK_VALUE_TYPE_ENERGY:
-            unit = ENERGY_KILO_WATT_HOUR
 
         self._unit = unit
         self._device_class = device_class
@@ -104,9 +102,9 @@ class ShellySensor(ShellyBlockEntity, Entity):
         ]:
             return round(value, 1)
         # Energy unit change from Wmin or Wh to kWh
-        if self.info[aioshelly.BLOCK_VALUE_UNIT] == "Wmin":
+        if self.info.get(aioshelly.BLOCK_VALUE_UNIT) == "Wmin":
             return round(value / 60 / 1000, 2)
-        if self.info[aioshelly.BLOCK_VALUE_UNIT] == "Wh":
+        if self.info.get(aioshelly.BLOCK_VALUE_UNIT) == "Wh":
             return round(value / 1000, 2)
         return value
 
