@@ -45,7 +45,7 @@ YesssSMS==0.4.1
 abodepy==1.1.0
 
 # homeassistant.components.accuweather
-accuweather==0.0.9
+accuweather==0.0.10
 
 # homeassistant.components.androidtv
 adb-shell[async]==0.2.1
