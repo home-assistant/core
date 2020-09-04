@@ -1,5 +1,4 @@
 """The jewish_calendar component."""
-import hashlib
 import logging
 from typing import Optional
 
@@ -94,7 +93,7 @@ def get_unique_prefix(
         location.diaspora,
         language,
         candle_lighting_offset,
-        havdalah_offset
+        havdalah_offset,
     ]
     prefix = "_".join(map(str, config_properties))
     return f"{prefix}"
