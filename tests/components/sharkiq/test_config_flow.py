@@ -1,22 +1,16 @@
 """Test the Shark IQ config flow."""
 import aiohttp
-from sharkiqpy import SharkIqAuthError
+import pytest
+from sharkiqpy import AylaApi, SharkIqAuthError
 
 from homeassistant import config_entries, setup
 from homeassistant.components.sharkiq.const import DOMAIN
+from homeassistant.core import HomeAssistant
 
 from .const import CONFIG, TEST_PASSWORD, TEST_USERNAME, UNIQUE_ID
 
-from tests.async_mock import MagicMock, PropertyMock, patch
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
-
-
-def _create_mocked_ayla(connect=None):
-    """Create a mocked AylaApi object."""
-    mocked_ayla = MagicMock()
-    type(mocked_ayla).sign_in = PropertyMock(side_effect=connect)
-    type(mocked_ayla).async_sign_in = PropertyMock(side_effect=connect)
-    return mocked_ayla
 
 
 async def test_form(hass):
@@ -46,75 +40,37 @@ async def test_form(hass):
         "password": TEST_PASSWORD,
     }
     await hass.async_block_till_done()
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
+    mock_setup.assert_called_once()
+    mock_setup_entry.assert_called_once()
 
 
-async def test_form_invalid_auth(hass):
-    """Test we handle invalid auth."""
+@pytest.mark.parametrize(
+    "exc,base_error",
+    [
+        (SharkIqAuthError, "invalid_auth"),
+        (aiohttp.ClientError, "cannot_connect"),
+        (TypeError, "unknown"),
+    ],
+)
+async def test_form_error(hass: HomeAssistant, exc: Exception, base_error: str):
+    """Test form errors."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    mocked_ayla = _create_mocked_ayla(connect=SharkIqAuthError)
 
-    with patch(
-        "homeassistant.components.sharkiq.config_flow.get_ayla_api",
-        return_value=mocked_ayla,
-    ):
+    with patch.object(AylaApi, "async_sign_in", side_effect=exc):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             CONFIG,
         )
 
     assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "invalid_auth"}
+    assert result2["errors"].get("base") == base_error
 
 
-async def test_form_cannot_connect(hass):
-    """Test we handle cannot connect error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    mocked_ayla = _create_mocked_ayla(connect=aiohttp.ClientError)
-
-    with patch(
-        "homeassistant.components.sharkiq.config_flow.get_ayla_api",
-        return_value=mocked_ayla,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            CONFIG,
-        )
-
-    assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "cannot_connect"}
-
-
-async def test_form_other_error(hass):
-    """Test we handle other errors."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    mocked_ayla = _create_mocked_ayla(connect=TypeError)
-
-    with patch(
-        "homeassistant.components.sharkiq.config_flow.get_ayla_api",
-        return_value=mocked_ayla,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], CONFIG
-        )
-
-    assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "unknown"}
-
-
-async def test_reauth(hass):
+async def test_reauth_success(hass: HomeAssistant):
     """Test reauth flow."""
-    with patch(
-        "homeassistant.components.sharkiq.vacuum.async_setup_entry",
-        return_value=True,
-    ), patch("sharkiqpy.AylaApi.async_sign_in", return_value=True):
+    with patch("sharkiqpy.AylaApi.async_sign_in", return_value=True):
         mock_config = MockConfigEntry(domain=DOMAIN, unique_id=UNIQUE_ID, data=CONFIG)
         mock_config.add_to_hass(hass)
 
@@ -125,21 +81,33 @@ async def test_reauth(hass):
         assert result["type"] == "abort"
         assert result["reason"] == "reauth_successful"
 
-    with patch("sharkiqpy.AylaApi.async_sign_in", side_effect=SharkIqAuthError):
+
+@pytest.mark.parametrize(
+    "side_effect,result_type,msg_field,msg",
+    [
+        (SharkIqAuthError, "form", "errors", "invalid_auth"),
+        (aiohttp.ClientError, "abort", "reason", "cannot_connect"),
+        (TypeError, "abort", "reason", "unknown"),
+    ],
+)
+async def test_reauth(
+    hass: HomeAssistant,
+    side_effect: Exception,
+    result_type: str,
+    msg_field: str,
+    msg: str,
+):
+    """Test reauth failures."""
+    with patch("sharkiqpy.AylaApi.async_sign_in", side_effect=side_effect):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": "reauth", "unique_id": UNIQUE_ID},
             data=CONFIG,
         )
-        assert result["type"] == "form"
-        assert result["errors"] == {"base": "invalid_auth"}
 
-    with patch("sharkiqpy.AylaApi.async_sign_in", side_effect=RuntimeError):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": "reauth", "unique_id": UNIQUE_ID},
-            data=CONFIG,
-        )
+        msg_value = result[msg_field]
+        if msg_field == "errors":
+            msg_value = msg_value.get("base")
 
-        assert result["type"] == "abort"
-        assert result["reason"] == "unknown"
+        assert result["type"] == result_type
+        assert msg_value == msg
