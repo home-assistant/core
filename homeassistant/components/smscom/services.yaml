@@ -1,9 +1,9 @@
 smscom:
-    description: Send SMS notify with usb3G/sim900 (use AT command).
-    fields:
-        message:
-            description: Message to Send
-            example: "Hello World"
-        target:
-            description: Phone number
-            example: ["0948654321"]
+  description: Send SMS notify with usb3G/sim900 (use AT command).
+  fields:
+    message:
+      description: Message to Send
+      example: "Hello World"
+    target:
+      description: Phone number
+      example: ["0948654321"]

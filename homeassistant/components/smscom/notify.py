@@ -1,16 +1,19 @@
 """SMS COM platform for notify component."""
 import logging
-
-import voluptuous as vol
-
-from homeassistant.components.notify import ATTR_TARGET, PLATFORM_SCHEMA, BaseNotificationService
-from homeassistant.const import (
-    CONF_RECIPIENT
-)
-import homeassistant.helpers.config_validation as cv
+import time
 
 from serial import Serial
-import time
+import voluptuous as vol
+
+from homeassistant.components.notify import (
+    ATTR_TARGET,
+    PLATFORM_SCHEMA,
+    BaseNotificationService
+)
+from homeassistant.const import CONF_RECIPIENT
+import homeassistant.helpers.config_validation as cv
+
+
 
 _LOGGER = logging.getLogger(__name__)
 
