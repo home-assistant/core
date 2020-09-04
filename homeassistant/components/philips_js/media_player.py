@@ -159,21 +159,11 @@ class PhilipsTVMediaPlayer(MediaPlayerEntity):
     def select_source(self, source):
         """Set the input source."""
         data = source.split(PREFIX_SEPARATOR, 1)
-        if data[0] == PREFIX_SOURCE:
-            _LOGGER.warning(
-                "Use of '%s%s' prefix is deprecated, call without prefix",
-                PREFIX_CHANNEL,
-                PREFIX_SEPARATOR,
-            )
+        if data[0] == PREFIX_SOURCE:  # Legacy way to set source
             source_id = _inverted(self._sources).get(data[1])
             if source_id:
                 self._tv.setSource(source_id)
-        elif data[0] == PREFIX_CHANNEL:
-            _LOGGER.warning(
-                "Use of '%s%s' prefix is deprecated, use play_media with channel media type instead",
-                PREFIX_CHANNEL,
-                PREFIX_SEPARATOR,
-            )
+        elif data[0] == PREFIX_CHANNEL:  # Legacy way to set channel
             channel_id = _inverted(self._channels).get(data[1])
             if channel_id:
                 self._tv.setChannel(channel_id)
