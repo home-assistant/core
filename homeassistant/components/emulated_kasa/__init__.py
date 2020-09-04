@@ -73,7 +73,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 def get_plug_devices(hass, entity_configs):
     """Produce list of plug devices from config entities."""
-    for entity_id, entity_config in entity_configs:
+    for entity_id, entity_config in entity_configs.items():
         state = hass.states.get(entity_id)
         if state is None:
             continue

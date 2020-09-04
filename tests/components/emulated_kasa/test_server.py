@@ -1,6 +1,5 @@
 """Tests for emulated_kasa library bindings."""
 import math
-from tests.async_mock import AsyncMock, Mock, patch
 
 from homeassistant.components import emulated_kasa
 from homeassistant.components.emulated_kasa.const import CONF_POWER, DOMAIN
@@ -20,6 +19,8 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.setup import async_setup_component
+
+from tests.async_mock import AsyncMock, Mock, patch
 
 ENTITY_SWITCH = "switch.ac"
 ENTITY_SWITCH_NAME = "A/C"
@@ -130,7 +131,7 @@ async def test_float(hass):
         "sense_energy.SenseLink",
         return_value=Mock(start=AsyncMock(), close=AsyncMock()),
     ):
-        assert await async_setup_component(hass, DOMAIN, CONFIG) is True
+        assert await async_setup_component(hass, DOMAIN, CONFIG_SWITCH) is True
     await hass.async_block_till_done()
 
     # Turn switch on
@@ -141,7 +142,7 @@ async def test_float(hass):
     switch = hass.states.get(ENTITY_SWITCH)
     assert switch.state == STATE_ON
 
-    plug_it = emulated_kasa.get_plug_devices(hass)
+    plug_it = emulated_kasa.get_plug_devices(hass, CONFIG_SWITCH[DOMAIN][CONF_ENTITIES])
     plug = next(plug_it).generate_response()
 
     assert nested_value(plug, "system", "get_sysinfo", "alias") == ENTITY_SWITCH_NAME
@@ -153,7 +154,7 @@ async def test_float(hass):
         SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_SWITCH}, blocking=True
     )
 
-    plug_it = emulated_kasa.get_plug_devices(hass)
+    plug_it = emulated_kasa.get_plug_devices(hass, CONFIG_SWITCH[DOMAIN][CONF_ENTITIES])
     plug = next(plug_it).generate_response()
     assert nested_value(plug, "system", "get_sysinfo", "alias") == ENTITY_SWITCH_NAME
     power = nested_value(plug, "emeter", "get_realtime", "power")
@@ -169,7 +170,7 @@ async def test_template(hass):
         "sense_energy.SenseLink",
         return_value=Mock(start=AsyncMock(), close=AsyncMock()),
     ):
-        assert await async_setup_component(hass, DOMAIN, CONFIG) is True
+        assert await async_setup_component(hass, DOMAIN, CONFIG_FAN) is True
     await hass.async_block_till_done()
 
     # Turn all devices on to known state
@@ -187,7 +188,7 @@ async def test_template(hass):
     assert fan.state == STATE_ON
 
     # Fan low:
-    plug_it = emulated_kasa.get_plug_devices(hass)
+    plug_it = emulated_kasa.get_plug_devices(hass, CONFIG_FAN[DOMAIN][CONF_ENTITIES])
     plug = next(plug_it).generate_response()
     assert nested_value(plug, "system", "get_sysinfo", "alias") == ENTITY_FAN_NAME
     power = nested_value(plug, "emeter", "get_realtime", "power")
@@ -200,7 +201,7 @@ async def test_template(hass):
         {ATTR_ENTITY_ID: ENTITY_FAN, ATTR_SPEED: "high"},
         blocking=True,
     )
-    plug_it = emulated_kasa.get_plug_devices(hass)
+    plug_it = emulated_kasa.get_plug_devices(hass, CONFIG_FAN[DOMAIN][CONF_ENTITIES])
     plug = next(plug_it).generate_response()
     assert nested_value(plug, "system", "get_sysinfo", "alias") == ENTITY_FAN_NAME
     power = nested_value(plug, "emeter", "get_realtime", "power")
@@ -210,7 +211,7 @@ async def test_template(hass):
     await hass.services.async_call(
         FAN_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_FAN}, blocking=True
     )
-    plug_it = emulated_kasa.get_plug_devices(hass)
+    plug_it = emulated_kasa.get_plug_devices(hass, CONFIG_FAN[DOMAIN][CONF_ENTITIES])
     plug = next(plug_it).generate_response()
     assert nested_value(plug, "system", "get_sysinfo", "alias") == ENTITY_FAN_NAME
     power = nested_value(plug, "emeter", "get_realtime", "power")
@@ -226,7 +227,7 @@ async def test_sensor(hass):
         "sense_energy.SenseLink",
         return_value=Mock(start=AsyncMock(), close=AsyncMock()),
     ):
-        assert await async_setup_component(hass, DOMAIN, CONFIG) is True
+        assert await async_setup_component(hass, DOMAIN, CONFIG_LIGHT) is True
     await hass.async_block_till_done()
 
     await hass.services.async_call(
@@ -240,7 +241,7 @@ async def test_sensor(hass):
     assert sensor.state == "35"
 
     # light
-    plug_it = emulated_kasa.get_plug_devices(hass)
+    plug_it = emulated_kasa.get_plug_devices(hass, CONFIG_LIGHT[DOMAIN][CONF_ENTITIES])
     plug = next(plug_it).generate_response()
     assert nested_value(plug, "system", "get_sysinfo", "alias") == ENTITY_LIGHT_NAME
     power = nested_value(plug, "emeter", "get_realtime", "power")
@@ -249,7 +250,7 @@ async def test_sensor(hass):
     # change power sensor
     hass.states.async_set(ENTITY_SENSOR, 40)
 
-    plug_it = emulated_kasa.get_plug_devices(hass)
+    plug_it = emulated_kasa.get_plug_devices(hass, CONFIG_LIGHT[DOMAIN][CONF_ENTITIES])
     plug = next(plug_it).generate_response()
     assert nested_value(plug, "system", "get_sysinfo", "alias") == ENTITY_LIGHT_NAME
     power = nested_value(plug, "emeter", "get_realtime", "power")
@@ -260,7 +261,7 @@ async def test_sensor(hass):
         LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_LIGHT}, blocking=True
     )
 
-    plug_it = emulated_kasa.get_plug_devices(hass)
+    plug_it = emulated_kasa.get_plug_devices(hass, CONFIG_LIGHT[DOMAIN][CONF_ENTITIES])
     plug = next(plug_it).generate_response()
     assert nested_value(plug, "system", "get_sysinfo", "alias") == ENTITY_LIGHT_NAME
     power = nested_value(plug, "emeter", "get_realtime", "power")
@@ -313,7 +314,7 @@ async def test_multiple_devices(hass):
     fan = hass.states.get(ENTITY_FAN)
     assert fan.state == STATE_ON
 
-    plug_it = emulated_kasa.get_plug_devices(hass)
+    plug_it = emulated_kasa.get_plug_devices(hass, CONFIG[DOMAIN][CONF_ENTITIES])
     # switch
     plug = next(plug_it).generate_response()
     assert nested_value(plug, "system", "get_sysinfo", "alias") == ENTITY_SWITCH_NAME
