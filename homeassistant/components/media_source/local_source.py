@@ -60,8 +60,8 @@ class LocalSource(MediaSource):
     async def async_resolve_media(self, item: MediaSourceItem) -> str:
         """Resolve media to a url."""
         source_dir_id, location = async_parse_identifier(item)
-        mime_type, _ = await self.hass.async_add_executor_job(
-            mimetypes.guess_type, self.async_full_path(source_dir_id, location)
+        mime_type, _ = mimetypes.guess_type(
+            self.async_full_path(source_dir_id, location)
         )
         return PlayMedia(item.identifier, mime_type)
 
@@ -153,9 +153,7 @@ class LocalMediaView(HomeAssistantView):
             raise web.HTTPNotFound()
 
         # Check that it's a media file
-        mime_type, _ = await request.app["hass"].async_add_executor_job(
-            mimetypes.guess_type, str(media_path)
-        )
+        mime_type, _ = mimetypes.guess_type(str(media_path))
         if not mime_type or mime_type.split("/")[0] not in MEDIA_MIME_TYPES:
             raise web.HTTPNotFound()
 
