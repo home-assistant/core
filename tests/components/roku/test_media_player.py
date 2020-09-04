@@ -438,6 +438,20 @@ async def test_tv_services(
 
         remote_mock.assert_called_once_with("volume_mute")
 
+    with patch("homeassistant.components.roku.Roku.launch") as launch_mock:
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: TV_ENTITY_ID,
+                ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_APP,
+                ATTR_MEDIA_CONTENT_ID: "11",
+            },
+            blocking=True,
+        )
+
+        launch_mock.assert_called_once_with("11")
+
     with patch("homeassistant.components.roku.Roku.tune") as tune_mock:
         await hass.services.async_call(
             MP_DOMAIN,
