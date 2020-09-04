@@ -495,8 +495,66 @@ async def test_media_browse(hass, aioclient_mock, hass_ws_client):
     assert msg["success"]
 
     assert msg["result"]
-    assert msg["result"]["title"] == "Channels"
+    assert msg["result"]["title"] == "Media Library"
     assert msg["result"]["type"] == "library"
+    assert msg["result"]["can_expand"]
+    assert not msg["result"]["can_play"]
+    assert len(msg["result"]["children"]) == 2
+
+    # test apps
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "media_player/browse_media",
+            "entity_id": TV_ENTITY_ID,
+            "media_content_type": "apps",
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["id"] == 2
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+
+    assert msg["result"]
+    assert msg["result"]["title"] == "Apps"
+    assert msg["result"]["type"] == "apps"
+    assert msg["result"]["can_expand"]
+    assert not msg["result"]["can_play"]
+    assert len(msg["result"]["children"]) == 11
+
+    assert msg["result"]["children"][0]["title"] == "Satellite TV"
+    assert msg["result"]["children"][0]["media_content_type"] == MEDIA_TYPE_APP
+    assert msg["result"]["children"][0]["media_content_id"] == "tvinput.hdmi2"
+    assert msg["result"]["children"][0]["thumbnail"] == ""
+    assert msg["result"]["children"][0]["can_play"]
+
+    assert msg["result"]["children"][3]["title"] == "Roku Channel Store"
+    assert msg["result"]["children"][3]["media_content_type"] == MEDIA_TYPE_APP
+    assert msg["result"]["children"][3]["media_content_id"] == "11"
+    assert msg["result"]["children"][3]["thumbnail"] == ""
+    assert msg["result"]["children"][3]["can_play"]
+
+    # test channels
+    await client.send_json(
+        {
+            "id": 3,
+            "type": "media_player/browse_media",
+            "entity_id": TV_ENTITY_ID,
+            "media_content_type": "channels",
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["id"] == 2
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+
+    assert msg["result"]
+    assert msg["result"]["title"] == "Channels"
+    assert msg["result"]["type"] == "channels"
     assert msg["result"]["can_expand"]
     assert not msg["result"]["can_play"]
     assert len(msg["result"]["children"]) == 2
