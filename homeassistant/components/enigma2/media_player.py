@@ -183,7 +183,7 @@ class Enigma2Device(MediaPlayerEntity):
     @property
     def media_image_url(self):
         """Picon url for the channel."""
-        return self.e2_box.picon_url
+        return self.e2_box.picon
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
