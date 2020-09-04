@@ -7,7 +7,6 @@ import voluptuous as vol
 
 from homeassistant.components.switch import ATTR_CURRENT_POWER_W
 from homeassistant.const import (
-    ATTR_FRIENDLY_NAME,
     CONF_ENTITIES,
     CONF_NAME,
     EVENT_HOMEASSISTANT_STOP,
@@ -97,10 +96,7 @@ def get_plug_devices(hass, entity_configs):
                 power = float(state.attributes[ATTR_CURRENT_POWER_W])
             else:
                 _LOGGER.warning("No power value defined for: %s", name)
-
-            last_changed = state.last_changed.timestamp()
-
         else:
             power = 0.0
-            last_changed = time()
+        last_changed = state.last_changed.timestamp()
         yield PlugInstance(entity_id, start_time=last_changed, alias=name, power=power)
