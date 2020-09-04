@@ -509,6 +509,7 @@ async def test_media_browse(hass, aioclient_mock, hass_ws_client):
             "type": "media_player/browse_media",
             "entity_id": TV_ENTITY_ID,
             "media_content_type": "apps",
+            "media_content_id": "apps",
         }
     )
 
@@ -544,6 +545,7 @@ async def test_media_browse(hass, aioclient_mock, hass_ws_client):
             "type": "media_player/browse_media",
             "entity_id": TV_ENTITY_ID,
             "media_content_type": "channels",
+            "media_content_id": "channels",
         }
     )
 
