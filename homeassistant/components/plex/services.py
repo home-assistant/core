@@ -28,7 +28,7 @@ async def async_setup_services(hass):
         await hass.async_add_executor_job(refresh_library, hass, service_call)
 
     async def async_scan_clients_service(_):
-        _LOGGER.info("Scanning for new Plex clients")
+        _LOGGER.debug("Scanning for new Plex clients")
         for server_id in hass.data[DOMAIN][SERVERS]:
             async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
 
