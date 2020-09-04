@@ -83,7 +83,7 @@ class DSMRConnection:
 
 async def _validate_dsmr_connection(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect."""
-    conn = DSMRConnection(data[CONF_HOST], data[CONF_PORT], data[CONF_DSMR_VERSION])
+    conn = DSMRConnection(data.get(CONF_HOST), data[CONF_PORT], data[CONF_DSMR_VERSION])
 
     if not await conn.validate_connect(hass):
         raise CannotConnect

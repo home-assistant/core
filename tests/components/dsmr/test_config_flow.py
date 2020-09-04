@@ -1,12 +1,64 @@
 """Test the DSMR config flow."""
+import asyncio
+
+from dsmr_parser.clients.protocol import DSMRProtocol
+from dsmr_parser.obis_references import EQUIPMENT_IDENTIFIER, EQUIPMENT_IDENTIFIER_GAS
+from dsmr_parser.objects import CosemObject
+import pytest
+
 from homeassistant import config_entries, setup
 from homeassistant.components.dsmr import DOMAIN
 
-from tests.async_mock import patch
+import tests.async_mock
+from tests.async_mock import Mock, patch
 from tests.common import MockConfigEntry
 
+SERIAL_DATA = {"serial_id": "12345678", "serial_id_gas": "123456789"}
 
-async def test_import_usb(hass):
+
+@pytest.fixture
+def mock_connection_factory(monkeypatch):
+    """Mock the create functions for serial and TCP Asyncio connections."""
+    transport = tests.async_mock.Mock(spec=asyncio.Transport)
+    protocol = tests.async_mock.Mock(spec=DSMRProtocol)
+
+    async def connection_factory(*args, **kwargs):
+        """Return mocked out Asyncio classes."""
+        return (transport, protocol)
+
+    connection_factory = Mock(wraps=connection_factory)
+
+    # apply the mock to both connection factories
+    monkeypatch.setattr(
+        "homeassistant.components.dsmr.config_flow.create_dsmr_reader",
+        connection_factory,
+    )
+    monkeypatch.setattr(
+        "homeassistant.components.dsmr.config_flow.create_tcp_dsmr_reader",
+        connection_factory,
+    )
+
+    protocol.telegram = {
+        EQUIPMENT_IDENTIFIER: CosemObject([{"value": "12345678", "unit": ""}]),
+        EQUIPMENT_IDENTIFIER_GAS: CosemObject([{"value": "123456789", "unit": ""}]),
+    }
+
+    async def wait_closed():
+        if isinstance(connection_factory.call_args_list[0][0][2], str):
+            # TCP
+            telegram_callback = connection_factory.call_args_list[0][0][3]
+        else:
+            # Serial
+            telegram_callback = connection_factory.call_args_list[0][0][2]
+
+        telegram_callback(protocol.telegram)
+
+    protocol.wait_closed = wait_closed
+
+    return connection_factory, transport, protocol
+
+
+async def test_import_usb(hass, mock_connection_factory):
     """Test we can import."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
@@ -26,10 +78,10 @@ async def test_import_usb(hass):
 
     assert result["type"] == "create_entry"
     assert result["title"] == "/dev/ttyUSB0"
-    assert result["data"] == entry_data
+    assert result["data"] == {**entry_data, **SERIAL_DATA}
 
 
-async def test_import_network(hass):
+async def test_import_network(hass, mock_connection_factory):
     """Test we can import from network."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
@@ -50,10 +102,10 @@ async def test_import_network(hass):
 
     assert result["type"] == "create_entry"
     assert result["title"] == "localhost:1234"
-    assert result["data"] == entry_data
+    assert result["data"] == {**entry_data, **SERIAL_DATA}
 
 
-async def test_import_update(hass):
+async def test_import_update(hass, mock_connection_factory):
     """Test we can import."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
