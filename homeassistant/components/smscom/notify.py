@@ -1,9 +1,6 @@
 """SMS COM platform for notify component."""
-import json
 import logging
 
-from aiohttp.hdrs import CONTENT_TYPE
-import requests
 import voluptuous as vol
 
 from homeassistant.components.notify import ATTR_TARGET, PLATFORM_SCHEMA, BaseNotificationService
@@ -38,7 +35,6 @@ PLATFORM_SCHEMA = vol.Schema(
 
 serial = Serial()
 
-
 def get_service(hass, config, discovery_info=None):
     """Get the atSMS notification service."""
 
@@ -52,6 +48,7 @@ def get_service(hass, config, discovery_info=None):
     return SMSComNotificationService(config)
 
 class StaticWait:
+    """Wait sendding by static variable"""
     still_sending = False
 
 class SMSComNotificationService(BaseNotificationService):
@@ -97,7 +94,7 @@ class SMSComNotificationService(BaseNotificationService):
 
 def _uart_read_timeout(t):
     serial.timeout = 1
-    timeout = time.time() + t
+    timeout = time.time() + float(t)
     line = b''
     serial.flush()
     while line == b'':
@@ -125,16 +122,3 @@ def _check_com_port(config):
     if b'OK' != line.strip():
         return False
     return True
-
-# def _authenticate(config):
-#     """Authenticate with ClickSend."""
-#     api_url = f"{BASE_API_URL}/account"
-#     resp = requests.get(
-#         api_url,
-#         headers=HEADERS,
-#         auth=(config[CONF_USERNAME], config[CONF_API_KEY]),
-#         timeout=TIMEOUT,
-#     )
-#     if resp.status_code != HTTP_OK:
-#         return False
-#     return True

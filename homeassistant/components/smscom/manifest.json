@@ -3,5 +3,5 @@
   "name": "SMS COM",
   "documentation": "https://hs2t.com",
   "codeowners": ["@han"],
-  "requirements": ["pyserial"]
+  "requirements": ["pyserial==3.4"]
 }
