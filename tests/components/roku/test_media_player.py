@@ -160,6 +160,7 @@ async def test_supported_features(
         | SUPPORT_PLAY_MEDIA
         | SUPPORT_TURN_ON
         | SUPPORT_TURN_OFF
+        | SUPPORT_BROWSE_MEDIA
         == state.attributes.get("supported_features")
     )
 
