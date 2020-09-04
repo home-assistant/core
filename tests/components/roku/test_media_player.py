@@ -20,6 +20,7 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE,
+    SUPPORT_BROWSE_MEDIA,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -187,6 +188,7 @@ async def test_tv_supported_features(
         | SUPPORT_PLAY_MEDIA
         | SUPPORT_TURN_ON
         | SUPPORT_TURN_OFF
+        | SUPPORT_BROWSE_MEDIA
         == state.attributes.get("supported_features")
     )
 
