@@ -262,7 +262,7 @@ async def test_template(hass):
     )
 
     fan = hass.states.get(ENTITY_FAN)
-    assert fan.state == STATE_ON    
+    assert fan.state == STATE_ON
 
     # Fan low:
     plug_it = emulated_kasa.get_plug_devices(hass, config)

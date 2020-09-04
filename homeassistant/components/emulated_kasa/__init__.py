@@ -76,7 +76,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 
 def validate_configs(hass, entity_configs):
-    """Validates that entities exist and ensures templates are ready to use."""
+    """Validate that entities exist and ensure templates are ready to use."""
     for entity_id, entity_config in entity_configs.items():
         state = hass.states.get(entity_id)
         if state is None:
