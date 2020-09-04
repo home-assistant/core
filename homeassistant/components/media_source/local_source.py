@@ -83,7 +83,7 @@ class LocalSource(MediaSource):
         full_path = Path(self.hass.config.path("media", location))
 
         if not full_path.exists():
-            raise BrowseError("Path does not exist in.")
+            raise BrowseError("Path does not exist.")
 
         if not full_path.is_dir():
             raise BrowseError("Path is not a directory.")

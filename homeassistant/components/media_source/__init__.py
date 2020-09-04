@@ -7,6 +7,7 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.components.http.auth import async_sign_path
 from homeassistant.components.media_player.const import ATTR_MEDIA_CONTENT_ID
+from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
@@ -15,6 +16,7 @@ from homeassistant.loader import bind_hass
 
 from . import local_source, models
 from .const import DOMAIN, URI_SCHEME, URI_SCHEME_REGEX
+from .error import Unresolvable
 
 
 def is_media_source_id(media_content_id: str):
@@ -24,7 +26,10 @@ def is_media_source_id(media_content_id: str):
 
 def generate_media_source_id(domain: str, identifier: str) -> str:
     """Generate a media source ID."""
-    return f"{URI_SCHEME}{domain}/{identifier}"
+    uri = f"{URI_SCHEME}{domain or ''}"
+    if identifier:
+        uri += f"/{identifier}"
+    return uri
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -82,11 +87,14 @@ async def async_resolve_media(
 @websocket_api.async_response
 async def websocket_browse_media(hass, connection, msg):
     """Browse available media."""
-    media = await async_browse_media(hass, msg.get("media_content_id"))
-    connection.send_result(
-        msg["id"],
-        media.to_media_player_item(),
-    )
+    try:
+        media = await async_browse_media(hass, msg.get("media_content_id"))
+        connection.send_result(
+            msg["id"],
+            media.to_media_player_item(),
+        )
+    except BrowseError as err:
+        connection.send_error(msg["id"], "browse_media_failed", str(err))
 
 
 @websocket_api.websocket_command(
@@ -99,14 +107,17 @@ async def websocket_browse_media(hass, connection, msg):
 @websocket_api.async_response
 async def websocket_resolve_media(hass, connection, msg):
     """Resolve media."""
-    media = await async_resolve_media(hass, msg["media_content_id"])
-    url = media.url
-    if url[0] == "/":
-        url = async_sign_path(
-            hass,
-            connection.refresh_token_id,
-            url,
-            timedelta(seconds=msg["expires"]),
-        )
+    try:
+        media = await async_resolve_media(hass, msg["media_content_id"])
+        url = media.url
+        if url[0] == "/":
+            url = async_sign_path(
+                hass,
+                connection.refresh_token_id,
+                url,
+                timedelta(seconds=msg["expires"]),
+            )
 
-    connection.send_result(msg["id"], {"url": url, "mime_type": media.mime_type})
+        connection.send_result(msg["id"], {"url": url, "mime_type": media.mime_type})
+    except Unresolvable as err:
+        connection.send_error(msg["id"], "resolve_media_failed", str(err))
