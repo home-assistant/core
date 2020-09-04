@@ -154,7 +154,7 @@ class LocalMediaView(HomeAssistantView):
 
         # Check that it's a media file
         mime_type, _ = await request.app["hass"].async_add_executor_job(
-            mimetypes.guess_type, media_path
+            mimetypes.guess_type, str(media_path)
         )
         if not mime_type or mime_type.split("/")[0] not in MEDIA_MIME_TYPES:
             raise web.HTTPNotFound()
