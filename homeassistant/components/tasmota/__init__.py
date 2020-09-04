@@ -1,6 +1,8 @@
 """Support for MQTT message handling."""
 import logging
 
+import voluptuous as vol
+
 from hatasmota.const import (
     CONF_ID,
     CONF_MANUFACTURER,
@@ -8,8 +10,6 @@ from hatasmota.const import (
     CONF_NAME,
     CONF_SW_VERSION,
 )
-import voluptuous as vol
-
 from homeassistant.components.mqtt import valid_subscribe_topic
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType
@@ -31,13 +31,6 @@ DOMAIN_SCHEMA = vol.Schema(
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: DOMAIN_SCHEMA,
-    },
-    extra=vol.ALLOW_EXTRA,
-)
-
 
 async def async_setup(hass: HomeAssistantType, config: dict):
     """Set up the Tasmota component."""
@@ -52,11 +45,8 @@ async def async_setup_entry(hass, entry):
 
     async def async_discover_device(config, discovery_hash, discovery_payload):
         """Discover and add a Tasmota device."""
-        discovery_data = discovery_payload.discovery_data if discovery_payload else None
         try:
-            await async_setup_device(
-                hass, discovery_hash, config, entry, discovery_data
-            )
+            await async_setup_device(hass, discovery_hash, config, entry)
         except Exception:
             clear_discovery_hash(hass, discovery_hash)
             raise
@@ -93,9 +83,7 @@ async def _update_device(hass, config_entry, config):
     device_registry.async_get_or_create(**device_info)
 
 
-async def async_setup_device(
-    hass, discovery_hash, config, config_entry, discovery_data
-):
+async def async_setup_device(hass, discovery_hash, config, config_entry):
     """Set up the Tasmota device."""
     if not config:
         await _remove_device(hass, discovery_hash)

@@ -1,15 +1,7 @@
 """Tasnmota entity mixins."""
 import logging
 
-from hatasmota.const import CONF_AVAILABILITY_TOPIC, CONF_OFFLINE, CONF_ONLINE, CONF_QOS
-
 from homeassistant.components.mqtt.const import MQTT_CONNECTED, MQTT_DISCONNECTED
-from homeassistant.components.mqtt.debug_info import log_messages
-from homeassistant.components.mqtt.models import Message
-from homeassistant.components.mqtt.subscription import (
-    async_subscribe_topics,
-    async_unsubscribe_topics,
-)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -24,16 +16,14 @@ _LOGGER = logging.getLogger(__name__)
 class TasmotaAvailability(Entity):
     """Mixin used for platforms that report availability."""
 
-    def __init__(self, config: dict) -> None:
+    def __init__(self, entity) -> None:
         """Initialize the availability mixin."""
-        self._availability_sub_state = None
         self._available = False
-        self._availability_setup_from_config(config)
+        entity.set_on_availability_callback(self.availability_updated)
 
     async def async_added_to_hass(self) -> None:
         """Subscribe MQTT events."""
         await super().async_added_to_hass()
-        await self._availability_subscribe_topics()
         self.async_on_remove(
             async_dispatcher_connect(self.hass, MQTT_CONNECTED, self.async_mqtt_connect)
         )
@@ -45,39 +35,12 @@ class TasmotaAvailability(Entity):
 
     async def availability_discovery_update(self, config: dict):
         """Handle updated discovery message."""
-        self._availability_setup_from_config(config)
-        await self._availability_subscribe_topics()
 
-    def _availability_setup_from_config(self, config):
-        """(Re)Setup."""
-        self._avail_config = config
-
-    async def _availability_subscribe_topics(self):
-        """(Re)Subscribe to topics."""
-
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        def availability_message_received(msg: Message) -> None:
-            """Handle a new received MQTT availability message."""
-            if msg.payload == self._avail_config[CONF_ONLINE]:
-                self._available = True
-            if msg.payload == self._avail_config[CONF_OFFLINE]:
-                self._available = False
-
-            self.async_write_ha_state()
-
-        availability_topic = self._avail_config[CONF_AVAILABILITY_TOPIC]
-        self._availability_sub_state = await async_subscribe_topics(
-            self.hass,
-            self._availability_sub_state,
-            {
-                "availability_topic": {
-                    "topic": availability_topic,
-                    "msg_callback": availability_message_received,
-                    "qos": self._avail_config[CONF_QOS],
-                }
-            },
-        )
+    @callback
+    def availability_updated(self, available: bool) -> None:
+        """Handle updated availability."""
+        self._available = available
+        self.async_write_ha_state()
 
     @callback
     def async_mqtt_connect(self):
@@ -87,9 +50,6 @@ class TasmotaAvailability(Entity):
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""
-        self._availability_sub_state = await async_unsubscribe_topics(
-            self.hass, self._availability_sub_state
-        )
 
     @property
     def available(self) -> bool:
@@ -104,7 +64,6 @@ class TasmotaDiscoveryUpdate(Entity):
 
     def __init__(self, config, discovery_hash, discovery_update) -> None:
         """Initialize the discovery update mixin."""
-        self._discovery_config = config
         self._discovery_hash = discovery_hash
         self._discovery_update = discovery_update
         self._remove_signal = None
@@ -123,9 +82,7 @@ class TasmotaDiscoveryUpdate(Entity):
                 self._discovery_hash,
                 config,
             )
-            old_config = self._discovery_config
-            self._discovery_config = config
-            if old_config != config:
+            if not self._entity.config_same(config):
                 # Changed payload: Notify component
                 _LOGGER.info("Updating component: %s", self.entity_id)
                 await self._discovery_update(config)
@@ -146,7 +103,7 @@ class TasmotaDiscoveryUpdate(Entity):
 
     def _cleanup_discovery_on_remove(self) -> None:
         """Stop listening to signal and cleanup discovery data."""
-        if self._discovery_config and not self._removed_from_hass:
+        if not self._removed_from_hass:
             clear_discovery_hash(self.hass, self._discovery_hash)
             self._removed_from_hass = True
 

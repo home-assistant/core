@@ -2,25 +2,27 @@
 import asyncio
 import json
 import logging
-import re
 
 from hatasmota.const import CONF_RELAY
 from hatasmota.discovery import (
     TasmotaDiscoveryMsg,
     get_device_config,
     get_entities_for_platform,
+    get_entity,
     has_entities_with_platform,
 )
-
+from hatasmota.utils import get_serial_number_from_discovery_topic
 from homeassistant.components import mqtt
+from homeassistant.components.mqtt.subscription import (
+    async_subscribe_topics,
+    async_unsubscribe_topics,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import ATTR_DISCOVERY_TOPIC, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-TOPIC_MATCHER = re.compile(r"(?P<serial_number>[A-Z0-9_-]+)\/config")
 
 SUPPORTED_COMPONENTS = {
     "switch": CONF_RELAY,
@@ -54,30 +56,21 @@ async def async_start(
         """Process the received message."""
         payload = msg.payload
         topic = msg.topic
-        topic_trimmed = topic.replace(f"{discovery_topic}/", "", 1)
-        match = TOPIC_MATCHER.match(topic_trimmed)
 
-        if not match:
+        serial_number = get_serial_number_from_discovery_topic(topic, discovery_topic)
+        if not serial_number:
             return
-
-        (serial_number,) = match.groups()
 
         if payload:
             try:
                 payload = TasmotaDiscoveryMsg(json.loads(payload))
             except ValueError:
-                _LOGGER.warning("Unable to parse JSON %s: '%s'", serial_number, payload)
+                _LOGGER.warning(
+                    "Invalid discovery message %s: '%s'", serial_number, payload
+                )
                 return
         else:
             payload = {}
-
-        if payload:
-            # Attach MQTT topic to the payload, used for debug prints
-            setattr(payload, "__configuration_source__", f"Tasmota (topic: '{topic}')")
-            discovery_data = {
-                ATTR_DISCOVERY_TOPIC: topic,
-            }
-            setattr(payload, "discovery_data", discovery_data)
 
         if ALREADY_DISCOVERED not in hass.data:
             hass.data[ALREADY_DISCOVERED] = {}
@@ -101,9 +94,9 @@ async def async_start(
 
         for component, component_key in SUPPORTED_COMPONENTS.items():
             entities = get_entities_for_platform(payload, component_key)
-            for (idx, config) in enumerate(entities):
+            for (idx, entity_config) in enumerate(entities):
                 discovery_hash = (serial_number, component, idx)
-                if not config:
+                if not entity_config:
                     # Entity disabled, clean up entity registry
                     entity_registry = (
                         await hass.helpers.entity_registry.async_get_registry()
@@ -128,17 +121,30 @@ async def async_start(
                     async_dispatcher_send(
                         hass,
                         TASMOTA_DISCOVERY_ENTITY_UPDATED.format(*discovery_hash),
-                        config,
+                        entity_config,
                     )
                 else:
                     _LOGGER.info("Adding new entity: %s %s", component, discovery_hash)
                     hass.data[ALREADY_DISCOVERED][discovery_hash] = None
+
+                    def _publish(*args):
+                        mqtt.async_publish(hass, *args)
+
+                    async def _subscribe_topics(sub_state, topics):
+                        return await async_subscribe_topics(hass, sub_state, topics)
+
+                    async def _unsubscribe_topics(sub_state):
+                        return await async_unsubscribe_topics(hass, sub_state)
+
+                    entity = get_entity(entity_config, component_key)
+                    entity.set_mqtt_callbacks(
+                        _publish, _subscribe_topics, _unsubscribe_topics
+                    )
                     async_dispatcher_send(
                         hass,
                         TASMOTA_DISCOVERY_ENTITY_NEW.format(component),
-                        config,
+                        entity,
                         discovery_hash,
-                        payload,
                     )
 
     hass.data[DATA_CONFIG_ENTRY_LOCK] = asyncio.Lock()
