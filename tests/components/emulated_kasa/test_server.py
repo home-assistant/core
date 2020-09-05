@@ -51,7 +51,10 @@ CONFIG = {
                 CONF_NAME: ENTITY_SWITCH_NAME,
                 CONF_POWER: ENTITY_SWITCH_POWER,
             },
-            ENTITY_LIGHT: {CONF_NAME: ENTITY_LIGHT_NAME, CONF_POWER_ENTITY: ENTITY_SENSOR},
+            ENTITY_LIGHT: {
+                CONF_NAME: ENTITY_LIGHT_NAME,
+                CONF_POWER_ENTITY: ENTITY_SENSOR,
+            },
             ENTITY_FAN: {
                 CONF_POWER: "{% if is_state_attr('"
                 + ENTITY_FAN
@@ -93,7 +96,10 @@ CONFIG_SWITCH_NO_POWER = {
 CONFIG_LIGHT = {
     DOMAIN: {
         CONF_ENTITIES: {
-            ENTITY_LIGHT: {CONF_NAME: ENTITY_LIGHT_NAME, CONF_POWER_ENTITY: ENTITY_SENSOR},
+            ENTITY_LIGHT: {
+                CONF_NAME: ENTITY_LIGHT_NAME,
+                CONF_POWER_ENTITY: ENTITY_SENSOR,
+            },
         }
     }
 }
