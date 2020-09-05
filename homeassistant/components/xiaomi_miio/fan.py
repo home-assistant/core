@@ -1173,7 +1173,7 @@ class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
         return None
 
     @property
-    def button_presed(self):
+    def button_pressed(self):
         """Return the last button pressed."""
         if self._state:
             return AirhumidifierPressedButton(
