@@ -177,8 +177,6 @@ async def test_setup(hass, two_zone_alarm):  # noqa: F811
     ) as save_mock:
         entry = await setup_risco(hass)
         await hass.async_block_till_done()
-        # need to block till done twice for the call to happen
-        await hass.async_block_till_done()
         save_mock.assert_awaited_once_with(
             {LAST_EVENT_TIMESTAMP_KEY: TEST_EVENTS[0].time}
         )
