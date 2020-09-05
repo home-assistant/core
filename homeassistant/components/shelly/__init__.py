@@ -69,7 +69,7 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         super().__init__(
             hass,
             _LOGGER,
-            name=device.settings["name"] or entry.title,
+            name=device.settings["name"] or device.settings["device"]["hostname"],
             update_interval=timedelta(seconds=5),
         )
         self.hass = hass
