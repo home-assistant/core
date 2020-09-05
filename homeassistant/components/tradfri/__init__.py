@@ -28,7 +28,6 @@ from .const import (
     DOMAIN,
     GROUPS,
     KEY_API,
-    KEY_GATEWAY,
     PLATFORMS,
 )
 
@@ -127,7 +126,6 @@ async def async_setup_entry(hass, entry):
         raise ConfigEntryNotReady from err
 
     tradfri_data[KEY_API] = api
-    tradfri_data[KEY_GATEWAY] = gateway
     tradfri_data[FACTORY] = factory
     tradfri_data[DEVICES] = devices
     tradfri_data[GROUPS] = groups
