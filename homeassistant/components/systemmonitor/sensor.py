@@ -35,41 +35,61 @@ if sys.maxsize > 2 ** 32:
 else:
     CPU_ICON = "mdi:cpu-32-bit"
 
+# Schema: [name, unit of measurement, icon, device class, flag if mandatory arg]
 SENSOR_TYPES = {
-    "disk_free": ["Disk free", DATA_GIBIBYTES, "mdi:harddisk", None],
-    "disk_use": ["Disk use", DATA_GIBIBYTES, "mdi:harddisk", None],
-    "disk_use_percent": ["Disk use (percent)", PERCENTAGE, "mdi:harddisk", None],
-    "ipv4_address": ["IPv4 address", "", "mdi:server-network", None],
-    "ipv6_address": ["IPv6 address", "", "mdi:server-network", None],
-    "last_boot": ["Last boot", "", "mdi:clock", "timestamp"],
-    "load_15m": ["Load (15m)", " ", "mdi:memory", None],
-    "load_1m": ["Load (1m)", " ", "mdi:memory", None],
-    "load_5m": ["Load (5m)", " ", "mdi:memory", None],
-    "memory_free": ["Memory free", DATA_MEBIBYTES, "mdi:memory", None],
-    "memory_use": ["Memory use", DATA_MEBIBYTES, "mdi:memory", None],
-    "memory_use_percent": ["Memory use (percent)", PERCENTAGE, "mdi:memory", None],
-    "network_in": ["Network in", DATA_MEBIBYTES, "mdi:server-network", None],
-    "network_out": ["Network out", DATA_MEBIBYTES, "mdi:server-network", None],
-    "packets_in": ["Packets in", " ", "mdi:server-network", None],
-    "packets_out": ["Packets out", " ", "mdi:server-network", None],
+    "disk_free": ["Disk free", DATA_GIBIBYTES, "mdi:harddisk", None, False],
+    "disk_use": ["Disk use", DATA_GIBIBYTES, "mdi:harddisk", None, False],
+    "disk_use_percent": [
+        "Disk use (percent)",
+        PERCENTAGE,
+        "mdi:harddisk",
+        None,
+        False,
+    ],
+    "ipv4_address": ["IPv4 address", "", "mdi:server-network", None, True],
+    "ipv6_address": ["IPv6 address", "", "mdi:server-network", None, True],
+    "last_boot": ["Last boot", "", "mdi:clock", "timestamp", False],
+    "load_15m": ["Load (15m)", " ", CPU_ICON, None, False],
+    "load_1m": ["Load (1m)", " ", CPU_ICON, None, False],
+    "load_5m": ["Load (5m)", " ", CPU_ICON, None, False],
+    "memory_free": ["Memory free", DATA_MEBIBYTES, "mdi:memory", None, False],
+    "memory_use": ["Memory use", DATA_MEBIBYTES, "mdi:memory", None, False],
+    "memory_use_percent": [
+        "Memory use (percent)",
+        PERCENTAGE,
+        "mdi:memory",
+        None,
+        False,
+    ],
+    "network_in": ["Network in", DATA_MEBIBYTES, "mdi:server-network", None, True],
+    "network_out": ["Network out", DATA_MEBIBYTES, "mdi:server-network", None, True],
+    "packets_in": ["Packets in", " ", "mdi:server-network", None, True],
+    "packets_out": ["Packets out", " ", "mdi:server-network", None, True],
     "throughput_network_in": [
         "Network throughput in",
         DATA_RATE_MEGABYTES_PER_SECOND,
         "mdi:server-network",
         None,
+        True,
     ],
     "throughput_network_out": [
         "Network throughput out",
         DATA_RATE_MEGABYTES_PER_SECOND,
         "mdi:server-network",
-        None,
+        True,
     ],
-    "process": ["Process", " ", CPU_ICON, None],
-    "processor_use": ["Processor use", PERCENTAGE, CPU_ICON, None],
-    "processor_temperature": ["Processor temperature", TEMP_CELSIUS, CPU_ICON, None],
-    "swap_free": ["Swap free", DATA_MEBIBYTES, "mdi:harddisk", None],
-    "swap_use": ["Swap use", DATA_MEBIBYTES, "mdi:harddisk", None],
-    "swap_use_percent": ["Swap use (percent)", PERCENTAGE, "mdi:harddisk", None],
+    "process": ["Process", " ", CPU_ICON, None, True],
+    "processor_use": ["Processor use", PERCENTAGE, CPU_ICON, None, False],
+    "processor_temperature": [
+        "Processor temperature",
+        TEMP_CELSIUS,
+        CPU_ICON,
+        None,
+        False,
+    ],
+    "swap_free": ["Swap free", DATA_MEBIBYTES, "mdi:harddisk", None, True],
+    "swap_use": ["Swap use", DATA_MEBIBYTES, "mdi:harddisk", None, False],
+    "swap_use_percent": ["Swap use (percent)", PERCENTAGE, "mdi:harddisk", None, False],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -133,6 +153,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 resource[CONF_ARG] = "/"
             else:
                 resource[CONF_ARG] = ""
+
+            # Check if argument is required. If yes, but none was provided, log an error.
+            if SENSOR_TYPES[resource[CONF_TYPE]][4] is True:
+                _LOGGER.error(
+                    f"Mandatory 'arg' is missing for 'type' {resource[CONF_TYPE]}."
+                )
+                continue
 
         # Verify if we can retrieve CPU / processor temperatures.
         # If not, do not create the entity and add a warning to the log
