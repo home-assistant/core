@@ -89,21 +89,10 @@ class DeviceCover(CoordinatorEntity, CoverEntity):
         """Initialize the object."""
         super().__init__(data_update_coordinator)
         self._config_entry = config_entry
-        self._data_update_coordinator = data_update_coordinator
         self._door = door
         self._api = data_update_coordinator.api
         self._unique_id = cover_unique_id(config_entry, door)
         self._is_available = True
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._data_update_coordinator.last_update_success
-
-    @property
-    def should_poll(self) -> bool:
-        """Return False as the data manager handles dispatching data."""
-        return False
 
     @property
     def unique_id(self) -> Optional[str]:
@@ -157,6 +146,6 @@ class DeviceCover(CoordinatorEntity, CoverEntity):
         return attrs
 
     def _get_door(self) -> AbstractDoor:
-        door = get_door_by_id(self._door.door_id, self._data_update_coordinator.data)
+        door = get_door_by_id(self._door.door_id, self.coordinator.data)
         self._door = door or self._door
         return self._door
