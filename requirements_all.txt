@@ -1955,8 +1955,9 @@ sendgrid==6.4.6
 # homeassistant.components.sensehat
 sense-hat==2.2.0
 
+# homeassistant.components.emulated_kasa
 # homeassistant.components.sense
-sense_energy==0.7.2
+sense_energy==0.8.0
 
 # homeassistant.components.sentry
 sentry-sdk==0.17.3
