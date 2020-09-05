@@ -34,8 +34,7 @@ class TradfriBaseClass(Entity):
 
     def __init__(self, device, api, gateway_id):
         """Initialize a device."""
-        self._api = api
-        self._api = handle_error(self._api)
+        self._api = handle_error(api)
         self._device = None
         self._device_control = None
         self._device_data = None
