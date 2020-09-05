@@ -10,23 +10,19 @@ from aioswitcher.bridge import SwitcherV2Bridge
 from aioswitcher.consts import COMMAND_ON
 import voluptuous as vol
 
-from homeassistant.auth.permissions.const import POLICY_EDIT
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import callback, split_entity_id
-from homeassistant.exceptions import Unauthorized, UnknownUser
+from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_listen_platform, async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import (
-    ContextType,
     DiscoveryInfoType,
     EventType,
     HomeAssistantType,
     ServiceCallType,
 )
-from homeassistant.loader import bind_hass
 
 _LOGGER = getLogger(__name__)
 
