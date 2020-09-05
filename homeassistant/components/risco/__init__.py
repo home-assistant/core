@@ -20,6 +20,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DATA_COORDINATOR, DEFAULT_SCAN_INTERVAL, DOMAIN, EVENTS_COORDINATOR
 
+# binary_sensors need to be before sensor, to ensure the zone dict is available
 PLATFORMS = ["alarm_control_panel", "binary_sensor", "sensor"]
 UNDO_UPDATE_LISTENER = "undo_update_listener"
 LAST_EVENT_STORAGE_VERSION = 1
