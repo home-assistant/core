@@ -1,7 +1,6 @@
 """Support for the Dynalite networks."""
 
 import asyncio
-import json
 from typing import Any, Dict, Union
 
 import voluptuous as vol
@@ -269,7 +268,7 @@ async def async_setup(hass: HomeAssistant, config: Dict[str, Any]) -> bool:
 
     def websocket_update_config_entry_data(hass, connection, msg):
         """Update the data for a config entry."""
-        entry_data = BRIDGE_SCHEMA(json.loads(msg["entry_data"]))
+        entry_data = msg["entry_data"]
         entry = hass.config_entries.async_get_entry(msg["entry_id"])
         existing_data = entry.data
         if existing_data != entry_data:
@@ -278,7 +277,11 @@ async def async_setup(hass: HomeAssistant, config: Dict[str, Any]) -> bool:
 
     ws_type_dynalite_update_entry = "dynalite/update_entry"
     schema_websocket_update_entry = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-        {"type": ws_type_dynalite_update_entry, "entry_id": str, "entry_data": str}
+        {
+            "type": ws_type_dynalite_update_entry,
+            "entry_id": str,
+            "entry_data": BRIDGE_SCHEMA,
+        }
     )
     hass.components.websocket_api.async_register_command(
         ws_type_dynalite_update_entry,
