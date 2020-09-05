@@ -61,8 +61,13 @@ async def test_setup_platform(hass, mock_connection_factory):
         "reconnect_interval": 30,
     }
 
+    serial_data = {"serial_id": "1234", "serial_id_gas": "5678"}
+
     with patch("homeassistant.components.dsmr.async_setup", return_value=True), patch(
         "homeassistant.components.dsmr.async_setup_entry", return_value=True
+    ), patch(
+        "homeassistant.components.dsmr.config_flow._validate_dsmr_connection",
+        return_value=serial_data,
     ):
         assert await async_setup_component(
             hass, SENSOR_DOMAIN, {SENSOR_DOMAIN: entry_data}
@@ -79,7 +84,7 @@ async def test_setup_platform(hass, mock_connection_factory):
     entry = conf_entries[0]
 
     assert entry.state == "loaded"
-    assert entry.data == entry_data
+    assert entry.data == {**entry_data, **serial_data}
 
 
 async def test_default_setup(hass, mock_connection_factory):
