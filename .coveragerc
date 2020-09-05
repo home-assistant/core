@@ -312,9 +312,6 @@ omit =
     homeassistant/components/gc100/*
     homeassistant/components/geniushub/*
     homeassistant/components/geizhals/sensor.py
-    homeassistant/components/github/sensor.py
-    homeassistant/components/gios/__init__.py
-    homeassistant/components/gios/air_quality.py
     homeassistant/components/github/__init__.py
     homeassistant/components/github/const.py
     homeassistant/components/github/sensor.py
