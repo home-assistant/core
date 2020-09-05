@@ -1,5 +1,6 @@
 """Test the DSMR config flow."""
 import asyncio
+from itertools import chain, repeat
 
 from dsmr_parser.clients.protocol import DSMRProtocol
 from dsmr_parser.obis_references import EQUIPMENT_IDENTIFIER, EQUIPMENT_IDENTIFIER_GAS
@@ -10,7 +11,7 @@ import serial
 from homeassistant import config_entries, setup
 from homeassistant.components.dsmr import DOMAIN
 
-from tests.async_mock import Mock, patch
+from tests.async_mock import DEFAULT, AsyncMock, Mock, patch
 from tests.common import MockConfigEntry
 
 SERIAL_DATA = {"serial_id": "12345678", "serial_id_gas": "123456789"}
@@ -58,23 +59,6 @@ def mock_connection_factory(monkeypatch):
     return connection_factory, transport, protocol
 
 
-@pytest.fixture
-def mock_connection_factory_error(monkeypatch):
-    """Mock the create functions for serial and TCP Asyncio connections."""
-
-    async def connection_factory(*args, **kwargs):
-        """Return mocked out Asyncio classes."""
-        raise serial.serialutil.SerialException
-
-    connection_factory = Mock(wraps=connection_factory)
-
-    # apply the mock to both connection factories
-    monkeypatch.setattr(
-        "homeassistant.components.dsmr.config_flow.create_dsmr_reader",
-        connection_factory,
-    )
-
-
 async def test_import_usb(hass, mock_connection_factory):
     """Test we can import."""
     await setup.async_setup_component(hass, "persistent_notification", {})
@@ -98,8 +82,10 @@ async def test_import_usb(hass, mock_connection_factory):
     assert result["data"] == {**entry_data, **SERIAL_DATA}
 
 
-async def test_import_usb_failed_connection(hass, mock_connection_factory_error):
+async def test_import_usb_failed_connection(hass, monkeypatch, mock_connection_factory):
     """Test we can import."""
+    (connection_factory, transport, protocol) = mock_connection_factory
+
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     entry_data = {
@@ -108,6 +94,17 @@ async def test_import_usb_failed_connection(hass, mock_connection_factory_error)
         "precision": 4,
         "reconnect_interval": 30,
     }
+
+    # override the mock to have it fail the first time and succeed after
+    first_fail_connection_factory = AsyncMock(
+        return_value=(transport, protocol),
+        side_effect=chain([serial.serialutil.SerialException], repeat(DEFAULT)),
+    )
+
+    monkeypatch.setattr(
+        "homeassistant.components.dsmr.config_flow.create_dsmr_reader",
+        first_fail_connection_factory,
+    )
 
     with patch("homeassistant.components.dsmr.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_init(
@@ -118,6 +115,38 @@ async def test_import_usb_failed_connection(hass, mock_connection_factory_error)
 
     assert result["type"] == "abort"
     assert result["reason"] == "cannot_connect"
+
+
+async def test_import_usb_no_data(hass, monkeypatch, mock_connection_factory):
+    """Test we can import."""
+    (connection_factory, transport, protocol) = mock_connection_factory
+
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    entry_data = {
+        "port": "/dev/ttyUSB0",
+        "dsmr_version": "2.2",
+        "precision": 4,
+        "reconnect_interval": 30,
+    }
+
+    # override the mock to have it fail the first time and succeed after
+    wait_closed = AsyncMock(
+        return_value=(transport, protocol),
+        side_effect=chain([asyncio.TimeoutError], repeat(DEFAULT)),
+    )
+
+    protocol.wait_closed = wait_closed
+
+    with patch("homeassistant.components.dsmr.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=entry_data,
+        )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "cannot_communicate"
 
 
 async def test_import_usb_wrong_telegram(hass, mock_connection_factory):
