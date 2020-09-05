@@ -337,6 +337,9 @@ async def test_time_using_input_datetime(hass):
             hass, after="input_datetime.pm", before="input_datetime.am"
         )
 
+    assert not condition.time(hass, after="input_datetime.not_existing")
+    assert not condition.time(hass, before="input_datetime.not_existing")
+
 
 async def test_if_numeric_state_not_raise_on_unavailable(hass):
     """Test numeric_state doesn't raise on unavailable/unknown state."""
