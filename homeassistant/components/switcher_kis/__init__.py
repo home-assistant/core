@@ -140,10 +140,6 @@ async def async_setup(hass: HomeAssistantType, config: Dict) -> bool:
         async def async_turn_on_with_timer_service(service: ServiceCallType) -> None:
             """Use for handling turning device on with a timer service calls."""
 
-            await _validate_edit_permission(
-                hass, service.context, service.data[ATTR_ENTITY_ID]
-            )
-
             async with SwitcherV2Api(
                 hass.loop, device_data.ip_addr, phone_id, device_id, device_password
             ) as swapi:
