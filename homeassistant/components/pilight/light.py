@@ -67,7 +67,7 @@ class PilightLight(PilightBaseDevice, LightEntity):
 
         dimlevel = None
         if self._brightness is not None:
-            # Calculate pilight brightness (as a range of 0 to 15), 
+            # Calculate pilight brightness (as a range of 0 to 15)
             # By creating a percentage
             percentage = self._brightness / 255
             # Then calulate the dimmer range (aka ammount of available brightness steps).
