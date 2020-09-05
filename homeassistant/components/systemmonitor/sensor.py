@@ -2,6 +2,7 @@
 import logging
 import os
 import socket
+import sys
 
 import psutil
 import voluptuous as vol
@@ -15,10 +16,12 @@ from homeassistant.const import (
     DATA_RATE_MEGABYTES_PER_SECOND,
     STATE_OFF,
     STATE_ON,
+    TEMP_CELSIUS,
     UNIT_PERCENTAGE,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
@@ -26,6 +29,11 @@ import homeassistant.util.dt as dt_util
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ARG = "arg"
+
+if sys.maxsize > 2 ** 32:
+    CPU_ICON = "mdi:cpu-64-bit"
+else:
+    CPU_ICON = "mdi:cpu-32-bit"
 
 SENSOR_TYPES = {
     "disk_free": ["Disk free", DATA_GIBIBYTES, "mdi:harddisk", None],
@@ -56,8 +64,9 @@ SENSOR_TYPES = {
         "mdi:server-network",
         None,
     ],
-    "process": ["Process", " ", "mdi:memory", None],
-    "processor_use": ["Processor use", UNIT_PERCENTAGE, "mdi:memory", None],
+    "process": ["Process", " ", CPU_ICON, None],
+    "processor_use": ["Processor use", UNIT_PERCENTAGE, CPU_ICON, None],
+    "processor_temperature": ["Processor temperature", TEMP_CELSIUS, CPU_ICON, None],
     "swap_free": ["Swap free", DATA_MEBIBYTES, "mdi:harddisk", None],
     "swap_use": ["Swap use", DATA_MEBIBYTES, "mdi:harddisk", None],
     "swap_use_percent": ["Swap use (percent)", UNIT_PERCENTAGE, "mdi:harddisk", None],
@@ -90,13 +99,48 @@ IO_COUNTER = {
 
 IF_ADDRS_FAMILY = {"ipv4_address": socket.AF_INET, "ipv6_address": socket.AF_INET6}
 
+# There might be additional keys to be added for different
+# platforms / hardware combinations.
+# Taken from last version of "glances" integration before they moved to
+# a generic temperature sensor logic.
+# https://github.com/home-assistant/core/blob/5e15675593ba94a2c11f9f929cdad317e27ce190/homeassistant/components/glances/sensor.py#L199
+CPU_SENSOR_PREFIXES = [
+    "amdgpu 1",
+    "aml_thermal",
+    "Core 0",
+    "Core 1",
+    "CPU Temperature",
+    "CPU",
+    "cpu-thermal 1",
+    "cpu_thermal 1",
+    "exynos-therm 1",
+    "Package id 0",
+    "Physical id 0",
+    "radeon 1",
+    "soc-thermal 1",
+    "soc_thermal 1",
+]
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the system monitor sensors."""
     dev = []
     for resource in config[CONF_RESOURCES]:
+        # Initialize the sensor argument if none was provided.
+        # For disk monitoring default to "/" (root) to prevent runtime errors, if argument was not specified.
         if CONF_ARG not in resource:
-            resource[CONF_ARG] = ""
+            if resource[CONF_TYPE].startswith("disk_"):
+                resource[CONF_ARG] = "/"
+            else:
+                resource[CONF_ARG] = ""
+
+        # Verify if we can retrieve CPU / processor temperatures.
+        # If not, do not create the entity and add a warning to the log
+        if resource[CONF_TYPE] == "processor_temperature":
+            if SystemMonitorSensor.read_cpu_temperature() is None:
+                _LOGGER.warning("Cannot read CPU / processor temperature information.")
+                continue
+
         dev.append(SystemMonitorSensor(resource[CONF_TYPE], resource[CONF_ARG]))
 
     add_entities(dev, True)
@@ -108,10 +152,12 @@ class SystemMonitorSensor(Entity):
     def __init__(self, sensor_type, argument=""):
         """Initialize the sensor."""
         self._name = "{} {}".format(SENSOR_TYPES[sensor_type][0], argument)
+        self._unique_id = slugify(f"{sensor_type}_{argument}")
         self.argument = argument
         self.type = sensor_type
         self._state = None
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+        self._available = True
         if sensor_type in ["throughput_network_out", "throughput_network_in"]:
             self._last_value = None
             self._last_update_time = None
@@ -120,6 +166,11 @@ class SystemMonitorSensor(Entity):
     def name(self):
         """Return the name of the sensor."""
         return self._name.rstrip()
+
+    @property
+    def unique_id(self):
+        """Return the unique ID."""
+        return self._unique_id
 
     @property
     def device_class(self):
@@ -140,6 +191,11 @@ class SystemMonitorSensor(Entity):
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._available
 
     def update(self):
         """Get the latest system information."""
@@ -166,6 +222,8 @@ class SystemMonitorSensor(Entity):
             self._state = round(psutil.swap_memory().free / 1024 ** 2, 1)
         elif self.type == "processor_use":
             self._state = round(psutil.cpu_percent(interval=None))
+        elif self.type == "processor_temperature":
+            self._state = self.read_cpu_temperature()
         elif self.type == "process":
             for proc in psutil.process_iter():
                 try:
@@ -231,3 +289,23 @@ class SystemMonitorSensor(Entity):
             self._state = round(os.getloadavg()[1], 2)
         elif self.type == "load_15m":
             self._state = round(os.getloadavg()[2], 2)
+
+    @staticmethod
+    def read_cpu_temperature():
+        """Attempt to read CPU / processor temperature."""
+        temps = psutil.sensors_temperatures()
+
+        for name, entries in temps.items():
+            i = 1
+            for entry in entries:
+                # In case the label is empty (e.g. on Raspberry PI 4),
+                # construct it ourself here based on the sensor key name.
+                if not entry.label:
+                    _label = f"{name} {i}"
+                else:
+                    _label = entry.label
+
+                if _label in CPU_SENSOR_PREFIXES:
+                    return round(entry.current, 1)
+
+                i += 1
