@@ -464,11 +464,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_validate_rfx(self, host=None, port=None, device=None):
         """Create data for rfxtrx entry."""
-        # success = await self.hass.async_add_executor_job(
-        #    _test_transport, host, port, device
-        # )
-        # if not success:
-        #    raise CannotConnect
+        success = await self.hass.async_add_executor_job(
+            _test_transport, host, port, device
+        )
+        if not success:
+            raise CannotConnect
 
         data = {
             CONF_HOST: host,
