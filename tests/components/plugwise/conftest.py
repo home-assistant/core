@@ -1,5 +1,6 @@
 """Setup mocks for the Plugwise integration tests."""
 
+from functools import partial
 import os
 import pickle
 import re
@@ -9,8 +10,6 @@ import pytest
 
 from tests.async_mock import AsyncMock, patch
 from tests.test_util.aiohttp import AiohttpClientMocker
-
-global ENVIRONMENT
 
 
 def _read_pickle(environment, call):
@@ -60,17 +59,15 @@ def mock_smile_notconnect():
         yield smile_mock.return_value
 
 
-def _get_device_data(device_id):
+def _get_device_data(chosen_env, device_id):
     """Mock return data for specific devices."""
-    global ENVIRONMENT
-    return _read_pickle(ENVIRONMENT, "get_device_data/" + device_id)
+    return _read_pickle(chosen_env, "get_device_data/" + device_id)
 
 
 @pytest.fixture(name="mock_smile_adam")
 def mock_smile_adam():
     """Create a Mock Adam environment for testing exceptions."""
-    global ENVIRONMENT
-    ENVIRONMENT = "adam_multiple_devices_per_zone"
+    chosen_env = "adam_multiple_devices_per_zone"
     with patch("homeassistant.components.plugwise.Smile") as smile_mock:
         smile_mock.InvalidAuthentication = Smile.InvalidAuthentication
         smile_mock.ConnectionFailedError = Smile.ConnectionFailedError
@@ -96,9 +93,11 @@ def mock_smile_adam():
         )
 
         smile_mock.return_value.get_all_devices.return_value = _read_pickle(
-            ENVIRONMENT, "get_all_devices"
+            chosen_env, "get_all_devices"
         )
-        smile_mock.return_value.get_device_data.side_effect = _get_device_data
+        smile_mock.return_value.get_device_data.side_effect = partial(
+            _get_device_data, chosen_env
+        )
 
         yield smile_mock.return_value
 
@@ -106,8 +105,7 @@ def mock_smile_adam():
 @pytest.fixture(name="mock_smile_anna")
 def mock_smile_anna():
     """Create a Mock Anna environment for testing exceptions."""
-    global ENVIRONMENT
-    ENVIRONMENT = "anna_heatpump"
+    chosen_env = "anna_heatpump"
     with patch("homeassistant.components.plugwise.Smile") as smile_mock:
         smile_mock.InvalidAuthentication = Smile.InvalidAuthentication
         smile_mock.ConnectionFailedError = Smile.ConnectionFailedError
@@ -133,9 +131,11 @@ def mock_smile_anna():
         )
 
         smile_mock.return_value.get_all_devices.return_value = _read_pickle(
-            ENVIRONMENT, "get_all_devices"
+            chosen_env, "get_all_devices"
         )
-        smile_mock.return_value.get_device_data.side_effect = _get_device_data
+        smile_mock.return_value.get_device_data.side_effect = partial(
+            _get_device_data, chosen_env
+        )
 
         yield smile_mock.return_value
 
@@ -143,8 +143,7 @@ def mock_smile_anna():
 @pytest.fixture(name="mock_smile_p1")
 def mock_smile_p1():
     """Create a Mock P1 DSMR environment for testing exceptions."""
-    global ENVIRONMENT
-    ENVIRONMENT = "p1v3_full_option"
+    chosen_env = "p1v3_full_option"
     with patch("homeassistant.components.plugwise.Smile") as smile_mock:
         smile_mock.InvalidAuthentication = Smile.InvalidAuthentication
         smile_mock.ConnectionFailedError = Smile.ConnectionFailedError
@@ -160,8 +159,10 @@ def mock_smile_p1():
         )
 
         smile_mock.return_value.get_all_devices.return_value = _read_pickle(
-            ENVIRONMENT, "get_all_devices"
+            chosen_env, "get_all_devices"
         )
-        smile_mock.return_value.get_device_data.side_effect = _get_device_data
+        smile_mock.return_value.get_device_data.side_effect = partial(
+            _get_device_data, chosen_env
+        )
 
         yield smile_mock.return_value
