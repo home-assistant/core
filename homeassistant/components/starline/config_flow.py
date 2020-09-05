@@ -97,12 +97,10 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(
-                        CONF_APP_ID,
-                        default=self._app_id or vol.UNDEFINED
+                        CONF_APP_ID, default=self._app_id or vol.UNDEFINED
                     ): str,
                     vol.Required(
-                        CONF_APP_SECRET,
-                        default=self._app_secret or vol.UNDEFINED
+                        CONF_APP_SECRET, default=self._app_secret or vol.UNDEFINED
                     ): str,
                 }
             ),
@@ -163,8 +161,7 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(
-                        CONF_CAPTCHA_CODE,
-                        default=self._captcha_code or vol.UNDEFINED
+                        CONF_CAPTCHA_CODE, default=self._captcha_code or vol.UNDEFINED
                     ): str
                 }
             ),
@@ -178,11 +175,11 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Authenticate application."""
         try:
             self._app_code = await self.hass.async_add_executor_job(
-                self._auth.get_app_code,
-                self._app_id, self._app_secret)
+                self._auth.get_app_code, self._app_id, self._app_secret
+            )
             self._app_token = await self.hass.async_add_executor_job(
-                self._auth.get_app_token,
-                self._app_id, self._app_secret, self._app_code)
+                self._auth.get_app_token, self._app_id, self._app_secret, self._app_code
+            )
             return self._async_form_auth_user(error)
         except Exception as err:  # pylint: disable=broad-except
             LOGGER.error("Error auth StarLine: %s", err)
@@ -228,8 +225,8 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self._slnet_token_expires,
             self._user_id,
         ) = await self.hass.async_add_executor_job(
-            self._auth.get_user_id,
-            self._user_slid)
+            self._auth.get_user_id, self._user_slid
+        )
 
         return self.async_create_entry(
             title=f"Application {self._app_id}",
