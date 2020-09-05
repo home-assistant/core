@@ -10,7 +10,6 @@ import serial
 from homeassistant import config_entries, setup
 from homeassistant.components.dsmr import DOMAIN
 
-import tests.async_mock
 from tests.async_mock import Mock, patch
 from tests.common import MockConfigEntry
 
@@ -20,8 +19,8 @@ SERIAL_DATA = {"serial_id": "12345678", "serial_id_gas": "123456789"}
 @pytest.fixture
 def mock_connection_factory(monkeypatch):
     """Mock the create functions for serial and TCP Asyncio connections."""
-    transport = tests.async_mock.Mock(spec=asyncio.Transport)
-    protocol = tests.async_mock.Mock(spec=DSMRProtocol)
+    transport = Mock(spec=asyncio.Transport)
+    protocol = Mock(spec=DSMRProtocol)
 
     async def connection_factory(*args, **kwargs):
         """Return mocked out Asyncio classes."""
