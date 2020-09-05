@@ -84,6 +84,7 @@ class AbstractOAuth2Implementation(ABC):
             new_token["expires_in"] = int(new_token["expires_in"])
         except ValueError as err:
             _LOGGER.warning("Error converting expires_in to int: %s", err)
+            return token
         new_token["expires_at"] = time.time() + new_token["expires_in"]
         return new_token
 

@@ -327,6 +327,31 @@ async def test_full_flow(
     )
 
 
+async def test_local_refresh_token_bad_response(hass, local_impl, aioclient_mock):
+    """Test bad refresh token."""
+    aioclient_mock.post(
+        TOKEN_URL, json={"access_token": ACCESS_TOKEN_2, "expires_in": "badnumber"}
+    )
+
+    token = {
+        "refresh_token": REFRESH_TOKEN,
+        "access_token": ACCESS_TOKEN_1,
+        "type": "bearer",
+        "expires_in": "badnumber",
+    }
+
+    new_tokens = await local_impl.async_refresh_token(token)
+
+    assert new_tokens == token
+    assert len(aioclient_mock.mock_calls) == 1
+    assert aioclient_mock.mock_calls[0][2] == {
+        "client_id": CLIENT_ID,
+        "client_secret": CLIENT_SECRET,
+        "grant_type": "refresh_token",
+        "refresh_token": REFRESH_TOKEN,
+    }
+
+
 async def test_local_refresh_token(hass, local_impl, aioclient_mock):
     """Test we can refresh token."""
     aioclient_mock.post(
