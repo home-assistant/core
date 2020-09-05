@@ -111,8 +111,8 @@
             "on": "Aberta"
         },
         "garage_door": {
-            "off": "Fechada",
-            "on": "Aberta"
+            "off": "Fechado",
+            "on": "Aberto"
         },
         "gas": {
             "off": "Limpo",
