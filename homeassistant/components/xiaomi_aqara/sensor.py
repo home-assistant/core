@@ -9,9 +9,9 @@ from homeassistant.const import (
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
+    PERCENTAGE,
     POWER_WATT,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
 )
 
 from . import XiaomiDevice
@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {
     "temperature": [TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE],
-    "humidity": [UNIT_PERCENTAGE, None, DEVICE_CLASS_HUMIDITY],
+    "humidity": [PERCENTAGE, None, DEVICE_CLASS_HUMIDITY],
     "illumination": ["lm", None, DEVICE_CLASS_ILLUMINANCE],
     "lux": ["lx", None, DEVICE_CLASS_ILLUMINANCE],
     "pressure": ["hPa", None, DEVICE_CLASS_PRESSURE],
@@ -171,7 +171,7 @@ class XiaomiBatterySensor(XiaomiDevice):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        return UNIT_PERCENTAGE
+        return PERCENTAGE
 
     @property
     def device_class(self):

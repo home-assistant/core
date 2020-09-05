@@ -10,10 +10,10 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     ENERGY_KILO_WATT_HOUR,
     ENERGY_WATT_HOUR,
+    PERCENTAGE,
     POWER_WATT,
     PRESSURE_BAR,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
     VOLUME_CUBIC_METERS,
 )
 from homeassistant.core import callback
@@ -41,7 +41,7 @@ ATTR_TEMPERATURE = [
 ]
 ATTR_BATTERY_LEVEL = [
     "Charge",
-    UNIT_PERCENTAGE,
+    PERCENTAGE,
     DEVICE_CLASS_BATTERY,
 ]
 ATTR_ILLUMINANCE = [
@@ -147,8 +147,8 @@ ENERGY_SENSOR_MAP = {
 MISC_SENSOR_MAP = {
     "battery": ATTR_BATTERY_LEVEL,
     "illuminance": ATTR_ILLUMINANCE,
-    "modulation_level": ["Heater Modulation Level", UNIT_PERCENTAGE, None],
-    "valve_position": ["Valve Position", UNIT_PERCENTAGE, None],
+    "modulation_level": ["Heater Modulation Level", PERCENTAGE, None],
+    "valve_position": ["Valve Position", PERCENTAGE, None],
     "water_pressure": ATTR_PRESSURE,
 }
 
@@ -297,7 +297,7 @@ class PwThermostatSensor(SmileSensor, Entity):
             measurement = data[self._sensor]
             if self._sensor == "battery" or self._sensor == "valve_position":
                 measurement = measurement * 100
-            if self._unit_of_measurement == UNIT_PERCENTAGE:
+            if self._unit_of_measurement == PERCENTAGE:
                 measurement = int(measurement)
             self._state = measurement
             self._icon = CUSTOM_ICONS.get(self._sensor, self._icon)

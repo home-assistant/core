@@ -11,7 +11,7 @@ from homeassistant.const import (
     ATTR_VOLTAGE,
     CONF_PASSWORD,
     CONF_USERNAME,
-    UNIT_PERCENTAGE,
+    PERCENTAGE,
     VOLT,
 )
 import homeassistant.helpers.config_validation as cv
@@ -283,5 +283,5 @@ class WirelessTagBaseSensor(Entity):
             ATTR_VOLTAGE: f"{self._tag.battery_volts:.2f}{VOLT}",
             ATTR_TAG_SIGNAL_STRENGTH: f"{self._tag.signal_strength}dBm",
             ATTR_TAG_OUT_OF_RANGE: not self._tag.is_in_range,
-            ATTR_TAG_POWER_CONSUMPTION: f"{self._tag.power_consumption:.2f}{UNIT_PERCENTAGE}",
+            ATTR_TAG_POWER_CONSUMPTION: f"{self._tag.power_consumption:.2f}{PERCENTAGE}",
         }

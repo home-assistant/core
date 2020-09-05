@@ -19,9 +19,9 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
+    PERCENTAGE,
     POWER_WATT,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
     UV_INDEX,
 )
 from homeassistant.core import callback
@@ -51,7 +51,7 @@ DATA_TYPES = OrderedDict(
     [
         ("Temperature", TEMP_CELSIUS),
         ("Temperature2", TEMP_CELSIUS),
-        ("Humidity", UNIT_PERCENTAGE),
+        ("Humidity", PERCENTAGE),
         ("Barometer", ""),
         ("Wind direction", ""),
         ("Rain rate", ""),
@@ -76,7 +76,7 @@ DATA_TYPES = OrderedDict(
         ("Energy usage", ""),
         ("Voltage", ""),
         ("Current", ""),
-        ("Battery numeric", UNIT_PERCENTAGE),
+        ("Battery numeric", PERCENTAGE),
         ("Rssi numeric", "dBm"),
     ]
 )

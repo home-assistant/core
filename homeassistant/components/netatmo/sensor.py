@@ -12,10 +12,10 @@ from homeassistant.const import (
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_TEMPERATURE,
+    PERCENTAGE,
     PRESSURE_MBAR,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import async_entries_for_config_entry
@@ -51,13 +51,13 @@ SENSOR_TYPES = {
     "co2": ["CO2", CONCENTRATION_PARTS_PER_MILLION, "mdi:molecule-co2", None],
     "pressure": ["Pressure", PRESSURE_MBAR, None, DEVICE_CLASS_PRESSURE],
     "noise": ["Noise", "dB", "mdi:volume-high", None],
-    "humidity": ["Humidity", UNIT_PERCENTAGE, None, DEVICE_CLASS_HUMIDITY],
+    "humidity": ["Humidity", PERCENTAGE, None, DEVICE_CLASS_HUMIDITY],
     "rain": ["Rain", "mm", "mdi:weather-rainy", None],
     "sum_rain_1": ["Rain last hour", "mm", "mdi:weather-rainy", None],
     "sum_rain_24": ["Rain last 24h", "mm", "mdi:weather-rainy", None],
     "battery_vp": ["Battery", "", "mdi:battery", None],
     "battery_lvl": ["Battery Level", "", "mdi:battery", None],
-    "battery_percent": ["Battery Percent", UNIT_PERCENTAGE, None, DEVICE_CLASS_BATTERY],
+    "battery_percent": ["Battery Percent", PERCENTAGE, None, DEVICE_CLASS_BATTERY],
     "min_temp": ["Min Temp.", TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE],
     "max_temp": ["Max Temp.", TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE],
     "windangle": ["Direction", None, "mdi:compass-outline", None],
