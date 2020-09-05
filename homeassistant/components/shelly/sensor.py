@@ -3,6 +3,8 @@ import aioshelly
 
 from homeassistant.components import sensor
 from homeassistant.const import (
+    CONCENTRATION_PARTS_PER_MILLION,
+    DEGREE,
     ELECTRICAL_CURRENT_AMPERE,
     ENERGY_KILO_WATT_HOUR,
     POWER_WATT,
@@ -18,14 +20,18 @@ from .const import DOMAIN
 
 SENSORS = {
     "battery": [UNIT_PERCENTAGE, sensor.DEVICE_CLASS_BATTERY],
+    "concentration": [CONCENTRATION_PARTS_PER_MILLION, None],
     "current": [ELECTRICAL_CURRENT_AMPERE, sensor.DEVICE_CLASS_CURRENT],
     "deviceTemp": [None, sensor.DEVICE_CLASS_TEMPERATURE],
     "energy": [ENERGY_KILO_WATT_HOUR, sensor.DEVICE_CLASS_ENERGY],
     "energyReturned": [ENERGY_KILO_WATT_HOUR, sensor.DEVICE_CLASS_ENERGY],
     "extTemp": [None, sensor.DEVICE_CLASS_TEMPERATURE],
     "humidity": [UNIT_PERCENTAGE, sensor.DEVICE_CLASS_HUMIDITY],
+    "luminosity": ["lx", sensor.DEVICE_CLASS_ILLUMINANCE],
     "overpowerValue": [POWER_WATT, sensor.DEVICE_CLASS_POWER],
     "power": [POWER_WATT, sensor.DEVICE_CLASS_POWER],
+    "powerFactor": [UNIT_PERCENTAGE, sensor.DEVICE_CLASS_POWER_FACTOR],
+    "tilt": [DEGREE, None],
     "voltage": [VOLT, sensor.DEVICE_CLASS_VOLTAGE],
 }
 
@@ -37,7 +43,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     for block in wrapper.device.blocks:
         for attr in SENSORS:
-            if not hasattr(block, attr):
+            # Filter out non-existing sensors and sensors without a value
+            if getattr(block, attr, None) is None:
                 continue
 
             sensors.append(ShellySensor(wrapper, block, attr))
@@ -69,8 +76,6 @@ class ShellySensor(ShellyBlockEntity, Entity):
                 unit = TEMP_CELSIUS
             else:
                 unit = TEMP_FAHRENHEIT
-        elif self.info[aioshelly.BLOCK_VALUE_TYPE] == aioshelly.BLOCK_VALUE_TYPE_ENERGY:
-            unit = ENERGY_KILO_WATT_HOUR
 
         self._unit = unit
         self._device_class = device_class
@@ -88,6 +93,12 @@ class ShellySensor(ShellyBlockEntity, Entity):
     @property
     def state(self):
         """Value of sensor."""
+        value = getattr(self.block, self.attribute)
+        if value is None:
+            return None
+
+        if self.attribute in ["luminosity", "tilt"]:
+            return round(value)
         if self.attribute in [
             "deviceTemp",
             "extTemp",
@@ -95,13 +106,15 @@ class ShellySensor(ShellyBlockEntity, Entity):
             "overpowerValue",
             "power",
         ]:
-            return round(getattr(self.block, self.attribute), 1)
+            return round(value, 1)
+        if self.attribute == "powerFactor":
+            return round(value * 100, 1)
         # Energy unit change from Wmin or Wh to kWh
-        if self.info[aioshelly.BLOCK_VALUE_UNIT] == "Wmin":
-            return round(getattr(self.block, self.attribute) / 60 / 1000, 2)
-        if self.info[aioshelly.BLOCK_VALUE_UNIT] == "Wh":
-            return round(getattr(self.block, self.attribute) / 1000, 2)
-        return getattr(self.block, self.attribute)
+        if self.info.get(aioshelly.BLOCK_VALUE_UNIT) == "Wmin":
+            return round(value / 60 / 1000, 2)
+        if self.info.get(aioshelly.BLOCK_VALUE_UNIT) == "Wh":
+            return round(value / 1000, 2)
+        return value
 
     @property
     def unit_of_measurement(self):
@@ -112,3 +125,12 @@ class ShellySensor(ShellyBlockEntity, Entity):
     def device_class(self):
         """Device class of sensor."""
         return self._device_class
+
+    @property
+    def available(self):
+        """Available."""
+        if self.attribute == "concentration":
+            # "sensorOp" is "normal" when the Shelly Gas is working properly and taking
+            # measurements.
+            return super().available and self.block.sensorOp == "normal"
+        return super().available

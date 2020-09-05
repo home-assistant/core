@@ -231,7 +231,11 @@ class BOMCurrentData:
         through the entire BOM provided dataset.
         """
         condition_readings = (entry[condition] for entry in self._data)
-        return next((x for x in condition_readings if x != "-"), None)
+        reading = next((x for x in condition_readings if x != "-"), None)
+
+        if isinstance(reading, (int, float)):
+            return round(reading, 2)
+        return reading
 
     def should_update(self):
         """Determine whether an update should occur.

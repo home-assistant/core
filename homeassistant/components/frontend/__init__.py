@@ -284,6 +284,10 @@ async def async_setup(hass, config):
     hass.http.register_static_path(
         "/auth/authorize", str(root_path / "authorize.html"), False
     )
+    # https://wicg.github.io/change-password-url/
+    hass.http.register_redirect(
+        "/.well-known/change-password", "/profile", redirect_exc=web.HTTPFound
+    )
 
     local = hass.config.path("www")
     if os.path.isdir(local):

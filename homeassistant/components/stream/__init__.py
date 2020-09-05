@@ -171,6 +171,10 @@ class Stream:
         from .worker import stream_worker
 
         if self._thread is None or not self._thread.isAlive():
+            if self._thread is not None:
+                # The thread must have crashed/exited. Join to clean up the
+                # previous thread.
+                self._thread.join(timeout=0)
             self._thread_quit = threading.Event()
             self._thread = threading.Thread(
                 name="stream_worker",

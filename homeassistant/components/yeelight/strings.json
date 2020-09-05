@@ -3,9 +3,9 @@
   "config": {
     "step": {
       "user": {
-        "description": "If you leave IP address empty, discovery will be used to find devices.",
+        "description": "If you leave the host empty, discovery will be used to find devices.",
         "data": {
-          "ip_address": "[%key:common::config_flow::data::ip%]"
+          "host": "[%key:common::config_flow::data::host%]"
         }
       },
       "pick_device": {

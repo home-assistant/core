@@ -8,7 +8,12 @@ import aioshelly
 import async_timeout
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
@@ -35,7 +40,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     try:
         async with async_timeout.timeout(5):
             device = await aioshelly.Device.create(
-                entry.data["host"], aiohttp_client.async_get_clientsession(hass)
+                entry.data[CONF_HOST],
+                aiohttp_client.async_get_clientsession(hass),
+                entry.data.get(CONF_USERNAME),
+                entry.data.get(CONF_PASSWORD),
             )
     except (asyncio.TimeoutError, OSError) as err:
         raise ConfigEntryNotReady from err

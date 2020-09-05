@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "OpenWeatherMap integration for these coordinates is already configured."
+        },
+        "error": {
+            "auth": "API key is not correct.",
+            "connection": "Can't connect to OWM API"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "OpenWeatherMap API key",
+                    "language": "Language",
+                    "latitude": "Latitude",
+                    "longitude": "Longitude",
+                    "mode": "Mode",
+                    "name": "Name of the integration"
+                },
+                "description": "Set up OpenWeatherMap integration. To generate API key go to https://openweathermap.org/appid",
+                "title": "OpenWeatherMap"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "language": "Language",
+                    "mode": "Mode"
+                }
+            }
+        }
+    }
+}

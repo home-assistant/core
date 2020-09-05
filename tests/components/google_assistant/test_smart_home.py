@@ -795,7 +795,10 @@ async def test_device_class_binary_sensor(hass, device_class, google_type):
             "agentUserId": "test-agent",
             "devices": [
                 {
-                    "attributes": {"queryOnlyOpenClose": True},
+                    "attributes": {
+                        "queryOnlyOpenClose": True,
+                        "discreteOnlyOpenClose": True,
+                    },
                     "id": "binary_sensor.demo_sensor",
                     "name": {"name": "Demo Sensor"},
                     "traits": ["action.devices.traits.OpenClose"],
@@ -853,6 +856,8 @@ async def test_device_class_cover(hass, device_class, google_type):
     [
         ("non_existing_class", "action.devices.types.SETTOP"),
         ("tv", "action.devices.types.TV"),
+        ("speaker", "action.devices.types.SPEAKER"),
+        ("receiver", "action.devices.types.AUDIO_VIDEO_RECEIVER"),
     ],
 )
 async def test_device_media_player(hass, device_class, google_type):

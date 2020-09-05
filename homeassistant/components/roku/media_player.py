@@ -1,10 +1,14 @@
 """Support for the Roku media player."""
 import logging
-from typing import List
+from typing import List, Optional
 
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerEntity
+from homeassistant.components.media_player import (
+    DEVICE_CLASS_RECEIVER,
+    DEVICE_CLASS_TV,
+    MediaPlayerEntity,
+)
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_APP,
     MEDIA_TYPE_CHANNEL,
@@ -22,6 +26,7 @@ from homeassistant.components.media_player.const import (
 from homeassistant.const import (
     STATE_HOME,
     STATE_IDLE,
+    STATE_ON,
     STATE_PAUSED,
     STATE_PLAYING,
     STATE_STANDBY,
@@ -77,10 +82,25 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
 
         self._unique_id = unique_id
 
+    def _media_playback_trackable(self) -> bool:
+        """Detect if we have enough media data to track playback."""
+        if self.coordinator.data.media is None or self.coordinator.data.media.live:
+            return False
+
+        return self.coordinator.data.media.duration > 0
+
     @property
     def unique_id(self) -> str:
         """Return the unique ID for this entity."""
         return self._unique_id
+
+    @property
+    def device_class(self) -> Optional[str]:
+        """Return the class of this device."""
+        if self.coordinator.data.info.device_type == "tv":
+            return DEVICE_CLASS_TV
+
+        return DEVICE_CLASS_RECEIVER
 
     @property
     def state(self) -> str:
@@ -100,11 +120,13 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         if self.coordinator.data.app.name == "Roku":
             return STATE_HOME
 
-        if self.coordinator.data.media and self.coordinator.data.media.paused:
-            return STATE_PAUSED
+        if self.coordinator.data.media:
+            if self.coordinator.data.media.paused:
+                return STATE_PAUSED
+            return STATE_PLAYING
 
         if self.coordinator.data.app.name:
-            return STATE_PLAYING
+            return STATE_ON
 
         return None
 
@@ -167,6 +189,30 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
 
         if self.coordinator.data.channel.program_title is not None:
             return self.coordinator.data.channel.program_title
+
+        return None
+
+    @property
+    def media_duration(self):
+        """Duration of current playing media in seconds."""
+        if self._media_playback_trackable():
+            return self.coordinator.data.media.duration
+
+        return None
+
+    @property
+    def media_position(self):
+        """Position of current playing media in seconds."""
+        if self._media_playback_trackable():
+            return self.coordinator.data.media.position
+
+        return None
+
+    @property
+    def media_position_updated_at(self):
+        """When was the position of the current playing media valid."""
+        if self._media_playback_trackable():
+            return self.coordinator.data.media.at
 
         return None
 
