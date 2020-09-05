@@ -157,7 +157,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             # Check if argument is required. If yes, but none was provided, log an error.
             if SENSOR_TYPES[resource[CONF_TYPE]][4] is True:
                 _LOGGER.error(
-                    f"Mandatory 'arg' is missing for 'type' {resource[CONF_TYPE]}."
+                    "Mandatory 'arg' is missing for sensor type '%s'.",
+                    resource[CONF_TYPE],
                 )
                 continue
 
