@@ -7,11 +7,6 @@
   "requirements": [
     "aiolyric==1.0.0"
   ],
-  "homekit": {
-    "models": [
-      "YT4910WF4011"
-    ]
-  },
   "codeowners": [
     "@timmo001"
   ]
