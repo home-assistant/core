@@ -108,7 +108,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                     entry.data[CONF_REPOSITORY]
                 )
                 if entry.options.get(CONF_LATEST_COMMIT, True) is True:
-                    latest_commit: AIOGitHubAPIReposCommit = await repository.get_last_commit()
+                    latest_commit: AIOGitHubAPIReposCommit = (
+                        await repository.get_last_commit()
+                    )
                 else:
                     latest_commit = None
                 if entry.options.get(CONF_ISSUES_PRS, False) is True:
@@ -125,11 +127,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                     releases = None
                 if repository.attributes.get("permissions").get("push") is True:
                     if entry.options.get(CONF_CLONES, False) is True:
-                        clones: AIOGitHubAPIReposTrafficClones = await repository.traffic.get_clones()
+                        clones: AIOGitHubAPIReposTrafficClones = (
+                            await repository.traffic.get_clones()
+                        )
                     else:
                         clones = None
                     if entry.options.get(CONF_VIEWS, False) is True:
-                        views: AIOGitHubAPIReposTrafficPageviews = await repository.traffic.get_views()
+                        views: AIOGitHubAPIReposTrafficPageviews = (
+                            await repository.traffic.get_views()
+                        )
                     else:
                         views = None
                 else:

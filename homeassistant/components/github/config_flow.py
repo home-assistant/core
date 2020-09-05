@@ -104,7 +104,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     for entry in self._async_current_entries():
                         if entry.unique_id == self.unique_id:
                             self.hass.config_entries.async_update_entry(
-                                entry, data=user_input,
+                                entry,
+                                data=user_input,
                             )
                             return self.async_abort(reason="reauth_successful")
                 except CannotConnect:

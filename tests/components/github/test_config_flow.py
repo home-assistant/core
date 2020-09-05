@@ -55,7 +55,8 @@ async def test_form(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker):
     ), patch(
         "homeassistant.components.github.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.github.async_setup_entry", return_value=True,
+        "homeassistant.components.github.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], FIXTURE_USER_INPUT
@@ -273,7 +274,8 @@ async def test_options_flow(hass: HomeAssistant, aioclient_mock: AiohttpClientMo
         # assert result["step_id"] == "init"
 
         result2 = await hass.config_entries.options.async_configure(
-            result["flow_id"], user_input=FIXTURE_OPTIONS_ENABLED,
+            result["flow_id"],
+            user_input=FIXTURE_OPTIONS_ENABLED,
         )
 
         assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
