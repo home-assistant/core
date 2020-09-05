@@ -1,23 +1,17 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Already configured. Only a single configuration possible.",
-            "cannot_connect": "Failed to connect"
+            "already_configured": "[%key:common::config_flow::abort::single_instance_allowed%]",
+            "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
         },
         "error": {
-            "cannot_connect": "Failed to connect"
+            "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
         },
         "step": {
-            "user": {
-                "data": {
-                    "type": "Connection type"
-                },
-                "title": "Select connection type"
-            },
             "setup_network": {
                 "data": {
-                    "host": "Host",
-                    "port": "Port"
+                    "host": "[%key:common::config_flow::data::host%]",
+                    "port": "[%key:common::config_flow::data::port%]"
                 },
                 "title": "Select connection address"
             },
@@ -32,40 +26,47 @@
                     "device": "Select path"
                 },
                 "title": "Path"
+            },
+            "user": {
+                "data": {
+                    "type": "Connection type"
+                },
+                "title": "Select connection type"
             }
         }
     },
     "options": {
+        "error": {
+            "invalid_event_code": "Invalid event code",
+            "invalid_input_2262_off": "Invalid input for command off",
+            "invalid_input_2262_on": "Invalid input for command on",
+            "invalid_input_off_delay": "Invalid input for off delay",
+            "unknown": "Unexpected error"
+        },
         "step": {
             "prompt_options": {
                 "data": {
-                    "debug": "Enable debugging",
                     "automatic_add": "Enable automatic add",
-                    "event_code": "Enter event code to add",
+                    "debug": "Enable debugging",
                     "device": "Select device to configure",
+                    "event_code": "Enter event code to add",
                     "remove_device": "Select device to delete"
                 },
                 "title": "Rfxtrx Options"
             },
             "set_device_options": {
                 "data": {
+                    "command_off": "Data bits value for command off",
+                    "command_on": "Data bits value for command on",
+                    "data_bit": "Number of data bits",
                     "fire_event": "Enable device event",
                     "off_delay": "Off delay",
                     "off_delay_enabled": "Enable off delay",
-                    "data_bit": "Number of data bits",
-                    "command_on": "Data bits value for command on",
-                    "command_off": "Data bits value for command off",
+                    "replace_device": "Select device to replace",
                     "signal_repetitions": "Number of signal repetitions"
                 },
                 "title": "Configure device options"
             }
-        },
-        "error": {
-            "invalid_event_code": "Invalid event code",
-            "invalid_input_2262_on": "Invalid input for command on",
-            "invalid_input_2262_off": "Invalid input for command off",
-            "invalid_input_off_delay": "Invalid input for off delay",
-            "unknown": "Unexpected error"
         }
     },
     "title": "Rfxtrx"

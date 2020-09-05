@@ -36,6 +36,7 @@ from .const import (
     CONF_FIRE_EVENT,
     CONF_OFF_DELAY,
     CONF_REMOVE_DEVICE,
+    CONF_REPLACE_DEVICE,
     CONF_SIGNAL_REPETITIONS,
     DEVICE_PACKET_TYPE_LIGHTING4,
 )
@@ -261,11 +262,39 @@ class OptionsFlow(config_entries.OptionsFlow):
                 }
             )
 
+        if isinstance(self._selected_device_object, rfxtrxmod.SensorEvent):
+            devices = {
+                entry.id: entry.name_by_user if entry.name_by_user else entry.name
+                for entry in self._device_entries
+                if self._can_replace_device(entry.id)
+            }
+
+            if devices:
+                data_schema.update(
+                    {
+                        vol.Optional(CONF_REPLACE_DEVICE): vol.In(devices),
+                    }
+                )
+
         return self.async_show_form(
             step_id="set_device_options",
             data_schema=vol.Schema(data_schema),
             errors=errors,
         )
+
+    def _can_replace_device(self, entry_id):
+        """Check if device can be replaced with selected device."""
+        device_data = self._get_device_data(entry_id)
+        event_code = device_data[CONF_EVENT_CODE]
+        rfx_obj = get_rfx_object(event_code)
+        if (
+            rfx_obj.pkt.packettype == self._selected_device_object.pkt.packettype
+            and rfx_obj.pkt.subtype == self._selected_device_object.pkt.subtype
+            and self._selected_device_event_code != event_code
+        ):
+            return True
+
+        return False
 
     def _get_device_data(self, entry_id):
         """Get event code based on device identifier."""
@@ -435,11 +464,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_validate_rfx(self, host=None, port=None, device=None):
         """Create data for rfxtrx entry."""
-        success = await self.hass.async_add_executor_job(
-            _test_transport, host, port, device
-        )
-        if not success:
-            raise CannotConnect
+        # success = await self.hass.async_add_executor_job(
+        #    _test_transport, host, port, device
+        # )
+        # if not success:
+        #    raise CannotConnect
 
         data = {
             CONF_HOST: host,
