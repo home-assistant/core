@@ -4,7 +4,7 @@ import math
 from homeassistant.components import emulated_kasa
 from homeassistant.components.emulated_kasa.const import (
     CONF_POWER,
-    CONF_POWER_TEMPLATE,
+    CONF_POWER_ENTITY,
     DOMAIN,
 )
 from homeassistant.components.fan import (
@@ -51,9 +51,9 @@ CONFIG = {
                 CONF_NAME: ENTITY_SWITCH_NAME,
                 CONF_POWER: ENTITY_SWITCH_POWER,
             },
-            ENTITY_LIGHT: {CONF_NAME: ENTITY_LIGHT_NAME, CONF_POWER: ENTITY_SENSOR},
+            ENTITY_LIGHT: {CONF_NAME: ENTITY_LIGHT_NAME, CONF_POWER_ENTITY: ENTITY_SENSOR},
             ENTITY_FAN: {
-                CONF_POWER_TEMPLATE: "{% if is_state_attr('"
+                CONF_POWER: "{% if is_state_attr('"
                 + ENTITY_FAN
                 + "','speed', 'low') %} "
                 + str(ENTITY_FAN_SPEED_LOW)
@@ -93,7 +93,7 @@ CONFIG_SWITCH_NO_POWER = {
 CONFIG_LIGHT = {
     DOMAIN: {
         CONF_ENTITIES: {
-            ENTITY_LIGHT: {CONF_NAME: ENTITY_LIGHT_NAME, CONF_POWER: ENTITY_SENSOR},
+            ENTITY_LIGHT: {CONF_NAME: ENTITY_LIGHT_NAME, CONF_POWER_ENTITY: ENTITY_SENSOR},
         }
     }
 }
@@ -102,7 +102,7 @@ CONFIG_FAN = {
     DOMAIN: {
         CONF_ENTITIES: {
             ENTITY_FAN: {
-                CONF_POWER_TEMPLATE: "{% if is_state_attr('"
+                CONF_POWER: "{% if is_state_attr('"
                 + ENTITY_FAN
                 + "','speed', 'low') %} "
                 + str(ENTITY_FAN_SPEED_LOW)
@@ -315,6 +315,11 @@ async def test_sensor(hass):
     assert await async_setup_component(
         hass, LIGHT_DOMAIN, {LIGHT_DOMAIN: {"platform": "demo"}}
     )
+    assert await async_setup_component(
+        hass,
+        SENSOR_DOMAIN,
+        {SENSOR_DOMAIN: {"platform": "demo"}},
+    )
     with patch(
         "sense_energy.SenseLink",
         return_value=Mock(start=AsyncMock(), close=AsyncMock()),
@@ -419,6 +424,11 @@ async def test_multiple_devices(hass):
     )
     assert await async_setup_component(
         hass, FAN_DOMAIN, {FAN_DOMAIN: {"platform": "demo"}}
+    )
+    assert await async_setup_component(
+        hass,
+        SENSOR_DOMAIN,
+        {SENSOR_DOMAIN: {"platform": "demo"}},
     )
     with patch(
         "sense_energy.SenseLink",
