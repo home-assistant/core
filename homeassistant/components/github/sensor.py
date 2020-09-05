@@ -119,16 +119,6 @@ class GitHubSensor(GitHubDeviceEntity):
 
         super().__init__(coordinator, f"{repository.full_name}_{unique_id}", name, icon)
 
-    @property
-    def state(self) -> str:
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def device_state_attributes(self) -> object:
-        """Return the attributes of the sensor."""
-        return self._attributes
-
 
 class ClonesSensor(GitHubSensor):
     """Representation of a Repository Sensor."""
@@ -142,14 +132,17 @@ class ClonesSensor(GitHubSensor):
             coordinator, repository, "clones", f"{name} Clones", "mdi:github"
         )
 
-    async def _github_update(self) -> bool:
-        """Fetch new state data for the sensor."""
-        await self._coordinator.async_request_refresh()
-        data: GitHubData = self._coordinator.data
+    @property
+    def state(self) -> str:
+        """Return the state of the sensor."""
+        data: GitHubData = self.coordinator.data
+        return data.clones.count
 
-        self._state = data.clones.count
-
-        self._attributes = {
+    @property
+    def device_state_attributes(self) -> object:
+        """Return the attributes of the sensor."""
+        data: GitHubData = self.coordinator.data
+        return {
             ATTR_REPO_DESCRIPTION: data.repository.description,
             ATTR_REPO_HOMEPAGE: data.repository.homepage,
             ATTR_REPO_NAME: data.repository.name,
@@ -157,8 +150,6 @@ class ClonesSensor(GitHubSensor):
             ATTR_REPO_TOPICS: data.repository.topics,
             ATTR_UNIQUE: data.clones.uniques,
         }
-
-        return True
 
 
 class ForksSensor(GitHubSensor):
@@ -173,22 +164,23 @@ class ForksSensor(GitHubSensor):
             coordinator, repository, "forks", f"{name} Forks", "mdi:github"
         )
 
-    async def _github_update(self) -> bool:
-        """Fetch new state data for the sensor."""
-        await self._coordinator.async_request_refresh()
-        data: GitHubData = self._coordinator.data
+    @property
+    def state(self) -> str:
+        """Return the state of the sensor."""
+        data: GitHubData = self.coordinator.data
+        return data.repository.forks_count
 
-        self._state = data.repository.forks_count
-
-        self._attributes = {
+    @property
+    def device_state_attributes(self) -> object:
+        """Return the attributes of the sensor."""
+        data: GitHubData = self.coordinator.data
+        return {
             ATTR_REPO_DESCRIPTION: data.repository.description,
             ATTR_REPO_HOMEPAGE: data.repository.homepage,
             ATTR_REPO_NAME: data.repository.name,
             ATTR_REPO_PATH: data.repository.full_name,
             ATTR_REPO_TOPICS: data.repository.topics,
         }
-
-        return True
 
 
 class LatestCommitSensor(GitHubSensor):
@@ -207,14 +199,17 @@ class LatestCommitSensor(GitHubSensor):
             "mdi:github",
         )
 
-    async def _github_update(self) -> bool:
-        """Fetch new state data for the sensor."""
-        await self._coordinator.async_request_refresh()
-        data: GitHubData = self._coordinator.data
+    @property
+    def state(self) -> str:
+        """Return the state of the sensor."""
+        data: GitHubData = self.coordinator.data
+        return short_sha(data.latest_commit.sha)
 
-        self._state = short_sha(data.latest_commit.sha)
-
-        self._attributes = {
+    @property
+    def device_state_attributes(self) -> object:
+        """Return the attributes of the sensor."""
+        data: GitHubData = self.coordinator.data
+        return {
             ATTR_MESSAGE: short_message(data.latest_commit.commit.message),
             ATTR_REPO_DESCRIPTION: data.repository.description,
             ATTR_REPO_HOMEPAGE: data.repository.homepage,
@@ -225,8 +220,6 @@ class LatestCommitSensor(GitHubSensor):
             ATTR_URL: data.latest_commit.html_url,
             ATTR_USER: data.latest_commit.author.login,
         }
-
-        return True
 
 
 class LatestOpenIssueSensor(GitHubSensor):
@@ -245,21 +238,24 @@ class LatestOpenIssueSensor(GitHubSensor):
             "mdi:github",
         )
 
-    async def _github_update(self) -> bool:
-        """Fetch new state data for the sensor."""
-        await self._coordinator.async_request_refresh()
-        data: GitHubData = self._coordinator.data
-
+    @property
+    def state(self) -> str:
+        """Return the state of the sensor."""
+        data: GitHubData = self.coordinator.data
         if data.open_issues is None or len(data.open_issues) < 1:
-            return False
+            return None
+        return data.open_issues[0].title
 
-        self._state = data.open_issues[0].title
-
+    @property
+    def device_state_attributes(self) -> object:
+        """Return the attributes of the sensor."""
+        data: GitHubData = self.coordinator.data
+        if data.open_issues is None or len(data.open_issues) < 1:
+            return None
         labels = []
         for label in data.open_issues[0].labels:
             labels.append(label.get("name"))
-
-        self._attributes = {
+        return {
             ATTR_ASSIGNEES: data.open_issues[0].assignees,
             ATTR_ID: data.open_issues[0].id,
             ATTR_LABELS: labels,
@@ -273,8 +269,6 @@ class LatestOpenIssueSensor(GitHubSensor):
             ATTR_URL: data.open_issues[0].html_url,
             ATTR_USER: data.open_issues[0].user.login,
         }
-
-        return True
 
 
 class LatestPullRequestSensor(GitHubSensor):
@@ -293,21 +287,24 @@ class LatestPullRequestSensor(GitHubSensor):
             "mdi:github",
         )
 
-    async def _github_update(self) -> bool:
-        """Fetch new state data for the sensor."""
-        await self._coordinator.async_request_refresh()
-        data: GitHubData = self._coordinator.data
-
+    @property
+    def state(self) -> str:
+        """Return the state of the sensor."""
+        data: GitHubData = self.coordinator.data
         if data.open_pull_requests is None or len(data.open_pull_requests) < 1:
-            return False
+            return None
+        return data.open_pull_requests[0].title
 
-        self._state = data.open_pull_requests[0].title
-
+    @property
+    def device_state_attributes(self) -> object:
+        """Return the attributes of the sensor."""
+        data: GitHubData = self.coordinator.data
+        if data.open_pull_requests is None or len(data.open_pull_requests) < 1:
+            return None
         labels = []
         for label in data.open_pull_requests[0].labels:
             labels.append(label.get("name"))
-
-        self._attributes = {
+        return {
             ATTR_ASSIGNEES: data.open_pull_requests[0].assignees,
             ATTR_ID: data.open_pull_requests[0].id,
             ATTR_LABELS: labels,
@@ -320,8 +317,6 @@ class LatestPullRequestSensor(GitHubSensor):
             ATTR_REPO_TOPICS: data.repository.topics,
             ATTR_USER: data.open_pull_requests[0].user.login,
         }
-
-        return True
 
 
 class LatestReleaseSensor(GitHubSensor):
@@ -340,17 +335,21 @@ class LatestReleaseSensor(GitHubSensor):
             "mdi:github",
         )
 
-    async def _github_update(self) -> bool:
-        """Fetch new state data for the sensor."""
-        await self._coordinator.async_request_refresh()
-        data: GitHubData = self._coordinator.data
-
+    @property
+    def state(self) -> str:
+        """Return the state of the sensor."""
+        data: GitHubData = self.coordinator.data
         if data.releases is None or len(data.releases) < 1:
-            return False
+            return None
+        return data.releases[0].tag_name
 
-        self._state = data.releases[0].tag_name
-
-        self._attributes = {
+    @property
+    def device_state_attributes(self) -> object:
+        """Return the attributes of the sensor."""
+        data: GitHubData = self.coordinator.data
+        if data.releases is None or len(data.releases) < 1:
+            return None
+        return {
             ATTR_DATE: data.releases[0].published_at,
             ATTR_DRAFT: data.releases[0].draft,
             ATTR_NAME: data.releases[0].name,
@@ -363,8 +362,6 @@ class LatestReleaseSensor(GitHubSensor):
             ATTR_REPO_TOPICS: data.repository.topics,
             ATTR_URL: f"https://github.com/{data.repository.full_name}/releases/{data.releases[0].tag_name}",
         }
-
-        return True
 
 
 class StargazersSensor(GitHubSensor):
@@ -379,22 +376,23 @@ class StargazersSensor(GitHubSensor):
             coordinator, repository, "stargazers", f"{name} Stargazers", "mdi:github"
         )
 
-    async def _github_update(self) -> bool:
-        """Fetch new state data for the sensor."""
-        await self._coordinator.async_request_refresh()
-        data: GitHubData = self._coordinator.data
+    @property
+    def state(self) -> str:
+        """Return the state of the sensor."""
+        data: GitHubData = self.coordinator.data
+        return data.repository.stargazers_count
 
-        self._state = data.repository.stargazers_count
-
-        self._attributes = {
+    @property
+    def device_state_attributes(self) -> object:
+        """Return the attributes of the sensor."""
+        data: GitHubData = self.coordinator.data
+        return {
             ATTR_REPO_DESCRIPTION: data.repository.description,
             ATTR_REPO_HOMEPAGE: data.repository.homepage,
             ATTR_REPO_NAME: data.repository.name,
             ATTR_REPO_PATH: data.repository.full_name,
             ATTR_REPO_TOPICS: data.repository.topics,
         }
-
-        return True
 
 
 class ViewsSensor(GitHubSensor):
@@ -409,14 +407,17 @@ class ViewsSensor(GitHubSensor):
             coordinator, repository, "views", f"{name} Views", "mdi:github"
         )
 
-    async def _github_update(self) -> bool:
-        """Fetch new state data for the sensor."""
-        await self._coordinator.async_request_refresh()
-        data: GitHubData = self._coordinator.data
+    @property
+    def state(self) -> str:
+        """Return the state of the sensor."""
+        data: GitHubData = self.coordinator.data
+        return data.views.count
 
-        self._state = data.views.count
-
-        self._attributes = {
+    @property
+    def device_state_attributes(self) -> object:
+        """Return the attributes of the sensor."""
+        data: GitHubData = self.coordinator.data
+        return {
             ATTR_REPO_DESCRIPTION: data.repository.description,
             ATTR_REPO_HOMEPAGE: data.repository.homepage,
             ATTR_REPO_NAME: data.repository.name,
@@ -424,8 +425,6 @@ class ViewsSensor(GitHubSensor):
             ATTR_REPO_TOPICS: data.repository.topics,
             ATTR_UNIQUE: data.views.uniques,
         }
-
-        return True
 
 
 class WatchersSensor(GitHubSensor):
@@ -440,19 +439,20 @@ class WatchersSensor(GitHubSensor):
             coordinator, repository, "watchers", f"{name} Watchers", "mdi:github"
         )
 
-    async def _github_update(self) -> bool:
-        """Fetch new state data for the sensor."""
-        await self._coordinator.async_request_refresh()
-        data: GitHubData = self._coordinator.data
+    @property
+    def state(self) -> str:
+        """Return the state of the sensor."""
+        data: GitHubData = self.coordinator.data
+        return data.repository.watchers_count
 
-        self._state = data.repository.watchers_count
-
-        self._attributes = {
+    @property
+    def device_state_attributes(self) -> object:
+        """Return the attributes of the sensor."""
+        data: GitHubData = self.coordinator.data
+        return {
             ATTR_REPO_DESCRIPTION: data.repository.description,
             ATTR_REPO_HOMEPAGE: data.repository.homepage,
             ATTR_REPO_NAME: data.repository.name,
             ATTR_REPO_PATH: data.repository.full_name,
             ATTR_REPO_TOPICS: data.repository.topics,
         }
-
-        return True

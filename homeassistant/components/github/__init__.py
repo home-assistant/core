@@ -25,8 +25,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import Config, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 
 from .const import (
     CONF_CLONES,
@@ -193,14 +196,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     return unload_ok
 
 
-class GitHubEntity(Entity):
+class GitHubEntity(CoordinatorEntity):
     """Defines a GitHub entity."""
 
     def __init__(
         self, coordinator: DataUpdateCoordinator, unique_id: str, name: str, icon: str
     ) -> None:
         """Set up GitHub Entity."""
-        self._coordinator = coordinator
+        super().__init__(coordinator)
         self._unique_id = unique_id
         self._name = name
         self._icon = icon
@@ -224,29 +227,7 @@ class GitHubEntity(Entity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._coordinator.last_update_success and self._available
-
-    @property
-    def should_poll(self):
-        """No need to poll. Coordinator notifies entity of updates."""
-        return False
-
-    async def async_added_to_hass(self):
-        """When entity is added to hass."""
-        self.async_on_remove(
-            self._coordinator.async_add_listener(self.async_write_ha_state)
-        )
-
-    async def async_update(self) -> None:
-        """Update GitHub entity."""
-        if await self._github_update():
-            self._available = True
-        else:
-            self._available = False
-
-    async def _github_update(self) -> bool:
-        """Update GitHub entity."""
-        raise NotImplementedError()
+        return self.coordinator.last_update_success and self._available
 
 
 class GitHubDeviceEntity(GitHubEntity):
@@ -255,7 +236,7 @@ class GitHubDeviceEntity(GitHubEntity):
     @property
     def device_info(self) -> Dict[str, Any]:
         """Return device information about this GitHub instance."""
-        data: GitHubData = self._coordinator.data
+        data: GitHubData = self.coordinator.data
 
         return {
             "entry_type": "service",
