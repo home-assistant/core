@@ -68,7 +68,7 @@ async def test_import_fail(gogogate2api_mock, hass: HomeAssistant) -> None:
         ],
     }
 
-    await async_process_ha_core_config(hass, hass_config.get("homeassistant"))
+    await async_process_ha_core_config(hass, hass_config[HA_DOMAIN])
     assert await async_setup_component(hass, HA_DOMAIN, {})
     assert await async_setup_component(hass, COVER_DOMAIN, hass_config)
     await hass.async_block_till_done()
@@ -219,7 +219,7 @@ async def test_import(
         ],
     }
 
-    await async_process_ha_core_config(hass, hass_config.get("homeassistant"))
+    await async_process_ha_core_config(hass, hass_config[HA_DOMAIN])
     assert await async_setup_component(hass, HA_DOMAIN, {})
     assert await async_setup_component(hass, COVER_DOMAIN, hass_config)
     await hass.async_block_till_done()

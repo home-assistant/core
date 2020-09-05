@@ -23,9 +23,10 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .common import (
     DeviceDataUpdateCoordinator,
@@ -76,7 +77,7 @@ async def async_setup_entry(
     )
 
 
-class DeviceCover(CoverEntity):
+class DeviceCover(CoordinatorEntity, CoverEntity):
     """Cover entity for goggate2."""
 
     def __init__(
@@ -86,6 +87,7 @@ class DeviceCover(CoverEntity):
         door: AbstractDoor,
     ) -> None:
         """Initialize the object."""
+        super().__init__(data_update_coordinator)
         self._config_entry = config_entry
         self._data_update_coordinator = data_update_coordinator
         self._door = door
@@ -96,7 +98,7 @@ class DeviceCover(CoverEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._is_available
+        return self._data_update_coordinator.last_update_success
 
     @property
     def should_poll(self) -> bool:
@@ -111,14 +113,16 @@ class DeviceCover(CoverEntity):
     @property
     def name(self):
         """Return the name of the door."""
-        return self._door.name
+        return self._get_door().name
 
     @property
     def is_closed(self):
         """Return true if cover is closed, else False."""
-        if self._door.status == DoorStatus.OPENED:
+        door = self._get_door()
+
+        if door.status == DoorStatus.OPENED:
             return False
-        if self._door.status == DoorStatus.CLOSED:
+        if door.status == DoorStatus.CLOSED:
             return True
 
         return None
@@ -135,36 +139,24 @@ class DeviceCover(CoverEntity):
 
     async def async_open_cover(self, **kwargs):
         """Open the door."""
-        await self.hass.async_add_executor_job(self._api.open_door, self._door.door_id)
+        await self.hass.async_add_executor_job(
+            self._api.open_door, self._get_door().door_id
+        )
 
     async def async_close_cover(self, **kwargs):
         """Close the door."""
-        await self.hass.async_add_executor_job(self._api.close_door, self._door.door_id)
+        await self.hass.async_add_executor_job(
+            self._api.close_door, self._get_door().door_id
+        )
 
     @property
     def state_attributes(self):
         """Return the state attributes."""
         attrs = super().state_attributes
-        attrs["door_id"] = self._door.door_id
+        attrs["door_id"] = self._get_door().door_id
         return attrs
 
-    @callback
-    def async_on_data_updated(self) -> None:
-        """Receive data from data dispatcher."""
-        if not self._data_update_coordinator.last_update_success:
-            self._is_available = False
-            self.async_write_ha_state()
-            return
-
+    def _get_door(self) -> AbstractDoor:
         door = get_door_by_id(self._door.door_id, self._data_update_coordinator.data)
-
-        # Set the state.
-        self._door = door
-        self._is_available = True
-        self.async_write_ha_state()
-
-    async def async_added_to_hass(self) -> None:
-        """Register update dispatcher."""
-        self.async_on_remove(
-            self._data_update_coordinator.async_add_listener(self.async_on_data_updated)
-        )
+        self._door = door or self._door
+        return self._door

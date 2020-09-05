@@ -17,11 +17,8 @@ from homeassistant.const import (
 )
 
 from .common import get_api
-from .const import (  # pylint: disable=unused-import
-    DEVICE_TYPE_GOGOGATE2,
-    DEVICE_TYPE_ISMARTGATE,
-    DOMAIN,
-)
+from .const import DEVICE_TYPE_GOGOGATE2, DEVICE_TYPE_ISMARTGATE
+from .const import DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
