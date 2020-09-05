@@ -20,25 +20,16 @@ async def test_smile_error(hass, mock_smile_error):
 async def test_smile_notconnect(hass, mock_smile_notconnect):
     """Connection failure error handling by Smile."""
     mock_smile_notconnect.connect.return_value = False
-    try:
-        assert not await async_init_integration(hass, mock_smile_notconnect)
-    except Smile.PlugwiseError as exception:
-        assert exception is Smile.InvalidAuthentication
+    assert not await async_init_integration(hass, mock_smile_notconnect)
 
 
 async def test_smile_timeout(hass, mock_smile_notconnect):
     """Timeout error handling by Smile."""
     mock_smile_notconnect.connect.side_effect = asyncio.TimeoutError
-    try:
-        assert not await async_init_integration(hass, mock_smile_notconnect)
-    except asyncio.TimeoutError as exception:
-        assert exception is asyncio.TimeoutError
+    assert not await async_init_integration(hass, mock_smile_notconnect)
 
 
 async def test_smile_adam_xmlerror(hass, mock_smile_adam):
     """Detect malformed XML by Smile in Adam environment."""
     mock_smile_adam.full_update_device.side_effect = Smile.XMLDataMissingError
-    try:
-        assert not await async_init_integration(hass, mock_smile_adam)
-    except Smile.XMLDataMissingError as exception:
-        assert exception is Smile.XMLDataMissingError
+    assert not await async_init_integration(hass, mock_smile_adam)
