@@ -795,7 +795,10 @@ async def test_device_class_binary_sensor(hass, device_class, google_type):
             "agentUserId": "test-agent",
             "devices": [
                 {
-                    "attributes": {"queryOnlyOpenClose": True},
+                    "attributes": {
+                        "queryOnlyOpenClose": True,
+                        "discreteOnlyOpenClose": True,
+                    },
                     "id": "binary_sensor.demo_sensor",
                     "name": {"name": "Demo Sensor"},
                     "traits": ["action.devices.traits.OpenClose"],
@@ -853,6 +856,8 @@ async def test_device_class_cover(hass, device_class, google_type):
     [
         ("non_existing_class", "action.devices.types.SETTOP"),
         ("tv", "action.devices.types.TV"),
+        ("speaker", "action.devices.types.SPEAKER"),
+        ("receiver", "action.devices.types.AUDIO_VIDEO_RECEIVER"),
     ],
 )
 async def test_device_media_player(hass, device_class, google_type):
@@ -1188,3 +1193,59 @@ async def test_sync_message_recovery(hass, caplog):
     }
 
     assert "Error serializing light.bad_light" in caplog.text
+
+
+async def test_query_recover(hass, caplog):
+    """Test that we recover if an entity raises during query."""
+
+    hass.states.async_set(
+        "light.good",
+        "on",
+        {
+            "supported_features": hass.components.light.SUPPORT_BRIGHTNESS,
+            "brightness": 50,
+        },
+    )
+    hass.states.async_set(
+        "light.bad",
+        "on",
+        {
+            "supported_features": hass.components.light.SUPPORT_BRIGHTNESS,
+            "brightness": "shoe",
+        },
+    )
+
+    result = await sh.async_handle_message(
+        hass,
+        BASIC_CONFIG,
+        "test-agent",
+        {
+            "requestId": REQ_ID,
+            "inputs": [
+                {
+                    "intent": "action.devices.QUERY",
+                    "payload": {
+                        "devices": [
+                            {"id": "light.good"},
+                            {"id": "light.bad"},
+                        ]
+                    },
+                }
+            ],
+        },
+        const.SOURCE_CLOUD,
+    )
+
+    assert (
+        f"Unexpected error serializing query for {hass.states.get('light.bad')}"
+        in caplog.text
+    )
+    assert result == {
+        "requestId": REQ_ID,
+        "payload": {
+            "devices": {
+                "light.bad": {"online": False},
+                "light.good": {"on": True, "online": True, "brightness": 19},
+            }
+        },
+    }

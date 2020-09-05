@@ -12,6 +12,7 @@ from xknx.devices import (
     Scene as XknxScene,
     Sensor as XknxSensor,
     Switch as XknxSwitch,
+    Weather as XknxWeather,
 )
 
 from homeassistant.const import CONF_ADDRESS, CONF_DEVICE_CLASS, CONF_NAME, CONF_TYPE
@@ -19,7 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DATA_KNX, DOMAIN, ColorTempModes, DeviceTypes
+from .const import DOMAIN, ColorTempModes, SupportedPlatforms
 from .schema import (
     BinarySensorSchema,
     ClimateSchema,
@@ -28,36 +29,43 @@ from .schema import (
     SceneSchema,
     SensorSchema,
     SwitchSchema,
+    WeatherSchema,
 )
 
 
 def create_knx_device(
-    hass: HomeAssistant, device_type: DeviceTypes, knx_module: XKNX, config: ConfigType
+    hass: HomeAssistant,
+    platform: SupportedPlatforms,
+    knx_module: XKNX,
+    config: ConfigType,
 ) -> XknxDevice:
     """Return the requested XKNX device."""
-    if device_type is DeviceTypes.light:
+    if platform is SupportedPlatforms.light:
         return _create_light(knx_module, config)
 
-    if device_type is DeviceTypes.cover:
+    if platform is SupportedPlatforms.cover:
         return _create_cover(knx_module, config)
 
-    if device_type is DeviceTypes.climate:
-        return _create_climate(hass, knx_module, config)
+    if platform is SupportedPlatforms.climate:
+        return _create_climate(knx_module, config)
 
-    if device_type is DeviceTypes.switch:
+    if platform is SupportedPlatforms.switch:
         return _create_switch(knx_module, config)
 
-    if device_type is DeviceTypes.sensor:
+    if platform is SupportedPlatforms.sensor:
         return _create_sensor(knx_module, config)
 
-    if device_type is DeviceTypes.notify:
+    if platform is SupportedPlatforms.notify:
         return _create_notify(knx_module, config)
 
-    if device_type is DeviceTypes.scene:
+    if platform is SupportedPlatforms.scene:
         return _create_scene(knx_module, config)
 
-    if device_type is DeviceTypes.binary_sensor:
+    if platform is SupportedPlatforms.binary_sensor:
         return _create_binary_sensor(hass, knx_module, config)
+
+    if platform is SupportedPlatforms.weather:
+        return _create_weather(knx_module, config)
 
 
 def _create_cover(knx_module: XKNX, config: ConfigType) -> XknxCover:
@@ -120,9 +128,7 @@ def _create_light(knx_module: XKNX, config: ConfigType) -> XknxLight:
     )
 
 
-def _create_climate(
-    hass: HomeAssistant, knx_module: XKNX, config: ConfigType
-) -> XknxClimate:
+def _create_climate(knx_module: XKNX, config: ConfigType) -> XknxClimate:
     """Return a KNX Climate device to be used within XKNX."""
     climate_mode = XknxClimateMode(
         knx_module,
@@ -163,7 +169,6 @@ def _create_climate(
         ),
         operation_modes=config.get(ClimateSchema.CONF_OPERATION_MODES),
     )
-    hass.data[DATA_KNX].xknx.devices.add(climate_mode)
 
     return XknxClimate(
         knx_module,
@@ -262,4 +267,35 @@ def _create_binary_sensor(
         ignore_internal_state=config[BinarySensorSchema.CONF_IGNORE_INTERNAL_STATE],
         reset_after=config.get(BinarySensorSchema.CONF_RESET_AFTER),
         actions=actions,
+    )
+
+
+def _create_weather(knx_module: XKNX, config: ConfigType) -> XknxWeather:
+    """Return a KNX weather device to be used within XKNX."""
+    return XknxWeather(
+        knx_module,
+        name=config[CONF_NAME],
+        sync_state=config[WeatherSchema.CONF_SYNC_STATE],
+        expose_sensors=config[WeatherSchema.CONF_KNX_EXPOSE_SENSORS],
+        group_address_temperature=config[WeatherSchema.CONF_KNX_TEMPERATURE_ADDRESS],
+        group_address_brightness_south=config.get(
+            WeatherSchema.CONF_KNX_BRIGHTNESS_SOUTH_ADDRESS
+        ),
+        group_address_brightness_east=config.get(
+            WeatherSchema.CONF_KNX_BRIGHTNESS_EAST_ADDRESS
+        ),
+        group_address_brightness_west=config.get(
+            WeatherSchema.CONF_KNX_BRIGHTNESS_WEST_ADDRESS
+        ),
+        group_address_wind_speed=config.get(WeatherSchema.CONF_KNX_WIND_SPEED_ADDRESS),
+        group_address_rain_alarm=config.get(WeatherSchema.CONF_KNX_RAIN_ALARM_ADDRESS),
+        group_address_frost_alarm=config.get(
+            WeatherSchema.CONF_KNX_FROST_ALARM_ADDRESS
+        ),
+        group_address_wind_alarm=config.get(WeatherSchema.CONF_KNX_WIND_ALARM_ADDRESS),
+        group_address_day_night=config.get(WeatherSchema.CONF_KNX_DAY_NIGHT_ADDRESS),
+        group_address_air_pressure=config.get(
+            WeatherSchema.CONF_KNX_AIR_PRESSURE_ADDRESS
+        ),
+        group_address_humidity=config.get(WeatherSchema.CONF_KNX_HUMIDITY_ADDRESS),
     )

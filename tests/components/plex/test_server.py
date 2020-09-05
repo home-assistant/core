@@ -1,7 +1,7 @@
 """Tests for Plex server."""
 import copy
 
-from plexapi.exceptions import NotFound
+from plexapi.exceptions import BadRequest, NotFound
 from requests.exceptions import RequestException
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
@@ -9,6 +9,7 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     MEDIA_TYPE_EPISODE,
+    MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_PLAYLIST,
     MEDIA_TYPE_VIDEO,
@@ -32,6 +33,7 @@ from .mock_classes import (
     MockPlexArtist,
     MockPlexLibrary,
     MockPlexLibrarySection,
+    MockPlexMediaItem,
     MockPlexSeason,
     MockPlexServer,
     MockPlexShow,
@@ -454,7 +456,7 @@ async def test_media_lookups(hass):
             is None
         )
 
-    # Movie searches
+    # Legacy Movie searches
     assert loaded_server.lookup_media(MEDIA_TYPE_VIDEO, video_name="Movie") is None
     assert loaded_server.lookup_media(MEDIA_TYPE_VIDEO, library_name="Movies") is None
     assert loaded_server.lookup_media(
@@ -467,3 +469,47 @@ async def test_media_lookups(hass):
             )
             is None
         )
+
+    # Movie searches
+    assert loaded_server.lookup_media(MEDIA_TYPE_MOVIE, title="Movie") is None
+    assert loaded_server.lookup_media(MEDIA_TYPE_MOVIE, library_name="Movies") is None
+    assert loaded_server.lookup_media(
+        MEDIA_TYPE_MOVIE, library_name="Movies", title="Movie"
+    )
+    with patch.object(MockPlexLibrarySection, "search", side_effect=BadRequest):
+        assert (
+            loaded_server.lookup_media(
+                MEDIA_TYPE_MOVIE, library_name="Movies", title="Not a Movie"
+            )
+            is None
+        )
+    with patch.object(MockPlexLibrarySection, "search", return_value=[]):
+        assert (
+            loaded_server.lookup_media(
+                MEDIA_TYPE_MOVIE, library_name="Movies", title="Not a Movie"
+            )
+            is None
+        )
+
+    similar_movies = []
+    for title in "Duplicate Movie", "Duplicate Movie 2":
+        similar_movies.append(MockPlexMediaItem(title))
+    with patch.object(
+        loaded_server.library.section("Movies"), "search", return_value=similar_movies
+    ):
+        found_media = loaded_server.lookup_media(
+            MEDIA_TYPE_MOVIE, library_name="Movies", title="Duplicate Movie"
+        )
+    assert found_media.title == "Duplicate Movie"
+
+    duplicate_movies = []
+    for title in "Duplicate Movie - Original", "Duplicate Movie - Remake":
+        duplicate_movies.append(MockPlexMediaItem(title))
+    with patch.object(
+        loaded_server.library.section("Movies"), "search", return_value=duplicate_movies
+    ):
+        assert (
+            loaded_server.lookup_media(
+                MEDIA_TYPE_MOVIE, library_name="Movies", title="Duplicate Movie"
+            )
+        ) is None

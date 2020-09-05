@@ -3,8 +3,6 @@ from os import path
 import statistics
 import unittest
 
-from asynctest.mock import patch
-
 from homeassistant import config as hass_config
 from homeassistant.components.min_max import DOMAIN
 from homeassistant.const import (
@@ -18,6 +16,7 @@ from homeassistant.const import (
 )
 from homeassistant.setup import async_setup_component, setup_component
 
+from tests.async_mock import patch
 from tests.common import get_test_home_assistant
 
 

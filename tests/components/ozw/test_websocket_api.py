@@ -19,6 +19,7 @@ from homeassistant.components.ozw.websocket_api import (
     OZW_INSTANCE,
     TYPE,
 )
+from homeassistant.components.websocket_api.const import ERR_NOT_FOUND
 
 from .common import MQTTMessage, setup_ozw
 
@@ -68,8 +69,13 @@ async def test_websocket_api(hass, generic_data, hass_ws_client):
     assert result[ATTR_NODE_SPECIFIC_STRING] == "Binary Power Switch"
     assert result[ATTR_NEIGHBORS] == [1, 33, 36, 37, 39]
 
+    await client.send_json({ID: 7, TYPE: "ozw/node_status", NODE_ID: 999})
+    msg = await client.receive_json()
+    result = msg["error"]
+    assert result["code"] == ERR_NOT_FOUND
+
     # Test node statistics
-    await client.send_json({ID: 7, TYPE: "ozw/node_statistics", NODE_ID: 39})
+    await client.send_json({ID: 8, TYPE: "ozw/node_statistics", NODE_ID: 39})
     msg = await client.receive_json()
     result = msg["result"]
 
@@ -87,13 +93,18 @@ async def test_websocket_api(hass, generic_data, hass_ws_client):
     assert result["received_unsolicited"] == 3546
 
     # Test node metadata
-    await client.send_json({ID: 8, TYPE: "ozw/node_metadata", NODE_ID: 39})
+    await client.send_json({ID: 9, TYPE: "ozw/node_metadata", NODE_ID: 39})
     msg = await client.receive_json()
     result = msg["result"]
     assert result["metadata"]["ProductPic"] == "images/aeotec/zwa002.png"
 
+    await client.send_json({ID: 10, TYPE: "ozw/node_metadata", NODE_ID: 999})
+    msg = await client.receive_json()
+    result = msg["error"]
+    assert result["code"] == ERR_NOT_FOUND
+
     # Test network statistics
-    await client.send_json({ID: 9, TYPE: "ozw/network_statistics"})
+    await client.send_json({ID: 11, TYPE: "ozw/network_statistics"})
     msg = await client.receive_json()
     result = msg["result"]
     assert result["readCnt"] == 92220
@@ -101,7 +112,7 @@ async def test_websocket_api(hass, generic_data, hass_ws_client):
     assert result["node_count"] == 5
 
     # Test get nodes
-    await client.send_json({ID: 10, TYPE: "ozw/get_nodes"})
+    await client.send_json({ID: 12, TYPE: "ozw/get_nodes"})
     msg = await client.receive_json()
     result = msg["result"]
     assert len(result) == 5

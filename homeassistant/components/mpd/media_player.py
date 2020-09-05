@@ -133,10 +133,17 @@ class MpdDevice(MediaPlayerEntity):
         self._status = self._client.status()
         self._currentsong = self._client.currentsong()
 
-        position = self._status.get("time")
+        position = self._status.get("elapsed")
+
+        if position is None:
+            position = self._status.get("time")
+
+            if position is not None and ":" in position:
+                position = position.split(":")[0]
+
         if position is not None and self._media_position != position:
             self._media_position_updated_at = dt_util.utcnow()
-            self._media_position = position
+            self._media_position = int(position)
 
         self._update_playlists()
 

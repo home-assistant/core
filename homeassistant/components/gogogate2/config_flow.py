@@ -1,16 +1,23 @@
 """Config flow for Gogogate2."""
+import dataclasses
 import logging
 import re
 
-from gogogate2_api.common import ApiError
-from gogogate2_api.const import ApiErrorCode
+from gogogate2_api.common import AbstractInfoResponse, ApiError
+from gogogate2_api.const import GogoGate2ApiErrorCode, ISmartGateApiErrorCode
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigFlow
-from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_DEVICE,
+    CONF_IP_ADDRESS,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
 
 from .common import get_api
+from .const import DEVICE_TYPE_GOGOGATE2, DEVICE_TYPE_ISMARTGATE
 from .const import DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,15 +43,35 @@ class Gogogate2FlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input:
             api = get_api(user_input)
             try:
-                data = await self.hass.async_add_executor_job(api.info)
+                data: AbstractInfoResponse = await self.hass.async_add_executor_job(
+                    api.info
+                )
+                data_dict = dataclasses.asdict(data)
+                title = data_dict.get(
+                    "gogogatename", data_dict.get("ismartgatename", "Cover")
+                )
                 await self.async_set_unique_id(re.sub("\\..*$", "", data.remoteaccess))
-                return self.async_create_entry(title=data.gogogatename, data=user_input)
+                return self.async_create_entry(title=title, data=user_input)
 
             except ApiError as api_error:
-                if api_error.code in (
-                    ApiErrorCode.CREDENTIALS_NOT_SET,
-                    ApiErrorCode.CREDENTIALS_INCORRECT,
-                ):
+                device_type = user_input[CONF_DEVICE]
+                is_invalid_auth = (
+                    device_type == DEVICE_TYPE_GOGOGATE2
+                    and api_error.code
+                    in (
+                        GogoGate2ApiErrorCode.CREDENTIALS_NOT_SET,
+                        GogoGate2ApiErrorCode.CREDENTIALS_INCORRECT,
+                    )
+                ) or (
+                    device_type == DEVICE_TYPE_ISMARTGATE
+                    and api_error.code
+                    in (
+                        ISmartGateApiErrorCode.CREDENTIALS_NOT_SET,
+                        ISmartGateApiErrorCode.CREDENTIALS_INCORRECT,
+                    )
+                )
+
+                if is_invalid_auth:
                     errors["base"] = "invalid_auth"
                 else:
                     errors["base"] = "cannot_connect"
@@ -59,6 +86,10 @@ class Gogogate2FlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
+                    vol.Required(
+                        CONF_DEVICE,
+                        default=user_input.get(CONF_DEVICE, DEVICE_TYPE_GOGOGATE2),
+                    ): vol.In((DEVICE_TYPE_GOGOGATE2, DEVICE_TYPE_ISMARTGATE)),
                     vol.Required(
                         CONF_IP_ADDRESS, default=user_input.get(CONF_IP_ADDRESS, "")
                     ): str,

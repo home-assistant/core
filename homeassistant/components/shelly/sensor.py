@@ -2,15 +2,37 @@
 import aioshelly
 
 from homeassistant.components import sensor
-from homeassistant.const import PERCENTAGE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import (
+    CONCENTRATION_PARTS_PER_MILLION,
+    DEGREE,
+    ELECTRICAL_CURRENT_AMPERE,
+    ENERGY_KILO_WATT_HOUR,
+    PERCENTAGE,
+    POWER_WATT,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+    VOLT,
+)
 from homeassistant.helpers.entity import Entity
 
 from . import ShellyBlockEntity, ShellyDeviceWrapper
 from .const import DOMAIN
 
 SENSORS = {
+    "battery": [PERCENTAGE, sensor.DEVICE_CLASS_BATTERY],
+    "concentration": [CONCENTRATION_PARTS_PER_MILLION, None],
+    "current": [ELECTRICAL_CURRENT_AMPERE, sensor.DEVICE_CLASS_CURRENT],
+    "deviceTemp": [None, sensor.DEVICE_CLASS_TEMPERATURE],
+    "energy": [ENERGY_KILO_WATT_HOUR, sensor.DEVICE_CLASS_ENERGY],
+    "energyReturned": [ENERGY_KILO_WATT_HOUR, sensor.DEVICE_CLASS_ENERGY],
     "extTemp": [None, sensor.DEVICE_CLASS_TEMPERATURE],
     "humidity": [PERCENTAGE, sensor.DEVICE_CLASS_HUMIDITY],
+    "luminosity": ["lx", sensor.DEVICE_CLASS_ILLUMINANCE],
+    "overpowerValue": [POWER_WATT, sensor.DEVICE_CLASS_POWER],
+    "power": [POWER_WATT, sensor.DEVICE_CLASS_POWER],
+    "powerFactor": [PERCENTAGE, sensor.DEVICE_CLASS_POWER_FACTOR],
+    "tilt": [DEGREE, None],
+    "voltage": [VOLT, sensor.DEVICE_CLASS_VOLTAGE],
 }
 
 
@@ -20,11 +42,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     sensors = []
 
     for block in wrapper.device.blocks:
-        if block.type != "sensor":
-            continue
-
         for attr in SENSORS:
-            if not hasattr(block, attr):
+            # Filter out non-existing sensors and sensors without a value
+            if getattr(block, attr, None) is None:
                 continue
 
             sensors.append(ShellySensor(wrapper, block, attr))
@@ -46,10 +66,13 @@ class ShellySensor(ShellyBlockEntity, Entity):
         super().__init__(wrapper, block)
         self.attribute = attribute
         unit, device_class = SENSORS[attribute]
-        info = block.info(attribute)
+        self.info = block.info(attribute)
 
-        if info[aioshelly.BLOCK_VALUE_TYPE] == aioshelly.BLOCK_VALUE_TYPE_TEMPERATURE:
-            if info[aioshelly.BLOCK_VALUE_UNIT] == "C":
+        if (
+            self.info[aioshelly.BLOCK_VALUE_TYPE]
+            == aioshelly.BLOCK_VALUE_TYPE_TEMPERATURE
+        ):
+            if self.info[aioshelly.BLOCK_VALUE_UNIT] == "C":
                 unit = TEMP_CELSIUS
             else:
                 unit = TEMP_FAHRENHEIT
@@ -70,7 +93,28 @@ class ShellySensor(ShellyBlockEntity, Entity):
     @property
     def state(self):
         """Value of sensor."""
-        return getattr(self.block, self.attribute)
+        value = getattr(self.block, self.attribute)
+        if value is None:
+            return None
+
+        if self.attribute in ["luminosity", "tilt"]:
+            return round(value)
+        if self.attribute in [
+            "deviceTemp",
+            "extTemp",
+            "humidity",
+            "overpowerValue",
+            "power",
+        ]:
+            return round(value, 1)
+        if self.attribute == "powerFactor":
+            return round(value * 100, 1)
+        # Energy unit change from Wmin or Wh to kWh
+        if self.info.get(aioshelly.BLOCK_VALUE_UNIT) == "Wmin":
+            return round(value / 60 / 1000, 2)
+        if self.info.get(aioshelly.BLOCK_VALUE_UNIT) == "Wh":
+            return round(value / 1000, 2)
+        return value
 
     @property
     def unit_of_measurement(self):
@@ -81,3 +125,12 @@ class ShellySensor(ShellyBlockEntity, Entity):
     def device_class(self):
         """Device class of sensor."""
         return self._device_class
+
+    @property
+    def available(self):
+        """Available."""
+        if self.attribute == "concentration":
+            # "sensorOp" is "normal" when the Shelly Gas is working properly and taking
+            # measurements.
+            return super().available and self.block.sensorOp == "normal"
+        return super().available

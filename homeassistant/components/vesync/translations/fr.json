@@ -10,7 +10,7 @@
             "user": {
                 "data": {
                     "password": "Mot de passe",
-                    "username": "Adresse e-mail"
+                    "username": "Email"
                 },
                 "title": "Entrez vos identifiants"
             }

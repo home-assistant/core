@@ -4,22 +4,15 @@ from xknx.devices import Sensor as XknxSensor
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 
-from . import ATTR_DISCOVER_DEVICES, DATA_KNX
+from . import DATA_KNX
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up sensor(s) for KNX platform."""
-    if discovery_info is not None:
-        async_add_entities_discovery(hass, discovery_info, async_add_entities)
-
-
-@callback
-def async_add_entities_discovery(hass, discovery_info, async_add_entities):
-    """Set up sensors for KNX platform configured via xknx.yaml."""
     entities = []
-    for device_name in discovery_info[ATTR_DISCOVER_DEVICES]:
-        device = hass.data[DATA_KNX].xknx.devices[device_name]
-        entities.append(KNXSensor(device))
+    for device in hass.data[DATA_KNX].xknx.devices:
+        if isinstance(device, XknxSensor):
+            entities.append(KNXSensor(device))
     async_add_entities(entities)
 
 

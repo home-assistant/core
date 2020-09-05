@@ -6,7 +6,7 @@
             "unknown": "Do\u0161lo k nezn\u00e1m\u00e9 chyb\u011b"
         },
         "error": {
-            "invalid_pin": "Neplatn\u00fd k\u00f3d PIN, zkuste to znovu.",
+            "invalid_sgtin_or_pin": "Neplatn\u00fd k\u00f3d PIN, zkuste to znovu.",
             "press_the_button": "Stiskn\u011bte modr\u00e9 tla\u010d\u00edtko.",
             "register_failed": "Registrace se nezda\u0159ila, zkuste to znovu.",
             "timeout_button": "\u010casov\u00fd limit stisknut\u00ed modr\u00e9ho tla\u010d\u00edtka vypr\u0161el. Zkuste to znovu."

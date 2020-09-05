@@ -5,10 +5,11 @@ from typing import Any, Callable, Dict, List, Optional, Union
 
 from pyvizio import VizioAsync
 from pyvizio.api.apps import find_app_name
-from pyvizio.const import APP_HOME, APPS, INPUT_APPS, NO_APP_RUNNING, UNKNOWN_APP
+from pyvizio.const import APP_HOME, INPUT_APPS, NO_APP_RUNNING, UNKNOWN_APP
 
 from homeassistant.components.media_player import (
     DEVICE_CLASS_SPEAKER,
+    DEVICE_CLASS_TV,
     SUPPORT_SELECT_SOUND_MODE,
     MediaPlayerEntity,
 )
@@ -23,6 +24,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.core import callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -32,6 +34,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
     CONF_ADDITIONAL_CONFIGS,
@@ -78,6 +81,7 @@ async def async_setup_entry(
     params = {}
     if not config_entry.options:
         params["options"] = {CONF_VOLUME_STEP: volume_step}
+
         include_or_exclude_key = next(
             (
                 key
@@ -115,7 +119,9 @@ async def async_setup_entry(
         _LOGGER.warning("Failed to connect to %s", host)
         raise PlatformNotReady
 
-    entity = VizioDevice(config_entry, device, name, device_class)
+    apps_coordinator = hass.data[DOMAIN].get(CONF_APPS)
+
+    entity = VizioDevice(config_entry, device, name, device_class, apps_coordinator)
 
     async_add_entities([entity], update_before_add=True)
     platform = entity_platform.current_platform.get()
@@ -133,10 +139,12 @@ class VizioDevice(MediaPlayerEntity):
         device: VizioAsync,
         name: str,
         device_class: str,
+        apps_coordinator: DataUpdateCoordinator,
     ) -> None:
         """Initialize Vizio device."""
         self._config_entry = config_entry
         self._async_unsub_listeners = []
+        self._apps_coordinator = apps_coordinator
 
         self._name = name
         self._state = None
@@ -150,6 +158,7 @@ class VizioDevice(MediaPlayerEntity):
         self._available_sound_modes = []
         self._available_inputs = []
         self._available_apps = []
+        self._all_apps = apps_coordinator.data if apps_coordinator else None
         self._conf_apps = config_entry.options.get(CONF_APPS, {})
         self._additional_app_configs = config_entry.data.get(CONF_APPS, {}).get(
             CONF_ADDITIONAL_CONFIGS, []
@@ -255,14 +264,15 @@ class VizioDevice(MediaPlayerEntity):
 
         # Create list of available known apps from known app list after
         # filtering by CONF_INCLUDE/CONF_EXCLUDE
-        self._available_apps = self._apps_list(self._device.get_apps_list())
+        self._available_apps = self._apps_list([app["name"] for app in self._all_apps])
 
         self._current_app_config = await self._device.get_current_app_config(
             log_api_exception=False
         )
 
         self._current_app = find_app_name(
-            self._current_app_config, [APP_HOME, *APPS, *self._additional_app_configs]
+            self._current_app_config,
+            [APP_HOME, *self._all_apps, *self._additional_app_configs],
         )
 
         if self._current_app == NO_APP_RUNNING:
@@ -286,6 +296,7 @@ class VizioDevice(MediaPlayerEntity):
     async def _async_update_options(self, config_entry: ConfigEntry) -> None:
         """Update options if the update signal comes from this entity."""
         self._volume_step = config_entry.options[CONF_VOLUME_STEP]
+        # Update so that CONF_ADDITIONAL_CONFIGS gets retained for imports
         self._conf_apps.update(config_entry.options.get(CONF_APPS, {}))
 
     async def async_update_setting(
@@ -313,6 +324,18 @@ class VizioDevice(MediaPlayerEntity):
                 self.hass, self._config_entry.entry_id, self._async_update_options
             )
         )
+
+        # Register callback for app list updates if device is a TV
+        @callback
+        def apps_list_update():
+            """Update list of all apps."""
+            self._all_apps = self._apps_coordinator.data
+            self.async_write_ha_state()
+
+        if self._device_class == DEVICE_CLASS_TV:
+            self._async_unsub_listeners.append(
+                self._apps_coordinator.async_add_listener(apps_list_update)
+            )
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect callbacks when entity is removed."""
@@ -479,7 +502,7 @@ class VizioDevice(MediaPlayerEntity):
                 )
             )
         elif source in self._available_apps:
-            await self._device.launch_app(source)
+            await self._device.launch_app(source, self._all_apps)
 
     async def async_volume_up(self) -> None:
         """Increase volume of the device."""

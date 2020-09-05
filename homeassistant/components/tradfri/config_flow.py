@@ -90,7 +90,7 @@ class FlowHandler(config_entries.ConfigFlow):
         host = discovery_info["host"]
 
         for entry in self._async_current_entries():
-            if entry.data[CONF_HOST] != host:
+            if entry.data.get(CONF_HOST) != host:
                 continue
 
             # Backwards compat, we update old entries
@@ -107,7 +107,7 @@ class FlowHandler(config_entries.ConfigFlow):
     async def async_step_import(self, user_input):
         """Import a config entry."""
         for entry in self._async_current_entries():
-            if entry.data[CONF_HOST] == user_input["host"]:
+            if entry.data.get(CONF_HOST) == user_input["host"]:
                 return self.async_abort(reason="already_configured")
 
         # Happens if user has host directly in configuration.yaml
@@ -141,8 +141,8 @@ class FlowHandler(config_entries.ConfigFlow):
         same_hub_entries = [
             entry.entry_id
             for entry in self._async_current_entries()
-            if entry.data[CONF_GATEWAY_ID] == gateway_id
-            or entry.data[CONF_HOST] == host
+            if entry.data.get(CONF_GATEWAY_ID) == gateway_id
+            or entry.data.get(CONF_HOST) == host
         ]
 
         if same_hub_entries:
@@ -161,7 +161,7 @@ async def authenticate(hass, host, security_code):
 
     identity = uuid4().hex
 
-    api_factory = APIFactory(host, psk_id=identity)
+    api_factory = await APIFactory.init(host, psk_id=identity)
 
     try:
         with async_timeout.timeout(5):
@@ -170,6 +170,8 @@ async def authenticate(hass, host, security_code):
         raise AuthError("invalid_security_code") from err
     except asyncio.TimeoutError as err:
         raise AuthError("timeout") from err
+    finally:
+        await api_factory.shutdown()
 
     return await get_gateway_info(hass, host, identity, key)
 
@@ -178,7 +180,7 @@ async def get_gateway_info(hass, host, identity, key):
     """Return info for the gateway."""
 
     try:
-        factory = APIFactory(host, psk_id=identity, psk=key)
+        factory = await APIFactory.init(host, psk_id=identity, psk=key)
 
         api = factory.request
         gateway = Gateway()

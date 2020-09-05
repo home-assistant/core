@@ -52,7 +52,7 @@ _RE_GET_ENTITIES = re.compile(
     re.I | re.M,
 )
 
-_RE_JINJA_DELIMITERS = re.compile(r"\{%|\{\{")
+_RE_JINJA_DELIMITERS = re.compile(r"\{%|\{\{|\{#")
 
 _RESERVED_NAMES = {"contextfunction", "evalcontextfunction", "environmentfunction"}
 
@@ -175,7 +175,6 @@ class RenderInfo:
             split_entity_id(entity_id)[0] in self.domains or entity_id in self.entities
         )
 
-    @property
     def result(self) -> str:
         """Results of the template computation."""
         if self.exception is not None:
@@ -192,7 +191,7 @@ class RenderInfo:
         self.entities = frozenset(self.entities)
         self.domains = frozenset(self.domains)
 
-        if self.all_states:
+        if self.all_states or self.exception:
             return
 
         if not self.domains:
@@ -1052,6 +1051,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["atan2"] = arc_tangent2
         self.filters["sqrt"] = square_root
         self.filters["as_timestamp"] = forgiving_as_timestamp
+        self.filters["as_local"] = dt_util.as_local
         self.filters["timestamp_custom"] = timestamp_custom
         self.filters["timestamp_local"] = timestamp_local
         self.filters["timestamp_utc"] = timestamp_utc
@@ -1085,6 +1085,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["atan2"] = arc_tangent2
         self.globals["float"] = forgiving_float
         self.globals["now"] = dt_util.now
+        self.globals["as_local"] = dt_util.as_local
         self.globals["utcnow"] = dt_util.utcnow
         self.globals["as_timestamp"] = forgiving_as_timestamp
         self.globals["relative_time"] = relative_time
