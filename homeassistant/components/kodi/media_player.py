@@ -9,12 +9,16 @@ import voluptuous as vol
 
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
+    MEDIA_TYPE_ALBUM,
+    MEDIA_TYPE_ARTIST,
     MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_PLAYLIST,
+    MEDIA_TYPE_TRACK,
     MEDIA_TYPE_TVSHOW,
     MEDIA_TYPE_VIDEO,
+    SUPPORT_BROWSE_MEDIA,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -29,6 +33,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
+from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -103,20 +108,27 @@ MEDIA_TYPES = {
     "audio": MEDIA_TYPE_MUSIC,
 }
 
+PLAYABLE_MEDIA_TYPES = [
+    MEDIA_TYPE_ALBUM,
+    MEDIA_TYPE_ARTIST,
+    MEDIA_TYPE_TRACK,
+]
+
 SUPPORT_KODI = (
-    SUPPORT_PAUSE
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_PREVIOUS_TRACK
+    SUPPORT_BROWSE_MEDIA
     | SUPPORT_NEXT_TRACK
-    | SUPPORT_SEEK
-    | SUPPORT_PLAY_MEDIA
-    | SUPPORT_STOP
-    | SUPPORT_SHUFFLE_SET
+    | SUPPORT_PAUSE
     | SUPPORT_PLAY
-    | SUPPORT_VOLUME_STEP
+    | SUPPORT_PLAY_MEDIA
+    | SUPPORT_PREVIOUS_TRACK
+    | SUPPORT_SEEK
+    | SUPPORT_SHUFFLE_SET
+    | SUPPORT_STOP
     | SUPPORT_TURN_OFF
     | SUPPORT_TURN_ON
+    | SUPPORT_VOLUME_MUTE
+    | SUPPORT_VOLUME_SET
+    | SUPPORT_VOLUME_STEP
 )
 
 
@@ -644,6 +656,20 @@ class KodiEntity(MediaPlayerEntity):
             await self._kodi.play_playlist(int(media_id))
         elif media_type_lower == "directory":
             await self._kodi.play_directory(str(media_id))
+        elif media_type_lower in [
+            MEDIA_TYPE_ARTIST,
+            MEDIA_TYPE_ALBUM,
+        ]:
+            await self._kodi.clear_playlist()
+            # await self._kodi._add_item_to_playlist({f"{media_type}id": int(media_id)})
+            params = {"playlistid": 0, "item": {f"{media_type}id": int(media_id)}}
+            await self._kodi._server.Playlist.Add(params)
+            await self._kodi.play_playlist(0)
+        elif media_type_lower == MEDIA_TYPE_TRACK:
+            await self._kodi.clear_playlist()
+            params = {"playlistid": 0, "item": {"songid": int(media_id)}}
+            await self._kodi._server.Playlist.Add(params)
+            await self._kodi.play_playlist(0)
         else:
             await self._kodi.play_file(str(media_id))
 
@@ -794,3 +820,137 @@ class KodiEntity(MediaPlayerEntity):
             out[i][1] = rate
 
         return sorted(out, key=lambda out: out[1], reverse=True)
+
+    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+        """Implement the websocket media browsing helper."""
+        if media_content_type in [None, "library"]:
+            return await self.hass.async_add_executor_job(library_payload, self._kodi)
+
+        payload = {
+            "search_type": media_content_type,
+            "search_id": media_content_id,
+        }
+        response = await build_item_response(self._kodi, payload)
+        if response is None:
+            raise BrowseError(
+                f"Media not found: {media_content_type} / {media_content_id}"
+            )
+        return response
+
+
+async def build_item_response(media_library, payload):
+    """Create response payload for the provided media query."""
+    search_id = payload.get("search_id")
+    search_type = payload.get("search_type")
+
+    thumbnail = None
+    title = None
+    media = None
+
+    query = {"properties": ["thumbnail"]}
+    if search_type == MEDIA_TYPE_ALBUM:
+        if search_id:
+            query.update({"filter": {"albumid": int(search_id)}})
+            query["properties"].extend(
+                ["albumid", "artist", "duration", "album", "track"]
+            )
+            album = await media_library._server.AudioLibrary.GetAlbumDetails(
+                {"albumid": int(search_id), "properties": ["thumbnail"]}
+            )
+            thumbnail = media_library.thumbnail_url(
+                album["albumdetails"].get("thumbnail")
+            )
+            media = await media_library._server.AudioLibrary.GetSongs(query)
+            media = media.get("songs")
+        else:
+            media = await media_library._server.AudioLibrary.GetAlbums(query)
+            media = media.get("albums")
+    elif search_type == MEDIA_TYPE_ARTIST:
+        if search_id:
+            query.update({"filter": {"artistid": int(search_id)}})
+            media = await media_library._server.AudioLibrary.GetAlbums(query)
+            media = media.get("albums")
+        else:
+            media = await media_library._server.AudioLibrary.GetArtists(query)
+            media = media.get("artists")
+    elif search_type == "library_music":
+        library = {MEDIA_TYPE_ALBUM: "Albums", MEDIA_TYPE_ARTIST: "Artists"}
+        media = [{"label": n, "type": t} for t, n in library.items()]
+
+    if media is None:
+        return
+
+    return {
+        "title": title,
+        "thumbnail": thumbnail,
+        "media_content_id": payload["search_id"],
+        "media_content_type": search_type,
+        "children": [item_payload(item, media_library) for item in media],
+        "can_play": search_type in PLAYABLE_MEDIA_TYPES and search_id,
+        "can_expand": True,
+    }
+
+
+def item_payload(item, media_library):
+    """
+    Create response payload for a single media item.
+
+    Used by async_browse_media.
+    """
+    payload = {}
+    if "songid" in item:
+        payload["media_content_type"] = MEDIA_TYPE_TRACK
+        payload["media_content_id"] = f"{item['songid']}"
+        payload["thumbnail"] = media_library.thumbnail_url(item.get("thumbnail"))
+        payload["can_expand"] = False
+    elif "albumid" in item:
+        payload["media_content_type"] = MEDIA_TYPE_ALBUM
+        payload["media_content_id"] = f"{item['albumid']}"
+        payload["thumbnail"] = media_library.thumbnail_url(item.get("thumbnail"))
+        payload["can_expand"] = True
+    elif "artistid" in item:
+        payload["media_content_type"] = MEDIA_TYPE_ARTIST
+        payload["media_content_id"] = f"{item['artistid']}"
+        payload["thumbnail"] = media_library.thumbnail_url(item.get("thumbnail"))
+        payload["can_expand"] = True
+    else:
+        payload["media_content_type"] = item.get("type")
+        payload["media_content_id"] = ""
+        payload["can_expand"] = True
+
+    payload["title"] = item["label"]
+    payload["can_play"] = payload[
+        "media_content_type"
+    ] in PLAYABLE_MEDIA_TYPES and bool(payload["media_content_id"])
+    return payload
+
+
+def library_payload(media_library):
+    """
+    Create response payload to describe contents of a specific library.
+
+    Used by async_browse_media.
+    """
+    library_info = {
+        "title": "Music Library",
+        "media_content_id": "library",
+        "media_content_type": "library",
+        "can_play": False,
+        "can_expand": True,
+        "children": [],
+    }
+
+    library = {
+        "library_music": "Music",
+        MEDIA_TYPE_MOVIE: "Movies",
+        MEDIA_TYPE_TVSHOW: "TV shows",
+    }
+    for item in [{"label": n, "type": t} for t, n in library.items()]:
+        library_info["children"].append(
+            item_payload(
+                {"label": item["label"], "type": item["type"], "uri": item["type"]},
+                media_library,
+            )
+        )
+
+    return library_info
