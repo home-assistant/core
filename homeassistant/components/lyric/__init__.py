@@ -1,6 +1,4 @@
 """The Honeywell Lyric integration."""
-# TODO: Finalise package and release
-# TODO: Re enable script/gen_requirements_all.py line #216
 import asyncio
 from datetime import timedelta
 import logging
