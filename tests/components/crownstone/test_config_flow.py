@@ -143,7 +143,9 @@ async def test_abort_if_configured(hass):
 
     # create mocked entry
     MockConfigEntry(
-        domain=DOMAIN, data=MOCK_CONF, unique_id=MOCK_CONF[CONF_ID],
+        domain=DOMAIN,
+        data=MOCK_CONF,
+        unique_id=MOCK_CONF[CONF_ID],
     ).add_to_hass(hass)
 
     cloud = get_mocked_crownstone_cloud(get_mocked_sphere_data(1))
