@@ -162,6 +162,9 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         data = {**import_config, **info}
 
+        await self.async_set_unique_id(info[CONF_SERIAL_ID])
+        self._abort_if_unique_id_configured(data)
+
         return self.async_create_entry(title=name, data=data)
 
 
