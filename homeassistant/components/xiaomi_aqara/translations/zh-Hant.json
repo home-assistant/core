@@ -7,7 +7,7 @@
         },
         "error": {
             "discovery_error": "\u63a2\u7d22\u5c0f\u7c73 Aqara \u7db2\u95dc\u5931\u6557\uff0c\u8acb\u5617\u8a66\u4f7f\u7528\u57f7\u884c Home Assistant \u8a2d\u5099\u7684 IP \u4f5c\u70ba\u4ecb\u9762",
-            "invalid_host": "\u7121\u6548\u7684 IP \u4f4d\u5740",
+            "invalid_host": "\u7121\u6548\u7684 IP \u4f4d\u5740\uff0c\u8acb\u53c3\u95b1 https://www.home-assistant.io/integrations/xiaomi_aqara/#connection-problem",
             "invalid_interface": "\u7db2\u8def\u4ecb\u9762\u7121\u6548",
             "invalid_key": "\u7db2\u95dc\u5bc6\u9470\u7121\u6548",
             "invalid_mac": "\u7121\u6548\u7684 Mac \u4f4d\u5740",
