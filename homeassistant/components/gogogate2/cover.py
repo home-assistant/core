@@ -2,7 +2,12 @@
 import logging
 from typing import Callable, List, Optional
 
-from gogogate2_api.common import Door, DoorStatus, get_configured_doors, get_door_by_id
+from gogogate2_api.common import (
+    AbstractDoor,
+    DoorStatus,
+    get_configured_doors,
+    get_door_by_id,
+)
 import voluptuous as vol
 
 from homeassistant.components.cover import (
@@ -12,17 +17,23 @@ from homeassistant.components.cover import (
     CoverEntity,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import (
+    CONF_DEVICE,
+    CONF_IP_ADDRESS,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .common import (
-    GogoGateDataUpdateCoordinator,
+    DeviceDataUpdateCoordinator,
     cover_unique_id,
     get_data_update_coordinator,
 )
-from .const import DOMAIN
+from .const import DEVICE_TYPE_GOGOGATE2, DEVICE_TYPE_ISMARTGATE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,6 +41,9 @@ _LOGGER = logging.getLogger(__name__)
 COVER_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_IP_ADDRESS): cv.string,
+        vol.Required(CONF_DEVICE, default=DEVICE_TYPE_GOGOGATE2): vol.In(
+            (DEVICE_TYPE_GOGOGATE2, DEVICE_TYPE_ISMARTGATE)
+        ),
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
     }
@@ -57,38 +71,28 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            Gogogate2Cover(config_entry, data_update_coordinator, door)
+            DeviceCover(config_entry, data_update_coordinator, door)
             for door in get_configured_doors(data_update_coordinator.data)
         ]
     )
 
 
-class Gogogate2Cover(CoverEntity):
+class DeviceCover(CoordinatorEntity, CoverEntity):
     """Cover entity for goggate2."""
 
     def __init__(
         self,
         config_entry: ConfigEntry,
-        data_update_coordinator: GogoGateDataUpdateCoordinator,
-        door: Door,
+        data_update_coordinator: DeviceDataUpdateCoordinator,
+        door: AbstractDoor,
     ) -> None:
         """Initialize the object."""
+        super().__init__(data_update_coordinator)
         self._config_entry = config_entry
-        self._data_update_coordinator = data_update_coordinator
         self._door = door
         self._api = data_update_coordinator.api
         self._unique_id = cover_unique_id(config_entry, door)
         self._is_available = True
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._is_available
-
-    @property
-    def should_poll(self) -> bool:
-        """Return False as the data manager handles dispatching data."""
-        return False
 
     @property
     def unique_id(self) -> Optional[str]:
@@ -98,14 +102,16 @@ class Gogogate2Cover(CoverEntity):
     @property
     def name(self):
         """Return the name of the door."""
-        return self._door.name
+        return self._get_door().name
 
     @property
     def is_closed(self):
         """Return true if cover is closed, else False."""
-        if self._door.status == DoorStatus.OPENED:
+        door = self._get_door()
+
+        if door.status == DoorStatus.OPENED:
             return False
-        if self._door.status == DoorStatus.CLOSED:
+        if door.status == DoorStatus.CLOSED:
             return True
 
         return None
@@ -122,36 +128,24 @@ class Gogogate2Cover(CoverEntity):
 
     async def async_open_cover(self, **kwargs):
         """Open the door."""
-        await self.hass.async_add_executor_job(self._api.open_door, self._door.door_id)
+        await self.hass.async_add_executor_job(
+            self._api.open_door, self._get_door().door_id
+        )
 
     async def async_close_cover(self, **kwargs):
         """Close the door."""
-        await self.hass.async_add_executor_job(self._api.close_door, self._door.door_id)
+        await self.hass.async_add_executor_job(
+            self._api.close_door, self._get_door().door_id
+        )
 
     @property
     def state_attributes(self):
         """Return the state attributes."""
         attrs = super().state_attributes
-        attrs["door_id"] = self._door.door_id
+        attrs["door_id"] = self._get_door().door_id
         return attrs
 
-    @callback
-    def async_on_data_updated(self) -> None:
-        """Receive data from data dispatcher."""
-        if not self._data_update_coordinator.last_update_success:
-            self._is_available = False
-            self.async_write_ha_state()
-            return
-
-        door = get_door_by_id(self._door.door_id, self._data_update_coordinator.data)
-
-        # Set the state.
-        self._door = door
-        self._is_available = True
-        self.async_write_ha_state()
-
-    async def async_added_to_hass(self) -> None:
-        """Register update dispatcher."""
-        self.async_on_remove(
-            self._data_update_coordinator.async_add_listener(self.async_on_data_updated)
-        )
+    def _get_door(self) -> AbstractDoor:
+        door = get_door_by_id(self._door.door_id, self.coordinator.data)
+        self._door = door or self._door
+        return self._door
