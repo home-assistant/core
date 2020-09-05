@@ -45,7 +45,7 @@ async def test_form(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {}
 
     with patch(
@@ -63,12 +63,14 @@ async def test_form(hass):
             {"host": TEST_HOST, "password": TEST_PASSWORD},
         )
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result2["data"] == {
         "host": TEST_HOST,
         "password": TEST_PASSWORD,
     }
     await hass.async_block_till_done()
+
+    assert result["errors"] == {}
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -87,7 +89,7 @@ async def test_form_invalid_auth(hass, mock_smile):
         {"host": TEST_HOST, "password": TEST_PASSWORD},
     )
 
-    assert result2["type"] == "form"
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
@@ -105,8 +107,26 @@ async def test_form_cannot_connect(hass, mock_smile):
         {"host": TEST_HOST, "password": TEST_PASSWORD},
     )
 
-    assert result2["type"] == "form"
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_other_problem(hass, mock_smile):
+    """Test we handle cannot connect error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    mock_smile.connect.side_effect = TimeoutError
+    mock_smile.gateway_id = "0a636a4fc1704ab4a24e4f7e37fb187a"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"host": TEST_HOST, "password": TEST_PASSWORD},
+    )
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["errors"] == {"base": "unknown"}
 
 
 async def test_show_zeroconf_form(hass, mock_smile) -> None:
@@ -119,6 +139,7 @@ async def test_show_zeroconf_form(hass, mock_smile) -> None:
     await hass.async_block_till_done()
     assert flow.context["title_placeholders"][CONF_HOST] == TEST_HOST
     assert flow.context["title_placeholders"]["name"] == "P1 DSMR v1.2.3"
+
     assert result["step_id"] == "user"
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
@@ -137,13 +158,13 @@ async def test_options_flow_power(hass, mock_smile) -> None:
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={CONF_SCAN_INTERVAL: 10}
     )
-    assert result["type"] == "create_entry"
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == {
         CONF_SCAN_INTERVAL: 10,
     }
@@ -163,13 +184,13 @@ async def test_options_flow_thermo(hass, mock_smile) -> None:
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={CONF_SCAN_INTERVAL: 60}
     )
-    assert result["type"] == "create_entry"
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == {
         CONF_SCAN_INTERVAL: 60,
     }
