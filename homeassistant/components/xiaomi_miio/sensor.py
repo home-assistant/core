@@ -21,9 +21,9 @@ from homeassistant.const import (
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
+    PERCENTAGE,
     PRESSURE_HPA,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
 )
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
@@ -73,7 +73,7 @@ GATEWAY_SENSOR_TYPES = {
         unit=TEMP_CELSIUS, icon=None, device_class=DEVICE_CLASS_TEMPERATURE
     ),
     "humidity": SensorType(
-        unit=UNIT_PERCENTAGE, icon=None, device_class=DEVICE_CLASS_HUMIDITY
+        unit=PERCENTAGE, icon=None, device_class=DEVICE_CLASS_HUMIDITY
     ),
     "pressure": SensorType(
         unit=PRESSURE_HPA, icon=None, device_class=DEVICE_CLASS_PRESSURE

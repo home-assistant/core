@@ -7,10 +7,10 @@ from homeassistant.const import (
     DEGREE,
     ELECTRICAL_CURRENT_AMPERE,
     ENERGY_KILO_WATT_HOUR,
+    PERCENTAGE,
     POWER_WATT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    UNIT_PERCENTAGE,
     VOLT,
 )
 from homeassistant.helpers.entity import Entity
@@ -19,18 +19,18 @@ from . import ShellyBlockEntity, ShellyDeviceWrapper
 from .const import DOMAIN
 
 SENSORS = {
-    "battery": [UNIT_PERCENTAGE, sensor.DEVICE_CLASS_BATTERY],
+    "battery": [PERCENTAGE, sensor.DEVICE_CLASS_BATTERY],
     "concentration": [CONCENTRATION_PARTS_PER_MILLION, None],
     "current": [ELECTRICAL_CURRENT_AMPERE, sensor.DEVICE_CLASS_CURRENT],
     "deviceTemp": [None, sensor.DEVICE_CLASS_TEMPERATURE],
     "energy": [ENERGY_KILO_WATT_HOUR, sensor.DEVICE_CLASS_ENERGY],
     "energyReturned": [ENERGY_KILO_WATT_HOUR, sensor.DEVICE_CLASS_ENERGY],
     "extTemp": [None, sensor.DEVICE_CLASS_TEMPERATURE],
-    "humidity": [UNIT_PERCENTAGE, sensor.DEVICE_CLASS_HUMIDITY],
+    "humidity": [PERCENTAGE, sensor.DEVICE_CLASS_HUMIDITY],
     "luminosity": ["lx", sensor.DEVICE_CLASS_ILLUMINANCE],
     "overpowerValue": [POWER_WATT, sensor.DEVICE_CLASS_POWER],
     "power": [POWER_WATT, sensor.DEVICE_CLASS_POWER],
-    "powerFactor": [UNIT_PERCENTAGE, sensor.DEVICE_CLASS_POWER_FACTOR],
+    "powerFactor": [PERCENTAGE, sensor.DEVICE_CLASS_POWER_FACTOR],
     "tilt": [DEGREE, None],
     "voltage": [VOLT, sensor.DEVICE_CLASS_VOLTAGE],
 }
