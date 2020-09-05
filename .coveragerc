@@ -313,7 +313,6 @@ omit =
     homeassistant/components/geniushub/*
     homeassistant/components/geizhals/sensor.py
     homeassistant/components/github/__init__.py
-    homeassistant/components/github/const.py
     homeassistant/components/github/sensor.py
     homeassistant/components/gitlab_ci/sensor.py
     homeassistant/components/gitter/sensor.py
