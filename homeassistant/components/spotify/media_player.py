@@ -9,7 +9,7 @@ from aiohttp import ClientError
 from spotipy import Spotify, SpotifyException
 from yarl import URL
 
-from homeassistant.components.media_player import MediaPlayerEntity
+from homeassistant.components.media_player import BrowseMedia, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_ALBUM,
     MEDIA_TYPE_ARTIST,
@@ -448,6 +448,7 @@ def build_item_response(spotify, payload):
         "media_content_type": payload.get("media_content_type"),
         "can_play": payload.get("media_content_type") in PLAYABLE_MEDIA_TYPES,
         "children": [item_payload(item) for item in items],
+        "can_expand": True,
     }
 
     if "name" in media:
@@ -460,7 +461,7 @@ def build_item_response(spotify, payload):
     if "images" in media:
         response["thumbnail"] = fetch_image_url(media)
 
-    return response
+    return BrowseMedia(**response)
 
 
 def item_payload(item):
@@ -491,10 +492,9 @@ def item_payload(item):
             "can_play": item.get("type") in PLAYABLE_MEDIA_TYPES,
         }
 
-    if item.get("type") not in [None, MEDIA_TYPE_TRACK]:
-        payload["can_expand"] = True
+    payload["can_expand"] = item.get("type") not in [None, MEDIA_TYPE_TRACK]
 
-    return payload
+    return BrowseMedia(**payload)
 
 
 def library_payload():

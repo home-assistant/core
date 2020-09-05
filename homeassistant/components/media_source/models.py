@@ -112,6 +112,6 @@ class MediaSource(ABC):
 
     async def async_browse_media(
         self, item: MediaSourceItem, media_types: Tuple[str]
-    ) -> BrowseMedia:
+    ) -> BrowseMediaSource:
         """Browse media."""
         raise NotImplementedError
