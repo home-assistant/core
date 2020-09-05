@@ -387,7 +387,12 @@ async def test_state_using_input_entities(hass):
                 {
                     "condition": "state",
                     "entity_id": "sensor.salut",
-                    "state": ["input_text.hello", "input_select.hello", "salut"],
+                    "state": [
+                        "input_text.hello",
+                        "input_select.hello",
+                        "input_number.not_exist",
+                        "salut",
+                    ],
                 },
             ],
         },
