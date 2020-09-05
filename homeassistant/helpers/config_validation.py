@@ -906,8 +906,12 @@ NUMERIC_STATE_CONDITION_SCHEMA = vol.All(
             vol.Required(CONF_CONDITION): "numeric_state",
             vol.Required(CONF_ENTITY_ID): entity_ids,
             vol.Optional(CONF_ATTRIBUTE): str,
-            CONF_BELOW: vol.Coerce(float),
-            CONF_ABOVE: vol.Coerce(float),
+            CONF_BELOW: vol.Any(
+                vol.Coerce(float), vol.All(str, entity_domain("input_number"))
+            ),
+            CONF_ABOVE: vol.Any(
+                vol.Coerce(float), vol.All(str, entity_domain("input_number"))
+            ),
             vol.Optional(CONF_VALUE_TEMPLATE): template,
         }
     ),
