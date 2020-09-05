@@ -29,14 +29,11 @@ import voluptuous as vol
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.const import (
@@ -47,6 +44,7 @@ from homeassistant.const import (
     CONF_SSL,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -69,18 +67,6 @@ from .const import (
 SIGNAL_CONFIG_OPTIONS_UPDATE = "epson_config_options_update {}"
 
 _LOGGER = logging.getLogger(__name__)
-
-
-SUPPORT_ONKYO = (
-    SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_VOLUME_STEP
-    | SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_SELECT_SOURCE
-    | SUPPORT_PLAY
-    | SUPPORT_PLAY_MEDIA
-)
 
 SUPPORT_EPSON = (
     SUPPORT_TURN_ON
@@ -106,7 +92,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up the Epson from a config entry."""
+    """Set up the Bosch thermostat from a config entry."""
 
     timeout_scale = config_entry.options.get(TIMEOUT_SCALE, 1.0)
     epson_proj = EpsonProjector(
@@ -164,7 +150,7 @@ async def update_listener(hass, entry):
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Epson Platform."""
+    """Set up the Bosch Thermostat Platform."""
     pass
 
 
@@ -188,19 +174,23 @@ class EpsonProjector(MediaPlayerEntity):
         """Update state of device."""
         is_turned_on = await self._projector.get_property(POWER)
         _LOGGER.debug("Projector status: %s", is_turned_on)
-        if is_turned_on and is_turned_on == EPSON_CODES[POWER]:
-            self._state = STATE_ON
-            cmode = await self._projector.get_property(CMODE)
-            self._cmode = CMODE_LIST.get(cmode, self._cmode)
-            source = await self._projector.get_property(SOURCE)
-            self._source = SOURCE_LIST.get(source, self._source)
-            volume = await self._projector.get_property(VOLUME)
-            if volume:
-                self._volume = volume
-        elif is_turned_on == BUSY:
-            self._state = STATE_ON
-        else:
-            self._state = STATE_OFF
+        if is_turned_on:
+            if is_turned_on == EPSON_CODES[POWER]:
+                self._state = STATE_ON
+                self._source_list = list(DEFAULT_SOURCES.values())
+                cmode = await self._projector.get_property(CMODE)
+                self._cmode = CMODE_LIST.get(cmode, self._cmode)
+                source = await self._projector.get_property(SOURCE)
+                self._source = SOURCE_LIST.get(source, self._source)
+                volume = await self._projector.get_property(VOLUME)
+                if volume:
+                    self._volume = volume
+            elif is_turned_on == BUSY:
+                self._state = STATE_ON
+            elif is_turned_on == STATE_UNAVAILABLE:
+                self._state = STATE_UNAVAILABLE
+            else:
+                self._state = STATE_OFF
 
     async def async_added_to_hass(self):
         """Use lifecycle hooks."""
@@ -235,7 +225,7 @@ class EpsonProjector(MediaPlayerEntity):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        return SUPPORT_ONKYO
+        return SUPPORT_EPSON
 
     async def async_turn_on(self):
         """Turn on epson."""
