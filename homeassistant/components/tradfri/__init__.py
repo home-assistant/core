@@ -24,9 +24,10 @@ from .const import (
     CONF_KEY,
     CONFIG_FILE,
     DEFAULT_ALLOW_TRADFRI_GROUPS,
+    DEVICES,
     DOMAIN,
+    GROUPS,
     KEY_API,
-    KEY_GATEWAY,
     PLATFORMS,
 )
 
@@ -116,13 +117,18 @@ async def async_setup_entry(hass, entry):
 
     try:
         gateway_info = await api(gateway.get_gateway_info())
+        devices_commands = await api(gateway.get_devices())
+        devices = await api(devices_commands)
+        groups_commands = await api(gateway.get_groups())
+        groups = await api(groups_commands)
     except RequestError as err:
         await factory.shutdown()
         raise ConfigEntryNotReady from err
 
     tradfri_data[KEY_API] = api
-    tradfri_data[KEY_GATEWAY] = gateway
     tradfri_data[FACTORY] = factory
+    tradfri_data[DEVICES] = devices
+    tradfri_data[GROUPS] = groups
 
     dev_reg = await hass.helpers.device_registry.async_get_registry()
     dev_reg.async_get_or_create(

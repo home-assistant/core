@@ -3,7 +3,7 @@
 from homeassistant.components.cover import ATTR_POSITION, CoverEntity
 
 from .base_class import TradfriBaseDevice
-from .const import ATTR_MODEL, CONF_GATEWAY_ID, DOMAIN, KEY_API, KEY_GATEWAY
+from .const import ATTR_MODEL, CONF_GATEWAY_ID, DEVICES, DOMAIN, KEY_API
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -11,10 +11,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     gateway_id = config_entry.data[CONF_GATEWAY_ID]
     tradfri_data = hass.data[DOMAIN][config_entry.entry_id]
     api = tradfri_data[KEY_API]
-    gateway = tradfri_data[KEY_GATEWAY]
+    devices = tradfri_data[DEVICES]
 
-    devices_commands = await api(gateway.get_devices())
-    devices = await api(devices_commands)
     covers = [dev for dev in devices if dev.has_blind_control]
     if covers:
         async_add_entities(TradfriCover(cover, api, gateway_id) for cover in covers)

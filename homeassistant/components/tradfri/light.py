@@ -21,9 +21,10 @@ from .const import (
     ATTR_TRANSITION_TIME,
     CONF_GATEWAY_ID,
     CONF_IMPORT_GROUPS,
+    DEVICES,
     DOMAIN,
+    GROUPS,
     KEY_API,
-    KEY_GATEWAY,
     SUPPORTED_GROUP_FEATURES,
     SUPPORTED_LIGHT_FEATURES,
 )
@@ -36,17 +37,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     gateway_id = config_entry.data[CONF_GATEWAY_ID]
     tradfri_data = hass.data[DOMAIN][config_entry.entry_id]
     api = tradfri_data[KEY_API]
-    gateway = tradfri_data[KEY_GATEWAY]
+    devices = tradfri_data[DEVICES]
 
-    devices_commands = await api(gateway.get_devices())
-    devices = await api(devices_commands)
     lights = [dev for dev in devices if dev.has_light_control]
     if lights:
         async_add_entities(TradfriLight(light, api, gateway_id) for light in lights)
 
     if config_entry.data[CONF_IMPORT_GROUPS]:
-        groups_commands = await api(gateway.get_groups())
-        groups = await api(groups_commands)
+        groups = tradfri_data[GROUPS]
         if groups:
             async_add_entities(TradfriGroup(group, api, gateway_id) for group in groups)
 
