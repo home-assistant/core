@@ -44,10 +44,10 @@ async def validate_input(hass: core.HomeAssistant, data):
         )
         if repository is None:
             raise CannotFindRepo
-    except AIOGitHubAPIAuthenticationException:
-        raise InvalidAuth
-    except AIOGitHubAPIException:
-        raise CannotConnect
+    except AIOGitHubAPIAuthenticationException as err:
+        raise InvalidAuth from err
+    except AIOGitHubAPIException as err:
+        raise CannotConnect from err
 
     return {"title": repository.attributes.get("name")}
 

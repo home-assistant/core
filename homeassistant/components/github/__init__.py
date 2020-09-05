@@ -146,7 +146,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                     repository, latest_commit, clones, issues, releases, views
                 )
         except (AIOGitHubAPIAuthenticationException, AIOGitHubAPIException) as err:
-            raise UpdateFailed(f"Error communicating with GitHub: {err}")
+            raise UpdateFailed(f"Error communicating with GitHub: {err}") from err
 
     coordinator = DataUpdateCoordinator(
         hass,
