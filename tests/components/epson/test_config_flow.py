@@ -21,18 +21,19 @@ async def test_form(hass):
     ), patch(
         "homeassistant.components.epson.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.epson.async_setup_entry", return_value=True,
+        "homeassistant.components.epson.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"host": "1.1.1.1", "name": "test-epson", "port": 80, "ssl": False},
         )
-
+    print("res")
+    print(result2)
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "Name of the device"
+    assert result2["title"] == "test-epson"
     assert result2["data"] == {
         "host": "1.1.1.1",
-        "name": "test-epson",
         "port": 80,
         "ssl": False,
     }

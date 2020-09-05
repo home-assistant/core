@@ -107,6 +107,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Bosch thermostat from a config entry."""
+    print("OJOJOJOJO")
 
     timeout_scale = config_entry.options.get(TIMEOUT_SCALE, 1.0)
     epson_proj = EpsonProjector(
@@ -183,6 +184,7 @@ class EpsonProjector(MediaPlayerEntity):
         self._volume = None
         self._state = None
         self._entry_id = entry_id
+        print("init")
         print(self.source_list)
         print(self.source)
 
@@ -225,6 +227,8 @@ class EpsonProjector(MediaPlayerEntity):
     @property
     def name(self):
         """Return the name of the device."""
+        print("name")
+        print(self._name)
         return self._name
 
     @property
