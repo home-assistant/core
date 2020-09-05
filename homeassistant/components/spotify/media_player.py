@@ -426,6 +426,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
 def build_item_response(spotify, user, payload):
     """Create response payload for the provided media query."""
     media_content_type = payload.get("media_content_type")
+    media_content_id = payload.get("media_content_id")
     title = None
     image = None
     if media_content_type == "current_user_playlists":
@@ -459,7 +460,6 @@ def build_item_response(spotify, user, payload):
         media = spotify.categories(country=user["country"], limit=BROWSE_LIMIT)
         items = media.get("categories", {}).get("items", [])
     elif media_content_type == "category_playlists":
-        media_content_id = payload["media_content_id"]
         media = spotify.category_playlists(
             category_id=media_content_id,
             country=user["country"],
@@ -473,20 +473,20 @@ def build_item_response(spotify, user, payload):
         media = spotify.new_releases(country=user["country"], limit=BROWSE_LIMIT)
         items = media.get("albums", {}).get("items", [])
     elif media_content_type == MEDIA_TYPE_PLAYLIST:
-        media = spotify.playlist(payload["media_content_id"])
+        media = spotify.playlist(media_content_id)
         items = media.get("tracks", {}).get("items", [])
     elif media_content_type == MEDIA_TYPE_ALBUM:
-        media = spotify.album(payload["media_content_id"])
+        media = spotify.album(media_content_id)
         items = media.get("tracks", {}).get("items", [])
     elif media_content_type == MEDIA_TYPE_ARTIST:
-        media = spotify.artist_albums(payload["media_content_id"], limit=BROWSE_LIMIT)
-        artist = spotify.artist(payload["media_content_id"])
+        media = spotify.artist_albums(media_content_id, limit=BROWSE_LIMIT)
+        artist = spotify.artist(media_content_id)
         title = artist.get("name")
         image = fetch_image_url(artist)
         items = media.get("items", [])
     elif media_content_type == MEDIA_TYPE_SHOW:
-        media = spotify.show_episodes(payload["media_content_id"], limit=BROWSE_LIMIT)
-        show = spotify.show(payload["media_content_id"])
+        media = spotify.show_episodes(media_content_id, limit=BROWSE_LIMIT)
+        show = spotify.show(media_content_id)
         title = show.get("name")
         image = fetch_image_url(show)
         items = media.get("items", [])
@@ -499,9 +499,9 @@ def build_item_response(spotify, user, payload):
 
     if media_content_type == "categories":
         return {
-            "media_content_id": payload.get("media_content_id"),
+            "media_content_id": media_content_id,
             "media_content_type": media_content_type,
-            "title": LIBRARY_MAP.get(payload["media_content_id"]),
+            "title": LIBRARY_MAP.get(media_content_id),
             "can_play": False,
             "children": [
                 {
@@ -517,13 +517,19 @@ def build_item_response(spotify, user, payload):
         }
 
     response = {
-        "title": title,
-        "media_content_id": payload.get("media_content_id"),
+        "media_content_id": media_content_id,
         "media_content_type": media_content_type,
         "can_play": media_content_type in PLAYABLE_MEDIA_TYPES,
         "children": [item_payload(item) for item in items],
         "can_expand": True,
     }
+
+    if "name" in media:
+        response["title"] = media["name"]
+    elif title:
+        response["title"] = title
+    else:
+        response["title"] = LIBRARY_MAP.get(media_content_id)
 
     if "images" in media:
         response["thumbnail"] = fetch_image_url(media)
