@@ -7,7 +7,7 @@
         },
         "error": {
             "discovery_error": "Kunne ikke oppdage en Xiaomi Aqara Gateway, pr\u00f8v \u00e5 bruke IP-adressen til enheten som kj\u00f8rer HomeAssistant som grensesnitt",
-            "invalid_host": "Ugyldig IP adresse",
+            "invalid_host": "Ugyldig IP adresse , se https://www.home-assistant.io/integrations/xiaomi_aqara/#connection-problem",
             "invalid_interface": "Ugyldig nettverksgrensesnitt",
             "invalid_key": "Ugyldig gateway-n\u00f8kkel",
             "invalid_mac": "Ugyldig Mac-adresse",
