@@ -49,15 +49,7 @@ class RelaySwitch(ShellyBlockEntity, SwitchEntity):
     @property
     def device_info(self):
         """Device info."""
-        if not self.multiple_blocks:
-            return super().device_info
-
-        # If a device has multiple relays, we want to expose as separate device
-        return {
-            "name": self.name,
-            "identifiers": {(DOMAIN, self.wrapper.mac, self.block.index)},
-            "via_device": (DOMAIN, self.wrapper.mac),
-        }
+        return super().device_info
 
     async def async_turn_on(self, **kwargs):
         """Turn on relay."""
