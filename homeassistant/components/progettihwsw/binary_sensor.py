@@ -18,12 +18,6 @@ from .const import DEFAULT_POLLING_INTERVAL_SEC, DOMAIN
 _LOGGER = logging.getLogger(DOMAIN)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set the progettihwsw platform up and create sensor instances (legacy)."""
-
-    return True
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the binary sensors from a config entry."""
     board_api = hass.data[DOMAIN][config_entry.entry_id]
@@ -47,9 +41,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for i in range(1, int(input_count) + 1):
         binary_sensors.append(
             ProgettihwswBinarySensor(
-                hass,
                 coordinator,
-                config_entry,
                 f"Input #{i}",
                 setup_input(board_api, i),
             )
@@ -61,7 +53,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class ProgettihwswBinarySensor(CoordinatorEntity, BinarySensorEntity):
     """Represent a binary sensor."""
 
-    def __init__(self, hass, coordinator, config_entry, name, sensor: Input):
+    def __init__(self, coordinator, name, sensor: Input):
         """Set initializing values."""
         super().__init__(coordinator)
         self._name = name

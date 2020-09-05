@@ -21,6 +21,7 @@ from .const import (
     ATTR_TRANSITION_TIME,
     CONF_GATEWAY_ID,
     CONF_IMPORT_GROUPS,
+    DOMAIN,
     KEY_API,
     KEY_GATEWAY,
     SUPPORTED_GROUP_FEATURES,
@@ -33,8 +34,9 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Load Tradfri lights based on a config entry."""
     gateway_id = config_entry.data[CONF_GATEWAY_ID]
-    api = hass.data[KEY_API][config_entry.entry_id]
-    gateway = hass.data[KEY_GATEWAY][config_entry.entry_id]
+    tradfri_data = hass.data[DOMAIN][config_entry.entry_id]
+    api = tradfri_data[KEY_API]
+    gateway = tradfri_data[KEY_GATEWAY]
 
     devices_commands = await api(gateway.get_devices())
     devices = await api(devices_commands)

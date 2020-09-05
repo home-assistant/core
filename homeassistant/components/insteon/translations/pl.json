@@ -1,0 +1,13 @@
+{
+    "options": {
+        "step": {
+            "change_hub_config": {
+                "data": {
+                    "host": "Adres IP",
+                    "password": "Has\u0142o",
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

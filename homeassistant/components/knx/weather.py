@@ -24,6 +24,11 @@ class KNXWeather(WeatherEntity):
         self.device = device
 
     @property
+    def name(self):
+        """Return the name of the weather device."""
+        return self.device.name
+
+    @property
     def temperature(self):
         """Return current temperature."""
         return self.device.temperature
