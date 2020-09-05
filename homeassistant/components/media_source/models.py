@@ -37,7 +37,7 @@ class BrowseMedia:
             uri += f"/{self.identifier}"
         return uri
 
-    def to_media_player_item(self):
+    def to_media_player_item(self, parent=True):
         """Convert Media class to browse media dictionary."""
         content_type = self.media_content_type
 
@@ -55,8 +55,10 @@ class BrowseMedia:
 
         if self.children:
             response["children"] = [
-                child.to_media_player_item() for child in self.children
+                child.to_media_player_item(False) for child in self.children
             ]
+        elif parent:
+            response["children"] = []
 
         return response
 
