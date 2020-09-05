@@ -44,7 +44,7 @@ async def test_hmip_access_point_cloud_connection_sensor(
     """Test HomematicipCloudConnectionSensor."""
     entity_id = "binary_sensor.access_point_cloud_connection"
     entity_name = "Access Point Cloud Connection"
-    device_model = "HmIP-ASIR"
+    device_model = None
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
         test_devices=[entity_name]
     )
