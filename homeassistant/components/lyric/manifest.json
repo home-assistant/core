@@ -1,0 +1,17 @@
+{
+  "domain": "lyric",
+  "name": "Honeywell Lyric",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/lyric",
+  "requirements": [
+    "aiolyric==1.0.0"
+  ],
+  "homekit": {
+    "models": [
+      "YT4910WF4011"
+    ]
+  },
+  "codeowners": [
+    "@timmo001"
+  ]
+}

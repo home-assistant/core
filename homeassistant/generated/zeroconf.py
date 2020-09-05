@@ -191,5 +191,6 @@ HOMEKIT = {
     "Wemo": "wemo",
     "iSmartGate": "gogogate2",
     "iZone": "izone",
+    "YT4910WF4011": "lyric",
     "tado": "tado"
 }
