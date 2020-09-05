@@ -4,6 +4,7 @@ from functools import partial
 import logging
 from typing import Any, Dict, Optional
 
+from async_timeout import timeout
 from dsmr_parser import obis_references as obis_ref
 from dsmr_parser.clients.protocol import create_dsmr_reader, create_tcp_dsmr_reader
 import serial
@@ -76,7 +77,13 @@ class DSMRConnection:
             return False
 
         if transport:
-            await protocol.wait_closed()
+            try:
+                async with timeout(30):
+                    await protocol.wait_closed()
+            except asyncio.TimeoutError:
+                transport.close()
+                await protocol.wait_closed()
+                return False
 
         return True
 
