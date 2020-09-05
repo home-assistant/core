@@ -201,37 +201,39 @@ class Hyperion(LightEntity):
         # preferable to enable LEDDEVICE after the settings (e.g. brightness,
         # color, effect), but this is not possible due to:
         # https://github.com/hyperion-project/hyperion.ng/issues/967
-        if not await self._client.async_set_component(
-            **{
-                const.KEY_COMPONENTSTATE: {
-                    const.KEY_COMPONENT: const.KEY_COMPONENTID_ALL,
-                    const.KEY_STATE: True,
+        if not self.is_on:
+            if not await self._client.async_set_component(
+                **{
+                    const.KEY_COMPONENTSTATE: {
+                        const.KEY_COMPONENT: const.KEY_COMPONENTID_ALL,
+                        const.KEY_STATE: True,
+                    }
                 }
-            }
-        ):
-            return
+            ):
+                return
 
-        # TODO: Do these failures emit errors in the log?
-        if not await self._client.async_set_component(
-            **{
-                const.KEY_COMPONENTSTATE: {
-                    const.KEY_COMPONENT: const.KEY_COMPONENTID_LEDDEVICE,
-                    const.KEY_STATE: True,
+            # TODO: Do these failures emit errors in the log?
+            if not await self._client.async_set_component(
+                **{
+                    const.KEY_COMPONENTSTATE: {
+                        const.KEY_COMPONENT: const.KEY_COMPONENTID_LEDDEVICE,
+                        const.KEY_STATE: True,
+                    }
                 }
-            }
-        ):
-            return
+            ):
+                return
 
         # == Set brightness ==
         brightness = kwargs.get(ATTR_BRIGHTNESS, self._brightness)
-        if not await self._client.async_set_adjustment(
-            **{
-                const.KEY_ADJUSTMENT: {
-                    const.KEY_BRIGHTNESS: int(round((float(brightness) * 100) / 255))
+        if self._brightness != brightness:
+            if not await self._client.async_set_adjustment(
+                **{
+                    const.KEY_ADJUSTMENT: {
+                        const.KEY_BRIGHTNESS: int(round((float(brightness) * 100) / 255))
+                    }
                 }
-            }
-        ):
-            return
+            ):
+                return
 
         effect = kwargs.get(ATTR_EFFECT, self._effect)
         if effect and effect in const.KEY_COMPONENTID_EXTERNAL_SOURCES:
@@ -251,6 +253,11 @@ class Hyperion(LightEntity):
                 ):
                     return
         elif effect and effect != KEY_EFFECT_SOLID:
+            # This call should not be necessary, but without it there is no priorities-update issued:
+            # https://github.com/hyperion-project/hyperion.ng/issues/992
+            if not await self._client.async_clear(**{const.KEY_PRIORITY: self._priority}):
+                return
+
             if not await self._client.async_set_effect(
                 **{
                     const.KEY_PRIORITY: self._priority,
