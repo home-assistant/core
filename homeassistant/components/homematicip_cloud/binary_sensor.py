@@ -27,6 +27,7 @@ from homematicip.base.enums import SmokeDetectorAlarmType, WindowState
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_CONNECTIVITY,
     DEVICE_CLASS_DOOR,
     DEVICE_CLASS_LIGHT,
     DEVICE_CLASS_MOISTURE,
@@ -82,7 +83,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the HomematicIP Cloud binary sensor from a config entry."""
     hap = hass.data[HMIPC_DOMAIN][config_entry.unique_id]
-    entities = []
+    entities = [HomematicipCloudConnectionSensor(hap)]
     for device in hap.home.devices:
         if isinstance(device, AsyncAccelerationSensor):
             entities.append(HomematicipAccelerationSensor(hap, device))
@@ -134,6 +135,45 @@ async def async_setup_entry(
 
     if entities:
         async_add_entities(entities)
+
+
+class HomematicipCloudConnectionSensor(HomematicipGenericEntity, BinarySensorEntity):
+    """Representation of the HomematicIP cloud connection sensor."""
+
+    def __init__(self, hap: HomematicipHAP) -> None:
+        """Initialize the cloud connection sensor."""
+        super().__init__(hap, hap.home, "Cloud Connection")
+
+    @property
+    def device_info(self) -> Dict[str, Any]:
+        """Return device specific attributes."""
+        # Adds a sensor to the existing HAP device
+        return {
+            "identifiers": {
+                # Serial numbers of Homematic IP device
+                (HMIPC_DOMAIN, self._device.id)
+            }
+        }
+
+    @property
+    def icon(self) -> str:
+        """Return the icon of the access point entity."""
+        return "mdi:access-point-network"
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of this sensor."""
+        return DEVICE_CLASS_CONNECTIVITY
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if hap is connected to cloud."""
+        return self._home.connected
+
+    @property
+    def available(self) -> bool:
+        """Sensor is always available."""
+        return True
 
 
 class HomematicipBaseActionSensor(HomematicipGenericEntity, BinarySensorEntity):

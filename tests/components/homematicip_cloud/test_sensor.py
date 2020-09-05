@@ -44,8 +44,8 @@ async def test_manually_configured_platform(hass):
 
 async def test_hmip_accesspoint_status(hass, default_mock_hap_factory):
     """Test HomematicipSwitch."""
-    entity_id = "sensor.access_point"
-    entity_name = "Access Point"
+    entity_id = "sensor.access_point_duty_cycle"
+    entity_name = "Access Point Duty Cycle"
     device_model = None
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
         test_devices=[entity_name]
