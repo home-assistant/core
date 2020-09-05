@@ -1,6 +1,25 @@
 """Test OpenZWave Websocket API."""
 
-from homeassistant.components.ozw.websocket_api import ID, NODE_ID, OZW_INSTANCE, TYPE
+from homeassistant.components.ozw.websocket_api import (
+    ATTR_IS_AWAKE,
+    ATTR_IS_BEAMING,
+    ATTR_IS_FAILED,
+    ATTR_IS_FLIRS,
+    ATTR_IS_ROUTING,
+    ATTR_IS_SECURITYV1,
+    ATTR_IS_ZWAVE_PLUS,
+    ATTR_NEIGHBORS,
+    ATTR_NODE_BASIC_STRING,
+    ATTR_NODE_BAUD_RATE,
+    ATTR_NODE_GENERIC_STRING,
+    ATTR_NODE_QUERY_STAGE,
+    ATTR_NODE_SPECIFIC_STRING,
+    ID,
+    NODE_ID,
+    OZW_INSTANCE,
+    TYPE,
+)
+from homeassistant.components.websocket_api.const import ERR_NOT_FOUND
 
 from .common import MQTTMessage, setup_ozw
 
@@ -36,22 +55,27 @@ async def test_websocket_api(hass, generic_data, hass_ws_client):
 
     assert result[OZW_INSTANCE] == 1
     assert result[NODE_ID] == 32
-    assert result["node_query_stage"] == "Complete"
-    assert result["is_zwave_plus"]
-    assert result["is_awake"]
-    assert not result["is_failed"]
-    assert result["node_baud_rate"] == 100000
-    assert result["is_beaming"]
-    assert not result["is_flirs"]
-    assert result["is_routing"]
-    assert not result["is_securityv1"]
-    assert result["node_basic_string"] == "Routing Slave"
-    assert result["node_generic_string"] == "Binary Switch"
-    assert result["node_specific_string"] == "Binary Power Switch"
-    assert result["neighbors"] == [1, 33, 36, 37, 39]
+    assert result[ATTR_NODE_QUERY_STAGE] == "Complete"
+    assert result[ATTR_IS_ZWAVE_PLUS]
+    assert result[ATTR_IS_AWAKE]
+    assert not result[ATTR_IS_FAILED]
+    assert result[ATTR_NODE_BAUD_RATE] == 100000
+    assert result[ATTR_IS_BEAMING]
+    assert not result[ATTR_IS_FLIRS]
+    assert result[ATTR_IS_ROUTING]
+    assert not result[ATTR_IS_SECURITYV1]
+    assert result[ATTR_NODE_BASIC_STRING] == "Routing Slave"
+    assert result[ATTR_NODE_GENERIC_STRING] == "Binary Switch"
+    assert result[ATTR_NODE_SPECIFIC_STRING] == "Binary Power Switch"
+    assert result[ATTR_NEIGHBORS] == [1, 33, 36, 37, 39]
+
+    await client.send_json({ID: 7, TYPE: "ozw/node_status", NODE_ID: 999})
+    msg = await client.receive_json()
+    result = msg["error"]
+    assert result["code"] == ERR_NOT_FOUND
 
     # Test node statistics
-    await client.send_json({ID: 7, TYPE: "ozw/node_statistics", NODE_ID: 39})
+    await client.send_json({ID: 8, TYPE: "ozw/node_statistics", NODE_ID: 39})
     msg = await client.receive_json()
     result = msg["result"]
 
@@ -69,18 +93,31 @@ async def test_websocket_api(hass, generic_data, hass_ws_client):
     assert result["received_unsolicited"] == 3546
 
     # Test node metadata
-    await client.send_json({ID: 8, TYPE: "ozw/node_metadata", NODE_ID: 39})
+    await client.send_json({ID: 9, TYPE: "ozw/node_metadata", NODE_ID: 39})
     msg = await client.receive_json()
     result = msg["result"]
     assert result["metadata"]["ProductPic"] == "images/aeotec/zwa002.png"
 
+    await client.send_json({ID: 10, TYPE: "ozw/node_metadata", NODE_ID: 999})
+    msg = await client.receive_json()
+    result = msg["error"]
+    assert result["code"] == ERR_NOT_FOUND
+
     # Test network statistics
-    await client.send_json({ID: 9, TYPE: "ozw/network_statistics"})
+    await client.send_json({ID: 11, TYPE: "ozw/network_statistics"})
     msg = await client.receive_json()
     result = msg["result"]
     assert result["readCnt"] == 92220
     assert result[OZW_INSTANCE] == 1
     assert result["node_count"] == 5
+
+    # Test get nodes
+    await client.send_json({ID: 12, TYPE: "ozw/get_nodes"})
+    msg = await client.receive_json()
+    result = msg["result"]
+    assert len(result) == 5
+    assert result[2][ATTR_IS_AWAKE]
+    assert not result[1][ATTR_IS_FAILED]
 
 
 async def test_refresh_node(hass, generic_data, sent_messages, hass_ws_client):

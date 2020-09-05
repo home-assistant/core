@@ -8,7 +8,12 @@ import aioshelly
 import async_timeout
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
@@ -20,7 +25,7 @@ from homeassistant.helpers import (
 
 from .const import DOMAIN
 
-PLATFORMS = ["switch"]
+PLATFORMS = ["binary_sensor", "light", "sensor", "switch"]
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -35,10 +40,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     try:
         async with async_timeout.timeout(5):
             device = await aioshelly.Device.create(
-                entry.data["host"], aiohttp_client.async_get_clientsession(hass)
+                entry.data[CONF_HOST],
+                aiohttp_client.async_get_clientsession(hass),
+                entry.data.get(CONF_USERNAME),
+                entry.data.get(CONF_PASSWORD),
             )
-    except (asyncio.TimeoutError, OSError):
-        raise ConfigEntryNotReady
+    except (asyncio.TimeoutError, OSError) as err:
+        raise ConfigEntryNotReady from err
 
     wrapper = hass.data[DOMAIN][entry.entry_id] = ShellyDeviceWrapper(
         hass, entry, device
@@ -78,8 +86,8 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         try:
             async with async_timeout.timeout(5):
                 return await self.device.update()
-        except aiocoap_error.Error:
-            raise update_coordinator.UpdateFailed("Error fetching data")
+        except aiocoap_error.Error as err:
+            raise update_coordinator.UpdateFailed("Error fetching data") from err
 
     @property
     def model(self):
@@ -129,11 +137,12 @@ class ShellyBlockEntity(entity.Entity):
         """Initialize Shelly entity."""
         self.wrapper = wrapper
         self.block = block
+        self._name = f"{self.wrapper.name} - {self.block.description.replace('_', ' ')}"
 
     @property
     def name(self):
         """Name of entity."""
-        return f"{self.wrapper.name} - {self.block.description}"
+        return self._name
 
     @property
     def should_poll(self):
@@ -155,7 +164,7 @@ class ShellyBlockEntity(entity.Entity):
     @property
     def unique_id(self):
         """Return unique ID of entity."""
-        return f"{self.wrapper.mac}-{self.block.index}"
+        return f"{self.wrapper.mac}-{self.block.description}"
 
     async def async_added_to_hass(self):
         """When entity is added to HASS."""

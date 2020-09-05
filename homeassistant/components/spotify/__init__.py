@@ -70,8 +70,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         current_user = await hass.async_add_executor_job(spotify.me)
-    except SpotifyException:
-        raise ConfigEntryNotReady
+    except SpotifyException as err:
+        raise ConfigEntryNotReady from err
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
@@ -80,7 +80,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         DATA_SPOTIFY_SESSION: session,
     }
 
-    if set(session.token["scope"].split(" ")) <= set(SPOTIFY_SCOPES):
+    if not set(session.token["scope"].split(" ")).issuperset(SPOTIFY_SCOPES):
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,

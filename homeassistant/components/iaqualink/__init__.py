@@ -96,7 +96,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> None
         aiohttp.client_exceptions.ClientConnectorError,
     ) as aio_exception:
         _LOGGER.warning("Exception raised while attempting to login: %s", aio_exception)
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from aio_exception
 
     systems = await aqualink.get_systems()
     systems = list(systems.values())

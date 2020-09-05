@@ -95,7 +95,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         if ex.response.status_code > 400 and ex.response.status_code < 500:
             _LOGGER.error("Failed to login to tado: %s", ex)
             return False
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from ex
 
     # Do first update
     await hass.async_add_executor_job(tadoconnector.update)

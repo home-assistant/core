@@ -166,6 +166,7 @@ omit =
     homeassistant/components/deutsche_bahn/sensor.py
     homeassistant/components/devolo_home_control/__init__.py
     homeassistant/components/devolo_home_control/binary_sensor.py
+    homeassistant/components/devolo_home_control/climate.py
     homeassistant/components/devolo_home_control/const.py
     homeassistant/components/devolo_home_control/cover.py
     homeassistant/components/devolo_home_control/devolo_device.py
@@ -306,8 +307,6 @@ omit =
     homeassistant/components/gc100/*
     homeassistant/components/geniushub/*
     homeassistant/components/geizhals/sensor.py
-    homeassistant/components/gios/__init__.py
-    homeassistant/components/gios/air_quality.py
     homeassistant/components/github/sensor.py
     homeassistant/components/gitlab_ci/sensor.py
     homeassistant/components/gitter/sensor.py
@@ -394,7 +393,6 @@ omit =
     homeassistant/components/ihc/*
     homeassistant/components/imap/sensor.py
     homeassistant/components/imap_email_content/sensor.py
-    homeassistant/components/insteon/__init__.py
     homeassistant/components/insteon/binary_sensor.py
     homeassistant/components/insteon/climate.py
     homeassistant/components/insteon/const.py
@@ -589,7 +587,7 @@ omit =
     homeassistant/components/nuki/lock.py
     homeassistant/components/nut/sensor.py
     homeassistant/components/nx584/alarm_control_panel.py
-    homeassistant/components/nzbget/__init__.py
+    homeassistant/components/nzbget/coordinator.py
     homeassistant/components/nzbget/sensor.py
     homeassistant/components/obihai/*
     homeassistant/components/octoprint/*
@@ -625,6 +623,9 @@ omit =
     homeassistant/components/openuv/sensor.py
     homeassistant/components/openweathermap/sensor.py
     homeassistant/components/openweathermap/weather.py
+    homeassistant/components/openweathermap/forecast_update_coordinator.py
+    homeassistant/components/openweathermap/weather_update_coordinator.py
+    homeassistant/components/openweathermap/abstract_owm_sensor.py
     homeassistant/components/opnsense/*
     homeassistant/components/opple/light.py
     homeassistant/components/orangepi_gpio/*
@@ -667,6 +668,9 @@ omit =
     homeassistant/components/poolsense/sensor.py
     homeassistant/components/poolsense/binary_sensor.py
     homeassistant/components/proliphix/climate.py
+    homeassistant/components/progettihwsw/__init__.py
+    homeassistant/components/progettihwsw/binary_sensor.py
+    homeassistant/components/progettihwsw/switch.py
     homeassistant/components/prometheus/*
     homeassistant/components/prowl/notify.py
     homeassistant/components/proxmoxve/*
@@ -754,6 +758,9 @@ omit =
     homeassistant/components/shiftr/*
     homeassistant/components/shodan/sensor.py
     homeassistant/components/shelly/__init__.py
+    homeassistant/components/shelly/binary_sensor.py
+    homeassistant/components/shelly/light.py
+    homeassistant/components/shelly/sensor.py
     homeassistant/components/shelly/switch.py
     homeassistant/components/sht31/sensor.py
     homeassistant/components/sigfox/sensor.py
@@ -934,6 +941,7 @@ omit =
     homeassistant/components/vesync/__init__.py
     homeassistant/components/vesync/common.py
     homeassistant/components/vesync/const.py
+    homeassistant/components/vesync/fan.py
     homeassistant/components/vesync/switch.py
     homeassistant/components/viaggiatreno/sensor.py
     homeassistant/components/vicare/*

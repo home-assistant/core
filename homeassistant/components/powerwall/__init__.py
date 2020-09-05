@@ -113,9 +113,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         await hass.async_add_executor_job(power_wall.detect_and_pin_version)
         await hass.async_add_executor_job(_fetch_powerwall_data, power_wall)
         powerwall_data = await hass.async_add_executor_job(call_base_info, power_wall)
-    except PowerwallUnreachableError:
+    except PowerwallUnreachableError as err:
         http_session.close()
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from err
     except APIChangedError as err:
         http_session.close()
         await _async_handle_api_changed_error(hass, err)
@@ -133,8 +133,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 return await hass.async_add_executor_job(
                     _fetch_powerwall_data, power_wall
                 )
-            except PowerwallUnreachableError:
-                raise UpdateFailed("Unable to fetch data from powerwall")
+            except PowerwallUnreachableError as err:
+                raise UpdateFailed("Unable to fetch data from powerwall") from err
             except APIChangedError as err:
                 await _async_handle_api_changed_error(hass, err)
                 hass.data[DOMAIN][entry.entry_id][POWERWALL_API_CHANGED] = True

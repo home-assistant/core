@@ -20,6 +20,14 @@
         },
         "flow_title": "Accessoire HomeKit: {name}",
         "step": {
+            "busy_error": {
+                "description": "Annulez l'association sur tous les contr\u00f4leurs ou essayez de red\u00e9marrer l'appareil, puis continuez \u00e0 reprendre l'association.",
+                "title": "L'appareil est d\u00e9j\u00e0 coupl\u00e9 avec un autre contr\u00f4leur"
+            },
+            "max_tries_error": {
+                "description": "L'appareil a re\u00e7u plus de 100 tentatives d'authentification infructueuses. Essayez de red\u00e9marrer l'appareil, puis continuez pour reprendre l'association.",
+                "title": "Nombre maximal de tentatives d'authentification d\u00e9pass\u00e9"
+            },
             "pair": {
                 "data": {
                     "pairing_code": "Code d\u2019appairage"

@@ -15,7 +15,7 @@ from homeassistant.components.light import (
 from homeassistant.core import callback
 import homeassistant.util.color as color_util
 
-from . import ATTR_DISCOVER_DEVICES, DATA_KNX
+from . import DATA_KNX
 
 DEFAULT_COLOR = (0.0, 0.0)
 DEFAULT_BRIGHTNESS = 255
@@ -24,17 +24,10 @@ DEFAULT_WHITE_VALUE = 255
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up lights for KNX platform."""
-    if discovery_info is not None:
-        async_add_entities_discovery(hass, discovery_info, async_add_entities)
-
-
-@callback
-def async_add_entities_discovery(hass, discovery_info, async_add_entities):
-    """Set up lights for KNX platform configured via xknx.yaml."""
     entities = []
-    for device_name in discovery_info[ATTR_DISCOVER_DEVICES]:
-        device = hass.data[DATA_KNX].xknx.devices[device_name]
-        entities.append(KNXLight(device))
+    for device in hass.data[DATA_KNX].xknx.devices:
+        if isinstance(device, XknxLight):
+            entities.append(KNXLight(device))
     async_add_entities(entities)
 
 
@@ -94,7 +87,6 @@ class KNXLight(LightEntity):
             return self.device.current_brightness
         hsv_color = self._hsv_color
         if self.device.supports_color and hsv_color:
-            # pylint: disable=unsubscriptable-object
             return round(hsv_color[-1] / 100 * 255)
         return None
 

@@ -51,8 +51,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     except SmartMeterTexasAuthError:
         _LOGGER.error("Username or password was not accepted")
         return False
-    except asyncio.TimeoutError:
-        raise ConfigEntryNotReady
+    except asyncio.TimeoutError as error:
+        raise ConfigEntryNotReady from error
 
     await smart_meter_texas_data.setup()
 
@@ -113,7 +113,7 @@ class SmartMeterTexasData:
             try:
                 await meter.read_meter(self.client)
             except (SmartMeterTexasAPIError, SmartMeterTexasAuthError) as error:
-                raise UpdateFailed(error)
+                raise UpdateFailed(error) from error
         return self.meters
 
 

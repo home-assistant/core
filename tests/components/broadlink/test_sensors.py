@@ -4,7 +4,6 @@ from homeassistant.helpers.entity_registry import async_entries_for_device
 
 from . import get_device
 
-from tests.async_mock import patch
 from tests.common import mock_device_registry, mock_registry
 
 
@@ -19,15 +18,11 @@ async def test_a1_sensor_setup(hass):
         "light": 2,
         "noise": 1,
     }
-    mock_entry = device.get_mock_entry()
-    mock_entry.add_to_hass(hass)
 
     device_registry = mock_device_registry(hass)
     entity_registry = mock_registry(hass)
 
-    with patch("broadlink.gendevice", return_value=mock_api):
-        await hass.config_entries.async_setup(mock_entry.entry_id)
-        await hass.async_block_till_done()
+    mock_api, mock_entry = await device.setup_entry(hass, mock_api=mock_api)
 
     assert mock_api.check_sensors_raw.call_count == 1
     device_entry = device_registry.async_get_device(
@@ -61,15 +56,11 @@ async def test_a1_sensor_update(hass):
         "light": 2,
         "noise": 1,
     }
-    mock_entry = device.get_mock_entry()
-    mock_entry.add_to_hass(hass)
 
     device_registry = mock_device_registry(hass)
     entity_registry = mock_registry(hass)
 
-    with patch("broadlink.gendevice", return_value=mock_api):
-        await hass.config_entries.async_setup(mock_entry.entry_id)
-        await hass.async_block_till_done()
+    mock_api, mock_entry = await device.setup_entry(hass, mock_api=mock_api)
 
     device_entry = device_registry.async_get_device(
         {(DOMAIN, mock_entry.unique_id)}, set()
@@ -108,15 +99,11 @@ async def test_rm_pro_sensor_setup(hass):
     device = get_device("Office")
     mock_api = device.get_mock_api()
     mock_api.check_sensors.return_value = {"temperature": 18.2}
-    mock_entry = device.get_mock_entry()
-    mock_entry.add_to_hass(hass)
 
     device_registry = mock_device_registry(hass)
     entity_registry = mock_registry(hass)
 
-    with patch("broadlink.gendevice", return_value=mock_api):
-        await hass.config_entries.async_setup(mock_entry.entry_id)
-        await hass.async_block_till_done()
+    mock_api, mock_entry = await device.setup_entry(hass, mock_api=mock_api)
 
     assert mock_api.check_sensors.call_count == 1
     device_entry = device_registry.async_get_device(
@@ -138,15 +125,11 @@ async def test_rm_pro_sensor_update(hass):
     device = get_device("Office")
     mock_api = device.get_mock_api()
     mock_api.check_sensors.return_value = {"temperature": 25.7}
-    mock_entry = device.get_mock_entry()
-    mock_entry.add_to_hass(hass)
 
     device_registry = mock_device_registry(hass)
     entity_registry = mock_registry(hass)
 
-    with patch("broadlink.gendevice", return_value=mock_api):
-        await hass.config_entries.async_setup(mock_entry.entry_id)
-        await hass.async_block_till_done()
+    mock_api, mock_entry = await device.setup_entry(hass, mock_api=mock_api)
 
     device_entry = device_registry.async_get_device(
         {(DOMAIN, mock_entry.unique_id)}, set()
@@ -173,15 +156,11 @@ async def test_rm_mini3_no_sensor(hass):
     device = get_device("Entrance")
     mock_api = device.get_mock_api()
     mock_api.check_sensors.return_value = {"temperature": 0}
-    mock_entry = device.get_mock_entry()
-    mock_entry.add_to_hass(hass)
 
     device_registry = mock_device_registry(hass)
     entity_registry = mock_registry(hass)
 
-    with patch("broadlink.gendevice", return_value=mock_api):
-        await hass.config_entries.async_setup(mock_entry.entry_id)
-        await hass.async_block_till_done()
+    mock_api, mock_entry = await device.setup_entry(hass, mock_api=mock_api)
 
     assert mock_api.check_sensors.call_count <= 1
     device_entry = device_registry.async_get_device(
@@ -197,15 +176,11 @@ async def test_rm4_pro_hts2_sensor_setup(hass):
     device = get_device("Garage")
     mock_api = device.get_mock_api()
     mock_api.check_sensors.return_value = {"temperature": 22.5, "humidity": 43.7}
-    mock_entry = device.get_mock_entry()
-    mock_entry.add_to_hass(hass)
 
     device_registry = mock_device_registry(hass)
     entity_registry = mock_registry(hass)
 
-    with patch("broadlink.gendevice", return_value=mock_api):
-        await hass.config_entries.async_setup(mock_entry.entry_id)
-        await hass.async_block_till_done()
+    mock_api, mock_entry = await device.setup_entry(hass, mock_api=mock_api)
 
     assert mock_api.check_sensors.call_count == 1
     device_entry = device_registry.async_get_device(
@@ -230,15 +205,11 @@ async def test_rm4_pro_hts2_sensor_update(hass):
     device = get_device("Garage")
     mock_api = device.get_mock_api()
     mock_api.check_sensors.return_value = {"temperature": 16.7, "humidity": 34.1}
-    mock_entry = device.get_mock_entry()
-    mock_entry.add_to_hass(hass)
 
     device_registry = mock_device_registry(hass)
     entity_registry = mock_registry(hass)
 
-    with patch("broadlink.gendevice", return_value=mock_api):
-        await hass.config_entries.async_setup(mock_entry.entry_id)
-        await hass.async_block_till_done()
+    mock_api, mock_entry = await device.setup_entry(hass, mock_api=mock_api)
 
     device_entry = device_registry.async_get_device(
         {(DOMAIN, mock_entry.unique_id)}, set()
@@ -268,15 +239,11 @@ async def test_rm4_pro_no_sensor(hass):
     device = get_device("Garage")
     mock_api = device.get_mock_api()
     mock_api.check_sensors.return_value = {"temperature": 0, "humidity": 0}
-    mock_entry = device.get_mock_entry()
-    mock_entry.add_to_hass(hass)
 
     device_registry = mock_device_registry(hass)
     entity_registry = mock_registry(hass)
 
-    with patch("broadlink.gendevice", return_value=mock_api):
-        await hass.config_entries.async_setup(mock_entry.entry_id)
-        await hass.async_block_till_done()
+    mock_api, mock_entry = await device.setup_entry(hass, mock_api=mock_api)
 
     assert mock_api.check_sensors.call_count <= 1
     device_entry = device_registry.async_get_device(

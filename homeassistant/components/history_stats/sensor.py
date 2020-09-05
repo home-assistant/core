@@ -16,16 +16,18 @@ from homeassistant.const import (
     TIME_HOURS,
     UNIT_PERCENTAGE,
 )
-from homeassistant.core import callback
+from homeassistant.core import CoreState, callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.reload import setup_reload_service
 import homeassistant.util.dt as dt_util
+
+from . import DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "history_stats"
 CONF_START = "start"
 CONF_END = "end"
 CONF_DURATION = "duration"
@@ -75,6 +77,9 @@ PLATFORM_SCHEMA = vol.All(
 # noinspection PyUnusedLocal
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the History Stats sensor."""
+
+    setup_reload_service(hass, DOMAIN, PLATFORMS)
+
     entity_id = config.get(CONF_ENTITY_ID)
     entity_state = config.get(CONF_STATE)
     start = config.get(CONF_START)
@@ -118,6 +123,9 @@ class HistoryStatsSensor(Entity):
         self.value = None
         self.count = None
 
+    async def async_added_to_hass(self):
+        """Create listeners when the entity is added."""
+
         @callback
         def start_refresh(*args):
             """Register state tracking."""
@@ -128,10 +136,18 @@ class HistoryStatsSensor(Entity):
                 self.async_schedule_update_ha_state(True)
 
             force_refresh()
-            async_track_state_change_event(self.hass, [self._entity_id], force_refresh)
+            self.async_on_remove(
+                async_track_state_change_event(
+                    self.hass, [self._entity_id], force_refresh
+                )
+            )
+
+        if self.hass.state == CoreState.running:
+            start_refresh()
+            return
 
         # Delay first refresh to keep startup fast
-        hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_refresh)
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_refresh)
 
     @property
     def name(self):

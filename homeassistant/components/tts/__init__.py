@@ -254,14 +254,14 @@ class SpeechManager:
                 _init_tts_cache_dir, self.hass, cache_dir
             )
         except OSError as err:
-            raise HomeAssistantError(f"Can't init cache dir {err}")
+            raise HomeAssistantError(f"Can't init cache dir {err}") from err
 
         try:
             cache_files = await self.hass.async_add_executor_job(
                 _get_cache_files, self.cache_dir
             )
         except OSError as err:
-            raise HomeAssistantError(f"Can't read cache dir {err}")
+            raise HomeAssistantError(f"Can't read cache dir {err}") from err
 
         if cache_files:
             self.file_cache.update(cache_files)
@@ -408,9 +408,9 @@ class SpeechManager:
 
         try:
             data = await self.hass.async_add_executor_job(load_speech)
-        except OSError:
+        except OSError as err:
             del self.file_cache[key]
-            raise HomeAssistantError(f"Can't read {voice_file}")
+            raise HomeAssistantError(f"Can't read {voice_file}") from err
 
         self._async_store_to_memcache(key, filename, data)
 

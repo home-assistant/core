@@ -390,4 +390,4 @@ async def get_status(hass, host, port):
 
     except client.ClientError as err:
         _LOGGER.error("Exception trying to get panel status: %s", err)
-        raise CannotConnect
+        raise CannotConnect from err

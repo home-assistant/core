@@ -117,6 +117,7 @@ async def async_attach_trigger(
                         "from_state": from_s,
                         "to_state": to_s,
                         "for": time_delta if not time_delta else period[entity],
+                        "description": f"numeric state of {entity}",
                     }
                 },
                 to_s.context,

@@ -324,22 +324,22 @@ def get_influx_connection(conf, test_write=False, test_read=False):
             try:
                 write_api.write(bucket=bucket, record=json)
             except (urllib3.exceptions.HTTPError, OSError) as exc:
-                raise ConnectionError(CONNECTION_ERROR % exc)
+                raise ConnectionError(CONNECTION_ERROR % exc) from exc
             except ApiException as exc:
                 if exc.status == CODE_INVALID_INPUTS:
-                    raise ValueError(WRITE_ERROR % (json, exc))
-                raise ConnectionError(CLIENT_ERROR_V2 % exc)
+                    raise ValueError(WRITE_ERROR % (json, exc)) from exc
+                raise ConnectionError(CLIENT_ERROR_V2 % exc) from exc
 
         def query_v2(query, _=None):
             """Query V2 influx."""
             try:
                 return query_api.query(query)
             except (urllib3.exceptions.HTTPError, OSError) as exc:
-                raise ConnectionError(CONNECTION_ERROR % exc)
+                raise ConnectionError(CONNECTION_ERROR % exc) from exc
             except ApiException as exc:
                 if exc.status == CODE_INVALID_INPUTS:
-                    raise ValueError(QUERY_ERROR % (query, exc))
-                raise ConnectionError(CLIENT_ERROR_V2 % exc)
+                    raise ValueError(QUERY_ERROR % (query, exc)) from exc
+                raise ConnectionError(CLIENT_ERROR_V2 % exc) from exc
 
         def close_v2():
             """Close V2 influx client."""
@@ -399,11 +399,11 @@ def get_influx_connection(conf, test_write=False, test_read=False):
             exceptions.InfluxDBServerError,
             OSError,
         ) as exc:
-            raise ConnectionError(CONNECTION_ERROR % exc)
+            raise ConnectionError(CONNECTION_ERROR % exc) from exc
         except exceptions.InfluxDBClientError as exc:
             if exc.code == CODE_INVALID_INPUTS:
-                raise ValueError(WRITE_ERROR % (json, exc))
-            raise ConnectionError(CLIENT_ERROR_V1 % exc)
+                raise ValueError(WRITE_ERROR % (json, exc)) from exc
+            raise ConnectionError(CLIENT_ERROR_V1 % exc) from exc
 
     def query_v1(query, database=None):
         """Query V1 influx."""
@@ -414,11 +414,11 @@ def get_influx_connection(conf, test_write=False, test_read=False):
             exceptions.InfluxDBServerError,
             OSError,
         ) as exc:
-            raise ConnectionError(CONNECTION_ERROR % exc)
+            raise ConnectionError(CONNECTION_ERROR % exc) from exc
         except exceptions.InfluxDBClientError as exc:
             if exc.code == CODE_INVALID_INPUTS:
-                raise ValueError(QUERY_ERROR % (query, exc))
-            raise ConnectionError(CLIENT_ERROR_V1 % exc)
+                raise ValueError(QUERY_ERROR % (query, exc)) from exc
+            raise ConnectionError(CLIENT_ERROR_V1 % exc) from exc
 
     def close_v1():
         """Close the V1 Influx client."""

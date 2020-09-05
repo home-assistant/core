@@ -14,6 +14,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_SUPPORTED_MODES, DATA_COORDINATOR, DATA_INFO, DOMAIN
 
@@ -54,43 +55,26 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
     async_add_devices(all_devices)
 
 
-class CoolmasterClimate(ClimateEntity):
+class CoolmasterClimate(CoordinatorEntity, ClimateEntity):
     """Representation of a coolmaster climate device."""
 
     def __init__(self, coordinator, unit_id, unit, supported_modes, info):
         """Initialize the climate device."""
-        self._coordinator = coordinator
+        super().__init__(coordinator)
         self._unit_id = unit_id
         self._unit = unit
         self._hvac_modes = supported_modes
         self._info = info
 
-    @property
-    def should_poll(self):
-        """No need to poll. Coordinator notifies entity of updates."""
-        return False
-
-    @property
-    def available(self):
-        """Return if entity is available."""
-        return self._coordinator.last_update_success
-
     def _refresh_from_coordinator(self):
-        self._unit = self._coordinator.data[self._unit_id]
+        self._unit = self.coordinator.data[self._unit_id]
         self.async_write_ha_state()
 
     async def async_added_to_hass(self):
         """When entity is added to hass."""
         self.async_on_remove(
-            self._coordinator.async_add_listener(self._refresh_from_coordinator)
+            self.coordinator.async_add_listener(self._refresh_from_coordinator)
         )
-
-    async def async_update(self):
-        """Update the entity.
-
-        Only used by the generic entity update service.
-        """
-        await self._coordinator.async_request_refresh()
 
     @property
     def device_info(self):

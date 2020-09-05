@@ -142,7 +142,7 @@ class NetatmoLight(NetatmoBase, LightEntity):
 
     def turn_off(self, **kwargs):
         """Turn camera floodlight into auto mode."""
-        _LOGGER.debug("Turn camera '%s' off", self._name)
+        _LOGGER.debug("Turn camera '%s' to auto mode", self._name)
         self._data.set_state(
             home_id=self._home_id,
             camera_id=self._id,

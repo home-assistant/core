@@ -22,8 +22,8 @@ def coerce_ip(value):
         raise vol.Invalid("Must define an IP address")
     try:
         ipaddress.IPv4Network(value)
-    except ValueError:
-        raise vol.Invalid("Not a valid IP address")
+    except ValueError as err:
+        raise vol.Invalid("Not a valid IP address") from err
     return value
 
 

@@ -57,8 +57,8 @@ def float_range(rng):
         coe = vol.Coerce(float)
         coe(rng[0])
         coe(rng[1])
-    except vol.CoerceInvalid:
-        raise vol.Invalid(f"Only int or float values are allowed: {rng}")
+    except vol.CoerceInvalid as err:
+        raise vol.Invalid(f"Only int or float values are allowed: {rng}") from err
     if len(rng) != 2:
         raise vol.Invalid(f"Only two numbers allowed in a range: {rng}")
     if rng[0] > rng[1]:
@@ -70,8 +70,8 @@ def adc_port_number(num):
     """Validate input number to be in the range of ADC enabled ports."""
     try:
         num = int(num)
-    except (ValueError):
-        raise vol.Invalid(f"Port numbers must be integers: {num}")
+    except ValueError as err:
+        raise vol.Invalid(f"Port numbers must be integers: {num}") from err
     if num not in range(1, 8):
         raise vol.Invalid(f"Only port numbers from 1 to 7 are ADC capable: {num}")
     return num

@@ -24,6 +24,7 @@ import voluptuous as vol
 
 from homeassistant import exceptions
 import homeassistant.components.device_automation as device_automation
+from homeassistant.components.logger import LOGSEVERITY
 import homeassistant.components.scene as scene
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -88,6 +89,10 @@ DEFAULT_SCRIPT_MODE = SCRIPT_MODE_SINGLE
 CONF_MAX = "max"
 DEFAULT_MAX = 10
 
+CONF_MAX_EXCEEDED = "max_exceeded"
+_MAX_EXCEEDED_CHOICES = list(LOGSEVERITY) + ["SILENT"]
+DEFAULT_MAX_EXCEEDED = "WARNING"
+
 ATTR_CUR = "current"
 ATTR_MAX = "max"
 ATTR_MODE = "mode"
@@ -112,6 +117,9 @@ def make_script_schema(schema, default_script_mode, extra=vol.PREVENT_EXTRA):
             ),
             vol.Optional(CONF_MAX, default=DEFAULT_MAX): vol.All(
                 vol.Coerce(int), vol.Range(min=2)
+            ),
+            vol.Optional(CONF_MAX_EXCEEDED, default=DEFAULT_MAX_EXCEEDED): vol.All(
+                vol.Upper, vol.In(_MAX_EXCEEDED_CHOICES)
             ),
         },
         extra=extra,
@@ -264,7 +272,7 @@ class _ScriptRun:
                 ex,
                 level=logging.ERROR,
             )
-            raise _StopScript
+            raise _StopScript from ex
 
     async def _async_delay_step(self):
         """Handle delay."""
@@ -327,10 +335,10 @@ class _ScriptRun:
         try:
             async with timeout(delay) as to_context:
                 await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
-        except asyncio.TimeoutError:
+        except asyncio.TimeoutError as ex:
             if not self._action.get(CONF_CONTINUE_ON_TIMEOUT, True):
                 self._log(_TIMEOUT_MSG)
-                raise _StopScript
+                raise _StopScript from ex
             self._variables["wait"]["remaining"] = 0.0
         finally:
             for task in tasks:
@@ -450,9 +458,7 @@ class _ScriptRun:
                 )
             except exceptions.TemplateError as ex:
                 self._log(
-                    "Error rendering event data template: %s",
-                    ex,
-                    level=logging.ERROR,
+                    "Error rendering event data template: %s", ex, level=logging.ERROR
                 )
 
         self._hass.bus.async_fire(
@@ -502,7 +508,7 @@ class _ScriptRun:
                         ex,
                         level=logging.ERROR,
                     )
-                    raise _StopScript
+                    raise _StopScript from ex
             extra_msg = f" of {count}"
             for iteration in range(1, count + 1):
                 set_repeat_var(iteration, count)
@@ -600,10 +606,10 @@ class _ScriptRun:
         try:
             async with timeout(delay) as to_context:
                 await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
-        except asyncio.TimeoutError:
+        except asyncio.TimeoutError as ex:
             if not self._action.get(CONF_CONTINUE_ON_TIMEOUT, True):
                 self._log(_TIMEOUT_MSG)
-                raise _StopScript
+                raise _StopScript from ex
             self._variables["wait"]["remaining"] = 0.0
         finally:
             for task in tasks:
@@ -712,6 +718,7 @@ class Script:
         change_listener: Optional[Callable[..., Any]] = None,
         script_mode: str = DEFAULT_SCRIPT_MODE,
         max_runs: int = DEFAULT_MAX,
+        max_exceeded: str = DEFAULT_MAX_EXCEEDED,
         logger: Optional[logging.Logger] = None,
         log_exceptions: bool = True,
         top_level: bool = True,
@@ -745,6 +752,7 @@ class Script:
 
         self._runs: List[_ScriptRun] = []
         self.max_runs = max_runs
+        self._max_exceeded = max_exceeded
         if script_mode == SCRIPT_MODE_QUEUED:
             self._queue_lck = asyncio.Lock()
         self._config_cache: Dict[Set[Tuple], Callable[..., bool]] = {}
@@ -859,7 +867,10 @@ class Script:
         ).result()
 
     async def async_run(
-        self, variables: Optional[_VarsType] = None, context: Optional[Context] = None
+        self,
+        variables: Optional[_VarsType] = None,
+        context: Optional[Context] = None,
+        started_action: Optional[Callable[..., Any]] = None,
     ) -> None:
         """Run script."""
         if context is None:
@@ -870,13 +881,18 @@ class Script:
 
         if self.is_running:
             if self.script_mode == SCRIPT_MODE_SINGLE:
-                self._log("Already running", level=logging.WARNING)
+                if self._max_exceeded != "SILENT":
+                    self._log("Already running", level=LOGSEVERITY[self._max_exceeded])
                 return
             if self.script_mode == SCRIPT_MODE_RESTART:
                 self._log("Restarting")
                 await self.async_stop(update_state=False)
             elif len(self._runs) == self.max_runs:
-                self._log("Maximum number of runs exceeded", level=logging.WARNING)
+                if self._max_exceeded != "SILENT":
+                    self._log(
+                        "Maximum number of runs exceeded",
+                        level=LOGSEVERITY[self._max_exceeded],
+                    )
                 return
 
         # If this is a top level Script then make a copy of the variables in case they
@@ -894,6 +910,8 @@ class Script:
             self._hass, self, cast(dict, variables), context, self._log_exceptions
         )
         self._runs.append(run)
+        if started_action:
+            self._hass.async_run_job(started_action)
         self.last_triggered = utcnow()
         self._changed()
 

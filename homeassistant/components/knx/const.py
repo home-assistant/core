@@ -28,8 +28,8 @@ class ColorTempModes(Enum):
     relative = "DPT-5.001"
 
 
-class DeviceTypes(Enum):
-    """KNX device types."""
+class SupportedPlatforms(Enum):
+    """Supported platforms."""
 
     cover = "cover"
     light = "light"
@@ -39,6 +39,7 @@ class DeviceTypes(Enum):
     notify = "notify"
     scene = "scene"
     sensor = "sensor"
+    weather = "weather"
 
 
 # Map KNX operation modes to HA modes. This list might not be complete.

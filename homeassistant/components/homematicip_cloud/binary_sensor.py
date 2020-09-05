@@ -16,6 +16,7 @@ from homematicip.aio.device import (
     AsyncShutterContact,
     AsyncShutterContactMagnetic,
     AsyncSmokeDetector,
+    AsyncTiltVibrationSensor,
     AsyncWaterSensor,
     AsyncWeatherSensor,
     AsyncWeatherSensorPlus,
@@ -85,13 +86,17 @@ async def async_setup_entry(
     for device in hap.home.devices:
         if isinstance(device, AsyncAccelerationSensor):
             entities.append(HomematicipAccelerationSensor(hap, device))
+        if isinstance(device, AsyncTiltVibrationSensor):
+            entities.append(HomematicipTiltVibrationSensor(hap, device))
         if isinstance(device, (AsyncContactInterface, AsyncFullFlushContactInterface)):
             entities.append(HomematicipContactInterface(hap, device))
         if isinstance(
             device,
-            (AsyncShutterContact, AsyncShutterContactMagnetic, AsyncRotaryHandleSensor),
+            (AsyncShutterContact, AsyncShutterContactMagnetic),
         ):
             entities.append(HomematicipShutterContact(hap, device))
+        if isinstance(device, AsyncRotaryHandleSensor):
+            entities.append(HomematicipShutterContact(hap, device, True))
         if isinstance(
             device,
             (
@@ -131,8 +136,8 @@ async def async_setup_entry(
         async_add_entities(entities)
 
 
-class HomematicipAccelerationSensor(HomematicipGenericEntity, BinarySensorEntity):
-    """Representation of the HomematicIP acceleration sensor."""
+class HomematicipBaseActionSensor(HomematicipGenericEntity, BinarySensorEntity):
+    """Representation of the HomematicIP base action sensor."""
 
     @property
     def device_class(self) -> str:
@@ -157,6 +162,14 @@ class HomematicipAccelerationSensor(HomematicipGenericEntity, BinarySensorEntity
         return state_attr
 
 
+class HomematicipAccelerationSensor(HomematicipBaseActionSensor):
+    """Representation of the HomematicIP acceleration sensor."""
+
+
+class HomematicipTiltVibrationSensor(HomematicipBaseActionSensor):
+    """Representation of the HomematicIP tilt vibration sensor."""
+
+
 class HomematicipContactInterface(HomematicipGenericEntity, BinarySensorEntity):
     """Representation of the HomematicIP contact interface."""
 
@@ -176,6 +189,13 @@ class HomematicipContactInterface(HomematicipGenericEntity, BinarySensorEntity):
 class HomematicipShutterContact(HomematicipGenericEntity, BinarySensorEntity):
     """Representation of the HomematicIP shutter contact."""
 
+    def __init__(
+        self, hap: HomematicipHAP, device, has_additional_state: bool = False
+    ) -> None:
+        """Initialize the shutter contact."""
+        super().__init__(hap, device)
+        self.has_additional_state = has_additional_state
+
     @property
     def device_class(self) -> str:
         """Return the class of this sensor."""
@@ -187,6 +207,18 @@ class HomematicipShutterContact(HomematicipGenericEntity, BinarySensorEntity):
         if self._device.windowState is None:
             return None
         return self._device.windowState != WindowState.CLOSED
+
+    @property
+    def device_state_attributes(self) -> Dict[str, Any]:
+        """Return the state attributes of the Shutter Contact."""
+        state_attr = super().device_state_attributes
+
+        if self.has_additional_state:
+            window_state = getattr(self._device, "windowState", None)
+            if window_state and window_state != WindowState.CLOSED:
+                state_attr[ATTR_WINDOW_STATE] = window_state
+
+        return state_attr
 
 
 class HomematicipMotionDetector(HomematicipGenericEntity, BinarySensorEntity):

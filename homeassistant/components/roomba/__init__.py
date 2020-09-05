@@ -104,8 +104,8 @@ async def async_setup_entry(hass, config_entry):
     try:
         if not await async_connect_or_timeout(hass, roomba):
             return False
-    except CannotConnect:
-        raise exceptions.ConfigEntryNotReady
+    except CannotConnect as err:
+        raise exceptions.ConfigEntryNotReady from err
 
     hass.data[DOMAIN][config_entry.entry_id] = {
         ROOMBA_SESSION: roomba,
@@ -136,14 +136,14 @@ async def async_connect_or_timeout(hass, roomba):
                 if name:
                     break
                 await asyncio.sleep(1)
-    except RoombaConnectionError:
+    except RoombaConnectionError as err:
         _LOGGER.error("Error to connect to vacuum")
-        raise CannotConnect
-    except asyncio.TimeoutError:
+        raise CannotConnect from err
+    except asyncio.TimeoutError as err:
         # api looping if user or password incorrect and roomba exist
         await async_disconnect_or_timeout(hass, roomba)
         _LOGGER.error("Timeout expired")
-        raise CannotConnect
+        raise CannotConnect from err
 
     return {ROOMBA_SESSION: roomba, CONF_NAME: name}
 
