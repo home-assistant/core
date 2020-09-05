@@ -79,6 +79,11 @@ class AbstractOAuth2Implementation(ABC):
     async def async_refresh_token(self, token: dict) -> dict:
         """Refresh a token and update expires info."""
         new_token = await self._async_refresh_token(token)
+        # Force int for non-compliant oauth2 providers
+        try:
+            new_token["expires_in"] = int(new_token["expires_in"])
+        except ValueError as err:
+            _LOGGER.warning("Error converting expires_in to int: %s", err)
         new_token["expires_at"] = time.time() + new_token["expires_in"]
         return new_token
 
@@ -264,6 +269,7 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
             token["expires_in"] = int(token["expires_in"])
         except ValueError as err:
             _LOGGER.warning("Error converting expires_in to int: %s", err)
+            return self.async_abort(reason="oauth_error")
         token["expires_at"] = time.time() + token["expires_in"]
 
         self.logger.info("Successfully authenticated")
