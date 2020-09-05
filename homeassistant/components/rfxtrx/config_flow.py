@@ -1,4 +1,5 @@
 """Config flow for RFXCOM RFXtrx integration."""
+import copy
 import logging
 import os
 
@@ -20,6 +21,7 @@ from homeassistant.const import (
     CONF_TYPE,
 )
 from homeassistant.core import callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import (
     async_entries_for_config_entry,
     async_get_registry,
@@ -90,16 +92,19 @@ class OptionsFlow(config_entries.OptionsFlow):
                 self._selected_device_object = get_rfx_object(event_code)
                 return await self.async_step_set_device_options()
             if CONF_REMOVE_DEVICE in user_input:
-                entry_id = user_input[CONF_REMOVE_DEVICE]
-                device_data = self._get_device_data(entry_id)
+                remove_devices = user_input[CONF_REMOVE_DEVICE]
+                devices = {}
+                for entry_id in remove_devices:
+                    device_data = self._get_device_data(entry_id)
 
-                event_code = device_data[CONF_EVENT_CODE]
-                device_id = device_data[CONF_DEVICE_ID]
-                self.hass.helpers.dispatcher.async_dispatcher_send(
-                    f"{DOMAIN}_{CONF_REMOVE_DEVICE}_{device_id}"
-                )
-                self._device_registry.async_remove_device(entry_id)
-                devices = {event_code: None}
+                    event_code = device_data[CONF_EVENT_CODE]
+                    device_id = device_data[CONF_DEVICE_ID]
+                    self.hass.helpers.dispatcher.async_dispatcher_send(
+                        f"{DOMAIN}_{CONF_REMOVE_DEVICE}_{device_id}"
+                    )
+                    self._device_registry.async_remove_device(entry_id)
+                    devices[event_code] = None
+
                 self.update_config_data(
                     global_options=self._global_options, devices=devices
                 )
@@ -142,7 +147,7 @@ class OptionsFlow(config_entries.OptionsFlow):
             ): bool,
             vol.Optional(CONF_EVENT_CODE): str,
             vol.Optional(CONF_DEVICE): vol.In(devices),
-            vol.Optional(CONF_REMOVE_DEVICE): vol.In(devices),
+            vol.Optional(CONF_REMOVE_DEVICE): cv.multi_select(devices),
         }
 
         return self.async_show_form(
@@ -281,6 +286,7 @@ class OptionsFlow(config_entries.OptionsFlow):
     def update_config_data(self, global_options=None, devices=None):
         """Update data in ConfigEntry."""
         entry_data = self._config_entry.data.copy()
+        entry_data[CONF_DEVICES] = copy.deepcopy(self._config_entry.data[CONF_DEVICES])
         if global_options:
             entry_data.update(global_options)
         if devices:
