@@ -2,7 +2,7 @@
 from homeassistant.const import DEVICE_CLASS_TIMESTAMP
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, EVENTS_COORDINATOR
+from .const import DATA_ZONES, DOMAIN, EVENTS_COORDINATOR
 
 CATEGORIES = {
     2: "Alarm",
@@ -28,23 +28,25 @@ EVENT_ATTRIBUTES = [
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up sensors for device."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id][EVENTS_COORDINATOR]
+    zones = hass.data[DOMAIN][config_entry.entry_id][DATA_ZONES]
     sensors = [
-        RiscoSensor(coordinator, id, [], name) for id, name in CATEGORIES.items()
+        RiscoSensor(coordinator, id, [], name, zones) for id, name in CATEGORIES.items()
     ]
-    sensors.append(RiscoSensor(coordinator, None, CATEGORIES.keys(), "Other"))
+    sensors.append(RiscoSensor(coordinator, None, CATEGORIES.keys(), "Other", zones))
     async_add_entities(sensors)
 
 
 class RiscoSensor(CoordinatorEntity):
     """Sensor for Risco events."""
 
-    def __init__(self, coordinator, category_id, excludes, name) -> None:
+    def __init__(self, coordinator, category_id, excludes, name, zones) -> None:
         """Initialize sensor."""
         super().__init__(coordinator)
         self._event = None
         self._category_id = category_id
         self._excludes = excludes
         self._name = name
+        self._zones = zones
 
     @property
     def name(self):
@@ -88,7 +90,13 @@ class RiscoSensor(CoordinatorEntity):
         if self._event is None:
             return None
 
-        return {atr: getattr(self._event, atr, None) for atr in EVENT_ATTRIBUTES}
+        attrs = {atr: getattr(self._event, atr, None) for atr in EVENT_ATTRIBUTES}
+        if self._event.zone_id is not None:
+            zone = self._zones.get(self._event.zone_id)
+            if zone is not None:
+                attrs["zone_entity_id"] = zone.entity_id
+
+        return attrs
 
     @property
     def device_class(self):

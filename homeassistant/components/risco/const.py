@@ -11,6 +11,7 @@ DOMAIN = "risco"
 RISCO_EVENT = "risco_event"
 
 DATA_COORDINATOR = "risco"
+DATA_ZONES = "zones"
 EVENTS_COORDINATOR = "risco_events"
 
 DEFAULT_SCAN_INTERVAL = 30
