@@ -1,8 +1,5 @@
 """Test Dynalite __init__."""
 
-
-import json
-
 import pytest
 from voluptuous import MultipleInvalid
 
@@ -311,7 +308,7 @@ async def test_dynalite_ws_subscription(hass, hass_ws_client):
             "id": 6,
             "type": "dynalite/update_entry",
             "entry_id": entry.entry_id,
-            "entry_data": json.dumps({CONF_HOST: host2}),
+            "entry_data": {CONF_HOST: host2},
         }
     )
     response = await client.receive_json()
