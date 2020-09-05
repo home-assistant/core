@@ -2,7 +2,11 @@
 import math
 
 from homeassistant.components import emulated_kasa
-from homeassistant.components.emulated_kasa.const import CONF_POWER, DOMAIN
+from homeassistant.components.emulated_kasa.const import (
+    CONF_POWER,
+    CONF_POWER_TEMPLATE,
+    DOMAIN,
+)
 from homeassistant.components.fan import (
     ATTR_SPEED,
     DOMAIN as FAN_DOMAIN,
@@ -49,7 +53,7 @@ CONFIG = {
             },
             ENTITY_LIGHT: {CONF_NAME: ENTITY_LIGHT_NAME, CONF_POWER: ENTITY_SENSOR},
             ENTITY_FAN: {
-                CONF_POWER: "{% if is_state_attr('"
+                CONF_POWER_TEMPLATE: "{% if is_state_attr('"
                 + ENTITY_FAN
                 + "','speed', 'low') %} "
                 + str(ENTITY_FAN_SPEED_LOW)
@@ -98,7 +102,7 @@ CONFIG_FAN = {
     DOMAIN: {
         CONF_ENTITIES: {
             ENTITY_FAN: {
-                CONF_POWER: "{% if is_state_attr('"
+                CONF_POWER_TEMPLATE: "{% if is_state_attr('"
                 + ENTITY_FAN
                 + "','speed', 'low') %} "
                 + str(ENTITY_FAN_SPEED_LOW)
