@@ -29,14 +29,6 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
-    # TODO validate the data can be used to set up a connection.
-
-    # If your PyPI package is not built with async, pass your methods
-    # to the executor:
-    # await hass.async_add_executor_job(
-    #     your_validate_func, data["username"], data["password"]
-    # )
-
     epson_proj = epson.Projector(
         data[CONF_HOST],
         websession=async_get_clientsession(hass, verify_ssl=data.get(CONF_SSL, False)),
@@ -63,7 +55,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
-        print("dzialałm?")
         errors = {}
         if user_input is not None:
             try:

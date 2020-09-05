@@ -106,8 +106,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up the Bosch thermostat from a config entry."""
-    print("OJOJOJOJO")
+    """Set up the Epson from a config entry."""
 
     timeout_scale = config_entry.options.get(TIMEOUT_SCALE, 1.0)
     epson_proj = EpsonProjector(
@@ -165,7 +164,7 @@ async def update_listener(hass, entry):
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Bosch Thermostat Platform."""
+    """Set up the Epson Platform."""
     pass
 
 
@@ -184,14 +183,10 @@ class EpsonProjector(MediaPlayerEntity):
         self._volume = None
         self._state = None
         self._entry_id = entry_id
-        print("init")
-        print(self.source_list)
-        print(self.source)
 
     async def async_update(self):
         """Update state of device."""
         is_turned_on = await self._projector.get_property(POWER)
-        is_turned_on = "01"
         _LOGGER.debug("Projector status: %s", is_turned_on)
         if is_turned_on and is_turned_on == EPSON_CODES[POWER]:
             self._state = STATE_ON
@@ -202,12 +197,10 @@ class EpsonProjector(MediaPlayerEntity):
             volume = await self._projector.get_property(VOLUME)
             if volume:
                 self._volume = volume
-            print("ustawione!")
         elif is_turned_on == BUSY:
             self._state = STATE_ON
         else:
             self._state = STATE_OFF
-        print("działam")
 
     async def async_added_to_hass(self):
         """Use lifecycle hooks."""
@@ -227,8 +220,6 @@ class EpsonProjector(MediaPlayerEntity):
     @property
     def name(self):
         """Return the name of the device."""
-        print("name")
-        print(self._name)
         return self._name
 
     @property
@@ -277,10 +268,7 @@ class EpsonProjector(MediaPlayerEntity):
 
     async def async_select_source(self, source):
         """Select input source."""
-        print("wybieram source")
         selected_source = INV_SOURCES[source]
-        print("mam source")
-        print(selected_source)
         await self._projector.send_command(selected_source)
 
     async def async_mute_volume(self, mute):
