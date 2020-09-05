@@ -1,4 +1,3 @@
-#!/usr/bin/python3
 """Support for Onkyo Network Receivers and Processors."""
 import logging
 
