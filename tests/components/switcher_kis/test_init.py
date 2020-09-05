@@ -3,8 +3,6 @@
 from datetime import timedelta
 from typing import TYPE_CHECKING, Any, Generator
 
-from pytest import raises
-
 from homeassistant.components.switcher_kis import (
     CONF_AUTO_OFF,
     DATA_DEVICE,
@@ -15,7 +13,6 @@ from homeassistant.components.switcher_kis import (
 )
 from homeassistant.const import CONF_ENTITY_ID
 from homeassistant.core import Context, callback
-from homeassistant.exceptions import Unauthorized, UnknownUser
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_setup_component
