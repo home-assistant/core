@@ -334,25 +334,6 @@ async def test_if_fails_setup_bad_for(hass, calls):
         assert mock_logger.error.called
 
 
-async def test_if_fails_setup_for_without_to(hass, calls):
-    """Test for setup failures for missing to."""
-    with assert_setup_component(0, automation.DOMAIN):
-        assert await async_setup_component(
-            hass,
-            automation.DOMAIN,
-            {
-                automation.DOMAIN: {
-                    "trigger": {
-                        "platform": "state",
-                        "entity_id": "test.entity",
-                        "for": {"seconds": 5},
-                    },
-                    "action": {"service": "homeassistant.turn_on"},
-                }
-            },
-        )
-
-
 async def test_if_not_fires_on_entity_change_with_for(hass, calls):
     """Test for not firing on entity change with for."""
     assert await async_setup_component(
@@ -518,6 +499,43 @@ async def test_if_fires_on_entity_change_with_for(hass, calls):
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
     await hass.async_block_till_done()
     assert 1 == len(calls)
+
+
+async def test_if_fires_on_entity_change_with_for_without_to(hass, calls):
+    """Test for firing on entity change with for."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "state",
+                    "entity_id": "test.entity",
+                    "for": {"seconds": 5},
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    hass.states.async_set("test.entity", "hello")
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=2))
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    hass.states.async_set("test.entity", "world")
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=4))
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
+    await hass.async_block_till_done()
+    assert len(calls) == 1
 
 
 async def test_if_fires_on_entity_creation_and_removal(hass, calls):
