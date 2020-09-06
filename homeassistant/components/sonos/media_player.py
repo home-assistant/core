@@ -14,7 +14,7 @@ import pysonos.music_library
 import pysonos.snapshot
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerEntity
+from homeassistant.components.media_player import BrowseMedia, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_ENQUEUE,
     MEDIA_TYPE_ALBUM,
@@ -1462,15 +1462,15 @@ def build_item_response(media_library, payload):
         except IndexError:
             title = LIBRARY_TITLES_MAPPING[payload["idstring"]]
 
-    return {
-        "title": title,
-        "thumbnail": thumbnail,
-        "media_content_id": payload["idstring"],
-        "media_content_type": payload["search_type"],
-        "children": [item_payload(item) for item in media],
-        "can_play": can_play(payload["search_type"]),
-        "can_expand": can_expand(payload["search_type"]),
-    }
+    return BrowseMedia(
+        title=title,
+        thumbnail=thumbnail,
+        media_content_id=payload["idstring"],
+        media_content_type=payload["search_type"],
+        children=[item_payload(item) for item in media],
+        can_play=can_play(payload["search_type"]),
+        can_expand=can_expand(payload["search_type"]),
+    )
 
 
 def item_payload(item):
