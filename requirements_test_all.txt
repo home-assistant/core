@@ -561,7 +561,7 @@ py-august==0.25.0
 py-canary==0.5.0
 
 # homeassistant.components.melissa
-py-melissa-climate==2.0.0
+py-melissa-climate==2.1.4
 
 # homeassistant.components.nightscout
 py-nightscout==1.2.1
