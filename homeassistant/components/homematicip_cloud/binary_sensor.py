@@ -27,7 +27,6 @@ from homematicip.base.enums import SmokeDetectorAlarmType, WindowState
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_CONNECTIVITY,
     DEVICE_CLASS_DOOR,
     DEVICE_CLASS_LIGHT,
     DEVICE_CLASS_MOISTURE,
@@ -158,12 +157,11 @@ class HomematicipCloudConnectionSensor(HomematicipGenericEntity, BinarySensorEnt
     @property
     def icon(self) -> str:
         """Return the icon of the access point entity."""
-        return "mdi:access-point-network"
-
-    @property
-    def device_class(self) -> str:
-        """Return the class of this sensor."""
-        return DEVICE_CLASS_CONNECTIVITY
+        return (
+            "mdi:access-point-network"
+            if self._home.connected
+            else "mdi:access-point-network-off"
+        )
 
     @property
     def is_on(self) -> bool:
