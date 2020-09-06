@@ -37,13 +37,18 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Shelly from a config entry."""
+    temperature_unit = "C" if hass.config.units.is_metric else "F"
+    options = aioshelly.ConnectionOptions(
+        entry.data[CONF_HOST],
+        entry.data.get(CONF_USERNAME),
+        entry.data.get(CONF_PASSWORD),
+        temperature_unit,
+    )
     try:
         async with async_timeout.timeout(5):
             device = await aioshelly.Device.create(
-                entry.data[CONF_HOST],
                 aiohttp_client.async_get_clientsession(hass),
-                entry.data.get(CONF_USERNAME),
-                entry.data.get(CONF_PASSWORD),
+                options,
             )
     except (asyncio.TimeoutError, OSError) as err:
         raise ConfigEntryNotReady from err

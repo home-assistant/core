@@ -25,12 +25,13 @@ async def validate_input(hass: core.HomeAssistant, host, data):
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
+    options = aioshelly.ConnectionOptions(
+        host, data.get(CONF_USERNAME), data.get(CONF_PASSWORD)
+    )
     async with async_timeout.timeout(5):
         device = await aioshelly.Device.create(
-            host,
             aiohttp_client.async_get_clientsession(hass),
-            data.get(CONF_USERNAME),
-            data.get(CONF_PASSWORD),
+            options,
         )
 
     await device.shutdown()
