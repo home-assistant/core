@@ -7,6 +7,7 @@ from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
     POWER_WATT,
+    VOLT,
 )
 
 from .entity import (
