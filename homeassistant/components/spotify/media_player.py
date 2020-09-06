@@ -498,38 +498,39 @@ def build_item_response(spotify, user, payload):
         return None
 
     if media_content_type == "categories":
-        return {
-            "media_content_id": media_content_id,
-            "media_content_type": media_content_type,
-            "title": LIBRARY_MAP.get(media_content_id),
-            "can_play": False,
-            "children": [
-                {
-                    "title": item.get("name"),
-                    "media_content_id": item.get("id"),
-                    "media_content_type": "category_playlists",
-                    "thumbnail": fetch_image_url(item, key="icons"),
-                    "can_play": False,
-                    "can_expand": True,
-                }
+        return BrowseMedia(
+            title=LIBRARY_MAP.get(media_content_id),
+            media_content_id=media_content_id,
+            media_content_type=media_content_type,
+            can_play=False,
+            can_expand=True,
+            children=[
+                BrowseMedia(
+                    title=item.get("name"),
+                    media_content_id=item.get("id"),
+                    media_content_type="category_playlists",
+                    thumbnail=fetch_image_url(item, key="icons"),
+                    can_play=False,
+                    can_expand=True,
+                )
                 for item in items
             ],
-        }
+        )
+
+    if title is None:
+        if "name" in media:
+            title = media.get("name")
+        else:
+            title = LIBRARY_MAP.get(payload["media_content_id"])
 
     response = {
+        "title": title,
         "media_content_id": media_content_id,
         "media_content_type": media_content_type,
         "can_play": media_content_type in PLAYABLE_MEDIA_TYPES,
         "children": [item_payload(item) for item in items],
         "can_expand": True,
     }
-
-    if "name" in media:
-        response["title"] = media["name"]
-    elif title:
-        response["title"] = title
-    else:
-        response["title"] = LIBRARY_MAP.get(media_content_id)
 
     if "images" in media:
         response["thumbnail"] = fetch_image_url(media)
@@ -554,11 +555,18 @@ def item_payload(item):
     elif MEDIA_TYPE_ALBUM in item and item.get("type") != MEDIA_TYPE_TRACK:
         item = item.get(MEDIA_TYPE_ALBUM)
 
+    can_expand = item.get("type") not in [
+        None,
+        MEDIA_TYPE_TRACK,
+        MEDIA_TYPE_EPISODE,
+    ]
+
     payload = {
         "title": item.get("name"),
         "media_content_id": item.get("uri"),
         "media_content_type": item.get("type"),
         "can_play": item.get("type") in PLAYABLE_MEDIA_TYPES,
+        "can_expand": can_expand,
     }
 
     if "images" in item:
@@ -566,20 +574,7 @@ def item_payload(item):
     elif MEDIA_TYPE_ALBUM in item:
         payload["thumbnail"] = fetch_image_url(item[MEDIA_TYPE_ALBUM])
 
-    payload["can_expand"] = item.get("type") not in [
-        None,
-        MEDIA_TYPE_TRACK,
-        MEDIA_TYPE_EPISODE,
-    ]
-
-    return BrowseMedia(
-        title=item.get("name"),
-        thumbnail=fetch_image_url(item),
-        media_content_id=item.get("uri"),
-        media_content_type=item.get("type"),
-        can_play=item.get("type") in PLAYABLE_MEDIA_TYPES,
-        can_expand=can_expand,
-    )
+    return BrowseMedia(**payload)
 
 
 def library_payload():
