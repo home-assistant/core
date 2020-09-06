@@ -175,6 +175,28 @@ def test_entity_ids():
     assert schema("sensor.LIGHT, light.kitchen ") == ["sensor.light", "light.kitchen"]
 
 
+def test_glob_entity_ids():
+    """Test entity ID validation with globs."""
+    schema = vol.Schema(cv.glob_entity_ids)
+
+    options = (
+        "invalid_entity",
+        "sensor.light,sensor_*",
+        ["invalid_entity"],
+        ["sensor.light", "sensor_[i]nvalid"],
+        ["sensor.l[!o]ght,sensor_invalid"],
+    )
+    for value in options:
+        with pytest.raises(vol.MultipleInvalid):
+            schema(value)
+
+    options = ([], ["sensor.light"], "sensor.light")
+    for value in options:
+        schema(value)
+
+    assert schema("sensor.LIGHT, light.kitchen ") == ["sensor.light", "light.kitchen"]
+
+
 def test_entity_domain():
     """Test entity domain validation."""
     schema = vol.Schema(cv.entity_domain("sensor"))

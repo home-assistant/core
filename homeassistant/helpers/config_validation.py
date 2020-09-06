@@ -89,6 +89,13 @@ import homeassistant.util.dt as dt_util
 # pylint: disable=invalid-name
 
 TIME_PERIOD_ERROR = "offset {} should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F'"
+FNMATCH_VALIDATION_TRANSLATION = {
+    42: "a",  # * -> a
+    63: "a",  # ? -> a
+    91: "a",  # [ -> a
+    93: "a",  # [ -> a
+    33: "a",  # ! -> a
+}
 
 # Home Assistant types
 byte = vol.All(vol.Coerce(int), vol.Range(min=0, max=255))
@@ -249,6 +256,27 @@ def entity_id(value: Any) -> str:
         return str_value
 
     raise vol.Invalid(f"Entity ID {value} is an invalid entity id")
+
+
+def glob_entity_ids(value: Union[str, List]) -> List[str]:
+    """Validate Entity IDs with glob (fnmatch) matching."""
+    if value is None:
+        raise vol.Invalid("Entity IDs can not be None")
+    if isinstance(value, str):
+        value = [ent_id.strip() for ent_id in value.split(",")]
+
+    valid_entity_ids = []
+
+    for ent_id in value:
+        ent_id_lower = ent_id.lower()
+        # We allow, "[", "]", "*", and "?"
+        # as they will be used to match entity_ids
+        # later
+        if not valid_entity_id(ent_id_lower.translate(FNMATCH_VALIDATION_TRANSLATION)):
+            raise vol.Invalid(f"Entity ID {ent_id_lower} is an invalid entity id")
+        valid_entity_ids.append(ent_id_lower)
+
+    return valid_entity_ids
 
 
 def entity_ids(value: Union[str, List]) -> List[str]:

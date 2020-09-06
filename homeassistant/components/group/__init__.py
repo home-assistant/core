@@ -1,6 +1,8 @@
 """Provide the functionality to group entities."""
 import asyncio
+import fnmatch
 import logging
+import re
 from typing import Any, Iterable, List, Optional, cast
 
 import voluptuous as vol
@@ -33,6 +35,7 @@ from homeassistant.core import CoreState, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.entityfilter import test_against_patterns
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.reload import async_reload_integration_platforms
 from homeassistant.helpers.typing import HomeAssistantType
@@ -74,7 +77,7 @@ def _conf_preprocess(value):
 GROUP_SCHEMA = vol.All(
     vol.Schema(
         {
-            vol.Optional(CONF_ENTITIES): vol.Any(cv.entity_ids, None),
+            vol.Optional(CONF_ENTITIES): vol.Any(cv.glob_entity_ids, None),
             CONF_NAME: cv.string,
             CONF_ICON: cv.icon,
             CONF_ALL: cv.boolean,
@@ -275,9 +278,8 @@ async def async_setup(hass, config):
             need_update = False
 
             if ATTR_ADD_ENTITIES in service.data:
-                delta = service.data[ATTR_ADD_ENTITIES]
-                entity_ids = set(group.tracking) | set(delta)
-                await group.async_update_tracked_entity_ids(entity_ids)
+                entity_ids = service.data[ATTR_ADD_ENTITIES]
+                await group.async_add_tracked_entity_ids(entity_ids)
 
             if ATTR_ENTITIES in service.data:
                 entity_ids = service.data[ATTR_ENTITIES]
@@ -417,9 +419,11 @@ class Group(Entity):
         self._state = STATE_UNKNOWN
         self._icon = icon
         if entity_ids:
-            self.tracking = tuple(ent_id.lower() for ent_id in entity_ids)
+            self._tracking_unexpanded = tuple(ent_id.lower() for ent_id in entity_ids)
         else:
-            self.tracking = ()
+            self._tracking_unexpanded = ()
+        self._tracking_expanded = []
+        self._async_build_tracking_expanded()
         self.group_on = None
         self.group_off = None
         self.user_defined = user_defined
@@ -529,7 +533,7 @@ class Group(Entity):
     @property
     def state_attributes(self):
         """Return the state attributes for the group."""
-        data = {ATTR_ENTITY_ID: self.tracking, ATTR_ORDER: self._order}
+        data = {ATTR_ENTITY_ID: self._tracking_expanded, ATTR_ORDER: self._order}
         if not self.user_defined:
             data[ATTR_AUTO] = True
         return data
@@ -545,28 +549,70 @@ class Group(Entity):
             self.async_update_tracked_entity_ids(entity_ids), self.hass.loop
         ).result()
 
+    async def async_add_tracked_entity_ids(self, entity_ids):
+        """Add the member entity IDs.
+
+        This method must be run in the event loop.
+        """
+        await self.async_update_tracked_entity_ids(
+            set(self._tracking_unexpanded) | set(entity_ids)
+        )
+
     async def async_update_tracked_entity_ids(self, entity_ids):
         """Update the member entity IDs.
 
         This method must be run in the event loop.
         """
         await self.async_stop()
-        self.tracking = tuple(ent_id.lower() for ent_id in entity_ids)
+        self._tracking_unexpanded = tuple(ent_id.lower() for ent_id in entity_ids)
         self.group_on, self.group_off = None, None
 
-        await self.async_update_ha_state(True)
-        self.async_start()
+        await self.async_start()
 
-    @callback
-    def async_start(self):
+    async def async_start(self, *_):
         """Start tracking members.
 
         This method must be run in the event loop.
         """
         if self._async_unsub_state_changed is None:
+            self._async_build_tracking_expanded()
             self._async_unsub_state_changed = async_track_state_change_event(
-                self.hass, self.tracking, self._async_state_changed_listener
+                self.hass, self._tracking_expanded, self._async_state_changed_listener
             )
+        await self.async_update_ha_state(True)
+
+    @callback
+    def _async_build_tracking_expanded(self):
+        """Extract any fnmatches in the entity list.
+
+        Expand the fnmatches into entities to build
+        an expanded list.
+        """
+        self._tracking_expanded = []
+        tracking_patterns = []
+        for entry in self._tracking_unexpanded:
+            if (
+                "*" not in entry
+                and "[" not in entry
+                and "]" not in entry
+                and "?" not in entry
+                and "!" not in entry
+            ):
+                self._tracking_expanded.append(entry)
+                continue
+
+            tracking_patterns.append(re.compile(fnmatch.translate(entry)))
+
+        if not tracking_patterns:
+            return
+
+        self._tracking_expanded.extend(
+            [
+                state.entity_id
+                for state in self.hass.states.async_all()
+                if test_against_patterns(tracking_patterns, state.entity_id)
+            ]
+        )
 
     async def async_stop(self):
         """Unregister the group from Home Assistant.
@@ -584,8 +630,14 @@ class Group(Entity):
 
     async def async_added_to_hass(self):
         """Handle addition to Home Assistant."""
-        if self.tracking:
-            self.async_start()
+        if not self._tracking_unexpanded:
+            return
+
+        if self.hass.state != CoreState.running:
+            self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, self.async_start)
+            return
+
+        await self.async_start()
 
     async def async_will_remove_from_hass(self):
         """Handle removal from Home Assistant."""
@@ -611,7 +663,7 @@ class Group(Entity):
         """Return the states that the group is tracking."""
         states = []
 
-        for entity_id in self.tracking:
+        for entity_id in self._tracking_expanded:
             state = self.hass.states.get(entity_id)
 
             if state is not None:

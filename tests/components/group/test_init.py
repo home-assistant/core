@@ -4,10 +4,12 @@ from collections import OrderedDict
 import unittest
 
 import homeassistant.components.group as group
+from homeassistant.components.group import ATTR_ENTITY_ID
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
+    ENTITY_MATCH_ALL,
     STATE_HOME,
     STATE_NOT_HOME,
     STATE_OFF,
@@ -169,6 +171,18 @@ class TestComponentsGroup(unittest.TestCase):
 
         assert sorted(["light.ceiling", "light.bowl"]) == sorted(
             group.expand_entity_ids(self.hass, [test_group.entity_id])
+        )
+
+    def test_expand_entity_ids_with_entity_match_all(self):
+        """Test expand_entity_ids method with invalid entity_match_all skipped."""
+        self.hass.states.set("light.Bowl", STATE_ON)
+        self.hass.states.set("light.Ceiling", STATE_OFF)
+        test_group = group.Group.create_group(
+            self.hass, "init_group", ["light.Bowl", "light.Ceiling"], False
+        )
+
+        assert sorted(["light.ceiling", "light.bowl"]) == sorted(
+            group.expand_entity_ids(self.hass, [test_group.entity_id, ENTITY_MATCH_ALL])
         )
 
     def test_expand_entity_ids_does_not_return_duplicates(self):
@@ -563,3 +577,52 @@ async def test_group_order_with_dynamic_creation(hass):
     await hass.async_block_till_done()
 
     assert hass.states.get("group.new_group2").attributes["order"] == 4
+
+
+async def test_group_with_fnmatch(hass):
+    """Test that the system includes entities with fnmatch."""
+    hass.states.async_set("light.bowl", STATE_ON)
+    hass.states.async_set("light.upstairs_floor", STATE_ON)
+    hass.states.async_set("light.upstairs_top", STATE_ON)
+    hass.states.async_set("switch.bar_dog_water", STATE_ON)
+    hass.states.async_set("switch.master_dog_water", STATE_ON)
+
+    assert await async_setup_component(
+        hass,
+        "group",
+        {
+            "group": {
+                "group_zero": {
+                    "entities": ["light.Bowl", "LIGHT.upstairs_*"],
+                    "icon": "mdi:work",
+                },
+                "group_one": {
+                    "entities": ["light.Bowl", "light.upstairs_???"],
+                    "icon": "mdi:work",
+                },
+                "group_two": {"entities": ["light.[!b]*"], "icon": "mdi:work"},
+                "dog_water": {"entities": ["switch.*_dog_water"], "icon": "mdi:work"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert set(hass.states.get("group.group_zero").attributes[ATTR_ENTITY_ID]) == {
+        "light.bowl",
+        "light.upstairs_floor",
+        "light.upstairs_top",
+    }
+    assert set(hass.states.get("group.group_one").attributes[ATTR_ENTITY_ID]) == {
+        "light.bowl",
+        "light.upstairs_top",
+    }
+    assert set(hass.states.get("group.group_two").attributes[ATTR_ENTITY_ID]) == {
+        "light.upstairs_floor",
+        "light.upstairs_top",
+    }
+    assert set(hass.states.get("group.dog_water").attributes[ATTR_ENTITY_ID]) == {
+        "switch.bar_dog_water",
+        "switch.master_dog_water",
+    }
