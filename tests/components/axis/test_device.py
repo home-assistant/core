@@ -5,6 +5,8 @@ from unittest import mock
 
 import axis as axislib
 from axis.api_discovery import URL as API_DISCOVERY_URL
+from axis.applications import URL_LIST as APPLICATIONS_URL
+from axis.applications.vmd4 import URL as VMD4_URL
 from axis.basic_device_info import URL as BASIC_DEVICE_INFO_URL
 from axis.event_stream import OPERATION_INITIALIZED
 from axis.light_control import URL as LIGHT_CONTROL_URL
@@ -79,6 +81,10 @@ API_DISCOVERY_PORT_MANAGEMENT = {
     "name": "IO Port Management",
 }
 
+APPLICATIONS_LIST_RESPONSE = """<reply result="ok">
+ <application Name="vmd" NiceName="AXIS Video Motion Detection" Vendor="Axis Communications" Version="4.2-0" ApplicationID="143440" License="None" Status="Running" ConfigurationPage="local/vmd/config.html" VendorHomePage="http://www.axis.com" />
+</reply>"""
+
 BASIC_DEVICE_INFO_RESPONSE = {
     "apiVersion": "1.1",
     "data": {
@@ -138,6 +144,18 @@ PORT_MANAGEMENT_RESPONSE = {
     },
 }
 
+VMD4_RESPONSE = {
+    "apiVersion": "1.4",
+    "method": "getConfiguration",
+    "context": "Axis library",
+    "data": {
+        "cameras": [{"id": 1, "rotation": 0, "active": True}],
+        "profiles": [
+            {"filters": [], "camera": 1, "triggers": [], "name": "Profile 1", "uid": 1}
+        ],
+    },
+}
+
 BRAND_RESPONSE = """root.Brand.Brand=AXIS
 root.Brand.ProdFullName=AXIS M1065-LW Network Camera
 root.Brand.ProdNbr=M1065-LW
@@ -158,6 +176,7 @@ root.Output.NbrOfOutputs=0
 PROPERTIES_RESPONSE = """root.Properties.API.HTTP.Version=3
 root.Properties.API.Metadata.Metadata=yes
 root.Properties.API.Metadata.Version=1.0
+root.Properties.EmbeddedDevelopment.Version=2.16
 root.Properties.Firmware.BuildDate=Feb 15 2019 09:42
 root.Properties.Firmware.BuildNumber=26
 root.Properties.Firmware.Version=9.10.1
@@ -182,6 +201,8 @@ def vapix_session_request(session, url, **kwargs):
     """Return data based on url."""
     if API_DISCOVERY_URL in url:
         return json.dumps(API_DISCOVERY_RESPONSE)
+    if APPLICATIONS_URL in url:
+        return APPLICATIONS_LIST_RESPONSE
     if BASIC_DEVICE_INFO_URL in url:
         return json.dumps(BASIC_DEVICE_INFO_RESPONSE)
     if LIGHT_CONTROL_URL in url:
@@ -190,6 +211,8 @@ def vapix_session_request(session, url, **kwargs):
         return json.dumps(MQTT_CLIENT_RESPONSE)
     if PORT_MANAGEMENT_URL in url:
         return json.dumps(PORT_MANAGEMENT_RESPONSE)
+    if VMD4_URL in url:
+        return json.dumps(VMD4_RESPONSE)
     if BRAND_URL in url:
         return BRAND_RESPONSE
     if IOPORT_URL in url or INPUT_URL in url or OUTPUT_URL in url:
