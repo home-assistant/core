@@ -53,8 +53,8 @@ class ShellyCover(ShellyBlockEntity, CoverEntity):
         """Position of the cover."""
         if self.control_result:
             return self.control_result["rollerPos"]
-        else:
-            return self.block.rollerPos
+
+        return self.block.rollerPos
 
     @property
     def is_closing(self):
