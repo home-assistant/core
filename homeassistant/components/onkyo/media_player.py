@@ -221,7 +221,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     port = config[CONF_PORT]
     name = config.get(CONF_NAME) or "Onkyo Receiver"
     max_volume = config[CONF_MAX_VOLUME]
-    zones = config[CONF_ZONES]
+    zones = config.get(CONF_ZONES) or ZONES
     sources = config[CONF_SOURCES]
 
     platform = entity_platform.current_platform.get()
@@ -233,14 +233,43 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     _LOGGER.debug("Provisioning Onkyo AVR device at %s:%d", host, port)
 
+    active_zones = []
+    zone_discovery_completed = False
+
+    def async_onkyo_discover_zones_callback(message):
+        """Receive the power status of the available zones on the AVR."""
+        """Returns True when zone discovery is completed."""
+        zone, command, _ = message
+        if command in ["system-power", "power"]:
+            # When we receive the status for a zone, it is available on the AVR
+            # So we add this zone to active_zones and continue discovery
+            if zone in zones:
+                _LOGGER.info("Discovered %s on %s, add to active zones", zone, name)
+                active_zones.append(OnkyoAVR(avr, name, sources, zone, max_volume))
+                return False
+
+            # When we receive the main status, we don't expect any other zones
+            # So add all entities in active_zones and finish zone discovery
+            elif zone == "main":
+                for zone in active_zones:
+                    zone.backfill_state()
+                async_add_entities(active_zones)
+                return True
+
     @callback
     def async_onkyo_update_callback(message):
         """Receive notification from transport that new data exists."""
         _LOGGER.debug("Received update callback from AVR: %s", message)
-        for zone in active_zones:
-            zone.process_update(message)
 
-    active_zones = []
+        # Define the zone_discovery_completed variable as non-local
+        # This way the variable stays consistent over multiple callbacks
+        nonlocal zone_discovery_completed
+
+        if zone_discovery_completed:
+            for zone in active_zones:
+                zone.process_update(message)
+        else:
+            zone_discovery_completed = async_onkyo_discover_zones_callback(message)
 
     @callback
     def async_onkyo_connect_callback():
@@ -259,8 +288,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     except Exception:
         raise PlatformNotReady from Exception
 
-    for zone in ["main"] + zones:
-        active_zones.append(OnkyoAVR(avr, name, sources, zone, max_volume))
+    # Discover what zones are available for the avr by querying the power.
+    # If we get a response for the specific zone, it means it is available.
+    for zone in zones:
+        avr.query_property(zone, "power")
+
+    # Add the main zone to active_zones, since it is always active
+    active_zones.append(OnkyoAVR(avr, name, sources, "main", max_volume))
 
     @callback
     def close_avr(_event):
@@ -506,7 +540,6 @@ class OnkyoAVR(MediaPlayerEntity):
         if audio_information == "N/A":
             self._attributes.pop(ATTR_AUDIO_INFORMATION, None)
             return
-
         self._attributes[ATTR_AUDIO_INFORMATION] = {
             name: value
             for name, value in zip(AUDIO_INFORMATION_MAPPING, audio_information)
