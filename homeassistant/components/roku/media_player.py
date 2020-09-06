@@ -7,6 +7,7 @@ import voluptuous as vol
 from homeassistant.components.media_player import (
     DEVICE_CLASS_RECEIVER,
     DEVICE_CLASS_TV,
+    BrowseMedia,
     MediaPlayerEntity,
 )
 from homeassistant.components.media_player.const import (
@@ -74,36 +75,36 @@ async def async_setup_entry(hass, entry, async_add_entities):
     )
 
 
-def browse_media_library(channels: bool = False) -> dict:
+def browse_media_library(channels: bool = False) -> BrowseMedia:
     """Create response payload to describe contents of a specific library."""
-    library_info = {
-        "title": "Media Library",
-        "media_content_id": "library",
-        "media_content_type": "library",
-        "can_play": False,
-        "can_expand": True,
-        "children": [],
-    }
+    library_info = BrowseMedia(
+        title="Media Library",
+        media_content_id="library",
+        media_content_type="library",
+        can_play=False,
+        can_expand=True,
+        children=[],
+    )
 
-    library_info["children"].append(
-        {
-            "title": "Apps",
-            "media_content_id": "apps",
-            "media_content_type": MEDIA_TYPE_APPS,
-            "can_expand": True,
-            "can_play": False,
-        }
+    library_info.children.append(
+        BrowseMedia(
+            title="Apps",
+            media_content_id="apps",
+            media_content_type=MEDIA_TYPE_APPS,
+            can_expand=True,
+            can_play=False,
+        )
     )
 
     if channels:
-        library_info["children"].append(
-            {
-                "title": "Channels",
-                "media_content_id": "channels",
-                "media_content_type": MEDIA_TYPE_CHANNELS,
-                "can_expand": True,
-                "can_play": False,
-            }
+        library_info.children.append(
+            BrowseMedia(
+                title="Channels",
+                media_content_id="channels",
+                media_content_type=MEDIA_TYPE_CHANNELS,
+                can_expand=True,
+                can_play=False,
+            )
         )
 
     return library_info
@@ -283,41 +284,43 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         response = None
 
         if media_content_type == MEDIA_TYPE_APPS:
-            response = {
-                "title": "Apps",
-                "media_content_id": "apps",
-                "media_content_type": MEDIA_TYPE_APPS,
-                "can_expand": True,
-                "can_play": False,
-                "children": [
-                    {
-                        "title": app.name,
-                        "thumbnail": self.coordinator.roku.app_icon_url(app.app_id),
-                        "media_content_id": app.app_id,
-                        "media_content_type": MEDIA_TYPE_APP,
-                        "can_play": True,
-                    }
+            response = BrowseMedia(
+                title="Apps",
+                media_content_id="apps",
+                media_content_type=MEDIA_TYPE_APPS,
+                can_expand=True,
+                can_play=False,
+                children=[
+                    BrowseMedia(
+                        title=app.name,
+                        thumbnail=self.coordinator.roku.app_icon_url(app.app_id),
+                        media_content_id=app.app_id,
+                        media_content_type=MEDIA_TYPE_APP,
+                        can_play=True,
+                        can_expand=False,
+                    )
                     for app in self.coordinator.data.apps
                 ],
-            }
+            )
 
         if media_content_type == MEDIA_TYPE_CHANNELS:
-            response = {
-                "title": "Channels",
-                "media_content_id": "channels",
-                "media_content_type": MEDIA_TYPE_CHANNELS,
-                "can_expand": True,
-                "can_play": False,
-                "children": [
-                    {
-                        "title": channel.name,
-                        "media_content_id": channel.number,
-                        "media_content_type": MEDIA_TYPE_CHANNEL,
-                        "can_play": True,
-                    }
+            response = BrowseMedia(
+                title="Channels",
+                media_content_id="channels",
+                media_content_type=MEDIA_TYPE_CHANNELS,
+                can_expand=True,
+                can_play=False,
+                children=[
+                    BrowseMedia(
+                        title=channel.name,
+                        media_content_id=channel.number,
+                        media_content_type=MEDIA_TYPE_CHANNEL,
+                        can_play=True,
+                        can_expand=False,
+                    )
                     for channel in self.coordinator.data.channels
                 ],
-            }
+            )
 
         if response is None:
             raise BrowseError(

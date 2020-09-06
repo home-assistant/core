@@ -1,6 +1,7 @@
 """Support to interface with the Plex API."""
 import logging
 
+from homeassistant.components.media_player import BrowseMedia
 from homeassistant.components.media_player.errors import BrowseError
 
 from .const import DOMAIN
@@ -34,10 +35,10 @@ def browse_media(
             return None
 
         media_info = item_payload(media)
-        if media_info.get("can_expand"):
-            media_info["children"] = []
+        if media_info.can_expand:
+            media_info.children = []
             for item in media:
-                media_info["children"].append(item_payload(item))
+                media_info.children.append(item_payload(item))
         return media_info
 
     if media_content_id and ":" in media_content_id:
@@ -103,12 +104,12 @@ def item_payload(item):
         "media_content_id": str(item.ratingKey),
         "media_content_type": item.type,
         "can_play": True,
+        "can_expand": item.type in EXPANDABLES,
     }
     if hasattr(item, "thumbUrl"):
         payload["thumbnail"] = item.thumbUrl
-    if item.type in EXPANDABLES:
-        payload["can_expand"] = True
-    return payload
+
+    return BrowseMedia(**payload)
 
 
 def library_section_payload(section):

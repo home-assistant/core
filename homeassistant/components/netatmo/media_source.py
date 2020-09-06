@@ -3,11 +3,12 @@ import datetime as dt
 import re
 from typing import Optional, Tuple
 
+from homeassistant.components.media_player.const import MEDIA_TYPE_VIDEO
 from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.components.media_source.const import MEDIA_MIME_TYPES
 from homeassistant.components.media_source.error import Unresolvable
 from homeassistant.components.media_source.models import (
-    BrowseMedia,
+    BrowseMediaSource,
     MediaSource,
     MediaSourceItem,
     PlayMedia,
@@ -43,7 +44,7 @@ class NetatmoSource(MediaSource):
 
     async def async_browse_media(
         self, item: MediaSourceItem, media_types: Tuple[str] = MEDIA_MIME_TYPES
-    ) -> Optional[BrowseMedia]:
+    ) -> Optional[BrowseMediaSource]:
         """Return media."""
         try:
             source, camera_id, event_id = async_parse_identifier(item)
@@ -54,7 +55,7 @@ class NetatmoSource(MediaSource):
 
     def _browse_media(
         self, source: str, camera_id: str, event_id: int
-    ) -> Optional[BrowseMedia]:
+    ) -> Optional[BrowseMediaSource]:
         """Browse media."""
         if camera_id and camera_id not in self.events:
             raise BrowseError("Camera does not exist.")
@@ -66,7 +67,7 @@ class NetatmoSource(MediaSource):
 
     def _build_item_response(
         self, source: str, camera_id: str, event_id: int = None
-    ) -> Optional[BrowseMedia]:
+    ) -> Optional[BrowseMediaSource]:
         if event_id and event_id in self.events[camera_id]:
             created = dt.datetime.fromtimestamp(event_id)
             thumbnail = self.events[camera_id][event_id].get("snapshot", {}).get("url")
@@ -81,17 +82,17 @@ class NetatmoSource(MediaSource):
         else:
             path = f"{source}/{camera_id}"
 
-        media = BrowseMedia(
-            DOMAIN,
-            path,
-            title,
+        media = BrowseMediaSource(
+            domain=DOMAIN,
+            identifier=path,
+            media_content_type=MEDIA_TYPE_VIDEO,
+            title=title,
+            can_play=bool(
+                event_id and self.events[camera_id][event_id].get("media_url")
+            ),
+            can_expand=event_id is None,
+            thumbnail=thumbnail,
         )
-
-        media.can_play = bool(
-            event_id and self.events[camera_id][event_id].get("media_url")
-        )
-        media.can_expand = event_id is None
-        media.thumbnail = thumbnail
 
         if not media.can_play and not media.can_expand:
             return None

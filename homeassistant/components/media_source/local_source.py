@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import sanitize_path
 
 from .const import DOMAIN, MEDIA_MIME_TYPES
-from .models import BrowseMedia, MediaSource, MediaSourceItem, PlayMedia
+from .models import BrowseMediaSource, MediaSource, MediaSourceItem, PlayMedia
 
 
 @callback
@@ -67,7 +67,7 @@ class LocalSource(MediaSource):
 
     async def async_browse_media(
         self, item: MediaSourceItem, media_types: Tuple[str] = MEDIA_MIME_TYPES
-    ) -> BrowseMedia:
+    ) -> BrowseMediaSource:
         """Return media."""
         try:
             source_dir_id, location = async_parse_identifier(item)
@@ -92,37 +92,41 @@ class LocalSource(MediaSource):
 
     def _build_item_response(self, source_dir_id: str, path: Path, is_child=False):
         mime_type, _ = mimetypes.guess_type(str(path))
-        media = BrowseMedia(
-            DOMAIN,
-            f"{source_dir_id}/{path.relative_to(self.hass.config.path('media'))}",
-            path.name,
-            path.is_file(),
-            path.is_dir(),
-            mime_type,
-        )
+        is_file = path.is_file()
+        is_dir = path.is_dir()
 
         # Make sure it's a file or directory
-        if not media.can_play and not media.can_expand:
+        if not is_file and not is_dir:
             return None
 
         # Check that it's a media file
-        if media.can_play and (
+        if is_file and (
             not mime_type or mime_type.split("/")[0] not in MEDIA_MIME_TYPES
         ):
             return None
 
-        if not media.can_expand:
+        title = path.name
+        if is_dir:
+            title += "/"
+
+        media = BrowseMediaSource(
+            domain=DOMAIN,
+            identifier=f"{source_dir_id}/{path.relative_to(self.hass.config.path('media'))}",
+            media_content_type="directory",
+            title=title,
+            can_play=is_file,
+            can_expand=is_dir,
+        )
+
+        if is_file or is_child:
             return media
 
-        media.name += "/"
-
         # Append first level children
-        if not is_child:
-            media.children = []
-            for child_path in path.iterdir():
-                child = self._build_item_response(source_dir_id, child_path, True)
-                if child:
-                    media.children.append(child)
+        media.children = []
+        for child_path in path.iterdir():
+            child = self._build_item_response(source_dir_id, child_path, True)
+            if child:
+                media.children.append(child)
 
         return media
 

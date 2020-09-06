@@ -7,7 +7,7 @@ import functools as ft
 import hashlib
 import logging
 from random import SystemRandom
-from typing import Optional
+from typing import List, Optional
 from urllib.parse import urlparse
 
 from aiohttp import web
@@ -811,7 +811,11 @@ class MediaPlayerEntity(Entity):
 
         return state_attr
 
-    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+    async def async_browse_media(
+        self,
+        media_content_type: Optional[str] = None,
+        media_content_id: Optional[str] = None,
+    ) -> "BrowseMedia":
         """
         Return a payload for the "media_player/browse_media" websocket command.
 
@@ -976,7 +980,7 @@ async def websocket_browse_media(hass, connection, msg):
     To use, media_player integrations can implement MediaPlayerEntity.async_browse_media()
     """
     component = hass.data[DOMAIN]
-    player = component.get_entity(msg["entity_id"])
+    player: Optional[MediaPlayerDevice] = component.get_entity(msg["entity_id"])
 
     if player is None:
         connection.send_error(msg["id"], "entity_not_found", "Entity not found")
@@ -1015,6 +1019,12 @@ async def websocket_browse_media(hass, connection, msg):
         )
         return
 
+    # For backwards compat
+    if isinstance(payload, BrowseMedia):
+        payload = payload.as_dict()
+    else:
+        _LOGGER.warning("Browse Media should use new BrowseMedia class")
+
     connection.send_result(msg["id"], payload)
 
 
@@ -1028,3 +1038,50 @@ class MediaPlayerDevice(MediaPlayerEntity):
             "MediaPlayerDevice is deprecated, modify %s to extend MediaPlayerEntity",
             cls.__name__,
         )
+
+
+class BrowseMedia:
+    """Represent a browsable media file."""
+
+    def __init__(
+        self,
+        *,
+        media_content_id: str,
+        media_content_type: str,
+        title: str,
+        can_play: bool,
+        can_expand: bool,
+        children: Optional[List["BrowseMedia"]] = None,
+        thumbnail: Optional[str] = None,
+    ):
+        """Initialize browse media item."""
+        self.media_content_id = media_content_id
+        self.media_content_type = media_content_type
+        self.title = title
+        self.can_play = can_play
+        self.can_expand = can_expand
+        self.children = children
+        self.thumbnail = thumbnail
+
+    def as_dict(self, *, parent: bool = True) -> dict:
+        """Convert Media class to browse media dictionary."""
+        response = {
+            "title": self.title,
+            "media_content_type": self.media_content_type,
+            "media_content_id": self.media_content_id,
+            "can_play": self.can_play,
+            "can_expand": self.can_expand,
+            "thumbnail": self.thumbnail,
+        }
+
+        if not parent:
+            return response
+
+        if self.children:
+            response["children"] = [
+                child.as_dict(parent=False) for child in self.children
+            ]
+        else:
+            response["children"] = []
+
+        return response
