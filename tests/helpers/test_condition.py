@@ -505,6 +505,62 @@ async def test_numberic_state_attribute(hass):
     assert not test(hass)
 
 
+async def test_numeric_state_using_input_number(hass):
+    """Test numeric_state conditions using input_number entities."""
+    await async_setup_component(
+        hass,
+        "input_number",
+        {
+            "input_number": {
+                "low": {"min": 0, "max": 255, "initial": 10},
+                "high": {"min": 0, "max": 255, "initial": 100},
+            }
+        },
+    )
+
+    test = await condition.async_from_config(
+        hass,
+        {
+            "condition": "and",
+            "conditions": [
+                {
+                    "condition": "numeric_state",
+                    "entity_id": "sensor.temperature",
+                    "below": "input_number.high",
+                    "above": "input_number.low",
+                },
+            ],
+        },
+    )
+
+    hass.states.async_set("sensor.temperature", 42)
+    assert test(hass)
+
+    hass.states.async_set("sensor.temperature", 10)
+    assert not test(hass)
+
+    hass.states.async_set("sensor.temperature", 100)
+    assert not test(hass)
+
+    await hass.services.async_call(
+        "input_number",
+        "set_value",
+        {
+            "entity_id": "input_number.high",
+            "value": 101,
+        },
+        blocking=True,
+    )
+    assert test(hass)
+
+    assert not condition.async_numeric_state(
+        hass, entity="sensor.temperature", below="input_number.not_exist"
+    )
+    assert not condition.async_numeric_state(
+        hass, entity="sensor.temperature", above="input_number.not_exist"
+    )
+
+
 async def test_zone_multiple_entities(hass):
     """Test with multiple entities in condition."""
     test = await condition.async_from_config(
