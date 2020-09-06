@@ -1,24 +1,13 @@
 """Tests for the Hyperion integration."""
+# from tests.async_mock import AsyncMock, MagicMock, patch
+from asynctest import CoroutineMock, Mock, call, patch
+from hyperion import const
 import pytest
 
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_HS_COLOR,
-    ATTR_EFFECT,
-)
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-)
-
-from homeassistant.exceptions import PlatformNotReady
-
-# from tests.async_mock import AsyncMock, MagicMock, patch
-from asynctest import Mock, CoroutineMock, patch, call
-
-from hyperion import const
 from homeassistant.components.hyperion import light as hyperion_light
+from homeassistant.components.light import ATTR_BRIGHTNESS, ATTR_EFFECT, ATTR_HS_COLOR
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.exceptions import PlatformNotReady
 
 TEST_HOST = "test-hyperion-host"
 TEST_NAME = "test-hyperion-name"
@@ -405,3 +394,33 @@ async def test_light_async_updates_from_hyperion_client(hass):
     ):
         entity._update_full_state()
     assert mock_update_ha_state.call_count == 9
+
+    # Update connection (e.g. disconnection)
+    client.is_connected = False
+    with patch(
+        "homeassistant.components.hyperion.light.Hyperion.schedule_update_ha_state",
+        new=mock_update_ha_state,
+    ):
+        entity._update_connection(
+            {
+                const.KEY_COMMAND: f"{const.KEY_CONNECTION}-{const.KEY_UPDATE}",
+                const.KEY_CONNECTED: False,
+            }
+        )
+    assert not entity.available
+    assert mock_update_ha_state.call_count == 10
+
+    # Update connection (e.g. re-connection)
+    client.is_connected = True
+    with patch(
+        "homeassistant.components.hyperion.light.Hyperion.schedule_update_ha_state",
+        new=mock_update_ha_state,
+    ):
+        entity._update_connection(
+            {
+                const.KEY_COMMAND: f"{const.KEY_CONNECTION}-{const.KEY_UPDATE}",
+                const.KEY_CONNECTED: True,
+            }
+        )
+    assert entity.available
+    assert mock_update_ha_state.call_count == 14

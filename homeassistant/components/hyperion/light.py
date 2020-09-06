@@ -121,6 +121,7 @@ class Hyperion(LightEntity):
                 f"{const.KEY_COMPONENTS}-{const.KEY_UPDATE}": self._update_components,
                 f"{const.KEY_EFFECTS}-{const.KEY_UPDATE}": self._update_effect_list,
                 f"{const.KEY_PRIORITIES}-{const.KEY_UPDATE}": self._update_priorities,
+                f"{const.KEY_CONNECTION}-{const.KEY_UPDATE}": self._update_connection,
             }
         )
 
@@ -374,6 +375,12 @@ class Hyperion(LightEntity):
             len(self._effect_list),
             self._rgb_color,
         )
+
+    def _update_connection(self, json):
+        """Update client connection state."""
+        if json.get(const.KEY_CONNECTED):
+            self._update_full_state()
+        self._update_ha_state()
 
     async def async_setup(self):
         """Set up the entity."""
