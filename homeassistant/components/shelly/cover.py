@@ -1,5 +1,6 @@
-"""Light for Shelly."""
+"""Cover for Shelly."""
 from aioshelly import Block
+
 from homeassistant.components.cover import (
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
