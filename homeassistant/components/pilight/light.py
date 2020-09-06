@@ -71,8 +71,8 @@ class PilightLight(PilightBaseDevice, LightEntity):
             # By creating a percentage
             percentage = self._brightness / 255
             # Then calulate the dimmer range (aka ammount of available brightness steps).
-            range = self._dimlevel_max - self._dimlevel_min
+            dimrange = self._dimlevel_max - self._dimlevel_min
             # Finaly calculate the pilight brightness, adding dimlevel_min back in to ensure the minimum is always reaced.
-            dimlevel = int(percentage * range + self._dimlevel_min)
+            dimlevel = int(percentage * dimrange + self._dimlevel_min)
 
         self.set_state(turn_on=True, dimlevel=dimlevel)
