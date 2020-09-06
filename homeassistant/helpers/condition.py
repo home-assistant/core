@@ -171,8 +171,8 @@ async def async_not_from_config(
 def numeric_state(
     hass: HomeAssistant,
     entity: Union[None, str, State],
-    below: Optional[float] = None,
-    above: Optional[float] = None,
+    below: Optional[Union[float, str]] = None,
+    above: Optional[Union[float, str]] = None,
     value_template: Optional[Template] = None,
     variables: TemplateVarsType = None,
 ) -> bool:
@@ -192,8 +192,8 @@ def numeric_state(
 def async_numeric_state(
     hass: HomeAssistant,
     entity: Union[None, str, State],
-    below: Optional[float] = None,
-    above: Optional[float] = None,
+    below: Optional[Union[float, str]] = None,
+    above: Optional[Union[float, str]] = None,
     value_template: Optional[Template] = None,
     variables: TemplateVarsType = None,
     attribute: Optional[str] = None,
@@ -233,11 +233,29 @@ def async_numeric_state(
         )
         return False
 
-    if below is not None and fvalue >= below:
-        return False
+    if below is not None:
+        if isinstance(below, str):
+            below_entity = hass.states.get(below)
+            if (
+                not below_entity
+                or below_entity.state in (STATE_UNAVAILABLE, STATE_UNKNOWN)
+                or fvalue >= float(below_entity.state)
+            ):
+                return False
+        elif fvalue >= below:
+            return False
 
-    if above is not None and fvalue <= above:
-        return False
+    if above is not None:
+        if isinstance(above, str):
+            above_entity = hass.states.get(above)
+            if (
+                not above_entity
+                or above_entity.state in (STATE_UNAVAILABLE, STATE_UNKNOWN)
+                or fvalue <= float(above_entity.state)
+            ):
+                return False
+        elif fvalue <= above:
+            return False
 
     return True
 
