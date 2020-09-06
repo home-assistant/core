@@ -296,7 +296,7 @@ enocean==0.50
 ephem==3.7.7.0
 
 # homeassistant.components.epson
-epson-projector==0.2.2
+epson-projector==0.2.3
 
 # homeassistant.components.feedreader
 feedparser-homeassistant==5.2.2.dev1
