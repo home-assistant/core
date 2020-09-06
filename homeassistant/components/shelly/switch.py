@@ -39,11 +39,6 @@ class RelaySwitch(ShellyBlockEntity, SwitchEntity):
 
         return self.block.output
 
-    @property
-    def device_info(self):
-        """Device info."""
-        return super().device_info
-
     async def async_turn_on(self, **kwargs):
         """Turn on relay."""
         self.control_result = await self.block.set_state(turn="on")
