@@ -12,6 +12,7 @@ import voluptuous as vol
 
 from homeassistant.components.cover import (
     DEVICE_CLASS_GARAGE,
+    DEVICE_CLASS_GATE,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
     CoverEntity,
@@ -119,6 +120,10 @@ class DeviceCover(CoordinatorEntity, CoverEntity):
     @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
+        door = self._get_door()
+        if door.gate:
+            return DEVICE_CLASS_GATE
+
         return DEVICE_CLASS_GARAGE
 
     @property
