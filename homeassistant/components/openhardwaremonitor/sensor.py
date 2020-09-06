@@ -80,7 +80,7 @@ class OpenHardwareMonitorDevice(Entity):
     @classmethod
     def parse_number(cls, string):
         """In some locales a decimal numbers uses ',' instead of '.'."""
-        return float(string.replace(",", "."))
+        return string.replace(",", ".")
 
     def update(self):
         """Update the device from a new JSON object."""
