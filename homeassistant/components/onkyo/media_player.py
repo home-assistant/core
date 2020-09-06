@@ -40,7 +40,7 @@ CONF_ZONES = "zones"
 
 DEFAULT_NAME = "Onkyo Receiver"
 SUPPORTED_MAX_VOLUME = 90
-ZONES = ["zone2", "zone3", "zone4"]
+ZONES = {"zone2": "Zone 2", "zone3": "Zone 3", "zone4": "Zone 4"}
 
 DEFAULT_SOURCES = {
     "tv": "TV",
@@ -312,7 +312,7 @@ class OnkyoAVR(MediaPlayerEntity):
         """Initialize entity with transport."""
         super().__init__()
         self._avr = avr
-        self._name = f"{name} {zone if zone != 'main' else ''}"
+        self._name = f"{name} {ZONES[zone] if zone != 'main' else ''}"
         self._zone = zone
         self._volume = 0
         self._supports_volume = False
