@@ -238,7 +238,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     def async_onkyo_discover_zones_callback(message):
         """Receive the power status of the available zones on the AVR."""
-        """Returns True when zone discovery is completed."""
         zone, command, _ = message
         if command in ["system-power", "power"]:
             # When we receive the status for a zone, it is available on the AVR
@@ -246,7 +245,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             if zone in zones:
                 _LOGGER.info("Discovered %s on %s, add to active zones", zone, name)
                 active_zones.append(OnkyoAVR(avr, name, sources, zone, max_volume))
-                return False
 
             # When we receive the main status, we don't expect any other zones
             # So add all entities in active_zones and finish zone discovery
@@ -255,6 +253,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                     zone.backfill_state()
                 async_add_entities(active_zones)
                 return True
+        return False
 
     @callback
     def async_onkyo_update_callback(message):
@@ -540,6 +539,7 @@ class OnkyoAVR(MediaPlayerEntity):
         if audio_information == "N/A":
             self._attributes.pop(ATTR_AUDIO_INFORMATION, None)
             return
+
         self._attributes[ATTR_AUDIO_INFORMATION] = {
             name: value
             for name, value in zip(AUDIO_INFORMATION_MAPPING, audio_information)
