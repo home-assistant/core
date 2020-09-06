@@ -7,7 +7,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_NAME, CONF_RESOURCE, CONF_URL, UNIT_PERCENTAGE
+from homeassistant.const import CONF_NAME, CONF_RESOURCE, CONF_URL, PERCENTAGE
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -166,7 +166,7 @@ class SyncThruTonerSensor(SyncThruSensor):
         super().__init__(syncthru, name)
         self._name = f"{name} Toner {color}"
         self._color = color
-        self._unit_of_measurement = UNIT_PERCENTAGE
+        self._unit_of_measurement = PERCENTAGE
         self._id_suffix = f"_toner_{color}"
 
     def update(self):
@@ -186,7 +186,7 @@ class SyncThruDrumSensor(SyncThruSensor):
         super().__init__(syncthru, name)
         self._name = f"{name} Drum {color}"
         self._color = color
-        self._unit_of_measurement = UNIT_PERCENTAGE
+        self._unit_of_measurement = PERCENTAGE
         self._id_suffix = f"_drum_{color}"
 
     def update(self):

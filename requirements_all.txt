@@ -272,7 +272,7 @@ aprslib==0.6.46
 aqualogic==1.0
 
 # homeassistant.components.arcam_fmj
-arcam-fmj==0.5.2
+arcam-fmj==0.5.3
 
 # homeassistant.components.arris_tg2492lg
 arris-tg2492lg==1.0.0
@@ -1805,7 +1805,7 @@ pytraccar==0.9.0
 pytrackr==0.0.5
 
 # homeassistant.components.tradfri
-pytradfri[async]==7.0.0
+pytradfri[async]==7.0.2
 
 # homeassistant.components.trafikverket_train
 # homeassistant.components.trafikverket_weatherstation
@@ -2119,7 +2119,7 @@ temescal==0.3
 temperusb==1.5.3
 
 # homeassistant.components.tensorflow
-# tensorflow==2.2.0
+# tensorflow==2.3.0
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.2.12
@@ -2128,10 +2128,7 @@ tesla-powerwall==0.2.12
 teslajsonpy==0.10.4
 
 # homeassistant.components.tensorflow
-# tf-models-official==2.2.1
-
-# homeassistant.components.tensorflow
-tf-slim==1.1.0
+# tf-models-official==2.3.0
 
 # homeassistant.components.thermoworks_smoke
 thermoworks_smoke==0.1.8

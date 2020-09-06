@@ -2,6 +2,14 @@
     "config": {
         "error": {
             "invalid_auth": "Niepoprawne uwierzytelnienie."
+        },
+        "step": {
+            "reauth": {
+                "data": {
+                    "password": "Has\u0142o",
+                    "username": "Nazwa u\u017cytkownika"
+                }
+            }
         }
     }
 }

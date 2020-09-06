@@ -5,7 +5,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.spaceapi import DOMAIN, SPACEAPI_VERSION, URL_API_SPACEAPI
-from homeassistant.const import TEMP_CELSIUS, UNIT_PERCENTAGE
+from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_coro
@@ -64,7 +64,7 @@ SENSOR_OUTPUT = {
         {"location": "Home", "name": "temp2", "unit": TEMP_CELSIUS, "value": "23"},
     ],
     "humidity": [
-        {"location": "Home", "name": "hum1", "unit": UNIT_PERCENTAGE, "value": "88"}
+        {"location": "Home", "name": "hum1", "unit": PERCENTAGE, "value": "88"}
     ],
 }
 
@@ -82,7 +82,7 @@ def mock_client(hass, hass_client):
         "test.temp2", 23, attributes={"unit_of_measurement": TEMP_CELSIUS}
     )
     hass.states.async_set(
-        "test.hum1", 88, attributes={"unit_of_measurement": UNIT_PERCENTAGE}
+        "test.hum1", 88, attributes={"unit_of_measurement": PERCENTAGE}
     )
 
     return hass.loop.run_until_complete(hass_client())

@@ -2,6 +2,14 @@
     "config": {
         "error": {
             "invalid_auth": "Niepoprawne uwierzytelnienie."
+        },
+        "flow_title": "NZBGet: {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Nazwa"
+                }
+            }
         }
     }
 }

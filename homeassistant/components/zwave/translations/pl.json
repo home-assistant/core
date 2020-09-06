@@ -21,8 +21,8 @@
     "state": {
         "_": {
             "dead": "martwy",
-            "initializing": "inicjalizacja",
-            "ready": "gotowy",
+            "initializing": "Inicjowanie",
+            "ready": "Gotowe",
             "sleeping": "u\u015bpiony"
         },
         "query_stage": {
