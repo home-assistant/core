@@ -6,7 +6,13 @@ from epson_projector.const import POWER
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_SSL
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PORT,
+    CONF_SSL,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -34,10 +40,8 @@ async def validate_input(hass: core.HomeAssistant, data):
         websession=async_get_clientsession(hass, verify_ssl=data.get(CONF_SSL, False)),
         port=data[CONF_PORT],
     )
-
     _power = await epson_proj.get_property(POWER)
-
-    if not _power:
+    if not _power or _power == STATE_UNAVAILABLE:
         raise CannotConnect
 
 
@@ -68,9 +72,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )

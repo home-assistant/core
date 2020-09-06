@@ -1,9 +1,12 @@
 """Test the epson config flow."""
-from homeassistant import config_entries, setup
-from homeassistant.components.epson.config_flow import CannotConnect
-from homeassistant.components.epson.const import DOMAIN
+from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant.components.epson.const import DOMAIN, TIMEOUT_SCALE
+from homeassistant.const import STATE_UNAVAILABLE
 
 from tests.async_mock import patch
+from tests.common import MockConfigEntry
+
+CONFIG = {"host": "1.1.1.1", "name": "test-epson", "port": 80, "ssl": False}
 
 
 async def test_form(hass):
@@ -26,7 +29,7 @@ async def test_form(hass):
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": "1.1.1.1", "name": "test-epson", "port": 80, "ssl": False},
+            CONFIG,
         )
     assert result2["type"] == "create_entry"
     assert result2["title"] == "test-epson"
@@ -48,11 +51,78 @@ async def test_form_cannot_connect(hass):
 
     with patch(
         "homeassistant.components.epson.config_flow.epson.Projector.get_property",
-        side_effect=CannotConnect,
+        return_value=STATE_UNAVAILABLE,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": "1.1.1.1", "name": "test-epson", "port": 80, "ssl": False},
+            CONFIG,
+        )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_options_flow(hass):
+    """Test EpsonOptionsFlowHandler."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="123456",
+        data=CONFIG,
+    )
+    config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.epson.config_flow.epson.Projector.get_property",
+        return_value="04",
+    ), patch("homeassistant.components.epson.async_setup", return_value=True), patch(
+        "homeassistant.components.epson.async_setup_entry",
+        return_value=True,
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "user"
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input={TIMEOUT_SCALE: 1.5}
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert config_entry.options == {TIMEOUT_SCALE: 1.0}
+
+
+async def test_import(hass):
+    """Test config.yaml import."""
+    with patch(
+        "homeassistant.components.epson.config_flow.epson.Projector.get_property",
+        return_value="04",
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=CONFIG,
+        )
+        assert result["type"] == "create_entry1"
+        assert result["title"] == "test-epson"
+        assert result["data"] == {
+            "host": "1.1.1.1",
+            "port": 80,
+            "ssl": False,
+        }
+
+
+async def test_import_cannot_connect(hass):
+    """Test we handle cannot connect error with import."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
+    )
+
+    with patch(
+        "homeassistant.components.epson.config_flow.epson.Projector.get_property",
+        return_value=STATE_UNAVAILABLE,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            CONFIG,
         )
 
     assert result2["type"] == "form"
