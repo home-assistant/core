@@ -1,12 +1,11 @@
 """Light for Shelly."""
 from aioshelly import Block
-
 from homeassistant.components.cover import (
-    CoverEntity,
-    SUPPORT_OPEN,
     SUPPORT_CLOSE,
-    SUPPORT_STOP,
+    SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
+    SUPPORT_STOP,
+    CoverEntity,
 )
 from homeassistant.const import (
     SERVICE_CLOSE_COVER,
@@ -51,6 +50,7 @@ class ShellyCover(ShellyBlockEntity, CoverEntity):
 
     @property
     def is_closed(self):
+        """If cover is closed."""
         if self.control_result:
             return self.control_result["rollerPos"] == 0
 
@@ -60,10 +60,9 @@ class ShellyCover(ShellyBlockEntity, CoverEntity):
     def current_cover_position(self):
         """Position of the cover."""
         if self.control_result:
-            cover_postion = self.control_result["rollerPos"]
+            return self.control_result["rollerPos"]
         else:
-            cover_position = self.block.rollerPos
-        return cover_position
+            return self.block.rollerPos
 
     @property
     def is_closing(self):
