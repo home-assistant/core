@@ -8,7 +8,6 @@ from homeassistant.components.cover import (
     SUPPORT_STOP,
     CoverEntity,
 )
-
 from homeassistant.core import callback
 
 from . import ShellyBlockEntity, ShellyDeviceWrapper
