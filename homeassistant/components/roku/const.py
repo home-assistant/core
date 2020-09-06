@@ -11,9 +11,5 @@ ATTR_SOFTWARE_VERSION = "sw_version"
 # Default Values
 DEFAULT_PORT = 8060
 
-# Media Types
-MEDIA_TYPE_APPS = "apps"
-MEDIA_TYPE_CHANNELS = "channels"
-
 # Services
 SERVICE_SEARCH = "search"
