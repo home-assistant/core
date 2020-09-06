@@ -20,22 +20,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     if not relay_blocks:
         return
 
-    multiple_blocks = len(relay_blocks) > 1
-    async_add_entities(
-        RelaySwitch(wrapper, block, multiple_blocks=multiple_blocks)
-        for block in relay_blocks
-    )
+    async_add_entities(RelaySwitch(wrapper, block) for block in relay_blocks)
 
 
 class RelaySwitch(ShellyBlockEntity, SwitchEntity):
     """Switch that controls a relay block on Shelly devices."""
 
-    def __init__(
-        self, wrapper: ShellyDeviceWrapper, block: RelayBlock, multiple_blocks
-    ) -> None:
+    def __init__(self, wrapper: ShellyDeviceWrapper, block: RelayBlock) -> None:
         """Initialize relay switch."""
         super().__init__(wrapper, block)
-        self.multiple_blocks = multiple_blocks
         self.control_result = None
 
     @property
@@ -45,19 +38,6 @@ class RelaySwitch(ShellyBlockEntity, SwitchEntity):
             return self.control_result["ison"]
 
         return self.block.output
-
-    @property
-    def device_info(self):
-        """Device info."""
-        if not self.multiple_blocks:
-            return super().device_info
-
-        # If a device has multiple relays, we want to expose as separate device
-        return {
-            "name": self.name,
-            "identifiers": {(DOMAIN, self.wrapper.mac, self.block.index)},
-            "via_device": (DOMAIN, self.wrapper.mac),
-        }
 
     async def async_turn_on(self, **kwargs):
         """Turn on relay."""
