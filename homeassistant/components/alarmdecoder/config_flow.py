@@ -1,4 +1,6 @@
 """Config flow for AlarmDecoder."""
+import logging
+
 from adext import AdExt
 from alarmdecoder.devices import SerialDevice, SocketDevice
 from alarmdecoder.util import NoDeviceError
@@ -39,6 +41,8 @@ from .const import (  # pylint: disable=unused-import
 EDIT_KEY = "edit_selection"
 EDIT_ZONES = "Zones"
 EDIT_SETTINGS = "Arming Settings"
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class AlarmDecoderFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -103,6 +107,9 @@ class AlarmDecoderFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             except NoDeviceError:
                 errors["base"] = "service_unavailable"
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception during AlarmDecoder setup")
+                errors["base"] = "unknown"
 
         if self.protocol == PROTOCOL_SOCKET:
             schema = vol.Schema(
