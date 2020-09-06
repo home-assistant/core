@@ -113,8 +113,6 @@ class Hyperion(LightEntity):
         self._priority = priority
         self._client = client
 
-        # TODO: Need to add connect/disconnect callbacks.
-
         client.set_callbacks(
             {
                 f"{const.KEY_ADJUSTMENT}-{const.KEY_UPDATE}": self._update_adjustment,
@@ -213,7 +211,6 @@ class Hyperion(LightEntity):
             ):
                 return
 
-            # TODO: Do these failures emit errors in the log?
             if not await self._client.async_set_component(
                 **{
                     const.KEY_COMPONENTSTATE: {
