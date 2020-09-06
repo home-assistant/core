@@ -2,13 +2,15 @@
 import asyncio
 
 from dsmr_parser.clients.protocol import DSMRProtocol
+from dsmr_parser.obis_references import EQUIPMENT_IDENTIFIER, EQUIPMENT_IDENTIFIER_GAS
+from dsmr_parser.objects import CosemObject
 import pytest
 
 from tests.async_mock import MagicMock, patch
 
 
 @pytest.fixture
-async def dsmr_serial_connection_fixture(hass):
+async def dsmr_connection_fixture(hass):
     """Fixture that mocks serial connection."""
 
     transport = MagicMock(spec=asyncio.Transport)
@@ -22,13 +24,16 @@ async def dsmr_serial_connection_fixture(hass):
 
     with patch(
         "homeassistant.components.dsmr.sensor.create_dsmr_reader", connection_factory
+    ), patch(
+        "homeassistant.components.dsmr.sensor.create_tcp_dsmr_reader",
+        connection_factory,
     ):
         yield (connection_factory, transport, protocol)
 
 
 @pytest.fixture
-async def dsmr_tcp_connection_fixture(hass):
-    """Fixture that mocks tcp connection."""
+async def dsmr_connection_send_validate_fixture(hass):
+    """Fixture that mocks serial connection."""
 
     transport = MagicMock(spec=asyncio.Transport)
     protocol = MagicMock(spec=DSMRProtocol)
@@ -39,8 +44,28 @@ async def dsmr_tcp_connection_fixture(hass):
 
     connection_factory = MagicMock(wraps=connection_factory)
 
+    protocol.telegram = {
+        EQUIPMENT_IDENTIFIER: CosemObject([{"value": "12345678", "unit": ""}]),
+        EQUIPMENT_IDENTIFIER_GAS: CosemObject([{"value": "123456789", "unit": ""}]),
+    }
+
+    async def wait_closed():
+        if isinstance(connection_factory.call_args_list[0][0][2], str):
+            # TCP
+            telegram_callback = connection_factory.call_args_list[0][0][3]
+        else:
+            # Serial
+            telegram_callback = connection_factory.call_args_list[0][0][2]
+
+        telegram_callback(protocol.telegram)
+
+    protocol.wait_closed = wait_closed
+
     with patch(
-        "homeassistant.components.dsmr.sensor.create_tcp_dsmr_reader",
+        "homeassistant.components.dsmr.config_flow.create_dsmr_reader",
+        connection_factory,
+    ), patch(
+        "homeassistant.components.dsmr.config_flow.create_tcp_dsmr_reader",
         connection_factory,
     ):
         yield (connection_factory, transport, protocol)

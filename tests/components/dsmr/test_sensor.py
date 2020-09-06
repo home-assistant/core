@@ -20,7 +20,7 @@ from tests.async_mock import DEFAULT, MagicMock
 from tests.common import MockConfigEntry, patch
 
 
-async def test_setup_platform(hass, dsmr_serial_connection_fixture):
+async def test_setup_platform(hass, dsmr_connection_fixture):
     """Test setup of platform."""
     async_add_entities = MagicMock()
 
@@ -58,9 +58,9 @@ async def test_setup_platform(hass, dsmr_serial_connection_fixture):
     assert entry.data == {**entry_data, **serial_data}
 
 
-async def test_default_setup(hass, dsmr_serial_connection_fixture):
+async def test_default_setup(hass, dsmr_connection_fixture):
     """Test the default setup."""
-    (connection_factory, transport, protocol) = dsmr_serial_connection_fixture
+    (connection_factory, transport, protocol) = dsmr_connection_fixture
 
     from dsmr_parser.obis_references import (
         CURRENT_ELECTRICITY_USAGE,
@@ -169,9 +169,9 @@ async def test_derivative():
     assert entity.unit_of_measurement == f"{VOLUME_CUBIC_METERS}/{TIME_HOURS}"
 
 
-async def test_v4_meter(hass, dsmr_serial_connection_fixture):
+async def test_v4_meter(hass, dsmr_connection_fixture):
     """Test if v4 meter is correctly parsed."""
-    (connection_factory, transport, protocol) = dsmr_serial_connection_fixture
+    (connection_factory, transport, protocol) = dsmr_connection_fixture
 
     from dsmr_parser.obis_references import (
         ELECTRICITY_ACTIVE_TARIFF,
@@ -224,9 +224,9 @@ async def test_v4_meter(hass, dsmr_serial_connection_fixture):
     assert gas_consumption.attributes.get("unit_of_measurement") == VOLUME_CUBIC_METERS
 
 
-async def test_v5_meter(hass, dsmr_serial_connection_fixture):
+async def test_v5_meter(hass, dsmr_connection_fixture):
     """Test if v5 meter is correctly parsed."""
-    (connection_factory, transport, protocol) = dsmr_serial_connection_fixture
+    (connection_factory, transport, protocol) = dsmr_connection_fixture
 
     from dsmr_parser.obis_references import (
         ELECTRICITY_ACTIVE_TARIFF,
@@ -279,9 +279,9 @@ async def test_v5_meter(hass, dsmr_serial_connection_fixture):
     assert gas_consumption.attributes.get("unit_of_measurement") == VOLUME_CUBIC_METERS
 
 
-async def test_belgian_meter(hass, dsmr_serial_connection_fixture):
+async def test_belgian_meter(hass, dsmr_connection_fixture):
     """Test if Belgian meter is correctly parsed."""
-    (connection_factory, transport, protocol) = dsmr_serial_connection_fixture
+    (connection_factory, transport, protocol) = dsmr_connection_fixture
 
     from dsmr_parser.obis_references import (
         BELGIUM_HOURLY_GAS_METER_READING,
@@ -334,9 +334,9 @@ async def test_belgian_meter(hass, dsmr_serial_connection_fixture):
     assert gas_consumption.attributes.get("unit_of_measurement") == VOLUME_CUBIC_METERS
 
 
-async def test_belgian_meter_low(hass, dsmr_serial_connection_fixture):
+async def test_belgian_meter_low(hass, dsmr_connection_fixture):
     """Test if Belgian meter is correctly parsed."""
-    (connection_factory, transport, protocol) = dsmr_serial_connection_fixture
+    (connection_factory, transport, protocol) = dsmr_connection_fixture
 
     from dsmr_parser.obis_references import ELECTRICITY_ACTIVE_TARIFF
     from dsmr_parser.objects import CosemObject
@@ -373,9 +373,9 @@ async def test_belgian_meter_low(hass, dsmr_serial_connection_fixture):
     assert power_tariff.attributes.get("unit_of_measurement") == ""
 
 
-async def test_tcp(hass, dsmr_tcp_connection_fixture):
+async def test_tcp(hass, dsmr_connection_fixture):
     """If proper config provided TCP connection should be made."""
-    (connection_factory, transport, protocol) = dsmr_tcp_connection_fixture
+    (connection_factory, transport, protocol) = dsmr_connection_fixture
 
     entry_data = {
         "host": "localhost",
@@ -398,11 +398,9 @@ async def test_tcp(hass, dsmr_tcp_connection_fixture):
     assert connection_factory.call_args_list[0][0][1] == "1234"
 
 
-async def test_connection_errors_retry(
-    hass, monkeypatch, dsmr_serial_connection_fixture
-):
+async def test_connection_errors_retry(hass, dsmr_connection_fixture):
     """Connection should be retried on error during setup."""
-    (connection_factory, transport, protocol) = dsmr_serial_connection_fixture
+    (connection_factory, transport, protocol) = dsmr_connection_fixture
 
     entry_data = {
         "port": "/dev/ttyUSB0",
@@ -435,9 +433,9 @@ async def test_connection_errors_retry(
         assert first_fail_connection_factory.call_count >= 2, "connecting not retried"
 
 
-async def test_reconnect(hass, monkeypatch, dsmr_serial_connection_fixture):
+async def test_reconnect(hass, dsmr_connection_fixture):
     """If transport disconnects, the connection should be retried."""
-    (connection_factory, transport, protocol) = dsmr_serial_connection_fixture
+    (connection_factory, transport, protocol) = dsmr_connection_fixture
 
     entry_data = {
         "port": "/dev/ttyUSB0",

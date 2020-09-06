@@ -59,7 +59,7 @@ def mock_connection_factory(monkeypatch):
     return connection_factory, transport, protocol
 
 
-async def test_import_usb(hass, mock_connection_factory):
+async def test_import_usb(hass, dsmr_connection_send_validate_fixture):
     """Test we can import."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
@@ -82,9 +82,11 @@ async def test_import_usb(hass, mock_connection_factory):
     assert result["data"] == {**entry_data, **SERIAL_DATA}
 
 
-async def test_import_usb_failed_connection(hass, monkeypatch, mock_connection_factory):
+async def test_import_usb_failed_connection(
+    hass, dsmr_connection_send_validate_fixture
+):
     """Test we can import."""
-    (connection_factory, transport, protocol) = mock_connection_factory
+    (connection_factory, transport, protocol) = dsmr_connection_send_validate_fixture
 
     await setup.async_setup_component(hass, "persistent_notification", {})
 
@@ -101,12 +103,12 @@ async def test_import_usb_failed_connection(hass, monkeypatch, mock_connection_f
         side_effect=chain([serial.serialutil.SerialException], repeat(DEFAULT)),
     )
 
-    monkeypatch.setattr(
+    with patch(
+        "homeassistant.components.dsmr.async_setup_entry", return_value=True
+    ), patch(
         "homeassistant.components.dsmr.config_flow.create_dsmr_reader",
         first_fail_connection_factory,
-    )
-
-    with patch("homeassistant.components.dsmr.async_setup_entry", return_value=True):
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
@@ -117,9 +119,9 @@ async def test_import_usb_failed_connection(hass, monkeypatch, mock_connection_f
     assert result["reason"] == "cannot_connect"
 
 
-async def test_import_usb_no_data(hass, monkeypatch, mock_connection_factory):
+async def test_import_usb_no_data(hass, dsmr_connection_send_validate_fixture):
     """Test we can import."""
-    (connection_factory, transport, protocol) = mock_connection_factory
+    (connection_factory, transport, protocol) = dsmr_connection_send_validate_fixture
 
     await setup.async_setup_component(hass, "persistent_notification", {})
 
@@ -149,9 +151,9 @@ async def test_import_usb_no_data(hass, monkeypatch, mock_connection_factory):
     assert result["reason"] == "cannot_communicate"
 
 
-async def test_import_usb_wrong_telegram(hass, mock_connection_factory):
+async def test_import_usb_wrong_telegram(hass, dsmr_connection_send_validate_fixture):
     """Test we can import."""
-    (connection_factory, transport, protocol) = mock_connection_factory
+    (connection_factory, transport, protocol) = dsmr_connection_send_validate_fixture
 
     await setup.async_setup_component(hass, "persistent_notification", {})
 
@@ -175,7 +177,7 @@ async def test_import_usb_wrong_telegram(hass, mock_connection_factory):
     assert result["reason"] == "cannot_communicate"
 
 
-async def test_import_network(hass, mock_connection_factory):
+async def test_import_network(hass, dsmr_connection_send_validate_fixture):
     """Test we can import from network."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
@@ -199,7 +201,7 @@ async def test_import_network(hass, mock_connection_factory):
     assert result["data"] == {**entry_data, **SERIAL_DATA}
 
 
-async def test_import_update(hass, mock_connection_factory):
+async def test_import_update(hass, dsmr_connection_send_validate_fixture):
     """Test we can import."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
