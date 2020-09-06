@@ -21,9 +21,11 @@ from homeassistant.components.plex.const import (
     CONF_MONITORED_USERS,
     CONF_SERVER,
     DOMAIN,
+    PLEX_GDM_CLIENT_SCAN_SIGNAL,
     SERVERS,
 )
 from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import DEFAULT_DATA, DEFAULT_OPTIONS
 from .helpers import trigger_plex_update
@@ -126,11 +128,14 @@ async def test_network_error_during_refresh(
     )
 
 
-async def test_gdm_client_failure(hass, entry, mock_websocket, setup_plex_server):
+async def test_gdm_client_failure(hass, mock_websocket, setup_plex_server):
     """Test connection failure to a GDM discovered client."""
     mock_plex_server = await setup_plex_server(disable_gdm=False)
     server_id = mock_plex_server.machineIdentifier
     loaded_server = hass.data[DOMAIN][SERVERS][server_id]
+
+    # Multiple debouncers with cooldowns involved, easier to trigger manually
+    async_dispatcher_send(hass, PLEX_GDM_CLIENT_SCAN_SIGNAL)
 
     with patch(
         "homeassistant.components.plex.server.PlexClient", side_effect=ConnectionError
@@ -142,11 +147,11 @@ async def test_gdm_client_failure(hass, entry, mock_websocket, setup_plex_server
     assert sensor.state == str(len(mock_plex_server.accounts))
 
     with patch.object(mock_plex_server, "clients", side_effect=RequestException):
-        await loaded_server._async_update_platforms()
+        trigger_plex_update(mock_websocket)
         await hass.async_block_till_done()
 
 
-async def test_mark_sessions_idle(hass, entry, mock_plex_server, mock_websocket):
+async def test_mark_sessions_idle(hass, mock_plex_server, mock_websocket):
     """Test marking media_players as idle when sessions end."""
     server_id = mock_plex_server.machineIdentifier
     loaded_server = hass.data[DOMAIN][SERVERS][server_id]
@@ -178,7 +183,7 @@ async def test_ignore_plex_web_client(hass, entry, mock_websocket):
     with patch("plexapi.server.PlexServer", return_value=mock_plex_server), patch(
         "plexapi.myplex.MyPlexAccount", return_value=MockPlexAccount(players=0)
     ), patch(
-        "homeassistant.components.plex.server.GDM", return_value=MockGDM(disabled=True)
+        "homeassistant.components.plex.GDM", return_value=MockGDM(disabled=True)
     ):
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)

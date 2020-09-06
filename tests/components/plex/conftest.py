@@ -46,7 +46,7 @@ def setup_plex_server(hass, entry, mock_plex_account, mock_websocket):
         disable_gdm = kwargs.pop("disable_gdm", True)
         plex_server = MockPlexServer(**kwargs)
         with patch("plexapi.server.PlexServer", return_value=plex_server), patch(
-                "homeassistant.components.plex.server.GDM", return_value=MockGDM(disabled=disable_gdm)):
+                "homeassistant.components.plex.GDM", return_value=MockGDM(disabled=disable_gdm)):
             config_entry.add_to_hass(hass)
             assert await hass.config_entries.async_setup(config_entry.entry_id)
             await hass.async_block_till_done()

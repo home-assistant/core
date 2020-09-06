@@ -13,6 +13,7 @@ PLEXTV_THROTTLE = 60
 
 DEBOUNCE_TIMEOUT = 1
 DISPATCHERS = "dispatchers"
+GDM_SCANNER = "gdm_scanner"
 PLATFORMS = frozenset(["media_player", "sensor"])
 PLATFORMS_COMPLETED = "platforms_completed"
 PLAYER_SOURCE = "player_source"
@@ -21,6 +22,7 @@ WEBSOCKETS = "websockets"
 
 PLEX_SERVER_CONFIG = "server_config"
 
+PLEX_GDM_CLIENT_SCAN_SIGNAL = "plex_gdm_client_scan_signal"
 PLEX_NEW_MP_SIGNAL = "plex_new_mp_signal.{}"
 PLEX_UPDATE_MEDIA_PLAYER_SIGNAL = "plex_update_mp_signal.{}"
 PLEX_UPDATE_PLATFORMS_SIGNAL = "plex_update_platforms_signal.{}"

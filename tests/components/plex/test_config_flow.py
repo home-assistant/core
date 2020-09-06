@@ -17,6 +17,7 @@ from homeassistant.components.plex.const import (
     CONF_USE_EPISODE_ART,
     DOMAIN,
     MANUAL_SETUP_STRING,
+    PLEX_GDM_CLIENT_SCAN_SIGNAL,
     PLEX_SERVER_CONFIG,
     SERVERS,
 )
@@ -34,6 +35,7 @@ from homeassistant.const import (
     CONF_URL,
     CONF_VERIFY_SSL,
 )
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import DEFAULT_OPTIONS, MOCK_SERVERS, MOCK_TOKEN
 from .helpers import trigger_plex_update
@@ -442,6 +444,9 @@ async def test_option_flow_new_users_available(
 
     mock_plex_server = await setup_plex_server(config_entry=entry, disable_gdm=False)
 
+    # Multiple debouncers with cooldowns involved, easier to trigger manually
+    async_dispatcher_send(hass, PLEX_GDM_CLIENT_SCAN_SIGNAL)
+
     with patch("homeassistant.components.plex.server.PlexClient", new=MockPlexClient):
         trigger_plex_update(mock_websocket)
         await hass.async_block_till_done()
@@ -648,7 +653,7 @@ async def test_manual_config(hass):
     with patch("plexapi.server.PlexServer", return_value=mock_plex_server), patch(
         "homeassistant.components.plex.PlexWebsocket", autospec=True
     ), patch(
-        "homeassistant.components.plex.server.GDM", return_value=MockGDM(disabled=True)
+        "homeassistant.components.plex.GDM", return_value=MockGDM(disabled=True)
     ), patch(
         "plexapi.myplex.MyPlexAccount", return_value=MockPlexAccount()
     ):
@@ -686,7 +691,7 @@ async def test_manual_config_with_token(hass):
     with patch("plexapi.myplex.MyPlexAccount", return_value=MockPlexAccount()), patch(
         "plexapi.server.PlexServer", return_value=mock_plex_server
     ), patch(
-        "homeassistant.components.plex.server.GDM", return_value=MockGDM(disabled=True)
+        "homeassistant.components.plex.GDM", return_value=MockGDM(disabled=True)
     ), patch(
         "homeassistant.components.plex.PlexWebsocket", autospec=True
     ):

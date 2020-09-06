@@ -1,10 +1,12 @@
 """Support to embed Plex."""
 import asyncio
 import functools
+from functools import partial
 import json
 import logging
 
 import plexapi.exceptions
+from plexapi.gdm import GDM
 from plexwebsocket import (
     SIGNAL_CONNECTION_STATE,
     SIGNAL_DATA,
@@ -32,6 +34,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -42,8 +45,10 @@ from .const import (
     CONF_SERVER_IDENTIFIER,
     DISPATCHERS,
     DOMAIN as PLEX_DOMAIN,
+    GDM_SCANNER,
     PLATFORMS,
     PLATFORMS_COMPLETED,
+    PLEX_GDM_CLIENT_SCAN_SIGNAL,
     PLEX_SERVER_CONFIG,
     PLEX_UPDATE_PLATFORMS_SIGNAL,
     SERVERS,
@@ -65,6 +70,22 @@ async def async_setup(hass, config):
     )
 
     await async_setup_services(hass)
+
+    gdm = hass.data[PLEX_DOMAIN][GDM_SCANNER] = GDM()
+
+    async_scan_gdm = Debouncer(
+        hass,
+        _LOGGER,
+        cooldown=10,
+        immediate=True,
+        function=partial(gdm.scan, scan_for_clients=True),
+    ).async_call
+
+    async_dispatcher_connect(
+        hass,
+        PLEX_GDM_CLIENT_SCAN_SIGNAL,
+        async_scan_gdm,
+    )
 
     return True
 

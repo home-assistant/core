@@ -184,7 +184,7 @@ async def test_bad_token_with_tokenless_server(hass, entry):
     with patch("plexapi.server.PlexServer", return_value=MockPlexServer()), patch(
         "plexapi.myplex.MyPlexAccount", side_effect=plexapi.exceptions.Unauthorized
     ), patch(
-        "homeassistant.components.plex.server.GDM", return_value=MockGDM(disabled=True)
+        "homeassistant.components.plex.GDM", return_value=MockGDM(disabled=True)
     ), patch(
         "homeassistant.components.plex.PlexWebsocket", autospec=True
     ) as mock_websocket:
