@@ -218,7 +218,7 @@ async def test_options_flow_thermo(hass, mock_smile) -> None:
         options={CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL},
     )
 
-    hass.data[DOMAIN] = {entry.entry_id: {"api": MagicMock(smile_type="thermo")}}
+    hass.data[DOMAIN] = {entry.entry_id: {"api": MagicMock(smile_type="thermostat")}}
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
