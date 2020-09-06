@@ -2,6 +2,7 @@
 from aioshelly import Block
 
 from homeassistant.components.cover import (
+    ATTR_POSITION,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
@@ -80,11 +81,12 @@ class ShellyCover(ShellyBlockEntity, CoverEntity):
         self.control_result = await self.block.set_state(go="open")
         self.async_write_ha_state()
 
-    def set_cover_position(self, **kwargs):
+    async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
-        pos = kwargs[ATTR_POSITION]
-        self.device.rollerPos(pos)
-        self._position = pos
+        params = {"go": "to_pos"}
+        params["roller_pos"] = kwargs[ATTR_POSITION]
+        self.control_result = await self.block.set_state(**params)
+        self.async_write_ha_state()
 
     async def async_stop_cover(self, **_kwargs):
         """Stop the cover."""
