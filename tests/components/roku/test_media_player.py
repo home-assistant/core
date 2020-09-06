@@ -17,7 +17,9 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MP_DOMAIN,
     MEDIA_TYPE_APP,
+    MEDIA_TYPE_APPS,
     MEDIA_TYPE_CHANNEL,
+    MEDIA_TYPE_CHANNELS,
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE,
     SUPPORT_BROWSE_MEDIA,
@@ -32,13 +34,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_STEP,
 )
-from homeassistant.components.roku.const import (
-    ATTR_KEYWORD, 
-    DOMAIN,
-    MEDIA_TYPE_APPS,
-    MEDIA_TYPE_CHANNELS,
-    SERVICE_SEARCH,
-)
+from homeassistant.components.roku.const import ATTR_KEYWORD, DOMAIN, SERVICE_SEARCH
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.const import (
     ATTR_ENTITY_ID,
