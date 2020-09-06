@@ -12,7 +12,6 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     TIME_SECONDS,
-    UNIT_PERCENTAGE,
     VOLT,
 )
 from homeassistant.helpers.entity import Entity
