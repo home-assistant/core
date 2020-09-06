@@ -52,26 +52,30 @@ ConditionCheckerType = Callable[[HomeAssistant, TemplateVarsType], bool]
 
 
 async def async_from_config(
-    hass: HomeAssistant, config: ConfigType, config_validation: bool = True
+    hass: HomeAssistant,
+    config: Union[ConfigType, Template],
+    config_validation: bool = True,
 ) -> ConditionCheckerType:
     """Turn a condition configuration into a method.
 
     Should be run on the event loop.
     """
+    if isinstance(config, Template):
+        # We got a condition template, wrap it in a configuration to pass along.
+        config = {
+            CONF_CONDITION: "template",
+            CONF_VALUE_TEMPLATE: config,
+        }
+
+    condition = config.get(CONF_CONDITION)
     for fmt in (ASYNC_FROM_CONFIG_FORMAT, FROM_CONFIG_FORMAT):
-        factory = getattr(
-            sys.modules[__name__], fmt.format(config.get(CONF_CONDITION)), None
-        )
+        factory = getattr(sys.modules[__name__], fmt.format(condition), None)
 
         if factory:
             break
 
     if factory is None:
-        raise HomeAssistantError(
-            'Invalid condition "{}" specified {}'.format(
-                config.get(CONF_CONDITION), config
-            )
-        )
+        raise HomeAssistantError(f'Invalid condition "{condition}" specified {config}')
 
     # Check for partials to properly determine if coroutine function
     check_factory = factory
@@ -584,9 +588,12 @@ async def async_device_from_config(
 
 
 async def async_validate_condition_config(
-    hass: HomeAssistant, config: ConfigType
-) -> ConfigType:
+    hass: HomeAssistant, config: Union[ConfigType, Template]
+) -> Union[ConfigType, Template]:
     """Validate config."""
+    if isinstance(config, Template):
+        return config
+
     condition = config[CONF_CONDITION]
     if condition in ("and", "not", "or"):
         conditions = []
@@ -597,6 +604,7 @@ async def async_validate_condition_config(
 
     if condition == "device":
         config = cv.DEVICE_CONDITION_SCHEMA(config)
+        assert not isinstance(config, Template)
         platform = await async_get_device_automation_platform(
             hass, config[CONF_DOMAIN], "condition"
         )
