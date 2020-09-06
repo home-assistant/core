@@ -471,31 +471,31 @@ def item_payload(item):
 
     Used by async_browse_media.
     """
+    can_expand = item.get("type") not in [None, MEDIA_TYPE_TRACK]
+
     if (
         MEDIA_TYPE_TRACK in item
         or item.get("type") != MEDIA_TYPE_ALBUM
         and "playlists" in item
     ):
         track = item.get(MEDIA_TYPE_TRACK)
-        payload = {
-            "title": track.get("name"),
-            "thumbnail": fetch_image_url(track.get(MEDIA_TYPE_ALBUM, {})),
-            "media_content_id": track.get("uri"),
-            "media_content_type": MEDIA_TYPE_TRACK,
-            "can_play": True,
-        }
-    else:
-        payload = {
-            "title": item.get("name"),
-            "thumbnail": fetch_image_url(item),
-            "media_content_id": item.get("uri"),
-            "media_content_type": item.get("type"),
-            "can_play": item.get("type") in PLAYABLE_MEDIA_TYPES,
-        }
+        return BrowseMedia(
+            title=track.get("name"),
+            thumbnail=fetch_image_url(track.get(MEDIA_TYPE_ALBUM, {})),
+            media_content_id=track.get("uri"),
+            media_content_type=MEDIA_TYPE_TRACK,
+            can_play=True,
+            can_expand=can_expand,
+        )
 
-    payload["can_expand"] = item.get("type") not in [None, MEDIA_TYPE_TRACK]
-
-    return BrowseMedia(**payload)
+    return BrowseMedia(
+        title=item.get("name"),
+        thumbnail=fetch_image_url(item),
+        media_content_id=item.get("uri"),
+        media_content_type=item.get("type"),
+        can_play=item.get("type") in PLAYABLE_MEDIA_TYPES,
+        can_expand=can_expand,
+    )
 
 
 def library_payload():
