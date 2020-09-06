@@ -11,7 +11,9 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_APP,
+    MEDIA_TYPE_APPS,
     MEDIA_TYPE_CHANNEL,
+    MEDIA_TYPE_CHANNELS,
     SUPPORT_BROWSE_MEDIA,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -25,9 +27,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.components.media_player.errors import BrowseError
-from homeassistant.const import (
-    MEDIA_TYPE_APPS,
-    MEDIA_TYPE_CHANNELS,
+from homeassistant.const import (,
     STATE_HOME,
     STATE_IDLE,
     STATE_ON,
