@@ -2,61 +2,15 @@
 import asyncio
 from itertools import chain, repeat
 
-from dsmr_parser.clients.protocol import DSMRProtocol
-from dsmr_parser.obis_references import EQUIPMENT_IDENTIFIER, EQUIPMENT_IDENTIFIER_GAS
-from dsmr_parser.objects import CosemObject
-import pytest
 import serial
 
 from homeassistant import config_entries, setup
 from homeassistant.components.dsmr import DOMAIN
 
-from tests.async_mock import DEFAULT, AsyncMock, Mock, patch
+from tests.async_mock import DEFAULT, AsyncMock, patch
 from tests.common import MockConfigEntry
 
 SERIAL_DATA = {"serial_id": "12345678", "serial_id_gas": "123456789"}
-
-
-@pytest.fixture
-def mock_connection_factory(monkeypatch):
-    """Mock the create functions for serial and TCP Asyncio connections."""
-    transport = Mock(spec=asyncio.Transport)
-    protocol = Mock(spec=DSMRProtocol)
-
-    async def connection_factory(*args, **kwargs):
-        """Return mocked out Asyncio classes."""
-        return (transport, protocol)
-
-    connection_factory = Mock(wraps=connection_factory)
-
-    # apply the mock to both connection factories
-    monkeypatch.setattr(
-        "homeassistant.components.dsmr.config_flow.create_dsmr_reader",
-        connection_factory,
-    )
-    monkeypatch.setattr(
-        "homeassistant.components.dsmr.config_flow.create_tcp_dsmr_reader",
-        connection_factory,
-    )
-
-    protocol.telegram = {
-        EQUIPMENT_IDENTIFIER: CosemObject([{"value": "12345678", "unit": ""}]),
-        EQUIPMENT_IDENTIFIER_GAS: CosemObject([{"value": "123456789", "unit": ""}]),
-    }
-
-    async def wait_closed():
-        if isinstance(connection_factory.call_args_list[0][0][2], str):
-            # TCP
-            telegram_callback = connection_factory.call_args_list[0][0][3]
-        else:
-            # Serial
-            telegram_callback = connection_factory.call_args_list[0][0][2]
-
-        telegram_callback(protocol.telegram)
-
-    protocol.wait_closed = wait_closed
-
-    return connection_factory, transport, protocol
 
 
 async def test_import_usb(hass, dsmr_connection_send_validate_fixture):
