@@ -528,7 +528,9 @@ async def test_bunch_of_stuff_master(hass, get_request_return_values, mock_api_o
     await _service_call(hass, TEST_MASTER_ENTITY_NAME, SERVICE_TOGGLE)
     for output in SAMPLE_OUTPUTS_ON:
         mock_api_object.change_output.assert_any_call(
-            output["id"], selected=output["selected"], volume=output["volume"],
+            output["id"],
+            selected=output["selected"],
+            volume=output["volume"],
         )
     mock_api_object.set_volume.assert_any_call(volume=0)
     mock_api_object.set_volume.assert_any_call(volume=SAMPLE_PLAYER_PAUSED["volume"])

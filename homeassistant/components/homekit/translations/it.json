@@ -23,8 +23,7 @@
             "advanced": {
                 "data": {
                     "auto_start": "Avvio automatico (disabilitare se si utilizza Z-Wave o un altro sistema di avvio ritardato)",
-                    "safe_mode": "Modalit\u00e0 provvisoria (attivare solo in caso di errore di associazione)",
-                    "zeroconf_default_interface": "Utilizzare l'interfaccia zeroconf predefinita (abilitare se il bridge non pu\u00f2 essere trovato nell'app Home)"
+                    "safe_mode": "Modalit\u00e0 provvisoria (attivare solo in caso di errore di associazione)"
                 },
                 "description": "Queste impostazioni devono essere modificate solo se il bridge HomeKit non funziona.",
                 "title": "Configurazione Avanzata"

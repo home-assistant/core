@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado",
+            "cannot_connect": "No se puede conectar con el Volumio descubierto"
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar",
+            "unknown": "Error inesperado"
+        },
+        "step": {
+            "discovery_confirm": {
+                "description": "\u00bfQuieres a\u00f1adir Volumio (`{name}`) a Home Assistant?",
+                "title": "Volumio descubierto"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Puerto"
+                }
+            }
+        }
+    }
+}

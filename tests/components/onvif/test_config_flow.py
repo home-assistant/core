@@ -130,7 +130,12 @@ def setup_mock_device(mock_device):
 
 
 async def setup_onvif_integration(
-    hass, config=None, options=None, unique_id=MAC, entry_id="1", source="user",
+    hass,
+    config=None,
+    options=None,
+    unique_id=MAC,
+    entry_id="1",
+    source="user",
 ):
     """Create an ONVIF config entry."""
     if not config:
@@ -353,7 +358,8 @@ async def test_flow_manual_entry(hass):
         setup_mock_device(mock_device)
 
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={},
+            result["flow_id"],
+            user_input={},
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM

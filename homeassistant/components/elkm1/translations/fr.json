@@ -13,10 +13,10 @@
             "user": {
                 "data": {
                     "address": "L'adresse IP ou le domaine ou le port s\u00e9rie si vous vous connectez via s\u00e9rie.",
-                    "password": "Mot de passe (s\u00e9curis\u00e9 uniquement).",
+                    "password": "Mot de passe",
                     "prefix": "Un pr\u00e9fixe unique (laissez vide si vous n'avez qu'un seul ElkM1).",
                     "protocol": "Protocole",
-                    "username": "Nom d'utilisateur (s\u00e9curis\u00e9 uniquement)."
+                    "username": "Nom d'utilisateur"
                 },
                 "title": "Se connecter a Elk-M1 Control"
             }

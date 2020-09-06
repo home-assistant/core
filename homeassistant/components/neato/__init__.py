@@ -101,9 +101,9 @@ async def async_setup_entry(hass, entry):
 
     try:
         await hass.async_add_executor_job(hub.update_robots)
-    except NeatoRobotException:
+    except NeatoRobotException as ex:
         _LOGGER.debug("Failed to connect to Neato API")
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from ex
 
     hass.data[NEATO_LOGIN] = hub
 
@@ -156,7 +156,7 @@ class NeatoHub:
                 _LOGGER.error("Invalid credentials")
             else:
                 _LOGGER.error("Unable to connect to Neato API")
-                raise ConfigEntryNotReady
+                raise ConfigEntryNotReady from ex
             self.logged_in = False
             return
 

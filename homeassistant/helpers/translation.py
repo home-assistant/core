@@ -92,7 +92,9 @@ def load_translations_files(
 
 
 def merge_resources(
-    translation_strings: Dict[str, Dict[str, Any]], components: Set[str], category: str,
+    translation_strings: Dict[str, Dict[str, Any]],
+    components: Set[str],
+    category: str,
 ) -> Dict[str, Dict[str, Any]]:
     """Build and merge the resources response for the given components and platforms."""
     # Build response
@@ -153,7 +155,9 @@ def merge_resources(
 
 
 def build_resources(
-    translation_strings: Dict[str, Dict[str, Any]], components: Set[str], category: str,
+    translation_strings: Dict[str, Dict[str, Any]],
+    components: Set[str],
+    category: str,
 ) -> Dict[str, Dict[str, Any]]:
     """Build the resources response for the given components."""
     # Build response

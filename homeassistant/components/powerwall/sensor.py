@@ -3,11 +3,7 @@ import logging
 
 from tesla_powerwall import MeterType, convert_to_kw
 
-from homeassistant.const import (
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_POWER,
-    UNIT_PERCENTAGE,
-)
+from homeassistant.const import DEVICE_CLASS_BATTERY, DEVICE_CLASS_POWER, PERCENTAGE
 
 from .const import (
     ATTR_ENERGY_EXPORTED,
@@ -69,7 +65,7 @@ class PowerWallChargeSensor(PowerWallEntity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return UNIT_PERCENTAGE
+        return PERCENTAGE
 
     @property
     def name(self):
@@ -89,7 +85,7 @@ class PowerWallChargeSensor(PowerWallEntity):
     @property
     def state(self):
         """Get the current value in percentage."""
-        return self._coordinator.data[POWERWALL_API_CHARGE]
+        return self.coordinator.data[POWERWALL_API_CHARGE]
 
 
 class PowerWallEnergySensor(PowerWallEntity):
@@ -134,7 +130,7 @@ class PowerWallEnergySensor(PowerWallEntity):
     def state(self):
         """Get the current value in kW."""
         return (
-            self._coordinator.data[POWERWALL_API_METERS]
+            self.coordinator.data[POWERWALL_API_METERS]
             .get(self._meter)
             .get_power(precision=3)
         )
@@ -142,7 +138,7 @@ class PowerWallEnergySensor(PowerWallEntity):
     @property
     def device_state_attributes(self):
         """Return the device specific state attributes."""
-        meter = self._coordinator.data[POWERWALL_API_METERS].get(self._meter)
+        meter = self.coordinator.data[POWERWALL_API_METERS].get(self._meter)
         return {
             ATTR_FREQUENCY: round(meter.frequency, 1),
             ATTR_ENERGY_EXPORTED: convert_to_kw(meter.energy_exported),

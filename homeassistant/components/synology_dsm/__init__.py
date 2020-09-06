@@ -88,7 +88,9 @@ async def async_setup(hass, config):
     for dsm_conf in conf:
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=dsm_conf,
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data=dsm_conf,
             )
         )
 
@@ -335,7 +337,10 @@ class SynologyDSMEntity(Entity):
     """Representation of a Synology NAS entry."""
 
     def __init__(
-        self, api: SynoApi, entity_type: str, entity_info: Dict[str, str],
+        self,
+        api: SynoApi,
+        entity_type: str,
+        entity_info: Dict[str, str],
     ):
         """Initialize the Synology DSM entity."""
         self._api = api

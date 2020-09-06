@@ -3,7 +3,7 @@ import asyncio
 from uuid import UUID
 
 from simplipy import API
-from simplipy.errors import InvalidCredentialsError, SimplipyError
+from simplipy.errors import EndpointUnavailable, InvalidCredentialsError, SimplipyError
 from simplipy.websocket import (
     EVENT_CAMERA_MOTION_DETECTED,
     EVENT_CONNECTION_LOST,
@@ -238,7 +238,7 @@ async def async_setup_entry(hass, config_entry):
         return False
     except SimplipyError as err:
         LOGGER.error("Config entry failed: %s", err)
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from err
 
     _async_save_refresh_token(hass, config_entry, api.refresh_token)
 
@@ -555,11 +555,18 @@ class SimpliSafe:
                     LOGGER.error("Error while using stored refresh token: %s", err)
                     return
 
+            if isinstance(result, EndpointUnavailable):
+                # In case the user attempt an action not allowed in their current plan,
+                # we merely log that message at INFO level (so the user is aware,
+                # but not spammed with ERROR messages that they cannot change):
+                LOGGER.info(result)
+                return
+
             if isinstance(result, SimplipyError):
                 LOGGER.error("SimpliSafe error while updating: %s", result)
                 return
 
-            if isinstance(result, Exception):  # pylint: disable=broad-except
+            if isinstance(result, Exception):
                 LOGGER.error("Unknown error while updating: %s", result)
                 return
 

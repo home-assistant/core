@@ -71,7 +71,8 @@ async def test_low_battery(hass):
     sensor.hass = hass
     assert sensor.state_attributes["problem"] == "none"
     sensor.state_changed(
-        "sensor.mqtt_plant_battery", State("sensor.mqtt_plant_battery", 10),
+        "sensor.mqtt_plant_battery",
+        State("sensor.mqtt_plant_battery", 10),
     )
     assert sensor.state == "problem"
     assert sensor.state_attributes["problem"] == "battery low"
