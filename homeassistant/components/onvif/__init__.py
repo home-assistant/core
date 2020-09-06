@@ -127,6 +127,8 @@ async def _get_snapshot_auth(hass, device, entry):
         return HTTP_DIGEST_AUTHENTICATION
 
     snapshot_uri = await device.async_get_snapshot_uri(device.profiles[0])
+    if not snapshot_uri:
+        return HTTP_DIGEST_AUTHENTICATION
     auth = HTTPDigestAuth(device.username, device.password)
 
     def _get():
