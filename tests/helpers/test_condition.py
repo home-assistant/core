@@ -128,10 +128,7 @@ async def test_or_condition_with_template(hass):
         {
             "condition": "or",
             "conditions": [
-                {
-                    "condition": "template",
-                    "value_template": '{{ states.sensor.temperature.state == "100" }}',
-                },
+                {'{{ states.sensor.temperature.state == "100" }}'},
                 {
                     "condition": "numeric_state",
                     "entity_id": "sensor.temperature",
