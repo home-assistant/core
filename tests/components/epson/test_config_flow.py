@@ -28,8 +28,6 @@ async def test_form(hass):
             result["flow_id"],
             {"host": "1.1.1.1", "name": "test-epson", "port": 80, "ssl": False},
         )
-    print("res")
-    print(result2)
     assert result2["type"] == "create_entry"
     assert result2["title"] == "test-epson"
     assert result2["data"] == {
