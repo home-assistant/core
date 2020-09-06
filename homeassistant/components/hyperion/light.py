@@ -128,6 +128,7 @@ class Hyperion(LightEntity):
         # Active state representing the Hyperion instance.
         self._brightness = 255
         self._effect = KEY_EFFECT_SOLID
+        self._effect_list = []
         self._icon = ICON_LIGHTBULB
         self._rgb_color = DEFAULT_COLOR
 
@@ -314,6 +315,8 @@ class Hyperion(LightEntity):
             brightness_pct = self._client.adjustment[0].get(
                 const.KEY_BRIGHTNESS, DEFAULT_BRIGHTNESS
             )
+            if brightness_pct < 0 or brightness_pct > 100:
+                return
             self._brightness = int(round((brightness_pct * 255) / float(100)))
             self._update_ha_state()
 
@@ -341,6 +344,8 @@ class Hyperion(LightEntity):
 
     def _update_effect_list(self, _=None):
         """Update Hyperion effects."""
+        if not self._client.effects:
+            return
         effect_list = []
         for effect in self._client.effects or []:
             if const.KEY_NAME in effect:
