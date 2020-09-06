@@ -459,8 +459,7 @@ class DomainStates:
             sorted(
                 (
                     _wrap_state(self._hass, state)
-                    for state in self._hass.states.async_all()
-                    if state.domain == self._domain
+                    for state in self._hass.states.async_all(self._domain)
                 ),
                 key=lambda state: state.entity_id,
             )
