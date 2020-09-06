@@ -437,8 +437,9 @@ def async_template_from_config(
 
 
 def time(
-    before: Optional[dt_util.dt.time] = None,
-    after: Optional[dt_util.dt.time] = None,
+    hass: HomeAssistant,
+    before: Optional[Union[dt_util.dt.time, str]] = None,
+    after: Optional[Union[dt_util.dt.time, str]] = None,
     weekday: Union[None, str, Container[str]] = None,
 ) -> bool:
     """Test if local time condition matches.
@@ -453,8 +454,28 @@ def time(
 
     if after is None:
         after = dt_util.dt.time(0)
+    elif isinstance(after, str):
+        after_entity = hass.states.get(after)
+        if not after_entity:
+            return False
+        after = dt_util.dt.time(
+            after_entity.attributes.get("hour", 23),
+            after_entity.attributes.get("minute", 59),
+            after_entity.attributes.get("second", 59),
+        )
+
     if before is None:
         before = dt_util.dt.time(23, 59, 59, 999999)
+    elif isinstance(before, str):
+        before_entity = hass.states.get(before)
+        if not before_entity:
+            return False
+        before = dt_util.dt.time(
+            before_entity.attributes.get("hour", 23),
+            before_entity.attributes.get("minute", 59),
+            before_entity.attributes.get("second", 59),
+            999999,
+        )
 
     if after < before:
         if not after <= now_time < before:
@@ -488,7 +509,7 @@ def time_from_config(
 
     def time_if(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
         """Validate time based if-condition."""
-        return time(before, after, weekday)
+        return time(hass, before, after, weekday)
 
     return time_if
 
