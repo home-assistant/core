@@ -24,6 +24,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
+    UpdateFailed,
 )
 
 from .api import ConfigEntryLyricClient, LyricLocalOAuth2Implementation
@@ -103,8 +104,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             try:
                 await lyric.get_locations()
             except (LyricAuthenticationException, LyricException) as exception:
-                _LOGGER.warning(exception)
-                return None
+                raise UpdateFailed(exception) from exception
             return lyric.locations
 
     coordinator = DataUpdateCoordinator(
