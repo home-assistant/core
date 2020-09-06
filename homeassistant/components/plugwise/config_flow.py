@@ -106,6 +106,11 @@ class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
+            if not errors:
+                await self.async_set_unique_id(api.gateway_id)
+                self._abort_if_unique_id_configured()
+
+                return self.async_create_entry(title=api.smile_name, data=user_input)
 
             if not errors:
                 await self.async_set_unique_id(api.gateway_id)
