@@ -1,9 +1,9 @@
 """Support for IKEA Tradfri sensors."""
 
-from homeassistant.const import DEVICE_CLASS_BATTERY, UNIT_PERCENTAGE
+from homeassistant.const import DEVICE_CLASS_BATTERY, PERCENTAGE
 
 from .base_class import TradfriBaseDevice
-from .const import CONF_GATEWAY_ID, DOMAIN, KEY_API, KEY_GATEWAY
+from .const import CONF_GATEWAY_ID, DEVICES, DOMAIN, KEY_API
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -11,20 +11,18 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     gateway_id = config_entry.data[CONF_GATEWAY_ID]
     tradfri_data = hass.data[DOMAIN][config_entry.entry_id]
     api = tradfri_data[KEY_API]
-    gateway = tradfri_data[KEY_GATEWAY]
+    devices = tradfri_data[DEVICES]
 
-    devices_commands = await api(gateway.get_devices())
-    all_devices = await api(devices_commands)
-    devices = (
+    sensors = (
         dev
-        for dev in all_devices
+        for dev in devices
         if not dev.has_light_control
         and not dev.has_socket_control
         and not dev.has_blind_control
         and not dev.has_signal_repeater_control
     )
-    if devices:
-        async_add_entities(TradfriSensor(device, api, gateway_id) for device in devices)
+    if sensors:
+        async_add_entities(TradfriSensor(sensor, api, gateway_id) for sensor in sensors)
 
 
 class TradfriSensor(TradfriBaseDevice):
@@ -48,4 +46,4 @@ class TradfriSensor(TradfriBaseDevice):
     @property
     def unit_of_measurement(self):
         """Return the unit_of_measurement of the device."""
-        return UNIT_PERCENTAGE
+        return PERCENTAGE

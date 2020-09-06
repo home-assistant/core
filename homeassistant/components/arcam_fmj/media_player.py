@@ -8,6 +8,8 @@ from homeassistant import config_entries
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
+    SUPPORT_BROWSE_MEDIA,
+    SUPPORT_PLAY_MEDIA,
     SUPPORT_SELECT_SOUND_MODE,
     SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF,
@@ -16,6 +18,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
+from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import callback
 from homeassistant.helpers.typing import HomeAssistantType
@@ -72,6 +75,8 @@ class ArcamFmj(MediaPlayerEntity):
         self._uuid = uuid
         self._support = (
             SUPPORT_SELECT_SOURCE
+            | SUPPORT_PLAY_MEDIA
+            | SUPPORT_BROWSE_MEDIA
             | SUPPORT_VOLUME_SET
             | SUPPORT_VOLUME_MUTE
             | SUPPORT_VOLUME_STEP
@@ -238,6 +243,45 @@ class ArcamFmj(MediaPlayerEntity):
         """Turn the media player off."""
         await self._state.set_power(False)
 
+    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+        """Implement the websocket media browsing helper."""
+        if media_content_id not in (None, "root"):
+            raise BrowseError(
+                f"Media not found: {media_content_type} / {media_content_id}"
+            )
+
+        presets = self._state.get_preset_details()
+
+        radio = [
+            {
+                "title": preset.name,
+                "media_content_id": f"preset:{preset.index}",
+                "media_content_type": MEDIA_TYPE_MUSIC,
+                "can_play": True,
+            }
+            for preset in presets.values()
+        ]
+
+        root = {
+            "title": "Root",
+            "media_content_id": "root",
+            "media_content_type": "library",
+            "can_play": False,
+            "children": radio,
+        }
+
+        return root
+
+    async def async_play_media(self, media_type: str, media_id: str, **kwargs) -> None:
+        """Play media."""
+
+        if media_id.startswith("preset:"):
+            preset = int(media_id[7:])
+            await self._state.set_tuner_preset(preset)
+        else:
+            _LOGGER.error("Media %s is not supported", media_id)
+            return
+
     @property
     def source(self):
         """Return the current input source."""
@@ -301,6 +345,21 @@ class ArcamFmj(MediaPlayerEntity):
             value = MEDIA_TYPE_MUSIC
         else:
             value = None
+        return value
+
+    @property
+    def media_content_id(self):
+        """Content type of current playing media."""
+        source = self._state.get_source()
+        if source in (SourceCodes.DAB, SourceCodes.FM):
+            preset = self._state.get_tuner_preset()
+            if preset:
+                value = f"preset:{preset}"
+            else:
+                value = None
+        else:
+            value = None
+
         return value
 
     @property
