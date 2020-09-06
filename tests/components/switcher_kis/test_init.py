@@ -39,8 +39,9 @@ from .consts import (
 from tests.common import async_fire_time_changed, async_mock_service
 
 if TYPE_CHECKING:
-    from tests.common import MockUser
     from aioswitcher.devices import SwitcherV2Device
+
+    from tests.common import MockUser
 
 
 async def test_failed_config(

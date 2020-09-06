@@ -29,12 +29,31 @@ jobs:
 - template: templates/azp-job-wheels.yaml@azure
   parameters:
     builderVersion: '$(versionWheels)'
-    builderApk: 'build-base;cmake;git;linux-headers;bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;autoconf;automake;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev'
+    builderApk: 'build-base;cmake;git;linux-headers;bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev'
     builderPip: 'Cython;numpy'
+    skipBinary: 'aiohttp'
+    wheelsRequirement: 'requirements.txt'
+    wheelsRequirementDiff: 'requirements_diff.txt'
+    wheelsConstraint: 'homeassistant/package_constraints.txt'
+    jobName: 'Wheels_Core'
+    preBuild:
+    - script: |
+        if [[ "$(Build.Reason)" =~ (Schedule|Manual) ]]; then
+          exit 0
+        else
+          curl -s -o requirements_diff.txt https://raw.githubusercontent.com/home-assistant/core/master/requirements.txt
+        fi
+      displayName: 'Prepare requirements files for Home Assistant Core wheels'
+- template: templates/azp-job-wheels.yaml@azure
+  parameters:
+    builderVersion: '$(versionWheels)'
+    builderApk: 'build-base;cmake;git;linux-headers;bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;autoconf;automake;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev'
+    builderPip: 'Cython;numpy;scikit-build'
     skipBinary: 'aiohttp'
     wheelsRequirement: 'requirements_wheels.txt'
     wheelsRequirementDiff: 'requirements_diff.txt'
     wheelsConstraint: 'homeassistant/package_constraints.txt'
+    jobName: 'Wheels_Integrations'
     preBuild:
     - script: |
         cp requirements_all.txt requirements_wheels.txt

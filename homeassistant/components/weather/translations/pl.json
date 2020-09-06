@@ -9,13 +9,13 @@
             "lightning": "b\u0142yskawice",
             "lightning-rainy": "burza",
             "partlycloudy": "cz\u0119\u015bciowe zachmurzenie",
-            "pouring": "ulewa",
-            "rainy": "deszczowo",
-            "snowy": "\u015bnie\u017cnie",
-            "snowy-rainy": "\u015bnie\u017cnie, deszczowo",
-            "sunny": "s\u0142onecznie",
-            "windy": "wietrznie",
-            "windy-variant": "wietrznie"
+            "pouring": "Ulewa",
+            "rainy": "Deszczowo",
+            "snowy": "\u015anie\u017cnie",
+            "snowy-rainy": "\u015anie\u017cnie, deszczowo",
+            "sunny": "S\u0142onecznie",
+            "windy": "Wietrznie",
+            "windy-variant": "Wietrznie"
         }
     }
 }

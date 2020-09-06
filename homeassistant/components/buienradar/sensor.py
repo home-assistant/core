@@ -30,10 +30,10 @@ from homeassistant.const import (
     DEGREE,
     IRRADIATION_WATTS_PER_SQUARE_METER,
     LENGTH_KILOMETERS,
+    PERCENTAGE,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
     TIME_HOURS,
-    UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -71,7 +71,7 @@ SENSOR_TYPES = {
     "symbol": ["Symbol", None, None],
     # new in json api (>1.0.0):
     "feeltemperature": ["Feel temperature", TEMP_CELSIUS, "mdi:thermometer"],
-    "humidity": ["Humidity", UNIT_PERCENTAGE, "mdi:water-percent"],
+    "humidity": ["Humidity", PERCENTAGE, "mdi:water-percent"],
     "temperature": ["Temperature", TEMP_CELSIUS, "mdi:thermometer"],
     "groundtemperature": ["Ground temperature", TEMP_CELSIUS, "mdi:thermometer"],
     "windspeed": ["Wind speed", SPEED_KILOMETERS_PER_HOUR, "mdi:weather-windy"],
@@ -124,16 +124,16 @@ SENSOR_TYPES = {
     "maxrain_3d": ["Maximum rain 3d", "mm", "mdi:weather-pouring"],
     "maxrain_4d": ["Maximum rain 4d", "mm", "mdi:weather-pouring"],
     "maxrain_5d": ["Maximum rain 5d", "mm", "mdi:weather-pouring"],
-    "rainchance_1d": ["Rainchance 1d", UNIT_PERCENTAGE, "mdi:weather-pouring"],
-    "rainchance_2d": ["Rainchance 2d", UNIT_PERCENTAGE, "mdi:weather-pouring"],
-    "rainchance_3d": ["Rainchance 3d", UNIT_PERCENTAGE, "mdi:weather-pouring"],
-    "rainchance_4d": ["Rainchance 4d", UNIT_PERCENTAGE, "mdi:weather-pouring"],
-    "rainchance_5d": ["Rainchance 5d", UNIT_PERCENTAGE, "mdi:weather-pouring"],
-    "sunchance_1d": ["Sunchance 1d", UNIT_PERCENTAGE, "mdi:weather-partly-cloudy"],
-    "sunchance_2d": ["Sunchance 2d", UNIT_PERCENTAGE, "mdi:weather-partly-cloudy"],
-    "sunchance_3d": ["Sunchance 3d", UNIT_PERCENTAGE, "mdi:weather-partly-cloudy"],
-    "sunchance_4d": ["Sunchance 4d", UNIT_PERCENTAGE, "mdi:weather-partly-cloudy"],
-    "sunchance_5d": ["Sunchance 5d", UNIT_PERCENTAGE, "mdi:weather-partly-cloudy"],
+    "rainchance_1d": ["Rainchance 1d", PERCENTAGE, "mdi:weather-pouring"],
+    "rainchance_2d": ["Rainchance 2d", PERCENTAGE, "mdi:weather-pouring"],
+    "rainchance_3d": ["Rainchance 3d", PERCENTAGE, "mdi:weather-pouring"],
+    "rainchance_4d": ["Rainchance 4d", PERCENTAGE, "mdi:weather-pouring"],
+    "rainchance_5d": ["Rainchance 5d", PERCENTAGE, "mdi:weather-pouring"],
+    "sunchance_1d": ["Sunchance 1d", PERCENTAGE, "mdi:weather-partly-cloudy"],
+    "sunchance_2d": ["Sunchance 2d", PERCENTAGE, "mdi:weather-partly-cloudy"],
+    "sunchance_3d": ["Sunchance 3d", PERCENTAGE, "mdi:weather-partly-cloudy"],
+    "sunchance_4d": ["Sunchance 4d", PERCENTAGE, "mdi:weather-partly-cloudy"],
+    "sunchance_5d": ["Sunchance 5d", PERCENTAGE, "mdi:weather-partly-cloudy"],
     "windforce_1d": ["Wind force 1d", "Bft", "mdi:weather-windy"],
     "windforce_2d": ["Wind force 2d", "Bft", "mdi:weather-windy"],
     "windforce_3d": ["Wind force 3d", "Bft", "mdi:weather-windy"],
@@ -204,7 +204,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Create the buienradar sensor."""
-
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
     timeframe = config[CONF_TIMEFRAME]
@@ -236,7 +235,6 @@ class BrSensor(Entity):
 
     def __init__(self, sensor_type, client_name, coordinates):
         """Initialize the sensor."""
-
         self.client_name = client_name
         self._name = SENSOR_TYPES[sensor_type][0]
         self.type = sensor_type
@@ -428,7 +426,6 @@ class BrSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-
         if self.type.startswith(PRECIPITATION_FORECAST):
             result = {ATTR_ATTRIBUTION: self._attribution}
             if self._timeframe is not None:

@@ -5,7 +5,6 @@ import logging
 import os
 
 from adb_shell.auth.keygen import keygen
-from adb_shell.auth.sign_pythonrsa import PythonRSASigner
 from adb_shell.exceptions import (
     AdbTimeoutError,
     InvalidChecksumError,
@@ -14,6 +13,7 @@ from adb_shell.exceptions import (
     TcpTimeoutException,
 )
 from androidtv import ha_state_detection_rules_validator
+from androidtv.adb_manager.adb_manager_sync import ADBPythonSync
 from androidtv.constants import APPS, KEYS
 from androidtv.exceptions import LockNotAcquiredException
 from androidtv.setup_async import setup
@@ -176,9 +176,7 @@ def setup_androidtv(hass, config):
             keygen(adbkey)
 
         # Load the ADB key
-        with open(adbkey) as priv_key:
-            priv = priv_key.read()
-        signer = PythonRSASigner("", priv)
+        signer = ADBPythonSync.load_adbkey(adbkey)
         adb_log = f"using Python ADB implementation with adbkey='{adbkey}'"
 
     else:
@@ -376,8 +374,14 @@ def adb_decorator(override_available=False):
                     err,
                 )
                 await self.aftv.adb_close()
-                self._available = False  # pylint: disable=protected-access
+                self._available = False
                 return None
+            except Exception:
+                # An unforeseen exception occurred. Close the ADB connection so that
+                # it doesn't happen over and over again, then raise the exception.
+                await self.aftv.adb_close()
+                self._available = False  # pylint: disable=protected-access
+                raise
 
         return _adb_exception_catcher
 
@@ -423,10 +427,8 @@ class ADBDevice(MediaPlayerEntity):
             # Using "adb_shell" (Python ADB implementation)
             self.exceptions = (
                 AdbTimeoutError,
-                AttributeError,
                 BrokenPipeError,
                 ConnectionResetError,
-                TypeError,
                 ValueError,
                 InvalidChecksumError,
                 InvalidCommandError,
@@ -599,7 +601,8 @@ class ADBDevice(MediaPlayerEntity):
 
             msg = f"Output from service '{SERVICE_LEARN_SENDEVENT}' from {self.entity_id}: '{output}'"
             self.hass.components.persistent_notification.async_create(
-                msg, title="Android TV",
+                msg,
+                title="Android TV",
             )
             _LOGGER.info("%s", msg)
 

@@ -21,7 +21,7 @@
             "node_pro": {
                 "data": {
                     "ip_address": "Adresse IP / nom d'h\u00f4te de l'unit\u00e9",
-                    "password": "Mot de passe de l'unit\u00e9"
+                    "password": "Mot de passe"
                 },
                 "description": "Surveillez une unit\u00e9 AirVisual personnelle. Le mot de passe peut \u00eatre r\u00e9cup\u00e9r\u00e9 dans l'interface utilisateur de l'unit\u00e9.",
                 "title": "Configurer un AirVisual Node/Pro"
@@ -32,7 +32,7 @@
                     "node_pro": "AirVisual Node Pro",
                     "type": "Type d'int\u00e9gration"
                 },
-                "description": "Surveiller la qualit\u00e9 de l\u2019air dans un emplacement g\u00e9ographique.",
+                "description": "Choisissez le type de donn\u00e9es AirVisual que vous souhaitez surveiller.",
                 "title": "Configurer AirVisual"
             }
         }

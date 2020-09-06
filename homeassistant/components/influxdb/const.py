@@ -129,7 +129,8 @@ RENDERING_WHERE_ERROR_MESSAGE = "Could not render where template: %s."
 COMPONENT_CONFIG_SCHEMA_CONNECTION = {
     # Connection config for V1 and V2 APIs.
     vol.Optional(CONF_API_VERSION, default=DEFAULT_API_VERSION): vol.All(
-        vol.Coerce(str), vol.In([DEFAULT_API_VERSION, API_VERSION_2]),
+        vol.Coerce(str),
+        vol.In([DEFAULT_API_VERSION, API_VERSION_2]),
     ),
     vol.Optional(CONF_HOST): cv.string,
     vol.Optional(CONF_PATH): cv.string,

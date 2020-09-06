@@ -1,0 +1,58 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Falha na liga\u00e7\u00e3o",
+            "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed"
+        },
+        "error": {
+            "cannot_connect": "Falha na liga\u00e7\u00e3o"
+        },
+        "step": {
+            "hubv1": {
+                "data": {
+                    "host": "Endere\u00e7o IP",
+                    "port": "Porta"
+                },
+                "description": "Configure o Insteon Hub Vers\u00e3o 1 (pr\u00e9-2014).",
+                "title": "Insteon Hub vers\u00e3o 1"
+            },
+            "hubv2": {
+                "data": {
+                    "host": "Endere\u00e7o IP",
+                    "password": "Palavra-passe",
+                    "port": "Porta",
+                    "username": "Nome de Utilizador"
+                },
+                "description": "Configure o Insteon Hub Vers\u00e3o 2.",
+                "title": "Insteon Hub vers\u00e3o 2"
+            },
+            "plm": {
+                "data": {
+                    "device": "Caminho do Dispositivo USB"
+                }
+            },
+            "user": {
+                "data": {
+                    "modem_type": "Tipo de modem."
+                },
+                "description": "Selecione o tipo de modem Insteon.",
+                "title": "Insteon"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "cannot_connect": "Falha na liga\u00e7\u00e3o"
+        },
+        "step": {
+            "change_hub_config": {
+                "data": {
+                    "host": "Endere\u00e7o IP",
+                    "password": "Palavra-passe",
+                    "port": "Porta",
+                    "username": "Nome de Utilizador"
+                }
+            }
+        }
+    }
+}

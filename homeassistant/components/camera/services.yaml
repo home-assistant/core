@@ -36,7 +36,7 @@ snapshot:
       example: "camera.living_room_camera"
     filename:
       description: Template of a Filename. Variable is entity_id.
-      example: "/tmp/snapshot_{{ entity_id }}"
+      example: "/tmp/snapshot_{{ entity_id.name }}.jpg"
 
 play_stream:
   description: Play camera stream on supported media player.
@@ -59,7 +59,7 @@ record:
       example: "camera.living_room_camera"
     filename:
       description: Template of a Filename. Variable is entity_id.  Must be mp4.
-      example: "/tmp/snapshot_{{ entity_id }}.mp4"
+      example: "/tmp/snapshot_{{ entity_id.name }}.mp4"
     duration:
       description: (Optional) Target recording length (in seconds).
       default: 30

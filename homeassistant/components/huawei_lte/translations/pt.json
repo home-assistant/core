@@ -15,7 +15,6 @@
             "user": {
                 "data": {
                     "password": "Palavra-passe",
-                    "url": "",
                     "username": "Nome do utilizador"
                 },
                 "title": "Configurar o Huawei LTE"

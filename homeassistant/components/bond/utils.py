@@ -1,8 +1,10 @@
 """Reusable utilities for the Bond component."""
-
+import logging
 from typing import List, Optional
 
 from bond_api import Action, Bond
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class BondDevice:
@@ -14,6 +16,14 @@ class BondDevice:
         self.props = props
         self._attrs = attrs
 
+    def __repr__(self):
+        """Return readable representation of a bond device."""
+        return {
+            "device_id": self.device_id,
+            "props": self.props,
+            "attrs": self._attrs,
+        }.__repr__()
+
     @property
     def name(self) -> str:
         """Get the name of this device."""
@@ -23,6 +33,11 @@ class BondDevice:
     def type(self) -> str:
         """Get the type of this device."""
         return self._attrs["type"]
+
+    @property
+    def trust_state(self) -> bool:
+        """Check if Trust State is turned on."""
+        return self.props.get("trust_state", False)
 
     def supports_speed(self) -> bool:
         """Return True if this device supports any of the speed related commands."""
@@ -45,6 +60,11 @@ class BondDevice:
             ]
         )
 
+    def supports_set_brightness(self) -> bool:
+        """Return True if this device supports setting a light brightness."""
+        actions: List[str] = self._attrs["actions"]
+        return bool([action for action in actions if action in [Action.SET_BRIGHTNESS]])
+
 
 class BondHub:
     """Hub device representing Bond Bridge."""
@@ -58,6 +78,7 @@ class BondHub:
     async def setup(self):
         """Read hub version information."""
         self._version = await self.bond.version()
+        _LOGGER.debug("Bond reported the following version info: %s", self._version)
 
         # Fetch all available devices using Bond API.
         device_ids = await self.bond.devices()
@@ -69,6 +90,8 @@ class BondHub:
             )
             for device_id in device_ids
         ]
+
+        _LOGGER.debug("Discovered Bond devices: %s", self._devices)
 
     @property
     def bond_id(self) -> str:
@@ -89,3 +112,9 @@ class BondHub:
     def devices(self) -> List[BondDevice]:
         """Return a list of all devices controlled by this hub."""
         return self._devices
+
+    @property
+    def is_bridge(self) -> bool:
+        """Return if the Bond is a Bond Bridge."""
+        # If False, it means that it is a Smart by Bond product. Assumes that it is if the model is not available.
+        return self._version.get("model", "BD-").startswith("BD-")

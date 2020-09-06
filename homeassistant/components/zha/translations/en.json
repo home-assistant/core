@@ -65,6 +65,7 @@
             "device_dropped": "Device dropped",
             "device_flipped": "Device flipped \"{subtype}\"",
             "device_knocked": "Device knocked \"{subtype}\"",
+            "device_offline": "Device offline",
             "device_rotated": "Device rotated \"{subtype}\"",
             "device_shaken": "Device shaken",
             "device_slid": "Device slid \"{subtype}\"",
