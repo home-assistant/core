@@ -43,9 +43,16 @@ class ShellyCover(ShellyBlockEntity, CoverEntity):
         super().__init__(wrapper, block)
         self.control_result = None
         self._supported_features = 0
+        self._supported_features |= SUPPORT_OPEN
+        self._supported_features |= SUPPORT_CLOSE
+        self._supported_features |= SUPPORT_STOP
+        if self.wrapper.device.settings["rollers"][0]["positioning"]:
+            self._supported_features |= SUPPORT_SET_POSITION
 
     @property
     def is_closed(self):
+        if self.control_result:
+            return self.control_result["rollerPos"] == 0
 
         return self.block.rollerPos == 0
 
@@ -57,11 +64,6 @@ class ShellyCover(ShellyBlockEntity, CoverEntity):
         else:
             cover_position = self.block.rollerPos
         return cover_position
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return True
 
     @property
     def is_closing(self):
@@ -76,12 +78,6 @@ class ShellyCover(ShellyBlockEntity, CoverEntity):
     @property
     def supported_features(self):
         """Flag supported features."""
-        self._supported_features |= SUPPORT_OPEN
-        self._supported_features |= SUPPORT_CLOSE
-        self._supported_features |= SUPPORT_STOP
-        if self.wrapper.device.settings["rollers"]["positioning"]:
-            self._supported_features |= SUPPORT_SET_POSITION
-
         return self._supported_features
 
     def close_cover(self, **_kwargs):
