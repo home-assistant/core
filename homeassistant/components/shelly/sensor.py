@@ -7,7 +7,10 @@ from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
     POWER_WATT,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
     TIME_SECONDS,
+    UNIT_PERCENTAGE,
     VOLT,
 )
 
