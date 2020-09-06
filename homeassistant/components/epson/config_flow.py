@@ -1,6 +1,4 @@
 """Config flow for epson integration."""
-import logging
-
 import epson_projector as epson
 from epson_projector.const import POWER
 import voluptuous as vol
@@ -17,8 +15,6 @@ from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, TIMEOUT_SCALE
-
-_LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -65,6 +61,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
+            if self.host_already_configured(user_input[CONF_HOST]):
+                return self.async_abort(reason="already_configured")
             try:
                 await validate_input(self.hass, user_input)
                 return self.async_create_entry(
@@ -75,6 +73,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
+
+    def host_already_configured(self, host):
+        """See if we already have a entry matching user input configured."""
+        existing_hosts = {
+            entry.data[CONF_HOST] for entry in self._async_current_entries()
+        }
+        return host in existing_hosts
 
 
 class CannotConnect(exceptions.HomeAssistantError):
