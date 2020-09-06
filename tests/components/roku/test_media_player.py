@@ -32,7 +32,13 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_STEP,
 )
-from homeassistant.components.roku.const import ATTR_KEYWORD, DOMAIN, SERVICE_SEARCH
+from homeassistant.components.roku.const import (
+    ATTR_KEYWORD, 
+    DOMAIN,
+    MEDIA_TYPE_APPS,
+    MEDIA_TYPE_CHANNELS,
+    SERVICE_SEARCH,
+)
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -508,7 +514,7 @@ async def test_media_browse(hass, aioclient_mock, hass_ws_client):
             "id": 2,
             "type": "media_player/browse_media",
             "entity_id": TV_ENTITY_ID,
-            "media_content_type": "apps",
+            "media_content_type": MEDIA_TYPE_APPS,
             "media_content_id": "apps",
         }
     )
@@ -521,7 +527,7 @@ async def test_media_browse(hass, aioclient_mock, hass_ws_client):
 
     assert msg["result"]
     assert msg["result"]["title"] == "Apps"
-    assert msg["result"]["media_content_type"] == "apps"
+    assert msg["result"]["media_content_type"] == MEDIA_TYPE_APPS
     assert msg["result"]["can_expand"]
     assert not msg["result"]["can_play"]
     assert len(msg["result"]["children"]) == 11
@@ -550,7 +556,7 @@ async def test_media_browse(hass, aioclient_mock, hass_ws_client):
             "id": 3,
             "type": "media_player/browse_media",
             "entity_id": TV_ENTITY_ID,
-            "media_content_type": "channels",
+            "media_content_type": MEDIA_TYPE_CHANNELS,
             "media_content_id": "channels",
         }
     )
@@ -563,7 +569,7 @@ async def test_media_browse(hass, aioclient_mock, hass_ws_client):
 
     assert msg["result"]
     assert msg["result"]["title"] == "Channels"
-    assert msg["result"]["media_content_type"] == "channels"
+    assert msg["result"]["media_content_type"] == MEDIA_TYPE_CHANNELS
     assert msg["result"]["can_expand"]
     assert not msg["result"]["can_play"]
     assert len(msg["result"]["children"]) == 2
