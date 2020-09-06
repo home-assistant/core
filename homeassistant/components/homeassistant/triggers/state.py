@@ -73,7 +73,7 @@ async def async_attach_trigger(
         else:
             old_value = from_s.attributes.get(attribute)
 
-        if to_s is None and time_delta is None:
+        if to_s is None:
             new_value = None
         elif attribute is None:
             new_value = to_s.state
