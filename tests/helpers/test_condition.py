@@ -5,6 +5,7 @@ import pytest
 
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import condition
+from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
 
 from tests.async_mock import patch
@@ -226,29 +227,118 @@ async def test_time_window(hass):
         "homeassistant.helpers.condition.dt_util.now",
         return_value=dt.now().replace(hour=3),
     ):
-        assert not condition.time(after=sixam, before=sixpm)
-        assert condition.time(after=sixpm, before=sixam)
+        assert not condition.time(hass, after=sixam, before=sixpm)
+        assert condition.time(hass, after=sixpm, before=sixam)
 
     with patch(
         "homeassistant.helpers.condition.dt_util.now",
         return_value=dt.now().replace(hour=9),
     ):
-        assert condition.time(after=sixam, before=sixpm)
-        assert not condition.time(after=sixpm, before=sixam)
+        assert condition.time(hass, after=sixam, before=sixpm)
+        assert not condition.time(hass, after=sixpm, before=sixam)
 
     with patch(
         "homeassistant.helpers.condition.dt_util.now",
         return_value=dt.now().replace(hour=15),
     ):
-        assert condition.time(after=sixam, before=sixpm)
-        assert not condition.time(after=sixpm, before=sixam)
+        assert condition.time(hass, after=sixam, before=sixpm)
+        assert not condition.time(hass, after=sixpm, before=sixam)
 
     with patch(
         "homeassistant.helpers.condition.dt_util.now",
         return_value=dt.now().replace(hour=21),
     ):
-        assert not condition.time(after=sixam, before=sixpm)
-        assert condition.time(after=sixpm, before=sixam)
+        assert not condition.time(hass, after=sixam, before=sixpm)
+        assert condition.time(hass, after=sixpm, before=sixam)
+
+
+async def test_time_using_input_datetime(hass):
+    """Test time conditions using input_datetime entities."""
+    await async_setup_component(
+        hass,
+        "input_datetime",
+        {
+            "input_datetime": {
+                "am": {"has_date": True, "has_time": True},
+                "pm": {"has_date": True, "has_time": True},
+            }
+        },
+    )
+
+    await hass.services.async_call(
+        "input_datetime",
+        "set_datetime",
+        {
+            "entity_id": "input_datetime.am",
+            "datetime": str(
+                dt.now()
+                .replace(hour=6, minute=0, second=0, microsecond=0)
+                .replace(tzinfo=None)
+            ),
+        },
+        blocking=True,
+    )
+
+    await hass.services.async_call(
+        "input_datetime",
+        "set_datetime",
+        {
+            "entity_id": "input_datetime.pm",
+            "datetime": str(
+                dt.now()
+                .replace(hour=18, minute=0, second=0, microsecond=0)
+                .replace(tzinfo=None)
+            ),
+        },
+        blocking=True,
+    )
+
+    with patch(
+        "homeassistant.helpers.condition.dt_util.now",
+        return_value=dt.now().replace(hour=3),
+    ):
+        assert not condition.time(
+            hass, after="input_datetime.am", before="input_datetime.pm"
+        )
+        assert condition.time(
+            hass, after="input_datetime.pm", before="input_datetime.am"
+        )
+
+    with patch(
+        "homeassistant.helpers.condition.dt_util.now",
+        return_value=dt.now().replace(hour=9),
+    ):
+        assert condition.time(
+            hass, after="input_datetime.am", before="input_datetime.pm"
+        )
+        assert not condition.time(
+            hass, after="input_datetime.pm", before="input_datetime.am"
+        )
+
+    with patch(
+        "homeassistant.helpers.condition.dt_util.now",
+        return_value=dt.now().replace(hour=15),
+    ):
+        assert condition.time(
+            hass, after="input_datetime.am", before="input_datetime.pm"
+        )
+        assert not condition.time(
+            hass, after="input_datetime.pm", before="input_datetime.am"
+        )
+
+    with patch(
+        "homeassistant.helpers.condition.dt_util.now",
+        return_value=dt.now().replace(hour=21),
+    ):
+        assert not condition.time(
+            hass, after="input_datetime.am", before="input_datetime.pm"
+        )
+        assert condition.time(
+            hass, after="input_datetime.pm", before="input_datetime.am"
+        )
+
+    assert not condition.time(hass, after="input_datetime.not_existing")
+    assert not condition.time(hass, before="input_datetime.not_existing")
 
 
 async def test_if_numeric_state_not_raise_on_unavailable(hass):
