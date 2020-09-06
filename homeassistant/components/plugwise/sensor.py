@@ -22,6 +22,7 @@ from homeassistant.helpers.entity import Entity
 from . import SmileGateway
 from .const import (
     COOL_ICON,
+    COORDINATOR,
     DEVICE_STATE,
     DOMAIN,
     FLAME_ICON,
@@ -168,7 +169,7 @@ CUSTOM_ICONS = {
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Smile sensors from a config entry."""
     api = hass.data[DOMAIN][config_entry.entry_id]["api"]
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]["coordinator"]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
 
     entities = []
     all_devices = api.get_all_devices()
