@@ -124,11 +124,10 @@ class Hyperion(LightEntity):
         )
 
         # Active state representing the Hyperion instance.
-        self._brightness = 255
-        self._effect = KEY_EFFECT_SOLID
+        self._set_internal_state(
+            brightness=255, rgb_color=DEFAULT_COLOR, effect=KEY_EFFECT_SOLID
+        )
         self._effect_list = []
-        self._icon = ICON_LIGHTBULB
-        self._rgb_color = DEFAULT_COLOR
 
     @property
     def should_poll(self):
@@ -302,6 +301,21 @@ class Hyperion(LightEntity):
         ):
             return
 
+    def _set_internal_state(self, brightness=None, rgb_color=None, effect=None):
+        """Set the internal state."""
+        if brightness is not None:
+            self._brightness = brightness
+        if rgb_color is not None:
+            self._rgb_color = rgb_color
+        if effect is not None:
+            self._effect = effect
+            if effect == KEY_EFFECT_SOLID:
+                self._icon = ICON_LIGHTBULB
+            elif effect in const.KEY_COMPONENTID_EXTERNAL_SOURCES:
+                self._icon = ICON_EXTERNAL_SOURCE
+            else:
+                self._icon = ICON_EFFECT
+
     def _update_ha_state(self):
         """Update the internal Home Assistant state."""
         if not hasattr(self, "hass") or self.hass is None:
@@ -320,7 +334,9 @@ class Hyperion(LightEntity):
             )
             if brightness_pct < 0 or brightness_pct > 100:
                 return
-            self._brightness = int(round((brightness_pct * 255) / float(100)))
+            self._set_internal_state(
+                brightness=int(round((brightness_pct * 255) / float(100)))
+            )
             self._update_ha_state()
 
     def _update_priorities(self, _=None):
@@ -329,20 +345,18 @@ class Hyperion(LightEntity):
         if visible_priority:
             componentid = visible_priority.get(const.KEY_COMPONENTID)
             if componentid in const.KEY_COMPONENTID_EXTERNAL_SOURCES:
-                self._rgb_color = DEFAULT_COLOR
-                self._icon = ICON_EXTERNAL_SOURCE
-                self._effect = componentid
+                self._set_internal_state(rgb_color=DEFAULT_COLOR, effect=componentid)
             elif componentid == const.KEY_COMPONENTID_EFFECT:
-                self._rgb_color = DEFAULT_COLOR
-                self._icon = ICON_EFFECT
-
                 # Owner is the effect name.
                 # See: https://docs.hyperion-project.org/en/json/ServerInfo.html#priorities
-                self._effect = visible_priority[const.KEY_OWNER]
+                self._set_internal_state(
+                    rgb_color=DEFAULT_COLOR, effect=visible_priority[const.KEY_OWNER]
+                )
             elif componentid == const.KEY_COMPONENTID_COLOR:
-                self._rgb_color = visible_priority[const.KEY_VALUE][const.KEY_RGB]
-                self._icon = ICON_LIGHTBULB
-                self._effect = KEY_EFFECT_SOLID
+                self._set_internal_state(
+                    rgb_color=visible_priority[const.KEY_VALUE][const.KEY_RGB],
+                    effect=KEY_EFFECT_SOLID,
+                )
             self._update_ha_state()
 
     def _update_effect_list(self, _=None):
