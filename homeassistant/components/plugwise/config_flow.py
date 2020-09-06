@@ -99,9 +99,6 @@ class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 api = await validate_input(self.hass, user_input)
 
-                await self.async_set_unique_id(api.gateway_id)
-                return self.async_create_entry(title=api.smile_name, data=user_input)
-
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -109,6 +106,12 @@ class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
+
+            if not errors:
+                await self.async_set_unique_id(api.gateway_id)
+                self._abort_if_unique_id_configured()
+
+                return self.async_create_entry(title=api.smile_name, data=user_input)
 
         return self.async_show_form(
             step_id="user",
