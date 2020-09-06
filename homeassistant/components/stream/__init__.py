@@ -82,6 +82,7 @@ async def async_setup(hass, config):
     """Set up stream."""
     # Set log level to error for libav
     logging.getLogger("libav").setLevel(logging.ERROR)
+    logging.getLogger("libav.mp4").setLevel(logging.ERROR)
 
     # Keep import here so that we can import stream integration without installing reqs
     # pylint: disable=import-outside-toplevel
