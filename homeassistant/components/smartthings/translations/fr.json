@@ -24,7 +24,7 @@
                 "title": "S\u00e9lectionnez l'emplacement"
             },
             "user": {
-                "description": "Veuillez entrer un [jeton d'acc\u00e8s personnel SmartThings] ( {token_url} ) cr\u00e9\u00e9 selon les [instructions] ( {component_url} ).",
+                "description": "SmartThings sera configur\u00e9 pour envoyer des mises \u00e0 jour push \u00e0 Home Assistant \u00e0 l'adresse: \n > {webhook_url} \n\n Si ce n'est pas le cas, mettez \u00e0 jour votre configuration, red\u00e9marrez Home Assistant et r\u00e9essayez.",
                 "title": "Entrer un jeton d'acc\u00e8s personnel"
             }
         }

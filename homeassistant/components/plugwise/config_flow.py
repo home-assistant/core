@@ -48,10 +48,10 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     try:
         await api.connect()
-    except Smile.InvalidAuthentication:
-        raise InvalidAuth
-    except Smile.PlugwiseError:
-        raise CannotConnect
+    except Smile.InvalidAuthentication as err:
+        raise InvalidAuth from err
+    except Smile.PlugwiseError as err:
+        raise CannotConnect from err
 
     return api
 

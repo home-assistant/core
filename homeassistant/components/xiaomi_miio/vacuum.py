@@ -91,20 +91,26 @@ SUPPORT_XIAOMI = (
 
 
 STATE_CODE_TO_STATE = {
-    2: STATE_IDLE,
-    3: STATE_IDLE,
-    5: STATE_CLEANING,
-    6: STATE_RETURNING,
-    7: STATE_CLEANING,
-    8: STATE_DOCKED,
-    9: STATE_ERROR,
-    10: STATE_PAUSED,
-    11: STATE_CLEANING,
-    12: STATE_ERROR,
-    15: STATE_RETURNING,
-    16: STATE_CLEANING,
-    17: STATE_CLEANING,
-    18: STATE_CLEANING,
+    1: STATE_IDLE,  # "Starting"
+    2: STATE_IDLE,  # "Charger disconnected"
+    3: STATE_IDLE,  # "Idle"
+    4: STATE_CLEANING,  # "Remote control active"
+    5: STATE_CLEANING,  # "Cleaning"
+    6: STATE_RETURNING,  # "Returning home"
+    7: STATE_CLEANING,  # "Manual mode"
+    8: STATE_DOCKED,  # "Charging"
+    9: STATE_ERROR,  # "Charging problem"
+    10: STATE_PAUSED,  # "Paused"
+    11: STATE_CLEANING,  # "Spot cleaning"
+    12: STATE_ERROR,  # "Error"
+    13: STATE_IDLE,  # "Shutting down"
+    14: STATE_DOCKED,  # "Updating"
+    15: STATE_RETURNING,  # "Docking"
+    16: STATE_CLEANING,  # "Going to target"
+    17: STATE_CLEANING,  # "Zoned cleaning"
+    18: STATE_CLEANING,  # "Segment cleaning"
+    100: STATE_DOCKED,  # "Charging complete"
+    101: STATE_ERROR,  # "Device offline"
 }
 
 

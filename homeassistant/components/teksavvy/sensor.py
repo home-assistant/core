@@ -12,7 +12,7 @@ from homeassistant.const import (
     CONF_NAME,
     DATA_GIGABYTES,
     HTTP_OK,
-    UNIT_PERCENTAGE,
+    PERCENTAGE,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -28,7 +28,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(hours=1)
 REQUEST_TIMEOUT = 5  # seconds
 
 SENSOR_TYPES = {
-    "usage": ["Usage Ratio", UNIT_PERCENTAGE, "mdi:percent"],
+    "usage": ["Usage Ratio", PERCENTAGE, "mdi:percent"],
     "usage_gb": ["Usage", DATA_GIGABYTES, "mdi:download"],
     "limit": ["Data limit", DATA_GIGABYTES, "mdi:download"],
     "onpeak_download": ["On Peak Download", DATA_GIGABYTES, "mdi:download"],

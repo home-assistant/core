@@ -5,7 +5,12 @@ from requests.exceptions import ConnectTimeout, HTTPError
 from skybellpy import Skybell
 import voluptuous as vol
 
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    __version__,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -19,6 +24,8 @@ NOTIFICATION_TITLE = "Skybell Sensor Setup"
 DOMAIN = "skybell"
 DEFAULT_CACHEDB = "./skybell_cache.pickle"
 DEFAULT_ENTITY_NAMESPACE = "skybell"
+
+AGENT_IDENTIFIER = f"HomeAssistant/{__version__}"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -42,7 +49,11 @@ def setup(hass, config):
     try:
         cache = hass.config.path(DEFAULT_CACHEDB)
         skybell = Skybell(
-            username=username, password=password, get_devices=True, cache_path=cache
+            username=username,
+            password=password,
+            get_devices=True,
+            cache_path=cache,
+            agent_identifier=AGENT_IDENTIFIER,
         )
 
         hass.data[DOMAIN] = skybell

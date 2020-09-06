@@ -14,13 +14,14 @@ from homeassistant.core import callback
 
 from . import (
     CONF_AUTOMATIC_ADD,
+    CONF_DATA_BITS,
     DATA_TYPES,
     SIGNAL_EVENT,
     RfxtrxEntity,
     get_device_id,
     get_rfx_object,
 )
-from .const import DATA_RFXTRX_CONFIG
+from .const import ATTR_EVENT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,17 +55,19 @@ CONVERT_FUNCTIONS = {
 
 
 async def async_setup_entry(
-    hass, config_entry, async_add_entities,
+    hass,
+    config_entry,
+    async_add_entities,
 ):
     """Set up platform."""
-    discovery_info = hass.data[DATA_RFXTRX_CONFIG]
+    discovery_info = config_entry.data
     data_ids = set()
 
     def supported(event):
         return isinstance(event, (ControlEvent, SensorEvent))
 
     entities = []
-    for packet_id in discovery_info[CONF_DEVICES]:
+    for packet_id, entity_info in discovery_info[CONF_DEVICES].items():
         event = get_rfx_object(packet_id)
         if event is None:
             _LOGGER.error("Invalid device: %s", packet_id)
@@ -72,7 +75,9 @@ async def async_setup_entry(
         if not supported(event):
             continue
 
-        device_id = get_device_id(event.device)
+        device_id = get_device_id(
+            event.device, data_bits=entity_info.get(CONF_DATA_BITS)
+        )
         for data_type in set(event.values) & set(DATA_TYPES):
             data_id = (*device_id, data_type)
             if data_id in data_ids:
@@ -126,6 +131,17 @@ class RfxtrxSensor(RfxtrxEntity):
         self._device_class = DEVICE_CLASSES.get(data_type)
         self._convert_fun = CONVERT_FUNCTIONS.get(data_type, lambda x: x)
 
+    async def async_added_to_hass(self):
+        """Restore device state."""
+        await super().async_added_to_hass()
+
+        if self._event is None:
+            old_state = await self.async_get_last_state()
+            if old_state is not None:
+                event = old_state.attributes.get(ATTR_EVENT)
+                if event:
+                    self._apply_event(get_rfx_object(event))
+
     @property
     def state(self):
         """Return the state of the sensor."""
@@ -157,9 +173,6 @@ class RfxtrxSensor(RfxtrxEntity):
     @callback
     def _handle_event(self, event, device_id):
         """Check if event applies to me and update."""
-        if not isinstance(event, SensorEvent):
-            return
-
         if device_id != self._device_id:
             return
 

@@ -44,12 +44,6 @@
                 "description": "Configurar dispositivo de seguimiento",
                 "title": "Opciones UniFi 1/3"
             },
-            "init": {
-                "data": {
-                    "one": "vac\u00edo",
-                    "other": "vac\u00edo"
-                }
-            },
             "simple_options": {
                 "data": {
                     "block_client": "Acceso controlado a la red de los clientes",

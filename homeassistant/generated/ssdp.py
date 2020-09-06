@@ -12,6 +12,11 @@ SSDP = {
             "manufacturer": "ARCAM"
         }
     ],
+    "control4": [
+        {
+            "st": "c4:director"
+        }
+    ],
     "deconz": [
         {
             "manufacturer": "Royal Philips Electronics"
@@ -166,6 +171,11 @@ SSDP = {
     "wemo": [
         {
             "manufacturer": "Belkin International Inc."
+        }
+    ],
+    "wilight": [
+        {
+            "manufacturer": "All Automacao Ltda"
         }
     ]
 }

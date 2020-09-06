@@ -403,7 +403,7 @@ async def async_test_level_on_off_from_hass(
         4,
         (zigpy.types.uint8_t, zigpy.types.uint16_t),
         10,
-        0,
+        1,
         expect_reply=True,
         manufacturer=None,
         tsn=None,

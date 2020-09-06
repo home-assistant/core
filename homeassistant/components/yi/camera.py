@@ -90,7 +90,7 @@ class YiCamera(Camera):
             await ftp.connect(self.host)
             await ftp.login(self.user, self.passwd)
         except (ConnectionRefusedError, StatusCodeError) as err:
-            raise PlatformNotReady(err)
+            raise PlatformNotReady(err) from err
 
         try:
             await ftp.change_directory(self.path)

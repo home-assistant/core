@@ -4,11 +4,12 @@ import logging
 import RFXtrx as rfxtrxmod
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.const import CONF_DEVICES
+from homeassistant.const import CONF_DEVICES, STATE_ON
 from homeassistant.core import callback
 
 from . import (
     CONF_AUTOMATIC_ADD,
+    CONF_DATA_BITS,
     CONF_SIGNAL_REPETITIONS,
     DEFAULT_SIGNAL_REPETITIONS,
     DOMAIN,
@@ -17,7 +18,7 @@ from . import (
     get_device_id,
     get_rfx_object,
 )
-from .const import COMMAND_OFF_LIST, COMMAND_ON_LIST, DATA_RFXTRX_CONFIG
+from .const import COMMAND_OFF_LIST, COMMAND_ON_LIST
 
 DATA_SWITCH = f"{DOMAIN}_switch"
 
@@ -25,10 +26,12 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass, config_entry, async_add_entities,
+    hass,
+    config_entry,
+    async_add_entities,
 ):
     """Set up config entry."""
-    discovery_info = hass.data[DATA_RFXTRX_CONFIG]
+    discovery_info = config_entry.data
     device_ids = set()
 
     def supported(event):
@@ -36,6 +39,7 @@ async def async_setup_entry(
             isinstance(event.device, rfxtrxmod.LightingDevice)
             and not event.device.known_to_be_dimmable
             and not event.device.known_to_be_rollershutter
+            or isinstance(event.device, rfxtrxmod.RfyDevice)
         )
 
     # Add switch from config file
@@ -48,7 +52,9 @@ async def async_setup_entry(
         if not supported(event):
             continue
 
-        device_id = get_device_id(event.device)
+        device_id = get_device_id(
+            event.device, data_bits=entity_info.get(CONF_DATA_BITS)
+        )
         if device_id in device_ids:
             continue
         device_ids.add(device_id)
@@ -91,6 +97,15 @@ async def async_setup_entry(
 class RfxtrxSwitch(RfxtrxCommandEntity, SwitchEntity):
     """Representation of a RFXtrx switch."""
 
+    async def async_added_to_hass(self):
+        """Restore device state."""
+        await super().async_added_to_hass()
+
+        if self._event is None:
+            old_state = await self.async_get_last_state()
+            if old_state is not None:
+                self._state = old_state.state == STATE_ON
+
     def _apply_event(self, event):
         """Apply command from rfxtrx."""
         super()._apply_event(event)
@@ -114,12 +129,14 @@ class RfxtrxSwitch(RfxtrxCommandEntity, SwitchEntity):
         """Return true if device is on."""
         return self._state
 
-    def turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn the device on."""
-        self._send_command("turn_on")
-        self.schedule_update_ha_state()
+        await self._async_send(self._device.send_on)
+        self._state = True
+        self.async_write_ha_state()
 
-    def turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn the device off."""
-        self._send_command("turn_off")
-        self.schedule_update_ha_state()
+        await self._async_send(self._device.send_off)
+        self._state = False
+        self.async_write_ha_state()

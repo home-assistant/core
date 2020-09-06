@@ -108,8 +108,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEnt
         auth = AlmondLocalAuth(entry.data["host"], websession)
     else:
         # OAuth2
-        implementation = await config_entry_oauth2_flow.async_get_config_entry_implementation(
-            hass, entry
+        implementation = (
+            await config_entry_oauth2_flow.async_get_config_entry_implementation(
+                hass, entry
+            )
         )
         oauth_session = config_entry_oauth2_flow.OAuth2Session(
             hass, entry, implementation
@@ -206,7 +208,7 @@ async def _configure_almond_for_ha(
             msg = err
         _LOGGER.warning("Unable to configure Almond: %s", msg)
         await hass.auth.async_remove_refresh_token(refresh_token)
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from err
 
     # Clear all other refresh tokens
     for token in list(user.refresh_tokens.values()):

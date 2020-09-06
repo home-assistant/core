@@ -104,7 +104,8 @@ async def test_invalid_ip(hass: HomeAssistantType) -> None:
 async def test_same_host(hass: HomeAssistantType) -> None:
     """Test abort in case of same host name."""
     with patch(
-        "aiodns.DNSResolver.query", side_effect=aiodns.error.DNSError,
+        "aiodns.DNSResolver.query",
+        side_effect=aiodns.error.DNSError,
     ):
         with patch(
             "mcstatus.server.MinecraftServer.status",
@@ -132,7 +133,8 @@ async def test_same_host(hass: HomeAssistantType) -> None:
 async def test_port_too_small(hass: HomeAssistantType) -> None:
     """Test error in case of a too small port."""
     with patch(
-        "aiodns.DNSResolver.query", side_effect=aiodns.error.DNSError,
+        "aiodns.DNSResolver.query",
+        side_effect=aiodns.error.DNSError,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT_PORT_TOO_SMALL
@@ -145,7 +147,8 @@ async def test_port_too_small(hass: HomeAssistantType) -> None:
 async def test_port_too_large(hass: HomeAssistantType) -> None:
     """Test error in case of a too large port."""
     with patch(
-        "aiodns.DNSResolver.query", side_effect=aiodns.error.DNSError,
+        "aiodns.DNSResolver.query",
+        side_effect=aiodns.error.DNSError,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT_PORT_TOO_LARGE
@@ -158,7 +161,8 @@ async def test_port_too_large(hass: HomeAssistantType) -> None:
 async def test_connection_failed(hass: HomeAssistantType) -> None:
     """Test error in case of a failed connection."""
     with patch(
-        "aiodns.DNSResolver.query", side_effect=aiodns.error.DNSError,
+        "aiodns.DNSResolver.query",
+        side_effect=aiodns.error.DNSError,
     ):
         with patch("mcstatus.server.MinecraftServer.status", side_effect=OSError):
             result = await hass.config_entries.flow.async_init(
@@ -172,7 +176,8 @@ async def test_connection_failed(hass: HomeAssistantType) -> None:
 async def test_connection_succeeded_with_srv_record(hass: HomeAssistantType) -> None:
     """Test config entry in case of a successful connection with a SRV record."""
     with patch(
-        "aiodns.DNSResolver.query", return_value=SRV_RECORDS,
+        "aiodns.DNSResolver.query",
+        return_value=SRV_RECORDS,
     ):
         with patch(
             "mcstatus.server.MinecraftServer.status",
@@ -191,7 +196,8 @@ async def test_connection_succeeded_with_srv_record(hass: HomeAssistantType) -> 
 async def test_connection_succeeded_with_host(hass: HomeAssistantType) -> None:
     """Test config entry in case of a successful connection with a host name."""
     with patch(
-        "aiodns.DNSResolver.query", side_effect=aiodns.error.DNSError,
+        "aiodns.DNSResolver.query",
+        side_effect=aiodns.error.DNSError,
     ):
         with patch(
             "mcstatus.server.MinecraftServer.status",
@@ -211,7 +217,8 @@ async def test_connection_succeeded_with_ip4(hass: HomeAssistantType) -> None:
     """Test config entry in case of a successful connection with an IPv4 address."""
     with patch("getmac.get_mac_address", return_value="01:23:45:67:89:ab"):
         with patch(
-            "aiodns.DNSResolver.query", side_effect=aiodns.error.DNSError,
+            "aiodns.DNSResolver.query",
+            side_effect=aiodns.error.DNSError,
         ):
             with patch(
                 "mcstatus.server.MinecraftServer.status",
@@ -231,7 +238,8 @@ async def test_connection_succeeded_with_ip6(hass: HomeAssistantType) -> None:
     """Test config entry in case of a successful connection with an IPv6 address."""
     with patch("getmac.get_mac_address", return_value="01:23:45:67:89:ab"):
         with patch(
-            "aiodns.DNSResolver.query", side_effect=aiodns.error.DNSError,
+            "aiodns.DNSResolver.query",
+            side_effect=aiodns.error.DNSError,
         ):
             with patch(
                 "mcstatus.server.MinecraftServer.status",

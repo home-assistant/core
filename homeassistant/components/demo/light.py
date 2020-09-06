@@ -24,11 +24,7 @@ LIGHT_EFFECT_LIST = ["rainbow", "none"]
 LIGHT_TEMPS = [240, 380]
 
 SUPPORT_DEMO = (
-    SUPPORT_BRIGHTNESS
-    | SUPPORT_COLOR_TEMP
-    | SUPPORT_EFFECT
-    | SUPPORT_COLOR
-    | SUPPORT_WHITE_VALUE
+    SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_COLOR | SUPPORT_WHITE_VALUE
 )
 
 
@@ -81,10 +77,13 @@ class DemoLight(LightEntity):
         self._ct = ct or random.choice(LIGHT_TEMPS)
         self._brightness = brightness
         self._white = white
+        self._features = SUPPORT_DEMO
         self._effect_list = effect_list
         self._effect = effect
         self._available = True
         self._color_mode = "ct" if ct is not None and hs_color is None else "hs"
+        if self._effect_list is not None:
+            self._features |= SUPPORT_EFFECT
 
     @property
     def device_info(self):
@@ -161,7 +160,7 @@ class DemoLight(LightEntity):
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
-        return SUPPORT_DEMO
+        return self._features
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn the light on."""

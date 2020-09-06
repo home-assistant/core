@@ -12,12 +12,14 @@ from homeassistant.const import (
     CONF_OPTIMISTIC,
     CONF_PAYLOAD_OFF,
     CONF_PAYLOAD_ON,
+    CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
     STATE_ON,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
@@ -27,7 +29,8 @@ from . import (
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
-    CONF_UNIQUE_ID,
+    DOMAIN,
+    PLATFORMS,
     MqttAttributes,
     MqttAvailability,
     MqttDiscoveryUpdate,
@@ -69,6 +72,7 @@ async def async_setup_platform(
     hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
 ):
     """Set up MQTT switch through configuration.yaml."""
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
     await _async_setup_entity(config, async_add_entities, discovery_info)
 
 

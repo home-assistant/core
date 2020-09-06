@@ -5,7 +5,6 @@ from aiohttp import web
 import voluptuous as vol
 
 from homeassistant import util
-from homeassistant.components.http import real_ip
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
@@ -22,7 +21,7 @@ from .hue_api import (
     HueUnauthorizedUser,
     HueUsernameView,
 )
-from .upnp import DescriptionXmlView, UPNPResponderThread
+from .upnp import DescriptionXmlView, create_upnp_datagram_endpoint
 
 DOMAIN = "emulated_hue"
 
@@ -38,6 +37,7 @@ CONF_ENTITY_NAME = "name"
 CONF_EXPOSE_BY_DEFAULT = "expose_by_default"
 CONF_EXPOSED_DOMAINS = "exposed_domains"
 CONF_HOST_IP = "host_ip"
+CONF_LIGHTS_ALL_DIMMABLE = "lights_all_dimmable"
 CONF_LISTEN_PORT = "listen_port"
 CONF_OFF_MAPS_TO_ON_DOMAINS = "off_maps_to_on_domains"
 CONF_TYPE = "type"
@@ -46,6 +46,7 @@ CONF_UPNP_BIND_MULTICAST = "upnp_bind_multicast"
 TYPE_ALEXA = "alexa"
 TYPE_GOOGLE = "google_home"
 
+DEFAULT_LIGHTS_ALL_DIMMABLE = False
 DEFAULT_LISTEN_PORT = 8300
 DEFAULT_UPNP_BIND_MULTICAST = True
 DEFAULT_OFF_MAPS_TO_ON_DOMAINS = ["script", "scene"]
@@ -85,6 +86,9 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_ENTITIES): vol.Schema(
                     {cv.entity_id: CONFIG_ENTITY_SCHEMA}
                 ),
+                vol.Optional(
+                    CONF_LIGHTS_ALL_DIMMABLE, default=DEFAULT_LIGHTS_ALL_DIMMABLE
+                ): cv.boolean,
             }
         )
     },
@@ -101,7 +105,6 @@ async def async_setup(hass, yaml_config):
     app = web.Application()
     app["hass"] = hass
 
-    real_ip.setup_real_ip(app, False, [])
     # We misunderstood the startup signal. You're not allowed to change
     # anything during startup. Temp workaround.
     # pylint: disable=protected-access
@@ -113,6 +116,7 @@ async def async_setup(hass, yaml_config):
 
     DescriptionXmlView(config).register(app, app.router)
     HueUsernameView().register(app, app.router)
+    HueConfigView(config).register(app, app.router)
     HueUnauthorizedUser().register(app, app.router)
     HueAllLightsStateView(config).register(app, app.router)
     HueOneLightStateView(config).register(app, app.router)
@@ -120,19 +124,23 @@ async def async_setup(hass, yaml_config):
     HueAllGroupsStateView(config).register(app, app.router)
     HueGroupView(config).register(app, app.router)
     HueFullStateView(config).register(app, app.router)
-    HueConfigView(config).register(app, app.router)
 
-    upnp_listener = UPNPResponderThread(
+    listen = create_upnp_datagram_endpoint(
         config.host_ip_addr,
-        config.listen_port,
         config.upnp_bind_multicast,
         config.advertise_ip,
-        config.advertise_port,
+        config.advertise_port or config.listen_port,
     )
+    protocol = None
 
     async def stop_emulated_hue_bridge(event):
         """Stop the emulated hue bridge."""
-        upnp_listener.stop()
+        nonlocal protocol
+        nonlocal site
+        nonlocal runner
+
+        if protocol:
+            protocol.close()
         if site:
             await site.stop()
         if runner:
@@ -140,9 +148,11 @@ async def async_setup(hass, yaml_config):
 
     async def start_emulated_hue_bridge(event):
         """Start the emulated hue bridge."""
-        upnp_listener.start()
+        nonlocal protocol
         nonlocal site
         nonlocal runner
+
+        _, protocol = await listen
 
         runner = web.AppRunner(app)
         await runner.setup()
@@ -155,6 +165,8 @@ async def async_setup(hass, yaml_config):
             _LOGGER.error(
                 "Failed to create HTTP server at port %d: %s", config.listen_port, error
             )
+            if protocol:
+                protocol.close()
         else:
             hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_STOP, stop_emulated_hue_bridge
@@ -236,6 +248,10 @@ class Config:
             hidden_value = self.entities[entity_id].get(CONF_ENTITY_HIDDEN)
             if hidden_value is not None:
                 self._entities_with_hidden_attr_in_config[entity_id] = hidden_value
+
+        # Get whether all non-dimmable lights should be reported as dimmable
+        # for compatibility with older installations.
+        self.lights_all_dimmable = conf.get(CONF_LIGHTS_ALL_DIMMABLE)
 
     def entity_id_to_number(self, entity_id):
         """Get a unique number for the entity id."""

@@ -28,10 +28,12 @@ async def test_form_source_user(hass):
     ), patch(
         "homeassistant.components.powerwall.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.powerwall.async_setup_entry", return_value=True,
+        "homeassistant.components.powerwall.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_IP_ADDRESS: "1.2.3.4"},
+            result["flow_id"],
+            {CONF_IP_ADDRESS: "1.2.3.4"},
         )
 
     assert result2["type"] == "create_entry"
@@ -53,7 +55,8 @@ async def test_form_source_import(hass):
     ), patch(
         "homeassistant.components.powerwall.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.powerwall.async_setup_entry", return_value=True,
+        "homeassistant.components.powerwall.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -82,7 +85,8 @@ async def test_form_cannot_connect(hass):
         return_value=mock_powerwall,
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_IP_ADDRESS: "1.2.3.4"},
+            result["flow_id"],
+            {CONF_IP_ADDRESS: "1.2.3.4"},
         )
 
     assert result2["type"] == "form"
@@ -102,7 +106,8 @@ async def test_form_wrong_version(hass):
         return_value=mock_powerwall,
     ):
         result3 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_IP_ADDRESS: "1.2.3.4"},
+            result["flow_id"],
+            {CONF_IP_ADDRESS: "1.2.3.4"},
         )
 
     assert result3["type"] == "form"
