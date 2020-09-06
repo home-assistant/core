@@ -1053,7 +1053,7 @@ xmltodict==0.12.0
 yeelight==0.5.3
 
 # homeassistant.components.zeroconf
-zeroconf==0.28.3
+zeroconf==0.28.4
 
 # homeassistant.components.zha
 zha-quirks==0.0.43
