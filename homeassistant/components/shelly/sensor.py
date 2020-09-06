@@ -10,6 +10,7 @@ from homeassistant.const import (
     POWER_WATT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    TIME_SECONDS,
     UNIT_PERCENTAGE,
     VOLT,
 )
@@ -24,14 +25,17 @@ SENSORS = {
     "current": [ELECTRICAL_CURRENT_AMPERE, sensor.DEVICE_CLASS_CURRENT],
     "deviceTemp": [None, sensor.DEVICE_CLASS_TEMPERATURE],
     "energy": [ENERGY_KILO_WATT_HOUR, sensor.DEVICE_CLASS_ENERGY],
+    "rollerEnergy": [ENERGY_KILO_WATT_HOUR, sensor.DEVICE_CLASS_ENERGY],
     "energyReturned": [ENERGY_KILO_WATT_HOUR, sensor.DEVICE_CLASS_ENERGY],
     "extTemp": [None, sensor.DEVICE_CLASS_TEMPERATURE],
     "humidity": [UNIT_PERCENTAGE, sensor.DEVICE_CLASS_HUMIDITY],
     "luminosity": ["lx", sensor.DEVICE_CLASS_ILLUMINANCE],
     "overpowerValue": [POWER_WATT, sensor.DEVICE_CLASS_POWER],
     "power": [POWER_WATT, sensor.DEVICE_CLASS_POWER],
+    "rollerPower": [POWER_WATT, sensor.DEVICE_CLASS_POWER],
     "powerFactor": [UNIT_PERCENTAGE, sensor.DEVICE_CLASS_POWER_FACTOR],
     "tilt": [DEGREE, None],
+    "totalWorkTime": [TIME_SECONDS, None],
     "voltage": [VOLT, sensor.DEVICE_CLASS_VOLTAGE],
 }
 
