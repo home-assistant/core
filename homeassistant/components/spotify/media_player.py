@@ -9,7 +9,7 @@ from aiohttp import ClientError
 from spotipy import Spotify, SpotifyException
 from yarl import URL
 
-from homeassistant.components.media_player import MediaPlayerEntity
+from homeassistant.components.media_player import BrowseMedia, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_ALBUM,
     MEDIA_TYPE_ARTIST,
@@ -439,28 +439,30 @@ def build_item_response(spotify, payload):
         items = media.get("items", [])
     else:
         media = None
+        items = []
 
     if media is None:
         return None
 
+    if title is None:
+        if "name" in media:
+            title = media.get("name")
+        else:
+            title = LIBRARY_MAP.get(payload["media_content_id"])
+
     response = {
+        "title": title,
         "media_content_id": payload.get("media_content_id"),
         "media_content_type": payload.get("media_content_type"),
         "can_play": payload.get("media_content_type") in PLAYABLE_MEDIA_TYPES,
         "children": [item_payload(item) for item in items],
+        "can_expand": True,
     }
-
-    if "name" in media:
-        response["title"] = media.get("name")
-    elif title:
-        response["title"] = title
-    else:
-        response["title"] = LIBRARY_MAP.get(payload["media_content_id"])
 
     if "images" in media:
         response["thumbnail"] = fetch_image_url(media)
 
-    return response
+    return BrowseMedia(**response)
 
 
 def item_payload(item):
@@ -469,32 +471,31 @@ def item_payload(item):
 
     Used by async_browse_media.
     """
+    can_expand = item.get("type") not in [None, MEDIA_TYPE_TRACK]
+
     if (
         MEDIA_TYPE_TRACK in item
         or item.get("type") != MEDIA_TYPE_ALBUM
         and "playlists" in item
     ):
         track = item.get(MEDIA_TYPE_TRACK)
-        payload = {
-            "title": track.get("name"),
-            "thumbnail": fetch_image_url(track.get(MEDIA_TYPE_ALBUM, {})),
-            "media_content_id": track.get("uri"),
-            "media_content_type": MEDIA_TYPE_TRACK,
-            "can_play": True,
-        }
-    else:
-        payload = {
-            "title": item.get("name"),
-            "thumbnail": fetch_image_url(item),
-            "media_content_id": item.get("uri"),
-            "media_content_type": item.get("type"),
-            "can_play": item.get("type") in PLAYABLE_MEDIA_TYPES,
-        }
+        return BrowseMedia(
+            title=track.get("name"),
+            thumbnail=fetch_image_url(track.get(MEDIA_TYPE_ALBUM, {})),
+            media_content_id=track.get("uri"),
+            media_content_type=MEDIA_TYPE_TRACK,
+            can_play=True,
+            can_expand=can_expand,
+        )
 
-    if item.get("type") not in [None, MEDIA_TYPE_TRACK]:
-        payload["can_expand"] = True
-
-    return payload
+    return BrowseMedia(
+        title=item.get("name"),
+        thumbnail=fetch_image_url(item),
+        media_content_id=item.get("uri"),
+        media_content_type=item.get("type"),
+        can_play=item.get("type") in PLAYABLE_MEDIA_TYPES,
+        can_expand=can_expand,
+    )
 
 
 def library_payload():

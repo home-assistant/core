@@ -3,6 +3,11 @@ from abc import ABC
 from dataclasses import dataclass
 from typing import List, Optional, Tuple
 
+from homeassistant.components.media_player import BrowseMedia
+from homeassistant.components.media_player.const import (
+    MEDIA_TYPE_CHANNEL,
+    MEDIA_TYPE_CHANNELS,
+)
 from homeassistant.core import HomeAssistant, callback
 
 from .const import DOMAIN, URI_SCHEME, URI_SCHEME_REGEX
@@ -16,49 +21,21 @@ class PlayMedia:
     mime_type: str
 
 
-@dataclass
-class BrowseMedia:
+class BrowseMediaSource(BrowseMedia):
     """Represent a browsable media file."""
 
-    domain: str
-    identifier: str
+    children: Optional[List["BrowseMediaSource"]]
 
-    name: str
-    can_play: bool = False
-    can_expand: bool = False
-    media_content_type: str = None
-    children: List = None
-    thumbnail: str = None
+    def __init__(self, *, domain: Optional[str], identifier: Optional[str], **kwargs):
+        """Initialize media source browse media."""
+        media_content_id = f"{URI_SCHEME}{domain or ''}"
+        if identifier:
+            media_content_id += f"/{identifier}"
 
-    def to_uri(self):
-        """Return URI of media."""
-        uri = f"{URI_SCHEME}{self.domain or ''}"
-        if self.identifier:
-            uri += f"/{self.identifier}"
-        return uri
+        super().__init__(media_content_id=media_content_id, **kwargs)
 
-    def to_media_player_item(self):
-        """Convert Media class to browse media dictionary."""
-        content_type = self.media_content_type
-
-        if content_type is None:
-            content_type = "folder" if self.can_expand else "file"
-
-        response = {
-            "title": self.name,
-            "media_content_type": content_type,
-            "media_content_id": self.to_uri(),
-            "can_play": self.can_play,
-            "can_expand": self.can_expand,
-            "thumbnail": self.thumbnail,
-        }
-
-        if self.children:
-            response["children"] = [
-                child.to_media_player_item() for child in self.children
-            ]
-
-        return response
+        self.domain = domain
+        self.identifier = identifier
 
 
 @dataclass
@@ -69,12 +46,26 @@ class MediaSourceItem:
     domain: Optional[str]
     identifier: str
 
-    async def async_browse(self) -> BrowseMedia:
+    async def async_browse(self) -> BrowseMediaSource:
         """Browse this item."""
         if self.domain is None:
-            base = BrowseMedia(None, None, "Media Sources", False, True)
+            base = BrowseMediaSource(
+                domain=None,
+                identifier=None,
+                media_content_type=MEDIA_TYPE_CHANNELS,
+                title="Media Sources",
+                can_play=False,
+                can_expand=True,
+            )
             base.children = [
-                BrowseMedia(source.domain, None, source.name, False, True)
+                BrowseMediaSource(
+                    domain=source.domain,
+                    identifier=None,
+                    media_content_type=MEDIA_TYPE_CHANNEL,
+                    title=source.name,
+                    can_play=False,
+                    can_expand=True,
+                )
                 for source in self.hass.data[DOMAIN].values()
             ]
             return base
@@ -121,6 +112,6 @@ class MediaSource(ABC):
 
     async def async_browse_media(
         self, item: MediaSourceItem, media_types: Tuple[str]
-    ) -> BrowseMedia:
+    ) -> BrowseMediaSource:
         """Browse media."""
         raise NotImplementedError
