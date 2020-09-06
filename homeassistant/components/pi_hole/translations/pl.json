@@ -9,7 +9,7 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "Klucz API (opcjonalnie)",
+                    "api_key": "Klucz API",
                     "host": "Nazwa hosta lub adres IP",
                     "location": "Lokalizacja",
                     "name": "Nazwa",
