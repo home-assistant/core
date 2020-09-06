@@ -139,9 +139,7 @@ class PlugwiseOptionsFlowHandler(config_entries.OptionsFlow):
             return self.async_create_entry(title="", data=user_input)
 
         api = self.hass.data[DOMAIN][self.config_entry.entry_id]["api"]
-        interval = DEFAULT_SCAN_INTERVAL["thermostat"]
-        if api.smile_type == "power":
-            interval = DEFAULT_SCAN_INTERVAL["power"]
+        interval = DEFAULT_SCAN_INTERVAL[api.smile_type]
         data = {
             vol.Optional(
                 CONF_SCAN_INTERVAL,

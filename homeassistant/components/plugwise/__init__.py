@@ -64,9 +64,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("Timeout while connecting to Smile")
         raise ConfigEntryNotReady from err
 
-    update_interval = timedelta(seconds=60)
-    if api.smile_type == "power":
-        update_interval = timedelta(seconds=10)
+    update_interval = timedelta(
+        seconds=entry.options.get(
+            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL[api.smile_type]
+        )
+    )
 
     async def async_update_data():
         """Update data via API endpoint."""
@@ -76,18 +78,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 return True
         except Smile.XMLDataMissingError as err:
             raise UpdateFailed("Smile update failed") from err
-
-    update_interval = timedelta(
-        seconds=entry.options.get(
-            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL["thermostat"]
-        )
-    )
-    if api.smile_type == "power":
-        update_interval = timedelta(
-            seconds=entry.options.get(
-                CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL["power"]
-            )
-        )
 
     coordinator = DataUpdateCoordinator(
         hass,
