@@ -95,7 +95,7 @@ class ShellyCover(ShellyBlockEntity, CoverEntity):
     def set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
         pos = kwargs[ATTR_POSITION]
-        self.devive.rollerPos(pos)
+        self.device.rollerPos(pos)
         self._position = pos
 
     def stop_cover(self, **_kwargs):
