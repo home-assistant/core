@@ -286,7 +286,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
             response = {
                 "title": "Apps",
                 "media_content_id": "apps",
-                "media_content_type": "apps",
+                "media_content_type": MEDIA_TYPE_APPS,
                 "can_expand": True,
                 "can_play": False,
                 "children": [
@@ -305,7 +305,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
             response = {
                 "title": "Channels",
                 "media_content_id": "channels",
-                "media_content_type": "channels",
+                "media_content_type": MEDIA_TYPE_CHANNELS,
                 "can_expand": True,
                 "can_play": False,
                 "children": [
