@@ -15,6 +15,7 @@ from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
+    UpdateFailed,
 )
 
 from .const import DATA_CLIENT, DATA_COORDINATOR, DOMAIN
@@ -60,11 +61,10 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
                             DOMAIN, context={"source": "reauth"}, data=entry.data
                         )
                     )
-                    return None
+                    raise UpdateFailed("Not authenticated with OVO Energy")
                 return await client.get_daily_usage(datetime.utcnow().strftime("%Y-%m"))
             except aiohttp.ClientError as exception:
-                _LOGGER.error(exception)
-                return None
+                raise UpdateFailed(exception) from exception
 
     coordinator = DataUpdateCoordinator(
         hass,
