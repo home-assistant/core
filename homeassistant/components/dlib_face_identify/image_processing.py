@@ -65,7 +65,7 @@ async def async_generate_encodings(hass, faces):
         faces_root_path = pathlib.Path(faces)
         if not faces_root_path.is_dir():
             _LOGGER.error(
-                "Path '%s' does not exist or is not a valid directory. No face encodings generated.",
+                "Path '%s' does not exist or is not a valid directory. No face encodings generated",
                 faces_root_path.resolve(),
             )
             return face_encodings
@@ -83,53 +83,50 @@ async def async_generate_encodings(hass, faces):
                 if imghdr.what(face_file) is None:
                     continue
 
-                try:
-                    image = await hass.async_add_executor_job(
-                        face_recognition.load_image_file, face_file
-                    )
-                    encodings_list = await hass.async_add_executor_job(
-                        face_recognition.face_encodings, image
-                    )
+                encoded_known_face = await async_extract_face_encoding(hass, face_file)
 
-                    if len(encodings_list) > 1:
-                        _LOGGER.error(
-                            "Failed to parse %s. More than one face detected in image.",
-                            face_file,
-                        )
-                    else:
-                        face_encodings[face_images.stem].append(encodings_list[0])
-
-                except IndexError as err:
-                    _LOGGER.error("Failed to parse %s. Error: %s", face_file, err)
+                if encoded_known_face is not None:
+                    face_encodings[face_images.stem].append(encoded_known_face)
 
     else:
 
         for face_name, face_file in faces.items():
-            try:
-                image = await hass.async_add_executor_job(
-                    face_recognition.load_image_file, face_file
-                )
+            encoded_known_face = await async_extract_face_encoding(hass, face_file)
 
-                encodings_list = await hass.async_add_executor_job(
-                    face_recognition.face_encodings, image
-                )
+            if encoded_known_face is None:
+                continue
 
-                if len(encodings_list) > 1:
-                    _LOGGER.error(
-                        "Failed to parse %s. More than one face detected in image.",
-                        face_file,
-                    )
-                else:
-
-                    if face_name in face_encodings:
-                        face_encodings[face_name].append(encodings_list[0])
-                    else:
-                        face_encodings[face_name] = [encodings_list[0]]
-
-            except IndexError as err:
-                _LOGGER.error("Failed to parse %s. Error: %s", face_file, err)
+            if face_name in face_encodings:
+                face_encodings[face_name].append(encoded_known_face)
+            else:
+                face_encodings[face_name] = [encoded_known_face]
 
     return face_encodings
+
+
+async def async_extract_face_encoding(hass, face_file):
+    """Extract face encoding from an image."""
+    try:
+        image = await hass.async_add_executor_job(
+            face_recognition.load_image_file, face_file
+        )
+
+        encodings_list = await hass.async_add_executor_job(
+            face_recognition.face_encodings, image
+        )
+
+        if len(encodings_list) > 1:
+            _LOGGER.error(
+                "Failed to parse %s. More than one face detected in image for a known person",
+                face_file,
+            )
+            return None
+
+        return encodings_list[0]
+
+    except IndexError as err:
+        _LOGGER.error("Failed to parse %s. Error: %s", face_file, err)
+        return None
 
 
 class DlibFaceIdentifyEntity(ImageProcessingFaceEntity):
@@ -160,7 +157,7 @@ class DlibFaceIdentifyEntity(ImageProcessingFaceEntity):
                 self._faces[name] = face_encoding_list
 
         except asyncio.InvalidStateError:
-            _LOGGER.error("Generating known face encodings failed.")
+            _LOGGER.error("Generating known face encodings failed")
 
     @property
     def camera_entity(self):
