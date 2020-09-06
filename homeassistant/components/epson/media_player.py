@@ -92,7 +92,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up the Bosch thermostat from a config entry."""
+    """Set up the Epson projector from a config entry."""
 
     timeout_scale = config_entry.options.get(TIMEOUT_SCALE, 1.0)
     epson_proj = EpsonProjector(
@@ -150,8 +150,7 @@ async def update_listener(hass, entry):
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Bosch Thermostat Platform."""
-    pass
+    """Set up the Epson projector."""
 
 
 class EpsonProjector(MediaPlayerEntity):
@@ -236,6 +235,7 @@ class EpsonProjector(MediaPlayerEntity):
         """Turn off epson."""
         if self._state == STATE_ON:
             await self._projector.send_command(TURN_OFF)
+            self._state = STATE_OFF
 
     @property
     def source_list(self):
