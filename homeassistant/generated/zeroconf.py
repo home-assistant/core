@@ -92,5 +92,6 @@ HOMEKIT = {
     "TRADFRI": "tradfri",
     "Welcome": "netatmo",
     "Wemo": "wemo",
+    "iSmartGate": "gogogate2",
     "tado": "tado"
 }
