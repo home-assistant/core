@@ -80,7 +80,7 @@ class ShellyCover(ShellyBlockEntity, CoverEntity):
         self._supported_features |= SUPPORT_CLOSE
         self._supported_features |= SUPPORT_STOP
         if self.wrapper.device.settings["rollers"]["positioning"]:
-           self._supported_features |= SUPPORT_SET_POSITION
+            self._supported_features |= SUPPORT_SET_POSITION
 
         return self._supported_features
 
