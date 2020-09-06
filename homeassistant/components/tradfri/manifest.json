@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/tradfri",
   "requirements": [
-    "pytradfri[async]==7.0.1"
+    "pytradfri[async]==7.0.2"
   ],
   "homekit": {
     "models": [
