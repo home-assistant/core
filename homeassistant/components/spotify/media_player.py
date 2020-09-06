@@ -439,24 +439,25 @@ def build_item_response(spotify, payload):
         items = media.get("items", [])
     else:
         media = None
+        items = []
 
     if media is None:
         return None
 
+    if title is None:
+        if "name" in media:
+            title = media.get("name")
+        else:
+            title = LIBRARY_MAP.get(payload["media_content_id"])
+
     response = {
+        "title": title,
         "media_content_id": payload.get("media_content_id"),
         "media_content_type": payload.get("media_content_type"),
         "can_play": payload.get("media_content_type") in PLAYABLE_MEDIA_TYPES,
         "children": [item_payload(item) for item in items],
         "can_expand": True,
     }
-
-    if "name" in media:
-        response["title"] = media.get("name")
-    elif title:
-        response["title"] = title
-    else:
-        response["title"] = LIBRARY_MAP.get(payload["media_content_id"])
 
     if "images" in media:
         response["thumbnail"] = fetch_image_url(media)

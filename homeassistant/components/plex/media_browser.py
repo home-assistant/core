@@ -35,10 +35,10 @@ def browse_media(
             return None
 
         media_info = item_payload(media)
-        if media_info.get("can_expand"):
-            media_info["children"] = []
+        if media_info.can_expand:
+            media_info.children = []
             for item in media:
-                media_info["children"].append(item_payload(item))
+                media_info.children.append(item_payload(item))
         return media_info
 
     if media_content_id and ":" in media_content_id:
