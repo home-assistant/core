@@ -17,9 +17,9 @@ _LOGGER = logging.getLogger(__name__)
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
-        vol.Optional(CONF_NAME, default=DOMAIN): str,
-        vol.Optional(CONF_PORT, default=80): int,
-        vol.Optional(CONF_SSL, default=False): bool,
+        vol.Required(CONF_NAME, default=DOMAIN): str,
+        vol.Required(CONF_PORT, default=80): int,
+        vol.Required(CONF_SSL, default=False): bool,
     }
 )
 
@@ -52,6 +52,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def async_get_options_flow(config_entry):
         """Epson options flow."""
         return EpsonOptionsFlowHandler(config_entry)
+
+    async def async_step_import(self, import_config):
+        """Import a config entry from configuration.yaml."""
+        return await self.async_step_user(import_config)
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""

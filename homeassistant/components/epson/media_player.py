@@ -50,10 +50,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
     ATTR_CMODE,
@@ -61,11 +58,10 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
     SERVICE_SELECT_CMODE,
+    SIGNAL_CONFIG_OPTIONS_UPDATE,
     SUPPORT_CMODE,
     TIMEOUT_SCALE,
 )
-
-SIGNAL_CONFIG_OPTIONS_UPDATE = "epson_config_options_update {}"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -94,28 +90,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Epson projector from a config entry."""
-
     timeout_scale = config_entry.options.get(TIMEOUT_SCALE, 1.0)
     epson_proj = EpsonProjector(
-        async_get_clientsession(
-            hass, verify_ssl=config_entry.data.get(CONF_SSL, False)
-        ),
+        async_get_clientsession(hass, verify_ssl=config_entry.data[CONF_SSL]),
         config_entry.title,
         config_entry.data[CONF_HOST],
         config_entry.data[CONF_PORT],
         timeout_scale,
         config_entry.entry_id,
     )
-    if not hass.data.get(DOMAIN):
-        hass.data[DOMAIN] = {config_entry.entry_id: {}}
-    if DATA_EPSON not in hass.data:
-        hass.data[DATA_EPSON] = []
-
-    hass.data[DOMAIN][config_entry.entry_id] = config_entry.add_update_listener(
-        update_listener
-    )
-    hass.data[DATA_EPSON].append(epson_proj)
-    async_add_entities([epson_proj])
+    hass.data[DOMAIN][config_entry.entry_id][DATA_EPSON].append(epson_proj)
+    async_add_entities(hass.data[DOMAIN][config_entry.entry_id][DATA_EPSON])
 
     async def async_service_handler(service):
         """Handle for services."""
@@ -141,13 +126,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         DOMAIN, SERVICE_SELECT_CMODE, async_service_handler, schema=epson_schema
     )
     return True
-
-
-async def update_listener(hass, entry):
-    """Handle options update."""
-    async_dispatcher_send(
-        hass, SIGNAL_CONFIG_OPTIONS_UPDATE.format(entry.entry_id), entry.options
-    )
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
