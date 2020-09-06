@@ -1,11 +1,14 @@
 """Tests for the Plugwise Climate integration."""
 
+from homeassistant.config_entries import ENTRY_STATE_LOADED
+
 from tests.components.plugwise.common import async_init_integration
 
 
 async def test_adam_climate_entity_attributes(hass, mock_smile_adam):
     """Test creation of adam climate device environment."""
-    assert await async_init_integration(hass, mock_smile_adam) is True
+    entry = await async_init_integration(hass, mock_smile_adam)
+    assert entry.state == ENTRY_STATE_LOADED
 
     state = hass.states.get("climate.zone_lisa_wk")
     attrs = state.attributes
@@ -40,7 +43,8 @@ async def test_adam_climate_entity_attributes(hass, mock_smile_adam):
 
 async def test_adam_climate_entity_climate_changes(hass, mock_smile_adam):
     """Test handling of user requests in adam climate device environment."""
-    assert await async_init_integration(hass, mock_smile_adam) is True
+    entry = await async_init_integration(hass, mock_smile_adam)
+    assert entry.state == ENTRY_STATE_LOADED
 
     await hass.services.async_call(
         "climate",
@@ -92,7 +96,8 @@ async def test_adam_climate_entity_climate_changes(hass, mock_smile_adam):
 
 async def test_anna_climate_entity_attributes(hass, mock_smile_anna):
     """Test creation of anna climate device environment."""
-    assert await async_init_integration(hass, mock_smile_anna) is True
+    entry = await async_init_integration(hass, mock_smile_anna)
+    assert entry.state == ENTRY_STATE_LOADED
 
     state = hass.states.get("climate.anna")
     attrs = state.attributes
@@ -116,7 +121,8 @@ async def test_anna_climate_entity_attributes(hass, mock_smile_anna):
 
 async def test_anna_climate_entity_climate_changes(hass, mock_smile_anna):
     """Test handling of user requests in anna climate device environment."""
-    assert await async_init_integration(hass, mock_smile_anna) is True
+    entry = await async_init_integration(hass, mock_smile_anna)
+    assert entry.state == ENTRY_STATE_LOADED
 
     await hass.services.async_call(
         "climate",
