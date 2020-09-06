@@ -127,7 +127,9 @@ class AlarmDecoderFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         return self.async_show_form(
-            step_id="protocol", data_schema=schema, errors=errors,
+            step_id="protocol",
+            data_schema=schema,
+            errors=errors,
         )
 
 
