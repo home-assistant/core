@@ -36,6 +36,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_STEP,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_HOST,
@@ -151,6 +152,11 @@ async def update_listener(hass, entry):
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Epson projector."""
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+    )
 
 
 class EpsonProjector(MediaPlayerEntity):
