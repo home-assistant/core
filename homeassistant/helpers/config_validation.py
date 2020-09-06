@@ -956,8 +956,8 @@ TIME_CONDITION_SCHEMA = vol.All(
     vol.Schema(
         {
             vol.Required(CONF_CONDITION): "time",
-            "before": time,
-            "after": time,
+            "before": vol.Any(time, vol.All(str, entity_domain("input_datetime"))),
+            "after": vol.Any(time, vol.All(str, entity_domain("input_datetime"))),
             "weekday": weekdays,
         }
     ),
