@@ -27,7 +27,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.components.media_player.errors import BrowseError
-from homeassistant.const import (,
+from homeassistant.const import (
     STATE_HOME,
     STATE_IDLE,
     STATE_ON,
