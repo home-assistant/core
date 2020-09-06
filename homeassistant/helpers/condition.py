@@ -66,10 +66,8 @@ async def async_from_config(
             CONF_CONDITION: "template",
             CONF_VALUE_TEMPLATE: config,
         }
-        condition = "template"
-    else:
-        condition = cast(str, config.get(CONF_CONDITION))
 
+    condition = config.get(CONF_CONDITION)
     for fmt in (ASYNC_FROM_CONFIG_FORMAT, FROM_CONFIG_FORMAT):
         factory = getattr(sys.modules[__name__], fmt.format(condition), None)
 
