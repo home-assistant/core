@@ -26,6 +26,8 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.const import (
+    MEDIA_TYPE_APPS,
+    MEDIA_TYPE_CHANNELS,
     STATE_HOME,
     STATE_IDLE,
     STATE_ON,
@@ -87,7 +89,7 @@ def browse_media_library(channels: bool = False) -> dict:
         {
             "title": "Apps",
             "media_content_id": "apps",
-            "media_content_type": "apps",
+            "media_content_type": MEDIA_TYPE_APPS,
             "can_expand": True,
             "can_play": False,
         }
@@ -98,7 +100,7 @@ def browse_media_library(channels: bool = False) -> dict:
             {
                 "title": "Channels",
                 "media_content_id": "channels",
-                "media_content_type": "channels",
+                "media_content_type": MEDIA_TYPE_CHANNELS,
                 "can_expand": True,
                 "can_play": False,
             }
@@ -280,7 +282,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
 
         response = None
 
-        if media_content_type == "apps":
+        if media_content_type == MEDIA_TYPE_APPS:
             response = {
                 "title": "Apps",
                 "media_content_id": "apps",
@@ -299,7 +301,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
                 ],
             }
 
-        if media_content_type == "channels":
+        if media_content_type == MEDIA_TYPE_CHANNELS:
             response = {
                 "title": "Channels",
                 "media_content_id": "channels",
