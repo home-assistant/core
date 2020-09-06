@@ -80,13 +80,15 @@ class ShellyCover(ShellyBlockEntity, CoverEntity):
         """Flag supported features."""
         return self._supported_features
 
-    def close_cover(self, **_kwargs):
-        """Close the cover."""
-        self.device.down()
+    async def async_close_cover(self, **kwargs):
+        """Close cover."""
+        self.control_result = await self.block.set_state(go="close")
+        self.async_write_ha_state()
 
-    def open_cover(self, **_kwargs):
-        """Open the cover."""
-        self.device.up()
+    async def async_open_cover(self, **kwargs):
+        """Open cover."""
+        self.control_result = await self.block.set_state(go="open")
+        self.async_write_ha_state()
 
     def set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
@@ -94,9 +96,10 @@ class ShellyCover(ShellyBlockEntity, CoverEntity):
         self.device.rollerPos(pos)
         self._position = pos
 
-    def stop_cover(self, **_kwargs):
+    async def async_stop_cover(self, **_kwargs):
         """Stop the cover."""
-        self.device.stop()
+        self.control_result = await self.block.set_state(go="stop")
+        self.async_write_ha_state()
 
     @callback
     def _update_callback(self):
