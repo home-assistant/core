@@ -1,6 +1,7 @@
 """Support for Hyperion-NG remotes."""
 import logging
 
+from hyperion import client, const
 import voluptuous as vol
 
 from homeassistant.components.light import (
@@ -17,8 +18,6 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
-
-from hyperion import client, const
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -230,7 +229,9 @@ class Hyperion(LightEntity):
             if not await self._client.async_set_adjustment(
                 **{
                     const.KEY_ADJUSTMENT: {
-                        const.KEY_BRIGHTNESS: int(round((float(brightness) * 100) / 255))
+                        const.KEY_BRIGHTNESS: int(
+                            round((float(brightness) * 100) / 255)
+                        )
                     }
                 }
             ):
@@ -239,7 +240,9 @@ class Hyperion(LightEntity):
         effect = kwargs.get(ATTR_EFFECT, self._effect)
         if effect and effect in const.KEY_COMPONENTID_EXTERNAL_SOURCES:
             # Clear any color/effect.
-            if not await self._client.async_clear(**{const.KEY_PRIORITY: self._priority}):
+            if not await self._client.async_clear(
+                **{const.KEY_PRIORITY: self._priority}
+            ):
                 return
 
             # Turn off all external sources, except the intended.
@@ -256,7 +259,9 @@ class Hyperion(LightEntity):
         elif effect and effect != KEY_EFFECT_SOLID:
             # This call should not be necessary, but without it there is no priorities-update issued:
             # https://github.com/hyperion-project/hyperion.ng/issues/992
-            if not await self._client.async_clear(**{const.KEY_PRIORITY: self._priority}):
+            if not await self._client.async_clear(
+                **{const.KEY_PRIORITY: self._priority}
+            ):
                 return
 
             if not await self._client.async_set_effect(
@@ -301,7 +306,7 @@ class Hyperion(LightEntity):
 
     def _update_ha_state(self):
         """Update the internal Home Assistant state."""
-        if not hasattr(self, 'hass') or self.hass is None:
+        if not hasattr(self, "hass") or self.hass is None:
             return
         self.schedule_update_ha_state()
 
