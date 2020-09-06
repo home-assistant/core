@@ -2119,7 +2119,7 @@ temescal==0.3
 temperusb==1.5.3
 
 # homeassistant.components.tensorflow
-# tensorflow==2.2.0
+# tensorflow==2.3.0
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.2.12
@@ -2128,10 +2128,7 @@ tesla-powerwall==0.2.12
 teslajsonpy==0.10.4
 
 # homeassistant.components.tensorflow
-# tf-models-official==2.2.1
-
-# homeassistant.components.tensorflow
-tf-slim==1.1.0
+# tf-models-official==2.3.0
 
 # homeassistant.components.thermoworks_smoke
 thermoworks_smoke==0.1.8
