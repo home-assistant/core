@@ -1122,7 +1122,13 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
     def is_safe_attribute(self, obj, attr, value):
         """Test if attribute is safe."""
-        return isinstance(obj, Namespace) or super().is_safe_attribute(obj, attr, value)
+        if isinstance(obj, Namespace):
+            return True
+
+        if isinstance(obj, (AllStates, DomainStates, TemplateState)):
+            return not attr.startswith("_")
+
+        return super().is_safe_attribute(obj, attr, value)
 
     def compile(self, source, name=None, filename=None, raw=False, defer_init=False):
         """Compile the template."""
