@@ -120,6 +120,14 @@ PLAYABLE_MEDIA_TYPES = [
     MEDIA_TYPE_TRACK,
 ]
 
+EXPANDABLE_MEDIA_TYPES = [
+    MEDIA_TYPE_ALBUM,
+    MEDIA_TYPE_ARTIST,
+    MEDIA_TYPE_PLAYLIST,
+    MEDIA_TYPE_TVSHOW,
+    MEDIA_TYPE_SEASON,
+]
+
 MAP_KODI_MEDIA_TYPES = {
     MEDIA_TYPE_MOVIE: "movieid",
     MEDIA_TYPE_EPISODE: "episodeid",
@@ -978,46 +986,35 @@ def item_payload(item, media_library):
     if "songid" in item:
         media_content_type = MEDIA_TYPE_TRACK
         media_content_id = f"{item['songid']}"
-        thumbnail = media_library.thumbnail_url(item.get("thumbnail"))
-        can_expand = False
     elif "albumid" in item:
         media_content_type = MEDIA_TYPE_ALBUM
         media_content_id = f"{item['albumid']}"
-        thumbnail = media_library.thumbnail_url(item.get("thumbnail"))
-        can_expand = True
     elif "artistid" in item:
         media_content_type = MEDIA_TYPE_ARTIST
         media_content_id = f"{item['artistid']}"
-        thumbnail = media_library.thumbnail_url(item.get("thumbnail"))
-        can_expand = True
     elif "movieid" in item:
         media_content_type = MEDIA_TYPE_MOVIE
         media_content_id = f"{item['movieid']}"
-        thumbnail = media_library.thumbnail_url(item.get("thumbnail"))
-        can_expand = False
     elif "episodeid" in item:
         media_content_type = MEDIA_TYPE_EPISODE
         media_content_id = f"{item['episodeid']}"
-        thumbnail = media_library.thumbnail_url(item.get("thumbnail"))
-        can_expand = False
     elif "seasonid" in item:
         media_content_type = MEDIA_TYPE_SEASON
         media_content_id = f"{item['tvshowid']}/{item['season']}"
-        thumbnail = media_library.thumbnail_url(item.get("thumbnail"))
-        can_expand = True
     elif "tvshowid" in item:
         media_content_type = MEDIA_TYPE_TVSHOW
         media_content_id = f"{item['tvshowid']}"
-        thumbnail = media_library.thumbnail_url(item.get("thumbnail"))
-        can_expand = True
     else:
         media_content_type = item.get("type")
         media_content_id = ""
-        can_expand = True
-        thumbnail = None
 
     title = item["label"]
     can_play = media_content_type in PLAYABLE_MEDIA_TYPES and bool(media_content_id)
+    can_expand = media_content_type in EXPANDABLE_MEDIA_TYPES
+
+    thumbnail = item.get("thumbnail")
+    if thumbnail:
+        thumbnail = media_library.thumbnail_url(thumbnail)
 
     return BrowseMedia(
         title=title,
