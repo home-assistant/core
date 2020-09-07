@@ -33,10 +33,7 @@ class ShellyCover(ShellyBlockEntity, CoverEntity):
         """Initialize light."""
         super().__init__(wrapper, block)
         self.control_result = None
-        self._supported_features = 0
-        self._supported_features |= SUPPORT_OPEN
-        self._supported_features |= SUPPORT_CLOSE
-        self._supported_features |= SUPPORT_STOP
+        self._supported_features = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP
         if self.wrapper.device.settings["rollers"][0]["positioning"]:
             self._supported_features |= SUPPORT_SET_POSITION
 
