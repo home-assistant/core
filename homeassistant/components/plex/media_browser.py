@@ -2,6 +2,15 @@
 import logging
 
 from homeassistant.components.media_player import BrowseMedia
+from homeassistant.components.media_player.const import (
+    MEDIA_CLASS_ALBUM,
+    MEDIA_CLASS_ARTIST,
+    MEDIA_CLASS_DIRECTORY,
+    MEDIA_CLASS_PLAYLIST,
+    MEDIA_CLASS_SEASON,
+    MEDIA_CLASS_TV_SHOW,
+    MEDIA_CLASS_VIDEO,
+)
 from homeassistant.components.media_player.errors import BrowseError
 
 from .const import DOMAIN
@@ -9,6 +18,7 @@ from .const import DOMAIN
 EXPANDABLES = ["album", "artist", "playlist", "season", "show"]
 PLAYLISTS_BROWSE_PAYLOAD = {
     "title": "Playlists",
+    "media_class": MEDIA_CLASS_PLAYLIST,
     "media_content_id": "all",
     "media_content_type": "playlists",
     "can_play": False,
@@ -17,6 +27,15 @@ PLAYLISTS_BROWSE_PAYLOAD = {
 SPECIAL_METHODS = {
     "On Deck": "onDeck",
     "Recently Added": "recentlyAdded",
+}
+
+ITEM_TYPE_MEDIA_CLASS = {
+    "album": MEDIA_CLASS_ALBUM,
+    "artist": MEDIA_CLASS_ARTIST,
+    "playlist": MEDIA_CLASS_PLAYLIST,
+    "season": MEDIA_CLASS_SEASON,
+    "show": MEDIA_CLASS_TV_SHOW,
+    "video": MEDIA_CLASS_VIDEO,
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -65,6 +84,7 @@ def browse_media(
 
         payload = {
             "title": title,
+            "media_class": MEDIA_CLASS_DIRECTORY,
             "media_content_id": f"{media_content_id}:{special_folder}",
             "media_content_type": media_content_type,
             "can_play": False,
@@ -101,6 +121,7 @@ def item_payload(item):
     """Create response payload for a single media item."""
     payload = {
         "title": item.title,
+        "media_class": ITEM_TYPE_MEDIA_CLASS[item.type],
         "media_content_id": str(item.ratingKey),
         "media_content_type": item.type,
         "can_play": True,
@@ -116,6 +137,7 @@ def library_section_payload(section):
     """Create response payload for a single library section."""
     return BrowseMedia(
         title=section.title,
+        media_class=MEDIA_CLASS_DIRECTORY,
         media_content_id=section.key,
         media_content_type="library",
         can_play=False,
@@ -128,6 +150,7 @@ def special_library_payload(parent_payload, special_type):
     title = f"{special_type} ({parent_payload.title})"
     return BrowseMedia(
         title=title,
+        media_class=parent_payload.media_class,
         media_content_id=f"{parent_payload.media_content_id}:{special_type}",
         media_content_type=parent_payload.media_content_type,
         can_play=False,
@@ -139,6 +162,7 @@ def server_payload(plex_server):
     """Create response payload to describe libraries of the Plex server."""
     server_info = BrowseMedia(
         title=plex_server.friendly_name,
+        media_class=MEDIA_CLASS_DIRECTORY,
         media_content_id=plex_server.machine_identifier,
         media_content_type="server",
         can_play=False,
