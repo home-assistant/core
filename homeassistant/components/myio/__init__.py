@@ -27,16 +27,12 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass, config_entry):
     """Set up config entry."""
     _server_name = slugify(config_entry.data[CONF_NAME])
-    _LOGGER.debug(config_entry)
 
     hass.data.setdefault(DOMAIN, {})[_server_name] = {}
 
     hass.data[DOMAIN][_server_name]["state"] = "Offline"
 
-    try:
-        _refresh_timer = config_entry.options[CONF_REFRESH_TIME]
-    except (ValueError, Exception):  # pylint: disable=broad-except
-        _refresh_timer = 4
+    _refresh_timer = config_entry.options.get(CONF_REFRESH_TIME, 4)
 
     def server_data():
         """Return the server data dictionary database."""

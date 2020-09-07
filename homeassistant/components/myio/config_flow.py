@@ -32,7 +32,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-class PlaceholderHub:
+class MyIOHub:
     """Placeholder class to make tests pass."""
 
     def __init__(self, user_input):
@@ -66,7 +66,7 @@ async def validate_input(user_input, entries):
 
     Data has the keys from CONFIG_SCHEMA with values provided by the user.
     """
-    hub = PlaceholderHub(user_input)
+    hub = MyIOHub(user_input)
 
     if not await hub.already_check(user_input[CONF_NAME], entries):
         raise AlreadyConfigured

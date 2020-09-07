@@ -29,7 +29,7 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.myio.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.myio.config_flow.MyIOHub.authenticate",
         return_value=True,
     ), patch(
         "homeassistant.components.myio.async_setup", return_value=True
@@ -56,7 +56,7 @@ async def test_form_invalid_auth(hass):
     )
 
     with patch(
-        "homeassistant.components.myio.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.myio.config_flow.MyIOHub.authenticate",
         side_effect=InvalidAuth,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -82,7 +82,7 @@ async def test_form_cannot_connect(hass):
     )
 
     with patch(
-        "homeassistant.components.myio.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.myio.config_flow.MyIOHub.authenticate",
         side_effect=CannotConnect,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -108,7 +108,7 @@ async def test_form_app_port_problem(hass):
     )
 
     with patch(
-        "homeassistant.components.myio.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.myio.config_flow.MyIOHub.authenticate",
         side_effect=AppPortProblem,
     ):
         result2 = await hass.config_entries.flow.async_configure(
