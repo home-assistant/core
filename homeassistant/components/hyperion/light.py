@@ -93,13 +93,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class Hyperion(LightEntity):
     """Representation of a Hyperion remote."""
 
-    def __init__(self, name, priority, client):
+    def __init__(self, name, priority, hyperion_client):
         """Initialize the light."""
         self._name = name
         self._priority = priority
-        self._client = client
+        self._client = hyperion_client
 
-        client.set_callbacks(
+        self._client.set_callbacks(
             {
                 f"{const.KEY_ADJUSTMENT}-{const.KEY_UPDATE}": self._update_adjustment,
                 f"{const.KEY_COMPONENTS}-{const.KEY_UPDATE}": self._update_components,
