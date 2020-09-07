@@ -29,11 +29,13 @@ async def build_item_response(coordinator, payload):
     media = None
 
     if search_type == MEDIA_TYPE_APPS:
+        title = "Apps"
         media = [
             {"app_id": item.app_id, "title": item.name, "type": MEDIA_TYPE_APP}
             for item in coordinator.data.apps
         ]
     elif search_type == MEDIA_TYPE_CHANNELS:
+        title = "channels"
         media = [
             {
                 "channel_number": item.number,
