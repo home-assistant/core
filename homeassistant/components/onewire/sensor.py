@@ -20,6 +20,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 from .const import (
+    CONF_NAMES,
     CONF_MOUNT_DIR,
     CONF_TYPE_OWFS,
     CONF_TYPE_OWSERVER,
@@ -28,8 +29,6 @@ from .const import (
     DEFAULT_SYSBUS_MOUNT_DIR,
     LOGGER,
 )
-
-CONF_NAMES = "names"
 
 DEVICE_SENSORS = {
     # Family : { SensorType: owfs path }
