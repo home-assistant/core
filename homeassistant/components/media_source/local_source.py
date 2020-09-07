@@ -85,8 +85,7 @@ class LocalSource(MediaSource):
         if not full_path.exists():
             if location == "":
                 raise BrowseError("Media directory does not exist.")
-            else:
-                raise BrowseError("Path does not exist.")
+            raise BrowseError("Path does not exist.")
 
         if not full_path.is_dir():
             raise BrowseError("Path is not a directory.")
