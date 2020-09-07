@@ -2306,3 +2306,18 @@ def test_is_template_string():
     assert template.is_template_string("{# a comment #} Hey") is True
     assert template.is_template_string("1") is False
     assert template.is_template_string("Some Text") is False
+
+
+async def test_protected_blocked(hass):
+    """Test accessing __getattr__ produces a template error."""
+    tmp = template.Template('{{ states.__getattr__("any") }}', hass)
+    with pytest.raises(TemplateError):
+        tmp.async_render()
+
+    tmp = template.Template('{{ states.sensor.__getattr__("any") }}', hass)
+    with pytest.raises(TemplateError):
+        tmp.async_render()
+
+    tmp = template.Template('{{ states.sensor.any.__getattr__("any") }}', hass)
+    with pytest.raises(TemplateError):
+        tmp.async_render()
