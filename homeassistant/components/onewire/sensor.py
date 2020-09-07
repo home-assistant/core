@@ -20,8 +20,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 from .const import (
-    CONF_NAMES,
     CONF_MOUNT_DIR,
+    CONF_NAMES,
     CONF_TYPE_OWFS,
     CONF_TYPE_OWSERVER,
     CONF_TYPE_SYSBUS,
