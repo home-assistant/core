@@ -15,7 +15,6 @@ from . import ShellyDeviceWrapper
 from .const import DOMAIN
 from .entity import ShellyBlockEntity
 
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up cover for device."""
     wrapper = hass.data[DOMAIN][config_entry.entry_id]
@@ -42,7 +41,11 @@ class ShellyCover(ShellyBlockEntity, CoverEntity):
     def is_closed(self):
         """If cover is closed."""
         if self.control_result:
+<<<<<<< HEAD
             return self.control_result["current_pos"] == 0
+=======
+            return self.control_result["rollerPos"] == 0
+>>>>>>> b910f0412325488a4b4975ddf2272f27ed66b513
 
         return self.block.rollerPos == 0
 
@@ -57,17 +60,23 @@ class ShellyCover(ShellyBlockEntity, CoverEntity):
     @property
     def is_closing(self):
         """Return if the cover is closing."""
+<<<<<<< HEAD
         if self.control_result:
             return self.control_result["state"] == "close"
 
+=======
+>>>>>>> b910f0412325488a4b4975ddf2272f27ed66b513
         return self.block.roller == "close"
 
     @property
     def is_opening(self):
         """Return if the cover is opening."""
+<<<<<<< HEAD
         if self.control_result:
             return self.control_result["state"] == "open"
 
+=======
+>>>>>>> b910f0412325488a4b4975ddf2272f27ed66b513
         return self.block.roller == "open"
 
     @property
@@ -88,7 +97,12 @@ class ShellyCover(ShellyBlockEntity, CoverEntity):
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
         self.control_result = await self.block.set_state(
+<<<<<<< HEAD
             go="to_pos", roller_pos=kwargs[ATTR_POSITION]
+=======
+            go="to_pos",
+            roller_pos=kwargs[ATTR_POSITION]
+>>>>>>> b910f0412325488a4b4975ddf2272f27ed66b513
         )
         self.async_write_ha_state()
 
