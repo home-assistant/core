@@ -21,7 +21,6 @@ from homeassistant.components.mqtt.const import MQTT_DISCONNECTED
 from homeassistant.components.tasmota import DEFAULT_PREFIX
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.setup import async_setup_component
 
 from .conftest import setup_tasmota
 
@@ -178,13 +177,6 @@ async def help_test_availability_discovery_update(
     assert state.state != STATE_UNAVAILABLE
 
 
-async def help_test_unique_id(hass, mqtt_mock, domain, config):
-    """Test unique id option only creates one entity per unique_id."""
-    assert await async_setup_component(hass, domain, config)
-    await hass.async_block_till_done()
-    assert len(hass.states.async_entity_ids(domain)) == 1
-
-
 async def help_test_discovery_removal(
     hass, mqtt_mock, caplog, domain, config1, config2
 ):
@@ -223,62 +215,6 @@ async def help_test_discovery_removal(
 
     # Verify state is removed
     state = hass.states.get(f"{domain}.test")
-    assert state is None
-
-
-async def help_test_discovery_update(
-    hass,
-    mqtt_mock,
-    caplog,
-    domain,
-    discovery_data1,
-    discovery_data2,
-    state_data1=None,
-    state_data2=None,
-):
-    """Test update of discovered component.
-
-    This is a test helper for the TasmotaDiscoveryUpdate mixin.
-    """
-    await setup_tasmota(hass)
-
-    async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", discovery_data1)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(f"{domain}.beer")
-    assert state is not None
-    assert state.name == "Beer"
-
-    if state_data1:
-        for (mqtt_messages, expected_state, attributes) in state_data1:
-            for (topic, data) in mqtt_messages:
-                async_fire_mqtt_message(hass, topic, data)
-            state = hass.states.get(f"{domain}.beer")
-            if expected_state:
-                assert state.state == expected_state
-            if attributes:
-                for (attr, value) in attributes:
-                    assert state.attributes.get(attr) == value
-
-    async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", discovery_data2)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(f"{domain}.beer")
-    assert state is not None
-    assert state.name == "Milk"
-
-    if state_data2:
-        for (mqtt_messages, expected_state, attributes) in state_data2:
-            for (topic, data) in mqtt_messages:
-                async_fire_mqtt_message(hass, topic, data)
-            state = hass.states.get(f"{domain}.beer")
-            if expected_state:
-                assert state.state == expected_state
-            if attributes:
-                for (attr, value) in attributes:
-                    assert state.attributes.get(attr) == value
-
-    state = hass.states.get(f"{domain}.milk")
     assert state is None
 
 

@@ -17,11 +17,9 @@ from .test_common import (
     help_test_discovery_broken,
     help_test_discovery_device_remove,
     help_test_discovery_removal,
-    help_test_discovery_update,
     help_test_discovery_update_unchanged,
     help_test_entity_id_update_discovery_update,
     help_test_entity_id_update_subscriptions,
-    help_test_unique_id,
 )
 
 from tests.async_mock import patch
@@ -138,29 +136,6 @@ async def test_availability_discovery_update(hass, mqtt_mock):
     )
 
 
-async def disabled_test_unique_id(hass, mqtt_mock):
-    """Test unique id option only creates one switch per unique_id."""
-    config = {
-        switch.DOMAIN: [
-            {
-                "platform": "mqtt",
-                "name": "Test 1",
-                "state_topic": "test-topic",
-                "command_topic": "command-topic",
-                "unique_id": "TOTALLY_UNIQUE",
-            },
-            {
-                "platform": "mqtt",
-                "name": "Test 2",
-                "state_topic": "test-topic",
-                "command_topic": "command-topic",
-                "unique_id": "TOTALLY_UNIQUE",
-            },
-        ]
-    }
-    await help_test_unique_id(hass, mqtt_mock, switch.DOMAIN, config)
-
-
 async def test_discovery_removal_switch(hass, mqtt_mock, caplog):
     """Test removal of discovered switch."""
     config1 = copy.deepcopy(DEFAULT_CONFIG)
@@ -169,23 +144,6 @@ async def test_discovery_removal_switch(hass, mqtt_mock, caplog):
 
     await help_test_discovery_removal(
         hass, mqtt_mock, caplog, switch.DOMAIN, config1, config2
-    )
-
-
-async def disabled_test_discovery_update_switch(hass, mqtt_mock, caplog):
-    """Test update of discovered switch."""
-    data1 = (
-        '{ "name": "Beer",'
-        '  "state_topic": "test_topic",'
-        '  "command_topic": "test_topic" }'
-    )
-    data2 = (
-        '{ "name": "Milk",'
-        '  "state_topic": "test_topic",'
-        '  "command_topic": "test_topic" }'
-    )
-    await help_test_discovery_update(
-        hass, mqtt_mock, caplog, switch.DOMAIN, data1, data2
     )
 
 
