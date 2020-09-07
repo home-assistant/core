@@ -14,19 +14,18 @@ from homeassistant.const import (
     CONF_PROTOCOL,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_DEVICE_BAUD,
     CONF_DEVICE_PATH,
-    DEFAULT_ZONE_OPTIONS,
+    DATA_AD,
+    DATA_REMOVE_STOP_LISTENER,
+    DATA_REMOVE_UPDATE_LISTENER,
     DOMAIN,
-    OPTIONS_ZONES,
     PROTOCOL_SERIAL,
     PROTOCOL_SOCKET,
-    SIGNAL_OPTIONS_UPDATE,
     SIGNAL_PANEL_MESSAGE,
     SIGNAL_REL_MESSAGE,
     SIGNAL_RFX_MESSAGE,
@@ -37,6 +36,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 RESTART = False
+PLATFORMS = ["alarm_control_panel", "sensor", "binary_sensor"]
 
 
 async def async_setup(hass, config):
@@ -46,7 +46,7 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
     """Set up AlarmDecoder config flow."""
-    entry.add_update_listener(_update_listener)
+    undo_listener = entry.add_update_listener(_update_listener)
 
     ad_connection = entry.data
     protocol = ad_connection[CONF_PROTOCOL]
@@ -120,17 +120,23 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     controller.on_close += handle_closed_connection
     controller.on_expander_message += handle_rel_message
 
-    hass.data[DOMAIN] = controller
+    remove_stop_listener = hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, stop_alarmdecoder
+    )
+
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = {
+        DATA_AD: controller,
+        DATA_REMOVE_UPDATE_LISTENER: undo_listener,
+        DATA_REMOVE_STOP_LISTENER: remove_stop_listener,
+    }
 
     open_connection()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_alarmdecoder)
-
-    for component in _get_platforms(entry):
+    for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
-
     return True
 
 
@@ -143,7 +149,7 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
         await asyncio.gather(
             *[
                 hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in _get_platforms(entry)
+                for component in PLATFORMS
             ]
         )
     )
@@ -151,23 +157,19 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     if not unload_ok:
         return False
 
-    hass.data[DOMAIN].close()
-    hass.data.pop(DOMAIN)
+    hass.data[DOMAIN][entry.entry_id][DATA_REMOVE_UPDATE_LISTENER]()
+    hass.data[DOMAIN][entry.entry_id][DATA_REMOVE_STOP_LISTENER]()
+    hass.data[DOMAIN][entry.entry_id][DATA_AD].close()
+
+    if hass.data[DOMAIN][entry.entry_id]:
+        hass.data[DOMAIN].pop(entry.entry_id)
+        if not hass.data[DOMAIN]:
+            hass.data.pop(DOMAIN)
 
     return True
-
-
-def _get_platforms(entry: ConfigEntry):
-    """Get a list of platforms for loading/unloading AlarmDecoder."""
-    zones = entry.options.get(OPTIONS_ZONES, DEFAULT_ZONE_OPTIONS)
-    platforms = ["alarm_control_panel", "sensor"]
-    if zones:
-        platforms.append("binary_sensor")
-
-    return platforms
 
 
 async def _update_listener(hass: HomeAssistantType, entry: ConfigEntry):
     """Handle options update."""
     _LOGGER.debug("AlarmDecoder options updated: %s", entry.as_dict()["options"])
-    async_dispatcher_send(hass, SIGNAL_OPTIONS_UPDATE, entry)
+    await hass.config_entries.async_reload(entry.entry_id)

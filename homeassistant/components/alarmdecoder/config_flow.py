@@ -63,9 +63,6 @@ class AlarmDecoderFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         if user_input is not None:
             self.protocol = user_input[CONF_PROTOCOL]
             return await self.async_step_protocol()
@@ -85,6 +82,8 @@ class AlarmDecoderFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle AlarmDecoder protocol setup."""
         errors = {}
         if user_input is not None:
+            if _device_already_added(self._async_current_entries(), user_input):
+                return self.async_abort(reason="already_configured")
             connection = {}
             if self.protocol == PROTOCOL_SOCKET:
                 baud = connection[CONF_DEVICE_BAUD] = DEFAULT_DEVICE_BAUD
@@ -329,3 +328,27 @@ def _fix_input_types(zone_input):
             zone_input[key] = int(zone_input[key])
 
     return zone_input
+
+
+def _device_already_added(current_entries, user_input):
+    """Determine if entry has already been added to HA."""
+    user_host = user_input.get(CONF_HOST)
+    user_port = user_input.get(CONF_PORT)
+    user_path = user_input.get(CONF_DEVICE_PATH)
+    user_baud = user_input.get(CONF_DEVICE_BAUD)
+
+    for entry in current_entries:
+        entry_host = entry.data.get(CONF_HOST)
+        entry_port = entry.data.get(CONF_PORT)
+        entry_path = entry.data.get(CONF_DEVICE_PATH)
+        entry_baud = entry.data.get(CONF_DEVICE_BAUD)
+
+        # Identifier for socket entry
+        if user_host == entry_host and user_port == entry_port:
+            return True
+
+        # Identifier for serial entry
+        if user_baud == entry_baud and user_path == entry_path:
+            return True
+
+    return False

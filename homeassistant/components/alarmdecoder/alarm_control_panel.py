@@ -30,10 +30,10 @@ from .const import (
     CONF_ALT_NIGHT_MODE,
     CONF_AUTO_BYPASS,
     CONF_CODE_ARM_REQUIRED,
+    DATA_AD,
     DEFAULT_ARM_OPTIONS,
     DOMAIN,
     OPTIONS_ARM,
-    SIGNAL_OPTIONS_UPDATE,
     SIGNAL_PANEL_MESSAGE,
 )
 
@@ -63,8 +63,10 @@ async def async_setup_entry(
     """Set up for AlarmDecoder alarm panels."""
     options = entry.options
     arm_options = options.get(OPTIONS_ARM, DEFAULT_ARM_OPTIONS)
+    client = hass.data[DOMAIN][entry.entry_id][DATA_AD]
 
     entity = AlarmDecoderAlarmPanel(
+        client=client,
         auto_bypass=arm_options[CONF_AUTO_BYPASS],
         code_arm_required=arm_options[CONF_CODE_ARM_REQUIRED],
         alt_night_mode=arm_options[CONF_ALT_NIGHT_MODE],
@@ -74,11 +76,15 @@ async def async_setup_entry(
     platform = entity_platform.current_platform.get()
 
     platform.async_register_entity_service(
-        SERVICE_ALARM_TOGGLE_CHIME, ALARM_TOGGLE_CHIME_SCHEMA, "alarm_toggle_chime",
+        SERVICE_ALARM_TOGGLE_CHIME,
+        ALARM_TOGGLE_CHIME_SCHEMA,
+        "alarm_toggle_chime",
     )
 
     platform.async_register_entity_service(
-        SERVICE_ALARM_KEYPRESS, ALARM_KEYPRESS_SCHEMA, "alarm_keypress",
+        SERVICE_ALARM_KEYPRESS,
+        ALARM_KEYPRESS_SCHEMA,
+        "alarm_keypress",
     )
 
     return True
@@ -87,8 +93,9 @@ async def async_setup_entry(
 class AlarmDecoderAlarmPanel(AlarmControlPanelEntity):
     """Representation of an AlarmDecoder-based alarm panel."""
 
-    def __init__(self, auto_bypass, code_arm_required, alt_night_mode):
+    def __init__(self, client, auto_bypass, code_arm_required, alt_night_mode):
         """Initialize the alarm panel."""
+        self._client = client
         self._display = ""
         self._name = "Alarm Panel"
         self._state = None
@@ -113,18 +120,6 @@ class AlarmDecoderAlarmPanel(AlarmControlPanelEntity):
                 SIGNAL_PANEL_MESSAGE, self._message_callback
             )
         )
-        self.async_on_remove(
-            self.hass.helpers.dispatcher.async_dispatcher_connect(
-                SIGNAL_OPTIONS_UPDATE, self._async_update_options,
-            )
-        )
-
-    async def _async_update_options(self, entry: ConfigEntry):
-        """Options update handler."""
-        updated_arm_options = entry.options[OPTIONS_ARM]
-        self._alt_night_mode = updated_arm_options[CONF_ALT_NIGHT_MODE]
-        self._auto_bypass = updated_arm_options[CONF_AUTO_BYPASS]
-        self._code_arm_required = updated_arm_options[CONF_CODE_ARM_REQUIRED]
 
     def _message_callback(self, message):
         """Handle received messages."""
@@ -202,11 +197,11 @@ class AlarmDecoderAlarmPanel(AlarmControlPanelEntity):
     def alarm_disarm(self, code=None):
         """Send disarm command."""
         if code:
-            self.hass.data[DOMAIN].send(f"{code!s}1")
+            self._client.send(f"{code!s}1")
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
-        self.hass.data[DOMAIN].arm_away(
+        self._client.arm_away(
             code=code,
             code_arm_required=self._code_arm_required,
             auto_bypass=self._auto_bypass,
@@ -214,7 +209,7 @@ class AlarmDecoderAlarmPanel(AlarmControlPanelEntity):
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
-        self.hass.data[DOMAIN].arm_home(
+        self._client.arm_home(
             code=code,
             code_arm_required=self._code_arm_required,
             auto_bypass=self._auto_bypass,
@@ -222,7 +217,7 @@ class AlarmDecoderAlarmPanel(AlarmControlPanelEntity):
 
     def alarm_arm_night(self, code=None):
         """Send arm night command."""
-        self.hass.data[DOMAIN].arm_night(
+        self._client.arm_night(
             code=code,
             code_arm_required=self._code_arm_required,
             alt_night_mode=self._alt_night_mode,
@@ -232,9 +227,9 @@ class AlarmDecoderAlarmPanel(AlarmControlPanelEntity):
     def alarm_toggle_chime(self, code=None):
         """Send toggle chime command."""
         if code:
-            self.hass.data[DOMAIN].send(f"{code!s}9")
+            self._client.send(f"{code!s}9")
 
     def alarm_keypress(self, keypress):
         """Send custom keypresses."""
         if keypress:
-            self.hass.data[DOMAIN].send(keypress)
+            self._client.send(keypress)

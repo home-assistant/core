@@ -22,7 +22,7 @@
     },
     "create_entry": { "default": "Successfully connected to AlarmDecoder." },
     "abort": {
-      "single_instance_allowed": "Only a single configuration of AlarmDecoder is allowed."
+      "already_configured": "AlarmDecoder device is already configured."
     }
   },
   "options": {

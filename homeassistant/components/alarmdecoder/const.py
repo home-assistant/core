@@ -13,6 +13,10 @@ CONF_ZONE_NUMBER = "zone_number"
 CONF_ZONE_RFID = "zone_rfid"
 CONF_ZONE_TYPE = "zone_type"
 
+DATA_AD = "alarmdecoder"
+DATA_REMOVE_STOP_LISTENER = "rm_stop_listener"
+DATA_REMOVE_UPDATE_LISTENER = "rm_update_listener"
+
 DEFAULT_ALT_NIGHT_MODE = False
 DEFAULT_AUTO_BYPASS = False
 DEFAULT_CODE_ARM_REQUIRED = True
@@ -30,7 +34,6 @@ OPTIONS_ZONES = "zone_options"
 PROTOCOL_SOCKET = "socket"
 PROTOCOL_SERIAL = "serial"
 
-SIGNAL_OPTIONS_UPDATE = "alarmdecoder_options_update"
 SIGNAL_PANEL_MESSAGE = "alarmdecoder.panel_message"
 SIGNAL_REL_MESSAGE = "alarmdecoder.rel_message"
 SIGNAL_RFX_MESSAGE = "alarmdecoder.rfx_message"
