@@ -65,16 +65,19 @@ UPDATE_FIELDS = {
 }
 
 
-def _format_timedelta(delta):
-    if isinstance(delta, str):
-        return delta
-    if isinstance(delta, int):
-        total_seconds = delta
-    else:
-        total_seconds = delta.total_seconds()
+def _format_timedelta(delta: timedelta):
+    total_seconds = delta.total_seconds()
     hours, remainder = divmod(total_seconds, 3600)
     minutes, seconds = divmod(remainder, 60)
     return f"{int(hours)}:{int(minutes):02}:{int(seconds):02}"
+
+
+def _parse_duration(duration: str) -> timedelta:
+    parts = duration.split(":")
+    hours = int(parts[0])
+    minutes = int(parts[1])
+    seconds = int(parts[2])
+    return timedelta(hours=hours, minutes=minutes, seconds=seconds)
 
 
 def _none_to_empty_dict(value):
@@ -91,9 +94,9 @@ CONFIG_SCHEMA = vol.Schema(
                 {
                     vol.Optional(CONF_NAME): cv.string,
                     vol.Optional(CONF_ICON): cv.icon,
-                    vol.Optional(
-                        CONF_DURATION, default=DEFAULT_DURATION
-                    ): cv.time_period,
+                    vol.Optional(CONF_DURATION, default=DEFAULT_DURATION): vol.All(
+                        cv.time_period, _format_timedelta
+                    ),
                 },
             )
         )
@@ -185,7 +188,8 @@ class TimerStorageCollection(collection.StorageCollection):
         """Return a new updated data object."""
         data = {**data, **self.UPDATE_SCHEMA(update_data)}
         # make duration JSON serializeable
-        data[CONF_DURATION] = _format_timedelta(data[CONF_DURATION])
+        if CONF_DURATION in update_data:
+            data[CONF_DURATION] = _format_timedelta(data[CONF_DURATION])
         return data
 
 
@@ -197,6 +201,7 @@ class Timer(RestoreEntity):
         self._config: dict = config
         self.editable: bool = True
         self._state: str = STATUS_IDLE
+        self._duration = _parse_duration(config[CONF_DURATION])
         self._remaining: Optional[timedelta] = None
         self._end: Optional[datetime] = None
         self._listener = None
@@ -238,7 +243,7 @@ class Timer(RestoreEntity):
     def state_attributes(self):
         """Return the state attributes."""
         attrs = {
-            ATTR_DURATION: _format_timedelta(self._config[CONF_DURATION]),
+            ATTR_DURATION: _format_timedelta(self._duration),
             ATTR_EDITABLE: self.editable,
         }
         if self._end is not None:
@@ -278,15 +283,18 @@ class Timer(RestoreEntity):
 
         self._state = STATUS_ACTIVE
         start = dt_util.utcnow().replace(microsecond=0)
+
         if self._remaining and newduration is None:
             self._end = start + self._remaining
+
+        elif newduration:
+            self._duration = newduration
+            self._remaining = newduration
+            self._end = start + self._duration
+
         else:
-            if newduration:
-                self._config[CONF_DURATION] = newduration
-                self._remaining = newduration
-            else:
-                self._remaining = self._config[CONF_DURATION]
-            self._end = start + self._config[CONF_DURATION]
+            self._remaining = self._duration
+            self._end = start + self._duration
 
         self.hass.bus.async_fire(event, {"entity_id": self.entity_id})
 
@@ -350,4 +358,5 @@ class Timer(RestoreEntity):
     async def async_update_config(self, config: Dict) -> None:
         """Handle when the config is updated."""
         self._config = config
+        self._duration = _parse_duration(config[CONF_DURATION])
         self.async_write_ha_state()

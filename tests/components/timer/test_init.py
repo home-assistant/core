@@ -62,7 +62,7 @@ def storage_setup(hass, hass_storage):
                         {
                             ATTR_ID: "from_storage",
                             ATTR_NAME: "timer from storage",
-                            ATTR_DURATION: 0,
+                            ATTR_DURATION: "0:00:00",
                         }
                     ]
                 },
