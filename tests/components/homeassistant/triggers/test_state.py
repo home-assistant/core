@@ -925,6 +925,64 @@ async def test_if_fires_on_change_with_for_template_3(hass, calls):
     assert len(calls) == 1
 
 
+async def test_if_fires_on_change_from_with_for(hass, calls):
+    """Test for firing on change with from/for."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "state",
+                    "entity_id": "media_player.foo",
+                    "from": "playing",
+                    "for": "00:00:30",
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    hass.states.async_set("media_player.foo", "playing")
+    await hass.async_block_till_done()
+    hass.states.async_set("media_player.foo", "paused")
+    await hass.async_block_till_done()
+    hass.states.async_set("media_player.foo", "stopped")
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=1))
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+
+async def test_if_not_fires_on_change_from_with_for(hass, calls):
+    """Test for firing on change with from/for."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "state",
+                    "entity_id": "media_player.foo",
+                    "from": "playing",
+                    "for": "00:00:30",
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    hass.states.async_set("media_player.foo", "playing")
+    await hass.async_block_till_done()
+    hass.states.async_set("media_player.foo", "paused")
+    await hass.async_block_till_done()
+    hass.states.async_set("media_player.foo", "playing")
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=1))
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+
 async def test_invalid_for_template_1(hass, calls):
     """Test for invalid for template."""
     assert await async_setup_component(
