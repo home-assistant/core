@@ -51,7 +51,7 @@
       },
       "zone_details": {
         "title": "Configure AlarmDecoder",
-        "description": "Enter details for zone {zone_number}. To delete zone {zone_number}, leave Zone Name blank. Restart Home Assistant for zone changes to take effect.",
+        "description": "Enter details for zone {zone_number}. To delete zone {zone_number}, leave Zone Name blank.",
         "data": {
           "zone_name": "Zone Name",
           "zone_type": "Zone Type",
