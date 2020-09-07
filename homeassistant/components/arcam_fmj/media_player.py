@@ -7,7 +7,7 @@ from arcam.fmj.state import State
 from homeassistant import config_entries
 from homeassistant.components.media_player import BrowseMedia, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
-    MEDIA_CLASS_CHANNELS,
+    MEDIA_CLASS_DIRECTORY,
     MEDIA_CLASS_MUSIC,
     MEDIA_TYPE_MUSIC,
     SUPPORT_BROWSE_MEDIA,
@@ -268,7 +268,7 @@ class ArcamFmj(MediaPlayerEntity):
 
         root = BrowseMedia(
             title="Root",
-            media_class=MEDIA_CLASS_CHANNELS,  # FIXME: Should we use directory instead?
+            media_class=MEDIA_CLASS_DIRECTORY,
             media_content_id="root",
             media_content_type="library",
             can_play=False,
