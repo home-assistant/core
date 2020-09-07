@@ -197,18 +197,14 @@ class TPLinkSmartBulb(LightEntity):
         await self._async_set_light_state_retry(
             self._light_state,
             self._light_state._replace(
-                state=True,
-                brightness=brightness,
-                color_temp=color_tmp,
-                hs=hue_sat,
+                state=True, brightness=brightness, color_temp=color_tmp, hs=hue_sat,
             ),
         )
 
     async def async_turn_off(self, **kwargs):
         """Turn the light off."""
         await self._async_set_light_state_retry(
-            self._light_state,
-            self._light_state._replace(state=False),
+            self._light_state, self._light_state._replace(state=False),
         )
 
     @property
@@ -258,11 +254,10 @@ class TPLinkSmartBulb(LightEntity):
             _LOGGER.warning(
                 "Retrying in %s seconds for %s|%s due to: %s",
                 SLEEP_TIME,
-                self._host,
-                self._alias,
+                self._light_features.host,
+                self._light_features.alias,
                 ex,
             )
-        return
 
     @property
     def supported_features(self):
@@ -494,15 +489,17 @@ class TPLinkSmartBulb(LightEntity):
             await self.hass.async_add_executor_job(self.attempt_update)
 
             if self._is_ready:
-                self._available = True
+                self._is_available = True
                 break
             await asyncio.sleep(SLEEP_TIME)
         else:
             if self._available:
                 _LOGGER.warning(
-                    "Could not read state for %s|%s", self._host, self._alias
+                    "Could not read state for %s|%s",
+                    self._light_features.host,
+                    self._light_features.alias,
                 )
-            self._available = False
+            self._is_available = False
 
 
 def _light_state_diff(old_light_state: LightState, new_light_state: LightState):

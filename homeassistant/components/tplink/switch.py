@@ -57,7 +57,7 @@ class SmartPlugSwitch(SwitchEntity):
         self.smartplug = smartplug
         self._sysinfo = None
         self._state = None
-        self._available = False
+        self._is_available = False
         # Set up emeter cache
         self._emeter_params = {}
 
@@ -93,7 +93,7 @@ class SmartPlugSwitch(SwitchEntity):
     @property
     def available(self) -> bool:
         """Return if switch is available."""
-        return self._available
+        return self._is_available
 
     @property
     def is_on(self):
@@ -177,7 +177,6 @@ class SmartPlugSwitch(SwitchEntity):
                 self._alias,
                 ex,
             )
-        return
 
     async def async_update(self):
         """Update the TP-Link switch's state."""
@@ -187,12 +186,12 @@ class SmartPlugSwitch(SwitchEntity):
             await self.hass.async_add_executor_job(self.attempt_update)
 
             if self._is_ready:
-                self._available = True
+                self._is_available = True
                 break
             await asyncio.sleep(SLEEP_TIME)
         else:
-            if self._available:
+            if self._is_available:
                 _LOGGER.warning(
                     "Could not read state for %s|%s", self._host, self._alias
                 )
-            self._available = False
+            self._is_available = False
