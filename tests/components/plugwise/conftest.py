@@ -1,7 +1,6 @@
 """Setup mocks for the Plugwise integration tests."""
 
 from functools import partial
-import os
 import re
 
 from Plugwise_Smile.Smile import Smile
@@ -9,18 +8,14 @@ import jsonpickle
 import pytest
 
 from tests.async_mock import AsyncMock, patch
+from tests.common import load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 def _read_json(environment, call):
     """Undecode the json data."""
-    fixture = call + ".json"
-    path = os.path.join(
-        os.path.dirname(__file__), "../../fixtures/plugwise/" + environment, fixture
-    )
-    with open(path) as fixture_file:
-        data = fixture_file.read()
-        return jsonpickle.decode(data)
+    fixture = load_fixture(f"plugwise/{environment}/{call}.json")
+    return jsonpickle.decode(fixture)
 
 
 @pytest.fixture(name="mock_smile")
