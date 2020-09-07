@@ -49,7 +49,7 @@ class ShellyCover(ShellyBlockEntity, CoverEntity):
     def current_cover_position(self):
         """Position of the cover."""
         if self.control_result:
-            return self.control_result["rollerPos"]
+            return self.control_result["current_pos"]
 
         return self.block.rollerPos
 
