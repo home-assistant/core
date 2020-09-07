@@ -497,7 +497,7 @@ class TPLinkSmartBulb(LightEntity):
                 break
             await asyncio.sleep(SLEEP_TIME)
         else:
-            if self._available:
+            if self._is_available:
                 _LOGGER.warning(
                     "Could not read state for %s|%s",
                     self._light_features.host,
