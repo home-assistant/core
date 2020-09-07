@@ -149,7 +149,7 @@ class DevoloConsumptionEntity(DevoloMultiLevelDeviceEntity):
     @property
     def unique_id(self):
         """Return the unique ID of the entity."""
-        return self._unique_id + self.sensor_type
+        return f"{self._unique_id}_{self.sensor_type}"
 
     def _sync(self, message=None):
         """Update the consumption sensor state."""
