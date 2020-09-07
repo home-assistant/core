@@ -241,14 +241,13 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
         """Implement the websocket media browsing helper."""
         if media_content_type in [None, "library"]:
-            response = await library_payload(self.coordinator)
-            return response
+            return library_payload(self.coordinator)
 
         payload = {
             "search_type": media_content_type,
             "search_id": media_content_id,
         }
-        response = await build_item_response(self.coordinator, payload)
+        response = build_item_response(self.coordinator, payload)
 
         if response is None:
             raise BrowseError(
