@@ -67,9 +67,9 @@ class DevoloMultiLevelDeviceEntity(DevoloDeviceEntity):
     ):
         """Initialize a devolo multi level sensor."""
         if multi_level_sensor_property is None:
-            self._multi_level_sensor_property = device_instance.multi_level_sensor_property[
-                element_uid
-            ]
+            self._multi_level_sensor_property = (
+                device_instance.multi_level_sensor_property[element_uid]
+            )
         else:
             self._multi_level_sensor_property = multi_level_sensor_property
 
