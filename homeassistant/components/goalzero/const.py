@@ -6,11 +6,11 @@ from homeassistant.const import (
     CONF_BINARY_SENSORS,
     CONF_NAME,
     ENERGY_WATT_HOUR,
+    PERCENTAGE,
     POWER_WATT,
     TEMP_CELSIUS,
     TIME_MINUTES,
     TIME_SECONDS,
-    PERCENTAGE,
 )
 
 DATA_KEY_COORDINATOR = "coordinator"
