@@ -80,7 +80,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     priority = config[CONF_PRIORITY]
 
     # Use loop outside of HA's tracked task in order not to delay startup.
-    # device = Hyperion(name, host, port, priority, token, instance, hass.loop)
     hyperion_client = client.HyperionClient(host, port, loop=hass.loop)
 
     if not await hyperion_client.async_connect():
