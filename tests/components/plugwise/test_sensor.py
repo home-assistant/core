@@ -11,7 +11,7 @@ async def test_adam_climate_sensor_entities(hass, mock_smile_adam):
     assert entry.state == ENTRY_STATE_LOADED
 
     state = hass.states.get("sensor.adam_outdoor_temperature")
-    assert float(state.state) == 7.8
+    assert float(state.state) == 7.81
 
     state = hass.states.get("sensor.cv_pomp_electricity_consumed")
     assert float(state.state) == 35.6
@@ -63,4 +63,4 @@ async def test_p1_dsmr_sensor_entities(hass, mock_smile_p1):
     assert int(state.state) == 442
 
     state = hass.states.get("sensor.p1_gas_consumed_cumulative")
-    assert float(state.state) == 584.85
+    assert float(state.state) == 584.9
