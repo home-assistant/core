@@ -11,6 +11,11 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
 )
 from homeassistant.components.media_player.const import (
+    MEDIA_CLASS_APP,
+    MEDIA_CLASS_APPS,
+    MEDIA_CLASS_CHANNEL,
+    MEDIA_CLASS_CHANNELS,
+    MEDIA_CLASS_DIRECTORY,
     MEDIA_TYPE_APP,
     MEDIA_TYPE_APPS,
     MEDIA_TYPE_CHANNEL,
@@ -79,6 +84,7 @@ def browse_media_library(channels: bool = False) -> BrowseMedia:
     """Create response payload to describe contents of a specific library."""
     library_info = BrowseMedia(
         title="Media Library",
+        media_class=MEDIA_CLASS_DIRECTORY,
         media_content_id="library",
         media_content_type="library",
         can_play=False,
@@ -89,6 +95,7 @@ def browse_media_library(channels: bool = False) -> BrowseMedia:
     library_info.children.append(
         BrowseMedia(
             title="Apps",
+            media_class=MEDIA_CLASS_APPS,
             media_content_id="apps",
             media_content_type=MEDIA_TYPE_APPS,
             can_expand=True,
@@ -100,6 +107,7 @@ def browse_media_library(channels: bool = False) -> BrowseMedia:
         library_info.children.append(
             BrowseMedia(
                 title="Channels",
+                media_class=MEDIA_CLASS_CHANNELS,
                 media_content_id="channels",
                 media_content_type=MEDIA_TYPE_CHANNELS,
                 can_expand=True,
@@ -286,6 +294,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         if media_content_type == MEDIA_TYPE_APPS:
             response = BrowseMedia(
                 title="Apps",
+                media_class=MEDIA_CLASS_APPS,
                 media_content_id="apps",
                 media_content_type=MEDIA_TYPE_APPS,
                 can_expand=True,
@@ -294,6 +303,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
                     BrowseMedia(
                         title=app.name,
                         thumbnail=self.coordinator.roku.app_icon_url(app.app_id),
+                        media_class=MEDIA_CLASS_APP,
                         media_content_id=app.app_id,
                         media_content_type=MEDIA_TYPE_APP,
                         can_play=True,
@@ -306,6 +316,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         if media_content_type == MEDIA_TYPE_CHANNELS:
             response = BrowseMedia(
                 title="Channels",
+                media_class=MEDIA_CLASS_CHANNELS,
                 media_content_id="channels",
                 media_content_type=MEDIA_TYPE_CHANNELS,
                 can_expand=True,
@@ -313,6 +324,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
                 children=[
                     BrowseMedia(
                         title=channel.name,
+                        media_class=MEDIA_CLASS_CHANNEL,
                         media_content_id=channel.number,
                         media_content_type=MEDIA_TYPE_CHANNEL,
                         can_play=True,
