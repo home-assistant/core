@@ -162,6 +162,8 @@ def item_payload(item, media_library):
         media_content_type = MEDIA_TYPE_TVSHOW
         media_content_id = f"{item['tvshowid']}"
     else:
+        # this case is for the top folder of each type
+        # possible content types: album, artist, movie, library_music, tvshow
         media_content_type = item.get("type")
         media_content_id = ""
 
