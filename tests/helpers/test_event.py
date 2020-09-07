@@ -1035,6 +1035,46 @@ async def test_track_template_result_errors(hass, caplog):
         assert isinstance(not_exist_runs[2][3], TemplateError)
 
 
+async def test_static_string(hass):
+    """Test a static string."""
+    template_refresh = Template("{{ 'static' }}", hass)
+
+    refresh_runs = []
+
+    @ha.callback
+    def refresh_listener(event, updates):
+        refresh_runs.append(updates.pop().result)
+
+    info = async_track_template_result(
+        hass, [TrackTemplate(template_refresh, None)], refresh_listener
+    )
+    await hass.async_block_till_done()
+    info.async_refresh()
+    await hass.async_block_till_done()
+
+    assert refresh_runs == ["static"]
+
+
+async def test_string(hass):
+    """Test a string."""
+    template_refresh = Template("no_template", hass)
+
+    refresh_runs = []
+
+    @ha.callback
+    def refresh_listener(event, updates):
+        refresh_runs.append(updates.pop().result)
+
+    info = async_track_template_result(
+        hass, [TrackTemplate(template_refresh, None)], refresh_listener
+    )
+    await hass.async_block_till_done()
+    info.async_refresh()
+    await hass.async_block_till_done()
+
+    assert refresh_runs == ["no_template"]
+
+
 async def test_track_template_result_refresh_cancel(hass):
     """Test cancelling and refreshing result."""
     template_refresh = Template("{{states.switch.test.state == 'on' and now() }}", hass)
