@@ -170,6 +170,10 @@ POWER_BATTERY_OR_UNKNOWN = "Battery or Unknown"
 class RadioType(enum.Enum):
     """Possible options for radio type."""
 
+    znp = (
+        "ZNP = Texas Instruments Z-Stack ZNP protocol: CC253x, CC26x2, CC13x2",
+        zigpy_znp.zigbee.application.ControllerApplication,
+    )
     ezsp = (
         "EZSP = Silicon Labs EmberZNet protocol: Elelabs, HUSBZB-1, Telegesis",
         bellows.zigbee.application.ControllerApplication,
@@ -177,10 +181,6 @@ class RadioType(enum.Enum):
     deconz = (
         "deCONZ = dresden elektronik deCONZ protocol: ConBee I/II, RaspBee I/II",
         zigpy_deconz.zigbee.application.ControllerApplication,
-    )
-    znp = (
-        "ZNP = Texas Instruments Z-Stack ZNP protocol: CC253x, CC26x2, CC13x2",
-        zigpy_znp.zigbee.application.ControllerApplication,
     )
     ti_cc = (
         "Legacy TI_CC = Texas Instruments Z-Stack ZNP protocol: CC253x, CC26x2, CC13x2",
