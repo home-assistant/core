@@ -211,14 +211,14 @@ STORAGE_VOL_SENSORS = {
     f"{SynoStorage.API_KEY}:volume_disk_temp_avg": {
         ENTITY_NAME: "Average Disk Temp",
         ENTITY_UNIT: None,
-        ENTITY_ICON: "mdi:thermometer",
+        ENTITY_ICON: None,
         ENTITY_CLASS: "temperature",
         ENTITY_ENABLE: True,
     },
     f"{SynoStorage.API_KEY}:volume_disk_temp_max": {
         ENTITY_NAME: "Maximum Disk Temp",
         ENTITY_UNIT: None,
-        ENTITY_ICON: "mdi:thermometer",
+        ENTITY_ICON: None,
         ENTITY_CLASS: "temperature",
         ENTITY_ENABLE: False,
     },
@@ -241,7 +241,7 @@ STORAGE_DISK_SENSORS = {
     f"{SynoStorage.API_KEY}:disk_temp": {
         ENTITY_NAME: "Temperature",
         ENTITY_UNIT: None,
-        ENTITY_ICON: "mdi:thermometer",
+        ENTITY_ICON: None,
         ENTITY_CLASS: "temperature",
         ENTITY_ENABLE: True,
     },
