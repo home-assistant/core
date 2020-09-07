@@ -444,7 +444,7 @@ CONDUCTIVITY: str = f"µS/{LENGTH_CENTIMETERS}"
 UV_INDEX: str = "UV index"
 
 # Percentage units
-UNIT_PERCENTAGE = "%"
+PERCENTAGE = "%"
 
 # Irradiation units
 IRRADIATION_WATTS_PER_SQUARE_METER = f"{POWER_WATT}/{AREA_SQUARE_METERS}"

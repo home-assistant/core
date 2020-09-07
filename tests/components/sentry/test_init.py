@@ -98,11 +98,9 @@ async def test_setup_entry_with_tracing(hass: HomeAssistant) -> None:
         "integrations",
         "release",
         "before_send",
-        "traceparent_v2",
         "traces_sample_rate",
     }
     assert call_args["traces_sample_rate"] == 0.5
-    assert call_args["traceparent_v2"]
 
 
 @pytest.mark.parametrize(

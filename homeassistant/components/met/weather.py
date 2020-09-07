@@ -3,14 +3,23 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.weather import PLATFORM_SCHEMA, WeatherEntity
+from homeassistant.components.weather import (
+    ATTR_FORECAST_CONDITION,
+    ATTR_WEATHER_HUMIDITY,
+    ATTR_WEATHER_PRESSURE,
+    ATTR_WEATHER_TEMPERATURE,
+    ATTR_WEATHER_WIND_BEARING,
+    ATTR_WEATHER_WIND_SPEED,
+    PLATFORM_SCHEMA,
+    WeatherEntity,
+)
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_ELEVATION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_NAME,
-    LENGTH_METERS,
+    LENGTH_KILOMETERS,
     LENGTH_MILES,
     PRESSURE_HPA,
     PRESSURE_INHG,
@@ -21,7 +30,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.distance import convert as convert_distance
 from homeassistant.util.pressure import convert as convert_pressure
 
-from .const import CONF_TRACK_HOME, DOMAIN
+from .const import ATTR_MAP, CONDITIONS_MAP, CONF_TRACK_HOME, DOMAIN, FORECAST_MAP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,6 +87,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
+def format_condition(condition: str) -> str:
+    """Return condition from dict CONDITIONS_MAP."""
+    for key, value in CONDITIONS_MAP.items():
+        if condition in value:
+            return key
+    return condition
+
+
 class MetWeather(CoordinatorEntity, WeatherEntity):
     """Implementation of a Met.no weather condition."""
 
@@ -118,12 +135,15 @@ class MetWeather(CoordinatorEntity, WeatherEntity):
     @property
     def condition(self):
         """Return the current condition."""
-        return self.coordinator.data.current_weather_data.get("condition")
+        condition = self.coordinator.data.current_weather_data.get("condition")
+        return format_condition(condition)
 
     @property
     def temperature(self):
         """Return the temperature."""
-        return self.coordinator.data.current_weather_data.get("temperature")
+        return self.coordinator.data.current_weather_data.get(
+            ATTR_MAP[ATTR_WEATHER_TEMPERATURE]
+        )
 
     @property
     def temperature_unit(self):
@@ -133,7 +153,9 @@ class MetWeather(CoordinatorEntity, WeatherEntity):
     @property
     def pressure(self):
         """Return the pressure."""
-        pressure_hpa = self.coordinator.data.current_weather_data.get("pressure")
+        pressure_hpa = self.coordinator.data.current_weather_data.get(
+            ATTR_MAP[ATTR_WEATHER_PRESSURE]
+        )
         if self._is_metric or pressure_hpa is None:
             return pressure_hpa
 
@@ -142,23 +164,28 @@ class MetWeather(CoordinatorEntity, WeatherEntity):
     @property
     def humidity(self):
         """Return the humidity."""
-        return self.coordinator.data.current_weather_data.get("humidity")
+        return self.coordinator.data.current_weather_data.get(
+            ATTR_MAP[ATTR_WEATHER_HUMIDITY]
+        )
 
     @property
     def wind_speed(self):
         """Return the wind speed."""
-        speed_m_s = self.coordinator.data.current_weather_data.get("wind_speed")
-        if self._is_metric or speed_m_s is None:
-            return speed_m_s
+        speed_km_h = self.coordinator.data.current_weather_data.get(
+            ATTR_MAP[ATTR_WEATHER_WIND_SPEED]
+        )
+        if self._is_metric or speed_km_h is None:
+            return speed_km_h
 
-        speed_mi_s = convert_distance(speed_m_s, LENGTH_METERS, LENGTH_MILES)
-        speed_mi_h = speed_mi_s / 3600.0
+        speed_mi_h = convert_distance(speed_km_h, LENGTH_KILOMETERS, LENGTH_MILES)
         return int(round(speed_mi_h))
 
     @property
     def wind_bearing(self):
         """Return the wind direction."""
-        return self.coordinator.data.current_weather_data.get("wind_bearing")
+        return self.coordinator.data.current_weather_data.get(
+            ATTR_MAP[ATTR_WEATHER_WIND_BEARING]
+        )
 
     @property
     def attribution(self):
@@ -169,5 +196,16 @@ class MetWeather(CoordinatorEntity, WeatherEntity):
     def forecast(self):
         """Return the forecast array."""
         if self._hourly:
-            return self.coordinator.data.hourly_forecast
-        return self.coordinator.data.daily_forecast
+            met_forecast = self.coordinator.data.hourly_forecast
+        else:
+            met_forecast = self.coordinator.data.daily_forecast
+        ha_forecast = []
+        for met_item in met_forecast:
+            ha_item = {
+                k: met_item[v] for k, v in FORECAST_MAP.items() if met_item.get(v)
+            }
+            ha_item[ATTR_FORECAST_CONDITION] = format_condition(
+                ha_item[ATTR_FORECAST_CONDITION]
+            )
+            ha_forecast.append(ha_item)
+        return ha_forecast

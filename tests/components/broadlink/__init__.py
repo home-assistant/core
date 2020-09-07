@@ -1,7 +1,7 @@
 """Tests for the Broadlink integration."""
 from homeassistant.components.broadlink.const import DOMAIN
 
-from tests.async_mock import MagicMock
+from tests.async_mock import MagicMock, patch
 from tests.common import MockConfigEntry
 
 # Do not edit/remove. Adding is ok.
@@ -75,6 +75,21 @@ class BroadlinkDevice:
         self.devtype: int = devtype
         self.timeout: int = timeout
         self.fwversion: int = fwversion
+
+    async def setup_entry(self, hass, mock_api=None, mock_entry=None):
+        """Set up the device."""
+        mock_api = mock_api or self.get_mock_api()
+        mock_entry = mock_entry or self.get_mock_entry()
+        mock_entry.add_to_hass(hass)
+
+        with patch(
+            "homeassistant.components.broadlink.device.blk.gendevice",
+            return_value=mock_api,
+        ):
+            await hass.config_entries.async_setup(mock_entry.entry_id)
+            await hass.async_block_till_done()
+
+        return mock_api, mock_entry
 
     def get_mock_api(self):
         """Return a mock device (API)."""

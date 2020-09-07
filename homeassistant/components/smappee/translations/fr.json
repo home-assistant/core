@@ -5,6 +5,11 @@
             "missing_configuration": "Le composant n'est pas configur\u00e9. Veuillez suivre la documentation."
         },
         "step": {
+            "environment": {
+                "data": {
+                    "environment": "Environnement"
+                }
+            },
             "pick_implementation": {
                 "title": "Choisissez la m\u00e9thode d'authentification"
             }

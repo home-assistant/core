@@ -3,7 +3,7 @@
   "name": "Shelly",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/shelly2",
-  "requirements": ["aioshelly==0.2.1"],
+  "requirements": ["aioshelly==0.3.0"],
   "zeroconf": ["_http._tcp.local."],
   "codeowners": ["@balloob", "@bieniu"]
 }

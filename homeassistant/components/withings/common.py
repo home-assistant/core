@@ -30,9 +30,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_WEBHOOK_ID,
     MASS_KILOGRAMS,
+    PERCENTAGE,
     SPEED_METERS_PER_SECOND,
     TIME_SECONDS,
-    UNIT_PERCENTAGE,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -211,7 +211,7 @@ WITHINGS_ATTRIBUTES = [
         Measurement.FAT_RATIO_PCT,
         MeasureType.FAT_RATIO,
         "Fat Ratio",
-        UNIT_PERCENTAGE,
+        PERCENTAGE,
         None,
         SENSOR_DOMAIN,
         True,
@@ -251,7 +251,7 @@ WITHINGS_ATTRIBUTES = [
         Measurement.SPO2_PCT,
         MeasureType.SP02,
         "SP02",
-        UNIT_PERCENTAGE,
+        PERCENTAGE,
         None,
         SENSOR_DOMAIN,
         True,

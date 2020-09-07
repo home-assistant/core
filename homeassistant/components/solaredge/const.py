@@ -1,7 +1,7 @@
 """Constants for the SolarEdge Monitoring API."""
 from datetime import timedelta
 
-from homeassistant.const import ENERGY_WATT_HOUR, POWER_WATT, UNIT_PERCENTAGE
+from homeassistant.const import ENERGY_WATT_HOUR, PERCENTAGE, POWER_WATT
 
 DOMAIN = "solaredge"
 
@@ -77,5 +77,5 @@ SENSOR_TYPES = {
         False,
     ],
     "feedin_power": ["FeedIn", "Exported Power", None, "mdi:flash", False],
-    "storage_level": ["STORAGE", "Storage Level", UNIT_PERCENTAGE, None, False],
+    "storage_level": ["STORAGE", "Storage Level", PERCENTAGE, None, False],
 }

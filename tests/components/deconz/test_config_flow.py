@@ -1,7 +1,6 @@
 """Tests for deCONZ config flow."""
 import asyncio
 
-from asynctest.mock import patch
 import pydeconz
 
 from homeassistant import data_entry_flow
@@ -21,6 +20,8 @@ from homeassistant.components.deconz.const import (
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 
 from .test_gateway import API_KEY, BRIDGEID, setup_deconz_integration
+
+from tests.async_mock import patch
 
 
 async def test_flow_discovered_bridges(hass, aioclient_mock):

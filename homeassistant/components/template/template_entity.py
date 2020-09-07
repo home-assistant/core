@@ -1,7 +1,7 @@
 """TemplateEntity utility class."""
 
 import logging
-from typing import Any, Callable, Optional, Union
+from typing import Any, Callable, List, Optional, Union
 
 import voluptuous as vol
 
@@ -9,7 +9,12 @@ from homeassistant.core import EVENT_HOMEASSISTANT_START, CoreState, callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import Event, async_track_template_result
+from homeassistant.helpers.event import (
+    Event,
+    TrackTemplate,
+    TrackTemplateResult,
+    async_track_template_result,
+)
 from homeassistant.helpers.template import Template, result_as_boolean
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,7 +39,6 @@ class _TemplateAttribute:
         self.validator = validator
         self.on_update = on_update
         self.async_update = None
-        self.add_complete = False
         self.none_on_template_error = none_on_template_error
 
     @callback
@@ -54,21 +58,14 @@ class _TemplateAttribute:
         setattr(self._entity, self._attribute, attr_result)
 
     @callback
-    def _write_update_if_added(self):
-        if self.add_complete:
-            self._entity.async_write_ha_state()
-
-    @callback
-    def _handle_result(
+    def handle_result(
         self,
         event: Optional[Event],
         template: Template,
-        last_result: Optional[str],
+        last_result: Union[str, None, TemplateError],
         result: Union[str, TemplateError],
     ) -> None:
-        if event:
-            self._entity.async_set_context(event.context)
-
+        """Handle a template result event callback."""
         if isinstance(result, TemplateError):
             _LOGGER.error(
                 "TemplateError('%s') "
@@ -83,13 +80,10 @@ class _TemplateAttribute:
                 self._default_update(result)
             else:
                 self.on_update(result)
-            self._write_update_if_added()
-
             return
 
         if not self.validator:
             self.on_update(result)
-            self._write_update_if_added()
             return
 
         try:
@@ -107,26 +101,10 @@ class _TemplateAttribute:
                 ex.msg,
             )
             self.on_update(None)
-            self._write_update_if_added()
             return
 
         self.on_update(validated)
-        self._write_update_if_added()
-
-    @callback
-    def async_template_startup(self) -> None:
-        """Call from containing entity when added to hass."""
-        result_info = async_track_template_result(
-            self._entity.hass, self.template, self._handle_result
-        )
-
-        self.async_update = result_info.async_refresh
-
-        @callback
-        def _remove_from_hass():
-            result_info.async_remove()
-
-        return _remove_from_hass
+        return
 
 
 class TemplateEntity(Entity):
@@ -141,7 +119,8 @@ class TemplateEntity(Entity):
         attribute_templates=None,
     ):
         """Template Entity."""
-        self._template_attrs = []
+        self._template_attrs = {}
+        self._async_update = None
         self._attribute_templates = attribute_templates
         self._attributes = {}
         self._availability_template = availability_template
@@ -233,17 +212,41 @@ class TemplateEntity(Entity):
             self, attribute, template, validator, on_update, none_on_template_error
         )
         attribute.async_setup()
-        self._template_attrs.append(attribute)
+        self._template_attrs.setdefault(template, [])
+        self._template_attrs[template].append(attribute)
+
+    @callback
+    def _handle_results(
+        self,
+        event: Optional[Event],
+        updates: List[TrackTemplateResult],
+    ) -> None:
+        """Call back the results to the attributes."""
+        if event:
+            self.async_set_context(event.context)
+
+        for update in updates:
+            for attr in self._template_attrs[update.template]:
+                attr.handle_result(
+                    event, update.template, update.last_result, update.result
+                )
+
+        if self._async_update:
+            self.async_write_ha_state()
 
     async def _async_template_startup(self, *_) -> None:
-        # async_update will not write state
-        # until "add_complete" is set on the attribute
-        for attribute in self._template_attrs:
-            self.async_on_remove(attribute.async_template_startup())
-        await self.async_update()
-        for attribute in self._template_attrs:
-            attribute.add_complete = True
+        # _handle_results will not write state until "_async_update" is set
+        template_var_tups = [
+            TrackTemplate(template, None) for template in self._template_attrs
+        ]
+
+        result_info = async_track_template_result(
+            self.hass, template_var_tups, self._handle_results
+        )
+        self.async_on_remove(result_info.async_remove)
+        result_info.async_refresh()
         self.async_write_ha_state()
+        self._async_update = result_info.async_refresh
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
@@ -272,6 +275,4 @@ class TemplateEntity(Entity):
 
     async def async_update(self) -> None:
         """Call for forced update."""
-        for attribute in self._template_attrs:
-            if attribute.async_update:
-                attribute.async_update()
+        self._async_update()

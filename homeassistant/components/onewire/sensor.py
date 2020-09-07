@@ -1,13 +1,35 @@
 """Support for 1-Wire environment sensors."""
+from glob import glob
 import os
+import time
 
 from pyownet import protocol
+import voluptuous as vol
 
-from homeassistant.const import VOLT
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PORT,
+    CONF_TYPE,
+    ELECTRICAL_CURRENT_AMPERE,
+    PERCENTAGE,
+    TEMP_CELSIUS,
+    VOLT,
+)
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
-from .const import CONF_TYPE_SYSBUS, LOGGER, SENSOR_TYPES
-from .onewireentity import OneWireEntity
-from .onewireproxy import OneWireProxy, get_proxy_from_config_entry
+from .const import (
+    CONF_MOUNT_DIR,
+    CONF_TYPE_OWFS,
+    CONF_TYPE_OWSERVER,
+    CONF_TYPE_SYSBUS,
+    DEFAULT_PORT,
+    DEFAULT_SYSBUS_MOUNT_DIR,
+    LOGGER,
+)
+
+CONF_NAMES = "names"
 
 DEVICE_SENSORS = {
     # Family : { SensorType: owfs path }
@@ -48,107 +70,200 @@ HOBBYBOARD_EF = {
     },
 }
 
+SENSOR_TYPES = {
+    # SensorType: [ Measured unit, Unit ]
+    "temperature": ["temperature", TEMP_CELSIUS],
+    "humidity": ["humidity", PERCENTAGE],
+    "humidity_raw": ["humidity", PERCENTAGE],
+    "pressure": ["pressure", "mb"],
+    "illuminance": ["illuminance", "lux"],
+    "wetness_0": ["wetness", PERCENTAGE],
+    "wetness_1": ["wetness", PERCENTAGE],
+    "wetness_2": ["wetness", PERCENTAGE],
+    "wetness_3": ["wetness", PERCENTAGE],
+    "moisture_0": ["moisture", "cb"],
+    "moisture_1": ["moisture", "cb"],
+    "moisture_2": ["moisture", "cb"],
+    "moisture_3": ["moisture", "cb"],
+    "counter_a": ["counter", "count"],
+    "counter_b": ["counter", "count"],
+    "HobbyBoard": ["none", "none"],
+    "voltage": ["voltage", VOLT],
+    "voltage_VAD": ["voltage", VOLT],
+    "voltage_VDD": ["voltage", VOLT],
+    "current": ["current", ELECTRICAL_CURRENT_AMPERE],
+}
 
-def hb_info_from_type(base_device_type="std"):
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_NAMES): {cv.string: cv.string},
+        vol.Optional(CONF_MOUNT_DIR, default=DEFAULT_SYSBUS_MOUNT_DIR): cv.string,
+        vol.Optional(CONF_HOST): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    }
+)
+
+
+def hb_info_from_type(dev_type="std"):
     """Return the proper info array for the device type."""
-    if "HobbyBoard" in base_device_type:
+    if "std" in dev_type:
+        return DEVICE_SENSORS
+    if "HobbyBoard" in dev_type:
         return HOBBYBOARD_EF
-    return DEVICE_SENSORS
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Old way of setting up 1-Wire platform."""
-    owproxy = OneWireProxy(hass, config)
-    if not owproxy.setup():
-        return False
-
-    entities = get_entities(owproxy, config)
-    add_entities(entities, True)
+    devs = get_entities(config)
+    if devs == []:
+        LOGGER.error(
+            "No onewire sensor found. Check if dtoverlay=w1-gpio "
+            "is in your /boot/config.txt. "
+            "Check the mount_dir parameter if it's defined"
+        )
+        return
+    add_entities(devs, True)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the 1-Wire sensors."""
-    owproxy = get_proxy_from_config_entry(hass, config_entry)
-    entities = get_entities(owproxy, config_entry.data)
-    async_add_entities(entities, True)
+    devs = get_entities(config_entry.data)
+    async_add_entities(devs, True)
 
 
-def get_entities(owproxy, config):
+def get_entities(config):
     """Get a list of entities."""
-    entities = []
-    for device_id, device_path in owproxy.read_device_list().items():
-        LOGGER.debug("Found device: %s", device_id)
-        family = owproxy.read_family(device_path)
-        device_type = owproxy.read_type(device_path)
-        base_device_type = "std"
-        if "EF" in family:
-            base_device_type = "HobbyBoard"
-            family = device_type
-        LOGGER.info("Found device: %s (family: %s)", device_id, family)
+    conf_type = config.get(CONF_TYPE)
+    base_dir = config.get(CONF_MOUNT_DIR, DEFAULT_SYSBUS_MOUNT_DIR)
+    owhost = config.get(CONF_HOST)
+    owport = config.get(CONF_PORT, DEFAULT_PORT)
 
-        known_types = hb_info_from_type(base_device_type)
-        if family not in known_types:
-            LOGGER.debug(
-                "Ignoring unknown sensor family (%s) for device: %s",
-                family,
-                device_id,
+    # Ensure type is configured
+    if conf_type is None:
+        if owhost:
+            conf_type = CONF_TYPE_OWSERVER
+        elif base_dir == DEFAULT_SYSBUS_MOUNT_DIR:
+            conf_type = CONF_TYPE_SYSBUS
+        else:
+            conf_type = CONF_TYPE_OWFS
+
+    devs = []
+    device_names = {}
+    if CONF_NAMES in config:
+        if isinstance(config[CONF_NAMES], dict):
+            device_names = config[CONF_NAMES]
+
+    # We have an owserver on a remote(or local) host/port
+    if conf_type == CONF_TYPE_OWSERVER:
+        LOGGER.debug("Initializing using %s:%s", owhost, owport)
+        try:
+            owproxy = protocol.proxy(host=owhost, port=owport)
+            devices = owproxy.dir()
+        except protocol.Error as exc:
+            LOGGER.error(
+                "Cannot connect to owserver on %s:%d, got: %s", owhost, owport, exc
             )
-            continue
+            devices = []
+        for device in devices:
+            LOGGER.debug("Found device: %s", device)
+            family = owproxy.read(f"{device}family").decode()
+            dev_type = "std"
+            if "EF" in family:
+                dev_type = "HobbyBoard"
+                family = owproxy.read(f"{device}type").decode()
 
-        for sensor_key, sensor_value in known_types[family].items():
-            if "moisture" in sensor_key:
-                s_id = sensor_key.split("_")[1]
-                is_leaf = int(
-                    owproxy.read_value(f"{device_path}moisture/is_leaf.{s_id}")
+            if family not in hb_info_from_type(dev_type):
+                LOGGER.warning(
+                    "Ignoring unknown family (%s) of sensor found for device: %s",
+                    family,
+                    device,
                 )
-                if is_leaf:
-                    sensor_key = f"wetness_{id}"
-            device_file = os.path.join(os.path.split(device_path)[0], sensor_value)
-
-            try:
-                initial_value = owproxy.read_value(device_file)
-                LOGGER.info("Adding 1-Wire sensor: %s", device_file)
-                entities.append(
-                    OneWireSensor(
-                        device_id,
+                continue
+            for sensor_key, sensor_value in hb_info_from_type(dev_type)[family].items():
+                if "moisture" in sensor_key:
+                    s_id = sensor_key.split("_")[1]
+                    is_leaf = int(
+                        owproxy.read(f"{device}moisture/is_leaf.{s_id}").decode()
+                    )
+                    if is_leaf:
+                        sensor_key = f"wetness_{id}"
+                sensor_id = os.path.split(os.path.split(device)[0])[1]
+                device_file = os.path.join(os.path.split(device)[0], sensor_value)
+                devs.append(
+                    OneWireProxy(
+                        device_names.get(sensor_id, sensor_id),
                         device_file,
-                        device_type,
                         sensor_key,
                         owproxy,
-                        initial_value,
                     )
                 )
-            except protocol.Error as exc:
-                LOGGER.error("Owserver failure in read(), got: %s", exc)
 
-    if entities == []:
-        LOGGER.warning(
-            "No 1-Wire sensor found. Check if dtoverlay=w1-gpio "
-            "is in your /boot/config.txt. "
-            "Check the mount_dir parameter if it's defined"
-        )
-    return entities
+    # We have a raw GPIO ow sensor on a Pi
+    elif conf_type == CONF_TYPE_SYSBUS:
+        LOGGER.debug("Initializing using SysBus %s", base_dir)
+        for device_family in DEVICE_SENSORS:
+            for device_folder in glob(os.path.join(base_dir, f"{device_family}[.-]*")):
+                sensor_id = os.path.split(device_folder)[1]
+                device_file = os.path.join(device_folder, "w1_slave")
+                devs.append(
+                    OneWireDirect(
+                        device_names.get(sensor_id, sensor_id),
+                        device_file,
+                        "temperature",
+                    )
+                )
+
+    # We have an owfs mounted
+    else:
+        LOGGER.debug("Initializing using OWFS %s", base_dir)
+        for family_file_path in glob(os.path.join(base_dir, "*", "family")):
+            with open(family_file_path) as family_file:
+                family = family_file.read()
+            if "EF" in family:
+                continue
+            if family in DEVICE_SENSORS:
+                for sensor_key, sensor_value in DEVICE_SENSORS[family].items():
+                    sensor_id = os.path.split(os.path.split(family_file_path)[0])[1]
+                    device_file = os.path.join(
+                        os.path.split(family_file_path)[0], sensor_value
+                    )
+                    devs.append(
+                        OneWireOWFS(
+                            device_names.get(sensor_id, sensor_id),
+                            device_file,
+                            sensor_key,
+                        )
+                    )
+    return devs
 
 
-class OneWireSensor(OneWireEntity):
-    """Implementation of a 1-Wire sensor."""
+class OneWire(Entity):
+    """Implementation of an One wire Sensor."""
 
-    def __init__(
-        self, name, device_file, device_type, sensor_type, proxy, initial_value
-    ):
+    def __init__(self, name, device_file, sensor_type):
         """Initialize the sensor."""
-        super().__init__(
-            name, device_file, device_type, sensor_type, proxy, initial_value
-        )
-        self._unit_of_measurement = None
-        if SENSOR_TYPES.get(sensor_type) is not None:
-            self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
-        if initial_value:
-            self._state = self.get_state_value(initial_value)
+        self._name = f"{name} {sensor_type.capitalize()}"
+        self._device_file = device_file
+        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+        self._state = None
+        self._value_raw = None
+
+    def _read_value_raw(self):
+        """Read the value as it is returned by the sensor."""
+        with open(self._device_file) as ds_device_file:
+            lines = ds_device_file.readlines()
+        return lines
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return self._name
 
     @property
     def state(self):
         """Return the state of the sensor."""
+        if "count" in self._unit_of_measurement:
+            return int(self._state)
         return self._state
 
     @property
@@ -156,23 +271,78 @@ class OneWireSensor(OneWireEntity):
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
 
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of the sensor."""
+        return {"device_file": self._device_file, "raw_value": self._value_raw}
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return self._device_file
+
+
+class OneWireProxy(OneWire):
+    """Implementation of a One wire Sensor through owserver."""
+
+    def __init__(self, name, device_file, sensor_type, owproxy):
+        """Initialize the onewire sensor via owserver."""
+        super().__init__(name, device_file, sensor_type)
+        self._owproxy = owproxy
+
+    def _read_value_ownet(self):
+        """Read a value from the owserver."""
+        if self._owproxy:
+            return self._owproxy.read(self._device_file).decode().lstrip()
+        return None
+
     def update(self):
         """Get the latest data from the device."""
+        value = None
+        value_read = False
         try:
-            value_read = self.read_value()
-            self._value_raw = value_read
-            self._state = self.get_state_value(value_read)
+            value_read = self._read_value_ownet()
         except protocol.Error as exc:
             LOGGER.error("Owserver failure in read(), got: %s", exc)
-            self._state = None
+        if value_read:
+            value = round(float(value_read), 1)
+            self._value_raw = float(value_read)
 
-    def get_state_value(self, raw_value):
-        """Compute state value based on raw_value."""
-        if self._proxy.conf_type == CONF_TYPE_SYSBUS:
-            raw_value = float(raw_value) / 1000.0
-        if self._unit_of_measurement is not None:
-            if self._unit_of_measurement == VOLT:
-                return round(float(raw_value), 2)
-            if "count" in self._unit_of_measurement:
-                return int(raw_value)
-        return round(float(raw_value), 1)
+        self._state = value
+
+
+class OneWireDirect(OneWire):
+    """Implementation of an One wire Sensor directly connected to RPI GPIO."""
+
+    def update(self):
+        """Get the latest data from the device."""
+        value = None
+        lines = self._read_value_raw()
+        while lines[0].strip()[-3:] != "YES":
+            time.sleep(0.2)
+            lines = self._read_value_raw()
+        equals_pos = lines[1].find("t=")
+        if equals_pos != -1:
+            value_string = lines[1][equals_pos + 2 :]
+            value = round(float(value_string) / 1000.0, 1)
+            self._value_raw = float(value_string)
+        self._state = value
+
+
+class OneWireOWFS(OneWire):
+    """Implementation of an One wire Sensor through owfs."""
+
+    def update(self):
+        """Get the latest data from the device."""
+        value = None
+        try:
+            value_read = self._read_value_raw()
+            if len(value_read) == 1:
+                value = round(float(value_read[0]), 1)
+                self._value_raw = float(value_read[0])
+        except ValueError:
+            LOGGER.warning("Invalid value read from %s", self._device_file)
+        except FileNotFoundError:
+            LOGGER.warning("Cannot read from sensor: %s", self._device_file)
+
+        self._state = value

@@ -340,3 +340,46 @@ class SceneSchema:
             vol.Required(CONF_SCENE_NUMBER): cv.positive_int,
         }
     )
+
+
+class WeatherSchema:
+    """Voluptuous schema for KNX weather station."""
+
+    CONF_SYNC_STATE = CONF_SYNC_STATE
+    CONF_KNX_TEMPERATURE_ADDRESS = "address_temperature"
+    CONF_KNX_BRIGHTNESS_SOUTH_ADDRESS = "address_brightness_south"
+    CONF_KNX_BRIGHTNESS_EAST_ADDRESS = "address_brightness_east"
+    CONF_KNX_BRIGHTNESS_WEST_ADDRESS = "address_brightness_west"
+    CONF_KNX_WIND_SPEED_ADDRESS = "address_wind_speed"
+    CONF_KNX_RAIN_ALARM_ADDRESS = "address_rain_alarm"
+    CONF_KNX_FROST_ALARM_ADDRESS = "address_frost_alarm"
+    CONF_KNX_WIND_ALARM_ADDRESS = "address_wind_alarm"
+    CONF_KNX_DAY_NIGHT_ADDRESS = "address_day_night"
+    CONF_KNX_AIR_PRESSURE_ADDRESS = "address_air_pressure"
+    CONF_KNX_HUMIDITY_ADDRESS = "address_humidity"
+    CONF_KNX_EXPOSE_SENSORS = "expose_sensors"
+
+    DEFAULT_NAME = "KNX Weather Station"
+
+    SCHEMA = vol.Schema(
+        {
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_SYNC_STATE, default=True): vol.Any(
+                vol.All(vol.Coerce(int), vol.Range(min=2, max=1440)),
+                cv.boolean,
+                cv.string,
+            ),
+            vol.Optional(CONF_KNX_EXPOSE_SENSORS, default=False): cv.boolean,
+            vol.Required(CONF_KNX_TEMPERATURE_ADDRESS): cv.string,
+            vol.Optional(CONF_KNX_BRIGHTNESS_SOUTH_ADDRESS): cv.string,
+            vol.Optional(CONF_KNX_BRIGHTNESS_EAST_ADDRESS): cv.string,
+            vol.Optional(CONF_KNX_BRIGHTNESS_WEST_ADDRESS): cv.string,
+            vol.Optional(CONF_KNX_WIND_SPEED_ADDRESS): cv.string,
+            vol.Optional(CONF_KNX_RAIN_ALARM_ADDRESS): cv.string,
+            vol.Optional(CONF_KNX_FROST_ALARM_ADDRESS): cv.string,
+            vol.Optional(CONF_KNX_WIND_ALARM_ADDRESS): cv.string,
+            vol.Optional(CONF_KNX_DAY_NIGHT_ADDRESS): cv.string,
+            vol.Optional(CONF_KNX_AIR_PRESSURE_ADDRESS): cv.string,
+            vol.Optional(CONF_KNX_HUMIDITY_ADDRESS): cv.string,
+        }
+    )

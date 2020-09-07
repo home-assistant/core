@@ -12,6 +12,7 @@ from xknx.devices import (
     Scene as XknxScene,
     Sensor as XknxSensor,
     Switch as XknxSwitch,
+    Weather as XknxWeather,
 )
 
 from homeassistant.const import CONF_ADDRESS, CONF_DEVICE_CLASS, CONF_NAME, CONF_TYPE
@@ -28,6 +29,7 @@ from .schema import (
     SceneSchema,
     SensorSchema,
     SwitchSchema,
+    WeatherSchema,
 )
 
 
@@ -61,6 +63,9 @@ def create_knx_device(
 
     if platform is SupportedPlatforms.binary_sensor:
         return _create_binary_sensor(hass, knx_module, config)
+
+    if platform is SupportedPlatforms.weather:
+        return _create_weather(knx_module, config)
 
 
 def _create_cover(knx_module: XKNX, config: ConfigType) -> XknxCover:
@@ -262,4 +267,35 @@ def _create_binary_sensor(
         ignore_internal_state=config[BinarySensorSchema.CONF_IGNORE_INTERNAL_STATE],
         reset_after=config.get(BinarySensorSchema.CONF_RESET_AFTER),
         actions=actions,
+    )
+
+
+def _create_weather(knx_module: XKNX, config: ConfigType) -> XknxWeather:
+    """Return a KNX weather device to be used within XKNX."""
+    return XknxWeather(
+        knx_module,
+        name=config[CONF_NAME],
+        sync_state=config[WeatherSchema.CONF_SYNC_STATE],
+        expose_sensors=config[WeatherSchema.CONF_KNX_EXPOSE_SENSORS],
+        group_address_temperature=config[WeatherSchema.CONF_KNX_TEMPERATURE_ADDRESS],
+        group_address_brightness_south=config.get(
+            WeatherSchema.CONF_KNX_BRIGHTNESS_SOUTH_ADDRESS
+        ),
+        group_address_brightness_east=config.get(
+            WeatherSchema.CONF_KNX_BRIGHTNESS_EAST_ADDRESS
+        ),
+        group_address_brightness_west=config.get(
+            WeatherSchema.CONF_KNX_BRIGHTNESS_WEST_ADDRESS
+        ),
+        group_address_wind_speed=config.get(WeatherSchema.CONF_KNX_WIND_SPEED_ADDRESS),
+        group_address_rain_alarm=config.get(WeatherSchema.CONF_KNX_RAIN_ALARM_ADDRESS),
+        group_address_frost_alarm=config.get(
+            WeatherSchema.CONF_KNX_FROST_ALARM_ADDRESS
+        ),
+        group_address_wind_alarm=config.get(WeatherSchema.CONF_KNX_WIND_ALARM_ADDRESS),
+        group_address_day_night=config.get(WeatherSchema.CONF_KNX_DAY_NIGHT_ADDRESS),
+        group_address_air_pressure=config.get(
+            WeatherSchema.CONF_KNX_AIR_PRESSURE_ADDRESS
+        ),
+        group_address_humidity=config.get(WeatherSchema.CONF_KNX_HUMIDITY_ADDRESS),
     )

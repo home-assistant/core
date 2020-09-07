@@ -129,6 +129,7 @@ FLOWS = [
     "onvif",
     "opentherm_gw",
     "openuv",
+    "openweathermap",
     "ovo_energy",
     "owntracks",
     "ozw",
@@ -209,6 +210,7 @@ FLOWS = [
     "wolflink",
     "xiaomi_aqara",
     "xiaomi_miio",
+    "yeelight",
     "zerproc",
     "zha",
     "zwave"

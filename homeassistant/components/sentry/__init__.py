@@ -75,7 +75,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     tracing = {}
     if entry.options.get(CONF_TRACING):
         tracing = {
-            "traceparent_v2": True,
             "traces_sample_rate": entry.options.get(
                 CONF_TRACING_SAMPLE_RATE, DEFAULT_TRACING_SAMPLE_RATE
             ),

@@ -11,6 +11,9 @@
         "step": {
             "pick_implementation": {
                 "title": "Wybierz metod\u0119 uwierzytelniania"
+            },
+            "reauth_confirm": {
+                "title": "Ponownie uwierzytelnij ze Spotify"
             }
         }
     }

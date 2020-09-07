@@ -39,6 +39,7 @@ class SupportedPlatforms(Enum):
     notify = "notify"
     scene = "scene"
     sensor = "sensor"
+    weather = "weather"
 
 
 # Map KNX operation modes to HA modes. This list might not be complete.

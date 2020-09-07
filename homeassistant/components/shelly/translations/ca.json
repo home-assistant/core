@@ -6,12 +6,19 @@
         "error": {
             "auth_not_supported": "Actualment els dispositius Shelly amb autenticaci\u00f3 no son compatibles.",
             "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
             "unknown": "Error inesperat"
         },
         "flow_title": "Shelly: {name}",
         "step": {
             "confirm_discovery": {
                 "description": "Voleu configurar {model} a {host}?"
+            },
+            "credentials": {
+                "data": {
+                    "password": "Contrasenya",
+                    "username": "Nom d'usuari"
+                }
             },
             "user": {
                 "data": {
