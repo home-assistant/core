@@ -35,7 +35,7 @@ def build_item_response(coordinator, payload):
             for item in coordinator.data.apps
         ]
     elif search_type == MEDIA_TYPE_CHANNELS:
-        title = "channels"
+        title = "Channels"
         media = [
             {
                 "channel_number": item.number,
