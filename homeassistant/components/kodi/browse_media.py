@@ -29,8 +29,8 @@ EXPANDABLE_MEDIA_TYPES = [
 
 async def build_item_response(media_library, payload):
     """Create response payload for the provided media query."""
-    search_id = payload.get("search_id")
-    search_type = payload.get("search_type")
+    search_id = payload["search_id"]
+    search_type = payload["search_type"]
 
     thumbnail = None
     title = None
