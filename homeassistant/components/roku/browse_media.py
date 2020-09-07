@@ -109,7 +109,7 @@ async def item_payload(item, coordinator):
     for item in [{"title": n, "type": t} for t, n in library.items()]:
         if (
             item["type"] == MEDIA_TYPE_CHANNELS
-            and coordinator.data.info.device_type == "tv"
+            and coordinator.data.info.device_type != "tv"
         ):
             continue
 
