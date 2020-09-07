@@ -982,7 +982,8 @@ async def test_repeat_count(hass):
 
 
 @pytest.mark.parametrize("condition", ["while", "until"])
-async def test_repeat_conditional(hass, condition):
+@pytest.mark.parametrize("direct_template", [False, True])
+async def test_repeat_conditional(hass, condition, direct_template):
     """Test repeat action w/ while option."""
     event = "test_event"
     events = async_capture_events(hass, event)
@@ -1004,15 +1005,23 @@ async def test_repeat_conditional(hass, condition):
         }
     }
     if condition == "while":
-        sequence["repeat"]["while"] = {
-            "condition": "template",
-            "value_template": "{{ not is_state('sensor.test', 'done') }}",
-        }
+        template = "{{ not is_state('sensor.test', 'done') }}"
+        if direct_template:
+            sequence["repeat"]["while"] = template
+        else:
+            sequence["repeat"]["while"] = {
+                "condition": "template",
+                "value_template": template,
+            }
     else:
-        sequence["repeat"]["until"] = {
-            "condition": "template",
-            "value_template": "{{ is_state('sensor.test', 'done') }}",
-        }
+        template = "{{ is_state('sensor.test', 'done') }}"
+        if direct_template:
+            sequence["repeat"]["until"] = template
+        else:
+            sequence["repeat"]["until"] = {
+                "condition": "template",
+                "value_template": template,
+            }
     script_obj = script.Script(
         hass, cv.SCRIPT_SCHEMA(sequence), "Test Name", "test_domain"
     )
@@ -1193,10 +1202,7 @@ async def test_choose(hass, var, result):
                     "sequence": {"event": event, "event_data": {"choice": "first"}},
                 },
                 {
-                    "conditions": {
-                        "condition": "template",
-                        "value_template": "{{ var == 2 }}",
-                    },
+                    "conditions": "{{ var == 2 }}",
                     "sequence": {"event": event, "event_data": {"choice": "second"}},
                 },
             ],

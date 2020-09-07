@@ -245,7 +245,7 @@ class Template:
     def render(self, variables: TemplateVarsType = None, **kwargs: Any) -> str:
         """Render given template."""
         if self.is_static:
-            return self.template
+            return self.template.strip()
 
         if variables is not None:
             kwargs.update(variables)
@@ -261,7 +261,7 @@ class Template:
         This method must be run in the event loop.
         """
         if self.is_static:
-            return self.template
+            return self.template.strip()
 
         compiled = self._compiled or self._ensure_compiled()
 
@@ -284,6 +284,7 @@ class Template:
 
         # pylint: disable=protected-access
         if self.is_static:
+            render_info._result = self.template.strip()
             render_info._freeze_static()
             return render_info
 
@@ -459,8 +460,7 @@ class DomainStates:
             sorted(
                 (
                     _wrap_state(self._hass, state)
-                    for state in self._hass.states.async_all()
-                    if state.domain == self._domain
+                    for state in self._hass.states.async_all(self._domain)
                 ),
                 key=lambda state: state.entity_id,
             )
@@ -1123,7 +1123,13 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
     def is_safe_attribute(self, obj, attr, value):
         """Test if attribute is safe."""
-        return isinstance(obj, Namespace) or super().is_safe_attribute(obj, attr, value)
+        if isinstance(obj, Namespace):
+            return True
+
+        if isinstance(obj, (AllStates, DomainStates, TemplateState)):
+            return not attr.startswith("_")
+
+        return super().is_safe_attribute(obj, attr, value)
 
     def compile(self, source, name=None, filename=None, raw=False, defer_init=False):
         """Compile the template."""

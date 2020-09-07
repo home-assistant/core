@@ -906,8 +906,12 @@ NUMERIC_STATE_CONDITION_SCHEMA = vol.All(
             vol.Required(CONF_CONDITION): "numeric_state",
             vol.Required(CONF_ENTITY_ID): entity_ids,
             vol.Optional(CONF_ATTRIBUTE): str,
-            CONF_BELOW: vol.Coerce(float),
-            CONF_ABOVE: vol.Coerce(float),
+            CONF_BELOW: vol.Any(
+                vol.Coerce(float), vol.All(str, entity_domain("input_number"))
+            ),
+            CONF_ABOVE: vol.Any(
+                vol.Coerce(float), vol.All(str, entity_domain("input_number"))
+            ),
             vol.Optional(CONF_VALUE_TEMPLATE): template,
         }
     ),
@@ -1018,20 +1022,25 @@ DEVICE_CONDITION_BASE_SCHEMA = vol.Schema(
 
 DEVICE_CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
 
-CONDITION_SCHEMA: vol.Schema = key_value_schemas(
-    CONF_CONDITION,
-    {
-        "numeric_state": NUMERIC_STATE_CONDITION_SCHEMA,
-        "state": STATE_CONDITION_SCHEMA,
-        "sun": SUN_CONDITION_SCHEMA,
-        "template": TEMPLATE_CONDITION_SCHEMA,
-        "time": TIME_CONDITION_SCHEMA,
-        "zone": ZONE_CONDITION_SCHEMA,
-        "and": AND_CONDITION_SCHEMA,
-        "or": OR_CONDITION_SCHEMA,
-        "not": NOT_CONDITION_SCHEMA,
-        "device": DEVICE_CONDITION_SCHEMA,
-    },
+CONDITION_SCHEMA: vol.Schema = vol.Schema(
+    vol.Any(
+        key_value_schemas(
+            CONF_CONDITION,
+            {
+                "numeric_state": NUMERIC_STATE_CONDITION_SCHEMA,
+                "state": STATE_CONDITION_SCHEMA,
+                "sun": SUN_CONDITION_SCHEMA,
+                "template": TEMPLATE_CONDITION_SCHEMA,
+                "time": TIME_CONDITION_SCHEMA,
+                "zone": ZONE_CONDITION_SCHEMA,
+                "and": AND_CONDITION_SCHEMA,
+                "or": OR_CONDITION_SCHEMA,
+                "not": NOT_CONDITION_SCHEMA,
+                "device": DEVICE_CONDITION_SCHEMA,
+            },
+        ),
+        dynamic_template,
+    )
 )
 
 TRIGGER_SCHEMA = vol.All(
