@@ -822,6 +822,7 @@ class MediaPlayerEntity(Entity):
         Payload should follow this format:
             {
                 "title": str - Title of the item
+                "media_class": str - Media class
                 "media_content_type": str - see below
                 "media_content_id": str - see below
                   - Can be passed back in to browse further
