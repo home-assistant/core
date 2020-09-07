@@ -71,20 +71,26 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
     def color_temp(self) -> Optional[float]:
         """Return the CT color value in mireds."""
         if self.control_result:
-            color_temp = self.control_result["colorTemp"]
+            color_temp = self.control_result["temp"]
         else:
             color_temp = self.block.colorTemp
+
+        # If you set DUO to max mireds in Shelly app, 2700K,
+        # It reports 0 temp
+        if color_temp == 0:
+            return self.max_mireds
+
         return int(color_temperature_kelvin_to_mired(color_temp))
 
     @property
     def min_mireds(self) -> float:
         """Return the coldest color_temp that this light supports."""
-        return color_temperature_kelvin_to_mired(2700)
+        return color_temperature_kelvin_to_mired(6500)
 
     @property
     def max_mireds(self) -> float:
         """Return the warmest color_temp that this light supports."""
-        return color_temperature_kelvin_to_mired(6500)
+        return color_temperature_kelvin_to_mired(2700)
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn on light."""
@@ -93,13 +99,12 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
             tmp_brightness = kwargs[ATTR_BRIGHTNESS]
             params["brightness"] = int(tmp_brightness / 255 * 100)
         if ATTR_COLOR_TEMP in kwargs:
-            tmp_color_temp = kwargs[ATTR_COLOR_TEMP]
-            color_temp = color_temperature_mired_to_kelvin(tmp_color_temp)
+            color_temp = color_temperature_mired_to_kelvin(kwargs[ATTR_COLOR_TEMP])
             if color_temp > 6500:
                 color_temp = 6500
-            if color_temp < 2700:
+            elif color_temp < 2700:
                 color_temp = 2700
-            params["colorTemp"] = color_temp
+            params["temp"] = int(color_temp)
         self.control_result = await self.block.set_state(**params)
         self.async_write_ha_state()
 
