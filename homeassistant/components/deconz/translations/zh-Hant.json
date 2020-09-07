@@ -6,7 +6,7 @@
             "no_bridges": "\u672a\u641c\u5c0b\u5230 deCONZ Bridfe",
             "not_deconz_bridge": "\u975e deCONZ Bridge \u8a2d\u5099",
             "one_instance_only": "\u7d44\u4ef6\u50c5\u652f\u63f4\u4e00\u7d44 deCONZ \u7269\u4ef6",
-            "updated_instance": "\u4f7f\u7528\u65b0\u4e3b\u6a5f\u7aef\u4f4d\u5740\u66f4\u65b0 deCONZ \u7269\u4ef6"
+            "updated_instance": "\u4f7f\u7528\u65b0\u4e3b\u6a5f\u7aef\u4f4d\u5740\u66f4\u65b0 deCONZ \u8a2d\u5099"
         },
         "error": {
             "no_key": "\u7121\u6cd5\u53d6\u5f97 API key"

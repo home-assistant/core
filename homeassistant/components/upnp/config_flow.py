@@ -90,7 +90,10 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 ),
             }
         )
-        return self.async_show_form(step_id="user", data_schema=data_schema,)
+        return self.async_show_form(
+            step_id="user",
+            data_schema=data_schema,
+        )
 
     async def async_step_import(self, import_info: Optional[Mapping]):
         """Import a new UPnP/IGD device as a config entry.
@@ -183,11 +186,13 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return UpnpOptionsFlowHandler(config_entry)
 
     async def _async_create_entry_from_discovery(
-        self, discovery: Mapping,
+        self,
+        discovery: Mapping,
     ):
         """Create an entry from discovery."""
         _LOGGER.debug(
-            "_async_create_entry_from_data: discovery: %s", discovery,
+            "_async_create_entry_from_data: discovery: %s",
+            discovery,
         )
         # Get name from device, if not found already.
         if DISCOVERY_NAME not in discovery and DISCOVERY_LOCATION in discovery:
@@ -238,9 +243,10 @@ class UpnpOptionsFlowHandler(config_entries.OptionsFlow):
             step_id="init",
             data_schema=vol.Schema(
                 {
-                    vol.Optional(CONF_SCAN_INTERVAL, default=scan_interval,): vol.All(
-                        vol.Coerce(int), vol.Range(min=30)
-                    ),
+                    vol.Optional(
+                        CONF_SCAN_INTERVAL,
+                        default=scan_interval,
+                    ): vol.All(vol.Coerce(int), vol.Range(min=30)),
                 }
             ),
         )

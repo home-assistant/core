@@ -291,7 +291,9 @@ class SmappeeSensor(Entity):
         return self._unit_of_measurement
 
     @property
-    def unique_id(self,):
+    def unique_id(
+        self,
+    ):
         """Return the unique ID for this sensor."""
         if self._sensor in ["load", "sensor"]:
             return (

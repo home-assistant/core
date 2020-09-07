@@ -15,10 +15,11 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.script import Script
 
-from .const import CONF_AVAILABILITY_TEMPLATE
-from .template_entity import TemplateEntityWithAvailability
+from .const import CONF_AVAILABILITY_TEMPLATE, DOMAIN, PLATFORMS
+from .template_entity import TemplateEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,29 +42,34 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Set up the Template lock."""
+async def _async_create_entities(hass, config):
+    """Create the Template lock."""
     device = config.get(CONF_NAME)
     value_template = config.get(CONF_VALUE_TEMPLATE)
     availability_template = config.get(CONF_AVAILABILITY_TEMPLATE)
 
-    async_add_devices(
-        [
-            TemplateLock(
-                hass,
-                device,
-                value_template,
-                availability_template,
-                config.get(CONF_LOCK),
-                config.get(CONF_UNLOCK),
-                config.get(CONF_OPTIMISTIC),
-                config.get(CONF_UNIQUE_ID),
-            )
-        ]
-    )
+    return [
+        TemplateLock(
+            hass,
+            device,
+            value_template,
+            availability_template,
+            config.get(CONF_LOCK),
+            config.get(CONF_UNLOCK),
+            config.get(CONF_OPTIMISTIC),
+            config.get(CONF_UNIQUE_ID),
+        )
+    ]
 
 
-class TemplateLock(TemplateEntityWithAvailability, LockEntity):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Set up the template lock."""
+
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+    async_add_entities(await _async_create_entities(hass, config))
+
+
+class TemplateLock(TemplateEntity, LockEntity):
     """Representation of a template lock."""
 
     def __init__(
@@ -78,7 +84,7 @@ class TemplateLock(TemplateEntityWithAvailability, LockEntity):
         unique_id,
     ):
         """Initialize the lock."""
-        super().__init__(availability_template)
+        super().__init__(availability_template=availability_template)
         self._state = None
         self._name = name
         self._state_template = value_template

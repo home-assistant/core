@@ -45,6 +45,7 @@ async def async_attach_trigger(hass, config, action, automation_info):
                 "topic": mqttmsg.topic,
                 "payload": mqttmsg.payload,
                 "qos": mqttmsg.qos,
+                "description": f"mqtt topic {mqttmsg.topic}",
             }
 
             try:

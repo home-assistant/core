@@ -24,6 +24,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.helpers.event as evt
 from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util import dt as dt_util
 
@@ -31,6 +32,8 @@ from . import (
     ATTR_DISCOVERY_HASH,
     CONF_QOS,
     CONF_STATE_TOPIC,
+    DOMAIN,
+    PLATFORMS,
     MqttAttributes,
     MqttAvailability,
     MqttDiscoveryUpdate,
@@ -72,6 +75,7 @@ async def async_setup_platform(
     hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
 ):
     """Set up MQTT binary sensor through configuration.yaml."""
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
     await _async_setup_entity(config, async_add_entities)
 
 

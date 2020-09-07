@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_NAME,
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_NONE,
+    EVENT_HOMEASSISTANT_START,
     SERVICE_RELOAD,
     STATE_CLOSED,
     STATE_HOME,
@@ -28,11 +29,12 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     STATE_UNLOCKED,
 )
-from homeassistant.core import callback
+from homeassistant.core import CoreState, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.reload import async_reload_integration_platforms
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import bind_hass
 
@@ -55,6 +57,8 @@ ATTR_ALL = "all"
 
 SERVICE_SET = "set"
 SERVICE_REMOVE = "remove"
+
+PLATFORMS = ["light", "cover", "notify"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -218,6 +222,8 @@ async def async_setup(hass, config):
 
         await component.async_add_entities(auto)
 
+        await async_reload_integration_platforms(hass, DOMAIN, PLATFORMS)
+
     hass.services.async_register(
         DOMAIN, SERVICE_RELOAD, reload_service_handler, schema=vol.Schema({})
     )
@@ -328,17 +334,65 @@ async def async_setup(hass, config):
 
 async def _async_process_config(hass, config, component):
     """Process group configuration."""
+    hass.data.setdefault(GROUP_ORDER, 0)
+
+    tasks = []
+
     for object_id, conf in config.get(DOMAIN, {}).items():
         name = conf.get(CONF_NAME, object_id)
         entity_ids = conf.get(CONF_ENTITIES) or []
         icon = conf.get(CONF_ICON)
         mode = conf.get(CONF_ALL)
 
-        # Don't create tasks and await them all. The order is important as
-        # groups get a number based on creation order.
-        await Group.async_create_group(
-            hass, name, entity_ids, icon=icon, object_id=object_id, mode=mode
+        # We keep track of the order when we are creating the tasks
+        # in the same way that async_create_group does to make
+        # sure we use the same ordering system.  This overcomes
+        # the problem with concurrently creating the groups
+        tasks.append(
+            Group.async_create_group(
+                hass,
+                name,
+                entity_ids,
+                icon=icon,
+                object_id=object_id,
+                mode=mode,
+                order=hass.data[GROUP_ORDER],
+            )
         )
+
+        # Keep track of the group order without iterating
+        # every state in the state machine every time
+        # we setup a new group
+        hass.data[GROUP_ORDER] += 1
+
+    await asyncio.gather(*tasks)
+
+
+class GroupEntity(Entity):
+    """Representation of a Group of entities."""
+
+    @property
+    def should_poll(self) -> bool:
+        """Disable polling for group."""
+        return False
+
+    async def async_added_to_hass(self) -> None:
+        """Register listeners."""
+        assert self.hass is not None
+
+        async def _update_at_start(_):
+            await self.async_update_ha_state(True)
+
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _update_at_start)
+
+    async def async_defer_or_update_ha_state(self) -> None:
+        """Only update once at start."""
+        assert self.hass is not None
+
+        if self.hass.state != CoreState.running:
+            return
+
+        await self.async_update_ha_state(True)
 
 
 class Group(Entity):
@@ -385,11 +439,12 @@ class Group(Entity):
         icon=None,
         object_id=None,
         mode=None,
+        order=None,
     ):
         """Initialize a group."""
         return asyncio.run_coroutine_threadsafe(
             Group.async_create_group(
-                hass, name, entity_ids, user_defined, icon, object_id, mode
+                hass, name, entity_ids, user_defined, icon, object_id, mode, order
             ),
             hass.loop,
         ).result()
@@ -403,27 +458,29 @@ class Group(Entity):
         icon=None,
         object_id=None,
         mode=None,
+        order=None,
     ):
         """Initialize a group.
 
         This method must be run in the event loop.
         """
-        hass.data.setdefault(GROUP_ORDER, 0)
+        if order is None:
+            hass.data.setdefault(GROUP_ORDER, 0)
+            order = hass.data[GROUP_ORDER]
+            # Keep track of the group order without iterating
+            # every state in the state machine every time
+            # we setup a new group
+            hass.data[GROUP_ORDER] += 1
 
         group = Group(
             hass,
             name,
-            order=hass.data[GROUP_ORDER],
+            order=order,
             icon=icon,
             user_defined=user_defined,
             entity_ids=entity_ids,
             mode=mode,
         )
-
-        # Keep track of the group order without iterating
-        # every state in the state machine every time
-        # we setup a new group
-        hass.data[GROUP_ORDER] += 1
 
         group.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, object_id or name, hass=hass
@@ -545,6 +602,7 @@ class Group(Entity):
         if self._async_unsub_state_changed is None:
             return
 
+        self.async_set_context(event.context)
         self._async_update_group_state(event.data.get("new_state"))
         self.async_write_ha_state()
 

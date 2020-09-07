@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "L\u2019acord seleccionat ja est\u00e0 configurat.",
+            "already_configured": "L'acord seleccionat ja est\u00e0 configurat.",
             "authorize_url_fail": "S'ha produ\u00eft un error desconegut al generar l'URL d'autoritzaci\u00f3.",
             "authorize_url_timeout": "Temps d'espera durant la generaci\u00f3 de l'URL d'autoritzaci\u00f3 esgotat.",
             "missing_configuration": "El component no est\u00e0 configurat. Mira'n la documentaci\u00f3.",
@@ -12,7 +12,7 @@
                 "data": {
                     "agreement": "Acord"
                 },
-                "description": "Seleccioneu l'adre\u00e7a de l'acord a afegir.",
+                "description": "Selecciona l'adre\u00e7a de l'acord a afegir.",
                 "title": "Selecciona acord"
             },
             "pick_implementation": {

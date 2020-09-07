@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "no_stations": "Aucune station de surveillance des inondations n'a \u00e9t\u00e9 trouv\u00e9e."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "station": "Station"
+                },
+                "description": "S\u00e9lectionnez la station que vous souhaitez surveiller",
+                "title": "Suivre une station de surveillance des inondations"
+            }
+        }
+    }
+}

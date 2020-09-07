@@ -53,8 +53,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     try:
         device_info = await hass.async_add_executor_job(miio_device.info)
-    except DeviceException:
-        raise PlatformNotReady
+    except DeviceException as ex:
+        raise PlatformNotReady from ex
 
     model = device_info.model
     unique_id = f"{model}-{device_info.mac_address}"

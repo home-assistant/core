@@ -32,10 +32,11 @@ from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
+from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.script import Script
 
-from .const import CONF_AVAILABILITY_TEMPLATE
-from .template_entity import TemplateEntityWithAvailability
+from .const import CONF_AVAILABILITY_TEMPLATE, DOMAIN, PLATFORMS
+from .template_entity import TemplateEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,25 +55,28 @@ _VALID_STATES = [STATE_ON, STATE_OFF]
 _VALID_OSC = [True, False]
 _VALID_DIRECTIONS = [DIRECTION_FORWARD, DIRECTION_REVERSE]
 
-FAN_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_FRIENDLY_NAME): cv.string,
-        vol.Required(CONF_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_SPEED_TEMPLATE): cv.template,
-        vol.Optional(CONF_OSCILLATING_TEMPLATE): cv.template,
-        vol.Optional(CONF_DIRECTION_TEMPLATE): cv.template,
-        vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
-        vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_SET_SPEED_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_SET_OSCILLATING_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_SET_DIRECTION_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(
-            CONF_SPEED_LIST, default=[SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
-        ): cv.ensure_list,
-        vol.Optional(CONF_ENTITY_ID): cv.entity_ids,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
-    }
+FAN_SCHEMA = vol.All(
+    cv.deprecated(CONF_ENTITY_ID),
+    vol.Schema(
+        {
+            vol.Optional(CONF_FRIENDLY_NAME): cv.string,
+            vol.Required(CONF_VALUE_TEMPLATE): cv.template,
+            vol.Optional(CONF_SPEED_TEMPLATE): cv.template,
+            vol.Optional(CONF_OSCILLATING_TEMPLATE): cv.template,
+            vol.Optional(CONF_DIRECTION_TEMPLATE): cv.template,
+            vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
+            vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_SET_SPEED_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_SET_OSCILLATING_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_SET_DIRECTION_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Optional(
+                CONF_SPEED_LIST, default=[SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
+            ): cv.ensure_list,
+            vol.Optional(CONF_ENTITY_ID): cv.entity_ids,
+            vol.Optional(CONF_UNIQUE_ID): cv.string,
+        }
+    ),
 )
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
@@ -80,8 +84,8 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Template Fans."""
+async def _async_create_entities(hass, config):
+    """Create the Template Fans."""
     fans = []
 
     for device, device_config in config[CONF_FANS].items():
@@ -122,10 +126,17 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             )
         )
 
-    async_add_entities(fans)
+    return fans
 
 
-class TemplateFan(TemplateEntityWithAvailability, FanEntity):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Set up the template fans."""
+
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+    async_add_entities(await _async_create_entities(hass, config))
+
+
+class TemplateFan(TemplateEntity, FanEntity):
     """A template fan component."""
 
     def __init__(
@@ -147,7 +158,7 @@ class TemplateFan(TemplateEntityWithAvailability, FanEntity):
         unique_id,
     ):
         """Initialize the fan."""
-        super().__init__(availability_template)
+        super().__init__(availability_template=availability_template)
         self.hass = hass
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, device_id, hass=hass
@@ -377,7 +388,8 @@ class TemplateFan(TemplateEntityWithAvailability, FanEntity):
             self._oscillating = None
         else:
             _LOGGER.error(
-                "Received invalid oscillating: %s. Expected: True/False", oscillating,
+                "Received invalid oscillating: %s. Expected: True/False",
+                oscillating,
             )
             self._oscillating = None
 

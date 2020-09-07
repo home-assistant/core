@@ -24,7 +24,8 @@ async def test_form(hass):
 
     with _patch_glucose_readings(), _patch_server_status(), _patch_async_setup() as mock_setup, _patch_async_setup_entry() as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], CONFIG,
+            result["flow_id"],
+            CONFIG,
         )
 
         assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -46,7 +47,8 @@ async def test_user_form_cannot_connect(hass):
         side_effect=ClientConnectionError(),
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_URL: "https://some.url:1234"},
+            result["flow_id"],
+            {CONF_URL: "https://some.url:1234"},
         )
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -64,7 +66,8 @@ async def test_user_form_unexpected_exception(hass):
         side_effect=Exception(),
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_URL: "https://some.url:1234"},
+            result["flow_id"],
+            {CONF_URL: "https://some.url:1234"},
         )
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -78,7 +81,9 @@ async def test_user_form_duplicate(hass):
         entry = MockConfigEntry(domain=DOMAIN, unique_id=unique_id)
         await hass.config_entries.async_add(entry)
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=CONFIG,
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data=CONFIG,
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
         assert result["reason"] == "already_configured"
@@ -90,7 +95,8 @@ def _patch_async_setup():
 
 def _patch_async_setup_entry():
     return patch(
-        "homeassistant.components.nightscout.async_setup_entry", return_value=True,
+        "homeassistant.components.nightscout.async_setup_entry",
+        return_value=True,
     )
 
 

@@ -4,7 +4,17 @@ import asyncio
 import aiohttp
 
 import homeassistant.components.rest.switch as rest
-from homeassistant.const import HTTP_INTERNAL_SERVER_ERROR
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.const import (
+    CONF_HEADERS,
+    CONF_NAME,
+    CONF_PLATFORM,
+    CONF_RESOURCE,
+    CONTENT_TYPE_JSON,
+    HTTP_INTERNAL_SERVER_ERROR,
+    HTTP_NOT_FOUND,
+    HTTP_OK,
+)
 from homeassistant.helpers.template import Template
 from homeassistant.setup import setup_component
 
@@ -25,7 +35,7 @@ class TestRestSwitchSetup:
     def test_setup_missing_config(self):
         """Test setup with configuration missing required entries."""
         assert not asyncio.run_coroutine_threadsafe(
-            rest.async_setup_platform(self.hass, {"platform": "rest"}, None),
+            rest.async_setup_platform(self.hass, {CONF_PLATFORM: rest.DOMAIN}, None),
             self.hass.loop,
         ).result()
 
@@ -33,7 +43,9 @@ class TestRestSwitchSetup:
         """Test setup with resource missing schema."""
         assert not asyncio.run_coroutine_threadsafe(
             rest.async_setup_platform(
-                self.hass, {"platform": "rest", "resource": "localhost"}, None
+                self.hass,
+                {CONF_PLATFORM: rest.DOMAIN, CONF_RESOURCE: "localhost"},
+                None,
             ),
             self.hass.loop,
         ).result()
@@ -43,7 +55,9 @@ class TestRestSwitchSetup:
         aioclient_mock.get("http://localhost", exc=aiohttp.ClientError)
         assert not asyncio.run_coroutine_threadsafe(
             rest.async_setup_platform(
-                self.hass, {"platform": "rest", "resource": "http://localhost"}, None
+                self.hass,
+                {CONF_PLATFORM: rest.DOMAIN, CONF_RESOURCE: "http://localhost"},
+                None,
             ),
             self.hass.loop,
         ).result()
@@ -53,41 +67,70 @@ class TestRestSwitchSetup:
         aioclient_mock.get("http://localhost", exc=asyncio.TimeoutError())
         assert not asyncio.run_coroutine_threadsafe(
             rest.async_setup_platform(
-                self.hass, {"platform": "rest", "resource": "http://localhost"}, None
+                self.hass,
+                {CONF_PLATFORM: rest.DOMAIN, CONF_RESOURCE: "http://localhost"},
+                None,
             ),
             self.hass.loop,
         ).result()
 
     def test_setup_minimum(self, aioclient_mock):
         """Test setup with minimum configuration."""
-        aioclient_mock.get("http://localhost", status=200)
-        with assert_setup_component(1, "switch"):
+        aioclient_mock.get("http://localhost", status=HTTP_OK)
+        with assert_setup_component(1, SWITCH_DOMAIN):
             assert setup_component(
                 self.hass,
-                "switch",
-                {"switch": {"platform": "rest", "resource": "http://localhost"}},
+                SWITCH_DOMAIN,
+                {
+                    SWITCH_DOMAIN: {
+                        CONF_PLATFORM: rest.DOMAIN,
+                        CONF_RESOURCE: "http://localhost",
+                    }
+                },
             )
         assert aioclient_mock.call_count == 1
 
     def test_setup(self, aioclient_mock):
         """Test setup with valid configuration."""
-        aioclient_mock.get("http://localhost", status=200)
+        aioclient_mock.get("http://localhost", status=HTTP_OK)
         assert setup_component(
             self.hass,
-            "switch",
+            SWITCH_DOMAIN,
             {
-                "switch": {
-                    "platform": "rest",
-                    "name": "foo",
-                    "resource": "http://localhost",
-                    "headers": {"Content-type": "application/json"},
-                    "body_on": "custom on text",
-                    "body_off": "custom off text",
+                SWITCH_DOMAIN: {
+                    CONF_PLATFORM: rest.DOMAIN,
+                    CONF_NAME: "foo",
+                    CONF_RESOURCE: "http://localhost",
+                    CONF_HEADERS: {"Content-type": CONTENT_TYPE_JSON},
+                    rest.CONF_BODY_ON: "custom on text",
+                    rest.CONF_BODY_OFF: "custom off text",
                 }
             },
         )
         assert aioclient_mock.call_count == 1
-        assert_setup_component(1, "switch")
+        assert_setup_component(1, SWITCH_DOMAIN)
+
+    def test_setup_with_state_resource(self, aioclient_mock):
+        """Test setup with valid configuration."""
+        aioclient_mock.get("http://localhost", status=HTTP_NOT_FOUND)
+        aioclient_mock.get("http://localhost/state", status=HTTP_OK)
+        assert setup_component(
+            self.hass,
+            SWITCH_DOMAIN,
+            {
+                SWITCH_DOMAIN: {
+                    CONF_PLATFORM: rest.DOMAIN,
+                    CONF_NAME: "foo",
+                    CONF_RESOURCE: "http://localhost",
+                    rest.CONF_STATE_RESOURCE: "http://localhost/state",
+                    CONF_HEADERS: {"Content-type": "application/json"},
+                    rest.CONF_BODY_ON: "custom on text",
+                    rest.CONF_BODY_OFF: "custom off text",
+                }
+            },
+        )
+        assert aioclient_mock.call_count == 1
+        assert_setup_component(1, SWITCH_DOMAIN)
 
 
 class TestRestSwitch:
@@ -99,6 +142,7 @@ class TestRestSwitch:
         self.name = "foo"
         self.method = "post"
         self.resource = "http://localhost/"
+        self.state_resource = self.resource
         self.headers = {"Content-type": "application/json"}
         self.auth = None
         self.body_on = Template("on", self.hass)
@@ -106,6 +150,7 @@ class TestRestSwitch:
         self.switch = rest.RestSwitch(
             self.name,
             self.resource,
+            self.state_resource,
             self.method,
             self.headers,
             self.auth,
@@ -131,7 +176,7 @@ class TestRestSwitch:
 
     def test_turn_on_success(self, aioclient_mock):
         """Test turn_on."""
-        aioclient_mock.post(self.resource, status=200)
+        aioclient_mock.post(self.resource, status=HTTP_OK)
         asyncio.run_coroutine_threadsafe(
             self.switch.async_turn_on(), self.hass.loop
         ).result()
@@ -160,7 +205,7 @@ class TestRestSwitch:
 
     def test_turn_off_success(self, aioclient_mock):
         """Test turn_off."""
-        aioclient_mock.post(self.resource, status=200)
+        aioclient_mock.post(self.resource, status=HTTP_OK)
         asyncio.run_coroutine_threadsafe(
             self.switch.async_turn_off(), self.hass.loop
         ).result()

@@ -180,6 +180,7 @@ CONF_URL = "url"
 CONF_USERNAME = "username"
 CONF_VALUE_TEMPLATE = "value_template"
 CONF_VERIFY_SSL = "verify_ssl"
+CONF_WAIT_FOR_TRIGGER = "wait_for_trigger"
 CONF_WAIT_TEMPLATE = "wait_template"
 CONF_WEBHOOK_ID = "webhook_id"
 CONF_WEEKDAY = "weekday"
@@ -443,7 +444,7 @@ CONDUCTIVITY: str = f"µS/{LENGTH_CENTIMETERS}"
 UV_INDEX: str = "UV index"
 
 # Percentage units
-UNIT_PERCENTAGE = "%"
+PERCENTAGE = "%"
 
 # Irradiation units
 IRRADIATION_WATTS_PER_SQUARE_METER = f"{POWER_WATT}/{AREA_SQUARE_METERS}"

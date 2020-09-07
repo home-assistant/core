@@ -11,6 +11,7 @@ from aiohttp import hdrs, web
 from aiohttp.web_request import FileField
 import voluptuous as vol
 
+from homeassistant.components.http.static import CACHE_HEADERS
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant, callback
@@ -41,7 +42,11 @@ async def async_setup(hass: HomeAssistant, config: dict):
     hass.data[DOMAIN] = storage_collection = ImageStorageCollection(hass, image_dir)
     await storage_collection.async_load()
     collection.StorageCollectionWebsocket(
-        storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS,
+        storage_collection,
+        DOMAIN,
+        DOMAIN,
+        CREATE_FIELDS,
+        UPDATE_FIELDS,
     ).async_setup(hass, create_create=False)
 
     hass.http.register_view(ImageUploadView)
@@ -88,13 +93,13 @@ class ImageStorageCollection(collection.StorageCollection):
         # Verify we can read the image
         try:
             image = Image.open(uploaded_file.file)
-        except UnidentifiedImageError:
-            raise vol.Invalid("Unable to identify image file")
+        except UnidentifiedImageError as err:
+            raise vol.Invalid("Unable to identify image file") from err
 
         # Reset content
         uploaded_file.file.seek(0)
 
-        media_folder: pathlib.Path = (self.image_dir / data[CONF_ID])
+        media_folder: pathlib.Path = self.image_dir / data[CONF_ID]
         media_folder.mkdir(parents=True)
 
         media_file = media_folder / "original"
@@ -166,8 +171,8 @@ class ImageServeView(HomeAssistantView):
             parts = image_size.split("x", 1)
             width = int(parts[0])
             height = int(parts[1])
-        except (ValueError, IndexError):
-            raise web.HTTPBadRequest
+        except (ValueError, IndexError) as err:
+            raise web.HTTPBadRequest from err
 
         if not width or width != height or width not in VALID_SIZES:
             raise web.HTTPBadRequest
@@ -193,7 +198,8 @@ class ImageServeView(HomeAssistantView):
                     )
 
         return web.FileResponse(
-            target_file, headers={hdrs.CONTENT_TYPE: image_info["content_type"]}
+            target_file,
+            headers={**CACHE_HEADERS, hdrs.CONTENT_TYPE: image_info["content_type"]},
         )
 
 

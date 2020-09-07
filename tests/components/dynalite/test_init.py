@@ -88,7 +88,8 @@ async def test_service_request_area_preset(hass):
         "homeassistant.components.dynalite.bridge.DynaliteDevices.async_setup",
         return_value=True,
     ), patch(
-        "dynalite_devices_lib.dynalite.Dynalite.request_area_preset", return_value=True,
+        "dynalite_devices_lib.dynalite.Dynalite.request_area_preset",
+        return_value=True,
     ) as mock_req_area_pres:
         assert await async_setup_component(
             hass,
@@ -105,25 +106,33 @@ async def test_service_request_area_preset(hass):
         await hass.async_block_till_done()
         assert len(hass.config_entries.async_entries(dynalite.DOMAIN)) == 2
         await hass.services.async_call(
-            dynalite.DOMAIN, "request_area_preset", {"host": "1.2.3.4", "area": 2},
+            dynalite.DOMAIN,
+            "request_area_preset",
+            {"host": "1.2.3.4", "area": 2},
         )
         await hass.async_block_till_done()
         mock_req_area_pres.assert_called_once_with(2, 1)
         mock_req_area_pres.reset_mock()
         await hass.services.async_call(
-            dynalite.DOMAIN, "request_area_preset", {"area": 3},
+            dynalite.DOMAIN,
+            "request_area_preset",
+            {"area": 3},
         )
         await hass.async_block_till_done()
         assert mock_req_area_pres.mock_calls == [call(3, 1), call(3, 1)]
         mock_req_area_pres.reset_mock()
         await hass.services.async_call(
-            dynalite.DOMAIN, "request_area_preset", {"host": "5.6.7.8", "area": 4},
+            dynalite.DOMAIN,
+            "request_area_preset",
+            {"host": "5.6.7.8", "area": 4},
         )
         await hass.async_block_till_done()
         mock_req_area_pres.assert_called_once_with(4, 1)
         mock_req_area_pres.reset_mock()
         await hass.services.async_call(
-            dynalite.DOMAIN, "request_area_preset", {"host": "6.5.4.3", "area": 5},
+            dynalite.DOMAIN,
+            "request_area_preset",
+            {"host": "6.5.4.3", "area": 5},
         )
         await hass.async_block_till_done()
         mock_req_area_pres.assert_not_called()
@@ -137,7 +146,9 @@ async def test_service_request_area_preset(hass):
         mock_req_area_pres.assert_called_once_with(6, 9)
         mock_req_area_pres.reset_mock()
         await hass.services.async_call(
-            dynalite.DOMAIN, "request_area_preset", {"host": "1.2.3.4", "area": 7},
+            dynalite.DOMAIN,
+            "request_area_preset",
+            {"host": "1.2.3.4", "area": 7},
         )
         await hass.async_block_till_done()
         mock_req_area_pres.assert_called_once_with(7, 1)
@@ -179,12 +190,16 @@ async def test_service_request_channel_level(hass):
         mock_req_chan_lvl.reset_mock()
         with pytest.raises(MultipleInvalid):
             await hass.services.async_call(
-                dynalite.DOMAIN, "request_channel_level", {"area": 3},
+                dynalite.DOMAIN,
+                "request_channel_level",
+                {"area": 3},
             )
         await hass.async_block_till_done()
         mock_req_chan_lvl.assert_not_called()
         await hass.services.async_call(
-            dynalite.DOMAIN, "request_channel_level", {"area": 4, "channel": 5},
+            dynalite.DOMAIN,
+            "request_channel_level",
+            {"area": 4, "channel": 5},
         )
         await hass.async_block_till_done()
         assert mock_req_chan_lvl.mock_calls == [call(4, 5), call(4, 5)]

@@ -8,7 +8,10 @@ from sentry_sdk.integrations.logging import LoggingIntegration
 from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import __version__ as current_version
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_STARTED,
+    __version__ as current_version,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.loader import Integration, async_get_custom_components
@@ -72,7 +75,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     tracing = {}
     if entry.options.get(CONF_TRACING):
         tracing = {
-            "traceparent_v2": True,
             "traces_sample_rate": entry.options.get(
                 CONF_TRACING_SAMPLE_RATE, DEFAULT_TRACING_SAMPLE_RATE
             ),
@@ -95,6 +97,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ),
         **tracing,
     )
+
+    async def update_system_info(now):
+        nonlocal system_info
+        system_info = await hass.helpers.system_info.async_get_system_info()
+
+        # Update system info every hour
+        hass.helpers.event.async_call_later(3600, update_system_info)
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, update_system_info)
 
     return True
 
@@ -185,6 +196,9 @@ def process_before_send(
 
     # Update event with the additional tags
     event.setdefault("tags", {}).update(additional_tags)
+
+    # Set user context to the installation UUID
+    event.setdefault("user", {}).update({"id": huuid})
 
     # Update event data with Home Assistant Context
     event.setdefault("contexts", {}).update(

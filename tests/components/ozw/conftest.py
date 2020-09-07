@@ -87,6 +87,12 @@ def lock_data_fixture():
     return load_fixture("ozw/lock_network_dump.csv")
 
 
+@pytest.fixture(name="string_sensor_data", scope="session")
+def string_sensor_fixture():
+    """Load string sensor MQTT data and return it."""
+    return load_fixture("ozw/sensor_string_value_network_dump.csv")
+
+
 @pytest.fixture(name="sent_messages")
 def sent_messages_fixture():
     """Fixture to capture sent messages."""

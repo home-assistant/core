@@ -2,6 +2,7 @@
 from datetime import timedelta
 from urllib.parse import urlparse
 
+import av
 import pytest
 
 from homeassistant.components.stream import request_stream
@@ -9,6 +10,7 @@ from homeassistant.const import HTTP_NOT_FOUND
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import patch
 from tests.common import async_fire_time_changed
 from tests.components.stream.common import generate_h264_video, preload_stream
 
@@ -119,6 +121,40 @@ async def test_stream_ended(hass):
 
     assert segments > 1
     assert not track.get_segment()
+
+    # Stop stream, if it hasn't quit already
+    stream.stop()
+
+
+async def test_stream_keepalive(hass):
+    """Test hls stream retries the stream when keepalive=True."""
+    await async_setup_component(hass, "stream", {"stream": {}})
+
+    # Setup demo HLS track
+    source = "test_stream_keepalive_source"
+    stream = preload_stream(hass, source)
+    track = stream.add_provider("hls")
+    track.num_segments = 2
+
+    cur_time = 0
+
+    def time_side_effect():
+        nonlocal cur_time
+        if cur_time >= 80:
+            stream.keepalive = False  # Thread should exit and be joinable.
+        cur_time += 40
+        return cur_time
+
+    with patch("av.open") as av_open, patch(
+        "homeassistant.components.stream.worker.time"
+    ) as mock_time:
+        av_open.side_effect = av.error.InvalidDataError(-2, "error")
+        mock_time.time.side_effect = time_side_effect
+        # Request stream
+        request_stream(hass, source, keepalive=True)
+        stream._thread.join()
+        stream._thread = None
+        assert av_open.call_count == 2
 
     # Stop stream, if it hasn't quit already
     stream.stop()

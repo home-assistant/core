@@ -18,7 +18,6 @@
                 "data": {
                     "host": "Vert",
                     "password": "Passord",
-                    "port": "",
                     "username": "Brukernavn"
                 },
                 "title": "Sett opp Axis enhet"

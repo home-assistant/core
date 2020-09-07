@@ -11,14 +11,13 @@ from homeassistant.components.smart_meter_texas.const import (
 from homeassistant.const import ATTR_ENTITY_ID, CONF_ADDRESS
 from homeassistant.setup import async_setup_component
 
-from .conftest import TEST_ENTITY_ID, mock_connection, refresh_data, setup_integration
+from .conftest import TEST_ENTITY_ID, refresh_data, setup_integration
 
 from tests.async_mock import patch
 
 
 async def test_sensor(hass, config_entry, aioclient_mock):
     """Test that the sensor is setup."""
-    mock_connection(aioclient_mock)
     await setup_integration(hass, config_entry, aioclient_mock)
     await refresh_data(hass, config_entry, aioclient_mock)
     meter = hass.states.get(TEST_ENTITY_ID)
@@ -29,7 +28,6 @@ async def test_sensor(hass, config_entry, aioclient_mock):
 
 async def test_name(hass, config_entry, aioclient_mock):
     """Test sensor name property."""
-    mock_connection(aioclient_mock)
     await setup_integration(hass, config_entry, aioclient_mock)
     await refresh_data(hass, config_entry, aioclient_mock)
     meter = hass.states.get(TEST_ENTITY_ID)
@@ -39,7 +37,6 @@ async def test_name(hass, config_entry, aioclient_mock):
 
 async def test_attributes(hass, config_entry, aioclient_mock):
     """Test meter attributes."""
-    mock_connection(aioclient_mock)
     await setup_integration(hass, config_entry, aioclient_mock)
     await refresh_data(hass, config_entry, aioclient_mock)
     meter = hass.states.get(TEST_ENTITY_ID)
@@ -51,7 +48,6 @@ async def test_attributes(hass, config_entry, aioclient_mock):
 
 async def test_generic_entity_update_service(hass, config_entry, aioclient_mock):
     """Test generic update entity service homeasasistant/update_entity."""
-    mock_connection(aioclient_mock)
     await setup_integration(hass, config_entry, aioclient_mock)
     await async_setup_component(hass, HA_DOMAIN, {})
     with patch("smart_meter_texas.Meter.read_meter") as updater:

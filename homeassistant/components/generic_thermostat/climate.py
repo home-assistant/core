@@ -40,7 +40,10 @@ from homeassistant.helpers.event import (
     async_track_state_change_event,
     async_track_time_interval,
 )
+from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.restore_state import RestoreEntity
+
+from . import DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,6 +91,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the generic thermostat platform."""
+
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+
     name = config.get(CONF_NAME)
     heater_entity_id = config.get(CONF_HEATER)
     sensor_entity_id = config.get(CONF_SENSOR)
@@ -182,16 +188,22 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         await super().async_added_to_hass()
 
         # Add listener
-        async_track_state_change_event(
-            self.hass, [self.sensor_entity_id], self._async_sensor_changed
+        self.async_on_remove(
+            async_track_state_change_event(
+                self.hass, [self.sensor_entity_id], self._async_sensor_changed
+            )
         )
-        async_track_state_change_event(
-            self.hass, [self.heater_entity_id], self._async_switch_changed
+        self.async_on_remove(
+            async_track_state_change_event(
+                self.hass, [self.heater_entity_id], self._async_switch_changed
+            )
         )
 
         if self._keep_alive:
-            async_track_time_interval(
-                self.hass, self._async_control_heating, self._keep_alive
+            self.async_on_remove(
+                async_track_time_interval(
+                    self.hass, self._async_control_heating, self._keep_alive
+                )
             )
 
         @callback

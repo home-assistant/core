@@ -1,7 +1,13 @@
 """Offer zone automation rules."""
 import voluptuous as vol
 
-from homeassistant.const import CONF_ENTITY_ID, CONF_EVENT, CONF_PLATFORM, CONF_ZONE
+from homeassistant.const import (
+    ATTR_FRIENDLY_NAME,
+    CONF_ENTITY_ID,
+    CONF_EVENT,
+    CONF_PLATFORM,
+    CONF_ZONE,
+)
 from homeassistant.core import callback
 from homeassistant.helpers import condition, config_validation as cv, location
 from homeassistant.helpers.event import async_track_state_change_event
@@ -11,6 +17,8 @@ from homeassistant.helpers.event import async_track_state_change_event
 EVENT_ENTER = "enter"
 EVENT_LEAVE = "leave"
 DEFAULT_EVENT = EVENT_ENTER
+
+_EVENT_DESCRIPTION = {EVENT_ENTER: "entering", EVENT_LEAVE: "leaving"}
 
 TRIGGER_SCHEMA = vol.Schema(
     {
@@ -56,20 +64,21 @@ async def async_attach_trigger(hass, config, action, automation_info):
             and from_match
             and not to_match
         ):
+            description = f"{entity} {_EVENT_DESCRIPTION[event]} {zone_state.attributes[ATTR_FRIENDLY_NAME]}"
             hass.async_run_job(
-                action(
-                    {
-                        "trigger": {
-                            "platform": "zone",
-                            "entity_id": entity,
-                            "from_state": from_s,
-                            "to_state": to_s,
-                            "zone": zone_state,
-                            "event": event,
-                        }
-                    },
-                    context=to_s.context,
-                )
+                action,
+                {
+                    "trigger": {
+                        "platform": "zone",
+                        "entity_id": entity,
+                        "from_state": from_s,
+                        "to_state": to_s,
+                        "zone": zone_state,
+                        "event": event,
+                        "description": description,
+                    }
+                },
+                to_s.context,
             )
 
     return async_track_state_change_event(hass, entity_id, zone_automation_listener)

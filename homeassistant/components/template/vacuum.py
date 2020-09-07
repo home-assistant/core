@@ -5,7 +5,7 @@ import voluptuous as vol
 
 from homeassistant.components.vacuum import (
     ATTR_FAN_SPEED,
-    DOMAIN,
+    DOMAIN as VACUUM_DOMAIN,
     SERVICE_CLEAN_SPOT,
     SERVICE_LOCATE,
     SERVICE_PAUSE,
@@ -41,10 +41,11 @@ from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
+from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.script import Script
 
-from .const import CONF_AVAILABILITY_TEMPLATE
-from .template_entity import TemplateEntityWithAttributesAvailabilityAndImages
+from .const import CONF_AVAILABILITY_TEMPLATE, DOMAIN, PLATFORMS
+from .template_entity import TemplateEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,7 +55,7 @@ CONF_FAN_SPEED_LIST = "fan_speeds"
 CONF_FAN_SPEED_TEMPLATE = "fan_speed_template"
 CONF_ATTRIBUTE_TEMPLATES = "attribute_templates"
 
-ENTITY_ID_FORMAT = DOMAIN + ".{}"
+ENTITY_ID_FORMAT = VACUUM_DOMAIN + ".{}"
 _VALID_STATES = [
     STATE_CLEANING,
     STATE_DOCKED,
@@ -64,27 +65,30 @@ _VALID_STATES = [
     STATE_ERROR,
 ]
 
-VACUUM_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_FRIENDLY_NAME): cv.string,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_BATTERY_LEVEL_TEMPLATE): cv.template,
-        vol.Optional(CONF_FAN_SPEED_TEMPLATE): cv.template,
-        vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
-        vol.Optional(CONF_ATTRIBUTE_TEMPLATES, default={}): vol.Schema(
-            {cv.string: cv.template}
-        ),
-        vol.Required(SERVICE_START): cv.SCRIPT_SCHEMA,
-        vol.Optional(SERVICE_PAUSE): cv.SCRIPT_SCHEMA,
-        vol.Optional(SERVICE_STOP): cv.SCRIPT_SCHEMA,
-        vol.Optional(SERVICE_RETURN_TO_BASE): cv.SCRIPT_SCHEMA,
-        vol.Optional(SERVICE_CLEAN_SPOT): cv.SCRIPT_SCHEMA,
-        vol.Optional(SERVICE_LOCATE): cv.SCRIPT_SCHEMA,
-        vol.Optional(SERVICE_SET_FAN_SPEED): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_FAN_SPEED_LIST, default=[]): cv.ensure_list,
-        vol.Optional(CONF_ENTITY_ID): cv.entity_ids,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
-    }
+VACUUM_SCHEMA = vol.All(
+    cv.deprecated(CONF_ENTITY_ID),
+    vol.Schema(
+        {
+            vol.Optional(CONF_FRIENDLY_NAME): cv.string,
+            vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+            vol.Optional(CONF_BATTERY_LEVEL_TEMPLATE): cv.template,
+            vol.Optional(CONF_FAN_SPEED_TEMPLATE): cv.template,
+            vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
+            vol.Optional(CONF_ATTRIBUTE_TEMPLATES, default={}): vol.Schema(
+                {cv.string: cv.template}
+            ),
+            vol.Required(SERVICE_START): cv.SCRIPT_SCHEMA,
+            vol.Optional(SERVICE_PAUSE): cv.SCRIPT_SCHEMA,
+            vol.Optional(SERVICE_STOP): cv.SCRIPT_SCHEMA,
+            vol.Optional(SERVICE_RETURN_TO_BASE): cv.SCRIPT_SCHEMA,
+            vol.Optional(SERVICE_CLEAN_SPOT): cv.SCRIPT_SCHEMA,
+            vol.Optional(SERVICE_LOCATE): cv.SCRIPT_SCHEMA,
+            vol.Optional(SERVICE_SET_FAN_SPEED): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_FAN_SPEED_LIST, default=[]): cv.ensure_list,
+            vol.Optional(CONF_ENTITY_ID): cv.entity_ids,
+            vol.Optional(CONF_UNIQUE_ID): cv.string,
+        }
+    ),
 )
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
@@ -92,8 +96,8 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Template Vacuums."""
+async def _async_create_entities(hass, config):
+    """Create the Template Vacuums."""
     vacuums = []
 
     for device, device_config in config[CONF_VACUUMS].items():
@@ -138,12 +142,17 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             )
         )
 
-    async_add_entities(vacuums)
+    return vacuums
 
 
-class TemplateVacuum(
-    TemplateEntityWithAttributesAvailabilityAndImages, StateVacuumEntity
-):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Set up the template vacuums."""
+
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+    async_add_entities(await _async_create_entities(hass, config))
+
+
+class TemplateVacuum(TemplateEntity, StateVacuumEntity):
     """A template vacuum component."""
 
     def __init__(
@@ -168,7 +177,8 @@ class TemplateVacuum(
     ):
         """Initialize the vacuum."""
         super().__init__(
-            attribute_templates, availability_template, None, None,
+            attribute_templates=attribute_templates,
+            availability_template=availability_template,
         )
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, device_id, hass=hass
@@ -334,7 +344,10 @@ class TemplateVacuum(
             )
         if self._fan_speed_template is not None:
             self.add_template_attribute(
-                "_fan_speed", self._fan_speed_template, None, self._update_fan_speed,
+                "_fan_speed",
+                self._fan_speed_template,
+                None,
+                self._update_fan_speed,
             )
         if self._battery_level_template is not None:
             self.add_template_attribute(

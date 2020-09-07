@@ -13,7 +13,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(
         [
             TeslaBinarySensor(
-                device, hass.data[TESLA_DOMAIN][config_entry.entry_id]["coordinator"],
+                device,
+                hass.data[TESLA_DOMAIN][config_entry.entry_id]["coordinator"],
             )
             for device in hass.data[TESLA_DOMAIN][config_entry.entry_id]["devices"][
                 "binary_sensor"
