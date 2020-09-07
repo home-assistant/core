@@ -37,7 +37,10 @@ TRIGGER_SCHEMA = vol.All(
             vol.Optional(CONF_ATTRIBUTE): cv.match_all,
         }
     ),
-    cv.key_dependency(CONF_FOR, CONF_TO),
+    vol.Any(
+        cv.key_dependency(CONF_FOR, CONF_TO),
+        cv.key_dependency(CONF_FOR, CONF_FROM),
+    ),
 )
 
 
@@ -140,6 +143,9 @@ async def async_attach_trigger(
                 cur_value = new_st.state
             else:
                 cur_value = new_st.attributes.get(attribute)
+
+            if CONF_TO not in config:
+                return cur_value != old_value
 
             return cur_value == new_value
 
