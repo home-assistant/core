@@ -60,6 +60,7 @@ async def help_test_availability_when_connection_lost(hass, mqtt_mock, domain, c
         get_topic_tele_will(config),
         get_state_online(config),
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get(f"{domain}.test")
     assert state.state != STATE_UNAVAILABLE
@@ -89,6 +90,7 @@ async def help_test_availability(
         f"{DEFAULT_PREFIX}/{config[CONF_ID]}/config",
         json.dumps(config),
     )
+    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get(f"{domain}.test")
@@ -154,6 +156,7 @@ async def help_test_availability_discovery_update(
     assert state.state == STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, availability_topic1, online1)
+    await hass.async_block_till_done()
     state = hass.states.get(f"{domain}.test")
     assert state.state != STATE_UNAVAILABLE
 
