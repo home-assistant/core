@@ -2,24 +2,25 @@
 
 from functools import partial
 import os
-import pickle
 import re
 
 from Plugwise_Smile.Smile import Smile
+import jsonpickle
 import pytest
 
 from tests.async_mock import AsyncMock, patch
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-def _read_pickle(environment, call):
-    """Uncompress the pickle data."""
-    fixture = call + ".pickle"
+def _read_json(environment, call):
+    """Undecode the json data."""
+    fixture = call + ".json"
     path = os.path.join(
         os.path.dirname(__file__), "../../fixtures/plugwise/" + environment, fixture
     )
-    with open(path, "rb") as fixture_file:
-        return pickle.load(fixture_file)
+    with open(path) as fixture_file:
+        data = fixture_file.read()
+        return jsonpickle.decode(data)
 
 
 @pytest.fixture(name="mock_smile")
@@ -61,7 +62,7 @@ def mock_smile_notconnect():
 
 def _get_device_data(chosen_env, device_id):
     """Mock return data for specific devices."""
-    return _read_pickle(chosen_env, "get_device_data/" + device_id)
+    return _read_json(chosen_env, "get_device_data/" + device_id)
 
 
 @pytest.fixture(name="mock_smile_adam")
@@ -93,7 +94,7 @@ def mock_smile_adam():
             return_value=True
         )
 
-        smile_mock.return_value.get_all_devices.return_value = _read_pickle(
+        smile_mock.return_value.get_all_devices.return_value = _read_json(
             chosen_env, "get_all_devices"
         )
         smile_mock.return_value.get_device_data.side_effect = partial(
@@ -132,7 +133,7 @@ def mock_smile_anna():
             return_value=True
         )
 
-        smile_mock.return_value.get_all_devices.return_value = _read_pickle(
+        smile_mock.return_value.get_all_devices.return_value = _read_json(
             chosen_env, "get_all_devices"
         )
         smile_mock.return_value.get_device_data.side_effect = partial(
@@ -161,7 +162,7 @@ def mock_smile_p1():
             return_value=True
         )
 
-        smile_mock.return_value.get_all_devices.return_value = _read_pickle(
+        smile_mock.return_value.get_all_devices.return_value = _read_json(
             chosen_env, "get_all_devices"
         )
         smile_mock.return_value.get_device_data.side_effect = partial(
