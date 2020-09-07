@@ -41,14 +41,14 @@ STORAGE_DISK_BINARY_SENSORS = {
     f"{SynoStorage.API_KEY}:disk_exceed_bad_sector_thr": {
         ENTITY_NAME: "Exceeded Max Bad Sectors",
         ENTITY_UNIT: None,
-        ENTITY_ICON: "mdi:checkbox-marked-circle-outline",
+        ENTITY_ICON: None,
         ENTITY_CLASS: "safety",
         ENTITY_ENABLE: True,
     },
     f"{SynoStorage.API_KEY}:disk_below_remain_life_thr": {
         ENTITY_NAME: "Below Min Remaining Life",
         ENTITY_UNIT: None,
-        ENTITY_ICON: "mdi:checkbox-marked-circle-outline",
+        ENTITY_ICON: None,
         ENTITY_CLASS: "safety",
         ENTITY_ENABLE: True,
     },
@@ -58,7 +58,7 @@ SECURITY_BINARY_SENSORS = {
     f"{SynoCoreSecurity.API_KEY}:status": {
         ENTITY_NAME: "Security status",
         ENTITY_UNIT: None,
-        ENTITY_ICON: "mdi:checkbox-marked-circle-outline",
+        ENTITY_ICON: None,
         ENTITY_CLASS: "safety",
         ENTITY_ENABLE: True,
     },
@@ -227,14 +227,14 @@ STORAGE_DISK_SENSORS = {
     f"{SynoStorage.API_KEY}:disk_smart_status": {
         ENTITY_NAME: "Status (Smart)",
         ENTITY_UNIT: None,
-        ENTITY_ICON: "mdi:checkbox-marked-circle-outline",
+        ENTITY_ICON: None,
         ENTITY_CLASS: "safety",
         ENTITY_ENABLE: False,
     },
     f"{SynoStorage.API_KEY}:disk_status": {
         ENTITY_NAME: "Status",
         ENTITY_UNIT: None,
-        ENTITY_ICON: "mdi:checkbox-marked-circle-outline",
+        ENTITY_ICON: None,
         ENTITY_CLASS: "safety",
         ENTITY_ENABLE: True,
     },
