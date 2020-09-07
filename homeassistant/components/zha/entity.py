@@ -202,7 +202,11 @@ class ZhaEntity(BaseZhaEntity, RestoreEntity):
 
     async def async_update(self) -> None:
         """Retrieve latest state."""
-        tasks = []
+    tasks = [
+        channel.async_update()
+        for channel in self.cluster_channels.values()
+        if hasattr(channel, "async_update")
+    ]
         for channel in self.cluster_channels.values():
             if hasattr(channel, "async_update"):
                 tasks.append(channel.async_update())
