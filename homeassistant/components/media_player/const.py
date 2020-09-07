@@ -48,7 +48,7 @@ MEDIA_CLASS_PLAYLIST = "playlist"
 MEDIA_CLASS_PODCAST = "podcast"
 MEDIA_CLASS_SEASON = "season"
 MEDIA_CLASS_TRACK = "track"
-MEDIA_CLASS_TVSHOW = "tvshow"
+MEDIA_CLASS_TV_SHOW = "tv_show"
 MEDIA_CLASS_URL = "url"
 MEDIA_CLASS_VIDEO = "video"
 
