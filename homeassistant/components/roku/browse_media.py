@@ -86,7 +86,7 @@ async def item_payload(item, coordinator):
     )
 
 
- async def library_payload(coordinator):
+async def library_payload(coordinator):
     """
     Create response payload to describe contents of a specific library.
 
