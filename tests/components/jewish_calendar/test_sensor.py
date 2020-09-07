@@ -11,7 +11,7 @@ from . import (
     HDATE_DEFAULT_ALTITUDE,
     alter_time,
     make_jerusalem_test_params,
-    make_nyc_test_params
+    make_nyc_test_params,
 )
 
 from tests.common import async_fire_time_changed
@@ -552,17 +552,22 @@ async def test_shabbat_times_sensor(
 
         entity = registry.async_get(f"sensor.test_{sensor_type}")
         target_sensor_type = sensor_type.replace("parshat_hashavua", "weekly_portion")
-        target_uid = "_".join(map(str, [
-            latitude,
-            longitude,
-            time_zone,
-            HDATE_DEFAULT_ALTITUDE,
-            diaspora,
-            language,
-            candle_lighting,
-            havdalah,
-            target_sensor_type,
-        ]))
+        target_uid = "_".join(
+            map(
+                str,
+                [
+                    latitude,
+                    longitude,
+                    time_zone,
+                    HDATE_DEFAULT_ALTITUDE,
+                    diaspora,
+                    language,
+                    candle_lighting,
+                    havdalah,
+                    target_sensor_type,
+                ],
+            )
+        )
         assert entity.unique_id == target_uid
 
 
