@@ -7,6 +7,7 @@ from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
     POWER_WATT,
+    TIME_SECONDS,
     VOLT,
 )
 
@@ -41,7 +42,20 @@ SENSORS = {
         device_class=sensor.DEVICE_CLASS_POWER,
         default_enabled=False,
     ),
+    ("roller", "rollerPower"): BlockAttributeDescription(
+        name="Power",
+        unit=POWER_WATT,
+        value=lambda value: round(value, 1),
+        device_class=sensor.DEVICE_CLASS_POWER,
+        default_enabled=False,
+    ),
     ("relay", "energy"): BlockAttributeDescription(
+        name="Energy",
+        unit=ENERGY_KILO_WATT_HOUR,
+        value=lambda value: round(value / 60 / 1000, 2),
+        device_class=sensor.DEVICE_CLASS_ENERGY,
+    ),
+    ("roller", "rollerEnergy"): BlockAttributeDescription(
         name="Energy",
         unit=ENERGY_KILO_WATT_HOUR,
         value=lambda value: round(value / 60 / 1000, 2),
@@ -67,11 +81,12 @@ SENSORS = {
         device_class=sensor.DEVICE_CLASS_HUMIDITY,
     ),
     ("sensor", "luminosity"): BlockAttributeDescription(
-        name="Luminosity",
-        unit="lx",
-        device_class=sensor.DEVICE_CLASS_ILLUMINANCE,
+        name="Luminosity", unit="lx", device_class=sensor.DEVICE_CLASS_ILLUMINANCE
     ),
-    ("sensor", "tilt"): BlockAttributeDescription(name="tilt", unit=DEGREE),
+    ("sensor", "tilt"): BlockAttributeDescription(name="Tilt", unit=DEGREE),
+    ("sensor", "totalWorkTime"): BlockAttributeDescription(
+        name="Total work time", unit=TIME_SECONDS
+    ),
 }
 
 
