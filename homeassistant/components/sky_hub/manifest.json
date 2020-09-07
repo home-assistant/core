@@ -2,6 +2,6 @@
   "domain": "sky_hub",
   "name": "Sky Hub",
   "documentation": "https://www.home-assistant.io/integrations/sky_hub",
-  "requirements": ["pyskyqhub==0.1.2"],
+  "requirements": ["pyskyqhub==0.1.3"],
   "codeowners": ["@rogerselwyn"]
 }
