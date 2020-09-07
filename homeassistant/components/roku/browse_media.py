@@ -28,10 +28,17 @@ async def build_item_response(coordinator, payload):
     title = None
     media = None
 
-    if search_type == MEDIA_TYPE_APP:
-    
-    elif search_type == MEDIA_TYPE_CHANNEL:
-        
+    if search_type == MEDIA_TYPE_APPS:
+        media = [
+            {"app_id": item.app_id, "title": item.name, "type": MEDIA_TYPE_APP}
+            for item in coordinator.data.apps
+        ]
+    elif search_type == MEDIA_TYPE_CHANNELS:
+        media = [
+            {"channel_number": item.number, "title": item.name, "type": MEDIA_TYPE_CHANNEL}
+            for item in coordinator.data.channels
+        ]
+
     if media is None:
         return
 
@@ -56,18 +63,16 @@ async def item_payload(item, coordinator):
 
     if "app_id" in item:
         media_content_type = MEDIA_TYPE_APP
-        media_content_id = item.app_id
-        title = item.name
-        thumbnail = coordinator.roku.app_icon_url(item.app_id)
-    elif "number" in item:
+        media_content_id = item["app_id"]
+        thumbnail = coordinator.roku.app_icon_url(item["app_id"])
+    elif "channel_number" in item:
         media_content_type = MEDIA_TYPE_CHANNEL
-        media_content_id = item.number
-        title = item.name
+        media_content_id = item["channel_number"]
     else:
         media_content_type = item.get("type")
         media_content_id = ""
-        title = item.get("title")
 
+    title = item.get("title")
     can_play = media_content_type in PLAYABLE_MEDIA_TYPES and bool(media_content_id)
     can_expand = media_content_type in EXPANDABLE_MEDIA_TYPES
 
