@@ -80,11 +80,7 @@ class AbstractOAuth2Implementation(ABC):
         """Refresh a token and update expires info."""
         new_token = await self._async_refresh_token(token)
         # Force int for non-compliant oauth2 providers
-        try:
-            new_token["expires_in"] = int(new_token["expires_in"])
-        except ValueError as err:
-            _LOGGER.warning("Error converting expires_in to int: %s", err)
-            return token
+        new_token["expires_in"] = int(new_token["expires_in"])
         new_token["expires_at"] = time.time() + new_token["expires_in"]
         return new_token
 
