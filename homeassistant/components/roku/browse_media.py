@@ -38,7 +38,7 @@ async def build_item_response(coordinator, payload):
             {
                 "channel_number": item.number,
                 "title": item.name,
-                "type": MEDIA_TYPE_CHANNEL
+                "type": MEDIA_TYPE_CHANNEL,
             }
             for item in coordinator.data.channels
         ]
