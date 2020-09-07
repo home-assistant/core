@@ -91,7 +91,7 @@ class MyIOSensor(Entity):
         if int(self._number) < 100:
             string_to_send = TEMP_CELSIUS
         elif int(self._number) < 200:
-            string_to_send = PERCENTAGE
+            string_to_send = PERCENTAGE2
         else:
             string_to_send = self._sensors[str(self._number)]["description"]
         return string_to_send
