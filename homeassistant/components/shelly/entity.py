@@ -145,7 +145,7 @@ class ShellyBlockAttributeEntity(ShellyBlockEntity, entity.Entity):
 
         name_parts = [self.wrapper.name]
         if same_type_count > 1:
-            name_parts.append(str(block.index))
+            name_parts.append(str(block.channel))
         name_parts.append(self.description.name)
 
         self._name = " ".join(name_parts)
