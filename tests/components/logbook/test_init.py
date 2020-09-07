@@ -2021,7 +2021,7 @@ async def test_logbook_context_from_template(hass, hass_client):
             }
         },
     )
-    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
     await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
@@ -2043,9 +2043,9 @@ async def test_logbook_context_from_template(hass, hass_client):
     )
     await hass.async_block_till_done()
 
-    await hass.async_add_job(trigger_db_commit, hass)
+    await hass.async_add_executor_job(trigger_db_commit, hass)
     await hass.async_block_till_done()
-    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
 
     client = await hass_client()
 
@@ -2079,6 +2079,101 @@ async def test_logbook_context_from_template(hass, hass_client):
     assert json_dict[5]["context_entity_id"] == "switch.test_state"
     assert json_dict[5]["context_entity_id_name"] == "test state"
     assert json_dict[5]["context_user_id"] == "9400facee45711eaa9308bfd3d19e474"
+
+
+async def test_logbook_entity_matches_only(hass, hass_client):
+    """Test the logbook view with a single entity and entity_matches_only."""
+    await hass.async_add_executor_job(init_recorder_component, hass)
+    await async_setup_component(hass, "logbook", {})
+    assert await async_setup_component(
+        hass,
+        "switch",
+        {
+            "switch": {
+                "platform": "template",
+                "switches": {
+                    "test_template_switch": {
+                        "value_template": "{{ states.switch.test_state.state }}",
+                        "turn_on": {
+                            "service": "switch.turn_on",
+                            "entity_id": "switch.test_state",
+                        },
+                        "turn_off": {
+                            "service": "switch.turn_off",
+                            "entity_id": "switch.test_state",
+                        },
+                    }
+                },
+            }
+        },
+    )
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    # Entity added (should not be logged)
+    hass.states.async_set("switch.test_state", STATE_ON)
+    await hass.async_block_till_done()
+
+    # First state change (should be logged)
+    hass.states.async_set("switch.test_state", STATE_OFF)
+    await hass.async_block_till_done()
+
+    switch_turn_off_context = ha.Context(
+        id="9c5bd62de45711eaaeb351041eec8dd9",
+        user_id="9400facee45711eaa9308bfd3d19e474",
+    )
+    hass.states.async_set(
+        "switch.test_state", STATE_ON, context=switch_turn_off_context
+    )
+    await hass.async_block_till_done()
+
+    await hass.async_add_executor_job(trigger_db_commit, hass)
+    await hass.async_block_till_done()
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+
+    client = await hass_client()
+
+    # Today time 00:00:00
+    start = dt_util.utcnow().date()
+    start_date = datetime(start.year, start.month, start.day)
+
+    # Test today entries with filter by end_time
+    end_time = start + timedelta(hours=24)
+    response = await client.get(
+        f"/api/logbook/{start_date.isoformat()}?end_time={end_time}&entity=switch.test_state&entity_matches_only"
+    )
+    assert response.status == 200
+    json_dict = await response.json()
+
+    assert len(json_dict) == 2
+
+    assert json_dict[0]["entity_id"] == "switch.test_state"
+    assert json_dict[0]["message"] == "turned off"
+
+    assert json_dict[1]["entity_id"] == "switch.test_state"
+    assert json_dict[1]["context_user_id"] == "9400facee45711eaa9308bfd3d19e474"
+    assert json_dict[1]["message"] == "turned on"
+
+
+async def test_logbook_invalid_entity(hass, hass_client):
+    """Test the logbook view with requesting an invalid entity."""
+    await hass.async_add_executor_job(init_recorder_component, hass)
+    await async_setup_component(hass, "logbook", {})
+    await hass.async_block_till_done()
+    client = await hass_client()
+
+    # Today time 00:00:00
+    start = dt_util.utcnow().date()
+    start_date = datetime(start.year, start.month, start.day)
+
+    # Test today entries with filter by end_time
+    end_time = start + timedelta(hours=24)
+    response = await client.get(
+        f"/api/logbook/{start_date.isoformat()}?end_time={end_time}&entity=invalid&entity_matches_only"
+    )
+    assert response.status == 500
 
 
 class MockLazyEventPartialState(ha.Event):

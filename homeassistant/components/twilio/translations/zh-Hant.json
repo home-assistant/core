@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "not_internet_accessible": "Home Assistant \u7269\u4ef6\u5fc5\u9808\u80fd\u5920\u7531\u7db2\u969b\u7db2\u8def\u5b58\u53d6\uff0c\u65b9\u80fd\u63a5\u53d7 Twilio \u8a0a\u606f\u3002",
+            "not_internet_accessible": "Home Assistant \u8a2d\u5099\u5fc5\u9808\u80fd\u5920\u7531\u7db2\u969b\u7db2\u8def\u5b58\u53d6\uff0c\u65b9\u80fd\u63a5\u53d7 Twilio \u8a0a\u606f\u3002",
             "one_instance_allowed": "\u50c5\u9700\u8a2d\u5b9a\u4e00\u7d44\u7269\u4ef6\u5373\u53ef\u3002"
         },
         "create_entry": {

@@ -1,7 +1,7 @@
 """Tests for the TekSavvy sensor platform."""
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.teksavvy.sensor import TekSavvyData
-from homeassistant.const import DATA_GIGABYTES, HTTP_NOT_FOUND, UNIT_PERCENTAGE
+from homeassistant.const import DATA_GIGABYTES, HTTP_NOT_FOUND, PERCENTAGE
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 
@@ -75,7 +75,7 @@ async def test_capped_setup(hass, aioclient_mock):
     assert state.state == "235.57"
 
     state = hass.states.get("sensor.teksavvy_usage_ratio")
-    assert state.attributes.get("unit_of_measurement") == UNIT_PERCENTAGE
+    assert state.attributes.get("unit_of_measurement") == PERCENTAGE
     assert state.state == "56.69"
 
     state = hass.states.get("sensor.teksavvy_usage")
@@ -161,7 +161,7 @@ async def test_unlimited_setup(hass, aioclient_mock):
     assert state.state == "226.75"
 
     state = hass.states.get("sensor.teksavvy_usage_ratio")
-    assert state.attributes.get("unit_of_measurement") == UNIT_PERCENTAGE
+    assert state.attributes.get("unit_of_measurement") == PERCENTAGE
     assert state.state == "0"
 
     state = hass.states.get("sensor.teksavvy_remaining")

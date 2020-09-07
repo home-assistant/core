@@ -1,114 +1,90 @@
 """Sensor for Shelly."""
-import aioshelly
-
 from homeassistant.components import sensor
 from homeassistant.const import (
+    CONCENTRATION_PARTS_PER_MILLION,
+    DEGREE,
     ELECTRICAL_CURRENT_AMPERE,
     ENERGY_KILO_WATT_HOUR,
+    PERCENTAGE,
     POWER_WATT,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-    UNIT_PERCENTAGE,
-    VOLT,
 )
-from homeassistant.helpers.entity import Entity
 
-from . import ShellyBlockEntity, ShellyDeviceWrapper
-from .const import DOMAIN
+from .entity import (
+    BlockAttributeDescription,
+    ShellyBlockAttributeEntity,
+    async_setup_entry_attribute_entities,
+    temperature_unit,
+)
 
 SENSORS = {
-    "battery": [UNIT_PERCENTAGE, sensor.DEVICE_CLASS_BATTERY],
-    "current": [ELECTRICAL_CURRENT_AMPERE, sensor.DEVICE_CLASS_CURRENT],
-    "deviceTemp": [None, sensor.DEVICE_CLASS_TEMPERATURE],
-    "energy": [ENERGY_KILO_WATT_HOUR, sensor.DEVICE_CLASS_ENERGY],
-    "energyReturned": [ENERGY_KILO_WATT_HOUR, sensor.DEVICE_CLASS_ENERGY],
-    "extTemp": [None, sensor.DEVICE_CLASS_TEMPERATURE],
-    "humidity": [UNIT_PERCENTAGE, sensor.DEVICE_CLASS_HUMIDITY],
-    "overpowerValue": [POWER_WATT, sensor.DEVICE_CLASS_POWER],
-    "power": [POWER_WATT, sensor.DEVICE_CLASS_POWER],
-    "voltage": [VOLT, sensor.DEVICE_CLASS_VOLTAGE],
+    ("device", "battery"): BlockAttributeDescription(
+        name="Battery", unit=PERCENTAGE, device_class=sensor.DEVICE_CLASS_BATTERY
+    ),
+    ("device", "deviceTemp"): BlockAttributeDescription(
+        name="Device Temperature",
+        unit=temperature_unit,
+        value=lambda value: round(value, 1),
+        device_class=sensor.DEVICE_CLASS_TEMPERATURE,
+        default_enabled=False,
+    ),
+    ("emeter", "current"): BlockAttributeDescription(
+        name="Current",
+        unit=ELECTRICAL_CURRENT_AMPERE,
+        value=lambda value: value,
+        device_class=sensor.DEVICE_CLASS_CURRENT,
+    ),
+    ("light", "power"): BlockAttributeDescription(
+        name="Power",
+        unit=POWER_WATT,
+        value=lambda value: round(value, 1),
+        device_class=sensor.DEVICE_CLASS_POWER,
+        default_enabled=False,
+    ),
+    ("relay", "energy"): BlockAttributeDescription(
+        name="Energy",
+        unit=ENERGY_KILO_WATT_HOUR,
+        value=lambda value: round(value / 60 / 1000, 2),
+        device_class=sensor.DEVICE_CLASS_ENERGY,
+    ),
+    ("sensor", "concentration"): BlockAttributeDescription(
+        name="Gas Concentration",
+        unit=CONCENTRATION_PARTS_PER_MILLION,
+        value=lambda value: value,
+        # "sensorOp" is "normal" when the Shelly Gas is working properly and taking measurements.
+        available=lambda block: block.sensorOp == "normal",
+    ),
+    ("sensor", "extTemp"): BlockAttributeDescription(
+        name="Temperature",
+        unit=temperature_unit,
+        value=lambda value: round(value, 1),
+        device_class=sensor.DEVICE_CLASS_TEMPERATURE,
+    ),
+    ("sensor", "humidity"): BlockAttributeDescription(
+        name="Humidity",
+        unit=PERCENTAGE,
+        value=lambda value: round(value, 1),
+        device_class=sensor.DEVICE_CLASS_HUMIDITY,
+    ),
+    ("sensor", "luminosity"): BlockAttributeDescription(
+        name="Luminosity",
+        unit="lx",
+        device_class=sensor.DEVICE_CLASS_ILLUMINANCE,
+    ),
+    ("sensor", "tilt"): BlockAttributeDescription(name="tilt", unit=DEGREE),
 }
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up sensors for device."""
-    wrapper = hass.data[DOMAIN][config_entry.entry_id]
-    sensors = []
-
-    for block in wrapper.device.blocks:
-        for attr in SENSORS:
-            if not hasattr(block, attr):
-                continue
-
-            sensors.append(ShellySensor(wrapper, block, attr))
-
-    if sensors:
-        async_add_entities(sensors)
+    await async_setup_entry_attribute_entities(
+        hass, config_entry, async_add_entities, SENSORS, ShellySensor
+    )
 
 
-class ShellySensor(ShellyBlockEntity, Entity):
-    """Switch that controls a relay block on Shelly devices."""
-
-    def __init__(
-        self,
-        wrapper: ShellyDeviceWrapper,
-        block: aioshelly.Block,
-        attribute: str,
-    ) -> None:
-        """Initialize sensor."""
-        super().__init__(wrapper, block)
-        self.attribute = attribute
-        unit, device_class = SENSORS[attribute]
-        self.info = block.info(attribute)
-
-        if (
-            self.info[aioshelly.BLOCK_VALUE_TYPE]
-            == aioshelly.BLOCK_VALUE_TYPE_TEMPERATURE
-        ):
-            if self.info[aioshelly.BLOCK_VALUE_UNIT] == "C":
-                unit = TEMP_CELSIUS
-            else:
-                unit = TEMP_FAHRENHEIT
-        elif self.info[aioshelly.BLOCK_VALUE_TYPE] == aioshelly.BLOCK_VALUE_TYPE_ENERGY:
-            unit = ENERGY_KILO_WATT_HOUR
-
-        self._unit = unit
-        self._device_class = device_class
-
-    @property
-    def unique_id(self):
-        """Return unique ID of entity."""
-        return f"{super().unique_id}-{self.attribute}"
-
-    @property
-    def name(self):
-        """Name of sensor."""
-        return f"{self.wrapper.name} - {self.attribute}"
+class ShellySensor(ShellyBlockAttributeEntity):
+    """Represent a shelly sensor."""
 
     @property
     def state(self):
-        """Value of sensor."""
-        if self.attribute in [
-            "deviceTemp",
-            "extTemp",
-            "humidity",
-            "overpowerValue",
-            "power",
-        ]:
-            return round(getattr(self.block, self.attribute), 1)
-        # Energy unit change from Wmin or Wh to kWh
-        if self.info[aioshelly.BLOCK_VALUE_UNIT] == "Wmin":
-            return round(getattr(self.block, self.attribute) / 60 / 1000, 2)
-        if self.info[aioshelly.BLOCK_VALUE_UNIT] == "Wh":
-            return round(getattr(self.block, self.attribute) / 1000, 2)
-        return getattr(self.block, self.attribute)
-
-    @property
-    def unit_of_measurement(self):
-        """Return unit of sensor."""
-        return self._unit
-
-    @property
-    def device_class(self):
-        """Device class of sensor."""
-        return self._device_class
+        """Return value of sensor."""
+        return self.attribute_value

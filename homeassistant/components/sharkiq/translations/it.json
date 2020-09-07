@@ -1,7 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured_account": "L'account \u00e8 gi\u00e0 configurato"
+            "already_configured_account": "L'account \u00e8 gi\u00e0 configurato",
+            "cannot_connect": "Impossibile connettersi",
+            "reauth_successful": "Token di accesso aggiornato correttamente",
+            "unknown": "Errore imprevisto"
         },
         "error": {
             "cannot_connect": "Impossibile connettersi",
@@ -9,6 +12,12 @@
             "unknown": "Errore imprevisto"
         },
         "step": {
+            "reauth": {
+                "data": {
+                    "password": "Password",
+                    "username": "Nome utente"
+                }
+            },
             "user": {
                 "data": {
                     "password": "Password",

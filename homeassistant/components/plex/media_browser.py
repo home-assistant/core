@@ -1,6 +1,7 @@
 """Support to interface with the Plex API."""
 import logging
 
+from homeassistant.components.media_player import BrowseMedia
 from homeassistant.components.media_player.errors import BrowseError
 
 from .const import DOMAIN
@@ -12,6 +13,10 @@ PLAYLISTS_BROWSE_PAYLOAD = {
     "media_content_type": "playlists",
     "can_play": False,
     "can_expand": True,
+}
+SPECIAL_METHODS = {
+    "On Deck": "onDeck",
+    "Recently Added": "recentlyAdded",
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,19 +35,48 @@ def browse_media(
             return None
 
         media_info = item_payload(media)
-        if media_info.get("can_expand"):
-            media_info["children"] = []
+        if media_info.can_expand:
+            media_info.children = []
             for item in media:
-                media_info["children"].append(item_payload(item))
+                media_info.children.append(item_payload(item))
         return media_info
 
+    if media_content_id and ":" in media_content_id:
+        media_content_id, special_folder = media_content_id.split(":")
+    else:
+        special_folder = None
+
     if (
-        media_content_type == "server"
+        media_content_type
+        and media_content_type == "server"
         and media_content_id != plex_server.machine_identifier
     ):
         raise BrowseError(
             f"Plex server with ID '{media_content_id}' is not associated with {entity_id}"
         )
+
+    if special_folder:
+        if media_content_type == "server":
+            library_or_section = plex_server.library
+            title = plex_server.friendly_name
+        elif media_content_type == "library":
+            library_or_section = plex_server.library.sectionByID(media_content_id)
+            title = library_or_section.title
+
+        payload = {
+            "title": title,
+            "media_content_id": f"{media_content_id}:{special_folder}",
+            "media_content_type": media_content_type,
+            "can_play": False,
+            "can_expand": True,
+            "children": [],
+        }
+
+        method = SPECIAL_METHODS[special_folder]
+        items = getattr(library_or_section, method)()
+        for item in items:
+            payload["children"].append(item_payload(item))
+        return payload
 
     if media_content_type in ["server", None]:
         return server_payload(plex_server)
@@ -70,12 +104,12 @@ def item_payload(item):
         "media_content_id": str(item.ratingKey),
         "media_content_type": item.type,
         "can_play": True,
+        "can_expand": item.type in EXPANDABLES,
     }
     if hasattr(item, "thumbUrl"):
         payload["thumbnail"] = item.thumbUrl
-    if item.type in EXPANDABLES:
-        payload["can_expand"] = True
-    return payload
+
+    return BrowseMedia(**payload)
 
 
 def library_section_payload(section):
@@ -84,6 +118,18 @@ def library_section_payload(section):
         "title": section.title,
         "media_content_id": section.key,
         "media_content_type": "library",
+        "can_play": False,
+        "can_expand": True,
+    }
+
+
+def special_library_payload(parent_payload, special_type):
+    """Create response payload for special library folders."""
+    title = f"{special_type} ({parent_payload['title']})"
+    return {
+        "title": title,
+        "media_content_id": f"{parent_payload['media_content_id']}:{special_type}",
+        "media_content_type": parent_payload["media_content_type"],
         "can_play": False,
         "can_expand": True,
     }
@@ -99,6 +145,10 @@ def server_payload(plex_server):
         "can_expand": True,
     }
     server_info["children"] = []
+    server_info["children"].append(special_library_payload(server_info, "On Deck"))
+    server_info["children"].append(
+        special_library_payload(server_info, "Recently Added")
+    )
     for library in plex_server.library.sections():
         if library.type == "photo":
             continue
@@ -112,6 +162,10 @@ def library_payload(plex_server, library_id):
     library = plex_server.library.sectionByID(library_id)
     library_info = library_section_payload(library)
     library_info["children"] = []
+    library_info["children"].append(special_library_payload(library_info, "On Deck"))
+    library_info["children"].append(
+        special_library_payload(library_info, "Recently Added")
+    )
     for item in library.all():
         library_info["children"].append(item_payload(item))
     return library_info

@@ -504,7 +504,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: Dict) -> Non
         hac.set_time_zone(config[CONF_TIME_ZONE])
 
     # Init whitelist external dir
-    hac.allowlist_external_dirs = {hass.config.path("www")}
+    hac.allowlist_external_dirs = {hass.config.path("www"), hass.config.path("media")}
     if CONF_ALLOWLIST_EXTERNAL_DIRS in config:
         hac.allowlist_external_dirs.update(set(config[CONF_ALLOWLIST_EXTERNAL_DIRS]))
 

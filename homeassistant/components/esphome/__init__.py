@@ -17,6 +17,7 @@ from aioesphomeapi import (
 import voluptuous as vol
 
 from homeassistant import const
+from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
@@ -66,12 +67,15 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     port = entry.data[CONF_PORT]
     password = entry.data[CONF_PASSWORD]
 
+    zeroconf_instance = await zeroconf.async_get_instance(hass)
+
     cli = APIClient(
         hass.loop,
         host,
         port,
         password,
         client_info=f"Home Assistant {const.__version__}",
+        zeroconf_instance=zeroconf_instance,
     )
 
     # Store client in per-config-entry hass.data

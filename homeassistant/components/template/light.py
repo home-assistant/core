@@ -51,26 +51,29 @@ CONF_COLOR_ACTION = "set_color"
 CONF_WHITE_VALUE_TEMPLATE = "white_value_template"
 CONF_WHITE_VALUE_ACTION = "set_white_value"
 
-LIGHT_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_ICON_TEMPLATE): cv.template,
-        vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
-        vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
-        vol.Optional(CONF_LEVEL_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_LEVEL_TEMPLATE): cv.template,
-        vol.Optional(CONF_FRIENDLY_NAME): cv.string,
-        vol.Optional(CONF_ENTITY_ID): cv.entity_ids,
-        vol.Optional(CONF_TEMPERATURE_TEMPLATE): cv.template,
-        vol.Optional(CONF_TEMPERATURE_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_COLOR_TEMPLATE): cv.template,
-        vol.Optional(CONF_COLOR_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_WHITE_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_WHITE_VALUE_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
-    }
+LIGHT_SCHEMA = vol.All(
+    cv.deprecated(CONF_ENTITY_ID),
+    vol.Schema(
+        {
+            vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+            vol.Optional(CONF_ICON_TEMPLATE): cv.template,
+            vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
+            vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
+            vol.Optional(CONF_LEVEL_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_LEVEL_TEMPLATE): cv.template,
+            vol.Optional(CONF_FRIENDLY_NAME): cv.string,
+            vol.Optional(CONF_ENTITY_ID): cv.entity_ids,
+            vol.Optional(CONF_TEMPERATURE_TEMPLATE): cv.template,
+            vol.Optional(CONF_TEMPERATURE_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_COLOR_TEMPLATE): cv.template,
+            vol.Optional(CONF_COLOR_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_WHITE_VALUE_TEMPLATE): cv.template,
+            vol.Optional(CONF_WHITE_VALUE_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_UNIQUE_ID): cv.string,
+        }
+    ),
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(

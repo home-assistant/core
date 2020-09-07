@@ -7,6 +7,7 @@
         },
         "error": {
             "invalid_pin": "PIN \u78bc\u7121\u6548\uff0c\u8acb\u518d\u8a66\u4e00\u6b21\u3002",
+            "invalid_sgtin_or_pin": "SGTIN \u6216 PIN \u78bc\u7121\u6548\uff0c\u8acb\u518d\u8a66\u4e00\u6b21\u3002",
             "press_the_button": "\u8acb\u6309\u4e0b\u85cd\u8272\u6309\u9215\u3002",
             "register_failed": "\u8a3b\u518a\u5931\u6557\uff0c\u8acb\u518d\u8a66\u4e00\u6b21\u3002",
             "timeout_button": "\u85cd\u8272\u6309\u9215\u903e\u6642\uff0c\u8acb\u518d\u8a66\u4e00\u6b21\u3002"

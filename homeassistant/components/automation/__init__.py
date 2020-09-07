@@ -39,6 +39,7 @@ from homeassistant.helpers.script import (
     ATTR_MAX,
     ATTR_MODE,
     CONF_MAX,
+    CONF_MAX_EXCEEDED,
     SCRIPT_MODE_SINGLE,
     Script,
     make_script_schema,
@@ -515,6 +516,7 @@ async def _async_process_config(hass, config, component):
                 running_description="automation actions",
                 script_mode=config_block[CONF_MODE],
                 max_runs=config_block[CONF_MAX],
+                max_exceeded=config_block[CONF_MAX_EXCEEDED],
                 logger=_LOGGER,
             )
 
