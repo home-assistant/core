@@ -5,7 +5,7 @@ import logging
 from goalzero import GoalZero, exceptions
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -53,15 +53,6 @@ async def async_setup(hass: HomeAssistant, config):
 
     hass.data[DOMAIN] = {}
 
-    # import
-    if DOMAIN in config:
-        for conf in config[DOMAIN]:
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
-                )
-            )
-
     return True
 
 
@@ -72,9 +63,9 @@ async def async_setup_entry(hass, entry):
 
     _LOGGER.debug("Setting up %s integration with host %s", DOMAIN, host)
 
+    session = async_get_clientsession(hass)
+    api = GoalZero(host, hass.loop, session)
     try:
-        session = async_get_clientsession(hass)
-        api = GoalZero(host, hass.loop, session)
         await api.get_state()
     except exceptions.ConnectError as ex:
         _LOGGER.warning("Failed to connect: %s", ex)

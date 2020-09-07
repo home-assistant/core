@@ -19,7 +19,7 @@ PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up the Pi-hole sensor."""
+    """Set up the Goal Zero Yeti sensor."""
     name = entry.data[CONF_NAME]
     goalzero_data = hass.data[DOMAIN][entry.entry_id]
     sensors = [
