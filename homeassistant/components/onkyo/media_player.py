@@ -231,7 +231,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         "async_select_output",
     )
 
-    _LOGGER.debug("Provisioning Onkyo AVR device at %s:%d", host, port)
+    _LOGGER.debug(f"Provisioning Onkyo AVR device at {host}:{port}")
 
     active_zones = []
     zone_discovery_completed = False
@@ -241,24 +241,25 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         zone, command, _ = message
         if command in ["system-power", "power"]:
             # When we receive the status for a zone, it is available on the AVR
-            # So we add this zone to active_zones and continue discovery
+            # So we create an entity for the zone and continue discovery
             if zone in zones:
-                _LOGGER.info("Discovered %s on %s, add to active zones", zone, name)
-                active_zones.append(OnkyoAVR(avr, name, sources, zone, max_volume))
+                _LOGGER.debug(f"Discovered {zone} on {name}, add to active zones")
+                zone_entity = OnkyoAVR(avr, name, sources, zone, max_volume)
+                active_zones.append(zone_entity)
+                async_add_entities([zone_entity])
 
-            # When we receive the main status, we don't expect any other zones
-            # So add all entities in active_zones and finish zone discovery
+            # When we receive the main status, we finish zone discovery
             elif zone == "main":
+                _LOGGER.debug(f"Finished zone discovery on {name}")
                 for zone in active_zones:
                     zone.backfill_state()
-                async_add_entities(active_zones)
                 return True
         return False
 
     @callback
     def async_onkyo_update_callback(message):
         """Receive notification from transport that new data exists."""
-        _LOGGER.debug("Received update callback from AVR: %s", message)
+        _LOGGER.debug(f"Received update callback from AVR: {message}")
 
         # Define the zone_discovery_completed variable as non-local
         # This way the variable stays consistent over multiple callbacks
