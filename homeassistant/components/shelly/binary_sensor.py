@@ -22,6 +22,9 @@ SENSORS = {
     ("device", "overpower"): BlockAttributeDescription(
         name="overpower", device_class=DEVICE_CLASS_PROBLEM
     ),
+    ("light", "overpower"): BlockAttributeDescription(
+        name="overpower", device_class=DEVICE_CLASS_PROBLEM
+    ),
     ("relay", "overpower"): BlockAttributeDescription(
         name="overpower", device_class=DEVICE_CLASS_PROBLEM
     ),

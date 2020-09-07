@@ -83,6 +83,13 @@ SENSORS = {
         value=lambda value: round(value / 60 / 1000, 2),
         device_class=sensor.DEVICE_CLASS_ENERGY,
     ),
+    ("device", "overpowerValue"): BlockAttributeDescription(
+        name="Overpower Value",
+        unit=POWER_WATT,
+        value=lambda value: round(value, 1),
+        device_class=sensor.DEVICE_CLASS_POWER,
+        default_enabled=False,
+    ),
     ("relay", "overpowerValue"): BlockAttributeDescription(
         name="Overpower Value",
         unit=POWER_WATT,
