@@ -5,6 +5,8 @@ import logging
 import time
 from typing import Any, Dict, NamedTuple, Tuple, cast
 
+from pyHS100 import SmartBulb, SmartDeviceException
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -22,7 +24,6 @@ from homeassistant.util.color import (
     color_temperature_mired_to_kelvin as mired_to_kelvin,
 )
 import homeassistant.util.dt as dt_util
-from pyHS100 import SmartBulb, SmartDeviceException
 
 from . import CONF_LIGHT, DOMAIN as TPLINK_DOMAIN
 from .common import async_add_entities_retry
@@ -196,14 +197,18 @@ class TPLinkSmartBulb(LightEntity):
         await self._async_set_light_state_retry(
             self._light_state,
             self._light_state._replace(
-                state=True, brightness=brightness, color_temp=color_tmp, hs=hue_sat,
+                state=True,
+                brightness=brightness,
+                color_temp=color_tmp,
+                hs=hue_sat,
             ),
         )
 
     async def async_turn_off(self, **kwargs):
         """Turn the light off."""
         await self._async_set_light_state_retry(
-            self._light_state, self._light_state._replace(state=False),
+            self._light_state,
+            self._light_state._replace(state=False),
         )
 
     @property

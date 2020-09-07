@@ -3,6 +3,8 @@ import asyncio
 import logging
 import time
 
+from pyHS100 import SmartDeviceException, SmartPlug
+
 from homeassistant.components.switch import (
     ATTR_CURRENT_POWER_W,
     ATTR_TODAY_ENERGY_KWH,
@@ -11,7 +13,6 @@ from homeassistant.components.switch import (
 from homeassistant.const import ATTR_VOLTAGE
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.typing import HomeAssistantType
-from pyHS100 import SmartDeviceException, SmartPlug
 
 from . import CONF_SWITCH, DOMAIN as TPLINK_DOMAIN
 from .common import async_add_entities_retry
