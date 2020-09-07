@@ -82,7 +82,9 @@ class AlarmDecoderFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle AlarmDecoder protocol setup."""
         errors = {}
         if user_input is not None:
-            if _device_already_added(self._async_current_entries(), user_input):
+            if _device_already_added(
+                self._async_current_entries(), user_input, self.protocol
+            ):
                 return self.async_abort(reason="already_configured")
             connection = {}
             if self.protocol == PROTOCOL_SOCKET:
@@ -330,7 +332,7 @@ def _fix_input_types(zone_input):
     return zone_input
 
 
-def _device_already_added(current_entries, user_input):
+def _device_already_added(current_entries, user_input, protocol):
     """Determine if entry has already been added to HA."""
     user_host = user_input.get(CONF_HOST)
     user_port = user_input.get(CONF_PORT)
@@ -343,12 +345,12 @@ def _device_already_added(current_entries, user_input):
         entry_path = entry.data.get(CONF_DEVICE_PATH)
         entry_baud = entry.data.get(CONF_DEVICE_BAUD)
 
-        # Identifier for socket entry
-        if user_host == entry_host and user_port == entry_port:
-            return True
+        if protocol == PROTOCOL_SOCKET:
+            if user_host == entry_host and user_port == entry_port:
+                return True
 
-        # Identifier for serial entry
-        if user_baud == entry_baud and user_path == entry_path:
-            return True
+        if protocol == PROTOCOL_SERIAL:
+            if user_baud == entry_baud and user_path == entry_path:
+                return True
 
     return False
