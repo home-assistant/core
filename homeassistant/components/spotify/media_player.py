@@ -598,7 +598,7 @@ def library_payload():
                 {"name": item["name"], "type": item["type"], "uri": item["type"]}
             )
         )
-    return library_info
+    return BrowseMedia(**library_info)
 
 
 def fetch_image_url(item, key="images"):
