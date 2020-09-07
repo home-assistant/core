@@ -75,7 +75,7 @@ async def build_item_response(media_library, payload):
             title = "Artists"
     elif search_type == "library_music":
         library = {MEDIA_TYPE_ALBUM: "Albums", MEDIA_TYPE_ARTIST: "Artists"}
-        media = [{"label": n, "type": t} for t, n in library.items()]
+        media = [{"label": name, "type": type_} for type_, name in library.items()]
         title = "Music Library"
     elif search_type == MEDIA_TYPE_MOVIE:
         media = await media_library._server.VideoLibrary.GetMovies(query)
