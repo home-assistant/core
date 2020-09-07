@@ -31,6 +31,7 @@ from .const import (
     CONF_REGISTERS,
     CONF_REVERSE_ORDER,
     CONF_SCALE,
+    CONF_STRUCTURE_INDEX,
     DATA_TYPE_CUSTOM,
     DATA_TYPE_FLOAT,
     DATA_TYPE_INT,
@@ -89,6 +90,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                 vol.Optional(CONF_SCALE, default=1): number,
                 vol.Optional(CONF_SLAVE): cv.positive_int,
                 vol.Optional(CONF_STRUCTURE): cv.string,
+                vol.Optional(CONF_STRUCTURE_INDEX, default=0): cv.positive_int,
                 vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
             }
         ]
@@ -152,6 +154,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 register[CONF_SCALE],
                 register[CONF_OFFSET],
                 structure,
+                register[CONF_STRUCTURE_INDEX],
                 register[CONF_PRECISION],
                 register[CONF_DATA_TYPE],
                 register.get(CONF_DEVICE_CLASS),
@@ -179,6 +182,7 @@ class ModbusRegisterSensor(RestoreEntity):
         scale,
         offset,
         structure,
+        structure_index,
         precision,
         data_type,
         device_class,
@@ -196,6 +200,7 @@ class ModbusRegisterSensor(RestoreEntity):
         self._offset = offset
         self._precision = precision
         self._structure = structure
+        self._structure_index = structure_index
         self._data_type = data_type
         self._device_class = device_class
         self._value = None
@@ -258,7 +263,7 @@ class ModbusRegisterSensor(RestoreEntity):
 
         byte_string = b"".join([x.to_bytes(2, byteorder="big") for x in registers])
         if self._data_type != DATA_TYPE_STRING:
-            val = struct.unpack(self._structure, byte_string)[0]
+            val = struct.unpack(self._structure, byte_string)[self._structure_index]
             val = self._scale * val + self._offset
             if isinstance(val, int):
                 self._value = str(val)
