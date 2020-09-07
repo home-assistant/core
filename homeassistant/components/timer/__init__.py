@@ -1,5 +1,4 @@
 """Support for Timers."""
-from datetime import timedelta
 import logging
 import typing
 
@@ -31,6 +30,7 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 DEFAULT_DURATION = 0
 ATTR_DURATION = "duration"
 ATTR_REMAINING = "remaining"
+ATTR_FINISHES_AT = "finishes_at"
 CONF_DURATION = "duration"
 
 STATUS_IDLE = "idle"
@@ -184,7 +184,7 @@ class Timer(RestoreEntity):
         self._config = config
         self.editable = True
         self._state = STATUS_IDLE
-        self._remaining = config[CONF_DURATION]
+        self._remaining = None
         self._end = None
         self._listener = None
 
@@ -224,11 +224,16 @@ class Timer(RestoreEntity):
     @property
     def state_attributes(self):
         """Return the state attributes."""
-        return {
+        attrs = {
             ATTR_DURATION: str(self._config[CONF_DURATION]),
             ATTR_EDITABLE: self.editable,
-            ATTR_REMAINING: str(self._remaining),
         }
+        if self._end is not None:
+            attrs[ATTR_FINISHES_AT] = str(self._end)
+        if self._remaining is not None:
+            attrs[ATTR_REMAINING] = str(self._remaining)
+
+        return attrs
 
     @property
     def unique_id(self) -> typing.Optional[str]:
@@ -299,7 +304,7 @@ class Timer(RestoreEntity):
             self._listener = None
         self._state = STATUS_IDLE
         self._end = None
-        self._remaining = timedelta()
+        self._remaining = None
         self.hass.bus.async_fire(EVENT_TIMER_CANCELLED, {"entity_id": self.entity_id})
         self.async_write_ha_state()
 
@@ -311,7 +316,8 @@ class Timer(RestoreEntity):
 
         self._listener = None
         self._state = STATUS_IDLE
-        self._remaining = timedelta()
+        self._end = None
+        self._remaining = None
         self.hass.bus.async_fire(EVENT_TIMER_FINISHED, {"entity_id": self.entity_id})
         self.async_write_ha_state()
 
@@ -323,7 +329,8 @@ class Timer(RestoreEntity):
 
         self._listener = None
         self._state = STATUS_IDLE
-        self._remaining = timedelta()
+        self._end = None
+        self._remaining = None
         self.hass.bus.async_fire(EVENT_TIMER_FINISHED, {"entity_id": self.entity_id})
         self.async_write_ha_state()
 
