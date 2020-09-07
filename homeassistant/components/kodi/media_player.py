@@ -967,15 +967,6 @@ async def build_item_response(media_library, payload):
         children=[item_payload(item, media_library) for item in media],
         thumbnail=thumbnail,
     )
-    # return {
-    #     "title": title,
-    #     "thumbnail": thumbnail,
-    #     "media_content_id": payload["search_id"],
-    #     "media_content_type": search_type,
-    #     "children": [item_payload(item, media_library) for item in media],
-    #     "can_play": search_type in PLAYABLE_MEDIA_TYPES and search_id,
-    #     "can_expand": True,
-    # }
 
 
 def item_payload(item, media_library):
@@ -1052,14 +1043,6 @@ def library_payload(media_library):
         can_expand=True,
         children=[],
     )
-    # library_info = {
-    #     "title": "Media Library",
-    #     "media_content_id": "library",
-    #     "media_content_type": "library",
-    #     "can_play": False,
-    #     "can_expand": True,
-    #     "children": [],
-    # }
 
     library = {
         "library_music": "Music",
