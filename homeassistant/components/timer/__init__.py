@@ -72,14 +72,6 @@ def _format_timedelta(delta: timedelta):
     return f"{int(hours)}:{int(minutes):02}:{int(seconds):02}"
 
 
-def _parse_duration(duration: str) -> timedelta:
-    parts = duration.split(":")
-    hours = int(parts[0])
-    minutes = int(parts[1])
-    seconds = int(parts[2])
-    return timedelta(hours=hours, minutes=minutes, seconds=seconds)
-
-
 def _none_to_empty_dict(value):
     if value is None:
         return {}
@@ -201,7 +193,7 @@ class Timer(RestoreEntity):
         self._config: dict = config
         self.editable: bool = True
         self._state: str = STATUS_IDLE
-        self._duration = _parse_duration(config[CONF_DURATION])
+        self._duration = cv.time_period_str(config[CONF_DURATION])
         self._remaining: Optional[timedelta] = None
         self._end: Optional[datetime] = None
         self._listener = None
@@ -358,5 +350,5 @@ class Timer(RestoreEntity):
     async def async_update_config(self, config: Dict) -> None:
         """Handle when the config is updated."""
         self._config = config
-        self._duration = _parse_duration(config[CONF_DURATION])
+        self._duration = cv.time_period_str(config[CONF_DURATION])
         self.async_write_ha_state()
