@@ -240,7 +240,6 @@ class SpotifyData:
             try:
                 i_total = 0
                 if audio_type == "playlist":
-                    item_owner_id = item["owner"]["id"]
                     i_total = item["tracks"]["total"]
                 elif audio_type == "artist":
                     i_total = item["popularity"]
