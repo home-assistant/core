@@ -67,12 +67,18 @@
         }
     },
     "options": {
+        "abort": {
+            "cannot_connect": "Impossible de se connecter au modem Insteon"
+        },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
             "select_single": "S\u00e9lectionnez une option"
         },
         "step": {
             "add_override": {
+                "data": {
+                    "cat": "Cat\u00e9gorie d'appareil (c.-\u00e0-d. 0x10)"
+                },
                 "title": "Insteon"
             },
             "add_x10": {
