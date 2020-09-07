@@ -33,13 +33,31 @@ from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
-async def test_setup_serial(hass: HomeAssistant):
-    """Test flow for serial setup."""
-
-    baud = 200
-    path = "/dev/ttyUSB1234"
-    protocol = PROTOCOL_SERIAL
-    connection_settings = {CONF_DEVICE_BAUD: baud, CONF_DEVICE_PATH: path}
+@pytest.mark.parametrize(
+    "protocol,connection,baud,title",
+    [
+        (
+            PROTOCOL_SOCKET,
+            {
+                CONF_HOST: "alarmdecoder123",
+                CONF_PORT: 10001,
+            },
+            None,
+            "alarmdecoder123:10001",
+        ),
+        (
+            PROTOCOL_SERIAL,
+            {
+                CONF_DEVICE_PATH: "/dev/ttyUSB123",
+                CONF_DEVICE_BAUD: 115000,
+            },
+            115000,
+            "/dev/ttyUSB123",
+        ),
+    ],
+)
+async def test_setups(hass: HomeAssistant, protocol, connection, baud, title):
+    """Test flow for setting up the available AlarmDecoder protocols."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -65,62 +83,14 @@ async def test_setup_serial(hass: HomeAssistant):
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], connection_settings
+            result["flow_id"], connection
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == path
+        assert result["title"] == title
         assert result["data"] == {
+            **connection,
             CONF_PROTOCOL: protocol,
-            CONF_DEVICE_PATH: path,
             CONF_DEVICE_BAUD: baud,
-        }
-
-    await hass.async_block_till_done()
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_setup_socket(hass: HomeAssistant):
-    """Test flow for socket setup."""
-
-    port = 1001
-    host = "alarmdecoder123"
-    protocol = PROTOCOL_SOCKET
-    connection_settings = {CONF_HOST: host, CONF_PORT: port}
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_PROTOCOL: protocol},
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "protocol"
-
-    with patch("homeassistant.components.alarmdecoder.config_flow.AdExt.open"), patch(
-        "homeassistant.components.alarmdecoder.config_flow.AdExt.close"
-    ), patch(
-        "homeassistant.components.alarmdecoder.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.alarmdecoder.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], connection_settings
-        )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == f"{host}:{port}"
-        assert result["data"] == {
-            CONF_PROTOCOL: protocol,
-            CONF_HOST: host,
-            CONF_PORT: port,
-            CONF_DEVICE_BAUD: None,
         }
 
     await hass.async_block_till_done()
@@ -409,15 +379,15 @@ async def test_options_zone_flow_validation(hass: HomeAssistant):
         (
             PROTOCOL_SOCKET,
             {
-                CONF_HOST: "alarmdecoder",
-                CONF_PORT: 10000,
+                CONF_HOST: "alarmdecoder123",
+                CONF_PORT: 10001,
             },
         ),
         (
             PROTOCOL_SERIAL,
             {
                 CONF_DEVICE_PATH: "/dev/ttyUSB123",
-                CONF_DEVICE_BAUD: 115200,
+                CONF_DEVICE_BAUD: 115000,
             },
         ),
     ],
