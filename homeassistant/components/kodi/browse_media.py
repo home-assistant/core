@@ -203,7 +203,7 @@ def library_payload(media_library):
         MEDIA_TYPE_MOVIE: "Movies",
         MEDIA_TYPE_TVSHOW: "TV shows",
     }
-    for item in [{"label": n, "type": t} for t, n in library.items()]:
+    for item in [{"label": name, "type": type_} for type_, name in library.items()]:
         library_info.children.append(
             item_payload(
                 {"label": item["label"], "type": item["type"], "uri": item["type"]},
