@@ -3,7 +3,6 @@ from Plugwise_Smile.Smile import Smile
 import pytest
 
 from homeassistant import config_entries, data_entry_flow, setup
-from homeassistant.components.plugwise import config_flow
 from homeassistant.components.plugwise.const import DEFAULT_SCAN_INTERVAL, DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_SCAN_INTERVAL
@@ -168,21 +167,6 @@ async def test_form_other_problem(hass, mock_smile):
     assert result2["errors"] == {"base": "unknown"}
 
 
-async def test_show_zeroconf_form(hass, mock_smile) -> None:
-    """Test that the zeroconf confirmation form is served."""
-    flow = config_flow.PlugwiseConfigFlow()
-    flow.hass = hass
-    flow.context = {"source": SOURCE_ZEROCONF}
-    result = await flow.async_step_zeroconf(TEST_DISCOVERY)
-
-    await hass.async_block_till_done()
-    assert flow.context["title_placeholders"][CONF_HOST] == TEST_HOST
-    assert flow.context["title_placeholders"]["name"] == "P1 DSMR v1.2.3"
-
-    assert result["step_id"] == "user"
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-
-
 async def test_options_flow_power(hass, mock_smile) -> None:
     """Test config flow options DSMR environments."""
     entry = MockConfigEntry(
@@ -195,18 +179,24 @@ async def test_options_flow_power(hass, mock_smile) -> None:
     hass.data[DOMAIN] = {entry.entry_id: {"api": MagicMock(smile_type="power")}}
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.options.async_init(entry.entry_id)
+    with patch(
+        "homeassistant.components.plugwise.async_setup_entry", return_value=True
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "init"
+        result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_SCAN_INTERVAL: 10}
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["data"] == {
-        CONF_SCAN_INTERVAL: 10,
-    }
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "init"
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input={CONF_SCAN_INTERVAL: 10}
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["data"] == {
+            CONF_SCAN_INTERVAL: 10,
+        }
 
 
 async def test_options_flow_thermo(hass, mock_smile) -> None:
@@ -221,15 +211,22 @@ async def test_options_flow_thermo(hass, mock_smile) -> None:
     hass.data[DOMAIN] = {entry.entry_id: {"api": MagicMock(smile_type="thermostat")}}
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.options.async_init(entry.entry_id)
+    with patch(
+        "homeassistant.components.plugwise.async_setup_entry", return_value=True
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "init"
+        result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_SCAN_INTERVAL: 60}
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["data"] == {
-        CONF_SCAN_INTERVAL: 60,
-    }
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "init"
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input={CONF_SCAN_INTERVAL: 60}
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["data"] == {
+            CONF_SCAN_INTERVAL: 60,
+        }
