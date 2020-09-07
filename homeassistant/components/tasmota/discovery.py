@@ -18,6 +18,7 @@ from homeassistant.components.mqtt.subscription import (
     async_subscribe_topics,
     async_unsubscribe_topics,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -139,6 +140,10 @@ async def async_start(
                         mqtt.async_publish(hass, *args)
 
                     async def _subscribe_topics(sub_state, topics):
+                        # Mark message handlers as callback
+                        for topic in topics.values():
+                            if "msg_callback" in topic:
+                                topic["msg_callback"] = callback(topic["msg_callback"])
                         return await async_subscribe_topics(hass, sub_state, topics)
 
                     async def _unsubscribe_topics(sub_state):
