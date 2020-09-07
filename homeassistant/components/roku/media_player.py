@@ -259,52 +259,6 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
 
         return response
 
-        if media_content_type == MEDIA_TYPE_APPS:
-            response = BrowseMedia(
-                title="Apps",
-                media_content_id="apps",
-                media_content_type=MEDIA_TYPE_APPS,
-                can_expand=True,
-                can_play=False,
-                children=[
-                    BrowseMedia(
-                        title=app.name,
-                        thumbnail=self.coordinator.roku.app_icon_url(app.app_id),
-                        media_content_id=app.app_id,
-                        media_content_type=MEDIA_TYPE_APP,
-                        can_play=True,
-                        can_expand=False,
-                    )
-                    for app in self.coordinator.data.apps
-                ],
-            )
-
-        if media_content_type == MEDIA_TYPE_CHANNELS:
-            response = BrowseMedia(
-                title="Channels",
-                media_content_id="channels",
-                media_content_type=MEDIA_TYPE_CHANNELS,
-                can_expand=True,
-                can_play=False,
-                children=[
-                    BrowseMedia(
-                        title=channel.name,
-                        media_content_id=channel.number,
-                        media_content_type=MEDIA_TYPE_CHANNEL,
-                        can_play=True,
-                        can_expand=False,
-                    )
-                    for channel in self.coordinator.data.channels
-                ],
-            )
-
-        if response is None:
-            raise BrowseError(
-                f"Media not found: {media_content_type} / {media_content_id}"
-            )
-
-        return response
-
     @roku_exception_handler
     async def async_turn_on(self) -> None:
         """Turn on the Roku."""
