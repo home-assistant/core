@@ -7,7 +7,7 @@
 HAP-python==3.0.0
 
 # homeassistant.components.plugwise
-Plugwise_Smile==1.1.0
+Plugwise_Smile==1.4.0
 
 # homeassistant.components.flick_electric
 PyFlick==0.0.2
