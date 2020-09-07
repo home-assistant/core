@@ -15,8 +15,8 @@ from homeassistant.components.media_player.const import (
     MEDIA_CLASS_ARTIST,
     MEDIA_CLASS_DIRECTORY,
     MEDIA_CLASS_PLAYLIST,
+    MEDIA_CLASS_PODCAST,
     MEDIA_CLASS_TRACK,
-    MEDIA_CLASS_TV_SHOW,
     MEDIA_TYPE_ALBUM,
     MEDIA_TYPE_ARTIST,
     MEDIA_TYPE_EPISODE,
@@ -107,7 +107,7 @@ CONTENT_TYPE_MEDIA_CLASS = {
     "current_user_followed_artists": MEDIA_CLASS_ARTIST,
     "current_user_saved_albums": MEDIA_CLASS_ALBUM,
     "current_user_saved_tracks": MEDIA_CLASS_TRACK,
-    "current_user_saved_shows": MEDIA_CLASS_TV_SHOW,
+    "current_user_saved_shows": MEDIA_CLASS_PODCAST,
     "current_user_recently_played": MEDIA_CLASS_TRACK,
     "current_user_top_artists": MEDIA_CLASS_ARTIST,
     "current_user_top_tracks": MEDIA_CLASS_TRACK,
@@ -118,7 +118,7 @@ CONTENT_TYPE_MEDIA_CLASS = {
     MEDIA_TYPE_PLAYLIST: MEDIA_CLASS_PLAYLIST,
     MEDIA_TYPE_ALBUM: MEDIA_CLASS_ALBUM,
     MEDIA_TYPE_ARTIST: MEDIA_CLASS_ARTIST,
-    MEDIA_TYPE_SHOW: MEDIA_CLASS_TV_SHOW,
+    MEDIA_TYPE_SHOW: MEDIA_CLASS_PODCAST,
 }
 
 
