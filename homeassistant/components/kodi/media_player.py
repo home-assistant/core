@@ -664,7 +664,7 @@ class KodiEntity(MediaPlayerEntity):
             MEDIA_TYPE_ARTIST,
             MEDIA_TYPE_ALBUM,
         ]:
-            await self._kodi.clear_playlist()
+            await self.async_clear_playlist()
             params = {"playlistid": 0, "item": {f"{media_type}id": int(media_id)}}
             # pylint: disable=protected-access
             await self._kodi._server.Playlist.Add(params)
