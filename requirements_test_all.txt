@@ -183,7 +183,7 @@ azure-eventhub==5.1.0
 base36==0.1.1
 
 # homeassistant.components.zha
-bellows==0.20.0
+bellows==0.20.1
 
 # homeassistant.components.blebox
 blebox_uniapi==1.3.2
@@ -1056,7 +1056,7 @@ yeelight==0.5.3
 zeroconf==0.28.4
 
 # homeassistant.components.zha
-zha-quirks==0.0.43
+zha-quirks==0.0.44
 
 # homeassistant.components.zha
 zigpy-cc==0.5.2
@@ -1071,7 +1071,7 @@ zigpy-xbee==0.13.0
 zigpy-zigate==0.6.2
 
 # homeassistant.components.zha
-zigpy-znp==0.1.0
+zigpy-znp==0.1.1
 
 # homeassistant.components.zha
 zigpy==0.23.1
