@@ -404,6 +404,9 @@ influxdb==5.2.3
 # homeassistant.components.verisure
 jsonpath==0.82
 
+# homeassistant.components.plugwise
+jsonpickle==1.4.1
+
 # homeassistant.scripts.keyring
 keyring==21.2.0
 

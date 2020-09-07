@@ -812,6 +812,9 @@ iperf3==0.1.11
 # homeassistant.components.verisure
 jsonpath==0.82
 
+# homeassistant.components.plugwise
+jsonpickle==1.4.1
+
 # homeassistant.components.kaiterra
 kaiterra-async-client==0.0.2
 
