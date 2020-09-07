@@ -150,7 +150,7 @@ class HomematicipCloudConnectionSensor(HomematicipGenericEntity, BinarySensorEnt
         return {
             "identifiers": {
                 # Serial numbers of Homematic IP device
-                (HMIPC_DOMAIN, self._device.id)
+                (HMIPC_DOMAIN, self._home.id)
             }
         }
 
