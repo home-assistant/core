@@ -11,6 +11,12 @@ from yarl import URL
 
 from homeassistant.components.media_player import BrowseMedia, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
+    MEDIA_CLASS_ALBUM,
+    MEDIA_CLASS_ARTIST,
+    MEDIA_CLASS_DIRECTORY,
+    MEDIA_CLASS_PLAYLIST,
+    MEDIA_CLASS_TRACK,
+    MEDIA_CLASS_TV_SHOW,
     MEDIA_TYPE_ALBUM,
     MEDIA_TYPE_ARTIST,
     MEDIA_TYPE_EPISODE,
@@ -94,6 +100,25 @@ LIBRARY_MAP = {
     "categories": "Categories",
     "featured_playlists": "Featured Playlists",
     "new_releases": "New Releases",
+}
+
+CONTENT_TYPE_MEDIA_CLASS = {
+    "current_user_playlists": MEDIA_CLASS_PLAYLIST,
+    "current_user_followed_artists": MEDIA_CLASS_ARTIST,
+    "current_user_saved_albums": MEDIA_CLASS_ALBUM,
+    "current_user_saved_tracks": MEDIA_CLASS_TRACK,
+    "current_user_saved_shows": MEDIA_CLASS_TV_SHOW,
+    "current_user_recently_played": MEDIA_CLASS_TRACK,
+    "current_user_top_artists": MEDIA_CLASS_ARTIST,
+    "current_user_top_tracks": MEDIA_CLASS_TRACK,
+    "featured_playlists": MEDIA_CLASS_PLAYLIST,
+    "categories": MEDIA_CLASS_DIRECTORY,
+    "category_playlists": MEDIA_CLASS_PLAYLIST,
+    "new_releases": MEDIA_CLASS_ALBUM,
+    MEDIA_TYPE_PLAYLIST: MEDIA_CLASS_PLAYLIST,
+    MEDIA_TYPE_ALBUM: MEDIA_CLASS_ALBUM,
+    MEDIA_TYPE_ARTIST: MEDIA_CLASS_ARTIST,
+    MEDIA_TYPE_SHOW: MEDIA_CLASS_TV_SHOW,
 }
 
 
@@ -500,6 +525,7 @@ def build_item_response(spotify, user, payload):
     if media_content_type == "categories":
         return BrowseMedia(
             title=LIBRARY_MAP.get(media_content_id),
+            media_class=CONTENT_TYPE_MEDIA_CLASS[media_content_type],
             media_content_id=media_content_id,
             media_content_type=media_content_type,
             can_play=False,
@@ -507,6 +533,7 @@ def build_item_response(spotify, user, payload):
             children=[
                 BrowseMedia(
                     title=item.get("name"),
+                    media_class=MEDIA_CLASS_PLAYLIST,
                     media_content_id=item["id"],
                     media_content_type="category_playlists",
                     thumbnail=fetch_image_url(item, key="icons"),
@@ -525,6 +552,7 @@ def build_item_response(spotify, user, payload):
 
     response = {
         "title": title,
+        "media_class": CONTENT_TYPE_MEDIA_CLASS[media_content_type],
         "media_content_id": media_content_id,
         "media_content_type": media_content_type,
         "can_play": media_content_type in PLAYABLE_MEDIA_TYPES,
@@ -560,6 +588,11 @@ def item_payload(item):
         "can_expand": can_expand,
     }
 
+    payload = {
+        **payload,
+        "media_class": CONTENT_TYPE_MEDIA_CLASS[payload["media_content_type"]],
+    }
+
     if "images" in item:
         payload["thumbnail"] = fetch_image_url(item)
     elif MEDIA_TYPE_ALBUM in item:
@@ -576,6 +609,7 @@ def library_payload():
     """
     library_info = {
         "title": "Media Library",
+        "media_class": MEDIA_CLASS_DIRECTORY,
         "media_content_id": "library",
         "media_content_type": "library",
         "can_play": False,
