@@ -35,7 +35,11 @@ async def build_item_response(coordinator, payload):
         ]
     elif search_type == MEDIA_TYPE_CHANNELS:
         media = [
-            {"channel_number": item.number, "title": item.name, "type": MEDIA_TYPE_CHANNEL}
+            {
+                "channel_number": item.number,
+                "title": item.name,
+                "type": MEDIA_TYPE_CHANNEL
+            }
             for item in coordinator.data.channels
         ]
 
