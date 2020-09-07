@@ -25,8 +25,6 @@ CONF_DEFAULT_COLOR = "default_color"
 CONF_PRIORITY = "priority"
 CONF_HDMI_PRIORITY = "hdmi_priority"
 CONF_EFFECT_LIST = "effect_list"
-CONF_TOKEN = "token"
-CONF_INSTANCE = "instance"
 
 # As we want to preserve brightness control for effects (e.g. to reduce the
 # brightness for V4L), we need to persist the effect that is in flight, so
@@ -45,35 +43,28 @@ DEFAULT_ORIGIN = "Home Assistant"
 DEFAULT_PORT = 19444
 DEFAULT_PRIORITY = 128
 DEFAULT_HDMI_PRIORITY = 880
+DEFAULT_EFFECT_LIST = []
 
 SUPPORT_HYPERION = SUPPORT_COLOR | SUPPORT_BRIGHTNESS | SUPPORT_EFFECT
 
-PLATFORM_SCHEMA = vol.All(
-    cv.deprecated(CONF_HDMI_PRIORITY, invalidation_version="0.115"),
-    cv.deprecated(CONF_DEFAULT_COLOR, invalidation_version="0.115"),
-    PLATFORM_SCHEMA.extend(
-        {
-            vol.Required(CONF_HOST): cv.string,
-            vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
-            vol.Optional(CONF_DEFAULT_COLOR, default=DEFAULT_COLOR): vol.All(
-                list,
-                vol.Length(min=3, max=3),
-                [vol.All(vol.Coerce(int), vol.Range(min=0, max=255))],
-            ),
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Optional(CONF_PRIORITY, default=DEFAULT_PRIORITY): cv.positive_int,
-            vol.Optional(
-                CONF_HDMI_PRIORITY, default=DEFAULT_HDMI_PRIORITY
-            ): cv.positive_int,
-            vol.Optional(CONF_EFFECT_LIST, default=[]): vol.All(
-                cv.ensure_list, [cv.string]
-            ),
-            vol.Optional(CONF_TOKEN): cv.string,
-            vol.Optional(
-                CONF_INSTANCE, default=const.DEFAULT_INSTANCE
-            ): cv.positive_int,
-        }
-    ),
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_DEFAULT_COLOR, default=DEFAULT_COLOR): vol.All(
+            list,
+            vol.Length(min=3, max=3),
+            [vol.All(vol.Coerce(int), vol.Range(min=0, max=255))],
+        ),
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_PRIORITY, default=DEFAULT_PRIORITY): cv.positive_int,
+        vol.Optional(
+            CONF_HDMI_PRIORITY, default=DEFAULT_HDMI_PRIORITY
+        ): cv.positive_int,
+        vol.Optional(CONF_EFFECT_LIST, default=DEFAULT_EFFECT_LIST): vol.All(
+            cv.ensure_list, [cv.string]
+        ),
+    }
 )
 
 ICON_LIGHTBULB = "mdi:lightbulb"
@@ -87,14 +78,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     host = config[CONF_HOST]
     port = config[CONF_PORT]
     priority = config[CONF_PRIORITY]
-    token = config.get(CONF_TOKEN)
-    instance = config.get(CONF_INSTANCE)
 
     # Use loop outside of HA's tracked task in order not to delay startup.
     # device = Hyperion(name, host, port, priority, token, instance, hass.loop)
-    hyperion_client = client.HyperionClient(
-        host, port, token=token, instance=instance, loop=hass.loop
-    )
+    hyperion_client = client.HyperionClient(host, port, loop=hass.loop)
 
     if not await hyperion_client.async_connect():
         raise PlatformNotReady

@@ -54,7 +54,7 @@ async def test_setup_platform(hass):
         await hass.async_block_till_done()
 
     # Make sure the background task is initiated.
-    assert client.run.called
+    assert client.start_background_task.called
 
     # Make sure the entity is added.
     assert add_entities.called
@@ -72,7 +72,7 @@ async def test_setup_platform_not_ready(hass):
             await hass.async_block_till_done()
 
     # Make sure the background task is initiated.
-    assert not client.run.called
+    assert not client.start_background_task.called
 
     # Make sure the entity is added.
     assert not add_entities.called
