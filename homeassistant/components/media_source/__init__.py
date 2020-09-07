@@ -38,7 +38,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
     hass.components.websocket_api.async_register_command(websocket_browse_media)
     hass.components.websocket_api.async_register_command(websocket_resolve_media)
     hass.components.frontend.async_register_built_in_panel(
-        "media-browser", "media-browser", "hass:play-box-multiple"
+        "media-browser", "media_browser", "hass:play-box-multiple"
     )
     local_source.async_setup(hass)
     await async_process_integration_platforms(
@@ -68,7 +68,7 @@ def _get_media_item(
 @bind_hass
 async def async_browse_media(
     hass: HomeAssistant, media_content_id: str
-) -> models.BrowseMedia:
+) -> models.BrowseMediaSource:
     """Return media player browse media results."""
     return await _get_media_item(hass, media_content_id).async_browse()
 
@@ -94,7 +94,7 @@ async def websocket_browse_media(hass, connection, msg):
         media = await async_browse_media(hass, msg.get("media_content_id"))
         connection.send_result(
             msg["id"],
-            media.to_media_player_item(),
+            media.as_dict(),
         )
     except BrowseError as err:
         connection.send_error(msg["id"], "browse_media_failed", str(err))

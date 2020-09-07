@@ -6,6 +6,7 @@ from contextlib import suppress
 from datetime import timedelta
 import hashlib
 import logging
+import os
 from random import SystemRandom
 
 from aiohttp import web
@@ -660,6 +661,8 @@ async def async_handle_snapshot_service(camera, service):
 
     def _write_image(to_file, image_data):
         """Executor helper to write image."""
+        if not os.path.exists(os.path.dirname(to_file)):
+            os.makedirs(os.path.dirname(to_file), exist_ok=True)
         with open(to_file, "wb") as img_file:
             img_file.write(image_data)
 

@@ -14,7 +14,7 @@ import pysonos.music_library
 import pysonos.snapshot
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerEntity
+from homeassistant.components.media_player import BrowseMedia, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_ENQUEUE,
     MEDIA_TYPE_ALBUM,
@@ -1462,15 +1462,15 @@ def build_item_response(media_library, payload):
         except IndexError:
             title = LIBRARY_TITLES_MAPPING[payload["idstring"]]
 
-    return {
-        "title": title,
-        "thumbnail": thumbnail,
-        "media_content_id": payload["idstring"],
-        "media_content_type": payload["search_type"],
-        "children": [item_payload(item) for item in media],
-        "can_play": can_play(payload["search_type"]),
-        "can_expand": can_expand(payload["search_type"]),
-    }
+    return BrowseMedia(
+        title=title,
+        thumbnail=thumbnail,
+        media_content_id=payload["idstring"],
+        media_content_type=payload["search_type"],
+        children=[item_payload(item) for item in media],
+        can_play=can_play(payload["search_type"]),
+        can_expand=can_expand(payload["search_type"]),
+    )
 
 
 def item_payload(item):
@@ -1479,14 +1479,14 @@ def item_payload(item):
 
     Used by async_browse_media.
     """
-    return {
-        "title": item.title,
-        "thumbnail": getattr(item, "album_art_uri", None),
-        "media_content_id": get_content_id(item),
-        "media_content_type": SONOS_TO_MEDIA_TYPES[get_media_type(item)],
-        "can_play": can_play(item.item_class),
-        "can_expand": can_expand(item),
-    }
+    return BrowseMedia(
+        title=item.title,
+        thumbnail=getattr(item, "album_art_uri", None),
+        media_content_id=get_content_id(item),
+        media_content_type=SONOS_TO_MEDIA_TYPES[get_media_type(item)],
+        can_play=can_play(item.item_class),
+        can_expand=can_expand(item),
+    )
 
 
 def library_payload(media_library):
@@ -1495,14 +1495,14 @@ def library_payload(media_library):
 
     Used by async_browse_media.
     """
-    return {
-        "title": "Music Library",
-        "media_content_id": "library",
-        "media_content_type": "library",
-        "can_play": False,
-        "can_expand": True,
-        "children": [item_payload(item) for item in media_library.browse()],
-    }
+    return BrowseMedia(
+        title="Music Library",
+        media_content_id="library",
+        media_content_type="library",
+        can_play=False,
+        can_expand=True,
+        children=[item_payload(item) for item in media_library.browse()],
+    )
 
 
 def get_media_type(item):
