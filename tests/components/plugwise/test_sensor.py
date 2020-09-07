@@ -1,11 +1,14 @@
 """Tests for the Plugwise Sensor integration."""
 
+from homeassistant.config_entries import ENTRY_STATE_LOADED
+
 from tests.components.plugwise.common import async_init_integration
 
 
 async def test_adam_climate_sensor_entities(hass, mock_smile_adam):
     """Test creation of climate related sensor entities."""
-    await async_init_integration(hass, mock_smile_adam)
+    entry = await async_init_integration(hass, mock_smile_adam)
+    assert entry.state == ENTRY_STATE_LOADED
 
     state = hass.states.get("sensor.adam_outdoor_temperature")
     assert float(state.state) == 7.8
@@ -29,7 +32,8 @@ async def test_adam_climate_sensor_entities(hass, mock_smile_adam):
 
 async def test_anna_climate_sensor_entities(hass, mock_smile_anna):
     """Test creation of climate related sensor entities."""
-    await async_init_integration(hass, mock_smile_anna)
+    entry = await async_init_integration(hass, mock_smile_anna)
+    assert entry.state == ENTRY_STATE_LOADED
 
     state = hass.states.get("sensor.auxiliary_outdoor_temperature")
     assert float(state.state) == 18.0
@@ -43,7 +47,8 @@ async def test_anna_climate_sensor_entities(hass, mock_smile_anna):
 
 async def test_p1_dsmr_sensor_entities(hass, mock_smile_p1):
     """Test creation of power related sensor entities."""
-    await async_init_integration(hass, mock_smile_p1)
+    entry = await async_init_integration(hass, mock_smile_p1)
+    assert entry.state == ENTRY_STATE_LOADED
 
     state = hass.states.get("sensor.p1_net_electricity_point")
     assert float(state.state) == -2761.0
