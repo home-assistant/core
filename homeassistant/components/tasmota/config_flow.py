@@ -5,6 +5,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.mqtt import valid_subscribe_topic
 
 from .const import (  # pylint:disable=unused-import
     CONF_DISCOVERY_PREFIX,
@@ -33,7 +34,15 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            return self.async_create_entry(title="Tasmota", data=user_input)
+            bad_prefix = False
+            try:
+                prefix = user_input[CONF_DISCOVERY_PREFIX]
+                valid_subscribe_topic(f"{prefix}/#")
+            except vol.Invalid:
+                errors["base"] = "invalid_discovery_topic"
+                bad_prefix = True
+            if not bad_prefix:
+                return self.async_create_entry(title="Tasmota", data=user_input)
 
         fields = OrderedDict()
         fields[vol.Optional(CONF_DISCOVERY_PREFIX, default=DEFAULT_PREFIX)] = str

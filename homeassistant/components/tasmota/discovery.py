@@ -3,7 +3,7 @@ import asyncio
 import json
 import logging
 
-from hatasmota.const import CONF_RELAY
+from hatasmota.const import CONF_ID, CONF_RELAY
 from hatasmota.discovery import (
     TasmotaDiscoveryMsg,
     get_device_config,
@@ -67,6 +67,13 @@ async def async_start(
             except ValueError:
                 _LOGGER.warning(
                     "Invalid discovery message %s: '%s'", serial_number, payload
+                )
+                return
+            if serial_number != payload[CONF_ID]:
+                _LOGGER.warning(
+                    "Serial number mismatch between topic and payload, '%s' != '%s'",
+                    serial_number,
+                    payload[CONF_ID],
                 )
                 return
         else:
@@ -155,10 +162,3 @@ async def async_start(
     )
 
     return True
-
-
-async def async_stop(hass: HomeAssistantType) -> bool:
-    """Stop Tasmota discovery."""
-    if DISCOVERY_UNSUBSCRIBE in hass.data and hass.data[DISCOVERY_UNSUBSCRIBE]:
-        hass.data[DISCOVERY_UNSUBSCRIBE]()
-        hass.data[DISCOVERY_UNSUBSCRIBE] = None

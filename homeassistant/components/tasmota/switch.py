@@ -5,7 +5,6 @@ from homeassistant.components import switch
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import DOMAIN as TASMOTA_DOMAIN
 from .discovery import TASMOTA_DISCOVERY_ENTITY_NEW, clear_discovery_hash
@@ -36,30 +35,25 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 async def _async_setup_entity(entity, discovery_hash, async_add_entities, config_entry):
     """Set up the Tasmota switch."""
-    async_add_entities([TasmotaSwitch(entity, discovery_hash, config_entry)])
+    async_add_entities([TasmotaSwitch(entity=entity, discovery_hash=discovery_hash)])
 
 
 class TasmotaSwitch(
     TasmotaAvailability,
     TasmotaDiscoveryUpdate,
     SwitchEntity,
-    RestoreEntity,
 ):
     """Representation of a Tasmota switch."""
 
-    def __init__(self, entity, discovery_hash, config_entry):
+    def __init__(self, entity, **kwds):
         """Initialize the Tasmota switch."""
         self._state = False
         self._sub_state = None
 
-        self._entity = entity
-        self._entity.set_on_state_callback(self.state_updated)
+        entity.set_on_state_callback(self.state_updated)
         self._unique_id = entity.unique_id
 
-        TasmotaAvailability.__init__(self, entity)
-        TasmotaDiscoveryUpdate.__init__(
-            self, entity, discovery_hash, self.discovery_update
-        )
+        super().__init__(discovery_update=self.discovery_update, entity=entity, **kwds)
 
     async def async_added_to_hass(self):
         """Subscribe to MQTT events."""

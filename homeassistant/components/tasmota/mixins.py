@@ -2,6 +2,7 @@
 import logging
 
 from homeassistant.components.mqtt.const import MQTT_CONNECTED, MQTT_DISCONNECTED
+from homeassistant.components.tasmota.discovery import set_discovery_hash
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -13,13 +14,22 @@ DATA_MQTT = "mqtt"
 _LOGGER = logging.getLogger(__name__)
 
 
-class TasmotaAvailability(Entity):
-    """Mixin used for platforms that report availability."""
+class TasmotaEntity(Entity):
+    """Base class for Tasmota entities."""
 
     def __init__(self, entity) -> None:
+        """Initialize."""
+        self._entity = entity
+
+
+class TasmotaAvailability(TasmotaEntity):
+    """Mixin used for platforms that report availability."""
+
+    def __init__(self, entity, **kwds) -> None:
         """Initialize the availability mixin."""
         self._available = False
         entity.set_on_availability_callback(self.availability_updated)
+        super().__init__(entity=entity, **kwds)
 
     async def async_added_to_hass(self) -> None:
         """Subscribe MQTT events."""
@@ -59,15 +69,16 @@ class TasmotaAvailability(Entity):
         return self._available
 
 
-class TasmotaDiscoveryUpdate(Entity):
+class TasmotaDiscoveryUpdate(TasmotaEntity):
     """Mixin used to handle updated discovery message."""
 
-    def __init__(self, config, discovery_hash, discovery_update) -> None:
+    def __init__(self, discovery_hash, discovery_update, **kwds) -> None:
         """Initialize the discovery update mixin."""
         self._discovery_hash = discovery_hash
         self._discovery_update = discovery_update
         self._remove_signal = None
         self._removed_from_hass = False
+        super().__init__(**kwds)
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to discovery updates."""
@@ -90,7 +101,8 @@ class TasmotaDiscoveryUpdate(Entity):
                 # Unchanged payload: Ignore to avoid changing states
                 _LOGGER.info("Ignoring unchanged update for: %s", self.entity_id)
 
-        # Set in case the entity has been removed and is re-added
+        # Set in case the entity has been removed and is re-added, for example when changing entity_id
+        set_discovery_hash(self.hass, self._discovery_hash)
         self._remove_signal = async_dispatcher_connect(
             self.hass,
             TASMOTA_DISCOVERY_ENTITY_UPDATED.format(*self._discovery_hash),
