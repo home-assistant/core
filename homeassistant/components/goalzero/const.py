@@ -10,7 +10,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TIME_MINUTES,
     TIME_SECONDS,
-    UNIT_PERCENTAGE,
+    PERCENTAGE,
 )
 
 DATA_KEY_COORDINATOR = "coordinator"
@@ -46,7 +46,7 @@ SENSOR_DICT = {
     "whOut": ["Wh Out", ENERGY_WATT_HOUR, "mdi:lightning-bolt"],
     "whStored": ["Wh Stored", ENERGY_WATT_HOUR, "mdi:lightning-bolt"],
     "volts": ["Volts", ATTR_VOLTAGE, "mdi:lightning-bolt"],
-    "socPercent": ["State of Charge Percent", UNIT_PERCENTAGE, "mdi:battery"],
+    "socPercent": ["State of Charge Percent", PERCENTAGE, "mdi:battery"],
     "timeToEmptyFull": ["Time to Empty/Full", TIME_MINUTES, "mdi:clock-end"],
     "temperature": ["temperature", TEMP_CELSIUS, "mdi:coolant-temperature"],
     "wifiStrength": ["Wifi Strength", "dB", "mdi:signal-variant"],
