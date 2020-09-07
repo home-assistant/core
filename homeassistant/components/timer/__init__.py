@@ -1,6 +1,7 @@
 """Support for Timers."""
+from datetime import datetime, timedelta
 import logging
-import typing
+from typing import Dict, Optional
 
 import voluptuous as vol
 
@@ -64,6 +65,13 @@ UPDATE_FIELDS = {
 }
 
 
+def _format_timedelta(delta: timedelta):
+    total_seconds = delta.total_seconds()
+    hours, remainder = divmod(total_seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    return f"{int(hours)}:{int(minutes):02}:{int(seconds):02}"
+
+
 def _none_to_empty_dict(value):
     if value is None:
         return {}
@@ -78,9 +86,9 @@ CONFIG_SCHEMA = vol.Schema(
                 {
                     vol.Optional(CONF_NAME): cv.string,
                     vol.Optional(CONF_ICON): cv.icon,
-                    vol.Optional(
-                        CONF_DURATION, default=DEFAULT_DURATION
-                    ): cv.time_period,
+                    vol.Optional(CONF_DURATION, default=DEFAULT_DURATION): vol.All(
+                        cv.time_period, _format_timedelta
+                    ),
                 },
             )
         )
@@ -156,40 +164,42 @@ class TimerStorageCollection(collection.StorageCollection):
     CREATE_SCHEMA = vol.Schema(CREATE_FIELDS)
     UPDATE_SCHEMA = vol.Schema(UPDATE_FIELDS)
 
-    async def _process_create_data(self, data: typing.Dict) -> typing.Dict:
+    async def _process_create_data(self, data: Dict) -> Dict:
         """Validate the config is valid."""
         data = self.CREATE_SCHEMA(data)
         # make duration JSON serializeable
-        data[CONF_DURATION] = str(data[CONF_DURATION])
+        data[CONF_DURATION] = _format_timedelta(data[CONF_DURATION])
         return data
 
     @callback
-    def _get_suggested_id(self, info: typing.Dict) -> str:
+    def _get_suggested_id(self, info: Dict) -> str:
         """Suggest an ID based on the config."""
         return info[CONF_NAME]
 
-    async def _update_data(self, data: dict, update_data: typing.Dict) -> typing.Dict:
+    async def _update_data(self, data: dict, update_data: Dict) -> Dict:
         """Return a new updated data object."""
         data = {**data, **self.UPDATE_SCHEMA(update_data)}
         # make duration JSON serializeable
-        data[CONF_DURATION] = str(data[CONF_DURATION])
+        if CONF_DURATION in update_data:
+            data[CONF_DURATION] = _format_timedelta(data[CONF_DURATION])
         return data
 
 
 class Timer(RestoreEntity):
     """Representation of a timer."""
 
-    def __init__(self, config: typing.Dict):
+    def __init__(self, config: Dict):
         """Initialize a timer."""
-        self._config = config
-        self.editable = True
-        self._state = STATUS_IDLE
-        self._remaining = None
-        self._end = None
+        self._config: dict = config
+        self.editable: bool = True
+        self._state: str = STATUS_IDLE
+        self._duration = cv.time_period_str(config[CONF_DURATION])
+        self._remaining: Optional[timedelta] = None
+        self._end: Optional[datetime] = None
         self._listener = None
 
     @classmethod
-    def from_yaml(cls, config: typing.Dict) -> "Timer":
+    def from_yaml(cls, config: Dict) -> "Timer":
         """Return entity instance initialized from yaml storage."""
         timer = cls(config)
         timer.entity_id = ENTITY_ID_FORMAT.format(config[CONF_ID])
@@ -225,18 +235,18 @@ class Timer(RestoreEntity):
     def state_attributes(self):
         """Return the state attributes."""
         attrs = {
-            ATTR_DURATION: str(self._config[CONF_DURATION]),
+            ATTR_DURATION: _format_timedelta(self._duration),
             ATTR_EDITABLE: self.editable,
         }
         if self._end is not None:
-            attrs[ATTR_FINISHES_AT] = str(self._end)
+            attrs[ATTR_FINISHES_AT] = self._end.isoformat()
         if self._remaining is not None:
-            attrs[ATTR_REMAINING] = str(self._remaining)
+            attrs[ATTR_REMAINING] = _format_timedelta(self._remaining)
 
         return attrs
 
     @property
-    def unique_id(self) -> typing.Optional[str]:
+    def unique_id(self) -> Optional[str]:
         """Return unique id for the entity."""
         return self._config[CONF_ID]
 
@@ -250,7 +260,7 @@ class Timer(RestoreEntity):
         self._state = state and state.state == state
 
     @callback
-    def async_start(self, duration):
+    def async_start(self, duration: timedelta):
         """Start a timer."""
         if self._listener:
             self._listener()
@@ -265,15 +275,18 @@ class Timer(RestoreEntity):
 
         self._state = STATUS_ACTIVE
         start = dt_util.utcnow().replace(microsecond=0)
+
         if self._remaining and newduration is None:
             self._end = start + self._remaining
+
+        elif newduration:
+            self._duration = newduration
+            self._remaining = newduration
+            self._end = start + self._duration
+
         else:
-            if newduration:
-                self._config[CONF_DURATION] = newduration
-                self._remaining = newduration
-            else:
-                self._remaining = self._config[CONF_DURATION]
-            self._end = start + self._config[CONF_DURATION]
+            self._remaining = self._duration
+            self._end = start + self._duration
 
         self.hass.bus.async_fire(event, {"entity_id": self.entity_id})
 
@@ -334,7 +347,8 @@ class Timer(RestoreEntity):
         self.hass.bus.async_fire(EVENT_TIMER_FINISHED, {"entity_id": self.entity_id})
         self.async_write_ha_state()
 
-    async def async_update_config(self, config: typing.Dict) -> None:
+    async def async_update_config(self, config: Dict) -> None:
         """Handle when the config is updated."""
         self._config = config
+        self._duration = cv.time_period_str(config[CONF_DURATION])
         self.async_write_ha_state()
