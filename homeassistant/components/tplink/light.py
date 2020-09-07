@@ -5,16 +5,22 @@ import logging
 import time
 from typing import Any, Dict, NamedTuple, Tuple, cast
 
-from homeassistant.components.light import (ATTR_BRIGHTNESS, ATTR_COLOR_TEMP,
-                                            ATTR_HS_COLOR, SUPPORT_BRIGHTNESS,
-                                            SUPPORT_COLOR, SUPPORT_COLOR_TEMP,
-                                            LightEntity)
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP,
+    ATTR_HS_COLOR,
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
+    SUPPORT_COLOR_TEMP,
+    LightEntity,
+)
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.color import (
     color_temperature_kelvin_to_mired as kelvin_to_mired,
-    color_temperature_mired_to_kelvin as mired_to_kelvin)
+    color_temperature_mired_to_kelvin as mired_to_kelvin,
+)
 import homeassistant.util.dt as dt_util
 from pyHS100 import SmartBulb, SmartDeviceException
 
