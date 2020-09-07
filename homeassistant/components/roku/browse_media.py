@@ -19,7 +19,7 @@ EXPANDABLE_MEDIA_TYPES = [
 ]
 
 
-async def build_item_response(coordinator, payload):
+def build_item_response(coordinator, payload):
     """Create response payload for the provided media query."""
     search_id = payload.get("search_id")
     search_type = payload.get("search_type")
@@ -59,7 +59,7 @@ async def build_item_response(coordinator, payload):
     )
 
 
-async def item_payload(item, coordinator):
+def item_payload(item, coordinator):
     """
     Create response payload for a single media item.
 
@@ -92,7 +92,7 @@ async def item_payload(item, coordinator):
     )
 
 
-async def library_payload(coordinator):
+def library_payload(coordinator):
     """
     Create response payload to describe contents of a specific library.
 
