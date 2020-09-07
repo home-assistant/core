@@ -120,4 +120,4 @@ async def library_payload(coordinator):
             )
         )
 
-     return library_info
+    return library_info
