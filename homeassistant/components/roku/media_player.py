@@ -7,14 +7,11 @@ import voluptuous as vol
 from homeassistant.components.media_player import (
     DEVICE_CLASS_RECEIVER,
     DEVICE_CLASS_TV,
-    BrowseMedia,
     MediaPlayerEntity,
 )
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_APP,
-    MEDIA_TYPE_APPS,
     MEDIA_TYPE_CHANNEL,
-    MEDIA_TYPE_CHANNELS,
     SUPPORT_BROWSE_MEDIA,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
