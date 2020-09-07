@@ -14,14 +14,9 @@ from homeassistant.const import (
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import (
-    aiohttp_client,
-    device_registry,
-    entity,
-    update_coordinator,
-)
+from homeassistant.helpers import aiohttp_client, device_registry, update_coordinator
 
 from .const import DOMAIN
 
@@ -133,56 +128,6 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         """Handle Home Assistant stopping."""
         self._unsub_stop = None
         await self.shutdown()
-
-
-class ShellyBlockEntity(entity.Entity):
-    """Helper class to represent a block."""
-
-    def __init__(self, wrapper: ShellyDeviceWrapper, block):
-        """Initialize Shelly entity."""
-        self.wrapper = wrapper
-        self.block = block
-        self._name = f"{self.wrapper.name} - {self.block.description.replace('_', ' ')}"
-
-    @property
-    def name(self):
-        """Name of entity."""
-        return self._name
-
-    @property
-    def should_poll(self):
-        """If device should be polled."""
-        return False
-
-    @property
-    def device_info(self):
-        """Device info."""
-        return {
-            "connections": {(device_registry.CONNECTION_NETWORK_MAC, self.wrapper.mac)}
-        }
-
-    @property
-    def available(self):
-        """Available."""
-        return self.wrapper.last_update_success
-
-    @property
-    def unique_id(self):
-        """Return unique ID of entity."""
-        return f"{self.wrapper.mac}-{self.block.description}"
-
-    async def async_added_to_hass(self):
-        """When entity is added to HASS."""
-        self.async_on_remove(self.wrapper.async_add_listener(self._update_callback))
-
-    async def async_update(self):
-        """Update entity with latest info."""
-        await self.wrapper.async_request_refresh()
-
-    @callback
-    def _update_callback(self):
-        """Handle device update."""
-        self.async_write_ha_state()
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):

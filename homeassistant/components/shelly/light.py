@@ -4,8 +4,9 @@ from aioshelly import Block
 from homeassistant.components.light import SUPPORT_BRIGHTNESS, LightEntity
 from homeassistant.core import callback
 
-from . import ShellyBlockEntity, ShellyDeviceWrapper
+from . import ShellyDeviceWrapper
 from .const import DOMAIN
+from .entity import ShellyBlockEntity
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
