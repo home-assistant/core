@@ -7,7 +7,11 @@ import re
 import jsonrpc_base
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
+from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA,
+    BrowseMedia,
+    MediaPlayerEntity,
+)
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_ALBUM,
     MEDIA_TYPE_ARTIST,
@@ -671,11 +675,13 @@ class KodiEntity(MediaPlayerEntity):
         ]:
             await self._kodi.clear_playlist()
             params = {"playlistid": 0, "item": {f"{media_type}id": int(media_id)}}
+            # pylint: disable=protected-access
             await self._kodi._server.Playlist.Add(params)
             await self._kodi.play_playlist(0)
         elif media_type_lower == MEDIA_TYPE_TRACK:
             await self._kodi.clear_playlist()
             params = {"playlistid": 0, "item": {"songid": int(media_id)}}
+            # pylint: disable=protected-access
             await self._kodi._server.Playlist.Add(params)
             await self._kodi.play_playlist(0)
         elif media_type_lower in [
@@ -684,6 +690,7 @@ class KodiEntity(MediaPlayerEntity):
             MEDIA_TYPE_SEASON,
             MEDIA_TYPE_TVSHOW,
         ]:
+            # pylint: disable=protected-access
             await self._kodi._play_item(
                 {MAP_KODI_MEDIA_TYPES[media_type_lower]: int(media_id)}
             )
@@ -865,6 +872,7 @@ async def build_item_response(media_library, payload):
     media = None
 
     query = {"properties": ["thumbnail"]}
+    # pylint: disable=protected-access
     if search_type == MEDIA_TYPE_ALBUM:
         if search_id:
             query.update({"filter": {"albumid": int(search_id)}})
@@ -927,6 +935,7 @@ async def build_item_response(media_library, payload):
         else:
             media = await media_library._server.VideoLibrary.GetTVShows(query)
             media = media.get("tvshows")
+            title = "TV Shows"
     elif search_type == MEDIA_TYPE_SEASON:
         tv_show_id, season_id = search_id.split("/", 1)
         media = await media_library._server.VideoLibrary.GetEpisodes(
@@ -949,15 +958,24 @@ async def build_item_response(media_library, payload):
     if media is None:
         return
 
-    return {
-        "title": title,
-        "thumbnail": thumbnail,
-        "media_content_id": payload["search_id"],
-        "media_content_type": search_type,
-        "children": [item_payload(item, media_library) for item in media],
-        "can_play": search_type in PLAYABLE_MEDIA_TYPES and search_id,
-        "can_expand": True,
-    }
+    return BrowseMedia(
+        media_content_id=payload["search_id"],
+        media_content_type=search_type,
+        title=title,
+        can_play=search_type in PLAYABLE_MEDIA_TYPES and search_id,
+        can_expand=True,
+        children=[item_payload(item, media_library) for item in media],
+        thumbnail=thumbnail,
+    )
+    # return {
+    #     "title": title,
+    #     "thumbnail": thumbnail,
+    #     "media_content_id": payload["search_id"],
+    #     "media_content_type": search_type,
+    #     "children": [item_payload(item, media_library) for item in media],
+    #     "can_play": search_type in PLAYABLE_MEDIA_TYPES and search_id,
+    #     "can_expand": True,
+    # }
 
 
 def item_payload(item, media_library):
@@ -966,52 +984,58 @@ def item_payload(item, media_library):
 
     Used by async_browse_media.
     """
-    payload = {}
     if "songid" in item:
-        payload["media_content_type"] = MEDIA_TYPE_TRACK
-        payload["media_content_id"] = f"{item['songid']}"
-        payload["thumbnail"] = media_library.thumbnail_url(item.get("thumbnail"))
-        payload["can_expand"] = False
+        media_content_type = MEDIA_TYPE_TRACK
+        media_content_id = f"{item['songid']}"
+        thumbnail = media_library.thumbnail_url(item.get("thumbnail"))
+        can_expand = False
     elif "albumid" in item:
-        payload["media_content_type"] = MEDIA_TYPE_ALBUM
-        payload["media_content_id"] = f"{item['albumid']}"
-        payload["thumbnail"] = media_library.thumbnail_url(item.get("thumbnail"))
-        payload["can_expand"] = True
+        media_content_type = MEDIA_TYPE_ALBUM
+        media_content_id = f"{item['albumid']}"
+        thumbnail = media_library.thumbnail_url(item.get("thumbnail"))
+        can_expand = True
     elif "artistid" in item:
-        payload["media_content_type"] = MEDIA_TYPE_ARTIST
-        payload["media_content_id"] = f"{item['artistid']}"
-        payload["thumbnail"] = media_library.thumbnail_url(item.get("thumbnail"))
-        payload["can_expand"] = True
+        media_content_type = MEDIA_TYPE_ARTIST
+        media_content_id = f"{item['artistid']}"
+        thumbnail = media_library.thumbnail_url(item.get("thumbnail"))
+        can_expand = True
     elif "movieid" in item:
-        payload["media_content_type"] = MEDIA_TYPE_MOVIE
-        payload["media_content_id"] = f"{item['movieid']}"
-        payload["thumbnail"] = media_library.thumbnail_url(item.get("thumbnail"))
-        payload["can_expand"] = False
+        media_content_type = MEDIA_TYPE_MOVIE
+        media_content_id = f"{item['movieid']}"
+        thumbnail = media_library.thumbnail_url(item.get("thumbnail"))
+        can_expand = False
     elif "episodeid" in item:
-        payload["media_content_type"] = MEDIA_TYPE_EPISODE
-        payload["media_content_id"] = f"{item['episodeid']}"
-        payload["thumbnail"] = media_library.thumbnail_url(item.get("thumbnail"))
-        payload["can_expand"] = False
+        media_content_type = MEDIA_TYPE_EPISODE
+        media_content_id = f"{item['episodeid']}"
+        thumbnail = media_library.thumbnail_url(item.get("thumbnail"))
+        can_expand = False
     elif "seasonid" in item:
-        payload["media_content_type"] = MEDIA_TYPE_SEASON
-        payload["media_content_id"] = f"{item['tvshowid']}/{item['season']}"
-        payload["thumbnail"] = media_library.thumbnail_url(item.get("thumbnail"))
-        payload["can_expand"] = True
+        media_content_type = MEDIA_TYPE_SEASON
+        media_content_id = f"{item['tvshowid']}/{item['season']}"
+        thumbnail = media_library.thumbnail_url(item.get("thumbnail"))
+        can_expand = True
     elif "tvshowid" in item:
-        payload["media_content_type"] = MEDIA_TYPE_TVSHOW
-        payload["media_content_id"] = f"{item['tvshowid']}"
-        payload["thumbnail"] = media_library.thumbnail_url(item.get("thumbnail"))
-        payload["can_expand"] = True
+        media_content_type = MEDIA_TYPE_TVSHOW
+        media_content_id = f"{item['tvshowid']}"
+        thumbnail = media_library.thumbnail_url(item.get("thumbnail"))
+        can_expand = True
     else:
-        payload["media_content_type"] = item.get("type")
-        payload["media_content_id"] = ""
-        payload["can_expand"] = True
+        media_content_type = item.get("type")
+        media_content_id = ""
+        can_expand = True
+        thumbnail = None
 
-    payload["title"] = item["label"]
-    payload["can_play"] = payload[
-        "media_content_type"
-    ] in PLAYABLE_MEDIA_TYPES and bool(payload["media_content_id"])
-    return payload
+    title = item["label"]
+    can_play = media_content_type in PLAYABLE_MEDIA_TYPES and bool(media_content_id)
+
+    return BrowseMedia(
+        title=title,
+        media_content_type=media_content_type,
+        media_content_id=media_content_id,
+        can_play=can_play,
+        can_expand=can_expand,
+        thumbnail=thumbnail,
+    )
 
 
 def library_payload(media_library):
@@ -1020,14 +1044,22 @@ def library_payload(media_library):
 
     Used by async_browse_media.
     """
-    library_info = {
-        "title": "Media Library",
-        "media_content_id": "library",
-        "media_content_type": "library",
-        "can_play": False,
-        "can_expand": True,
-        "children": [],
-    }
+    library_info = BrowseMedia(
+        media_content_id="library",
+        media_content_type="library",
+        title="Media Library",
+        can_play=False,
+        can_expand=True,
+        children=[],
+    )
+    # library_info = {
+    #     "title": "Media Library",
+    #     "media_content_id": "library",
+    #     "media_content_type": "library",
+    #     "can_play": False,
+    #     "can_expand": True,
+    #     "children": [],
+    # }
 
     library = {
         "library_music": "Music",
@@ -1035,7 +1067,7 @@ def library_payload(media_library):
         MEDIA_TYPE_TVSHOW: "TV shows",
     }
     for item in [{"label": n, "type": t} for t, n in library.items()]:
-        library_info["children"].append(
+        library_info.children.append(
             item_payload(
                 {"label": item["label"], "type": item["type"], "uri": item["type"]},
                 media_library,
