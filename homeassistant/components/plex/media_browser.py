@@ -125,11 +125,11 @@ def library_section_payload(section):
 
 def special_library_payload(parent_payload, special_type):
     """Create response payload for special library folders."""
-    title = f"{special_type} ({parent_payload['title']})"
+    title = f"{special_type} ({parent_payload.title})"
     return BrowseMedia(
         title=title,
-        media_content_id=f"{parent_payload['media_content_id']}:{special_type}",
-        media_content_type=parent_payload["media_content_type"],
+        media_content_id=f"{parent_payload.media_content_id}:{special_type}",
+        media_content_type=parent_payload.media_content_type,
         can_play=False,
         can_expand=True,
     )
