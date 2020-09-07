@@ -26,24 +26,23 @@ DEFAULT_DEVICE_HOST = "alarmdecoder"
 DEFAULT_DEVICE_PORT = 10000
 DEFAULT_ZONE_TYPE = "window"
 
-DOMAIN = "alarmdecoder"
-
-OPTIONS_ARM = "arm_options"
-OPTIONS_ZONES = "zone_options"
-
-PROTOCOL_SOCKET = "socket"
-PROTOCOL_SERIAL = "serial"
-
-SIGNAL_PANEL_MESSAGE = "alarmdecoder.panel_message"
-SIGNAL_REL_MESSAGE = "alarmdecoder.rel_message"
-SIGNAL_RFX_MESSAGE = "alarmdecoder.rfx_message"
-
-SIGNAL_ZONE_FAULT = "alarmdecoder.zone_fault"
-SIGNAL_ZONE_RESTORE = "alarmdecoder.zone_restore"
-
 DEFAULT_ARM_OPTIONS = {
     CONF_ALT_NIGHT_MODE: DEFAULT_ALT_NIGHT_MODE,
     CONF_AUTO_BYPASS: DEFAULT_AUTO_BYPASS,
     CONF_CODE_ARM_REQUIRED: DEFAULT_CODE_ARM_REQUIRED,
 }
 DEFAULT_ZONE_OPTIONS = {}
+
+DOMAIN = "alarmdecoder"
+
+OPTIONS_ARM = "arm_options"
+OPTIONS_ZONES = "zone_options"
+
+PROTOCOL_SERIAL = "serial"
+PROTOCOL_SOCKET = "socket"
+
+SIGNAL_PANEL_MESSAGE = "alarmdecoder.panel_message"
+SIGNAL_REL_MESSAGE = "alarmdecoder.rel_message"
+SIGNAL_RFX_MESSAGE = "alarmdecoder.rfx_message"
+SIGNAL_ZONE_FAULT = "alarmdecoder.zone_fault"
+SIGNAL_ZONE_RESTORE = "alarmdecoder.zone_restore"
