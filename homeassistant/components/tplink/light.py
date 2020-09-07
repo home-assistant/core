@@ -1,8 +1,10 @@
 """Support for TPLink lights."""
+import asyncio
 from datetime import timedelta
 import logging
 import time
 from typing import Any, Dict, NamedTuple, Tuple, cast
+
 
 from pyHS100 import SmartBulb, SmartDeviceException
 
@@ -48,11 +50,15 @@ LIGHT_STATE_SATURATION = "saturation"
 LIGHT_STATE_ERROR_MSG = "err_msg"
 
 LIGHT_SYSINFO_MAC = "mac"
+LIGHT_SYSINFO_HOST = "host"
 LIGHT_SYSINFO_ALIAS = "alias"
 LIGHT_SYSINFO_MODEL = "model"
 LIGHT_SYSINFO_IS_DIMMABLE = "is_dimmable"
 LIGHT_SYSINFO_IS_VARIABLE_COLOR_TEMP = "is_variable_color_temp"
 LIGHT_SYSINFO_IS_COLOR = "is_color"
+
+MAX_ATTEMPTS = 20
+SLEEP_TIME = 2
 
 
 async def async_setup_entry(hass: HomeAssistantType, config_entry, async_add_entities):
@@ -63,13 +69,12 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry, async_add_ent
     return True
 
 
-def add_entity(device: SmartBulb, async_add_entities):
+async def async_add_entity(hass, device: SmartBulb, async_add_entities):
     """Check if device is online and add the entity."""
     # Attempt to get the sysinfo. If it fails, it will raise an
     # exception that is caught by async_add_entities_retry which
     # will try again later.
-    device.get_sysinfo()
-
+    await hass.async_add_executor_job(device.get_sysinfo)
     async_add_entities([TPLinkSmartBulb(device)], update_before_add=True)
 
 
@@ -112,6 +117,7 @@ class LightFeatures(NamedTuple):
 
     sysinfo: Dict[str, Any]
     mac: str
+    host: str
     alias: str
     model: str
     supported_features: int
@@ -133,6 +139,7 @@ class TPLinkSmartBulb(LightEntity):
         self._last_current_power_update = None
         self._last_historical_power_update = None
         self._emeter_params = {}
+        self._is_ready = False
 
     @property
     def unique_id(self):
@@ -191,18 +198,14 @@ class TPLinkSmartBulb(LightEntity):
         await self._async_set_light_state_retry(
             self._light_state,
             self._light_state._replace(
-                state=True,
-                brightness=brightness,
-                color_temp=color_tmp,
-                hs=hue_sat,
+                state=True, brightness=brightness, color_temp=color_tmp, hs=hue_sat,
             ),
         )
 
     async def async_turn_off(self, **kwargs):
         """Turn the light off."""
         await self._async_set_light_state_retry(
-            self._light_state,
-            self._light_state._replace(state=False),
+            self._light_state, self._light_state._replace(state=False),
         )
 
     @property
@@ -235,7 +238,7 @@ class TPLinkSmartBulb(LightEntity):
         """Return True if device is on."""
         return self._light_state.state
 
-    def update(self):
+    def attempt_update(self):
         """Update the TP-Link Bulb's state."""
         # State is currently being set, ignore.
         if self._is_setting_light_state:
@@ -246,13 +249,17 @@ class TPLinkSmartBulb(LightEntity):
             if not self._light_features:
                 self._light_features = self._get_light_features_retry()
             self._light_state = self._get_light_state_retry()
-            self._is_available = True
+            self._is_ready = True
+
         except (SmartDeviceException, OSError) as ex:
-            if self._is_available:
-                _LOGGER.warning(
-                    "Could not read data for %s: %s", self.smartbulb.host, ex
-                )
-            self._is_available = False
+            _LOGGER.warning(
+                "Retrying in %s seconds for %s|%s due to: %s",
+                SLEEP_TIME,
+                self._host,
+                self._alias,
+                ex,
+            )
+        return
 
     @property
     def supported_features(self):
@@ -275,6 +282,7 @@ class TPLinkSmartBulb(LightEntity):
         supported_features = 0
         # Calling api here as it reformats
         mac = self.smartbulb.mac
+        host = self.smartbulb.host
         alias = sysinfo[LIGHT_SYSINFO_ALIAS]
         model = sysinfo[LIGHT_SYSINFO_MODEL]
         min_mireds = None
@@ -296,6 +304,7 @@ class TPLinkSmartBulb(LightEntity):
         return LightFeatures(
             sysinfo=sysinfo,
             mac=mac,
+            host=host,
             alias=alias,
             model=model,
             supported_features=supported_features,
@@ -473,6 +482,24 @@ class TPLinkSmartBulb(LightEntity):
                 self.smartbulb.state = self.smartbulb.SWITCH_STATE_OFF
 
         return self._get_device_state()
+
+    async def async_update(self):
+        """Update the TP-Link bulb's state."""
+        for update_attempt in range(MAX_ATTEMPTS):
+            self._is_ready = False
+
+            await self.hass.async_add_executor_job(self.attempt_update)
+
+            if self._is_ready:
+                self._available = True
+                break
+            await asyncio.sleep(SLEEP_TIME)
+        else:
+            if self._available:
+                _LOGGER.warning(
+                    "Could not read state for %s|%s", self._host, self._alias
+                )
+            self._available = False
 
 
 def _light_state_diff(old_light_state: LightState, new_light_state: LightState):

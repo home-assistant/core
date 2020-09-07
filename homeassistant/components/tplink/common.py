@@ -4,6 +4,7 @@ from datetime import timedelta
 import logging
 from typing import Any, Callable, List
 
+from homeassistant.helpers.typing import HomeAssistantType
 from pyHS100 import (
     Discover,
     SmartBulb,
@@ -12,8 +13,6 @@ from pyHS100 import (
     SmartPlug,
     SmartStrip,
 )
-
-from homeassistant.helpers.typing import HomeAssistantType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -176,9 +175,7 @@ async def async_add_entities_retry(
             # Call the individual item callback.
             try:
                 _LOGGER.debug("Attempting to add object of type %s", type(add_object))
-                result = await hass.async_add_job(
-                    callback, add_object, async_add_entities
-                )
+                result = await callback(hass, add_object, async_add_entities)
             except SmartDeviceException as ex:
                 _LOGGER.debug(str(ex))
                 result = False
