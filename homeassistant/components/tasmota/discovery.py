@@ -12,6 +12,7 @@ from hatasmota.discovery import (
     has_entities_with_platform,
 )
 from hatasmota.utils import get_serial_number_from_discovery_topic
+
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt.subscription import (
     async_subscribe_topics,

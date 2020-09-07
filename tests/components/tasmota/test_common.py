@@ -16,6 +16,7 @@ from hatasmota.utils import (
     get_topic_tele_state,
     get_topic_tele_will,
 )
+
 from homeassistant.components.mqtt.const import MQTT_DISCONNECTED
 from homeassistant.components.tasmota import DEFAULT_PREFIX
 from homeassistant.const import STATE_UNAVAILABLE

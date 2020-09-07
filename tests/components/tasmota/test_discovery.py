@@ -2,9 +2,9 @@
 import copy
 import json
 
+from hatasmota.const import CONF_ONLINE
 import pytest
 
-from hatasmota.const import CONF_ONLINE
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX
 from homeassistant.components.tasmota.discovery import ALREADY_DISCOVERED
 

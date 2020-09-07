@@ -2,9 +2,9 @@
 import copy
 import json
 
+from hatasmota.const import CONF_ONLINE
 import pytest
 
-from hatasmota.const import CONF_ONLINE
 from homeassistant.components import switch
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX
 from homeassistant.const import ATTR_ASSUMED_STATE, STATE_OFF, STATE_ON

@@ -1,8 +1,6 @@
 """Support for MQTT message handling."""
 import logging
 
-import voluptuous as vol
-
 from hatasmota.const import (
     CONF_ID,
     CONF_MANUFACTURER,
@@ -10,6 +8,8 @@ from hatasmota.const import (
     CONF_NAME,
     CONF_SW_VERSION,
 )
+import voluptuous as vol
+
 from homeassistant.components.mqtt import async_publish, valid_subscribe_topic
 from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
