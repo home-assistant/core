@@ -66,7 +66,6 @@ async def test_controlling_state_via_mqtt(hass, mqtt_mock):
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "online")
-    await hass.async_block_till_done()
     state = hass.states.get("switch.test")
     assert state.state == STATE_OFF
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
@@ -93,7 +92,6 @@ async def test_sending_mqtt_commands(hass, mqtt_mock):
         f"{DEFAULT_PREFIX}/49A3BC/config",
         json.dumps(config),
     )
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "online")
