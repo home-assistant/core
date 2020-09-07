@@ -160,6 +160,7 @@ class ShellyBlockAttributeEntity(ShellyBlockEntity, entity.Entity):
         """Name of sensor."""
         return self._name
 
+    @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if it should be enabled by default."""
         return self.description.default_enabled
