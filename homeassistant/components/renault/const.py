@@ -5,6 +5,8 @@ LOGGER = logging.getLogger(__package__)
 
 DOMAIN = "renault"
 
+CONF_GIGYA_APIKEY = "gigya-api-key"
+CONF_KAMEREON_APIKEY = "kamereon-api-key"
 CONF_LOCALE = "locale"
 CONF_KAMEREON_ACCOUNT_ID = "kamereon_account_id"
 

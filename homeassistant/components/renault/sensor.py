@@ -1,7 +1,7 @@
 """Support for Renault sensors."""
 from pyze.api import ChargeState, PlugState
 
-from homeassistant.const import DEVICE_CLASS_BATTERY, POWER_KILO_WATT, UNIT_PERCENTAGE
+from homeassistant.const import DEVICE_CLASS_BATTERY, PERCENTAGE, POWER_KILO_WATT
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.util.distance import LENGTH_KILOMETERS, LENGTH_MILES
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
@@ -70,7 +70,7 @@ class RenaultBatteryLevelSensor(RenaultBatteryDataEntity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity."""
-        return UNIT_PERCENTAGE
+        return PERCENTAGE
 
     @property
     def icon(self):

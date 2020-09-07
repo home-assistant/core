@@ -6,11 +6,16 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from .const import (  # pylint: disable=unused-import
     AVAILABLE_LOCALES,
+    CONF_GIGYA_APIKEY,
     CONF_KAMEREON_ACCOUNT_ID,
+    CONF_KAMEREON_APIKEY,
     CONF_LOCALE,
     DOMAIN,
 )
 from .pyzeproxy import PyzeProxy
+
+DEFAULT_GIGYA_APIKEY = "3_e8d4g..."
+DEFAULT_KAMEREON_APIKEY = "oF09WnK..."
 
 
 class RenaultFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -27,27 +32,50 @@ class RenaultFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Handle a Renault config flow start.
 
-        Ask the user for credentials.
+        Ask the user for API keys.
         """
         if user_input:
             self.renault_config.update(user_input)
-            self.pyzeproxy = PyzeProxy(self.hass, self.renault_config)
-            if not await self.pyzeproxy.attempt_login():
-                return self._show_user_form({"base": "invalid_credentials"})
-
-            self.renault_config = user_input
-            return await self.async_step_kamereon()
+            if (
+                user_input.get(CONF_GIGYA_APIKEY) == DEFAULT_GIGYA_APIKEY
+                or user_input.get(CONF_KAMEREON_APIKEY) == DEFAULT_KAMEREON_APIKEY
+            ):
+                return self._show_user_form({"base": "invalid_api_keys"})
+            return await self.async_step_credentials()
         return self._show_user_form()
 
     def _show_user_form(self, errors=None):
-        """Show the credentials form."""
+        """Show the API keys form."""
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
+                    vol.Required(CONF_GIGYA_APIKEY, DEFAULT_GIGYA_APIKEY): str,
+                    vol.Required(CONF_KAMEREON_APIKEY, DEFAULT_KAMEREON_APIKEY): str,
+                    vol.Required(CONF_LOCALE): vol.In(AVAILABLE_LOCALES),
+                }
+            ),
+            errors=errors if errors else {},
+        )
+
+    async def async_step_credentials(self, user_input=None):
+        """Request credentials."""
+        if user_input:
+            self.renault_config.update(user_input)
+            self.pyzeproxy = PyzeProxy(self.hass, self.renault_config)
+            if not await self.pyzeproxy.attempt_login():
+                return self._show_credentials_form({"base": "invalid_credentials"})
+            return await self.async_step_kamereon()
+        return self._show_credentials_form()
+
+    def _show_credentials_form(self, errors=None):
+        """Show the credentials form."""
+        return self.async_show_form(
+            step_id="credentials",
+            data_schema=vol.Schema(
+                {
                     vol.Required(CONF_USERNAME): str,
                     vol.Required(CONF_PASSWORD): str,
-                    vol.Required(CONF_LOCALE): vol.In(AVAILABLE_LOCALES),
                 }
             ),
             errors=errors if errors else {},

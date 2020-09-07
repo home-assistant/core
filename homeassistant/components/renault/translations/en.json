@@ -8,6 +8,13 @@
             "preload_failed": "Unable to preload Renault keys."
         },
         "step": {
+            "credentials": {
+                "data": {
+                    "username": "Email",
+                    "password": "Password"
+                },
+                "title": "Set Renault credentials"
+            },
             "kamereon": {
                 "data": {
                     "kamereon_account_id": "Kamereon account id"
@@ -16,11 +23,12 @@
             },
             "user": {
                 "data": {
-                    "username": "Email",
-                    "password": "Password",
-                    "locale": "Locale"
+                    "locale": "Locale",
+                    "gigya-api-key": "Gigya API Key",
+                    "kamereon-api-key": "Kamereon API Key"
                 },
-                "title": "Set Renault credentials"
+                "title": "Set API keys",
+                "description": "For instructions to gather API keys, check https://github.com/jamesremuscat/pyze#obtaining-api-keys"
             }
         }
     }
