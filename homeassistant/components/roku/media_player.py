@@ -246,7 +246,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         if media_content_type in [None, "library"]:
             return await library_payload(self.coordinator)
 
-         payload = {
+        payload = {
             "search_type": media_content_type,
             "search_id": media_content_id,
         }
