@@ -3,11 +3,9 @@ import asyncio
 import logging
 import time
 
-from homeassistant.components.switch import (
-    ATTR_CURRENT_POWER_W,
-    ATTR_TODAY_ENERGY_KWH,
-    SwitchEntity,
-)
+from homeassistant.components.switch import (ATTR_CURRENT_POWER_W,
+                                             ATTR_TODAY_ENERGY_KWH,
+                                             SwitchEntity)
 from homeassistant.const import ATTR_VOLTAGE
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.typing import HomeAssistantType

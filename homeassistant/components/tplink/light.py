@@ -5,26 +5,18 @@ import logging
 import time
 from typing import Any, Dict, NamedTuple, Tuple, cast
 
-
-from pyHS100 import SmartBulb, SmartDeviceException
-
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
-    ATTR_HS_COLOR,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_COLOR_TEMP,
-    LightEntity,
-)
+from homeassistant.components.light import (ATTR_BRIGHTNESS, ATTR_COLOR_TEMP,
+                                            ATTR_HS_COLOR, SUPPORT_BRIGHTNESS,
+                                            SUPPORT_COLOR, SUPPORT_COLOR_TEMP,
+                                            LightEntity)
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.color import (
     color_temperature_kelvin_to_mired as kelvin_to_mired,
-    color_temperature_mired_to_kelvin as mired_to_kelvin,
-)
+    color_temperature_mired_to_kelvin as mired_to_kelvin)
 import homeassistant.util.dt as dt_util
+from pyHS100 import SmartBulb, SmartDeviceException
 
 from . import CONF_LIGHT, DOMAIN as TPLINK_DOMAIN
 from .common import async_add_entities_retry
@@ -64,7 +56,7 @@ SLEEP_TIME = 2
 async def async_setup_entry(hass: HomeAssistantType, config_entry, async_add_entities):
     """Set up switches."""
     await async_add_entities_retry(
-        hass, async_add_entities, hass.data[TPLINK_DOMAIN][CONF_LIGHT], add_entity
+        hass, async_add_entities, hass.data[TPLINK_DOMAIN][CONF_LIGHT], async_add_entity
     )
     return True
 
