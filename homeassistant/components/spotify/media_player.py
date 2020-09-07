@@ -583,23 +583,22 @@ def library_payload():
 
     Used by async_browse_media.
     """
-    return BrowseMedia(
-        title="Media Library",
-        media_content_id="library",
-        media_content_type="library",
-        can_play=False,
-        can_expand=True,
-        children=[
-            BrowseMedia(
-                title=title,
-                media_content_type=key,
-                media_content_id=key,
-                can_play=False,
-                can_expand=True,
+    library_info = {
+        "title": "Media Library",
+        "media_content_id": "library",
+        "media_content_type": "library",
+        "can_play": False,
+        "can_expand": True,
+        "children": [],
+    }
+
+    for item in [{"name": n, "type": t} for t, n in LIBRARY_MAP.items()]:
+        library_info["children"].append(
+            item_payload(
+                {"name": item["name"], "type": item["type"], "uri": item["type"]}
             )
-            for key, title in LIBRARY_MAP.items()
-        ],
-    )
+        )
+    return BrowseMedia(**library_info)
 
 
 def fetch_image_url(item, key="images"):
