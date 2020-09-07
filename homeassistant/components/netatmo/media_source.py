@@ -1,5 +1,6 @@
 """Netatmo Media Source Implementation."""
 import datetime as dt
+import logging
 import re
 from typing import Optional, Tuple
 
@@ -17,6 +18,7 @@ from homeassistant.core import HomeAssistant, callback
 
 from .const import DATA_CAMERAS, DATA_EVENTS, DOMAIN, MANUFACTURER
 
+_LOGGER = logging.getLogger(__name__)
 MIME_TYPE = "application/x-mpegURL"
 
 
@@ -99,6 +101,9 @@ class NetatmoSource(MediaSource):
         )
 
         if not media.can_play and not media.can_expand:
+            _LOGGER.debug(
+                "Camera %s with event %s without media url found", camera_id, event_id
+            )
             raise IncompatibleMediaSource
 
         if not media.can_expand:
