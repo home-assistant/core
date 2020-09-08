@@ -523,8 +523,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 device_info.firmware_version,
                 device_info.hardware_version,
             )
-        except DeviceException:
-            raise PlatformNotReady
+        except DeviceException as ex:
+            raise PlatformNotReady from ex
 
     if model in PURIFIER_MIOT:
         air_purifier = AirPurifierMiot(host, token)

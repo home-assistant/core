@@ -144,7 +144,7 @@ async def async_setup_entry(hass, config_entry):
         )
     except RainMachineError as err:
         _LOGGER.error("An error occurred: %s", err)
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from err
     else:
         # regenmaschine can load multiple controllers at once, but we only grab the one
         # we loaded above:

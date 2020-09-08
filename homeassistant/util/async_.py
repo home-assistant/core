@@ -10,7 +10,7 @@ from typing import Any, Callable, Coroutine, TypeVar
 
 _LOGGER = logging.getLogger(__name__)
 
-T = TypeVar("T")  # pylint: disable=invalid-name
+T = TypeVar("T")
 
 
 def fire_coroutine_threadsafe(coro: Coroutine, loop: AbstractEventLoop) -> None:

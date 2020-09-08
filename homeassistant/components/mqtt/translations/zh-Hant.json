@@ -66,11 +66,13 @@
             },
             "options": {
                 "data": {
+                    "birth_enable": "\u958b\u555f Birth \u8a0a\u606f",
                     "birth_payload": "Birth \u8a0a\u606f payload",
                     "birth_qos": "Birth \u8a0a\u606f QoS",
                     "birth_retain": "Birth \u8a0a\u606f Retain",
                     "birth_topic": "Birth \u8a0a\u606f\u4e3b\u984c",
                     "discovery": "\u958b\u555f\u63a2\u7d22",
+                    "will_enable": "\u958b\u555f Birth \u8a0a\u606f",
                     "will_payload": "Will \u8a0a\u606f payload",
                     "will_qos": "Will \u8a0a\u606f QoS",
                     "will_retain": "Will \u8a0a\u606f Retain",

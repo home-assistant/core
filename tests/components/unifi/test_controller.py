@@ -130,7 +130,8 @@ async def setup_unifi_integration(
         return {}
 
     with patch("aiounifi.Controller.check_unifi_os", return_value=True), patch(
-        "aiounifi.Controller.login", return_value=True,
+        "aiounifi.Controller.login",
+        return_value=True,
     ), patch("aiounifi.Controller.sites", return_value=sites), patch(
         "aiounifi.Controller.site_description", return_value=site_description
     ), patch(

@@ -87,7 +87,9 @@ async def test_climate(
     assert hass.states.get(entity_id).state == HVAC_MODE_OFF
 
     await hass.services.async_call(
-        "climate", "set_fan_mode", {"entity_id": entity_id, "fan_mode": "on"},
+        "climate",
+        "set_fan_mode",
+        {"entity_id": entity_id, "fan_mode": "on"},
     )
     await hass.async_block_till_done()
     vera_device.turn_auto_on.assert_called()
@@ -97,7 +99,9 @@ async def test_climate(
     assert hass.states.get(entity_id).attributes["fan_mode"] == FAN_ON
 
     await hass.services.async_call(
-        "climate", "set_fan_mode", {"entity_id": entity_id, "fan_mode": "off"},
+        "climate",
+        "set_fan_mode",
+        {"entity_id": entity_id, "fan_mode": "off"},
     )
     await hass.async_block_till_done()
     vera_device.turn_auto_on.assert_called()
@@ -107,7 +111,9 @@ async def test_climate(
     assert hass.states.get(entity_id).attributes["fan_mode"] == FAN_AUTO
 
     await hass.services.async_call(
-        "climate", "set_temperature", {"entity_id": entity_id, "temperature": 30},
+        "climate",
+        "set_temperature",
+        {"entity_id": entity_id, "temperature": 30},
     )
     await hass.async_block_till_done()
     vera_device.set_temperature.assert_called_with(30)
@@ -145,7 +151,9 @@ async def test_climate_f(
     update_callback = component_data.controller_data.update_callback
 
     await hass.services.async_call(
-        "climate", "set_temperature", {"entity_id": entity_id, "temperature": 30},
+        "climate",
+        "set_temperature",
+        {"entity_id": entity_id, "temperature": 30},
     )
     await hass.async_block_till_done()
     vera_device.set_temperature.assert_called_with(86)

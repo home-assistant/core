@@ -56,7 +56,9 @@ def dummy_client_fixture(hass):
 async def test_ssdp(hass, dummy_client):
     """Test a ssdp import flow."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_SSDP}, data=MOCK_DISCOVER,
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_SSDP},
+        data=MOCK_DISCOVER,
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "confirm"
@@ -75,7 +77,9 @@ async def test_ssdp_abort(hass):
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_SSDP}, data=MOCK_DISCOVER,
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_SSDP},
+        data=MOCK_DISCOVER,
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
@@ -86,7 +90,9 @@ async def test_ssdp_unable_to_connect(hass, dummy_client):
     dummy_client.start.side_effect = AsyncMock(side_effect=ConnectionFailed)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_SSDP}, data=MOCK_DISCOVER,
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_SSDP},
+        data=MOCK_DISCOVER,
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "confirm"
@@ -107,7 +113,9 @@ async def test_ssdp_update(hass):
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_SSDP}, data=MOCK_DISCOVER,
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_SSDP},
+        data=MOCK_DISCOVER,
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
@@ -119,7 +127,9 @@ async def test_user(hass, aioclient_mock):
     """Test a manual user configuration flow."""
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data=None,
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_USER},
+        data=None,
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -149,7 +159,9 @@ async def test_invalid_ssdp(hass, aioclient_mock):
 
     aioclient_mock.get(MOCK_UPNP_LOCATION, text="")
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data=user_input,
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_USER},
+        data=user_input,
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == f"Arcam FMJ ({MOCK_HOST})"
@@ -166,7 +178,9 @@ async def test_user_wrong(hass, aioclient_mock):
 
     aioclient_mock.get(MOCK_UPNP_LOCATION, status=404)
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data=user_input,
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_USER},
+        data=user_input,
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == f"Arcam FMJ ({MOCK_HOST})"

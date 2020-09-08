@@ -63,7 +63,6 @@ from .const import (
     ZONE_TO_PIN,
     ZONES,
 )
-from .errors import CannotConnect
 from .handlers import HANDLERS
 from .panel import AlarmPanel
 
@@ -258,11 +257,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     # creates a panel data store in hass.data[DOMAIN][CONF_DEVICES]
     await client.async_save_data()
 
-    try:
-        await client.async_connect()
-    except CannotConnect:
-        # this will trigger a retry in the future
-        raise config_entries.ConfigEntryNotReady
+    # if the cfg entry was created we know we could connect to the panel at some point
+    # async_connect will handle retries until it establishes a connection
+    await client.async_connect()
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -355,6 +352,11 @@ class KonnectedView(HomeAssistantView):
                 "unregistered device", status_code=HTTP_BAD_REQUEST
             )
 
+        panel = device.get("panel")
+        if panel is not None:
+            # connect if we haven't already
+            hass.async_create_task(panel.async_connect())
+
         try:
             zone_num = str(payload.get(CONF_ZONE) or PIN_TO_ZONE[payload[CONF_PIN]])
             payload[CONF_ZONE] = zone_num
@@ -389,6 +391,11 @@ class KonnectedView(HomeAssistantView):
             return self.json_message(
                 f"Device {device_id} not configured", status_code=HTTP_NOT_FOUND
             )
+
+        panel = device.get("panel")
+        if panel is not None:
+            # connect if we haven't already
+            hass.async_create_task(panel.async_connect())
 
         # Our data model is based on zone ids but we convert from/to pin ids
         # based on whether they are specified in the request

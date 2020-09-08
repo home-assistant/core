@@ -2,7 +2,7 @@
 import datetime
 import logging
 
-from env_canada import ECRadar
+from env_canada import ECRadar  # pylint: disable=import-error
 import voluptuous as vol
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, Camera

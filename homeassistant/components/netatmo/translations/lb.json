@@ -1,9 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Scho konfigur\u00e9iert. N\u00ebmmen eng Konfiguratioun ass m\u00e9iglech.",
             "authorize_url_timeout": "Z\u00e4itiwwerschreidung beim erstellen vun der Authorisatiouns URL",
-            "missing_configuration": "D\u00ebs Komponent ass net konfigur\u00e9iert. Folleg w.e.g der Dokumentatioun."
+            "missing_configuration": "D\u00ebs Komponent ass net konfigur\u00e9iert. Folleg w.e.g der Dokumentatioun.",
+            "single_instance_allowed": "Scho konfigur\u00e9iert. N\u00ebmmen eng eenzeg Konfiguratioun m\u00e9iglech."
         },
         "create_entry": {
             "default": "Erfollegr\u00e4ich authentifiz\u00e9iert."

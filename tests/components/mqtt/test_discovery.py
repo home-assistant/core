@@ -419,6 +419,8 @@ async def test_missing_discover_abbreviations(hass, mqtt_mock, caplog):
     missing = []
     regex = re.compile(r"(CONF_[a-zA-Z\d_]*) *= *[\'\"]([a-zA-Z\d_]*)[\'\"]")
     for fil in Path(mqtt.__file__).parent.rglob("*.py"):
+        if fil.name == "trigger.py":
+            continue
         with open(fil) as file:
             matches = re.findall(regex, file.read())
             for match in matches:

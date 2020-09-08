@@ -12,11 +12,10 @@ from tests.async_mock import Mock, patch
 from tests.common import get_test_home_assistant
 
 
-def mock_process_creator(error: bool = False) -> asyncio.coroutine:
+def mock_process_creator(error: bool = False):
     """Mock a coroutine that creates a process when yielded."""
 
-    @asyncio.coroutine
-    def communicate() -> Tuple[bytes, bytes]:
+    async def communicate() -> Tuple[bytes, bytes]:
         """Mock a coroutine that runs a process when yielded.
 
         Returns a tuple of (stdout, stderr).

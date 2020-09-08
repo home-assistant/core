@@ -1,11 +1,18 @@
 """The test for the bayesian sensor platform."""
 import json
+from os import path
 import unittest
 
-from homeassistant.components.bayesian import binary_sensor as bayesian
-from homeassistant.const import STATE_UNKNOWN
-from homeassistant.setup import setup_component
+from homeassistant import config as hass_config
+from homeassistant.components.bayesian import DOMAIN, binary_sensor as bayesian
+from homeassistant.components.homeassistant import (
+    DOMAIN as HA_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_RELOAD, STATE_UNKNOWN
+from homeassistant.setup import async_setup_component, setup_component
 
+from tests.async_mock import patch
 from tests.common import get_test_home_assistant
 
 
@@ -488,3 +495,194 @@ class TestBayesianBinarySensor(unittest.TestCase):
 
         for key, attrs in state.attributes.items():
             json.dumps(attrs)
+
+
+async def test_template_error(hass, caplog):
+    """Test sensor with template error."""
+    config = {
+        "binary_sensor": {
+            "name": "Test_Binary",
+            "platform": "bayesian",
+            "observations": [
+                {
+                    "platform": "template",
+                    "value_template": "{{ xyz + 1 }}",
+                    "prob_given_true": 0.9,
+                },
+            ],
+            "prior": 0.2,
+            "probability_threshold": 0.32,
+        }
+    }
+
+    await async_setup_component(hass, "binary_sensor", config)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("binary_sensor.test_binary").state == "off"
+
+    assert "TemplateError" in caplog.text
+    assert "xyz" in caplog.text
+
+
+async def test_update_request_with_template(hass):
+    """Test sensor on template platform observations that gets an update request."""
+    config = {
+        "binary_sensor": {
+            "name": "Test_Binary",
+            "platform": "bayesian",
+            "observations": [
+                {
+                    "platform": "template",
+                    "value_template": "{{states('sensor.test_monitored') == 'off'}}",
+                    "prob_given_true": 0.8,
+                    "prob_given_false": 0.4,
+                }
+            ],
+            "prior": 0.2,
+            "probability_threshold": 0.32,
+        }
+    }
+
+    await async_setup_component(hass, "binary_sensor", config)
+    await async_setup_component(hass, HA_DOMAIN, {})
+
+    await hass.async_block_till_done()
+
+    assert hass.states.get("binary_sensor.test_binary").state == "off"
+
+    await hass.services.async_call(
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: "binary_sensor.test_binary"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("binary_sensor.test_binary").state == "off"
+
+
+async def test_update_request_without_template(hass):
+    """Test sensor on template platform observations that gets an update request."""
+    config = {
+        "binary_sensor": {
+            "name": "Test_Binary",
+            "platform": "bayesian",
+            "observations": [
+                {
+                    "platform": "state",
+                    "entity_id": "sensor.test_monitored",
+                    "to_state": "off",
+                    "prob_given_true": 0.9,
+                    "prob_given_false": 0.4,
+                },
+            ],
+            "prior": 0.2,
+            "probability_threshold": 0.32,
+        }
+    }
+
+    await async_setup_component(hass, "binary_sensor", config)
+    await async_setup_component(hass, HA_DOMAIN, {})
+
+    await hass.async_block_till_done()
+
+    hass.states.async_set("sensor.test_monitored", "on")
+    await hass.async_block_till_done()
+
+    assert hass.states.get("binary_sensor.test_binary").state == "off"
+
+    await hass.services.async_call(
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: "binary_sensor.test_binary"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("binary_sensor.test_binary").state == "off"
+
+
+async def test_monitored_sensor_goes_away(hass):
+    """Test sensor on template platform observations that goes away."""
+    config = {
+        "binary_sensor": {
+            "name": "Test_Binary",
+            "platform": "bayesian",
+            "observations": [
+                {
+                    "platform": "state",
+                    "entity_id": "sensor.test_monitored",
+                    "to_state": "on",
+                    "prob_given_true": 0.9,
+                    "prob_given_false": 0.4,
+                },
+            ],
+            "prior": 0.2,
+            "probability_threshold": 0.32,
+        }
+    }
+
+    await async_setup_component(hass, "binary_sensor", config)
+    await async_setup_component(hass, HA_DOMAIN, {})
+
+    await hass.async_block_till_done()
+
+    hass.states.async_set("sensor.test_monitored", "on")
+    await hass.async_block_till_done()
+
+    assert hass.states.get("binary_sensor.test_binary").state == "on"
+
+    hass.states.async_remove("sensor.test_monitored")
+
+    await hass.async_block_till_done()
+    assert hass.states.get("binary_sensor.test_binary").state == "on"
+
+
+async def test_reload(hass):
+    """Verify we can reload bayesian sensors."""
+
+    config = {
+        "binary_sensor": {
+            "name": "test",
+            "platform": "bayesian",
+            "observations": [
+                {
+                    "platform": "state",
+                    "entity_id": "sensor.test_monitored",
+                    "to_state": "on",
+                    "prob_given_true": 0.9,
+                    "prob_given_false": 0.4,
+                },
+            ],
+            "prior": 0.2,
+            "probability_threshold": 0.32,
+        }
+    }
+
+    await async_setup_component(hass, "binary_sensor", config)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 1
+
+    assert hass.states.get("binary_sensor.test")
+
+    yaml_path = path.join(
+        _get_fixtures_base_path(),
+        "fixtures",
+        "bayesian/configuration.yaml",
+    )
+    with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RELOAD,
+            {},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 1
+
+    assert hass.states.get("binary_sensor.test") is None
+    assert hass.states.get("binary_sensor.test2")
+
+
+def _get_fixtures_base_path():
+    return path.dirname(path.dirname(path.dirname(__file__)))

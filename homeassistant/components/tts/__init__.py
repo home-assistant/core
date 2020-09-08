@@ -46,6 +46,8 @@ ATTR_MESSAGE = "message"
 ATTR_OPTIONS = "options"
 ATTR_PLATFORM = "platform"
 
+BASE_URL_KEY = "tts_base_url"
+
 CONF_BASE_URL = "base_url"
 CONF_CACHE = "cache"
 CONF_CACHE_DIR = "cache_dir"
@@ -115,10 +117,11 @@ async def async_setup(hass, config):
         cache_dir = conf.get(CONF_CACHE_DIR, DEFAULT_CACHE_DIR)
         time_memory = conf.get(CONF_TIME_MEMORY, DEFAULT_TIME_MEMORY)
         base_url = conf.get(CONF_BASE_URL) or get_url(hass)
+        hass.data[BASE_URL_KEY] = base_url
 
         await tts.async_init_cache(use_cache, cache_dir, time_memory, base_url)
-    except (HomeAssistantError, KeyError) as err:
-        _LOGGER.error("Error on cache init %s", err)
+    except (HomeAssistantError, KeyError):
+        _LOGGER.exception("Error on cache init")
         return False
 
     hass.http.register_view(TextToSpeechView(tts))
@@ -251,14 +254,14 @@ class SpeechManager:
                 _init_tts_cache_dir, self.hass, cache_dir
             )
         except OSError as err:
-            raise HomeAssistantError(f"Can't init cache dir {err}")
+            raise HomeAssistantError(f"Can't init cache dir {err}") from err
 
         try:
             cache_files = await self.hass.async_add_executor_job(
                 _get_cache_files, self.cache_dir
             )
         except OSError as err:
-            raise HomeAssistantError(f"Can't read cache dir {err}")
+            raise HomeAssistantError(f"Can't read cache dir {err}") from err
 
         if cache_files:
             self.file_cache.update(cache_files)
@@ -405,9 +408,9 @@ class SpeechManager:
 
         try:
             data = await self.hass.async_add_executor_job(load_speech)
-        except OSError:
+        except OSError as err:
             del self.file_cache[key]
-            raise HomeAssistantError(f"Can't read {voice_file}")
+            raise HomeAssistantError(f"Can't read {voice_file}") from err
 
         self._async_store_to_memcache(key, filename, data)
 
@@ -599,3 +602,8 @@ class TextToSpeechView(HomeAssistantView):
             return web.Response(status=HTTP_NOT_FOUND)
 
         return web.Response(body=data, content_type=content)
+
+
+def get_base_url(hass):
+    """Get base URL."""
+    return hass.data[BASE_URL_KEY]

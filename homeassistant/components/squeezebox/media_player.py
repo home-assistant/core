@@ -1,5 +1,6 @@
 """Support for interfacing to the Logitech SqueezeBox API."""
 import asyncio
+import json
 import logging
 
 from pysqueezebox import Server, async_discover
@@ -10,6 +11,7 @@ from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEn
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_ENQUEUE,
     MEDIA_TYPE_MUSIC,
+    MEDIA_TYPE_PLAYLIST,
     SUPPORT_CLEAR_PLAYLIST,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -18,6 +20,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SEEK,
     SUPPORT_SHUFFLE_SET,
+    SUPPORT_STOP,
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE,
@@ -80,6 +83,7 @@ SUPPORT_SQUEEZEBOX = (
     | SUPPORT_PLAY
     | SUPPORT_SHUFFLE_SET
     | SUPPORT_CLEAR_PLAYLIST
+    | SUPPORT_STOP
 )
 
 PLATFORM_SCHEMA = vol.All(
@@ -224,7 +228,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         "async_call_query",
     )
     platform.async_register_entity_service(
-        SERVICE_SYNC, {vol.Required(ATTR_OTHER_PLAYER): cv.string}, "async_sync",
+        SERVICE_SYNC,
+        {vol.Required(ATTR_OTHER_PLAYER): cv.string},
+        "async_sync",
     )
     platform.async_register_entity_service(SERVICE_UNSYNC, None, "async_unsync")
 
@@ -332,11 +338,20 @@ class SqueezeBoxEntity(MediaPlayerEntity):
     @property
     def media_content_id(self):
         """Content ID of current playing media."""
+        if not self._player.playlist:
+            return None
+        if len(self._player.playlist) > 1:
+            urls = [{"url": track["url"]} for track in self._player.playlist]
+            return json.dumps({"index": self._player.current_index, "urls": urls})
         return self._player.url
 
     @property
     def media_content_type(self):
         """Content type of current playing media."""
+        if not self._player.playlist:
+            return None
+        if len(self._player.playlist) > 1:
+            return MEDIA_TYPE_PLAYLIST
         return MEDIA_TYPE_MUSIC
 
     @property
@@ -422,6 +437,10 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         """Mute (true) or unmute (false) media player."""
         await self._player.async_set_muting(mute)
 
+    async def async_media_stop(self):
+        """Send stop command to media player."""
+        await self._player.async_stop()
+
     async def async_media_play_pause(self):
         """Send pause command to media player."""
         await self._player.async_toggle_pause()
@@ -460,7 +479,12 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         if kwargs.get(ATTR_MEDIA_ENQUEUE):
             cmd = "add"
 
-        await self._player.async_load_url(media_id, cmd)
+        if media_type == MEDIA_TYPE_PLAYLIST:
+            content = json.loads(media_id)
+            await self._player.async_load_playlist(content["urls"], cmd)
+            await self._player.async_index(content["index"])
+        else:
+            await self._player.async_load_url(media_id, cmd)
 
     async def async_set_shuffle(self, shuffle):
         """Enable/disable shuffle mode."""

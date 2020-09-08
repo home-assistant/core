@@ -20,9 +20,9 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
+    PERCENTAGE,
     STATE_UNAVAILABLE,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
 )
 
 from .const import (
@@ -98,7 +98,7 @@ async def test_awair_gen1_sensors(hass):
         "sensor.living_room_humidity",
         f"{AWAIR_UUID}_{SENSOR_TYPES[API_HUMID][ATTR_UNIQUE_ID]}",
         "41.59",
-        {ATTR_UNIT_OF_MEASUREMENT: UNIT_PERCENTAGE, "awair_index": 0.0},
+        {ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE, "awair_index": 0.0},
     )
 
     assert_expected_properties(

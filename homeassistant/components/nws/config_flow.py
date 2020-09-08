@@ -34,7 +34,7 @@ async def validate_input(hass: core.HomeAssistant, data):
         await nws.set_station(station)
     except aiohttp.ClientError as err:
         _LOGGER.error("Could not connect: %s", err)
-        raise CannotConnect
+        raise CannotConnect from err
 
     return {"title": nws.station}
 
