@@ -1031,16 +1031,12 @@ def duration(value):
     Take a datetime and return its duration since now in seconds.
 
     If the date is in the future it will return a negative number.
-
-    If the input is not a datetime object the input will be returned unmodified.
     """
 
     if not isinstance(value, datetime):
-        return value
+        raise TypeError("Expected value to be a datetime")
     if not value.tzinfo:
         value = dt_util.as_local(value)
-    if dt_util.now() < value:
-        return value
     return dt_util.as_timestamp(dt_util.now()) - dt_util.as_timestamp(value)
 
 
