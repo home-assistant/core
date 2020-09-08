@@ -20,7 +20,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.distance import convert as convert_distance
 from homeassistant.util.pressure import convert as convert_pressure
 
-from .const import ATTRIBUTION, CONDITION_MAP, CONF_TRACK_HOME, DEFAULT_NAME, DOMAIN
+from .const import ATTRIBUTION, CONDITION_MAP, DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,16 +75,8 @@ class MetEireannWeather(CoordinatorEntity, WeatherEntity):
         self._name_appendix = "-hourly" if hourly else ""
 
     @property
-    def track_home(self):
-        """Return if we are tracking home."""
-        return self._config.get(CONF_TRACK_HOME, False)
-
-    @property
     def unique_id(self):
         """Return unique ID."""
-        if self.track_home:
-            return f"home{self._name_appendix}"
-
         return f"{self._config[CONF_LATITUDE]}-{self._config[CONF_LONGITUDE]}{self._name_appendix}"
 
     @property
@@ -94,9 +86,6 @@ class MetEireannWeather(CoordinatorEntity, WeatherEntity):
 
         if name is not None:
             return f"{name}{self._name_appendix}"
-
-        if self.track_home:
-            return f"{self.hass.config.location_name}{self._name_appendix}"
 
         return f"{DEFAULT_NAME}{self._name_appendix}"
 

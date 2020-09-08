@@ -8,7 +8,7 @@ from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE, C
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
-from .const import CONF_TRACK_HOME, DOMAIN, HOME_LOCATION_NAME
+from .const import DOMAIN, HOME_LOCATION_NAME
 
 
 @callback
@@ -16,9 +16,6 @@ def configured_instances(hass):
     """Return a set of configured SimpliSafe instances."""
     entries = []
     for entry in hass.config_entries.async_entries(DOMAIN):
-        if entry.data.get("track_home"):
-            entries.append("home")
-            continue
         entries.append(
             f"{entry.data.get(CONF_LATITUDE)}-{entry.data.get(CONF_LONGITUDE)}"
         )
@@ -78,9 +75,3 @@ class MetEireannFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> Dict[str, Any]:
         """Handle configuration by yaml file."""
         return await self.async_step_user(user_input)
-
-    async def async_step_onboarding(self, data=None):
-        """Handle a flow initialized by onboarding."""
-        return self.async_create_entry(
-            title=HOME_LOCATION_NAME, data={CONF_TRACK_HOME: True}
-        )

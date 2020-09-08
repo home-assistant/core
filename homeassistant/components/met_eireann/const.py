@@ -11,8 +11,6 @@ DOMAIN = "met_eireann"
 
 HOME_LOCATION_NAME = "Home"
 
-CONF_TRACK_HOME = "track_home"
-
 ENTITY_ID_SENSOR_FORMAT_HOME = f"{WEATHER_DOMAIN}.met_eireann_{HOME_LOCATION_NAME}"
 
 _LOGGER = logging.getLogger(".")
