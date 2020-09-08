@@ -84,7 +84,9 @@ class HostICMPLib:
 
     def ping(self):
         """Send an ICMP echo request and return True if success."""
-        return icmp_ping(self.ip_address, count=PING_ATTEMPTS_COUNT).is_alive
+        return icmp_ping(
+            self.ip_address, count=PING_ATTEMPTS_COUNT, verify_source=True
+        ).is_alive
 
     def update(self, see):
         """Update device state by sending one or more ping messages."""
