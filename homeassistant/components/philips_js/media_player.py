@@ -11,6 +11,8 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
 )
 from homeassistant.components.media_player.const import (
+    MEDIA_CLASS_CHANNEL,
+    MEDIA_CLASS_CHANNELS,
     MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_CHANNELS,
     SUPPORT_BROWSE_MEDIA,
@@ -288,6 +290,7 @@ class PhilipsTVMediaPlayer(MediaPlayerEntity):
 
         return BrowseMedia(
             title="Channels",
+            media_class=MEDIA_CLASS_CHANNELS,
             media_content_id="",
             media_content_type=MEDIA_TYPE_CHANNELS,
             can_play=False,
@@ -295,6 +298,7 @@ class PhilipsTVMediaPlayer(MediaPlayerEntity):
             children=[
                 BrowseMedia(
                     title=channel,
+                    media_class=MEDIA_CLASS_CHANNEL,
                     media_content_id=channel,
                     media_content_type=MEDIA_TYPE_CHANNEL,
                     can_play=True,
