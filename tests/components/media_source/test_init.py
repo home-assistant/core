@@ -2,6 +2,7 @@
 import pytest
 
 from homeassistant.components import media_source
+from homeassistant.components.media_player.const import MEDIA_CLASS_DIRECTORY
 from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.components.media_source import const
 from homeassistant.setup import async_setup_component
@@ -77,6 +78,7 @@ async def test_websocket_browse_media(hass, hass_ws_client):
         domain=const.DOMAIN,
         identifier="/media",
         title="Local Media",
+        media_class=MEDIA_CLASS_DIRECTORY,
         media_content_type="listing",
         can_play=False,
         can_expand=True,

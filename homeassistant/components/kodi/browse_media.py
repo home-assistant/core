@@ -2,6 +2,14 @@
 
 from homeassistant.components.media_player import BrowseMedia
 from homeassistant.components.media_player.const import (
+    MEDIA_CLASS_ALBUM,
+    MEDIA_CLASS_ARTIST,
+    MEDIA_CLASS_DIRECTORY,
+    MEDIA_CLASS_MOVIE,
+    MEDIA_CLASS_MUSIC,
+    MEDIA_CLASS_PLAYLIST,
+    MEDIA_CLASS_SEASON,
+    MEDIA_CLASS_TV_SHOW,
     MEDIA_TYPE_ALBUM,
     MEDIA_TYPE_ARTIST,
     MEDIA_TYPE_EPISODE,
@@ -25,6 +33,16 @@ EXPANDABLE_MEDIA_TYPES = [
     MEDIA_TYPE_TVSHOW,
     MEDIA_TYPE_SEASON,
 ]
+
+CONTENT_TYPE_MEDIA_CLASS = {
+    "library_music": MEDIA_CLASS_MUSIC,
+    MEDIA_TYPE_SEASON: MEDIA_CLASS_SEASON,
+    MEDIA_TYPE_ALBUM: MEDIA_CLASS_ALBUM,
+    MEDIA_TYPE_ARTIST: MEDIA_CLASS_ARTIST,
+    MEDIA_TYPE_MOVIE: MEDIA_CLASS_MOVIE,
+    MEDIA_TYPE_PLAYLIST: MEDIA_CLASS_PLAYLIST,
+    MEDIA_TYPE_TVSHOW: MEDIA_CLASS_TV_SHOW,
+}
 
 
 async def build_item_response(media_library, payload):
@@ -124,6 +142,7 @@ async def build_item_response(media_library, payload):
         return
 
     return BrowseMedia(
+        media_class=CONTENT_TYPE_MEDIA_CLASS[search_type],
         media_content_id=payload["search_id"],
         media_content_type=search_type,
         title=title,
@@ -177,6 +196,7 @@ def item_payload(item, media_library):
 
     return BrowseMedia(
         title=title,
+        media_class=CONTENT_TYPE_MEDIA_CLASS[item["type"]],
         media_content_type=media_content_type,
         media_content_id=media_content_id,
         can_play=can_play,
@@ -192,6 +212,7 @@ def library_payload(media_library):
     Used by async_browse_media.
     """
     library_info = BrowseMedia(
+        media_class=MEDIA_CLASS_DIRECTORY,
         media_content_id="library",
         media_content_type="library",
         title="Media Library",
