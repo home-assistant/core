@@ -871,7 +871,7 @@ def script_action(value: Any) -> dict:
     return ACTION_TYPE_SCHEMAS[determine_script_action(value)](value)
 
 
-SCRIPT_SCHEMA = vol.All(ensure_list, [script_action])
+SCRIPT_SCHEMA = vol.All(ensure_list, [vol.Any(script_action, dynamic_template)])
 
 EVENT_SCHEMA = vol.Schema(
     {
@@ -1129,8 +1129,12 @@ SCRIPT_ACTION_CHOOSE = "choose"
 SCRIPT_ACTION_WAIT_FOR_TRIGGER = "wait_for_trigger"
 
 
-def determine_script_action(action: dict) -> str:
+def determine_script_action(action: Any) -> str:
     """Determine action type."""
+
+    if not isinstance(action, dict):
+        return SCRIPT_ACTION_CHECK_CONDITION
+
     if CONF_DELAY in action:
         return SCRIPT_ACTION_DELAY
 

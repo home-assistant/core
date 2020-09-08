@@ -901,6 +901,33 @@ async def test_condition_basic(hass):
     assert len(events) == 3
 
 
+async def test_condition_shorthand(hass):
+    """Test if we can use conditions in a script."""
+    event = "test_event"
+    events = async_capture_events(hass, event)
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"event": event},
+            "{{ states.test.entity.state == 'hello' }}",
+            {"event": event},
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    hass.states.async_set("test.entity", "hello")
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert len(events) == 2
+
+    hass.states.async_set("test.entity", "goodbye")
+
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert len(events) == 3
+
+
 @patch("homeassistant.helpers.script.condition.async_from_config")
 async def test_condition_created_once(async_from_config, hass):
     """Test that the conditions do not get created multiple times."""

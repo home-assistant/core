@@ -233,7 +233,7 @@ async def test_two_conditions_with_and(hass, calls):
 
 
 async def test_shorthand_conditions_template(hass, calls):
-    """Test shorthand nation form in conditions."""
+    """Test shorthand notation form in conditions."""
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -255,6 +255,35 @@ async def test_shorthand_conditions_template(hass, calls):
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()
     assert len(calls) == 1
+
+
+async def test_shorthand_condition_template_in_action(hass, calls):
+    """Test shorthand nation form in actions."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": [{"platform": "event", "event_type": "test_event"}],
+                "condition": [],
+                "action": [
+                    {"service": "test.automation"},
+                    "{{ is_state('test.entity', 'hello') }}",
+                    {"service": "test.automation"},
+                ],
+            }
+        },
+    )
+
+    hass.states.async_set("test.entity", "hello")
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+
+    hass.states.async_set("test.entity", "goodbye")
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 3
 
 
 async def test_automation_list_setting(hass, calls):

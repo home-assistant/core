@@ -127,10 +127,13 @@ def make_script_schema(schema, default_script_mode, extra=vol.PREVENT_EXTRA):
 
 
 async def async_validate_action_config(
-    hass: HomeAssistant, config: ConfigType
-) -> ConfigType:
+    hass: HomeAssistant, config: Union[ConfigType, template.Template]
+) -> Union[ConfigType, template.Template]:
     """Validate config."""
     action_type = cv.determine_script_action(config)
+
+    if isinstance(config, template.Template):
+        return config
 
     if action_type == cv.SCRIPT_ACTION_DEVICE_AUTOMATION:
         platform = await device_automation.async_get_device_automation_platform(
@@ -467,9 +470,11 @@ class _ScriptRun:
 
     async def _async_condition_step(self):
         """Test if condition is matching."""
-        self._script.last_action = self._action.get(
-            CONF_ALIAS, self._action[CONF_CONDITION]
-        )
+        self._script.last_action = "template"
+        if not isinstance(self._action, template.Template):
+            self._script.last_action = self._action.get(
+                CONF_ALIAS, self._action[CONF_CONDITION]
+            )
         cond = await self._async_get_condition(self._action)
         check = cond(self._hass, self._variables)
         self._log("Test condition %s: %s", self._script.last_action, check)
