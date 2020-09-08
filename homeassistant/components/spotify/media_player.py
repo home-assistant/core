@@ -122,6 +122,10 @@ CONTENT_TYPE_MEDIA_CLASS = {
 }
 
 
+class MissingMediaInformation(BrowseError):
+    """Missing media required information."""
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -523,26 +527,32 @@ def build_item_response(spotify, user, payload):
         return None
 
     if media_content_type == "categories":
-        return BrowseMedia(
+        media_item = BrowseMedia(
             title=LIBRARY_MAP.get(media_content_id),
             media_class=CONTENT_TYPE_MEDIA_CLASS[media_content_type],
             media_content_id=media_content_id,
             media_content_type=media_content_type,
             can_play=False,
             can_expand=True,
-            children=[
+            children=[],
+        )
+        for item in items:
+            try:
+                item_id = item["id"]
+            except KeyError:
+                _LOGGER.debug("Missing id for media item: %s", item)
+                continue
+            media_item.children.append(
                 BrowseMedia(
                     title=item.get("name"),
                     media_class=MEDIA_CLASS_PLAYLIST,
-                    media_content_id=item["id"],
+                    media_content_id=item_id,
                     media_content_type="category_playlists",
                     thumbnail=fetch_image_url(item, key="icons"),
                     can_play=False,
                     can_expand=True,
                 )
-                for item in items
-            ],
-        )
+            )
 
     if title is None:
         if "name" in media:
@@ -556,9 +566,14 @@ def build_item_response(spotify, user, payload):
         "media_content_id": media_content_id,
         "media_content_type": media_content_type,
         "can_play": media_content_type in PLAYABLE_MEDIA_TYPES,
-        "children": [item_payload(item) for item in items],
+        "children": [],
         "can_expand": True,
     }
+    for item in items:
+        try:
+            response["children"].append(item_payload(item))
+        except MissingMediaInformation:
+            continue
 
     if "images" in media:
         response["thumbnail"] = fetch_image_url(media)
@@ -574,23 +589,29 @@ def item_payload(item):
 
     Used by async_browse_media.
     """
+    try:
+        media_type = item["type"]
+        media_id = item["uri"]
+    except KeyError as err:
+        _LOGGER.debug("Missing type or uri for media item: %s", item)
+        raise MissingMediaInformation from err
 
-    can_expand = item["type"] not in [
+    can_expand = media_type not in [
         MEDIA_TYPE_TRACK,
         MEDIA_TYPE_EPISODE,
     ]
 
     payload = {
         "title": item.get("name"),
-        "media_content_id": item["uri"],
-        "media_content_type": item["type"],
-        "can_play": item["type"] in PLAYABLE_MEDIA_TYPES,
+        "media_content_id": media_id,
+        "media_content_type": media_type,
+        "can_play": media_type in PLAYABLE_MEDIA_TYPES,
         "can_expand": can_expand,
     }
 
     payload = {
         **payload,
-        "media_class": CONTENT_TYPE_MEDIA_CLASS[payload["media_content_type"]],
+        "media_class": CONTENT_TYPE_MEDIA_CLASS[media_type],
     }
 
     if "images" in item:
