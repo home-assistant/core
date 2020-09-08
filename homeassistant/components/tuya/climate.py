@@ -132,8 +132,8 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
 
     @property
     def current_temperature(self):
-        """Return the current temperature."""
-        return self._tuya.current_temperature()
+        temp = float(self.tuya.current_temperature())/2
+        return temp
 
     @property
     def target_temperature(self):
