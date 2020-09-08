@@ -437,7 +437,7 @@ def build_item_response(spotify, user, payload):
         items = media.get("artists", {}).get("items", [])
     elif media_content_type == "current_user_saved_albums":
         media = spotify.current_user_saved_albums(limit=BROWSE_LIMIT)
-        items = media.get("items", [])
+        items = [item["album"] for item in media.get("items", [])]
     elif media_content_type == "current_user_saved_tracks":
         media = spotify.current_user_saved_tracks(limit=BROWSE_LIMIT)
         items = media.get("items", [])
@@ -528,7 +528,7 @@ def build_item_response(spotify, user, payload):
         "media_content_id": media_content_id,
         "media_content_type": media_content_type,
         "can_play": media_content_type in PLAYABLE_MEDIA_TYPES,
-        "children": [item_payload(item) for item in items if "type" in item],
+        "children": [item_payload(item) for item in items],
         "can_expand": True,
     }
 
@@ -552,8 +552,6 @@ def item_payload(item):
         item = item[MEDIA_TYPE_SHOW]
     elif MEDIA_TYPE_ARTIST in item:
         item = item[MEDIA_TYPE_ARTIST]
-    elif MEDIA_TYPE_ALBUM in item and item["type"] != MEDIA_TYPE_TRACK:
-        item = item[MEDIA_TYPE_ALBUM]
 
     can_expand = item["type"] not in [
         MEDIA_TYPE_TRACK,
