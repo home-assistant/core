@@ -51,10 +51,9 @@ CONFIG_SCHEMA = vol.Schema(
 def post_request(event_collector, body, headers, verify_ssl):
     """Post request to Splunk."""
     try:
-        payload = {"host": event_collector, "event": body}
         requests.post(
             event_collector,
-            data=json.dumps(payload, cls=JSONEncoder),
+            data=json.dumps(body, cls=JSONEncoder),
             headers=headers,
             timeout=10,
             verify=verify_ssl,
@@ -95,16 +94,16 @@ def setup(hass, config):
         except ValueError:
             _state = state.state
 
-        json_body = [
-            {
+        json_body = {
+            "time": event.time_fired.timestamp(),
+            "host": name,
+            "event": {
                 "domain": state.domain,
                 "entity_id": state.object_id,
                 "attributes": dict(state.attributes),
-                "time": str(event.time_fired),
                 "value": _state,
-                "host": name,
             }
-        ]
+        }
 
         post_request(event_collector, json_body, headers, verify_ssl)
 
