@@ -196,7 +196,7 @@ def item_payload(item, media_library):
     if thumbnail:
         thumbnail = media_library.thumbnail_url(thumbnail)
 
-    if media_content_type == MEDIA_TYPE_MOVIE and not bool(media_content_id):
+    if media_content_type == MEDIA_TYPE_MOVIE and not media_content_id:
         media_class = MEDIA_CLASS_DIRECTORY
         can_expand = True
     else:
