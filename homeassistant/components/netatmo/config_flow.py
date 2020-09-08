@@ -111,13 +111,16 @@ class NetatmoOptionsFlowHandler(config_entries.OptionsFlow):
         data_schema = vol.Schema(
             {
                 vol.Optional(
-                    CONF_WEATHER_AREAS, default=weather_areas,
+                    CONF_WEATHER_AREAS,
+                    default=weather_areas,
                 ): cv.multi_select(weather_areas),
                 vol.Optional(CONF_NEW_AREA): str,
             }
         )
         return self.async_show_form(
-            step_id="public_weather_areas", data_schema=data_schema, errors=errors,
+            step_id="public_weather_areas",
+            data_schema=data_schema,
+            errors=errors,
         )
 
     async def async_step_public_weather(self, user_input=None):
@@ -169,10 +172,12 @@ class NetatmoOptionsFlowHandler(config_entries.OptionsFlow):
                     ),
                 ): cv.longitude,
                 vol.Required(
-                    CONF_PUBLIC_MODE, default=orig_options.get(CONF_PUBLIC_MODE, "avg"),
+                    CONF_PUBLIC_MODE,
+                    default=orig_options.get(CONF_PUBLIC_MODE, "avg"),
                 ): vol.In(["avg", "max"]),
                 vol.Required(
-                    CONF_SHOW_ON_MAP, default=orig_options.get(CONF_SHOW_ON_MAP, False),
+                    CONF_SHOW_ON_MAP,
+                    default=orig_options.get(CONF_SHOW_ON_MAP, False),
                 ): bool,
             }
         )

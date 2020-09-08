@@ -109,12 +109,18 @@ async def test_user_flow_all_fields(
     assert CONF_APPS not in result["data"]
 
 
-async def test_speaker_options_flow(hass: HomeAssistantType) -> None:
+async def test_speaker_options_flow(
+    hass: HomeAssistantType,
+    vizio_connect: pytest.fixture,
+    vizio_bypass_update: pytest.fixture,
+) -> None:
     """Test options config flow for speaker."""
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_SPEAKER_CONFIG)
-    entry.add_to_hass(hass)
-
-    assert not entry.options
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=MOCK_SPEAKER_CONFIG
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    entry = result["result"]
 
     result = await hass.config_entries.options.async_init(entry.entry_id, data=None)
 
@@ -131,12 +137,18 @@ async def test_speaker_options_flow(hass: HomeAssistantType) -> None:
     assert CONF_APPS not in result["data"]
 
 
-async def test_tv_options_flow_no_apps(hass: HomeAssistantType) -> None:
+async def test_tv_options_flow_no_apps(
+    hass: HomeAssistantType,
+    vizio_connect: pytest.fixture,
+    vizio_bypass_update: pytest.fixture,
+) -> None:
     """Test options config flow for TV without providing apps option."""
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_VALID_TV_CONFIG)
-    entry.add_to_hass(hass)
-
-    assert not entry.options
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=MOCK_USER_VALID_TV_CONFIG
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    entry = result["result"]
 
     result = await hass.config_entries.options.async_init(entry.entry_id, data=None)
 
@@ -156,12 +168,18 @@ async def test_tv_options_flow_no_apps(hass: HomeAssistantType) -> None:
     assert CONF_APPS not in result["data"]
 
 
-async def test_tv_options_flow_with_apps(hass: HomeAssistantType) -> None:
+async def test_tv_options_flow_with_apps(
+    hass: HomeAssistantType,
+    vizio_connect: pytest.fixture,
+    vizio_bypass_update: pytest.fixture,
+) -> None:
     """Test options config flow for TV with providing apps option."""
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_VALID_TV_CONFIG)
-    entry.add_to_hass(hass)
-
-    assert not entry.options
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=MOCK_USER_VALID_TV_CONFIG
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    entry = result["result"]
 
     result = await hass.config_entries.options.async_init(entry.entry_id, data=None)
 
@@ -182,14 +200,23 @@ async def test_tv_options_flow_with_apps(hass: HomeAssistantType) -> None:
     assert result["data"][CONF_APPS] == {CONF_INCLUDE: [CURRENT_APP]}
 
 
-async def test_tv_options_flow_start_with_volume(hass: HomeAssistantType) -> None:
+async def test_tv_options_flow_start_with_volume(
+    hass: HomeAssistantType,
+    vizio_connect: pytest.fixture,
+    vizio_bypass_update: pytest.fixture,
+) -> None:
     """Test options config flow for TV with providing apps option after providing volume step in initial config."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=MOCK_USER_VALID_TV_CONFIG,
-        options={CONF_VOLUME_STEP: VOLUME_STEP},
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=MOCK_USER_VALID_TV_CONFIG
     )
-    entry.add_to_hass(hass)
+    await hass.async_block_till_done()
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    entry = result["result"]
+
+    result = await hass.config_entries.options.async_init(
+        entry.entry_id, data={CONF_VOLUME_STEP: VOLUME_STEP}
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
     assert entry.options
     assert entry.options == {CONF_VOLUME_STEP: VOLUME_STEP}

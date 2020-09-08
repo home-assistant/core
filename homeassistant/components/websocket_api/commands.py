@@ -1,5 +1,6 @@
 """Commands part of Websocket API."""
 import asyncio
+import logging
 
 import voluptuous as vol
 
@@ -7,13 +8,20 @@ from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_READ
 from homeassistant.components.websocket_api.const import ERR_NOT_FOUND
 from homeassistant.const import EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_ALL
 from homeassistant.core import DOMAIN as HASS_DOMAIN, callback
-from homeassistant.exceptions import HomeAssistantError, ServiceNotFound, Unauthorized
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    ServiceNotFound,
+    TemplateError,
+    Unauthorized,
+)
 from homeassistant.helpers import config_validation as cv, entity
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.event import TrackTemplate, async_track_template_result
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.loader import IntegrationNotFound, async_get_integration
 
 from . import const, decorators, messages
+
+_LOGGER = logging.getLogger(__name__)
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 
@@ -32,6 +40,8 @@ def async_register_commands(hass, async_reg):
     async_reg(hass, handle_manifest_list)
     async_reg(hass, handle_manifest_get)
     async_reg(hass, handle_entity_source)
+    async_reg(hass, handle_subscribe_trigger)
+    async_reg(hass, handle_test_condition)
 
 
 def pong_message(iden):
@@ -244,27 +254,30 @@ def handle_render_template(hass, connection, msg):
 
     variables = msg.get("variables")
 
-    entity_ids = msg.get("entity_ids")
-    if entity_ids is None:
-        entity_ids = template.extract_entities(variables)
-
     @callback
-    def state_listener(*_):
-        connection.send_message(
-            messages.event_message(
-                msg["id"], {"result": template.async_render(variables)}
+    def _template_listener(event, updates):
+        track_template_result = updates.pop()
+        result = track_template_result.result
+        if isinstance(result, TemplateError):
+            _LOGGER.error(
+                "TemplateError('%s') " "while processing template '%s'",
+                result,
+                track_template_result.template,
             )
-        )
 
-    if entity_ids and entity_ids != MATCH_ALL:
-        connection.subscriptions[msg["id"]] = async_track_state_change_event(
-            hass, entity_ids, state_listener
-        )
-    else:
-        connection.subscriptions[msg["id"]] = lambda: None
+            result = None
+
+        connection.send_message(messages.event_message(msg["id"], {"result": result}))
+
+    info = async_track_template_result(
+        hass, [TrackTemplate(template, variables)], _template_listener
+    )
+
+    connection.subscriptions[msg["id"]] = info.async_remove
 
     connection.send_result(msg["id"])
-    state_listener()
+
+    hass.loop.call_soon_threadsafe(info.async_refresh)
 
 
 @callback
@@ -308,3 +321,69 @@ def handle_entity_source(hass, connection, msg):
         sources[entity_id] = source
 
     connection.send_result(msg["id"], sources)
+
+
+@callback
+@decorators.websocket_command(
+    {
+        vol.Required("type"): "subscribe_trigger",
+        vol.Required("trigger"): cv.TRIGGER_SCHEMA,
+        vol.Optional("variables"): dict,
+    }
+)
+@decorators.require_admin
+@decorators.async_response
+async def handle_subscribe_trigger(hass, connection, msg):
+    """Handle subscribe trigger command."""
+    # Circular dep
+    # pylint: disable=import-outside-toplevel
+    from homeassistant.helpers import trigger
+
+    trigger_config = await trigger.async_validate_trigger_config(hass, msg["trigger"])
+
+    @callback
+    def forward_triggers(variables, context=None):
+        """Forward events to websocket."""
+        connection.send_message(
+            messages.event_message(
+                msg["id"], {"variables": variables, "context": context}
+            )
+        )
+
+    connection.subscriptions[msg["id"]] = (
+        await trigger.async_initialize_triggers(
+            hass,
+            trigger_config,
+            forward_triggers,
+            const.DOMAIN,
+            const.DOMAIN,
+            connection.logger.log,
+            variables=msg.get("variables"),
+        )
+    ) or (
+        # Some triggers won't return an unsub function. Since the caller expects
+        # a subscription, we're going to fake one.
+        lambda: None
+    )
+    connection.send_result(msg["id"])
+
+
+@decorators.websocket_command(
+    {
+        vol.Required("type"): "test_condition",
+        vol.Required("condition"): cv.CONDITION_SCHEMA,
+        vol.Optional("variables"): dict,
+    }
+)
+@decorators.require_admin
+@decorators.async_response
+async def handle_test_condition(hass, connection, msg):
+    """Handle test condition command."""
+    # Circular dep
+    # pylint: disable=import-outside-toplevel
+    from homeassistant.helpers import condition
+
+    check_condition = await condition.async_from_config(hass, msg["condition"])
+    connection.send_result(
+        msg["id"], {"result": check_condition(hass, msg.get("variables"))}
+    )

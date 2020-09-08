@@ -11,7 +11,7 @@ from yarl import URL
 from homeassistant import config_entries, core, data_entry_flow
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
-from .const import DOMAIN, TYPE_LOCAL, TYPE_OAUTH2
+from .const import DOMAIN as ALMOND_DOMAIN, TYPE_LOCAL, TYPE_OAUTH2
 
 
 async def async_verify_local_connection(hass: core.HomeAssistant, host: str):
@@ -28,11 +28,11 @@ async def async_verify_local_connection(hass: core.HomeAssistant, host: str):
         return False
 
 
-@config_entries.HANDLERS.register(DOMAIN)
+@config_entries.HANDLERS.register(ALMOND_DOMAIN)
 class AlmondFlowHandler(config_entry_oauth2_flow.AbstractOAuth2FlowHandler):
     """Implementation of the Almond OAuth2 config flow."""
 
-    DOMAIN = DOMAIN
+    DOMAIN = ALMOND_DOMAIN
 
     host = None
     hassio_discovery = None

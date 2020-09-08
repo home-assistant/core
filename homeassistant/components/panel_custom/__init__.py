@@ -50,7 +50,7 @@ CONFIG_SCHEMA = vol.Schema(
             cv.ensure_list,
             [
                 vol.All(
-                    cv.deprecated(CONF_WEBCOMPONENT_PATH, invalidation_version="0.115"),
+                    cv.deprecated(CONF_WEBCOMPONENT_PATH),
                     vol.Schema(
                         {
                             vol.Required(CONF_COMPONENT_NAME): cv.string,
@@ -60,9 +60,15 @@ CONFIG_SCHEMA = vol.Schema(
                             ): cv.icon,
                             vol.Optional(CONF_URL_PATH): cv.string,
                             vol.Optional(CONF_CONFIG): dict,
-                            vol.Optional(CONF_WEBCOMPONENT_PATH,): cv.string,
-                            vol.Optional(CONF_JS_URL,): cv.string,
-                            vol.Optional(CONF_MODULE_URL,): cv.string,
+                            vol.Optional(
+                                CONF_WEBCOMPONENT_PATH,
+                            ): cv.string,
+                            vol.Optional(
+                                CONF_JS_URL,
+                            ): cv.string,
+                            vol.Optional(
+                                CONF_MODULE_URL,
+                            ): cv.string,
                             vol.Optional(
                                 CONF_EMBED_IFRAME, default=DEFAULT_EMBED_IFRAME
                             ): cv.boolean,

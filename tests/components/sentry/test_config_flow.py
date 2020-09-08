@@ -34,10 +34,12 @@ async def test_full_user_flow_implementation(hass):
     with patch("homeassistant.components.sentry.config_flow.Dsn"), patch(
         "homeassistant.components.sentry.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.sentry.async_setup_entry", return_value=True,
+        "homeassistant.components.sentry.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"dsn": "http://public@sentry.local/1"},
+            result["flow_id"],
+            {"dsn": "http://public@sentry.local/1"},
         )
 
     assert result2["type"] == "create_entry"
@@ -69,10 +71,12 @@ async def test_user_flow_bad_dsn(hass):
     )
 
     with patch(
-        "homeassistant.components.sentry.config_flow.Dsn", side_effect=BadDsn,
+        "homeassistant.components.sentry.config_flow.Dsn",
+        side_effect=BadDsn,
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"dsn": "foo"},
+            result["flow_id"],
+            {"dsn": "foo"},
         )
 
     assert result2["type"] == RESULT_TYPE_FORM
@@ -86,10 +90,12 @@ async def test_user_flow_unkown_exception(hass):
     )
 
     with patch(
-        "homeassistant.components.sentry.config_flow.Dsn", side_effect=Exception,
+        "homeassistant.components.sentry.config_flow.Dsn",
+        side_effect=Exception,
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"dsn": "foo"},
+            result["flow_id"],
+            {"dsn": "foo"},
         )
 
     assert result2["type"] == RESULT_TYPE_FORM
@@ -99,7 +105,8 @@ async def test_user_flow_unkown_exception(hass):
 async def test_options_flow(hass):
     """Test options config flow."""
     entry = MockConfigEntry(
-        domain=DOMAIN, data={"dsn": "http://public@sentry.local/1"},
+        domain=DOMAIN,
+        data={"dsn": "http://public@sentry.local/1"},
     )
     entry.add_to_hass(hass)
 

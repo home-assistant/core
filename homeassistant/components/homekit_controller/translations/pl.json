@@ -27,6 +27,9 @@
                 "description": "Wprowad\u017a kod parowania HomeKit, aby u\u017cy\u0107 tego akcesorium",
                 "title": "Sparuj z akcesorium HomeKit"
             },
+            "protocol_error": {
+                "description": "Urz\u0105dzenie mo\u017ce nie by\u0107 w trybie parowania i wymaga\u0107 "
+            },
             "user": {
                 "data": {
                     "device": "Urz\u0105dzenie"

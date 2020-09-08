@@ -80,7 +80,7 @@ async def async_setup_entry(hass, config_entry):
         hass.data[DOMAIN][DATA_OPENUV_CLIENT][config_entry.entry_id] = openuv
     except OpenUvError as err:
         _LOGGER.error("Config entry failed: %s", err)
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from err
 
     for component in PLATFORMS:
         hass.async_create_task(

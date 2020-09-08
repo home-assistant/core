@@ -75,7 +75,10 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         }
         if self._bridge.token:
             data[CONF_TOKEN] = self._bridge.token
-        return self.async_create_entry(title=self._title, data=data)
+        return self.async_create_entry(
+            title=self._title,
+            data=data,
+        )
 
     async def _abort_if_already_configured(self):
         device_ip = await self.hass.async_add_executor_job(gethostbyname, self._host)

@@ -46,7 +46,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     # Yes we really do get all these exceptions (hopefully rachiopy switches to requests)
     except RACHIO_API_EXCEPTIONS as error:
         _LOGGER.error("Could not reach the Rachio API: %s", error)
-        raise CannotConnect
+        raise CannotConnect from error
 
     # Return info that you want to store in the config entry.
     return {"title": username}

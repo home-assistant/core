@@ -169,14 +169,15 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self.onvif_config[CONF_PASSWORD] = user_input[CONF_PASSWORD]
             return await self.async_step_profiles()
 
-        # Password is optional and default empty due to some cameras not
-        # allowing you to change ONVIF user settings.
-        # See https://github.com/home-assistant/core/issues/35904
+        # Username and Password are optional and default empty
+        # due to some cameras not allowing you to change ONVIF user settings.
+        # See https://github.com/home-assistant/core/issues/39182
+        # and https://github.com/home-assistant/core/issues/35904
         return self.async_show_form(
             step_id="auth",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_USERNAME): str,
+                    vol.Optional(CONF_USERNAME, default=""): str,
                     vol.Optional(CONF_PASSWORD, default=""): str,
                 }
             ),

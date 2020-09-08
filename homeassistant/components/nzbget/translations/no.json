@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig.",
+            "unknown": "Uventet feil"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes.",
+            "invalid_auth": "Ugyldig godkjenning"
+        },
+        "flow_title": "NZBGet: {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Vert",
+                    "name": "Navn",
+                    "password": "Passord",
+                    "port": "Port",
+                    "ssl": "NZBGet bruker et SSL-sertifikat",
+                    "username": "Brukernavn",
+                    "verify_ssl": "NZBGet bruker et riktig sertifikat"
+                },
+                "title": "Koble til NZBGet"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Oppdater frekvens (sekunder)"
+                }
+            }
+        }
+    }
+}

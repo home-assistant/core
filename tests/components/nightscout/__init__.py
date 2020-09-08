@@ -26,7 +26,10 @@ SERVER_STATUS = ServerStatus.new_from_json_dict(
 
 async def init_integration(hass) -> MockConfigEntry:
     """Set up the Nightscout integration in Home Assistant."""
-    entry = MockConfigEntry(domain=DOMAIN, data={CONF_URL: "https://some.url:1234"},)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_URL: "https://some.url:1234"},
+    )
     with patch(
         "homeassistant.components.nightscout.NightscoutAPI.get_sgvs",
         return_value=GLUCOSE_READINGS,
@@ -43,7 +46,10 @@ async def init_integration(hass) -> MockConfigEntry:
 
 async def init_integration_unavailable(hass) -> MockConfigEntry:
     """Set up the Nightscout integration in Home Assistant."""
-    entry = MockConfigEntry(domain=DOMAIN, data={CONF_URL: "https://some.url:1234"},)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_URL: "https://some.url:1234"},
+    )
     with patch(
         "homeassistant.components.nightscout.NightscoutAPI.get_sgvs",
         side_effect=ClientConnectionError(),
@@ -60,7 +66,10 @@ async def init_integration_unavailable(hass) -> MockConfigEntry:
 
 async def init_integration_empty_response(hass) -> MockConfigEntry:
     """Set up the Nightscout integration in Home Assistant."""
-    entry = MockConfigEntry(domain=DOMAIN, data={CONF_URL: "https://some.url:1234"},)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_URL: "https://some.url:1234"},
+    )
     with patch(
         "homeassistant.components.nightscout.NightscoutAPI.get_sgvs", return_value=[]
     ), patch(

@@ -19,9 +19,9 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
+    PERCENTAGE,
     POWER_WATT,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
     UV_INDEX,
 )
 from homeassistant.core import callback
@@ -51,7 +51,7 @@ DATA_TYPES = OrderedDict(
     [
         ("Temperature", TEMP_CELSIUS),
         ("Temperature2", TEMP_CELSIUS),
-        ("Humidity", UNIT_PERCENTAGE),
+        ("Humidity", PERCENTAGE),
         ("Barometer", ""),
         ("Wind direction", ""),
         ("Rain rate", ""),
@@ -76,7 +76,7 @@ DATA_TYPES = OrderedDict(
         ("Energy usage", ""),
         ("Voltage", ""),
         ("Current", ""),
-        ("Battery numeric", UNIT_PERCENTAGE),
+        ("Battery numeric", PERCENTAGE),
         ("Rssi numeric", "dBm"),
     ]
 )
@@ -90,8 +90,10 @@ def _bytearray_string(data):
     val = cv.string(data)
     try:
         return bytearray.fromhex(val)
-    except ValueError:
-        raise vol.Invalid("Data must be a hex string with multiple of two characters")
+    except ValueError as err:
+        raise vol.Invalid(
+            "Data must be a hex string with multiple of two characters"
+        ) from err
 
 
 def _ensure_device(value):
@@ -154,6 +156,8 @@ async def async_setup(hass, config):
     # Read device_id from the event code add to the data that will end up in the ConfigEntry
     for event_code, event_config in data[CONF_DEVICES].items():
         event = get_rfx_object(event_code)
+        if event is None:
+            continue
         device_id = get_device_id(
             event.device, data_bits=event_config.get(CONF_DATA_BITS)
         )
@@ -161,7 +165,9 @@ async def async_setup(hass, config):
 
     hass.async_create_task(
         hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=data,
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=data,
         )
     )
     return True
@@ -225,6 +231,8 @@ def _get_device_lookup(devices):
     lookup = dict()
     for event_code, event_config in devices.items():
         event = get_rfx_object(event_code)
+        if event is None:
+            continue
         device_id = get_device_id(
             event.device, data_bits=event_config.get(CONF_DATA_BITS)
         )

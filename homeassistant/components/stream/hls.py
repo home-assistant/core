@@ -72,7 +72,8 @@ class HlsSegmentView(StreamView):
             return web.HTTPNotFound()
         headers = {"Content-Type": "video/iso.segment"}
         return web.Response(
-            body=get_m4s(segment.segment, int(sequence)), headers=headers,
+            body=get_m4s(segment.segment, int(sequence)),
+            headers=headers,
         )
 
 

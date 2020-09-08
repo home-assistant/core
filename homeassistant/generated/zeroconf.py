@@ -40,6 +40,9 @@ ZEROCONF = {
     "_hap._tcp.local.": [
         "homekit_controller"
     ],
+    "_http._tcp.local.": [
+        "shelly"
+    ],
     "_ipp._tcp.local.": [
         "ipp"
     ],
@@ -70,6 +73,9 @@ ZEROCONF = {
     ],
     "_wled._tcp.local.": [
         "wled"
+    ],
+    "_xbmc-jsonrpc-h._tcp.local.": [
+        "kodi"
     ]
 }
 
@@ -85,8 +91,10 @@ HOMEKIT = {
     "PowerView": "hunterdouglas_powerview",
     "Presence": "netatmo",
     "Rachio": "rachio",
+    "Socket": "wemo",
     "TRADFRI": "tradfri",
     "Welcome": "netatmo",
     "Wemo": "wemo",
+    "iSmartGate": "gogogate2",
     "tado": "tado"
 }

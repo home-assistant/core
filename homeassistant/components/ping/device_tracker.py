@@ -4,6 +4,7 @@ import logging
 import subprocess
 import sys
 
+from icmplib import SocketPermissionError, ping as icmp_ping
 import voluptuous as vol
 
 from homeassistant import const, util
@@ -16,7 +17,7 @@ from homeassistant.components.device_tracker.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.process import kill_subprocess
 
-from .const import PING_TIMEOUT
+from .const import PING_ATTEMPTS_COUNT, PING_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,7 +32,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-class Host:
+class HostSubProcess:
     """Host object with ping detection."""
 
     def __init__(self, ip_address, dev_id, hass, config):
@@ -72,10 +73,46 @@ class Host:
         _LOGGER.debug("No response from %s failed=%d", self.ip_address, failed)
 
 
+class HostICMPLib:
+    """Host object with ping detection."""
+
+    def __init__(self, ip_address, dev_id, _, config):
+        """Initialize the Host pinger."""
+        self.ip_address = ip_address
+        self.dev_id = dev_id
+        self._count = config[CONF_PING_COUNT]
+
+    def ping(self):
+        """Send an ICMP echo request and return True if success."""
+        return icmp_ping(self.ip_address, count=PING_ATTEMPTS_COUNT).is_alive
+
+    def update(self, see):
+        """Update device state by sending one or more ping messages."""
+        if self.ping():
+            see(dev_id=self.dev_id, source_type=SOURCE_TYPE_ROUTER)
+            return True
+
+        _LOGGER.debug(
+            "No response from %s (%s) failed=%d",
+            self.ip_address,
+            self.dev_id,
+            PING_ATTEMPTS_COUNT,
+        )
+
+
 def setup_scanner(hass, config, see, discovery_info=None):
     """Set up the Host objects and return the update function."""
+
+    try:
+        # Verify we can create a raw socket, or
+        # fallback to using a subprocess
+        icmp_ping("127.0.0.1", count=0, timeout=0)
+        host_cls = HostICMPLib
+    except SocketPermissionError:
+        host_cls = HostSubProcess
+
     hosts = [
-        Host(ip, dev_id, hass, config)
+        host_cls(ip, dev_id, hass, config)
         for (dev_id, ip) in config[const.CONF_HOSTS].items()
     ]
     interval = config.get(

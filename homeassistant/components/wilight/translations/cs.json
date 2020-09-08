@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "not_supported_device": "Toto za\u0159\u00edzen\u00ed WiLight nen\u00ed moment\u00e1ln\u011b podporov\u00e1no.",
+            "not_wilight_device": "Toto za\u0159\u00edzen\u00ed nen\u00ed WiLight"
+        },
+        "flow_title": "WiLight: {name}",
+        "step": {
+            "confirm": {
+                "description": "Chcete nastavit WiLight {name} ? \n\n Podporuje: {components}",
+                "title": "WiLight"
+            }
+        }
+    }
+}

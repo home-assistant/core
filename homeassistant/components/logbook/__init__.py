@@ -3,12 +3,14 @@ from datetime import timedelta
 from itertools import groupby
 import json
 import logging
+import re
 
 import sqlalchemy
 from sqlalchemy.orm import aliased
 import voluptuous as vol
 
 from homeassistant.components import sun
+from homeassistant.components.automation import EVENT_AUTOMATION_TRIGGERED
 from homeassistant.components.history import sqlalchemy_filter_from_include_exclude_conf
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.recorder.models import (
@@ -18,12 +20,15 @@ from homeassistant.components.recorder.models import (
     process_timestamp_to_utc_isoformat,
 )
 from homeassistant.components.recorder.util import session_scope
+from homeassistant.components.script import EVENT_SCRIPT_STARTED
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_DOMAIN,
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_NAME,
+    ATTR_SERVICE,
+    EVENT_CALL_SERVICE,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
     EVENT_LOGBOOK_ENTRY,
@@ -33,7 +38,13 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import DOMAIN as HA_DOMAIN, callback, split_entity_id
+from homeassistant.core import (
+    DOMAIN as HA_DOMAIN,
+    callback,
+    split_entity_id,
+    valid_entity_id,
+)
+from homeassistant.exceptions import InvalidEntityFormatError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import (
     INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
@@ -45,6 +56,10 @@ from homeassistant.helpers.integration_platform import (
 )
 from homeassistant.loader import bind_hass
 import homeassistant.util.dt as dt_util
+
+ENTITY_ID_JSON_TEMPLATE = '"entity_id": "{}"'
+ENTITY_ID_JSON_EXTRACT = re.compile('"entity_id": "([^"]+)"')
+DOMAIN_JSON_EXTRACT = re.compile('"domain": "([^"]+)"')
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,7 +85,14 @@ HOMEASSISTANT_EVENTS = [
     EVENT_HOMEASSISTANT_STOP,
 ]
 
-ALL_EVENT_TYPES = [EVENT_STATE_CHANGED, EVENT_LOGBOOK_ENTRY, *HOMEASSISTANT_EVENTS]
+ALL_EVENT_TYPES = [
+    EVENT_STATE_CHANGED,
+    EVENT_LOGBOOK_ENTRY,
+    EVENT_CALL_SERVICE,
+    *HOMEASSISTANT_EVENTS,
+]
+
+SCRIPT_AUTOMATION_EVENTS = [EVENT_AUTOMATION_TRIGGERED, EVENT_SCRIPT_STARTED]
 
 LOG_MESSAGE_SCHEMA = vol.Schema(
     {
@@ -83,13 +105,13 @@ LOG_MESSAGE_SCHEMA = vol.Schema(
 
 
 @bind_hass
-def log_entry(hass, name, message, domain=None, entity_id=None):
+def log_entry(hass, name, message, domain=None, entity_id=None, context=None):
     """Add an entry to the logbook."""
-    hass.add_job(async_log_entry, hass, name, message, domain, entity_id)
+    hass.add_job(async_log_entry, hass, name, message, domain, entity_id, context)
 
 
 @bind_hass
-def async_log_entry(hass, name, message, domain=None, entity_id=None):
+def async_log_entry(hass, name, message, domain=None, entity_id=None, context=None):
     """Add an entry to the logbook."""
     data = {ATTR_NAME: name, ATTR_MESSAGE: message}
 
@@ -97,7 +119,7 @@ def async_log_entry(hass, name, message, domain=None, entity_id=None):
         data[ATTR_DOMAIN] = domain
     if entity_id is not None:
         data[ATTR_ENTITY_ID] = entity_id
-    hass.bus.async_fire(EVENT_LOGBOOK_ENTRY, data)
+    hass.bus.async_fire(EVENT_LOGBOOK_ENTRY, data, context=context)
 
 
 async def async_setup(hass, config):
@@ -198,24 +220,26 @@ class LogbookView(HomeAssistantView):
 
         hass = request.app["hass"]
 
+        entity_matches_only = "entity_matches_only" in request.query
+
         def json_events():
             """Fetch events and generate JSON."""
             return self.json(
                 _get_events(
                     hass,
-                    self.config,
                     start_day,
                     end_day,
                     entity_id,
                     self.filters,
                     self.entities_filter,
+                    entity_matches_only,
                 )
             )
 
         return await hass.async_add_executor_job(json_events)
 
 
-def humanify(hass, events, entity_attr_cache):
+def humanify(hass, events, entity_attr_cache, context_lookup):
     """Generate a converted list of events into Entry objects.
 
     Will try to group events if possible:
@@ -263,7 +287,18 @@ def humanify(hass, events, entity_attr_cache):
                 data = describe_event(event)
                 data["when"] = event.time_fired_isoformat
                 data["domain"] = domain
-                data["context_user_id"] = event.context_user_id
+                if event.context_user_id:
+                    data["context_user_id"] = event.context_user_id
+                context_event = context_lookup.get(event.context_id)
+                if context_event:
+                    _augment_data_with_context(
+                        data,
+                        data.get(ATTR_ENTITY_ID),
+                        event,
+                        context_event,
+                        entity_attr_cache,
+                        external_events,
+                    )
                 yield data
 
             if event.event_type == EVENT_STATE_CHANGED:
@@ -277,20 +312,33 @@ def humanify(hass, events, entity_attr_cache):
                     # Skip all but the last sensor state
                     continue
 
-                name = entity_attr_cache.get(
-                    entity_id, ATTR_FRIENDLY_NAME, event
-                ) or split_entity_id(entity_id)[1].replace("_", " ")
-
-                yield {
+                data = {
                     "when": event.time_fired_isoformat,
-                    "name": name,
+                    "name": _entity_name_from_event(
+                        entity_id, event, entity_attr_cache
+                    ),
                     "message": _entry_message_from_event(
-                        hass, entity_id, domain, event, entity_attr_cache
+                        entity_id, domain, event, entity_attr_cache
                     ),
                     "domain": domain,
                     "entity_id": entity_id,
-                    "context_user_id": event.context_user_id,
                 }
+
+                if event.context_user_id:
+                    data["context_user_id"] = event.context_user_id
+
+                context_event = context_lookup.get(event.context_id)
+                if context_event and context_event != event:
+                    _augment_data_with_context(
+                        data,
+                        entity_id,
+                        event,
+                        context_event,
+                        entity_attr_cache,
+                        external_events,
+                    )
+
+                yield data
 
             elif event.event_type == EVENT_HOMEASSISTANT_START:
                 if start_stop_events.get(event.time_fired_minute) == 2:
@@ -301,7 +349,6 @@ def humanify(hass, events, entity_attr_cache):
                     "name": "Home Assistant",
                     "message": "started",
                     "domain": HA_DOMAIN,
-                    "context_user_id": event.context_user_id,
                 }
 
             elif event.event_type == EVENT_HOMEASSISTANT_STOP:
@@ -315,7 +362,6 @@ def humanify(hass, events, entity_attr_cache):
                     "name": "Home Assistant",
                     "message": action,
                     "domain": HA_DOMAIN,
-                    "context_user_id": event.context_user_id,
                 }
 
             elif event.event_type == EVENT_LOGBOOK_ENTRY:
@@ -328,37 +374,64 @@ def humanify(hass, events, entity_attr_cache):
                     except IndexError:
                         pass
 
-                yield {
+                data = {
                     "when": event.time_fired_isoformat,
                     "name": event_data.get(ATTR_NAME),
                     "message": event_data.get(ATTR_MESSAGE),
                     "domain": domain,
                     "entity_id": entity_id,
                 }
+                if event.context_user_id:
+                    data["context_user_id"] = event.context_user_id
+
+                context_event = context_lookup.get(event.context_id)
+                if context_event and context_event != event:
+                    _augment_data_with_context(
+                        data,
+                        entity_id,
+                        event,
+                        context_event,
+                        entity_attr_cache,
+                        external_events,
+                    )
+
+                yield data
 
 
 def _get_events(
-    hass, config, start_day, end_day, entity_id=None, filters=None, entities_filter=None
+    hass,
+    start_day,
+    end_day,
+    entity_id=None,
+    filters=None,
+    entities_filter=None,
+    entity_matches_only=False,
 ):
     """Get events for a period of time."""
     entity_attr_cache = EntityAttributeCache(hass)
+    context_lookup = {None: None}
+    entity_id_lower = None
+    apply_sql_entities_filter = True
 
     def yield_events(query):
         """Yield Events that are not filtered away."""
         for row in query.yield_per(1000):
             event = LazyEventPartialState(row)
+            context_lookup.setdefault(event.context_id, event)
             if _keep_event(hass, event, entities_filter):
                 yield event
 
-    with session_scope(hass=hass) as session:
-        if entity_id is not None:
-            entity_ids = [entity_id.lower()]
-            entities_filter = generate_filter([], entity_ids, [], [])
-            apply_sql_entities_filter = False
-        else:
-            entity_ids = None
-            apply_sql_entities_filter = True
+    if entity_id is not None:
+        entity_id_lower = entity_id.lower()
+        if not valid_entity_id(entity_id_lower):
+            raise InvalidEntityFormatError(
+                f"Invalid entity id encountered: {entity_id_lower}. "
+                "Format should be <domain>.<object_id>"
+            )
+        entities_filter = generate_filter([], [entity_id_lower], [], [])
+        apply_sql_entities_filter = False
 
+    with session_scope(hass=hass) as session:
         old_state = aliased(States, name="old_state")
 
         query = (
@@ -366,6 +439,7 @@ def _get_events(
                 Events.event_type,
                 Events.event_data,
                 Events.time_fired,
+                Events.context_id,
                 Events.context_user_id,
                 States.state,
                 States.entity_id,
@@ -403,14 +477,29 @@ def _get_events(
             .filter((Events.time_fired > start_day) & (Events.time_fired < end_day))
         )
 
-        if entity_ids:
-            query = query.filter(
-                (
-                    (States.last_updated == States.last_changed)
-                    & States.entity_id.in_(entity_ids)
+        if entity_id_lower is not None:
+            if entity_matches_only:
+                # When entity_matches_only is provided, contexts and events that do not
+                # contain the entity_id are not included in the logbook response.
+                entity_id_json = ENTITY_ID_JSON_TEMPLATE.format(entity_id_lower)
+                query = query.filter(
+                    (
+                        (States.last_updated == States.last_changed)
+                        & (States.entity_id == entity_id_lower)
+                    )
+                    | (
+                        States.state_id.is_(None)
+                        & Events.event_data.contains(entity_id_json)
+                    )
                 )
-                | (States.state_id.is_(None))
-            )
+            else:
+                query = query.filter(
+                    (
+                        (States.last_updated == States.last_changed)
+                        & (States.entity_id == entity_id_lower)
+                    )
+                    | (States.state_id.is_(None))
+                )
         else:
             query = query.filter(
                 (States.last_updated == States.last_changed)
@@ -424,7 +513,9 @@ def _get_events(
                     entity_filter | (Events.event_type != EVENT_STATE_CHANGED)
                 )
 
-        return list(humanify(hass, yield_events(query), entity_attr_cache))
+        return list(
+            humanify(hass, yield_events(query), entity_attr_cache, context_lookup)
+        )
 
 
 def _keep_event(hass, event, entities_filter):
@@ -432,18 +523,17 @@ def _keep_event(hass, event, entities_filter):
         entity_id = event.entity_id
     elif event.event_type in HOMEASSISTANT_EVENTS:
         entity_id = f"{HA_DOMAIN}."
-    elif event.event_type in hass.data[DOMAIN] and ATTR_ENTITY_ID not in event.data:
-        # If the entity_id isn't described, use the domain that describes
-        # the event for filtering.
-        domain = hass.data[DOMAIN][event.event_type][0]
-        if domain is None:
-            return False
-        entity_id = f"{domain}."
+    elif event.event_type == EVENT_CALL_SERVICE:
+        return False
     else:
-        event_data = event.data
-        entity_id = event_data.get(ATTR_ENTITY_ID)
-        if entity_id is None:
-            domain = event_data.get(ATTR_DOMAIN)
+        entity_id = event.data_entity_id
+        if not entity_id:
+            if event.event_type in hass.data[DOMAIN]:
+                # If the entity_id isn't described, use the domain that describes
+                # the event for filtering.
+                domain = hass.data[DOMAIN][event.event_type][0]
+            else:
+                domain = event.data_domain
             if domain is None:
                 return False
             entity_id = f"{domain}."
@@ -451,7 +541,7 @@ def _keep_event(hass, event, entities_filter):
     return entities_filter is None or entities_filter(entity_id)
 
 
-def _entry_message_from_event(hass, entity_id, domain, event, entity_attr_cache):
+def _entry_message_from_event(entity_id, domain, event, entity_attr_cache):
     """Convert a state to a message for the logbook."""
     # We pass domain in so we don't have to split entity_id again
     state_state = event.state
@@ -539,6 +629,68 @@ def _entry_message_from_event(hass, entity_id, domain, event, entity_attr_cache)
     return f"changed to {state_state}"
 
 
+def _augment_data_with_context(
+    data, entity_id, event, context_event, entity_attr_cache, external_events
+):
+    event_type = context_event.event_type
+
+    # State change
+    context_entity_id = context_event.entity_id
+
+    if entity_id and context_entity_id == entity_id:
+        return
+
+    if context_entity_id:
+        data["context_entity_id"] = context_entity_id
+        data["context_entity_id_name"] = _entity_name_from_event(
+            context_entity_id, context_event, entity_attr_cache
+        )
+        data["context_event_type"] = event_type
+        return
+
+    event_data = context_event.data
+
+    # Call service
+    if event_type == EVENT_CALL_SERVICE:
+        event_data = context_event.data
+        data["context_domain"] = event_data.get(ATTR_DOMAIN)
+        data["context_service"] = event_data.get(ATTR_SERVICE)
+        data["context_event_type"] = event_type
+        return
+
+    if not entity_id:
+        return
+
+    attr_entity_id = event_data.get(ATTR_ENTITY_ID)
+    if not attr_entity_id or (
+        event_type in SCRIPT_AUTOMATION_EVENTS and attr_entity_id == entity_id
+    ):
+        return
+
+    if context_event == event:
+        return
+
+    data["context_entity_id"] = attr_entity_id
+    data["context_entity_id_name"] = _entity_name_from_event(
+        attr_entity_id, context_event, entity_attr_cache
+    )
+    data["context_event_type"] = event_type
+
+    if event_type in external_events:
+        domain, describe_event = external_events[event_type]
+        data["context_domain"] = domain
+        name = describe_event(context_event).get(ATTR_NAME)
+        if name:
+            data["context_name"] = name
+
+
+def _entity_name_from_event(entity_id, event, entity_attr_cache):
+    """Extract the entity name from the event using the cache if possible."""
+    return entity_attr_cache.get(
+        entity_id, ATTR_FRIENDLY_NAME, event
+    ) or split_entity_id(entity_id)[1].replace("_", " ")
+
+
 class LazyEventPartialState:
     """A lazy version of core Event with limited State joined in."""
 
@@ -552,6 +704,9 @@ class LazyEventPartialState:
         "entity_id",
         "state",
         "domain",
+        "context_id",
+        "context_user_id",
+        "time_fired_minute",
     ]
 
     def __init__(self, row):
@@ -565,11 +720,27 @@ class LazyEventPartialState:
         self.entity_id = self._row.entity_id
         self.state = self._row.state
         self.domain = self._row.domain
+        self.context_id = self._row.context_id
+        self.context_user_id = self._row.context_user_id
+        self.time_fired_minute = self._row.time_fired.minute
 
     @property
-    def context_user_id(self):
-        """Context user id of event."""
-        return self._row.context_user_id
+    def data_entity_id(self):
+        """Extract the entity id from the decoded data or json."""
+        if self._event_data:
+            return self._event_data.get(ATTR_ENTITY_ID)
+
+        result = ENTITY_ID_JSON_EXTRACT.search(self._row.event_data)
+        return result and result.group(1)
+
+    @property
+    def data_domain(self):
+        """Extract the domain from the decoded data or json."""
+        if self._event_data:
+            return self._event_data.get(ATTR_DOMAIN)
+
+        result = DOMAIN_JSON_EXTRACT.search(self._row.event_data)
+        return result and result.group(1)
 
     @property
     def attributes(self):
@@ -593,11 +764,6 @@ class LazyEventPartialState:
             else:
                 self._event_data = json.loads(self._row.event_data)
         return self._event_data
-
-    @property
-    def time_fired_minute(self):
-        """Minute the event was fired not converted."""
-        return self._row.time_fired.minute
 
     @property
     def time_fired(self):

@@ -110,7 +110,8 @@ async def test_form_already_configured(hass):
     )
 
     with patch("vilfo.Client.ping", return_value=None), patch(
-        "vilfo.Client.get_board_information", return_value=None,
+        "vilfo.Client.get_board_information",
+        return_value=None,
     ), patch("vilfo.Client.resolve_mac_address", return_value=None):
         first_flow_result2 = await hass.config_entries.flow.async_configure(
             first_flow_result1["flow_id"],
@@ -122,7 +123,8 @@ async def test_form_already_configured(hass):
     )
 
     with patch("vilfo.Client.ping", return_value=None), patch(
-        "vilfo.Client.get_board_information", return_value=None,
+        "vilfo.Client.get_board_information",
+        return_value=None,
     ), patch("vilfo.Client.resolve_mac_address", return_value=None):
         second_flow_result2 = await hass.config_entries.flow.async_configure(
             second_flow_result1["flow_id"],

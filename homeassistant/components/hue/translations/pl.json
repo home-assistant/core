@@ -35,14 +35,14 @@
     },
     "device_automation": {
         "trigger_subtype": {
-            "button_1": "pierwszy przycisk",
-            "button_2": "drugi przycisk",
-            "button_3": "trzeci przycisk",
-            "button_4": "czwarty przycisk",
-            "dim_down": "nast\u0105pi zmniejszenie jasno\u015bci",
-            "dim_up": "nast\u0105pi zwi\u0119kszenie jasno\u015bci",
-            "double_buttons_1_3": "przyciski pierwszy i trzeci",
-            "double_buttons_2_4": "przyciski drugi i czwarty",
+            "button_1": "pierwszy",
+            "button_2": "drugi",
+            "button_3": "trzeci",
+            "button_4": "czwarty",
+            "dim_down": "zmniejszenie jasno\u015bci",
+            "dim_up": "zwi\u0119kszenie jasno\u015bci",
+            "double_buttons_1_3": "pierwszy i trzeci",
+            "double_buttons_2_4": "drugi i czwarty",
             "turn_off": "wy\u0142\u0105cznik",
             "turn_on": "w\u0142\u0105cznik"
         },
