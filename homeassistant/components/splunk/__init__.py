@@ -102,7 +102,7 @@ def setup(hass, config):
                 "entity_id": state.object_id,
                 "attributes": dict(state.attributes),
                 "value": _state,
-            }
+            },
         }
 
         post_request(event_collector, json_body, headers, verify_ssl)
