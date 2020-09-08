@@ -26,7 +26,6 @@ from homeassistant.util.color import (
 import homeassistant.util.dt as dt_util
 
 from . import CONF_LIGHT, DOMAIN as TPLINK_DOMAIN
-from .common import async_add_entities_retry
 
 PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=5)
@@ -62,19 +61,10 @@ SLEEP_TIME = 2
 
 async def async_setup_entry(hass: HomeAssistantType, config_entry, async_add_entities):
     """Set up switches."""
-    await async_add_entities_retry(
-        hass, async_add_entities, hass.data[TPLINK_DOMAIN][CONF_LIGHT], async_add_entity
-    )
+    for device in hass.data[TPLINK_DOMAIN][CONF_LIGHT]:
+        await hass.async_add_executor_job(device.get_sysinfo)
+        async_add_entities([TPLinkSmartBulb(device)], update_before_add=True)
     return True
-
-
-async def async_add_entity(hass, device: SmartBulb, async_add_entities):
-    """Check if device is online and add the entity."""
-    # Attempt to get the sysinfo. If it fails, it will raise an
-    # exception that is caught by async_add_entities_retry which
-    # will try again later.
-    await hass.async_add_executor_job(device.get_sysinfo)
-    async_add_entities([TPLinkSmartBulb(device)], update_before_add=True)
 
 
 def brightness_to_percentage(byt):
@@ -256,7 +246,8 @@ class TPLinkSmartBulb(LightEntity):
 
         except (SmartDeviceException, OSError) as ex:
             _LOGGER.warning(
-                "Retrying in %s seconds for %s|%s due to: %s",
+                "Attempt %s - retrying in %s seconds for %s|%s due to: %s",
+                update_attempt,
                 SLEEP_TIME,
                 self._light_features.host,
                 self._light_features.alias,
@@ -490,7 +481,7 @@ class TPLinkSmartBulb(LightEntity):
         for update_attempt in range(MAX_ATTEMPTS):
             self._is_ready = False
 
-            await self.hass.async_add_executor_job(self.attempt_update)
+            await self.hass.async_add_executor_job(self.attempt_update, update_attempt)
 
             if self._is_ready:
                 self._is_available = True
