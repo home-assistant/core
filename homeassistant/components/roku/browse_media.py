@@ -2,11 +2,21 @@
 
 from homeassistant.components.media_player import BrowseMedia
 from homeassistant.components.media_player.const import (
+    MEDIA_CLASS_APP,
+    MEDIA_CLASS_APPS,
+    MEDIA_CLASS_CHANNEL,
+    MEDIA_CLASS_CHANNELS,
+    MEDIA_CLASS_DIRECTORY,
     MEDIA_TYPE_APP,
     MEDIA_TYPE_APPS,
     MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_CHANNELS,
 )
+
+CONTENT_TYPE_MEDIA_CLASS = {
+    MEDIA_TYPE_APP: MEDIA_CLASS_APP,
+    MEDIA_TYPE_CHANNEL: MEDIA_CLASS_CHANNEL,
+}
 
 PLAYABLE_MEDIA_TYPES = [
     MEDIA_TYPE_APP,
@@ -49,6 +59,7 @@ def build_item_response(coordinator, payload):
         return
 
     return BrowseMedia(
+        media_class=CONTENT_TYPE_MEDIA_CLASS[search_type],
         media_content_id=payload["search_id"],
         media_content_type=search_type,
         title=title,
@@ -84,6 +95,7 @@ def item_payload(item, coordinator):
 
     return BrowseMedia(
         title=title,
+        media_class=CONTENT_TYPE_MEDIA_CLASS[media_content_type],
         media_content_type=media_content_type,
         media_content_id=media_content_id,
         can_play=can_play,
@@ -99,6 +111,7 @@ def library_payload(coordinator):
     Used by async_browse_media.
     """
     library_info = BrowseMedia(
+        media_class=MEDIA_CLASS_DIRECTORY,
         media_content_id="library",
         media_content_type="library",
         title="Media Library",
