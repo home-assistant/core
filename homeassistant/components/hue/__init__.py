@@ -39,7 +39,7 @@ BRIDGE_CONFIG_SCHEMA = vol.Schema(
 
 CONFIG_SCHEMA = vol.Schema(
     vol.All(
-        cv.deprecated(DOMAIN, invalidation_version="0.115.0"),
+        cv.deprecated(DOMAIN),
         {
             DOMAIN: vol.Schema(
                 {
