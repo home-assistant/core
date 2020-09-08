@@ -3,10 +3,10 @@
 from datetime import timedelta
 import logging
 
-from homeassistant.components.sensor import ENTITY_ID_FORMAT
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT, UNIT_PERCENTAGE
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
+from . import OmniLogicEntity
 from .const import COORDINATOR, DOMAIN
 
 TEMP_UNITS = [TEMP_CELSIUS, TEMP_FAHRENHEIT]
@@ -158,66 +158,40 @@ async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None
     async_add_entities(sensors, update_before_add=True)
 
 
-class OmnilogicSensor(Entity):
+class OmnilogicSensor(OmniLogicEntity):
     """Defines an Omnilogic sensor entity."""
 
     def __init__(
         self,
-        coordinator,
-        kind,
-        name,
-        backyard,
-        bow,
-        device_class,
-        icon,
-        unit,
-        sensordata,
+        coordinator: DataUpdateCoordinator,
+        kind: str,
+        name: str,
+        backyard: dict,
+        bow: dict,
+        device_class: str,
+        icon: str,
+        unit: str,
+        sensordata: dict,
     ):
         """Initialize Entities."""
-
-        if bow != {}:
-            sensorname = (
-                backyard["BackyardName"].replace(" ", "_")
-                + "_"
-                + bow["Name"].replace(" ", "_")
-                + "_"
-                + kind
-            )
-        else:
-            sensorname = backyard["BackyardName"].replace(" ", "_") + "_" + kind
-
-        self._kind = kind
-        self._name = None
-        self.entity_id = ENTITY_ID_FORMAT.format(sensorname)
-        self._unique_id = ENTITY_ID_FORMAT.format(sensorname)
-        self._backyard = backyard
-        self._backyard_name = backyard["BackyardName"]
+        super().__init__(
+            coordinator=coordinator,
+            kind=kind,
+            name=name,
+            backyard=backyard,
+            bow=bow,
+            icon=icon,
+            sensordata=sensordata,
+        )
         self._state = None
         self._unit_type = backyard["Unit-of-Measurement"]
         self._device_class = device_class
-        self._icon = icon
-        self._bow = bow
         self._unit = None
-        self.coordinator = coordinator
-        self.bow = bow
-        self.sensordata = sensordata
-        self._attrs = {"MspSystemId": backyard["systemId"]}
-        self.alarms = []
 
     @property
     def should_poll(self) -> bool:
         """Return the polling requirement of the entity."""
         return False
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique, Home Assistant friendly identifier for this entity."""
-        return self._unique_id
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._name
 
     @property
     def device_class(self):
@@ -229,16 +203,6 @@ class OmnilogicSensor(Entity):
     def unit_of_measurement(self):
         """Return the right unit of measure."""
         return self._unit
-
-    @property
-    def icon(self):
-        """Return the icon for the entity."""
-        return self._icon
-
-    @property
-    def device_state_attributes(self):
-        """Return the attributes."""
-        return self._attrs
 
     @property
     def force_update(self):
@@ -519,24 +483,3 @@ class OmnilogicSensor(Entity):
             else:
                 self._state = "off"
         return self._state
-
-    @property
-    def device_info(self):
-        """Define the device as back yard/MSP System."""
-
-        return {
-            "identifiers": {(DOMAIN, self._attrs["MspSystemId"])},
-            "name": self._backyard.get("BackyardName"),
-            "manufacturer": "Hayward",
-            "model": "OmniLogic",
-        }
-
-    async def async_update(self):
-        """Update Omnilogic entity."""
-        await self.coordinator.async_request_refresh()
-
-    async def async_added_to_hass(self):
-        """Subscribe to updates."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
-        )
