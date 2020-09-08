@@ -86,6 +86,13 @@ MOCK_CALLS_WS = {
     "timeout": 31,
     "name": "HomeAssistant",
 }
+MOCK_CALLS_DEVICEINFO = {
+    "host": "fake",
+    "port": 8002,
+    "token": "987654321",
+    "timeout": 8,
+    "name": "HomeAssistant",
+}
 
 MOCK_ENTRY_WS = {
     CONF_IP_ADDRESS: "test",
@@ -137,6 +144,7 @@ def remotews_fixture():
         remote = Mock()
         remote.__enter__ = Mock()
         remote.__exit__ = Mock()
+        remote.rest_device_info.return_value = {"device": {"type": "Samsung SmartTV"}}
         remote_class.return_value = remote
         remote_class().__enter__().token = "FAKE_TOKEN"
         yield remote
@@ -175,20 +183,28 @@ async def test_setup_without_turnon(hass: HomeAssistantType, remote: Mock):
     assert hass.states.get(ENTITY_ID_NOTURNON)
 
 
-async def test_setup_websocket(hass: HomeAssistantType, remotews, mock_now: Mock):
+async def test_setup_websocket(hass: HomeAssistantType, remotews: Mock, mock_now: Mock):
     """Test setup of platform."""
-    with patch("homeassistant.components.samsungtv.bridge.SamsungTVWS") as remote_class:
+    with patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVWS"
+    ) as remote_class, patch(
+        "homeassistant.components.samsungtv.config_flow.gethostbyname"
+    ):
         enter = Mock()
         type(enter).token = PropertyMock(return_value="987654321")
         remote = Mock()
         remote.__enter__ = Mock(return_value=enter)
         remote.__exit__ = Mock()
+        remote.rest_device_info.return_value = {"device": {"type": "Samsung SmartTV"}}
         remote_class.return_value = remote
 
         await setup_samsungtv(hass, MOCK_CONFIGWS)
 
-        assert remote_class.call_count == 1
-        assert remote_class.call_args_list == [call(**MOCK_CALLS_WS)]
+        assert remote_class.call_count == 2
+        assert remote_class.call_args_list == [
+            call(**MOCK_CALLS_WS),
+            call(**MOCK_CALLS_DEVICEINFO),
+        ]
         assert hass.states.get(ENTITY_ID)
 
 

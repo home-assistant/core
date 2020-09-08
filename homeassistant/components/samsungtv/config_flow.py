@@ -78,7 +78,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(title=self._title, data=data)
 
     async def _abort_if_already_configured(self):
-        device_ip = await self.hass.async_add_executor_job(gethostbyname(self._host))
+        device_ip = await self.hass.async_add_executor_job(gethostbyname, self._host)
         for entry in self._async_current_entries():
 
             # update user configured or unique_id=ip entries
@@ -117,21 +117,31 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         LOGGER.debug("No working config found")
         raise data_entry_flow.AbortFlow(RESULT_NOT_SUCCESSFUL)
 
-    def _get_and_check_device_info(self):
+    async def _get_and_check_device_info(self):
         """Try to get the device info."""
-        for port in WEBSOCKET_PORTS:
-            self._device_info = SamsungTVBridge.get_bridge(
-                METHOD_WEBSOCKET, self._host, port
-            ).device_info()
-            if self._device_info:
-                device_type = self._device_info.get("device", {}).get("type")
-                if device_type and device_type != "Samsung SmartTV":
-                    raise data_entry_flow.AbortFlow(RESULT_NOT_SUPPORTED)
-                self._model = self._device_info.get("device", {}).get("modelName")
-                return
-            # this will also fail on non-websocket devices - todo
-            # else:
-            #    raise data_entry_flow.AbortFlow(RESULT_NOT_SUPPORTED)
+        if self._bridge:
+            self._device_info = await self.hass.async_add_executor_job(
+                self._bridge.device_info
+            )
+        else:
+            for port in WEBSOCKET_PORTS:
+                self._device_info = await self.hass.async_add_executor_job(
+                    SamsungTVBridge.get_bridge(
+                        METHOD_WEBSOCKET, self._host, port
+                    ).device_info
+                )
+                if self._device_info:
+                    break
+
+        if self._device_info:
+            device_type = self._device_info.get("device", {}).get("type")
+            if device_type and device_type != "Samsung SmartTV":
+                raise data_entry_flow.AbortFlow(RESULT_NOT_SUPPORTED)
+            self._model = self._device_info.get("device", {}).get("modelName")
+            return
+
+        if self._bridge and self._bridge.method == METHOD_WEBSOCKET:
+            raise data_entry_flow.AbortFlow(RESULT_NOT_SUPPORTED)
 
     async def async_step_import(self, user_input=None):
         """Handle configuration by yaml file."""
@@ -147,6 +157,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self._abort_if_already_configured()
 
             await self.hass.async_add_executor_job(self._try_connect)
+            await self._get_and_check_device_info()
 
             return self._get_entry()
 
@@ -164,7 +175,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._id = self._id[5:]
 
         await self.async_set_unique_id(self._id)
-        await self.hass.async_add_executor_job(self._get_and_check_device_info)
+        await self._get_and_check_device_info()
 
         self._manufacturer = user_input.get(ATTR_UPNP_MANUFACTURER)
         if not self._model:
@@ -184,7 +195,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if self._id:
             await self.async_set_unique_id(self._id)
-        await self.hass.async_add_executor_job(self._get_and_check_device_info)
+        await self._get_and_check_device_info()
 
         self._mac = user_input[ATTR_PROPERTIES].get("deviceid")
         self._manufacturer = user_input[ATTR_PROPERTIES].get("manufacturer")

@@ -89,6 +89,13 @@ AUTODETECT_WEBSOCKET_SSL = {
     "timeout": 31,
     "token": None,
 }
+DEVICEINFO_WEBSOCKET_SSL = {
+    "host": "fake_host",
+    "name": "HomeAssistant",
+    "port": 8002,
+    "timeout": 8,
+    "token": "123456789",
+}
 
 
 @pytest.fixture(name="remote")
@@ -534,6 +541,7 @@ async def test_autodetect_websocket(
         remote = Mock()
         remote.__enter__ = Mock(return_value=enter)
         remote.__exit__ = Mock(return_value=False)
+        remote.rest_device_info.return_value = {"device": {"type": "Samsung SmartTV"}}
         remotews.return_value = remote
 
         result = await hass.config_entries.flow.async_init(
@@ -542,11 +550,14 @@ async def test_autodetect_websocket(
         assert result["type"] == "create_entry"
         assert result["data"][CONF_METHOD] == "websocket"
         assert result["data"][CONF_TOKEN] == "123456789"
-        assert remotews.call_count == 1
-        assert remotews.call_args_list == [call(**AUTODETECT_WEBSOCKET_SSL)]
+        assert remotews.call_count == 2
+        assert remotews.call_args_list == [
+            call(**AUTODETECT_WEBSOCKET_SSL),
+            call(**DEVICEINFO_WEBSOCKET_SSL),
+        ]
 
 
-async def test_autodetect_websocket_ssl(
+async def _test_autodetect_websocket_ssl(
     hass: HomeAssistantType, remote: Mock, remotews: Mock
 ):
     """Test for send key with autodetection of protocol."""
@@ -561,6 +572,7 @@ async def test_autodetect_websocket_ssl(
         remote = Mock()
         remote.__enter__ = Mock(return_value=enter)
         remote.__exit__ = Mock(return_value=False)
+        remote.rest_device_info.return_value = {"device": {"type": "Samsung SmartTV"}}
         remotews.return_value = remote
 
         result = await hass.config_entries.flow.async_init(
@@ -612,6 +624,7 @@ async def test_autodetect_legacy(hass: HomeAssistantType, remote: Mock):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "user"}, data=MOCK_USER_DATA
         )
+        print(result)
         assert result["type"] == "create_entry"
         assert result["data"][CONF_METHOD] == "legacy"
         assert remote.call_count == 1
