@@ -25,7 +25,10 @@ from homeassistant.helpers.event import (
     async_track_state_change_event,
     async_track_template_result,
 )
+from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.template import result_as_boolean
+
+from . import DOMAIN, PLATFORMS
 
 ATTR_OBSERVATIONS = "observations"
 ATTR_OCCURRED_OBSERVATION_ENTITIES = "occurred_observation_entities"
@@ -106,6 +109,8 @@ def update_probability(prior, prob_given_true, prob_given_false):
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Bayesian Binary sensor."""
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+
     name = config[CONF_NAME]
     observations = config[CONF_OBSERVATIONS]
     prior = config[CONF_PRIOR]

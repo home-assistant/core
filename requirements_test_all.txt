@@ -370,7 +370,7 @@ hole==0.5.1
 holidays==0.10.3
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200904.0
+home-assistant-frontend==20200908.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -692,7 +692,7 @@ pyisy==2.0.2
 pykira==0.1.1
 
 # homeassistant.components.kodi
-pykodi==0.1.1
+pykodi==0.1.2
 
 # homeassistant.components.lastfm
 pylast==3.3.0
@@ -830,7 +830,7 @@ python-openzwave-mqtt==1.0.5
 python-songpal==0.12
 
 # homeassistant.components.synology_dsm
-python-synology==0.8.2
+python-synology==0.9.0
 
 # homeassistant.components.tado
 python-tado==0.8.1

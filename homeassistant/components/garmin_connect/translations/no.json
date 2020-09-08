@@ -15,7 +15,8 @@
                     "password": "Passord",
                     "username": "Brukernavn"
                 },
-                "description": "Fyll inn legitimasjonen din."
+                "description": "Fyll inn legitimasjonen din.",
+                "title": ""
             }
         }
     }

@@ -1,6 +1,5 @@
 """Helpers to execute scripts."""
 import asyncio
-from copy import deepcopy
 from datetime import datetime, timedelta
 from functools import partial
 import itertools
@@ -572,7 +571,7 @@ class _ScriptRun:
             "" if delay is None else f" (timeout: {timedelta(seconds=delay)})",
         )
 
-        variables = deepcopy(self._variables)
+        variables = {**self._variables}
         self._variables["wait"] = {"remaining": delay, "trigger": None}
 
         async def async_done(variables, context=None):

@@ -13,8 +13,10 @@
                     "mydevolo_url": "mydevolo URL",
                     "password": "Passord",
                     "username": "E-postadresse / devolo-ID"
-                }
+                },
+                "title": ""
             }
         }
-    }
+    },
+    "title": ""
 }

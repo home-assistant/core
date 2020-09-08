@@ -6,6 +6,7 @@ from typing import Tuple
 from aiohttp import web
 
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.media_player.const import MEDIA_CLASS_DIRECTORY
 from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.components.media_source.error import Unresolvable
 from homeassistant.core import HomeAssistant, callback
@@ -83,6 +84,8 @@ class LocalSource(MediaSource):
         full_path = Path(self.hass.config.path("media", location))
 
         if not full_path.exists():
+            if location == "":
+                raise BrowseError("Media directory does not exist.")
             raise BrowseError("Path does not exist.")
 
         if not full_path.is_dir():
@@ -112,6 +115,7 @@ class LocalSource(MediaSource):
         media = BrowseMediaSource(
             domain=DOMAIN,
             identifier=f"{source_dir_id}/{path.relative_to(self.hass.config.path('media'))}",
+            media_class=MEDIA_CLASS_DIRECTORY,
             media_content_type="directory",
             title=title,
             can_play=is_file,

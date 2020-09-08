@@ -311,7 +311,9 @@ class SynoApi:
     def _fetch_device_configuration(self):
         """Fetch initial device config."""
         self.information = self.dsm.information
+        self.information.update()
         self.network = self.dsm.network
+        self.network.update()
 
         if self._with_security:
             self.security = self.dsm.security
@@ -444,7 +446,7 @@ class SynologyDSMDeviceEntity(SynologyDSMEntity):
         self._device_type = None
 
         if "volume" in entity_type:
-            volume = self._api.storage._get_volume(self._device_id)
+            volume = self._api.storage.get_volume(self._device_id)
             # Volume does not have a name
             self._device_name = volume["id"].replace("_", " ").capitalize()
             self._device_manufacturer = "Synology"
@@ -457,7 +459,7 @@ class SynologyDSMDeviceEntity(SynologyDSMEntity):
                 .replace("shr", "SHR")
             )
         elif "disk" in entity_type:
-            disk = self._api.storage._get_disk(self._device_id)
+            disk = self._api.storage.get_disk(self._device_id)
             self._device_name = disk["name"]
             self._device_manufacturer = disk["vendor"]
             self._device_model = disk["model"].strip()

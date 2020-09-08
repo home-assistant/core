@@ -446,6 +446,7 @@ omit =
     homeassistant/components/knx/climate.py
     homeassistant/components/knx/cover.py
     homeassistant/components/kodi/__init__.py
+    homeassistant/components/kodi/browse_media.py
     homeassistant/components/kodi/const.py
     homeassistant/components/kodi/media_player.py
     homeassistant/components/kodi/notify.py
@@ -656,11 +657,6 @@ omit =
     homeassistant/components/plaato/*
     homeassistant/components/plex/media_player.py
     homeassistant/components/plex/sensor.py
-    homeassistant/components/plugwise/__init__.py
-    homeassistant/components/plugwise/binary_sensor.py
-    homeassistant/components/plugwise/climate.py
-    homeassistant/components/plugwise/sensor.py
-    homeassistant/components/plugwise/switch.py
     homeassistant/components/plum_lightpad/light.py
     homeassistant/components/pocketcasts/sensor.py
     homeassistant/components/point/*
@@ -759,6 +755,7 @@ omit =
     homeassistant/components/shodan/sensor.py
     homeassistant/components/shelly/__init__.py
     homeassistant/components/shelly/binary_sensor.py
+    homeassistant/components/shelly/cover.py
     homeassistant/components/shelly/entity.py
     homeassistant/components/shelly/light.py
     homeassistant/components/shelly/sensor.py

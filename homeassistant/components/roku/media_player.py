@@ -10,6 +10,11 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
 )
 from homeassistant.components.media_player.const import (
+    MEDIA_CLASS_APP,
+    MEDIA_CLASS_APPS,
+    MEDIA_CLASS_CHANNEL,
+    MEDIA_CLASS_CHANNELS,
+    MEDIA_CLASS_DIRECTORY,
     MEDIA_TYPE_APP,
     MEDIA_TYPE_CHANNEL,
     SUPPORT_BROWSE_MEDIA,

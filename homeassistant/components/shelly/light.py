@@ -1,8 +1,20 @@
 """Light for Shelly."""
+from typing import Optional
+
 from aioshelly import Block
 
-from homeassistant.components.light import SUPPORT_BRIGHTNESS, LightEntity
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP,
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR_TEMP,
+    LightEntity,
+)
 from homeassistant.core import callback
+from homeassistant.util.color import (
+    color_temperature_kelvin_to_mired,
+    color_temperature_mired_to_kelvin,
+)
 
 from . import ShellyDeviceWrapper
 from .const import DOMAIN
@@ -30,6 +42,13 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         self._supported_features = 0
         if hasattr(block, "brightness"):
             self._supported_features |= SUPPORT_BRIGHTNESS
+        if hasattr(block, "colorTemp"):
+            self._supported_features |= SUPPORT_COLOR_TEMP
+
+    @property
+    def supported_features(self) -> int:
+        """Supported features."""
+        return self._supported_features
 
     @property
     def is_on(self) -> bool:
@@ -40,7 +59,7 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         return self.block.output
 
     @property
-    def brightness(self):
+    def brightness(self) -> Optional[int]:
         """Brightness of light."""
         if self.control_result:
             brightness = self.control_result["brightness"]
@@ -49,21 +68,47 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         return int(brightness / 100 * 255)
 
     @property
-    def supported_features(self):
-        """Supported features."""
-        return self._supported_features
+    def color_temp(self) -> Optional[float]:
+        """Return the CT color value in mireds."""
+        if self.control_result:
+            color_temp = self.control_result["temp"]
+        else:
+            color_temp = self.block.colorTemp
 
-    async def async_turn_on(
-        self, brightness=None, **kwargs
-    ):  # pylint: disable=arguments-differ
+        # If you set DUO to max mireds in Shelly app, 2700K,
+        # It reports 0 temp
+        if color_temp == 0:
+            return self.max_mireds
+
+        return int(color_temperature_kelvin_to_mired(color_temp))
+
+    @property
+    def min_mireds(self) -> float:
+        """Return the coldest color_temp that this light supports."""
+        return color_temperature_kelvin_to_mired(6500)
+
+    @property
+    def max_mireds(self) -> float:
+        """Return the warmest color_temp that this light supports."""
+        return color_temperature_kelvin_to_mired(2700)
+
+    async def async_turn_on(self, **kwargs) -> None:
         """Turn on light."""
         params = {"turn": "on"}
-        if brightness is not None:
-            params["brightness"] = int(brightness / 255 * 100)
+        if ATTR_BRIGHTNESS in kwargs:
+            tmp_brightness = kwargs[ATTR_BRIGHTNESS]
+            params["brightness"] = int(tmp_brightness / 255 * 100)
+        if ATTR_COLOR_TEMP in kwargs:
+            color_temp = color_temperature_mired_to_kelvin(kwargs[ATTR_COLOR_TEMP])
+            if color_temp > 6500:
+                color_temp = 6500
+            elif color_temp < 2700:
+                color_temp = 2700
+            params["temp"] = int(color_temp)
         self.control_result = await self.block.set_state(**params)
         self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs) -> None:
         """Turn off light."""
         self.control_result = await self.block.set_state(turn="off")
         self.async_write_ha_state()
