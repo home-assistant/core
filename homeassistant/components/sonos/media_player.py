@@ -17,6 +17,14 @@ import voluptuous as vol
 from homeassistant.components.media_player import BrowseMedia, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_ENQUEUE,
+    MEDIA_CLASS_ALBUM,
+    MEDIA_CLASS_ARTIST,
+    MEDIA_CLASS_COMPOSER,
+    MEDIA_CLASS_CONTRIBUTING_ARTIST,
+    MEDIA_CLASS_DIRECTORY,
+    MEDIA_CLASS_GENRE,
+    MEDIA_CLASS_PLAYLIST,
+    MEDIA_CLASS_TRACK,
     MEDIA_TYPE_ALBUM,
     MEDIA_TYPE_ARTIST,
     MEDIA_TYPE_COMPOSER,
@@ -102,6 +110,23 @@ EXPANDABLE_MEDIA_TYPES = [
     SONOS_COMPOSER,
     SONOS_PLAYLISTS,
 ]
+
+SONOS_TO_MEDIA_CLASSES = {
+    SONOS_ALBUM: MEDIA_CLASS_ALBUM,
+    SONOS_ALBUM_ARTIST: MEDIA_CLASS_ARTIST,
+    SONOS_ARTIST: MEDIA_CLASS_CONTRIBUTING_ARTIST,
+    SONOS_COMPOSER: MEDIA_CLASS_COMPOSER,
+    SONOS_GENRE: MEDIA_CLASS_GENRE,
+    SONOS_PLAYLISTS: MEDIA_CLASS_PLAYLIST,
+    SONOS_TRACKS: MEDIA_CLASS_TRACK,
+    "object.container.album.musicAlbum": MEDIA_CLASS_ALBUM,
+    "object.container.genre.musicGenre": MEDIA_CLASS_PLAYLIST,
+    "object.container.person.composer": MEDIA_CLASS_PLAYLIST,
+    "object.container.person.musicArtist": MEDIA_CLASS_ARTIST,
+    "object.container.playlistContainer.sameArtist": MEDIA_CLASS_ARTIST,
+    "object.container.playlistContainer": MEDIA_CLASS_PLAYLIST,
+    "object.item.audioItem.musicTrack": MEDIA_CLASS_TRACK,
+}
 
 SONOS_TO_MEDIA_TYPES = {
     SONOS_ALBUM: MEDIA_TYPE_ALBUM,
@@ -1462,9 +1487,12 @@ def build_item_response(media_library, payload):
         except IndexError:
             title = LIBRARY_TITLES_MAPPING[payload["idstring"]]
 
+    media_class = SONOS_TO_MEDIA_CLASSES[MEDIA_TYPES_TO_SONOS[payload["search_type"]]]
+
     return BrowseMedia(
         title=title,
         thumbnail=thumbnail,
+        media_class=media_class,
         media_content_id=payload["idstring"],
         media_content_type=payload["search_type"],
         children=[item_payload(item) for item in media],
@@ -1482,6 +1510,7 @@ def item_payload(item):
     return BrowseMedia(
         title=item.title,
         thumbnail=getattr(item, "album_art_uri", None),
+        media_class=SONOS_TO_MEDIA_CLASSES[get_media_type(item)],
         media_content_id=get_content_id(item),
         media_content_type=SONOS_TO_MEDIA_TYPES[get_media_type(item)],
         can_play=can_play(item.item_class),
@@ -1497,6 +1526,7 @@ def library_payload(media_library):
     """
     return BrowseMedia(
         title="Music Library",
+        media_class=MEDIA_CLASS_DIRECTORY,
         media_content_id="library",
         media_content_type="library",
         can_play=False,
