@@ -15,7 +15,14 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import color as colorutil
 
 from . import TuyaDevice
-from .const import DOMAIN, TUYA_DATA, TUYA_DISCOVERY_NEW
+from .const import (
+    DOMAIN,
+    TUYA_DATA,
+    TUYA_DISCOVERY_NEW,
+    NORMAL_LIGHT_RANGE,
+    TUYA_LIGHT_TURN_ON_RANGE,
+    TUYA_LIGHT_RANGE,
+)
 
 PARALLEL_UPDATES = 0
 
@@ -75,7 +82,9 @@ class TuyaLight(TuyaDevice, LightEntity):
         """Return the brightness of the light."""
         if self._tuya.brightness() is None:
             return None
-        scaled_brightness = _scale(int(self._tuya.brightness()), (10, 1000), (1, 255))
+        scaled_brightness = _scale(
+            int(self._tuya.brightness()), TUYA_LIGHT_RANGE, NORMAL_LIGHT_RANGE
+        )
         return round(scaled_brightness)
 
     @property
@@ -115,7 +124,9 @@ class TuyaLight(TuyaDevice, LightEntity):
         ):
             self._tuya.turn_on()
         if ATTR_BRIGHTNESS in kwargs:
-            scaled_brightness = _scale(kwargs[ATTR_BRIGHTNESS], (0, 255), (27, 255))
+            scaled_brightness = _scale(
+                kwargs[ATTR_BRIGHTNESS], NORMAL_LIGHT_RANGE, TUYA_LIGHT_TURN_ON_RANGE
+            )
             self._tuya.set_brightness(round(scaled_brightness))
         if ATTR_HS_COLOR in kwargs:
             self._tuya.set_color(kwargs[ATTR_HS_COLOR])
