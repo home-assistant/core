@@ -33,6 +33,8 @@ PLATFORMS = ["sensor"]
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Omnilogic component."""
+    hass.data.setdefault(DOMAIN, {})
+
     return True
 
 
@@ -48,11 +50,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     try:
         await api.connect()
         await api.get_telemetry_data()
-    except LoginException as e:
-        _LOGGER.debug(f"OmniLogic login error: {e}")
-        raise PlatformNotReady
-    except OmniLogicException as e:
-        _LOGGER.debug(f"OmniLogic API error: {e}")
+    except LoginException as error:
+        _LOGGER.debug("OmniLogic login error: %s", error)
+        raise PlatformNotReady from error
+    except OmniLogicException as error:
+        _LOGGER.debug("OmniLogic API error: %s", error)
 
     coordinator = OmniLogicUpdateCoordinator(
         hass=hass,
@@ -65,7 +67,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if not coordinator.last_update_success:
         raise ConfigEntryNotReady
 
-    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         COORDINATOR: coordinator,
         OMNI_API: api,

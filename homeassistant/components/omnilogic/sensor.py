@@ -3,14 +3,14 @@
 from datetime import timedelta
 import logging
 
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT, UNIT_PERCENTAGE
+from homeassistant.const import PERCENTAGE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import OmniLogicEntity
 from .const import COORDINATOR, DOMAIN
 
 TEMP_UNITS = [TEMP_CELSIUS, TEMP_FAHRENHEIT]
-PERCENT_UNITS = [UNIT_PERCENTAGE, UNIT_PERCENTAGE]
+PERCENT_UNITS = [PERCENTAGE, PERCENTAGE]
 SALT_UNITS = ["g/L", "ppm"]
 
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -213,7 +213,7 @@ class OmnilogicSensor(OmniLogicEntity):
     def state(self):
         """Return the state."""
 
-        _LOGGER.debug(f"Updating state of sensor: {self._name}")
+        _LOGGER.debug("Updating state of sensor: %s", self._name)
         if self._kind == "water_temperature":
             sensordata = None
 
