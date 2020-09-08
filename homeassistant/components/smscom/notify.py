@@ -2,8 +2,11 @@
 import logging
 import time
 
-from homeassistant.components.notify import (ATTR_TARGET, PLATFORM_SCHEMA,
-                                             BaseNotificationService)
+from homeassistant.components.notify import (
+    ATTR_TARGET,
+    PLATFORM_SCHEMA,
+    BaseNotificationService,
+)
 from homeassistant.const import CONF_RECIPIENT
 import homeassistant.helpers.config_validation as cv
 from serial import Serial
@@ -32,6 +35,7 @@ PLATFORM_SCHEMA = vol.Schema(
 
 serial = Serial()
 
+
 def get_service(hass, config, discovery_info=None):
     """Get the atSMS notification service."""
 
@@ -44,9 +48,12 @@ def get_service(hass, config, discovery_info=None):
         return None
     return SMSComNotificationService(config)
 
+
 class StaticWait:
     """Wait sendding by static variable"""
+
     still_sending = False
+
 
 class SMSComNotificationService(BaseNotificationService):
     """Implementation of a notification service for the SMS Com service."""
@@ -67,18 +74,18 @@ class SMSComNotificationService(BaseNotificationService):
             _LOGGER.debug("Send message to:\r\n%s", phone)
             if not serial.is_open:
                 serial.open()
-            serial.write(b'AT+CMGF=1\r\n')
+            serial.write(b"AT+CMGF=1\r\n")
             line = _uart_read_timeout(2)
-            if line != b'OK':
+            if line != b"OK":
                 _LOGGER.error(line)
                 break
-            serial.write(b'AT+CMGS="'+phone.encode('ascii')+b'"\r\n')
+            serial.write(b'AT+CMGS="' + phone.encode("ascii") + b'"\r\n')
             line = _uart_read_timeout(2)
-            if line != b'>':
+            if line != b">":
                 _LOGGER.error(line)
                 break
-            serial.write(message.encode('ascii'))
-            serial.write(chr(26).encode('ascii'))
+            serial.write(message.encode("ascii"))
+            serial.write(chr(26).encode("ascii"))
             line = _uart_read_timeout(60)
             # if line != b'OK':
             #     _LOGGER.error(line)
@@ -89,33 +96,35 @@ class SMSComNotificationService(BaseNotificationService):
         if serial.is_open:
             serial.close()
 
+
 def _uart_read_timeout(t):
     serial.timeout = 1
     timeout = time.time() + float(t)
-    line = b''
+    line = b""
     serial.flush()
-    while line == b'':
+    while line == b"":
         line = serial.read(1000).strip()
         if time.time() > timeout:
             break
-    
+
     serial.flush()
     return line
+
 
 def _check_com_port(config):
     if not serial.is_open:
         serial.open()
-    serial.write(b'ATE0\r\n')
+    serial.write(b"ATE0\r\n")
     line = _uart_read_timeout(2)
-    if line != b'OK':
+    if line != b"OK":
         return False
-    serial.write(b'AT\r\n')
+    serial.write(b"AT\r\n")
     line = _uart_read_timeout(2)
-    if line != b'OK':
+    if line != b"OK":
         return False
     if serial.is_open:
         serial.close()
 
-    if b'OK' != line.strip():
+    if b"OK" != line.strip():
         return False
     return True
