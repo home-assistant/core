@@ -363,6 +363,7 @@ blinkstick==1.1.8
 blockchain==1.4.4
 
 # homeassistant.components.decora
+# homeassistant.components.miflora
 # bluepy==1.3.0
 
 # homeassistant.components.bme680
@@ -916,6 +917,9 @@ meteofrance-api==0.1.1
 
 # homeassistant.components.mfi
 mficlient==0.3.0
+
+# homeassistant.components.miflora
+miflora==0.7.0
 
 # homeassistant.components.mill
 millheater==0.3.4
