@@ -5,7 +5,11 @@ import logging
 
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT, UNIT_PERCENTAGE
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 
 from .const import DOMAIN
 
@@ -13,7 +17,6 @@ TEMP_UNITS = [TEMP_CELSIUS, TEMP_FAHRENHEIT]
 PERCENT_UNITS = [UNIT_PERCENTAGE, UNIT_PERCENTAGE]
 SALT_UNITS = ["g/L", "ppm"]
 
-SCAN_INTERVAL = timedelta(seconds=30)
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -172,7 +175,7 @@ async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None
     async_add_entities(sensors, update_before_add=True)
 
 
-class OmnilogicSensor(Entity):
+class OmnilogicSensor(CoordinatorEntity):
     """Defines an Omnilogic sensor entity."""
 
     def __init__(
@@ -214,14 +217,13 @@ class OmnilogicSensor(Entity):
         self.coordinator = coordinator
         self.bow = bow
         self.sensordata = sensordata
-        self.attrs = {}
-        self.attrs["MspSystemId"] = backyard["systemId"]
+        self._attrs = {"MspSystemId": backyard["systemId"]}
         self.alarms = []
 
     @property
     def should_poll(self) -> bool:
         """Return the polling requirement of the entity."""
-        return True
+        return False
 
     @property
     def unique_id(self) -> str:
@@ -252,7 +254,7 @@ class OmnilogicSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the attributes."""
-        return self.attrs
+        return self._attrs
 
     @property
     def force_update(self):
@@ -269,7 +271,7 @@ class OmnilogicSensor(Entity):
         """Define the device as back yard/MSP System."""
 
         return {
-            "identifiers": {(DOMAIN, self.attrs["MspSystemId"])},
+            "identifiers": {(DOMAIN, self._attrs["MspSystemId"])},
             "name": self._backyard.get("BackyardName"),
             "manufacturer": "Hayward",
             "model": "OmniLogic",
@@ -299,11 +301,11 @@ class OmnilogicSensor(Entity):
                 temp_return = None
                 temp_state = None
 
-            self.attrs["hayward_temperature"] = temp_return
-            self.attrs["hayward_unit_of_measure"] = unit_of_measurement
+            self._attrs["hayward_temperature"] = temp_return
+            self._attrs["hayward_unit_of_measure"] = unit_of_measurement
             self._state = temp_state
             self._unit = TEMP_FAHRENHEIT
-            self.attrs["systemId"] = self.bow.get("systemId")
+            self._attrs["systemId"] = self.bow.get("systemId")
             self._name = (
                 self._backyard["BackyardName"]
                 + " "
@@ -329,15 +331,15 @@ class OmnilogicSensor(Entity):
                 + " "
                 + self.sensordata.get("Name")
             )
-            self.attrs["systemId"] = self.sensordata.get("systemId")
-            self.attrs["MspSystemId"] = self._backyard["systemId"]
-            self.attrs["PumpType"] = self.sensordata.get("Filter-Type")
+            self._attrs["systemId"] = self.sensordata.get("systemId")
+            self._attrs["MspSystemId"] = self._backyard["systemId"]
+            self._attrs["PumpType"] = self.sensordata.get("Filter-Type")
 
             self.alarms = sensordata.get("Alarms")
 
-            self.attrs["Alarm"] = ""
+            self._attrs["Alarm"] = ""
             if len(self.alarms) != 0:
-                self.attrs["Alarm"] = (
+                self._attrs["Alarm"] = (
                     self.alarms[0]["Message"] + " (" + self.alarms[0]["Comment"] + ")"
                 )
 
@@ -367,16 +369,16 @@ class OmnilogicSensor(Entity):
                 + " "
                 + self.sensordata.get("Name")
             )
-            self.attrs["systemId"] = self.sensordata.get("systemId")
-            self.attrs["MspSystemId"] = self._backyard["systemId"]
-            self.attrs["PumpType"] = self.sensordata.get("Type")
+            self._attrs["systemId"] = self.sensordata.get("systemId")
+            self._attrs["MspSystemId"] = self._backyard["systemId"]
+            self._attrs["PumpType"] = self.sensordata.get("Type")
 
             self.alarms = []
             self.alarms.append(sensordata.get("Alarms"))
 
-            self.attrs["Alarm"] = ""
+            self._attrs["Alarm"] = ""
             if len(self.alarms) != 0:
-                self.attrs["Alarm"] = (
+                self._attrs["Alarm"] = (
                     self.alarms[0]["Message"] + " (" + self.alarms[0]["Comment"] + ")"
                 )
 
@@ -398,7 +400,7 @@ class OmnilogicSensor(Entity):
 
             self._state = salt_return
             self._unit = unit_of_measurement
-            self.attrs["SystemId"] = self.sensordata.get("systemId")
+            self._attrs["SystemId"] = self.sensordata.get("systemId")
             self._name = (
                 self._backyard["BackyardName"]
                 + " "
@@ -410,9 +412,9 @@ class OmnilogicSensor(Entity):
 
             self.alarms = sensordata.get("Alarms")
 
-            self.attrs["Alarm"] = ""
+            self._attrs["Alarm"] = ""
             if len(self.alarms) > 0:
-                self.attrs["Alarm"] = (
+                self._attrs["Alarm"] = (
                     self.alarms[0]["Message"] + " (" + self.alarms[0]["Comment"] + ")"
                 )
 
@@ -445,9 +447,9 @@ class OmnilogicSensor(Entity):
 
             self.alarms = sensordata.get("Alarms")
 
-            self.attrs["Alarm"] = ""
+            self._attrs["Alarm"] = ""
             if len(self.alarms) != 0:
-                self.attrs["Alarm"] = (
+                self._attrs["Alarm"] = (
                     self.alarms[0]["Message"] + " (" + self.alarms[0]["Comment"] + ")"
                 )
 
@@ -472,9 +474,9 @@ class OmnilogicSensor(Entity):
 
             self.alarms = sensordata.get("Alarms")
 
-            self.attrs["Alarm"] = ""
+            self._attrs["Alarm"] = ""
             if len(self.alarms) != 0:
-                self.attrs["Alarm"] = (
+                self._attrs["Alarm"] = (
                     self.alarms[0]["Message"] + " (" + self.alarms[0]["Comment"] + ")"
                 )
 
@@ -499,9 +501,9 @@ class OmnilogicSensor(Entity):
 
             self.alarms = sensordata.get("Alarms")
 
-            self.attrs["Alarm"] = ""
+            self._attrs["Alarm"] = ""
             if len(self.alarms) != 0:
-                self.attrs["Alarm"] = (
+                self._attrs["Alarm"] = (
                     self.alarms[0]["Message"] + " (" + self.alarms[0]["Comment"] + ")"
                 )
 
@@ -509,7 +511,7 @@ class OmnilogicSensor(Entity):
             sensordata = 0
 
             for backyard in self.coordinator.data:
-                if backyard.get("systemId") == self.attrs["MspSystemId"]:
+                if backyard.get("systemId") == self._attrs["MspSystemId"]:
                     sensordata = backyard.get("airTemp")
 
             temp_return = int(sensordata)
@@ -518,12 +520,12 @@ class OmnilogicSensor(Entity):
                 temp_return = round((temp_return - 32) * 5 / 9, 1)
                 unit_of_measurement = TEMP_CELSIUS
 
-            self.attrs["hayward_temperature"] = temp_return
-            self.attrs["hayward_unit_of_measure"] = unit_of_measurement
+            self._attrs["hayward_temperature"] = temp_return
+            self._attrs["hayward_unit_of_measure"] = unit_of_measurement
             self._state = float(sensordata)
             self._unit = TEMP_FAHRENHEIT
             self._name = self._backyard.get("BackyardName") + " Air Temperature"
-            self.attrs["MspSystemId"] = self._backyard["systemId"]
+            self._attrs["MspSystemId"] = self._backyard["systemId"]
 
         elif self._kind == "alarm":
             sensordata = []
@@ -531,7 +533,7 @@ class OmnilogicSensor(Entity):
             self._name = self._backyard.get("BackyardName") + " Alarms"
 
             for backyard in self.coordinator.data:
-                if backyard.get("systemId") == self.attrs["MspSystemId"]:
+                if backyard.get("systemId") == self._attrs["MspSystemId"]:
                     sensordata = backyard
 
             alarms_list = sensordata["Alarms"]
@@ -543,7 +545,7 @@ class OmnilogicSensor(Entity):
                     alarm_message = alarm_message + (
                         " (" + alarms_list[0].get("Comment") + ")"
                     )
-                self.attrs["Alarm"] = alarm_message
+                self._attrs["Alarm"] = alarm_message
             else:
                 self._state = "off"
 
