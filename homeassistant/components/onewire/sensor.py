@@ -1,5 +1,6 @@
 """Support for 1-Wire environment sensors."""
 from glob import glob
+import logging
 import os
 import time
 
@@ -27,8 +28,9 @@ from .const import (
     CONF_TYPE_SYSBUS,
     DEFAULT_PORT,
     DEFAULT_SYSBUS_MOUNT_DIR,
-    LOGGER,
 )
+
+LOGGER = logging.getLogger(__name__)
 
 DEVICE_SENSORS = {
     # Family : { SensorType: owfs path }
