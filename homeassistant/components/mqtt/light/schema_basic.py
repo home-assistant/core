@@ -35,6 +35,7 @@ from homeassistant.const import (
     CONF_PAYLOAD_OFF,
     CONF_PAYLOAD_ON,
     CONF_UNIQUE_ID,
+    CONF_VALUE_TEMPLATE,
     STATE_ON,
 )
 from homeassistant.core import callback
@@ -157,6 +158,9 @@ async def async_setup_entity_basic(
     hass, config, async_add_entities, config_entry, discovery_data=None
 ):
     """Set up a MQTT Light."""
+    if CONF_STATE_VALUE_TEMPLATE not in config and CONF_VALUE_TEMPLATE in config:
+        config[CONF_STATE_VALUE_TEMPLATE] = config[CONF_VALUE_TEMPLATE]
+
     async_add_entities([MqttLight(hass, config, config_entry, discovery_data)])
 
 
