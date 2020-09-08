@@ -25,6 +25,8 @@ from homeassistant.helpers.network import get_url
 
 from .aiohttp_client import async_get_clientsession
 
+_LOGGER = logging.getLogger(__name__)
+
 DATA_JWT_SECRET = "oauth2_jwt_secret"
 DATA_VIEW_REGISTERED = "oauth2_view_reg"
 DATA_IMPLEMENTATIONS = "oauth2_impl"
@@ -77,6 +79,8 @@ class AbstractOAuth2Implementation(ABC):
     async def async_refresh_token(self, token: dict) -> dict:
         """Refresh a token and update expires info."""
         new_token = await self._async_refresh_token(token)
+        # Force int for non-compliant oauth2 providers
+        new_token["expires_in"] = int(new_token["expires_in"])
         new_token["expires_at"] = time.time() + new_token["expires_in"]
         return new_token
 
@@ -118,7 +122,7 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
     @property
     def redirect_uri(self) -> str:
         """Return the redirect uri."""
-        return f"{get_url(self.hass)}{AUTH_CALLBACK_PATH}"
+        return f"{get_url(self.hass, require_current_request=True)}{AUTH_CALLBACK_PATH}"
 
     @property
     def extra_authorize_data(self) -> dict:
@@ -257,6 +261,12 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
     ) -> Dict[str, Any]:
         """Create config entry from external data."""
         token = await self.flow_impl.async_resolve_external_data(self.external_data)
+        # Force int for non-compliant oauth2 providers
+        try:
+            token["expires_in"] = int(token["expires_in"])
+        except ValueError as err:
+            _LOGGER.warning("Error converting expires_in to int: %s", err)
+            return self.async_abort(reason="oauth_error")
         token["expires_at"] = time.time() + token["expires_in"]
 
         self.logger.info("Successfully authenticated")

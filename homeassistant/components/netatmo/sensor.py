@@ -6,12 +6,16 @@ from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     CONCENTRATION_PARTS_PER_MILLION,
+    DEGREE,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_PRESSURE,
+    DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_TEMPERATURE,
+    PERCENTAGE,
+    PRESSURE_MBAR,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import async_entries_for_config_entry
@@ -43,51 +47,41 @@ SUPPORTED_PUBLIC_SENSOR_TYPES = [
 ]
 
 SENSOR_TYPES = {
-    "temperature": [
-        "Temperature",
-        TEMP_CELSIUS,
-        "mdi:thermometer",
-        DEVICE_CLASS_TEMPERATURE,
-    ],
+    "temperature": ["Temperature", TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE],
     "co2": ["CO2", CONCENTRATION_PARTS_PER_MILLION, "mdi:molecule-co2", None],
-    "pressure": ["Pressure", "mbar", "mdi:gauge", None],
+    "pressure": ["Pressure", PRESSURE_MBAR, None, DEVICE_CLASS_PRESSURE],
     "noise": ["Noise", "dB", "mdi:volume-high", None],
-    "humidity": [
-        "Humidity",
-        UNIT_PERCENTAGE,
-        "mdi:water-percent",
-        DEVICE_CLASS_HUMIDITY,
-    ],
+    "humidity": ["Humidity", PERCENTAGE, None, DEVICE_CLASS_HUMIDITY],
     "rain": ["Rain", "mm", "mdi:weather-rainy", None],
     "sum_rain_1": ["Rain last hour", "mm", "mdi:weather-rainy", None],
     "sum_rain_24": ["Rain last 24h", "mm", "mdi:weather-rainy", None],
     "battery_vp": ["Battery", "", "mdi:battery", None],
     "battery_lvl": ["Battery Level", "", "mdi:battery", None],
-    "battery_percent": ["Battery Percent", UNIT_PERCENTAGE, None, DEVICE_CLASS_BATTERY],
-    "min_temp": ["Min Temp.", TEMP_CELSIUS, "mdi:thermometer", None],
-    "max_temp": ["Max Temp.", TEMP_CELSIUS, "mdi:thermometer", None],
-    "windangle": ["Angle", "", "mdi:compass", None],
-    "windangle_value": ["Angle Value", "º", "mdi:compass", None],
+    "battery_percent": ["Battery Percent", PERCENTAGE, None, DEVICE_CLASS_BATTERY],
+    "min_temp": ["Min Temp.", TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE],
+    "max_temp": ["Max Temp.", TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE],
+    "windangle": ["Direction", None, "mdi:compass-outline", None],
+    "windangle_value": ["Angle", DEGREE, "mdi:compass-outline", None],
     "windstrength": [
         "Wind Strength",
         SPEED_KILOMETERS_PER_HOUR,
         "mdi:weather-windy",
         None,
     ],
-    "gustangle": ["Gust Angle", "", "mdi:compass", None],
-    "gustangle_value": ["Gust Angle Value", "º", "mdi:compass", None],
+    "gustangle": ["Gust Direction", None, "mdi:compass-outline", None],
+    "gustangle_value": ["Gust Angle", DEGREE, "mdi:compass-outline", None],
     "guststrength": [
         "Gust Strength",
         SPEED_KILOMETERS_PER_HOUR,
         "mdi:weather-windy",
         None,
     ],
-    "reachable": ["Reachability", "", "mdi:signal", None],
-    "rf_status": ["Radio", "", "mdi:signal", None],
-    "rf_status_lvl": ["Radio Level", "", "mdi:signal", None],
-    "wifi_status": ["Wifi", "", "mdi:wifi", None],
-    "wifi_status_lvl": ["Wifi Level", "dBm", "mdi:wifi", None],
-    "health_idx": ["Health", "", "mdi:cloud", None],
+    "reachable": ["Reachability", None, "mdi:signal", None],
+    "rf_status": ["Radio", None, "mdi:signal", None],
+    "rf_status_lvl": ["Radio Level", "", None, DEVICE_CLASS_SIGNAL_STRENGTH],
+    "wifi_status": ["Wifi", None, "mdi:wifi", None],
+    "wifi_status_lvl": ["Wifi Level", "dBm", None, DEVICE_CLASS_SIGNAL_STRENGTH],
+    "health_idx": ["Health", None, "mdi:cloud", None],
 }
 
 MODULE_TYPE_OUTDOOR = "NAModule1"
@@ -107,7 +101,6 @@ PUBLIC = "public"
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Netatmo weather and homecoach platform."""
-    device_registry = await hass.helpers.device_registry.async_get_registry()
     data_handler = hass.data[DOMAIN][entry.entry_id][DATA_HANDLER]
 
     async def find_entities(data_class_name):
@@ -135,15 +128,25 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 continue
 
             _LOGGER.debug(
-                "Adding module %s %s", module.get("module_name"), module.get("_id"),
+                "Adding module %s %s",
+                module.get("module_name"),
+                module.get("_id"),
             )
-            for condition in data_class.get_monitored_conditions(
-                module_id=module["_id"]
-            ):
+            conditions = [
+                c.lower()
+                for c in data_class.get_monitored_conditions(module_id=module["_id"])
+            ]
+            for condition in conditions:
+                if f"{condition}_value" in SENSOR_TYPES:
+                    conditions.append(f"{condition}_value")
+                elif f"{condition}_lvl" in SENSOR_TYPES:
+                    conditions.append(f"{condition}_lvl")
+                elif condition == "battery_vp":
+                    conditions.append("battery_lvl")
+
+            for condition in conditions:
                 entities.append(
-                    NetatmoSensor(
-                        data_handler, data_class_name, module, condition.lower()
-                    )
+                    NetatmoSensor(data_handler, data_class_name, module, condition)
                 )
 
         return entities
@@ -153,6 +156,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
         HOMECOACH_DATA_CLASS_NAME,
     ]:
         async_add_entities(await find_entities(data_class_name), True)
+
+    device_registry = await hass.helpers.device_registry.async_get_registry()
 
     @callback
     async def add_public_entities(update=True):
@@ -176,7 +181,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
                 if update:
                     async_dispatcher_send(
-                        hass, f"netatmo-config-{area.area_name}", area,
+                        hass,
+                        f"netatmo-config-{area.area_name}",
+                        area,
                     )
                     continue
 
@@ -212,11 +219,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
 async def async_config_entry_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle signals of config entry being updated."""
     async_dispatcher_send(hass, f"signal-{DOMAIN}-public-update-{entry.entry_id}")
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Netatmo weather and homecoach platform."""
-    return
 
 
 class NetatmoSensor(NetatmoBase):
@@ -298,8 +300,8 @@ class NetatmoSensor(NetatmoBase):
         if data is None:
             if self._state:
                 _LOGGER.debug(
-                    "No data (%s) found for %s (%s)",
-                    self._data,
+                    "No data found for %s - %s (%s)",
+                    self.name,
                     self._device_name,
                     self._id,
                 )
@@ -367,22 +369,22 @@ class NetatmoSensor(NetatmoBase):
 def process_angle(angle: int) -> str:
     """Process angle and return string for display."""
     if angle >= 330:
-        return f"N ({angle}\xb0)"
+        return "N"
     if angle >= 300:
-        return f"NW ({angle}\xb0)"
+        return "NW"
     if angle >= 240:
-        return f"W ({angle}\xb0)"
+        return "W"
     if angle >= 210:
-        return f"SW ({angle}\xb0)"
+        return "SW"
     if angle >= 150:
-        return f"S ({angle}\xb0)"
+        return "S"
     if angle >= 120:
-        return f"SE ({angle}\xb0)"
+        return "SE"
     if angle >= 60:
-        return f"E ({angle}\xb0)"
+        return "E"
     if angle >= 30:
-        return f"NE ({angle}\xb0)"
-    return f"N ({angle}\xb0)"
+        return "NE"
+    return "N"
 
 
 def process_battery(data: int, model: str) -> str:
@@ -524,7 +526,6 @@ class NetatmoPublicSensor(NetatmoBase):
             )
         )
 
-    @callback
     async def async_config_update_callback(self, area):
         """Update the entity's config."""
         if self.area == area:

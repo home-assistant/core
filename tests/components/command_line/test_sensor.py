@@ -78,7 +78,9 @@ class TestCommandSensorSensor(unittest.TestCase):
             return_value=b"Works\n",
         ) as check_output:
             data = command_line.CommandSensorData(
-                self.hass, 'echo "{{ states.sensor.test_state.state }}" "3 4"', 15,
+                self.hass,
+                'echo "{{ states.sensor.test_state.state }}" "3 4"',
+                15,
             )
             data.update()
 

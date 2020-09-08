@@ -13,8 +13,7 @@
             "user": {
                 "data": {
                     "host": "Vert",
-                    "name": "Sertifikatets navn",
-                    "port": ""
+                    "name": "Sertifikatets navn"
                 },
                 "title": "Definer sertifikatet som skal testes"
             }

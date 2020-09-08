@@ -35,7 +35,7 @@ from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
 from . import migration, purge
-from .const import DATA_INSTANCE, DOMAIN, SQLITE_URL_PREFIX
+from .const import CONF_DB_INTEGRITY_CHECK, DATA_INSTANCE, DOMAIN, SQLITE_URL_PREFIX
 from .models import Base, Events, RecorderRuns, States
 from .util import session_scope, validate_or_move_away_sqlite_database
 
@@ -55,6 +55,7 @@ SERVICE_PURGE_SCHEMA = vol.Schema(
 
 DEFAULT_URL = "sqlite:///{hass_config_path}"
 DEFAULT_DB_FILE = "home-assistant_v2.db"
+DEFAULT_DB_INTEGRITY_CHECK = True
 DEFAULT_DB_MAX_RETRIES = 10
 DEFAULT_DB_RETRY_WAIT = 3
 KEEPALIVE_TIME = 30
@@ -99,6 +100,9 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Optional(
                         CONF_DB_RETRY_WAIT, default=DEFAULT_DB_RETRY_WAIT
                     ): cv.positive_int,
+                    vol.Optional(
+                        CONF_DB_INTEGRITY_CHECK, default=DEFAULT_DB_INTEGRITY_CHECK
+                    ): cv.boolean,
                 }
             ),
         )
@@ -164,8 +168,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     commit_interval = 60
     db_max_retries = 10
     db_retry_wait = 3
+    db_integrity_check = conf[CONF_DB_INTEGRITY_CHECK]
     try:
         import json
+
         from homeassistant.components import ais_files
         import homeassistant.components.ais_dom.ais_global as ais_global
 
@@ -208,6 +214,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         db_retry_wait=db_retry_wait,
         entity_filter=entity_filter,
         exclude_t=exclude_t,
+        db_integrity_check=db_integrity_check,
     )
     instance.async_initialize()
     instance.start()
@@ -240,6 +247,7 @@ class Recorder(threading.Thread):
         db_retry_wait: int,
         entity_filter: Callable[[str], bool],
         exclude_t: List[str],
+        db_integrity_check: bool,
     ) -> None:
         """Initialize the recorder."""
         threading.Thread.__init__(self, name="Recorder")
@@ -248,11 +256,12 @@ class Recorder(threading.Thread):
         self.auto_purge = auto_purge
         self.keep_days = keep_days
         self.commit_interval = commit_interval
-        self.queue: Any = queue.Queue()
+        self.queue: Any = queue.SimpleQueue()
         self.recording_start = dt_util.utcnow()
         self.db_url = uri
         self.db_max_retries = db_max_retries
         self.db_retry_wait = db_retry_wait
+        self.db_integrity_check = db_integrity_check
         self.async_db_ready = asyncio.Future()
         self.engine: Any = None
         self.run_info: Any = None
@@ -377,16 +386,13 @@ class Recorder(threading.Thread):
             if event is None:
                 self._close_run()
                 self._close_connection()
-                self.queue.task_done()
                 return
             if isinstance(event, PurgeTask):
                 # Schedule a new purge task if this one didn't finish
                 if not purge.purge_old_data(self, event.keep_days, event.repack):
                     self.queue.put(PurgeTask(event.keep_days, event.repack))
-                self.queue.task_done()
                 continue
             if event.event_type == EVENT_TIME_CHANGED:
-                self.queue.task_done()
                 self._keepalive_count += 1
                 if self._keepalive_count >= KEEPALIVE_TIME:
                     self._keepalive_count = 0
@@ -398,13 +404,11 @@ class Recorder(threading.Thread):
                         self._commit_event_session_or_retry()
                 continue
             if event.event_type in self.exclude_t:
-                self.queue.task_done()
                 continue
 
             entity_id = event.data.get(ATTR_ENTITY_ID)
             if entity_id is not None:
                 if not self.entity_filter(entity_id):
-                    self.queue.task_done()
                     continue
 
             try:
@@ -456,7 +460,8 @@ class Recorder(threading.Thread):
         except Exception as err:  # pylint: disable=broad-except
             # Must catch the exception to prevent the loop from collapsing
             _LOGGER.error(
-                "Error in database connectivity during keepalive: %s", err,
+                "Error in database connectivity during keepalive: %s",
+                err,
             )
             self._reopen_event_session()
 
@@ -530,8 +535,19 @@ class Recorder(threading.Thread):
         self.queue.put(event)
 
     def block_till_done(self):
-        """Block till all events processed."""
-        self.queue.join()
+        """Block till all events processed.
+
+        This is only called in tests.
+
+        This only blocks until the queue is empty
+        which does not mean the recorder is done.
+
+        Call tests.common's wait_recording_done
+        after calling this to ensure the data
+        is in the database.
+        """
+        while not self.queue.empty():
+            time.sleep(0.025)
 
     def _setup_connection(self):
         """Ensure database is ready to fly."""
@@ -579,7 +595,9 @@ class Recorder(threading.Thread):
                 # On systems with very large databases and
                 # very slow disk or cpus, this can take a while.
                 #
-                validate_or_move_away_sqlite_database(self.db_url)
+                validate_or_move_away_sqlite_database(
+                    self.db_url, self.db_integrity_check
+                )
 
         if self.engine is not None:
             self.engine.dispose()

@@ -538,7 +538,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: Dict) -> Non
         hac.set_time_zone(config[CONF_TIME_ZONE])
 
     # Init whitelist external dir
-    hac.allowlist_external_dirs = {hass.config.path("www")}
+    hac.allowlist_external_dirs = {hass.config.path("www"), hass.config.path("media")}
     if CONF_ALLOWLIST_EXTERNAL_DIRS in config:
         hac.allowlist_external_dirs.update(set(config[CONF_ALLOWLIST_EXTERNAL_DIRS]))
 
@@ -843,9 +843,7 @@ async def async_process_component_config(
         # Validate platform specific schema
         if hasattr(platform, "PLATFORM_SCHEMA"):
             try:
-                p_validated = platform.PLATFORM_SCHEMA(  # type: ignore
-                    p_config
-                )
+                p_validated = platform.PLATFORM_SCHEMA(p_config)  # type: ignore
             except vol.Invalid as ex:
                 async_log_exception(
                     ex,

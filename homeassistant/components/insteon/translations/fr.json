@@ -1,0 +1,124 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Une connexion Insteon par modem est d\u00e9j\u00e0 configur\u00e9e",
+            "cannot_connect": "\u00c9chec de connexion",
+            "single_instance_allowed": "D\u00e9j\u00e0 configur\u00e9. Une seule configuration possible."
+        },
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion",
+            "select_single": "S\u00e9lectionnez une option."
+        },
+        "step": {
+            "hub1": {
+                "data": {
+                    "host": "Adresse IP du hub",
+                    "port": "Port IP"
+                },
+                "description": "Configurer le Hub Insteon Version 1 (avant 2014).",
+                "title": "Hub Insteon Version 1"
+            },
+            "hub2": {
+                "data": {
+                    "host": "Adresse IP du hub",
+                    "password": "Mot de passe",
+                    "port": "Port IP",
+                    "username": "Nom d'utilisateur"
+                },
+                "description": "Configurez le Hub Insteon version 2.",
+                "title": "Hub Insteon Version 2"
+            },
+            "hubv1": {
+                "data": {
+                    "host": "Adresse IP",
+                    "port": "Port"
+                },
+                "description": "Configurer le Hub Insteon Version 1 (avant 2014).",
+                "title": "Hub Insteon Version 1"
+            },
+            "hubv2": {
+                "data": {
+                    "host": "Adresse IP",
+                    "password": "Mot de passe",
+                    "port": "Port",
+                    "username": "Nom d'utilisateur"
+                },
+                "description": "Configurez le Hub Insteon version 2.",
+                "title": "Hub Insteon Version 2"
+            },
+            "init": {
+                "data": {
+                    "hubv1": "Hub Version 1 (avant 2014)"
+                },
+                "title": "Insteon"
+            },
+            "plm": {
+                "data": {
+                    "device": "Chemin du p\u00e9riph\u00e9rique USB"
+                }
+            },
+            "user": {
+                "data": {
+                    "modem_type": "Type de modem."
+                },
+                "description": "S\u00e9lectionnez le type de modem Insteon.",
+                "title": "Insteon"
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "cannot_connect": "Impossible de se connecter au modem Insteon"
+        },
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion",
+            "select_single": "S\u00e9lectionnez une option"
+        },
+        "step": {
+            "add_override": {
+                "data": {
+                    "cat": "Cat\u00e9gorie d'appareil (c.-\u00e0-d. 0x10)"
+                },
+                "title": "Insteon"
+            },
+            "add_x10": {
+                "data": {
+                    "platform": "Plate-forme"
+                },
+                "description": "Modifiez le mot de passe Insteon Hub.",
+                "title": "Insteon"
+            },
+            "change_hub_config": {
+                "data": {
+                    "host": "Adresse IP",
+                    "password": "Mot de passe",
+                    "port": "Port",
+                    "username": "Nom d'utilisateur"
+                },
+                "title": "Insteon"
+            },
+            "init": {
+                "data": {
+                    "add_x10": "Ajouter un appareil X10.",
+                    "change_hub_config": "Modifier la configuration du Hub.",
+                    "remove_x10": "Retirez un p\u00e9riph\u00e9rique X10."
+                },
+                "description": "S\u00e9lectionnez une option \u00e0 configurer.",
+                "title": "Insteon"
+            },
+            "remove_override": {
+                "data": {
+                    "address": "S\u00e9lectionner une adresse de p\u00e9riph\u00e9rique \u00e0 retirer"
+                },
+                "title": "Insteon"
+            },
+            "remove_x10": {
+                "data": {
+                    "address": "S\u00e9lectionner une adresse de p\u00e9riph\u00e9rique \u00e0 retirer"
+                },
+                "description": "Retirer un p\u00e9riph\u00e9rique X10",
+                "title": "Insteon"
+            }
+        }
+    }
+}

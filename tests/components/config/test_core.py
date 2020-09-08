@@ -125,7 +125,8 @@ async def test_websocket_bad_core_update(hass, client):
 async def test_detect_config(hass, client):
     """Test detect config."""
     with patch(
-        "homeassistant.util.location.async_detect_location_info", return_value=None,
+        "homeassistant.util.location.async_detect_location_info",
+        return_value=None,
     ):
         await client.send_json({"id": 1, "type": "config/core/detect"})
 
