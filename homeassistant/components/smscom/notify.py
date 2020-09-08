@@ -2,11 +2,8 @@
 import logging
 import time
 
-from homeassistant.components.notify import (
-    ATTR_TARGET,
-    PLATFORM_SCHEMA,
-    BaseNotificationService,
-)
+from homeassistant.components.notify import (ATTR_TARGET, PLATFORM_SCHEMA,
+                                             BaseNotificationService)
 from homeassistant.const import CONF_RECIPIENT
 import homeassistant.helpers.config_validation as cv
 from serial import Serial
@@ -50,7 +47,7 @@ def get_service(hass, config, discovery_info=None):
 
 
 class StaticWait:
-    """Wait sendding by static variable"""
+    """Wait sendding by static variable."""
 
     still_sending = False
 
@@ -97,9 +94,9 @@ class SMSComNotificationService(BaseNotificationService):
             serial.close()
 
 
-def _uart_read_timeout(t):
+def _uart_read_timeout(wait_time):
     serial.timeout = 1
-    timeout = time.time() + float(t)
+    timeout = time.time() + float(wait_time)
     line = b""
     serial.flush()
     while line == b"":
@@ -125,6 +122,6 @@ def _check_com_port(config):
     if serial.is_open:
         serial.close()
 
-    if b"OK" != line.strip():
+    if line.strip() != b'OK':
         return False
     return True
