@@ -12,8 +12,8 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
     ELECTRICAL_CURRENT_AMPERE,
+    PERCENTAGE,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
     VOLT,
 )
 import homeassistant.helpers.config_validation as cv
@@ -67,14 +67,14 @@ HOBBYBOARD_EF = {
 SENSOR_TYPES = {
     # SensorType: [ Measured unit, Unit ]
     "temperature": ["temperature", TEMP_CELSIUS],
-    "humidity": ["humidity", UNIT_PERCENTAGE],
-    "humidity_raw": ["humidity", UNIT_PERCENTAGE],
+    "humidity": ["humidity", PERCENTAGE],
+    "humidity_raw": ["humidity", PERCENTAGE],
     "pressure": ["pressure", "mb"],
     "illuminance": ["illuminance", "lux"],
-    "wetness_0": ["wetness", UNIT_PERCENTAGE],
-    "wetness_1": ["wetness", UNIT_PERCENTAGE],
-    "wetness_2": ["wetness", UNIT_PERCENTAGE],
-    "wetness_3": ["wetness", UNIT_PERCENTAGE],
+    "wetness_0": ["wetness", PERCENTAGE],
+    "wetness_1": ["wetness", PERCENTAGE],
+    "wetness_2": ["wetness", PERCENTAGE],
+    "wetness_3": ["wetness", PERCENTAGE],
     "moisture_0": ["moisture", "cb"],
     "moisture_1": ["moisture", "cb"],
     "moisture_2": ["moisture", "cb"],

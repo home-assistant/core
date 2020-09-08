@@ -66,7 +66,8 @@ async def test_create_entry(hass):
         )
 
         result_create_entry = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"device_name": CONFIG[DEVICE_NAME]},
+            result["flow_id"],
+            {"device_name": CONFIG[DEVICE_NAME]},
         )
 
     assert result_create_entry["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -132,7 +133,8 @@ async def test_already_configured_error(hass):
         )
 
         result_create_entry = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"device_name": CONFIG[DEVICE_NAME]},
+            result["flow_id"],
+            {"device_name": CONFIG[DEVICE_NAME]},
         )
 
     assert result_create_entry["type"] == data_entry_flow.RESULT_TYPE_ABORT

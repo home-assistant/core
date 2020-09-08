@@ -69,13 +69,19 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     platform = entity_platform.current_platform.get()
 
     platform.async_register_entity_service(
-        SERVICE_SEEK_FORWARD, {}, "seek_forward",
+        SERVICE_SEEK_FORWARD,
+        {},
+        "seek_forward",
     )
     platform.async_register_entity_service(
-        SERVICE_SEEK_BACKWARD, {}, "seek_backward",
+        SERVICE_SEEK_BACKWARD,
+        {},
+        "seek_backward",
     )
     platform.async_register_entity_service(
-        SERVICE_SEEK_BY, {vol.Required(ATTR_SECONDS): vol.Coerce(int)}, "seek_by",
+        SERVICE_SEEK_BY,
+        {vol.Required(ATTR_SECONDS): vol.Coerce(int)},
+        "seek_by",
     )
 
 

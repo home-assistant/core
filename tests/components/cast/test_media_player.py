@@ -629,7 +629,8 @@ async def test_failed_cast_other_url(hass, caplog):
 async def test_failed_cast_internal_url(hass, caplog):
     """Test warning when casting from internal_url fails."""
     await async_process_ha_core_config(
-        hass, {"internal_url": "http://example.local:8123"},
+        hass,
+        {"internal_url": "http://example.local:8123"},
     )
     with assert_setup_component(1, tts.DOMAIN):
         assert await async_setup_component(
@@ -653,7 +654,8 @@ async def test_failed_cast_internal_url(hass, caplog):
 async def test_failed_cast_external_url(hass, caplog):
     """Test warning when casting from external_url fails."""
     await async_process_ha_core_config(
-        hass, {"external_url": "http://example.com:8123"},
+        hass,
+        {"external_url": "http://example.com:8123"},
     )
     with assert_setup_component(1, tts.DOMAIN):
         assert await async_setup_component(

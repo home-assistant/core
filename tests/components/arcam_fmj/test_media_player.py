@@ -62,7 +62,7 @@ async def test_powered_on(player, state):
 async def test_supported_features(player, state):
     """Test supported features."""
     data = await update(player)
-    assert data.attributes["supported_features"] == 69004
+    assert data.attributes["supported_features"] == 200588
 
 
 async def test_turn_on(player, state):

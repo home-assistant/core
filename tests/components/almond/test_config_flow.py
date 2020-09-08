@@ -18,7 +18,9 @@ async def test_import(hass):
     """Test that we can import a config entry."""
     with patch("pyalmond.WebAlmondAPI.async_list_apps"):
         assert await setup.async_setup_component(
-            hass, DOMAIN, {DOMAIN: {"type": "local", "host": "http://localhost:3000"}},
+            hass,
+            DOMAIN,
+            {DOMAIN: {"type": "local", "host": "http://localhost:3000"}},
         )
         await hass.async_block_till_done()
 
@@ -34,7 +36,9 @@ async def test_import_cannot_connect(hass):
         "pyalmond.WebAlmondAPI.async_list_apps", side_effect=asyncio.TimeoutError
     ):
         assert await setup.async_setup_component(
-            hass, DOMAIN, {DOMAIN: {"type": "local", "host": "http://localhost:3000"}},
+            hass,
+            DOMAIN,
+            {DOMAIN: {"type": "local", "host": "http://localhost:3000"}},
         )
         await hass.async_block_till_done()
 

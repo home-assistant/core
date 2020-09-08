@@ -93,7 +93,10 @@ class TriggerInstance:
         if self.remove:
             self.remove()
         self.remove = await mqtt_trigger.async_attach_trigger(
-            self.trigger.hass, mqtt_config, self.action, self.automation_info,
+            self.trigger.hass,
+            mqtt_config,
+            self.action,
+            self.automation_info,
         )
 
 
@@ -256,7 +259,10 @@ async def async_device_removed(hass: HomeAssistant, device_id: str):
             clear_discovery_hash(hass, discovery_hash)
             device_trigger.remove_signal()
             mqtt.publish(
-                hass, discovery_topic, "", retain=True,
+                hass,
+                discovery_topic,
+                "",
+                retain=True,
             )
 
 

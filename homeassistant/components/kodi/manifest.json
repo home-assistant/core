@@ -2,9 +2,8 @@
   "domain": "kodi",
   "name": "Kodi",
   "documentation": "https://www.home-assistant.io/integrations/kodi",
-  "requirements": ["pykodi==0.1"],
+  "requirements": ["pykodi==0.1.2"],
   "codeowners": [
-    "@armills",
     "@OnFreund"
   ],
   "zeroconf": ["_xbmc-jsonrpc-h._tcp.local."],

@@ -31,10 +31,10 @@ from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import async_generate_entity_id
+from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.script import Script
 
-from . import async_setup_platform_reloadable
-from .const import CONF_AVAILABILITY_TEMPLATE
+from .const import CONF_AVAILABILITY_TEMPLATE, DOMAIN, PLATFORMS
 from .template_entity import TemplateEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,26 +51,29 @@ CONF_COLOR_ACTION = "set_color"
 CONF_WHITE_VALUE_TEMPLATE = "white_value_template"
 CONF_WHITE_VALUE_ACTION = "set_white_value"
 
-LIGHT_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_ICON_TEMPLATE): cv.template,
-        vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
-        vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
-        vol.Optional(CONF_LEVEL_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_LEVEL_TEMPLATE): cv.template,
-        vol.Optional(CONF_FRIENDLY_NAME): cv.string,
-        vol.Optional(CONF_ENTITY_ID): cv.entity_ids,
-        vol.Optional(CONF_TEMPERATURE_TEMPLATE): cv.template,
-        vol.Optional(CONF_TEMPERATURE_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_COLOR_TEMPLATE): cv.template,
-        vol.Optional(CONF_COLOR_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_WHITE_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_WHITE_VALUE_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
-    }
+LIGHT_SCHEMA = vol.All(
+    cv.deprecated(CONF_ENTITY_ID),
+    vol.Schema(
+        {
+            vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+            vol.Optional(CONF_ICON_TEMPLATE): cv.template,
+            vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
+            vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
+            vol.Optional(CONF_LEVEL_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_LEVEL_TEMPLATE): cv.template,
+            vol.Optional(CONF_FRIENDLY_NAME): cv.string,
+            vol.Optional(CONF_ENTITY_ID): cv.entity_ids,
+            vol.Optional(CONF_TEMPERATURE_TEMPLATE): cv.template,
+            vol.Optional(CONF_TEMPERATURE_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_COLOR_TEMPLATE): cv.template,
+            vol.Optional(CONF_COLOR_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_WHITE_VALUE_TEMPLATE): cv.template,
+            vol.Optional(CONF_WHITE_VALUE_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_UNIQUE_ID): cv.string,
+        }
+    ),
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -78,7 +81,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_create_entities(hass, config):
+async def _async_create_entities(hass, config):
     """Create the Template Lights."""
     lights = []
 
@@ -135,8 +138,8 @@ async def async_create_entities(hass, config):
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the template lights."""
 
-    await async_setup_platform_reloadable(hass)
-    async_add_entities(await async_create_entities(hass, config))
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+    async_add_entities(await _async_create_entities(hass, config))
 
 
 class LightTemplate(TemplateEntity, LightEntity):
@@ -409,7 +412,7 @@ class LightTemplate(TemplateEntity, LightEntity):
                 self._available = True
             return
 
-        state = str(result).lower()
+        state = result.lower()
         if state in _VALID_STATES:
             self._state = state in ("true", STATE_ON)
         else:

@@ -50,8 +50,8 @@ class DevoloCoverDeviceEntity(DevoloDeviceEntity, CoverEntity):
             sync=self._sync,
         )
 
-        self._multi_level_switch_property = device_instance.multi_level_switch_property.get(
-            element_uid
+        self._multi_level_switch_property = (
+            device_instance.multi_level_switch_property.get(element_uid)
         )
 
         self._position = self._multi_level_switch_property.value

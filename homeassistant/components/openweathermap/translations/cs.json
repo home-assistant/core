@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Integrace OpenWeatherMap pro tyto sou\u0159adnice je ji\u017e nakonfigurov\u00e1na."
+        },
+        "error": {
+            "auth": "Kl\u00ed\u010d API nen\u00ed spr\u00e1vn\u00fd.",
+            "connection": "Nelze se p\u0159ipojit k OpenWeatherMap API"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API kl\u00ed\u010d OpenWeatherMap",
+                    "language": "Jazyk",
+                    "latitude": "Zem\u011bpisn\u00e1 \u0161\u00ed\u0159ka",
+                    "longitude": "Zem\u011bpisn\u00e1 d\u00e9lka",
+                    "mode": "Re\u017eim",
+                    "name": "N\u00e1zev integrace"
+                },
+                "description": "Nastaven\u00ed integrace OpenWeatherMap. Chcete-li vygenerovat API kl\u00ed\u010d, p\u0159ejd\u011bte na https://openweathermap.org/appid",
+                "title": "OpenWeatherMap"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "language": "Jazyk",
+                    "mode": "Re\u017eim"
+                }
+            }
+        }
+    }
+}

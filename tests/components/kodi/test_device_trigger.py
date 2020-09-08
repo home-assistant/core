@@ -48,7 +48,8 @@ async def test_get_triggers(hass, device_reg, entity_reg):
     config_entry = MockConfigEntry(domain=DOMAIN, data={})
     config_entry.add_to_hass(hass)
     device_entry = device_reg.async_get_or_create(
-        config_entry_id=config_entry.entry_id, identifiers={(DOMAIN, "host", 1234)},
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "host", 1234)},
     )
     entity_reg.async_get_or_create(MP_DOMAIN, DOMAIN, "5678", device_id=device_entry.id)
     expected_triggers = [
@@ -113,7 +114,10 @@ async def test_if_fires_on_state_change(hass, calls, kodi_media_player):
     )
 
     await hass.services.async_call(
-        MP_DOMAIN, "turn_on", {"entity_id": kodi_media_player}, blocking=True,
+        MP_DOMAIN,
+        "turn_on",
+        {"entity_id": kodi_media_player},
+        blocking=True,
     )
 
     await hass.async_block_till_done()
@@ -121,7 +125,10 @@ async def test_if_fires_on_state_change(hass, calls, kodi_media_player):
     assert calls[0].data["some"] == f"turn_on - {kodi_media_player}"
 
     await hass.services.async_call(
-        MP_DOMAIN, "turn_off", {"entity_id": kodi_media_player}, blocking=True,
+        MP_DOMAIN,
+        "turn_off",
+        {"entity_id": kodi_media_player},
+        blocking=True,
     )
 
     await hass.async_block_till_done()

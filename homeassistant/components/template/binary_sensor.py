@@ -24,10 +24,10 @@ from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.template import result_as_boolean
 
-from . import async_setup_platform_reloadable
-from .const import CONF_AVAILABILITY_TEMPLATE
+from .const import CONF_AVAILABILITY_TEMPLATE, DOMAIN, PLATFORMS
 from .template_entity import TemplateEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,20 +36,25 @@ CONF_DELAY_ON = "delay_on"
 CONF_DELAY_OFF = "delay_off"
 CONF_ATTRIBUTE_TEMPLATES = "attribute_templates"
 
-SENSOR_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_ICON_TEMPLATE): cv.template,
-        vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
-        vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
-        vol.Optional(CONF_ATTRIBUTE_TEMPLATES): vol.Schema({cv.string: cv.template}),
-        vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
-        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_DELAY_ON): cv.positive_time_period,
-        vol.Optional(CONF_DELAY_OFF): cv.positive_time_period,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
-    }
+SENSOR_SCHEMA = vol.All(
+    cv.deprecated(ATTR_ENTITY_ID),
+    vol.Schema(
+        {
+            vol.Required(CONF_VALUE_TEMPLATE): cv.template,
+            vol.Optional(CONF_ICON_TEMPLATE): cv.template,
+            vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
+            vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
+            vol.Optional(CONF_ATTRIBUTE_TEMPLATES): vol.Schema(
+                {cv.string: cv.template}
+            ),
+            vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
+            vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+            vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+            vol.Optional(CONF_DELAY_ON): cv.positive_time_period,
+            vol.Optional(CONF_DELAY_OFF): cv.positive_time_period,
+            vol.Optional(CONF_UNIQUE_ID): cv.string,
+        }
+    ),
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -57,7 +62,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_create_entities(hass, config):
+async def _async_create_entities(hass, config):
     """Create the template binary sensors."""
     sensors = []
 
@@ -97,8 +102,8 @@ async def async_create_entities(hass, config):
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the template binary sensors."""
 
-    await async_setup_platform_reloadable(hass)
-    async_add_entities(await async_create_entities(hass, config))
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+    async_add_entities(await _async_create_entities(hass, config))
 
 
 class BinarySensorTemplate(TemplateEntity, BinarySensorEntity):
@@ -189,3 +194,8 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity):
     def is_on(self):
         """Return true if sensor is on."""
         return self._state
+
+    @property
+    def device_class(self):
+        """Return the sensor class of the binary sensor."""
+        return self._device_class

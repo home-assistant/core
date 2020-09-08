@@ -39,6 +39,7 @@ from homeassistant.helpers.script import (
     ATTR_MAX,
     ATTR_MODE,
     CONF_MAX,
+    CONF_MAX_EXCEEDED,
     SCRIPT_MODE_SINGLE,
     Script,
     make_script_schema,
@@ -47,7 +48,7 @@ from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.trigger import async_initialize_triggers
 from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.loader import bind_hass
-from homeassistant.util.dt import parse_datetime, utcnow
+from homeassistant.util.dt import parse_datetime
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs, no-warn-return-any
@@ -81,6 +82,7 @@ EVENT_AUTOMATION_RELOADED = "automation_reloaded"
 EVENT_AUTOMATION_TRIGGERED = "automation_triggered"
 
 ATTR_LAST_TRIGGERED = "last_triggered"
+ATTR_SOURCE = "source"
 ATTR_VARIABLES = "variables"
 SERVICE_TRIGGER = "trigger"
 
@@ -246,7 +248,6 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         self._cond_func = cond_func
         self.action_script = action_script
         self.action_script.change_listener = self.async_write_ha_state
-        self._last_triggered = None
         self._initial_state = initial_state
         self._is_enabled = False
         self._referenced_entities: Optional[Set[str]] = None
@@ -272,7 +273,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
     def state_attributes(self):
         """Return the entity state attributes."""
         attrs = {
-            ATTR_LAST_TRIGGERED: self._last_triggered,
+            ATTR_LAST_TRIGGERED: self.action_script.last_triggered,
             ATTR_MODE: self.action_script.script_mode,
             ATTR_CUR: self.action_script.runs,
         }
@@ -338,7 +339,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
             enable_automation = state.state == STATE_ON
             last_triggered = state.attributes.get("last_triggered")
             if last_triggered is not None:
-                self._last_triggered = parse_datetime(last_triggered)
+                self.action_script.last_triggered = parse_datetime(last_triggered)
             self._logger.debug(
                 "Loaded automation %s with state %s from state "
                 " storage last state %s",
@@ -377,7 +378,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         else:
             await self.async_disable()
 
-    async def async_trigger(self, variables, skip_condition=False, context=None):
+    async def async_trigger(self, variables, context=None, skip_condition=False):
         """Trigger automation.
 
         This method is a coroutine.
@@ -394,18 +395,23 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         trigger_context = Context(parent_id=parent_id)
 
         self.async_set_context(trigger_context)
-        self._last_triggered = utcnow()
-        self.async_write_ha_state()
-        self.hass.bus.async_fire(
-            EVENT_AUTOMATION_TRIGGERED,
-            {ATTR_NAME: self._name, ATTR_ENTITY_ID: self.entity_id},
-            context=trigger_context,
-        )
+        event_data = {
+            ATTR_NAME: self._name,
+            ATTR_ENTITY_ID: self.entity_id,
+        }
+        if "trigger" in variables and "description" in variables["trigger"]:
+            event_data[ATTR_SOURCE] = variables["trigger"]["description"]
 
-        self._logger.info("Executing %s", self._name)
+        @callback
+        def started_action():
+            self.hass.bus.async_fire(
+                EVENT_AUTOMATION_TRIGGERED, event_data, context=trigger_context
+            )
 
         try:
-            await self.action_script.async_run(variables, trigger_context)
+            await self.action_script.async_run(
+                variables, trigger_context, started_action
+            )
         except Exception:  # pylint: disable=broad-except
             self._logger.exception("While executing automation %s", self.entity_id)
 
@@ -510,6 +516,7 @@ async def _async_process_config(hass, config, component):
                 running_description="automation actions",
                 script_mode=config_block[CONF_MODE],
                 max_runs=config_block[CONF_MAX],
+                max_exceeded=config_block[CONF_MAX_EXCEEDED],
                 logger=_LOGGER,
             )
 

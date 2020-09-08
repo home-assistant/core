@@ -46,7 +46,7 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
                     *[self._update_device(), self._update_consumption_data()]
                 )
         except (RequestError) as error:
-            raise UpdateFailed(error)
+            raise UpdateFailed(error) from error
 
     @property
     def location_id(self) -> str:
@@ -171,6 +171,24 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
     def target_valve_state(self) -> str:
         """Return the target valve state for the device."""
         return self._device_information["valve"]["target"]
+
+    async def async_set_mode_home(self):
+        """Set the Flo location to home mode."""
+        await self.api_client.location.set_mode_home(self._flo_location_id)
+
+    async def async_set_mode_away(self):
+        """Set the Flo location to away mode."""
+        await self.api_client.location.set_mode_away(self._flo_location_id)
+
+    async def async_set_mode_sleep(self, sleep_minutes, revert_to_mode):
+        """Set the Flo location to sleep mode."""
+        await self.api_client.location.set_mode_sleep(
+            self._flo_location_id, sleep_minutes, revert_to_mode
+        )
+
+    async def async_run_health_test(self):
+        """Run a Flo device health test."""
+        await self.api_client.device.run_health_test(self._flo_device_id)
 
     async def _update_device(self, *_) -> None:
         """Update the device information from the API."""

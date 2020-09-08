@@ -31,12 +31,23 @@ async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for events based on configuration."""
     event = config.get(CONF_EVENT)
     offset = config.get(CONF_OFFSET)
+    description = event
+    if offset:
+        description = f"{description} with offset"
 
     @callback
     def call_action():
         """Call action with right context."""
         hass.async_run_job(
-            action, {"trigger": {"platform": "sun", "event": event, "offset": offset}}
+            action,
+            {
+                "trigger": {
+                    "platform": "sun",
+                    "event": event,
+                    "offset": offset,
+                    "description": description,
+                }
+            },
         )
 
     if event == SUN_EVENT_SUNRISE:

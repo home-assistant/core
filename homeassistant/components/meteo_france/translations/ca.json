@@ -5,14 +5,14 @@
             "unknown": "Error desconegut: torna-ho a provar m\u00e9s tard"
         },
         "error": {
-            "empty": "No hi ha cap resultat de la cerca: comproveu el camp de la ciutat"
+            "empty": "No s'ha trobat cap resultat en la cerca de la ciutat: comprova el camp ciutat"
         },
         "step": {
             "cities": {
                 "data": {
                     "city": "Ciutat"
                 },
-                "description": "Tria la teva ciutat de la llista",
+                "description": "Tria una ciutat de la llista",
                 "title": "M\u00e9t\u00e9o-France"
             },
             "user": {

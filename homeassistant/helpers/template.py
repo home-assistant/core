@@ -30,6 +30,7 @@ from homeassistant.const import (
 from homeassistant.core import State, callback, split_entity_id, valid_entity_id
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, location as loc_helper
+from homeassistant.helpers.frame import report
 from homeassistant.helpers.typing import HomeAssistantType, TemplateVarsType
 from homeassistant.loader import bind_hass
 from homeassistant.util import convert, dt as dt_util, location as loc_util
@@ -51,7 +52,7 @@ _RE_GET_ENTITIES = re.compile(
     re.I | re.M,
 )
 
-_RE_JINJA_DELIMITERS = re.compile(r"\{%|\{\{")
+_RE_JINJA_DELIMITERS = re.compile(r"\{%|\{\{|\{#")
 
 _RESERVED_NAMES = {"contextfunction", "evalcontextfunction", "environmentfunction"}
 
@@ -98,6 +99,11 @@ def extract_entities(
     variables: TemplateVarsType = None,
 ) -> Union[str, List[str]]:
     """Extract all entities for state_changed listener from template string."""
+
+    report(
+        "called template.extract_entities. Please use event.async_track_template_result instead as it can accurately handle watching entities"
+    )
+
     if template is None or not is_template_string(template):
         return []
 
@@ -169,7 +175,6 @@ class RenderInfo:
             split_entity_id(entity_id)[0] in self.domains or entity_id in self.entities
         )
 
-    @property
     def result(self) -> str:
         """Results of the template computation."""
         if self.exception is not None:
@@ -186,7 +191,7 @@ class RenderInfo:
         self.entities = frozenset(self.entities)
         self.domains = frozenset(self.domains)
 
-        if self.all_states:
+        if self.all_states or self.exception:
             return
 
         if not self.domains:
@@ -207,6 +212,7 @@ class Template:
         self._compiled_code = None
         self._compiled = None
         self.hass = hass
+        self.is_static = not is_template_string(template)
 
     @property
     def _env(self):
@@ -225,16 +231,22 @@ class Template:
         try:
             self._compiled_code = self._env.compile(self.template)
         except jinja2.exceptions.TemplateSyntaxError as err:
-            raise TemplateError(err)
+            raise TemplateError(err) from err
 
     def extract_entities(
         self, variables: TemplateVarsType = None
     ) -> Union[str, List[str]]:
         """Extract all entities for state_changed listener."""
+        if self.is_static:
+            return []
+
         return extract_entities(self.hass, self.template, variables)
 
     def render(self, variables: TemplateVarsType = None, **kwargs: Any) -> str:
         """Render given template."""
+        if self.is_static:
+            return self.template.strip()
+
         if variables is not None:
             kwargs.update(variables)
 
@@ -248,6 +260,9 @@ class Template:
 
         This method must be run in the event loop.
         """
+        if self.is_static:
+            return self.template.strip()
+
         compiled = self._compiled or self._ensure_compiled()
 
         if variables is not None:
@@ -256,7 +271,7 @@ class Template:
         try:
             return compiled.render(kwargs).strip()
         except jinja2.TemplateError as err:
-            raise TemplateError(err)
+            raise TemplateError(err) from err
 
     @callback
     def async_render_to_info(
@@ -264,18 +279,24 @@ class Template:
     ) -> RenderInfo:
         """Render the template and collect an entity filter."""
         assert self.hass and _RENDER_INFO not in self.hass.data
-        render_info = self.hass.data[_RENDER_INFO] = RenderInfo(self)
+
+        render_info = RenderInfo(self)
+
         # pylint: disable=protected-access
+        if self.is_static:
+            render_info._result = self.template.strip()
+            render_info._freeze_static()
+            return render_info
+
+        self.hass.data[_RENDER_INFO] = render_info
         try:
             render_info._result = self.async_render(variables, **kwargs)
         except TemplateError as ex:
             render_info.exception = ex
         finally:
             del self.hass.data[_RENDER_INFO]
-            if not is_template_string(self.template):
-                render_info._freeze_static()
-            else:
-                render_info._freeze()
+
+        render_info._freeze()
         return render_info
 
     def render_with_possible_json_value(self, value, error_value=_SENTINEL):
@@ -283,6 +304,9 @@ class Template:
 
         If valid JSON will expose value_json too.
         """
+        if self.is_static:
+            return self.template
+
         return run_callback_threadsafe(
             self.hass.loop,
             self.async_render_with_possible_json_value,
@@ -300,6 +324,9 @@ class Template:
 
         This method must be run in the event loop.
         """
+        if self.is_static:
+            return self.template
+
         if self._compiled is None:
             self._ensure_compiled()
 
@@ -433,8 +460,7 @@ class DomainStates:
             sorted(
                 (
                     _wrap_state(self._hass, state)
-                    for state in self._hass.states.async_all()
-                    if state.domain == self._domain
+                    for state in self._hass.states.async_all(self._domain)
                 ),
                 key=lambda state: state.entity_id,
             )
@@ -1025,6 +1051,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["atan2"] = arc_tangent2
         self.filters["sqrt"] = square_root
         self.filters["as_timestamp"] = forgiving_as_timestamp
+        self.filters["as_local"] = dt_util.as_local
         self.filters["timestamp_custom"] = timestamp_custom
         self.filters["timestamp_local"] = timestamp_local
         self.filters["timestamp_utc"] = timestamp_utc
@@ -1058,6 +1085,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["atan2"] = arc_tangent2
         self.globals["float"] = forgiving_float
         self.globals["now"] = dt_util.now
+        self.globals["as_local"] = dt_util.as_local
         self.globals["utcnow"] = dt_util.utcnow
         self.globals["as_timestamp"] = forgiving_as_timestamp
         self.globals["relative_time"] = relative_time
@@ -1095,7 +1123,13 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
     def is_safe_attribute(self, obj, attr, value):
         """Test if attribute is safe."""
-        return isinstance(obj, Namespace) or super().is_safe_attribute(obj, attr, value)
+        if isinstance(obj, Namespace):
+            return True
+
+        if isinstance(obj, (AllStates, DomainStates, TemplateState)):
+            return not attr.startswith("_")
+
+        return super().is_safe_attribute(obj, attr, value)
 
     def compile(self, source, name=None, filename=None, raw=False, defer_init=False):
         """Compile the template."""

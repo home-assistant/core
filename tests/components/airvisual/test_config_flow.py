@@ -68,7 +68,8 @@ async def test_invalid_identifier(hass):
     }
 
     with patch(
-        "pyairvisual.api.API.nearest_city", side_effect=InvalidKeyError,
+        "pyairvisual.api.API.nearest_city",
+        side_effect=InvalidKeyError,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=geography_conf
@@ -82,7 +83,8 @@ async def test_node_pro_error(hass):
     node_pro_conf = {CONF_IP_ADDRESS: "192.168.1.100", CONF_PASSWORD: "my_password"}
 
     with patch(
-        "pyairvisual.node.Node.from_samba", side_effect=NodeProError,
+        "pyairvisual.node.Node.from_samba",
+        side_effect=NodeProError,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data={"type": "AirVisual Node/Pro"}

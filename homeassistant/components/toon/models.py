@@ -2,7 +2,7 @@
 import logging
 from typing import Any, Dict, Optional
 
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import ToonDataUpdateCoordinator
@@ -10,7 +10,7 @@ from .coordinator import ToonDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-class ToonEntity(Entity):
+class ToonEntity(CoordinatorEntity):
     """Defines a base Toon entity."""
 
     def __init__(
@@ -22,11 +22,11 @@ class ToonEntity(Entity):
         enabled_default: bool = True,
     ) -> None:
         """Initialize the Toon entity."""
+        super().__init__(coordinator)
         self._enabled_default = enabled_default
         self._icon = icon
         self._name = name
         self._state = None
-        self.coordinator = coordinator
 
     @property
     def name(self) -> str:
@@ -39,29 +39,9 @@ class ToonEntity(Entity):
         return self._icon
 
     @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self.coordinator.last_update_success
-
-    @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
         return self._enabled_default
-
-    @property
-    def should_poll(self) -> bool:
-        """Return the polling requirement of the entity."""
-        return False
-
-    async def async_added_to_hass(self) -> None:
-        """Connect to dispatcher listening for entity data notifications."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
-        )
-
-    async def async_update(self) -> None:
-        """Update Toon entity."""
-        await self.coordinator.async_request_refresh()
 
 
 class ToonDisplayDeviceEntity(ToonEntity):

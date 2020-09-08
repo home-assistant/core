@@ -1006,7 +1006,9 @@ async def test_invalid_values(hass, mqtt_mock):
 
     # Bad HS color values
     async_fire_mqtt_message(
-        hass, "test_light_rgb", '{"state":"ON",' '"color":{"h":"bad","s":"val"}}',
+        hass,
+        "test_light_rgb",
+        '{"state":"ON",' '"color":{"h":"bad","s":"val"}}',
     )
 
     # Color should not have changed
@@ -1028,7 +1030,9 @@ async def test_invalid_values(hass, mqtt_mock):
 
     # Bad XY color values
     async_fire_mqtt_message(
-        hass, "test_light_rgb", '{"state":"ON",' '"color":{"x":"bad","y":"val"}}',
+        hass,
+        "test_light_rgb",
+        '{"state":"ON",' '"color":{"x":"bad","y":"val"}}',
     )
 
     # Color should not have changed

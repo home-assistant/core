@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado"
+        },
+        "error": {
+            "cannot_connect": "Fallo al conectar",
+            "invalid_auth": "Autentificaci\u00f3n no valida",
+            "unknown": "Error inesperado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Contrase\u00f1a",
+                    "username": "Nombre de usuario"
+                }
+            }
+        }
+    },
+    "title": "flo"
+}

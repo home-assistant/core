@@ -157,7 +157,8 @@ class GlancesSensor(Entity):
                         self._state = round(disk["free"] / 1024 ** 3, 1)
                     except KeyError:
                         self._state = round(
-                            (disk["size"] - disk["used"]) / 1024 ** 3, 1,
+                            (disk["size"] - disk["used"]) / 1024 ** 3,
+                            1,
                         )
             elif self.type == "sensor_temp":
                 for sensor in value["sensors"]:

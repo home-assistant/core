@@ -315,6 +315,8 @@ class OnOffTrait(_Trait):
 
     def sync_attributes(self):
         """Return OnOff attributes for a sync request."""
+        if self.state.attributes.get(ATTR_ASSUMED_STATE, False):
+            return {"commandOnlyOnOff": True}
         return {}
 
     def query_attributes(self):
@@ -1541,6 +1543,7 @@ class OpenCloseTrait(_Trait):
         response = {}
         if self.state.domain == binary_sensor.DOMAIN:
             response["queryOnlyOpenClose"] = True
+            response["discreteOnlyOpenClose"] = True
         return response
 
     def query_attributes(self):
@@ -1715,7 +1718,7 @@ class VolumeTrait(_Trait):
                 svc = media_player.SERVICE_VOLUME_DOWN
                 relative = -relative
 
-            for i in range(relative):
+            for _ in range(relative):
                 await self.hass.services.async_call(
                     media_player.DOMAIN,
                     svc,

@@ -32,7 +32,9 @@ class AvriConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _show_setup_form(self, errors=None):
         """Show the setup form to the user."""
         return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors or {},
+            step_id="user",
+            data_schema=DATA_SCHEMA,
+            errors=errors or {},
         )
 
     async def async_step_user(self, user_input=None):

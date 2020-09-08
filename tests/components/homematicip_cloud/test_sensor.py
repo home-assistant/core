@@ -2,7 +2,7 @@
 from homematicip.base.enums import ValveState
 
 from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
-from homeassistant.components.homematicip_cloud.device import (
+from homeassistant.components.homematicip_cloud.generic_entity import (
     ATTR_CONFIG_PENDING,
     ATTR_DEVICE_OVERHEATED,
     ATTR_DEVICE_OVERLOADED,
@@ -24,10 +24,10 @@ from homeassistant.components.homematicip_cloud.sensor import (
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
+    PERCENTAGE,
     POWER_WATT,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
 )
 from homeassistant.setup import async_setup_component
 
@@ -56,7 +56,7 @@ async def test_hmip_accesspoint_status(hass, default_mock_hap_factory):
     )
     assert hmip_device
     assert ha_state.state == "8.0"
-    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UNIT_PERCENTAGE
+    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
 
     await async_manipulate_test_data(hass, hmip_device, "dutyCycle", 17.3)
 
@@ -78,7 +78,7 @@ async def test_hmip_heating_thermostat(hass, default_mock_hap_factory):
     )
 
     assert ha_state.state == "0"
-    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UNIT_PERCENTAGE
+    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
     await async_manipulate_test_data(hass, hmip_device, "valvePosition", 0.37)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == "37"
@@ -112,7 +112,7 @@ async def test_hmip_humidity_sensor(hass, default_mock_hap_factory):
     )
 
     assert ha_state.state == "40"
-    assert ha_state.attributes["unit_of_measurement"] == UNIT_PERCENTAGE
+    assert ha_state.attributes["unit_of_measurement"] == PERCENTAGE
     await async_manipulate_test_data(hass, hmip_device, "humidity", 45)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == "45"

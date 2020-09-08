@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Do Home Assistant mo\u017cna doda\u0107 tylko jedno urz\u0105dzenie Atag."
+            "already_configured": "To urz\u0105dzenie zosta\u0142o ju\u017c dodane do Home Assistant"
         },
         "error": {
             "connection_error": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia, spr\u00f3buj ponownie."

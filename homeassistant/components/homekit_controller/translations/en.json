@@ -1,50 +1,57 @@
 {
-  "title": "HomeKit Controller",
-  "config": {
-    "flow_title": "HomeKit Accessory: {name}",
-    "step": {
-      "user": {
-        "title": "Pair with HomeKit Accessory",
-        "description": "Select the device you want to pair with",
-        "data": {
-          "device": "Device"
+    "config": {
+        "abort": {
+            "accessory_not_found_error": "Cannot add pairing as device can no longer be found.",
+            "already_configured": "Accessory is already configured with this controller.",
+            "already_in_progress": "Config flow for device is already in progress.",
+            "already_paired": "This accessory is already paired to another device. Please reset the accessory and try again.",
+            "ignored_model": "HomeKit support for this model is blocked as a more feature complete native integration is available.",
+            "invalid_config_entry": "This device is showing as ready to pair but there is already a conflicting configuration entry for it in Home Assistant that must first be removed.",
+            "no_devices": "No unpaired devices could be found"
+        },
+        "error": {
+            "authentication_error": "Incorrect HomeKit code. Please check it and try again.",
+            "busy_error": "Device refused to add pairing as it is already pairing with another controller.",
+            "max_peers_error": "Device refused to add pairing as it has no free pairing storage.",
+            "max_tries_error": "Device refused to add pairing as it has received more than 100 unsuccessful authentication attempts.",
+            "pairing_failed": "An unhandled error occurred while attempting to pair with this device. This may be a temporary failure or your device may not be supported currently.",
+            "protocol_error": "Error communicating with the accessory. Device may not be in pairing mode and may require a physical or virtual button press.",
+            "unable_to_pair": "Unable to pair, please try again.",
+            "unknown_error": "Device reported an unknown error. Pairing failed."
+        },
+        "flow_title": "HomeKit Accessory: {name}",
+        "step": {
+            "busy_error": {
+                "description": "Abort pairing on all controllers, or try restarting the device, then continue to resume pairing.",
+                "title": "The device is already pairing with another controller"
+            },
+            "max_tries_error": {
+                "description": "The device has received more than 100 unsuccessful authentication attempts. Try restarting the device, then continue to resume pairing.",
+                "title": "Maximum authentication attempts exceeded"
+            },
+            "pair": {
+                "data": {
+                    "pairing_code": "Pairing Code"
+                },
+                "description": "Enter your HomeKit pairing code (in the format XXX-XX-XXX) to use this accessory",
+                "title": "Pair with HomeKit Accessory"
+            },
+            "protocol_error": {
+                "description": "The device may not be in pairing mode and may require a physical or virtual button press. Ensure the device is in pairing mode or try restarting the device, then continue to resume pairing.",
+                "title": "Error communicating with the accessory"
+            },
+            "try_pair_later": {
+                "description": "Ensure the device is in pairing mode or try restarting the device, then continue to re-start pairing.",
+                "title": "Pairing Unavailable"
+            },
+            "user": {
+                "data": {
+                    "device": "Device"
+                },
+                "description": "Select the device you want to pair with",
+                "title": "Pair with HomeKit Accessory"
+            }
         }
-      },
-      "pair": {
-        "title": "Pair with HomeKit Accessory",
-        "description": "Enter your HomeKit pairing code (in the format XXX-XX-XXX) to use this accessory",
-        "data": {
-          "pairing_code": "Pairing Code"
-        }
-      },
-      "protocol_error": {
-        "title": "Error communicating with the accessory",
-        "description": "The device may not be in pairing mode and may require a physical or virtual button press. Ensure the device is in pairing mode or try restarting the device, then continue to resume pairing."
-      },
-      "busy_error": {
-        "title": "The device is already pairing with another controller",
-        "description": "Abort pairing on all controllers, or try restarting the device, then continue to resume pairing."
-      },
-      "max_tries_error": {
-        "title": "Maximum authentication attempts exceeded",
-        "description": "The device has received more than 100 unsuccessful authentication attempts. Try restarting the device, then continue to resume pairing."
-      }
     },
-    "error": {
-      "unable_to_pair": "Unable to pair, please try again.",
-      "unknown_error": "Device reported an unknown error. Pairing failed.",
-      "authentication_error": "Incorrect HomeKit code. Please check it and try again.",
-      "max_peers_error": "Device refused to add pairing as it has no free pairing storage.",
-      "pairing_failed": "An unhandled error occurred while attempting to pair with this device. This may be a temporary failure or your device may not be supported currently."
-    },
-    "abort": {
-      "no_devices": "No unpaired devices could be found",
-      "already_paired": "This accessory is already paired to another device. Please reset the accessory and try again.",
-      "ignored_model": "HomeKit support for this model is blocked as a more feature complete native integration is available.",
-      "already_configured": "Accessory is already configured with this controller.",
-      "invalid_config_entry": "This device is showing as ready to pair but there is already a conflicting configuration entry for it in Home Assistant that must first be removed.",
-      "accessory_not_found_error": "Cannot add pairing as device can no longer be found.",
-      "already_in_progress": "Config flow for device is already in progress."
-    }
-  }
+    "title": "HomeKit Controller"
 }
