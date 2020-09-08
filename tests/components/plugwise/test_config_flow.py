@@ -62,14 +62,14 @@ async def test_form(hass):
             {"host": TEST_HOST, "password": TEST_PASSWORD},
         )
 
+    await hass.async_block_till_done()
+
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result2["data"] == {
         "host": TEST_HOST,
         "password": TEST_PASSWORD,
     }
-    await hass.async_block_till_done()
 
-    assert result["errors"] == {}
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -108,7 +108,6 @@ async def test_zeroconf_form(hass):
         "password": TEST_PASSWORD,
     }
 
-    assert result["errors"] == {}
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
