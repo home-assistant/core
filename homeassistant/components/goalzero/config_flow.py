@@ -23,18 +23,10 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
-        return await self.async_step_init(user_input)
-
-    async def async_step_import(self, user_input=None):
-        """Handle a flow initiated by import."""
-        return await self.async_step_init(user_input, is_import=True)
-
-    async def async_step_init(self, user_input, is_import=False):
-        """Handle init step of a flow."""
         errors = {}
 
         if user_input is not None:
-            host = user_input[CONF_HOST] if is_import else f"{user_input[CONF_HOST]}"
+            host = user_input[CONF_HOST]
             name = user_input[CONF_NAME]
             endpoint = f"{host}"
 
@@ -44,12 +36,11 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 await self._async_try_connect(host)
                 return self.async_create_entry(
-                    title=name,
-                    data={CONF_HOST: host, CONF_NAME: name},
+                    title=name, data={CONF_HOST: host, CONF_NAME: name},
                 )
             except exceptions.ConnectError:
-                errors["base"] = "connect_timeout"
-                _LOGGER.exception("No route to device at %s", host)
+                errors["base"] = "cannot_connect"
+                _LOGGER.exception("Error connecting to device at %s", host)
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -79,7 +70,4 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def _async_try_connect(self, host):
         session = async_get_clientsession(self.hass)
         api = GoalZero(host, self.hass.loop, session)
-        try:
-            await api.get_state()
-        except exceptions.ConnectError:
-            return False
+        await api.get_state()
