@@ -40,6 +40,43 @@ SENSORS = {
         device_class=sensor.DEVICE_CLASS_POWER,
         default_enabled=False,
     ),
+    ("device", "power"): BlockAttributeDescription(
+        name="Power",
+        unit=POWER_WATT,
+        value=lambda value: round(value, 1),
+        device_class=sensor.DEVICE_CLASS_POWER,
+    ),
+    ("emeter", "power"): BlockAttributeDescription(
+        name="Power",
+        unit=POWER_WATT,
+        value=lambda value: round(value, 1),
+        device_class=sensor.DEVICE_CLASS_POWER,
+    ),
+    ("relay", "power"): BlockAttributeDescription(
+        name="Power",
+        unit=POWER_WATT,
+        value=lambda value: round(value, 1),
+        device_class=sensor.DEVICE_CLASS_POWER,
+    ),
+    ("device", "energy"): BlockAttributeDescription(
+        name="Energy",
+        unit=ENERGY_KILO_WATT_HOUR,
+        value=lambda value: round(value / 60 / 1000, 2),
+        device_class=sensor.DEVICE_CLASS_ENERGY,
+    ),
+    ("emeter", "energy"): BlockAttributeDescription(
+        name="Energy",
+        unit=ENERGY_KILO_WATT_HOUR,
+        value=lambda value: round(value / 1000, 2),
+        device_class=sensor.DEVICE_CLASS_ENERGY,
+    ),
+    ("light", "energy"): BlockAttributeDescription(
+        name="Energy",
+        unit=ENERGY_KILO_WATT_HOUR,
+        value=lambda value: round(value / 60 / 1000, 2),
+        device_class=sensor.DEVICE_CLASS_ENERGY,
+        default_enabled=False,
+    ),
     ("relay", "energy"): BlockAttributeDescription(
         name="Energy",
         unit=ENERGY_KILO_WATT_HOUR,
