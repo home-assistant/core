@@ -256,7 +256,6 @@ class MqttLight(
             value_templates[key] = lambda value: value
         for key in VALUE_TEMPLATE_KEYS & config.keys():
             tpl = config[key]
-            _LOGGER.error("Template for %s: %s", key, tpl)
             value_templates[key] = tpl.async_render_with_possible_json_value
             tpl.hass = self.hass
         self._value_templates = value_templates
@@ -304,9 +303,7 @@ class MqttLight(
         @log_messages(self.hass, self.entity_id)
         def state_received(msg):
             """Handle new MQTT messages."""
-            _LOGGER.error("state_received: %s", msg)
             payload = self._value_templates[CONF_STATE_VALUE_TEMPLATE](msg.payload)
-            _LOGGER.error("payload: %s", payload)
             if not payload:
                 _LOGGER.debug("Ignoring empty state message from '%s'", msg.topic)
                 return
