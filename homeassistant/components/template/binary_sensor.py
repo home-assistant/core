@@ -194,3 +194,8 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity):
     def is_on(self):
         """Return true if sensor is on."""
         return self._state
+
+    @property
+    def device_class(self):
+        """Return the sensor class of the binary sensor."""
+        return self._device_class
