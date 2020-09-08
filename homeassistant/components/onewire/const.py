@@ -15,7 +15,7 @@ DEFAULT_SYSBUS_MOUNT_DIR = "/sys/bus/w1/devices/"
 
 DOMAIN = "onewire"
 
-LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__package__)
 
 SUPPORTED_PLATFORMS = [
     "sensor",
