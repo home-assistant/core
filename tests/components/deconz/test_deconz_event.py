@@ -40,6 +40,14 @@ SENSORS = {
         "config": {"battery": 100},
         "uniqueid": "00:00:00:00:00:00:00:04-00",
     },
+    "5": {
+        "id": "ZHA remote 1 id",
+        "name": "ZHA remote 1",
+        "type": "ZHASwitch",
+        "state": {"angle": 0, "buttonevent": 1000, "xy": [0.0, 0.0]},
+        "config": {"group": "4,5,6", "reachable": True, "on": True},
+        "uniqueid": "00:00:00:00:00:00:00:05-00",
+    },
 }
 
 
@@ -53,7 +61,7 @@ async def test_deconz_events(hass):
     assert "sensor.switch_2" not in gateway.deconz_ids
     assert "sensor.switch_2_battery_level" in gateway.deconz_ids
     assert len(hass.states.async_all()) == 3
-    assert len(gateway.events) == 4
+    assert len(gateway.events) == 5
 
     switch_1 = hass.states.get("sensor.switch_1")
     assert switch_1 is None
@@ -99,6 +107,20 @@ async def test_deconz_events(hass):
         "unique_id": "00:00:00:00:00:00:00:04",
         "event": 1000,
         "gesture": 0,
+    }
+
+    gateway.api.sensors["5"].update(
+        {"state": {"buttonevent": 6002, "angle": 110, "xy": [0.5982, 0.3897]}}
+    )
+    await hass.async_block_till_done()
+
+    assert len(events) == 4
+    assert events[3].data == {
+        "id": "zha_remote_1",
+        "unique_id": "00:00:00:00:00:00:00:05",
+        "event": 6002,
+        "angle": 110,
+        "xy": [0.5982, 0.3897],
     }
 
     await gateway.async_reset()
