@@ -3,6 +3,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_GAS,
     DEVICE_CLASS_MOISTURE,
     DEVICE_CLASS_OPENING,
+    DEVICE_CLASS_PROBLEM,
     DEVICE_CLASS_SMOKE,
     DEVICE_CLASS_VIBRATION,
     BinarySensorEntity,
@@ -15,8 +16,18 @@ from .entity import (
 )
 
 SENSORS = {
-    ("device", "overtemp"): BlockAttributeDescription(name="overtemp"),
-    ("relay", "overpower"): BlockAttributeDescription(name="overpower"),
+    ("device", "overtemp"): BlockAttributeDescription(
+        name="Overheating", device_class=DEVICE_CLASS_PROBLEM
+    ),
+    ("device", "overpower"): BlockAttributeDescription(
+        name="Over Power", device_class=DEVICE_CLASS_PROBLEM
+    ),
+    ("light", "overpower"): BlockAttributeDescription(
+        name="Over Power", device_class=DEVICE_CLASS_PROBLEM
+    ),
+    ("relay", "overpower"): BlockAttributeDescription(
+        name="Over Power", device_class=DEVICE_CLASS_PROBLEM
+    ),
     ("sensor", "dwIsOpened"): BlockAttributeDescription(
         name="Door", device_class=DEVICE_CLASS_OPENING
     ),
