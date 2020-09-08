@@ -1026,6 +1026,24 @@ def relative_time(value):
     return dt_util.get_age(value)
 
 
+def duration(value):
+    """
+    Take a datetime and return its duration since now in seconds.
+
+    If the date is in the future it will return a negative number.
+
+    If the input is not a datetime object the input will be returned unmodified.
+    """
+
+    if not isinstance(value, datetime):
+        return value
+    if not value.tzinfo:
+        value = dt_util.as_local(value)
+    if dt_util.now() < value:
+        return value
+    return dt_util.as_timestamp(dt_util.now()) - dt_util.as_timestamp(value)
+
+
 def urlencode(value):
     """Urlencode dictionary and return as UTF-8 string."""
     return urllib_urlencode(value).encode("utf-8")
@@ -1071,6 +1089,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["bitwise_and"] = bitwise_and
         self.filters["bitwise_or"] = bitwise_or
         self.filters["ord"] = ord
+        self.filters["duration"] = duration
         self.globals["log"] = logarithm
         self.globals["sin"] = sine
         self.globals["cos"] = cosine
@@ -1091,6 +1110,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["relative_time"] = relative_time
         self.globals["strptime"] = strptime
         self.globals["urlencode"] = urlencode
+        self.globals["duration"] = duration
         if hass is None:
             return
 
