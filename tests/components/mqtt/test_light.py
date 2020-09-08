@@ -648,6 +648,35 @@ async def test_controlling_state_via_topic_with_templates(hass, mqtt_mock):
     assert state.attributes.get("xy_color") == (0.14, 0.131)
 
 
+async def test_controlling_state_via_topic_with_value_template(hass, mqtt_mock):
+    """Test the setting of the state with undocumented value_template."""
+    config = {
+        light.DOMAIN: {
+            "platform": "mqtt",
+            "name": "test",
+            "state_topic": "test_light_rgb/status",
+            "command_topic": "test_light_rgb/set",
+            "value_template": "{{ value_json.hello }}",
+        }
+    }
+
+    assert await async_setup_component(hass, light.DOMAIN, config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.test")
+    assert state.state == STATE_OFF
+
+    async_fire_mqtt_message(hass, "test_light_rgb/status", '{"hello": "ON"}')
+
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+
+    async_fire_mqtt_message(hass, "test_light_rgb/status", '{"hello": "OFF"}')
+
+    state = hass.states.get("light.test")
+    assert state.state == STATE_OFF
+
+
 async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
     """Test the sending of command in optimistic mode."""
     config = {
