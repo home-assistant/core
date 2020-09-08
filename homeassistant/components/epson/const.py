@@ -12,4 +12,4 @@ SUPPORT_CMODE = 33001
 
 TIMEOUT_SCALE = "timeout_scale"
 UPDATE_LISTENER = "update_listener"
-SIGNAL_CONFIG_OPTIONS_UPDATE = "epson_config_options_update {}"
+SIGNAL_CONFIG_OPTIONS_UPDATE = "epson_config_options_update"

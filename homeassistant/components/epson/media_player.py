@@ -108,11 +108,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if entity_ids:
             devices = [
                 device
-                for device in hass.data[DATA_EPSON]
+                for device in hass.data[DOMAIN][config_entry.entry_id][DATA_EPSON]
                 if device.entity_id in entity_ids
             ]
         else:
-            devices = hass.data[DATA_EPSON]
+            devices = hass.data[DOMAIN][config_entry.entry_id][DATA_EPSON]
         for device in devices:
             if service.service == SERVICE_SELECT_CMODE:
                 cmode = service.data.get(ATTR_CMODE)
@@ -180,7 +180,7 @@ class EpsonProjector(MediaPlayerEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                SIGNAL_CONFIG_OPTIONS_UPDATE.format(self._entry_id),
+                f"{SIGNAL_CONFIG_OPTIONS_UPDATE} {self._entry_id}",
                 self.update_options,
             )
         )

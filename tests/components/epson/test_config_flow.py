@@ -21,6 +21,7 @@ async def test_form(hass):
     )
     assert result["type"] == "form"
     assert result["errors"] == {}
+    assert result["step_id"] == config_entries.SOURCE_USER
 
     with patch(
         "homeassistant.components.epson.config_flow.epson.Projector.get_property",

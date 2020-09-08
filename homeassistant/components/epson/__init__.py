@@ -41,8 +41,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
             ]
         )
     )
-    hass.data[DOMAIN][entry.entry_id][UPDATE_LISTENER]()
     if unload_ok:
+        listener = hass.data[DOMAIN][entry.entry_id][UPDATE_LISTENER]
+        listener()
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
@@ -51,5 +52,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 async def update_listener(hass, entry):
     """Handle options update."""
     async_dispatcher_send(
-        hass, SIGNAL_CONFIG_OPTIONS_UPDATE.format(entry.entry_id), entry.options
+        hass, f"{SIGNAL_CONFIG_OPTIONS_UPDATE} {entry.entry_id}", entry.options
     )
