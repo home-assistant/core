@@ -4,11 +4,11 @@ from synology_dsm.api.core.security import SynoCoreSecurity
 from synology_dsm.api.core.utilization import SynoCoreUtilization
 from synology_dsm.api.storage.storage import SynoStorage
 
+from homeassistant.components.binary_sensor import DEVICE_CLASS_SAFETY
 from homeassistant.const import (
     DATA_MEGABYTES,
     DATA_RATE_KILOBYTES_PER_SECOND,
     DATA_TERABYTES,
-    DEVICE_CLASS_SAFETY,
     PERCENTAGE,
 )
 
