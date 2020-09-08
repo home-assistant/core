@@ -9,7 +9,7 @@ from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import Event, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform
-from homeassistant.helpers.entity_platform import DATA_ENTITY_PLATFORM, EntityPlatform
+from homeassistant.helpers.entity_platform import EntityPlatform, async_get_platforms
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
@@ -141,13 +141,7 @@ def async_get_platform(
     hass: HomeAssistantType, integration_name: str, integration_platform_name: str
 ) -> Optional[EntityPlatform]:
     """Find an existing platform."""
-    if (
-        DATA_ENTITY_PLATFORM not in hass.data
-        or integration_name not in hass.data[DATA_ENTITY_PLATFORM]
-    ):
-        return None
-
-    for integration_platform in hass.data[DATA_ENTITY_PLATFORM][integration_name]:
+    for integration_platform in async_get_platforms(hass, integration_name):
         if integration_platform.domain == integration_platform_name:
             platform: EntityPlatform = integration_platform
             return platform
