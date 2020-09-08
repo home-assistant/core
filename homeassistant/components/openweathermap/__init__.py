@@ -3,6 +3,7 @@ import asyncio
 import logging
 
 from pyowm import OWM
+from pyowm.utils.config import get_default_config
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
@@ -19,12 +20,10 @@ from .const import (
     COMPONENTS,
     CONF_LANGUAGE,
     DOMAIN,
-    ENTRY_FORECAST_COORDINATOR,
     ENTRY_NAME,
     ENTRY_WEATHER_COORDINATOR,
     UPDATE_LISTENER,
 )
-from .forecast_update_coordinator import ForecastUpdateCoordinator
 from .weather_update_coordinator import WeatherUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -50,26 +49,23 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     forecast_mode = _get_config_value(config_entry, CONF_MODE)
     language = _get_config_value(config_entry, CONF_LANGUAGE)
 
-    owm = OWM(API_key=api_key, language=language)
-    weather_coordinator = WeatherUpdateCoordinator(owm, latitude, longitude, hass)
-    forecast_coordinator = ForecastUpdateCoordinator(
+    config_dict = get_default_config()
+    config_dict["language"] = language
+
+    owm = OWM(api_key, config_dict).weather_manager()
+    weather_coordinator = WeatherUpdateCoordinator(
         owm, latitude, longitude, forecast_mode, hass
     )
 
     await weather_coordinator.async_refresh()
-    await forecast_coordinator.async_refresh()
 
-    if (
-        not weather_coordinator.last_update_success
-        and not forecast_coordinator.last_update_success
-    ):
+    if not weather_coordinator.last_update_success:
         raise ConfigEntryNotReady
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config_entry.entry_id] = {
         ENTRY_NAME: name,
         ENTRY_WEATHER_COORDINATOR: weather_coordinator,
-        ENTRY_FORECAST_COORDINATOR: forecast_coordinator,
     }
 
     for component in COMPONENTS:

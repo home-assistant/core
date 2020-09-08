@@ -2,8 +2,7 @@
 import logging
 
 from pyowm import OWM
-from pyowm.exceptions.api_call_error import APICallError
-from pyowm.exceptions.api_response_error import UnauthorizedError
+from pyowm.commons.exceptions import APIRequestError, UnauthorizedError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -66,13 +65,13 @@ class OpenWeatherMapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 api_online = await _is_owm_api_online(
-                    self.hass, user_input[CONF_API_KEY]
+                    self.hass, user_input[CONF_API_KEY], latitude, longitude
                 )
                 if not api_online:
                     errors["base"] = "auth"
             except UnauthorizedError:
                 errors["base"] = "auth"
-            except APICallError:
+            except APIRequestError:
                 errors["base"] = "connection"
 
             if not errors:
@@ -133,6 +132,6 @@ class OpenWeatherMapOptionsFlow(config_entries.OptionsFlow):
         )
 
 
-async def _is_owm_api_online(hass, api_key):
-    owm = OWM(api_key)
-    return await hass.async_add_executor_job(owm.is_API_online)
+async def _is_owm_api_online(hass, api_key, lat, lon):
+    owm = OWM(api_key).weather_manager()
+    return await hass.async_add_executor_job(owm.one_call, lat, lon)
