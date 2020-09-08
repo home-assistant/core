@@ -6,8 +6,11 @@ from homeassistant.components.media_player.const import (
     MEDIA_CLASS_ALBUM,
     MEDIA_CLASS_ARTIST,
     MEDIA_CLASS_DIRECTORY,
+    MEDIA_CLASS_EPISODE,
+    MEDIA_CLASS_MOVIE,
     MEDIA_CLASS_PLAYLIST,
     MEDIA_CLASS_SEASON,
+    MEDIA_CLASS_TRACK,
     MEDIA_CLASS_TV_SHOW,
     MEDIA_CLASS_VIDEO,
 )
@@ -32,9 +35,12 @@ SPECIAL_METHODS = {
 ITEM_TYPE_MEDIA_CLASS = {
     "album": MEDIA_CLASS_ALBUM,
     "artist": MEDIA_CLASS_ARTIST,
+    "episode": MEDIA_CLASS_EPISODE,
+    "movie": MEDIA_CLASS_MOVIE,
     "playlist": MEDIA_CLASS_PLAYLIST,
     "season": MEDIA_CLASS_SEASON,
     "show": MEDIA_CLASS_TV_SHOW,
+    "track": MEDIA_CLASS_TRACK,
     "video": MEDIA_CLASS_VIDEO,
 }
 
