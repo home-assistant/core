@@ -75,8 +75,8 @@ class TuyaLight(TuyaDevice, LightEntity):
         """Return the brightness of the light."""
         if self._tuya.brightness() is None:
             return None
-        scaled_brightness = scale(int(self._tuya.brightness()), (10, 1000), (1, 255))
-        return scaled_brightness
+        scaled_brightness = _scale(int(self._tuya.brightness()), (10, 1000), (1, 255))
+        return round(scaled_brightness)
 
     @property
     def hs_color(self):
@@ -115,7 +115,7 @@ class TuyaLight(TuyaDevice, LightEntity):
         ):
             self._tuya.turn_on()
         if ATTR_BRIGHTNESS in kwargs:
-            scaled_brightness = scale(kwargs[ATTR_BRIGHTNESS], (0, 255), (27, 255))
+            scaled_brightness = _scale(kwargs[ATTR_BRIGHTNESS], (0, 255), (27, 255))
             self._tuya.set_brightness(round(scaled_brightness))
         if ATTR_HS_COLOR in kwargs:
             self._tuya.set_color(kwargs[ATTR_HS_COLOR])
