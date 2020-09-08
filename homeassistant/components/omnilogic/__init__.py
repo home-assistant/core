@@ -4,7 +4,6 @@ from datetime import timedelta
 import logging
 
 from omnilogic import LoginException, OmniLogic, OmniLogicException
-import voluptuous as vol
 
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
 from homeassistant.config_entries import ConfigEntry
@@ -28,7 +27,6 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
 PLATFORMS = ["sensor"]
 
