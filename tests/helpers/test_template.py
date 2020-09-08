@@ -2321,3 +2321,39 @@ async def test_protected_blocked(hass):
     tmp = template.Template('{{ states.sensor.any.__getattr__("any") }}', hass)
     with pytest.raises(TemplateError):
         tmp.async_render()
+
+
+@patch(
+    "homeassistant.helpers.template.TemplateEnvironment.is_safe_callable",
+    return_value=True,
+)
+def test_duration(mock_is_safe, hass):
+    """Test duration method."""
+    now = datetime.strptime("2000-01-01 10:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z")
+    with patch("homeassistant.util.dt.now", return_value=now):
+        assert (
+            "3600.0"
+            == template.Template(
+                '{{duration(strptime("2000-01-01 09:00:00", "%Y-%m-%d %H:%M:%S"))}}',
+                hass,
+            ).async_render()
+        )
+        assert (
+            "1.5"
+            == template.Template(
+                '{{duration(strptime("2000-01-01 09:59:58.5 +00:00", "%Y-%m-%d %H:%M:%S.%f %z"))}}',
+                hass,
+            ).async_render()
+        )
+        assert (
+            "3600.0"
+            == template.Template(
+                '{{duration(strptime("2000-01-01 03:00:00 -06:00", "%Y-%m-%d %H:%M:%S %z"))}}',
+                hass,
+            ).async_render()
+        )
+        with pytest.raises(TypeError):
+            template.Template(
+                '{{duration("time")}}',
+                hass,
+            ).async_render()
