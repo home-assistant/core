@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured_device": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
             "authorize_url_timeout": "D\u00e9lai de g\u00e9n\u00e9ration de l'URL d'authentification d\u00e9pass\u00e9.",
             "missing_configuration": "Le composant n'est pas configur\u00e9. Veuillez suivre la documentation."
         },
@@ -8,6 +9,11 @@
             "environment": {
                 "data": {
                     "environment": "Environnement"
+                }
+            },
+            "local": {
+                "data": {
+                    "host": "H\u00f4te"
                 }
             },
             "pick_implementation": {

@@ -425,8 +425,8 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
 
 def build_item_response(spotify, user, payload):
     """Create response payload for the provided media query."""
-    media_content_type = payload.get("media_content_type")
-    media_content_id = payload.get("media_content_id")
+    media_content_type = payload["media_content_type"]
+    media_content_id = payload["media_content_id"]
     title = None
     image = None
     if media_content_type == "current_user_playlists":
@@ -507,7 +507,7 @@ def build_item_response(spotify, user, payload):
             children=[
                 BrowseMedia(
                     title=item.get("name"),
-                    media_content_id=item.get("id"),
+                    media_content_id=item["id"],
                     media_content_type="category_playlists",
                     thumbnail=fetch_image_url(item, key="icons"),
                     can_play=False,
@@ -547,25 +547,24 @@ def item_payload(item):
     Used by async_browse_media.
     """
     if MEDIA_TYPE_TRACK in item:
-        item = item.get(MEDIA_TYPE_TRACK)
+        item = item[MEDIA_TYPE_TRACK]
     elif MEDIA_TYPE_SHOW in item:
-        item = item.get(MEDIA_TYPE_SHOW)
+        item = item[MEDIA_TYPE_SHOW]
     elif MEDIA_TYPE_ARTIST in item:
-        item = item.get(MEDIA_TYPE_ARTIST)
-    elif MEDIA_TYPE_ALBUM in item and item.get("type") != MEDIA_TYPE_TRACK:
-        item = item.get(MEDIA_TYPE_ALBUM)
+        item = item[MEDIA_TYPE_ARTIST]
+    elif MEDIA_TYPE_ALBUM in item and item["type"] != MEDIA_TYPE_TRACK:
+        item = item[MEDIA_TYPE_ALBUM]
 
-    can_expand = item.get("type") not in [
-        None,
+    can_expand = item["type"] not in [
         MEDIA_TYPE_TRACK,
         MEDIA_TYPE_EPISODE,
     ]
 
     payload = {
         "title": item.get("name"),
-        "media_content_id": item.get("uri"),
-        "media_content_type": item.get("type"),
-        "can_play": item.get("type") in PLAYABLE_MEDIA_TYPES,
+        "media_content_id": item["uri"],
+        "media_content_type": item["type"],
+        "can_play": item["type"] in PLAYABLE_MEDIA_TYPES,
         "can_expand": can_expand,
     }
 
