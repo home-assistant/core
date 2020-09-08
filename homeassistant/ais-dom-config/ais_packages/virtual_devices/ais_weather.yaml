@@ -1,7 +1,3 @@
-weather:
-  - platform: openweathermap
-    api_key: use_ais_dom_api_key
-
 sensor:
   - platform: darksky
     api_key: use_ais_dom_api_key
