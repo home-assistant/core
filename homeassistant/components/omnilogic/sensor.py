@@ -5,31 +5,25 @@ import logging
 
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT, UNIT_PERCENTAGE
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN
+from .const import COORDINATOR, DOMAIN
 
 TEMP_UNITS = [TEMP_CELSIUS, TEMP_FAHRENHEIT]
 PERCENT_UNITS = [UNIT_PERCENTAGE, UNIT_PERCENTAGE]
 SALT_UNITS = ["g/L", "ppm"]
 
+SCAN_INTERVAL = timedelta(seconds=30)
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None):
     """Set up the sensor platform."""
 
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = hass.data[DOMAIN][entry.entry_id][COORDINATOR]
     sensors = []
 
     for backyard in coordinator.data:
-        _LOGGER.info(
-            "Setting up air temperature sensor for %s.", backyard.get("BackyardName")
-        )
         sensors.append(
             OmnilogicSensor(
                 coordinator,
@@ -44,7 +38,6 @@ async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None
             )
         )
 
-        _LOGGER.info("Setting up alarm sensor for %s.", backyard.get("BackyardName"))
         sensors.append(
             OmnilogicSensor(
                 coordinator,
@@ -60,7 +53,6 @@ async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None
         )
 
         for bow in backyard["BOWS"]:
-            _LOGGER.info("Setting up water temperature sensor for %s.", bow.get("Name"))
             sensors.append(
                 OmnilogicSensor(
                     coordinator,
@@ -75,23 +67,22 @@ async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None
                 )
             )
 
-            _LOGGER.info("Setting up filter pump sensor for %s.", bow.get("Name"))
-            sensors.append(
-                OmnilogicSensor(
-                    coordinator,
-                    "filter_pump_speed",
-                    "Pump Speed",
-                    backyard,
-                    bow,
-                    "none",
-                    "mdi:speedometer",
-                    PERCENT_UNITS,
-                    bow["Filter"],
+            if "Filter" in bow.keys():
+                sensors.append(
+                    OmnilogicSensor(
+                        coordinator,
+                        "filter_pump_speed",
+                        "Pump Speed",
+                        backyard,
+                        bow,
+                        "none",
+                        "mdi:speedometer",
+                        PERCENT_UNITS,
+                        bow["Filter"],
+                    )
                 )
-            )
 
             for pump in bow["Pumps"]:
-                _LOGGER.info("Setting up pump sensor for %s.", pump.get("Name"))
                 sensors.append(
                     OmnilogicSensor(
                         coordinator,
@@ -106,43 +97,36 @@ async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None
                     )
                 )
 
-            _LOGGER.info(
-                "Setting up chlorinator sensor for %s.", bow["Chlorinator"].get("Name")
-            )
-            sensors.append(
-                OmnilogicSensor(
-                    coordinator,
-                    "chlorinator",
-                    "Chlorinator",
-                    backyard,
-                    bow,
-                    "none",
-                    "mdi:gauge",
-                    PERCENT_UNITS,
-                    bow["Chlorinator"],
+            if "Chlorinator" in bow.keys():
+                sensors.append(
+                    OmnilogicSensor(
+                        coordinator,
+                        "chlorinator",
+                        "Chlorinator",
+                        backyard,
+                        bow,
+                        "none",
+                        "mdi:gauge",
+                        PERCENT_UNITS,
+                        bow["Chlorinator"],
+                    )
                 )
-            )
-
-            _LOGGER.info(
-                "Setting up salt level sensor for %s.", bow["Chlorinator"].get("Name")
-            )
-            sensors.append(
-                OmnilogicSensor(
-                    coordinator,
-                    "salt_level",
-                    "Salt Level",
-                    backyard,
-                    bow,
-                    "none",
-                    "mdi:gauge",
-                    PERCENT_UNITS,
-                    bow["Chlorinator"],
+                sensors.append(
+                    OmnilogicSensor(
+                        coordinator,
+                        "salt_level",
+                        "Salt Level",
+                        backyard,
+                        bow,
+                        "none",
+                        "mdi:gauge",
+                        PERCENT_UNITS,
+                        bow["Chlorinator"],
+                    )
                 )
-            )
 
             if "CSAD" in bow.keys():
                 if bow["CSAD"]["systemId"] != "0":
-                    _LOGGER.info("Setting up ph sensor for %s.", bow.get("Name"))
                     sensors.append(
                         OmnilogicSensor(
                             coordinator,
@@ -157,7 +141,6 @@ async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None
                         )
                     )
 
-                    _LOGGER.info("Setting up orp sensor for %s.", bow.get("Name"))
                     sensors.append(
                         OmnilogicSensor(
                             coordinator,
@@ -175,7 +158,7 @@ async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None
     async_add_entities(sensors, update_before_add=True)
 
 
-class OmnilogicSensor(CoordinatorEntity):
+class OmnilogicSensor(Entity):
     """Defines an Omnilogic sensor entity."""
 
     def __init__(
@@ -206,6 +189,7 @@ class OmnilogicSensor(CoordinatorEntity):
         self._kind = kind
         self._name = None
         self.entity_id = ENTITY_ID_FORMAT.format(sensorname)
+        self._unique_id = ENTITY_ID_FORMAT.format(sensorname)
         self._backyard = backyard
         self._backyard_name = backyard["BackyardName"]
         self._state = None
@@ -228,7 +212,7 @@ class OmnilogicSensor(CoordinatorEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique, Home Assistant friendly identifier for this entity."""
-        return self.entity_id
+        return self._unique_id
 
     @property
     def name(self) -> str:
@@ -264,23 +248,8 @@ class OmnilogicSensor(CoordinatorEntity):
     @property
     def state(self):
         """Return the state."""
-        return self._state
 
-    @property
-    def device_info(self):
-        """Define the device as back yard/MSP System."""
-
-        return {
-            "identifiers": {(DOMAIN, self._attrs["MspSystemId"])},
-            "name": self._backyard.get("BackyardName"),
-            "manufacturer": "Hayward",
-            "model": "OmniLogic",
-        }
-
-    async def async_update(self):
-        """Update Omnilogic entity."""
-        await self.coordinator.async_request_refresh()
-
+        _LOGGER.debug(f"Updating state of sensor: {self._name}")
         if self._kind == "water_temperature":
             sensordata = None
 
@@ -373,14 +342,15 @@ class OmnilogicSensor(CoordinatorEntity):
             self._attrs["MspSystemId"] = self._backyard["systemId"]
             self._attrs["PumpType"] = self.sensordata.get("Type")
 
-            self.alarms = []
-            self.alarms.append(sensordata.get("Alarms"))
+            self.alarms = sensordata.get("Alarms")
 
             self._attrs["Alarm"] = ""
             if len(self.alarms) != 0:
-                self._attrs["Alarm"] = (
-                    self.alarms[0]["Message"] + " (" + self.alarms[0]["Comment"] + ")"
-                )
+                alarm_message = self.alarms[0].get("Message")
+                if self.alarms[0].get("Comment") is not None:
+                    alarm_message = alarm_message + (
+                        " (" + self.alarms[0].get("Comment") + ")"
+                    )
 
         elif self._kind == "salt_level":
             sensordata = {}
@@ -548,6 +518,22 @@ class OmnilogicSensor(CoordinatorEntity):
                 self._attrs["Alarm"] = alarm_message
             else:
                 self._state = "off"
+        return self._state
+
+    @property
+    def device_info(self):
+        """Define the device as back yard/MSP System."""
+
+        return {
+            "identifiers": {(DOMAIN, self._attrs["MspSystemId"])},
+            "name": self._backyard.get("BackyardName"),
+            "manufacturer": "Hayward",
+            "model": "OmniLogic",
+        }
+
+    async def async_update(self):
+        """Update Omnilogic entity."""
+        await self.coordinator.async_request_refresh()
 
     async def async_added_to_hass(self):
         """Subscribe to updates."""
