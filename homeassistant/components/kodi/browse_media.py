@@ -5,8 +5,8 @@ from homeassistant.components.media_player.const import (
     MEDIA_CLASS_ALBUM,
     MEDIA_CLASS_ARTIST,
     MEDIA_CLASS_DIRECTORY,
+    MEDIA_CLASS_EPISODE,
     MEDIA_CLASS_MOVIE,
-    MEDIA_CLASS_MUSIC,
     MEDIA_CLASS_PLAYLIST,
     MEDIA_CLASS_SEASON,
     MEDIA_CLASS_TV_SHOW,
@@ -32,16 +32,18 @@ EXPANDABLE_MEDIA_TYPES = [
     MEDIA_TYPE_PLAYLIST,
     MEDIA_TYPE_TVSHOW,
     MEDIA_TYPE_SEASON,
+    "library_music",
 ]
 
 CONTENT_TYPE_MEDIA_CLASS = {
-    "library_music": MEDIA_CLASS_MUSIC,
+    "library_music": MEDIA_CLASS_DIRECTORY,
     MEDIA_TYPE_SEASON: MEDIA_CLASS_SEASON,
     MEDIA_TYPE_ALBUM: MEDIA_CLASS_ALBUM,
     MEDIA_TYPE_ARTIST: MEDIA_CLASS_ARTIST,
     MEDIA_TYPE_MOVIE: MEDIA_CLASS_MOVIE,
     MEDIA_TYPE_PLAYLIST: MEDIA_CLASS_PLAYLIST,
     MEDIA_TYPE_TVSHOW: MEDIA_CLASS_TV_SHOW,
+    MEDIA_TYPE_EPISODE: MEDIA_CLASS_EPISODE,
 }
 
 
@@ -187,16 +189,22 @@ def item_payload(item, media_library):
         media_content_id = ""
 
     title = item["label"]
-    can_play = media_content_type in PLAYABLE_MEDIA_TYPES and bool(media_content_id)
+    can_play = media_content_type in PLAYABLE_MEDIA_TYPES and media_content_id
     can_expand = media_content_type in EXPANDABLE_MEDIA_TYPES
 
     thumbnail = item.get("thumbnail")
     if thumbnail:
         thumbnail = media_library.thumbnail_url(thumbnail)
 
+    if media_content_type == MEDIA_TYPE_MOVIE and not media_content_id:
+        media_class = MEDIA_CLASS_DIRECTORY
+        can_expand = True
+    else:
+        media_class = CONTENT_TYPE_MEDIA_CLASS[media_content_type]
+
     return BrowseMedia(
         title=title,
-        media_class=CONTENT_TYPE_MEDIA_CLASS[item["type"]],
+        media_class=media_class,
         media_content_type=media_content_type,
         media_content_id=media_content_id,
         can_play=can_play,
