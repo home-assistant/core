@@ -1,17 +1,15 @@
 """Support for MQTT discovery."""
 import asyncio
-import json
 import logging
 
-from hatasmota.const import CONF_ID, CONF_RELAY
+from hatasmota.const import CONF_RELAY
 from hatasmota.discovery import (
-    TasmotaDiscoveryMsg,
-    get_device_config,
-    get_entities_for_platform,
-    get_entity,
-    has_entities_with_platform,
+    get_device_config as tasmota_get_device_config,
+    get_entities_for_platform as tasmota_get_entities_for_platform,
+    get_entity as tasmota_get_entity,
+    has_entities_with_platform as tasmota_has_entities_with_platform,
+    subscribe_discovery_topic,
 )
-from hatasmota.utils import get_serial_number_from_discovery_topic
 
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt.subscription import (
@@ -54,45 +52,21 @@ async def async_start(
 ) -> bool:
     """Start MQTT Discovery."""
 
-    async def async_discovery_message_received(msg):
+    async def async_device_discovered(payload, serial_number):
         """Process the received message."""
-        payload = msg.payload
-        topic = msg.topic
-
-        serial_number = get_serial_number_from_discovery_topic(topic, discovery_topic)
-        if not serial_number:
-            return
-
-        if payload:
-            try:
-                payload = TasmotaDiscoveryMsg(json.loads(payload))
-            except ValueError:
-                _LOGGER.warning(
-                    "Invalid discovery message %s: '%s'", serial_number, payload
-                )
-                return
-            if serial_number != payload[CONF_ID]:
-                _LOGGER.warning(
-                    "Serial number mismatch between topic and payload, '%s' != '%s'",
-                    serial_number,
-                    payload[CONF_ID],
-                )
-                return
-        else:
-            payload = {}
 
         if ALREADY_DISCOVERED not in hass.data:
             hass.data[ALREADY_DISCOVERED] = {}
 
-        _LOGGER.info("Discovered tasmota device: %s", serial_number)
-        device_config = get_device_config(payload)
+        _LOGGER.debug("Received discovery data for tasmota device: %s", serial_number)
+        tasmota_device_config = tasmota_get_device_config(payload)
         async_dispatcher_send(
-            hass, TASMOTA_DISCOVERY_DEVICE, device_config, serial_number, payload
+            hass, TASMOTA_DISCOVERY_DEVICE, tasmota_device_config, serial_number
         )
 
         async with hass.data[DATA_CONFIG_ENTRY_LOCK]:
             for component, component_key in SUPPORTED_COMPONENTS.items():
-                if not has_entities_with_platform(payload, component_key):
+                if not tasmota_has_entities_with_platform(payload, component_key):
                     continue
                 config_entries_key = f"{component}.tasmota"
                 if config_entries_key not in hass.data[CONFIG_ENTRY_IS_SETUP]:
@@ -102,10 +76,10 @@ async def async_start(
                     hass.data[CONFIG_ENTRY_IS_SETUP].add(config_entries_key)
 
         for component, component_key in SUPPORTED_COMPONENTS.items():
-            entities = get_entities_for_platform(payload, component_key)
-            for (idx, entity_config) in enumerate(entities):
+            tasmota_entities = tasmota_get_entities_for_platform(payload, component_key)
+            for (idx, tasmota_entity_config) in enumerate(tasmota_entities):
                 discovery_hash = (serial_number, component, idx)
-                if not entity_config:
+                if not tasmota_entity_config:
                     # Entity disabled, clean up entity registry
                     entity_registry = (
                         await hass.helpers.entity_registry.async_get_registry()
@@ -122,7 +96,7 @@ async def async_start(
                     continue
 
                 if discovery_hash in hass.data[ALREADY_DISCOVERED]:
-                    _LOGGER.info(
+                    _LOGGER.debug(
                         "Entity already added, sending update: %s %s",
                         component,
                         discovery_hash,
@@ -130,7 +104,7 @@ async def async_start(
                     async_dispatcher_send(
                         hass,
                         TASMOTA_DISCOVERY_ENTITY_UPDATED.format(*discovery_hash),
-                        entity_config,
+                        tasmota_entity_config,
                     )
                 else:
                     _LOGGER.info("Adding new entity: %s %s", component, discovery_hash)
@@ -149,22 +123,29 @@ async def async_start(
                     async def _unsubscribe_topics(sub_state):
                         return await async_unsubscribe_topics(hass, sub_state)
 
-                    entity = get_entity(entity_config, component_key)
-                    entity.set_mqtt_callbacks(
+                    tasmota_entity = tasmota_get_entity(
+                        tasmota_entity_config, component_key
+                    )
+                    tasmota_entity.set_mqtt_callbacks(
                         _publish, _subscribe_topics, _unsubscribe_topics
                     )
                     async_dispatcher_send(
                         hass,
                         TASMOTA_DISCOVERY_ENTITY_NEW.format(component),
-                        entity,
+                        tasmota_entity,
                         discovery_hash,
                     )
 
     hass.data[DATA_CONFIG_ENTRY_LOCK] = asyncio.Lock()
     hass.data[CONFIG_ENTRY_IS_SETUP] = set()
 
-    hass.data[DISCOVERY_UNSUBSCRIBE] = await mqtt.async_subscribe(
-        hass, f"{discovery_topic}/#", async_discovery_message_received, 0
+    async def _subscribe(topic, msg_callback, *args):
+        hass.data[DISCOVERY_UNSUBSCRIBE] = await mqtt.async_subscribe(
+            hass, topic, msg_callback, *args
+        )
+
+    await subscribe_discovery_topic(
+        discovery_topic, async_device_discovered, _subscribe
     )
 
     return True

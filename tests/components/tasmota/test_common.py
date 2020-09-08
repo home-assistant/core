@@ -18,7 +18,7 @@ from hatasmota.utils import (
 )
 
 from homeassistant.components.mqtt.const import MQTT_DISCONNECTED
-from homeassistant.components.tasmota import DEFAULT_PREFIX
+from homeassistant.components.tasmota.const import DEFAULT_PREFIX
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 

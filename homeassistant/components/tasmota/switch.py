@@ -16,11 +16,15 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Tasmota switch dynamically through discovery."""
 
-    async def async_discover(entity, discovery_hash):
+    async def async_discover(tasmota_entity, discovery_hash):
         """Discover and add a Tasmota switch."""
         try:
-            await _async_setup_entity(
-                entity, discovery_hash, async_add_entities, config_entry
+            async_add_entities(
+                [
+                    TasmotaSwitch(
+                        tasmota_entity=tasmota_entity, discovery_hash=discovery_hash
+                    )
+                ]
             )
         except Exception:
             clear_discovery_hash(hass, discovery_hash)
@@ -33,11 +37,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-async def _async_setup_entity(entity, discovery_hash, async_add_entities, config_entry):
-    """Set up the Tasmota switch."""
-    async_add_entities([TasmotaSwitch(entity=entity, discovery_hash=discovery_hash)])
-
-
 class TasmotaSwitch(
     TasmotaAvailability,
     TasmotaDiscoveryUpdate,
@@ -45,24 +44,28 @@ class TasmotaSwitch(
 ):
     """Representation of a Tasmota switch."""
 
-    def __init__(self, entity, **kwds):
+    def __init__(self, tasmota_entity, **kwds):
         """Initialize the Tasmota switch."""
         self._state = False
         self._sub_state = None
 
-        entity.set_on_state_callback(self.state_updated)
-        self._unique_id = entity.unique_id
+        self._unique_id = tasmota_entity.unique_id
 
-        super().__init__(discovery_update=self.discovery_update, entity=entity, **kwds)
+        super().__init__(
+            discovery_update=self.discovery_update,
+            tasmota_entity=tasmota_entity,
+            **kwds,
+        )
 
     async def async_added_to_hass(self):
         """Subscribe to MQTT events."""
         await super().async_added_to_hass()
+        self._tasmota_entity.set_on_state_callback(self.state_updated)
         await self._subscribe_topics()
 
     async def discovery_update(self, update):
         """Handle updated discovery message."""
-        self._entity.config_update(update)
+        self._tasmota_entity.config_update(update)
         await self._subscribe_topics()
         self.async_write_ha_state()
 
@@ -74,11 +77,11 @@ class TasmotaSwitch(
 
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
-        await self._entity.subscribe_topics()
+        await self._tasmota_entity.subscribe_topics()
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""
-        await self._entity.unsubscribe_topics()
+        await self._tasmota_entity.unsubscribe_topics()
         await TasmotaAvailability.async_will_remove_from_hass(self)
         await TasmotaDiscoveryUpdate.async_will_remove_from_hass(self)
 
@@ -90,7 +93,7 @@ class TasmotaSwitch(
     @property
     def name(self):
         """Return the name of the switch."""
-        return self._entity.name
+        return self._tasmota_entity.name
 
     @property
     def is_on(self):
@@ -98,35 +101,19 @@ class TasmotaSwitch(
         return self._state
 
     @property
-    def assumed_state(self):
-        """Return true if we do optimistic updates."""
-        return False
-
-    @property
     def unique_id(self):
         """Return a unique ID."""
-        return self._entity.unique_id
-
-    @property
-    def icon(self):
-        """Return the icon."""
-        return None
+        return self._tasmota_entity.unique_id
 
     @property
     def device_info(self):
         """Return a device description for device registry."""
-        return {"identifiers": {(TASMOTA_DOMAIN, self._entity.device_id)}}
+        return {"identifiers": {(TASMOTA_DOMAIN, self._tasmota_entity.device_id)}}
 
     async def async_turn_on(self, **kwargs):
-        """Turn the device on.
-
-        This method is a coroutine.
-        """
-        self._entity.set_state(True)
+        """Turn the device on."""
+        self._tasmota_entity.set_state(True)
 
     async def async_turn_off(self, **kwargs):
-        """Turn the device off.
-
-        This method is a coroutine.
-        """
-        self._entity.set_state(False)
+        """Turn the device off."""
+        self._tasmota_entity.set_state(False)

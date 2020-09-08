@@ -214,7 +214,7 @@ async def test_discovery_broken(hass, mqtt_mock, caplog, device_reg):
 
 
 async def test_device_remove(hass, mqtt_mock, caplog, device_reg, entity_reg):
-    """Test removing a device."""
+    """Test removing a discovered device."""
     config = copy.deepcopy(DEFAULT_CONFIG)
 
     await setup_tasmota(hass)
@@ -236,6 +236,29 @@ async def test_device_remove(hass, mqtt_mock, caplog, device_reg, entity_reg):
         "",
     )
     await hass.async_block_till_done()
+
+    # Verify device entry is removed
+    device_entry = device_reg.async_get_device({("tasmota", "49A3BC")}, set())
+    assert device_entry is None
+
+
+async def test_device_remove_stale(hass, mqtt_mock, caplog, device_reg):
+    """Test removing a stale (undiscovered) device does not throw."""
+    await setup_tasmota(hass)
+    config_entry = hass.config_entries.async_entries("tasmota")[0]
+
+    # Create a device
+    device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("tasmota", "49A3BC")},
+    )
+
+    # Verify device entry was created
+    device_entry = device_reg.async_get_device({("tasmota", "49A3BC")}, set())
+    assert device_entry is not None
+
+    # Remove the device
+    device_reg.async_remove_device(device_entry.id)
 
     # Verify device entry is removed
     device_entry = device_reg.async_get_device({("tasmota", "49A3BC")}, set())

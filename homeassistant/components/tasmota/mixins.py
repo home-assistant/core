@@ -17,23 +17,23 @@ _LOGGER = logging.getLogger(__name__)
 class TasmotaEntity(Entity):
     """Base class for Tasmota entities."""
 
-    def __init__(self, entity) -> None:
+    def __init__(self, tasmota_entity) -> None:
         """Initialize."""
-        self._entity = entity
+        self._tasmota_entity = tasmota_entity
 
 
 class TasmotaAvailability(TasmotaEntity):
     """Mixin used for platforms that report availability."""
 
-    def __init__(self, entity, **kwds) -> None:
+    def __init__(self, **kwds) -> None:
         """Initialize the availability mixin."""
         self._available = False
-        entity.set_on_availability_callback(self.availability_updated)
-        super().__init__(entity=entity, **kwds)
+        super().__init__(**kwds)
 
     async def async_added_to_hass(self) -> None:
         """Subscribe MQTT events."""
         await super().async_added_to_hass()
+        self._tasmota_entity.set_on_availability_callback(self.availability_updated)
         self.async_on_remove(
             async_dispatcher_connect(self.hass, MQTT_CONNECTED, self.async_mqtt_connect)
         )
@@ -88,18 +88,18 @@ class TasmotaDiscoveryUpdate(TasmotaEntity):
         @callback
         async def discovery_callback(config):
             """Handle discovery update."""
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Got update for entity with hash: %s '%s'",
                 self._discovery_hash,
                 config,
             )
-            if not self._entity.config_same(config):
+            if not self._tasmota_entity.config_same(config):
                 # Changed payload: Notify component
                 _LOGGER.info("Updating component: %s", self.entity_id)
                 await self._discovery_update(config)
             else:
                 # Unchanged payload: Ignore to avoid changing states
-                _LOGGER.info("Ignoring unchanged update for: %s", self.entity_id)
+                _LOGGER.debug("Ignoring unchanged update for: %s", self.entity_id)
 
         # Set in case the entity has been removed and is re-added, for example when changing entity_id
         set_discovery_hash(self.hass, self._discovery_hash)
