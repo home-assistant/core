@@ -2304,7 +2304,10 @@ async def async_process_json_from_frame(hass, json_req):
         res = {
             CONF_WEBHOOK_ID: payload[CONF_WEBHOOK_ID],
         }
-        pass
+
+    elif topic == "ais/event":
+        # tag_scanned event
+        hass.bus.async_fire(payload["event_type"], payload["event_data"])
 
     # add player satus for some topics
     if topic in ("ais/player_status", "ais/player_auto_discovery", "ais/media_player"):
