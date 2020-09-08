@@ -12,7 +12,3 @@ TUYA_PLATFORMS = {
     "smart_life": "Smart Life",
     "jinvoo_smart": "Jinvoo Smart",
 }
-
-NORMAL_LIGHT_RANGE = (1, 255)
-TUYA_LIGHT_TURN_ON_RANGE = (28, 255)
-TUYA_LIGHT_RANGE = (10, 1000)
