@@ -1298,7 +1298,7 @@ pydanfossair==0.1.0
 pydeconz==72
 
 # homeassistant.components.delijn
-pydelijn==0.6.0
+pydelijn==0.6.1
 
 # homeassistant.components.dexcom
 pydexcom==0.2.0
