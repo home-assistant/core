@@ -1,8 +1,6 @@
 """Common code for tplink."""
-import asyncio
-from datetime import timedelta
 import logging
-from typing import Any, Callable, List
+from typing import List
 
 from pyHS100 import (
     Discover,

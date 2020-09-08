@@ -231,7 +231,7 @@ class TPLinkSmartBulb(LightEntity):
         """Return True if device is on."""
         return self._light_state.state
 
-    def attempt_update(self):
+    def attempt_update(self, update_attempt):
         """Update the TP-Link Bulb's state."""
         # State is currently being set, ignore.
         if self._is_setting_light_state:
