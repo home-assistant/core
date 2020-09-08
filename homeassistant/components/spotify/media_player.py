@@ -528,7 +528,7 @@ def build_item_response(spotify, user, payload):
         "media_content_id": media_content_id,
         "media_content_type": media_content_type,
         "can_play": media_content_type in PLAYABLE_MEDIA_TYPES,
-        "children": [item_payload(item) for item in items],
+        "children": [item_payload(item) for item in items if "type" in item],
         "can_expand": True,
     }
 
