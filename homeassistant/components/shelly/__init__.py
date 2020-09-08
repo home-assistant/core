@@ -20,7 +20,7 @@ from homeassistant.helpers import aiohttp_client, device_registry, update_coordi
 
 from .const import DOMAIN
 
-PLATFORMS = ["binary_sensor", "light", "sensor", "switch"]
+PLATFORMS = ["binary_sensor", "light", "sensor", "switch", "cover"]
 _LOGGER = logging.getLogger(__name__)
 
 
