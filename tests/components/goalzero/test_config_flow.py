@@ -31,7 +31,8 @@ def _flow_next(hass, flow_id):
 
 def _patch_setup():
     return patch(
-        "homeassistant.components.goalzero.async_setup_entry", return_value=True,
+        "homeassistant.components.goalzero.async_setup_entry",
+        return_value=True,
     )
 
 
@@ -40,7 +41,8 @@ async def test_flow_user(hass):
     mocked_yeti = await _create_mocked_yeti()
     with _patch_config_flow_yeti(mocked_yeti), _patch_setup():
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER},
+            DOMAIN,
+            context={"source": SOURCE_USER},
         )
         assert result["type"] == RESULT_TYPE_FORM
         assert result["step_id"] == "user"
@@ -48,7 +50,8 @@ async def test_flow_user(hass):
         _flow_next(hass, result["flow_id"])
 
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=CONF_CONFIG_FLOW,
+            result["flow_id"],
+            user_input=CONF_CONFIG_FLOW,
         )
         assert result["type"] == RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == NAME
@@ -56,23 +59,12 @@ async def test_flow_user(hass):
 
         # duplicated server
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONF_CONFIG_FLOW,
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data=CONF_CONFIG_FLOW,
         )
         assert result["type"] == RESULT_TYPE_ABORT
         assert result["reason"] == "already_configured"
-
-
-async def test_flow_user_invalid(hass):
-    """Test user initialized flow with invalid server."""
-    mocked_yeti = await _create_mocked_yeti(True)
-    with _patch_config_flow_yeti(mocked_yeti), _patch_setup():
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONF_CONFIG_FLOW
-        )
-        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-        assert result["flow_id"] is not None
-        assert result["data"] != {"host": None}
-        assert result["data"] != {"host": FAKE_HOST}
 
 
 async def test_flow_user_cannot_connect(hass):

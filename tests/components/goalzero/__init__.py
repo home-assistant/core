@@ -1,7 +1,6 @@
 """Tests for the Goal Zero Yeti integration."""
 from goalzero import exceptions
 
-from homeassistant.components import goalzero
 from homeassistant.const import CONF_HOST, CONF_NAME
 
 from tests.async_mock import AsyncMock, patch

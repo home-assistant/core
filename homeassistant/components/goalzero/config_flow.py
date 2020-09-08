@@ -36,7 +36,8 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 await self._async_try_connect(host)
                 return self.async_create_entry(
-                    title=name, data={CONF_HOST: host, CONF_NAME: name},
+                    title=name,
+                    data={CONF_HOST: host, CONF_NAME: name},
                 )
             except exceptions.ConnectError:
                 errors["base"] = "cannot_connect"
