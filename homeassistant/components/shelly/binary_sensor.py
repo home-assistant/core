@@ -17,7 +17,7 @@ from .entity import (
 
 SENSORS = {
     ("device", "overtemp"): BlockAttributeDescription(
-        name="overtemp", device_class=DEVICE_CLASS_PROBLEM
+        name="Over Temperature", device_class=DEVICE_CLASS_PROBLEM
     ),
     ("device", "overpower"): BlockAttributeDescription(
         name="overpower", device_class=DEVICE_CLASS_PROBLEM
