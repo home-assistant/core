@@ -35,6 +35,7 @@ from homeassistant.const import (
     CONF_PAYLOAD_OFF,
     CONF_PAYLOAD_ON,
     CONF_UNIQUE_ID,
+    CONF_VALUE_TEMPLATE,
     STATE_ON,
 )
 from homeassistant.core import callback
@@ -157,6 +158,8 @@ async def async_setup_entity_basic(
     hass, config, async_add_entities, config_entry, discovery_data=None
 ):
     """Set up a MQTT Light."""
+    config.setdefault(CONF_STATE_VALUE_TEMPLATE, config.get(CONF_VALUE_TEMPLATE))
+
     async_add_entities([MqttLight(hass, config, config_entry, discovery_data)])
 
 
@@ -253,6 +256,7 @@ class MqttLight(
             value_templates[key] = lambda value: value
         for key in VALUE_TEMPLATE_KEYS & config.keys():
             tpl = config[key]
+            _LOGGER.error("Template for %s: %s", key, tpl)
             value_templates[key] = tpl.async_render_with_possible_json_value
             tpl.hass = self.hass
         self._value_templates = value_templates
@@ -300,7 +304,9 @@ class MqttLight(
         @log_messages(self.hass, self.entity_id)
         def state_received(msg):
             """Handle new MQTT messages."""
+            _LOGGER.error("state_received: %s", msg)
             payload = self._value_templates[CONF_STATE_VALUE_TEMPLATE](msg.payload)
+            _LOGGER.error("payload: %s", payload)
             if not payload:
                 _LOGGER.debug("Ignoring empty state message from '%s'", msg.topic)
                 return
