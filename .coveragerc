@@ -755,7 +755,9 @@ omit =
     homeassistant/components/shodan/sensor.py
     homeassistant/components/shelly/__init__.py
     homeassistant/components/shelly/binary_sensor.py
+    homeassistant/components/shelly/cover.py
     homeassistant/components/shelly/entity.py
+    homeassistant/components/shelly/cover.py
     homeassistant/components/shelly/light.py
     homeassistant/components/shelly/sensor.py
     homeassistant/components/shelly/switch.py
