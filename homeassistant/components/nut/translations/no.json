@@ -16,6 +16,7 @@
             },
             "ups": {
                 "data": {
+                    "alias": "",
                     "resources": "Ressurser"
                 },
                 "title": "Velg UPS som skal overv\u00e5kes"
@@ -24,6 +25,7 @@
                 "data": {
                     "host": "Vert",
                     "password": "Passord",
+                    "port": "",
                     "username": "Brukernavn"
                 },
                 "title": "Koble til NUT-serveren"

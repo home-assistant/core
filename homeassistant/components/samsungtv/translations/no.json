@@ -10,7 +10,8 @@
         "flow_title": "Samsung TV: {model}",
         "step": {
             "confirm": {
-                "description": "Vil du sette opp Samsung TV {model} ? Hvis du aldri har koblet til Home Assistant f\u00f8r, vil en popup p\u00e5 TVen be om godkjenning. Manuelle konfigurasjoner for denne TVen vil bli overskrevet."
+                "description": "Vil du sette opp Samsung TV {model} ? Hvis du aldri har koblet til Home Assistant f\u00f8r, vil en popup p\u00e5 TVen be om godkjenning. Manuelle konfigurasjoner for denne TVen vil bli overskrevet.",
+                "title": ""
             },
             "user": {
                 "data": {
