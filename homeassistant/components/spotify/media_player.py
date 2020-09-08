@@ -437,16 +437,16 @@ def build_item_response(spotify, user, payload):
         items = media.get("artists", {}).get("items", [])
     elif media_content_type == "current_user_saved_albums":
         media = spotify.current_user_saved_albums(limit=BROWSE_LIMIT)
-        items = media.get("items", [])
+        items = [item["album"] for item in media.get("items", [])]
     elif media_content_type == "current_user_saved_tracks":
         media = spotify.current_user_saved_tracks(limit=BROWSE_LIMIT)
-        items = media.get("items", [])
+        items = [item["track"] for item in media.get("items", [])]
     elif media_content_type == "current_user_saved_shows":
         media = spotify.current_user_saved_shows(limit=BROWSE_LIMIT)
-        items = media.get("items", [])
+        items = [item["show"] for item in media.get("items", [])]
     elif media_content_type == "current_user_recently_played":
         media = spotify.current_user_recently_played(limit=BROWSE_LIMIT)
-        items = media.get("items", [])
+        items = [item["track"] for item in media.get("items", [])]
     elif media_content_type == "current_user_top_artists":
         media = spotify.current_user_top_artists(limit=BROWSE_LIMIT)
         items = media.get("items", [])
@@ -474,7 +474,7 @@ def build_item_response(spotify, user, payload):
         items = media.get("albums", {}).get("items", [])
     elif media_content_type == MEDIA_TYPE_PLAYLIST:
         media = spotify.playlist(media_content_id)
-        items = media.get("tracks", {}).get("items", [])
+        items = [item["track"] for item in media.get("tracks", {}).get("items", [])]
     elif media_content_type == MEDIA_TYPE_ALBUM:
         media = spotify.album(media_content_id)
         items = media.get("tracks", {}).get("items", [])
@@ -546,14 +546,6 @@ def item_payload(item):
 
     Used by async_browse_media.
     """
-    if MEDIA_TYPE_TRACK in item:
-        item = item[MEDIA_TYPE_TRACK]
-    elif MEDIA_TYPE_SHOW in item:
-        item = item[MEDIA_TYPE_SHOW]
-    elif MEDIA_TYPE_ARTIST in item:
-        item = item[MEDIA_TYPE_ARTIST]
-    elif MEDIA_TYPE_ALBUM in item and item["type"] != MEDIA_TYPE_TRACK:
-        item = item[MEDIA_TYPE_ALBUM]
 
     can_expand = item["type"] not in [
         MEDIA_TYPE_TRACK,
