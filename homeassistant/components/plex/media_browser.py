@@ -18,6 +18,11 @@ from homeassistant.components.media_player.errors import BrowseError
 
 from .const import DOMAIN
 
+
+class UnknownMediaType(BrowseError):
+    """Unknown media type."""
+
+
 EXPANDABLES = ["album", "artist", "playlist", "season", "show"]
 PLAYLISTS_BROWSE_PAYLOAD = {
     "title": "Playlists",
@@ -59,11 +64,17 @@ def browse_media(
         if media is None:
             return None
 
-        media_info = item_payload(media)
+        try:
+            media_info = item_payload(media)
+        except UnknownMediaType:
+            return None
         if media_info.can_expand:
             media_info.children = []
             for item in media:
-                media_info.children.append(item_payload(item))
+                try:
+                    media_info.children.append(item_payload(item))
+                except UnknownMediaType:
+                    continue
         return media_info
 
     if media_content_id and ":" in media_content_id:
@@ -101,7 +112,10 @@ def browse_media(
         method = SPECIAL_METHODS[special_folder]
         items = getattr(library_or_section, method)()
         for item in items:
-            payload["children"].append(item_payload(item))
+            try:
+                payload["children"].append(item_payload(item))
+            except UnknownMediaType:
+                continue
         return BrowseMedia(**payload)
 
     if media_content_type in ["server", None]:
@@ -125,9 +139,14 @@ def browse_media(
 
 def item_payload(item):
     """Create response payload for a single media item."""
+    try:
+        media_class = ITEM_TYPE_MEDIA_CLASS[item.type]
+    except KeyError as err:
+        _LOGGER.debug("Unknown type received: %s", item.type)
+        raise UnknownMediaType from err
     payload = {
         "title": item.title,
-        "media_class": ITEM_TYPE_MEDIA_CLASS[item.type],
+        "media_class": media_class,
         "media_content_id": str(item.ratingKey),
         "media_content_type": item.type,
         "can_play": True,
@@ -195,7 +214,10 @@ def library_payload(plex_server, library_id):
         special_library_payload(library_info, "Recently Added")
     )
     for item in library.all():
-        library_info.children.append(item_payload(item))
+        try:
+            library_info.children.append(item_payload(item))
+        except UnknownMediaType:
+            continue
     return library_info
 
 
@@ -203,5 +225,8 @@ def playlists_payload(plex_server):
     """Create response payload for all available playlists."""
     playlists_info = {**PLAYLISTS_BROWSE_PAYLOAD, "children": []}
     for playlist in plex_server.playlists():
-        playlists_info["children"].append(item_payload(playlist))
+        try:
+            playlists_info["children"].append(item_payload(playlist))
+        except UnknownMediaType:
+            continue
     return BrowseMedia(**playlists_info)
