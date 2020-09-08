@@ -1,8 +1,4 @@
 """Constants for the Renault component."""
-import logging
-
-LOGGER = logging.getLogger(__package__)
-
 DOMAIN = "renault"
 
 CONF_GIGYA_APIKEY = "gigya-api-key"

@@ -1,13 +1,15 @@
 """Proxy to handle account communication with Renault servers via PyZE."""
 from datetime import timedelta
+import logging
 
 from pyze.api import Vehicle
 
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=60)
+LOGGER = logging.getLogger(__name__)
 
 
 class PyzeVehicleProxy:

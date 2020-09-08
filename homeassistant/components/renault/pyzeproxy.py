@@ -1,5 +1,6 @@
 """Proxy to handle account communication with Renault servers via PyZE."""
 import asyncio
+import logging
 
 from pyze.api import BasicCredentialStore, Gigya, Kamereon, Vehicle
 
@@ -10,9 +11,10 @@ from .const import (
     CONF_KAMEREON_ACCOUNT_ID,
     CONF_KAMEREON_APIKEY,
     CONF_LOCALE,
-    LOGGER,
 )
 from .pyzevehicleproxy import PyzeVehicleProxy
+
+LOGGER = logging.getLogger(__name__)
 
 
 class PyzeProxy:

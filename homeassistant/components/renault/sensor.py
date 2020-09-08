@@ -1,4 +1,6 @@
 """Support for Renault sensors."""
+import logging
+
 from pyze.api import ChargeState, PlugState
 
 from homeassistant.const import DEVICE_CLASS_BATTERY, PERCENTAGE, POWER_KILO_WATT
@@ -6,7 +8,7 @@ from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.util.distance import LENGTH_KILOMETERS, LENGTH_MILES
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN
 from .pyzeproxy import PyzeProxy
 from .pyzevehicleproxy import PyzeVehicleProxy
 from .renaultentity import RenaultBatteryDataEntity
@@ -17,6 +19,8 @@ ATTR_CHARGING_POWER = "charging_power"
 ATTR_CHARGING_REMAINING_TIME = "charging_remaining_time"
 ATTR_PLUGGED = "plugged"
 ATTR_PLUG_STATUS = "plug_status"
+
+LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
