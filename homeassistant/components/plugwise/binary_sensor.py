@@ -13,6 +13,8 @@ from .const import (
     FLOW_OFF_ICON,
     FLOW_ON_ICON,
     IDLE_ICON,
+    NO_NOTIFICATION_ICON,
+    NOTIFICATION_ICON,
 )
 from .sensor import SmileSensor
 
@@ -33,23 +35,46 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     all_devices = api.get_all_devices()
     for dev_id, device_properties in all_devices.items():
-        if device_properties["class"] == "heater_central":
-            data = api.get_device_data(dev_id)
+        if device_properties["class"] not in ["heater_central", "gateway"]:
+            continue
 
-            for binary_sensor in BINARY_SENSOR_MAP:
-                if binary_sensor not in data:
-                    continue
-
-                entities.append(
-                    PwBinarySensor(
-                        api,
-                        coordinator,
-                        device_properties["name"],
-                        dev_id,
-                        binary_sensor,
-                        device_properties["class"],
-                    )
+        if device_properties["class"] == "gateway":
+            entities.append(
+                PwNotifySensor(
+                    hass,
+                    api,
+                    coordinator,
+                    device_properties["name"],
+                    dev_id,
+                    "plugwise_notification",
+                    device_properties["class"],
                 )
+            )
+            _LOGGER.info(
+                "Added binary_sensor.%s",
+                f"{device_properties['name']}_{'plugwise_notification'}",
+            )
+
+            continue
+
+        data = api.get_device_data(dev_id)
+        for binary_sensor, dummy in BINARY_SENSOR_MAP.items():
+            if binary_sensor not in data:
+                continue
+
+            entities.append(
+                PwBinarySensor(
+                    api,
+                    coordinator,
+                    device_properties["name"],
+                    dev_id,
+                    binary_sensor,
+                    device_properties["class"],
+                )
+            )
+            _LOGGER.info(
+                "Added binary_sensor.%s", f"{device_properties['name']}_{binary_sensor}"
+            )
 
     async_add_entities(entities, True)
 
@@ -94,5 +119,54 @@ class PwBinarySensor(SmileSensor, BinarySensorEntity):
             self._icon = FLOW_ON_ICON if self._is_on else FLOW_OFF_ICON
         if self._binary_sensor == "slave_boiler_state":
             self._icon = FLAME_ICON if self._is_on else IDLE_ICON
+
+        self.async_write_ha_state()
+
+
+class PwNotifySensor(PwBinarySensor, BinarySensorEntity):
+    """Representation of a Plugwise Notification binary_sensor."""
+
+    def __init__(self, hass, api, coordinator, name, dev_id, binary_sensor, model):
+        """Set up the Plugwise API."""
+        super().__init__(api, coordinator, name, dev_id, binary_sensor, model)
+
+        self._binary_sensor = binary_sensor
+        self._hass = hass
+
+        self._is_on = False
+        self._icon = None
+        self._attributes = {}
+
+        self._unique_id = f"{dev_id}-notification"
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return self._attributes
+
+    @callback
+    def _async_process_data(self):
+        """Update the entity."""
+        self._attributes = {}
+
+        notify = self._api.notifications
+
+        self._is_on = False
+        self._state = STATE_OFF
+        self._icon = NO_NOTIFICATION_ICON
+
+        if notify != {}:
+            self._is_on = True
+            self._state = STATE_ON
+            self._icon = NOTIFICATION_ICON
+
+            for dev_id, details in notify.items():
+                for msg_type, msg in details.items():
+                    self._attributes[msg_type.upper()] = msg
+                    self._hass.components.persistent_notification.async_create(
+                        f"{msg_type.upper()}: {msg}",
+                        "Plugwise Notification:",
+                        f"{DOMAIN}.{dev_id}",
+                    )
 
         self.async_write_ha_state()
