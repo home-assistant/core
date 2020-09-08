@@ -1595,6 +1595,7 @@ def get_media(media_library, item_id, search_type):
         search_type,
         "/".join(item_id.split("/")[:-1]),
         full_album_art_uri=True,
+        max_items=0,
     ):
         if item.item_id == item_id:
             return item
