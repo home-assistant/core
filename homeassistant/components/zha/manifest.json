@@ -9,7 +9,7 @@
     "zha-quirks==0.0.44",
     "zigpy-cc==0.5.2",
     "zigpy-deconz==0.9.2",
-    "zigpy==0.23.1",
+    "zigpy==0.23.2",
     "zigpy-xbee==0.13.0",
     "zigpy-zigate==0.6.2",
     "zigpy-znp==0.1.1"
