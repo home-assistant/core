@@ -228,15 +228,15 @@ STORAGE_DISK_SENSORS = {
     f"{SynoStorage.API_KEY}:disk_smart_status": {
         ENTITY_NAME: "Status (Smart)",
         ENTITY_UNIT: None,
-        ENTITY_ICON: None,
-        ENTITY_CLASS: DEVICE_CLASS_SAFETY,
+        ENTITY_ICON: "mdi:checkbox-marked-circle-outline",
+        ENTITY_CLASS: None,
         ENTITY_ENABLE: False,
     },
     f"{SynoStorage.API_KEY}:disk_status": {
         ENTITY_NAME: "Status",
         ENTITY_UNIT: None,
-        ENTITY_ICON: None,
-        ENTITY_CLASS: DEVICE_CLASS_SAFETY,
+        ENTITY_ICON: "mdi:checkbox-marked-circle-outline",
+        ENTITY_CLASS: None,
         ENTITY_ENABLE: True,
     },
     f"{SynoStorage.API_KEY}:disk_temp": {
