@@ -9,9 +9,9 @@ from homeassistant.const import (
 )
 from homeassistant.util import dt as dt_util
 
-from tests.async_mock import patch
-
 from . import init_integration
+
+from tests.async_mock import patch
 
 
 async def test_sensors(hass) -> None:
