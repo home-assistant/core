@@ -22,7 +22,7 @@ async def test_sensors(hass) -> None:
 
     registry = await hass.helpers.entity_registry.async_get_registry()
 
-    uptime = now + timedelta(seconds=600)
+    uptime = now - timedelta(seconds=600)
 
     sensors = {
         "article_cache": ("ArticleCacheMB", "64", DATA_MEGABYTES, None),
