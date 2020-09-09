@@ -147,7 +147,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
     def _get_rain(rain):
         if "all" in rain:
             return round(rain["all"], 0)
-        elif "1h" in rain:
+        if "1h" in rain:
             return round(rain["1h"], 0)
         return "not raining"
 
@@ -156,7 +156,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         if snow:
             if "all" in snow:
                 return round(snow["all"], 0)
-            elif "1h" in snow:
+            if "1h" in snow:
                 return round(snow["1h"], 0)
             return "not snowing"
         return "not snowing"
