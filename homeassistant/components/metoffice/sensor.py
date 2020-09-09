@@ -2,6 +2,23 @@
 
 import logging
 
+from homeassistant.components.weather import (
+    ATTR_CONDITION_CLEAR_NIGHT,
+    ATTR_CONDITION_CLOUDY,
+    ATTR_CONDITION_EXCEPTIONAL,
+    ATTR_CONDITION_FOG,
+    ATTR_CONDITION_HAIL,
+    ATTR_CONDITION_LIGHTNING,
+    ATTR_CONDITION_LIGHTNING_RAINY,
+    ATTR_CONDITION_PARTLYCLOUDY,
+    ATTR_CONDITION_POURING,
+    ATTR_CONDITION_RAINY,
+    ATTR_CONDITION_SNOWY,
+    ATTR_CONDITION_SNOWY_RAINY,
+    ATTR_CONDITION_SUNNY,
+    ATTR_CONDITION_WINDY,
+    ATTR_CONDITION_WINDY_VARIANT,
+)
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     DEVICE_CLASS_HUMIDITY,
@@ -163,8 +180,8 @@ class MetOfficeCurrentSensor(Entity):
         if self._type == "weather":
             value = self.state
             if value is None:
-                value = "sunny"
-            elif value == "partlycloudy":
+                value = ATTR_CONDITION_SUNNY
+            elif value == ATTR_CONDITION_PARTLYCLOUDY:
                 value = "partly-cloudy"
             value = f"mdi:weather-{value}"
 

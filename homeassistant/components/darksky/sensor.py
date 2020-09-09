@@ -6,7 +6,25 @@ import forecastio
 from requests.exceptions import ConnectionError as ConnectError, HTTPError, Timeout
 import voluptuous as vol
 
+from homeassistant.components.weather import (
+    ATTR_CONDITION_CLEAR_NIGHT,
+    ATTR_CONDITION_CLOUDY,
+    ATTR_CONDITION_EXCEPTIONAL,
+    ATTR_CONDITION_FOG,
+    ATTR_CONDITION_HAIL,
+    ATTR_CONDITION_LIGHTNING,
+    ATTR_CONDITION_LIGHTNING_RAINY,
+    ATTR_CONDITION_PARTLYCLOUDY,
+    ATTR_CONDITION_POURING,
+    ATTR_CONDITION_RAINY,
+    ATTR_CONDITION_SNOWY,
+    ATTR_CONDITION_SNOWY_RAINY,
+    ATTR_CONDITION_SUNNY,
+    ATTR_CONDITION_WINDY,
+    ATTR_CONDITION_WINDY_VARIANT,
+)
 from homeassistant.components.sensor import DEVICE_CLASS_TEMPERATURE, PLATFORM_SCHEMA
+from homeassistant.components.weather import ATTR_CONDITION_CLEAR_NIGHT
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_API_KEY,
@@ -382,13 +400,19 @@ SENSOR_TYPES = {
 
 CONDITION_PICTURES = {
     "clear-day": ["/static/images/darksky/weather-sunny.svg", "mdi:weather-sunny"],
-    "clear-night": ["/static/images/darksky/weather-night.svg", "mdi:weather-night"],
+    ATTR_CONDITION_CLEAR_NIGHT: [
+        "/static/images/darksky/weather-night.svg",
+        "mdi:weather-night",
+    ],
     "rain": ["/static/images/darksky/weather-pouring.svg", "mdi:weather-pouring"],
     "snow": ["/static/images/darksky/weather-snowy.svg", "mdi:weather-snowy"],
     "sleet": ["/static/images/darksky/weather-hail.svg", "mdi:weather-snowy-rainy"],
     "wind": ["/static/images/darksky/weather-windy.svg", "mdi:weather-windy"],
-    "fog": ["/static/images/darksky/weather-fog.svg", "mdi:weather-fog"],
-    "cloudy": ["/static/images/darksky/weather-cloudy.svg", "mdi:weather-cloudy"],
+    ATTR_CONDITION_FOG: ["/static/images/darksky/weather-fog.svg", "mdi:weather-fog"],
+    ATTR_CONDITION_CLOUDY: [
+        "/static/images/darksky/weather-cloudy.svg",
+        "mdi:weather-cloudy",
+    ],
     "partly-cloudy-day": [
         "/static/images/darksky/weather-partlycloudy.svg",
         "mdi:weather-partly-cloudy",
