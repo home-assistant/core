@@ -25,25 +25,25 @@ async def test_sensors(hass) -> None:
     uptime = now + timedelta(seconds=600)
 
     sensors = {
-        "article_cache": (64, DATA_MEGABYTES, None),
-        "average_download_rate": (512, DATA_RATE_MEGABYTES_PER_SECOND, None),
-        "download_paused": (4, None, None),
-        "download_rate": (1000, DATA_RATE_MEGABYTES_PER_SECOND, None),
-        "download_size": (256, DATA_MEGABYTES, None),
-        "free_disk_space": (1024, DATA_MEGABYTES, None),
-        "post_job_count": (2, "Jobs", None),
-        "post_paused": (4, None, None),
-        "remaining_size": (512, DATA_MEGABYTES, None),
-        "uptime": (uptime.isoformat(), None, DEVICE_CLASS_TIMESTAMP),
+        "article_cache": ("ArticleCacheMB", 64, DATA_MEGABYTES, None),
+        "average_download_rate": ("AverageDownloadRate", 512, DATA_RATE_MEGABYTES_PER_SECOND, None),
+        "download_paused": ("DownloadPaused", 4, None, None),
+        "download_rate": ("DownloadRate", 1000, DATA_RATE_MEGABYTES_PER_SECOND, None),
+        "download_size": ("DownloadedSizeMB", 256, DATA_MEGABYTES, None),
+        "free_disk_space": ("FreeDiskSpaceMB", 1024, DATA_MEGABYTES, None),
+        "post_job_count": ("PostJobCount", 2, "Jobs", None),
+        "post_paused": ("PostPaused", 4, None, None),
+        "remaining_size": ("RemainingSizeMB", 512, DATA_MEGABYTES, None),
+        "uptime": ("UpTimeSec", uptime.isoformat(), None, DEVICE_CLASS_TIMESTAMP),
     }
 
     for (sensor_id, data) in sensors.items():
         entity = registry.async_get(f"sensor.nzbgettest_{sensor_id}")
         assert entity
-        assert entity.device_class == data[2]
-        assert entity.unique_id == f"{entry.entry_id}_{sensor_id}"
+        assert entity.device_class == data[3]
+        assert entity.unique_id == f"{entry.entry_id}_{data[0]}"
 
         state = hass.states.get(f"sensor.nzbgettest_{sensor_id}")
         assert state
-        assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == data[1]
-        assert state.state == data[0]
+        assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == data[2]
+        assert state.state == data[1]
