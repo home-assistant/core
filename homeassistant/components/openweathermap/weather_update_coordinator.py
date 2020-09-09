@@ -53,8 +53,8 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             self._forecast_limit = 15
 
         self._weather_update_interval = timedelta(minutes=5)
-        if forecast_mode == "freedaily":
-            self._weather_update_interval = 30
+        if self._forecast_mode == "freedaily":
+            self._weather_update_interval = timedelta(minutes=30)
 
         super().__init__(
             hass, _LOGGER, name=DOMAIN, update_interval=self._weather_update_interval
