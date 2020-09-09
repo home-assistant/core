@@ -88,10 +88,10 @@ def item_payload(item, coordinator):
         media_content_type = MEDIA_TYPE_CHANNEL
         media_content_id = item["channel_number"]
     else:
-        media_content_type = item.get("type")
+        media_content_type = item["type"]
         media_content_id = ""
 
-    title = item.get("title")
+    title = item["title"]
     can_play = media_content_type in PLAYABLE_MEDIA_TYPES and media_content_id
     can_expand = media_content_type in EXPANDABLE_MEDIA_TYPES
 
@@ -136,7 +136,7 @@ def library_payload(coordinator):
 
         library_info.children.append(
             item_payload(
-                {"title": item["title"], "type": item["type"], "uri": item["type"]},
+                {"title": item["title"], "type": item["type"]},
                 coordinator,
             )
         )
