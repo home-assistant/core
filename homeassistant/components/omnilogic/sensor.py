@@ -1,19 +1,16 @@
 """Definition and setup of the Omnilogic Sensors for Home Assistant."""
 
-from datetime import timedelta
 import logging
 
 from homeassistant.const import PERCENTAGE, TEMP_CELSIUS, TEMP_FAHRENHEIT
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import OmniLogicEntity
 from .const import COORDINATOR, DOMAIN
+from .omnilogic_common import OmniLogicEntity, OmniLogicUpdateCoordinator
 
 TEMP_UNITS = [TEMP_CELSIUS, TEMP_FAHRENHEIT]
 PERCENT_UNITS = [PERCENTAGE, PERCENTAGE]
 SALT_UNITS = ["g/L", "ppm"]
 
-SCAN_INTERVAL = timedelta(seconds=30)
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -163,7 +160,7 @@ class OmnilogicSensor(OmniLogicEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: OmniLogicUpdateCoordinator,
         kind: str,
         name: str,
         backyard: dict,
@@ -181,17 +178,12 @@ class OmnilogicSensor(OmniLogicEntity):
             backyard=backyard,
             bow=bow,
             icon=icon,
-            sensordata=sensordata,
+            entitydata=sensordata,
         )
         self._state = None
         self._unit_type = backyard["Unit-of-Measurement"]
         self._device_class = device_class
         self._unit = None
-
-    @property
-    def should_poll(self) -> bool:
-        """Return the polling requirement of the entity."""
-        return False
 
     @property
     def device_class(self):
@@ -251,7 +243,7 @@ class OmnilogicSensor(OmniLogicEntity):
 
             for backyard in self.coordinator.data:
                 for bow in backyard.get("BOWS"):
-                    if bow["Filter"]["systemId"] == self.sensordata.get("systemId"):
+                    if bow["Filter"]["systemId"] == self.entitydata.get("systemId"):
                         sensordata = bow["Filter"]
                         break
 
@@ -262,11 +254,11 @@ class OmnilogicSensor(OmniLogicEntity):
                 + " "
                 + self.bow.get("Name")
                 + " "
-                + self.sensordata.get("Name")
+                + self.entitydata.get("Name")
             )
-            self._attrs["systemId"] = self.sensordata.get("systemId")
+            self._attrs["systemId"] = self.entitydata.get("systemId")
             self._attrs["MspSystemId"] = self._backyard["systemId"]
-            self._attrs["PumpType"] = self.sensordata.get("Filter-Type")
+            self._attrs["PumpType"] = self.entitydata.get("Filter-Type")
 
             self.alarms = sensordata.get("Alarms")
 
@@ -282,11 +274,11 @@ class OmnilogicSensor(OmniLogicEntity):
             for backyard in self.coordinator.data:
                 for bow in backyard.get("BOWS"):
                     for pump in bow.get("Pumps"):
-                        if pump["systemId"] == self.sensordata["systemId"]:
+                        if pump["systemId"] == self.entitydata["systemId"]:
                             sensordata = pump
                             break
 
-            if self.sensordata.get("Type") == "PMP_SINGLE_SPEED":
+            if self.entitydata.get("Type") == "PMP_SINGLE_SPEED":
                 if sensordata.get("pumpSpeed") == "100":
                     self._state = "on"
                 else:
@@ -300,11 +292,11 @@ class OmnilogicSensor(OmniLogicEntity):
                 + " "
                 + self.bow.get("Name")
                 + " "
-                + self.sensordata.get("Name")
+                + self.entitydata.get("Name")
             )
-            self._attrs["systemId"] = self.sensordata.get("systemId")
+            self._attrs["systemId"] = self.entitydata.get("systemId")
             self._attrs["MspSystemId"] = self._backyard["systemId"]
-            self._attrs["PumpType"] = self.sensordata.get("Type")
+            self._attrs["PumpType"] = self.entitydata.get("Type")
 
             self.alarms = sensordata.get("Alarms")
 
@@ -321,7 +313,7 @@ class OmnilogicSensor(OmniLogicEntity):
 
             for backyard in self.coordinator.data:
                 for bow in backyard.get("BOWS"):
-                    if bow["Chlorinator"]["systemId"] == self.sensordata["systemId"]:
+                    if bow["Chlorinator"]["systemId"] == self.entitydata["systemId"]:
                         sensordata = bow.get("Chlorinator")
                         break
 
@@ -334,13 +326,13 @@ class OmnilogicSensor(OmniLogicEntity):
 
             self._state = salt_return
             self._unit = unit_of_measurement
-            self._attrs["SystemId"] = self.sensordata.get("systemId")
+            self._attrs["SystemId"] = self.entitydata.get("systemId")
             self._name = (
                 self._backyard["BackyardName"]
                 + " "
                 + self.bow.get("Name")
                 + " "
-                + self.sensordata.get("Name")
+                + self.entitydata.get("Name")
                 + " Salt Level"
             )
 
@@ -357,7 +349,7 @@ class OmnilogicSensor(OmniLogicEntity):
 
             for backyard in self.coordinator.data:
                 for bow in backyard.get("BOWS"):
-                    if bow["Chlorinator"]["systemId"] == self.sensordata["systemId"]:
+                    if bow["Chlorinator"]["systemId"] == self.entitydata["systemId"]:
                         sensordata = bow.get("Chlorinator")
                         break
 
@@ -375,7 +367,7 @@ class OmnilogicSensor(OmniLogicEntity):
                 + " "
                 + self.bow.get("Name")
                 + " "
-                + self.sensordata.get("Name")
+                + self.entitydata.get("Name")
                 + " Setting"
             )
 
@@ -392,7 +384,7 @@ class OmnilogicSensor(OmniLogicEntity):
 
             for backyard in self.coordinator.data:
                 for bow in backyard.get("BOWS"):
-                    if bow["CSAD"]["systemId"] == self.sensordata["systemId"]:
+                    if bow["CSAD"]["systemId"] == self.entitydata["systemId"]:
                         sensordata = bow.get("CSAD")
                         break
 
@@ -419,7 +411,7 @@ class OmnilogicSensor(OmniLogicEntity):
 
             for backyard in self.coordinator.data:
                 for bow in backyard.get("BOWS"):
-                    if bow["CSAD"]["systemId"] == self.sensordata["systemId"]:
+                    if bow["CSAD"]["systemId"] == self.entitydata["systemId"]:
                         sensordata = bow.get("CSAD")
                         break
 
