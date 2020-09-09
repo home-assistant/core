@@ -96,5 +96,4 @@ class OpenWeatherMapForecastSensor(AbstractOpenWeatherMapSensor):
             return self._weather_coordinator.data.get("forecast")[0].get(
                 self._sensor_type, None
             )
-        else:
-            return None
+        return None

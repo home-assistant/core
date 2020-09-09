@@ -35,8 +35,6 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-WEATHER_UPDATE_INTERVAL = timedelta(minutes=5)
-
 
 class WeatherUpdateCoordinator(DataUpdateCoordinator):
     """Weather data update coordinator."""
@@ -47,9 +45,19 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         self._latitude = latitude
         self._longitude = longitude
         self._forecast_mode = forecast_mode
+        if forecast_mode == "freedaily":
+            # Auto convert to One Call for freedaily users
+            self._forecast_mode = "onecall_daily"
+        self._forecast_limit = None
+        if forecast_mode == "daily":
+            self._forecast_limit = 15
+
+        self._weather_update_interval = timedelta(minutes=5)
+        if forecast_mode == "freedaily":
+            self._weather_update_interval = 30
 
         super().__init__(
-            hass, _LOGGER, name=DOMAIN, update_interval=WEATHER_UPDATE_INTERVAL
+            hass, _LOGGER, name=DOMAIN, update_interval=self._weather_update_interval
         )
 
     async def _async_update_data(self):
@@ -63,20 +71,44 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         return data
 
     async def _get_owm_weather(self):
-        weather = await self.hass.async_add_executor_job(
-            self._owm_client.one_call, self._latitude, self._longitude
-        )
+        weather = None
+        if (
+            self._forecast_mode == "onecall_hourly"
+            or self._forecast_mode == "onecall_daily"
+        ):
+            weather = await self.hass.async_add_executor_job(
+                self._owm_client.one_call, self._latitude, self._longitude
+            )
+        else:
+            current_weather = await self.hass.async_add_executor_job(
+                self._owm_client.weather_at_coords, self._latitude, self._longitude
+            )
+            interval = "daily"
+            if self._forecast_mode == "hourly":
+                interval = "3h"
+            forecast = await self.hass.async_add_executor_job(
+                self._owm_client.forecast_at_coords,
+                self._latitude,
+                self._longitude,
+                interval,
+                self._forecast_limit,
+            )
+            weather = LegacyWeather(current_weather.weather, forecast.forecast.weathers)
+
         return weather
 
-    def _convert_weather_response(self, one_call_response):
-        current_weather = one_call_response.current
+    def _convert_weather_response(self, weather_response):
+        current_weather = weather_response.current
 
         forecast_weather = []
-        if hasattr(one_call_response, "forecast_" + self._forecast_mode):
-            forecast_weather = [
-                self._convert_forecast(x)
-                for x in getattr(one_call_response, "forecast_" + self._forecast_mode)
-            ]
+        forecast_arg = "forecast"
+        if self._forecast_mode == "onecall_hourly":
+            forecast_arg = "forecast_hourly"
+        elif self._forecast_mode == "onecall_daily":
+            forecast_arg = "forecast_daily"
+        forecast_weather = [
+            self._convert_forecast(x) for x in getattr(weather_response, forecast_arg)
+        ]
 
         return {
             ATTR_API_TEMPERATURE: current_weather.temperature("celsius").get("temp"),
@@ -104,10 +136,11 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             ATTR_FORECAST_CONDITION: self._get_condition(entry.weather_code),
         }
 
-        if self._forecast_mode == "daily":
+        temperature_dict = entry.temperature("celsius")
+        if "max" in temperature_dict and "min" in temperature_dict:
             forecast[ATTR_FORECAST_TEMP] = entry.temperature("celsius").get("max")
             forecast[ATTR_FORECAST_TEMP_LOW] = entry.temperature("celsius").get("min")
-        elif self._forecast_mode == "hourly":
+        elif "temp" in temperature_dict:
             forecast[ATTR_FORECAST_TEMP] = entry.temperature("celsius").get("temp")
 
         return forecast
@@ -136,3 +169,12 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
     @staticmethod
     def _get_condition(weather_code):
         return [k for k, v in CONDITION_CLASSES.items() if weather_code in v][0]
+
+
+class LegacyWeather:
+    """Class to harmonize weather data model for hourly, daily and One Call APIs."""
+
+    def __init__(self, current_weather, forecast):
+        """Initialize weather object."""
+        self.current = current_weather
+        self.forecast = forecast
