@@ -26,19 +26,19 @@ async def test_sensors(hass) -> None:
 
     sensors = {
         "article_cache": ("ArticleCacheMB", "64", DATA_MEGABYTES, None),
-        "average_download_rate": (
+        "average_speed": (
             "AverageDownloadRate",
             "1.19",
             DATA_RATE_MEGABYTES_PER_SECOND,
             None,
         ),
         "download_paused": ("DownloadPaused", "4", None, None),
-        "download_rate": ("DownloadRate", "2.38", DATA_RATE_MEGABYTES_PER_SECOND, None),
-        "download_size": ("DownloadedSizeMB", "256", DATA_MEGABYTES, None),
-        "free_disk_space": ("FreeDiskSpaceMB", "1024", DATA_MEGABYTES, None),
-        "post_job_count": ("PostJobCount", "2", "Jobs", None),
-        "post_paused": ("PostPaused", "4", None, None),
-        "remaining_size": ("RemainingSizeMB", "512", DATA_MEGABYTES, None),
+        "speed": ("DownloadRate", "2.38", DATA_RATE_MEGABYTES_PER_SECOND, None),
+        "size": ("DownloadedSizeMB", "256", DATA_MEGABYTES, None),
+        "disk_free": ("FreeDiskSpaceMB", "1024", DATA_MEGABYTES, None),
+        "post_processing_jobs": ("PostJobCount", "2", "Jobs", None),
+        "post_processing_paused": ("PostPaused", "4", None, None),
+        "queue_size": ("RemainingSizeMB", "512", DATA_MEGABYTES, None),
         "uptime": ("UpTimeSec", uptime.isoformat(), None, DEVICE_CLASS_TIMESTAMP),
     }
 
