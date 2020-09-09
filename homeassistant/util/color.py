@@ -167,8 +167,8 @@ COLORS = {
 class XYPoint:
     """Represents a CIE 1931 XY coordinate pair."""
 
-    x = attr.ib(type=float)  # pylint: disable=invalid-name
-    y = attr.ib(type=float)  # pylint: disable=invalid-name
+    x: float = attr.ib()  # pylint: disable=invalid-name
+    y: float = attr.ib()  # pylint: disable=invalid-name
 
 
 @attr.s()
@@ -176,9 +176,9 @@ class GamutType:
     """Represents the Gamut of a light."""
 
     # ColorGamut = gamut(xypoint(xR,yR),xypoint(xG,yG),xypoint(xB,yB))
-    red = attr.ib(type=XYPoint)
-    green = attr.ib(type=XYPoint)
-    blue = attr.ib(type=XYPoint)
+    red: XYPoint = attr.ib()
+    green: XYPoint = attr.ib()
+    blue: XYPoint = attr.ib()
 
 
 def color_name_to_rgb(color_name: str) -> Tuple[int, int, int]:

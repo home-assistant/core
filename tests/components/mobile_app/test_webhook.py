@@ -22,8 +22,8 @@ _LOGGER = logging.getLogger(__name__)
 def encrypt_payload(secret_key, payload):
     """Return a encrypted payload given a key and dictionary of data."""
     try:
-        from nacl.secret import SecretBox
         from nacl.encoding import Base64Encoder
+        from nacl.secret import SecretBox
     except (ImportError, OSError):
         pytest.skip("libnacl/libsodium is not installed")
         return
@@ -45,8 +45,8 @@ def encrypt_payload(secret_key, payload):
 def decrypt_payload(secret_key, encrypted_data):
     """Return a decrypted payload given a key and a string of encrypted data."""
     try:
-        from nacl.secret import SecretBox
         from nacl.encoding import Base64Encoder
+        from nacl.secret import SecretBox
     except (ImportError, OSError):
         pytest.skip("libnacl/libsodium is not installed")
         return
@@ -143,7 +143,9 @@ async def test_webhook_update_registration(webhook_client, authed_api_client):
 async def test_webhook_handle_get_zones(hass, create_registrations, webhook_client):
     """Test that we can get zones properly."""
     await async_setup_component(
-        hass, ZONE_DOMAIN, {ZONE_DOMAIN: {}},
+        hass,
+        ZONE_DOMAIN,
+        {ZONE_DOMAIN: {}},
     )
 
     resp = await webhook_client.post(
@@ -171,8 +173,8 @@ async def test_webhook_handle_get_config(hass, create_registrations, webhook_cli
     json = await resp.json()
     if "components" in json:
         json["components"] = set(json["components"])
-    if "whitelist_external_dirs" in json:
-        json["whitelist_external_dirs"] = set(json["whitelist_external_dirs"])
+    if "allowlist_external_dirs" in json:
+        json["allowlist_external_dirs"] = set(json["allowlist_external_dirs"])
 
     hass_config = hass.config.as_dict()
 
@@ -266,7 +268,8 @@ async def test_webhook_enable_encryption(hass, webhook_client, create_registrati
     webhook_id = create_registrations[1]["webhook_id"]
 
     enable_enc_resp = await webhook_client.post(
-        f"/api/webhook/{webhook_id}", json={"type": "enable_encryption"},
+        f"/api/webhook/{webhook_id}",
+        json={"type": "enable_encryption"},
     )
 
     assert enable_enc_resp.status == 200
@@ -278,7 +281,8 @@ async def test_webhook_enable_encryption(hass, webhook_client, create_registrati
     key = enable_enc_json["secret"]
 
     enc_required_resp = await webhook_client.post(
-        f"/api/webhook/{webhook_id}", json=RENDER_TEMPLATE,
+        f"/api/webhook/{webhook_id}",
+        json=RENDER_TEMPLATE,
     )
 
     assert enc_required_resp.status == 400
@@ -406,3 +410,28 @@ async def test_webhook_camera_stream_stream_available_but_errors(
     webhook_json = await resp.json()
     assert webhook_json["hls_path"] is None
     assert webhook_json["mjpeg_path"] == "/api/camera_proxy_stream/camera.stream_camera"
+
+
+async def test_webhook_handle_scan_tag(hass, create_registrations, webhook_client):
+    """Test that we can scan tags."""
+    events = []
+
+    @callback
+    def store_event(event):
+        """Helepr to store events."""
+        events.append(event)
+
+    hass.bus.async_listen("tag_scanned", store_event)
+
+    resp = await webhook_client.post(
+        "/api/webhook/{}".format(create_registrations[1]["webhook_id"]),
+        json={"type": "scan_tag", "data": {"tag_id": "mock-tag-id"}},
+    )
+
+    assert resp.status == 200
+    json = await resp.json()
+    assert json == {}
+
+    assert len(events) == 1
+    assert events[0].data["tag_id"] == "mock-tag-id"
+    assert events[0].data["device_id"] == "mock-device-id"

@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane."
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia.",
+            "invalid_auth": "Niepoprawne uwierzytelnienie.",
+            "unknown": "Nieoczekiwany b\u0142\u0105d."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Adres IP",
+                    "password": "[%key_id:common::config_flow::data::password%]",
+                    "username": "[%key_id:common::config_flow::data::username%]"
+                },
+                "description": "Prosz\u0119 wprowadzi\u0107 dane swojego konta Control4 oraz adres IP lokalnego kontrolera."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Cz\u0119stotliwo\u015b\u0107 aktualizacji [sekundy]"
+                }
+            }
+        }
+    }
+}

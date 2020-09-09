@@ -435,7 +435,7 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         """Pause player and store outputs state."""
         await self.async_media_pause()
         self._last_outputs = self._outputs
-        if any([output["selected"] for output in self._outputs]):
+        if any(output["selected"] for output in self._outputs):
             await self._api.set_enabled_outputs([])
 
     async def async_toggle(self):
@@ -461,7 +461,7 @@ class ForkedDaapdMaster(MediaPlayerEntity):
             return STATE_PLAYING
         if self._player["state"] == "pause":
             return STATE_PAUSED
-        if not any([output["selected"] for output in self._outputs]):
+        if not any(output["selected"] for output in self._outputs):
             return STATE_OFF
         if self._player["state"] == "stop":  # this should catch all remaining cases
             return STATE_IDLE
@@ -720,27 +720,25 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         else:
             _LOGGER.debug("Media type '%s' not supported", media_type)
 
-    async def select_source(self, source):
+    async def async_select_source(self, source):
         """Change source.
 
         Source name reflects whether in default mode or pipe mode.
         Selecting playlists/clear sets the playlists/clears but ends up in default mode.
         """
-        if source != self._source:
-            if (
-                self._use_pipe_control()
-            ):  # if pipe was playing, we need to stop it first
-                await self._pause_and_wait_for_callback()
-            self._source = source
-            if not self._use_pipe_control():  # playlist or clear ends up at default
-                self._source = SOURCE_NAME_DEFAULT
-            if self._sources_uris.get(source):  # load uris for pipes or playlists
-                await self._api.add_to_queue(
-                    uris=self._sources_uris[source], clear=True
-                )
-            elif source == SOURCE_NAME_CLEAR:  # clear playlist
-                await self._api.clear_queue()
-            self.async_write_ha_state()
+        if source == self._source:
+            return
+
+        if self._use_pipe_control():  # if pipe was playing, we need to stop it first
+            await self._pause_and_wait_for_callback()
+        self._source = source
+        if not self._use_pipe_control():  # playlist or clear ends up at default
+            self._source = SOURCE_NAME_DEFAULT
+        if self._sources_uris.get(source):  # load uris for pipes or playlists
+            await self._api.add_to_queue(uris=self._sources_uris[source], clear=True)
+        elif source == SOURCE_NAME_CLEAR:  # clear playlist
+            await self._api.clear_queue()
+        self.async_write_ha_state()
 
     def _use_pipe_control(self):
         """Return which pipe control from KNOWN_PIPES to use."""

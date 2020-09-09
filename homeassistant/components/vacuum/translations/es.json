@@ -16,7 +16,7 @@
     "state": {
         "_": {
             "cleaning": "Limpiando",
-            "docked": "En base",
+            "docked": "En la base",
             "error": "Error",
             "idle": "Inactivo",
             "off": "Apagado",

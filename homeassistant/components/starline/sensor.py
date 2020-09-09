@@ -2,8 +2,8 @@
 from homeassistant.components.sensor import DEVICE_CLASS_TEMPERATURE
 from homeassistant.const import (
     LENGTH_KILOMETERS,
+    PERCENTAGE,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
     VOLT,
     VOLUME_LITERS,
 )
@@ -19,7 +19,7 @@ SENSOR_TYPES = {
     "balance": ["Balance", None, None, "mdi:cash-multiple"],
     "ctemp": ["Interior Temperature", DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS, None],
     "etemp": ["Engine Temperature", DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS, None],
-    "gsm_lvl": ["GSM Signal", None, UNIT_PERCENTAGE, None],
+    "gsm_lvl": ["GSM Signal", None, PERCENTAGE, None],
     "fuel": ["Fuel Volume", None, None, "mdi:fuel"],
     "errors": ["OBD Errors", None, None, "mdi:alert-octagon"],
     "mileage": ["Mileage", None, LENGTH_KILOMETERS, "mdi:counter"],
@@ -98,7 +98,7 @@ class StarlineSensor(StarlineEntity, Entity):
         if self._key == "fuel":
             type_value = self._device.fuel.get("type")
             if type_value == "percents":
-                return UNIT_PERCENTAGE
+                return PERCENTAGE
             if type_value == "litres":
                 return VOLUME_LITERS
         return self._unit

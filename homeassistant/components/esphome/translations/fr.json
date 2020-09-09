@@ -23,7 +23,7 @@
             },
             "user": {
                 "data": {
-                    "host": "H\u00f4te",
+                    "host": "Nom d'h\u00f4te ou adresse IP",
                     "port": "Port"
                 },
                 "description": "Veuillez saisir les param\u00e8tres de connexion de votre n\u0153ud [ESPHome] (https://esphomelib.com/)."

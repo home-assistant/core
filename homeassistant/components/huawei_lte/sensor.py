@@ -156,7 +156,7 @@ SENSOR_META = {
         exclude=re.compile(r"^showtraffic$", re.IGNORECASE)
     ),
     (KEY_MONITORING_TRAFFIC_STATISTICS, "CurrentConnectTime"): dict(
-        name="Current connection duration", unit=TIME_SECONDS, icon="mdi:timer"
+        name="Current connection duration", unit=TIME_SECONDS, icon="mdi:timer-outline"
     ),
     (KEY_MONITORING_TRAFFIC_STATISTICS, "CurrentDownload"): dict(
         name="Current connection download", unit=DATA_BYTES, icon="mdi:download"
@@ -165,7 +165,7 @@ SENSOR_META = {
         name="Current connection upload", unit=DATA_BYTES, icon="mdi:upload"
     ),
     (KEY_MONITORING_TRAFFIC_STATISTICS, "TotalConnectTime"): dict(
-        name="Total connected duration", unit=TIME_SECONDS, icon="mdi:timer"
+        name="Total connected duration", unit=TIME_SECONDS, icon="mdi:timer-outline"
     ),
     (KEY_MONITORING_TRAFFIC_STATISTICS, "TotalDownload"): dict(
         name="Total download", unit=DATA_BYTES, icon="mdi:download"
@@ -178,8 +178,12 @@ SENSOR_META = {
         name="Operator search mode",
         formatter=lambda x: ({"0": "Auto", "1": "Manual"}.get(x, "Unknown"), None),
     ),
-    (KEY_NET_CURRENT_PLMN, "FullName"): dict(name="Operator name",),
-    (KEY_NET_CURRENT_PLMN, "Numeric"): dict(name="Operator code",),
+    (KEY_NET_CURRENT_PLMN, "FullName"): dict(
+        name="Operator name",
+    ),
+    (KEY_NET_CURRENT_PLMN, "Numeric"): dict(
+        name="Operator code",
+    ),
     KEY_NET_NET_MODE: dict(include=re.compile(r"^NetworkMode$", re.IGNORECASE)),
     (KEY_NET_NET_MODE, "NetworkMode"): dict(
         name="Preferred mode",
@@ -197,7 +201,8 @@ SENSOR_META = {
         ),
     ),
     (KEY_SMS_SMS_COUNT, "LocalUnread"): dict(
-        name="SMS unread", icon="mdi:email-receive",
+        name="SMS unread",
+        icon="mdi:email-receive",
     ),
 }
 

@@ -21,7 +21,7 @@
             "link": {
                 "data": {
                     "password": "Passord",
-                    "port": "Port",
+                    "port": "",
                     "ssl": "Bruk SSL/TLS til \u00e5 koble til NAS-en",
                     "username": "Brukernavn"
                 },
@@ -32,7 +32,7 @@
                 "data": {
                     "host": "Vert",
                     "password": "Passord",
-                    "port": "Port",
+                    "port": "",
                     "ssl": "Bruk SSL/TLS til \u00e5 koble til NAS-en",
                     "username": "Brukernavn"
                 },

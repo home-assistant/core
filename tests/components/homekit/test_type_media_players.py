@@ -3,6 +3,7 @@
 from homeassistant.components.homekit.const import (
     ATTR_KEY_NAME,
     ATTR_VALUE,
+    CHAR_REMOTE_KEY,
     CONF_FEATURE_LIST,
     EVENT_HOMEKIT_TV_REMOTE_KEY_PRESSED,
     FEATURE_ON_OFF,
@@ -377,7 +378,7 @@ async def test_media_player_television_basic(hass, hk_driver, events, caplog):
     await acc.run_handler()
     await hass.async_block_till_done()
 
-    assert acc.chars_tv == []
+    assert acc.chars_tv == [CHAR_REMOTE_KEY]
     assert acc.chars_speaker == []
     assert acc.support_select_source is False
 
@@ -448,7 +449,7 @@ async def test_tv_restore(hass, hk_driver, events):
         hass, hk_driver, "MediaPlayer", "media_player.simple", 2, None
     )
     assert acc.category == 31
-    assert acc.chars_tv == []
+    assert acc.chars_tv == [CHAR_REMOTE_KEY]
     assert acc.chars_speaker == []
     assert acc.support_select_source is False
     assert not hasattr(acc, "char_input_source")
@@ -457,7 +458,7 @@ async def test_tv_restore(hass, hk_driver, events):
         hass, hk_driver, "MediaPlayer", "media_player.all_info_set", 2, None
     )
     assert acc.category == 31
-    assert acc.chars_tv == ["RemoteKey"]
+    assert acc.chars_tv == [CHAR_REMOTE_KEY]
     assert acc.chars_speaker == [
         "Name",
         "Active",

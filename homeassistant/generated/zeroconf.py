@@ -6,12 +6,18 @@ To update, run python3 -m script.hassfest
 # fmt: off
 
 ZEROCONF = {
+    "_Volumio._tcp.local.": [
+        "volumio"
+    ],
     "_api._udp.local.": [
         "guardian"
     ],
     "_axis-video._tcp.local.": [
         "axis",
         "doorbird"
+    ],
+    "_bond._tcp.local.": [
+        "bond"
     ],
     "_daap._tcp.local.": [
         "forked_daapd"
@@ -30,6 +36,9 @@ ZEROCONF = {
     ],
     "_hap._tcp.local.": [
         "homekit_controller"
+    ],
+    "_http._tcp.local.": [
+        "shelly"
     ],
     "_ipp._tcp.local.": [
         "ipp"
@@ -53,11 +62,17 @@ ZEROCONF = {
     "_spotify-connect._tcp.local.": [
         "spotify"
     ],
+    "_ssh._tcp.local.": [
+        "smappee"
+    ],
     "_viziocast._tcp.local.": [
         "vizio"
     ],
     "_wled._tcp.local.": [
         "wled"
+    ],
+    "_xbmc-jsonrpc-h._tcp.local.": [
+        "kodi"
     ]
 }
 
@@ -73,8 +88,10 @@ HOMEKIT = {
     "PowerView": "hunterdouglas_powerview",
     "Presence": "netatmo",
     "Rachio": "rachio",
+    "Socket": "wemo",
     "TRADFRI": "tradfri",
     "Welcome": "netatmo",
     "Wemo": "wemo",
+    "iSmartGate": "gogogate2",
     "tado": "tado"
 }

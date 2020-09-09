@@ -66,7 +66,7 @@ class HassIODiscovery(HomeAssistantView):
         try:
             data = await self.hassio.get_discovery_message(uuid)
         except HassioAPIError as err:
-            _LOGGER.error("Can't read discovey data: %s", err)
+            _LOGGER.error("Can't read discovery data: %s", err)
             raise HTTPServiceUnavailable() from None
 
         await self.async_process_new(data)

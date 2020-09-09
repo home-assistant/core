@@ -2,6 +2,6 @@
   "domain": "dwd_weather_warnings",
   "name": "Deutsche Wetter Dienst (DWD) Weather Warnings",
   "documentation": "https://www.home-assistant.io/integrations/dwd_weather_warnings",
-  "after_dependencies": ["rest"],
-  "codeowners": []
+  "codeowners": ["@runningman84", "@stephan192", "@Hummel95"],
+  "requirements": ["dwdwfsapi==1.0.2"]
 }

@@ -7,8 +7,8 @@ from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_TEMPERATURE,
+    PERCENTAGE,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback
 
@@ -17,7 +17,7 @@ from . import KNOWN_DEVICES, HomeKitEntity
 HUMIDITY_ICON = "mdi:water-percent"
 TEMP_C_ICON = "mdi:thermometer"
 BRIGHTNESS_ICON = "mdi:brightness-6"
-CO2_ICON = "mdi:periodic-table-co2"
+CO2_ICON = "mdi:molecule-co2"
 
 UNIT_LUX = "lux"
 
@@ -47,7 +47,7 @@ class HomeKitHumiditySensor(HomeKitEntity):
     @property
     def unit_of_measurement(self):
         """Return units for the sensor."""
-        return UNIT_PERCENTAGE
+        return PERCENTAGE
 
     @property
     def state(self):
@@ -195,7 +195,7 @@ class HomeKitBatterySensor(HomeKitEntity):
     @property
     def unit_of_measurement(self):
         """Return units for the sensor."""
-        return UNIT_PERCENTAGE
+        return PERCENTAGE
 
     @property
     def is_low_battery(self):

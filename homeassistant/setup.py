@@ -22,11 +22,7 @@ DATA_SETUP = "setup_tasks"
 DATA_DEPS_REQS = "deps_reqs_processed"
 
 SLOW_SETUP_WARNING = 10
-
-# Since its possible for databases to be
-# upwards of 36GiB (or larger) in the wild
-# we wait up to 3 hours for startup
-SLOW_SETUP_MAX_WAIT = 10800
+SLOW_SETUP_MAX_WAIT = 300
 
 
 @core.callback
@@ -75,26 +71,47 @@ async def _async_process_dependencies(
     hass: core.HomeAssistant, config: ConfigType, integration: loader.Integration
 ) -> bool:
     """Ensure all dependencies are set up."""
-    tasks = {
+    dependencies_tasks = {
         dep: hass.loop.create_task(async_setup_component(hass, dep, config))
         for dep in integration.dependencies
+        if dep not in hass.config.components
     }
 
+    after_dependencies_tasks = dict()
     to_be_loaded = hass.data.get(DATA_SETUP_DONE, {})
     for dep in integration.after_dependencies:
-        if dep in to_be_loaded and dep not in hass.config.components:
-            tasks[dep] = hass.loop.create_task(to_be_loaded[dep].wait())
+        if (
+            dep not in dependencies_tasks
+            and dep in to_be_loaded
+            and dep not in hass.config.components
+        ):
+            after_dependencies_tasks[dep] = hass.loop.create_task(
+                to_be_loaded[dep].wait()
+            )
 
-    if not tasks:
+    if not dependencies_tasks and not after_dependencies_tasks:
         return True
 
-    _LOGGER.debug("Dependency %s will wait for %s", integration.domain, list(tasks))
-    results = await asyncio.gather(*tasks.values())
+    if dependencies_tasks:
+        _LOGGER.debug(
+            "Dependency %s will wait for dependencies %s",
+            integration.domain,
+            list(dependencies_tasks),
+        )
+    if after_dependencies_tasks:
+        _LOGGER.debug(
+            "Dependency %s will wait for after dependencies %s",
+            integration.domain,
+            list(after_dependencies_tasks),
+        )
+
+    async with hass.timeout.async_freeze(integration.domain):
+        results = await asyncio.gather(
+            *dependencies_tasks.values(), *after_dependencies_tasks.values()
+        )
 
     failed = [
-        domain
-        for idx, domain in enumerate(integration.dependencies)
-        if not results[idx]
+        domain for idx, domain in enumerate(dependencies_tasks) if not results[idx]
     ]
 
     if failed:
@@ -125,6 +142,10 @@ async def _async_setup_component(
         integration = await loader.async_get_integration(hass, domain)
     except loader.IntegrationNotFound:
         log_error("Integration not found.")
+        return False
+
+    if integration.disabled:
+        log_error(f"dependency is disabled - {integration.disabled}")
         return False
 
     # Validate all dependencies exist and there are no circular dependencies
@@ -176,9 +197,7 @@ async def _async_setup_component(
 
     try:
         if hasattr(component, "async_setup"):
-            task = component.async_setup(  # type: ignore
-                hass, processed_config
-            )
+            task = component.async_setup(hass, processed_config)  # type: ignore
         elif hasattr(component, "setup"):
             # This should not be replaced with hass.async_add_executor_job because
             # we don't want to track this task in case it blocks startup.
@@ -190,7 +209,8 @@ async def _async_setup_component(
             hass.data[DATA_SETUP_STARTED].pop(domain)
             return False
 
-        result = await asyncio.wait_for(task, SLOW_SETUP_MAX_WAIT)
+        async with hass.timeout.async_timeout(SLOW_SETUP_MAX_WAIT, domain):
+            result = await task
     except asyncio.TimeoutError:
         _LOGGER.error(
             "Setup of %s is taking longer than %s seconds."
@@ -319,9 +339,10 @@ async def async_process_deps_reqs(
         raise HomeAssistantError("Could not set up all dependencies.")
 
     if not hass.config.skip_pip and integration.requirements:
-        await requirements.async_get_integration_with_requirements(
-            hass, integration.domain
-        )
+        async with hass.timeout.async_freeze(integration.domain):
+            await requirements.async_get_integration_with_requirements(
+                hass, integration.domain
+            )
 
     processed.add(integration.domain)
 

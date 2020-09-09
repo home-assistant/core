@@ -3,7 +3,7 @@
 from aiopvapi.resources.shade import ATTR_TYPE
 
 import homeassistant.helpers.device_registry as dr
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     DEVICE_FIRMWARE,
@@ -20,30 +20,19 @@ from .const import (
 )
 
 
-class HDEntity(Entity):
+class HDEntity(CoordinatorEntity):
     """Base class for hunter douglas entities."""
 
     def __init__(self, coordinator, device_info, unique_id):
         """Initialize the entity."""
-        super().__init__()
-        self._coordinator = coordinator
+        super().__init__(coordinator)
         self._unique_id = unique_id
         self._device_info = device_info
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return self._coordinator.last_update_success
 
     @property
     def unique_id(self):
         """Return the unique id."""
         return self._unique_id
-
-    @property
-    def should_poll(self):
-        """Return False, updates are controlled via coordinator."""
-        return False
 
     @property
     def device_info(self):

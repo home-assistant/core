@@ -4,7 +4,7 @@ import logging
 from homeassistant.const import DEVICE_CLASS_POWER, ENERGY_WATT_HOUR, POWER_WATT, VOLT
 from homeassistant.helpers.entity import Entity
 
-from .const import BASE, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -15,13 +15,7 @@ TREND_SENSORS = {
         POWER_WATT,
         "total_power",
         DEVICE_CLASS_POWER,
-    ],
-    "total_reactive_power": [
-        "Total consumption - Reactive power",
-        None,
-        POWER_WATT,
-        "total_reactive_power",
-        DEVICE_CLASS_POWER,
+        True,  # both cloud and local
     ],
     "alwayson": [
         "Always on - Active power",
@@ -29,6 +23,7 @@ TREND_SENSORS = {
         POWER_WATT,
         "alwayson",
         DEVICE_CLASS_POWER,
+        False,  # cloud only
     ],
     "power_today": [
         "Total consumption - Today",
@@ -36,6 +31,7 @@ TREND_SENSORS = {
         ENERGY_WATT_HOUR,
         "power_today",
         None,
+        False,  # cloud only
     ],
     "power_current_hour": [
         "Total consumption - Current hour",
@@ -43,6 +39,7 @@ TREND_SENSORS = {
         ENERGY_WATT_HOUR,
         "power_current_hour",
         None,
+        False,  # cloud only
     ],
     "power_last_5_minutes": [
         "Total consumption - Last 5 minutes",
@@ -50,6 +47,7 @@ TREND_SENSORS = {
         ENERGY_WATT_HOUR,
         "power_last_5_minutes",
         None,
+        False,  # cloud only
     ],
     "alwayson_today": [
         "Always on - Today",
@@ -57,7 +55,17 @@ TREND_SENSORS = {
         ENERGY_WATT_HOUR,
         "alwayson_today",
         None,
+        False,  # cloud only
     ],
+}
+REACTIVE_SENSORS = {
+    "total_reactive_power": [
+        "Total consumption - Reactive power",
+        None,
+        POWER_WATT,
+        "total_reactive_power",
+        DEVICE_CLASS_POWER,
+    ]
 }
 SOLAR_SENSORS = {
     "solar_power": [
@@ -66,6 +74,7 @@ SOLAR_SENSORS = {
         POWER_WATT,
         "solar_power",
         DEVICE_CLASS_POWER,
+        True,  # both cloud and local
     ],
     "solar_today": [
         "Total production - Today",
@@ -73,6 +82,7 @@ SOLAR_SENSORS = {
         ENERGY_WATT_HOUR,
         "solar_today",
         None,
+        False,  # cloud only
     ],
     "solar_current_hour": [
         "Total production - Current hour",
@@ -80,6 +90,7 @@ SOLAR_SENSORS = {
         ENERGY_WATT_HOUR,
         "solar_current_hour",
         None,
+        False,  # cloud only
     ],
 }
 VOLTAGE_SENSORS = {
@@ -88,80 +99,94 @@ VOLTAGE_SENSORS = {
         "mdi:flash",
         VOLT,
         "phase_voltage_a",
-        ["ONE", "TWO", "THREE_STAR", "THREE_DELTA"],
         None,
+        ["ONE", "TWO", "THREE_STAR", "THREE_DELTA"],
     ],
     "phase_voltages_b": [
         "Phase voltages - B",
         "mdi:flash",
         VOLT,
         "phase_voltage_b",
-        ["TWO", "THREE_STAR", "THREE_DELTA"],
         None,
+        ["TWO", "THREE_STAR", "THREE_DELTA"],
     ],
     "phase_voltages_c": [
         "Phase voltages - C",
         "mdi:flash",
         VOLT,
         "phase_voltage_c",
-        ["THREE_STAR"],
         None,
+        ["THREE_STAR"],
     ],
     "line_voltages_a": [
         "Line voltages - A",
         "mdi:flash",
         VOLT,
         "line_voltage_a",
-        ["ONE", "TWO", "THREE_STAR", "THREE_DELTA"],
         None,
+        ["ONE", "TWO", "THREE_STAR", "THREE_DELTA"],
     ],
     "line_voltages_b": [
         "Line voltages - B",
         "mdi:flash",
         VOLT,
         "line_voltage_b",
-        ["TWO", "THREE_STAR", "THREE_DELTA"],
         None,
+        ["TWO", "THREE_STAR", "THREE_DELTA"],
     ],
     "line_voltages_c": [
         "Line voltages - C",
         "mdi:flash",
         VOLT,
         "line_voltage_c",
-        ["THREE_STAR", "THREE_DELTA"],
         None,
+        ["THREE_STAR", "THREE_DELTA"],
     ],
 }
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Smappee sensor."""
-    smappee_base = hass.data[DOMAIN][BASE]
+    smappee_base = hass.data[DOMAIN][config_entry.entry_id]
 
     entities = []
     for service_location in smappee_base.smappee.service_locations.values():
         # Add all basic sensors (realtime values and aggregators)
+        # Some are available in local only env
         for sensor in TREND_SENSORS:
-            entities.append(
-                SmappeeSensor(
-                    smappee_base=smappee_base,
-                    service_location=service_location,
-                    sensor=sensor,
-                    attributes=TREND_SENSORS[sensor],
-                )
-            )
-
-        # Add solar sensors
-        if service_location.has_solar_production:
-            for sensor in SOLAR_SENSORS:
+            if not service_location.local_polling or TREND_SENSORS[sensor][5]:
                 entities.append(
                     SmappeeSensor(
                         smappee_base=smappee_base,
                         service_location=service_location,
                         sensor=sensor,
-                        attributes=SOLAR_SENSORS[sensor],
+                        attributes=TREND_SENSORS[sensor],
                     )
                 )
+
+        if service_location.has_reactive_value:
+            for reactive_sensor in REACTIVE_SENSORS:
+                entities.append(
+                    SmappeeSensor(
+                        smappee_base=smappee_base,
+                        service_location=service_location,
+                        sensor=reactive_sensor,
+                        attributes=REACTIVE_SENSORS[reactive_sensor],
+                    )
+                )
+
+        # Add solar sensors (some are available in local only env)
+        if service_location.has_solar_production:
+            for sensor in SOLAR_SENSORS:
+                if not service_location.local_polling or SOLAR_SENSORS[sensor][5]:
+                    entities.append(
+                        SmappeeSensor(
+                            smappee_base=smappee_base,
+                            service_location=service_location,
+                            sensor=sensor,
+                            attributes=SOLAR_SENSORS[sensor],
+                        )
+                    )
 
         # Add all CT measurements
         for measurement_id, measurement in service_location.measurements.items():
@@ -180,17 +205,18 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 )
             )
 
-        # Add phase- and line voltages
-        for sensor_name, sensor in VOLTAGE_SENSORS.items():
-            if service_location.phase_type in sensor[4]:
-                entities.append(
-                    SmappeeSensor(
-                        smappee_base=smappee_base,
-                        service_location=service_location,
-                        sensor=sensor_name,
-                        attributes=sensor,
+        # Add phase- and line voltages if available
+        if service_location.has_voltage_values:
+            for sensor_name, sensor in VOLTAGE_SENSORS.items():
+                if service_location.phase_type in sensor[5]:
+                    entities.append(
+                        SmappeeSensor(
+                            smappee_base=smappee_base,
+                            service_location=service_location,
+                            sensor=sensor_name,
+                            attributes=sensor,
+                        )
                     )
-                )
 
         # Add Gas and Water sensors
         for sensor_id, sensor in service_location.sensors.items():
@@ -265,7 +291,9 @@ class SmappeeSensor(Entity):
         return self._unit_of_measurement
 
     @property
-    def unique_id(self,):
+    def unique_id(
+        self,
+    ):
         """Return the unique ID for this sensor."""
         if self._sensor in ["load", "sensor"]:
             return (

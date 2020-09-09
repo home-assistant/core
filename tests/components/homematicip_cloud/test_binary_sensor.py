@@ -15,7 +15,7 @@ from homeassistant.components.homematicip_cloud.binary_sensor import (
     ATTR_WATER_LEVEL_DETECTED,
     ATTR_WINDOW_STATE,
 )
-from homeassistant.components.homematicip_cloud.device import (
+from homeassistant.components.homematicip_cloud.generic_entity import (
     ATTR_EVENT_DELAY,
     ATTR_GROUP_MEMBER_UNREACHABLE,
     ATTR_LOW_BATTERY,
@@ -31,7 +31,9 @@ from .helper import async_manipulate_test_data, get_and_check_entity_basics
 async def test_manually_configured_platform(hass):
     """Test that we do not set up an access point."""
     assert await async_setup_component(
-        hass, BINARY_SENSOR_DOMAIN, {BINARY_SENSOR_DOMAIN: {"platform": HMIPC_DOMAIN}},
+        hass,
+        BINARY_SENSOR_DOMAIN,
+        {BINARY_SENSOR_DOMAIN: {"platform": HMIPC_DOMAIN}},
     )
     assert not hass.data.get(HMIPC_DOMAIN)
 
@@ -54,6 +56,42 @@ async def test_hmip_acceleration_sensor(hass, default_mock_hap_factory):
     assert ha_state.attributes[ATTR_ACCELERATION_SENSOR_NEUTRAL_POSITION] == "VERTICAL"
     assert (
         ha_state.attributes[ATTR_ACCELERATION_SENSOR_SENSITIVITY] == "SENSOR_RANGE_4G"
+    )
+    assert ha_state.attributes[ATTR_ACCELERATION_SENSOR_TRIGGER_ANGLE] == 45
+    service_call_counter = len(hmip_device.mock_calls)
+
+    await async_manipulate_test_data(
+        hass, hmip_device, "accelerationSensorTriggered", False
+    )
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == STATE_OFF
+    assert len(hmip_device.mock_calls) == service_call_counter + 1
+
+    await async_manipulate_test_data(
+        hass, hmip_device, "accelerationSensorTriggered", True
+    )
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == STATE_ON
+    assert len(hmip_device.mock_calls) == service_call_counter + 2
+
+
+async def test_hmip_tilt_vibration_sensor(hass, default_mock_hap_factory):
+    """Test HomematicipTiltVibrationSensor."""
+    entity_id = "binary_sensor.garage_neigungs_und_erschutterungssensor"
+    entity_name = "Garage Neigungs- und Erschütterungssensor"
+    device_model = "HmIP-STV"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=[entity_name]
+    )
+
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, entity_name, device_model
+    )
+
+    assert ha_state.state == STATE_ON
+    assert ha_state.attributes[ATTR_ACCELERATION_SENSOR_MODE] == "FLAT_DECT"
+    assert (
+        ha_state.attributes[ATTR_ACCELERATION_SENSOR_SENSITIVITY] == "SENSOR_RANGE_2G"
     )
     assert ha_state.attributes[ATTR_ACCELERATION_SENSOR_TRIGGER_ANGLE] == 45
     service_call_counter = len(hmip_device.mock_calls)
@@ -110,11 +148,19 @@ async def test_hmip_shutter_contact(hass, default_mock_hap_factory):
     )
 
     assert ha_state.state == STATE_ON
+    assert ha_state.attributes[ATTR_WINDOW_STATE] == WindowState.TILTED
+
+    await async_manipulate_test_data(hass, hmip_device, "windowState", WindowState.OPEN)
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == STATE_ON
+    assert ha_state.attributes[ATTR_WINDOW_STATE] == WindowState.OPEN
+
     await async_manipulate_test_data(
         hass, hmip_device, "windowState", WindowState.CLOSED
     )
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_OFF
+    assert not ha_state.attributes.get(ATTR_WINDOW_STATE)
 
     await async_manipulate_test_data(hass, hmip_device, "windowState", None)
     ha_state = hass.states.get(entity_id)
@@ -245,7 +291,10 @@ async def test_hmip_smoke_detector(hass, default_mock_hap_factory):
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_ON
     await async_manipulate_test_data(
-        hass, hmip_device, "smokeDetectorAlarmType", None,
+        hass,
+        hmip_device,
+        "smokeDetectorAlarmType",
+        None,
     )
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_OFF

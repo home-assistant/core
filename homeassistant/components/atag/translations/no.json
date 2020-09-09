@@ -12,7 +12,7 @@
                 "data": {
                     "email": "E-post (valgfritt)",
                     "host": "Vert",
-                    "port": "Port "
+                    "port": ""
                 },
                 "title": "Koble til enheten"
             }

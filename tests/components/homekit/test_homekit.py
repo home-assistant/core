@@ -4,6 +4,7 @@ from typing import Dict
 
 import pytest
 
+from homeassistant import config as hass_config
 from homeassistant.components import zeroconf
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_BATTERY_CHARGING,
@@ -49,8 +50,9 @@ from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
+    PERCENTAGE,
+    SERVICE_RELOAD,
     STATE_ON,
-    UNIT_PERCENTAGE,
 )
 from homeassistant.core import State
 from homeassistant.helpers import device_registry
@@ -66,6 +68,11 @@ from tests.common import MockConfigEntry, mock_device_registry, mock_registry
 from tests.components.homekit.common import patch_debounce
 
 IP_ADDRESS = "127.0.0.1"
+
+
+@pytest.fixture(autouse=True)
+def always_patch_driver(hk_driver):
+    """Load the hk_driver fixture."""
 
 
 @pytest.fixture(name="device_reg")
@@ -780,7 +787,7 @@ async def test_homekit_finds_linked_batteries(
     with patch.object(homekit.bridge, "add_accessory"), patch(
         f"{PATH_HOMEKIT}.show_setup_message"
     ), patch(f"{PATH_HOMEKIT}.get_accessory") as mock_get_acc, patch(
-        "pyhap.accessory_driver.AccessoryDriver.start"
+        "pyhap.accessory_driver.AccessoryDriver.start_service"
     ):
         await homekit.async_start()
     await hass.async_block_till_done()
@@ -912,7 +919,8 @@ async def test_raise_config_entry_not_ready(hass):
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.homekit.port_is_available", return_value=False,
+        "homeassistant.components.homekit.port_is_available",
+        return_value=False,
     ):
         assert not await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -927,11 +935,15 @@ async def test_homekit_uses_system_zeroconf(hass, hk_driver, mock_zeroconf):
     )
     system_zc = await zeroconf.async_get_instance(hass)
 
-    entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-    assert hass.data[DOMAIN][entry.entry_id][HOMEKIT].driver.advertiser == system_zc
-    await hass.async_block_till_done()
+    with patch("pyhap.accessory_driver.AccessoryDriver.start_service"), patch(
+        f"{PATH_HOMEKIT}.HomeKit.async_stop"
+    ):
+        entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        assert hass.data[DOMAIN][entry.entry_id][HOMEKIT].driver.advertiser == system_zc
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
 
 
 def _write_data(path: str, data: Dict) -> None:
@@ -1003,7 +1015,7 @@ async def test_homekit_ignored_missing_devices(
     with patch.object(homekit.bridge, "add_accessory"), patch(
         f"{PATH_HOMEKIT}.show_setup_message"
     ), patch(f"{PATH_HOMEKIT}.get_accessory") as mock_get_acc, patch(
-        "pyhap.accessory_driver.AccessoryDriver.start"
+        "pyhap.accessory_driver.AccessoryDriver.start_service"
     ):
         await homekit.async_start()
     await hass.async_block_till_done()
@@ -1077,7 +1089,7 @@ async def test_homekit_finds_linked_motion_sensors(
     with patch.object(homekit.bridge, "add_accessory"), patch(
         f"{PATH_HOMEKIT}.show_setup_message"
     ), patch(f"{PATH_HOMEKIT}.get_accessory") as mock_get_acc, patch(
-        "pyhap.accessory_driver.AccessoryDriver.start"
+        "pyhap.accessory_driver.AccessoryDriver.start_service"
     ):
         await homekit.async_start()
     await hass.async_block_till_done()
@@ -1143,7 +1155,7 @@ async def test_homekit_finds_linked_humidity_sensors(
         "42",
         {
             ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
-            ATTR_UNIT_OF_MEASUREMENT: UNIT_PERCENTAGE,
+            ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
         },
     )
     hass.states.async_set(humidifier.entity_id, STATE_ON)
@@ -1154,7 +1166,7 @@ async def test_homekit_finds_linked_humidity_sensors(
     with patch.object(homekit.bridge, "add_accessory"), patch(
         f"{PATH_HOMEKIT}.show_setup_message"
     ), patch(f"{PATH_HOMEKIT}.get_accessory") as mock_get_acc, patch(
-        "pyhap.accessory_driver.AccessoryDriver.start"
+        "pyhap.accessory_driver.AccessoryDriver.start_service"
     ):
         await homekit.async_start()
     await hass.async_block_till_done()
@@ -1171,3 +1183,69 @@ async def test_homekit_finds_linked_humidity_sensors(
             "linked_humidity_sensor": "sensor.humidifier_humidity_sensor",
         },
     )
+
+
+async def test_reload(hass):
+    """Test we can reload from yaml."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=SOURCE_IMPORT,
+        data={CONF_NAME: "reloadable", CONF_PORT: 12345},
+        options={},
+    )
+    entry.add_to_hass(hass)
+
+    with patch(f"{PATH_HOMEKIT}.HomeKit") as mock_homekit:
+        mock_homekit.return_value = homekit = Mock()
+        type(homekit).async_start = AsyncMock()
+        assert await async_setup_component(
+            hass, "homekit", {"homekit": {CONF_NAME: "reloadable", CONF_PORT: 12345}}
+        )
+        await hass.async_block_till_done()
+
+    mock_homekit.assert_any_call(
+        hass,
+        "reloadable",
+        12345,
+        None,
+        ANY,
+        {},
+        DEFAULT_SAFE_MODE,
+        None,
+        entry.entry_id,
+    )
+    assert mock_homekit().setup.called is True
+    yaml_path = os.path.join(
+        _get_fixtures_base_path(),
+        "fixtures",
+        "homekit/configuration.yaml",
+    )
+    with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path), patch(
+        f"{PATH_HOMEKIT}.HomeKit"
+    ) as mock_homekit2:
+        mock_homekit2.return_value = homekit = Mock()
+        type(homekit).async_start = AsyncMock()
+        await hass.services.async_call(
+            "homekit",
+            SERVICE_RELOAD,
+            {},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    mock_homekit2.assert_any_call(
+        hass,
+        "reloadable",
+        45678,
+        None,
+        ANY,
+        {},
+        DEFAULT_SAFE_MODE,
+        None,
+        entry.entry_id,
+    )
+    assert mock_homekit2().setup.called is True
+
+
+def _get_fixtures_base_path():
+    return os.path.dirname(os.path.dirname(os.path.dirname(__file__)))

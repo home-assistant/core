@@ -10,7 +10,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "H\u00f4te",
+                    "host": "Nom d'h\u00f4te ou adresse IP",
                     "port": "Port"
                 },
                 "title": "Configurer l'agent DVR"

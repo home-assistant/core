@@ -1,11 +1,12 @@
 """The tests for the automation component."""
-from datetime import timedelta
+import asyncio
 
 import pytest
 
 from homeassistant.components import logbook
 import homeassistant.components.automation as automation
 from homeassistant.components.automation import (
+    ATTR_SOURCE,
     DOMAIN,
     EVENT_AUTOMATION_RELOADED,
     EVENT_AUTOMATION_TRIGGERED,
@@ -14,21 +15,17 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_NAME,
     EVENT_HOMEASSISTANT_STARTED,
+    SERVICE_TURN_OFF,
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import Context, CoreState, State
+from homeassistant.core import Context, CoreState, State, callback
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.async_mock import Mock, patch
-from tests.common import (
-    assert_setup_component,
-    async_fire_time_changed,
-    async_mock_service,
-    mock_restore_cache,
-)
+from tests.common import assert_setup_component, async_mock_service, mock_restore_cache
 from tests.components.automation import common
 from tests.components.logbook.test_init import MockLazyEventPartialState
 
@@ -76,63 +73,12 @@ async def test_service_specify_data(hass, calls):
 
     time = dt_util.utcnow()
 
-    with patch("homeassistant.components.automation.utcnow", return_value=time):
+    with patch("homeassistant.helpers.script.utcnow", return_value=time):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
 
     assert len(calls) == 1
     assert calls[0].data["some"] == "event - test_event"
-    state = hass.states.get("automation.hello")
-    assert state is not None
-    assert state.attributes.get("last_triggered") == time
-
-
-async def test_action_delay(hass, calls):
-    """Test action delay."""
-    assert await async_setup_component(
-        hass,
-        automation.DOMAIN,
-        {
-            automation.DOMAIN: {
-                "alias": "hello",
-                "trigger": {"platform": "event", "event_type": "test_event"},
-                "action": [
-                    {
-                        "service": "test.automation",
-                        "data_template": {
-                            "some": "{{ trigger.platform }} - "
-                            "{{ trigger.event.event_type }}"
-                        },
-                    },
-                    {"delay": {"minutes": "10"}},
-                    {
-                        "service": "test.automation",
-                        "data_template": {
-                            "some": "{{ trigger.platform }} - "
-                            "{{ trigger.event.event_type }}"
-                        },
-                    },
-                ],
-            }
-        },
-    )
-
-    time = dt_util.utcnow()
-
-    with patch("homeassistant.components.automation.utcnow", return_value=time):
-        hass.bus.async_fire("test_event")
-        await hass.async_block_till_done()
-
-    assert len(calls) == 1
-    assert calls[0].data["some"] == "event - test_event"
-
-    future = dt_util.utcnow() + timedelta(minutes=10)
-    async_fire_time_changed(hass, future)
-    await hass.async_block_till_done()
-
-    assert len(calls) == 2
-    assert calls[1].data["some"] == "event - test_event"
-
     state = hass.states.get("automation.hello")
     assert state is not None
     assert state.attributes.get("last_triggered") == time
@@ -286,6 +232,31 @@ async def test_two_conditions_with_and(hass, calls):
     assert len(calls) == 1
 
 
+async def test_shorthand_conditions_template(hass, calls):
+    """Test shorthand nation form in conditions."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": [{"platform": "event", "event_type": "test_event"}],
+                "condition": "{{ is_state('test.entity', 'hello') }}",
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    hass.states.async_set("test.entity", "hello")
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    hass.states.async_set("test.entity", "goodbye")
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+
 async def test_automation_list_setting(hass, calls):
     """Event is not a valid condition."""
     assert await async_setup_component(
@@ -379,6 +350,7 @@ async def test_shared_context(hass, calls):
     # Ensure event data has all attributes set
     assert args[0].data.get(ATTR_NAME) is not None
     assert args[0].data.get(ATTR_ENTITY_ID) is not None
+    assert args[0].data.get(ATTR_SOURCE) is not None
 
     # Ensure context set correctly for event fired by 'hello' automation
     args, _ = first_automation_listener.call_args
@@ -396,6 +368,7 @@ async def test_shared_context(hass, calls):
     # Ensure event data has all attributes set
     assert args[0].data.get(ATTR_NAME) is not None
     assert args[0].data.get(ATTR_ENTITY_ID) is not None
+    assert args[0].data.get(ATTR_SOURCE) is not None
 
     # Ensure the service call from the second automation
     # shares the same context
@@ -444,6 +417,17 @@ async def test_services(hass, calls):
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()
     assert len(calls) == 2
+
+    await common.async_toggle(hass, entity_id)
+    await hass.async_block_till_done()
+
+    assert not automation.is_on(hass, entity_id)
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+
+    await common.async_toggle(hass, entity_id)
+    await hass.async_block_till_done()
 
     await common.async_trigger(hass, entity_id)
     await hass.async_block_till_done()
@@ -609,6 +593,65 @@ async def test_reload_config_handles_load_fails(hass, calls):
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()
     assert len(calls) == 2
+
+
+@pytest.mark.parametrize("service", ["turn_off_stop", "turn_off_no_stop", "reload"])
+async def test_automation_stops(hass, calls, service):
+    """Test that turning off / reloading stops any running actions as appropriate."""
+    entity_id = "automation.hello"
+    test_entity = "test.entity"
+
+    config = {
+        automation.DOMAIN: {
+            "alias": "hello",
+            "trigger": {"platform": "event", "event_type": "test_event"},
+            "action": [
+                {"event": "running"},
+                {"wait_template": "{{ is_state('test.entity', 'goodbye') }}"},
+                {"service": "test.automation"},
+            ],
+        }
+    }
+    assert await async_setup_component(hass, automation.DOMAIN, config)
+
+    running = asyncio.Event()
+
+    @callback
+    def running_cb(event):
+        running.set()
+
+    hass.bus.async_listen_once("running", running_cb)
+    hass.states.async_set(test_entity, "hello")
+
+    hass.bus.async_fire("test_event")
+    await running.wait()
+
+    if service == "turn_off_stop":
+        await hass.services.async_call(
+            automation.DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+    elif service == "turn_off_no_stop":
+        await hass.services.async_call(
+            automation.DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: entity_id, automation.CONF_STOP_ACTIONS: False},
+            blocking=True,
+        )
+    else:
+        with patch(
+            "homeassistant.config.load_yaml_config_file",
+            autospec=True,
+            return_value=config,
+        ):
+            await common.async_reload(hass)
+
+    hass.states.async_set(test_entity, "goodbye")
+    await hass.async_block_till_done()
+
+    assert len(calls) == (1 if service == "turn_off_no_stop" else 0)
 
 
 async def test_automation_restore_state(hass):
@@ -846,6 +889,22 @@ async def test_automation_not_trigger_on_bootstrap(hass):
     assert ["hello.world"] == calls[0].data.get(ATTR_ENTITY_ID)
 
 
+async def test_automation_bad_trigger(hass, caplog):
+    """Test bad trigger configuration."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": "hello",
+                "trigger": {"platform": "automation"},
+                "action": [],
+            }
+        },
+    )
+    assert "Integration 'automation' does not provide trigger support." in caplog.text
+
+
 async def test_automation_with_error_in_script(hass, caplog):
     """Test automation with an error in script."""
     assert await async_setup_component(
@@ -1054,10 +1113,15 @@ async def test_logbook_humanify_automation_triggered_event(hass):
                 ),
                 MockLazyEventPartialState(
                     EVENT_AUTOMATION_TRIGGERED,
-                    {ATTR_ENTITY_ID: "automation.bye", ATTR_NAME: "Bye Automation"},
+                    {
+                        ATTR_ENTITY_ID: "automation.bye",
+                        ATTR_NAME: "Bye Automation",
+                        ATTR_SOURCE: "source of trigger",
+                    },
                 ),
             ],
             entity_attr_cache,
+            {},
         )
     )
 
@@ -1068,37 +1132,5 @@ async def test_logbook_humanify_automation_triggered_event(hass):
 
     assert event2["name"] == "Bye Automation"
     assert event2["domain"] == "automation"
-    assert event2["message"] == "has been triggered"
+    assert event2["message"] == "has been triggered by source of trigger"
     assert event2["entity_id"] == "automation.bye"
-
-
-async def test_invalid_config(hass):
-    """Test invalid config."""
-    with assert_setup_component(0, automation.DOMAIN):
-        assert await async_setup_component(
-            hass,
-            automation.DOMAIN,
-            {
-                automation.DOMAIN: {
-                    "mode": "parallel",
-                    "queue_size": 5,
-                    "trigger": {"platform": "event", "event_type": "test_event"},
-                    "action": [],
-                }
-            },
-        )
-
-
-async def test_config_legacy(hass, caplog):
-    """Test config defaulting to legacy mode."""
-    assert await async_setup_component(
-        hass,
-        automation.DOMAIN,
-        {
-            automation.DOMAIN: {
-                "trigger": {"platform": "event", "event_type": "test_event"},
-                "action": [],
-            }
-        },
-    )
-    assert "To continue using previous behavior, which is now deprecated" in caplog.text

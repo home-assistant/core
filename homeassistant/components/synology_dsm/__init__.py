@@ -88,7 +88,9 @@ async def async_setup(hass, config):
     for dsm_conf in conf:
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=dsm_conf,
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data=dsm_conf,
             )
         )
 
@@ -309,7 +311,9 @@ class SynoApi:
     def _fetch_device_configuration(self):
         """Fetch initial device config."""
         self.information = self.dsm.information
+        self.information.update()
         self.network = self.dsm.network
+        self.network.update()
 
         if self._with_security:
             self.security = self.dsm.security
@@ -335,7 +339,10 @@ class SynologyDSMEntity(Entity):
     """Representation of a Synology NAS entry."""
 
     def __init__(
-        self, api: SynoApi, entity_type: str, entity_info: Dict[str, str],
+        self,
+        api: SynoApi,
+        entity_type: str,
+        entity_info: Dict[str, str],
     ):
         """Initialize the Synology DSM entity."""
         self._api = api
@@ -439,7 +446,7 @@ class SynologyDSMDeviceEntity(SynologyDSMEntity):
         self._device_type = None
 
         if "volume" in entity_type:
-            volume = self._api.storage._get_volume(self._device_id)
+            volume = self._api.storage.get_volume(self._device_id)
             # Volume does not have a name
             self._device_name = volume["id"].replace("_", " ").capitalize()
             self._device_manufacturer = "Synology"
@@ -452,7 +459,7 @@ class SynologyDSMDeviceEntity(SynologyDSMEntity):
                 .replace("shr", "SHR")
             )
         elif "disk" in entity_type:
-            disk = self._api.storage._get_disk(self._device_id)
+            disk = self._api.storage.get_disk(self._device_id)
             self._device_name = disk["name"]
             self._device_manufacturer = disk["vendor"]
             self._device_model = disk["model"].strip()

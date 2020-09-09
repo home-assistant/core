@@ -6,6 +6,16 @@
             "toggle": "{entity_name} \u00ebmschalten",
             "turn_off": "{entity_name} ausschalten",
             "turn_on": "{entity_name} uschalten"
+        },
+        "condition_type": {
+            "is_mode": "{entity_name} ass op e spezifesche Modus gesat",
+            "is_off": "{entity_name} ass ausgeschalt",
+            "is_on": "{entity_name} ass un"
+        },
+        "trigger_type": {
+            "target_humidity_changed": "{entity_name} Ziel Fiichtegkeet ge\u00e4nnert",
+            "turned_off": "{entity_name} gouf ausgeschalt",
+            "turned_on": "{entity_name} gouf ugeschalt"
         }
     },
     "state": {

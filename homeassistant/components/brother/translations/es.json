@@ -13,7 +13,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Nombre del host o direcci\u00f3n IP de la impresora",
+                    "host": "Host",
                     "type": "Tipo de impresora"
                 },
                 "description": "Configura la integraci\u00f3n de impresoras Brother. Si tienes problemas con la configuraci\u00f3n, ve a: https://www.home-assistant.io/integrations/brother"

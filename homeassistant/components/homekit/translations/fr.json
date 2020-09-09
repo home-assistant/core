@@ -23,8 +23,7 @@
             "advanced": {
                 "data": {
                     "auto_start": "D\u00e9marrage automatique (d\u00e9sactiver si vous utilisez Z-Wave ou un autre syst\u00e8me de d\u00e9marrage diff\u00e9r\u00e9)",
-                    "safe_mode": "Mode sans \u00e9chec (activez uniquement si le jumelage \u00e9choue)",
-                    "zeroconf_default_interface": "Utiliser l'interface zeroconf par d\u00e9faut (activer si le pont est introuvable dans l'application Home)"
+                    "safe_mode": "Mode sans \u00e9chec (activez uniquement si le jumelage \u00e9choue)"
                 },
                 "description": "Ces param\u00e8tres ne doivent \u00eatre ajust\u00e9s que si le pont HomeKit n'est pas fonctionnel.",
                 "title": "Configuration avanc\u00e9e"

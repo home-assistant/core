@@ -28,8 +28,8 @@ async def validate_input(hass: core.HomeAssistant, data):
         await AsyncGriddy(
             client_session, settlement_point=data[CONF_LOADZONE]
         ).async_getnow()
-    except (asyncio.TimeoutError, ClientError):
-        raise CannotConnect
+    except (asyncio.TimeoutError, ClientError) as err:
+        raise CannotConnect from err
 
     # Return info that you want to store in the config entry.
     return {"title": f"Load Zone {data[CONF_LOADZONE]}"}
