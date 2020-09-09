@@ -26,9 +26,9 @@ async def test_sensors(hass) -> None:
 
     sensors = {
         "article_cache": ("ArticleCacheMB", 64, DATA_MEGABYTES, None),
-        "average_download_rate": ("AverageDownloadRate", 512, DATA_RATE_MEGABYTES_PER_SECOND, None),
+        "average_download_rate": ("AverageDownloadRate", 1.19, DATA_RATE_MEGABYTES_PER_SECOND, None),
         "download_paused": ("DownloadPaused", 4, None, None),
-        "download_rate": ("DownloadRate", 1000, DATA_RATE_MEGABYTES_PER_SECOND, None),
+        "download_rate": ("DownloadRate", 2.38, DATA_RATE_MEGABYTES_PER_SECOND, None),
         "download_size": ("DownloadedSizeMB", 256, DATA_MEGABYTES, None),
         "free_disk_space": ("FreeDiskSpaceMB", 1024, DATA_MEGABYTES, None),
         "post_job_count": ("PostJobCount", 2, "Jobs", None),
