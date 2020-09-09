@@ -33,8 +33,8 @@ EXPANDABLE_MEDIA_TYPES = [
 
 def build_item_response(coordinator, payload):
     """Create response payload for the provided media query."""
-    search_id = payload.get("search_id")
-    search_type = payload.get("search_type")
+    search_id = payload["search_id"]
+    search_type = payload["search_type"]
 
     thumbnail = None
     title = None
@@ -58,11 +58,11 @@ def build_item_response(coordinator, payload):
         ]
 
     if media is None:
-        return
+        return None
 
     return BrowseMedia(
         media_class=CONTENT_TYPE_MEDIA_CLASS[search_type],
-        media_content_id=payload["search_id"],
+        media_content_id=search_id,
         media_content_type=search_type,
         title=title,
         can_play=search_type in PLAYABLE_MEDIA_TYPES and search_id,
@@ -127,7 +127,7 @@ def library_payload(coordinator):
         MEDIA_TYPE_CHANNELS: "Channels",
     }
 
-    for item in [{"title": n, "type": t} for t, n in library.items()]:
+    for item in [{"title": name, "type": type_} for type_, name in library.items()]:
         if (
             item["type"] == MEDIA_TYPE_CHANNELS
             and coordinator.data.info.device_type != "tv"
