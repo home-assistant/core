@@ -140,7 +140,7 @@ class PingDataICMPLib(PingData):
                 icmp_ping,
                 self._ip_address,
                 count=self._count,
-                id=async_get_next_ping_id(),
+                id=async_get_next_ping_id(self.hass),
             )
         )
         self.available = data.is_alive
