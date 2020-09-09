@@ -10,6 +10,7 @@ from synology_dsm.api.core.utilization import SynoCoreUtilization
 from synology_dsm.api.dsm.information import SynoDSMInformation
 from synology_dsm.api.dsm.network import SynoDSMNetwork
 from synology_dsm.api.storage.storage import SynoStorage
+from synology_dsm.api.surveillance_station import SynoSurveillanceStation
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -45,7 +46,6 @@ from .const import (
     ENTITY_ICON,
     ENTITY_NAME,
     ENTITY_UNIT,
-    PLATFORMS,
     STORAGE_DISK_BINARY_SENSORS,
     STORAGE_DISK_SENSORS,
     STORAGE_VOL_SENSORS,
@@ -177,7 +177,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
             entry, data={**entry.data, CONF_MAC: network.macs}
         )
 
-    for platform in PLATFORMS:
+    for platform in _async_platforms(api):
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, platform)
         )
@@ -187,17 +187,17 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Unload Synology DSM sensors."""
+    entry_data = hass.data[DOMAIN][entry.unique_id]
     unload_ok = all(
         await asyncio.gather(
             *[
                 hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
+                for platform in _async_platforms(entry_data[SYNO_API])
             ]
         )
     )
 
     if unload_ok:
-        entry_data = hass.data[DOMAIN][entry.unique_id]
         entry_data[UNDO_UPDATE_LISTENER]()
         await entry_data[SYNO_API].async_unload()
         hass.data[DOMAIN].pop(entry.unique_id)
@@ -208,6 +208,15 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
 async def _async_update_listener(hass: HomeAssistantType, entry: ConfigEntry):
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
+
+
+@callback
+def _async_platforms(api):
+    """Return the platforms to be set up / unloaded."""
+    platforms = ["binary_sensor", "sensor"]
+    if api._with_surveillance_station:
+        platforms.append("camera")
+    return platforms
 
 
 class SynoApi:
@@ -225,12 +234,14 @@ class SynoApi:
         self.security: SynoCoreSecurity = None
         self.storage: SynoStorage = None
         self.utilisation: SynoCoreUtilization = None
+        self.surveillance_station: SynoSurveillanceStation = None
 
         # Should we fetch them
         self._fetching_entities = {}
         self._with_security = True
         self._with_storage = True
         self._with_utilisation = True
+        self._with_surveillance_station = True
 
         self._unsub_dispatcher = None
 
@@ -248,6 +259,11 @@ class SynoApi:
             self._entry.data[CONF_PASSWORD],
             self._entry.data[CONF_SSL],
             device_token=self._entry.data.get("device_token"),
+        )
+
+        await self._hass.async_add_executor_job(self.dsm.discover_apis)
+        self._with_surveillance_station = bool(
+            self.dsm.apis.get(SynoSurveillanceStation.CAMERA_API_KEY)
         )
 
         self._async_setup_api_requests()
@@ -294,6 +310,9 @@ class SynoApi:
         self._with_utilisation = bool(
             self._fetching_entities.get(SynoCoreUtilization.API_KEY)
         )
+        self._with_surveillance_station = bool(
+            self._fetching_entities.get(SynoSurveillanceStation.CAMERA_API_KEY)
+        )
 
         # Reset not used API
         if not self._with_security:
@@ -307,6 +326,10 @@ class SynoApi:
         if not self._with_utilisation:
             self.dsm.reset(self.utilisation)
             self.utilisation = None
+
+        if not self._with_surveillance_station:
+            self.dsm.reset(self.surveillance_station)
+            self.surveillance_station = None
 
     def _fetch_device_configuration(self):
         """Fetch initial device config."""
@@ -323,6 +346,9 @@ class SynoApi:
 
         if self._with_utilisation:
             self.utilisation = self.dsm.utilisation
+
+        if self._with_surveillance_station:
+            self.surveillance_station = self.dsm.surveillance_station
 
     async def async_unload(self):
         """Stop interacting with the NAS and prepare for removal from hass."""
@@ -345,6 +371,8 @@ class SynologyDSMEntity(Entity):
         entity_info: Dict[str, str],
     ):
         """Initialize the Synology DSM entity."""
+        super().__init__()
+
         self._api = api
         self._api_key = entity_type.split(":")[0]
         self.entity_type = entity_type.split(":")[-1]
