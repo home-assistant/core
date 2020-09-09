@@ -15,11 +15,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import color as colorutil
 
 from . import TuyaDevice
-from .const import (
-    DOMAIN,
-    TUYA_DATA,
-    TUYA_DISCOVERY_NEW,
-)
+from .const import DOMAIN, TUYA_DATA, TUYA_DISCOVERY_NEW
 
 PARALLEL_UPDATES = 0
 NORMAL_LIGHT_RANGE = (1, 255)
