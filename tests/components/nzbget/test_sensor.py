@@ -28,7 +28,7 @@ async def test_sensors(hass) -> None:
         "article_cache": ("ArticleCacheMB", "64", DATA_MEGABYTES, None),
         "average_download_rate": (
             "AverageDownloadRate",
-            1.19,
+            "1.19",
             DATA_RATE_MEGABYTES_PER_SECOND,
             None,
         ),
