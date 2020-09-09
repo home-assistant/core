@@ -1,6 +1,38 @@
 """Test the NZBGet sensors."""
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    DATA_MEGABYTES,
+    DATA_RATE_MEGABYTES_PER_SECOND,
+    DEVICE_CLASS_TIMESTAMP,
+)
+
 from . import init_integration
+
 
 async def test_sensors(hass) -> None:
     """Test the creation and values of the sensors."""
     entry = await init_integration(hass)
+
+    sensors = {
+        "article_cache": ("64", DATA_MEGABYTES, None),
+        "average_download_rate": ("512", DATA_RATE_MEGABYTES_PER_SECOND, None),
+        "download_paused": ("4", None, None),
+        "download_rate": ("1000", DATA_RATE_MEGABYTES_PER_SECOND, None),
+        "download_size": ("256", DATA_MEGABYTES, None),
+        "free_disk_space": ("1024", DATA_MEGABYTES, None),
+        "post_job_count": ("2", "Jobs", None),
+        "post_paused": ("4", None, None),
+        "remaining_size": ("512", DATA_MEGABYTES, None),
+        "uptime": ("600", None, DEVICE_CLASS_TIMESTAMP),
+    }
+
+    for (sensor_id, data) in sensors.items():
+        entity = registry.async_get(f"sensor.{sensor_id}")
+        assert entity
+        assert entity.device_class == data[2]
+        assert entity.unique_id == f"{entry.entry_id}_{sensor_id}"
+
+        state = hass.states.get(f"sensor.{sensor_id}")
+        assert state
+        assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == data[1]
+        assert state.state == data[0]
