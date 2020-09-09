@@ -35,6 +35,8 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+WEATHER_UPDATE_INTERVAL = timedelta(minutes=5)
+
 
 class WeatherUpdateCoordinator(DataUpdateCoordinator):
     """Weather data update coordinator."""
@@ -52,12 +54,8 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         if forecast_mode == "daily":
             self._forecast_limit = 15
 
-        self._weather_update_interval = timedelta(minutes=5)
-        if self._forecast_mode == "freedaily":
-            self._weather_update_interval = timedelta(minutes=30)
-
         super().__init__(
-            hass, _LOGGER, name=DOMAIN, update_interval=self._weather_update_interval
+            hass, _LOGGER, name=DOMAIN, update_interval=WEATHER_UPDATE_INTERVAL
         )
 
     async def _async_update_data(self):
@@ -149,12 +147,18 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
     def _get_rain(rain):
         if "all" in rain:
             return round(rain["all"], 0)
+        elif "1h" in rain:
+            return round(rain["1h"], 0)
         return "not raining"
 
     @staticmethod
     def _get_snow(snow):
         if snow:
-            return round(snow["all"], 0)
+            if "all" in snow:
+                return round(snow["all"], 0)
+            elif "1h" in snow:
+                return round(snow["1h"], 0)
+            return "not snowing"
         return "not snowing"
 
     @staticmethod
