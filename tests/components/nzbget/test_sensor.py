@@ -38,12 +38,12 @@ async def test_sensors(hass) -> None:
     }
 
     for (sensor_id, data) in sensors.items():
-        entity = registry.async_get(f"sensor.{sensor_id}")
+        entity = registry.async_get(f"sensor.nzbgettest_{sensor_id}")
         assert entity
         assert entity.device_class == data[2]
         assert entity.unique_id == f"{entry.entry_id}_{sensor_id}"
 
-        state = hass.states.get(f"sensor.{sensor_id}")
+        state = hass.states.get(f"sensor.nzbgettest_{sensor_id}")
         assert state
         assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == data[1]
         assert state.state == data[0]
