@@ -12,7 +12,7 @@ from homeassistant.components.media_source.error import Unresolvable
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import sanitize_path
 
-from .const import DOMAIN, MEDIA_MIME_TYPES
+from .const import DOMAIN, MEDIA_CLASS_MAP, MEDIA_MIME_TYPES
 from .models import BrowseMediaSource, MediaSource, MediaSourceItem, PlayMedia
 
 
@@ -112,11 +112,15 @@ class LocalSource(MediaSource):
         if is_dir:
             title += "/"
 
+        media_class = MEDIA_CLASS_MAP.get(
+            mime_type and mime_type.split("/")[0], MEDIA_CLASS_DIRECTORY
+        )
+
         media = BrowseMediaSource(
             domain=DOMAIN,
             identifier=f"{source_dir_id}/{path.relative_to(self.hass.config.path('media'))}",
-            media_class=MEDIA_CLASS_DIRECTORY,
-            media_content_type="directory",
+            media_class=media_class,
+            media_content_type=mime_type or "",
             title=title,
             can_play=is_file,
             can_expand=is_dir,
@@ -131,6 +135,9 @@ class LocalSource(MediaSource):
             child = self._build_item_response(source_dir_id, child_path, True)
             if child:
                 media.children.append(child)
+
+        # Sort children showing directories first, then by name
+        media.children.sort(key=lambda child: (child.can_play, child.title))
 
         return media
 
