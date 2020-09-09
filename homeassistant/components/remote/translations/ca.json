@@ -6,8 +6,8 @@
             "turn_on": "Engega {entity_name}"
         },
         "condition_type": {
-            "is_off": "{entity_name} est\u00e0 apagat/da",
-            "is_on": "{entity_name} est\u00e0 engegat/da"
+            "is_off": "{entity_name} est\u00e0 apagat/ada",
+            "is_on": "{entity_name} est\u00e0 engegat/ada"
         },
         "trigger_type": {
             "turned_off": "{entity_name} s'ha apagat",
