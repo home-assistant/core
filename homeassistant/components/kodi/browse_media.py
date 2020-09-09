@@ -7,8 +7,10 @@ from homeassistant.components.media_player.const import (
     MEDIA_CLASS_DIRECTORY,
     MEDIA_CLASS_EPISODE,
     MEDIA_CLASS_MOVIE,
+    MEDIA_CLASS_MUSIC,
     MEDIA_CLASS_PLAYLIST,
     MEDIA_CLASS_SEASON,
+    MEDIA_CLASS_TRACK,
     MEDIA_CLASS_TV_SHOW,
     MEDIA_TYPE_ALBUM,
     MEDIA_TYPE_ARTIST,
@@ -26,22 +28,14 @@ PLAYABLE_MEDIA_TYPES = [
     MEDIA_TYPE_TRACK,
 ]
 
-EXPANDABLE_MEDIA_TYPES = [
-    MEDIA_TYPE_ALBUM,
-    MEDIA_TYPE_ARTIST,
-    MEDIA_TYPE_PLAYLIST,
-    MEDIA_TYPE_TVSHOW,
-    MEDIA_TYPE_SEASON,
-    "library_music",
-]
-
 CONTENT_TYPE_MEDIA_CLASS = {
-    "library_music": MEDIA_CLASS_DIRECTORY,
+    "library_music": MEDIA_CLASS_MUSIC,
     MEDIA_TYPE_SEASON: MEDIA_CLASS_SEASON,
     MEDIA_TYPE_ALBUM: MEDIA_CLASS_ALBUM,
     MEDIA_TYPE_ARTIST: MEDIA_CLASS_ARTIST,
     MEDIA_TYPE_MOVIE: MEDIA_CLASS_MOVIE,
     MEDIA_TYPE_PLAYLIST: MEDIA_CLASS_PLAYLIST,
+    MEDIA_TYPE_TRACK: MEDIA_CLASS_TRACK,
     MEDIA_TYPE_TVSHOW: MEDIA_CLASS_TV_SHOW,
     MEDIA_TYPE_EPISODE: MEDIA_CLASS_EPISODE,
 }
@@ -145,7 +139,7 @@ async def build_item_response(media_library, payload):
 
     return BrowseMedia(
         media_class=CONTENT_TYPE_MEDIA_CLASS[search_type],
-        media_content_id=payload["search_id"],
+        media_content_id=search_id,
         media_content_type=search_type,
         title=title,
         can_play=search_type in PLAYABLE_MEDIA_TYPES and search_id,
@@ -161,55 +155,94 @@ def item_payload(item, media_library):
 
     Used by async_browse_media.
     """
-    if "songid" in item:
-        media_content_type = MEDIA_TYPE_TRACK
-        media_content_id = f"{item['songid']}"
-    elif "albumid" in item:
-        media_content_type = MEDIA_TYPE_ALBUM
-        media_content_id = f"{item['albumid']}"
-    elif "artistid" in item:
-        media_content_type = MEDIA_TYPE_ARTIST
-        media_content_id = f"{item['artistid']}"
-    elif "movieid" in item:
-        media_content_type = MEDIA_TYPE_MOVIE
-        media_content_id = f"{item['movieid']}"
-    elif "episodeid" in item:
-        media_content_type = MEDIA_TYPE_EPISODE
-        media_content_id = f"{item['episodeid']}"
-    elif "seasonid" in item:
-        media_content_type = MEDIA_TYPE_SEASON
-        media_content_id = f"{item['tvshowid']}/{item['season']}"
-    elif "tvshowid" in item:
-        media_content_type = MEDIA_TYPE_TVSHOW
-        media_content_id = f"{item['tvshowid']}"
-    else:
-        # this case is for the top folder of each type
-        # possible content types: album, artist, movie, library_music, tvshow
-        media_content_type = item.get("type")
-        media_content_id = ""
-
     title = item["label"]
-    can_play = media_content_type in PLAYABLE_MEDIA_TYPES and media_content_id
-    can_expand = media_content_type in EXPANDABLE_MEDIA_TYPES
 
     thumbnail = item.get("thumbnail")
     if thumbnail:
         thumbnail = media_library.thumbnail_url(thumbnail)
 
-    if media_content_type == MEDIA_TYPE_MOVIE and not media_content_id:
-        media_class = MEDIA_CLASS_DIRECTORY
-        can_expand = True
-    else:
-        media_class = CONTENT_TYPE_MEDIA_CLASS[media_content_type]
+    if "songid" in item:
+        return BrowseMedia(
+            title=title,
+            media_class=CONTENT_TYPE_MEDIA_CLASS[MEDIA_TYPE_TRACK],
+            media_content_type=MEDIA_TYPE_TRACK,
+            media_content_id=f"{item['songid']}",
+            can_play=True,
+            can_expand=False,
+            thumbnail=thumbnail,
+        )
+    elif "albumid" in item:
+        return BrowseMedia(
+            title=title,
+            media_class=CONTENT_TYPE_MEDIA_CLASS[MEDIA_TYPE_ALBUM],
+            media_content_type=MEDIA_TYPE_ALBUM,
+            media_content_id=f"{item['albumid']}",
+            can_play=True,
+            can_expand=True,
+            thumbnail=thumbnail,
+        )
+    elif "artistid" in item:
+        return BrowseMedia(
+            title=title,
+            media_class=CONTENT_TYPE_MEDIA_CLASS[MEDIA_TYPE_ARTIST],
+            media_content_type=MEDIA_TYPE_ARTIST,
+            media_content_id=f"{item['artistid']}",
+            can_play=True,
+            can_expand=True,
+            thumbnail=thumbnail,
+        )
+    elif "movieid" in item:
+        return BrowseMedia(
+            title=title,
+            media_class=CONTENT_TYPE_MEDIA_CLASS[MEDIA_TYPE_MOVIE],
+            media_content_type=MEDIA_TYPE_MOVIE,
+            media_content_id=f"{item['movieid']}",
+            can_play=True,
+            can_expand=False,
+            thumbnail=thumbnail,
+        )
+    elif "episodeid" in item:
+        return BrowseMedia(
+            title=title,
+            media_class=CONTENT_TYPE_MEDIA_CLASS[MEDIA_TYPE_EPISODE],
+            media_content_type=MEDIA_TYPE_EPISODE,
+            media_content_id=f"{item['episodeid']}",
+            can_play=True,
+            can_expand=False,
+            thumbnail=thumbnail,
+        )
+    elif "seasonid" in item:
+        return BrowseMedia(
+            title=title,
+            media_class=CONTENT_TYPE_MEDIA_CLASS[MEDIA_TYPE_SEASON],
+            media_content_type=MEDIA_TYPE_SEASON,
+            media_content_id=f"{item['tvshowid']}/{item['season']}",
+            can_play=True,
+            can_expand=True,
+            thumbnail=thumbnail,
+        )
+    elif "tvshowid" in item:
+        return BrowseMedia(
+            title=title,
+            media_class=CONTENT_TYPE_MEDIA_CLASS[MEDIA_TYPE_TVSHOW],
+            media_content_type=MEDIA_TYPE_TVSHOW,
+            media_content_id=f"{item['tvshowid']}",
+            can_play=True,
+            can_expand=True,
+            thumbnail=thumbnail,
+        )
+
+    # this case is for the top folder of each type
+    # possible content types: album, artist, movie, library_music, tvshow
+    media_content_type = item["type"]
 
     return BrowseMedia(
         title=title,
-        media_class=media_class,
+        media_class=CONTENT_TYPE_MEDIA_CLASS[media_content_type],
         media_content_type=media_content_type,
-        media_content_id=media_content_id,
-        can_play=can_play,
-        can_expand=can_expand,
-        thumbnail=thumbnail,
+        media_content_id="",
+        can_play=False,
+        can_expand=True,
     )
 
 
