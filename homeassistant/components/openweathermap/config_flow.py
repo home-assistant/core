@@ -110,13 +110,16 @@ class OpenWeatherMapOptionsFlow(config_entries.OptionsFlow):
         )
 
     def _get_options_schema(self):
+        default_mode = self.config_entry.options.get(CONF_MODE, DEFAULT_FORECAST_MODE)
+        # Backwards compatibility
+        if default_mode == "freedaily":
+            default_mode = "onecall_daily"
+
         return vol.Schema(
             {
                 vol.Optional(
                     CONF_MODE,
-                    default=self.config_entry.options.get(
-                        CONF_MODE, DEFAULT_FORECAST_MODE
-                    ),
+                    default=default_mode,
                 ): vol.In(FORECAST_MODES),
                 vol.Optional(
                     CONF_LANGUAGE,
