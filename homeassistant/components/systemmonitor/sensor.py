@@ -96,10 +96,10 @@ SENSOR_TYPES = {
 def check_required_arg(value):
     """Validate that the required "arg" for the sensor types that need it are set."""
     for sensor in value:
-        sensor_type = sensor.get(CONF_TYPE)
+        sensor_type = sensor[CONF_TYPE]
         sensor_arg = sensor.get(CONF_ARG)
 
-        if sensor_arg is None and SENSOR_TYPES[sensor_type][4] is True:
+        if sensor_arg is None and SENSOR_TYPES[sensor_type][4]:
             raise vol.RequiredFieldInvalid(
                 f"Mandatory 'arg' is missing for sensor type '{sensor_type}'."
             )
@@ -111,7 +111,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_RESOURCES, default={CONF_TYPE: "disk_use"}): vol.All(
             cv.ensure_list,
-            check_required_arg,
             [
                 vol.Schema(
                     {
@@ -120,6 +119,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                     }
                 )
             ],
+            check_required_arg,
         )
     }
 )
