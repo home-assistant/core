@@ -1,6 +1,7 @@
 """Tracks the latency of a host by sending ICMP echo requests (ping)."""
 import asyncio
 from datetime import timedelta
+from functools import partial
 import logging
 import re
 import sys
@@ -14,7 +15,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.reload import setup_reload_service
 
-from . import DOMAIN, PLATFORMS
+from . import DOMAIN, PLATFORMS, async_get_next_ping_id
 from .const import PING_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
@@ -131,20 +132,28 @@ class PingData:
 class PingDataICMPLib(PingData):
     """The Class for handling the data retrieval using icmplib."""
 
-    def ping(self):
-        """Send ICMP echo request and return details."""
-        return icmp_ping(self._ip_address, count=self._count)
-
     async def async_update(self) -> None:
         """Retrieve the latest details from the host."""
-        data = await self.hass.async_add_executor_job(self.ping)
+        _LOGGER.warning("ping address: %s", self._ip_address)
+        data = await self.hass.async_add_executor_job(
+            partial(
+                icmp_ping,
+                self._ip_address,
+                count=self._count,
+                id=async_get_next_ping_id(self.hass),
+            )
+        )
+        self.available = data.is_alive
+        if not self.available:
+            self.data = False
+            return
+
         self.data = {
             "min": data.min_rtt,
             "max": data.max_rtt,
             "avg": data.avg_rtt,
             "mdev": "",
         }
-        self.available = data.is_alive
 
 
 class PingDataSubProcess(PingData):
