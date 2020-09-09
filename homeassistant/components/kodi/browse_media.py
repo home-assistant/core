@@ -171,7 +171,7 @@ def item_payload(item, media_library):
             can_expand=False,
             thumbnail=thumbnail,
         )
-    elif "albumid" in item:
+    if "albumid" in item:
         return BrowseMedia(
             title=title,
             media_class=CONTENT_TYPE_MEDIA_CLASS[MEDIA_TYPE_ALBUM],
@@ -181,7 +181,7 @@ def item_payload(item, media_library):
             can_expand=True,
             thumbnail=thumbnail,
         )
-    elif "artistid" in item:
+    if "artistid" in item:
         return BrowseMedia(
             title=title,
             media_class=CONTENT_TYPE_MEDIA_CLASS[MEDIA_TYPE_ARTIST],
@@ -191,7 +191,7 @@ def item_payload(item, media_library):
             can_expand=True,
             thumbnail=thumbnail,
         )
-    elif "movieid" in item:
+    if "movieid" in item:
         return BrowseMedia(
             title=title,
             media_class=CONTENT_TYPE_MEDIA_CLASS[MEDIA_TYPE_MOVIE],
@@ -201,7 +201,7 @@ def item_payload(item, media_library):
             can_expand=False,
             thumbnail=thumbnail,
         )
-    elif "episodeid" in item:
+    if "episodeid" in item:
         return BrowseMedia(
             title=title,
             media_class=CONTENT_TYPE_MEDIA_CLASS[MEDIA_TYPE_EPISODE],
@@ -211,7 +211,7 @@ def item_payload(item, media_library):
             can_expand=False,
             thumbnail=thumbnail,
         )
-    elif "seasonid" in item:
+    if "seasonid" in item:
         return BrowseMedia(
             title=title,
             media_class=CONTENT_TYPE_MEDIA_CLASS[MEDIA_TYPE_SEASON],
@@ -221,7 +221,7 @@ def item_payload(item, media_library):
             can_expand=True,
             thumbnail=thumbnail,
         )
-    elif "tvshowid" in item:
+    if "tvshowid" in item:
         return BrowseMedia(
             title=title,
             media_class=CONTENT_TYPE_MEDIA_CLASS[MEDIA_TYPE_TVSHOW],
