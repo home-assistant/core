@@ -9,19 +9,17 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import (
-    PairedSensorEntity,
-    ValveControllerEntity,
-    async_register_dispatcher_connect,
-)
+from . import PairedSensorEntity, ValveControllerEntity
 from .const import (
     API_SENSOR_PAIRED_SENSOR_STATUS,
     API_SYSTEM_ONBOARD_SENSOR_STATUS,
     API_WIFI_STATUS,
     CONF_UID,
     DATA_COORDINATOR,
+    DATA_UNSUB_DISPATCHER_CONNECT,
     DOMAIN,
     SIGNAL_PAIRED_SENSOR_COORDINATOR_ADDED,
 )
@@ -70,11 +68,12 @@ async def async_setup_entry(
         async_add_entities(entities)
 
     # Handle adding paired sensors after HASS startup:
-    async_register_dispatcher_connect(
-        hass,
-        entry,
-        SIGNAL_PAIRED_SENSOR_COORDINATOR_ADDED.format(entry.data[CONF_UID]),
-        add_new_paired_sensor,
+    hass.data[DOMAIN][DATA_UNSUB_DISPATCHER_CONNECT][entry.entry_id].append(
+        async_dispatcher_connect(
+            hass,
+            SIGNAL_PAIRED_SENSOR_COORDINATOR_ADDED.format(entry.data[CONF_UID]),
+            add_new_paired_sensor,
+        )
     )
 
     sensors = []

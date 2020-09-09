@@ -1,16 +1,13 @@
 """The Elexa Guardian integration."""
 import asyncio
-from typing import Any, Callable, Dict
+from typing import Dict
 
 from aioguardian import Client
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -26,28 +23,17 @@ from .const import (
     CONF_UID,
     DATA_CLIENT,
     DATA_COORDINATOR,
+    DATA_PAIRED_SENSOR_MANAGER,
+    DATA_UNSUB_DISPATCHER_CONNECT,
     DOMAIN,
     LOGGER,
-    SIGNAL_ADD_PAIRED_SENSOR,
     SIGNAL_PAIRED_SENSOR_COORDINATOR_ADDED,
-    SIGNAL_REMOVE_PAIRED_SENSOR,
 )
 from .util import GuardianDataUpdateCoordinator
 
 DATA_LAST_SENSOR_PAIR_DUMP = "last_sensor_pair_dump"
-DATA_UNSUB_DISPATCHER_CONNECTS = "unsub_dispatcher_connects"
 
 PLATFORMS = ["binary_sensor", "sensor", "switch"]
-
-
-@callback
-def async_register_dispatcher_connect(
-    hass: HomeAssistant, entry: ConfigEntry, signal: str, target: Callable[..., Any]
-) -> None:
-    """Store a new dispatcher connect unsub handler."""
-    hass.data[DOMAIN][DATA_UNSUB_DISPATCHER_CONNECTS][entry.entry_id].append(
-        async_dispatcher_connect(hass, signal, target)
-    )
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
@@ -56,7 +42,8 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
         DATA_CLIENT: {},
         DATA_COORDINATOR: {},
         DATA_LAST_SENSOR_PAIR_DUMP: {},
-        DATA_UNSUB_DISPATCHER_CONNECTS: {},
+        DATA_PAIRED_SENSOR_MANAGER: {},
+        DATA_UNSUB_DISPATCHER_CONNECT: {},
     }
     return True
 
@@ -69,7 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id] = {
         API_SENSOR_PAIRED_SENSOR_STATUS: {}
     }
-    hass.data[DOMAIN][DATA_UNSUB_DISPATCHER_CONNECTS][entry.entry_id] = []
+    hass.data[DOMAIN][DATA_UNSUB_DISPATCHER_CONNECT][entry.entry_id] = []
 
     # The valve controller's UDP-based API can't handle concurrent requests very well,
     # so we use a lock to ensure that only one API request is reaching it at a time:
@@ -100,21 +87,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Set up an object to evaluate each batch of paired sensor UIDs and add/remove
     # devices as appropriate:
-    paired_sensor_manager = PairedSensorManager(hass, entry, client, api_lock)
-    await paired_sensor_manager.async_init()
+    paired_sensor_manager = hass.data[DOMAIN][DATA_PAIRED_SENSOR_MANAGER][
+        entry.entry_id
+    ] = PairedSensorManager(hass, entry, client, api_lock)
+    await paired_sensor_manager.async_process_latest_paired_sensor_uids()
 
     @callback
-    def async_new_sensor_pair_dump():
+    def async_process_paired_sensor_uids():
         """Define a callback for when new paired sensor data is received."""
         hass.async_create_task(
             paired_sensor_manager.async_process_latest_paired_sensor_uids()
         )
 
-    # When the sensor_pair_dump API completes, send a signal (via the dispatcher) to the
-    # PairedSensorManager so it can process any paired sensor addition/removal:
     hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
         API_SENSOR_PAIR_DUMP
-    ].async_add_listener(async_new_sensor_pair_dump)
+    ].async_add_listener(async_process_paired_sensor_uids)
 
     # Set up all of the Guardian entity platforms:
     for component in PLATFORMS:
@@ -139,11 +126,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN][DATA_CLIENT].pop(entry.entry_id)
         hass.data[DOMAIN][DATA_COORDINATOR].pop(entry.entry_id)
         hass.data[DOMAIN][DATA_LAST_SENSOR_PAIR_DUMP].pop(entry.entry_id)
-        for async_unsub_dispatcher_connect in hass.data[DOMAIN][
-            DATA_UNSUB_DISPATCHER_CONNECTS
-        ][entry.entry_id]:
-            async_unsub_dispatcher_connect()
-        hass.data[DOMAIN][DATA_UNSUB_DISPATCHER_CONNECTS].pop(entry.entry_id)
+        for unsub in hass.data[DOMAIN][DATA_UNSUB_DISPATCHER_CONNECT].pop(
+            entry.entry_id
+        ):
+            unsub()
+        hass.data[DOMAIN][DATA_UNSUB_DISPATCHER_CONNECT].pop(entry.entry_id)
 
     return unload_ok
 
@@ -163,26 +150,14 @@ class PairedSensorManager:
         self._client = client
         self._entry = entry
         self._hass = hass
+        self._listeners = []
         self._paired_uids = set()
-
-    async def async_init(self) -> None:
-        """Perform post-creation initialization."""
-        for signal_template, target in [
-            (SIGNAL_ADD_PAIRED_SENSOR, self.async_pair_sensor),
-            (SIGNAL_REMOVE_PAIRED_SENSOR, self.async_unpair_sensor),
-        ]:
-            async_register_dispatcher_connect(
-                self._hass,
-                self._entry,
-                signal_template.format(self._entry.data[CONF_UID]),
-                target,
-            )
-
-        await self.async_process_latest_paired_sensor_uids()
 
     async def async_pair_sensor(self, uid: str) -> None:
         """Add a new paired sensor coordinator."""
         LOGGER.info("Adding paired sensor: %s", uid)
+
+        self._paired_uids.add(uid)
 
         coordinator = self._hass.data[DOMAIN][DATA_COORDINATOR][self._entry.entry_id][
             API_SENSOR_PAIRED_SENSOR_STATUS
@@ -194,10 +169,7 @@ class PairedSensorManager:
             api_lock=self._api_lock,
             valve_controller_uid=self._entry.data[CONF_UID],
         )
-
         await coordinator.async_refresh()
-
-        self._paired_uids.add(uid)
 
         async_dispatcher_send(
             self._hass,
@@ -224,11 +196,8 @@ class PairedSensorManager:
         old = self._paired_uids
         new = self._paired_uids = set(uids)
 
-        to_add = new.difference(old)
-        to_remove = old.difference(new)
-
-        tasks = [self.async_pair_sensor(uid) for uid in to_add]
-        tasks += [self.async_unpair_sensor(uid) for uid in to_remove]
+        tasks = [self.async_pair_sensor(uid) for uid in new.difference(old)]
+        tasks += [self.async_unpair_sensor(uid) for uid in old.difference(new)]
 
         if tasks:
             await asyncio.gather(*tasks)
@@ -338,7 +307,7 @@ class PairedSensorEntity(GuardianEntity):
 
     async def async_added_to_hass(self) -> None:
         """Perform tasks when the entity is added."""
-        super().async_added_to_hass()
+        await super().async_added_to_hass()
         self._async_update_from_latest_data()
 
 

@@ -10,7 +10,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_FILENAME, CONF_PORT, CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import ValveControllerEntity
@@ -19,10 +18,9 @@ from .const import (
     CONF_UID,
     DATA_CLIENT,
     DATA_COORDINATOR,
+    DATA_PAIRED_SENSOR_MANAGER,
     DOMAIN,
     LOGGER,
-    SIGNAL_ADD_PAIRED_SENSOR,
-    SIGNAL_REMOVE_PAIRED_SENSOR,
 )
 
 ATTR_AVG_CURRENT = "average_current"
@@ -162,11 +160,9 @@ class ValveControllerSwitch(ValveControllerEntity, SwitchEntity):
             LOGGER.error("Error while adding paired sensor: %s", err)
             return
 
-        async_dispatcher_send(
-            self.hass,
-            SIGNAL_ADD_PAIRED_SENSOR.format(self._entry.data[CONF_UID]),
-            uid,
-        )
+        await self.hass.data[DOMAIN][DATA_PAIRED_SENSOR_MANAGER][
+            self._entry.entry_id
+        ].async_pair_sensor(uid)
 
     async def async_reboot(self):
         """Reboot the device."""
@@ -193,11 +189,9 @@ class ValveControllerSwitch(ValveControllerEntity, SwitchEntity):
             LOGGER.error("Error while removing paired sensor: %s", err)
             return
 
-        async_dispatcher_send(
-            self.hass,
-            SIGNAL_REMOVE_PAIRED_SENSOR.format(self._entry.data[CONF_UID]),
-            uid,
-        )
+        await self.hass.data[DOMAIN][DATA_PAIRED_SENSOR_MANAGER][
+            self._entry.entry_id
+        ].async_unpair_sensor(uid)
 
     async def async_upgrade_firmware(self, *, url, port, filename):
         """Upgrade the device firmware."""
