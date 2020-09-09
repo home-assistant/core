@@ -33,9 +33,10 @@ class UpdaterBinary(CoordinatorEntity, BinarySensorEntity):
         if not self.coordinator.data:
             return None
         return self.coordinator.data.update_available
-    
+
     @property
     def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
         return DEVICE_CLASS_PROBLEM
 
     @property
