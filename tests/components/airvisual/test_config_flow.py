@@ -69,30 +69,14 @@ async def test_invalid_identifier(hass):
     }
 
     with patch(
-        "pyairvisual.api.API.nearest_city", side_effect=InvalidKeyError,
+        "pyairvisual.api.API.nearest_city",
+        side_effect=InvalidKeyError,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=geography_conf
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["errors"] == {CONF_API_KEY: "invalid_api_key"}
-
-
-async def test_node_pro_error(hass):
-    """Test that an invalid Node/Pro ID shows an error."""
-    node_pro_conf = {CONF_IP_ADDRESS: "192.168.1.100", CONF_PASSWORD: "my_password"}
-
-    with patch(
-        "pyairvisual.node.Node.from_samba", side_effect=NodeProError,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data={"type": "AirVisual Node/Pro"}
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=node_pro_conf
-        )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["errors"] == {CONF_IP_ADDRESS: "unable_to_connect"}
 
 
 async def test_migration(hass):
@@ -146,7 +130,8 @@ async def test_node_pro_error(hass):
     node_pro_conf = {CONF_IP_ADDRESS: "192.168.1.100", CONF_PASSWORD: "my_password"}
 
     with patch(
-        "pyairvisual.node.Node.from_samba", side_effect=NodeProError,
+        "pyairvisual.node.Node.from_samba",
+        side_effect=NodeProError,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data={"type": "AirVisual Node/Pro"}
@@ -274,13 +259,7 @@ async def test_step_reauth(hass):
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": "reauth"},
-        data={
-            CONF_API_KEY: "abcde12345",
-            CONF_LATITUDE: 51.528308,
-            CONF_LONGITUDE: -0.3817765,
-        },
+        DOMAIN, context={"source": "reauth"}, data=geography_conf
     )
     assert result["step_id"] == "reauth_confirm"
 
