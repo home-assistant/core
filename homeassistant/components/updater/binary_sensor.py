@@ -1,8 +1,8 @@
 """Support for Home Assistant Updater binary sensors."""
 
 from homeassistant.components.binary_sensor import (
-    BinarySensorEntity,
     DEVICE_CLASS_PROBLEM,
+    BinarySensorEntity,
 )
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
