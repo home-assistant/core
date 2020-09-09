@@ -138,7 +138,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         if "max" in temperature_dict and "min" in temperature_dict:
             forecast[ATTR_FORECAST_TEMP] = entry.temperature("celsius").get("max")
             forecast[ATTR_FORECAST_TEMP_LOW] = entry.temperature("celsius").get("min")
-        elif "temp" in temperature_dict:
+        else:
             forecast[ATTR_FORECAST_TEMP] = entry.temperature("celsius").get("temp")
 
         return forecast
