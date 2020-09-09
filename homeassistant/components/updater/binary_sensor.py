@@ -1,6 +1,6 @@
 """Support for Home Assistant Updater binary sensors."""
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import BinarySensorEntity, DEVICE_CLASS_PROBLEM
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import ATTR_NEWEST_VERSION, ATTR_RELEASE_NOTES, DOMAIN as UPDATER_DOMAIN
@@ -33,6 +33,10 @@ class UpdaterBinary(CoordinatorEntity, BinarySensorEntity):
         if not self.coordinator.data:
             return None
         return self.coordinator.data.update_available
+    
+    @property
+    def device_class(self):
+        return DEVICE_CLASS_PROBLEM
 
     @property
     def device_state_attributes(self) -> dict:
