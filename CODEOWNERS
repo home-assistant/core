@@ -428,6 +428,7 @@ homeassistant/components/tag/* @balloob @dmulcahey
 homeassistant/components/tahoma/* @philklei
 homeassistant/components/tankerkoenig/* @guillempages
 homeassistant/components/tautulli/* @ludeeus
+homeassistant/components/teletask/* @tiemooowh
 homeassistant/components/tellduslive/* @fredrike
 homeassistant/components/template/* @PhracturedBlue @tetienne
 homeassistant/components/tesla/* @zabuldon @alandtse
