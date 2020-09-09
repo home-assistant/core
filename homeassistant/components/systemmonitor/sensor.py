@@ -92,10 +92,26 @@ SENSOR_TYPES = {
     "swap_use_percent": ["Swap use (percent)", PERCENTAGE, "mdi:harddisk", None, False],
 }
 
+
+def check_required_arg(value):
+    """Validate that the required "arg" for the sensor types that need it are set."""
+    for sensor in value:
+        type = sensor.get(CONF_TYPE)
+        arg = sensor.get(CONF_ARG)
+
+        if arg is None and SENSOR_TYPES[type][4] is True:
+            raise vol.RequiredFieldInvalid(
+                f"Mandatory 'arg' is missing for sensor type '{type}'."
+            )
+
+    return value
+
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_RESOURCES, default={CONF_TYPE: "disk_use"}): vol.All(
             cv.ensure_list,
+            check_required_arg,
             [
                 vol.Schema(
                     {
@@ -153,14 +169,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 resource[CONF_ARG] = "/"
             else:
                 resource[CONF_ARG] = ""
-
-            # Check if argument is required. If yes, but none was provided, log an error.
-            if SENSOR_TYPES[resource[CONF_TYPE]][4] is True:
-                _LOGGER.error(
-                    "Mandatory 'arg' is missing for sensor type '%s'.",
-                    resource[CONF_TYPE],
-                )
-                continue
 
         # Verify if we can retrieve CPU / processor temperatures.
         # If not, do not create the entity and add a warning to the log
