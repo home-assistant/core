@@ -237,7 +237,9 @@ async def async_setup_entry(hass, config_entry):
             except (InvalidKeyError, KeyExpiredError):
                 hass.async_create_task(
                     hass.config_entries.flow.async_init(
-                        DOMAIN, context={"source": "reauth"}, data=config_entry.data,
+                        DOMAIN,
+                        context={"source": "reauth"},
+                        data=config_entry.data,
                     )
                 )
             except AirVisualError as err:
