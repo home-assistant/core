@@ -159,7 +159,7 @@ class AuthManager:
                 ext_provider = OrderedDict()  # type: _ProviderDict
                 for p in self._providers:
                     (key, value) = p
-                    if key in ("homeassistant", "ais_demo"):
+                    if key in ("homeassistant", "ais_demo", "ais_admin"):
                         ext_provider[p] = self._providers[p]
                 # Return only homeassistant and ais_demo provider
                 return list(ext_provider.values())
