@@ -120,7 +120,7 @@ class LocalSource(MediaSource):
             domain=DOMAIN,
             identifier=f"{source_dir_id}/{path.relative_to(self.hass.config.path('media'))}",
             media_class=media_class,
-            media_content_type=mime_type or MEDIA_CLASS_DIRECTORY,
+            media_content_type=mime_type or "",
             title=title,
             can_play=is_file,
             can_expand=is_dir,
