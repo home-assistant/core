@@ -201,7 +201,7 @@ class OmnilogicSensor(OmniLogicEntity):
         """Force update."""
         return True
 
-    def AddAlarms(self, alarms: dict):
+    def add_alarms(self, alarms: dict):
         """Add Alarm attributes."""
         self.alarms = alarms
 
@@ -383,7 +383,7 @@ class OmniLogicPumpSpeedSensor(OmnilogicSensor):
 
         self._attrs["PumpType"] = pump_type
 
-        super().AddAlarms(sensordata.get("Alarms"))
+        super().add_alarms(sensordata.get("Alarms"))
 
         return self._state
 
@@ -447,7 +447,7 @@ class OmniLogicSaltLevelSensor(OmnilogicSensor):
             + " Salt Level"
         )
 
-        super().AddAlarms(sensordata.get("Alarms"))
+        super().add_alarms(sensordata.get("Alarms"))
 
         return self._state
 
@@ -511,7 +511,7 @@ class OmniLogicChlorinatorSensor(OmnilogicSensor):
             + " Setting"
         )
 
-        super().AddAlarms(sensordata.get("Alarms"))
+        super().add_alarms(sensordata.get("Alarms"))
 
         return self._state
 
@@ -565,7 +565,7 @@ class OmniLogicPHSensor(OmnilogicSensor):
         self._unit = "pH"
         self._name = self._backyard["BackyardName"] + " " + self.bow.get("Name") + " pH"
 
-        super().AddAlarms(sensordata.get("Alarms"))
+        super().add_alarms(sensordata.get("Alarms"))
 
         return self._state
 
@@ -621,7 +621,7 @@ class OmniLogicORPSensor(OmnilogicSensor):
             self._backyard["BackyardName"] + " " + self.bow.get("Name") + " ORP"
         )
 
-        super().AddAlarms(sensordata.get("Alarms"))
+        super().add_alarms(sensordata.get("Alarms"))
 
         return self._state
 
