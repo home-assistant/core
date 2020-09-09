@@ -67,6 +67,8 @@ async def async_start(
 
     async def async_device_message_received(msg):
         """Process the received message."""
+        import time
+
         hass.data[LAST_DISCOVERY] = time.time()
         payload = msg.payload
         topic = msg.topic
