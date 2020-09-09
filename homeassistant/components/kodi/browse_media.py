@@ -142,7 +142,14 @@ async def build_item_response(media_library, payload):
             title = season["seasondetails"]["label"]
 
     if media is None:
-        return
+        return None
+
+    children = []
+    for item in media:
+        try:
+            children.append(item_payload(item, media_library))
+        except UnknownMediaType:
+            pass
 
     return BrowseMedia(
         media_class=CONTENT_TYPE_MEDIA_CLASS[search_type],
@@ -151,7 +158,7 @@ async def build_item_response(media_library, payload):
         title=title,
         can_play=search_type in PLAYABLE_MEDIA_TYPES and search_id,
         can_expand=True,
-        children=[item_payload(item, media_library) for item in media],
+        children=children,
         thumbnail=thumbnail,
     )
 
