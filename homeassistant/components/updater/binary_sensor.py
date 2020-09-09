@@ -1,6 +1,9 @@
 """Support for Home Assistant Updater binary sensors."""
 
-from homeassistant.components.binary_sensor import BinarySensorEntity, DEVICE_CLASS_PROBLEM
+from homeassistant.components.binary_sensor import (
+    BinarySensorEntity,
+    DEVICE_CLASS_PROBLEM,
+)
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import ATTR_NEWEST_VERSION, ATTR_RELEASE_NOTES, DOMAIN as UPDATER_DOMAIN
