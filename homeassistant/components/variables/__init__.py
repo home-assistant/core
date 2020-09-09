@@ -145,7 +145,8 @@ class VariableManager:
                 key, data[CONF_VALUE], attributes=data.get(CONF_ATTRS)
             )
 
-    async def async_set(
+    @callback
+    def async_set(
         self, key: str, value: str, attributes: Optional[dict] = None
     ) -> Variable:
         """Set a variable and return it."""
