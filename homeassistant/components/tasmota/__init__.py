@@ -9,8 +9,14 @@ from hatasmota.const import (
     CONF_SW_VERSION,
 )
 from hatasmota.discovery import clear_discovery_topic
+from hatasmota.mqtt import TasmotaMQTTClient
 
-from homeassistant.components.mqtt import async_publish
+from homeassistant.components import mqtt
+from homeassistant.components.mqtt.subscription import (
+    async_subscribe_topics,
+    async_unsubscribe_topics,
+)
+from homeassistant.core import callback
 from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType
@@ -36,7 +42,23 @@ async def async_setup_entry(hass, entry):
     """Set up Tasmota from a config entry."""
     hass.data[DEVICE_IDS] = {}
 
-    await discovery.async_start(hass, entry.data[CONF_DISCOVERY_PREFIX], entry)
+    def _publish(*args, **kwds):
+        mqtt.async_publish(hass, *args, **kwds)
+
+    async def _subscribe_topics(sub_state, topics):
+        # Optionally mark message handlers as callback
+        for topic in topics.values():
+            if "msg_callback" in topic and "event_loop_safe" in topic:
+                topic["msg_callback"] = callback(topic["msg_callback"])
+        return await async_subscribe_topics(hass, sub_state, topics)
+
+    async def _unsubscribe_topics(sub_state):
+        return await async_unsubscribe_topics(hass, sub_state)
+
+    tasmota_mqtt = TasmotaMQTTClient(_publish, _subscribe_topics, _unsubscribe_topics)
+
+    discovery_prefix = entry.data[CONF_DISCOVERY_PREFIX]
+    await discovery.async_start(hass, discovery_prefix, entry, tasmota_mqtt)
 
     async def async_device_removed(event):
         """Handle the removal of a device."""
@@ -46,11 +68,8 @@ async def async_setup_entry(hass, entry):
         if not serial_number:
             return
 
-        def _publish(*args, **kwds):
-            async_publish(hass, *args, **kwds)
-
         clear_discovery_topic(
-            serial_number, entry.data[CONF_DISCOVERY_PREFIX], _publish
+            serial_number, entry.data[CONF_DISCOVERY_PREFIX], tasmota_mqtt
         )
 
     async def async_discover_device(config, serial_number):

@@ -16,7 +16,8 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Tasmota switch dynamically through discovery."""
 
-    async def async_discover(tasmota_entity, discovery_hash):
+    @callback
+    def async_discover(tasmota_entity, discovery_hash):
         """Discover and add a Tasmota switch."""
         try:
             async_add_entities(
