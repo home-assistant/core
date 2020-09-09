@@ -1,5 +1,4 @@
 """Support for Synology DSM cameras."""
-import logging
 from typing import Dict
 
 from synology_dsm.api.surveillance_station import SynoSurveillanceStation
@@ -18,8 +17,6 @@ from .const import (
     ENTITY_UNIT,
     SYNO_API,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -47,7 +44,7 @@ class SynoDSMCamera(SynologyDSMEntity, Camera):
         """Initialize a Synology camera."""
         super().__init__(
             api,
-            f"{SynoSurveillanceStation.CAMERA_API_KEY}:{camera.name}",
+            f"{SynoSurveillanceStation.CAMERA_API_KEY}:{camera.id}",
             {
                 ENTITY_NAME: camera.name,
                 ENTITY_CLASS: None,
@@ -56,16 +53,13 @@ class SynoDSMCamera(SynologyDSMEntity, Camera):
                 ENTITY_UNIT: None,
             },
         )
-        self._unique_id = f"{self._api.information.serial}_{SynoSurveillanceStation.CAMERA_API_KEY}_{camera.id}"
         self._camera = camera
 
     @property
     def device_info(self) -> Dict[str, any]:
         """Return the device information."""
         return {
-            "identifiers": {
-                (DOMAIN, f"{self._api.information.serial}/{self._camera.id}")
-            },
+            "identifiers": {(DOMAIN, self._api.information.serial, self._camera.id)},
             "name": self.name,
             "model": self._camera.model,
             "via_device": (DOMAIN, self._api.information.serial),

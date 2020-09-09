@@ -188,7 +188,6 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Unload Synology DSM sensors."""
-    entry_data = hass.data[DOMAIN][entry.unique_id]
     unload_ok = all(
         await asyncio.gather(
             *[
@@ -199,6 +198,7 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     )
 
     if unload_ok:
+        entry_data = hass.data[DOMAIN][entry.unique_id]
         entry_data[UNDO_UPDATE_LISTENER]()
         await entry_data[SYNO_API].async_unload()
         hass.data[DOMAIN].pop(entry.unique_id)
