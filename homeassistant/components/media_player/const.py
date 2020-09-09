@@ -31,7 +31,6 @@ DOMAIN = "media_player"
 
 MEDIA_CLASS_ALBUM = "album"
 MEDIA_CLASS_APP = "app"
-MEDIA_CLASS_APPS = "apps"
 MEDIA_CLASS_ARTIST = "artist"
 MEDIA_CLASS_CHANNEL = "channel"
 MEDIA_CLASS_CHANNELS = "channels"
