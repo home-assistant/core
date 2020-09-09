@@ -70,8 +70,6 @@ MANIFEST_JSON = {
 
 DATA_PANELS = "frontend_panels"
 DATA_JS_VERSION = "frontend_js_version"
-DATA_EXTRA_HTML_URL = "frontend_extra_html_url"
-DATA_EXTRA_HTML_URL_ES5 = "frontend_extra_html_url_es5"
 DATA_EXTRA_MODULE_URL = "frontend_extra_module_url"
 DATA_EXTRA_JS_URL_ES5 = "frontend_extra_js_url_es5"
 
@@ -91,29 +89,23 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.All(
-            cv.deprecated(CONF_EXTRA_HTML_URL, invalidation_version="0.115"),
-            cv.deprecated(CONF_EXTRA_HTML_URL_ES5, invalidation_version="0.115"),
-            vol.Schema(
-                {
-                    vol.Optional(CONF_FRONTEND_REPO): cv.isdir,
-                    vol.Optional(CONF_THEMES): vol.Schema(
-                        {cv.string: {cv.string: cv.string}}
-                    ),
-                    vol.Optional(CONF_EXTRA_HTML_URL): vol.All(
-                        cv.ensure_list, [cv.string]
-                    ),
-                    vol.Optional(CONF_EXTRA_MODULE_URL): vol.All(
-                        cv.ensure_list, [cv.string]
-                    ),
-                    vol.Optional(CONF_EXTRA_JS_URL_ES5): vol.All(
-                        cv.ensure_list, [cv.string]
-                    ),
-                    # We no longer use these options.
-                    vol.Optional(CONF_EXTRA_HTML_URL_ES5): cv.match_all,
-                    vol.Optional(CONF_JS_VERSION): cv.match_all,
-                },
-            ),
+        DOMAIN: vol.Schema(
+            {
+                vol.Optional(CONF_FRONTEND_REPO): cv.isdir,
+                vol.Optional(CONF_THEMES): vol.Schema(
+                    {cv.string: {cv.string: cv.string}}
+                ),
+                vol.Optional(CONF_EXTRA_MODULE_URL): vol.All(
+                    cv.ensure_list, [cv.string]
+                ),
+                vol.Optional(CONF_EXTRA_JS_URL_ES5): vol.All(
+                    cv.ensure_list, [cv.string]
+                ),
+                # We no longer use these options.
+                vol.Optional(CONF_EXTRA_HTML_URL): cv.match_all,
+                vol.Optional(CONF_EXTRA_HTML_URL_ES5): cv.match_all,
+                vol.Optional(CONF_JS_VERSION): cv.match_all,
+            },
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -220,17 +212,6 @@ def async_remove_panel(hass, frontend_url_path):
     hass.bus.async_fire(EVENT_PANELS_UPDATED)
 
 
-@bind_hass
-@callback
-def add_extra_html_url(hass, url, es5=False):
-    """Register extra html url to load."""
-    key = DATA_EXTRA_HTML_URL_ES5 if es5 else DATA_EXTRA_HTML_URL
-    url_set = hass.data.get(key)
-    if url_set is None:
-        url_set = hass.data[key] = set()
-    url_set.add(url)
-
-
 def add_extra_js_url(hass, url, es5=False):
     """Register extra js or module url to load."""
     key = DATA_EXTRA_JS_URL_ES5 if es5 else DATA_EXTRA_MODULE_URL
@@ -266,6 +247,13 @@ async def async_setup(hass, config):
     hass.http.register_view(ManifestJSONView)
 
     conf = config.get(DOMAIN, {})
+
+    for key in (CONF_EXTRA_HTML_URL, CONF_EXTRA_HTML_URL_ES5, CONF_JS_VERSION):
+        if key in conf:
+            _LOGGER.error(
+                "Please remove %s from your frontend config. It is no longer supported",
+                key,
+            )
 
     repo_path = conf.get(CONF_FRONTEND_REPO)
     is_dev = repo_path is not None
@@ -314,12 +302,6 @@ async def async_setup(hass, config):
         sidebar_title="developer_tools",
         sidebar_icon="hass:hammer",
     )
-
-    if DATA_EXTRA_HTML_URL not in hass.data:
-        hass.data[DATA_EXTRA_HTML_URL] = set()
-
-    for url in conf.get(CONF_EXTRA_HTML_URL, []):
-        add_extra_html_url(hass, url, False)
 
     if DATA_EXTRA_MODULE_URL not in hass.data:
         hass.data[DATA_EXTRA_MODULE_URL] = set()
@@ -522,7 +504,6 @@ class IndexView(web_urldispatcher.AbstractResource):
         return web.Response(
             text=template.render(
                 theme_color=MANIFEST_JSON["theme_color"],
-                extra_urls=hass.data[DATA_EXTRA_HTML_URL],
                 extra_modules=hass.data[DATA_EXTRA_MODULE_URL],
                 extra_js_es5=hass.data[DATA_EXTRA_JS_URL_ES5],
             ),

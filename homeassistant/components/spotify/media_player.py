@@ -11,6 +11,12 @@ from yarl import URL
 
 from homeassistant.components.media_player import BrowseMedia, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
+    MEDIA_CLASS_ALBUM,
+    MEDIA_CLASS_ARTIST,
+    MEDIA_CLASS_DIRECTORY,
+    MEDIA_CLASS_PLAYLIST,
+    MEDIA_CLASS_PODCAST,
+    MEDIA_CLASS_TRACK,
     MEDIA_TYPE_ALBUM,
     MEDIA_TYPE_ARTIST,
     MEDIA_TYPE_EPISODE,
@@ -95,6 +101,29 @@ LIBRARY_MAP = {
     "featured_playlists": "Featured Playlists",
     "new_releases": "New Releases",
 }
+
+CONTENT_TYPE_MEDIA_CLASS = {
+    "current_user_playlists": MEDIA_CLASS_PLAYLIST,
+    "current_user_followed_artists": MEDIA_CLASS_ARTIST,
+    "current_user_saved_albums": MEDIA_CLASS_ALBUM,
+    "current_user_saved_tracks": MEDIA_CLASS_TRACK,
+    "current_user_saved_shows": MEDIA_CLASS_PODCAST,
+    "current_user_recently_played": MEDIA_CLASS_TRACK,
+    "current_user_top_artists": MEDIA_CLASS_ARTIST,
+    "current_user_top_tracks": MEDIA_CLASS_TRACK,
+    "featured_playlists": MEDIA_CLASS_PLAYLIST,
+    "categories": MEDIA_CLASS_DIRECTORY,
+    "category_playlists": MEDIA_CLASS_PLAYLIST,
+    "new_releases": MEDIA_CLASS_ALBUM,
+    MEDIA_TYPE_PLAYLIST: MEDIA_CLASS_PLAYLIST,
+    MEDIA_TYPE_ALBUM: MEDIA_CLASS_ALBUM,
+    MEDIA_TYPE_ARTIST: MEDIA_CLASS_ARTIST,
+    MEDIA_TYPE_SHOW: MEDIA_CLASS_PODCAST,
+}
+
+
+class MissingMediaInformation(BrowseError):
+    """Missing media required information."""
 
 
 async def async_setup_entry(
@@ -425,8 +454,8 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
 
 def build_item_response(spotify, user, payload):
     """Create response payload for the provided media query."""
-    media_content_type = payload.get("media_content_type")
-    media_content_id = payload.get("media_content_id")
+    media_content_type = payload["media_content_type"]
+    media_content_id = payload["media_content_id"]
     title = None
     image = None
     if media_content_type == "current_user_playlists":
@@ -437,16 +466,16 @@ def build_item_response(spotify, user, payload):
         items = media.get("artists", {}).get("items", [])
     elif media_content_type == "current_user_saved_albums":
         media = spotify.current_user_saved_albums(limit=BROWSE_LIMIT)
-        items = media.get("items", [])
+        items = [item["album"] for item in media.get("items", [])]
     elif media_content_type == "current_user_saved_tracks":
         media = spotify.current_user_saved_tracks(limit=BROWSE_LIMIT)
-        items = media.get("items", [])
+        items = [item["track"] for item in media.get("items", [])]
     elif media_content_type == "current_user_saved_shows":
         media = spotify.current_user_saved_shows(limit=BROWSE_LIMIT)
-        items = media.get("items", [])
+        items = [item["show"] for item in media.get("items", [])]
     elif media_content_type == "current_user_recently_played":
         media = spotify.current_user_recently_played(limit=BROWSE_LIMIT)
-        items = media.get("items", [])
+        items = [item["track"] for item in media.get("items", [])]
     elif media_content_type == "current_user_top_artists":
         media = spotify.current_user_top_artists(limit=BROWSE_LIMIT)
         items = media.get("items", [])
@@ -474,7 +503,7 @@ def build_item_response(spotify, user, payload):
         items = media.get("albums", {}).get("items", [])
     elif media_content_type == MEDIA_TYPE_PLAYLIST:
         media = spotify.playlist(media_content_id)
-        items = media.get("tracks", {}).get("items", [])
+        items = [item["track"] for item in media.get("tracks", {}).get("items", [])]
     elif media_content_type == MEDIA_TYPE_ALBUM:
         media = spotify.album(media_content_id)
         items = media.get("tracks", {}).get("items", [])
@@ -498,24 +527,32 @@ def build_item_response(spotify, user, payload):
         return None
 
     if media_content_type == "categories":
-        return BrowseMedia(
+        media_item = BrowseMedia(
             title=LIBRARY_MAP.get(media_content_id),
+            media_class=CONTENT_TYPE_MEDIA_CLASS[media_content_type],
             media_content_id=media_content_id,
             media_content_type=media_content_type,
             can_play=False,
             can_expand=True,
-            children=[
+            children=[],
+        )
+        for item in items:
+            try:
+                item_id = item["id"]
+            except KeyError:
+                _LOGGER.debug("Missing id for media item: %s", item)
+                continue
+            media_item.children.append(
                 BrowseMedia(
                     title=item.get("name"),
-                    media_content_id=item.get("id"),
+                    media_class=MEDIA_CLASS_PLAYLIST,
+                    media_content_id=item_id,
                     media_content_type="category_playlists",
                     thumbnail=fetch_image_url(item, key="icons"),
                     can_play=False,
                     can_expand=True,
                 )
-                for item in items
-            ],
-        )
+            )
 
     if title is None:
         if "name" in media:
@@ -525,12 +562,18 @@ def build_item_response(spotify, user, payload):
 
     response = {
         "title": title,
+        "media_class": CONTENT_TYPE_MEDIA_CLASS[media_content_type],
         "media_content_id": media_content_id,
         "media_content_type": media_content_type,
         "can_play": media_content_type in PLAYABLE_MEDIA_TYPES,
-        "children": [item_payload(item) for item in items],
+        "children": [],
         "can_expand": True,
     }
+    for item in items:
+        try:
+            response["children"].append(item_payload(item))
+        except MissingMediaInformation:
+            continue
 
     if "images" in media:
         response["thumbnail"] = fetch_image_url(media)
@@ -546,27 +589,29 @@ def item_payload(item):
 
     Used by async_browse_media.
     """
-    if MEDIA_TYPE_TRACK in item:
-        item = item.get(MEDIA_TYPE_TRACK)
-    elif MEDIA_TYPE_SHOW in item:
-        item = item.get(MEDIA_TYPE_SHOW)
-    elif MEDIA_TYPE_ARTIST in item:
-        item = item.get(MEDIA_TYPE_ARTIST)
-    elif MEDIA_TYPE_ALBUM in item and item.get("type") != MEDIA_TYPE_TRACK:
-        item = item.get(MEDIA_TYPE_ALBUM)
+    try:
+        media_type = item["type"]
+        media_id = item["uri"]
+    except KeyError as err:
+        _LOGGER.debug("Missing type or uri for media item: %s", item)
+        raise MissingMediaInformation from err
 
-    can_expand = item.get("type") not in [
-        None,
+    can_expand = media_type not in [
         MEDIA_TYPE_TRACK,
         MEDIA_TYPE_EPISODE,
     ]
 
     payload = {
         "title": item.get("name"),
-        "media_content_id": item.get("uri"),
-        "media_content_type": item.get("type"),
-        "can_play": item.get("type") in PLAYABLE_MEDIA_TYPES,
+        "media_content_id": media_id,
+        "media_content_type": media_type,
+        "can_play": media_type in PLAYABLE_MEDIA_TYPES,
         "can_expand": can_expand,
+    }
+
+    payload = {
+        **payload,
+        "media_class": CONTENT_TYPE_MEDIA_CLASS[media_type],
     }
 
     if "images" in item:
@@ -585,6 +630,7 @@ def library_payload():
     """
     library_info = {
         "title": "Media Library",
+        "media_class": MEDIA_CLASS_DIRECTORY,
         "media_content_id": "library",
         "media_content_type": "library",
         "can_play": False,
@@ -598,7 +644,7 @@ def library_payload():
                 {"name": item["name"], "type": item["type"], "uri": item["type"]}
             )
         )
-    return library_info
+    return BrowseMedia(**library_info)
 
 
 def fetch_image_url(item, key="images"):
