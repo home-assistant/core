@@ -25,15 +25,20 @@ async def test_sensors(hass) -> None:
     uptime = now + timedelta(seconds=600)
 
     sensors = {
-        "article_cache": ("ArticleCacheMB", 64, DATA_MEGABYTES, None),
-        "average_download_rate": ("AverageDownloadRate", 1.19, DATA_RATE_MEGABYTES_PER_SECOND, None),
-        "download_paused": ("DownloadPaused", 4, None, None),
-        "download_rate": ("DownloadRate", 2.38, DATA_RATE_MEGABYTES_PER_SECOND, None),
-        "download_size": ("DownloadedSizeMB", 256, DATA_MEGABYTES, None),
-        "free_disk_space": ("FreeDiskSpaceMB", 1024, DATA_MEGABYTES, None),
-        "post_job_count": ("PostJobCount", 2, "Jobs", None),
-        "post_paused": ("PostPaused", 4, None, None),
-        "remaining_size": ("RemainingSizeMB", 512, DATA_MEGABYTES, None),
+        "article_cache": ("ArticleCacheMB", "64", DATA_MEGABYTES, None),
+        "average_download_rate": (
+            "AverageDownloadRate",
+            1.19,
+            DATA_RATE_MEGABYTES_PER_SECOND,
+            None,
+        ),
+        "download_paused": ("DownloadPaused", "4", None, None),
+        "download_rate": ("DownloadRate", "2.38", DATA_RATE_MEGABYTES_PER_SECOND, None),
+        "download_size": ("DownloadedSizeMB", "256", DATA_MEGABYTES, None),
+        "free_disk_space": ("FreeDiskSpaceMB", "1024", DATA_MEGABYTES, None),
+        "post_job_count": ("PostJobCount", "2", "Jobs", None),
+        "post_paused": ("PostPaused", "4", None, None),
+        "remaining_size": ("RemainingSizeMB", "512", DATA_MEGABYTES, None),
         "uptime": ("UpTimeSec", uptime.isoformat(), None, DEVICE_CLASS_TIMESTAMP),
     }
 
