@@ -13,7 +13,6 @@ from homeassistant.components.media_player import (
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_APP,
     MEDIA_CLASS_CHANNEL,
-    MEDIA_CLASS_CHANNELS,
     MEDIA_CLASS_DIRECTORY,
     MEDIA_TYPE_APP,
     MEDIA_TYPE_APPS,
@@ -106,7 +105,7 @@ def browse_media_library(channels: bool = False) -> BrowseMedia:
         library_info.children.append(
             BrowseMedia(
                 title="Channels",
-                media_class=MEDIA_CLASS_CHANNELS,
+                media_class=MEDIA_CLASS_CHANNEL,
                 media_content_id="channels",
                 media_content_type=MEDIA_TYPE_CHANNELS,
                 can_expand=True,
@@ -315,7 +314,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         if media_content_type == MEDIA_TYPE_CHANNELS:
             response = BrowseMedia(
                 title="Channels",
-                media_class=MEDIA_CLASS_CHANNELS,
+                media_class=MEDIA_CLASS_CHANNEL,
                 media_content_id="channels",
                 media_content_type=MEDIA_TYPE_CHANNELS,
                 can_expand=True,
