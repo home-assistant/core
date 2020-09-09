@@ -29,7 +29,8 @@ async def async_setup_entry(
 
     api = hass.data[DOMAIN][entry.unique_id][SYNO_API]
 
-    entities = []
+    if SynoSurveillanceStation.CAMERA_API_KEY not in api.dsm.apis:
+        return True
 
     surveillance_station = api.surveillance_station
     await hass.async_add_executor_job(surveillance_station.update)
@@ -91,7 +92,6 @@ class SynoDSMCamera(SynologyDSMEntity, Camera):
 
     async def stream_source(self) -> str:
         """Return the source of the stream."""
-        _LOGGER.debug(self._camera.live_view.rtsp)
         return self._camera.live_view.rtsp
 
     def enable_motion_detection(self):

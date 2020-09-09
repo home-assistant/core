@@ -46,6 +46,7 @@ from .const import (
     ENTITY_ICON,
     ENTITY_NAME,
     ENTITY_UNIT,
+    PLATFORMS,
     STORAGE_DISK_BINARY_SENSORS,
     STORAGE_DISK_SENSORS,
     STORAGE_VOL_SENSORS,
@@ -177,7 +178,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
             entry, data={**entry.data, CONF_MAC: network.macs}
         )
 
-    for platform in _async_platforms(api):
+    for platform in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, platform)
         )
@@ -192,7 +193,7 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
         await asyncio.gather(
             *[
                 hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in _async_platforms(entry_data[SYNO_API])
+                for platform in PLATFORMS
             ]
         )
     )
@@ -208,15 +209,6 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
 async def _async_update_listener(hass: HomeAssistantType, entry: ConfigEntry):
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
-
-
-@callback
-def _async_platforms(api):
-    """Return the platforms to be set up / unloaded."""
-    platforms = ["binary_sensor", "sensor"]
-    if api._with_surveillance_station:
-        platforms.append("camera")
-    return platforms
 
 
 class SynoApi:
