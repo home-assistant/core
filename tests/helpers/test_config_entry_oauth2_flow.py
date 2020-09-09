@@ -130,7 +130,7 @@ async def test_abort_if_authorization_timeout(hass, flow_handler, local_impl):
 
 
 async def test_abort_if_no_url_available(hass, flow_handler, local_impl):
-    """Check timeout generating authorization url."""
+    """Check no_url_available generating authorization url."""
     flow_handler.async_register_implementation(hass, local_impl)
 
     flow = flow_handler()
