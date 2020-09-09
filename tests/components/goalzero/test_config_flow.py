@@ -12,7 +12,6 @@ from homeassistant.data_entry_flow import (
 from . import (
     CONF_CONFIG_FLOW,
     CONF_DATA,
-    FAKE_HOST,
     NAME,
     _create_mocked_yeti,
     _patch_config_flow_yeti,
