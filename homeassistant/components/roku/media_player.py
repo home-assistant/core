@@ -7,17 +7,11 @@ import voluptuous as vol
 from homeassistant.components.media_player import (
     DEVICE_CLASS_RECEIVER,
     DEVICE_CLASS_TV,
-    BrowseMedia,
     MediaPlayerEntity,
 )
 from homeassistant.components.media_player.const import (
-    MEDIA_CLASS_APP,
-    MEDIA_CLASS_CHANNEL,
-    MEDIA_CLASS_DIRECTORY,
     MEDIA_TYPE_APP,
-    MEDIA_TYPE_APPS,
     MEDIA_TYPE_CHANNEL,
-    MEDIA_TYPE_CHANNELS,
     SUPPORT_BROWSE_MEDIA,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -42,6 +36,7 @@ from homeassistant.const import (
 from homeassistant.helpers import entity_platform
 
 from . import RokuDataUpdateCoordinator, RokuEntity, roku_exception_handler
+from .browse_media import build_item_response, library_payload
 from .const import ATTR_KEYWORD, DOMAIN, SERVICE_SEARCH
 
 _LOGGER = logging.getLogger(__name__)
@@ -76,44 +71,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
         SEARCH_SCHEMA,
         "search",
     )
-
-
-def browse_media_library(channels: bool = False) -> BrowseMedia:
-    """Create response payload to describe contents of a specific library."""
-    library_info = BrowseMedia(
-        title="Media Library",
-        media_class=MEDIA_CLASS_DIRECTORY,
-        media_content_id="library",
-        media_content_type="library",
-        can_play=False,
-        can_expand=True,
-        children=[],
-    )
-
-    library_info.children.append(
-        BrowseMedia(
-            title="Apps",
-            media_class=MEDIA_CLASS_APP,
-            media_content_id="apps",
-            media_content_type=MEDIA_TYPE_APPS,
-            can_expand=True,
-            can_play=False,
-        )
-    )
-
-    if channels:
-        library_info.children.append(
-            BrowseMedia(
-                title="Channels",
-                media_class=MEDIA_CLASS_CHANNEL,
-                media_content_id="channels",
-                media_content_type=MEDIA_TYPE_CHANNELS,
-                can_expand=True,
-                can_play=False,
-            )
-        )
-
-    return library_info
 
 
 class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
@@ -284,53 +241,13 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
         """Implement the websocket media browsing helper."""
         if media_content_type in [None, "library"]:
-            is_tv = self.coordinator.data.info.device_type == "tv"
-            return browse_media_library(channels=is_tv)
+            return library_payload(self.coordinator)
 
-        response = None
-
-        if media_content_type == MEDIA_TYPE_APPS:
-            response = BrowseMedia(
-                title="Apps",
-                media_class=MEDIA_CLASS_APP,
-                media_content_id="apps",
-                media_content_type=MEDIA_TYPE_APPS,
-                can_expand=True,
-                can_play=False,
-                children=[
-                    BrowseMedia(
-                        title=app.name,
-                        thumbnail=self.coordinator.roku.app_icon_url(app.app_id),
-                        media_class=MEDIA_CLASS_APP,
-                        media_content_id=app.app_id,
-                        media_content_type=MEDIA_TYPE_APP,
-                        can_play=True,
-                        can_expand=False,
-                    )
-                    for app in self.coordinator.data.apps
-                ],
-            )
-
-        if media_content_type == MEDIA_TYPE_CHANNELS:
-            response = BrowseMedia(
-                title="Channels",
-                media_class=MEDIA_CLASS_CHANNEL,
-                media_content_id="channels",
-                media_content_type=MEDIA_TYPE_CHANNELS,
-                can_expand=True,
-                can_play=False,
-                children=[
-                    BrowseMedia(
-                        title=channel.name,
-                        media_class=MEDIA_CLASS_CHANNEL,
-                        media_content_id=channel.number,
-                        media_content_type=MEDIA_TYPE_CHANNEL,
-                        can_play=True,
-                        can_expand=False,
-                    )
-                    for channel in self.coordinator.data.channels
-                ],
-            )
+        payload = {
+            "search_type": media_content_type,
+            "search_id": media_content_id,
+        }
+        response = build_item_response(self.coordinator, payload)
 
         if response is None:
             raise BrowseError(
