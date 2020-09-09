@@ -22,7 +22,7 @@ async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None
 
     for backyard in coordinator.data:
         sensors.append(
-            OmnilogicSensor(
+            OmniLogicTemperatureSensor(
                 coordinator,
                 "air_temperature",
                 "Air Temperature",
@@ -36,7 +36,7 @@ async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None
         )
 
         sensors.append(
-            OmnilogicSensor(
+            OmniLogicAlarmSensor(
                 coordinator,
                 "alarm",
                 "Alarm",
@@ -51,7 +51,7 @@ async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None
 
         for bow in backyard["BOWS"]:
             sensors.append(
-                OmnilogicSensor(
+                OmniLogicTemperatureSensor(
                     coordinator,
                     "water_temperature",
                     "Water Temperature",
@@ -66,7 +66,7 @@ async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None
 
             if "Filter" in bow.keys():
                 sensors.append(
-                    OmnilogicSensor(
+                    OmniLogicPumpSpeedSensor(
                         coordinator,
                         "filter_pump_speed",
                         "Pump Speed",
@@ -81,7 +81,7 @@ async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None
 
             for pump in bow["Pumps"]:
                 sensors.append(
-                    OmnilogicSensor(
+                    OmniLogicPumpSpeedSensor(
                         coordinator,
                         "pump_speed",
                         "Pump Speed",
@@ -96,7 +96,7 @@ async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None
 
             if "Chlorinator" in bow.keys():
                 sensors.append(
-                    OmnilogicSensor(
+                    OmniLogicChlorinatorSensor(
                         coordinator,
                         "chlorinator",
                         "Chlorinator",
@@ -109,7 +109,7 @@ async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None
                     )
                 )
                 sensors.append(
-                    OmnilogicSensor(
+                    OmniLogicSaltLevelSensor(
                         coordinator,
                         "salt_level",
                         "Salt Level",
@@ -125,7 +125,7 @@ async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None
             if "CSAD" in bow.keys():
                 if bow["CSAD"]["systemId"] != "0":
                     sensors.append(
-                        OmnilogicSensor(
+                        OmniLogicPHSensor(
                             coordinator,
                             "csad_ph",
                             "CSAD",
@@ -139,7 +139,7 @@ async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None
                     )
 
                     sensors.append(
-                        OmnilogicSensor(
+                        OmniLogicORPSensor(
                             coordinator,
                             "csad_orp",
                             "CSAD",
@@ -201,36 +201,59 @@ class OmnilogicSensor(OmniLogicEntity):
         """Force update."""
         return True
 
+    def AddAlarms(self, alarms: dict):
+        """Add Alarm attributes."""
+        self.alarms = alarms
+
+        self._attrs["Alarm"] = ""
+        if len(self.alarms) != 0:
+            self._attrs["Alarm"] = (
+                self.alarms[0]["Message"] + " (" + self.alarms[0]["Comment"] + ")"
+            )
+
+
+class OmniLogicTemperatureSensor(OmnilogicSensor):
+    """Define an OmniLogic Temperature (Air/Water) Sensor."""
+
+    def __init__(
+        self,
+        coordinator: OmniLogicUpdateCoordinator,
+        kind: str,
+        name: str,
+        backyard: dict,
+        bow: dict,
+        device_class: str,
+        icon: str,
+        unit: str,
+        sensordata: dict,
+    ):
+        """Initialize the sensor."""
+        super().__init__(
+            coordinator=coordinator,
+            kind=kind,
+            name=name,
+            backyard=backyard,
+            bow=bow,
+            device_class=device_class,
+            icon=icon,
+            unit=unit,
+            sensordata=sensordata,
+        )
+
     @property
     def state(self):
-        """Return the state."""
-
+        """Return the state for the temperature sensor."""
         _LOGGER.debug("Updating state of sensor: %s", self._name)
-        if self._kind == "water_temperature":
-            sensordata = None
 
+        sensordata = None
+
+        if self._kind == "water_temperature":
             for backyard in self.coordinator.data:
                 for bow in backyard["BOWS"]:
                     if bow["systemId"] == self.bow["systemId"]:
                         sensordata = bow["waterTemp"]
                         break
 
-            temp_return = int(sensordata)
-            temp_state = int(sensordata)
-            unit_of_measurement = TEMP_FAHRENHEIT
-            if self._backyard["Unit-of-Measurement"] == "Metric":
-                temp_return = round((temp_return - 32) * 5 / 9, 1)
-                unit_of_measurement = TEMP_CELSIUS
-
-            if int(sensordata) == -1:
-                temp_return = None
-                temp_state = None
-
-            self._attrs["hayward_temperature"] = temp_return
-            self._attrs["hayward_unit_of_measure"] = unit_of_measurement
-            self._state = temp_state
-            self._unit = TEMP_FAHRENHEIT
-            self._attrs["systemId"] = self.bow.get("systemId")
             self._name = (
                 self._backyard["BackyardName"]
                 + " "
@@ -238,39 +261,86 @@ class OmnilogicSensor(OmniLogicEntity):
                 + " Water Temperature"
             )
 
-        elif self._kind == "filter_pump_speed":
-            sensordata = {}
+        elif self._kind == "air_temperature":
+            for backyard in self.coordinator.data:
+                if backyard.get("systemId") == self._attrs["MspSystemId"]:
+                    sensordata = backyard.get("airTemp")
 
+            self._name = self._backyard.get("BackyardName") + " Air Temperature"
+
+        temp_return = int(sensordata)
+        temp_state = int(sensordata)
+        unit_of_measurement = TEMP_FAHRENHEIT
+        if self._backyard["Unit-of-Measurement"] == "Metric":
+            temp_return = round((temp_return - 32) * 5 / 9, 1)
+            unit_of_measurement = TEMP_CELSIUS
+
+        if int(sensordata) == -1:
+            temp_return = None
+            temp_state = None
+
+        self._attrs["hayward_temperature"] = temp_return
+        self._attrs["hayward_unit_of_measure"] = unit_of_measurement
+        self._state = float(temp_state)
+        self._unit = TEMP_FAHRENHEIT
+
+        return self._state
+
+
+class OmniLogicPumpSpeedSensor(OmnilogicSensor):
+    """Define an OmniLogic Pump Speed Sensor."""
+
+    def __init__(
+        self,
+        coordinator: OmniLogicUpdateCoordinator,
+        kind: str,
+        name: str,
+        backyard: dict,
+        bow: dict,
+        device_class: str,
+        icon: str,
+        unit: str,
+        sensordata: dict,
+    ):
+        """Initialize the sensor."""
+        super().__init__(
+            coordinator=coordinator,
+            kind=kind,
+            name=name,
+            backyard=backyard,
+            bow=bow,
+            device_class=device_class,
+            icon=icon,
+            unit=unit,
+            sensordata=sensordata,
+        )
+
+    @property
+    def state(self):
+        """Return the state for the pump speed sensor."""
+        _LOGGER.debug("Updating state of sensor: %s", self._name)
+
+        sensordata = {}
+        pump_type = ""
+        pump_speed = 0
+
+        if self._kind == "filter_pump_speed":
             for backyard in self.coordinator.data:
                 for bow in backyard.get("BOWS"):
                     if bow["Filter"]["systemId"] == self.entitydata.get("systemId"):
                         sensordata = bow["Filter"]
                         break
 
-            self._state = sensordata.get("filterSpeed")
-            self._unit = "%"
-            self._name = (
-                self._backyard["BackyardName"]
-                + " "
-                + self.bow.get("Name")
-                + " "
-                + self.entitydata.get("Name")
-            )
-            self._attrs["systemId"] = self.entitydata.get("systemId")
-            self._attrs["MspSystemId"] = self._backyard["systemId"]
-            self._attrs["PumpType"] = self.entitydata.get("Filter-Type")
+            if sensordata.get("Filter-Type") == "FMT_VARIABLE_SPEED_PUMP":
+                pump_type = "VARIABLE"
+            elif sensordata.get("Filter-Type") == "FMP_SINGLE_SPEED":
+                pump_type = "SINGLE"
+            elif sensordata.get("Filter-Type") == "FMT_DUAL_SPEED":
+                pump_type = "DUAL"
 
-            self.alarms = sensordata.get("Alarms")
-
-            self._attrs["Alarm"] = ""
-            if len(self.alarms) != 0:
-                self._attrs["Alarm"] = (
-                    self.alarms[0]["Message"] + " (" + self.alarms[0]["Comment"] + ")"
-                )
+            pump_speed = sensordata.get("filterSpeed")
 
         elif self._kind == "pump_speed":
-            sensordata = {}
-
             for backyard in self.coordinator.data:
                 for bow in backyard.get("BOWS"):
                     for pump in bow.get("Pumps"):
@@ -278,200 +348,336 @@ class OmnilogicSensor(OmniLogicEntity):
                             sensordata = pump
                             break
 
-            if self.entitydata.get("Type") == "PMP_SINGLE_SPEED":
-                if sensordata.get("pumpSpeed") == "100":
-                    self._state = "on"
-                else:
-                    self._state = "off"
-            else:
-                self._state = sensordata.get("pumpSpeed")
-                self._unit = "%"
+            if sensordata.get("Filter-Type") == "PMP_VARIABLE_SPEED_PUMP":
+                pump_type = "VARIABLE"
+            elif sensordata.get("Filter-Type") == "PMP_SINGLE_SPEED":
+                pump_type = "SINGLE"
+            elif sensordata.get("Filter-Type") == "PMP_DUAL_SPEED":
+                pump_type = "DUAL"
 
-            self._name = (
-                self._backyard["BackyardName"]
-                + " "
-                + self.bow.get("Name")
-                + " "
-                + self.entitydata.get("Name")
-            )
-            self._attrs["systemId"] = self.entitydata.get("systemId")
-            self._attrs["MspSystemId"] = self._backyard["systemId"]
-            self._attrs["PumpType"] = self.entitydata.get("Type")
+            pump_speed = sensordata.get("pumpSpeed")
 
-            self.alarms = sensordata.get("Alarms")
-
-            self._attrs["Alarm"] = ""
-            if len(self.alarms) != 0:
-                alarm_message = self.alarms[0].get("Message")
-                if self.alarms[0].get("Comment") is not None:
-                    alarm_message = alarm_message + (
-                        " (" + self.alarms[0].get("Comment") + ")"
-                    )
-
-        elif self._kind == "salt_level":
-            sensordata = {}
-
-            for backyard in self.coordinator.data:
-                for bow in backyard.get("BOWS"):
-                    if bow["Chlorinator"]["systemId"] == self.entitydata["systemId"]:
-                        sensordata = bow.get("Chlorinator")
-                        break
-
-            salt_return = int(sensordata.get("avgSaltLevel"))
-            unit_of_measurement = "ppm"
-
-            if self._backyard["Unit-of-Measurement"] == "Metric":
-                salt_return = round(salt_return / 1000, 2)
-                unit_of_measurement = "g/L"
-
-            self._state = salt_return
-            self._unit = unit_of_measurement
-            self._attrs["SystemId"] = self.entitydata.get("systemId")
-            self._name = (
-                self._backyard["BackyardName"]
-                + " "
-                + self.bow.get("Name")
-                + " "
-                + self.entitydata.get("Name")
-                + " Salt Level"
-            )
-
-            self.alarms = sensordata.get("Alarms")
-
-            self._attrs["Alarm"] = ""
-            if len(self.alarms) > 0:
-                self._attrs["Alarm"] = (
-                    self.alarms[0]["Message"] + " (" + self.alarms[0]["Comment"] + ")"
-                )
-
-        elif self._kind == "chlorinator":
-            sensordata = {}
-
-            for backyard in self.coordinator.data:
-                for bow in backyard.get("BOWS"):
-                    if bow["Chlorinator"]["systemId"] == self.entitydata["systemId"]:
-                        sensordata = bow.get("Chlorinator")
-                        break
-
-            if sensordata.get("operatingMode") == "1":
-                self._state = sensordata.get("Timed-Percent")
-                self._unit = "%"
-            elif sensordata.get("operatingMode") == "2":
-                if sensordata.get("Timed-Percent") == "100":
-                    self._state = "on"
-                else:
-                    self._state = "off"
-
-            self._name = (
-                self._backyard["BackyardName"]
-                + " "
-                + self.bow.get("Name")
-                + " "
-                + self.entitydata.get("Name")
-                + " Setting"
-            )
-
-            self.alarms = sensordata.get("Alarms")
-
-            self._attrs["Alarm"] = ""
-            if len(self.alarms) != 0:
-                self._attrs["Alarm"] = (
-                    self.alarms[0]["Message"] + " (" + self.alarms[0]["Comment"] + ")"
-                )
-
-        elif self._kind == "csad_ph":
-            sensordata = {}
-
-            for backyard in self.coordinator.data:
-                for bow in backyard.get("BOWS"):
-                    if bow["CSAD"]["systemId"] == self.entitydata["systemId"]:
-                        sensordata = bow.get("CSAD")
-                        break
-
-            phstate = None
-            if sensordata.get("ph") != 0:
-                phstate = sensordata.get("ph")
-
-            self._state = phstate
-            self._unit = "pH"
-            self._name = (
-                self._backyard["BackyardName"] + " " + self.bow.get("Name") + " pH"
-            )
-
-            self.alarms = sensordata.get("Alarms")
-
-            self._attrs["Alarm"] = ""
-            if len(self.alarms) != 0:
-                self._attrs["Alarm"] = (
-                    self.alarms[0]["Message"] + " (" + self.alarms[0]["Comment"] + ")"
-                )
-
-        elif self._kind == "csad_orp":
-            sensordata = {}
-
-            for backyard in self.coordinator.data:
-                for bow in backyard.get("BOWS"):
-                    if bow["CSAD"]["systemId"] == self.entitydata["systemId"]:
-                        sensordata = bow.get("CSAD")
-                        break
-
-            orpstate = None
-            if sensordata.get("orp") != -1:
-                orpstate = sensordata.get("orp")
-
-            self._state = orpstate
-            self._unit = "mV"
-            self._name = (
-                self._backyard["BackyardName"] + " " + self.bow.get("Name") + " ORP"
-            )
-
-            self.alarms = sensordata.get("Alarms")
-
-            self._attrs["Alarm"] = ""
-            if len(self.alarms) != 0:
-                self._attrs["Alarm"] = (
-                    self.alarms[0]["Message"] + " (" + self.alarms[0]["Comment"] + ")"
-                )
-
-        elif self._kind == "air_temperature":
-            sensordata = 0
-
-            for backyard in self.coordinator.data:
-                if backyard.get("systemId") == self._attrs["MspSystemId"]:
-                    sensordata = backyard.get("airTemp")
-
-            temp_return = int(sensordata)
-            unit_of_measurement = TEMP_FAHRENHEIT
-            if self._backyard["Unit-of-Measurement"] == "Metric":
-                temp_return = round((temp_return - 32) * 5 / 9, 1)
-                unit_of_measurement = TEMP_CELSIUS
-
-            self._attrs["hayward_temperature"] = temp_return
-            self._attrs["hayward_unit_of_measure"] = unit_of_measurement
-            self._state = float(sensordata)
-            self._unit = TEMP_FAHRENHEIT
-            self._name = self._backyard.get("BackyardName") + " Air Temperature"
-            self._attrs["MspSystemId"] = self._backyard["systemId"]
-
-        elif self._kind == "alarm":
-            sensordata = []
-
-            self._name = self._backyard.get("BackyardName") + " Alarms"
-
-            for backyard in self.coordinator.data:
-                if backyard.get("systemId") == self._attrs["MspSystemId"]:
-                    sensordata = backyard
-
-            alarms_list = sensordata["Alarms"]
-
-            if len(alarms_list) > 0:
+        if pump_type == "VARIABLE":
+            self._unit = "%"
+            self._state = pump_speed
+        elif pump_type == "DUAL":
+            if pump_speed == 0:
+                self._state = "off"
+            elif pump_speed == sensordata.get("Min-Pump-Speed"):
+                self._state = "low"
+            elif pump_speed == sensordata.get("Max-Pump-Speed"):
+                self._state = "high"
+        elif pump_type == "SINGLE":
+            if pump_speed == 0:
+                self.state = "off"
+            elif pump_speed == sensordata.get("Max-Pump-Speed"):
                 self._state = "on"
-                alarm_message = alarms_list[0].get("Message")
-                if alarms_list[0].get("Comment") is not None:
-                    alarm_message = alarm_message + (
-                        " (" + alarms_list[0].get("Comment") + ")"
-                    )
-                self._attrs["Alarm"] = alarm_message
+
+        self._name = (
+            self._backyard["BackyardName"]
+            + " "
+            + self.bow.get("Name")
+            + " "
+            + self.entitydata.get("Name")
+        )
+
+        self._attrs["PumpType"] = pump_type
+
+        super().AddAlarms(sensordata.get("Alarms"))
+
+        return self._state
+
+
+class OmniLogicSaltLevelSensor(OmnilogicSensor):
+    """Define an OmniLogic Salt Level Sensor."""
+
+    def __init__(
+        self,
+        coordinator: OmniLogicUpdateCoordinator,
+        kind: str,
+        name: str,
+        backyard: dict,
+        bow: dict,
+        device_class: str,
+        icon: str,
+        unit: str,
+        sensordata: dict,
+    ):
+        """Initialize the sensor."""
+        super().__init__(
+            coordinator=coordinator,
+            kind=kind,
+            name=name,
+            backyard=backyard,
+            bow=bow,
+            device_class=device_class,
+            icon=icon,
+            unit=unit,
+            sensordata=sensordata,
+        )
+
+    @property
+    def state(self):
+        """Return the state for the salt level sensor."""
+        _LOGGER.debug("Updating state of sensor: %s", self._name)
+
+        sensordata = {}
+
+        for backyard in self.coordinator.data:
+            for bow in backyard.get("BOWS"):
+                if bow["Chlorinator"]["systemId"] == self.entitydata["systemId"]:
+                    sensordata = bow.get("Chlorinator")
+                    break
+
+        salt_return = int(sensordata.get("avgSaltLevel"))
+        unit_of_measurement = "ppm"
+
+        if self._backyard["Unit-of-Measurement"] == "Metric":
+            salt_return = round(salt_return / 1000, 2)
+            unit_of_measurement = "g/L"
+
+        self._state = salt_return
+        self._unit = unit_of_measurement
+        self._name = (
+            self._backyard["BackyardName"]
+            + " "
+            + self.bow.get("Name")
+            + " "
+            + self.entitydata.get("Name")
+            + " Salt Level"
+        )
+
+        super().AddAlarms(sensordata.get("Alarms"))
+
+        return self._state
+
+
+class OmniLogicChlorinatorSensor(OmnilogicSensor):
+    """Define an OmniLogic Chlorinator Sensor."""
+
+    def __init__(
+        self,
+        coordinator: OmniLogicUpdateCoordinator,
+        kind: str,
+        name: str,
+        backyard: dict,
+        bow: dict,
+        device_class: str,
+        icon: str,
+        unit: str,
+        sensordata: dict,
+    ):
+        """Initialize the sensor."""
+        super().__init__(
+            coordinator=coordinator,
+            kind=kind,
+            name=name,
+            backyard=backyard,
+            bow=bow,
+            device_class=device_class,
+            icon=icon,
+            unit=unit,
+            sensordata=sensordata,
+        )
+
+    @property
+    def state(self):
+        """Return the state for the chlorinator sensor."""
+        _LOGGER.debug("Updating state of sensor: %s", self._name)
+
+        sensordata = {}
+
+        for backyard in self.coordinator.data:
+            for bow in backyard.get("BOWS"):
+                if bow["Chlorinator"]["systemId"] == self.entitydata["systemId"]:
+                    sensordata = bow.get("Chlorinator")
+                    break
+
+        if sensordata.get("operatingMode") == "1":
+            self._state = sensordata.get("Timed-Percent")
+            self._unit = "%"
+        elif sensordata.get("operatingMode") == "2":
+            if sensordata.get("Timed-Percent") == "100":
+                self._state = "on"
             else:
                 self._state = "off"
+
+        self._name = (
+            self._backyard["BackyardName"]
+            + " "
+            + self.bow.get("Name")
+            + " "
+            + self.entitydata.get("Name")
+            + " Setting"
+        )
+
+        super().AddAlarms(sensordata.get("Alarms"))
+
+        return self._state
+
+
+class OmniLogicPHSensor(OmnilogicSensor):
+    """Define an OmniLogic pH Sensor."""
+
+    def __init__(
+        self,
+        coordinator: OmniLogicUpdateCoordinator,
+        kind: str,
+        name: str,
+        backyard: dict,
+        bow: dict,
+        device_class: str,
+        icon: str,
+        unit: str,
+        sensordata: dict,
+    ):
+        """Initialize the sensor."""
+        super().__init__(
+            coordinator=coordinator,
+            kind=kind,
+            name=name,
+            backyard=backyard,
+            bow=bow,
+            device_class=device_class,
+            icon=icon,
+            unit=unit,
+            sensordata=sensordata,
+        )
+
+    @property
+    def state(self):
+        """Return the state for the pH sensor."""
+        _LOGGER.debug("Updating state of sensor: %s", self._name)
+
+        sensordata = {}
+
+        for backyard in self.coordinator.data:
+            for bow in backyard.get("BOWS"):
+                if bow["CSAD"]["systemId"] == self.entitydata["systemId"]:
+                    sensordata = bow.get("CSAD")
+                    break
+
+        phstate = None
+        if sensordata.get("ph") != 0:
+            phstate = sensordata.get("ph")
+
+        self._state = phstate
+        self._unit = "pH"
+        self._name = self._backyard["BackyardName"] + " " + self.bow.get("Name") + " pH"
+
+        super().AddAlarms(sensordata.get("Alarms"))
+
+        return self._state
+
+
+class OmniLogicORPSensor(OmnilogicSensor):
+    """Define an OmniLogic ORP Sensor."""
+
+    def __init__(
+        self,
+        coordinator: OmniLogicUpdateCoordinator,
+        kind: str,
+        name: str,
+        backyard: dict,
+        bow: dict,
+        device_class: str,
+        icon: str,
+        unit: str,
+        sensordata: dict,
+    ):
+        """Initialize the sensor."""
+        super().__init__(
+            coordinator=coordinator,
+            kind=kind,
+            name=name,
+            backyard=backyard,
+            bow=bow,
+            device_class=device_class,
+            icon=icon,
+            unit=unit,
+            sensordata=sensordata,
+        )
+
+    @property
+    def state(self):
+        """Return the state for the ORP sensor."""
+        _LOGGER.debug("Updating state of sensor: %s", self._name)
+
+        sensordata = {}
+
+        for backyard in self.coordinator.data:
+            for bow in backyard.get("BOWS"):
+                if bow["CSAD"]["systemId"] == self.entitydata["systemId"]:
+                    sensordata = bow.get("CSAD")
+                    break
+
+        orpstate = None
+        if sensordata.get("orp") != -1:
+            orpstate = sensordata.get("orp")
+
+        self._state = orpstate
+        self._unit = "mV"
+        self._name = (
+            self._backyard["BackyardName"] + " " + self.bow.get("Name") + " ORP"
+        )
+
+        super().AddAlarms(sensordata.get("Alarms"))
+
+        return self._state
+
+
+class OmniLogicAlarmSensor(OmnilogicSensor):
+    """Define an OmniLogic Alarm Sensor."""
+
+    def __init__(
+        self,
+        coordinator: OmniLogicUpdateCoordinator,
+        kind: str,
+        name: str,
+        backyard: dict,
+        bow: dict,
+        device_class: str,
+        icon: str,
+        unit: str,
+        sensordata: dict,
+    ):
+        """Initialize the sensor."""
+        super().__init__(
+            coordinator=coordinator,
+            kind=kind,
+            name=name,
+            backyard=backyard,
+            bow=bow,
+            device_class=device_class,
+            icon=icon,
+            unit=unit,
+            sensordata=sensordata,
+        )
+
+    @property
+    def state(self):
+        """Return the state for the alarm sensor."""
+        _LOGGER.debug("Updating state of sensor: %s", self._name)
+
+        sensordata = []
+
+        self._name = self._backyard.get("BackyardName") + " Alarms"
+
+        for backyard in self.coordinator.data:
+            if backyard.get("systemId") == self._attrs["MspSystemId"]:
+                sensordata = backyard
+
+        alarms_list = sensordata["Alarms"]
+
+        if len(alarms_list) > 0:
+            self._state = "on"
+            alarm_message = alarms_list[0].get("Message")
+            if alarms_list[0].get("Comment") is not None:
+                alarm_message = alarm_message + (
+                    " (" + alarms_list[0].get("Comment") + ")"
+                )
+            self._attrs["Alarm"] = alarm_message
+        else:
+            self._state = "off"
+
         return self._state

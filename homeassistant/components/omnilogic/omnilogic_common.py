@@ -47,7 +47,7 @@ class OmniLogicUpdateCoordinator(DataUpdateCoordinator):
             return data
 
         except OmniLogicException as error:
-            raise UpdateFailed("Error updating from OmniLogic: %s", error) from error
+            raise UpdateFailed("Error updating from OmniLogic: %s" % error) from error
 
 
 class OmniLogicEntity(CoordinatorEntity):
