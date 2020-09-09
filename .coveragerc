@@ -847,6 +847,7 @@ omit =
     homeassistant/components/ted5000/sensor.py
     homeassistant/components/telegram/notify.py
     homeassistant/components/telegram_bot/*
+    homeassistant/components/teletask/*
     homeassistant/components/tellduslive/*
     homeassistant/components/tellstick/*
     homeassistant/components/telnet/switch.py
