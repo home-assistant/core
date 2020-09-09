@@ -14,6 +14,7 @@ from homeassistant.components.media_player.const import (
     MEDIA_CLASS_ALBUM,
     MEDIA_CLASS_ARTIST,
     MEDIA_CLASS_DIRECTORY,
+    MEDIA_CLASS_EPISODE,
     MEDIA_CLASS_PLAYLIST,
     MEDIA_CLASS_PODCAST,
     MEDIA_CLASS_TRACK,
@@ -118,12 +119,18 @@ CONTENT_TYPE_MEDIA_CLASS = {
     MEDIA_TYPE_PLAYLIST: MEDIA_CLASS_PLAYLIST,
     MEDIA_TYPE_ALBUM: MEDIA_CLASS_ALBUM,
     MEDIA_TYPE_ARTIST: MEDIA_CLASS_ARTIST,
+    MEDIA_TYPE_EPISODE: MEDIA_CLASS_EPISODE,
     MEDIA_TYPE_SHOW: MEDIA_CLASS_PODCAST,
+    MEDIA_TYPE_TRACK: MEDIA_CLASS_TRACK,
 }
 
 
 class MissingMediaInformation(BrowseError):
     """Missing media required information."""
+
+
+class UnknownMediaType(BrowseError):
+    """Unknown media type."""
 
 
 async def async_setup_entry(
@@ -526,10 +533,16 @@ def build_item_response(spotify, user, payload):
     if media is None:
         return None
 
+    try:
+        media_class = CONTENT_TYPE_MEDIA_CLASS[media_content_type]
+    except KeyError:
+        _LOGGER.debug("Unknown media type received: %s", media_content_type)
+        return None
+
     if media_content_type == "categories":
         media_item = BrowseMedia(
             title=LIBRARY_MAP.get(media_content_id),
-            media_class=CONTENT_TYPE_MEDIA_CLASS[media_content_type],
+            media_class=media_class,
             media_content_id=media_content_id,
             media_content_type=media_content_type,
             can_play=False,
@@ -562,7 +575,7 @@ def build_item_response(spotify, user, payload):
 
     response = {
         "title": title,
-        "media_class": CONTENT_TYPE_MEDIA_CLASS[media_content_type],
+        "media_class": media_class,
         "media_content_id": media_content_id,
         "media_content_type": media_content_type,
         "can_play": media_content_type in PLAYABLE_MEDIA_TYPES,
@@ -572,7 +585,7 @@ def build_item_response(spotify, user, payload):
     for item in items:
         try:
             response["children"].append(item_payload(item))
-        except MissingMediaInformation:
+        except (MissingMediaInformation, UnknownMediaType):
             continue
 
     if "images" in media:
@@ -596,6 +609,12 @@ def item_payload(item):
         _LOGGER.debug("Missing type or uri for media item: %s", item)
         raise MissingMediaInformation from err
 
+    try:
+        media_class = CONTENT_TYPE_MEDIA_CLASS[media_type]
+    except KeyError as err:
+        _LOGGER.debug("Unknown media type received: %s", media_type)
+        raise UnknownMediaType from err
+
     can_expand = media_type not in [
         MEDIA_TYPE_TRACK,
         MEDIA_TYPE_EPISODE,
@@ -611,7 +630,7 @@ def item_payload(item):
 
     payload = {
         **payload,
-        "media_class": CONTENT_TYPE_MEDIA_CLASS[media_type],
+        "media_class": media_class,
     }
 
     if "images" in item:
