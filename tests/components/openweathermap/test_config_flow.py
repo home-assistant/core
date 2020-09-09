@@ -141,12 +141,12 @@ async def test_form_options(hass):
         assert result["step_id"] == "init"
 
         result = await hass.config_entries.options.async_configure(
-            result["flow_id"], user_input={CONF_MODE: "freedaily"}
+            result["flow_id"], user_input={CONF_MODE: "onecall_daily"}
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert config_entry.options == {
-            CONF_MODE: "freedaily",
+            CONF_MODE: "onecall_daily",
             CONF_LANGUAGE: DEFAULT_LANGUAGE,
         }
 
@@ -204,7 +204,6 @@ async def test_form_api_offline(hass):
 
 def _create_mocked_owm(is_api_online: bool):
     mocked_owm = MagicMock()
-    mocked_owm.is_API_online.return_value = is_api_online
 
     weather = MagicMock()
     weather.temperature.return_value.get.return_value = 10
@@ -215,7 +214,7 @@ def _create_mocked_owm(is_api_online: bool):
     weather.rain.return_value = []
     weather.snow.return_value = []
     weather.detailed_status.return_value = "status"
-    weather.weather_code.return_value = 803
+    weather.weather_code = 803
 
     mocked_owm.weather_at_coords.return_value.weather = weather
 
@@ -235,5 +234,7 @@ def _create_mocked_owm(is_api_online: bool):
     one_call.forecast_daily = [one_day_forecast]
 
     mocked_owm.one_call.return_value = one_call
+
+    mocked_owm.weather_manager.return_value.one_call.return_value = is_api_online
 
     return mocked_owm
