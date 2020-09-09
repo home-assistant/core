@@ -252,7 +252,12 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
         except asyncio.TimeoutError:
             return self.async_abort(reason="authorize_url_timeout")
         except NoURLAvailableError:
-            return self.async_abort(reason="no_url_available")
+            return self.async_abort(
+                reason="no_url_available",
+                description_placeholders={
+                    "docs_url": "https://www.home-assistant.io/docs/configuration/basic/"
+                },
+            )
 
         url = str(URL(url).update_query(self.extra_authorize_data))
 
