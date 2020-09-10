@@ -1134,3 +1134,57 @@ async def test_logbook_humanify_automation_triggered_event(hass):
     assert event2["domain"] == "automation"
     assert event2["message"] == "has been triggered by source of trigger"
     assert event2["entity_id"] == "automation.bye"
+
+
+async def test_automation_variables(hass):
+    """Test automation variables."""
+    calls = async_mock_service(hass, "test", "automation")
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "variables": {
+                        "test_var": "defined_in_config",
+                        "event_type": "{{ trigger.event.event_type }}",
+                    },
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "action": {
+                        "service": "test.automation",
+                        "data": {
+                            "value": "{{ test_var }}",
+                            "event_type": "{{ event_type }}",
+                        },
+                    },
+                },
+                {
+                    "variables": {
+                        "test_var": "defined_in_config",
+                    },
+                    "trigger": {"platform": "event", "event_type": "test_event_2"},
+                    "condition": {
+                        "condition": "template",
+                        "value_template": "{{ trigger.event.data.pass_condition }}",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                    },
+                },
+            ]
+        },
+    )
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].data["value"] == "defined_in_config"
+    assert calls[0].data["event_type"] == "test_event"
+
+    hass.bus.async_fire("test_event_2")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    hass.bus.async_fire("test_event_2", {"pass_condition": True})
+    await hass.async_block_till_done()
+    assert len(calls) == 2
