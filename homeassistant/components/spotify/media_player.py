@@ -15,6 +15,7 @@ from homeassistant.components.media_player.const import (
     MEDIA_CLASS_ARTIST,
     MEDIA_CLASS_DIRECTORY,
     MEDIA_CLASS_EPISODE,
+    MEDIA_CLASS_GENRE,
     MEDIA_CLASS_PLAYLIST,
     MEDIA_CLASS_PODCAST,
     MEDIA_CLASS_TRACK,
@@ -113,7 +114,7 @@ CONTENT_TYPE_MEDIA_CLASS = {
     "current_user_top_artists": MEDIA_CLASS_ARTIST,
     "current_user_top_tracks": MEDIA_CLASS_TRACK,
     "featured_playlists": MEDIA_CLASS_PLAYLIST,
-    "categories": MEDIA_CLASS_DIRECTORY,
+    "categories": MEDIA_CLASS_GENRE,
     "category_playlists": MEDIA_CLASS_PLAYLIST,
     "new_releases": MEDIA_CLASS_ALBUM,
     MEDIA_TYPE_PLAYLIST: MEDIA_CLASS_PLAYLIST,
@@ -566,6 +567,7 @@ def build_item_response(spotify, user, payload):
                     can_expand=True,
                 )
             )
+        return media_item
 
     if title is None:
         if "name" in media:
