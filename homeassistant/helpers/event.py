@@ -17,7 +17,6 @@ from typing import (
     Tuple,
     Union,
 )
-import weakref
 
 import attr
 
@@ -509,7 +508,7 @@ class _TrackTemplateResultInfo:
         self._info: Dict[Template, RenderInfo] = {}
         self._last_domains: Set = set()
         self._last_entities: Set = set()
-        self._seen_contexts: weakref.WeakSet = weakref.WeakSet([])
+        self._entity_ids_filter: Set = set()
 
     def async_setup(self) -> None:
         """Activation of template tracking."""
@@ -662,23 +661,25 @@ class _TrackTemplateResultInfo:
         self._refresh(None)
 
     @callback
+    def async_update_entity_ids_filter(self, entity_ids: Set) -> None:
+        """Update the filtered entity_ids."""
+        self._entity_ids_filter = entity_ids
+
+    @callback
     def _refresh(self, event: Optional[Event]) -> None:
         entity_id = event and event.data.get(ATTR_ENTITY_ID)
         updates = []
         info_changed = False
 
-        if event:
-            if event.context in self._seen_contexts:
-                # Skip duplicate contexts
-                for track_template_ in self._track_templates:
-                    _LOGGER.warning(
-                        "Template loop detected while processing event: %s with context %s, skipping template render for Template[%s]",
-                        event,
-                        event.context.id,
-                        track_template_.template.template,
-                    )
-                return
-            self._seen_contexts.add(event.context)
+        if entity_id and entity_id in self._entity_ids_filter:
+            # Skip self-referencing updates
+            for track_template_ in self._track_templates:
+                _LOGGER.warning(
+                    "Template loop detected while processing event: %s, skipping template render for Template[%s]",
+                    event,
+                    track_template_.template.template,
+                )
+            return
 
         for track_template_ in self._track_templates:
             template = track_template_.template
