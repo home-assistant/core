@@ -6,7 +6,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_PROBLEM,
     DEVICE_CLASS_SMOKE,
     DEVICE_CLASS_VIBRATION,
-    BinarySensorEntity,
+    BinarySensorEntity
 )
 
 from .entity import (
