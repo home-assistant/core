@@ -789,7 +789,7 @@ ibm-watson==4.0.1
 ibmiotf==0.3.4
 
 # homeassistant.components.ping
-icmplib==1.1.1
+icmplib==1.1.3
 
 # homeassistant.components.iglo
 iglo==1.2.7
@@ -2314,7 +2314,7 @@ zigpy-zigate==0.6.2
 zigpy-znp==0.1.1
 
 # homeassistant.components.zha
-zigpy==0.23.1
+zigpy==0.23.2
 
 # homeassistant.components.zoneminder
 zm-py==0.4.0
