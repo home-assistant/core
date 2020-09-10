@@ -639,6 +639,19 @@ async def test_script_variables(hass):
                         },
                     ],
                 },
+                "script2": {
+                    "variables": {
+                        "test_var": "from_config",
+                    },
+                    "sequence": [
+                        {
+                            "service": "test.script",
+                            "data": {
+                                "value": "{{ test_var }}",
+                            },
+                        },
+                    ],
+                },
             }
         },
     )
@@ -660,3 +673,11 @@ async def test_script_variables(hass):
     assert len(mock_calls) == 2
     assert mock_calls[1].data["value"] == "from_service"
     assert mock_calls[1].data["templated_config_var"] == "config-default"
+
+    # Call script with vars but no templates in it
+    await hass.services.async_call(
+        "script", "script2", {"test_var": "from_service"}, blocking=True
+    )
+
+    assert len(mock_calls) == 3
+    assert mock_calls[2].data["value"] == "from_service"

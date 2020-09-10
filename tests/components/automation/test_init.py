@@ -1144,21 +1144,35 @@ async def test_automation_variables(hass):
         hass,
         automation.DOMAIN,
         {
-            automation.DOMAIN: {
-                "alias": "hello",
-                "variables": {
-                    "test_var": "defined_in_config",
-                    "event_type": "{{ trigger.event.event_type }}",
-                },
-                "trigger": {"platform": "event", "event_type": "test_event"},
-                "action": {
-                    "service": "test.automation",
-                    "data": {
-                        "value": "{{ test_var }}",
-                        "event_type": "{{ event_type }}",
+            automation.DOMAIN: [
+                {
+                    "variables": {
+                        "test_var": "defined_in_config",
+                        "event_type": "{{ trigger.event.event_type }}",
+                    },
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "action": {
+                        "service": "test.automation",
+                        "data": {
+                            "value": "{{ test_var }}",
+                            "event_type": "{{ event_type }}",
+                        },
                     },
                 },
-            }
+                {
+                    "variables": {
+                        "test_var": "defined_in_config",
+                    },
+                    "trigger": {"platform": "event", "event_type": "test_event_2"},
+                    "condition": {
+                        "condition": "template",
+                        "value_template": "{{ trigger.event.data.pass_condition }}",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                    },
+                },
+            ]
         },
     )
     hass.bus.async_fire("test_event")
@@ -1166,3 +1180,11 @@ async def test_automation_variables(hass):
     assert len(calls) == 1
     assert calls[0].data["value"] == "defined_in_config"
     assert calls[0].data["event_type"] == "test_event"
+
+    hass.bus.async_fire("test_event_2")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    hass.bus.async_fire("test_event_2", {"pass_condition": True})
+    await hass.async_block_till_done()
+    assert len(calls) == 2
