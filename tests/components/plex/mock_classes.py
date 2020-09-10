@@ -361,6 +361,7 @@ class MockPlexLibrarySection:
     def __init__(self, library):
         """Initialize the object."""
         self.title = library
+        self.TYPE = library
 
         if library == "Music":
             self._item = MockPlexArtist("Artist")
