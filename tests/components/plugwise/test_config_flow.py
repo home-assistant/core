@@ -18,6 +18,8 @@ TEST_HOST = "1.1.1.1"
 TEST_HOSTNAME = "smileabcdef"
 TEST_PASSWORD = "test_password"
 TEST_PORT = 81
+TEST_USERNAME = "smile"
+TEST_USERNAME2 = "stretch"
 
 TEST_DISCOVERY = {
     "host": TEST_HOST,
@@ -76,6 +78,7 @@ async def test_form(hass):
         "host": TEST_HOST,
         "password": TEST_PASSWORD,
         "port": DEFAULT_PORT,
+        "username": TEST_USERNAME,
     }
 
     assert len(mock_setup.mock_calls) == 1
@@ -115,6 +118,44 @@ async def test_zeroconf_form(hass):
         "host": TEST_HOST,
         "password": TEST_PASSWORD,
         "port": DEFAULT_PORT,
+        "username": TEST_USERNAME,
+    }
+
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_username(hass):
+    """Test we get the username data back."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.plugwise.config_flow.Smile.connect",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.plugwise.async_setup",
+        return_value=True,
+    ) as mock_setup, patch(
+        "homeassistant.components.plugwise.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"host": TEST_HOST, "password": TEST_PASSWORD, "username": TEST_USERNAME2},
+        )
+
+    await hass.async_block_till_done()
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result2["data"] == {
+        "host": TEST_HOST,
+        "password": TEST_PASSWORD,
+        "port": DEFAULT_PORT,
+        "username": TEST_USERNAME2,
     }
 
     assert len(mock_setup.mock_calls) == 1

@@ -242,6 +242,7 @@ class SmileSensor(SmileGateway):
         self._sensor = sensor
 
         self._dev_class = None
+        self._icon = None
         self._state = None
         self._unit_of_measurement = None
 
@@ -262,6 +263,11 @@ class SmileSensor(SmileGateway):
         return self._dev_class
 
     @property
+    def icon(self):
+        """Return the icon of this entity."""
+        return self._icon
+
+    @property
     def state(self):
         """Device class of this entity."""
         return self._state
@@ -273,7 +279,7 @@ class SmileSensor(SmileGateway):
 
 
 class PwThermostatSensor(SmileSensor, Entity):
-    """Thermostat and climate sensor entities."""
+    """Thermostat or generic sensor entities."""
 
     def __init__(self, api, coordinator, name, dev_id, sensor, sensor_type):
         """Set up the Plugwise API."""
@@ -296,8 +302,6 @@ class PwThermostatSensor(SmileSensor, Entity):
 
         if data.get(self._sensor) is not None:
             measurement = data[self._sensor]
-            if self._sensor == "battery" or self._sensor == "valve_position":
-                measurement = measurement * 100
             if self._unit_of_measurement == PERCENTAGE:
                 measurement = int(measurement)
             self._state = measurement
@@ -307,7 +311,7 @@ class PwThermostatSensor(SmileSensor, Entity):
 
 
 class PwAuxDeviceSensor(SmileSensor, Entity):
-    """Auxiliary sensor entities for the heating/cooling device."""
+    """Auxiliary Device Sensors."""
 
     def __init__(self, api, coordinator, name, dev_id, sensor):
         """Set up the Plugwise API."""
@@ -315,12 +319,6 @@ class PwAuxDeviceSensor(SmileSensor, Entity):
 
         self._cooling_state = False
         self._heating_state = False
-        self._icon = None
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return self._icon
 
     @callback
     def _async_process_data(self):
@@ -380,7 +378,7 @@ class PwPowerSensor(SmileSensor, Entity):
         if data.get(self._sensor) is not None:
             measurement = data[self._sensor]
             if self._unit_of_measurement == ENERGY_KILO_WATT_HOUR:
-                measurement = int(measurement / 1000)
+                measurement = round((measurement / 1000), 1)
             self._state = measurement
             self._icon = CUSTOM_ICONS.get(self._sensor, self._icon)
 

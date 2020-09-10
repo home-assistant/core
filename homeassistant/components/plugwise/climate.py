@@ -65,6 +65,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             DEFAULT_MAX_TEMP,
         )
 
+        if not thermostat:
+            continue
+
         entities.append(thermostat)
 
     async_add_entities(entities, True)

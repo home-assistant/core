@@ -8,6 +8,7 @@ ALL_PLATFORMS = ["binary_sensor", "climate", "sensor", "switch"]
 SENSOR_MAP_MODEL = 0
 SENSOR_MAP_UOM = 1
 SENSOR_MAP_DEVICE_CLASS = 2
+SENSOR_MAP_ICON = 3
 
 # Default directives
 DEFAULT_NAME = "Smile"
@@ -16,7 +17,7 @@ DEFAULT_TIMEOUT = 10
 DEFAULT_PORT = 80
 DEFAULT_MIN_TEMP = 4
 DEFAULT_MAX_TEMP = 30
-DEFAULT_SCAN_INTERVAL = {"thermostat": 60, "power": 10}
+DEFAULT_SCAN_INTERVAL = {"power": 10, "stretch": 60, "thermostat": 60}
 
 # Configuration directives
 CONF_MIN_TEMP = "min_temp"
