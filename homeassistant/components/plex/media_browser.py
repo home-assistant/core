@@ -180,13 +180,14 @@ def item_payload(item):
 def library_section_payload(section):
     """Create response payload for a single library section."""
     try:
-        children_media_class = ITEM_TYPE_MEDIA_CLASS[section.TYPE]
+        media_class = children_media_class = ITEM_TYPE_MEDIA_CLASS[section.TYPE]
     except KeyError as err:
         _LOGGER.debug("Unknown type received: %s", section.TYPE)
         raise UnknownMediaType from err
+
     return BrowseMedia(
         title=section.title,
-        media_class=MEDIA_CLASS_DIRECTORY,
+        media_class=media_class,
         media_content_id=section.key,
         media_content_type="library",
         can_play=False,
