@@ -1054,6 +1054,7 @@ class BrowseMedia:
         can_play: bool,
         can_expand: bool,
         children: Optional[List["BrowseMedia"]] = None,
+        children_media_class: Optional[str] = None,
         thumbnail: Optional[str] = None,
     ):
         """Initialize browse media item."""
@@ -1064,6 +1065,7 @@ class BrowseMedia:
         self.can_play = can_play
         self.can_expand = can_expand
         self.children = children
+        self.children_media_class = children_media_class
         self.thumbnail = thumbnail
 
     def as_dict(self, *, parent: bool = True) -> dict:
@@ -1075,6 +1077,7 @@ class BrowseMedia:
             "media_content_id": self.media_content_id,
             "can_play": self.can_play,
             "can_expand": self.can_expand,
+            "children_media_class": self.children_media_class,
             "thumbnail": self.thumbnail,
         }
 
