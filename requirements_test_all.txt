@@ -352,7 +352,7 @@ ha-ffmpeg==2.0
 hangups==0.4.10
 
 # homeassistant.components.cloud
-hass-nabucasa==0.36.1
+hass-nabucasa==0.37.0
 
 # homeassistant.components.jewish_calendar
 hdate==0.9.5
