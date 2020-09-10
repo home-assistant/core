@@ -617,8 +617,8 @@ class _ScriptRun:
         """Set a variable value."""
         self._log("Executing step %s", self._script.last_action)
         new_values = self._action.get(CONF_VARIABLE_SET, {})
-        for k, v in new_values.items():
-            self._variables[k] = template.render_complex(v, self._variables)
+        for key, value in new_values.items():
+            self._variables[key] = template.render_complex(value, self._variables)
 
     async def _async_run_script(self, script):
         """Execute a script."""
