@@ -1,4 +1,6 @@
 """Validate requirements."""
+from collections import deque
+import json
 import operator
 import re
 import subprocess
@@ -27,6 +29,7 @@ SUPPORTED_PYTHON_VERSIONS = [
     ".".join(map(str, version_tuple)) for version_tuple in SUPPORTED_PYTHON_TUPLES
 ]
 STD_LIBS = {version: set(stdlib_list(version)) for version in SUPPORTED_PYTHON_VERSIONS}
+PIPDEPTREE_CACHE = None
 
 
 def normalize_package_name(requirement: str) -> str:
@@ -43,8 +46,15 @@ def normalize_package_name(requirement: str) -> str:
 
 def validate(integrations: Dict[str, Integration], config: Config):
     """Handle requirements for integrations."""
+    ensure_cache()
+
     # check for incompatible requirements
-    for integration in tqdm(integrations.values()):
+    items = integrations.values()
+
+    if not config.specific_integrations:
+        tqdm(items)
+
+    for integration in items:
         if not integration.manifest:
             continue
 
@@ -92,39 +102,68 @@ def validate_requirements(integration: Integration):
                 )
 
 
+def ensure_cache():
+    """Ensure we have a cache of pipdeptree.
+
+    {
+        "flake8-docstring": {
+            "key": "flake8-docstrings",
+            "package_name": "flake8-docstrings",
+            "installed_version": "1.5.0"
+            "dependencies": {"flake8"}
+        }
+    }
+    """
+    global PIPDEPTREE_CACHE
+
+    if PIPDEPTREE_CACHE is not None:
+        return
+
+    cache = {}
+
+    for item in json.loads(
+        subprocess.run(
+            ["pipdeptree", "-w", "silence", "--json"],
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout
+    ):
+        cache[item["package"]["key"]] = {
+            **item["package"],
+            "dependencies": {dep["key"] for dep in item["dependencies"]},
+        }
+
+    PIPDEPTREE_CACHE = cache
+
+
 def get_requirements(integration: Integration, packages: Set[str]) -> Set[str]:
     """Return all (recursively) requirements for an integration."""
+    ensure_cache()
+
     all_requirements = set()
 
-    for package in packages:
-        try:
-            result = subprocess.run(
-                ["pipdeptree", "-w", "silence", "--packages", package],
-                check=True,
-                capture_output=True,
-                text=True,
-            )
-        except subprocess.SubprocessError:
-            integration.add_error(
-                "requirements", f"Failed to resolve requirements for {package}"
-            )
+    to_check = deque(packages)
+
+    while to_check:
+        package = to_check.popleft()
+
+        if package in all_requirements:
             continue
 
-        # parse output to get a set of package names
-        output = result.stdout
-        lines = output.split("\n")
-        parent = lines[0].split("==")[0]  # the first line is the parent package
-        if parent:
-            all_requirements.add(parent)
+        all_requirements.add(package)
 
-        for line in lines[1:]:  # skip the first line which we already processed
-            line = line.strip()
-            line = line.lstrip("- ")
-            package = line.split("[")[0]
-            package = package.strip()
-            if not package:
-                continue
-            all_requirements.add(package)
+        item = PIPDEPTREE_CACHE.get(package)
+
+        if item is None:
+            # Only warn if direct dependencies could not be resolved
+            if package in packages:
+                integration.add_error(
+                    "requirements", f"Failed to resolve requirements for {package}"
+                )
+            continue
+
+        to_check.extend(item["dependencies"])
 
     return all_requirements
 
@@ -134,15 +173,11 @@ def install_requirements(integration: Integration, requirements: Set[str]) -> bo
 
     Return True if successful.
     """
+    global PIPDEPTREE_CACHE
+
+    ensure_cache()
+
     for req in requirements:
-        try:
-            is_installed = pkg_util.is_installed(req)
-        except ValueError:
-            is_installed = False
-
-        if is_installed:
-            continue
-
         match = PIP_REGEX.search(req)
 
         if not match:
@@ -155,17 +190,39 @@ def install_requirements(integration: Integration, requirements: Set[str]) -> bo
         install_args = match.group(1)
         requirement_arg = match.group(2)
 
+        is_installed = False
+
+        normalized = normalize_package_name(requirement_arg)
+
+        if normalized and "==" in requirement_arg:
+            ver = requirement_arg.split("==")[-1]
+            item = PIPDEPTREE_CACHE.get(normalized)
+            is_installed = item and item["installed_version"] == ver
+
+        if not is_installed:
+            try:
+                is_installed = pkg_util.is_installed(req)
+            except ValueError:
+                is_installed = False
+
+        if is_installed:
+            continue
+
         args = [sys.executable, "-m", "pip", "install", "--quiet"]
         if install_args:
             args.append(install_args)
         args.append(requirement_arg)
         try:
-            subprocess.run(args, check=True)
+            result = subprocess.run(args, check=True, capture_output=True, text=True)
         except subprocess.SubprocessError:
             integration.add_error(
                 "requirements",
                 f"Requirement {req} failed to install",
             )
+        else:
+            # Clear the pipdeptree cache if something got installed
+            if "Successfully installed" in result.stdout:
+                PIPDEPTREE_CACHE = None
 
     if integration.errors:
         return False
