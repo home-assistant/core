@@ -90,7 +90,10 @@ async def test_with_invalid_credentials(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch("omnilogic.OmniLogic.connect", side_effect=LoginException):
+    with patch(
+        "homeassistant.components.omnilogic.OmniLogic.connect",
+        side_effect=LoginException,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             DATA,
@@ -100,7 +103,9 @@ async def test_with_invalid_credentials(hass):
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
-    with patch("omnilogic.OmniLogic.connect", side_effect=Exception):
+    with patch(
+        "homeassistant.components.omnilogic.OmniLogic.connect", side_effect=Exception
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             DATA,
