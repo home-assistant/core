@@ -1157,6 +1157,12 @@ async def test_attribute_if_not_fires_on_entities_change_with_for_after_stop(
     await hass.async_block_till_done()
     assert len(calls) == 1
 
+    # Make sure that there is no trigger when the attribute stays the same
+    hass.states.async_set("test.entity", "bla", {"name": "hello"})
+    hass.states.async_set("test.entity", "bla", {"name": "hello"})
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
     hass.states.async_remove("test.entity")
     await hass.async_block_till_done()
 
