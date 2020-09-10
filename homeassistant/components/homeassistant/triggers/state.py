@@ -84,6 +84,7 @@ async def async_attach_trigger(
             not match_from_state(old_value)
             or not match_to_state(new_value)
             or (not match_all and old_value == new_value)
+            or (attribute is not None and match_all and old_value == new_value)
         ):
             return
 
