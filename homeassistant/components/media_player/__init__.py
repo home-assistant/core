@@ -816,24 +816,10 @@ class MediaPlayerEntity(Entity):
         media_content_type: Optional[str] = None,
         media_content_id: Optional[str] = None,
     ) -> "BrowseMedia":
-        """
-        Return a payload for the "media_player/browse_media" websocket command.
+        """Return a BrowseMedia instance.
 
-        Payload should follow this format:
-            {
-                "title": str - Title of the item
-                "media_class": str - Media class
-                "media_content_type": str - see below
-                "media_content_id": str - see below
-                  - Can be passed back in to browse further
-                  - Can be used as-is with media_player.play_media service
-                "can_play": bool - If item is playable
-                "can_expand": bool - If item contains other media
-                "thumbnail": str (Optional) - URL to image thumbnail for item
-                "children": list (Optional) - [{<item_with_keys_above>}, ...]
-            }
-
-        Note: Children should omit the children key.
+        The BrowseMedia instance will be used by the
+        "media_player/browse_media" websocket command.
         """
         raise NotImplementedError()
 
