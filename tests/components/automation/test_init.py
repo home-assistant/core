@@ -1146,11 +1146,17 @@ async def test_automation_variables(hass):
         {
             automation.DOMAIN: {
                 "alias": "hello",
-                "variables": {"test_var": "defined_in_config"},
+                "variables": {
+                    "test_var": "defined_in_config",
+                    "event_type": "{{ trigger.event.event_type }}",
+                },
                 "trigger": {"platform": "event", "event_type": "test_event"},
                 "action": {
                     "service": "test.automation",
-                    "data": {"value": "{{ test_var }}"},
+                    "data": {
+                        "value": "{{ test_var }}",
+                        "event_type": "{{ event_type }}",
+                    },
                 },
             }
         },
@@ -1159,3 +1165,4 @@ async def test_automation_variables(hass):
     await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0].data["value"] == "defined_in_config"
+    assert calls[0].data["event_type"] == "test_event"

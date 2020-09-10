@@ -53,11 +53,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
 )
 from homeassistant.core import SERVICE_CALL_LIMIT, Context, HomeAssistant, callback
-from homeassistant.helpers import (
-    condition,
-    config_validation as cv,
-    template as template,
-)
+from homeassistant.helpers import condition, config_validation as cv, template
 from homeassistant.helpers.event import async_call_later, async_track_template
 from homeassistant.helpers.service import (
     CONF_SERVICE_DATA,
@@ -761,6 +757,9 @@ class Script:
         self._referenced_entities: Optional[Set[str]] = None
         self._referenced_devices: Optional[Set[str]] = None
         self.variables = variables
+        self._variables_dynamic = template.is_complex(variables)
+        if self._variables_dynamic:
+            template.attach(hass, variables)
 
     def _set_logger(self, logger: Optional[logging.Logger] = None) -> None:
         if logger:
@@ -900,7 +899,14 @@ class Script:
         # are read-only, but more importantly, so as not to leak any variables created
         # during the run back to the caller.
         if self._top_level:
-            variables = {} if self.variables is None else dict(self.variables)
+            if self.variables:
+                if self._variables_dynamic:
+                    variables = template.render_complex(self.variables, run_variables)
+                else:
+                    variables = dict(self.variables)
+            else:
+                variables = {}
+
             if run_variables:
                 variables.update(run_variables)
             variables["context"] = context

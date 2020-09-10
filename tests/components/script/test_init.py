@@ -625,9 +625,18 @@ async def test_script_variables(hass):
         {
             "script": {
                 "script1": {
-                    "variables": {"test_var": "from_config"},
+                    "variables": {
+                        "test_var": "from_config",
+                        "templated_config_var": "{{ var_from_service | default('config-default') }}",
+                    },
                     "sequence": [
-                        {"service": "test.script", "data": {"value": "{{ test_var }}"}},
+                        {
+                            "service": "test.script",
+                            "data": {
+                                "value": "{{ test_var }}",
+                                "templated_config_var": "{{ templated_config_var }}",
+                            },
+                        },
                     ],
                 },
             }
@@ -636,10 +645,13 @@ async def test_script_variables(hass):
 
     mock_calls = async_mock_service(hass, "test", "script")
 
-    await hass.services.async_call("script", "script1", {}, blocking=True)
+    await hass.services.async_call(
+        "script", "script1", {"var_from_service": "hello"}, blocking=True
+    )
 
     assert len(mock_calls) == 1
     assert mock_calls[0].data["value"] == "from_config"
+    assert mock_calls[0].data["templated_config_var"] == "hello"
 
     await hass.services.async_call(
         "script", "script1", {"test_var": "from_service"}, blocking=True
@@ -647,3 +659,4 @@ async def test_script_variables(hass):
 
     assert len(mock_calls) == 2
     assert mock_calls[1].data["value"] == "from_service"
+    assert mock_calls[1].data["templated_config_var"] == "config-default"
