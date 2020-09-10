@@ -2,9 +2,10 @@ import logging
 
 from instantpy import InstantVC
 
-from .const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
+
+from .const import DOMAIN, DISCOVERED_DEVICES, TRACKED_DEVICES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,6 +31,13 @@ class VirtualController:
             ssl_verify=entry.data.get("verify_ssl"),
         )
         self._logged_in = self._virtual_controller.logged_in
+        selected_clients = entry.data.get('clients')
+        try:
+            for client in selected_clients:
+                hass.data[DOMAIN][TRACKED_DEVICES][self.entry_id].add(client)
+            # entry.data['clients'].clear()
+        except TypeError:
+            _LOGGER.debug("No clients selected to track.")
 
     async def async_setup(self) -> [bool, ConnectionError]:
         """Set up an Aruba Instant Virtual Controller."""
@@ -59,16 +67,6 @@ class VirtualController:
         """Update Instant VC APs."""
         updates = await self.hass.async_add_executor_job(self._virtual_controller.aps)
         return updates
-
-    @property
-    def signal_device_update(self) -> str:
-        """Event specific per Instant VC entry to signal updates in devices."""
-        return f"{DOMAIN}-{self.host}-device-update"
-
-    @property
-    def signal_device_new(self) -> str:
-        """Event specific per Instant VC entry to signal new device."""
-        return f"{DOMAIN}-{self.host}-device-new"
 
     @property
     def clients(self) -> dict:

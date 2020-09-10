@@ -4,8 +4,8 @@
             "already_configured": "This device has already been configured."
         },
         "error": {
-            "cannot_connect": "We cannot connect to the given device.",
-            "invalid_auth": "We can't connect with provided credentials.  Please check your username and password",
+            "cannot_connect": "We cannot connect to the given Aruba Instant device.",
+            "invalid_auth": "We can't connect with the provided credentials.  Please check your username and password.",
             "cannot_verify_ssl_cert": "We cannot verify the SSL certificate from the Aruba Instant device.",
             "unknown": "An unknown error occured."
         },
@@ -18,6 +18,12 @@
                     "port": "Port",
                     "verify_ssl": "Verify SSL",
                     "scan_interval": "Scan Interval in Seconds (minimum 10)"
+                }
+            },
+            "track_clients": {
+                "data": {
+                  "clients": "Track Clients:",
+                  "track_none": "Stop tracking all clients."
                 }
             }
         }

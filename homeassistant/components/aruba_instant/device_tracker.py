@@ -1,54 +1,41 @@
-import logging
-import async_timeout
-from datetime import timedelta
+"""Aruba Instant Device Tracker"""
 
-from homeassistant.core import HomeAssistant
+from datetime import timedelta
+import logging
+
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.components.device_tracker.const import SOURCE_TYPE_ROUTER
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import DOMAIN, DISCOVERED_DEVICES, TRACKED_DEVICES
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up device tracker for Aruba Instant component."""
-    _LOGGER.debug(f"Setting up the Aruba Instant device tracker.")
+    _LOGGER.debug("Setting up the Aruba Instant device tracker.")
     device_registry = await dr.async_get_registry(hass)
     virtual_controller = hass.data[DOMAIN][config_entry.entry_id]
     await virtual_controller.async_setup()
     add_devices(virtual_controller, config_entry, device_registry)
 
-    async def async_update_data():
-        """Fetch data from API endpoint.
-
-        This is the place to pre-process the data to lookup tables
-        so entities can quickly look up their data.
-        """
-        try:
-            async with async_timeout.timeout(10):
-                clients = await virtual_controller.async_update_clients()
-            return clients
-        except Exception as err:
-            raise UpdateFailed(f"Error communicating with API: {err}")
-
-    coordinator = InstantCoordinator(hass, config_entry)
+    coordinator = InstantCoordinator(hass, config_entry, async_add_entities)
     await coordinator.async_refresh()
-    # hass.data[DOMAIN]['unsub_device_tracker'][config_entry.entry_id].add(tuple(coordinator.data.keys()))
+    # Iterate through entities and add clients to TRACKED_DEVICES where platform='aruba_instant'
     async_add_entities(
-        (
-            InstantClientEntity(coordinator, idx, ent)
-            for idx, ent in enumerate(coordinator.data)
-        ),
-        True,
+        InstantClientEntity(coordinator, 0, ent)
+        # for ent in hass.data[DOMAIN][TRACKED_DEVICES][config_entry.entry_id]
+        for ent in config_entry.data["clients"]
     )
+    hass.data[DOMAIN]["coordinator"] = {config_entry.entry_id: coordinator}
 
 
 def add_devices(instant, config_entry, device_registry):
     """Add APs into HA as devices."""
-    _LOGGER.debug(f"Adding APs to the device registry.")
+    _LOGGER.debug("Adding APs to the device registry.")
     access_points = instant.aps
     for ap in access_points:
         device_registry.async_get_or_create(
@@ -64,13 +51,19 @@ def add_devices(instant, config_entry, device_registry):
 class InstantCoordinator(DataUpdateCoordinator):
     """Class to manage data updates from Aruba Instant."""
 
-    _LOGGER.debug(f"Initializing InstantCoordinator.")
+    _LOGGER.debug("Initializing InstantCoordinator.")
 
-    def __init__(self, hass: HomeAssistant, config_entry):
+    def __init__(self, hass: HomeAssistant, config_entry, async_add_entities):
         """Initialize Instant Coordinator."""
+        self.async_add_entities = async_add_entities
+        self.config_entry = config_entry
         self.virtual_controller = hass.data[DOMAIN][config_entry.entry_id]
+        self.entities = {}
         super().__init__(
-            hass, _LOGGER, name=DOMAIN, update_interval=timedelta(seconds=config_entry.data.get('scan_interval'))
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_interval=timedelta(seconds=config_entry.data.get("scan_interval")),
         )
 
     def update_listeners(self) -> None:
@@ -78,9 +71,13 @@ class InstantCoordinator(DataUpdateCoordinator):
         for update_callback in self._listeners:
             update_callback()
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> dict:
         """Update data from Aruba Instant."""
         clients = await self.virtual_controller.async_update_clients()
+        for client in clients:
+            self.hass.data[DOMAIN][DISCOVERED_DEVICES][self.config_entry.entry_id].add(
+                client
+            )
         return clients
 
 
@@ -109,11 +106,14 @@ class InstantClientEntity(ScannerEntity):
         self._speed_text = coordinator.data[self._mac].get("speed_text")
         self._lat = self.coordinator.hass.config.latitude
         self._lon = self.coordinator.hass.config.longitude
+        # self.entity_id = f"{DOMAIN}.{self._mac}"
         self._is_connected = True
-        # self._enabled_default = False
-        self.hass.data[DOMAIN]['discovered_devices'][self.coordinator.virtual_controller.entry_id].add(self._mac)
+        self.hass.data[DOMAIN]["discovered_devices"][
+            self.coordinator.virtual_controller.entry_id
+        ].add(self._mac)
+        self.coordinator.entities.update({self.unique_id: self})
 
-    def update_entity(self):
+    def update_entity(self) -> None:
         """Update entity data."""
         try:
             self._name = self.coordinator.data[self._mac].get("name")
@@ -135,6 +135,7 @@ class InstantClientEntity(ScannerEntity):
             if self._is_connected is False:
                 _LOGGER.debug(f"{self._mac} - {self._name} is now connected.")
             self._is_connected = True
+            # self.async_update_ha_state()
         except KeyError:
             if self._is_connected is True:
                 _LOGGER.debug(f"{self._mac} - {self._name} is no longer connected.")
@@ -153,32 +154,37 @@ class InstantClientEntity(ScannerEntity):
             self._speed_text = None
             self._lat = None
             self._lon = None
-
+            # self.async_update_ha_state()
 
     @property
-    def should_poll(self):
+    def should_poll(self) -> bool:
         """No need to poll. Coordinator notifies entity of updates."""
         return False
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return if entity is available."""
         return self.coordinator.last_update_success
 
     @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
-        # return self._enabled_default
+        if (
+            self.unique_id
+            in self.hass.data[DOMAIN][TRACKED_DEVICES][
+                self.coordinator.virtual_controller.entry_id
+            ]
+        ):
+            return True
         return False
 
     async def async_added_to_hass(self):
         """When entity is added to hass."""
-        self.hass.data[DOMAIN]['sub_device_tracker'][self.coordinator.virtual_controller.entry_id].add(self._mac)
         self.async_on_remove(
             self.coordinator.async_add_listener(self.async_write_ha_state)
         )
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update the entity.
 
         Only used by the generic entity update service.
@@ -186,7 +192,7 @@ class InstantClientEntity(ScannerEntity):
         await self.coordinator.async_request_refresh()
 
     @property
-    def is_connected(self):
+    def is_connected(self) -> bool:
         """Return the status of a client on the network."""
         return self._is_connected
 

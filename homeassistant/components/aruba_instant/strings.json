@@ -11,6 +11,12 @@
           "verify_ssl": "Verify SSL",
           "scan_interval": "Scan Interval in Seconds (minimum 10)"
         }
+      },
+      "track_clients": {
+        "data": {
+          "clients": "Track Clients:",
+          "track_none": "Stop tracking all clients."
+        }
       }
     }
   },

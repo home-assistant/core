@@ -1,23 +1,30 @@
 """Config flow for Aruba Instant integration."""
 import logging
 
-import voluptuous as vol
 from instantpy import InstantVC
+import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant import config_entries, core, exceptions
-from homeassistant.core import callback
-from homeassistant.const import (
+from homeassistant.const import (  # pylint:disable=unused-import
     CONF_HOST,
     CONF_PASSWORD,
-    CONF_USERNAME,
     CONF_PORT,
-    CONF_VERIFY_SSL,
     CONF_SCAN_INTERVAL,
-)  # pylint:disable=unused-import
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
+from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_registry import EntityRegistry
 
-from .const import DOMAIN, DEFAULT_PORT, DEFAULT_VERIFY_SSL, DEFAULT_SCAN_INTERVAL
+from .const import (
+    DEFAULT_PORT,
+    DEFAULT_SCAN_INTERVAL,
+    DEFAULT_VERIFY_SSL,
+    DOMAIN,
+    DISCOVERED_DEVICES,
+    TRACKED_DEVICES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -87,7 +94,7 @@ class InstantConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 }
                 await self.async_set_unique_id(user_input[CONF_HOST])
                 info = await async_validate_input(self.hass, user_input)
-                return self.async_create_entry(title=info["title"], data=user_input)
+                return await self.async_step_track_clients(config_input=user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -100,6 +107,36 @@ class InstantConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
+        )
+
+    async def async_step_track_clients(self, user_input=None, config_input=None):
+        """Handles tracking clients on initial component setup."""
+        errors = {}
+        data = {}
+        if user_input is not None:
+            self.config['options'] = list(user_input.get('clients'))
+            data.update(self.config)
+            data.update(user_input)
+            return self.async_create_entry(title="Aruba Instant VC", data=data)
+        instant_vc = InstantVC(
+            self.config.get("host"),
+            self.config.get("username"),
+            self.config.get("password"),
+            port=self.config.get("port"),
+            ssl_verify=self.config.get("verify_ssl"),
+        )
+        clients = await self.hass.async_add_executor_job(instant_vc.clients)
+        macs = {client: f"{clients[client]['name']} ({client})" for client in clients}
+        track_client_data_schema = vol.Schema(
+            {
+                vol.Optional("clients", description="Clients",): cv.multi_select(macs),
+                vol.Optional(
+                    "track_none", description="Stop tracking all devices."
+                ): bool,
+            }
+        )
+        return self.async_show_form(
+            step_id="track_clients", data_schema=track_client_data_schema, errors=errors
         )
 
 
@@ -116,23 +153,21 @@ class InstantOptionsFlowHandler(config_entries.OptionsFlow):
         errors = {}
         if user_input is not None:
             selected_macs = {
-                mac: f"{self.hass.data['entity_registry'].async_get(self.hass.data['entity_registry'].async_get_entity_id('device_tracker', DOMAIN, mac)).original_name} ({mac})"
+                mac: f"{self.hass.data[DOMAIN]['coordinator'][self.config_entry.entry_id].data.get(mac)['name']} ({mac})"
                 for mac in user_input.get("clients")
             }
             for mac in selected_macs.keys():
-                entity = self.hass.data["entity_registry"].async_get(
-                    self.hass.data["entity_registry"].async_get_entity_id(
-                        "device_tracker", DOMAIN, mac
-                    )
-                )
-                self.options.update({mac: entity.unique_id})
-                if user_input.get('track_none'):
+                entity = self.hass.data[DOMAIN]["coordinator"][
+                    self.config_entry.entry_id
+                ].data.get(mac)
+                self.options.update({mac: entity.get('mac')})
+                if user_input.get("track_none"):
                     return self.async_create_entry(title="", data={"track_none": True})
-                return self.async_create_entry(title="", data=selected_macs)
+            return self.async_create_entry(title="", data=selected_macs)
         else:
             macs = {
-                mac: f"{self.hass.data['entity_registry'].async_get(self.hass.data['entity_registry'].async_get_entity_id('device_tracker', DOMAIN, mac)).original_name} ({mac})"
-                for mac in self.hass.data[DOMAIN]["discovered_devices"][
+                mac: f"{self.hass.data[DOMAIN]['coordinator'][self.config_entry.entry_id].data.get(mac)['name']} ({mac})"
+                for mac in self.hass.data[DOMAIN][DISCOVERED_DEVICES][
                     self.config_entry.entry_id
                 ]
             }
@@ -142,9 +177,7 @@ class InstantOptionsFlowHandler(config_entries.OptionsFlow):
                     vol.Optional(
                         "clients",
                         description="Clients",
-                        default=self.hass.data[DOMAIN]["sub_device_tracker"][
-                            self.config_entry.entry_id
-                        ],
+                        default=set(self.hass.data[DOMAIN]['coordinator'][self.config_entry.entry_id].entities.keys()),
                     ): cv.multi_select(macs),
                     vol.Optional(
                         "track_none", description="Stop tracking all devices."
