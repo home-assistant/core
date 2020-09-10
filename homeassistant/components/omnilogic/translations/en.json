@@ -1,22 +1,22 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Omnilogic is already configured."
+            "already_configured": "The Hayward OmniLogic integration is already configured."
         },
         "error": {
-            "conn_err": "Unable to connect to Hayward Omnilogic, confirm username and password."
+            "cannot_connect": "Cannot connect to Hayward. Please try again later.",
+            "invalid_auth": "Invalid authentication. Please check your username and password.",
+            "unknown": "Unknown error connecting to Hayward. Please try again later and check your username and password."
         },
         "step": {
             "user": {
                 "data": {
                     "password": "Password",
-                    "username": "Username",
-                    "polling_interval": "API Polling Interval in seconds."
-                },
-                "description": "Please enter the username and password for your Omnilogic account.",
-                "title": "Connect to Hayward Omnilogic"
+                    "polling_interval": "Polling Interval (seconds)",
+                    "username": "Username (not email address)"
+                }
             }
         }
     },
-    "title": "Hayward Omnilogic"
+    "title": "Omnilogic"
 }
