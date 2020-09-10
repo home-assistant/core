@@ -90,7 +90,7 @@ async def test_smoke_sensor_read_state(hass, utcnow):
     assert state.attributes["device_class"] == DEVICE_CLASS_SMOKE
 
 
-def create_co_sensor_service(accessory):
+def create_carbon_monoxide_sensor_service(accessory):
     """Define carbon monoxide sensor characteristics."""
     service = accessory.add_service(ServicesTypes.CARBON_MONOXIDE_SENSOR)
 
@@ -98,9 +98,9 @@ def create_co_sensor_service(accessory):
     cur_state.value = 0
 
 
-async def test_co_sensor_read_state(hass, utcnow):
+async def test_carbon_monoxide_sensor_read_state(hass, utcnow):
     """Test that we can read the state of a HomeKit contact accessory."""
-    helper = await setup_test_component(hass, create_co_sensor_service)
+    helper = await setup_test_component(hass, create_carbon_monoxide_sensor_service)
 
     helper.characteristics[CARBON_MONOXIDE_DETECTED].value = 0
     state = await helper.poll_and_get_state()
