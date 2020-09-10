@@ -1,5 +1,6 @@
 """Support for exposing Home Assistant via Zeroconf."""
 import asyncio
+import fnmatch
 import ipaddress
 import logging
 import socket
@@ -275,16 +276,14 @@ def setup(hass, config):
                         continue
                     if "macaddress" not in info["properties"]:
                         continue
-                    if (
-                        not info["properties"]["macaddress"]
-                        .upper()
-                        .startswith(entry["macaddress"])
+                    if not fnmatch.fnmatch(
+                        info["properties"]["macaddress"], entry["macaddress"]
                     ):
                         continue
                 if "name" in entry:
                     if "name" not in info:
                         continue
-                    if not info["name"].lower().startswith(entry["name"]):
+                    if not fnmatch.fnmatch(info["name"], entry["name"]):
                         continue
 
             hass.add_job(

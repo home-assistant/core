@@ -11,7 +11,7 @@
     "@bsmappee"
   ],
   "zeroconf": [
-    {"type":"_ssh._tcp.local.", "name":"smappee1"},
-    {"type":"_ssh._tcp.local.", "name":"smappee2"}
+    {"type":"_ssh._tcp.local.", "name":"smappee1*"},
+    {"type":"_ssh._tcp.local.", "name":"smappee2*"}
   ]
 }
