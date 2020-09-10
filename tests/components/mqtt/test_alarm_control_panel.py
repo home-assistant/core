@@ -603,17 +603,71 @@ async def test_discovery_removal_alarm(hass, mqtt_mock, caplog):
     )
 
 
-async def test_discovery_update_alarm(hass, mqtt_mock, caplog):
+async def test_discovery_update_alarm_topic_and_template(hass, mqtt_mock, caplog):
     """Test update of discovered alarm_control_panel."""
     config1 = copy.deepcopy(DEFAULT_CONFIG[alarm_control_panel.DOMAIN])
     config2 = copy.deepcopy(DEFAULT_CONFIG[alarm_control_panel.DOMAIN])
     config1["name"] = "Beer"
     config2["name"] = "Milk"
+    config1["state_topic"] = "alarm/state1"
+    config2["state_topic"] = "alarm/state2"
+    config1["value_template"] = "{{ value_json.state1.state }}"
+    config2["value_template"] = "{{ value_json.state2.state }}"
+
+    state_data1 = [
+        ([("alarm/state1", '{"state1":{"state":"armed_away"}}')], "armed_away", None),
+    ]
+    state_data2 = [
+        ([("alarm/state1", '{"state1":{"state":"triggered"}}')], "armed_away", None),
+        ([("alarm/state1", '{"state2":{"state":"triggered"}}')], "armed_away", None),
+        ([("alarm/state2", '{"state1":{"state":"triggered"}}')], "armed_away", None),
+        ([("alarm/state2", '{"state2":{"state":"triggered"}}')], "triggered", None),
+    ]
 
     data1 = json.dumps(config1)
     data2 = json.dumps(config2)
     await help_test_discovery_update(
-        hass, mqtt_mock, caplog, alarm_control_panel.DOMAIN, data1, data2
+        hass,
+        mqtt_mock,
+        caplog,
+        alarm_control_panel.DOMAIN,
+        data1,
+        data2,
+        state_data1=state_data1,
+        state_data2=state_data2,
+    )
+
+
+async def test_discovery_update_alarm_template(hass, mqtt_mock, caplog):
+    """Test update of discovered alarm_control_panel."""
+    config1 = copy.deepcopy(DEFAULT_CONFIG[alarm_control_panel.DOMAIN])
+    config2 = copy.deepcopy(DEFAULT_CONFIG[alarm_control_panel.DOMAIN])
+    config1["name"] = "Beer"
+    config2["name"] = "Milk"
+    config1["state_topic"] = "alarm/state1"
+    config2["state_topic"] = "alarm/state1"
+    config1["value_template"] = "{{ value_json.state1.state }}"
+    config2["value_template"] = "{{ value_json.state2.state }}"
+
+    state_data1 = [
+        ([("alarm/state1", '{"state1":{"state":"armed_away"}}')], "armed_away", None),
+    ]
+    state_data2 = [
+        ([("alarm/state1", '{"state1":{"state":"triggered"}}')], "armed_away", None),
+        ([("alarm/state1", '{"state2":{"state":"triggered"}}')], "triggered", None),
+    ]
+
+    data1 = json.dumps(config1)
+    data2 = json.dumps(config2)
+    await help_test_discovery_update(
+        hass,
+        mqtt_mock,
+        caplog,
+        alarm_control_panel.DOMAIN,
+        data1,
+        data2,
+        state_data1=state_data1,
+        state_data2=state_data2,
     )
 
 
