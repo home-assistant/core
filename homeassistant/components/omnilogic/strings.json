@@ -6,7 +6,7 @@
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "polling_interval": "[%key:common::config_flow::data::polling_interval"
+          "polling_interval": "Polling interval (in seconds)"
         }
       }
     },
