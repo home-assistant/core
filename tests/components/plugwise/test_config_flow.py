@@ -13,6 +13,9 @@ from tests.common import MockConfigEntry
 TEST_HOST = "1.1.1.1"
 TEST_HOSTNAME = "smileabcdef"
 TEST_PASSWORD = "test_password"
+TEST_HOST_PORT = "1.1.1.1:80"
+TEST_HOST_FPORT = "1.1.1.1:81"
+
 TEST_DISCOVERY = {
     "host": TEST_HOST,
     "hostname": f"{TEST_HOSTNAME}.local.",
@@ -59,14 +62,14 @@ async def test_form(hass):
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": TEST_HOST, "password": TEST_PASSWORD},
+            {"host": TEST_HOST_PORT, "password": TEST_PASSWORD},
         )
 
     await hass.async_block_till_done()
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result2["data"] == {
-        "host": TEST_HOST,
+        "host": TEST_HOST_PORT,
         "password": TEST_PASSWORD,
     }
 
@@ -170,6 +173,24 @@ async def test_form_cannot_connect(hass, mock_smile):
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {"host": TEST_HOST, "password": TEST_PASSWORD},
+    )
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_cannot_connect_port(hass, mock_smile):
+    """Test we handle cannot connect to port error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    mock_smile.connect.side_effect = Smile.ConnectionFailedError
+    mock_smile.gateway_id = "0a636a4fc1704ab4a24e4f7e37fb187a"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"host": TEST_HOST_FPORT, "password": TEST_PASSWORD},
     )
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
