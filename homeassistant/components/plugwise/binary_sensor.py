@@ -50,10 +50,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     device_properties["class"],
                 )
             )
-            _LOGGER.info(
-                "Added binary_sensor.%s",
-                f"{device_properties['name']}_{'plugwise_notification'}",
-            )
 
             continue
 
@@ -71,9 +67,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     binary_sensor,
                     device_properties["class"],
                 )
-            )
-            _LOGGER.info(
-                "Added binary_sensor.%s", f"{device_properties['name']}_{binary_sensor}"
             )
 
     async_add_entities(entities, True)
