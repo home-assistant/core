@@ -1305,7 +1305,7 @@ class MqttDiscoveryUpdate(Entity):
             debug_info.add_entity_discovery_data(
                 self.hass, self._discovery_data, self.entity_id
             )
-            # Set in case the entity has been removed and is re-added
+            # Set in case the entity has been removed and is re-added, for example when changing entity_id
             set_discovery_hash(self.hass, discovery_hash)
             self._remove_signal = async_dispatcher_connect(
                 self.hass,
