@@ -1,7 +1,7 @@
 """Representation of Z-Wave locks."""
 import logging
 
-from openzwavemqtt.const import CommandClass
+from openzwavemqtt.const import CommandClass, ValueIndex
 import voluptuous as vol
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockEntity
@@ -73,35 +73,25 @@ class ZWaveLock(ZWaveDeviceEntity, LockEntity):
     @callback
     def async_set_usercode(self, code_slot, usercode):
         """Set the usercode to index X on the lock."""
-        lock_node = self.values.primary.node.values()
+        value = self.values.primary.node.get_value(CommandClass.USER_CODE, code_slot)
 
-        for value in lock_node:
-            if (
-                value.command_class == CommandClass.USER_CODE
-                and value.index == code_slot
-            ):
-                if len(str(usercode)) < 4:
-                    _LOGGER.error(
-                        "Invalid code provided: (%s) user code must be at least 4 digits",
-                        usercode,
-                    )
-                    break
-                value.send_value(usercode)
-                _LOGGER.debug("User code at slot %s set", code_slot)
-                break
+        if len(str(usercode)) < 4:
+            _LOGGER.error(
+                "Invalid code provided: (%s) user code must be at least 4 digits",
+                usercode,
+            )
+            return
+        value.send_value(usercode)
+        _LOGGER.debug("User code at slot %s set", code_slot)
 
     @callback
     def async_clear_usercode(self, code_slot):
         """Clear usercode in slot X on the lock."""
-        lock_node = self.values.primary.node.values()
+        value = self.values.primary.node.get_value(
+            CommandClass.USER_CODE, ValueIndex.CLEAR_USER_CODE
+        )
 
-        for value in lock_node:
-            if (
-                value.command_class == CommandClass.USER_CODE
-                and value.label == "Remove User Code"
-            ):
-                value.send_value(code_slot)
-                # Sending twice because the first time it doesn't take
-                value.send_value(code_slot)
-                _LOGGER.info("Usercode at slot %s is cleared", code_slot)
-                break
+        value.send_value(code_slot)
+        # Sending twice because the first time it doesn't take
+        value.send_value(code_slot)
+        _LOGGER.info("Usercode at slot %s is cleared", code_slot)

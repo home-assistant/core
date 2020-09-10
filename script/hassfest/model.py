@@ -27,6 +27,7 @@ class Config:
     specific_integrations: Optional[pathlib.Path] = attr.ib()
     root: pathlib.Path = attr.ib()
     action: str = attr.ib()
+    requirements: bool = attr.ib()
     errors: List[Error] = attr.ib(factory=list)
     cache: Dict[str, Any] = attr.ib(factory=dict)
 

@@ -49,6 +49,7 @@
             },
             "simple_options": {
                 "data": {
+                    "block_client": "Clients contr\u00f4l\u00e9s par acc\u00e8s r\u00e9seau",
                     "track_clients": "Suivi de clients r\u00e9seaux",
                     "track_devices": "Suivi d'\u00e9quipement r\u00e9seau (Equipements Ubiquiti)"
                 },
