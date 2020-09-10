@@ -44,9 +44,9 @@ from homeassistant.const import (
     CONF_REPEAT,
     CONF_SCENE,
     CONF_SEQUENCE,
-    CONF_SET,
     CONF_TIMEOUT,
     CONF_UNTIL,
+    CONF_VARIABLE_SET,
     CONF_WAIT_FOR_TRIGGER,
     CONF_WAIT_TEMPLATE,
     CONF_WHILE,
@@ -616,12 +616,9 @@ class _ScriptRun:
     async def _async_set_step(self):
         """Set a variable value."""
         self._log("Executing step %s", self._script.last_action)
-        new_values = self._action.get(CONF_SET, {})
-        self._log(str(self._variables))
+        new_values = self._action.get(CONF_VARIABLE_SET, {})
         for k, v in new_values.items():
-            self._log("Variable %s: %s", k, v)
             self._variables[k] = template.render_complex(v, self._variables)
-        self._log(str(self._variables))
 
     async def _async_run_script(self, script):
         """Execute a script."""

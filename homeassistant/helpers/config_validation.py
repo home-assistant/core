@@ -61,13 +61,13 @@ from homeassistant.const import (
     CONF_SEQUENCE,
     CONF_SERVICE,
     CONF_SERVICE_TEMPLATE,
-    CONF_SET,
     CONF_STATE,
     CONF_TIMEOUT,
     CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_UNIT_SYSTEM_METRIC,
     CONF_UNTIL,
     CONF_VALUE_TEMPLATE,
+    CONF_VARIABLE_SET,
     CONF_WAIT_FOR_TRIGGER,
     CONF_WAIT_TEMPLATE,
     CONF_WHILE,
@@ -1131,7 +1131,7 @@ _SCRIPT_WAIT_FOR_TRIGGER_SCHEMA = vol.Schema(
 _SCRIPT_SET_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_ALIAS): string,
-        vol.Required(CONF_SET): SCRIPT_VARIABLES_SCHEMA,
+        vol.Required(CONF_VARIABLE_SET): SCRIPT_VARIABLES_SCHEMA,
     }
 )
 
@@ -1177,7 +1177,7 @@ def determine_script_action(action: dict) -> str:
     if CONF_WAIT_FOR_TRIGGER in action:
         return SCRIPT_ACTION_WAIT_FOR_TRIGGER
 
-    if CONF_SET in action:
+    if CONF_VARIABLE_SET in action:
         return SCRIPT_ACTION_SET
 
     return SCRIPT_ACTION_CALL_SERVICE
