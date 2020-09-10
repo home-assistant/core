@@ -19,8 +19,8 @@
             "docked": "Sur la base",
             "error": "Erreur",
             "idle": "Inactif",
-            "off": "Off",
-            "on": "On",
+            "off": "Inactif",
+            "on": "Actif",
             "paused": "En pause",
             "returning": "Retourne \u00e0 la base"
         }

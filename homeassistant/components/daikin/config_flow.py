@@ -85,17 +85,23 @@ class FlowHandler(config_entries.ConfigFlow):
             )
         except web_exceptions.HTTPForbidden:
             return self.async_show_form(
-                step_id="user", data_schema=self.schema, errors={"base": "forbidden"},
+                step_id="user",
+                data_schema=self.schema,
+                errors={"base": "forbidden"},
             )
         except ClientError:
             _LOGGER.exception("ClientError")
             return self.async_show_form(
-                step_id="user", data_schema=self.schema, errors={"base": "device_fail"},
+                step_id="user",
+                data_schema=self.schema,
+                errors={"base": "device_fail"},
             )
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected error creating device")
             return self.async_show_form(
-                step_id="user", data_schema=self.schema, errors={"base": "device_fail"},
+                step_id="user",
+                data_schema=self.schema,
+                errors={"base": "device_fail"},
             )
 
         mac = device.mac

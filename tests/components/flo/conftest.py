@@ -95,3 +95,40 @@ def aioclient_mock_fixture(aioclient_mock):
         headers={"Content-Type": "application/json"},
         json={"valve": {"target": "closed"}},
     )
+    # Mocks the health test call for flo.
+    aioclient_mock.post(
+        "https://api-gw.meetflo.com/api/v2/devices/98765/healthTest/run",
+        text=load_fixture("flo/user_info_expand_locations_response.json"),
+        status=200,
+        headers={"Content-Type": "application/json"},
+    )
+    # Mocks the health test call for flo.
+    aioclient_mock.post(
+        "https://api-gw.meetflo.com/api/v2/locations/mmnnoopp/systemMode",
+        text=load_fixture("flo/user_info_expand_locations_response.json"),
+        status=200,
+        headers={"Content-Type": "application/json"},
+        json={"systemMode": {"target": "home"}},
+    )
+    # Mocks the health test call for flo.
+    aioclient_mock.post(
+        "https://api-gw.meetflo.com/api/v2/locations/mmnnoopp/systemMode",
+        text=load_fixture("flo/user_info_expand_locations_response.json"),
+        status=200,
+        headers={"Content-Type": "application/json"},
+        json={"systemMode": {"target": "away"}},
+    )
+    # Mocks the health test call for flo.
+    aioclient_mock.post(
+        "https://api-gw.meetflo.com/api/v2/locations/mmnnoopp/systemMode",
+        text=load_fixture("flo/user_info_expand_locations_response.json"),
+        status=200,
+        headers={"Content-Type": "application/json"},
+        json={
+            "systemMode": {
+                "target": "sleep",
+                "revertMinutes": 120,
+                "revertMode": "home",
+            }
+        },
+    )

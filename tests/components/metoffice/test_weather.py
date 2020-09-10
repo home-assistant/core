@@ -18,7 +18,8 @@ from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
 
 
 @patch(
-    "datapoint.Forecast.datetime.datetime", NewDateTime,
+    "datapoint.Forecast.datetime.datetime",
+    NewDateTime,
 )
 async def test_site_cannot_connect(hass, requests_mock, legacy_patchable_time):
     """Test we handle cannot connect error."""
@@ -26,7 +27,10 @@ async def test_site_cannot_connect(hass, requests_mock, legacy_patchable_time):
     requests_mock.get("/public/data/val/wxfcs/all/json/sitelist/", text="")
     requests_mock.get("/public/data/val/wxfcs/all/json/354107?res=3hourly", text="")
 
-    entry = MockConfigEntry(domain=DOMAIN, data=METOFFICE_CONFIG_WAVERTREE,)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=METOFFICE_CONFIG_WAVERTREE,
+    )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -39,7 +43,8 @@ async def test_site_cannot_connect(hass, requests_mock, legacy_patchable_time):
 
 
 @patch(
-    "datapoint.Forecast.datetime.datetime", NewDateTime,
+    "datapoint.Forecast.datetime.datetime",
+    NewDateTime,
 )
 async def test_site_cannot_update(hass, requests_mock, legacy_patchable_time):
     """Test we handle cannot connect error."""
@@ -54,7 +59,10 @@ async def test_site_cannot_update(hass, requests_mock, legacy_patchable_time):
         "/public/data/val/wxfcs/all/json/354107?res=3hourly", text=wavertree_hourly
     )
 
-    entry = MockConfigEntry(domain=DOMAIN, data=METOFFICE_CONFIG_WAVERTREE,)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=METOFFICE_CONFIG_WAVERTREE,
+    )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -73,7 +81,8 @@ async def test_site_cannot_update(hass, requests_mock, legacy_patchable_time):
 
 
 @patch(
-    "datapoint.Forecast.datetime.datetime", NewDateTime,
+    "datapoint.Forecast.datetime.datetime",
+    NewDateTime,
 )
 async def test_one_weather_site_running(hass, requests_mock, legacy_patchable_time):
     """Test the Met Office weather platform."""
@@ -85,10 +94,14 @@ async def test_one_weather_site_running(hass, requests_mock, legacy_patchable_ti
 
     requests_mock.get("/public/data/val/wxfcs/all/json/sitelist/", text=all_sites)
     requests_mock.get(
-        "/public/data/val/wxfcs/all/json/354107?res=3hourly", text=wavertree_hourly,
+        "/public/data/val/wxfcs/all/json/354107?res=3hourly",
+        text=wavertree_hourly,
     )
 
-    entry = MockConfigEntry(domain=DOMAIN, data=METOFFICE_CONFIG_WAVERTREE,)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=METOFFICE_CONFIG_WAVERTREE,
+    )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -106,7 +119,8 @@ async def test_one_weather_site_running(hass, requests_mock, legacy_patchable_ti
 
 
 @patch(
-    "datapoint.Forecast.datetime.datetime", NewDateTime,
+    "datapoint.Forecast.datetime.datetime",
+    NewDateTime,
 )
 async def test_two_weather_sites_running(hass, requests_mock, legacy_patchable_time):
     """Test we handle two different weather sites both running."""
@@ -125,10 +139,16 @@ async def test_two_weather_sites_running(hass, requests_mock, legacy_patchable_t
         "/public/data/val/wxfcs/all/json/322380?res=3hourly", text=kingslynn_hourly
     )
 
-    entry = MockConfigEntry(domain=DOMAIN, data=METOFFICE_CONFIG_WAVERTREE,)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=METOFFICE_CONFIG_WAVERTREE,
+    )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
-    entry2 = MockConfigEntry(domain=DOMAIN, data=METOFFICE_CONFIG_KINGSLYNN,)
+    entry2 = MockConfigEntry(
+        domain=DOMAIN,
+        data=METOFFICE_CONFIG_KINGSLYNN,
+    )
     entry2.add_to_hass(hass)
     await hass.config_entries.async_setup(entry2.entry_id)
     await hass.async_block_till_done()

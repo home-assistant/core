@@ -61,7 +61,9 @@ class SmappeePresence(BinarySensorEntity):
         return "presence"
 
     @property
-    def unique_id(self,):
+    def unique_id(
+        self,
+    ):
         """Return the unique ID for this binary sensor."""
         return (
             f"{self._service_location.device_serial_number}-"
@@ -142,7 +144,9 @@ class SmappeeAppliance(BinarySensorEntity):
         return icon_mapping.get(self._appliance_type)
 
     @property
-    def unique_id(self,):
+    def unique_id(
+        self,
+    ):
         """Return the unique ID for this binary sensor."""
         return (
             f"{self._service_location.device_serial_number}-"

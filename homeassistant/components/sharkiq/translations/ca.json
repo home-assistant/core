@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_account": "El compte ja ha estat configurat",
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "reauth_successful": "Token d'acc\u00e9s actualitzat correctament",
+            "unknown": "Error inesperat"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "unknown": "Error inesperat"
+        },
+        "step": {
+            "reauth": {
+                "data": {
+                    "password": "Contrasenya",
+                    "username": "Nom d'usuari"
+                }
+            },
+            "user": {
+                "data": {
+                    "password": "Contrasenya",
+                    "username": "Nom d'usuari"
+                }
+            }
+        }
+    }
+}

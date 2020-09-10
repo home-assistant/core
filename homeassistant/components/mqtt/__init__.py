@@ -8,6 +8,7 @@ import logging
 from operator import attrgetter
 import os
 import ssl
+import time
 from typing import Any, Callable, List, Optional, Union
 
 import attr
@@ -26,10 +27,11 @@ from homeassistant.const import (
     CONF_PROTOCOL,
     CONF_USERNAME,
     CONF_VALUE_TEMPLATE,
+    EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.const import CONF_UNIQUE_ID  # noqa: F401
-from homeassistant.core import Event, ServiceCall, callback
+from homeassistant.core import CoreState, Event, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import config_validation as cv, event, template
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
@@ -71,7 +73,12 @@ from .const import (
     PROTOCOL_311,
 )
 from .debug_info import log_messages
-from .discovery import MQTT_DISCOVERY_UPDATED, clear_discovery_hash, set_discovery_hash
+from .discovery import (
+    LAST_DISCOVERY,
+    MQTT_DISCOVERY_UPDATED,
+    clear_discovery_hash,
+    set_discovery_hash,
+)
 from .models import Message, MessageCallbackType, PublishPayloadType
 from .subscription import async_subscribe_topics, async_unsubscribe_topics
 from .util import _VALID_QOS_SCHEMA, valid_publish_topic, valid_subscribe_topic
@@ -126,7 +133,22 @@ CONNECTION_SUCCESS = "connection_success"
 CONNECTION_FAILED = "connection_failed"
 CONNECTION_FAILED_RECOVERABLE = "connection_failed_recoverable"
 
+DISCOVERY_COOLDOWN = 2
 TIMEOUT_ACK = 1
+
+PLATFORMS = [
+    "alarm_control_panel",
+    "binary_sensor",
+    "camera",
+    "climate",
+    "cover",
+    "fan",
+    "light",
+    "lock",
+    "sensor",
+    "switch",
+    "vacuum",
+]
 
 
 def validate_device_has_at_least_one_identifier(value: ConfigType) -> ConfigType:
@@ -523,7 +545,11 @@ async def async_setup_entry(hass, entry):
 
     conf = _merge_config(entry, conf)
 
-    hass.data[DATA_MQTT] = MQTT(hass, entry, conf,)
+    hass.data[DATA_MQTT] = MQTT(
+        hass,
+        entry,
+        conf,
+    )
 
     await hass.data[DATA_MQTT].async_connect()
 
@@ -612,7 +638,12 @@ class Subscription:
 class MQTT:
     """Home Assistant MQTT client."""
 
-    def __init__(self, hass: HomeAssistantType, config_entry, conf,) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistantType,
+        config_entry,
+        conf,
+    ) -> None:
         """Initialize Home Assistant MQTT client."""
         # We don't import on the top because some integrations
         # should be able to optionally rely on MQTT.
@@ -623,10 +654,22 @@ class MQTT:
         self.conf = conf
         self.subscriptions: List[Subscription] = []
         self.connected = False
+        self._ha_started = asyncio.Event()
+        self._last_subscribe = time.time()
         self._mqttc: mqtt.Client = None
         self._paho_lock = asyncio.Lock()
 
         self._pending_operations = {}
+
+        if self.hass.state == CoreState.running:
+            self._ha_started.set()
+        else:
+
+            @callback
+            def ha_started(_):
+                self._ha_started.set()
+
+            self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, ha_started)
 
         self.init_client()
         self.config_entry.add_update_listener(self.async_config_entry_updated)
@@ -800,6 +843,7 @@ class MQTT:
 
         # Only subscribe if currently connected.
         if self.connected:
+            self._last_subscribe = time.time()
             await self._async_perform_subscription(topic, qos)
 
         @callback
@@ -880,15 +924,19 @@ class MQTT:
             CONF_BIRTH_MESSAGE in self.conf
             and ATTR_TOPIC in self.conf[CONF_BIRTH_MESSAGE]
         ):
-            birth_message = Message(**self.conf[CONF_BIRTH_MESSAGE])
-            self.hass.add_job(
-                self.async_publish(  # pylint: disable=no-value-for-parameter
+
+            async def publish_birth_message(birth_message):
+                await self._ha_started.wait()  # Wait for Home Assistant to start
+                await self._discovery_cooldown()  # Wait for MQTT discovery to cool down
+                await self.async_publish(  # pylint: disable=no-value-for-parameter
                     topic=birth_message.topic,
                     payload=birth_message.payload,
                     qos=birth_message.qos,
                     retain=birth_message.retain,
                 )
-            )
+
+            birth_message = Message(**self.conf[CONF_BIRTH_MESSAGE])
+            self.hass.loop.create_task(publish_birth_message(birth_message))
 
     def _mqtt_on_message(self, _mqttc, _userdata, msg) -> None:
         """Message received callback."""
@@ -969,6 +1017,26 @@ class MQTT:
             _LOGGER.error("Timed out waiting for mid %s", mid)
         finally:
             del self._pending_operations[mid]
+
+    async def _discovery_cooldown(self):
+        now = time.time()
+        # Reset discovery and subscribe cooldowns
+        self.hass.data[LAST_DISCOVERY] = now
+        self._last_subscribe = now
+
+        last_discovery = self.hass.data[LAST_DISCOVERY]
+        last_subscribe = self._last_subscribe
+        wait_until = max(
+            last_discovery + DISCOVERY_COOLDOWN, last_subscribe + DISCOVERY_COOLDOWN
+        )
+        while now < wait_until:
+            await asyncio.sleep(wait_until - now)
+            now = time.time()
+            last_discovery = self.hass.data[LAST_DISCOVERY]
+            last_subscribe = self._last_subscribe
+            wait_until = max(
+                last_discovery + DISCOVERY_COOLDOWN, last_subscribe + DISCOVERY_COOLDOWN
+            )
 
 
 def _raise_on_error(result_code: int) -> None:
@@ -1132,7 +1200,9 @@ class MqttAvailability(Entity):
             }
 
         self._availability_sub_state = await async_subscribe_topics(
-            self.hass, self._availability_sub_state, topics,
+            self.hass,
+            self._availability_sub_state,
+            topics,
         )
 
     @callback
@@ -1211,7 +1281,9 @@ class MqttDiscoveryUpdate(Entity):
         async def discovery_callback(payload):
             """Handle discovery update."""
             _LOGGER.info(
-                "Got update for entity with hash: %s '%s'", discovery_hash, payload,
+                "Got update for entity with hash: %s '%s'",
+                discovery_hash,
+                payload,
             )
             old_payload = self._discovery_data[ATTR_DISCOVERY_PAYLOAD]
             debug_info.update_entity_discovery_data(self.hass, payload, self.entity_id)
@@ -1246,7 +1318,10 @@ class MqttDiscoveryUpdate(Entity):
         if not self._removed_from_hass:
             discovery_topic = self._discovery_data[ATTR_DISCOVERY_TOPIC]
             publish(
-                self.hass, discovery_topic, "", retain=True,
+                self.hass,
+                discovery_topic,
+                "",
+                retain=True,
             )
 
     async def async_will_remove_from_hass(self) -> None:

@@ -35,7 +35,8 @@ def mock_dummy_get_components_from_model():
     """Mock a clear components list."""
     components = []
     with patch(
-        "pywilight.get_components_from_model", return_value=components,
+        "pywilight.get_components_from_model",
+        return_value=components,
     ):
         yield components
 
@@ -122,7 +123,9 @@ async def test_ssdp_device_exists_abort(hass: HomeAssistantType) -> None:
 
     discovery_info = MOCK_SSDP_DISCOVERY_INFO_P_B.copy()
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_SSDP}, data=discovery_info,
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_SSDP},
+        data=discovery_info,
     )
 
     assert result["type"] == RESULT_TYPE_ABORT

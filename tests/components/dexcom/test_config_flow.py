@@ -25,10 +25,12 @@ async def test_form(hass):
     ), patch(
         "homeassistant.components.dexcom.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.dexcom.async_setup_entry", return_value=True,
+        "homeassistant.components.dexcom.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], CONFIG,
+            result["flow_id"],
+            CONFIG,
         )
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -46,10 +48,12 @@ async def test_form_account_error(hass):
     )
 
     with patch(
-        "homeassistant.components.dexcom.config_flow.Dexcom", side_effect=AccountError,
+        "homeassistant.components.dexcom.config_flow.Dexcom",
+        side_effect=AccountError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], CONFIG,
+            result["flow_id"],
+            CONFIG,
         )
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -63,10 +67,12 @@ async def test_form_session_error(hass):
     )
 
     with patch(
-        "homeassistant.components.dexcom.config_flow.Dexcom", side_effect=SessionError,
+        "homeassistant.components.dexcom.config_flow.Dexcom",
+        side_effect=SessionError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], CONFIG,
+            result["flow_id"],
+            CONFIG,
         )
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -80,10 +86,12 @@ async def test_form_unknown_error(hass):
     )
 
     with patch(
-        "homeassistant.components.dexcom.config_flow.Dexcom", side_effect=Exception,
+        "homeassistant.components.dexcom.config_flow.Dexcom",
+        side_effect=Exception,
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], CONFIG,
+            result["flow_id"],
+            CONFIG,
         )
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -92,7 +100,11 @@ async def test_form_unknown_error(hass):
 
 async def test_option_flow_default(hass):
     """Test config flow options."""
-    entry = MockConfigEntry(domain=DOMAIN, data=CONFIG, options=None,)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=CONFIG,
+        options=None,
+    )
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
@@ -101,7 +113,8 @@ async def test_option_flow_default(hass):
     assert result["step_id"] == "init"
 
     result2 = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={},
+        result["flow_id"],
+        user_input={},
     )
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result2["data"] == {
@@ -112,7 +125,9 @@ async def test_option_flow_default(hass):
 async def test_option_flow(hass):
     """Test config flow options."""
     entry = MockConfigEntry(
-        domain=DOMAIN, data=CONFIG, options={CONF_UNIT_OF_MEASUREMENT: MG_DL},
+        domain=DOMAIN,
+        data=CONFIG,
+        options={CONF_UNIT_OF_MEASUREMENT: MG_DL},
     )
     entry.add_to_hass(hass)
 
@@ -122,7 +137,8 @@ async def test_option_flow(hass):
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_UNIT_OF_MEASUREMENT: MMOL_L},
+        result["flow_id"],
+        user_input={CONF_UNIT_OF_MEASUREMENT: MMOL_L},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == {

@@ -80,8 +80,8 @@ import homeassistant.util.uuid as uuid_util
 # Typing imports that create a circular dependency
 if TYPE_CHECKING:
     from homeassistant.auth import AuthManager
-    from homeassistant.config_entries import ConfigEntries
     from homeassistant.components.http import HomeAssistantHTTP
+    from homeassistant.config_entries import ConfigEntries
 
 
 block_async_io.enable()
@@ -158,7 +158,7 @@ class CoreState(enum.Enum):
     final_write = "FINAL_WRITE"
     stopped = "STOPPED"
 
-    def __str__(self) -> str:
+    def __str__(self) -> str:  # pylint: disable=invalid-str-returned
         """Return the event."""
         return self.value  # type: ignore
 
@@ -319,9 +319,7 @@ class HomeAssistant:
         elif is_callback(check_target):
             self.loop.call_soon(target, *args)
         else:
-            task = self.loop.run_in_executor(  # type: ignore
-                None, target, *args
-            )
+            task = self.loop.run_in_executor(None, target, *args)  # type: ignore
 
         # If a task is scheduled
         if self._track_task and task is not None:
@@ -525,7 +523,7 @@ class EventOrigin(enum.Enum):
     local = "LOCAL"
     remote = "REMOTE"
 
-    def __str__(self) -> str:
+    def __str__(self) -> str:  # pylint: disable=invalid-str-returned
         """Return the event."""
         return self.value  # type: ignore
 
@@ -920,17 +918,29 @@ class StateMachine:
             if state.domain in domain_filter
         ]
 
-    def all(self) -> List[State]:
+    def all(self, domain_filter: Optional[Union[str, Iterable]] = None) -> List[State]:
         """Create a list of all states."""
-        return run_callback_threadsafe(self._loop, self.async_all).result()
+        return run_callback_threadsafe(
+            self._loop, self.async_all, domain_filter
+        ).result()
 
     @callback
-    def async_all(self) -> List[State]:
-        """Create a list of all states.
+    def async_all(
+        self, domain_filter: Optional[Union[str, Iterable]] = None
+    ) -> List[State]:
+        """Create a list of all states matching the filter.
 
         This method must be run in the event loop.
         """
-        return list(self._states.values())
+        if domain_filter is None:
+            return list(self._states.values())
+
+        if isinstance(domain_filter, str):
+            domain_filter = (domain_filter.lower(),)
+
+        return [
+            state for state in self._states.values() if state.domain in domain_filter
+        ]
 
     def get(self, entity_id: str) -> Optional[State]:
         """Retrieve state of entity_id or None if not found.
@@ -1485,6 +1495,7 @@ class Config:
         unit_system: Optional[str] = None,
         location_name: Optional[str] = None,
         time_zone: Optional[str] = None,
+        # pylint: disable=dangerous-default-value # _UNDEFs not modified
         external_url: Optional[Union[str, dict]] = _UNDEF,
         internal_url: Optional[Union[str, dict]] = _UNDEF,
     ) -> None:

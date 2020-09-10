@@ -2,7 +2,7 @@
 
 import logging
 
-from openzwavemqtt.const import CommandClass
+from openzwavemqtt.const import CommandClass, ValueType
 
 from homeassistant.components.sensor import (
     DEVICE_CLASS_BATTERY,
@@ -30,13 +30,18 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     def async_add_sensor(value):
         """Add Z-Wave Sensor."""
         # Basic Sensor types
-        if isinstance(value.primary.value, (float, int)):
+        if value.primary.type in (
+            ValueType.BYTE,
+            ValueType.INT,
+            ValueType.SHORT,
+            ValueType.DECIMAL,
+        ):
             sensor = ZWaveNumericSensor(value)
 
-        elif isinstance(value.primary.value, dict):
+        elif value.primary.type == ValueType.LIST:
             sensor = ZWaveListSensor(value)
 
-        elif isinstance(value.primary.value, str):
+        elif value.primary.type == ValueType.STRING:
             sensor = ZWaveStringSensor(value)
 
         else:

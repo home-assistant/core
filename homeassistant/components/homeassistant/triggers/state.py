@@ -1,13 +1,13 @@
 """Offer state listening automation rules."""
 from datetime import timedelta
 import logging
-from typing import Dict
+from typing import Dict, Optional
 
 import voluptuous as vol
 
 from homeassistant import exceptions
-from homeassistant.const import CONF_FOR, CONF_PLATFORM, MATCH_ALL
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.const import CONF_ATTRIBUTE, CONF_FOR, CONF_PLATFORM, MATCH_ALL
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.event import (
     Event,
@@ -25,18 +25,16 @@ CONF_ENTITY_ID = "entity_id"
 CONF_FROM = "from"
 CONF_TO = "to"
 
-TRIGGER_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            vol.Required(CONF_PLATFORM): "state",
-            vol.Required(CONF_ENTITY_ID): cv.entity_ids,
-            # These are str on purpose. Want to catch YAML conversions
-            vol.Optional(CONF_FROM): vol.Any(str, [str]),
-            vol.Optional(CONF_TO): vol.Any(str, [str]),
-            vol.Optional(CONF_FOR): cv.positive_time_period_template,
-        }
-    ),
-    cv.key_dependency(CONF_FOR, CONF_TO),
+TRIGGER_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_PLATFORM): "state",
+        vol.Required(CONF_ENTITY_ID): cv.entity_ids,
+        # These are str on purpose. Want to catch YAML conversions
+        vol.Optional(CONF_FROM): vol.Any(str, [str]),
+        vol.Optional(CONF_TO): vol.Any(str, [str]),
+        vol.Optional(CONF_FOR): cv.positive_time_period_template,
+        vol.Optional(CONF_ATTRIBUTE): cv.match_all,
+    }
 )
 
 
@@ -59,23 +57,33 @@ async def async_attach_trigger(
     period: Dict[str, timedelta] = {}
     match_from_state = process_state_match(from_state)
     match_to_state = process_state_match(to_state)
+    attribute = config.get(CONF_ATTRIBUTE)
 
     @callback
     def state_automation_listener(event: Event):
         """Listen for state changes and calls action."""
         entity: str = event.data["entity_id"]
-        if entity not in entity_id:
-            return
+        from_s: Optional[State] = event.data.get("old_state")
+        to_s: Optional[State] = event.data.get("new_state")
 
-        from_s = event.data.get("old_state")
-        to_s = event.data.get("new_state")
-        old_state = getattr(from_s, "state", None)
-        new_state = getattr(to_s, "state", None)
+        if from_s is None:
+            old_value = None
+        elif attribute is None:
+            old_value = from_s.state
+        else:
+            old_value = from_s.attributes.get(attribute)
+
+        if to_s is None:
+            new_value = None
+        elif attribute is None:
+            new_value = to_s.state
+        else:
+            new_value = to_s.attributes.get(attribute)
 
         if (
-            not match_from_state(old_state)
-            or not match_to_state(new_state)
-            or (not match_all and old_state == new_state)
+            not match_from_state(old_value)
+            or not match_to_state(new_value)
+            or (not match_all and old_value == new_value)
         ):
             return
 
@@ -91,6 +99,8 @@ async def async_attach_trigger(
                         "from_state": from_s,
                         "to_state": to_s,
                         "for": time_delta if not time_delta else period[entity],
+                        "attribute": attribute,
+                        "description": f"state of {entity}",
                     }
                 },
                 event.context,
@@ -119,13 +129,26 @@ async def async_attach_trigger(
             )
             return
 
-        def _check_same_state(_, _2, new_st):
+        def _check_same_state(_, _2, new_st: State):
             if new_st is None:
                 return False
-            return new_st.state == to_s.state
+
+            if attribute is None:
+                cur_value = new_st.state
+            else:
+                cur_value = new_st.attributes.get(attribute)
+
+            if CONF_TO not in config:
+                return cur_value != old_value
+
+            return cur_value == new_value
 
         unsub_track_same[entity] = async_track_same_state(
-            hass, period[entity], call_action, _check_same_state, entity_ids=entity,
+            hass,
+            period[entity],
+            call_action,
+            _check_same_state,
+            entity_ids=entity,
         )
 
     unsub = async_track_state_change_event(hass, entity_id, state_automation_listener)

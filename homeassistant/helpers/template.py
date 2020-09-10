@@ -52,7 +52,7 @@ _RE_GET_ENTITIES = re.compile(
     re.I | re.M,
 )
 
-_RE_JINJA_DELIMITERS = re.compile(r"\{%|\{\{")
+_RE_JINJA_DELIMITERS = re.compile(r"\{%|\{\{|\{#")
 
 _RESERVED_NAMES = {"contextfunction", "evalcontextfunction", "environmentfunction"}
 
@@ -175,7 +175,6 @@ class RenderInfo:
             split_entity_id(entity_id)[0] in self.domains or entity_id in self.entities
         )
 
-    @property
     def result(self) -> str:
         """Results of the template computation."""
         if self.exception is not None:
@@ -192,7 +191,7 @@ class RenderInfo:
         self.entities = frozenset(self.entities)
         self.domains = frozenset(self.domains)
 
-        if self.all_states:
+        if self.all_states or self.exception:
             return
 
         if not self.domains:
@@ -232,7 +231,7 @@ class Template:
         try:
             self._compiled_code = self._env.compile(self.template)
         except jinja2.exceptions.TemplateSyntaxError as err:
-            raise TemplateError(err)
+            raise TemplateError(err) from err
 
     def extract_entities(
         self, variables: TemplateVarsType = None
@@ -246,7 +245,7 @@ class Template:
     def render(self, variables: TemplateVarsType = None, **kwargs: Any) -> str:
         """Render given template."""
         if self.is_static:
-            return self.template
+            return self.template.strip()
 
         if variables is not None:
             kwargs.update(variables)
@@ -262,7 +261,7 @@ class Template:
         This method must be run in the event loop.
         """
         if self.is_static:
-            return self.template
+            return self.template.strip()
 
         compiled = self._compiled or self._ensure_compiled()
 
@@ -272,7 +271,7 @@ class Template:
         try:
             return compiled.render(kwargs).strip()
         except jinja2.TemplateError as err:
-            raise TemplateError(err)
+            raise TemplateError(err) from err
 
     @callback
     def async_render_to_info(
@@ -285,6 +284,7 @@ class Template:
 
         # pylint: disable=protected-access
         if self.is_static:
+            render_info._result = self.template.strip()
             render_info._freeze_static()
             return render_info
 
@@ -460,8 +460,7 @@ class DomainStates:
             sorted(
                 (
                     _wrap_state(self._hass, state)
-                    for state in self._hass.states.async_all()
-                    if state.domain == self._domain
+                    for state in self._hass.states.async_all(self._domain)
                 ),
                 key=lambda state: state.entity_id,
             )
@@ -1052,6 +1051,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["atan2"] = arc_tangent2
         self.filters["sqrt"] = square_root
         self.filters["as_timestamp"] = forgiving_as_timestamp
+        self.filters["as_local"] = dt_util.as_local
         self.filters["timestamp_custom"] = timestamp_custom
         self.filters["timestamp_local"] = timestamp_local
         self.filters["timestamp_utc"] = timestamp_utc
@@ -1085,6 +1085,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["atan2"] = arc_tangent2
         self.globals["float"] = forgiving_float
         self.globals["now"] = dt_util.now
+        self.globals["as_local"] = dt_util.as_local
         self.globals["utcnow"] = dt_util.utcnow
         self.globals["as_timestamp"] = forgiving_as_timestamp
         self.globals["relative_time"] = relative_time
@@ -1122,7 +1123,13 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
     def is_safe_attribute(self, obj, attr, value):
         """Test if attribute is safe."""
-        return isinstance(obj, Namespace) or super().is_safe_attribute(obj, attr, value)
+        if isinstance(obj, Namespace):
+            return True
+
+        if isinstance(obj, (AllStates, DomainStates, TemplateState)):
+            return not attr.startswith("_")
+
+        return super().is_safe_attribute(obj, attr, value)
 
     def compile(self, source, name=None, filename=None, raw=False, defer_init=False):
         """Compile the template."""

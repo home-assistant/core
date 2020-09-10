@@ -122,7 +122,9 @@ async def async_setup_entry(
     platform = entity_platform.current_platform.get()
 
     platform.async_register_entity_service(
-        SERVICE_SYNC, HARMONY_SYNC_SCHEMA, "sync",
+        SERVICE_SYNC,
+        HARMONY_SYNC_SCHEMA,
+        "sync",
     )
     platform.async_register_entity_service(
         SERVICE_CHANGE_CHANNEL, HARMONY_CHANGE_CHANNEL_SCHEMA, "change_channel"

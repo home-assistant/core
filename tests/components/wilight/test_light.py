@@ -36,7 +36,8 @@ def mock_dummy_get_components_from_model_light():
     """Mock a components list with light."""
     components = ["light"]
     with patch(
-        "pywilight.get_components_from_model", return_value=components,
+        "pywilight.get_components_from_model",
+        return_value=components,
     ):
         yield components
 
@@ -56,7 +57,8 @@ def mock_dummy_device_from_host_light_fan():
     device.set_dummy(True)
 
     with patch(
-        "pywilight.device_from_host", return_value=device,
+        "pywilight.device_from_host",
+        return_value=device,
     ):
         yield device
 
@@ -76,7 +78,8 @@ def mock_dummy_device_from_host_pb():
     device.set_dummy(True)
 
     with patch(
-        "pywilight.device_from_host", return_value=device,
+        "pywilight.device_from_host",
+        return_value=device,
     ):
         yield device
 
@@ -96,7 +99,8 @@ def mock_dummy_device_from_host_dimmer():
     device.set_dummy(True)
 
     with patch(
-        "pywilight.device_from_host", return_value=device,
+        "pywilight.device_from_host",
+        return_value=device,
     ):
         yield device
 
@@ -116,7 +120,8 @@ def mock_dummy_device_from_host_color():
     device.set_dummy(True)
 
     with patch(
-        "pywilight.device_from_host", return_value=device,
+        "pywilight.device_from_host",
+        return_value=device,
     ):
         yield device
 

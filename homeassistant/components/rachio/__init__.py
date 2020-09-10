@@ -117,7 +117,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     # and there is not a reasonable timeout here so it can block for a long time
     except RACHIO_API_EXCEPTIONS as error:
         _LOGGER.error("Could not reach the Rachio API: %s", error)
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from error
 
     # Check for Rachio controller devices
     if not person.controllers:

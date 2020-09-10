@@ -83,12 +83,14 @@ async def async_get_device_automation_platform(
     try:
         integration = await async_get_integration_with_requirements(hass, domain)
         platform = integration.get_platform(platform_name)
-    except IntegrationNotFound:
-        raise InvalidDeviceAutomationConfig(f"Integration '{domain}' not found")
-    except ImportError:
+    except IntegrationNotFound as err:
+        raise InvalidDeviceAutomationConfig(
+            f"Integration '{domain}' not found"
+        ) from err
+    except ImportError as err:
         raise InvalidDeviceAutomationConfig(
             f"Integration '{domain}' does not support device automation {automation_type}s"
-        )
+        ) from err
 
     return platform
 

@@ -1,0 +1,141 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Una conexi\u00f3n de m\u00f3dem Insteon ya est\u00e1 configurada",
+            "cannot_connect": "No se puede conectar al m\u00f3dem Insteon",
+            "single_instance_allowed": "Ya esta configurado. Solo es posible una \u00fanica configuraci\u00f3n."
+        },
+        "error": {
+            "cannot_connect": "No se conect\u00f3 al m\u00f3dem Insteon, por favor, int\u00e9ntelo de nuevo.",
+            "select_single": "Seleccione una opci\u00f3n."
+        },
+        "step": {
+            "hub1": {
+                "data": {
+                    "host": "Direcci\u00f3n IP del Hub",
+                    "port": "Puerto IP"
+                },
+                "description": "Configure el Insteon Hub Versi\u00f3n 1 (anterior a 2014).",
+                "title": "Insteon Hub Versi\u00f3n 1"
+            },
+            "hub2": {
+                "data": {
+                    "host": "Direcci\u00f3n IP del Hub",
+                    "password": "Contrase\u00f1a",
+                    "port": "Puerto IP",
+                    "username": "Nombre de usuario"
+                },
+                "description": "Configure el Insteon Hub versi\u00f3n 2.",
+                "title": "Insteon Hub Versi\u00f3n 2"
+            },
+            "hubv1": {
+                "data": {
+                    "host": "Direcci\u00f3n IP",
+                    "port": "Puerto"
+                },
+                "description": "Configure el Insteon Hub Versi\u00f3n 1 (anterior a 2014).",
+                "title": "Insteon Hub Versi\u00f3n 1"
+            },
+            "hubv2": {
+                "data": {
+                    "host": "Direcci\u00f3n IP",
+                    "password": "Contrase\u00f1a",
+                    "port": "Puerto",
+                    "username": "Usuario"
+                },
+                "description": "Configure el Insteon Hub versi\u00f3n 2.",
+                "title": "Insteon Hub Versi\u00f3n 2"
+            },
+            "init": {
+                "data": {
+                    "hubv1": "Hub versi\u00f3n 1 (anterior a 2014)",
+                    "hubv2": "Hub Versi\u00f3n 2",
+                    "plm": "M\u00f3dem PowerLink (PLM)"
+                },
+                "description": "Seleccione el tipo de m\u00f3dem Insteon.",
+                "title": "Insteon"
+            },
+            "plm": {
+                "data": {
+                    "device": "Dispositivo PLM (es decir, /dev/ttyUSB0 o COM3)"
+                },
+                "description": "Configure el M\u00f3dem Insteon PowerLink (PLM).",
+                "title": "Insteon PLM"
+            },
+            "user": {
+                "data": {
+                    "modem_type": "Tipo de m\u00f3dem."
+                },
+                "description": "Seleccione el tipo de m\u00f3dem Insteon.",
+                "title": "Insteon"
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "already_configured": "Ya est\u00e1 configurada una conexi\u00f3n del m\u00f3dem Insteon",
+            "cannot_connect": "No se puede conectar al m\u00f3dem Insteon"
+        },
+        "error": {
+            "cannot_connect": "No se conect\u00f3 al m\u00f3dem Insteon, por favor, int\u00e9ntelo de nuevo.",
+            "input_error": "Entradas no v\u00e1lidas, compruebe sus valores.",
+            "select_single": "Selecciona una opci\u00f3n"
+        },
+        "step": {
+            "add_override": {
+                "data": {
+                    "address": "Direcci\u00f3n del dispositivo (es decir, 1a2b3c)",
+                    "cat": "Categor\u00eda del dispositivo (es decir, 0x10)",
+                    "subcat": "Subcategor\u00eda del dispositivo (es decir, 0x0a)"
+                },
+                "description": "Agregue una anulaci\u00f3n del dispositivo.",
+                "title": "Insteon"
+            },
+            "add_x10": {
+                "data": {
+                    "housecode": "C\u00f3digo de casa (a - p)",
+                    "platform": "Plataforma",
+                    "steps": "Pasos de atenuaci\u00f3n (s\u00f3lo para dispositivos de luz, por defecto 22)",
+                    "unitcode": "Unitcode (1 - 16)"
+                },
+                "description": "Cambie la contrase\u00f1a del Hub Insteon.",
+                "title": "Insteon"
+            },
+            "change_hub_config": {
+                "data": {
+                    "host": "Nuevo nombre del host o direcci\u00f3n IP",
+                    "password": "Nueva contrase\u00f1a",
+                    "port": "Nuevo n\u00famero de puerto",
+                    "username": "Nuevo nombre de usuario"
+                },
+                "description": "Cambiar la informaci\u00f3n de la conexi\u00f3n del Hub Insteon. Debes reiniciar el Home Assistant despu\u00e9s de hacer este cambio. Esto no cambia la configuraci\u00f3n del Hub en s\u00ed. Para cambiar la configuraci\u00f3n del Hub usa la aplicaci\u00f3n Hub.",
+                "title": "Insteon"
+            },
+            "init": {
+                "data": {
+                    "add_override": "Agregue una anulaci\u00f3n del dispositivo.",
+                    "add_x10": "A\u00f1ade un dispositivo X10.",
+                    "change_hub_config": "Cambie la configuraci\u00f3n del Hub.",
+                    "remove_override": "Eliminar una anulaci\u00f3n del dispositivo.",
+                    "remove_x10": "Eliminar un dispositivo X10"
+                },
+                "description": "Seleccione una opci\u00f3n para configurar.",
+                "title": "Insteon"
+            },
+            "remove_override": {
+                "data": {
+                    "address": "Seleccione una direcci\u00f3n del dispositivo para eliminar"
+                },
+                "description": "Eliminar una anulaci\u00f3n del dispositivo",
+                "title": "Insteon"
+            },
+            "remove_x10": {
+                "data": {
+                    "address": "Seleccione la direcci\u00f3n del dispositivo para eliminar"
+                },
+                "description": "Eliminar un dispositivo X10",
+                "title": "Insteon"
+            }
+        }
+    }
+}

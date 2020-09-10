@@ -186,8 +186,8 @@ class AxisNetworkDevice:
                 password=self.config_entry.data[CONF_PASSWORD],
             )
 
-        except CannotConnect:
-            raise ConfigEntryNotReady
+        except CannotConnect as err:
+            raise ConfigEntryNotReady from err
 
         except Exception:  # pylint: disable=broad-except
             LOGGER.error("Unknown error connecting with Axis device on %s", self.host)
@@ -271,14 +271,14 @@ async def get_device(hass, host, port, username, password):
 
         return device
 
-    except axis.Unauthorized:
+    except axis.Unauthorized as err:
         LOGGER.warning("Connected to device at %s but not registered.", host)
-        raise AuthenticationRequired
+        raise AuthenticationRequired from err
 
-    except (asyncio.TimeoutError, axis.RequestError):
+    except (asyncio.TimeoutError, axis.RequestError) as err:
         LOGGER.error("Error connecting to the Axis device at %s", host)
-        raise CannotConnect
+        raise CannotConnect from err
 
-    except axis.AxisException:
+    except axis.AxisException as err:
         LOGGER.exception("Unknown Axis communication error occurred")
-        raise AuthenticationRequired
+        raise AuthenticationRequired from err

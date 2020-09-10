@@ -196,7 +196,9 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
         ] = str
 
         return self.async_show_form(
-            step_id="broker", data_schema=vol.Schema(fields), errors=errors,
+            step_id="broker",
+            data_schema=vol.Schema(fields),
+            errors=errors,
         )
 
     async def async_step_options(self, user_input=None):
@@ -305,7 +307,9 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
         fields[vol.Optional("will_retain", default=will[ATTR_RETAIN])] = bool
 
         return self.async_show_form(
-            step_id="options", data_schema=vol.Schema(fields), errors=errors,
+            step_id="options",
+            data_schema=vol.Schema(fields),
+            errors=errors,
         )
 
 

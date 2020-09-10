@@ -31,7 +31,13 @@ async def async_attach_trigger(hass, config, action, automation_info):
             """Execute when Home Assistant is shutting down."""
             hass.async_run_job(
                 action,
-                {"trigger": {"platform": "homeassistant", "event": event}},
+                {
+                    "trigger": {
+                        "platform": "homeassistant",
+                        "event": event,
+                        "description": "Home Assistant stopping",
+                    }
+                },
                 event.context,
             )
 
@@ -41,7 +47,14 @@ async def async_attach_trigger(hass, config, action, automation_info):
     # Check state because a config reload shouldn't trigger it.
     if automation_info["home_assistant_start"]:
         hass.async_run_job(
-            action({"trigger": {"platform": "homeassistant", "event": event}})
+            action,
+            {
+                "trigger": {
+                    "platform": "homeassistant",
+                    "event": event,
+                    "description": "Home Assistant starting",
+                }
+            },
         )
 
     return lambda: None

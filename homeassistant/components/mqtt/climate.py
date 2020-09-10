@@ -48,13 +48,16 @@ from homeassistant.const import (
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from . import (
     ATTR_DISCOVERY_HASH,
     CONF_QOS,
     CONF_RETAIN,
+    DOMAIN,
     MQTT_BASE_PLATFORM_SCHEMA,
+    PLATFORMS,
     MqttAttributes,
     MqttAvailability,
     MqttDiscoveryUpdate,
@@ -170,7 +173,8 @@ PLATFORM_SCHEMA = (
             vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
             vol.Optional(CONF_FAN_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
             vol.Optional(
-                CONF_FAN_MODE_LIST, default=[FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH],
+                CONF_FAN_MODE_LIST,
+                default=[FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH],
             ): cv.ensure_list,
             vol.Optional(CONF_FAN_MODE_STATE_TEMPLATE): cv.template,
             vol.Optional(CONF_FAN_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
@@ -238,6 +242,7 @@ async def async_setup_platform(
     hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
 ):
     """Set up MQTT climate device through configuration.yaml."""
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
     await _async_setup_entity(hass, config, async_add_entities)
 
 

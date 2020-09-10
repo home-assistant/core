@@ -11,8 +11,8 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
+    PERCENTAGE,
     TEMP_FAHRENHEIT,
-    UNIT_PERCENTAGE,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -49,7 +49,7 @@ SENSOR_HUMID = "humidity"
 SENSOR_PRESS = "pressure"
 SENSOR_TYPES = {
     SENSOR_TEMP: ["Temperature", None],
-    SENSOR_HUMID: ["Humidity", UNIT_PERCENTAGE],
+    SENSOR_HUMID: ["Humidity", PERCENTAGE],
     SENSOR_PRESS: ["Pressure", "mb"],
 }
 DEFAULT_MONITORED = [SENSOR_TEMP, SENSOR_HUMID, SENSOR_PRESS]

@@ -11,9 +11,13 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
+    ATTR_CAMERA_LIGHT_MODE,
     ATTR_PERSON,
     ATTR_PERSONS,
     ATTR_PSEUDO,
+    CAMERA_LIGHT_MODES,
+    DATA_CAMERAS,
+    DATA_EVENTS,
     DATA_HANDLER,
     DATA_PERSONS,
     DOMAIN,
@@ -21,6 +25,7 @@ from .const import (
     EVENT_TYPE_ON,
     MANUFACTURER,
     MODELS,
+    SERVICE_SET_CAMERA_LIGHT,
     SERVICE_SET_PERSON_AWAY,
     SERVICE_SET_PERSONS_HOME,
     SIGNAL_NAME,
@@ -101,13 +106,23 @@ async def async_setup_entry(hass, entry, async_add_entities):
             {vol.Optional(ATTR_PERSON): cv.string},
             "_service_set_person_away",
         )
+        platform.async_register_entity_service(
+            SERVICE_SET_CAMERA_LIGHT,
+            {vol.Required(ATTR_CAMERA_LIGHT_MODE): vol.In(CAMERA_LIGHT_MODES)},
+            "_service_set_camera_light",
+        )
 
 
 class NetatmoCamera(NetatmoBase, Camera):
     """Representation of a Netatmo camera."""
 
     def __init__(
-        self, data_handler, camera_id, camera_type, home_id, quality,
+        self,
+        data_handler,
+        camera_id,
+        camera_type,
+        home_id,
+        quality,
     ):
         """Set up for access to the Netatmo camera images."""
         Camera.__init__(self)
@@ -144,6 +159,8 @@ class NetatmoCamera(NetatmoBase, Camera):
                 )
             )
 
+        self.hass.data[DOMAIN][DATA_CAMERAS][self._id] = self._device_name
+
     @callback
     def handle_event(self, event):
         """Handle webhook events."""
@@ -172,7 +189,9 @@ class NetatmoCamera(NetatmoBase, Camera):
                 )
             elif self._vpnurl:
                 response = requests.get(
-                    f"{self._vpnurl}/live/snapshot_720.jpg", timeout=10, verify=True,
+                    f"{self._vpnurl}/live/snapshot_720.jpg",
+                    timeout=10,
+                    verify=True,
                 )
             else:
                 _LOGGER.error("Welcome/Presence VPN URL is None")
@@ -260,6 +279,30 @@ class NetatmoCamera(NetatmoBase, Camera):
         self._is_local = camera.get("is_local")
         self.is_streaming = bool(self._status == "on")
 
+        if self._model == "NACamera":  # Smart Indoor Camera
+            self.hass.data[DOMAIN][DATA_EVENTS][self._id] = self.process_events(
+                self._data.events.get(self._id, {})
+            )
+        elif self._model == "NOC":  # Smart Outdoor Camera
+            self.hass.data[DOMAIN][DATA_EVENTS][
+                self._id
+            ] = self._data.outdoor_events.get(self._id, {})
+
+    def process_events(self, events):
+        """Add meta data to events."""
+        for event in events.values():
+            if "video_id" not in event:
+                continue
+            if self._is_local:
+                event[
+                    "media_url"
+                ] = f"{self._localurl}/vod/{event['video_id']}/files/{self._quality}/index.m3u8"
+            else:
+                event[
+                    "media_url"
+                ] = f"{self._vpnurl}/vod/{event['video_id']}/files/{self._quality}/index.m3u8"
+        return events
+
     def _service_set_persons_home(self, **kwargs):
         """Service to change current home schedule."""
         persons = kwargs.get(ATTR_PERSONS)
@@ -283,12 +326,24 @@ class NetatmoCamera(NetatmoBase, Camera):
 
         if person_id is not None:
             self._data.set_persons_away(
-                person_id=person_id, home_id=self._home_id,
+                person_id=person_id,
+                home_id=self._home_id,
             )
             _LOGGER.debug("Set %s as away", person)
 
         else:
             self._data.set_persons_away(
-                person_id=person_id, home_id=self._home_id,
+                person_id=person_id,
+                home_id=self._home_id,
             )
             _LOGGER.debug("Set home as empty")
+
+    def _service_set_camera_light(self, **kwargs):
+        """Service to set light mode."""
+        mode = kwargs.get(ATTR_CAMERA_LIGHT_MODE)
+        _LOGGER.debug("Turn camera '%s' %s", self._name, mode)
+        self._data.set_state(
+            home_id=self._home_id,
+            camera_id=self._id,
+            floodlight=mode,
+        )

@@ -21,8 +21,11 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 from homeassistant.util import slugify
 
 from .config_flow import (
@@ -223,7 +226,10 @@ class TeslaDataUpdateCoordinator(DataUpdateCoordinator):
         update_interval = timedelta(seconds=MIN_SCAN_INTERVAL)
 
         super().__init__(
-            hass, _LOGGER, name=DOMAIN, update_interval=update_interval,
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_interval=update_interval,
         )
 
     async def _async_update_data(self):
@@ -241,16 +247,16 @@ class TeslaDataUpdateCoordinator(DataUpdateCoordinator):
             async with async_timeout.timeout(30):
                 return await self.controller.update()
         except TeslaException as err:
-            raise UpdateFailed(f"Error communicating with API: {err}")
+            raise UpdateFailed(f"Error communicating with API: {err}") from err
 
 
-class TeslaDevice(Entity):
+class TeslaDevice(CoordinatorEntity):
     """Representation of a Tesla device."""
 
     def __init__(self, tesla_device, coordinator):
         """Initialise the Tesla device."""
+        super().__init__(coordinator)
         self.tesla_device = tesla_device
-        self.coordinator = coordinator
         self._name = self.tesla_device.name
         self._unique_id = slugify(self.tesla_device.uniq_name)
         self._attributes = self.tesla_device.attrs.copy()
@@ -272,16 +278,6 @@ class TeslaDevice(Entity):
             return None
 
         return ICONS.get(self.tesla_device.type)
-
-    @property
-    def should_poll(self):
-        """No need to poll. Coordinator notifies entity of updates."""
-        return False
-
-    @property
-    def available(self):
-        """Return if entity is available."""
-        return self.coordinator.last_update_success
 
     @property
     def device_state_attributes(self):
@@ -306,14 +302,6 @@ class TeslaDevice(Entity):
     async def async_added_to_hass(self):
         """Register state update callback."""
         self.async_on_remove(self.coordinator.async_add_listener(self.refresh))
-
-    async def async_will_remove_from_hass(self):
-        """Prepare for unload."""
-
-    async def async_update(self):
-        """Update the state of the device."""
-        _LOGGER.debug("Updating state for: %s", self.name)
-        await self.coordinator.async_request_refresh()
 
     @callback
     def refresh(self) -> None:
