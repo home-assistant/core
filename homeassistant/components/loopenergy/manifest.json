@@ -3,5 +3,7 @@
   "name": "Loop Energy",
   "documentation": "https://www.home-assistant.io/integrations/loopenergy",
   "requirements": ["pyloopenergy==0.2.0"],
-  "codeowners": []
+  "codeowners": [
+    "@pavoni"
+  ]
 }
