@@ -104,7 +104,6 @@ class MetWeather(CoordinatorEntity, WeatherEntity):
         self._config = config
         self._is_metric = is_metric
         self._hourly = hourly
-        self._name_appendix = "-hourly" if hourly else ""
 
     @property
     def track_home(self):
@@ -114,23 +113,34 @@ class MetWeather(CoordinatorEntity, WeatherEntity):
     @property
     def unique_id(self):
         """Return unique ID."""
+        name_appendix = ""
+        if self._hourly:
+            name_appendix = "-hourly"
         if self.track_home:
-            return f"home{self._name_appendix}"
+            return f"home{name_appendix}"
 
-        return f"{self._config[CONF_LATITUDE]}-{self._config[CONF_LONGITUDE]}{self._name_appendix}"
+        return f"{self._config[CONF_LATITUDE]}-{self._config[CONF_LONGITUDE]}{name_appendix}"
 
     @property
     def name(self):
         """Return the name of the sensor."""
         name = self._config.get(CONF_NAME)
+        name_appendix = ""
+        if self._hourly:
+            name_appendix = " Hourly"
 
         if name is not None:
-            return f"{name}{self._name_appendix}"
+            return f"{name}{name_appendix}"
 
         if self.track_home:
-            return f"{self.hass.config.location_name}{self._name_appendix}"
+            return f"{self.hass.config.location_name}{name_appendix}"
 
-        return f"{DEFAULT_NAME}{self._name_appendix}"
+        return f"{DEFAULT_NAME}{name_appendix}"
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return not self._hourly
 
     @property
     def condition(self):
