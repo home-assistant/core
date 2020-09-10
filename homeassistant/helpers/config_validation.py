@@ -863,6 +863,9 @@ def make_entity_service_schema(
     )
 
 
+SCRIPT_VARIABLES_SCHEMA = vol.Schema({str: template_complex})
+
+
 def script_action(value: Any) -> dict:
     """Validate a script action."""
     if not isinstance(value, dict):

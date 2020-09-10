@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_ICON,
     CONF_MODE,
     CONF_SEQUENCE,
+    CONF_VARIABLES,
     SERVICE_RELOAD,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
@@ -59,6 +60,7 @@ SCRIPT_ENTRY_SCHEMA = make_script_schema(
         vol.Optional(CONF_ICON): cv.icon,
         vol.Required(CONF_SEQUENCE): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_DESCRIPTION, default=""): cv.string,
+        vol.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
         vol.Optional(CONF_FIELDS, default={}): {
             cv.string: {
                 vol.Optional(CONF_DESCRIPTION): cv.string,
@@ -75,7 +77,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 SCRIPT_SERVICE_SCHEMA = vol.Schema(dict)
 SCRIPT_TURN_ONOFF_SCHEMA = make_entity_service_schema(
-    {vol.Optional(ATTR_VARIABLES): dict}
+    {vol.Optional(ATTR_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA}
 )
 RELOAD_SERVICE_SCHEMA = vol.Schema({})
 
@@ -263,6 +265,7 @@ class ScriptEntity(ToggleEntity):
             max_runs=cfg[CONF_MAX],
             max_exceeded=cfg[CONF_MAX_EXCEEDED],
             logger=logging.getLogger(f"{__name__}.{object_id}"),
+            variables=cfg.get(CONF_VARIABLES),
         )
         self._changed = asyncio.Event()
 
