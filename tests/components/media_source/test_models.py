@@ -64,6 +64,7 @@ async def test_browse_media_parent_no_children():
     assert not item["can_play"]
     assert item["can_expand"]
     assert len(item["children"]) == 0
+    assert item["children_media_class"] is None
 
 
 async def test_media_source_default_name():
