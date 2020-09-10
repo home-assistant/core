@@ -39,7 +39,7 @@ class RiscoBinarySensor(BinarySensorEntity, RiscoEntity):
         self._zone = zone
 
     def _get_data_from_coordinator(self):
-        self._zone = self._coordinator.data.zones[self._zone_id]
+        self._zone = self.coordinator.data.zones[self._zone_id]
 
     @property
     def device_info(self):

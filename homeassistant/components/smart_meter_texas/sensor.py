@@ -5,9 +5,11 @@ from smart_meter_texas import Meter
 
 from homeassistant.const import CONF_ADDRESS, ENERGY_KILO_WATT_HOUR
 from homeassistant.core import callback
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .const import (
     DATA_COORDINATOR,
@@ -31,13 +33,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class SmartMeterTexasSensor(RestoreEntity, Entity):
+class SmartMeterTexasSensor(CoordinatorEntity, RestoreEntity):
     """Representation of an Smart Meter Texas sensor."""
 
     def __init__(self, meter: Meter, coordinator: DataUpdateCoordinator):
         """Initialize the sensor."""
+        super().__init__(coordinator)
         self.meter = meter
-        self.coordinator = coordinator
         self._state = None
         self._available = False
 
@@ -75,18 +77,6 @@ class SmartMeterTexasSensor(RestoreEntity, Entity):
             CONF_ADDRESS: self.meter.address,
         }
         return attributes
-
-    @property
-    def should_poll(self):
-        """Return False, updates are controlled via coordinator."""
-        return False
-
-    async def async_update(self):
-        """Update the entity.
-
-        Only used by the generic entity update service.
-        """
-        await self.coordinator.async_request_refresh()
 
     @callback
     def _state_update(self):

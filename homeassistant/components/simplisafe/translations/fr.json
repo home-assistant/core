@@ -8,6 +8,11 @@
             "invalid_credentials": "Informations d'identification invalides"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Mot de passe"
+                }
+            },
             "user": {
                 "data": {
                     "code": "Code (utilis\u00e9 dans l'interface Home Assistant)",

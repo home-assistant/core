@@ -37,6 +37,9 @@ ZEROCONF = {
     "_hap._tcp.local.": [
         "homekit_controller"
     ],
+    "_homekit._tcp.local.": [
+        "homekit"
+    ],
     "_http._tcp.local.": [
         "shelly"
     ],
@@ -92,5 +95,6 @@ HOMEKIT = {
     "TRADFRI": "tradfri",
     "Welcome": "netatmo",
     "Wemo": "wemo",
+    "iSmartGate": "gogogate2",
     "tado": "tado"
 }

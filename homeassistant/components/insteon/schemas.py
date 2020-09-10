@@ -271,11 +271,13 @@ def build_plm_schema(device=vol.UNDEFINED):
 def build_hub_schema(
     hub_version,
     host=vol.UNDEFINED,
-    port=PORT_HUB_V2,
+    port=vol.UNDEFINED,
     username=vol.UNDEFINED,
     password=vol.UNDEFINED,
 ):
-    """Build the Hub v2 schema for config flow."""
+    """Build the Hub schema for config flow."""
+    if port == vol.UNDEFINED:
+        port = PORT_HUB_V2 if hub_version == 2 else PORT_HUB_V1
     schema = {
         vol.Required(CONF_HOST, default=host): str,
         vol.Required(CONF_PORT, default=port): int,

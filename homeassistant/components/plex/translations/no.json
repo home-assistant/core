@@ -19,6 +19,7 @@
             "manual_setup": {
                 "data": {
                     "host": "Vert",
+                    "port": "",
                     "ssl": "Bruk SSL",
                     "token": "Token (valgfritt)",
                     "verify_ssl": "Verifisere SSL-sertifikat"
@@ -26,16 +27,21 @@
                 "title": "Manuell Plex-konfigurasjon"
             },
             "select_server": {
+                "data": {
+                    "server": ""
+                },
                 "description": "Flere servere tilgjengelig, velg en:",
                 "title": "Velg Plex-server"
             },
             "user": {
-                "description": "Fortsett til [plex.tv] (https://plex.tv) for \u00e5 koble en Plex-server."
+                "description": "Fortsett til [plex.tv] (https://plex.tv) for \u00e5 koble en Plex-server.",
+                "title": ""
             },
             "user_advanced": {
                 "data": {
                     "setup_method": "Oppsettmetode"
-                }
+                },
+                "title": ""
             }
         }
     },

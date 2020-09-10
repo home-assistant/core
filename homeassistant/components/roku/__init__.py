@@ -15,9 +15,12 @@ from homeassistant.const import ATTR_NAME, CONF_HOST
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 from homeassistant.util.dt import utcnow
 
 from .const import (
@@ -149,41 +152,21 @@ class RokuDataUpdateCoordinator(DataUpdateCoordinator[Device]):
             raise UpdateFailed(f"Invalid response from API: {error}") from error
 
 
-class RokuEntity(Entity):
+class RokuEntity(CoordinatorEntity):
     """Defines a base Roku entity."""
 
     def __init__(
         self, *, device_id: str, name: str, coordinator: RokuDataUpdateCoordinator
     ) -> None:
         """Initialize the Roku entity."""
+        super().__init__(coordinator)
         self._device_id = device_id
         self._name = name
-        self.coordinator = coordinator
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self.coordinator.last_update_success
 
     @property
     def name(self) -> str:
         """Return the name of the entity."""
         return self._name
-
-    @property
-    def should_poll(self) -> bool:
-        """Return the polling requirement of the entity."""
-        return False
-
-    async def async_added_to_hass(self) -> None:
-        """Connect to dispatcher listening for entity data notifications."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
-        )
-
-    async def async_update(self) -> None:
-        """Update an Roku entity."""
-        await self.coordinator.async_request_refresh()
 
     @property
     def device_info(self) -> Dict[str, Any]:

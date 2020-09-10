@@ -66,6 +66,7 @@ TILT_FEATURES = (
 )
 
 COVER_SCHEMA = vol.All(
+    cv.deprecated(CONF_ENTITY_ID),
     vol.Schema(
         {
             vol.Inclusive(OPEN_ACTION, CONF_OPEN_OR_CLOSE): cv.SCRIPT_SCHEMA,
@@ -248,15 +249,16 @@ class CoverTemplate(TemplateEntity, CoverEntity):
             self._position = None
             return
 
-        if result in _VALID_STATES:
-            if result in ("true", STATE_OPEN):
+        state = result.lower()
+        if state in _VALID_STATES:
+            if state in ("true", STATE_OPEN):
                 self._position = 100
             else:
                 self._position = 0
         else:
             _LOGGER.error(
                 "Received invalid cover is_on state: %s. Expected: %s",
-                result,
+                state,
                 ", ".join(_VALID_STATES),
             )
             self._position = None

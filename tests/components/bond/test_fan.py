@@ -8,11 +8,14 @@ from homeassistant import core
 from homeassistant.components import fan
 from homeassistant.components.fan import (
     ATTR_DIRECTION,
+    ATTR_SPEED,
     ATTR_SPEED_LIST,
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
     DOMAIN as FAN_DOMAIN,
     SERVICE_SET_DIRECTION,
+    SERVICE_SET_SPEED,
+    SPEED_OFF,
 )
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.helpers.entity_registry import EntityRegistry
@@ -152,6 +155,24 @@ async def test_turn_on_fan_with_off_speed(hass: core.HomeAssistant):
 
     with patch_bond_action() as mock_turn_off, patch_bond_device_state():
         await turn_fan_on(hass, "fan.name_1", fan.SPEED_OFF)
+
+    mock_turn_off.assert_called_with("test-device-id", Action.turn_off())
+
+
+async def test_set_speed_off(hass: core.HomeAssistant):
+    """Tests that set_speed(off) command delegates to turn off API."""
+    await setup_platform(
+        hass, FAN_DOMAIN, ceiling_fan("name-1"), bond_device_id="test-device-id"
+    )
+
+    with patch_bond_action() as mock_turn_off, patch_bond_device_state():
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            SERVICE_SET_SPEED,
+            service_data={ATTR_ENTITY_ID: "fan.name_1", ATTR_SPEED: SPEED_OFF},
+            blocking=True,
+        )
+    await hass.async_block_till_done()
 
     mock_turn_off.assert_called_with("test-device-id", Action.turn_off())
 

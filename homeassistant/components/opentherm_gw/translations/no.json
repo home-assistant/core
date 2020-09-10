@@ -10,8 +10,10 @@
             "init": {
                 "data": {
                     "device": "Bane eller URL-adresse",
+                    "id": "",
                     "name": "Navn"
-                }
+                },
+                "title": ""
             }
         }
     },

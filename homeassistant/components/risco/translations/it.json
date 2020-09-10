@@ -20,6 +20,16 @@
     },
     "options": {
         "step": {
+            "ha_to_risco": {
+                "data": {
+                    "armed_away": "Attivo Fuori Casa",
+                    "armed_custom_bypass": "Attivo con Bypass Personalizzato",
+                    "armed_home": "Attivo In Casa",
+                    "armed_night": "Attivo Notte"
+                },
+                "description": "Selezionare lo stato in cui impostare l'allarme Risco quando si attiva l'allarme Home Assistant",
+                "title": "Mappare gli stati di Home Assistant negli stati di Risco"
+            },
             "init": {
                 "data": {
                     "code_arm_required": "Richiedi codice PIN per armare",
@@ -27,6 +37,18 @@
                     "scan_interval": "Con che frequenza interrogare Risco (in secondi)"
                 },
                 "title": "Configura le opzioni"
+            },
+            "risco_to_ha": {
+                "data": {
+                    "A": "Gruppo A",
+                    "B": "Gruppo B",
+                    "C": "Gruppo C",
+                    "D": "Gruppo D",
+                    "arm": "Attivo (Fuori Casa)",
+                    "partial_arm": "Parzialmente attivo (IN CASA)"
+                },
+                "description": "Seleziona lo stato che verr\u00e0 segnalato dall'allarme Home Assistant per ogni stato segnalato da Risco",
+                "title": "Mappare gli stati di Risco agli stati di Home Assistant"
             }
         }
     }

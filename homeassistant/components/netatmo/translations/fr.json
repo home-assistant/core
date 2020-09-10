@@ -6,7 +6,7 @@
             "single_instance_allowed": "D\u00e9j\u00e0 configur\u00e9. Une seule configuration possible."
         },
         "create_entry": {
-            "default": "Authentification r\u00e9ussie avec Netatmo."
+            "default": "Authentification r\u00e9ussie"
         },
         "step": {
             "pick_implementation": {

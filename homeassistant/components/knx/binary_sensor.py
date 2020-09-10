@@ -4,22 +4,15 @@ from xknx.devices import BinarySensor as XknxBinarySensor
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import callback
 
-from . import ATTR_DISCOVER_DEVICES, DATA_KNX
+from . import DATA_KNX
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up binary sensor(s) for KNX platform."""
-    if discovery_info is not None:
-        async_add_entities_discovery(hass, discovery_info, async_add_entities)
-
-
-@callback
-def async_add_entities_discovery(hass, discovery_info, async_add_entities):
-    """Set up binary sensors for KNX platform configured via xknx.yaml."""
     entities = []
-    for device_name in discovery_info[ATTR_DISCOVER_DEVICES]:
-        device = hass.data[DATA_KNX].xknx.devices[device_name]
-        entities.append(KNXBinarySensor(device))
+    for device in hass.data[DATA_KNX].xknx.devices:
+        if isinstance(device, XknxBinarySensor):
+            entities.append(KNXBinarySensor(device))
     async_add_entities(entities)
 
 

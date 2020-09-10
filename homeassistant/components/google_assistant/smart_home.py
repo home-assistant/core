@@ -137,7 +137,11 @@ async def async_devices_query(hass, data, payload):
             continue
 
         entity = GoogleEntity(hass, data.config, state)
-        devices[devid] = entity.query_serialize()
+        try:
+            devices[devid] = entity.query_serialize()
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected error serializing query for %s", state)
+            devices[devid] = {"online": False}
 
     return {"devices": devices}
 

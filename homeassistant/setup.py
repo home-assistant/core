@@ -71,27 +71,47 @@ async def _async_process_dependencies(
     hass: core.HomeAssistant, config: ConfigType, integration: loader.Integration
 ) -> bool:
     """Ensure all dependencies are set up."""
-    tasks = {
+    dependencies_tasks = {
         dep: hass.loop.create_task(async_setup_component(hass, dep, config))
         for dep in integration.dependencies
+        if dep not in hass.config.components
     }
 
+    after_dependencies_tasks = dict()
     to_be_loaded = hass.data.get(DATA_SETUP_DONE, {})
     for dep in integration.after_dependencies:
-        if dep in to_be_loaded and dep not in hass.config.components:
-            tasks[dep] = hass.loop.create_task(to_be_loaded[dep].wait())
+        if (
+            dep not in dependencies_tasks
+            and dep in to_be_loaded
+            and dep not in hass.config.components
+        ):
+            after_dependencies_tasks[dep] = hass.loop.create_task(
+                to_be_loaded[dep].wait()
+            )
 
-    if not tasks:
+    if not dependencies_tasks and not after_dependencies_tasks:
         return True
 
-    _LOGGER.debug("Dependency %s will wait for %s", integration.domain, list(tasks))
+    if dependencies_tasks:
+        _LOGGER.debug(
+            "Dependency %s will wait for dependencies %s",
+            integration.domain,
+            list(dependencies_tasks),
+        )
+    if after_dependencies_tasks:
+        _LOGGER.debug(
+            "Dependency %s will wait for after dependencies %s",
+            integration.domain,
+            list(after_dependencies_tasks),
+        )
+
     async with hass.timeout.async_freeze(integration.domain):
-        results = await asyncio.gather(*tasks.values())
+        results = await asyncio.gather(
+            *dependencies_tasks.values(), *after_dependencies_tasks.values()
+        )
 
     failed = [
-        domain
-        for idx, domain in enumerate(integration.dependencies)
-        if not results[idx]
+        domain for idx, domain in enumerate(dependencies_tasks) if not results[idx]
     ]
 
     if failed:

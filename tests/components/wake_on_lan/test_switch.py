@@ -103,16 +103,6 @@ class TestWolSwitch(unittest.TestCase):
 
     @patch("wakeonlan.send_magic_packet", new=send_magic_packet)
     @patch("subprocess.call", new=call)
-    def test_minimal_config(self):
-        """Test with minimal config."""
-        assert setup_component(
-            self.hass,
-            switch.DOMAIN,
-            {"switch": {"platform": "wake_on_lan", "mac": "00-01-02-03-04-05"}},
-        )
-
-    @patch("wakeonlan.send_magic_packet", new=send_magic_packet)
-    @patch("subprocess.call", new=call)
     def test_broadcast_config_ip_and_port(self):
         """Test with broadcast address and broadcast port config."""
 

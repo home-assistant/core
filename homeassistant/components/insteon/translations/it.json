@@ -2,10 +2,11 @@
     "config": {
         "abort": {
             "already_configured": "Una connessione modem Insteon \u00e8 gi\u00e0 configurata",
-            "cannot_connect": "Impossibile connettersi al modem Insteon"
+            "cannot_connect": "Impossibile connettersi",
+            "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
         },
         "error": {
-            "cannot_connect": "Impossibile connettersi al modem Insteon, riprovare.",
+            "cannot_connect": "Impossibile connettersi",
             "select_single": "Selezionare un'opzione."
         },
         "step": {
@@ -27,6 +28,24 @@
                 "description": "Configurare la versione 2 di Insteon Hub.",
                 "title": "Insteon Hub versione 2"
             },
+            "hubv1": {
+                "data": {
+                    "host": "Indirizzo IP",
+                    "port": "Porta"
+                },
+                "description": "Configurare la versione 1 di Insteon Hub (precedente al 2014).",
+                "title": "Insteon Hub Versione 1"
+            },
+            "hubv2": {
+                "data": {
+                    "host": "Indirizzo IP",
+                    "password": "Password",
+                    "port": "Porta",
+                    "username": "Nome utente"
+                },
+                "description": "Configurare la versione 2 di Insteon Hub.",
+                "title": "Insteon Hub Versione 2"
+            },
             "init": {
                 "data": {
                     "hubv1": "Hub versione 1 (precedente al 2014)",
@@ -38,10 +57,17 @@
             },
             "plm": {
                 "data": {
-                    "device": "Dispositivo PLM (ad esempio /dev/ttyUSB0 o COM3)"
+                    "device": "Percorso del dispositivo USB"
                 },
                 "description": "Configurare Insteon PowerLink Modem (PLM).",
                 "title": "Insteon PLM"
+            },
+            "user": {
+                "data": {
+                    "modem_type": "Tipo di modem."
+                },
+                "description": "Seleziona il tipo di modem Insteon.",
+                "title": "Insteon"
             }
         }
     },
@@ -51,7 +77,7 @@
             "cannot_connect": "Impossibile connettersi al modem Insteon"
         },
         "error": {
-            "cannot_connect": "Impossibile connettersi al modem Insteon, riprovare.",
+            "cannot_connect": "Impossibile connettersi",
             "input_error": "Voci non valide, si prega di controllare i valori.",
             "select_single": "Selezionare un'opzione."
         },
@@ -77,10 +103,10 @@
             },
             "change_hub_config": {
                 "data": {
-                    "host": "Nuovo nome host o indirizzo IP",
-                    "password": "Nuova password",
-                    "port": "Nuovo numero di porta",
-                    "username": "Nuovo nome utente"
+                    "host": "Indirizzo IP",
+                    "password": "Password",
+                    "port": "Porta",
+                    "username": "Nome utente"
                 },
                 "description": "Modificare le informazioni di connessione di Insteon Hub. \u00c8 necessario riavviare Home Assistant dopo aver apportato questa modifica. Ci\u00f2 non modifica la configurazione dell'Hub stesso. Per modificare la configurazione nell'Hub, utilizzare l'app Hub.",
                 "title": "Insteon"

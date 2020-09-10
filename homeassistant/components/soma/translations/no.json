@@ -13,9 +13,11 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Vert"
+                    "host": "Vert",
+                    "port": ""
                 },
-                "description": "Vennligst fyll inn tilkoblingsinnstillingene for din SOMA Connect."
+                "description": "Vennligst fyll inn tilkoblingsinnstillingene for din SOMA Connect.",
+                "title": ""
             }
         }
     }

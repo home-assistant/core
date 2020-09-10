@@ -15,8 +15,6 @@ from .const import DOMAIN as FLO_DOMAIN
 from .device import FloDeviceDataUpdateCoordinator
 from .entity import FloEntity
 
-DEPENDENCIES = ["flo"]
-
 WATER_ICON = "mdi:water"
 GAUGE_ICON = "mdi:gauge"
 NAME_DAILY_USAGE = "Today's Water Usage"
@@ -28,7 +26,9 @@ NAME_WATER_PRESSURE = "Water Pressure"
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Flo sensors from config entry."""
-    devices: List[FloDeviceDataUpdateCoordinator] = hass.data[FLO_DOMAIN]["devices"]
+    devices: List[FloDeviceDataUpdateCoordinator] = hass.data[FLO_DOMAIN][
+        config_entry.entry_id
+    ]["devices"]
     entities = []
     entities.extend([FloDailyUsageSensor(device) for device in devices])
     entities.extend([FloSystemModeSensor(device) for device in devices])

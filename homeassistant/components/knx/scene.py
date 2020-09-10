@@ -4,24 +4,16 @@ from typing import Any
 from xknx.devices import Scene as XknxScene
 
 from homeassistant.components.scene import Scene
-from homeassistant.core import callback
 
-from . import ATTR_DISCOVER_DEVICES, DATA_KNX
+from . import DATA_KNX
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the scenes for KNX platform."""
-    if discovery_info is not None:
-        async_add_entities_discovery(hass, discovery_info, async_add_entities)
-
-
-@callback
-def async_add_entities_discovery(hass, discovery_info, async_add_entities):
-    """Set up scenes for KNX platform configured via xknx.yaml."""
     entities = []
-    for device_name in discovery_info[ATTR_DISCOVER_DEVICES]:
-        device = hass.data[DATA_KNX].xknx.devices[device_name]
-        entities.append(KNXScene(device))
+    for device in hass.data[DATA_KNX].xknx.devices:
+        if isinstance(device, XknxScene):
+            entities.append(KNXScene(device))
     async_add_entities(entities)
 
 

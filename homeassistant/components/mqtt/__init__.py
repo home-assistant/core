@@ -136,6 +136,20 @@ CONNECTION_FAILED_RECOVERABLE = "connection_failed_recoverable"
 DISCOVERY_COOLDOWN = 2
 TIMEOUT_ACK = 1
 
+PLATFORMS = [
+    "alarm_control_panel",
+    "binary_sensor",
+    "camera",
+    "climate",
+    "cover",
+    "fan",
+    "light",
+    "lock",
+    "sensor",
+    "switch",
+    "vacuum",
+]
+
 
 def validate_device_has_at_least_one_identifier(value: ConfigType) -> ConfigType:
     """Validate that a device info entry has at least one identifying value."""
@@ -1291,7 +1305,7 @@ class MqttDiscoveryUpdate(Entity):
             debug_info.add_entity_discovery_data(
                 self.hass, self._discovery_data, self.entity_id
             )
-            # Set in case the entity has been removed and is re-added
+            # Set in case the entity has been removed and is re-added, for example when changing entity_id
             set_discovery_hash(self.hass, discovery_hash)
             self._remove_signal = async_dispatcher_connect(
                 self.hass,
