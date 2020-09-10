@@ -246,7 +246,7 @@ async def async_setup_entry(hass, config_entry):
     await simplisafe.async_init()
     hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = simplisafe
 
-    for component in ("alarm_control_panel", "lock", "binary_sensor"):
+    for component in ("alarm_control_panel", "lock", "binary_sensor", "sensor"):
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(config_entry, component)
         )
@@ -351,7 +351,7 @@ async def async_unload_entry(hass, entry):
     """Unload a SimpliSafe config entry."""
     tasks = [
         hass.config_entries.async_forward_entry_unload(entry, component)
-        for component in ("alarm_control_panel", "lock", "binary_sensor")
+        for component in ("alarm_control_panel", "lock", "binary_sensor", "sensor")
     ]
 
     await asyncio.gather(*tasks)

@@ -1,6 +1,6 @@
 """Support for SimpliSafe binary sensors."""
 from simplipy.entity import EntityTypes
-from simplipy.websocker import EVENT_MOTION_DETECTED
+from simplipy.websocket import EVENT_MOTION_DETECTED
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_BATTERY,
