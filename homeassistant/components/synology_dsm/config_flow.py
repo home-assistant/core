@@ -260,14 +260,15 @@ def _login_and_fetch_syno_info(api, otp_code):
     """Login to the NAS and fetch basic data."""
     # These do i/o
     api.login(otp_code)
-    utilisation = api.utilisation
-    storage = api.storage
+    api.utilisation.update()
+    api.storage.update()
+    api.network.update()
 
     if (
         not api.information.serial
-        or utilisation.cpu_user_load is None
-        or not storage.disks_ids
-        or not storage.volumes_ids
+        or api.utilisation.cpu_user_load is None
+        or not api.storage.disks_ids
+        or not api.storage.volumes_ids
         or not api.network.macs
     ):
         raise InvalidData

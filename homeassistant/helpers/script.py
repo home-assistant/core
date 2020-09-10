@@ -1,6 +1,5 @@
 """Helpers to execute scripts."""
 import asyncio
-from copy import deepcopy
 from datetime import datetime, timedelta
 from functools import partial
 import itertools
@@ -54,11 +53,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
 )
 from homeassistant.core import SERVICE_CALL_LIMIT, Context, HomeAssistant, callback
-from homeassistant.helpers import (
-    condition,
-    config_validation as cv,
-    template as template,
-)
+from homeassistant.helpers import condition, config_validation as cv, template
 from homeassistant.helpers.event import async_call_later, async_track_template
 from homeassistant.helpers.service import (
     CONF_SERVICE_DATA,
@@ -572,7 +567,7 @@ class _ScriptRun:
             "" if delay is None else f" (timeout: {timedelta(seconds=delay)})",
         )
 
-        variables = deepcopy(self._variables)
+        variables = {**self._variables}
         self._variables["wait"] = {"remaining": delay, "trigger": None}
 
         async def async_done(variables, context=None):
@@ -722,6 +717,7 @@ class Script:
         logger: Optional[logging.Logger] = None,
         log_exceptions: bool = True,
         top_level: bool = True,
+        variables: Optional[Dict[str, Any]] = None,
     ) -> None:
         """Initialize the script."""
         all_scripts = hass.data.get(DATA_SCRIPTS)
@@ -760,6 +756,10 @@ class Script:
         self._choose_data: Dict[int, Dict[str, Any]] = {}
         self._referenced_entities: Optional[Set[str]] = None
         self._referenced_devices: Optional[Set[str]] = None
+        self.variables = variables
+        self._variables_dynamic = template.is_complex(variables)
+        if self._variables_dynamic:
+            template.attach(hass, variables)
 
     def _set_logger(self, logger: Optional[logging.Logger] = None) -> None:
         if logger:
@@ -868,7 +868,7 @@ class Script:
 
     async def async_run(
         self,
-        variables: Optional[_VarsType] = None,
+        run_variables: Optional[_VarsType] = None,
         context: Optional[Context] = None,
         started_action: Optional[Callable[..., Any]] = None,
     ) -> None:
@@ -899,8 +899,19 @@ class Script:
         # are read-only, but more importantly, so as not to leak any variables created
         # during the run back to the caller.
         if self._top_level:
-            variables = dict(variables) if variables is not None else {}
+            if self.variables:
+                if self._variables_dynamic:
+                    variables = template.render_complex(self.variables, run_variables)
+                else:
+                    variables = dict(self.variables)
+            else:
+                variables = {}
+
+            if run_variables:
+                variables.update(run_variables)
             variables["context"] = context
+        else:
+            variables = cast(dict, run_variables)
 
         if self.script_mode != SCRIPT_MODE_QUEUED:
             cls = _ScriptRun

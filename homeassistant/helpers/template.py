@@ -65,7 +65,7 @@ def attach(hass: HomeAssistantType, obj: Any) -> None:
     if isinstance(obj, list):
         for child in obj:
             attach(hass, child)
-    elif isinstance(obj, dict):
+    elif isinstance(obj, collections.abc.Mapping):
         for child_key, child_value in obj.items():
             attach(hass, child_key)
             attach(hass, child_value)
@@ -77,7 +77,7 @@ def render_complex(value: Any, variables: TemplateVarsType = None) -> Any:
     """Recursive template creator helper function."""
     if isinstance(value, list):
         return [render_complex(item, variables) for item in value]
-    if isinstance(value, dict):
+    if isinstance(value, collections.abc.Mapping):
         return {
             render_complex(key, variables): render_complex(item, variables)
             for key, item in value.items()
@@ -86,6 +86,19 @@ def render_complex(value: Any, variables: TemplateVarsType = None) -> Any:
         return value.async_render(variables)
 
     return value
+
+
+def is_complex(value: Any) -> bool:
+    """Test if data structure is a complex template."""
+    if isinstance(value, Template):
+        return True
+    if isinstance(value, list):
+        return any(is_complex(val) for val in value)
+    if isinstance(value, collections.abc.Mapping):
+        return any(is_complex(val) for val in value.keys()) or any(
+            is_complex(val) for val in value.values()
+        )
+    return False
 
 
 def is_template_string(maybe_template: str) -> bool:
@@ -245,7 +258,7 @@ class Template:
     def render(self, variables: TemplateVarsType = None, **kwargs: Any) -> str:
         """Render given template."""
         if self.is_static:
-            return self.template
+            return self.template.strip()
 
         if variables is not None:
             kwargs.update(variables)
@@ -261,7 +274,7 @@ class Template:
         This method must be run in the event loop.
         """
         if self.is_static:
-            return self.template
+            return self.template.strip()
 
         compiled = self._compiled or self._ensure_compiled()
 
@@ -284,6 +297,7 @@ class Template:
 
         # pylint: disable=protected-access
         if self.is_static:
+            render_info._result = self.template.strip()
             render_info._freeze_static()
             return render_info
 
@@ -459,8 +473,7 @@ class DomainStates:
             sorted(
                 (
                     _wrap_state(self._hass, state)
-                    for state in self._hass.states.async_all()
-                    if state.domain == self._domain
+                    for state in self._hass.states.async_all(self._domain)
                 ),
                 key=lambda state: state.entity_id,
             )
@@ -1123,7 +1136,13 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
     def is_safe_attribute(self, obj, attr, value):
         """Test if attribute is safe."""
-        return isinstance(obj, Namespace) or super().is_safe_attribute(obj, attr, value)
+        if isinstance(obj, Namespace):
+            return True
+
+        if isinstance(obj, (AllStates, DomainStates, TemplateState)):
+            return not attr.startswith("_")
+
+        return super().is_safe_attribute(obj, attr, value)
 
     def compile(self, source, name=None, filename=None, raw=False, defer_init=False):
         """Compile the template."""

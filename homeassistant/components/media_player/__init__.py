@@ -822,6 +822,7 @@ class MediaPlayerEntity(Entity):
         Payload should follow this format:
             {
                 "title": str - Title of the item
+                "media_class": str - Media class
                 "media_content_type": str - see below
                 "media_content_id": str - see below
                   - Can be passed back in to browse further
@@ -1046,6 +1047,7 @@ class BrowseMedia:
     def __init__(
         self,
         *,
+        media_class: str,
         media_content_id: str,
         media_content_type: str,
         title: str,
@@ -1055,6 +1057,7 @@ class BrowseMedia:
         thumbnail: Optional[str] = None,
     ):
         """Initialize browse media item."""
+        self.media_class = media_class
         self.media_content_id = media_content_id
         self.media_content_type = media_content_type
         self.title = title
@@ -1067,6 +1070,7 @@ class BrowseMedia:
         """Convert Media class to browse media dictionary."""
         response = {
             "title": self.title,
+            "media_class": self.media_class,
             "media_content_type": self.media_content_type,
             "media_content_id": self.media_content_id,
             "can_play": self.can_play,

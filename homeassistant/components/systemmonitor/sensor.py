@@ -35,42 +35,77 @@ if sys.maxsize > 2 ** 32:
 else:
     CPU_ICON = "mdi:cpu-32-bit"
 
+# Schema: [name, unit of measurement, icon, device class, flag if mandatory arg]
 SENSOR_TYPES = {
-    "disk_free": ["Disk free", DATA_GIBIBYTES, "mdi:harddisk", None],
-    "disk_use": ["Disk use", DATA_GIBIBYTES, "mdi:harddisk", None],
-    "disk_use_percent": ["Disk use (percent)", PERCENTAGE, "mdi:harddisk", None],
-    "ipv4_address": ["IPv4 address", "", "mdi:server-network", None],
-    "ipv6_address": ["IPv6 address", "", "mdi:server-network", None],
-    "last_boot": ["Last boot", "", "mdi:clock", "timestamp"],
-    "load_15m": ["Load (15m)", " ", "mdi:memory", None],
-    "load_1m": ["Load (1m)", " ", "mdi:memory", None],
-    "load_5m": ["Load (5m)", " ", "mdi:memory", None],
-    "memory_free": ["Memory free", DATA_MEBIBYTES, "mdi:memory", None],
-    "memory_use": ["Memory use", DATA_MEBIBYTES, "mdi:memory", None],
-    "memory_use_percent": ["Memory use (percent)", PERCENTAGE, "mdi:memory", None],
-    "network_in": ["Network in", DATA_MEBIBYTES, "mdi:server-network", None],
-    "network_out": ["Network out", DATA_MEBIBYTES, "mdi:server-network", None],
-    "packets_in": ["Packets in", " ", "mdi:server-network", None],
-    "packets_out": ["Packets out", " ", "mdi:server-network", None],
+    "disk_free": ["Disk free", DATA_GIBIBYTES, "mdi:harddisk", None, False],
+    "disk_use": ["Disk use", DATA_GIBIBYTES, "mdi:harddisk", None, False],
+    "disk_use_percent": [
+        "Disk use (percent)",
+        PERCENTAGE,
+        "mdi:harddisk",
+        None,
+        False,
+    ],
+    "ipv4_address": ["IPv4 address", "", "mdi:server-network", None, True],
+    "ipv6_address": ["IPv6 address", "", "mdi:server-network", None, True],
+    "last_boot": ["Last boot", "", "mdi:clock", "timestamp", False],
+    "load_15m": ["Load (15m)", " ", CPU_ICON, None, False],
+    "load_1m": ["Load (1m)", " ", CPU_ICON, None, False],
+    "load_5m": ["Load (5m)", " ", CPU_ICON, None, False],
+    "memory_free": ["Memory free", DATA_MEBIBYTES, "mdi:memory", None, False],
+    "memory_use": ["Memory use", DATA_MEBIBYTES, "mdi:memory", None, False],
+    "memory_use_percent": [
+        "Memory use (percent)",
+        PERCENTAGE,
+        "mdi:memory",
+        None,
+        False,
+    ],
+    "network_in": ["Network in", DATA_MEBIBYTES, "mdi:server-network", None, True],
+    "network_out": ["Network out", DATA_MEBIBYTES, "mdi:server-network", None, True],
+    "packets_in": ["Packets in", " ", "mdi:server-network", None, True],
+    "packets_out": ["Packets out", " ", "mdi:server-network", None, True],
     "throughput_network_in": [
         "Network throughput in",
         DATA_RATE_MEGABYTES_PER_SECOND,
         "mdi:server-network",
         None,
+        True,
     ],
     "throughput_network_out": [
         "Network throughput out",
         DATA_RATE_MEGABYTES_PER_SECOND,
         "mdi:server-network",
-        None,
+        True,
     ],
-    "process": ["Process", " ", CPU_ICON, None],
-    "processor_use": ["Processor use", PERCENTAGE, CPU_ICON, None],
-    "processor_temperature": ["Processor temperature", TEMP_CELSIUS, CPU_ICON, None],
-    "swap_free": ["Swap free", DATA_MEBIBYTES, "mdi:harddisk", None],
-    "swap_use": ["Swap use", DATA_MEBIBYTES, "mdi:harddisk", None],
-    "swap_use_percent": ["Swap use (percent)", PERCENTAGE, "mdi:harddisk", None],
+    "process": ["Process", " ", CPU_ICON, None, True],
+    "processor_use": ["Processor use", PERCENTAGE, CPU_ICON, None, False],
+    "processor_temperature": [
+        "Processor temperature",
+        TEMP_CELSIUS,
+        CPU_ICON,
+        None,
+        False,
+    ],
+    "swap_free": ["Swap free", DATA_MEBIBYTES, "mdi:harddisk", None, True],
+    "swap_use": ["Swap use", DATA_MEBIBYTES, "mdi:harddisk", None, False],
+    "swap_use_percent": ["Swap use (percent)", PERCENTAGE, "mdi:harddisk", None, False],
 }
+
+
+def check_required_arg(value):
+    """Validate that the required "arg" for the sensor types that need it are set."""
+    for sensor in value:
+        sensor_type = sensor[CONF_TYPE]
+        sensor_arg = sensor.get(CONF_ARG)
+
+        if sensor_arg is None and SENSOR_TYPES[sensor_type][4]:
+            raise vol.RequiredFieldInvalid(
+                f"Mandatory 'arg' is missing for sensor type '{sensor_type}'."
+            )
+
+    return value
+
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -84,6 +119,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                     }
                 )
             ],
+            check_required_arg,
         )
     }
 )

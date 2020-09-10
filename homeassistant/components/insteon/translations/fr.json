@@ -67,17 +67,25 @@
         }
     },
     "options": {
+        "abort": {
+            "cannot_connect": "Impossible de se connecter au modem Insteon"
+        },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
             "select_single": "S\u00e9lectionnez une option"
         },
         "step": {
             "add_override": {
+                "data": {
+                    "cat": "Cat\u00e9gorie d'appareil (c.-\u00e0-d. 0x10)"
+                },
                 "title": "Insteon"
             },
             "add_x10": {
                 "data": {
-                    "platform": "Plate-forme"
+                    "platform": "Plate-forme",
+                    "steps": "Pas de gradateur (pour les appareils d'\u00e9clairage uniquement, par d\u00e9faut 22)",
+                    "unitcode": "Code de l'unit\u00e9 (1-16)"
                 },
                 "description": "Modifiez le mot de passe Insteon Hub.",
                 "title": "Insteon"
@@ -93,8 +101,10 @@
             },
             "init": {
                 "data": {
+                    "add_override": "Ajoutez un remplacement de p\u00e9riph\u00e9rique.",
                     "add_x10": "Ajouter un appareil X10.",
                     "change_hub_config": "Modifier la configuration du Hub.",
+                    "remove_override": "Supprimer un remplacement d'appareil",
                     "remove_x10": "Retirez un p\u00e9riph\u00e9rique X10."
                 },
                 "description": "S\u00e9lectionnez une option \u00e0 configurer.",
@@ -104,6 +114,7 @@
                 "data": {
                     "address": "S\u00e9lectionner une adresse de p\u00e9riph\u00e9rique \u00e0 retirer"
                 },
+                "description": "Supprimer un remplacement d'appareil",
                 "title": "Insteon"
             },
             "remove_x10": {

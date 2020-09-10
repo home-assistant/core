@@ -34,12 +34,19 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 2
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
+    def __init__(self):
+        """Initialize the config flow."""
+        self._geo_id = None
+        self._latitude = None
+        self._longitude = None
+
+        self.api_key_data_schema = vol.Schema({vol.Required(CONF_API_KEY): str})
+
     @property
     def geography_schema(self):
         """Return the data schema for the cloud API."""
-        return vol.Schema(
+        return self.api_key_data_schema.extend(
             {
-                vol.Required(CONF_API_KEY): str,
                 vol.Required(
                     CONF_LATITUDE, default=self.hass.config.latitude
                 ): cv.latitude,
@@ -85,8 +92,8 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="geography", data_schema=self.geography_schema
             )
 
-        geo_id = async_get_geography_id(user_input)
-        await self._async_set_unique_id(geo_id)
+        self._geo_id = async_get_geography_id(user_input)
+        await self._async_set_unique_id(self._geo_id)
         self._abort_if_unique_id_configured()
 
         # Find older config entries without unique ID:
@@ -95,7 +102,7 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 continue
 
             if any(
-                geo_id == async_get_geography_id(geography)
+                self._geo_id == async_get_geography_id(geography)
                 for geography in entry.data[CONF_GEOGRAPHIES]
             ):
                 return self.async_abort(reason="already_configured")
@@ -123,10 +130,19 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
                 checked_keys.add(user_input[CONF_API_KEY])
 
-            return self.async_create_entry(
-                title=f"Cloud API ({geo_id})",
-                data={**user_input, CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_GEOGRAPHY},
-            )
+            return await self.async_step_geography_finish(user_input)
+
+    async def async_step_geography_finish(self, user_input=None):
+        """Handle the finalization of a Cloud API config entry."""
+        existing_entry = await self.async_set_unique_id(self._geo_id)
+        if existing_entry:
+            self.hass.config_entries.async_update_entry(existing_entry, data=user_input)
+            return self.async_abort(reason="reauth_successful")
+
+        return self.async_create_entry(
+            title=f"Cloud API ({self._geo_id})",
+            data={**user_input, CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_GEOGRAPHY},
+        )
 
     async def async_step_import(self, import_config):
         """Import a config entry from configuration.yaml."""
@@ -163,6 +179,30 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             title=f"Node/Pro ({user_input[CONF_IP_ADDRESS]})",
             data={**user_input, CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_NODE_PRO},
         )
+
+    async def async_step_reauth(self, data):
+        """Handle configuration by re-auth."""
+        self._latitude = data[CONF_LATITUDE]
+        self._longitude = data[CONF_LONGITUDE]
+
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(self, user_input=None):
+        """Handle re-auth completion."""
+        if not user_input:
+            return self.async_show_form(
+                step_id="reauth_confirm", data_schema=self.api_key_data_schema
+            )
+
+        conf = {
+            CONF_API_KEY: user_input[CONF_API_KEY],
+            CONF_LATITUDE: self._latitude,
+            CONF_LONGITUDE: self._longitude,
+        }
+
+        self._geo_id = async_get_geography_id(conf)
+
+        return await self.async_step_geography_finish(conf)
 
     async def async_step_user(self, user_input=None):
         """Handle the start of the config flow."""

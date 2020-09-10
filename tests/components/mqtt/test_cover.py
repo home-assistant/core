@@ -1397,6 +1397,7 @@ async def test_tilt_position_altered_range(hass, mqtt_mock):
 async def test_find_percentage_in_range_defaults(hass, mqtt_mock):
     """Test find percentage in range with default range."""
     mqtt_cover = MqttCover(
+        hass,
         {
             "name": "cover.test",
             "state_topic": "state-topic",
@@ -1440,6 +1441,7 @@ async def test_find_percentage_in_range_defaults(hass, mqtt_mock):
 async def test_find_percentage_in_range_altered(hass, mqtt_mock):
     """Test find percentage in range with altered range."""
     mqtt_cover = MqttCover(
+        hass,
         {
             "name": "cover.test",
             "state_topic": "state-topic",
@@ -1483,6 +1485,7 @@ async def test_find_percentage_in_range_altered(hass, mqtt_mock):
 async def test_find_percentage_in_range_defaults_inverted(hass, mqtt_mock):
     """Test find percentage in range with default range but inverted."""
     mqtt_cover = MqttCover(
+        hass,
         {
             "name": "cover.test",
             "state_topic": "state-topic",
@@ -1526,6 +1529,7 @@ async def test_find_percentage_in_range_defaults_inverted(hass, mqtt_mock):
 async def test_find_percentage_in_range_altered_inverted(hass, mqtt_mock):
     """Test find percentage in range with altered range and inverted."""
     mqtt_cover = MqttCover(
+        hass,
         {
             "name": "cover.test",
             "state_topic": "state-topic",
@@ -1569,6 +1573,7 @@ async def test_find_percentage_in_range_altered_inverted(hass, mqtt_mock):
 async def test_find_in_range_defaults(hass, mqtt_mock):
     """Test find in range with default range."""
     mqtt_cover = MqttCover(
+        hass,
         {
             "name": "cover.test",
             "state_topic": "state-topic",
@@ -1612,6 +1617,7 @@ async def test_find_in_range_defaults(hass, mqtt_mock):
 async def test_find_in_range_altered(hass, mqtt_mock):
     """Test find in range with altered range."""
     mqtt_cover = MqttCover(
+        hass,
         {
             "name": "cover.test",
             "state_topic": "state-topic",
@@ -1655,6 +1661,7 @@ async def test_find_in_range_altered(hass, mqtt_mock):
 async def test_find_in_range_defaults_inverted(hass, mqtt_mock):
     """Test find in range with default range but inverted."""
     mqtt_cover = MqttCover(
+        hass,
         {
             "name": "cover.test",
             "state_topic": "state-topic",
@@ -1698,6 +1705,7 @@ async def test_find_in_range_defaults_inverted(hass, mqtt_mock):
 async def test_find_in_range_altered_inverted(hass, mqtt_mock):
     """Test find in range with altered range and inverted."""
     mqtt_cover = MqttCover(
+        hass,
         {
             "name": "cover.test",
             "state_topic": "state-topic",

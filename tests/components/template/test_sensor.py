@@ -758,3 +758,47 @@ async def test_sun_renders_once_per_sensor(hass):
         "{{ state_attr('sun.sun', 'elevation') }}",
         "{{ state_attr('sun.sun', 'next_rising') }}",
     }
+
+
+async def test_self_referencing_sensor_loop(hass, caplog):
+    """Test a self referencing sensor does not loop forever."""
+
+    template_str = """
+{% for state in states -%}
+  {{ state.last_updated }}
+{%- endfor %}
+"""
+
+    await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": {
+                "platform": "template",
+                "sensors": {
+                    "test": {
+                        "value_template": template_str,
+                    },
+                },
+            }
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 1
+
+    value = hass.states.get("sensor.test").state
+    await hass.async_block_till_done()
+
+    value2 = hass.states.get("sensor.test").state
+    assert value2 == value
+
+    await hass.async_block_till_done()
+
+    value3 = hass.states.get("sensor.test").state
+    assert value3 == value2
+
+    assert "Template loop detected" in caplog.text
