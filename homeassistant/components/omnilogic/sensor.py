@@ -201,6 +201,7 @@ class OmnilogicSensor(OmniLogicEntity):
         """Force update."""
         return True
 
+    @staticmethod
     def add_alarms(self, alarms: dict):
         """Add Alarm attributes."""
         self.alarms = alarms
@@ -211,6 +212,7 @@ class OmnilogicSensor(OmniLogicEntity):
                 self.alarms[0]["Message"] + " (" + self.alarms[0]["Comment"] + ")"
             )
 
+    @staticmethod
     def find_chlorinator(self, coordinator, systemid):
         """Find the correct chlorinator entity."""
 
