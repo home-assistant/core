@@ -13,7 +13,7 @@ from homeassistant.const import (
 )
 
 DOMAIN = "synology_dsm"
-PLATFORMS = ["binary_sensor", "sensor"]
+PLATFORMS = ["binary_sensor", "camera", "sensor"]
 
 # Entry keys
 SYNO_API = "syno_api"
