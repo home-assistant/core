@@ -36,7 +36,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await omni.connect()
             except LoginException:
                 errors["base"] = "cannot_connect"
-            except Exception:
+            except Exception:  # pylint: disable=bare-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
