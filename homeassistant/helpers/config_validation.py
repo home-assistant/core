@@ -61,6 +61,7 @@ from homeassistant.const import (
     CONF_SEQUENCE,
     CONF_SERVICE,
     CONF_SERVICE_TEMPLATE,
+    CONF_SET,
     CONF_STATE,
     CONF_TIMEOUT,
     CONF_UNIT_SYSTEM_IMPERIAL,
@@ -1120,6 +1121,13 @@ _SCRIPT_WAIT_FOR_TRIGGER_SCHEMA = vol.Schema(
     }
 )
 
+_SCRIPT_SET_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_ALIAS): string,
+        vol.Required(CONF_SET): SCRIPT_VARIABLES_SCHEMA,
+    }
+)
+
 SCRIPT_ACTION_DELAY = "delay"
 SCRIPT_ACTION_WAIT_TEMPLATE = "wait_template"
 SCRIPT_ACTION_CHECK_CONDITION = "condition"
@@ -1130,6 +1138,7 @@ SCRIPT_ACTION_ACTIVATE_SCENE = "scene"
 SCRIPT_ACTION_REPEAT = "repeat"
 SCRIPT_ACTION_CHOOSE = "choose"
 SCRIPT_ACTION_WAIT_FOR_TRIGGER = "wait_for_trigger"
+SCRIPT_ACTION_SET = "set"
 
 
 def determine_script_action(action: dict) -> str:
@@ -1161,6 +1170,9 @@ def determine_script_action(action: dict) -> str:
     if CONF_WAIT_FOR_TRIGGER in action:
         return SCRIPT_ACTION_WAIT_FOR_TRIGGER
 
+    if CONF_SET in action:
+        return SCRIPT_ACTION_SET
+
     return SCRIPT_ACTION_CALL_SERVICE
 
 
@@ -1175,4 +1187,5 @@ ACTION_TYPE_SCHEMAS: Dict[str, Callable[[Any], dict]] = {
     SCRIPT_ACTION_REPEAT: _SCRIPT_REPEAT_SCHEMA,
     SCRIPT_ACTION_CHOOSE: _SCRIPT_CHOOSE_SCHEMA,
     SCRIPT_ACTION_WAIT_FOR_TRIGGER: _SCRIPT_WAIT_FOR_TRIGGER_SCHEMA,
+    SCRIPT_ACTION_SET: _SCRIPT_SET_SCHEMA,
 }
