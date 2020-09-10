@@ -28,11 +28,16 @@ async def async_attach_trigger(
 ):
     """Listen for events based on configuration."""
     event_type = config.get(CONF_EVENT_TYPE)
-    event_data_schema = (
-        vol.Schema(config.get(CONF_EVENT_DATA), extra=vol.ALLOW_EXTRA)
-        if config.get(CONF_EVENT_DATA)
-        else None
-    )
+    if config.get(CONF_EVENT_DATA):
+        event_data_schema = vol.Schema(
+            {
+                vol.Required(key): value
+                for key, value in config.get(CONF_EVENT_DATA).items()
+            },
+            extra=vol.ALLOW_EXTRA,
+        )
+    else:
+        event_data_schema = None
 
     @callback
     def handle_event(event):
