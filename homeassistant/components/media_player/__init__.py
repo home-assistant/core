@@ -85,6 +85,7 @@ from .const import (
     ATTR_SOUND_MODE,
     ATTR_SOUND_MODE_LIST,
     DOMAIN,
+    MEDIA_CLASS_DIRECTORY,
     SERVICE_CLEAR_PLAYLIST,
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOUND_MODE,
@@ -1078,3 +1079,13 @@ class BrowseMedia:
             response["children"] = []
 
         return response
+
+    def calculate_children_class(self):
+        """Count the children media classes and calculate the correct class."""
+        self.children_media_class = MEDIA_CLASS_DIRECTORY
+        child_class_count = collections.Counter(
+            child.media_class for child in self.children
+        )
+        if len(child_class_count) == 1:
+            # there's only one child class
+            self.children_media_class = next(iter(child_class_count))
