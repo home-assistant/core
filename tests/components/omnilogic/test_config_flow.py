@@ -58,7 +58,7 @@ async def test_already_configured(hass):
 
 
 async def test_without_config(hass):
-    """Test config flow with no configuration."""
+    """Test config flow with no or incomplete configuration."""
 
     flow = config_flow.ConfigFlow()
     flow.hass = hass
@@ -71,6 +71,31 @@ async def test_without_config(hass):
     assert result["type"] == "form"
     assert result["step_id"] == "user"
     assert result["errors"] == {}
+
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.omnilogic.config_flow.OmniLogic.connect",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.omnilogic.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.omnilogic.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"username": "test-username", "password": "test-password"},
+        )
+
+    assert result2["type"] == "create_entry"
+    assert result2["title"] == "Omnilogic"
+    assert result2["data"] == DATA
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_with_invalid_credentials(hass):
