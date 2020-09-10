@@ -330,7 +330,6 @@ class KodiEntity(MediaPlayerEntity):
         """Reset the player state on quit action."""
         self.hass.async_create_task(self._clear_connection())
 
-    @callback
     async def _clear_connection(self, close=True):
         self._reset_state()
         self.async_write_ha_state()
@@ -394,7 +393,6 @@ class KodiEntity(MediaPlayerEntity):
             await self._connection.connect()
             self._on_ws_connected()
         except (jsonrpc_base.jsonrpc.TransportError, CannotConnectError):
-            _LOGGER.info("Unable to connect to Kodi via websocket")
             _LOGGER.debug("Unable to connect to Kodi via websocket", exc_info=True)
             await self._clear_connection(False)
 
@@ -402,7 +400,6 @@ class KodiEntity(MediaPlayerEntity):
         try:
             await self._kodi.ping()
         except (jsonrpc_base.jsonrpc.TransportError, CannotConnectError):
-            _LOGGER.info("Unable to ping  Kodi via websocket")
             _LOGGER.debug("Unable to ping Kodi via websocket", exc_info=True)
             await self._clear_connection()
 
