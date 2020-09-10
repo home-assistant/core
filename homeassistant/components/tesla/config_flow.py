@@ -142,9 +142,9 @@ async def validate_input(hass: core.HomeAssistant, data):
     except TeslaException as ex:
         if ex.code == 401:
             _LOGGER.error("Invalid credentials: %s", ex)
-            raise InvalidAuth()
+            raise InvalidAuth() from ex
         _LOGGER.error("Unable to communicate with Tesla API: %s", ex)
-        raise CannotConnect()
+        raise CannotConnect() from ex
     _LOGGER.debug("Credentials successfully connected to the Tesla API")
     return config
 

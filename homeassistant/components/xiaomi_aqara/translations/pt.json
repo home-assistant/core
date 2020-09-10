@@ -1,5 +1,8 @@
 {
     "config": {
+        "error": {
+            "invalid_host": "Endere\u00e7o IP Inv\u00e1lido"
+        },
         "step": {
             "select": {
                 "data": {
@@ -11,6 +14,11 @@
                     "name": "Nome da Gateway"
                 },
                 "description": "A chave (palavra-passe) pode ser recuperada usando este tutorial: https://www.domoticz.com/wiki/Xiaomi_Gateway_(Aqara)#Adding_the_Xiaomi_Gateway_to_Domoticz. Se a chave n\u00e3o for fornecida, apenas os sensores estar\u00e3o acess\u00edveis"
+            },
+            "user": {
+                "data": {
+                    "host": "Endere\u00e7o IP (optional)"
+                }
             }
         }
     }

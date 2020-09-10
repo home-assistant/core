@@ -11,8 +11,8 @@
         "step": {
             "user": {
                 "data": {
-                    "password": "MELCloud passord.",
-                    "username": "E-post som blir brukt til \u00e5 logge inn p\u00e5 MELCloud."
+                    "password": "Passord",
+                    "username": "E-post"
                 },
                 "description": "Koble til ved hjelp av MELCloud-kontoen din.",
                 "title": "Koble til MELCloud"

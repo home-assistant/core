@@ -20,7 +20,8 @@ async def test_show_form(hass):
 async def test_invalid_credentials(hass):
     """Test we handle invalid credentials."""
     with patch(
-        "poolsense.PoolSense.test_poolsense_credentials", return_value=False,
+        "poolsense.PoolSense.test_poolsense_credentials",
+        return_value=False,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

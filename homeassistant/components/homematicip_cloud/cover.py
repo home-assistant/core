@@ -19,7 +19,7 @@ from homeassistant.components.cover import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 
-from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericDevice
+from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericEntity
 from .hap import HomematicipHAP
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,8 +54,8 @@ async def async_setup_entry(
         async_add_entities(entities)
 
 
-class HomematicipCoverShutter(HomematicipGenericDevice, CoverEntity):
-    """Representation of a HomematicIP Cloud cover shutter device."""
+class HomematicipCoverShutter(HomematicipGenericEntity, CoverEntity):
+    """Representation of the HomematicIP cover shutter."""
 
     @property
     def current_cover_position(self) -> int:
@@ -92,7 +92,7 @@ class HomematicipCoverShutter(HomematicipGenericDevice, CoverEntity):
 
 
 class HomematicipCoverSlats(HomematicipCoverShutter, CoverEntity):
-    """Representation of a HomematicIP Cloud cover slats device."""
+    """Representation of the HomematicIP cover slats."""
 
     @property
     def current_cover_tilt_position(self) -> int:
@@ -121,8 +121,8 @@ class HomematicipCoverSlats(HomematicipCoverShutter, CoverEntity):
         await self._device.set_shutter_stop()
 
 
-class HomematicipGarageDoorModule(HomematicipGenericDevice, CoverEntity):
-    """Representation of a HomematicIP Garage Door Module."""
+class HomematicipGarageDoorModule(HomematicipGenericEntity, CoverEntity):
+    """Representation of the HomematicIP Garage Door Module."""
 
     @property
     def current_cover_position(self) -> int:
@@ -154,7 +154,7 @@ class HomematicipGarageDoorModule(HomematicipGenericDevice, CoverEntity):
 
 
 class HomematicipCoverShutterGroup(HomematicipCoverSlats, CoverEntity):
-    """Representation of a HomematicIP Cloud cover shutter group."""
+    """Representation of the HomematicIP cover shutter group."""
 
     def __init__(self, hap: HomematicipHAP, device, post: str = "ShutterGroup") -> None:
         """Initialize switching group."""

@@ -16,6 +16,8 @@ EVENT_MOTION_DETECTOR_NO_MOTION = "08200100a109000570"
 EVENT_LIGHT_DETECTOR_LIGHT = "08200100a109001570"
 EVENT_LIGHT_DETECTOR_DARK = "08200100a109001470"
 
+EVENT_AC_118CDEA_2_ON = "0b1100100118cdea02010f70"
+
 
 async def test_one(hass, rfxtrx):
     """Test with 1 sensor."""
@@ -65,6 +67,35 @@ async def test_one_pt2262(hass, rfxtrx):
     await rfxtrx.signal("09130000226707013d70")
     state = hass.states.get("binary_sensor.pt2262_22670e")
     assert state.state == "off"
+
+
+async def test_pt2262_unconfigured(hass, rfxtrx):
+    """Test with discovery for PT2262."""
+    assert await async_setup_component(
+        hass,
+        "rfxtrx",
+        {
+            "rfxtrx": {
+                "device": "abcd",
+                "devices": {
+                    "0913000022670e013970": {},
+                    "09130000226707013970": {},
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    await hass.async_start()
+
+    state = hass.states.get("binary_sensor.pt2262_22670e")
+    assert state
+    assert state.state == "off"  # probably aught to be unknown
+    assert state.attributes.get("friendly_name") == "PT2262 22670e"
+
+    state = hass.states.get("binary_sensor.pt2262_226707")
+    assert state
+    assert state.state == "off"  # probably aught to be unknown
+    assert state.attributes.get("friendly_name") == "PT2262 226707"
 
 
 @pytest.mark.parametrize(
@@ -137,6 +168,37 @@ async def test_discover(hass, rfxtrx_automatic):
     assert state.state == "on"
 
 
+async def test_off_delay_restore(hass, rfxtrx):
+    """Make sure binary sensor restore as off, if off delay is active."""
+    mock_restore_cache(
+        hass,
+        [
+            State(
+                "binary_sensor.ac_118cdea_2",
+                "on",
+                attributes={ATTR_EVENT: EVENT_AC_118CDEA_2_ON},
+            )
+        ],
+    )
+
+    assert await async_setup_component(
+        hass,
+        "rfxtrx",
+        {
+            "rfxtrx": {
+                "device": "abcd",
+                "devices": {EVENT_AC_118CDEA_2_ON: {"off_delay": 5}},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    await hass.async_start()
+
+    state = hass.states.get("binary_sensor.ac_118cdea_2")
+    assert state
+    assert state.state == "off"
+
+
 async def test_off_delay(hass, rfxtrx, timestep):
     """Test with discovery."""
     assert await async_setup_component(
@@ -160,6 +222,24 @@ async def test_off_delay(hass, rfxtrx, timestep):
     state = hass.states.get("binary_sensor.ac_118cdea_2")
     assert state
     assert state.state == "on"
+
+    await timestep(4)
+    state = hass.states.get("binary_sensor.ac_118cdea_2")
+    assert state
+    assert state.state == "on"
+
+    await timestep(4)
+    state = hass.states.get("binary_sensor.ac_118cdea_2")
+    assert state
+    assert state.state == "off"
+
+    await rfxtrx.signal("0b1100100118cdea02010f70")
+    state = hass.states.get("binary_sensor.ac_118cdea_2")
+    assert state
+    assert state.state == "on"
+
+    await timestep(3)
+    await rfxtrx.signal("0b1100100118cdea02010f70")
 
     await timestep(4)
     state = hass.states.get("binary_sensor.ac_118cdea_2")
@@ -211,3 +291,35 @@ async def test_light(hass, rfxtrx_automatic):
 
     await rfxtrx.signal(EVENT_LIGHT_DETECTOR_DARK)
     assert hass.states.get(entity_id).state == "off"
+
+
+async def test_pt2262_duplicate_id(hass, rfxtrx):
+    """Test with 1 sensor."""
+    assert await async_setup_component(
+        hass,
+        "rfxtrx",
+        {
+            "rfxtrx": {
+                "device": "abcd",
+                "devices": {
+                    "0913000022670e013970": {
+                        "data_bits": 4,
+                        "command_on": 0xE,
+                        "command_off": 0x7,
+                    },
+                    "09130000226707013970": {
+                        "data_bits": 4,
+                        "command_on": 0xE,
+                        "command_off": 0x7,
+                    },
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    await hass.async_start()
+
+    state = hass.states.get("binary_sensor.pt2262_22670e")
+    assert state
+    assert state.state == "off"  # probably aught to be unknown
+    assert state.attributes.get("friendly_name") == "PT2262 22670e"

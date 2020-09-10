@@ -15,7 +15,12 @@ from homeassistant.const import (
 from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.util import utcnow
 
-from .common import patch_bond_action, patch_bond_device_state, setup_platform
+from .common import (
+    help_test_entity_available,
+    patch_bond_action,
+    patch_bond_device_state,
+    setup_platform,
+)
 
 from tests.common import async_fire_time_changed
 
@@ -29,10 +34,17 @@ def shades(name: str):
 
 async def test_entity_registry(hass: core.HomeAssistant):
     """Tests that the devices are registered in the entity registry."""
-    await setup_platform(hass, COVER_DOMAIN, shades("name-1"))
+    await setup_platform(
+        hass,
+        COVER_DOMAIN,
+        shades("name-1"),
+        bond_version={"bondid": "test-hub-id"},
+        bond_device_id="test-device-id",
+    )
 
     registry: EntityRegistry = await hass.helpers.entity_registry.async_get_registry()
-    assert [key for key in registry.entities] == ["cover.name_1"]
+    entity = registry.entities["cover.name_1"]
+    assert entity.unique_id == "test-hub-id_test-device-id"
 
 
 async def test_open_cover(hass: core.HomeAssistant):
@@ -109,3 +121,10 @@ async def test_update_reports_closed_cover(hass: core.HomeAssistant):
         await hass.async_block_till_done()
 
     assert hass.states.get("cover.name_1").state == "closed"
+
+
+async def test_cover_available(hass: core.HomeAssistant):
+    """Tests that available state is updated based on API errors."""
+    await help_test_entity_available(
+        hass, COVER_DOMAIN, shades("name-1"), "cover.name_1"
+    )

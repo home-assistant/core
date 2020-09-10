@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "invalid_dongle_path": "Ong\u00eblte Dongle Pad"
+        },
+        "error": {
+            "invalid_dongle_path": "Kee g\u00ebltege Dongle an d\u00ebsem Pad fonnt"
+        },
+        "flow_title": "ENOcean Konfiguratioun",
+        "step": {
+            "detect": {
+                "data": {
+                    "path": "USB Dongle Pad"
+                },
+                "title": "Wiel de Pad zu dengem ENOcean Dongle aus."
+            },
+            "manual": {
+                "data": {
+                    "path": "USB Dongle Pad"
+                },
+                "title": "G\u00ebff de Pad zu dengem ENOcean Dongle an"
+            }
+        }
+    },
+    "title": "EnOcean"
+}

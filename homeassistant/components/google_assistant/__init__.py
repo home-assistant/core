@@ -39,7 +39,7 @@ _LOGGER = logging.getLogger(__name__)
 ENTITY_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_EXPOSE): cv.boolean,
+        vol.Optional(CONF_EXPOSE, default=True): cv.boolean,
         vol.Optional(CONF_ALIASES): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_ROOM_HINT): cv.string,
     }

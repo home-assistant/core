@@ -129,7 +129,8 @@ class HomeKitTelevision(HomeKitEntity, MediaPlayerEntity):
         this_tv = this_accessory.services.iid(self._iid)
 
         input_sources = this_accessory.services.filter(
-            service_type=ServicesTypes.INPUT_SOURCE, parent_service=this_tv,
+            service_type=ServicesTypes.INPUT_SOURCE,
+            parent_service=this_tv,
         )
 
         for input_source in input_sources:

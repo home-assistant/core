@@ -132,11 +132,11 @@ warning_device_warn:
       example: "00:0d:6f:00:05:7d:2d:34"
     mode:
       description: >-
-        The Warning Mode field is used as an 4-bit enumeration, can have one of the values defined below in table 8-20 of the ZCL spec. The exact behavior of the WD device in each mode is according to the relevant security standards.
+        The Warning Mode field is used as an 4-bit enumeration, can have one of the values 0-6 defined below in table 8-20 of the ZCL spec. The exact behavior of the WD device in each mode is according to the relevant security standards.
       example: 1
     strobe:
       description: >-
-        The Strobe field is used as a 2-bit enumeration, and determines if the visual indication is required in addition to the audible siren, as indicated in Table 8-21 of the ZCL spec. If the strobe field is “1” and the Warning Mode is “0” (“Stop”) then only the strobe is activated.
+        The Strobe field is used as a 2-bit enumeration, and determines if the visual indication is required in addition to the audible siren, as indicated in Table 8-21 of the ZCL spec. "0" means no strobe, "1" means strobe. If the strobe field is “1” and the Warning Mode is “0” (“Stop”) then only the strobe is activated.
       example: 1
     level:
       description: >-
@@ -144,12 +144,12 @@ warning_device_warn:
       example: 2
     duration:
       description: >-
-        Requested duration of warning, in seconds. If both Strobe and Warning Mode are "0" this field SHALL be ignored.
+        Requested duration of warning, in seconds (16 bit). If both Strobe and Warning Mode are "0" this field SHALL be ignored.
       example: 2
     duty_cycle:
       description: >-
         Indicates the length of the flash cycle. This provides a means of varying the flash duration for different alarm types (e.g., fire, police, burglar). Valid range is 0-100 in increments of 10. All other values SHALL be rounded to the nearest valid value. Strobe SHALL calculate duty cycle over a duration of one second. The ON state SHALL precede the OFF state. For example, if Strobe Duty Cycle Field specifies “40,” then the strobe SHALL flash ON for 4/10ths of a second and then turn OFF for 6/10ths of a second.
-      example: 2
+      example: 50
     intensity:
       description: >-
         Indicates the intensity of the strobe as shown in Table 8-23 of the ZCL spec. This attribute is designed to vary the output of the strobe (i.e., brightness) and not its frequency, which is detailed in section 8.4.2.3.1.6 of the ZCL spec.

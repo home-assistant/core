@@ -1,5 +1,12 @@
 {
     "config": {
+        "abort": {
+            "cannot_connect": "Tilkobling mislyktes."
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes.",
+            "invalid_auth": "Ugyldig godkjenning"
+        },
         "step": {
             "user": {
                 "data": {
@@ -7,8 +14,8 @@
                     "password": "Passord",
                     "username": "Brukernavn"
                 },
-                "description": "Gi n\u00f8dvendig informasjon nedenfor. Merk: bare \"admin\" brukeren er kjent for \u00e5 fungere.",
-                "title": "Konfigurer GogoGate2"
+                "description": "Gi n\u00f8dvendig informasjon nedenfor.",
+                "title": "Sett opp GogoGate2 eller iSmartGate"
             }
         }
     }

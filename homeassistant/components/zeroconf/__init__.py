@@ -8,6 +8,7 @@ import voluptuous as vol
 from zeroconf import (
     DNSPointer,
     DNSRecord,
+    Error as ZeroconfError,
     InterfaceChoice,
     IPVersion,
     NonUniqueNameException,
@@ -25,10 +26,12 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     __version__,
 )
-from homeassistant.generated.zeroconf import HOMEKIT, ZEROCONF
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.singleton import singleton
+from homeassistant.loader import async_get_homekit, async_get_zeroconf
+
+from .usage import install_multiple_zeroconf_catcher
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,6 +54,13 @@ DEFAULT_IPV6 = True
 HOMEKIT_PROPERTIES = "properties"
 HOMEKIT_PAIRED_STATUS_FLAG = "sf"
 HOMEKIT_MODEL = "md"
+
+# Property key=value has a max length of 255
+# so we use 230 to leave space for key=
+MAX_PROPERTY_VALUE_LEN = 230
+
+# Dns label max length
+MAX_NAME_LEN = 63
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -135,13 +145,17 @@ def setup(hass, config):
         ipv6=zc_config.get(CONF_IPV6, DEFAULT_IPV6),
     )
 
+    install_multiple_zeroconf_catcher(zeroconf)
+
     # Get instance UUID
     uuid = asyncio.run_coroutine_threadsafe(
         hass.helpers.instance_id.async_get(), hass.loop
     ).result()
 
+    valid_location_name = _truncate_location_name_to_valid(hass.config.location_name)
+
     params = {
-        "location_name": hass.config.location_name,
+        "location_name": valid_location_name,
         "uuid": uuid,
         "version": __version__,
         "external_url": "",
@@ -173,9 +187,11 @@ def setup(hass, config):
     except OSError:
         host_ip_pton = socket.inet_pton(socket.AF_INET6, host_ip)
 
+    _suppress_invalid_properties(params)
+
     info = ServiceInfo(
         ZEROCONF_TYPE,
-        name=f"{hass.config.location_name}.{ZEROCONF_TYPE}",
+        name=f"{valid_location_name}.{ZEROCONF_TYPE}",
         server=f"{uuid}.local.",
         addresses=[host_ip_pton],
         port=hass.http.server_port,
@@ -197,12 +213,23 @@ def setup(hass, config):
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, zeroconf_hass_start)
 
+    zeroconf_types = {}
+    homekit_models = {}
+
     def service_update(zeroconf, service_type, name, state_change):
         """Service state changed."""
+        nonlocal zeroconf_types
+        nonlocal homekit_models
+
         if state_change != ServiceStateChange.Added:
             return
 
-        service_info = zeroconf.get_service_info(service_type, name)
+        try:
+            service_info = zeroconf.get_service_info(service_type, name)
+        except ZeroconfError:
+            _LOGGER.exception("Failed to get info for device %s", name)
+            return
+
         if not service_info:
             # Prevent the browser thread from collapsing as
             # service_info can be None
@@ -219,7 +246,7 @@ def setup(hass, config):
 
         # If we can handle it as a HomeKit discovery, we do that here.
         if service_type == HOMEKIT_TYPE:
-            discovery_was_forwarded = handle_homekit(hass, info)
+            discovery_was_forwarded = handle_homekit(hass, homekit_models, info)
             # Continue on here as homekit_controller
             # still needs to get updates on devices
             # so it can see when the 'c#' field is updated.
@@ -241,20 +268,25 @@ def setup(hass, config):
                     # likely bad homekit data
                     return
 
-        for domain in ZEROCONF[service_type]:
+        for domain in zeroconf_types[service_type]:
             hass.add_job(
                 hass.config_entries.flow.async_init(
                     domain, context={"source": DOMAIN}, data=info
                 )
             )
 
-    types = list(ZEROCONF)
-
-    if HOMEKIT_TYPE not in ZEROCONF:
-        types.append(HOMEKIT_TYPE)
-
-    def zeroconf_hass_started(_event):
+    async def zeroconf_hass_started(_event):
         """Start the service browser."""
+        nonlocal zeroconf_types
+        nonlocal homekit_models
+
+        zeroconf_types = await async_get_zeroconf(hass)
+        homekit_models = await async_get_homekit(hass)
+
+        types = list(zeroconf_types)
+
+        if HOMEKIT_TYPE not in zeroconf_types:
+            types.append(HOMEKIT_TYPE)
 
         _LOGGER.debug("Starting Zeroconf browser")
         HaServiceBrowser(zeroconf, types, handlers=[service_update])
@@ -264,7 +296,7 @@ def setup(hass, config):
     return True
 
 
-def handle_homekit(hass, info) -> bool:
+def handle_homekit(hass, homekit_models, info) -> bool:
     """Handle a HomeKit discovery.
 
     Return if discovery was forwarded.
@@ -280,7 +312,7 @@ def handle_homekit(hass, info) -> bool:
     if model is None:
         return False
 
-    for test_model in HOMEKIT:
+    for test_model in homekit_models:
         if (
             model != test_model
             and not model.startswith(f"{test_model} ")
@@ -290,7 +322,7 @@ def handle_homekit(hass, info) -> bool:
 
         hass.add_job(
             hass.config_entries.flow.async_init(
-                HOMEKIT[test_model], context={"source": "homekit"}, data=info
+                homekit_models[test_model], context={"source": "homekit"}, data=info
             )
         )
         return True
@@ -337,3 +369,33 @@ def info_from_service(service):
     }
 
     return info
+
+
+def _suppress_invalid_properties(properties):
+    """Suppress any properties that will cause zeroconf to fail to startup."""
+
+    for prop, prop_value in properties.items():
+        if not isinstance(prop_value, str):
+            continue
+
+        if len(prop_value.encode("utf-8")) > MAX_PROPERTY_VALUE_LEN:
+            _LOGGER.error(
+                "The property '%s' was suppressed because it is longer than the maximum length of %d bytes: %s",
+                prop,
+                MAX_PROPERTY_VALUE_LEN,
+                prop_value,
+            )
+            properties[prop] = ""
+
+
+def _truncate_location_name_to_valid(location_name):
+    """Truncate or return the location name usable for zeroconf."""
+    if len(location_name.encode("utf-8")) < MAX_NAME_LEN:
+        return location_name
+
+    _LOGGER.warning(
+        "The location name was truncated because it is longer than the maximum length of %d bytes: %s",
+        MAX_NAME_LEN,
+        location_name,
+    )
+    return location_name.encode("utf-8")[:MAX_NAME_LEN].decode("utf-8", "ignore")

@@ -11,6 +11,10 @@
                 "description": "Vil du legge Arcam FMJ p\u00e5 ` {host} ` til Home Assistant? "
             },
             "user": {
+                "data": {
+                    "host": "Vert",
+                    "port": ""
+                },
                 "description": "Vennligst skriv inn vertsnavnet eller IP-adressen til enheten."
             }
         }

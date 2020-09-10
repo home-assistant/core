@@ -180,9 +180,9 @@ class WebSocketHandler:
             try:
                 with async_timeout.timeout(10):
                     msg = await wsock.receive()
-            except asyncio.TimeoutError:
+            except asyncio.TimeoutError as err:
                 disconnect_warn = "Did not receive auth message within 10 seconds"
-                raise Disconnect
+                raise Disconnect from err
 
             if msg.type in (WSMsgType.CLOSE, WSMsgType.CLOSING):
                 raise Disconnect
@@ -193,9 +193,9 @@ class WebSocketHandler:
 
             try:
                 msg_data = msg.json()
-            except ValueError:
+            except ValueError as err:
                 disconnect_warn = "Received invalid JSON."
-                raise Disconnect
+                raise Disconnect from err
 
             self._logger.debug("Received %s", msg_data)
             connection = await auth.async_handle(msg_data)

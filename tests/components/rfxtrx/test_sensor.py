@@ -2,7 +2,7 @@
 import pytest
 
 from homeassistant.components.rfxtrx.const import ATTR_EVENT
-from homeassistant.const import TEMP_CELSIUS, UNIT_PERCENTAGE
+from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
 from homeassistant.core import State
 from homeassistant.setup import async_setup_component
 
@@ -81,7 +81,7 @@ async def test_one_sensor_no_datatype(hass, rfxtrx):
     assert state
     assert state.state == "unknown"
     assert state.attributes.get("friendly_name") == f"{base_name} Humidity"
-    assert state.attributes.get("unit_of_measurement") == UNIT_PERCENTAGE
+    assert state.attributes.get("unit_of_measurement") == PERCENTAGE
 
     state = hass.states.get(f"{base_id}_humidity_status")
     assert state
@@ -99,7 +99,7 @@ async def test_one_sensor_no_datatype(hass, rfxtrx):
     assert state
     assert state.state == "unknown"
     assert state.attributes.get("friendly_name") == f"{base_name} Battery numeric"
-    assert state.attributes.get("unit_of_measurement") == UNIT_PERCENTAGE
+    assert state.attributes.get("unit_of_measurement") == PERCENTAGE
 
 
 async def test_several_sensors(hass, rfxtrx):
@@ -145,7 +145,7 @@ async def test_several_sensors(hass, rfxtrx):
         state.attributes.get("friendly_name")
         == "WT260,WT260H,WT440H,WT450,WT450H 06:01 Humidity"
     )
-    assert state.attributes.get("unit_of_measurement") == UNIT_PERCENTAGE
+    assert state.attributes.get("unit_of_measurement") == PERCENTAGE
 
 
 async def test_discover_sensor(hass, rfxtrx_automatic):
@@ -159,7 +159,7 @@ async def test_discover_sensor(hass, rfxtrx_automatic):
     state = hass.states.get(f"{base_id}_humidity")
     assert state
     assert state.state == "27"
-    assert state.attributes.get("unit_of_measurement") == UNIT_PERCENTAGE
+    assert state.attributes.get("unit_of_measurement") == PERCENTAGE
 
     state = hass.states.get(f"{base_id}_humidity_status")
     assert state
@@ -179,7 +179,7 @@ async def test_discover_sensor(hass, rfxtrx_automatic):
     state = hass.states.get(f"{base_id}_battery_numeric")
     assert state
     assert state.state == "90"
-    assert state.attributes.get("unit_of_measurement") == UNIT_PERCENTAGE
+    assert state.attributes.get("unit_of_measurement") == PERCENTAGE
 
     # 2
     await rfxtrx.signal("0a52080405020095240279")
@@ -188,7 +188,7 @@ async def test_discover_sensor(hass, rfxtrx_automatic):
 
     assert state
     assert state.state == "36"
-    assert state.attributes.get("unit_of_measurement") == UNIT_PERCENTAGE
+    assert state.attributes.get("unit_of_measurement") == PERCENTAGE
 
     state = hass.states.get(f"{base_id}_humidity_status")
     assert state
@@ -208,7 +208,7 @@ async def test_discover_sensor(hass, rfxtrx_automatic):
     state = hass.states.get(f"{base_id}_battery_numeric")
     assert state
     assert state.state == "90"
-    assert state.attributes.get("unit_of_measurement") == UNIT_PERCENTAGE
+    assert state.attributes.get("unit_of_measurement") == PERCENTAGE
 
     # 1 Update
     await rfxtrx.signal("0a52085e070100b31b0279")
@@ -217,7 +217,7 @@ async def test_discover_sensor(hass, rfxtrx_automatic):
     state = hass.states.get(f"{base_id}_humidity")
     assert state
     assert state.state == "27"
-    assert state.attributes.get("unit_of_measurement") == UNIT_PERCENTAGE
+    assert state.attributes.get("unit_of_measurement") == PERCENTAGE
 
     state = hass.states.get(f"{base_id}_humidity_status")
     assert state
@@ -237,7 +237,7 @@ async def test_discover_sensor(hass, rfxtrx_automatic):
     state = hass.states.get(f"{base_id}_battery_numeric")
     assert state
     assert state.state == "90"
-    assert state.attributes.get("unit_of_measurement") == UNIT_PERCENTAGE
+    assert state.attributes.get("unit_of_measurement") == PERCENTAGE
 
     assert len(hass.states.async_all()) == 10
 

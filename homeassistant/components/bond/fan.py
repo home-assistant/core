@@ -1,4 +1,5 @@
 """Support for Bond fans."""
+import logging
 import math
 from typing import Any, Callable, List, Optional
 
@@ -22,6 +23,8 @@ from homeassistant.helpers.entity import Entity
 from .const import DOMAIN
 from .entity import BondEntity
 from .utils import BondDevice, BondHub
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -75,7 +78,7 @@ class BondFan(BondEntity, FanEntity):
             return None
 
         # map 1..max_speed Bond speed to 1..3 HA speed
-        max_speed = self._device.props.get("max_speed", 3)
+        max_speed = max(self._device.props.get("max_speed", 3), self._speed)
         ha_speed = math.ceil(self._speed * (len(self.speed_list) - 1) / max_speed)
         return self.speed_list[ha_speed]
 
@@ -97,6 +100,12 @@ class BondFan(BondEntity, FanEntity):
 
     async def async_set_speed(self, speed: str) -> None:
         """Set the desired speed for the fan."""
+        _LOGGER.debug("async_set_speed called with speed %s", speed)
+
+        if speed == SPEED_OFF:
+            await self.async_turn_off()
+            return
+
         max_speed = self._device.props.get("max_speed", 3)
         if speed == SPEED_LOW:
             bond_speed = 1
@@ -111,8 +120,13 @@ class BondFan(BondEntity, FanEntity):
 
     async def async_turn_on(self, speed: Optional[str] = None, **kwargs) -> None:
         """Turn on the fan."""
+        _LOGGER.debug("async_turn_on called with speed %s", speed)
+
         if speed is not None:
-            await self.async_set_speed(speed)
+            if speed == SPEED_OFF:
+                await self.async_turn_off()
+            else:
+                await self.async_set_speed(speed)
         else:
             await self._hub.bond.action(self._device.device_id, Action.turn_on())
 

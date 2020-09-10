@@ -66,11 +66,13 @@
             },
             "options": {
                 "data": {
+                    "birth_enable": "Enable birth message",
                     "birth_payload": "Birth message payload",
                     "birth_qos": "Birth message QoS",
                     "birth_retain": "Birth message retain",
                     "birth_topic": "Birth message topic",
                     "discovery": "Enable discovery",
+                    "will_enable": "Enable birth message",
                     "will_payload": "Will message payload",
                     "will_qos": "Will message QoS",
                     "will_retain": "Will message retain",
