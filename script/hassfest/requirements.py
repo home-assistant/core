@@ -178,22 +178,6 @@ def install_requirements(integration: Integration, requirements: Set[str]) -> bo
     ensure_cache()
 
     for req in requirements:
-        is_installed = False
-
-        if "==" in req:
-            pkg, ver = req.split(" ")[-1].split("==")
-            item = PIPDEPTREE_CACHE.get(pkg)
-            is_installed = item and item["installed_version"] == ver
-
-        if not is_installed:
-            try:
-                is_installed = pkg_util.is_installed(req)
-            except ValueError:
-                is_installed = False
-
-        if is_installed:
-            continue
-
         match = PIP_REGEX.search(req)
 
         if not match:
@@ -205,6 +189,24 @@ def install_requirements(integration: Integration, requirements: Set[str]) -> bo
 
         install_args = match.group(1)
         requirement_arg = match.group(2)
+
+        is_installed = False
+
+        normalized = normalize_package_name(requirement_arg)
+
+        if normalized and "==" in requirement_arg:
+            ver = requirement_arg.split("==")[-1]
+            item = PIPDEPTREE_CACHE.get(normalized)
+            is_installed = item and item["installed_version"] == ver
+
+        if not is_installed:
+            try:
+                is_installed = pkg_util.is_installed(req)
+            except ValueError:
+                is_installed = False
+
+        if is_installed:
+            continue
 
         args = [sys.executable, "-m", "pip", "install", "--quiet"]
         if install_args:
