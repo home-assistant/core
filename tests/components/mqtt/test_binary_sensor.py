@@ -597,6 +597,7 @@ async def test_discovery_update_binary_sensor_topic_template(hass, mqtt_mock, ca
     state_data2 = [
         ([("sensor/state2", '{"state2":{"state":"OFF"}}')], "off", None),
         ([("sensor/state2", '{"state2":{"state":"ON"}}')], "on", None),
+        ([("sensor/state1", '{"state1":{"state":"OFF"}}')], "on", None),
         ([("sensor/state1", '{"state2":{"state":"OFF"}}')], "on", None),
         ([("sensor/state2", '{"state1":{"state":"OFF"}}')], "on", None),
         ([("sensor/state2", '{"state2":{"state":"OFF"}}')], "off", None),
