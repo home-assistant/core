@@ -134,7 +134,7 @@ class PingDataICMPLib(PingData):
 
     async def async_update(self) -> None:
         """Retrieve the latest details from the host."""
-        _LOGGER.warning("ping address: %s", self._ip_address)
+        _LOGGER.debug("ping address: %s", self._ip_address)
         data = await self.hass.async_add_executor_job(
             partial(
                 icmp_ping,
