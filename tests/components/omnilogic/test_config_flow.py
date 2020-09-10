@@ -113,3 +113,10 @@ async def test_with_invalid_credentials(hass):
     assert result["type"] == "form"
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
+
+    with patch("omnilogic.OmniLogic.connect", side_effect=Exception):
+        result2 = await func(DATA)
+
+    assert result2["type"] == "form"
+    assert result2["step_id"] == "user"
+    assert result2["errors"] == {"base": "unknown"}

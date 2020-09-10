@@ -31,15 +31,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             username = user_input[CONF_USERNAME]
             password = user_input[CONF_PASSWORD]
 
-            errors = {"base": ""}
-
             try:
                 omni = OmniLogic(username, password)
                 await omni.connect()
             except LoginException:
                 errors["base"] = "cannot_connect"
-
-            if errors["base"] == "":
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
                 await self.async_set_unique_id(user_input["username"])
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(title="Omnilogic", data=user_input)
