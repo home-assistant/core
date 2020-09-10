@@ -42,7 +42,7 @@ def generate_and_validate(integrations: Dict[str, Integration]):
             if isinstance(entry, dict):
                 typ = entry["type"]
                 entry_without_type = entry.copy()
-                entry_without_type.pop("type")
+                del entry_without_type["type"]
                 data.update(entry_without_type)
             else:
                 typ = entry

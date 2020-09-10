@@ -158,7 +158,7 @@ async def async_get_zeroconf(hass: "HomeAssistant") -> Dict[str, List[Dict[str, 
             if isinstance(entry, dict):
                 typ = entry["type"]
                 entry_without_type = entry.copy()
-                entry_without_type.pop("type")
+                del entry_without_type["type"]
                 data.update(entry_without_type)
             else:
                 typ = entry
