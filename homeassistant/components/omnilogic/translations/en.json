@@ -1,19 +1,19 @@
 {
     "config": {
         "abort": {
-            "already_configured": "The Hayward OmniLogic integration is already configured."
+            "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
         },
         "error": {
-            "cannot_connect": "Cannot connect to Hayward. Please try again later.",
-            "invalid_auth": "Invalid authentication. Please check your username and password.",
-            "unknown": "Unknown error connecting to Hayward. Please try again later and check your username and password."
+            "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+            "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+            "unknown": "[%key:common::config_flow::error::unknown%]"
         },
         "step": {
             "user": {
                 "data": {
-                    "password": "Password",
-                    "polling_interval": "Polling Interval (seconds)",
-                    "username": "Username (not email address)"
+                    "password": "[%key:common::config_flow::data::password%]",
+                    "polling_interval": "[%key:common::config_flow::data::polling_interval",
+                    "username": "[%key:common::config_flow::data::username%]"
                 }
             }
         }
