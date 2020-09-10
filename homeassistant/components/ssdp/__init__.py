@@ -174,6 +174,7 @@ def info_from_entry(entry, device_info):
     }
     if device_info:
         info.update(device_info)
+        info.pop("st", None)
         if "usn" in info:
             info[ATTR_SSDP_USN] = info.pop("usn")
         if "ext" in info:
