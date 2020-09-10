@@ -13,9 +13,9 @@ from homeassistant.components.media_player.const import (
 
 CONTENT_TYPE_MEDIA_CLASS = {
     MEDIA_TYPE_APP: MEDIA_CLASS_APP,
-    MEDIA_TYPE_APPS: MEDIA_CLASS_APP,
+    MEDIA_TYPE_APPS: MEDIA_CLASS_DIRECTORY,
     MEDIA_TYPE_CHANNEL: MEDIA_CLASS_CHANNEL,
-    MEDIA_TYPE_CHANNELS: MEDIA_CLASS_CHANNEL,
+    MEDIA_TYPE_CHANNELS: MEDIA_CLASS_DIRECTORY,
 }
 
 PLAYABLE_MEDIA_TYPES = [
@@ -58,8 +58,8 @@ def build_item_response(coordinator, payload):
     if media is None:
         return None
 
-    return BrowseMedia(
-        media_class=CONTENT_TYPE_MEDIA_CLASS[search_type],
+    response = BrowseMedia(
+        media_class=MEDIA_CLASS_DIRECTORY,
         media_content_id=search_id,
         media_content_type=search_type,
         title=title,
@@ -68,6 +68,8 @@ def build_item_response(coordinator, payload):
         children=[item_payload(item, coordinator) for item in media],
         thumbnail=thumbnail,
     )
+    response.calculate_children_class()
+    return response
 
 
 def item_payload(item, coordinator):
@@ -138,5 +140,17 @@ def library_payload(coordinator):
                 coordinator,
             )
         )
+
+    if all(
+        child.media_content_type == MEDIA_TYPE_APPS for child in library_info.children
+    ):
+        library_info.children_media_class = MEDIA_CLASS_APP
+    elif all(
+        child.media_content_type == MEDIA_TYPE_CHANNELS
+        for child in library_info.children
+    ):
+        library_info.children_media_class = MEDIA_CLASS_CHANNEL
+    else:
+        library_info.children_media_class = MEDIA_CLASS_DIRECTORY
 
     return library_info
