@@ -148,6 +148,11 @@ async def async_setup(hass, config):
             discovery.async_load_platform(hass, platform.value, DOMAIN, {}, config)
         )
 
+    if len(hass.data[DATA_KNX].xknx.devices) == 0:
+        _LOGGER.warning(
+            "No KNX devices are configured. Please make sure to migrate your configuration according to https://xknx.io/migration_ha_0115.html."
+        )
+
     hass.services.async_register(
         DOMAIN,
         SERVICE_KNX_SEND,
