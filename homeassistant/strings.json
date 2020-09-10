@@ -53,7 +53,8 @@
         "already_configured_device": "Device is already configured",
         "no_devices_found": "No devices found on the network",
         "oauth2_missing_configuration": "The component is not configured. Please follow the documentation.",
-        "oauth2_authorize_url_timeout": "Timeout generating authorize URL."
+        "oauth2_authorize_url_timeout": "Timeout generating authorize URL.",
+        "oauth2_no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})"
       }
     }
   }
