@@ -73,7 +73,7 @@ class HomeKitSmokeSensor(HomeKitEntity, BinarySensorEntity):
         return self.service.value(CharacteristicsTypes.SMOKE_DETECTED) == 1
 
 
-class HomeKitCOSensor(HomeKitEntity, BinarySensorEntity):
+class HomeKitCarbonMonoxideSensor(HomeKitEntity, BinarySensorEntity):
     """Representation of a Homekit BO sensor."""
 
     @property
@@ -89,6 +89,7 @@ class HomeKitCOSensor(HomeKitEntity, BinarySensorEntity):
     def is_on(self):
         """Return true if CO is currently detected."""
         return self.service.value(CharacteristicsTypes.CARBON_MONOXIDE_DETECTED) == 1
+
 
 class HomeKitOccupancySensor(HomeKitEntity, BinarySensorEntity):
     """Representation of a Homekit occupancy sensor."""
@@ -130,7 +131,7 @@ ENTITY_TYPES = {
     "motion": HomeKitMotionSensor,
     "contact": HomeKitContactSensor,
     "smoke": HomeKitSmokeSensor,
-    "carbon-monoxide": HomeKitCOSensor,
+    "carbon-monoxide": HomeKitCarbonMonoxideSensor,
     "occupancy": HomeKitOccupancySensor,
     "leak": HomeKitLeakSensor,
 }
