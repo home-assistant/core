@@ -121,6 +121,7 @@ class TemplateEntity(Entity):
         """Template Entity."""
         self._template_attrs = {}
         self._async_update = None
+        self._async_update_entity_ids_filter = None
         self._attribute_templates = attribute_templates
         self._attributes = {}
         self._availability_template = availability_template
@@ -231,6 +232,9 @@ class TemplateEntity(Entity):
                     event, update.template, update.last_result, update.result
                 )
 
+        if self._async_update_entity_ids_filter:
+            self._async_update_entity_ids_filter({self.entity_id})
+
         if self._async_update:
             self.async_write_ha_state()
 
@@ -245,8 +249,12 @@ class TemplateEntity(Entity):
         )
         self.async_on_remove(result_info.async_remove)
         result_info.async_refresh()
+        result_info.async_update_entity_ids_filter({self.entity_id})
         self.async_write_ha_state()
         self._async_update = result_info.async_refresh
+        self._async_update_entity_ids_filter = (
+            result_info.async_update_entity_ids_filter
+        )
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
