@@ -94,7 +94,7 @@ jobs:
 
         # Write env for build settings
         (
-          echo "GRPC_BUILD_WITH_BORING_SSL_ASM=0"
+          echo "GRPC_BUILD_WITH_BORING_SSL_ASM="
           echo "GRPC_PYTHON_BUILD_SYSTEM_OPENSSL=1"
         ) > .env_file
       displayName: 'Prepare requirements files for Home Assistant wheels'
