@@ -8,6 +8,7 @@ import pytest
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers.network import NoURLAvailableError
 
 from tests.async_mock import patch
 from tests.common import MockConfigEntry, mock_platform
@@ -126,6 +127,22 @@ async def test_abort_if_authorization_timeout(hass, flow_handler, local_impl):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "authorize_url_timeout"
+
+
+async def test_abort_if_no_url_available(hass, flow_handler, local_impl):
+    """Check no_url_available generating authorization url."""
+    flow_handler.async_register_implementation(hass, local_impl)
+
+    flow = flow_handler()
+    flow.hass = hass
+
+    with patch.object(
+        local_impl, "async_generate_authorize_url", side_effect=NoURLAvailableError
+    ):
+        result = await flow.async_step_user()
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "no_url_available"
 
 
 async def test_abort_if_oauth_error(
