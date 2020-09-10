@@ -1,4 +1,5 @@
 """Local Media Source Implementation."""
+from collections import Counter
 import mimetypes
 from pathlib import Path
 from typing import Tuple
@@ -131,10 +132,19 @@ class LocalSource(MediaSource):
 
         # Append first level children
         media.children = []
+        # default to a mixed directory of child classes
+        media.children_media_class = MEDIA_CLASS_DIRECTORY
+
         for child_path in path.iterdir():
             child = self._build_item_response(source_dir_id, child_path, True)
             if child:
                 media.children.append(child)
+
+        # count child media classes to determine best children_media_class
+        child_class_count = Counter(child.media_class for child in media.children)
+        if len(child_class_count) == 1:
+            # there's only one child class
+            media.children_media_class = next(iter(child_class_count))
 
         # Sort children showing directories first, then by name
         media.children.sort(key=lambda child: (child.can_play, child.title))
