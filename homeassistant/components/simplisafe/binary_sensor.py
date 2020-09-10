@@ -1,6 +1,6 @@
 """Support for SimpliSafe binary sensors."""
 from simplipy.entity import EntityTypes
-from simplipy.websocket import EVENT_MOTION_DETECTED
+from simplipy.websocket import EVENT_DOORBELL_DETECTED, EVENT_MOTION_DETECTED
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_BATTERY,
@@ -8,6 +8,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_GAS,
     DEVICE_CLASS_MOISTURE,
     DEVICE_CLASS_MOTION,
+    DEVICE_CLASS_OCCUPANCY,
     DEVICE_CLASS_SMOKE,
     BinarySensorEntity,
 )
@@ -48,6 +49,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     """Set up SimpliSafe binary sensors based on a config entry."""
     simplisafe = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
 
+    # Add sensor
     async_add_entities(
         [
             SimpliSafeBinarySensor(simplisafe, system, sensor)
@@ -57,12 +59,45 @@ async def async_setup_entry(hass, entry, async_add_entities):
         ]
     )
 
+    # Add low battery status entity for every sensor
     async_add_entities(
         [
             SimpliSafeSensorBattery(simplisafe, system, sensor)
             for system in simplisafe.systems.values()
             for sensor in system.sensors.values()
             if sensor.type in SUPPORTED_SENSOR_TYPES
+        ]
+    )
+
+    # Add motion sensor for cameras and doorbells
+    cameras = []
+    doorbells = []
+    for system in simplisafe.systems.values():
+        if (
+            "cameras" in system._location_info["system"]
+            and len(system._location_info["system"]["cameras"]) > 0
+        ):
+            for cam in system._location_info["system"]["cameras"]:
+                cameras.append(cam)
+                if cam["model"] == "SS002":
+                    doorbells.append(cam)
+
+    async_add_entities(
+        [
+            SimpliSafeCameraBinarySensor(
+                simplisafe, system, camera, DEVICE_CLASS_MOTION
+            )
+            for camera in cameras
+        ]
+    )
+
+    # Add occupancy sensor for doorbells
+    async_add_entities(
+        [
+            SimpliSafeCameraBinarySensor(
+                simplisafe, system, camera, DEVICE_CLASS_OCCUPANCY
+            )
+            for camera in doorbells
         ]
     )
 
@@ -168,3 +203,77 @@ class SimpliSafeSensorBattery(SimpliSafeEntity, BinarySensorEntity):
     def async_update_from_rest_api(self):
         """Update the entity with the provided REST API data."""
         self._is_low = self._sensor.low_battery
+
+
+class SimpliSafeCameraBinarySensor(SimpliSafeEntity, BinarySensorEntity):
+    """Define a SimpliSafe camera binary sensor entity."""
+
+    def __init__(self, simplisafe, system, camera, device_class):
+        """Initialize."""
+        super().__init__(
+            simplisafe,
+            system,
+            camera["cameraSettings"]["cameraName"],
+            serial=camera["uuid"],
+        )
+        self._system = system
+        self._camera = camera
+        self._is_on = False
+        self._device_class = device_class
+
+    @property
+    def device_class(self):
+        """Return type of sensor."""
+        return self._device_class
+
+    @property
+    def unique_id(self):
+        """Return unique ID of sensor."""
+        if self.device_class == DEVICE_CLASS_MOTION:
+            return "{}-motion".format(self._camera["uuid"])
+        if self._device_class == DEVICE_CLASS_OCCUPANCY:
+            return "{}-doorbell".format(self._camera["uuid"])
+        return "{}-sensor".format(self._camera["uuid"])
+
+    @property
+    def device_info(self):
+        """Return device registry information for this entity."""
+        return {
+            "identifiers": {(DOMAIN, self._camera["uuid"])},
+            "manufacturer": "SimpliSafe",
+            "model": self._camera["model"],
+            "name": self._camera["cameraSettings"]["cameraName"],
+            "via_device": (DOMAIN, self._system.serial),
+        }
+
+    @property
+    def is_on(self):
+        """Return true if the sensor is on."""
+        return self._is_on
+
+    @callback
+    def async_update_from_rest_api(self):
+        """No updates as camera sensor status cannot be read via API."""
+        return
+
+    @callback
+    def async_update_from_websocket_event(self, event):
+        """Update the entity with the provided websocket event data."""
+        if (
+            event.event_type == EVENT_MOTION_DETECTED
+            and self.device_class == DEVICE_CLASS_MOTION
+        ) or (
+            event.event_type == EVENT_DOORBELL_DETECTED
+            and self.device_class == DEVICE_CLASS_OCCUPANCY
+        ):
+            self._is_on = True
+
+            @callback
+            def clear_delay_listener(now):
+                """Clear motion sensor after delay."""
+                self.is_on = False
+                self.async_write_ha_state()
+
+            async_call_later(
+                self.hass, MOTION_SENSOR_TRIGGER_CLEAR, clear_delay_listener
+            )
