@@ -268,10 +268,28 @@ def setup(hass, config):
                     # likely bad homekit data
                     return
 
-        for domain in zeroconf_types[service_type]:
+        for entry in zeroconf_types[service_type]:
+            if len(entry) > 1:
+                if "macaddress" in entry:
+                    if "properties" not in info:
+                        continue
+                    if "macaddress" not in info["properties"]:
+                        continue
+                    if (
+                        not info["properties"]["macaddress"]
+                        .upper()
+                        .startswith(entry["macaddress"])
+                    ):
+                        continue
+                if "name" in entry:
+                    if "name" not in info:
+                        continue
+                    if not info["name"].lower().startswith(entry["name"]):
+                        continue
+
             hass.add_job(
                 hass.config_entries.flow.async_init(
-                    domain, context={"source": DOMAIN}, data=info
+                    entry["domain"], context={"source": DOMAIN}, data=info
                 )
             )
 
