@@ -12,6 +12,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_CHANNEL,
+    MEDIA_CLASS_DIRECTORY,
     MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_CHANNELS,
     SUPPORT_BROWSE_MEDIA,
@@ -287,9 +288,9 @@ class PhilipsTVMediaPlayer(MediaPlayerEntity):
                 f"Media not found: {media_content_type} / {media_content_id}"
             )
 
-        return BrowseMedia(
+        response = BrowseMedia(
             title="Channels",
-            media_class=MEDIA_CLASS_CHANNEL,
+            media_class=MEDIA_CLASS_DIRECTORY,
             media_content_id="",
             media_content_type=MEDIA_TYPE_CHANNELS,
             can_play=False,
@@ -306,6 +307,9 @@ class PhilipsTVMediaPlayer(MediaPlayerEntity):
                 for channel in self._channels.values()
             ],
         )
+
+        response.calculate_children_class()
+        return response
 
     def update(self):
         """Get the latest data and update device state."""
