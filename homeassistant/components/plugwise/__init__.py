@@ -94,6 +94,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     api.get_all_devices()
 
+    if entry.unique_id is None:
+        if api.smile_version[0] != "1.8.0":
+            hass.config_entries.async_update_entry(entry, unique_id=api.smile_hostname)
+
     undo_listener = entry.add_update_listener(_update_listener)
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
