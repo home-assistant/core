@@ -37,7 +37,9 @@ def provider(hass: HomeAssistant, store: AuthStore) -> headers.HeaderAuthProvide
         "",
     )
     return headers.HeaderAuthProvider(
-        hass, store, headers.CONFIG_SCHEMA({"type": "header"}),
+        hass,
+        store,
+        headers.CONFIG_SCHEMA({"type": "header"}),
     )
 
 
