@@ -183,7 +183,6 @@ async def test_disabled_by_default_sensors(
     """Test the disabled by default WLED sensors."""
     await init_integration(hass, aioclient_mock)
     registry = await hass.helpers.entity_registry.async_get_registry()
-    print(registry.entities)
 
     state = hass.states.get(entity_id)
     assert state is None
