@@ -201,7 +201,6 @@ class OmnilogicSensor(OmniLogicEntity):
         """Force update."""
         return True
 
-    @staticmethod
     def add_alarms(self, alarms: dict):
         """Add Alarm attributes."""
         self.alarms = alarms
@@ -213,7 +212,7 @@ class OmnilogicSensor(OmniLogicEntity):
             )
 
     @staticmethod
-    def find_chlorinator(self, coordinator, systemid):
+    def find_chlorinator(coordinator, systemid):
         """Find the correct chlorinator entity."""
 
         for backyard in coordinator.data:
@@ -224,7 +223,8 @@ class OmnilogicSensor(OmniLogicEntity):
 
         return sensordata
 
-    def find_csad(self, coordinator, systemid):
+    @staticmethod
+    def find_csad(coordinator, systemid):
         """Find the correct CSAD entity."""
 
         for backyard in coordinator.data:
