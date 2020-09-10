@@ -70,7 +70,9 @@ ZEROCONF = {
         }
     ],
     "_homekit._tcp.local.": [
-        "homekit"
+        {
+            "domain": "homekit"
+        }
     ],
     "_http._tcp.local.": [
         {
