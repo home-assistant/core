@@ -211,6 +211,28 @@ class OmnilogicSensor(OmniLogicEntity):
                 self.alarms[0]["Message"] + " (" + self.alarms[0]["Comment"] + ")"
             )
 
+    def find_chlorinator(self, coordinator, systemid):
+        """Find the correct chlorinator entity."""
+
+        for backyard in coordinator.data:
+            for bow in backyard.get("BOWS"):
+                if bow["Chlorinator"]["systemId"] == systemid:
+                    sensordata = bow.get("Chlorinator")
+                    break
+
+        return sensordata
+
+    def find_csad(self, coordinator, systemid):
+        """Find the correct CSAD entity."""
+
+        for backyard in coordinator.data:
+            for bow in backyard.get("BOWS"):
+                if bow["CSAD"]["systemId"] == systemid:
+                    sensordata = bow.get("CSAD")
+                    break
+
+        return sensordata
+
 
 class OmniLogicTemperatureSensor(OmnilogicSensor):
     """Define an OmniLogic Temperature (Air/Water) Sensor."""
@@ -421,13 +443,9 @@ class OmniLogicSaltLevelSensor(OmnilogicSensor):
         """Return the state for the salt level sensor."""
         _LOGGER.debug("Updating state of sensor: %s", self._name)
 
-        sensordata = {}
-
-        for backyard in self.coordinator.data:
-            for bow in backyard.get("BOWS"):
-                if bow["Chlorinator"]["systemId"] == self.entitydata["systemId"]:
-                    sensordata = bow.get("Chlorinator")
-                    break
+        sensordata = super().find_chlorinator(
+            self.coordinator, self.entitydata["systemId"]
+        )
 
         salt_return = int(sensordata.get("avgSaltLevel"))
         unit_of_measurement = "ppm"
@@ -485,13 +503,9 @@ class OmniLogicChlorinatorSensor(OmnilogicSensor):
         """Return the state for the chlorinator sensor."""
         _LOGGER.debug("Updating state of sensor: %s", self._name)
 
-        sensordata = {}
-
-        for backyard in self.coordinator.data:
-            for bow in backyard.get("BOWS"):
-                if bow["Chlorinator"]["systemId"] == self.entitydata["systemId"]:
-                    sensordata = bow.get("Chlorinator")
-                    break
+        sensordata = super().find_chlorinator(
+            self.coordinator, self.entitydata["systemId"]
+        )
 
         if sensordata.get("operatingMode") == "1":
             self._state = sensordata.get("Timed-Percent")
@@ -549,13 +563,7 @@ class OmniLogicPHSensor(OmnilogicSensor):
         """Return the state for the pH sensor."""
         _LOGGER.debug("Updating state of sensor: %s", self._name)
 
-        sensordata = {}
-
-        for backyard in self.coordinator.data:
-            for bow in backyard.get("BOWS"):
-                if bow["CSAD"]["systemId"] == self.entitydata["systemId"]:
-                    sensordata = bow.get("CSAD")
-                    break
+        sensordata = super().find_csad(self.coordinator, self.entitydata["systemId"])
 
         phstate = None
         if sensordata.get("ph") != 0:
@@ -603,13 +611,7 @@ class OmniLogicORPSensor(OmnilogicSensor):
         """Return the state for the ORP sensor."""
         _LOGGER.debug("Updating state of sensor: %s", self._name)
 
-        sensordata = {}
-
-        for backyard in self.coordinator.data:
-            for bow in backyard.get("BOWS"):
-                if bow["CSAD"]["systemId"] == self.entitydata["systemId"]:
-                    sensordata = bow.get("CSAD")
-                    break
+        sensordata = super().find_csad(self.coordinator, self.entitydata["systemId"])
 
         orpstate = None
         if sensordata.get("orp") != -1:
