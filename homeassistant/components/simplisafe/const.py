@@ -10,7 +10,7 @@ DOMAIN = "simplisafe"
 
 DATA_CLIENT = "client"
 
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=15)
 
 ATTR_ALARM_DURATION = "alarm_duration"
 ATTR_ALARM_VOLUME = "alarm_volume"

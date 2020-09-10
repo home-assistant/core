@@ -246,7 +246,7 @@ async def async_setup_entry(hass, config_entry):
     await simplisafe.async_init()
     hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = simplisafe
 
-    for component in ("alarm_control_panel", "lock"):
+    for component in ("alarm_control_panel", "lock", "binary_sensor"):
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(config_entry, component)
         )
@@ -351,7 +351,7 @@ async def async_unload_entry(hass, entry):
     """Unload a SimpliSafe config entry."""
     tasks = [
         hass.config_entries.async_forward_entry_unload(entry, component)
-        for component in ("alarm_control_panel", "lock")
+        for component in ("alarm_control_panel", "lock", "binary_sensor")
     ]
 
     await asyncio.gather(*tasks)
@@ -517,7 +517,7 @@ class SimpliSafe:
 
         async def update_system(system):
             """Update a system."""
-            await system.update()
+            await system.update(cached=False)
             self._async_process_new_notifications(system)
             LOGGER.debug('Updated REST API data for "%s"', system.address)
             async_dispatcher_send(

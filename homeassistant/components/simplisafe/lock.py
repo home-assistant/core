@@ -39,6 +39,11 @@ class SimpliSafeLock(SimpliSafeEntity, LockEntity):
             self.websocket_events_to_listen_for.append(event_type)
 
     @property
+    def unique_id(self):
+        """Return unique ID of lock."""
+        return f"{self._lock.serial}-lock"
+
+    @property
     def is_locked(self):
         """Return true if the lock is locked."""
         return self._is_locked
