@@ -23,7 +23,7 @@ from homeassistant.loader import bind_hass
 from homeassistant.setup import async_setup_component, setup_component
 
 from tests.async_mock import Mock, patch
-from tests.common import get_test_home_assistant
+from tests.common import async_mock_service, get_test_home_assistant
 from tests.components.logbook.test_init import MockLazyEventPartialState
 
 ENTITY_ID = "script.test"
@@ -615,3 +615,35 @@ async def test_concurrent_script(hass, concurrently):
 
     assert not script.is_on(hass, "script.script1")
     assert not script.is_on(hass, "script.script2")
+
+
+async def test_script_variables(hass):
+    """Test defining scripts."""
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "script1": {
+                    "variables": {"test_var": "from_config"},
+                    "sequence": [
+                        {"service": "test.script", "data": {"value": "{{ test_var }}"}},
+                    ],
+                },
+            }
+        },
+    )
+
+    mock_calls = async_mock_service(hass, "test", "script")
+
+    await hass.services.async_call("script", "script1", {}, blocking=True)
+
+    assert len(mock_calls) == 1
+    assert mock_calls[0].data["value"] == "from_config"
+
+    await hass.services.async_call(
+        "script", "script1", {"test_var": "from_service"}, blocking=True
+    )
+
+    assert len(mock_calls) == 2
+    assert mock_calls[1].data["value"] == "from_service"

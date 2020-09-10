@@ -1134,3 +1134,28 @@ async def test_logbook_humanify_automation_triggered_event(hass):
     assert event2["domain"] == "automation"
     assert event2["message"] == "has been triggered by source of trigger"
     assert event2["entity_id"] == "automation.bye"
+
+
+async def test_automation_variables(hass):
+    """Test automation variables."""
+    calls = async_mock_service(hass, "test", "automation")
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": "hello",
+                "variables": {"test_var": "defined_in_config"},
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "action": {
+                    "service": "test.automation",
+                    "data": {"value": "{{ test_var }}"},
+                },
+            }
+        },
+    )
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].data["value"] == "defined_in_config"

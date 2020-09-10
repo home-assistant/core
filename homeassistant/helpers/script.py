@@ -721,6 +721,7 @@ class Script:
         logger: Optional[logging.Logger] = None,
         log_exceptions: bool = True,
         top_level: bool = True,
+        variables: Optional[Dict[str, Any]] = None,
     ) -> None:
         """Initialize the script."""
         all_scripts = hass.data.get(DATA_SCRIPTS)
@@ -759,6 +760,7 @@ class Script:
         self._choose_data: Dict[int, Dict[str, Any]] = {}
         self._referenced_entities: Optional[Set[str]] = None
         self._referenced_devices: Optional[Set[str]] = None
+        self.variables = variables
 
     def _set_logger(self, logger: Optional[logging.Logger] = None) -> None:
         if logger:
@@ -867,7 +869,7 @@ class Script:
 
     async def async_run(
         self,
-        variables: Optional[_VarsType] = None,
+        run_variables: Optional[_VarsType] = None,
         context: Optional[Context] = None,
         started_action: Optional[Callable[..., Any]] = None,
     ) -> None:
@@ -898,8 +900,12 @@ class Script:
         # are read-only, but more importantly, so as not to leak any variables created
         # during the run back to the caller.
         if self._top_level:
-            variables = dict(variables) if variables is not None else {}
+            variables = {} if self.variables is None else dict(self.variables)
+            if run_variables:
+                variables.update(run_variables)
             variables["context"] = context
+        else:
+            variables = cast(dict, run_variables)
 
         if self.script_mode != SCRIPT_MODE_QUEUED:
             cls = _ScriptRun

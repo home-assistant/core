@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_ID,
     CONF_MODE,
     CONF_PLATFORM,
+    CONF_VARIABLES,
     CONF_ZONE,
     EVENT_HOMEASSISTANT_STARTED,
     SERVICE_RELOAD,
@@ -104,6 +105,7 @@ PLATFORM_SCHEMA = vol.All(
             vol.Optional(CONF_HIDE_ENTITY): cv.boolean,
             vol.Required(CONF_TRIGGER): cv.TRIGGER_SCHEMA,
             vol.Optional(CONF_CONDITION): _CONDITION_SCHEMA,
+            vol.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
             vol.Required(CONF_ACTION): cv.SCRIPT_SCHEMA,
         },
         SCRIPT_MODE_SINGLE,
@@ -518,6 +520,7 @@ async def _async_process_config(hass, config, component):
                 max_runs=config_block[CONF_MAX],
                 max_exceeded=config_block[CONF_MAX_EXCEEDED],
                 logger=_LOGGER,
+                variables=config_block.get(CONF_VARIABLES),
             )
 
             if CONF_CONDITION in config_block:
