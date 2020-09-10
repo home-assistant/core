@@ -16,7 +16,7 @@ from tests.components.homekit_controller.common import setup_test_component
 MOTION_DETECTED = ("motion", "motion-detected")
 CONTACT_STATE = ("contact", "contact-state")
 SMOKE_DETECTED = ("smoke", "smoke-detected")
-CARBON_MONOXIDE_DETECTED = ("carbon-monoxide", "carbon-monoxide-detected")
+CARBON_MONOXIDE_DETECTED = ("carbon-monoxide", "carbon-monoxide.detected")
 OCCUPANCY_DETECTED = ("occupancy", "occupancy-detected")
 LEAK_DETECTED = ("leak", "leak-detected")
 
