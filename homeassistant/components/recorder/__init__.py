@@ -175,7 +175,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         from homeassistant.components import ais_files
         import homeassistant.components.ais_dom.ais_global as ais_global
 
-        with open(ais_files.G_DB_SETTINGS_INFO_FILE) as json_file:
+        with open(
+            hass.config.config_dir + ais_files.G_DB_SETTINGS_INFO_FILE
+        ) as json_file:
             db_settings = json.load(json_file)
             ais_global.G_DB_SETTINGS_INFO = db_settings
         db_url = db_settings["dbUrl"]
