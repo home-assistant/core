@@ -30,7 +30,7 @@ DEFAULT_CONFIG = {
     "dn": "My Device",
     "fn": ["Test", "Beer", "Milk", "Four", "Five"],
     "hn": "tasmota_49A3BC",
-    "id": "49A3BC",
+    "mac": "00000049A3BC",
     "md": "Sonoff 123",
     "ofl": "offline",
     CONF_ONLINE: "online",
@@ -49,12 +49,13 @@ DEFAULT_CONFIG = {
 async def test_controlling_state_via_mqtt(hass, mqtt_mock):
     """Test state update via MQTT."""
     config = copy.deepcopy(DEFAULT_CONFIG)
+    mac = config["mac"]
 
     await setup_tasmota(hass)
 
     async_fire_mqtt_message(
         hass,
-        f"{DEFAULT_PREFIX}/49A3BC/config",
+        f"{DEFAULT_PREFIX}/{mac}/config",
         json.dumps(config),
     )
     await hass.async_block_till_done()
@@ -82,12 +83,13 @@ async def test_controlling_state_via_mqtt(hass, mqtt_mock):
 async def test_sending_mqtt_commands(hass, mqtt_mock):
     """Test the sending MQTT commands."""
     config = copy.deepcopy(DEFAULT_CONFIG)
+    mac = config["mac"]
 
     await setup_tasmota(hass)
 
     async_fire_mqtt_message(
         hass,
-        f"{DEFAULT_PREFIX}/49A3BC/config",
+        f"{DEFAULT_PREFIX}/{mac}/config",
         json.dumps(config),
     )
     await hass.async_block_till_done()

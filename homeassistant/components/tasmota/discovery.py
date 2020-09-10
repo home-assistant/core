@@ -45,16 +45,16 @@ async def async_start(
 ) -> bool:
     """Start MQTT Discovery."""
 
-    async def async_device_discovered(payload, serial_number):
+    async def async_device_discovered(payload, mac):
         """Process the received message."""
 
         if ALREADY_DISCOVERED not in hass.data:
             hass.data[ALREADY_DISCOVERED] = {}
 
-        _LOGGER.debug("Received discovery data for tasmota device: %s", serial_number)
+        _LOGGER.debug("Received discovery data for tasmota device: %s", mac)
         tasmota_device_config = tasmota_get_device_config(payload)
         async_dispatcher_send(
-            hass, TASMOTA_DISCOVERY_DEVICE, tasmota_device_config, serial_number
+            hass, TASMOTA_DISCOVERY_DEVICE, tasmota_device_config, mac
         )
 
         async with hass.data[DATA_CONFIG_ENTRY_LOCK]:
@@ -71,7 +71,7 @@ async def async_start(
         for component, component_key in SUPPORTED_COMPONENTS.items():
             tasmota_entities = tasmota_get_entities_for_platform(payload, component_key)
             for (idx, tasmota_entity_config) in enumerate(tasmota_entities):
-                discovery_hash = (serial_number, component, idx)
+                discovery_hash = (mac, component, idx)
                 if not tasmota_entity_config:
                     # Entity disabled, clean up entity registry
                     entity_registry = (

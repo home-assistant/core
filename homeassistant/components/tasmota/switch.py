@@ -4,9 +4,10 @@ import logging
 from homeassistant.components import switch
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import callback
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import DOMAIN as TASMOTA_DOMAIN
+from .const import DOMAIN as TASMOTA_DOMAIN
 from .discovery import TASMOTA_DISCOVERY_ENTITY_NEW, clear_discovery_hash
 from .mixins import TasmotaAvailability, TasmotaDiscoveryUpdate
 
@@ -109,7 +110,7 @@ class TasmotaSwitch(
     @property
     def device_info(self):
         """Return a device description for device registry."""
-        return {"identifiers": {(TASMOTA_DOMAIN, self._tasmota_entity.device_id)}}
+        return {"connections": {(CONNECTION_NETWORK_MAC, self._tasmota_entity.mac)}}
 
     async def async_turn_on(self, **kwargs):
         """Turn the device on."""

@@ -2,7 +2,7 @@
 import logging
 
 from hatasmota.const import (
-    CONF_ID,
+    CONF_MAC,
     CONF_MANUFACTURER,
     CONF_MODEL,
     CONF_NAME,
@@ -17,20 +17,20 @@ from homeassistant.components.mqtt.subscription import (
     async_unsubscribe_topics,
 )
 from homeassistant.core import callback
-from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    EVENT_DEVICE_REGISTRY_UPDATED,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import discovery
-from .const import CONF_DISCOVERY_PREFIX, DOMAIN
+from .const import CONF_DISCOVERY_PREFIX
 from .discovery import TASMOTA_DISCOVERY_DEVICE
-
-# from typing import Optional
-
 
 _LOGGER = logging.getLogger(__name__)
 
-DEVICE_IDS = "tasmota_devices"
+DEVICE_MACS = "tasmota_devices"
 
 
 async def async_setup(hass: HomeAssistantType, config: dict):
@@ -40,7 +40,7 @@ async def async_setup(hass: HomeAssistantType, config: dict):
 
 async def async_setup_entry(hass, entry):
     """Set up Tasmota from a config entry."""
-    hass.data[DEVICE_IDS] = {}
+    hass.data[DEVICE_MACS] = {}
 
     def _publish(*args, **kwds):
         mqtt.async_publish(hass, *args, **kwds)
@@ -64,17 +64,15 @@ async def async_setup_entry(hass, entry):
         """Handle the removal of a device."""
         if event.data["action"] != "remove":
             return
-        serial_number = hass.data[DEVICE_IDS].get(event.data["device_id"])
-        if not serial_number:
+        mac = hass.data[DEVICE_MACS].get(event.data["device_id"])
+        if not mac:
             return
 
-        clear_discovery_topic(
-            serial_number, entry.data[CONF_DISCOVERY_PREFIX], tasmota_mqtt
-        )
+        clear_discovery_topic(mac, entry.data[CONF_DISCOVERY_PREFIX], tasmota_mqtt)
 
-    async def async_discover_device(config, serial_number):
+    async def async_discover_device(config, mac):
         """Discover and add a Tasmota device."""
-        await async_setup_device(hass, serial_number, config, entry)
+        await async_setup_device(hass, mac, config, entry)
 
     async_dispatcher_connect(hass, TASMOTA_DISCOVERY_DEVICE, async_discover_device)
     hass.bus.async_listen(EVENT_DEVICE_REGISTRY_UPDATED, async_device_removed)
@@ -82,15 +80,15 @@ async def async_setup_entry(hass, entry):
     return True
 
 
-async def _remove_device(hass, serial_number):
+async def _remove_device(hass, mac):
     """Remove device from device registry."""
     device_registry = await hass.helpers.device_registry.async_get_registry()
-    device = device_registry.async_get_device({(DOMAIN, serial_number)}, None)
+    device = device_registry.async_get_device(set(), {(CONNECTION_NETWORK_MAC, mac)})
 
     if device is None:
         return
 
-    _LOGGER.info("Removing tasmota device %s", serial_number)
+    _LOGGER.info("Removing tasmota device %s", mac)
     device_registry.async_remove_device(device.id)
 
 
@@ -98,21 +96,21 @@ async def _update_device(hass, config_entry, config):
     """Add or update device registry."""
     device_registry = await hass.helpers.device_registry.async_get_registry()
     config_entry_id = config_entry.entry_id
-    device_info = {"identifiers": {(DOMAIN, config[CONF_ID])}}
+    device_info = {"connections": {(CONNECTION_NETWORK_MAC, config[CONF_MAC])}}
     device_info["manufacturer"] = config[CONF_MANUFACTURER]
     device_info["model"] = config[CONF_MODEL]
     device_info["name"] = config[CONF_NAME]
     device_info["sw_version"] = config[CONF_SW_VERSION]
 
     device_info["config_entry_id"] = config_entry_id
-    _LOGGER.debug("Adding or updating tasmota device %s", config[CONF_ID])
+    _LOGGER.debug("Adding or updating tasmota device %s", config[CONF_MAC])
     device = device_registry.async_get_or_create(**device_info)
-    hass.data[DEVICE_IDS][device.id] = config[CONF_ID]
+    hass.data[DEVICE_MACS][device.id] = config[CONF_MAC]
 
 
-async def async_setup_device(hass, serial_number, config, config_entry):
+async def async_setup_device(hass, mac, config, config_entry):
     """Set up the Tasmota device."""
     if not config:
-        await _remove_device(hass, serial_number)
+        await _remove_device(hass, mac)
     else:
         await _update_device(hass, config_entry, config)

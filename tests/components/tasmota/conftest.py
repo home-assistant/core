@@ -3,8 +3,11 @@
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import tasmota
-from homeassistant.components.tasmota.const import CONF_DISCOVERY_PREFIX, DEFAULT_PREFIX
+from homeassistant.components.tasmota.const import (
+    CONF_DISCOVERY_PREFIX,
+    DEFAULT_PREFIX,
+    DOMAIN,
+)
 
 from tests.common import MockConfigEntry, mock_device_registry, mock_registry
 
@@ -29,7 +32,7 @@ async def setup_tasmota(hass, entry=None):
         entry = MockConfigEntry(
             connection_class=config_entries.CONN_CLASS_LOCAL_PUSH,
             data={CONF_DISCOVERY_PREFIX: DEFAULT_PREFIX},
-            domain=tasmota.DOMAIN,
+            domain=DOMAIN,
             title="Tasmota",
         )
 

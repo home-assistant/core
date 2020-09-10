@@ -17,7 +17,7 @@ DEFAULT_CONFIG = {
     "dn": "My Device",
     "fn": ["Beer", "Milk", "Three", "Four", "Five"],
     "hn": "tasmota_49A3BC",
-    "id": "49A3BC",
+    "mac": "00000049A3BC",
     "md": "Sonoff 123",
     "ofl": "offline",
     CONF_ONLINE: "online",
@@ -72,8 +72,8 @@ async def test_invalid_message(hass, mqtt_mock, caplog):
         assert not mock_dispatcher_send.called
 
 
-async def test_invalid_id(hass, mqtt_mock, caplog):
-    """Test topic is not matching device ID."""
+async def test_invalid_mac(hass, mqtt_mock, caplog):
+    """Test topic is not matching device MAC."""
     config = copy.deepcopy(DEFAULT_CONFIG)
 
     await setup_tasmota(hass)
@@ -83,10 +83,10 @@ async def test_invalid_id(hass, mqtt_mock, caplog):
         mock_dispatcher_send = AsyncMock(return_value=None)
 
         async_fire_mqtt_message(
-            hass, f"{DEFAULT_PREFIX}/49A3BA/config", json.dumps(config)
+            hass, f"{DEFAULT_PREFIX}/00000049A3BA/config", json.dumps(config)
         )
         await hass.async_block_till_done()
-        assert "Serial number mismatch" in caplog.text
+        assert "MAC mismatch" in caplog.text
         assert not mock_dispatcher_send.called
 
 
@@ -96,18 +96,19 @@ async def test_correct_config_discovery(
     """Test receiving valid discovery message."""
     config = copy.deepcopy(DEFAULT_CONFIG)
     config["rl"][0] = 1
+    mac = config["mac"]
 
     await setup_tasmota(hass)
 
     async_fire_mqtt_message(
         hass,
-        f"{DEFAULT_PREFIX}/49A3BC/config",
+        f"{DEFAULT_PREFIX}/{mac}/config",
         json.dumps(config),
     )
     await hass.async_block_till_done()
 
     # Verify device and registry entries are created
-    device_entry = device_reg.async_get_device({("tasmota", "49A3BC")}, set())
+    device_entry = device_reg.async_get_device(set(), {("mac", mac)})
     assert device_entry is not None
     entity_entry = entity_reg.async_get("switch.beer")
     assert entity_entry is not None
@@ -116,24 +117,25 @@ async def test_correct_config_discovery(
     assert state is not None
     assert state.name == "Beer"
 
-    assert ("49A3BC", "switch", 0) in hass.data[ALREADY_DISCOVERED]
+    assert (mac, "switch", 0) in hass.data[ALREADY_DISCOVERED]
 
 
 async def test_device_discover(hass, mqtt_mock, caplog, device_reg, entity_reg):
     """Test setting up a device."""
     config = copy.deepcopy(DEFAULT_CONFIG)
+    mac = config["mac"]
 
     await setup_tasmota(hass)
 
     async_fire_mqtt_message(
         hass,
-        f"{DEFAULT_PREFIX}/49A3BC/config",
+        f"{DEFAULT_PREFIX}/{mac}/config",
         json.dumps(config),
     )
     await hass.async_block_till_done()
 
     # Verify device and registry entries are created
-    device_entry = device_reg.async_get_device({("tasmota", "49A3BC")}, set())
+    device_entry = device_reg.async_get_device(set(), {("mac", mac)})
     assert device_entry is not None
     assert device_entry.manufacturer == "Tasmota"
     assert device_entry.model == config["md"]
@@ -147,18 +149,19 @@ async def test_device_update(hass, mqtt_mock, caplog, device_reg, entity_reg):
     config["md"] = "Model 1"
     config["dn"] = "Name 1"
     config["sw"] = "v1.2.3.4"
+    mac = config["mac"]
 
     await setup_tasmota(hass)
 
     async_fire_mqtt_message(
         hass,
-        f"{DEFAULT_PREFIX}/49A3BC/config",
+        f"{DEFAULT_PREFIX}/{mac}/config",
         json.dumps(config),
     )
     await hass.async_block_till_done()
 
     # Verify device entry is created
-    device_entry = device_reg.async_get_device({("tasmota", "49A3BC")}, set())
+    device_entry = device_reg.async_get_device(set(), {("mac", mac)})
     assert device_entry is not None
 
     # Update device parameters
@@ -168,13 +171,13 @@ async def test_device_update(hass, mqtt_mock, caplog, device_reg, entity_reg):
 
     async_fire_mqtt_message(
         hass,
-        f"{DEFAULT_PREFIX}/49A3BC/config",
+        f"{DEFAULT_PREFIX}/{mac}/config",
         json.dumps(config),
     )
     await hass.async_block_till_done()
 
     # Verify device entry is updated
-    device_entry = device_reg.async_get_device({("tasmota", "49A3BC")}, set())
+    device_entry = device_reg.async_get_device(set(), {("mac", mac)})
     assert device_entry is not None
     assert device_entry.model == "Another model"
     assert device_entry.name == "Another name"
@@ -185,6 +188,7 @@ async def test_device_update(hass, mqtt_mock, caplog, device_reg, entity_reg):
 async def test_discovery_broken(hass, mqtt_mock, caplog, device_reg):
     """Test handling of exception when creating discovered device."""
     config = copy.deepcopy(DEFAULT_CONFIG)
+    mac = config["mac"]
     data = json.dumps(config)
 
     await setup_tasmota(hass)
@@ -194,114 +198,118 @@ async def test_discovery_broken(hass, mqtt_mock, caplog, device_reg):
         "hatasmota.discovery.get_device_config_helper",
         return_value=object(),
     ):
-        async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/49A3BC/config", data)
+        async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", data)
         await hass.async_block_till_done()
 
     # Verify device entry is not created
-    device_entry = device_reg.async_get_device({("tasmota", "49A3BC")}, set())
+    device_entry = device_reg.async_get_device(set(), {("mac", mac)})
     assert device_entry is None
     assert (
         "Exception in async_discover_device when dispatching 'tasmota_discovery_device'"
         in caplog.text
     )
 
-    async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/49A3BC/config", data)
+    async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", data)
     await hass.async_block_till_done()
 
     # Verify device entry is created
-    device_entry = device_reg.async_get_device({("tasmota", "49A3BC")}, set())
+    device_entry = device_reg.async_get_device(set(), {("mac", mac)})
     assert device_entry is not None
 
 
 async def test_device_remove(hass, mqtt_mock, caplog, device_reg, entity_reg):
     """Test removing a discovered device."""
     config = copy.deepcopy(DEFAULT_CONFIG)
+    mac = config["mac"]
 
     await setup_tasmota(hass)
 
     async_fire_mqtt_message(
         hass,
-        f"{DEFAULT_PREFIX}/49A3BC/config",
+        f"{DEFAULT_PREFIX}/{mac}/config",
         json.dumps(config),
     )
     await hass.async_block_till_done()
 
     # Verify device entry is created
-    device_entry = device_reg.async_get_device({("tasmota", "49A3BC")}, set())
+    device_entry = device_reg.async_get_device(set(), {("mac", mac)})
     assert device_entry is not None
 
     async_fire_mqtt_message(
         hass,
-        f"{DEFAULT_PREFIX}/49A3BC/config",
+        f"{DEFAULT_PREFIX}/{mac}/config",
         "",
     )
     await hass.async_block_till_done()
 
     # Verify device entry is removed
-    device_entry = device_reg.async_get_device({("tasmota", "49A3BC")}, set())
+    device_entry = device_reg.async_get_device(set(), {("mac", mac)})
     assert device_entry is None
 
 
 async def test_device_remove_stale(hass, mqtt_mock, caplog, device_reg):
     """Test removing a stale (undiscovered) device does not throw."""
+    mac = "00000049A3BC"
+
     await setup_tasmota(hass)
     config_entry = hass.config_entries.async_entries("tasmota")[0]
 
     # Create a device
     device_reg.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        identifiers={("tasmota", "49A3BC")},
+        connections={("mac", mac)},
     )
 
     # Verify device entry was created
-    device_entry = device_reg.async_get_device({("tasmota", "49A3BC")}, set())
+    device_entry = device_reg.async_get_device(set(), {("mac", mac)})
     assert device_entry is not None
 
     # Remove the device
     device_reg.async_remove_device(device_entry.id)
 
     # Verify device entry is removed
-    device_entry = device_reg.async_get_device({("tasmota", "49A3BC")}, set())
+    device_entry = device_reg.async_get_device(set(), {("mac", mac)})
     assert device_entry is None
 
 
 async def test_device_rediscover(hass, mqtt_mock, caplog, device_reg, entity_reg):
     """Test removing a device."""
     config = copy.deepcopy(DEFAULT_CONFIG)
+    mac = config["mac"]
 
     await setup_tasmota(hass)
 
     async_fire_mqtt_message(
         hass,
-        f"{DEFAULT_PREFIX}/49A3BC/config",
+        f"{DEFAULT_PREFIX}/{mac}/config",
         json.dumps(config),
     )
     await hass.async_block_till_done()
 
     # Verify device entry is created
-    device_entry1 = device_reg.async_get_device({("tasmota", "49A3BC")}, set())
+    device_entry1 = device_reg.async_get_device(set(), {("mac", mac)})
     assert device_entry1 is not None
 
     async_fire_mqtt_message(
         hass,
-        f"{DEFAULT_PREFIX}/49A3BC/config",
+        f"{DEFAULT_PREFIX}/{mac}/config",
         "",
     )
     await hass.async_block_till_done()
 
     # Verify device entry is removed
-    device_entry = device_reg.async_get_device({("tasmota", "49A3BC")}, set())
+    device_entry = device_reg.async_get_device(set(), {("mac", mac)})
     assert device_entry is None
 
     async_fire_mqtt_message(
         hass,
-        f"{DEFAULT_PREFIX}/49A3BC/config",
+        f"{DEFAULT_PREFIX}/{mac}/config",
         json.dumps(config),
     )
     await hass.async_block_till_done()
 
     # Verify device entry is created, and id is reused
-    device_entry = device_reg.async_get_device({("tasmota", "49A3BC")}, set())
+    device_entry = device_reg.async_get_device(set(), {("mac", mac)})
     assert device_entry is not None
     assert device_entry1.id == device_entry.id
 
@@ -310,17 +318,18 @@ async def test_entity_duplicate_discovery(hass, mqtt_mock, caplog):
     """Test entities are not duplicated."""
     config = copy.deepcopy(DEFAULT_CONFIG)
     config["rl"][0] = 1
+    mac = config["mac"]
 
     await setup_tasmota(hass)
 
     async_fire_mqtt_message(
         hass,
-        f"{DEFAULT_PREFIX}/49A3BC/config",
+        f"{DEFAULT_PREFIX}/{mac}/config",
         json.dumps(config),
     )
     async_fire_mqtt_message(
         hass,
-        f"{DEFAULT_PREFIX}/49A3BC/config",
+        f"{DEFAULT_PREFIX}/{mac}/config",
         json.dumps(config),
     )
     await hass.async_block_till_done()
@@ -332,7 +341,7 @@ async def test_entity_duplicate_discovery(hass, mqtt_mock, caplog):
     assert state.name == "Beer"
     assert state_duplicate is None
     assert (
-        "Entity already added, sending update: switch ('49A3BC', 'switch', 0)"
+        f"Entity already added, sending update: switch ('{mac}', 'switch', 0)"
         in caplog.text
     )
 
@@ -341,43 +350,45 @@ async def test_entity_duplicate_removal(hass, mqtt_mock, caplog):
     """Test removing entity twice."""
     config = copy.deepcopy(DEFAULT_CONFIG)
     config["rl"][0] = 1
+    mac = config["mac"]
 
     await setup_tasmota(hass)
 
     async_fire_mqtt_message(
         hass,
-        f"{DEFAULT_PREFIX}/49A3BC/config",
+        f"{DEFAULT_PREFIX}/{mac}/config",
         json.dumps(config),
     )
     await hass.async_block_till_done()
     config["rl"][0] = 0
-    async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/49A3BC/config", json.dumps(config))
+    async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config))
     await hass.async_block_till_done()
-    assert "Removing entity: switch ('49A3BC', 'switch', 0)" in caplog.text
+    assert f"Removing entity: switch ('{mac}', 'switch', 0)" in caplog.text
 
     caplog.clear()
-    async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/49A3BC/config", json.dumps(config))
+    async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config))
     await hass.async_block_till_done()
-    assert "Removing entity: switch ('49A3BC', 'switch', 0)" not in caplog.text
+    assert f"Removing entity: switch ('{mac}', 'switch', 0)" not in caplog.text
 
 
 async def test_entity_cleanup(hass, device_reg, entity_reg, mqtt_mock):
     """Test discovered device and entity is cleaned up when removed from registry."""
     config = copy.deepcopy(DEFAULT_CONFIG)
     config["rl"][0] = 1
+    mac = config["mac"]
 
     await setup_tasmota(hass)
 
     async_fire_mqtt_message(
         hass,
-        f"{DEFAULT_PREFIX}/49A3BC/config",
+        f"{DEFAULT_PREFIX}/{mac}/config",
         json.dumps(config),
     )
     await hass.async_block_till_done()
     entity_id = "switch.beer"
 
     # Verify device and entity registry entries are created
-    device_entry = device_reg.async_get_device({("tasmota", "49A3BC")}, set())
+    device_entry = device_reg.async_get_device(set(), {("mac", mac)})
     assert device_entry is not None
     entity_entry = entity_reg.async_get(entity_id)
     assert entity_entry is not None
@@ -389,7 +400,7 @@ async def test_entity_cleanup(hass, device_reg, entity_reg, mqtt_mock):
     await hass.async_block_till_done()
 
     # Verify device and entity registry entries are cleared
-    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")}, set())
+    device_entry = device_reg.async_get_device(set(), {("mac", mac)})
     assert device_entry is None
     entity_entry = entity_reg.async_get(entity_id)
     assert entity_entry is None
@@ -401,5 +412,5 @@ async def test_entity_cleanup(hass, device_reg, entity_reg, mqtt_mock):
 
     # Verify retained discovery topic has been cleared
     mqtt_mock.async_publish.assert_called_once_with(
-        f"{DEFAULT_PREFIX}/49A3BC/config", "", 0, True
+        f"{DEFAULT_PREFIX}/{mac}/config", "", 0, True
     )

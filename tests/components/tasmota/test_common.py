@@ -3,7 +3,7 @@ import copy
 import json
 
 from hatasmota.const import (
-    CONF_ID,
+    CONF_MAC,
     CONF_OFFLINE,
     CONF_ONLINE,
     CONF_PREFIX,
@@ -27,22 +27,6 @@ from .conftest import setup_tasmota
 from tests.async_mock import ANY, patch
 from tests.common import async_fire_mqtt_message
 
-DEFAULT_CONFIG_DEVICE_INFO_ID = {
-    "identifiers": ["helloworld"],
-    "manufacturer": "Whatever",
-    "name": "Beer",
-    "model": "Glass",
-    "sw_version": "0.1-beta",
-}
-
-DEFAULT_CONFIG_DEVICE_INFO_MAC = {
-    "connections": [["mac", "02:5b:26:a8:dc:12"]],
-    "manufacturer": "Whatever",
-    "name": "Beer",
-    "model": "Glass",
-    "sw_version": "0.1-beta",
-}
-
 
 async def help_test_availability_when_connection_lost(hass, mqtt_mock, domain, config):
     """Test availability after MQTT disconnection."""
@@ -50,7 +34,7 @@ async def help_test_availability_when_connection_lost(hass, mqtt_mock, domain, c
 
     async_fire_mqtt_message(
         hass,
-        f"{DEFAULT_PREFIX}/{config[CONF_ID]}/config",
+        f"{DEFAULT_PREFIX}/{config[CONF_MAC]}/config",
         json.dumps(config),
     )
     await hass.async_block_till_done()
@@ -85,7 +69,7 @@ async def help_test_availability(
 
     async_fire_mqtt_message(
         hass,
-        f"{DEFAULT_PREFIX}/{config[CONF_ID]}/config",
+        f"{DEFAULT_PREFIX}/{config[CONF_MAC]}/config",
         json.dumps(config),
     )
     await hass.async_block_till_done()
@@ -146,7 +130,7 @@ async def help_test_availability_discovery_update(
 
     await setup_tasmota(hass)
 
-    async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{config1[CONF_ID]}/config", data1)
+    async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{config1[CONF_MAC]}/config", data1)
     await hass.async_block_till_done()
 
     state = hass.states.get(f"{domain}.test")
@@ -161,7 +145,7 @@ async def help_test_availability_discovery_update(
     assert state.state == STATE_UNAVAILABLE
 
     # Change availability settings
-    async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{config2[CONF_ID]}/config", data2)
+    async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{config2[CONF_MAC]}/config", data2)
     await hass.async_block_till_done()
 
     # Verify we are no longer subscribing to the old topic or payload
@@ -186,15 +170,15 @@ async def help_test_discovery_removal(
 
     data1 = json.dumps(config1)
     data2 = json.dumps(config2)
-    assert config1[CONF_ID] == config2[CONF_ID]
+    assert config1[CONF_MAC] == config2[CONF_MAC]
 
     await setup_tasmota(hass)
 
-    async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{config1[CONF_ID]}/config", data1)
+    async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{config1[CONF_MAC]}/config", data1)
     await hass.async_block_till_done()
 
     # Verify device and entity registry entries are created
-    device_entry = device_reg.async_get_device({("tasmota", config1[CONF_ID])}, set())
+    device_entry = device_reg.async_get_device(set(), {("mac", config1[CONF_MAC])})
     assert device_entry is not None
     entity_entry = entity_reg.async_get(f"{domain}.test")
     assert entity_entry is not None
@@ -204,11 +188,11 @@ async def help_test_discovery_removal(
     assert state is not None
     assert state.name == "Test"
 
-    async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{config2[CONF_ID]}/config", data2)
+    async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{config2[CONF_MAC]}/config", data2)
     await hass.async_block_till_done()
 
     # Verify entity registry entries are cleared
-    device_entry = device_reg.async_get_device({("tasmota", config2[CONF_ID])}, set())
+    device_entry = device_reg.async_get_device(set(), {("mac", config2[CONF_MAC])})
     assert device_entry is not None
     entity_entry = entity_reg.async_get(f"{domain}.test")
     assert entity_entry is None
@@ -233,19 +217,19 @@ async def help_test_discovery_update_unchanged(
 
     await setup_tasmota(hass)
 
-    async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{config[CONF_ID]}/config", data1)
+    async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{config[CONF_MAC]}/config", data1)
     await hass.async_block_till_done()
 
     state = hass.states.get(f"{domain}.test")
     assert state is not None
     assert state.name == "Test"
 
-    async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{config[CONF_ID]}/config", data1)
+    async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{config[CONF_MAC]}/config", data1)
     await hass.async_block_till_done()
 
     assert not discovery_update.called
 
-    async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{config[CONF_ID]}/config", data2)
+    async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{config[CONF_MAC]}/config", data2)
     await hass.async_block_till_done()
 
     assert discovery_update.called
@@ -263,7 +247,7 @@ async def help_test_discovery_broken(hass, mqtt_mock, caplog, domain, config):
         return_value=[object()],
     ):
         async_fire_mqtt_message(
-            hass, f"{DEFAULT_PREFIX}/{config[CONF_ID]}/config", data
+            hass, f"{DEFAULT_PREFIX}/{config[CONF_MAC]}/config", data
         )
         await hass.async_block_till_done()
 
@@ -271,7 +255,7 @@ async def help_test_discovery_broken(hass, mqtt_mock, caplog, domain, config):
     assert state is None
 
     # Make sure the entity is added, instead of a discovery update
-    async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{config[CONF_ID]}/config", data)
+    async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{config[CONF_MAC]}/config", data)
     await hass.async_block_till_done()
 
     state = hass.states.get(f"{domain}.test")
@@ -285,22 +269,22 @@ async def help_test_discovery_device_remove(hass, mqtt_mock, domain, config):
     entity_reg = await hass.helpers.entity_registry.async_get_registry()
 
     config = copy.deepcopy(config)
-    unique_id = f"{config[CONF_ID]}_{domain}_0"
+    unique_id = f"{config[CONF_MAC]}_{domain}_0"
 
     await setup_tasmota(hass)
 
     data = json.dumps(config)
-    async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{config[CONF_ID]}/config", data)
+    async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{config[CONF_MAC]}/config", data)
     await hass.async_block_till_done()
 
-    device = device_reg.async_get_device({("tasmota", config[CONF_ID])}, set())
+    device = device_reg.async_get_device(set(), {("mac", config[CONF_MAC])})
     assert device is not None
     assert entity_reg.async_get_entity_id(domain, "tasmota", unique_id)
 
-    async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{config[CONF_ID]}/config", "")
+    async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{config[CONF_MAC]}/config", "")
     await hass.async_block_till_done()
 
-    device = device_reg.async_get_device({("tasmota", config[CONF_ID])}, set())
+    device = device_reg.async_get_device(set(), {("mac", config[CONF_MAC])})
     assert device is None
     assert not entity_reg.async_get_entity_id(domain, "tasmota", unique_id)
 
@@ -317,7 +301,7 @@ async def help_test_entity_id_update_subscriptions(
     await setup_tasmota(hass)
     mqtt_mock.async_subscribe.reset_mock()
 
-    async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{config[CONF_ID]}/config", data)
+    async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{config[CONF_MAC]}/config", data)
     await hass.async_block_till_done()
 
     topics = [get_topic_tele_state(config), get_topic_tele_will(config)]
@@ -353,7 +337,7 @@ async def help_test_entity_id_update_discovery_update(hass, mqtt_mock, domain, c
 
     await setup_tasmota(hass)
 
-    async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{config[CONF_ID]}/config", data)
+    async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{config[CONF_MAC]}/config", data)
     await hass.async_block_till_done()
 
     async_fire_mqtt_message(hass, topic, get_state_online(config))
@@ -370,7 +354,7 @@ async def help_test_entity_id_update_discovery_update(hass, mqtt_mock, domain, c
     assert config[CONF_PREFIX][PREFIX_TELE] != "tele2"
     config[CONF_PREFIX][PREFIX_TELE] = "tele2"
     data = json.dumps(config)
-    async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{config[CONF_ID]}/config", data)
+    async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{config[CONF_MAC]}/config", data)
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids(domain)) == 1
 
