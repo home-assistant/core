@@ -1,5 +1,5 @@
 """Switch for Shelly."""
-from aioshelly import RelayBlock
+from aioshelly import Block
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import callback
@@ -28,7 +28,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class RelaySwitch(ShellyBlockEntity, SwitchEntity):
     """Switch that controls a relay block on Shelly devices."""
 
-    def __init__(self, wrapper: ShellyDeviceWrapper, block: RelayBlock) -> None:
+    def __init__(self, wrapper: ShellyDeviceWrapper, block: Block) -> None:
         """Initialize relay switch."""
         super().__init__(wrapper, block)
         self.control_result = None
