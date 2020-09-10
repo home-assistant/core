@@ -7,7 +7,7 @@ from omnilogic import LoginException, OmniLogic, OmniLogicException
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady, PlatformNotReady
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import COORDINATOR, DOMAIN, OMNI_API, POLL_INTERVAL
 from .omnilogic_common import OmniLogicUpdateCoordinator
@@ -41,7 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         raise ConfigEntryNotReady from error
     except OmniLogicException as error:
         _LOGGER.debug("OmniLogic API error: %s", error)
-        raise PlatformNotReady from error
+        raise ConfigEntryNotReady from error
 
     coordinator = OmniLogicUpdateCoordinator(
         hass=hass,
