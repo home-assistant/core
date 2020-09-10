@@ -150,7 +150,8 @@ async def async_setup(hass, config):
 
     if len(hass.data[DATA_KNX].xknx.devices) == 0:
         _LOGGER.warning(
-            "No KNX devices are configured. Please make sure to migrate your configuration according to https://xknx.io/migration_ha_0115.html."
+            "No KNX devices are configured. Please read "
+            "https://home-assistant.io/blog/2020/09/17/release-115/#breaking-changes."
         )
 
     hass.services.async_register(
