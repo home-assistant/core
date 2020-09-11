@@ -148,10 +148,10 @@ async def async_setup(hass, config):
             discovery.async_load_platform(hass, platform.value, DOMAIN, {}, config)
         )
 
-    if len(hass.data[DATA_KNX].xknx.devices) == 0:
+    if not hass.data[DATA_KNX].xknx.devices:
         _LOGGER.warning(
             "No KNX devices are configured. Please read "
-            "https://home-assistant.io/blog/2020/09/17/release-115/#breaking-changes."
+            "https://www.home-assistant.io/blog/2020/09/17/release-115/#breaking-changes"
         )
 
     hass.services.async_register(
