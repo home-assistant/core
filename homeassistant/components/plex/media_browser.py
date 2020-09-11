@@ -26,7 +26,7 @@ class UnknownMediaType(BrowseError):
 EXPANDABLES = ["album", "artist", "playlist", "season", "show"]
 PLAYLISTS_BROWSE_PAYLOAD = {
     "title": "Playlists",
-    "media_class": MEDIA_CLASS_PLAYLIST,
+    "media_class": MEDIA_CLASS_DIRECTORY,
     "media_content_id": "all",
     "media_content_type": "playlists",
     "can_play": False,
@@ -94,10 +94,21 @@ def browse_media(
     if special_folder:
         if media_content_type == "server":
             library_or_section = plex_server.library
+            children_media_class = MEDIA_CLASS_DIRECTORY
             title = plex_server.friendly_name
         elif media_content_type == "library":
             library_or_section = plex_server.library.sectionByID(media_content_id)
             title = library_or_section.title
+            try:
+                children_media_class = ITEM_TYPE_MEDIA_CLASS[library_or_section.TYPE]
+            except KeyError as err:
+                raise BrowseError(
+                    f"Media not found: {media_content_type} / {media_content_id}"
+                ) from err
+        else:
+            raise BrowseError(
+                f"Media not found: {media_content_type} / {media_content_id}"
+            )
 
         payload = {
             "title": title,
@@ -107,6 +118,7 @@ def browse_media(
             "can_play": False,
             "can_expand": True,
             "children": [],
+            "children_media_class": children_media_class,
         }
 
         method = SPECIAL_METHODS[special_folder]
@@ -116,13 +128,20 @@ def browse_media(
                 payload["children"].append(item_payload(item))
             except UnknownMediaType:
                 continue
+
         return BrowseMedia(**payload)
 
-    if media_content_type in ["server", None]:
-        return server_payload(plex_server)
+    try:
+        if media_content_type in ["server", None]:
+            return server_payload(plex_server)
 
-    if media_content_type == "library":
-        return library_payload(plex_server, media_content_id)
+        if media_content_type == "library":
+            return library_payload(plex_server, media_content_id)
+
+    except UnknownMediaType as err:
+        raise BrowseError(
+            f"Media not found: {media_content_type} / {media_content_id}"
+        ) from err
 
     if media_content_type == "playlists":
         return playlists_payload(plex_server)
@@ -160,6 +179,11 @@ def item_payload(item):
 
 def library_section_payload(section):
     """Create response payload for a single library section."""
+    try:
+        children_media_class = ITEM_TYPE_MEDIA_CLASS[section.TYPE]
+    except KeyError as err:
+        _LOGGER.debug("Unknown type received: %s", section.TYPE)
+        raise UnknownMediaType from err
     return BrowseMedia(
         title=section.title,
         media_class=MEDIA_CLASS_DIRECTORY,
@@ -167,6 +191,7 @@ def library_section_payload(section):
         media_content_type="library",
         can_play=False,
         can_expand=True,
+        children_media_class=children_media_class,
     )
 
 
@@ -194,6 +219,7 @@ def server_payload(plex_server):
         can_expand=True,
     )
     server_info.children = []
+    server_info.children_media_class = MEDIA_CLASS_DIRECTORY
     server_info.children.append(special_library_payload(server_info, "On Deck"))
     server_info.children.append(special_library_payload(server_info, "Recently Added"))
     for library in plex_server.library.sections():
@@ -229,4 +255,6 @@ def playlists_payload(plex_server):
             playlists_info["children"].append(item_payload(playlist))
         except UnknownMediaType:
             continue
-    return BrowseMedia(**playlists_info)
+    response = BrowseMedia(**playlists_info)
+    response.children_media_class = MEDIA_CLASS_PLAYLIST
+    return response

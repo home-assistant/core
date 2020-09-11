@@ -105,18 +105,18 @@ LIBRARY_MAP = {
 }
 
 CONTENT_TYPE_MEDIA_CLASS = {
-    "current_user_playlists": MEDIA_CLASS_PLAYLIST,
-    "current_user_followed_artists": MEDIA_CLASS_ARTIST,
-    "current_user_saved_albums": MEDIA_CLASS_ALBUM,
-    "current_user_saved_tracks": MEDIA_CLASS_TRACK,
-    "current_user_saved_shows": MEDIA_CLASS_PODCAST,
-    "current_user_recently_played": MEDIA_CLASS_TRACK,
-    "current_user_top_artists": MEDIA_CLASS_ARTIST,
-    "current_user_top_tracks": MEDIA_CLASS_TRACK,
-    "featured_playlists": MEDIA_CLASS_PLAYLIST,
-    "categories": MEDIA_CLASS_GENRE,
-    "category_playlists": MEDIA_CLASS_PLAYLIST,
-    "new_releases": MEDIA_CLASS_ALBUM,
+    "current_user_playlists": MEDIA_CLASS_DIRECTORY,
+    "current_user_followed_artists": MEDIA_CLASS_DIRECTORY,
+    "current_user_saved_albums": MEDIA_CLASS_DIRECTORY,
+    "current_user_saved_tracks": MEDIA_CLASS_DIRECTORY,
+    "current_user_saved_shows": MEDIA_CLASS_DIRECTORY,
+    "current_user_recently_played": MEDIA_CLASS_DIRECTORY,
+    "current_user_top_artists": MEDIA_CLASS_DIRECTORY,
+    "current_user_top_tracks": MEDIA_CLASS_DIRECTORY,
+    "featured_playlists": MEDIA_CLASS_DIRECTORY,
+    "categories": MEDIA_CLASS_DIRECTORY,
+    "category_playlists": MEDIA_CLASS_DIRECTORY,
+    "new_releases": MEDIA_CLASS_DIRECTORY,
     MEDIA_TYPE_PLAYLIST: MEDIA_CLASS_PLAYLIST,
     MEDIA_TYPE_ALBUM: MEDIA_CLASS_ALBUM,
     MEDIA_TYPE_ARTIST: MEDIA_CLASS_ARTIST,
@@ -567,6 +567,7 @@ def build_item_response(spotify, user, payload):
                     can_expand=True,
                 )
             )
+        media_item.children_media_class = MEDIA_CLASS_GENRE
         return media_item
 
     if title is None:
@@ -575,7 +576,7 @@ def build_item_response(spotify, user, payload):
         else:
             title = LIBRARY_MAP.get(payload["media_content_id"])
 
-    response = {
+    params = {
         "title": title,
         "media_class": media_class,
         "media_content_id": media_content_id,
@@ -586,16 +587,16 @@ def build_item_response(spotify, user, payload):
     }
     for item in items:
         try:
-            response["children"].append(item_payload(item))
+            params["children"].append(item_payload(item))
         except (MissingMediaInformation, UnknownMediaType):
             continue
 
     if "images" in media:
-        response["thumbnail"] = fetch_image_url(media)
+        params["thumbnail"] = fetch_image_url(media)
     elif image:
-        response["thumbnail"] = image
+        params["thumbnail"] = image
 
-    return BrowseMedia(**response)
+    return BrowseMedia(**params)
 
 
 def item_payload(item):
@@ -624,15 +625,11 @@ def item_payload(item):
 
     payload = {
         "title": item.get("name"),
+        "media_class": media_class,
         "media_content_id": media_id,
         "media_content_type": media_type,
         "can_play": media_type in PLAYABLE_MEDIA_TYPES,
         "can_expand": can_expand,
-    }
-
-    payload = {
-        **payload,
-        "media_class": media_class,
     }
 
     if "images" in item:
@@ -665,7 +662,9 @@ def library_payload():
                 {"name": item["name"], "type": item["type"], "uri": item["type"]}
             )
         )
-    return BrowseMedia(**library_info)
+    response = BrowseMedia(**library_info)
+    response.children_media_class = MEDIA_CLASS_DIRECTORY
+    return response
 
 
 def fetch_image_url(item, key="images"):
