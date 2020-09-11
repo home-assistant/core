@@ -199,6 +199,7 @@ async def test_handle_events(hass, utcnow, calls):
         {
             automation.DOMAIN: [
                 {
+                    "alias": "single_press",
                     "trigger": {
                         "platform": "device",
                         "domain": DOMAIN,
@@ -217,6 +218,7 @@ async def test_handle_events(hass, utcnow, calls):
                     },
                 },
                 {
+                    "alias": "long_press",
                     "trigger": {
                         "platform": "device",
                         "domain": DOMAIN,
@@ -271,3 +273,26 @@ async def test_handle_events(hass, utcnow, calls):
     await hass.async_block_till_done()
     assert len(calls) == 2
     assert calls[1].data["some"] == "device - button2 - long_press"
+
+    # Turn the automations off
+    await hass.services.async_call(
+        "automation",
+        "turn_off",
+        {"entity_id": "automation.long_press"},
+        blocking=True,
+    )
+
+    await hass.services.async_call(
+        "automation",
+        "turn_off",
+        {"entity_id": "automation.single_press"},
+        blocking=True,
+    )
+
+    # Make sure event no longer fires
+    helper.pairing.testing.update_named_service(
+        "Button 2", {CharacteristicsTypes.INPUT_EVENT: 2}
+    )
+
+    await hass.async_block_till_done()
+    assert len(calls) == 2
