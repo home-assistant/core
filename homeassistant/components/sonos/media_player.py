@@ -1506,7 +1506,7 @@ def build_item_response(media_library, payload):
         except UnknownMediaType:
             pass
 
-    response = BrowseMedia(
+    return BrowseMedia(
         title=title,
         thumbnail=thumbnail,
         media_class=media_class,
@@ -1516,8 +1516,6 @@ def build_item_response(media_library, payload):
         can_play=can_play(payload["search_type"]),
         can_expand=can_expand(payload["search_type"]),
     )
-    response.calculate_children_class()
-    return response
 
 
 def item_payload(item):
@@ -1556,7 +1554,7 @@ def library_payload(media_library):
         except UnknownMediaType:
             pass
 
-    response = BrowseMedia(
+    return BrowseMedia(
         title="Music Library",
         media_class=MEDIA_CLASS_DIRECTORY,
         media_content_id="library",
@@ -1565,8 +1563,6 @@ def library_payload(media_library):
         can_expand=True,
         children=children,
     )
-    response.calculate_children_class()
-    return response
 
 
 def get_media_type(item):

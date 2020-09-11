@@ -288,7 +288,7 @@ class PhilipsTVMediaPlayer(MediaPlayerEntity):
                 f"Media not found: {media_content_type} / {media_content_id}"
             )
 
-        response = BrowseMedia(
+        return BrowseMedia(
             title="Channels",
             media_class=MEDIA_CLASS_DIRECTORY,
             media_content_id="",
@@ -307,9 +307,6 @@ class PhilipsTVMediaPlayer(MediaPlayerEntity):
                 for channel in self._channels.values()
             ],
         )
-
-        response.calculate_children_class()
-        return response
 
     def update(self):
         """Get the latest data and update device state."""

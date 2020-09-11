@@ -132,7 +132,6 @@ class NetatmoSource(MediaSource):
                 if child:
                     media.children.append(child)
 
-        media.calculate_children_class()
         return media
 
 

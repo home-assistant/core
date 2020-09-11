@@ -58,7 +58,7 @@ def build_item_response(coordinator, payload):
     if media is None:
         return None
 
-    response = BrowseMedia(
+    return BrowseMedia(
         media_class=MEDIA_CLASS_DIRECTORY,
         media_content_id=search_id,
         media_content_type=search_type,
@@ -68,8 +68,6 @@ def build_item_response(coordinator, payload):
         children=[item_payload(item, coordinator) for item in media],
         thumbnail=thumbnail,
     )
-    response.calculate_children_class()
-    return response
 
 
 def item_payload(item, coordinator):

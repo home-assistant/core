@@ -136,8 +136,6 @@ class LocalSource(MediaSource):
             if child:
                 media.children.append(child)
 
-        media.calculate_children_class()
-
         # Sort children showing directories first, then by name
         media.children.sort(key=lambda child: (child.can_play, child.title))
 

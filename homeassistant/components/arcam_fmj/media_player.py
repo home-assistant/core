@@ -275,7 +275,6 @@ class ArcamFmj(MediaPlayerEntity):
             can_expand=True,
             children=radio,
         )
-        root.calculate_children_class()
 
         return root
 

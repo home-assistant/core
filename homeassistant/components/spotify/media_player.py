@@ -596,9 +596,7 @@ def build_item_response(spotify, user, payload):
     elif image:
         params["thumbnail"] = image
 
-    response = BrowseMedia(**params)
-    response.calculate_children_class()
-    return response
+    return BrowseMedia(**params)
 
 
 def item_payload(item):
