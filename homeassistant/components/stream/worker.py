@@ -25,7 +25,10 @@ def create_stream_buffer(stream_output, video_stream, audio_stream, sequence):
         segment,
         mode="w",
         format=stream_output.format,
-        container_options=container_options,
+        container_options={
+            "video_track_timescale": str(int(1 / video_stream.time_base)),
+            **container_options,
+        },
     )
     vstream = output.add_stream(template=video_stream)
     # Check if audio is requested
