@@ -23,6 +23,7 @@ from homeassistant.helpers.event import (
     async_track_state_added_domain,
     async_track_state_change,
     async_track_state_change_event,
+    async_track_state_removed_domain,
     async_track_sunrise,
     async_track_sunset,
     async_track_template,
@@ -427,6 +428,132 @@ async def test_async_track_state_added_domain(hass):
 
     unsub_multi()
     unsub_throws()
+
+
+async def test_async_track_state_removed_domain(hass):
+    """Test async_track_state_removed_domain."""
+    single_entity_id_tracker = []
+    multiple_entity_id_tracker = []
+
+    @ha.callback
+    def single_run_callback(event):
+        old_state = event.data.get("old_state")
+        new_state = event.data.get("new_state")
+
+        single_entity_id_tracker.append((old_state, new_state))
+
+    @ha.callback
+    def multiple_run_callback(event):
+        old_state = event.data.get("old_state")
+        new_state = event.data.get("new_state")
+
+        multiple_entity_id_tracker.append((old_state, new_state))
+
+    @ha.callback
+    def callback_that_throws(event):
+        raise ValueError
+
+    unsub_single = async_track_state_removed_domain(hass, "light", single_run_callback)
+    unsub_multi = async_track_state_removed_domain(
+        hass, ["light", "switch"], multiple_run_callback
+    )
+    unsub_throws = async_track_state_removed_domain(
+        hass, ["light", "switch"], callback_that_throws
+    )
+
+    # Adding state to state machine
+    hass.states.async_set("light.Bowl", "on")
+    hass.states.async_remove("light.Bowl")
+    await hass.async_block_till_done()
+    assert len(single_entity_id_tracker) == 1
+    assert single_entity_id_tracker[-1][1] is None
+    assert single_entity_id_tracker[-1][0] is not None
+    assert len(multiple_entity_id_tracker) == 1
+    assert multiple_entity_id_tracker[-1][1] is None
+    assert multiple_entity_id_tracker[-1][0] is not None
+
+    # Added and than removed (light)
+    hass.states.async_set("light.Bowl", "on")
+    hass.states.async_remove("light.Bowl")
+    await hass.async_block_till_done()
+    assert len(single_entity_id_tracker) == 2
+    assert len(multiple_entity_id_tracker) == 2
+
+    # Added and than removed (light)
+    hass.states.async_set("light.Bowl", "off")
+    hass.states.async_remove("light.Bowl")
+    await hass.async_block_till_done()
+    assert len(single_entity_id_tracker) == 3
+    assert len(multiple_entity_id_tracker) == 3
+
+    # Added and than removed (light)
+    hass.states.async_set("light.Bowl", "off", {"some_attr": 1})
+    hass.states.async_remove("light.Bowl")
+    await hass.async_block_till_done()
+    assert len(single_entity_id_tracker) == 4
+    assert len(multiple_entity_id_tracker) == 4
+
+    # Added and than removed (switch)
+    hass.states.async_set("switch.kitchen", "on")
+    hass.states.async_remove("switch.kitchen")
+    await hass.async_block_till_done()
+    assert len(single_entity_id_tracker) == 4
+    assert len(multiple_entity_id_tracker) == 5
+
+    unsub_single()
+    # Ensure unsubing the listener works
+    hass.states.async_set("light.new", "off")
+    hass.states.async_remove("light.new")
+    await hass.async_block_till_done()
+    assert len(single_entity_id_tracker) == 4
+    assert len(multiple_entity_id_tracker) == 6
+
+    unsub_multi()
+    unsub_throws()
+
+
+async def test_async_track_state_removed_domain_match_all(hass):
+    """Test async_track_state_removed_domain with a match_all."""
+    single_entity_id_tracker = []
+    match_all_entity_id_tracker = []
+
+    @ha.callback
+    def single_run_callback(event):
+        old_state = event.data.get("old_state")
+        new_state = event.data.get("new_state")
+
+        single_entity_id_tracker.append((old_state, new_state))
+
+    @ha.callback
+    def match_all_run_callback(event):
+        old_state = event.data.get("old_state")
+        new_state = event.data.get("new_state")
+
+        match_all_entity_id_tracker.append((old_state, new_state))
+
+    unsub_single = async_track_state_removed_domain(hass, "light", single_run_callback)
+    unsub_match_all = async_track_state_removed_domain(
+        hass, MATCH_ALL, match_all_run_callback
+    )
+    hass.states.async_set("light.new", "off")
+    hass.states.async_remove("light.new")
+    await hass.async_block_till_done()
+    assert len(single_entity_id_tracker) == 1
+    assert len(match_all_entity_id_tracker) == 1
+
+    hass.states.async_set("switch.new", "off")
+    hass.states.async_remove("switch.new")
+    await hass.async_block_till_done()
+    assert len(single_entity_id_tracker) == 1
+    assert len(match_all_entity_id_tracker) == 2
+
+    unsub_match_all()
+    unsub_single()
+    hass.states.async_set("switch.new", "off")
+    hass.states.async_remove("switch.new")
+    await hass.async_block_till_done()
+    assert len(single_entity_id_tracker) == 1
+    assert len(match_all_entity_id_tracker) == 2
 
 
 async def test_track_template(hass):
