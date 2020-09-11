@@ -1,5 +1,5 @@
 """Switch for Shelly."""
-from aioshelly import RelayBlock
+from aioshelly import Block
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import callback
@@ -13,6 +13,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up switches for device."""
     wrapper = hass.data[DOMAIN][config_entry.entry_id]
 
+    # In roller mode the relay blocks exist but do not contain required info
+    if wrapper.model == "SHSW-25" and wrapper.device.settings["mode"] != "relay":
+        return
+
     relay_blocks = [block for block in wrapper.device.blocks if block.type == "relay"]
 
     if not relay_blocks:
@@ -24,7 +28,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class RelaySwitch(ShellyBlockEntity, SwitchEntity):
     """Switch that controls a relay block on Shelly devices."""
 
-    def __init__(self, wrapper: ShellyDeviceWrapper, block: RelayBlock) -> None:
+    def __init__(self, wrapper: ShellyDeviceWrapper, block: Block) -> None:
         """Initialize relay switch."""
         super().__init__(wrapper, block)
         self.control_result = None

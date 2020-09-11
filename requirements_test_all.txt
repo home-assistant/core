@@ -131,7 +131,7 @@ aiopvpc==2.0.2
 aiopylgtv==0.3.3
 
 # homeassistant.components.shelly
-aioshelly==0.3.0
+aioshelly==0.3.1
 
 # homeassistant.components.switcher_kis
 aioswitcher==1.2.1
@@ -352,7 +352,7 @@ ha-ffmpeg==2.0
 hangups==0.4.10
 
 # homeassistant.components.cloud
-hass-nabucasa==0.36.1
+hass-nabucasa==0.37.0
 
 # homeassistant.components.jewish_calendar
 hdate==0.9.5
@@ -370,7 +370,7 @@ hole==0.5.1
 holidays==0.10.3
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200908.0
+home-assistant-frontend==20200909.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -392,7 +392,7 @@ huawei-lte-api==1.4.12
 iaqualink==0.3.4
 
 # homeassistant.components.ping
-icmplib==1.1.1
+icmplib==1.1.3
 
 # homeassistant.components.influxdb
 influxdb-client==1.8.0
@@ -472,7 +472,7 @@ numato-gpio==0.8.0
 # homeassistant.components.opencv
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==1.19.1
+numpy==1.19.2
 
 # homeassistant.components.google
 oauth2client==4.0.0
@@ -583,7 +583,7 @@ pyMetno==0.8.1
 pyRFXtrx==0.25
 
 # homeassistant.components.tibber
-pyTibber==0.14.0
+pyTibber==0.15.2
 
 # homeassistant.components.nextbus
 py_nextbusnext==0.1.4
@@ -782,7 +782,7 @@ pysignalclirestapi==0.3.4
 pysma==0.3.5
 
 # homeassistant.components.smappee
-pysmappee==0.2.10
+pysmappee==0.2.13
 
 # homeassistant.components.smartthings
 pysmartapp==0.3.2
@@ -912,7 +912,7 @@ samsungtvws[websocket]==1.4.0
 sense_energy==0.8.0
 
 # homeassistant.components.sentry
-sentry-sdk==0.17.3
+sentry-sdk==0.17.4
 
 # homeassistant.components.sharkiq
 sharkiqpy==0.1.8
@@ -1053,7 +1053,7 @@ xmltodict==0.12.0
 yeelight==0.5.3
 
 # homeassistant.components.zeroconf
-zeroconf==0.28.4
+zeroconf==0.28.5
 
 # homeassistant.components.zha
 zha-quirks==0.0.44
@@ -1074,4 +1074,4 @@ zigpy-zigate==0.6.2
 zigpy-znp==0.1.1
 
 # homeassistant.components.zha
-zigpy==0.23.1
+zigpy==0.23.2

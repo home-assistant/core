@@ -6,7 +6,7 @@ from typing import List, Optional, Tuple
 from homeassistant.components.media_player import BrowseMedia
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_CHANNEL,
-    MEDIA_CLASS_CHANNELS,
+    MEDIA_CLASS_DIRECTORY,
     MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_CHANNELS,
 )
@@ -54,11 +54,12 @@ class MediaSourceItem:
             base = BrowseMediaSource(
                 domain=None,
                 identifier=None,
-                media_class=MEDIA_CLASS_CHANNELS,
+                media_class=MEDIA_CLASS_DIRECTORY,
                 media_content_type=MEDIA_TYPE_CHANNELS,
                 title="Media Sources",
                 can_play=False,
                 can_expand=True,
+                children_media_class=MEDIA_CLASS_CHANNEL,
             )
             base.children = [
                 BrowseMediaSource(

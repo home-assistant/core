@@ -14,6 +14,8 @@ from homeassistant.components.media_player.const import (
     MEDIA_CLASS_ALBUM,
     MEDIA_CLASS_ARTIST,
     MEDIA_CLASS_DIRECTORY,
+    MEDIA_CLASS_EPISODE,
+    MEDIA_CLASS_GENRE,
     MEDIA_CLASS_PLAYLIST,
     MEDIA_CLASS_PODCAST,
     MEDIA_CLASS_TRACK,
@@ -103,27 +105,33 @@ LIBRARY_MAP = {
 }
 
 CONTENT_TYPE_MEDIA_CLASS = {
-    "current_user_playlists": MEDIA_CLASS_PLAYLIST,
-    "current_user_followed_artists": MEDIA_CLASS_ARTIST,
-    "current_user_saved_albums": MEDIA_CLASS_ALBUM,
-    "current_user_saved_tracks": MEDIA_CLASS_TRACK,
-    "current_user_saved_shows": MEDIA_CLASS_PODCAST,
-    "current_user_recently_played": MEDIA_CLASS_TRACK,
-    "current_user_top_artists": MEDIA_CLASS_ARTIST,
-    "current_user_top_tracks": MEDIA_CLASS_TRACK,
-    "featured_playlists": MEDIA_CLASS_PLAYLIST,
+    "current_user_playlists": MEDIA_CLASS_DIRECTORY,
+    "current_user_followed_artists": MEDIA_CLASS_DIRECTORY,
+    "current_user_saved_albums": MEDIA_CLASS_DIRECTORY,
+    "current_user_saved_tracks": MEDIA_CLASS_DIRECTORY,
+    "current_user_saved_shows": MEDIA_CLASS_DIRECTORY,
+    "current_user_recently_played": MEDIA_CLASS_DIRECTORY,
+    "current_user_top_artists": MEDIA_CLASS_DIRECTORY,
+    "current_user_top_tracks": MEDIA_CLASS_DIRECTORY,
+    "featured_playlists": MEDIA_CLASS_DIRECTORY,
     "categories": MEDIA_CLASS_DIRECTORY,
-    "category_playlists": MEDIA_CLASS_PLAYLIST,
-    "new_releases": MEDIA_CLASS_ALBUM,
+    "category_playlists": MEDIA_CLASS_DIRECTORY,
+    "new_releases": MEDIA_CLASS_DIRECTORY,
     MEDIA_TYPE_PLAYLIST: MEDIA_CLASS_PLAYLIST,
     MEDIA_TYPE_ALBUM: MEDIA_CLASS_ALBUM,
     MEDIA_TYPE_ARTIST: MEDIA_CLASS_ARTIST,
+    MEDIA_TYPE_EPISODE: MEDIA_CLASS_EPISODE,
     MEDIA_TYPE_SHOW: MEDIA_CLASS_PODCAST,
+    MEDIA_TYPE_TRACK: MEDIA_CLASS_TRACK,
 }
 
 
 class MissingMediaInformation(BrowseError):
     """Missing media required information."""
+
+
+class UnknownMediaType(BrowseError):
+    """Unknown media type."""
 
 
 async def async_setup_entry(
@@ -526,10 +534,16 @@ def build_item_response(spotify, user, payload):
     if media is None:
         return None
 
+    try:
+        media_class = CONTENT_TYPE_MEDIA_CLASS[media_content_type]
+    except KeyError:
+        _LOGGER.debug("Unknown media type received: %s", media_content_type)
+        return None
+
     if media_content_type == "categories":
         media_item = BrowseMedia(
             title=LIBRARY_MAP.get(media_content_id),
-            media_class=CONTENT_TYPE_MEDIA_CLASS[media_content_type],
+            media_class=media_class,
             media_content_id=media_content_id,
             media_content_type=media_content_type,
             can_play=False,
@@ -553,6 +567,8 @@ def build_item_response(spotify, user, payload):
                     can_expand=True,
                 )
             )
+        media_item.children_media_class = MEDIA_CLASS_GENRE
+        return media_item
 
     if title is None:
         if "name" in media:
@@ -560,9 +576,9 @@ def build_item_response(spotify, user, payload):
         else:
             title = LIBRARY_MAP.get(payload["media_content_id"])
 
-    response = {
+    params = {
         "title": title,
-        "media_class": CONTENT_TYPE_MEDIA_CLASS[media_content_type],
+        "media_class": media_class,
         "media_content_id": media_content_id,
         "media_content_type": media_content_type,
         "can_play": media_content_type in PLAYABLE_MEDIA_TYPES,
@@ -571,16 +587,16 @@ def build_item_response(spotify, user, payload):
     }
     for item in items:
         try:
-            response["children"].append(item_payload(item))
-        except MissingMediaInformation:
+            params["children"].append(item_payload(item))
+        except (MissingMediaInformation, UnknownMediaType):
             continue
 
     if "images" in media:
-        response["thumbnail"] = fetch_image_url(media)
+        params["thumbnail"] = fetch_image_url(media)
     elif image:
-        response["thumbnail"] = image
+        params["thumbnail"] = image
 
-    return BrowseMedia(**response)
+    return BrowseMedia(**params)
 
 
 def item_payload(item):
@@ -596,6 +612,12 @@ def item_payload(item):
         _LOGGER.debug("Missing type or uri for media item: %s", item)
         raise MissingMediaInformation from err
 
+    try:
+        media_class = CONTENT_TYPE_MEDIA_CLASS[media_type]
+    except KeyError as err:
+        _LOGGER.debug("Unknown media type received: %s", media_type)
+        raise UnknownMediaType from err
+
     can_expand = media_type not in [
         MEDIA_TYPE_TRACK,
         MEDIA_TYPE_EPISODE,
@@ -603,15 +625,11 @@ def item_payload(item):
 
     payload = {
         "title": item.get("name"),
+        "media_class": media_class,
         "media_content_id": media_id,
         "media_content_type": media_type,
         "can_play": media_type in PLAYABLE_MEDIA_TYPES,
         "can_expand": can_expand,
-    }
-
-    payload = {
-        **payload,
-        "media_class": CONTENT_TYPE_MEDIA_CLASS[media_type],
     }
 
     if "images" in item:
@@ -644,7 +662,9 @@ def library_payload():
                 {"name": item["name"], "type": item["type"], "uri": item["type"]}
             )
         )
-    return BrowseMedia(**library_info)
+    response = BrowseMedia(**library_info)
+    response.children_media_class = MEDIA_CLASS_DIRECTORY
+    return response
 
 
 def fetch_image_url(item, key="images"):
