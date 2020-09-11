@@ -2,7 +2,10 @@
 import logging
 from typing import Callable
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_WINDOW,
+    BinarySensorEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 
@@ -33,8 +36,8 @@ BINARY_SENSOR_TYPES = {
     SENSOR_SAFE: ("Safe", "door"),
     SENSOR_SLIDING: ("Sliding Door/Window", "door"),
     SENSOR_SMOKE_CO: ("Smoke/Carbon Monoxide Detector", "smoke"),
-    SENSOR_WINDOW_HINGED_HORIZONTAL: ("Hinged Window", "window"),
-    SENSOR_WINDOW_HINGED_VERTICAL: ("Hinged Window", "window"),
+    SENSOR_WINDOW_HINGED_HORIZONTAL: ("Hinged Window", DEVICE_CLASS_WINDOW),
+    SENSOR_WINDOW_HINGED_VERTICAL: ("Hinged Window", DEVICE_CLASS_WINDOW),
 }
 
 
