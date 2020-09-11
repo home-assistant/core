@@ -236,6 +236,7 @@ homeassistant/components/linux_battery/* @fabaff
 homeassistant/components/local_ip/* @issacg
 homeassistant/components/logger/* @home-assistant/core
 homeassistant/components/logi_circle/* @evanjd
+homeassistant/components/loopenergy/* @pavoni
 homeassistant/components/lovelace/* @home-assistant/frontend
 homeassistant/components/luci/* @fbradyirl @mzdrale
 homeassistant/components/luftdaten/* @fabaff
