@@ -868,7 +868,7 @@ def make_entity_service_schema(
 
 SCRIPT_VARIABLES_SCHEMA = vol.All(
     vol.Schema({str: template_complex}),
-    # pylint: disable=unecessary-lambda
+    # pylint: disable=unnecessary-lambda
     lambda val: script_variables_helper.ScriptVariables(val),
 )
 
