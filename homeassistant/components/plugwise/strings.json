@@ -13,9 +13,9 @@
     "step": {
       "user": {
         "title": "Connect to the Smile",
-        "description": "Details",
+        "description": "Please enter:",
         "data": {
-          "host": "Smile IP address",
+          "host": "Smile IP address(:port)",
           "password": "Smile ID"
         }
       }
