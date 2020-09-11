@@ -3,7 +3,10 @@ from typing import Optional, Sequence
 
 from pysmartthings import Attribute, Capability
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_SOUND,
+    BinarySensorEntity,
+)
 
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
@@ -25,7 +28,7 @@ ATTRIB_TO_CLASS = {
     Attribute.filter_status: "problem",
     Attribute.motion: "motion",
     Attribute.presence: "presence",
-    Attribute.sound: "sound",
+    Attribute.sound: DEVICE_CLASS_SOUND,
     Attribute.tamper: "problem",
     Attribute.valve: "opening",
     Attribute.water: "moisture",

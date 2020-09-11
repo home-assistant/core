@@ -87,7 +87,7 @@ def get_opening_type(zone):
     if "MOTION" in zone["name"]:
         return "motion"
     if "KEY" in zone["name"]:
-        return "safety"
+        return DEVICE_CLASSES.DEVICE_CLASS_SAFETY
     if "SMOKE" in zone["name"]:
         return "smoke"
     if "WATER" in zone["name"]:

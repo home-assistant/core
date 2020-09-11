@@ -11,10 +11,10 @@ SENSORS = {
     "S_DOOR": "door",
     "S_MOTION": "motion",
     "S_SMOKE": "smoke",
-    "S_SPRINKLER": "safety",
-    "S_WATER_LEAK": "safety",
-    "S_SOUND": "sound",
-    "S_VIBRATION": "vibration",
+    "S_SPRINKLER": DEVICE_CLASSES.DEVICE_CLASS_SAFETY,
+    "S_WATER_LEAK": DEVICE_CLASSES.DEVICE_CLASS_SAFETY,
+    "S_SOUND": DEVICE_CLASSES.DEVICE_CLASS_SOUND,
+    "S_VIBRATION": DEVICE_CLASSES.DEVICE_CLASS_VIBRATION,
     "S_MOISTURE": "moisture",
 }
 
