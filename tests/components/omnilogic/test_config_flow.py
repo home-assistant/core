@@ -1,5 +1,5 @@
 """Test the Omnilogic config flow."""
-from omnilogic import LoginException
+from omnilogic import LoginException, OmniLogicException
 
 from homeassistant import config_entries, setup
 from homeassistant.components.omnilogic.const import DOMAIN
@@ -114,3 +114,25 @@ async def test_with_invalid_credentials(hass):
     assert result2["type"] == "form"
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "unknown"}
+
+
+async def test_form_cannot_connect(hass):
+    """Test if invalid response or no connection returned from Hayward."""
+
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.omnilogic.OmniLogic.connect",
+        side_effect=OmniLogicException,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            DATA,
+        )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "cannot_connect"}
