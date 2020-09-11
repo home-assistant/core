@@ -1,5 +1,6 @@
 """Tests for handling accessories on a Hue bridge via HomeKit."""
 
+from tests.common import assert_lists_same, async_get_device_automations
 from tests.components.homekit_controller.common import (
     Helper,
     setup_accessories_from_file,
@@ -34,3 +35,32 @@ async def test_hue_bridge_setup(hass):
     assert device.name == "Hue dimmer switch"
     assert device.model == "RWL021"
     assert device.sw_version == "45.1.17846"
+
+    # The fixture file has 1 dimmer, which is a remote with 4 buttons
+    # It (incorrectly) claims to support single, double and long press events
+    # It also has a battery
+
+    expected = [
+        {
+            "device_id": device.id,
+            "domain": "sensor",
+            "entity_id": "sensor.hue_dimmer_switch_battery",
+            "platform": "device",
+            "type": "battery_level",
+        }
+    ]
+
+    for button in ("button1", "button2", "button3", "button4"):
+        for subtype in ("single_press", "double_press", "long_press"):
+            expected.append(
+                {
+                    "device_id": device.id,
+                    "domain": "homekit_controller",
+                    "platform": "device",
+                    "type": button,
+                    "subtype": subtype,
+                }
+            )
+
+    triggers = await async_get_device_automations(hass, "trigger", device.id)
+    assert_lists_same(triggers, expected)
