@@ -305,8 +305,9 @@ class OmniLogicTemperatureSensor(OmnilogicSensor):
 
         self._attrs["hayward_temperature"] = temp_return
         self._attrs["hayward_unit_of_measure"] = unit_of_measurement
-        self._state = float(temp_state)
-        self._unit = TEMP_FAHRENHEIT
+        if temp_state is not None:
+            self._state = float(temp_state)
+            self._unit = TEMP_FAHRENHEIT
 
         return self._state
 
