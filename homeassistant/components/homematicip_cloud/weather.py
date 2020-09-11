@@ -9,23 +9,18 @@ from homematicip.aio.device import (
 from homematicip.base.enums import WeatherCondition
 
 from homeassistant.components.weather import (
-    ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_CLOUDY,
-    ATTR_CONDITION_EXCEPTIONAL,
     ATTR_CONDITION_FOG,
-    ATTR_CONDITION_HAIL,
     ATTR_CONDITION_LIGHTNING,
     ATTR_CONDITION_LIGHTNING_RAINY,
     ATTR_CONDITION_PARTLYCLOUDY,
-    ATTR_CONDITION_POURING,
     ATTR_CONDITION_RAINY,
     ATTR_CONDITION_SNOWY,
     ATTR_CONDITION_SNOWY_RAINY,
     ATTR_CONDITION_SUNNY,
     ATTR_CONDITION_WINDY,
-    ATTR_CONDITION_WINDY_VARIANT,
+    WeatherEntity,
 )
-from homeassistant.components.weather import WeatherEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.typing import HomeAssistantType

@@ -6,25 +6,12 @@ import forecastio
 from requests.exceptions import ConnectionError as ConnectError, HTTPError, Timeout
 import voluptuous as vol
 
+from homeassistant.components.sensor import DEVICE_CLASS_TEMPERATURE, PLATFORM_SCHEMA
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_CLOUDY,
-    ATTR_CONDITION_EXCEPTIONAL,
     ATTR_CONDITION_FOG,
-    ATTR_CONDITION_HAIL,
-    ATTR_CONDITION_LIGHTNING,
-    ATTR_CONDITION_LIGHTNING_RAINY,
-    ATTR_CONDITION_PARTLYCLOUDY,
-    ATTR_CONDITION_POURING,
-    ATTR_CONDITION_RAINY,
-    ATTR_CONDITION_SNOWY,
-    ATTR_CONDITION_SNOWY_RAINY,
-    ATTR_CONDITION_SUNNY,
-    ATTR_CONDITION_WINDY,
-    ATTR_CONDITION_WINDY_VARIANT,
 )
-from homeassistant.components.sensor import DEVICE_CLASS_TEMPERATURE, PLATFORM_SCHEMA
-from homeassistant.components.weather import ATTR_CONDITION_CLEAR_NIGHT
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_API_KEY,

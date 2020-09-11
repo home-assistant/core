@@ -1,15 +1,5 @@
 """Meteo-France component constants."""
 
-from homeassistant.components.weather import ATTR_CONDITION_CLEAR_NIGHT
-from homeassistant.const import (
-    DEVICE_CLASS_PRESSURE,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_TIMESTAMP,
-    PERCENTAGE,
-    PRESSURE_HPA,
-    SPEED_KILOMETERS_PER_HOUR,
-    TEMP_CELSIUS,
-)
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_CLOUDY,
@@ -26,6 +16,15 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_SUNNY,
     ATTR_CONDITION_WINDY,
     ATTR_CONDITION_WINDY_VARIANT,
+)
+from homeassistant.const import (
+    DEVICE_CLASS_PRESSURE,
+    DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_TIMESTAMP,
+    PERCENTAGE,
+    PRESSURE_HPA,
+    SPEED_KILOMETERS_PER_HOUR,
+    TEMP_CELSIUS,
 )
 
 DOMAIN = "meteo_france"

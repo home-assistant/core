@@ -1,5 +1,4 @@
 """Constants for AccuWeather integration."""
-from homeassistant.components.weather import ATTR_CONDITION_CLEAR_NIGHT
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_CLOUDY,
@@ -15,7 +14,6 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_SNOWY_RAINY,
     ATTR_CONDITION_SUNNY,
     ATTR_CONDITION_WINDY,
-    ATTR_CONDITION_WINDY_VARIANT,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,

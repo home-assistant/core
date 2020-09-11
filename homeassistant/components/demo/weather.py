@@ -2,7 +2,6 @@
 from datetime import timedelta
 
 from homeassistant.components.weather import (
-    ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_CLOUDY,
     ATTR_CONDITION_EXCEPTIONAL,
     ATTR_CONDITION_FOG,
@@ -17,8 +16,6 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_SUNNY,
     ATTR_CONDITION_WINDY,
     ATTR_CONDITION_WINDY_VARIANT,
-)
-from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_PRECIPITATION,
     ATTR_FORECAST_PRECIPITATION_PROBABILITY,
