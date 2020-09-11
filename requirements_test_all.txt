@@ -103,7 +103,7 @@ aioguardian==1.0.1
 aioharmony==0.2.6
 
 # homeassistant.components.homekit_controller
-aiohomekit[IP]==0.2.49
+aiohomekit==0.2.49
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -905,7 +905,7 @@ rxv==0.6.0
 samsungctl[websocket]==0.7.1
 
 # homeassistant.components.samsungtv
-samsungtvws[websocket]==1.4.0
+samsungtvws==1.4.0
 
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense

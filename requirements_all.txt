@@ -2,7 +2,7 @@
 -r requirements.txt
 
 # homeassistant.components.nuimo_controller
---only-binary=all nuimo==0.1.0
+# --only-binary=all nuimo==0.1.0
 
 # homeassistant.components.dht
 # Adafruit-DHT==1.4.0
@@ -178,7 +178,7 @@ aioguardian==1.0.1
 aioharmony==0.2.6
 
 # homeassistant.components.homekit_controller
-aiohomekit[IP]==0.2.49
+aiohomekit==0.2.49
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -1942,7 +1942,7 @@ saltbox==0.1.3
 samsungctl[websocket]==0.7.1
 
 # homeassistant.components.samsungtv
-samsungtvws[websocket]==1.4.0
+samsungtvws==1.4.0
 
 # homeassistant.components.satel_integra
 satel_integra==0.3.4
