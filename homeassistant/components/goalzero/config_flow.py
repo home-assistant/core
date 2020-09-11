@@ -74,4 +74,4 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def _async_try_connect(self, host):
         session = async_get_clientsession(self.hass)
         api = GoalZero(host, self.hass.loop, session)
-        await api.get_state()
+        api.get_state()
