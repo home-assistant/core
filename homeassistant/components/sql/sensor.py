@@ -127,7 +127,7 @@ class SQLSensor(Entity):
             result = sess.execute(self._query)
             self._attributes = {}
 
-            if not result.returns_rows or result.rowcount == 0:
+            if not result.returns_rows or result.rowcount <= 0:
                 _LOGGER.warning("%s returned no results", self._query)
                 self._state = None
                 return
