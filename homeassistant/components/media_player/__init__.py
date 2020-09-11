@@ -1057,6 +1057,9 @@ class BrowseMedia:
 
     def as_dict(self, *, parent: bool = True) -> dict:
         """Convert Media class to browse media dictionary."""
+        if self.children_media_class is None:
+            self.calculate_children_class()
+
         response = {
             "title": self.title,
             "media_class": self.media_class,
@@ -1080,13 +1083,13 @@ class BrowseMedia:
 
         return response
 
-    def calculate_children_class(self):
+    def calculate_children_class(self) -> None:
         """Count the children media classes and calculate the correct class."""
-        if len(self.children) == 0:
+        if self.children is None or len(self.children) == 0:
             return
-        
+
         self.children_media_class = MEDIA_CLASS_DIRECTORY
-        
+
         proposed_class = self.children[0].media_class
         if all(child.media_class == proposed_class for child in self.children):
             self.children_media_class = proposed_class
