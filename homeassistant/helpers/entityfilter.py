@@ -94,8 +94,6 @@ def convert_include_exclude_filter(
         ],
         "entities": [
             "sun.sun",
-            "sensor.nextsunrise",
-            "sensor.nextsunset",
             "sensor.date",
             "sensor.time",
             "automation.ais_ask_the_question",

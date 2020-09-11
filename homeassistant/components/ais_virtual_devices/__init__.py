@@ -1,8 +1,9 @@
 """Set up the demo environment that mimics interaction with devices."""
 import asyncio
 import logging
-from homeassistant.setup import async_setup_component
+
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.setup import async_setup_component
 
 DOMAIN = "ais_virtual_devices"
 _LOGGER = logging.getLogger(__name__)
@@ -267,8 +268,6 @@ async def async_setup(hass, config):
         "on",
         {
             "entity_id": [
-                "sensor.nextsunrise",
-                "sensor.nextsunset",
                 "sensor.dayofyear",
                 "sensor.weekofyear",
                 "binary_sensor.dzien_pracujacy",

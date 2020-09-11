@@ -1,40 +1,27 @@
-sensor:
-  - platform: time_date
-    display_options:
-      - 'time'
-      - 'date'
-  - platform: template
-    sensors:
-      daytodisplay:
-        entity_id: sensor.date
-        friendly_name: 'Data'
-        value_template: '{{ as_timestamp(now()) | timestamp_custom("%d/%m", True) }}'
-  - platform: template
-    sensors:
-      nextsunrise:
-        entity_id: sun.sun
-        friendly_name: 'Wschód słońca'
-        value_template: "{{ as_timestamp(states.sun.sun.attributes.next_rising) | timestamp_custom('o godzinie %-I:%M') }}"
-  - platform: template
-    sensors:
-      nextsunset:
-         entity_id: sun.sun
-         friendly_name: 'Zachód słońca'
-         value_template: "{{ as_timestamp(states.sun.sun.attributes.next_setting) | timestamp_custom('o godzinie %-H:%M') }}"
-  - platform: template
-    sensors:
-       dayofyear:
-         entity_id: sensor.date
-         friendly_name: 'Numer dnia w roku'
-         value_template: "{{ now().strftime('%j') }}"
-  - platform: template
-    sensors:
-       weekofyear:
-         entity_id: sensor.date
-         friendly_name: 'Numer tygodnia w roku'
-         value_template: "{{ now().isocalendar()[1] }}"
-binary_sensor:
-  - platform: workday
-    name: "Dzień pracujący"
-    country: PL
-
+# sensor:
+#   - platform: time_date
+#     display_options:
+#       - 'time'
+#       - 'date'
+#   - platform: template
+#     sensors:
+#       daytodisplay:
+#         entity_id: sensor.date
+#         friendly_name: 'Data'
+#         value_template: '{{ as_timestamp(now()) | timestamp_custom("%d/%m", True) }}'
+#   - platform: template
+#     sensors:
+#        dayofyear:
+#          entity_id: sensor.date
+#          friendly_name: 'Numer dnia w roku'
+#          value_template: "{{ now().strftime('%j') }}"
+#   - platform: template
+#     sensors:
+#        weekofyear:
+#          entity_id: sensor.date
+#          friendly_name: 'Numer tygodnia w roku'
+#          value_template: "{{ now().isocalendar()[1] }}"
+# binary_sensor:
+#   - platform: workday
+#     name: "Dzień pracujący"
+#     country: PL
