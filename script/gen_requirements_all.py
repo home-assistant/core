@@ -23,6 +23,7 @@ COMMENT_REQUIREMENTS = (
     "bme680",
     "credstash",
     "decora",
+    "decora_wifi",
     "env_canada",
     "envirophat",
     "evdev",
