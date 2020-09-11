@@ -53,5 +53,26 @@
             }
         }
     },
-    "title": "HomeKit Controller"
+    "title": "HomeKit Controller",
+    "device_automation": {
+      "trigger_type": {
+          "single_press": "\"{subtype}\" pressed",
+          "double_press": "\"{subtype}\" pressed twice",
+          "long_press": "\"{subtype}\" pressed and held"
+      },
+      "trigger_subtype": {
+        "doorbell": "Doorbell",
+        "button1": "Button 1",
+        "button2": "Button 2",
+        "button3": "Button 3",
+        "button4": "Button 4",
+        "button5": "Button 5",
+        "button6": "Button 6",
+        "button7": "Button 7",
+        "button8": "Button 8",
+        "button9": "Button 9",
+        "button10": "Button 10"
+      }
+    }
 }
+
