@@ -1,6 +1,7 @@
 """Support to interface with the Plex API."""
 import logging
 
+from homeassistant.components import media_source
 from homeassistant.components.media_player import BrowseMedia
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_ALBUM,
@@ -15,10 +16,11 @@ from homeassistant.components.media_player.const import (
     MEDIA_CLASS_TRACK,
     MEDIA_CLASS_TV_SHOW,
     MEDIA_CLASS_VIDEO,
-    MEDIA_TYPE_APPS,
+    MEDIA_TYPE_APP,
     MEDIA_TYPE_CHANNELS,
 )
 from homeassistant.components.media_player.errors import BrowseError
+from homeassistant.components.media_source import const as media_source_const
 
 from .const import DOMAIN
 
@@ -27,36 +29,29 @@ class UnknownMediaType(BrowseError):
     """Unknown media type."""
 
 
-EXPANDABLES = ["album", "artist", "playlist", "season", "show"]
-PLAYLISTS_BROWSE_PAYLOAD = {
-    "title": "Playlists",
-    "media_class": MEDIA_CLASS_PLAYLIST,
-    "media_content_id": "all",
-    "media_content_type": "playlists",
-    "can_play": False,
-    "can_expand": True,
-}
-SPECIAL_METHODS = {
-    "On Deck": "onDeck",
-    "Recently Added": "recentlyAdded",
-}
-
-ITEM_TYPE_MEDIA_CLASS = {
-    "album": MEDIA_CLASS_ALBUM,
-    "artist": MEDIA_CLASS_ARTIST,
-    "episode": MEDIA_CLASS_EPISODE,
-    "movie": MEDIA_CLASS_MOVIE,
-    "playlist": MEDIA_CLASS_PLAYLIST,
-    "season": MEDIA_CLASS_SEASON,
-    "show": MEDIA_CLASS_TV_SHOW,
-    "track": MEDIA_CLASS_TRACK,
-    "video": MEDIA_CLASS_VIDEO,
-}
-
 _LOGGER = logging.getLogger(__name__)
 
 
-def browse_media_library(channels: bool = False) -> BrowseMedia:
+async def browse_media(hass, media_content_type=None, media_content_id=None):
+    """Implement the websocket media browsing helper."""
+    if media_content_type in [None, "library"]:
+        return ais_media_library()
+
+    if media_content_id.startswith(media_source_const.URI_SCHEME):
+        result = await media_source.async_browse_media(hass, media_content_id)
+        return result
+
+    if media_content_id.startswith("ais_music"):
+        return ais_music_library()
+
+    response = None
+
+    if response is None:
+        raise BrowseError(f"Media not found: {media_content_type} / {media_content_id}")
+    return response
+
+
+def ais_media_library() -> BrowseMedia:
     """Create response payload to describe contents of a specific library."""
     ais_library_info = BrowseMedia(
         title="AIS Audio",
@@ -70,164 +65,107 @@ def browse_media_library(channels: bool = False) -> BrowseMedia:
 
     ais_library_info.children.append(
         BrowseMedia(
-            title="Apps",
-            media_class=MEDIA_CLASS_APP,
-            media_content_id="apps",
-            media_content_type=MEDIA_TYPE_APPS,
+            title="Dyski",
+            media_class=MEDIA_CLASS_DIRECTORY,
+            media_content_id=f"{media_source_const.URI_SCHEME}{media_source_const.DOMAIN}",
+            media_content_type=MEDIA_TYPE_APP,
             can_expand=True,
             can_play=False,
+            thumbnail="https://cdn2.iconfinder.com/data/icons/folders-22/512/Folder_Mac_Music.png",
+        )
+    )
+    ais_library_info.children.append(
+        BrowseMedia(
+            title="Ulubione",
+            media_class=MEDIA_CLASS_DIRECTORY,
+            media_content_id="ais_radio",
+            media_content_type=MEDIA_TYPE_APP,
+            can_expand=True,
+            can_play=False,
+            thumbnail="https://1.bp.blogspot.com/-qZTfIjt9AXk/TxMWUFLKWLI/AAAAAAAAAWk/bwQqSX-Z3H0/s1600/Graphic__Music__Headphones__Heart_xlarge.gif",
+        )
+    )
+    ais_library_info.children.append(
+        BrowseMedia(
+            title="Radio",
+            media_class=MEDIA_CLASS_DIRECTORY,
+            media_content_id="ais_radio",
+            media_content_type=MEDIA_TYPE_APP,
+            can_expand=True,
+            can_play=False,
+            thumbnail="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/Radio.svg/1024px-Radio.svg.png",
+        )
+    )
+    ais_library_info.children.append(
+        BrowseMedia(
+            title="Podcast",
+            media_class=MEDIA_CLASS_DIRECTORY,
+            media_content_id="ais_podcast",
+            media_content_type=MEDIA_TYPE_APP,
+            can_expand=True,
+            can_play=False,
+            thumbnail="https://www.mclellanmarketing.com/wp-content/uploads/2016/04/podcasting_opt.jpg",
+        )
+    )
+    ais_library_info.children.append(
+        BrowseMedia(
+            title="Audio książki",
+            media_class=MEDIA_CLASS_DIRECTORY,
+            media_content_id="ais_audio_books",
+            media_content_type=MEDIA_TYPE_APP,
+            can_expand=True,
+            can_play=False,
+            thumbnail="https://lh3.googleusercontent.com/proxy/wp_i9gaVHpM75OVae5HyUoBcgMyW-ssPsSS1tCK7QerVBjeKIE8-ruKLCVmjjc7_AwFvDhWDLYKWnurpPOQoSlA",
+        )
+    )
+    ais_library_info.children.append(
+        BrowseMedia(
+            title="Muzyka",
+            media_class=MEDIA_CLASS_DIRECTORY,
+            media_content_id="ais_music",
+            media_content_type=MEDIA_TYPE_APP,
+            can_expand=True,
+            can_play=False,
+            thumbnail="https://mybroadband.co.za/news/wp-content/uploads/2019/03/YouTube-Music-vs-Spotify.png",
         )
     )
 
     return ais_library_info
 
 
-def browse_media(media_content_type=None, media_content_id=None):
-    """Implement the websocket media browsing helper."""
-
-    if media_content_type in [None, "library"]:
-        return browse_media_library(channels=False)
-
-    response = None
-
-    # if media_content_type == MEDIA_TYPE_APPS:
-    #     response = BrowseMedia(
-    #         title="Apps",
-    #         media_class=MEDIA_CLASS_APP,
-    #         media_content_id="apps",
-    #         media_content_type=MEDIA_TYPE_APPS,
-    #         can_expand=True,
-    #         can_play=False,
-    #         children=[
-    #             BrowseMedia(
-    #                 title=app.name,
-    #                 thumbnail=self.coordinator.roku.app_icon_url(app.app_id),
-    #                 media_class=MEDIA_CLASS_APP,
-    #                 media_content_id=app.app_id,
-    #                 media_content_type=MEDIA_TYPE_APP,
-    #                 can_play=True,
-    #                 can_expand=False,
-    #             )
-    #             for app in self.coordinator.data.apps
-    #         ],
-    #     )
-    #
-    # if media_content_type == MEDIA_TYPE_CHANNELS:
-    #     response = BrowseMedia(
-    #         title="Channels",
-    #         media_class=MEDIA_CLASS_CHANNEL,
-    #         media_content_id="channels",
-    #         media_content_type=MEDIA_TYPE_CHANNELS,
-    #         can_expand=True,
-    #         can_play=False,
-    #         children=[
-    #             BrowseMedia(
-    #                 title=channel.name,
-    #                 media_class=MEDIA_CLASS_CHANNEL,
-    #                 media_content_id=channel.number,
-    #                 media_content_type=MEDIA_TYPE_CHANNEL,
-    #                 can_play=True,
-    #                 can_expand=False,
-    #             )
-    #             for channel in self.coordinator.data.channels
-    #         ],
-    #     )
-
-    if response is None:
-        raise BrowseError(f"Media not found: {media_content_type} / {media_content_id}")
-    return response
-
-
-def item_payload(item):
-    """Create response payload for a single media item."""
-    try:
-        media_class = ITEM_TYPE_MEDIA_CLASS[item.type]
-    except KeyError as err:
-        _LOGGER.debug("Unknown type received: %s", item.type)
-        raise UnknownMediaType from err
-    payload = {
-        "title": item.title,
-        "media_class": media_class,
-        "media_content_id": str(item.ratingKey),
-        "media_content_type": item.type,
-        "can_play": True,
-        "can_expand": item.type in EXPANDABLES,
-    }
-    if hasattr(item, "thumbUrl"):
-        payload["thumbnail"] = item.thumbUrl
-
-    return BrowseMedia(**payload)
-
-
-def library_section_payload(section):
-    """Create response payload for a single library section."""
-    return BrowseMedia(
-        title=section.title,
-        media_class=MEDIA_CLASS_DIRECTORY,
-        media_content_id=section.key,
-        media_content_type="library",
-        can_play=False,
-        can_expand=True,
-    )
-
-
-def special_library_payload(parent_payload, special_type):
-    """Create response payload for special library folders."""
-    title = f"{special_type} ({parent_payload.title})"
-    return BrowseMedia(
-        title=title,
-        media_class=parent_payload.media_class,
-        media_content_id=f"{parent_payload.media_content_id}:{special_type}",
-        media_content_type=parent_payload.media_content_type,
-        can_play=False,
-        can_expand=True,
-    )
-
-
-def server_payload(plex_server):
-    """Create response payload to describe libraries of the Plex server."""
-    server_info = BrowseMedia(
-        title=plex_server.friendly_name,
-        media_class=MEDIA_CLASS_DIRECTORY,
-        media_content_id=plex_server.machine_identifier,
-        media_content_type="server",
-        can_play=False,
-        can_expand=True,
-    )
-    server_info.children = []
-    server_info.children.append(special_library_payload(server_info, "On Deck"))
-    server_info.children.append(special_library_payload(server_info, "Recently Added"))
-    for library in plex_server.library.sections():
-        if library.type == "photo":
-            continue
-        server_info.children.append(library_section_payload(library))
-    server_info.children.append(BrowseMedia(**PLAYLISTS_BROWSE_PAYLOAD))
-    return server_info
-
-
-def library_payload(plex_server, library_id):
+def ais_music_library() -> BrowseMedia:
     """Create response payload to describe contents of a specific library."""
-    library = plex_server.library.sectionByID(library_id)
-    library_info = library_section_payload(library)
-    library_info.children = []
-    library_info.children.append(special_library_payload(library_info, "On Deck"))
-    library_info.children.append(
-        special_library_payload(library_info, "Recently Added")
+    ais_music_info = BrowseMedia(
+        title="AIS Audio",
+        media_class=MEDIA_CLASS_DIRECTORY,
+        media_content_id="ais_music",
+        media_content_type=MEDIA_TYPE_APP,
+        can_play=False,
+        can_expand=True,
+        children=[],
+        thumbnail="https://mybroadband.co.za/news/wp-content/uploads/2019/03/YouTube-Music-vs-Spotify.png",
     )
-    for item in library.all():
-        try:
-            library_info.children.append(item_payload(item))
-        except UnknownMediaType:
-            continue
-    return library_info
 
-
-def playlists_payload(plex_server):
-    """Create response payload for all available playlists."""
-    playlists_info = {**PLAYLISTS_BROWSE_PAYLOAD, "children": []}
-    for playlist in plex_server.playlists():
-        try:
-            playlists_info["children"].append(item_payload(playlist))
-        except UnknownMediaType:
-            continue
-    return BrowseMedia(**playlists_info)
+    ais_music_info.children.append(
+        BrowseMedia(
+            title="Spotify",
+            media_class=MEDIA_CLASS_DIRECTORY,
+            media_content_id="ais_music",
+            media_content_type=MEDIA_TYPE_APP,
+            can_expand=True,
+            can_play=False,
+            thumbnail="https://www.theyucatantimes.com/wp-content/uploads/2020/08/spotify-logo.png",
+        )
+    )
+    ais_music_info.children.append(
+        BrowseMedia(
+            title="YouTube",
+            media_class=MEDIA_CLASS_DIRECTORY,
+            media_content_id="ais_music",
+            media_content_type=MEDIA_TYPE_APP,
+            can_expand=True,
+            can_play=False,
+            thumbnail="https://www.internetmatters.org/wp-content/uploads/2020/01/youtube.png",
+        )
+    )
+    return ais_music_info

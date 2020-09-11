@@ -87,6 +87,7 @@ ais_mdns:
 # ais_gm_service:
 #
 
+media_source:
 
 # TODO
 # check if user is authenticated and add this to polymer

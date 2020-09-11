@@ -7,7 +7,6 @@ import json
 import logging
 from typing import Optional
 
-from homeassistant.components import media_source
 import homeassistant.components.ais_dom.ais_global as ais_global
 from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK,
@@ -849,11 +848,14 @@ class ExoPlayerDevice(MediaPlayerEntity):
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
         """Implement the websocket media browsing helper."""
         # main
-        return await self.hass.async_add_executor_job(
-            browse_media,
-            media_content_type,
-            media_content_id,
-        )
+        result = await browse_media(self.hass, media_content_type, media_content_id)
+        return result
+        # return await self.hass.async_add_executor_job(
+        #     self.hass,
+        #     browse_media,
+        #     media_content_type,
+        #     media_content_id,
+        # )
 
         # TODO local disk
         # result = await media_source.async_browse_media(self.hass, media_content_id)
