@@ -54,10 +54,10 @@ repos:
           - --branch=dev
           - --branch=master
           - --branch=rc
-  # - repo: https://github.com/adrienverge/yamllint.git
-  #   rev: v1.24.2
-  #   hooks:
-  #     - id: yamllint
+  - repo: https://github.com/adrienverge/yamllint.git
+    rev: v1.24.2
+    hooks:
+      - id: yamllint
   - repo: https://github.com/prettier/prettier
     rev: 2.0.4
     hooks:
