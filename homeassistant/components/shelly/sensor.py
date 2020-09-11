@@ -7,7 +7,6 @@ from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
     POWER_WATT,
-    TIME_SECONDS,
 )
 
 from .entity import (
@@ -113,9 +112,6 @@ SENSORS = {
         name="Luminosity", unit="lx", device_class=sensor.DEVICE_CLASS_ILLUMINANCE
     ),
     ("sensor", "tilt"): BlockAttributeDescription(name="Tilt", unit=DEGREE),
-    ("sensor", "totalWorkTime"): BlockAttributeDescription(
-        name="Total work time", unit=TIME_SECONDS
-    ),
 }
 
 
