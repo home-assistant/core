@@ -46,6 +46,7 @@ from homeassistant.const import (
     CONF_SEQUENCE,
     CONF_TIMEOUT,
     CONF_UNTIL,
+    CONF_VARIABLES,
     CONF_WAIT_FOR_TRIGGER,
     CONF_WAIT_TEMPLATE,
     CONF_WHILE,
@@ -611,6 +612,14 @@ class _ScriptRun:
             for task in tasks:
                 task.cancel()
             remove_triggers()
+
+    async def _async_variables_step(self):
+        """Set a variable value."""
+        self._script.last_action = self._action.get(CONF_ALIAS, "setting variables")
+        self._log("Executing step %s", self._script.last_action)
+        self._variables = self._action[CONF_VARIABLES].async_render(
+            self._hass, self._variables, render_as_defaults=False
+        )
 
     async def _async_run_script(self, script):
         """Execute a script."""
