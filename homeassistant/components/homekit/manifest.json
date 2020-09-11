@@ -12,9 +12,7 @@
   "dependencies": [
     "http",
     "camera",
-    "ffmpeg"
-  ],
-  "after_dependencies": [
+    "ffmpeg",
     "zeroconf"
   ],
   "codeowners": [
