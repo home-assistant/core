@@ -528,6 +528,14 @@ class _TrackTemplateResultInfo:
         self._create_listeners()
 
     @property
+    def listeners(self) -> Dict:
+        return {
+            "all": self._all_listener is not None,
+            "entities": self._last_entities,
+            "domains": self._last_domains,
+        }
+
+    @property
     def _needs_all_listener(self) -> bool:
         for track_template_ in self._track_templates:
             template = track_template_.template

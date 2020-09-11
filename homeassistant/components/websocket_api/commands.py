@@ -253,9 +253,11 @@ def handle_render_template(hass, connection, msg):
     template.hass = hass
 
     variables = msg.get("variables")
+    info = None
 
     @callback
     def _template_listener(event, updates):
+        nonlocal info
         track_template_result = updates.pop()
         result = track_template_result.result
         if isinstance(result, TemplateError):
@@ -267,7 +269,11 @@ def handle_render_template(hass, connection, msg):
 
             result = None
 
-        connection.send_message(messages.event_message(msg["id"], {"result": result}))
+        connection.send_message(
+            messages.event_message(
+                msg["id"], {"result": result, "listeners": info.listeners}  # type: ignore
+            )
+        )
 
     info = async_track_template_result(
         hass, [TrackTemplate(template, variables)], _template_listener
