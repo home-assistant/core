@@ -4,8 +4,7 @@
             "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
         },
         "error": {
-            "cannot_connect": "Error connecting to host. This is likely not the Yeti you are looking for.",
-            "connect_timeout": "Connection to Yeti has timed out",
+            "cannot_connect": "Error connecting to host",
             "invalid_host": "This is not a Yeti",
             "unknown": "Unknown Error"
         },

@@ -11,9 +11,8 @@
       }
     },
     "error": {
-      "cannot_connect": "Error connecting to host. This is likely not the Yeti you are looking for.",
-      "connect_timeout": "Connection to Yeti has timed out",
-      "invalid_host": "This is not a Yeti",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_host": "This is not the Yeti you are looking for",
       "unknown": "Unknown Error"
     },
     "abort": {

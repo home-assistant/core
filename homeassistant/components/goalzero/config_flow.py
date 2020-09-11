@@ -42,6 +42,9 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             except exceptions.ConnectError:
                 errors["base"] = "cannot_connect"
                 _LOGGER.exception("Error connecting to device at %s", host)
+            except exceptions.InvalidHost:
+                errors["base"] = "invalid_host"
+                _LOGGER.exception("Invalid data received from device at %s", host)
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"

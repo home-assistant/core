@@ -12,12 +12,15 @@ from homeassistant.data_entry_flow import (
 from . import (
     CONF_CONFIG_FLOW,
     CONF_DATA,
+    CONF_HOST,
+    CONF_NAME,
     NAME,
     _create_mocked_yeti,
     _patch_config_flow_yeti,
 )
 
 from tests.async_mock import patch
+from tests.common import MockConfigEntry
 
 
 def _flow_next(hass, flow_id):
@@ -56,14 +59,26 @@ async def test_flow_user(hass):
         assert result["title"] == NAME
         assert result["data"] == CONF_DATA
 
-        # duplicated server
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data=CONF_CONFIG_FLOW,
-        )
-        assert result["type"] == RESULT_TYPE_ABORT
-        assert result["reason"] == "already_configured"
+
+async def test_flow_user_already_configured(hass):
+    """Test user initialized flow with duplicate server."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "1.2.3.4", CONF_NAME: "Yeti"},
+    )
+
+    entry.add_to_hass(hass)
+
+    service_info = {
+        "host": "1.2.3.4",
+        "name": "Yeti",
+    }
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=service_info
+    )
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_flow_user_cannot_connect(hass):
@@ -77,6 +92,19 @@ async def test_flow_user_cannot_connect(hass):
         assert result["type"] == RESULT_TYPE_FORM
         assert result["step_id"] == "user"
         assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_flow_user_invalid_host(hass):
+    """Test user initialized flow with invalid server."""
+    mocked_yeti = await _create_mocked_yeti(True)
+    with _patch_config_flow_yeti(mocked_yeti) as yetimock:
+        yetimock.side_effect = exceptions.InvalidHost
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=CONF_CONFIG_FLOW
+        )
+        assert result["type"] == RESULT_TYPE_FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {"base": "invalid_host"}
 
 
 async def test_flow_user_unknown_error(hass):
