@@ -527,16 +527,15 @@ jobs:
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
-      - name: Restore base Python virtual environment
+      - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
         id: cache-venv
         uses: actions/cache@v2
         with:
           path: venv
           key: >-
-            ${{ env.CACHE_VERSION}}-${{ runner.os }}-base-venv-${{
-            steps.python.outputs.python-version }}-${{
-            hashFiles('requirements.txt') }}-${{
-            hashFiles('requirements_test.txt') }}-${{
+            ${{ env.CACHE_VERSION}}-${{ runner.os }}-venv-${{
+            steps.python.outputs.python-version }}-${{ hashFiles('requirements_test.txt')
+            }}-${{ hashFiles('requirements_all.txt') }}-${{
             hashFiles('homeassistant/package_constraints.txt') }}
       - name: Fail job if Python cache restore failed
         if: steps.cache-venv.outputs.cache-hit != 'true'
@@ -546,7 +545,7 @@ jobs:
       - name: Run hassfest
         run: |
           . venv/bin/activate
-          python -m script.hassfest --action validate
+          python -m script.hassfest --requirements --action validate
 
   gen-requirements-all:
     name: Check all requirements
