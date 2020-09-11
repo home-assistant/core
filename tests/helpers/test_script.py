@@ -1791,7 +1791,7 @@ async def test_set_variable(hass, caplog):
     """Test setting variables in scripts."""
     sequence = cv.SCRIPT_SCHEMA(
         [
-            {"variables.set": {"variable": "value"}},
+            {"variables": {"variable": "value"}},
             {"service": "test.script", "data": {"value": "{{ variable }}"}},
         ]
     )
@@ -1809,9 +1809,9 @@ async def test_set_redefines_variable(hass, caplog):
     """Test setting variables based on their current value."""
     sequence = cv.SCRIPT_SCHEMA(
         [
-            {"variables.set": {"variable": "1"}},
+            {"variables": {"variable": "1"}},
             {"service": "test.script", "data": {"value": "{{ variable }}"}},
-            {"variables.set": {"variable": "{{ variable | int + 1 }}"}},
+            {"variables": {"variable": "{{ variable | int + 1 }}"}},
             {"service": "test.script", "data": {"value": "{{ variable }}"}},
         ]
     )
