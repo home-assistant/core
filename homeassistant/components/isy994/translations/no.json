@@ -4,15 +4,19 @@
             "already_configured": "Enheten er allerede konfigurert"
         },
         "error": {
+            "cannot_connect": "Tilkobling mislyktes.",
+            "invalid_auth": "Ugyldig godkjenning",
             "invalid_host": "Vertsoppf\u00f8ringen var ikke i fullstendig URL-format, for eksempel http://192.168.10.100:80",
-            "unknown": "[%key:common::config_flow::error::unknown%"
+            "unknown": "Uventet feil"
         },
         "flow_title": "Universelle enheter ISY994 {name} ({host})",
         "step": {
             "user": {
                 "data": {
                     "host": "URL",
-                    "tls": "TLS-versjonen av ISY-kontrolleren."
+                    "password": "Passord",
+                    "tls": "TLS-versjonen av ISY-kontrolleren.",
+                    "username": "Brukernavn"
                 },
                 "description": "Vertsoppf\u00f8ringen m\u00e5 v\u00e6re i fullstendig URL-format, for eksempel http://192.168.10.100:80",
                 "title": "Koble til ISY994"

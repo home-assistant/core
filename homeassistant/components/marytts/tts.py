@@ -39,7 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_get_engine(hass, config, discovery_info=None):
+def get_engine(hass, config, discovery_info=None):
     """Set up MaryTTS speech component."""
     return MaryTTSProvider(hass, config)
 
@@ -80,7 +80,7 @@ class MaryTTSProvider(Provider):
         """Return a list of supported options."""
         return SUPPORT_OPTIONS
 
-    async def async_get_tts_audio(self, message, language, options=None):
+    def get_tts_audio(self, message, language, options=None):
         """Load TTS from MaryTTS."""
         effects = options[CONF_EFFECT]
 

@@ -1,10 +1,18 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert"
+        },
         "error": {
+            "already_configured": "Enheten er allerede konfigurert",
+            "cannot_connect": "Tilkobling mislyktes.",
             "invalid_host": "Ugyldig vertsnavn eller IP-adresse."
         },
         "step": {
             "user": {
+                "data": {
+                    "host": "Vert"
+                },
                 "description": "Konfigurer Dune HD-integrering. Hvis du har problemer med konfigurasjonen, kan du g\u00e5 til: https://www.home-assistant.io/integrations/dunehd \n\nKontroller at spilleren er sl\u00e5tt p\u00e5.",
                 "title": ""
             }

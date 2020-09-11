@@ -132,4 +132,8 @@ class ToonLocalOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implemen
 
         resp = await session.post(self.token_url, data=data, headers=headers)
         resp.raise_for_status()
-        return cast(dict, await resp.json())
+        resp_json = cast(dict, await resp.json())
+        # The Toon API returns "expires_in" as a string for some tenants.
+        # This is not according to OAuth specifications.
+        resp_json["expires_in"] = float(resp_json["expires_in"])
+        return resp_json

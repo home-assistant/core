@@ -171,8 +171,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     try:
         await august_gateway.async_setup(entry.data)
         return await async_setup_august(hass, entry, august_gateway)
-    except asyncio.TimeoutError:
-        raise ConfigEntryNotReady
+    except asyncio.TimeoutError as err:
+        raise ConfigEntryNotReady from err
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
@@ -339,7 +339,7 @@ class AugustData(AugustSubscriberMixin):
             device_name = self._get_device_name(device_id)
             if device_name is None:
                 device_name = f"DeviceID: {device_id}"
-            raise HomeAssistantError(f"{device_name}: {err}")
+            raise HomeAssistantError(f"{device_name}: {err}") from err
 
         return ret
 

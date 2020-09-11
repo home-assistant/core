@@ -71,7 +71,9 @@ class SupervisorProcessSensor(Entity):
     def update(self):
         """Update device state."""
         try:
-            self._info = self._server.supervisor.getProcessInfo(self._info.get("name"))
+            self._info = self._server.supervisor.getProcessInfo(
+                self._info.get("group") + ":" + self._info.get("name")
+            )
             self._available = True
         except ConnectionRefusedError:
             _LOGGER.warning("Supervisord not available")

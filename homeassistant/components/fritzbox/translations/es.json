@@ -20,7 +20,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Host o direcci\u00f3n IP",
+                    "host": "Host",
                     "password": "Contrase\u00f1a",
                     "username": "Usuario"
                 },

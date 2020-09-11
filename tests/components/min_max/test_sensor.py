@@ -1,16 +1,22 @@
 """The test for the min/max sensor platform."""
+from os import path
+import statistics
 import unittest
 
+from homeassistant import config as hass_config
+from homeassistant.components.min_max import DOMAIN
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
+    PERCENTAGE,
+    SERVICE_RELOAD,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    UNIT_PERCENTAGE,
 )
-from homeassistant.setup import setup_component
+from homeassistant.setup import async_setup_component, setup_component
 
+from tests.async_mock import patch
 from tests.common import get_test_home_assistant
 
 
@@ -27,6 +33,7 @@ class TestMinMaxSensor(unittest.TestCase):
         self.mean = round(sum(self.values) / self.count, 2)
         self.mean_1_digit = round(sum(self.values) / self.count, 1)
         self.mean_4_digits = round(sum(self.values) / self.count, 4)
+        self.median = round(statistics.median(self.values), 2)
 
     def teardown_method(self, method):
         """Stop everything that was started."""
@@ -58,6 +65,7 @@ class TestMinMaxSensor(unittest.TestCase):
         assert self.max == state.attributes.get("max_value")
         assert entity_ids[1] == state.attributes.get("max_entity_id")
         assert self.mean == state.attributes.get("mean")
+        assert self.median == state.attributes.get("median")
 
     def test_max_sensor(self):
         """Test the max sensor."""
@@ -85,6 +93,7 @@ class TestMinMaxSensor(unittest.TestCase):
         assert self.min == state.attributes.get("min_value")
         assert entity_ids[1] == state.attributes.get("max_entity_id")
         assert self.mean == state.attributes.get("mean")
+        assert self.median == state.attributes.get("median")
 
     def test_mean_sensor(self):
         """Test the mean sensor."""
@@ -112,6 +121,7 @@ class TestMinMaxSensor(unittest.TestCase):
         assert entity_ids[2] == state.attributes.get("min_entity_id")
         assert self.max == state.attributes.get("max_value")
         assert entity_ids[1] == state.attributes.get("max_entity_id")
+        assert self.median == state.attributes.get("median")
 
     def test_mean_1_digit_sensor(self):
         """Test the mean with 1-digit precision sensor."""
@@ -140,6 +150,7 @@ class TestMinMaxSensor(unittest.TestCase):
         assert entity_ids[2] == state.attributes.get("min_entity_id")
         assert self.max == state.attributes.get("max_value")
         assert entity_ids[1] == state.attributes.get("max_entity_id")
+        assert self.median == state.attributes.get("median")
 
     def test_mean_4_digit_sensor(self):
         """Test the mean with 1-digit precision sensor."""
@@ -168,6 +179,35 @@ class TestMinMaxSensor(unittest.TestCase):
         assert entity_ids[2] == state.attributes.get("min_entity_id")
         assert self.max == state.attributes.get("max_value")
         assert entity_ids[1] == state.attributes.get("max_entity_id")
+        assert self.median == state.attributes.get("median")
+
+    def test_median_sensor(self):
+        """Test the median sensor."""
+        config = {
+            "sensor": {
+                "platform": "min_max",
+                "name": "test_median",
+                "type": "median",
+                "entity_ids": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+            }
+        }
+
+        assert setup_component(self.hass, "sensor", config)
+
+        entity_ids = config["sensor"]["entity_ids"]
+
+        for entity_id, value in dict(zip(entity_ids, self.values)).items():
+            self.hass.states.set(entity_id, value)
+            self.hass.block_till_done()
+
+        state = self.hass.states.get("sensor.test_median")
+
+        assert str(float(self.median)) == state.state
+        assert self.min == state.attributes.get("min_value")
+        assert entity_ids[2] == state.attributes.get("min_entity_id")
+        assert self.max == state.attributes.get("max_value")
+        assert entity_ids[1] == state.attributes.get("max_entity_id")
+        assert self.mean == state.attributes.get("mean")
 
     def test_not_enough_sensor_value(self):
         """Test that there is nothing done if not enough values available."""
@@ -193,6 +233,7 @@ class TestMinMaxSensor(unittest.TestCase):
         assert state.attributes.get("min_value") is None
         assert state.attributes.get("max_entity_id") is None
         assert state.attributes.get("max_value") is None
+        assert state.attributes.get("median") is None
 
         self.hass.states.set(entity_ids[1], self.values[1])
         self.hass.block_till_done()
@@ -260,7 +301,7 @@ class TestMinMaxSensor(unittest.TestCase):
         assert state.attributes.get("unit_of_measurement") == "ERR"
 
         self.hass.states.set(
-            entity_ids[2], self.values[2], {ATTR_UNIT_OF_MEASUREMENT: UNIT_PERCENTAGE}
+            entity_ids[2], self.values[2], {ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE}
         )
         self.hass.block_till_done()
 
@@ -295,3 +336,51 @@ class TestMinMaxSensor(unittest.TestCase):
         assert self.min == state.attributes.get("min_value")
         assert self.max == state.attributes.get("max_value")
         assert self.mean == state.attributes.get("mean")
+        assert self.median == state.attributes.get("median")
+
+
+async def test_reload(hass):
+    """Verify we can reload filter sensors."""
+    hass.states.async_set("sensor.test_1", 12345)
+    hass.states.async_set("sensor.test_2", 45678)
+
+    await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": {
+                "platform": "min_max",
+                "name": "test",
+                "type": "mean",
+                "entity_ids": ["sensor.test_1", "sensor.test_2"],
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 3
+
+    assert hass.states.get("sensor.test")
+
+    yaml_path = path.join(
+        _get_fixtures_base_path(),
+        "fixtures",
+        "min_max/configuration.yaml",
+    )
+    with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RELOAD,
+            {},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 3
+
+    assert hass.states.get("sensor.test") is None
+    assert hass.states.get("sensor.second_test")
+
+
+def _get_fixtures_base_path():
+    return path.dirname(path.dirname(path.dirname(__file__)))

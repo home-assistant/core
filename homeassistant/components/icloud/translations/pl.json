@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Konto jest ju\u017c skonfigurowane.",
-            "no_device": "\u017badne z Twoich urz\u0105dze\u0144 nie ma aktywowanej funkcji \"Znajd\u017a m\u00f3j iPhone\""
+            "no_device": "\u017badne z Twoich urz\u0105dze\u0144 nie ma aktywowanej funkcji \"Znajd\u017a m\u00f3j iPhone\"."
         },
         "error": {
             "login": "B\u0142\u0105d logowania: sprawd\u017a adres e-mail i has\u0142o",

@@ -44,6 +44,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 DATA_INFO = "hassio_info"
 DATA_HOST_INFO = "hassio_host_info"
+DATA_CORE_INFO = "hassio_core_info"
 HASSIO_UPDATE_INTERVAL = timedelta(minutes=55)
 
 SERVICE_ADDON_START = "addon_start"
@@ -142,18 +143,6 @@ async def async_get_addon_info(hass: HomeAssistantType, addon_id: str) -> dict:
 
 @callback
 @bind_hass
-def get_homeassistant_version(hass):
-    """Return latest available Home Assistant version.
-
-    Async friendly.
-    """
-    if DATA_INFO not in hass.data:
-        return None
-    return hass.data[DATA_INFO].get("homeassistant")
-
-
-@callback
-@bind_hass
 def get_info(hass):
     """Return generic information from Supervisor.
 
@@ -170,6 +159,16 @@ def get_host_info(hass):
     Async friendly.
     """
     return hass.data.get(DATA_HOST_INFO)
+
+
+@callback
+@bind_hass
+def get_core_info(hass):
+    """Return Home Assistant Core information from Supervisor.
+
+    Async friendly.
+    """
+    return hass.data.get(DATA_CORE_INFO)
 
 
 @callback
@@ -301,6 +300,7 @@ async def async_setup(hass, config):
         try:
             hass.data[DATA_INFO] = await hassio.get_info()
             hass.data[DATA_HOST_INFO] = await hassio.get_host_info()
+            hass.data[DATA_CORE_INFO] = await hassio.get_core_info()
         except HassioAPIError as err:
             _LOGGER.warning("Can't read last version: %s", err)
 

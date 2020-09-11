@@ -147,7 +147,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         influx = get_influx_connection(config, test_read=True)
     except ConnectionError as exc:
         _LOGGER.error(exc)
-        raise PlatformNotReady()
+        raise PlatformNotReady() from exc
 
     entities = []
     if CONF_QUERIES_FLUX in config:

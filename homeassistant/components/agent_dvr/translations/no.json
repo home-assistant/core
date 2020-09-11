@@ -11,7 +11,7 @@
             "user": {
                 "data": {
                     "host": "Vert",
-                    "port": "Port"
+                    "port": ""
                 },
                 "title": "Konfigurere Agent DVR"
             }

@@ -17,6 +17,7 @@ from aioesphomeapi import (
 import voluptuous as vol
 
 from homeassistant import const
+from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
@@ -31,7 +32,7 @@ import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.template import Template
@@ -66,12 +67,15 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     port = entry.data[CONF_PORT]
     password = entry.data[CONF_PASSWORD]
 
+    zeroconf_instance = await zeroconf.async_get_instance(hass)
+
     cli = APIClient(
         hass.loop,
         host,
         port,
         password,
         client_info=f"Home Assistant {const.__version__}",
+        zeroconf_instance=zeroconf_instance,
     )
 
     # Store client in per-config-entry hass.data
@@ -133,23 +137,32 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
                 )
             )
 
-    async def send_home_assistant_state(
-        entity_id: str, _, new_state: Optional[State]
-    ) -> None:
-        """Forward Home Assistant states to ESPHome."""
+    async def send_home_assistant_state_event(event: Event) -> None:
+        """Forward Home Assistant states updates to ESPHome."""
+        new_state = event.data.get("new_state")
         if new_state is None:
             return
+        entity_id = event.data.get("entity_id")
+        await cli.send_home_assistant_state(entity_id, new_state.state)
+
+    async def _send_home_assistant_state(
+        entity_id: str, new_state: Optional[State]
+    ) -> None:
+        """Forward Home Assistant states to ESPHome."""
         await cli.send_home_assistant_state(entity_id, new_state.state)
 
     @callback
     def async_on_state_subscription(entity_id: str) -> None:
         """Subscribe and forward states for requested entities."""
-        unsub = async_track_state_change(hass, entity_id, send_home_assistant_state)
-        entry_data.disconnect_callbacks.append(unsub)
-        # Send initial state
-        hass.async_create_task(
-            send_home_assistant_state(entity_id, None, hass.states.get(entity_id))
+        unsub = async_track_state_change_event(
+            hass, [entity_id], send_home_assistant_state_event
         )
+        entry_data.disconnect_callbacks.append(unsub)
+        new_state = hass.states.get(entity_id)
+        if new_state is None:
+            return
+        # Send initial state
+        hass.async_create_task(_send_home_assistant_state(entity_id, new_state))
 
     async def on_login() -> None:
         """Subscribe to states and list entities on successful API login."""
@@ -424,7 +437,6 @@ def esphome_state_property(func):
 
     @property
     def _wrapper(self):
-        # pylint: disable=protected-access
         if self._state is None:
             return None
         val = func(self)

@@ -1,61 +1,28 @@
 """Support for KNX/IP notification services."""
-import voluptuous as vol
+from typing import List
+
 from xknx.devices import Notification as XknxNotification
 
-from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
-from homeassistant.const import CONF_ADDRESS, CONF_NAME
-from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.notify import BaseNotificationService
 
-from . import ATTR_DISCOVER_DEVICES, DATA_KNX
-
-DEFAULT_NAME = "KNX Notify"
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_ADDRESS): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
+from . import DATA_KNX
 
 
 async def async_get_service(hass, config, discovery_info=None):
     """Get the KNX notification service."""
-    return (
-        async_get_service_discovery(hass, discovery_info)
-        if discovery_info is not None
-        else async_get_service_config(hass, config)
-    )
-
-
-@callback
-def async_get_service_discovery(hass, discovery_info):
-    """Set up notifications for KNX platform configured via xknx.yaml."""
     notification_devices = []
-    for device_name in discovery_info[ATTR_DISCOVER_DEVICES]:
-        device = hass.data[DATA_KNX].xknx.devices[device_name]
-        notification_devices.append(device)
+    for device in hass.data[DATA_KNX].xknx.devices:
+        if isinstance(device, XknxNotification):
+            notification_devices.append(device)
     return (
         KNXNotificationService(notification_devices) if notification_devices else None
     )
 
 
-@callback
-def async_get_service_config(hass, config):
-    """Set up notification for KNX platform configured within platform."""
-    notification = XknxNotification(
-        hass.data[DATA_KNX].xknx,
-        name=config[CONF_NAME],
-        group_address=config[CONF_ADDRESS],
-    )
-    hass.data[DATA_KNX].xknx.devices.add(notification)
-    return KNXNotificationService([notification])
-
-
 class KNXNotificationService(BaseNotificationService):
     """Implement demo notification service."""
 
-    def __init__(self, devices):
+    def __init__(self, devices: List[XknxNotification]):
         """Initialize the service."""
         self.devices = devices
 

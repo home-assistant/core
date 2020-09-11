@@ -266,7 +266,8 @@ async def test_turn_on_to_not_block_for_domains_without_service(hass):
     service = hass.services._services["homeassistant"]["turn_on"]
 
     with patch(
-        "homeassistant.core.ServiceRegistry.async_call", return_value=None,
+        "homeassistant.core.ServiceRegistry.async_call",
+        return_value=None,
     ) as mock_call:
         await service.func(service_call)
 
@@ -290,7 +291,8 @@ async def test_entity_update(hass):
     await async_setup_component(hass, "homeassistant", {})
 
     with patch(
-        "homeassistant.helpers.entity_component.async_update_entity", return_value=None,
+        "homeassistant.helpers.entity_component.async_update_entity",
+        return_value=None,
     ) as mock_update:
         await hass.services.async_call(
             "homeassistant",
@@ -373,7 +375,10 @@ async def test_not_allowing_recursion(hass, caplog):
 
     for service in SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE:
         await hass.services.async_call(
-            ha.DOMAIN, service, {"entity_id": "homeassistant.light"}, blocking=True,
+            ha.DOMAIN,
+            service,
+            {"entity_id": "homeassistant.light"},
+            blocking=True,
         )
         assert (
             f"Called service homeassistant.{service} with invalid entity IDs homeassistant.light"

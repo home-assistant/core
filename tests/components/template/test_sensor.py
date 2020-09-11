@@ -1,11 +1,19 @@
 """The test for the Template sensor platform."""
+from asyncio import Event
+from unittest.mock import patch
+
+from homeassistant.bootstrap import async_from_config_dict
 from homeassistant.const import (
+    EVENT_COMPONENT_LOADED,
     EVENT_HOMEASSISTANT_START,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.setup import async_setup_component, setup_component
+from homeassistant.core import CoreState, callback
+from homeassistant.helpers.template import Template
+from homeassistant.setup import ATTR_COMPONENT, async_setup_component, setup_component
+import homeassistant.util.dt as dt_util
 
 from tests.common import assert_setup_component, get_test_home_assistant
 
@@ -438,6 +446,46 @@ class TestTemplateSensor:
         )
 
 
+async def test_creating_sensor_loads_group(hass):
+    """Test setting up template sensor loads group component first."""
+    order = []
+    after_dep_event = Event()
+
+    async def async_setup_group(hass, config):
+        # Make sure group takes longer to load, so that it won't
+        # be loaded first by chance
+        await after_dep_event.wait()
+
+        order.append("group")
+        return True
+
+    async def async_setup_template(
+        hass, config, async_add_entities, discovery_info=None
+    ):
+        order.append("sensor.template")
+        return True
+
+    async def set_after_dep_event(event):
+        if event.data[ATTR_COMPONENT] == "sensor":
+            after_dep_event.set()
+
+    hass.bus.async_listen(EVENT_COMPONENT_LOADED, set_after_dep_event)
+
+    with patch(
+        "homeassistant.components.group.async_setup",
+        new=async_setup_group,
+    ), patch(
+        "homeassistant.components.template.sensor.async_setup_platform",
+        new=async_setup_template,
+    ):
+        await async_from_config_dict(
+            {"sensor": {"platform": "template", "sensors": {}}, "group": {}}, hass
+        )
+        await hass.async_block_till_done()
+
+    assert order == ["group", "sensor.template"]
+
+
 async def test_available_template_with_entities(hass):
     """Test availability tempalates with values from other entities."""
     hass.states.async_set("sensor.availability_sensor", STATE_OFF)
@@ -500,9 +548,13 @@ async def test_invalid_attribute_template(hass, caplog):
     )
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 2
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
     await hass.helpers.entity_component.async_update_entity("sensor.invalid_template")
 
-    assert ("Error rendering attribute test_attribute") in caplog.text
+    assert "TemplateError" in caplog.text
+    assert "test_attribute" in caplog.text
 
 
 async def test_invalid_availability_template_keeps_component_available(hass, caplog):
@@ -533,8 +585,10 @@ async def test_invalid_availability_template_keeps_component_available(hass, cap
 
 
 async def test_no_template_match_all(hass, caplog):
-    """Test that we do not allow sensors that match on all."""
+    """Test that we allow static templates."""
     hass.states.async_set("sensor.test_sensor", "startup")
+
+    hass.state = CoreState.not_running
 
     await async_setup_component(
         hass,
@@ -573,31 +627,6 @@ async def test_no_template_match_all(hass, caplog):
 
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 6
-    assert (
-        "Template sensor 'invalid_state' has no entity ids "
-        "configured to track nor were we able to extract the entities to "
-        "track from the value template"
-    ) in caplog.text
-    assert (
-        "Template sensor 'invalid_icon' has no entity ids "
-        "configured to track nor were we able to extract the entities to "
-        "track from the icon template"
-    ) in caplog.text
-    assert (
-        "Template sensor 'invalid_entity_picture' has no entity ids "
-        "configured to track nor were we able to extract the entities to "
-        "track from the entity_picture template"
-    ) in caplog.text
-    assert (
-        "Template sensor 'invalid_friendly_name' has no entity ids "
-        "configured to track nor were we able to extract the entities to "
-        "track from the friendly_name template"
-    ) in caplog.text
-    assert (
-        "Template sensor 'invalid_attribute' has no entity ids "
-        "configured to track nor were we able to extract the entities to "
-        "track from the test_attribute template"
-    ) in caplog.text
 
     assert hass.states.get("sensor.invalid_state").state == "unknown"
     assert hass.states.get("sensor.invalid_icon").state == "unknown"
@@ -618,10 +647,11 @@ async def test_no_template_match_all(hass, caplog):
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.invalid_state").state == "2"
-    assert hass.states.get("sensor.invalid_icon").state == "startup"
-    assert hass.states.get("sensor.invalid_entity_picture").state == "startup"
-    assert hass.states.get("sensor.invalid_friendly_name").state == "startup"
-    assert hass.states.get("sensor.invalid_attribute").state == "startup"
+    # Will now process because we have at least one valid template
+    assert hass.states.get("sensor.invalid_icon").state == "hello"
+    assert hass.states.get("sensor.invalid_entity_picture").state == "hello"
+    assert hass.states.get("sensor.invalid_friendly_name").state == "hello"
+    assert hass.states.get("sensor.invalid_attribute").state == "hello"
 
     await hass.helpers.entity_component.async_update_entity("sensor.invalid_state")
     await hass.helpers.entity_component.async_update_entity("sensor.invalid_icon")
@@ -638,3 +668,137 @@ async def test_no_template_match_all(hass, caplog):
     assert hass.states.get("sensor.invalid_entity_picture").state == "hello"
     assert hass.states.get("sensor.invalid_friendly_name").state == "hello"
     assert hass.states.get("sensor.invalid_attribute").state == "hello"
+
+
+async def test_unique_id(hass):
+    """Test unique_id option only creates one sensor per id."""
+    await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": {
+                "platform": "template",
+                "sensors": {
+                    "test_template_sensor_01": {
+                        "unique_id": "not-so-unique-anymore",
+                        "value_template": "{{ true }}",
+                    },
+                    "test_template_sensor_02": {
+                        "unique_id": "not-so-unique-anymore",
+                        "value_template": "{{ false }}",
+                    },
+                },
+            }
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 1
+
+
+async def test_sun_renders_once_per_sensor(hass):
+    """Test sun change renders the template only once per sensor."""
+
+    now = dt_util.utcnow()
+    hass.states.async_set(
+        "sun.sun", "above_horizon", {"elevation": 45.3, "next_rising": now}
+    )
+
+    await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": {
+                "platform": "template",
+                "sensors": {
+                    "solar_angle": {
+                        "friendly_name": "Sun angle",
+                        "unit_of_measurement": "degrees",
+                        "value_template": "{{ state_attr('sun.sun', 'elevation') }}",
+                    },
+                    "sunrise": {
+                        "value_template": "{{ state_attr('sun.sun', 'next_rising') }}"
+                    },
+                },
+            }
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 3
+
+    assert hass.states.get("sensor.solar_angle").state == "45.3"
+    assert hass.states.get("sensor.sunrise").state == str(now)
+
+    async_render_calls = []
+
+    @callback
+    def _record_async_render(self, *args, **kwargs):
+        """Catch async_render."""
+        async_render_calls.append(self.template)
+        return "mocked"
+
+    later = dt_util.utcnow()
+
+    with patch.object(Template, "async_render", _record_async_render):
+        hass.states.async_set("sun.sun", {"elevation": 50, "next_rising": later})
+        await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.solar_angle").state == "mocked"
+    assert hass.states.get("sensor.sunrise").state == "mocked"
+
+    assert len(async_render_calls) == 2
+    assert set(async_render_calls) == {
+        "{{ state_attr('sun.sun', 'elevation') }}",
+        "{{ state_attr('sun.sun', 'next_rising') }}",
+    }
+
+
+async def test_self_referencing_sensor_loop(hass, caplog):
+    """Test a self referencing sensor does not loop forever."""
+
+    template_str = """
+{% for state in states -%}
+  {{ state.last_updated }}
+{%- endfor %}
+"""
+
+    await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": {
+                "platform": "template",
+                "sensors": {
+                    "test": {
+                        "value_template": template_str,
+                    },
+                },
+            }
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 1
+
+    value = hass.states.get("sensor.test").state
+    await hass.async_block_till_done()
+
+    value2 = hass.states.get("sensor.test").state
+    assert value2 == value
+
+    await hass.async_block_till_done()
+
+    value3 = hass.states.get("sensor.test").state
+    assert value3 == value2
+
+    assert "Template loop detected" in caplog.text

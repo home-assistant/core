@@ -198,7 +198,9 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         bridge = self._async_get_bridge(host, discovery_info[ssdp.ATTR_UPNP_SERIAL])
 
         await self.async_set_unique_id(bridge.id)
-        self._abort_if_unique_id_configured(updates={CONF_HOST: bridge.host})
+        self._abort_if_unique_id_configured(
+            updates={CONF_HOST: bridge.host}, reload_on_update=False
+        )
 
         self.bridge = bridge
         return await self.async_step_link()

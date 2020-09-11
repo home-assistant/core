@@ -120,7 +120,8 @@ async def test_manual_flow_with_invalid_path(hass):
     USER_PROVIDED_PATH = "/user/provided/path"
 
     with patch(
-        DONGLE_VALIDATE_PATH_METHOD, Mock(return_value=False),
+        DONGLE_VALIDATE_PATH_METHOD,
+        Mock(return_value=False),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "manual"}, data={CONF_DEVICE: USER_PROVIDED_PATH}
@@ -149,7 +150,8 @@ async def test_import_flow_with_invalid_path(hass):
     DATA_TO_IMPORT = {CONF_DEVICE: "/invalid/path/to/import"}
 
     with patch(
-        DONGLE_VALIDATE_PATH_METHOD, Mock(return_value=False),
+        DONGLE_VALIDATE_PATH_METHOD,
+        Mock(return_value=False),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "import"}, data=DATA_TO_IMPORT

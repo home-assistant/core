@@ -24,10 +24,11 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONTENT_TYPE_TEXT_PLAIN,
     EVENT_STATE_CHANGED,
+    PERCENTAGE,
     STATE_ON,
+    STATE_UNAVAILABLE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    UNIT_PERCENTAGE,
 )
 from homeassistant.helpers import entityfilter, state as state_helper
 import homeassistant.helpers.config_validation as cv
@@ -153,13 +154,28 @@ class PrometheusMetrics:
 
         handler = f"_handle_{domain}"
 
-        if hasattr(self, handler):
+        if hasattr(self, handler) and state.state != STATE_UNAVAILABLE:
             getattr(self, handler)(state)
 
-        metric = self._metric(
+        labels = self._labels(state)
+        state_change = self._metric(
             "state_change", self.prometheus_cli.Counter, "The number of state changes"
         )
-        metric.labels(**self._labels(state)).inc()
+        state_change.labels(**labels).inc()
+
+        entity_available = self._metric(
+            "entity_available",
+            self.prometheus_cli.Gauge,
+            "Entity is available (not in the unavailable state)",
+        )
+        entity_available.labels(**labels).set(float(state.state != STATE_UNAVAILABLE))
+
+        last_updated_time_seconds = self._metric(
+            "last_updated_time_seconds",
+            self.prometheus_cli.Gauge,
+            "The last_updated timestamp",
+        )
+        last_updated_time_seconds.labels(**labels).set(state.last_updated.timestamp())
 
     def _handle_attributes(self, state):
         for key, value in state.attributes.items():
@@ -209,7 +225,7 @@ class PrometheusMetrics:
         try:
             value = state_helper.state_as_number(state)
         except ValueError:
-            _LOGGER.warning("Could not convert %s to float", state)
+            _LOGGER.debug("Could not convert %s to float", state)
             value = 0
         return value
 
@@ -316,7 +332,10 @@ class PrometheusMetrics:
         current_action = state.attributes.get(ATTR_HVAC_ACTION)
         if current_action:
             metric = self._metric(
-                "climate_action", self.prometheus_cli.Gauge, "HVAC action", ["action"],
+                "climate_action",
+                self.prometheus_cli.Gauge,
+                "HVAC action",
+                ["action"],
             )
             for action in CURRENT_HVAC_ACTIONS:
                 metric.labels(**dict(self._labels(state), action=action)).set(
@@ -420,7 +439,7 @@ class PrometheusMetrics:
         units = {
             TEMP_CELSIUS: "c",
             TEMP_FAHRENHEIT: "c",  # F should go into C metric
-            UNIT_PERCENTAGE: "percent",
+            PERCENTAGE: "percent",
         }
         default = unit.replace("/", "_per_")
         default = default.lower()

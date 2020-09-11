@@ -4,6 +4,7 @@ from typing import Any, Dict
 
 from homematicip.aio.device import (
     AsyncBrandSwitchMeasuring,
+    AsyncFullFlushInputSwitch,
     AsyncFullFlushSwitchMeasuring,
     AsyncHeatingSwitch2,
     AsyncMultiIOBox,
@@ -19,8 +20,8 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 
-from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericDevice
-from .device import ATTR_GROUP_MEMBER_UNREACHABLE
+from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericEntity
+from .generic_entity import ATTR_GROUP_MEMBER_UNREACHABLE
 from .hap import HomematicipHAP
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,7 +36,7 @@ async def async_setup_entry(
     for device in hap.home.devices:
         if isinstance(device, AsyncBrandSwitchMeasuring):
             # BrandSwitchMeasuring inherits PlugableSwitchMeasuring
-            # This device is implemented in the light platform and will
+            # This entity is implemented in the light platform and will
             # not be added in the switch platform
             pass
         elif isinstance(
@@ -43,7 +44,12 @@ async def async_setup_entry(
         ):
             entities.append(HomematicipSwitchMeasuring(hap, device))
         elif isinstance(
-            device, (AsyncPlugableSwitch, AsyncPrintedCircuitBoardSwitchBattery)
+            device,
+            (
+                AsyncPlugableSwitch,
+                AsyncPrintedCircuitBoardSwitchBattery,
+                AsyncFullFlushInputSwitch,
+            ),
         ):
             entities.append(HomematicipSwitch(hap, device))
         elif isinstance(device, AsyncOpenCollector8Module):
@@ -67,8 +73,8 @@ async def async_setup_entry(
         async_add_entities(entities)
 
 
-class HomematicipSwitch(HomematicipGenericDevice, SwitchEntity):
-    """representation of a HomematicIP Cloud switch device."""
+class HomematicipSwitch(HomematicipGenericEntity, SwitchEntity):
+    """Representation of the HomematicIP switch."""
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the switch device."""
@@ -88,8 +94,8 @@ class HomematicipSwitch(HomematicipGenericDevice, SwitchEntity):
         await self._device.turn_off()
 
 
-class HomematicipGroupSwitch(HomematicipGenericDevice, SwitchEntity):
-    """representation of a HomematicIP switching group."""
+class HomematicipGroupSwitch(HomematicipGenericEntity, SwitchEntity):
+    """Representation of the HomematicIP switching group."""
 
     def __init__(self, hap: HomematicipHAP, device, post: str = "Group") -> None:
         """Initialize switching group."""
@@ -130,7 +136,7 @@ class HomematicipGroupSwitch(HomematicipGenericDevice, SwitchEntity):
 
 
 class HomematicipSwitchMeasuring(HomematicipSwitch):
-    """Representation of a HomematicIP measuring switch device."""
+    """Representation of the HomematicIP measuring switch."""
 
     @property
     def current_power_w(self) -> float:
@@ -145,8 +151,8 @@ class HomematicipSwitchMeasuring(HomematicipSwitch):
         return round(self._device.energyCounter)
 
 
-class HomematicipMultiSwitch(HomematicipGenericDevice, SwitchEntity):
-    """Representation of a HomematicIP Cloud multi switch device."""
+class HomematicipMultiSwitch(HomematicipGenericEntity, SwitchEntity):
+    """Representation of the HomematicIP multi switch."""
 
     def __init__(self, hap: HomematicipHAP, device, channel: int) -> None:
         """Initialize the multi switch device."""
@@ -168,13 +174,13 @@ class HomematicipMultiSwitch(HomematicipGenericDevice, SwitchEntity):
 
     @property
     def is_on(self) -> bool:
-        """Return true if device is on."""
+        """Return true if switch is on."""
         return self._device.functionalChannels[self.channel].on
 
     async def async_turn_on(self, **kwargs) -> None:
-        """Turn the device on."""
+        """Turn the switch on."""
         await self._device.turn_on(self.channel)
 
     async def async_turn_off(self, **kwargs) -> None:
-        """Turn the device off."""
+        """Turn the switch off."""
         await self._device.turn_off(self.channel)

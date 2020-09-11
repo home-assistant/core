@@ -25,6 +25,9 @@ from typing import (
     cast,
 )
 
+from homeassistant.generated.ssdp import SSDP
+from homeassistant.generated.zeroconf import HOMEKIT, ZEROCONF
+
 # Typing imports that create a circular dependency
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -142,6 +145,63 @@ async def async_get_config_flows(hass: "HomeAssistant") -> Set[str]:
     return flows
 
 
+async def async_get_zeroconf(hass: "HomeAssistant") -> Dict[str, List[Dict[str, str]]]:
+    """Return cached list of zeroconf types."""
+    zeroconf: Dict[str, List[Dict[str, str]]] = ZEROCONF.copy()
+
+    integrations = await async_get_custom_components(hass)
+    for integration in integrations.values():
+        if not integration.zeroconf:
+            continue
+        for entry in integration.zeroconf:
+            data = {"domain": integration.domain}
+            if isinstance(entry, dict):
+                typ = entry["type"]
+                entry_without_type = entry.copy()
+                del entry_without_type["type"]
+                data.update(entry_without_type)
+            else:
+                typ = entry
+
+            zeroconf.setdefault(typ, []).append(data)
+
+    return zeroconf
+
+
+async def async_get_homekit(hass: "HomeAssistant") -> Dict[str, str]:
+    """Return cached list of homekit models."""
+
+    homekit: Dict[str, str] = HOMEKIT.copy()
+
+    integrations = await async_get_custom_components(hass)
+    for integration in integrations.values():
+        if (
+            not integration.homekit
+            or "models" not in integration.homekit
+            or not integration.homekit["models"]
+        ):
+            continue
+        for model in integration.homekit["models"]:
+            homekit[model] = integration.domain
+
+    return homekit
+
+
+async def async_get_ssdp(hass: "HomeAssistant") -> Dict[str, List]:
+    """Return cached list of ssdp mappings."""
+
+    ssdp: Dict[str, List] = SSDP.copy()
+
+    integrations = await async_get_custom_components(hass)
+    for integration in integrations.values():
+        if not integration.ssdp:
+            continue
+
+        ssdp[integration.domain] = integration.ssdp
+
+    return ssdp
+
+
 class Integration:
     """An integration in Home Assistant."""
 
@@ -219,6 +279,11 @@ class Integration:
         return cast(str, self.manifest["name"])
 
     @property
+    def disabled(self) -> Optional[str]:
+        """Return reason integration is disabled."""
+        return cast(Optional[str], self.manifest.get("disabled"))
+
+    @property
     def domain(self) -> str:
         """Return domain."""
         return cast(str, self.manifest["domain"])
@@ -257,6 +322,21 @@ class Integration:
     def quality_scale(self) -> Optional[str]:
         """Return Integration Quality Scale."""
         return cast(str, self.manifest.get("quality_scale"))
+
+    @property
+    def ssdp(self) -> Optional[list]:
+        """Return Integration SSDP entries."""
+        return cast(List[dict], self.manifest.get("ssdp"))
+
+    @property
+    def zeroconf(self) -> Optional[list]:
+        """Return Integration zeroconf entries."""
+        return cast(List[str], self.manifest.get("zeroconf"))
+
+    @property
+    def homekit(self) -> Optional[dict]:
+        """Return Integration homekit entries."""
+        return cast(Dict[str, List], self.manifest.get("homekit"))
 
     @property
     def is_built_in(self) -> bool:

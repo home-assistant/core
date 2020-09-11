@@ -89,7 +89,9 @@ async def test_config_flow(hass, config_entry):
 
         # Also test that creating a new entry with the same host aborts
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=config_entry.data,
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data=config_entry.data,
         )
         await hass.async_block_till_done()
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT

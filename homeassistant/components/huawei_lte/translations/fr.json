@@ -16,6 +16,7 @@
             "response_error": "Erreur inconnue de l'appareil",
             "unknown_connection_error": "Erreur inconnue lors de la connexion \u00e0 l'appareil"
         },
+        "flow_title": "Huawei LTE: {nom}",
         "step": {
             "user": {
                 "data": {

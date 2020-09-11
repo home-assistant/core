@@ -4,8 +4,9 @@ from pyecobee.const import ECOBEE_STATE_CALIBRATING, ECOBEE_STATE_UNKNOWN
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
+    PERCENTAGE,
+    STATE_UNKNOWN,
     TEMP_FAHRENHEIT,
-    UNIT_PERCENTAGE,
 )
 from homeassistant.helpers.entity import Entity
 
@@ -13,7 +14,7 @@ from .const import _LOGGER, DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
 
 SENSOR_TYPES = {
     "temperature": ["Temperature", TEMP_FAHRENHEIT],
-    "humidity": ["Humidity", UNIT_PERCENTAGE],
+    "humidity": ["Humidity", PERCENTAGE],
 }
 
 
@@ -108,7 +109,11 @@ class EcobeeSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self._state in [ECOBEE_STATE_CALIBRATING, ECOBEE_STATE_UNKNOWN, "unknown"]:
+        if self._state in [
+            ECOBEE_STATE_CALIBRATING,
+            ECOBEE_STATE_UNKNOWN,
+            STATE_UNKNOWN,
+        ]:
             return None
 
         if self.type == "temperature":

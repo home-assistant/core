@@ -38,3 +38,33 @@ async def test_capture_image(hass):
         )
         await hass.async_block_till_done()
         mock_capture.assert_called_once()
+
+
+async def test_camera_on(hass):
+    """Test the camera turn on service."""
+    await setup_platform(hass, CAMERA_DOMAIN)
+
+    with patch("abodepy.AbodeCamera.privacy_mode") as mock_capture:
+        await hass.services.async_call(
+            CAMERA_DOMAIN,
+            "turn_on",
+            {ATTR_ENTITY_ID: "camera.test_cam"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        mock_capture.assert_called_once_with(False)
+
+
+async def test_camera_off(hass):
+    """Test the camera turn off service."""
+    await setup_platform(hass, CAMERA_DOMAIN)
+
+    with patch("abodepy.AbodeCamera.privacy_mode") as mock_capture:
+        await hass.services.async_call(
+            CAMERA_DOMAIN,
+            "turn_off",
+            {ATTR_ENTITY_ID: "camera.test_cam"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        mock_capture.assert_called_once_with(True)

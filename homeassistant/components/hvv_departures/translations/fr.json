@@ -1,7 +1,24 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9"
+        },
+        "error": {
+            "cannot_connect": "Impossible de se connecter, veuillez r\u00e9essayer",
+            "invalid_auth": "Authentification non valide",
+            "no_results": "Aucun r\u00e9sultat. Essayez avec une autre station / adresse"
+        },
         "step": {
+            "station": {
+                "data": {
+                    "station": "Station / Adresse"
+                },
+                "title": "Entrez la station / l'adresse"
+            },
             "station_select": {
+                "data": {
+                    "station": "Station / Adresse"
+                },
                 "title": "S\u00e9lectionner la station/l\u2019adresse"
             },
             "user": {
@@ -9,7 +26,8 @@
                     "host": "H\u00f4te",
                     "password": "Mot de passe",
                     "username": "Nom d'utilisateur"
-                }
+                },
+                "title": "Connectez-vous \u00e0 l'API HVV"
             }
         }
     },
