@@ -283,6 +283,4 @@ def library_payload(media_library):
             )
         )
 
-    library_info.calculate_children_class()
-
     return library_info
