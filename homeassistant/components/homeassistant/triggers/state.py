@@ -80,6 +80,13 @@ async def async_attach_trigger(
         else:
             new_value = to_s.attributes.get(attribute)
 
+        # When we listen for state changes with `match_all`, we
+        # will trigger even if just an attribute changes. When
+        # we listen to just an attribute, we should ignore all
+        # other attribute changes.
+        if attribute is not None and old_value == new_value:
+            return
+
         if (
             not match_from_state(old_value)
             or not match_to_state(new_value)
