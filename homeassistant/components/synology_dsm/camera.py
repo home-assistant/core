@@ -27,7 +27,7 @@ async def async_setup_entry(
     api = hass.data[DOMAIN][entry.unique_id][SYNO_API]
 
     if SynoSurveillanceStation.CAMERA_API_KEY not in api.dsm.apis:
-        return True
+        return
 
     surveillance_station = api.surveillance_station
     await hass.async_add_executor_job(surveillance_station.update)
