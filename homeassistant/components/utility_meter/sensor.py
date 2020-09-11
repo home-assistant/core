@@ -24,6 +24,7 @@ import homeassistant.util.dt as dt_util
 
 from .const import (
     ATTR_VALUE,
+    BIMONTHLY,
     CONF_METER,
     CONF_METER_NET_CONSUMPTION,
     CONF_METER_OFFSET,
@@ -35,7 +36,6 @@ from .const import (
     DATA_UTILITY,
     HOURLY,
     MONTHLY,
-    BIMONTHLY,
     QUARTERLY,
     SERVICE_CALIBRATE_METER,
     SIGNAL_RESET_METER,
