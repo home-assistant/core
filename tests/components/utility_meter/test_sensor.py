@@ -289,9 +289,16 @@ async def test_self_reset_monthly(hass, legacy_patchable_time):
 
 
 async def test_self_reset_bimonthly(hass, legacy_patchable_time):
-    """Test bimonthly reset of meter."""
+    """Test bimonthly reset of meter occurs on even months."""
     await _test_self_reset(
         hass, gen_config("bimonthly"), "2017-12-31T23:59:00.000000+00:00"
+    )
+
+
+async def test_self_no_reset_bimonthly(hass, legacy_patchable_time):
+    """Test bimonthly reset of meter does not occur on odd months."""
+    await _test_self_reset(
+        hass, gen_config("bimonthly"), "2018-01-01T23:59:00.000000+00:00"
     )
 
 
