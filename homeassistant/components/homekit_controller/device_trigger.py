@@ -97,7 +97,7 @@ class TriggerSource:
 def enumerate_stateless_switch(service):
     """Enumerate a stateless switch, like a single button."""
 
-    # A stateless switch that has a SERIVCE_LABEL_INDEX is part of a group
+    # A stateless switch that has a SERVICE_LABEL_INDEX is part of a group
     # And is handled separately
     if service.has(CharacteristicsTypes.SERVICE_LABEL_INDEX):
         if len(service.linked) > 0:
