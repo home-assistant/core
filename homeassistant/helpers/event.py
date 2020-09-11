@@ -529,6 +529,7 @@ class _TrackTemplateResultInfo:
 
     @property
     def listeners(self) -> Dict:
+        """State changes that will cause a re-render."""
         return {
             "all": self._all_listener is not None,
             "entities": self._last_entities,
