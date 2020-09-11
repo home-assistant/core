@@ -1083,9 +1083,9 @@ class BrowseMedia:
     def calculate_children_class(self):
         """Count the children media classes and calculate the correct class."""
         self.children_media_class = MEDIA_CLASS_DIRECTORY
-        child_class_count = collections.Counter(
-            child.media_class for child in self.children
-        )
-        if len(child_class_count) == 1:
-            # there's only one child class
-            self.children_media_class = next(iter(child_class_count))
+        if len(self.children) == 0:
+            return
+        
+        proposed_class = self.children[0].media_class
+        if all(child.media_class == proposed_class for child in self.children):
+            self.children_media_class = proposed_class
