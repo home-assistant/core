@@ -1,7 +1,7 @@
 """Template helper methods for rendering strings with Home Assistant data."""
 import base64
 import collections.abc
-from datetime import datetime
+from datetime import datetime, timedelta
 from functools import wraps
 import json
 import logging
@@ -1102,6 +1102,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["utcnow"] = dt_util.utcnow
         self.globals["as_timestamp"] = forgiving_as_timestamp
         self.globals["relative_time"] = relative_time
+        self.globals["timedelta"] = timedelta
         self.globals["strptime"] = strptime
         self.globals["urlencode"] = urlencode
         if hass is None:
