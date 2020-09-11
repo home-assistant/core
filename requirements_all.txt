@@ -1455,7 +1455,7 @@ pylibrespot-java==0.1.0
 pylitejet==0.1
 
 # homeassistant.components.loopenergy
-pyloopenergy==0.1.3
+pyloopenergy==0.2.1
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.6.1
