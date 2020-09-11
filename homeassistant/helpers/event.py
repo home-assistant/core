@@ -55,6 +55,9 @@ TRACK_STATE_CHANGE_LISTENER = "track_state_change_listener"
 TRACK_STATE_ADDED_DOMAIN_CALLBACKS = "track_state_added_domain_callbacks"
 TRACK_STATE_ADDED_DOMAIN_LISTENER = "track_state_added_domain_listener"
 
+TRACK_STATE_REMOVED_DOMAIN_CALLBACKS = "track_state_removed_domain_callbacks"
+TRACK_STATE_REMOVED_DOMAIN_LISTENER = "track_state_removed_domain_listener"
+
 TRACK_ENTITY_REGISTRY_UPDATED_CALLBACKS = "track_entity_registry_updated_callbacks"
 TRACK_ENTITY_REGISTRY_UPDATED_LISTENER = "track_entity_registry_updated_listener"
 
@@ -235,10 +238,7 @@ def async_track_state_change_event(
             EVENT_STATE_CHANGED, _async_state_change_dispatcher
         )
 
-    if isinstance(entity_ids, str):
-        entity_ids = [entity_ids]
-
-    entity_ids = [entity_id.lower() for entity_id in entity_ids]
+    entity_ids = _async_string_to_lower_list(entity_ids)
 
     for entity_id in entity_ids:
         entity_callbacks.setdefault(entity_id, []).append(action)
@@ -315,10 +315,7 @@ def async_track_entity_registry_updated_event(
             EVENT_ENTITY_REGISTRY_UPDATED, _async_entity_registry_updated_dispatcher
         )
 
-    if isinstance(entity_ids, str):
-        entity_ids = [entity_ids]
-
-    entity_ids = [entity_id.lower() for entity_id in entity_ids]
+    entity_ids = _async_string_to_lower_list(entity_ids)
 
     for entity_id in entity_ids:
         entity_callbacks.setdefault(entity_id, []).append(action)
@@ -335,6 +332,26 @@ def async_track_entity_registry_updated_event(
         )
 
     return remove_listener
+
+
+@callback
+def _async_dispatch_domain_event(
+    hass: HomeAssistant, event: Event, callbacks: Dict[str, List]
+) -> None:
+    domain = split_entity_id(event.data["entity_id"])[0]
+
+    if domain not in callbacks and MATCH_ALL not in callbacks:
+        return
+
+    listeners = callbacks.get(domain, []) + callbacks.get(MATCH_ALL, [])
+
+    for action in listeners:
+        try:
+            hass.async_run_job(action, event)
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception(
+                "Error while processing event %s for domain %s", event, domain
+            )
 
 
 @bind_hass
@@ -355,27 +372,13 @@ def async_track_state_added_domain(
             if event.data.get("old_state") is not None:
                 return
 
-            domain = split_entity_id(event.data["entity_id"])[0]
-
-            if domain not in domain_callbacks:
-                return
-
-            for action in domain_callbacks[domain][:]:
-                try:
-                    hass.async_run_job(action, event)
-                except Exception:  # pylint: disable=broad-except
-                    _LOGGER.exception(
-                        "Error while processing state added for %s", domain
-                    )
+            _async_dispatch_domain_event(hass, event, domain_callbacks)
 
         hass.data[TRACK_STATE_ADDED_DOMAIN_LISTENER] = hass.bus.async_listen(
             EVENT_STATE_CHANGED, _async_state_change_dispatcher
         )
 
-    if isinstance(domains, str):
-        domains = [domains]
-
-    domains = [domains.lower() for domains in domains]
+    domains = _async_string_to_lower_list(domains)
 
     for domain in domains:
         domain_callbacks.setdefault(domain, []).append(action)
@@ -392,6 +395,57 @@ def async_track_state_added_domain(
         )
 
     return remove_listener
+
+
+@bind_hass
+def async_track_state_removed_domain(
+    hass: HomeAssistant,
+    domains: Union[str, Iterable[str]],
+    action: Callable[[Event], Any],
+) -> Callable[[], None]:
+    """Track state change events when an entity is removed from domains."""
+
+    domain_callbacks = hass.data.setdefault(TRACK_STATE_REMOVED_DOMAIN_CALLBACKS, {})
+
+    if TRACK_STATE_REMOVED_DOMAIN_LISTENER not in hass.data:
+
+        @callback
+        def _async_state_change_dispatcher(event: Event) -> None:
+            """Dispatch state changes by entity_id."""
+            if event.data.get("new_state") is not None:
+                return
+
+            _async_dispatch_domain_event(hass, event, domain_callbacks)
+
+        hass.data[TRACK_STATE_REMOVED_DOMAIN_LISTENER] = hass.bus.async_listen(
+            EVENT_STATE_CHANGED, _async_state_change_dispatcher
+        )
+
+    domains = _async_string_to_lower_list(domains)
+
+    for domain in domains:
+        domain_callbacks.setdefault(domain, []).append(action)
+
+    @callback
+    def remove_listener() -> None:
+        """Remove state change listener."""
+        _async_remove_indexed_listeners(
+            hass,
+            TRACK_STATE_REMOVED_DOMAIN_CALLBACKS,
+            TRACK_STATE_REMOVED_DOMAIN_LISTENER,
+            domains,
+            action,
+        )
+
+    return remove_listener
+
+
+@callback
+def _async_string_to_lower_list(instr: Union[str, Iterable[str]]) -> List[str]:
+    if isinstance(instr, str):
+        return [instr.lower()]
+
+    return [mstr.lower() for mstr in instr]
 
 
 @callback
