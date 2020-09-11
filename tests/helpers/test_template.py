@@ -896,6 +896,65 @@ def test_relative_time(mock_is_safe, hass):
     "homeassistant.helpers.template.TemplateEnvironment.is_safe_callable",
     return_value=True,
 )
+def test_timedelta(mock_is_safe, hass):
+    """Test relative_time method."""
+    now = datetime.strptime("2000-01-01 10:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z")
+    with patch("homeassistant.util.dt.now", return_value=now):
+        assert (
+            "0:02:00"
+            == template.Template(
+                "{{timedelta(seconds=120)}}",
+                hass,
+            ).async_render()
+        )
+        assert (
+            "1 day, 0:00:00"
+            == template.Template(
+                "{{timedelta(seconds=86400)}}",
+                hass,
+            ).async_render()
+        )
+        assert (
+            "1 day, 4:00:00"
+            == template.Template(
+                "{{timedelta(days=1, hours=4)}}",
+                hass,
+            ).async_render()
+        )
+        assert (
+            "1 hour"
+            == template.Template(
+                "{{relative_time(now() - timedelta(seconds=3600))}}",
+                hass,
+            ).async_render()
+        )
+        assert (
+            "1 day"
+            == template.Template(
+                "{{relative_time(now() - timedelta(seconds=86400))}}",
+                hass,
+            ).async_render()
+        )
+        assert (
+            "1 day"
+            == template.Template(
+                "{{relative_time(now() - timedelta(seconds=86401))}}",
+                hass,
+            ).async_render()
+        )
+        assert (
+            "15 days"
+            == template.Template(
+                "{{relative_time(now() - timedelta(weeks=2, days=1))}}",
+                hass,
+            ).async_render()
+        )
+
+
+@patch(
+    "homeassistant.helpers.template.TemplateEnvironment.is_safe_callable",
+    return_value=True,
+)
 def test_utcnow(mock_is_safe, hass):
     """Test utcnow method."""
     now = dt_util.utcnow()
