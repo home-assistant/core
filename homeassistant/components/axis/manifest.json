@@ -4,7 +4,11 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/axis",
   "requirements": ["axis==35"],
-  "zeroconf": ["_axis-video._tcp.local."],
+  "zeroconf": [
+    {"type":"_axis-video._tcp.local.","macaddress":"00408C*"},
+    {"type":"_axis-video._tcp.local.","macaddress":"ACCC8E*"},
+    {"type":"_axis-video._tcp.local.","macaddress":"B8A44F*"}
+  ],
   "after_dependencies": ["mqtt"],
   "codeowners": ["@Kane610"]
 }
