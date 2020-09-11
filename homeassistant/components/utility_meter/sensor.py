@@ -207,7 +207,8 @@ class UtilityMeterSensor(RestoreEntity):
             return
         if (
             self._period == BIMONTHLY
-            and now != date(now.year, (((now.month - 1) // 2) * 2 + 1), 1) + self._period_offset
+            and now
+            != date(now.year, (((now.month - 1) // 2) * 2 + 1), 1) + self._period_offset
         ):
             return
         if (
