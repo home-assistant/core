@@ -7,6 +7,7 @@ import json
 import logging
 from typing import Optional
 
+from homeassistant.components import media_source
 import homeassistant.components.ais_dom.ais_global as ais_global
 from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK,
@@ -22,6 +23,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
 )
 from homeassistant.components.media_player.const import (
+    SUPPORT_BROWSE_MEDIA,
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
@@ -36,6 +38,8 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 import homeassistant.util.dt as dt_util
+
+from .media_browser import browse_media
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,6 +57,7 @@ SUPPORT_EXO = (
     | SUPPORT_SELECT_SOURCE
     | SUPPORT_SELECT_SOUND_MODE
     | SUPPORT_SHUFFLE_SET
+    | SUPPORT_BROWSE_MEDIA
 )
 
 DEFAULT_NAME = "AIS Dom Odtwarzacz"
@@ -840,3 +845,16 @@ class ExoPlayerDevice(MediaPlayerEntity):
             _publish_command_to_frame(
                 self.hass, self._device_ip, "playAudio", media_content_id
             )
+
+    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+        """Implement the websocket media browsing helper."""
+        # main
+        return await self.hass.async_add_executor_job(
+            browse_media,
+            media_content_type,
+            media_content_id,
+        )
+
+        # TODO local disk
+        # result = await media_source.async_browse_media(self.hass, media_content_id)
+        # return result
