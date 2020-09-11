@@ -589,7 +589,6 @@ omit =
     homeassistant/components/nut/sensor.py
     homeassistant/components/nx584/alarm_control_panel.py
     homeassistant/components/nzbget/coordinator.py
-    homeassistant/components/nzbget/sensor.py
     homeassistant/components/obihai/*
     homeassistant/components/octoprint/*
     homeassistant/components/oem/climate.py
@@ -757,7 +756,6 @@ omit =
     homeassistant/components/shelly/binary_sensor.py
     homeassistant/components/shelly/cover.py
     homeassistant/components/shelly/entity.py
-    homeassistant/components/shelly/cover.py
     homeassistant/components/shelly/light.py
     homeassistant/components/shelly/sensor.py
     homeassistant/components/shelly/switch.py
@@ -831,6 +829,7 @@ omit =
     homeassistant/components/synology/camera.py
     homeassistant/components/synology_chat/notify.py
     homeassistant/components/synology_dsm/__init__.py
+    homeassistant/components/synology_dsm/camera.py
     homeassistant/components/synology_dsm/binary_sensor.py
     homeassistant/components/synology_dsm/sensor.py
     homeassistant/components/synology_srm/device_tracker.py

@@ -2321,3 +2321,42 @@ async def test_protected_blocked(hass):
     tmp = template.Template('{{ states.sensor.any.__getattr__("any") }}', hass)
     with pytest.raises(TemplateError):
         tmp.async_render()
+
+
+async def test_demo_template(hass):
+    """Test the demo template works as expected."""
+    hass.states.async_set("sun.sun", "above", {"elevation": 50, "next_rising": "later"})
+    for i in range(2):
+        hass.states.async_set(f"sensor.sensor{i}", "on")
+
+    demo_template_str = """
+{## Imitate available variables: ##}
+{% set my_test_json = {
+  "temperature": 25,
+  "unit": "°C"
+} %}
+
+The temperature is {{ my_test_json.temperature }} {{ my_test_json.unit }}.
+
+{% if is_state("sun.sun", "above_horizon") -%}
+  The sun rose {{ relative_time(states.sun.sun.last_changed) }} ago.
+{%- else -%}
+  The sun will rise at {{ as_timestamp(strptime(state_attr("sun.sun", "next_rising"), "")) | timestamp_local }}.
+{%- endif %}
+
+For loop example getting 3 entity values:
+
+{% for states in states | slice(3) -%}
+  {% set state = states | first %}
+  {%- if loop.first %}The {% elif loop.last %} and the {% else %}, the {% endif -%}
+  {{ state.name | lower }} is {{state.state_with_unit}}
+{%- endfor %}.
+"""
+    tmp = template.Template(demo_template_str, hass)
+
+    result = tmp.async_render()
+    assert "The temperature is 25" in result
+    assert "is on" in result
+    assert "sensor0" in result
+    assert "sensor1" in result
+    assert "sun" in result

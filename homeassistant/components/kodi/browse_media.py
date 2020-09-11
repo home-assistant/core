@@ -1,7 +1,18 @@
 """Support for media browsing."""
+import logging
 
-from homeassistant.components.media_player import BrowseMedia
+from homeassistant.components.media_player import BrowseError, BrowseMedia
 from homeassistant.components.media_player.const import (
+    MEDIA_CLASS_ALBUM,
+    MEDIA_CLASS_ARTIST,
+    MEDIA_CLASS_DIRECTORY,
+    MEDIA_CLASS_EPISODE,
+    MEDIA_CLASS_MOVIE,
+    MEDIA_CLASS_MUSIC,
+    MEDIA_CLASS_PLAYLIST,
+    MEDIA_CLASS_SEASON,
+    MEDIA_CLASS_TRACK,
+    MEDIA_CLASS_TV_SHOW,
     MEDIA_TYPE_ALBUM,
     MEDIA_TYPE_ARTIST,
     MEDIA_TYPE_EPISODE,
@@ -18,13 +29,30 @@ PLAYABLE_MEDIA_TYPES = [
     MEDIA_TYPE_TRACK,
 ]
 
-EXPANDABLE_MEDIA_TYPES = [
-    MEDIA_TYPE_ALBUM,
-    MEDIA_TYPE_ARTIST,
-    MEDIA_TYPE_PLAYLIST,
-    MEDIA_TYPE_TVSHOW,
-    MEDIA_TYPE_SEASON,
-]
+CONTAINER_TYPES_SPECIFIC_MEDIA_CLASS = {
+    MEDIA_TYPE_ALBUM: MEDIA_CLASS_ALBUM,
+    MEDIA_TYPE_ARTIST: MEDIA_CLASS_ARTIST,
+    MEDIA_TYPE_PLAYLIST: MEDIA_CLASS_PLAYLIST,
+    MEDIA_TYPE_SEASON: MEDIA_CLASS_SEASON,
+    MEDIA_TYPE_TVSHOW: MEDIA_CLASS_TV_SHOW,
+}
+
+CHILD_TYPE_MEDIA_CLASS = {
+    MEDIA_TYPE_SEASON: MEDIA_CLASS_SEASON,
+    MEDIA_TYPE_ALBUM: MEDIA_CLASS_ALBUM,
+    MEDIA_TYPE_ARTIST: MEDIA_CLASS_ARTIST,
+    MEDIA_TYPE_MOVIE: MEDIA_CLASS_MOVIE,
+    MEDIA_TYPE_PLAYLIST: MEDIA_CLASS_PLAYLIST,
+    MEDIA_TYPE_TRACK: MEDIA_CLASS_TRACK,
+    MEDIA_TYPE_TVSHOW: MEDIA_CLASS_TV_SHOW,
+    MEDIA_TYPE_EPISODE: MEDIA_CLASS_EPISODE,
+}
+
+_LOGGER = logging.getLogger(__name__)
+
+
+class UnknownMediaType(BrowseError):
+    """Unknown media type."""
 
 
 async def build_item_response(media_library, payload):
@@ -121,17 +149,34 @@ async def build_item_response(media_library, payload):
             title = season["seasondetails"]["label"]
 
     if media is None:
-        return
+        return None
 
-    return BrowseMedia(
-        media_content_id=payload["search_id"],
+    children = []
+    for item in media:
+        try:
+            children.append(item_payload(item, media_library))
+        except UnknownMediaType:
+            pass
+
+    response = BrowseMedia(
+        media_class=CONTAINER_TYPES_SPECIFIC_MEDIA_CLASS.get(
+            search_type, MEDIA_CLASS_DIRECTORY
+        ),
+        media_content_id=search_id,
         media_content_type=search_type,
         title=title,
         can_play=search_type in PLAYABLE_MEDIA_TYPES and search_id,
         can_expand=True,
-        children=[item_payload(item, media_library) for item in media],
+        children=children,
         thumbnail=thumbnail,
     )
+
+    if search_type == "library_music":
+        response.children_media_class = MEDIA_CLASS_MUSIC
+    else:
+        response.calculate_children_class()
+
+    return response
 
 
 def item_payload(item, media_library):
@@ -140,43 +185,67 @@ def item_payload(item, media_library):
 
     Used by async_browse_media.
     """
-    if "songid" in item:
-        media_content_type = MEDIA_TYPE_TRACK
-        media_content_id = f"{item['songid']}"
-    elif "albumid" in item:
-        media_content_type = MEDIA_TYPE_ALBUM
-        media_content_id = f"{item['albumid']}"
-    elif "artistid" in item:
-        media_content_type = MEDIA_TYPE_ARTIST
-        media_content_id = f"{item['artistid']}"
-    elif "movieid" in item:
-        media_content_type = MEDIA_TYPE_MOVIE
-        media_content_id = f"{item['movieid']}"
-    elif "episodeid" in item:
-        media_content_type = MEDIA_TYPE_EPISODE
-        media_content_id = f"{item['episodeid']}"
-    elif "seasonid" in item:
-        media_content_type = MEDIA_TYPE_SEASON
-        media_content_id = f"{item['tvshowid']}/{item['season']}"
-    elif "tvshowid" in item:
-        media_content_type = MEDIA_TYPE_TVSHOW
-        media_content_id = f"{item['tvshowid']}"
-    else:
-        # this case is for the top folder of each type
-        # possible content types: album, artist, movie, library_music, tvshow
-        media_content_type = item.get("type")
-        media_content_id = ""
-
     title = item["label"]
-    can_play = media_content_type in PLAYABLE_MEDIA_TYPES and bool(media_content_id)
-    can_expand = media_content_type in EXPANDABLE_MEDIA_TYPES
-
     thumbnail = item.get("thumbnail")
     if thumbnail:
         thumbnail = media_library.thumbnail_url(thumbnail)
 
+    media_class = None
+
+    if "songid" in item:
+        media_content_type = MEDIA_TYPE_TRACK
+        media_content_id = f"{item['songid']}"
+        can_play = True
+        can_expand = False
+    elif "albumid" in item:
+        media_content_type = MEDIA_TYPE_ALBUM
+        media_content_id = f"{item['albumid']}"
+        can_play = True
+        can_expand = True
+    elif "artistid" in item:
+        media_content_type = MEDIA_TYPE_ARTIST
+        media_content_id = f"{item['artistid']}"
+        can_play = True
+        can_expand = True
+    elif "movieid" in item:
+        media_content_type = MEDIA_TYPE_MOVIE
+        media_content_id = f"{item['movieid']}"
+        can_play = True
+        can_expand = False
+    elif "episodeid" in item:
+        media_content_type = MEDIA_TYPE_EPISODE
+        media_content_id = f"{item['episodeid']}"
+        can_play = True
+        can_expand = False
+    elif "seasonid" in item:
+        media_content_type = MEDIA_TYPE_SEASON
+        media_content_id = f"{item['tvshowid']}/{item['season']}"
+        can_play = False
+        can_expand = True
+    elif "tvshowid" in item:
+        media_content_type = MEDIA_TYPE_TVSHOW
+        media_content_id = f"{item['tvshowid']}"
+        can_play = False
+        can_expand = True
+    else:
+        # this case is for the top folder of each type
+        # possible content types: album, artist, movie, library_music, tvshow
+        media_class = MEDIA_CLASS_DIRECTORY
+        media_content_type = item["type"]
+        media_content_id = ""
+        can_play = False
+        can_expand = True
+
+    if media_class is None:
+        try:
+            media_class = CHILD_TYPE_MEDIA_CLASS[media_content_type]
+        except KeyError as err:
+            _LOGGER.debug("Unknown media type received: %s", media_content_type)
+            raise UnknownMediaType from err
+
     return BrowseMedia(
         title=title,
+        media_class=media_class,
         media_content_type=media_content_type,
         media_content_id=media_content_id,
         can_play=can_play,
@@ -192,6 +261,7 @@ def library_payload(media_library):
     Used by async_browse_media.
     """
     library_info = BrowseMedia(
+        media_class=MEDIA_CLASS_DIRECTORY,
         media_content_id="library",
         media_content_type="library",
         title="Media Library",

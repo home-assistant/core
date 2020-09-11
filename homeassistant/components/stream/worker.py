@@ -64,10 +64,15 @@ def _stream_worker_internal(hass, stream, quit_event):
         video_stream = container.streams.video[0]
     except (KeyError, IndexError):
         _LOGGER.error("Stream has no video")
+        container.close()
         return
     try:
         audio_stream = container.streams.audio[0]
     except (KeyError, IndexError):
+        audio_stream = None
+    # These formats need aac_adtstoasc bitstream filter, but auto_bsf not
+    # compatible with empty_moov and manual bitstream filters not in PyAV
+    if container.format.name in {"hls", "mpegts"}:
         audio_stream = None
 
     # The presentation timestamps of the first packet in each stream we receive
@@ -238,7 +243,7 @@ def _stream_worker_internal(hass, stream, quit_event):
 
         # Update last_dts processed
         last_dts[packet.stream] = packet.dts
-        # mux video packets immediately, save audio packets to be muxed all at once
+        # mux packets
         if packet.stream == video_stream:
             mux_video_packet(packet)  # mutates packet timestamps
         else:

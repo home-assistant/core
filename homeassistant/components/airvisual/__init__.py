@@ -4,7 +4,12 @@ from datetime import timedelta
 from math import ceil
 
 from pyairvisual import Client
-from pyairvisual.errors import AirVisualError, NodeProError
+from pyairvisual.errors import (
+    AirVisualError,
+    InvalidKeyError,
+    KeyExpiredError,
+    NodeProError,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
@@ -229,6 +234,14 @@ async def async_setup_entry(hass, config_entry):
 
             try:
                 return await api_coro
+            except (InvalidKeyError, KeyExpiredError):
+                hass.async_create_task(
+                    hass.config_entries.flow.async_init(
+                        DOMAIN,
+                        context={"source": "reauth"},
+                        data=config_entry.data,
+                    )
+                )
             except AirVisualError as err:
                 raise UpdateFailed(f"Error while retrieving data: {err}") from err
 

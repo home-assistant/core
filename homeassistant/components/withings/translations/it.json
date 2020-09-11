@@ -3,7 +3,8 @@
         "abort": {
             "already_configured": "Configurazione aggiornata per il profilo.",
             "authorize_url_timeout": "Timeout durante la generazione dell'URL di autorizzazione.",
-            "missing_configuration": "Il componente Withings non \u00e8 configurato. Si prega di seguire la documentazione."
+            "missing_configuration": "Il componente Withings non \u00e8 configurato. Si prega di seguire la documentazione.",
+            "no_url_available": "Nessun URL disponibile. Per informazioni su questo errore, [controlla la sezione della guida]({docs_url})"
         },
         "create_entry": {
             "default": "Autenticazione riuscita con Withings."
