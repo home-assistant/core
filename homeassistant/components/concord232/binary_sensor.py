@@ -89,7 +89,7 @@ def get_opening_type(zone):
     if "KEY" in zone["name"]:
         return "safety"
     if "SMOKE" in zone["name"]:
-        return "smoke"
+        return DEVICE_CLASSES.DEVICE_CLASS_SMOKE
     if "WATER" in zone["name"]:
         return "water"
     return "opening"

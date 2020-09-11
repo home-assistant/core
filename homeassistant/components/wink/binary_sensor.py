@@ -3,7 +3,10 @@ import logging
 
 import pywink
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_SMOKE,
+    BinarySensorEntity,
+)
 
 from . import DOMAIN, WinkDevice
 
@@ -21,7 +24,7 @@ SENSOR_TYPES = {
     "noise": "sound",
     "opened": "opening",
     "presence": "occupancy",
-    "smoke_detected": "smoke",
+    "smoke_detected": DEVICE_CLASS_SMOKE,
     "vibration": "vibration",
 }
 
