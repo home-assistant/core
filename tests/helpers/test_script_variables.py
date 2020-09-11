@@ -24,6 +24,28 @@ async def test_static_vars_run_args():
     assert orig == orig_copy
 
 
+async def test_static_vars_no_default():
+    """Test static vars."""
+    orig = {"hello": "world"}
+    var = cv.SCRIPT_VARIABLES_SCHEMA(orig)
+    rendered = var.async_render(None, None, render_as_defaults=False)
+    assert rendered is not orig
+    assert rendered == orig
+
+
+async def test_static_vars_run_args_no_default():
+    """Test static vars."""
+    orig = {"hello": "world"}
+    orig_copy = dict(orig)
+    var = cv.SCRIPT_VARIABLES_SCHEMA(orig)
+    rendered = var.async_render(
+        None, {"hello": "override", "run": "var"}, render_as_defaults=False
+    )
+    assert rendered == {"hello": "world", "run": "var"}
+    # Make sure we don't change original vars
+    assert orig == orig_copy
+
+
 async def test_template_vars(hass):
     """Test template vars."""
     var = cv.SCRIPT_VARIABLES_SCHEMA({"hello": "{{ 1 + 1 }}"})
@@ -50,6 +72,36 @@ async def test_template_vars_run_args(hass):
         "run_var_ex": 5,
         "something": "6",
         "something_2": 1,
+    }
+
+
+async def test_template_vars_no_default(hass):
+    """Test template vars."""
+    var = cv.SCRIPT_VARIABLES_SCHEMA({"hello": "{{ 1 + 1 }}"})
+    rendered = var.async_render(hass, None, render_as_defaults=False)
+    assert rendered == {"hello": "2"}
+
+
+async def test_template_vars_run_args_no_default(hass):
+    """Test template vars."""
+    var = cv.SCRIPT_VARIABLES_SCHEMA(
+        {
+            "something": "{{ run_var_ex + 1 }}",
+            "something_2": "{{ run_var_ex + 1 }}",
+        }
+    )
+    rendered = var.async_render(
+        hass,
+        {
+            "run_var_ex": 5,
+            "something_2": 1,
+        },
+        render_as_defaults=False,
+    )
+    assert rendered == {
+        "run_var_ex": 5,
+        "something": "6",
+        "something_2": "6",
     }
 
 
