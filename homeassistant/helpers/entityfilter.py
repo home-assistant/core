@@ -75,7 +75,6 @@ def convert_include_exclude_filter(
             "ais_drives_service",
             "ais_exo_player",
             "ais_files",
-            "ais_gm_service",
             "ais_google_home",
             "ais_help",
             "ais_host",
