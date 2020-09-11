@@ -38,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         await api.get_telemetry_data()
     except LoginException as error:
         _LOGGER.debug("OmniLogic login error: %s", error)
-        raise ConfigEntryNotReady from error
+        return False
     except OmniLogicException as error:
         _LOGGER.debug("OmniLogic API error: %s", error)
         raise ConfigEntryNotReady from error
