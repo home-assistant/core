@@ -5,6 +5,7 @@ import re
 from typing import Optional, Tuple
 
 from homeassistant.components.media_player.const import (
+    MEDIA_CLASS_DIRECTORY,
     MEDIA_CLASS_VIDEO,
     MEDIA_TYPE_VIDEO,
 )
@@ -91,10 +92,12 @@ class NetatmoSource(MediaSource):
         else:
             path = f"{source}/{camera_id}"
 
+        media_class = MEDIA_CLASS_DIRECTORY if event_id is None else MEDIA_CLASS_VIDEO
+
         media = BrowseMediaSource(
             domain=DOMAIN,
             identifier=path,
-            media_class=MEDIA_CLASS_VIDEO,
+            media_class=media_class,
             media_content_type=MEDIA_TYPE_VIDEO,
             title=title,
             can_play=bool(
