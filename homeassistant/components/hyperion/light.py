@@ -186,7 +186,7 @@ class Hyperion(LightEntity):
         # color, effect), but this is not possible due to:
         # https://github.com/hyperion-project/hyperion.ng/issues/967
         if not self.is_on:
-            if not await self._client.async_set_component(
+            if not await self._client.async_send_set_component(
                 **{
                     const.KEY_COMPONENTSTATE: {
                         const.KEY_COMPONENT: const.KEY_COMPONENTID_ALL,
@@ -196,7 +196,7 @@ class Hyperion(LightEntity):
             ):
                 return
 
-            if not await self._client.async_set_component(
+            if not await self._client.async_send_set_component(
                 **{
                     const.KEY_COMPONENTSTATE: {
                         const.KEY_COMPONENT: const.KEY_COMPONENTID_LEDDEVICE,
@@ -206,10 +206,17 @@ class Hyperion(LightEntity):
             ):
                 return
 
-        # == Set brightness ==
+        # == Get key parameters ==
         brightness = kwargs.get(ATTR_BRIGHTNESS, self._brightness)
+        effect = kwargs.get(ATTR_EFFECT, self._effect)
+        if ATTR_HS_COLOR in kwargs:
+            rgb_color = color_util.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
+        else:
+            rgb_color = self._rgb_color
+
+        # == Set brightness ==
         if self._brightness != brightness:
-            if not await self._client.async_set_adjustment(
+            if not await self._client.async_send_set_adjustment(
                 **{
                     const.KEY_ADJUSTMENT: {
                         const.KEY_BRIGHTNESS: int(
@@ -220,17 +227,18 @@ class Hyperion(LightEntity):
             ):
                 return
 
-        effect = kwargs.get(ATTR_EFFECT, self._effect)
+        # == Set an external source
         if effect and effect in const.KEY_COMPONENTID_EXTERNAL_SOURCES:
+
             # Clear any color/effect.
-            if not await self._client.async_clear(
+            if not await self._client.async_send_clear(
                 **{const.KEY_PRIORITY: self._priority}
             ):
                 return
 
             # Turn off all external sources, except the intended.
             for key in const.KEY_COMPONENTID_EXTERNAL_SOURCES:
-                if not await self._client.async_set_component(
+                if not await self._client.async_send_set_component(
                     **{
                         const.KEY_COMPONENTSTATE: {
                             const.KEY_COMPONENT: key,
@@ -239,15 +247,17 @@ class Hyperion(LightEntity):
                     }
                 ):
                     return
+
+        # == Set an effect
         elif effect and effect != KEY_EFFECT_SOLID:
             # This call should not be necessary, but without it there is no priorities-update issued:
             # https://github.com/hyperion-project/hyperion.ng/issues/992
-            if not await self._client.async_clear(
+            if not await self._client.async_send_clear(
                 **{const.KEY_PRIORITY: self._priority}
             ):
                 return
 
-            if not await self._client.async_set_effect(
+            if not await self._client.async_send_set_effect(
                 **{
                     const.KEY_PRIORITY: self._priority,
                     const.KEY_EFFECT: {const.KEY_NAME: effect},
@@ -255,13 +265,9 @@ class Hyperion(LightEntity):
                 }
             ):
                 return
+        # == Set a color
         else:
-            if ATTR_HS_COLOR in kwargs:
-                rgb_color = color_util.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
-            else:
-                rgb_color = self._rgb_color
-
-            if not await self._client.async_set_color(
+            if not await self._client.async_send_set_color(
                 **{
                     const.KEY_PRIORITY: self._priority,
                     const.KEY_COLOR: rgb_color,
@@ -277,7 +283,7 @@ class Hyperion(LightEntity):
         if not self._client.is_connected:
             return
 
-        if not await self._client.async_set_component(
+        if not await self._client.async_send_set_component(
             **{
                 const.KEY_COMPONENTSTATE: {
                     const.KEY_COMPONENT: const.KEY_COMPONENTID_LEDDEVICE,

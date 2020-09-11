@@ -117,9 +117,9 @@ async def test_light_async_turn_on(hass):
     client, entity = create_client_and_entity()
 
     # On (=), 100% (=), solid (=), [255,255,255] (=)
-    client.async_set_color = CoroutineMock(return_value=True)
+    client.async_send_set_color = CoroutineMock(return_value=True)
     await entity.async_turn_on()
-    assert client.async_set_color.call_args == call(
+    assert client.async_send_set_color.call_args == call(
         **{
             const.KEY_PRIORITY: TEST_PRIORITY,
             const.KEY_COLOR: [255, 255, 255],
@@ -130,13 +130,13 @@ async def test_light_async_turn_on(hass):
     # On (=), 50% (!), solid (=), [255,255,255] (=)
     # ===
     brightness = 128
-    client.async_set_color = CoroutineMock(return_value=True)
-    client.async_set_adjustment = CoroutineMock(return_value=True)
+    client.async_send_set_color = CoroutineMock(return_value=True)
+    client.async_send_set_adjustment = CoroutineMock(return_value=True)
     await entity.async_turn_on(**{ATTR_BRIGHTNESS: brightness})
-    assert client.async_set_adjustment.call_args == call(
+    assert client.async_send_set_adjustment.call_args == call(
         **{const.KEY_ADJUSTMENT: {const.KEY_BRIGHTNESS: 50}}
     )
-    assert client.async_set_color.call_args == call(
+    assert client.async_send_set_color.call_args == call(
         **{
             const.KEY_PRIORITY: TEST_PRIORITY,
             const.KEY_COLOR: [255, 255, 255],
@@ -150,9 +150,9 @@ async def test_light_async_turn_on(hass):
 
     # On (=), 50% (=), solid (=), [0,255,255] (!)
     hs_color = (180.0, 100.0)
-    client.async_set_color = CoroutineMock(return_value=True)
+    client.async_send_set_color = CoroutineMock(return_value=True)
     await entity.async_turn_on(**{ATTR_HS_COLOR: hs_color})
-    assert client.async_set_color.call_args == call(
+    assert client.async_send_set_color.call_args == call(
         **{
             const.KEY_PRIORITY: TEST_PRIORITY,
             const.KEY_COLOR: (0, 255, 255),
@@ -170,13 +170,13 @@ async def test_light_async_turn_on(hass):
 
     # On (=), 100% (!), solid, [0,255,255] (=)
     brightness = 255
-    client.async_set_color = CoroutineMock(return_value=True)
-    client.async_set_adjustment = CoroutineMock(return_value=True)
+    client.async_send_set_color = CoroutineMock(return_value=True)
+    client.async_send_set_adjustment = CoroutineMock(return_value=True)
     await entity.async_turn_on(**{ATTR_BRIGHTNESS: brightness})
-    assert client.async_set_adjustment.call_args == call(
+    assert client.async_send_set_adjustment.call_args == call(
         **{const.KEY_ADJUSTMENT: {const.KEY_BRIGHTNESS: 100}}
     )
-    assert client.async_set_color.call_args == call(
+    assert client.async_send_set_color.call_args == call(
         **{
             const.KEY_PRIORITY: TEST_PRIORITY,
             const.KEY_COLOR: (0, 255, 255),
@@ -189,11 +189,13 @@ async def test_light_async_turn_on(hass):
 
     # On (=), 100% (=), V4L (!), [0,255,255] (=)
     effect = const.KEY_COMPONENTID_EXTERNAL_SOURCES[2]  # V4L
-    client.async_clear = CoroutineMock(return_value=True)
-    client.async_set_component = CoroutineMock(return_value=True)
+    client.async_send_clear = CoroutineMock(return_value=True)
+    client.async_send_set_component = CoroutineMock(return_value=True)
     await entity.async_turn_on(**{ATTR_EFFECT: effect})
-    assert client.async_clear.call_args == call(**{const.KEY_PRIORITY: TEST_PRIORITY})
-    assert client.async_set_component.call_args_list == [
+    assert client.async_send_clear.call_args == call(
+        **{const.KEY_PRIORITY: TEST_PRIORITY}
+    )
+    assert client.async_send_set_component.call_args_list == [
         call(
             **{
                 const.KEY_COMPONENTSTATE: {
@@ -226,11 +228,13 @@ async def test_light_async_turn_on(hass):
 
     # On (=), 100% (=), "Warm Blobs" (!), [0,255,255] (=)
     effect = "Warm Blobs"
-    client.async_clear = CoroutineMock(return_value=True)
-    client.async_set_effect = CoroutineMock(return_value=True)
+    client.async_send_clear = CoroutineMock(return_value=True)
+    client.async_send_set_effect = CoroutineMock(return_value=True)
     await entity.async_turn_on(**{ATTR_EFFECT: effect})
-    assert client.async_clear.call_args == call(**{const.KEY_PRIORITY: TEST_PRIORITY})
-    assert client.async_set_effect.call_args == call(
+    assert client.async_send_clear.call_args == call(
+        **{const.KEY_PRIORITY: TEST_PRIORITY}
+    )
+    assert client.async_send_set_effect.call_args == call(
         **{
             const.KEY_PRIORITY: TEST_PRIORITY,
             const.KEY_EFFECT: {const.KEY_NAME: effect},
@@ -247,20 +251,20 @@ async def test_light_async_turn_on(hass):
 
     # No calls if disconnected.
     client.is_connected = False
-    client.async_clear = CoroutineMock(return_value=True)
-    client.async_set_effect = CoroutineMock(return_value=True)
+    client.async_send_clear = CoroutineMock(return_value=True)
+    client.async_send_set_effect = CoroutineMock(return_value=True)
     await entity.async_turn_on()
-    assert not client.async_clear.called
-    assert not client.async_set_effect.called
+    assert not client.async_send_clear.called
+    assert not client.async_send_set_effect.called
 
 
 async def test_light_async_turn_off(hass):
     """Test turning the light off."""
     client, entity = create_client_and_entity()
 
-    client.async_set_component = CoroutineMock(return_value=True)
+    client.async_send_set_component = CoroutineMock(return_value=True)
     await entity.async_turn_off()
-    assert client.async_set_component.call_args == call(
+    assert client.async_send_set_component.call_args == call(
         **{
             const.KEY_COMPONENTSTATE: {
                 const.KEY_COMPONENT: const.KEY_COMPONENTID_LEDDEVICE,
@@ -271,9 +275,9 @@ async def test_light_async_turn_off(hass):
 
     # No calls if disconnected.
     client.is_connected = False
-    client.async_set_component = CoroutineMock(return_value=True)
+    client.async_send_set_component = CoroutineMock(return_value=True)
     await entity.async_turn_off()
-    assert not client.async_set_component.called
+    assert not client.async_send_set_component.called
 
 
 async def test_light_async_updates_from_hyperion_client(hass):
