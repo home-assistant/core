@@ -81,7 +81,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import split_entity_id, valid_entity_id
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import template as template_helper
+from homeassistant.helpers import (
+    script_variables as script_variables_helper,
+    template as template_helper,
+)
 from homeassistant.helpers.logging import KeywordStyleAdapter
 from homeassistant.util import slugify as util_slugify
 import homeassistant.util.dt as dt_util
@@ -863,7 +866,11 @@ def make_entity_service_schema(
     )
 
 
-SCRIPT_VARIABLES_SCHEMA = vol.Schema({str: template_complex})
+SCRIPT_VARIABLES_SCHEMA = vol.All(
+    vol.Schema({str: template_complex}),
+    # pylint: disable=unnecessary-lambda
+    lambda val: script_variables_helper.ScriptVariables(val),
+)
 
 
 def script_action(value: Any) -> dict:

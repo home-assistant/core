@@ -1136,7 +1136,7 @@ async def test_logbook_humanify_automation_triggered_event(hass):
     assert event2["entity_id"] == "automation.bye"
 
 
-async def test_automation_variables(hass):
+async def test_automation_variables(hass, caplog):
     """Test automation variables."""
     calls = async_mock_service(hass, "test", "automation")
 
@@ -1172,6 +1172,15 @@ async def test_automation_variables(hass):
                         "service": "test.automation",
                     },
                 },
+                {
+                    "variables": {
+                        "test_var": "{{ trigger.event.data.break + 1 }}",
+                    },
+                    "trigger": {"platform": "event", "event_type": "test_event_3"},
+                    "action": {
+                        "service": "test.automation",
+                    },
+                },
             ]
         },
     )
@@ -1188,3 +1197,13 @@ async def test_automation_variables(hass):
     hass.bus.async_fire("test_event_2", {"pass_condition": True})
     await hass.async_block_till_done()
     assert len(calls) == 2
+
+    assert "Error rendering variables" not in caplog.text
+    hass.bus.async_fire("test_event_3")
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+    assert "Error rendering variables" in caplog.text
+
+    hass.bus.async_fire("test_event_3", {"break": 0})
+    await hass.async_block_till_done()
+    assert len(calls) == 3

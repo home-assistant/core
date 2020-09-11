@@ -55,6 +55,7 @@ from homeassistant.const import (
 from homeassistant.core import SERVICE_CALL_LIMIT, Context, HomeAssistant, callback
 from homeassistant.helpers import condition, config_validation as cv, template
 from homeassistant.helpers.event import async_call_later, async_track_template
+from homeassistant.helpers.script_variables import ScriptVariables
 from homeassistant.helpers.service import (
     CONF_SERVICE_DATA,
     async_prepare_call_from_config,
@@ -717,7 +718,7 @@ class Script:
         logger: Optional[logging.Logger] = None,
         log_exceptions: bool = True,
         top_level: bool = True,
-        variables: Optional[Dict[str, Any]] = None,
+        variables: Optional[ScriptVariables] = None,
     ) -> None:
         """Initialize the script."""
         all_scripts = hass.data.get(DATA_SCRIPTS)
@@ -900,15 +901,19 @@ class Script:
         # during the run back to the caller.
         if self._top_level:
             if self.variables:
-                if self._variables_dynamic:
-                    variables = template.render_complex(self.variables, run_variables)
-                else:
-                    variables = dict(self.variables)
+                try:
+                    variables = self.variables.async_render(
+                        self._hass,
+                        run_variables,
+                    )
+                except template.TemplateError as err:
+                    self._log("Error rendering variables: %s", err, level=logging.ERROR)
+                    raise
+            elif run_variables:
+                variables = dict(run_variables)
             else:
                 variables = {}
 
-            if run_variables:
-                variables.update(run_variables)
             variables["context"] = context
         else:
             variables = cast(dict, run_variables)
