@@ -15,6 +15,7 @@ from homeassistant.helpers.network import (
 )
 
 from tests.async_mock import Mock, patch
+from tests.common import mock_component
 
 
 async def test_get_url_internal(hass: HomeAssistant):
@@ -799,3 +800,55 @@ async def test_get_external_url_with_base_url_fallback(hass: HomeAssistant):
     assert _get_external_url(hass, allow_ip=False) == "https://example.com"
     assert _get_external_url(hass, require_standard_port=True) == "https://example.com"
     assert _get_external_url(hass, require_ssl=True) == "https://example.com"
+
+
+async def test_get_current_request_url_with_known_host(
+    hass: HomeAssistant, current_request
+):
+    """Test getting current request URL with known hosts addresses."""
+    hass.config.api = Mock(
+        use_ssl=False, port=8123, local_ip="127.0.0.1", deprecated_base_url=None
+    )
+    assert hass.config.internal_url is None
+
+    with pytest.raises(NoURLAvailableError):
+        get_url(hass, require_current_request=True)
+
+    # Ensure we accept localhost
+    with patch(
+        "homeassistant.helpers.network._get_request_host", return_value="localhost"
+    ):
+        assert get_url(hass, require_current_request=True) == "http://localhost:8123"
+        with pytest.raises(NoURLAvailableError):
+            get_url(hass, require_current_request=True, require_ssl=True)
+        with pytest.raises(NoURLAvailableError):
+            get_url(hass, require_current_request=True, require_standard_port=True)
+
+    # Ensure we accept local loopback ip (e.g., 127.0.0.1)
+    with patch(
+        "homeassistant.helpers.network._get_request_host", return_value="127.0.0.8"
+    ):
+        assert get_url(hass, require_current_request=True) == "http://127.0.0.8:8123"
+        with pytest.raises(NoURLAvailableError):
+            get_url(hass, require_current_request=True, allow_ip=False)
+
+    # Ensure hostname from Supervisor is accepted transparently
+    mock_component(hass, "hassio")
+    hass.components.hassio.is_hassio = Mock(return_value=True)
+    hass.components.hassio.get_host_info = Mock(
+        return_value={"hostname": "homeassistant"}
+    )
+
+    with patch(
+        "homeassistant.helpers.network._get_request_host",
+        return_value="homeassistant.local",
+    ):
+        assert (
+            get_url(hass, require_current_request=True)
+            == "http://homeassistant.local:8123"
+        )
+
+    with patch(
+        "homeassistant.helpers.network._get_request_host", return_value="unknown.local"
+    ), pytest.raises(NoURLAvailableError):
+        get_url(hass, require_current_request=True)
