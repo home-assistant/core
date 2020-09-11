@@ -31,7 +31,10 @@ class HostFlowHandler(config_entries.ConfigFlow):
         errors = {}
         if user_input is not None:
             return await self.async_step_init(user_input=None)
-        return self.async_show_form(step_id="confirm", errors=errors,)
+        return self.async_show_form(
+            step_id="confirm",
+            errors=errors,
+        )
 
     async def async_step_init(self, user_input=None):
         """Handle a flow start."""
@@ -45,7 +48,10 @@ class HostFlowHandler(config_entries.ConfigFlow):
                 "ais_cloud", "enable_gate_pairing_by_pin"
             )
             return await self.async_step_generate_pin(user_input=None)
-        return self.async_show_form(step_id="init", errors=errors,)
+        return self.async_show_form(
+            step_id="init",
+            errors=errors,
+        )
 
     async def async_step_generate_pin(self, user_input=None):
         """Handle a flow start."""
