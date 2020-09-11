@@ -222,6 +222,10 @@ ATTR_STATUS_LIGHT = "status_light"
 UNAVAILABLE_VALUES = {"", "NOT_IMPLEMENTED", None}
 
 
+class UnknownMediaType(BrowseError):
+    """Unknown media type."""
+
+
 class SonosData:
     """Storage class for platform global data."""
 
@@ -1487,7 +1491,20 @@ def build_item_response(media_library, payload):
         except IndexError:
             title = LIBRARY_TITLES_MAPPING[payload["idstring"]]
 
-    media_class = SONOS_TO_MEDIA_CLASSES[MEDIA_TYPES_TO_SONOS[payload["search_type"]]]
+    try:
+        media_class = SONOS_TO_MEDIA_CLASSES[
+            MEDIA_TYPES_TO_SONOS[payload["search_type"]]
+        ]
+    except KeyError:
+        _LOGGER.debug("Unknown media type received %s", payload["search_type"])
+        return None
+
+    children = []
+    for item in media:
+        try:
+            children.append(item_payload(item))
+        except UnknownMediaType:
+            pass
 
     return BrowseMedia(
         title=title,
@@ -1495,7 +1512,7 @@ def build_item_response(media_library, payload):
         media_class=media_class,
         media_content_id=payload["idstring"],
         media_content_type=payload["search_type"],
-        children=[item_payload(item) for item in media],
+        children=children,
         can_play=can_play(payload["search_type"]),
         can_expand=can_expand(payload["search_type"]),
     )
@@ -1507,12 +1524,18 @@ def item_payload(item):
 
     Used by async_browse_media.
     """
+    media_type = get_media_type(item)
+    try:
+        media_class = SONOS_TO_MEDIA_CLASSES[media_type]
+    except KeyError as err:
+        _LOGGER.debug("Unknown media type received %s", media_type)
+        raise UnknownMediaType from err
     return BrowseMedia(
         title=item.title,
         thumbnail=getattr(item, "album_art_uri", None),
-        media_class=SONOS_TO_MEDIA_CLASSES[get_media_type(item)],
+        media_class=media_class,
         media_content_id=get_content_id(item),
-        media_content_type=SONOS_TO_MEDIA_TYPES[get_media_type(item)],
+        media_content_type=SONOS_TO_MEDIA_TYPES[media_type],
         can_play=can_play(item.item_class),
         can_expand=can_expand(item),
     )
@@ -1524,6 +1547,13 @@ def library_payload(media_library):
 
     Used by async_browse_media.
     """
+    children = []
+    for item in media_library.browse():
+        try:
+            children.append(item_payload(item))
+        except UnknownMediaType:
+            pass
+
     return BrowseMedia(
         title="Music Library",
         media_class=MEDIA_CLASS_DIRECTORY,
@@ -1531,7 +1561,7 @@ def library_payload(media_library):
         media_content_type="library",
         can_play=False,
         can_expand=True,
-        children=[item_payload(item) for item in media_library.browse()],
+        children=children,
     )
 
 
