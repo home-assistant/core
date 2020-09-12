@@ -1,6 +1,7 @@
 """Constants for the opentherm_gw integration."""
 import pyotgw.vars as gw_vars
 
+from homeassistant.components.binary_sensor import DEVICE_CLASS_PROBLEM
 from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
@@ -23,7 +24,6 @@ DATA_OPENTHERM_GW = "opentherm_gw"
 
 DEVICE_CLASS_COLD = "cold"
 DEVICE_CLASS_HEAT = "heat"
-DEVICE_CLASS_PROBLEM = "problem"
 
 DOMAIN = "opentherm_gw"
 
