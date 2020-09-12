@@ -1,0 +1,15 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "domain": "Domain",
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "title": "Google Domains dynamic DNS to update"
+            }
+        }
+    },
+    "title": "Google Domains"
+}

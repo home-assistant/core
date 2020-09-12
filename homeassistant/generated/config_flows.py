@@ -67,6 +67,7 @@ FLOWS = [
     "gios",
     "glances",
     "gogogate2",
+    "google_domains",
     "gpslogger",
     "griddy",
     "guardian",
