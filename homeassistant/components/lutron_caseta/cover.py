@@ -53,17 +53,17 @@ class LutronCasetaCover(LutronCasetaDevice, CoverEntity):
 
     async def async_close_cover(self, **kwargs):
         """Close the cover."""
-        self._smartbridge.set_value(self.device_id, 0)
+        await self._smartbridge.set_value(self.device_id, 0)
 
     async def async_open_cover(self, **kwargs):
         """Open the cover."""
-        self._smartbridge.set_value(self.device_id, 100)
+        await self._smartbridge.set_value(self.device_id, 100)
 
     async def async_set_cover_position(self, **kwargs):
         """Move the shade to a specific position."""
         if ATTR_POSITION in kwargs:
             position = kwargs[ATTR_POSITION]
-            self._smartbridge.set_value(self.device_id, position)
+            await self._smartbridge.set_value(self.device_id, position)
 
     async def async_update(self):
         """Call when forcing a refresh of the device."""
