@@ -123,7 +123,7 @@ class TuyaLight(TuyaDevice, LightEntity):
             scaled_brightness = _scale(
                 kwargs[ATTR_BRIGHTNESS], NORMAL_LIGHT_RANGE, TUYA_LIGHT_TURN_ON_RANGE
             )
-            self._tuya.set_brightness(round(scaled_brightness))
+            self._tuya.set_brightness(round(scaled_brightness, 1))
         if ATTR_HS_COLOR in kwargs:
             self._tuya.set_color(kwargs[ATTR_HS_COLOR])
         if ATTR_COLOR_TEMP in kwargs:
