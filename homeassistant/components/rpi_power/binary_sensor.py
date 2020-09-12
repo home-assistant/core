@@ -27,7 +27,7 @@ def setup_platform(hass: HomeAssistant, config, add_entities, discovery_info=Non
     under_voltage = new_under_voltage()
     if under_voltage is None:
         _LOGGER.error(
-            "Can't find the system class needed for this component, make sure that your kernel is recent and the hardware is supported."
+            "Can't find the system class needed for this component, make sure that your kernel is recent and the hardware is supported"
         )
         return
 
