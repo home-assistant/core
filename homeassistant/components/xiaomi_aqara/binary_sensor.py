@@ -3,6 +3,7 @@ import logging
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_MOISTURE,
+    DEVICE_CLASS_OPENING,
     BinarySensorEntity,
 )
 from homeassistant.core import callback
@@ -302,7 +303,7 @@ class XiaomiDoorSensor(XiaomiBinarySensor):
             "Door Window Sensor",
             xiaomi_hub,
             data_key,
-            "opening",
+            DEVICE_CLASS_OPENING,
             config_entry,
         )
 

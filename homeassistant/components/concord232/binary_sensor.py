@@ -7,6 +7,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_OPENING,
     DEVICE_CLASS_SAFETY,
     DEVICE_CLASS_SMOKE,
     DEVICE_CLASSES,
@@ -94,7 +95,7 @@ def get_opening_type(zone):
         return DEVICE_CLASS_SMOKE
     if "WATER" in zone["name"]:
         return "water"
-    return "opening"
+    return DEVICE_CLASS_OPENING
 
 
 class Concord232ZoneSensor(BinarySensorEntity):

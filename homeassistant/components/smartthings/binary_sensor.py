@@ -6,6 +6,7 @@ from pysmartthings import Attribute, Capability
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_MOISTURE,
     DEVICE_CLASS_MOVING,
+    DEVICE_CLASS_OPENING,
     DEVICE_CLASS_SOUND,
     BinarySensorEntity,
 )
@@ -26,13 +27,13 @@ CAPABILITY_TO_ATTRIB = {
 }
 ATTRIB_TO_CLASS = {
     Attribute.acceleration: DEVICE_CLASS_MOVING,
-    Attribute.contact: "opening",
+    Attribute.contact: DEVICE_CLASS_OPENING,
     Attribute.filter_status: "problem",
     Attribute.motion: "motion",
     Attribute.presence: "presence",
     Attribute.sound: DEVICE_CLASS_SOUND,
     Attribute.tamper: "problem",
-    Attribute.valve: "opening",
+    Attribute.valve: DEVICE_CLASS_OPENING,
     Attribute.water: DEVICE_CLASS_MOISTURE,
 }
 

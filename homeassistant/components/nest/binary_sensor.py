@@ -3,6 +3,7 @@ from itertools import chain
 import logging
 
 from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_OCCUPANCY,
     DEVICE_CLASS_SOUND,
     BinarySensorEntity,
 )
@@ -24,7 +25,7 @@ CLIMATE_BINARY_TYPES = {
 CAMERA_BINARY_TYPES = {
     "motion_detected": "motion",
     "sound_detected": DEVICE_CLASS_SOUND,
-    "person_detected": "occupancy",
+    "person_detected": DEVICE_CLASS_OCCUPANCY,
 }
 
 STRUCTURE_BINARY_TYPES = {"away": None}
