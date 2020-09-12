@@ -1,7 +1,10 @@
 """Interfaces with Egardia/Woonveilig alarm control panel."""
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_OPENING,
+    BinarySensorEntity,
+)
 from homeassistant.const import STATE_OFF, STATE_ON
 
 from . import ATTR_DISCOVER_DEVICES, EGARDIA_DEVICE
@@ -10,7 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 
 EGARDIA_TYPE_TO_DEVICE_CLASS = {
     "IR Sensor": "motion",
-    "Door Contact": "opening",
+    "Door Contact": DEVICE_CLASS_OPENING,
     "IR": "motion",
 }
 
