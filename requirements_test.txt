@@ -5,7 +5,7 @@
 -c homeassistant/package_constraints.txt
 -r requirements_test_pre_commit.txt
 asynctest==0.13.0
-codecov==2.1.0
+codecov==2.1.9
 coverage==5.2.1
 jsonpickle==1.4.1
 mock-open==1.4.0
