@@ -3,7 +3,10 @@ import logging
 
 from pyspcwebgw.const import ZoneInput, ZoneType
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_MOTION,
+    BinarySensorEntity,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -14,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def _get_device_class(zone_type):
     return {
-        ZoneType.ALARM: "motion",
+        ZoneType.ALARM: DEVICE_CLASS_MOTION,
         ZoneType.ENTRY_EXIT: "opening",
         ZoneType.FIRE: "smoke",
         ZoneType.TECHNICAL: "power",

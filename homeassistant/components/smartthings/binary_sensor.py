@@ -4,6 +4,7 @@ from typing import Optional, Sequence
 from pysmartthings import Attribute, Capability
 
 from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_MOTION,
     DEVICE_CLASS_SOUND,
     BinarySensorEntity,
 )
@@ -26,7 +27,7 @@ ATTRIB_TO_CLASS = {
     Attribute.acceleration: "moving",
     Attribute.contact: "opening",
     Attribute.filter_status: "problem",
-    Attribute.motion: "motion",
+    Attribute.motion: DEVICE_CLASS_MOTION,
     Attribute.presence: "presence",
     Attribute.sound: DEVICE_CLASS_SOUND,
     Attribute.tamper: "problem",
