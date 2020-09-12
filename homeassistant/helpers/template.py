@@ -65,7 +65,7 @@ def attach(hass: HomeAssistantType, obj: Any) -> None:
     if isinstance(obj, list):
         for child in obj:
             attach(hass, child)
-    elif isinstance(obj, dict):
+    elif isinstance(obj, collections.abc.Mapping):
         for child_key, child_value in obj.items():
             attach(hass, child_key)
             attach(hass, child_value)
@@ -77,7 +77,7 @@ def render_complex(value: Any, variables: TemplateVarsType = None) -> Any:
     """Recursive template creator helper function."""
     if isinstance(value, list):
         return [render_complex(item, variables) for item in value]
-    if isinstance(value, dict):
+    if isinstance(value, collections.abc.Mapping):
         return {
             render_complex(key, variables): render_complex(item, variables)
             for key, item in value.items()
@@ -86,6 +86,19 @@ def render_complex(value: Any, variables: TemplateVarsType = None) -> Any:
         return value.async_render(variables)
 
     return value
+
+
+def is_complex(value: Any) -> bool:
+    """Test if data structure is a complex template."""
+    if isinstance(value, Template):
+        return True
+    if isinstance(value, list):
+        return any(is_complex(val) for val in value)
+    if isinstance(value, collections.abc.Mapping):
+        return any(is_complex(val) for val in value.keys()) or any(
+            is_complex(val) for val in value.values()
+        )
+    return False
 
 
 def is_template_string(maybe_template: str) -> bool:
