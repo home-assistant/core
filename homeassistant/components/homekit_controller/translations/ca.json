@@ -53,5 +53,25 @@
             }
         }
     },
+    "device_automation": {
+        "trigger_subtype": {
+            "button1": "Bot\u00f3 1",
+            "button10": "Bot\u00f3 10",
+            "button2": "Bot\u00f3 2",
+            "button3": "Bot\u00f3 3",
+            "button4": "Bot\u00f3 4",
+            "button5": "Bot\u00f3 5",
+            "button6": "Bot\u00f3 6",
+            "button7": "Bot\u00f3 7",
+            "button8": "Bot\u00f3 8",
+            "button9": "Bot\u00f3 9",
+            "doorbell": "Timbre"
+        },
+        "trigger_type": {
+            "double_press": "\"{subtype}\" premut dues vegades",
+            "long_press": "\"{subtype}\" premut i mantingut",
+            "single_press": "\"{subtype}\" premut"
+        }
+    },
     "title": "Controlador HomeKit"
 }
