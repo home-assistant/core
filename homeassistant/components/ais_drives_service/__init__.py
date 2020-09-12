@@ -441,8 +441,8 @@ def rclone_set_auth_ftp(drive_name, host, port, user_name, password):
 
 
 def file_tags_extract(path):
-    import mutagen.id3
     import mutagen.flac
+    import mutagen.id3
     import mutagen.mp4
 
     global G_COVER_FILE
@@ -712,6 +712,7 @@ class LocalData:
                     + uid
                     + " --gid "
                     + gid
+                    + " --allow-non-empty "
                     + " "
                     + G_RCLONE_CONF
                 )
