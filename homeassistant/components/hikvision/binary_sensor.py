@@ -6,6 +6,7 @@ from pyhik.hikvision import HikCamera
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_CONNECTIVITY,
     DEVICE_CLASS_MOTION,
     PLATFORM_SCHEMA,
     BinarySensorEntity,
@@ -46,8 +47,8 @@ DEVICE_CLASS_MAP = {
     "Shelter Alarm": None,
     "Disk Full": None,
     "Disk Error": None,
-    "Net Interface Broken": "connectivity",
-    "IP Conflict": "connectivity",
+    "Net Interface Broken": DEVICE_CLASS_CONNECTIVITY,
+    "IP Conflict": DEVICE_CLASS_CONNECTIVITY,
     "Illegal Access": None,
     "Video Mismatch": None,
     "Bad Video": None,
