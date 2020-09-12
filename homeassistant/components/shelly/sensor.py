@@ -40,7 +40,7 @@ SENSORS = {
         device_class=sensor.DEVICE_CLASS_POWER,
         default_enabled=False,
     ),
-    ("roller", "rollerPower"): BlockAttributeDescription(
+    ("device", "power"): BlockAttributeDescription(
         name="Power",
         unit=POWER_WATT,
         value=lambda value: round(value, 1),
@@ -53,6 +53,12 @@ SENSORS = {
         device_class=sensor.DEVICE_CLASS_POWER,
     ),
     ("relay", "power"): BlockAttributeDescription(
+        name="Power",
+        unit=POWER_WATT,
+        value=lambda value: round(value, 1),
+        device_class=sensor.DEVICE_CLASS_POWER,
+    ),
+    ("roller", "rollerPower"): BlockAttributeDescription(
         name="Power",
         unit=POWER_WATT,
         value=lambda value: round(value, 1),
@@ -109,9 +115,11 @@ SENSORS = {
         device_class=sensor.DEVICE_CLASS_HUMIDITY,
     ),
     ("sensor", "luminosity"): BlockAttributeDescription(
-        name="Luminosity", unit="lx", device_class=sensor.DEVICE_CLASS_ILLUMINANCE
+        name="Luminosity",
+        unit="lx",
+        device_class=sensor.DEVICE_CLASS_ILLUMINANCE,
     ),
-    ("sensor", "tilt"): BlockAttributeDescription(name="Tilt", unit=DEGREE),
+    ("sensor", "tilt"): BlockAttributeDescription(name="tilt", unit=DEGREE),
 }
 
 
