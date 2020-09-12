@@ -161,13 +161,13 @@ SUPPORT_ONKYO_WO_SOUND_MODE = (
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_MAX_VOLUME, default=SUPPORTED_MAX_VOLUME): vol.All(
             vol.Coerce(int), vol.Range(min=1)
         ),
         vol.Optional(CONF_SOURCES, default=DEFAULT_SOURCES): {cv.string: cv.string},
-        vol.Optional(CONF_ZONES, default=[]): vol.All(cv.ensure_list, [vol.In(ZONES)]),
+        vol.Optional(CONF_ZONES, default=ZONES): {cv.string: cv.string},
     }
 )
 
@@ -223,9 +223,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     host = config[CONF_HOST]
     port = config[CONF_PORT]
-    name = config.get(CONF_NAME) or "Onkyo Receiver"
+    name = config[CONF_NAME]
     max_volume = config[CONF_MAX_VOLUME]
-    zones = config.get(CONF_ZONES) or ZONES
+    zones = config[CONF_ZONES]
     sources = config[CONF_SOURCES]
 
     platform = entity_platform.current_platform.get()
@@ -246,8 +246,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             # When we receive the status for a zone, it is available on the AVR
             # So we create an entity for the zone and continue discovery
             if zone in zones:
-                _LOGGER.debug("Discovered %s on %s, add to active zones", zone, name)
-                zone_entity = OnkyoAVR(avr, name, sources, zone, max_volume)
+                _LOGGER.debug(
+                    "Discovered %s on %s, add to active zones", zones[zone], name
+                )
+                zone_entity = OnkyoAVR(
+                    avr, f"{name} {zones[zone]}", sources, zone, max_volume
+                )
                 active_zones.append(zone_entity)
                 async_add_entities([zone_entity])
 
@@ -304,7 +308,7 @@ class OnkyoAVR(MediaPlayerEntity):
         """Initialize entity with transport."""
         super().__init__()
         self._avr = avr
-        self._name = f"{name} {ZONES[zone] if zone != 'main' else ''}"
+        self._name = name
         self._zone = zone
         self._volume = 0
         self._supports_volume = False
