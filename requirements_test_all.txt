@@ -692,7 +692,7 @@ pyisy==2.0.2
 pykira==0.1.1
 
 # homeassistant.components.kodi
-pykodi==0.1.2
+pykodi==0.2.0
 
 # homeassistant.components.lastfm
 pylast==3.3.0
