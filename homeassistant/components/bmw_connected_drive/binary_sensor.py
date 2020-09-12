@@ -4,6 +4,7 @@ import logging
 from bimmer_connected.state import ChargingState, LockState
 
 from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_OPENING,
     DEVICE_CLASS_PLUG,
     DEVICE_CLASS_PROBLEM,
     BinarySensorEntity,
@@ -16,8 +17,8 @@ from .const import ATTRIBUTION
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {
-    "lids": ["Doors", "opening", "mdi:car-door-lock"],
-    "windows": ["Windows", "opening", "mdi:car-door"],
+    "lids": ["Doors", DEVICE_CLASS_OPENING, "mdi:car-door-lock"],
+    "windows": ["Windows", DEVICE_CLASS_OPENING, "mdi:car-door"],
     "door_lock_state": ["Door lock state", "lock", "mdi:car-key"],
     "lights_parking": ["Parking lights", "light", "mdi:car-parking-lights"],
     "condition_based_services": [
