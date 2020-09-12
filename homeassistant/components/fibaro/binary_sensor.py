@@ -1,7 +1,11 @@
 """Support for Fibaro binary sensors."""
 import logging
 
-from homeassistant.components.binary_sensor import DOMAIN, BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_WINDOW,
+    DOMAIN,
+    BinarySensorEntity,
+)
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_ICON
 
 from . import FIBARO_DEVICES, FibaroDevice
@@ -12,7 +16,7 @@ SENSOR_TYPES = {
     "com.fibaro.floodSensor": ["Flood", "mdi:water", "flood"],
     "com.fibaro.motionSensor": ["Motion", "mdi:run", "motion"],
     "com.fibaro.doorSensor": ["Door", "mdi:window-open", "door"],
-    "com.fibaro.windowSensor": ["Window", "mdi:window-open", "window"],
+    "com.fibaro.windowSensor": ["Window", "mdi:window-open", DEVICE_CLASS_WINDOW],
     "com.fibaro.smokeSensor": ["Smoke", "mdi:smoking", "smoke"],
     "com.fibaro.FGMS001": ["Motion", "mdi:run", "motion"],
     "com.fibaro.heatDetector": ["Heat", "mdi:fire", "heat"],
