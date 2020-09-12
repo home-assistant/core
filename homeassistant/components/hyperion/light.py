@@ -85,9 +85,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if not await hyperion_client.async_connect():
         raise PlatformNotReady
 
-    entity = Hyperion(name, priority, hyperion_client)
-    await entity.async_setup()
-    async_add_entities([entity])
+    async_add_entities([Hyperion(name, priority, hyperion_client)])
 
 
 class Hyperion(LightEntity):
@@ -98,16 +96,6 @@ class Hyperion(LightEntity):
         self._name = name
         self._priority = priority
         self._client = hyperion_client
-
-        self._client.set_callbacks(
-            {
-                f"{const.KEY_ADJUSTMENT}-{const.KEY_UPDATE}": self._update_adjustment,
-                f"{const.KEY_COMPONENTS}-{const.KEY_UPDATE}": self._update_components,
-                f"{const.KEY_EFFECTS}-{const.KEY_UPDATE}": self._update_effect_list,
-                f"{const.KEY_PRIORITIES}-{const.KEY_UPDATE}": self._update_priorities,
-                f"{const.KEY_CONNECTION}-{const.KEY_UPDATE}": self._update_connection,
-            }
-        )
 
         # Active state representing the Hyperion instance.
         self._set_internal_state(
@@ -176,10 +164,6 @@ class Hyperion(LightEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn the lights on."""
-        _LOGGER.debug("Turning On: %s", kwargs)
-        if not self._client.is_connected:
-            return
-
         # == Turn device on ==
         # Turn on both ALL (Hyperion itself) and LEDDEVICE. It would be
         # preferable to enable LEDDEVICE after the settings (e.g. brightness,
@@ -278,11 +262,6 @@ class Hyperion(LightEntity):
 
     async def async_turn_off(self, **kwargs):
         """Disable the LED output component."""
-        _LOGGER.debug("Turning Off: %s", kwargs)
-
-        if not self._client.is_connected:
-            return
-
         if not await self._client.async_send_set_component(
             **{
                 const.KEY_COMPONENTSTATE: {
@@ -308,15 +287,9 @@ class Hyperion(LightEntity):
             else:
                 self._icon = ICON_EFFECT
 
-    def _update_ha_state(self):
-        """Update the internal Home Assistant state."""
-        if not hasattr(self, "hass") or self.hass is None:
-            return
-        self.schedule_update_ha_state()
-
     def _update_components(self, _=None):
         """Update Hyperion components."""
-        self._update_ha_state()
+        self.async_write_ha_state()
 
     def _update_adjustment(self, _=None):
         """Update Hyperion adjustments."""
@@ -329,7 +302,7 @@ class Hyperion(LightEntity):
             self._set_internal_state(
                 brightness=int(round((brightness_pct * 255) / float(100)))
             )
-            self._update_ha_state()
+            self.async_write_ha_state()
 
     def _update_priorities(self, _=None):
         """Update Hyperion priorities."""
@@ -349,7 +322,7 @@ class Hyperion(LightEntity):
                     rgb_color=visible_priority[const.KEY_VALUE][const.KEY_RGB],
                     effect=KEY_EFFECT_SOLID,
                 )
-            self._update_ha_state()
+            self.async_write_ha_state()
 
     def _update_effect_list(self, _=None):
         """Update Hyperion effects."""
@@ -361,7 +334,7 @@ class Hyperion(LightEntity):
                 effect_list.append(effect[const.KEY_NAME])
         if effect_list:
             self._effect_list = effect_list
-            self._update_ha_state()
+            self.async_write_ha_state()
 
     def _update_full_state(self):
         """Update full Hyperion state."""
@@ -383,10 +356,20 @@ class Hyperion(LightEntity):
         """Update client connection state."""
         if json.get(const.KEY_CONNECTED):
             self._update_full_state()
-        self._update_ha_state()
+        self.async_write_ha_state()
 
-    async def async_setup(self):
-        """Set up the entity."""
+    async def async_added_to_hass(self):
+        """Register callbacks when entity added to hass."""
+        self._client.set_callbacks(
+            {
+                f"{const.KEY_ADJUSTMENT}-{const.KEY_UPDATE}": self._update_adjustment,
+                f"{const.KEY_COMPONENTS}-{const.KEY_UPDATE}": self._update_components,
+                f"{const.KEY_EFFECTS}-{const.KEY_UPDATE}": self._update_effect_list,
+                f"{const.KEY_PRIORITIES}-{const.KEY_UPDATE}": self._update_priorities,
+                f"{const.KEY_CONNECTION}-{const.KEY_UPDATE}": self._update_connection,
+            }
+        )
+
         # Load initial state.
         self._update_full_state()
 
