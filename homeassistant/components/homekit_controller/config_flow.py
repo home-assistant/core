@@ -157,9 +157,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
 
         if device is None:
             return False
-        if device.model == HOMEKIT_BRIDGE_MODEL:
-            return True
-        return False
+        return device.model == HOMEKIT_BRIDGE_MODEL
 
     async def async_step_zeroconf(self, discovery_info):
         """Handle a discovered HomeKit accessory.
