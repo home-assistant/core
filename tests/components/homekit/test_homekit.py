@@ -807,6 +807,91 @@ async def test_homekit_finds_linked_batteries(
     )
 
 
+async def test_homekit_async_get_integration_fails(
+    hass, hk_driver, debounce_patcher, device_reg, entity_reg
+):
+    """Test that we continue if async_get_integration fails."""
+    entry = await async_init_integration(hass)
+
+    homekit = HomeKit(
+        hass,
+        None,
+        None,
+        None,
+        {},
+        {"light.demo": {}},
+        DEFAULT_SAFE_MODE,
+        advertise_ip=None,
+        entry_id=entry.entry_id,
+    )
+    homekit.driver = hk_driver
+    # pylint: disable=protected-access
+    homekit._filter = Mock(return_value=True)
+    homekit.bridge = HomeBridge(hass, hk_driver, "mock_bridge")
+
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        sw_version="0.16.0",
+        model="Powerwall 2",
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+
+    binary_charging_sensor = entity_reg.async_get_or_create(
+        "binary_sensor",
+        "invalid_integration_does_not_exist",
+        "battery_charging",
+        device_id=device_entry.id,
+        device_class=DEVICE_CLASS_BATTERY_CHARGING,
+    )
+    battery_sensor = entity_reg.async_get_or_create(
+        "sensor",
+        "invalid_integration_does_not_exist",
+        "battery",
+        device_id=device_entry.id,
+        device_class=DEVICE_CLASS_BATTERY,
+    )
+    light = entity_reg.async_get_or_create(
+        "light", "invalid_integration_does_not_exist", "demo", device_id=device_entry.id
+    )
+
+    hass.states.async_set(
+        binary_charging_sensor.entity_id,
+        STATE_ON,
+        {ATTR_DEVICE_CLASS: DEVICE_CLASS_BATTERY_CHARGING},
+    )
+    hass.states.async_set(
+        battery_sensor.entity_id, 30, {ATTR_DEVICE_CLASS: DEVICE_CLASS_BATTERY}
+    )
+    hass.states.async_set(light.entity_id, STATE_ON)
+
+    def _mock_get_accessory(*args, **kwargs):
+        return [None, "acc", None]
+
+    with patch.object(homekit.bridge, "add_accessory"), patch(
+        f"{PATH_HOMEKIT}.show_setup_message"
+    ), patch(f"{PATH_HOMEKIT}.get_accessory") as mock_get_acc, patch(
+        "pyhap.accessory_driver.AccessoryDriver.start_service"
+    ):
+        await homekit.async_start()
+    await hass.async_block_till_done()
+
+    mock_get_acc.assert_called_with(
+        hass,
+        hk_driver,
+        ANY,
+        ANY,
+        {
+            "model": "Powerwall 2",
+            "sw_version": "0.16.0",
+            "platform": "invalid_integration_does_not_exist",
+            "linked_battery_charging_sensor": "binary_sensor.invalid_integration_does_not_exist_battery_charging",
+            "linked_battery_sensor": "sensor.invalid_integration_does_not_exist_battery",
+        },
+    )
+
+
 async def test_setup_imported(hass):
     """Test async_setup with imported config options."""
     legacy_persist_file_path = hass.config.path(HOMEKIT_FILE)
@@ -1222,7 +1307,13 @@ async def test_reload(hass):
     )
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path), patch(
         f"{PATH_HOMEKIT}.HomeKit"
-    ) as mock_homekit2:
+    ) as mock_homekit2, patch.object(homekit.bridge, "add_accessory"), patch(
+        f"{PATH_HOMEKIT}.show_setup_message"
+    ), patch(
+        f"{PATH_HOMEKIT}.get_accessory"
+    ), patch(
+        "pyhap.accessory_driver.AccessoryDriver.start_service"
+    ):
         mock_homekit2.return_value = homekit = Mock()
         type(homekit).async_start = AsyncMock()
         await hass.services.async_call(

@@ -29,8 +29,15 @@ PLAYABLE_MEDIA_TYPES = [
     MEDIA_TYPE_TRACK,
 ]
 
-CONTENT_TYPE_MEDIA_CLASS = {
-    "library_music": MEDIA_CLASS_MUSIC,
+CONTAINER_TYPES_SPECIFIC_MEDIA_CLASS = {
+    MEDIA_TYPE_ALBUM: MEDIA_CLASS_ALBUM,
+    MEDIA_TYPE_ARTIST: MEDIA_CLASS_ARTIST,
+    MEDIA_TYPE_PLAYLIST: MEDIA_CLASS_PLAYLIST,
+    MEDIA_TYPE_SEASON: MEDIA_CLASS_SEASON,
+    MEDIA_TYPE_TVSHOW: MEDIA_CLASS_TV_SHOW,
+}
+
+CHILD_TYPE_MEDIA_CLASS = {
     MEDIA_TYPE_SEASON: MEDIA_CLASS_SEASON,
     MEDIA_TYPE_ALBUM: MEDIA_CLASS_ALBUM,
     MEDIA_TYPE_ARTIST: MEDIA_CLASS_ARTIST,
@@ -151,8 +158,10 @@ async def build_item_response(media_library, payload):
         except UnknownMediaType:
             pass
 
-    return BrowseMedia(
-        media_class=CONTENT_TYPE_MEDIA_CLASS[search_type],
+    response = BrowseMedia(
+        media_class=CONTAINER_TYPES_SPECIFIC_MEDIA_CLASS.get(
+            search_type, MEDIA_CLASS_DIRECTORY
+        ),
         media_content_id=search_id,
         media_content_type=search_type,
         title=title,
@@ -162,6 +171,13 @@ async def build_item_response(media_library, payload):
         thumbnail=thumbnail,
     )
 
+    if search_type == "library_music":
+        response.children_media_class = MEDIA_CLASS_MUSIC
+    else:
+        response.calculate_children_class()
+
+    return response
+
 
 def item_payload(item, media_library):
     """
@@ -170,10 +186,11 @@ def item_payload(item, media_library):
     Used by async_browse_media.
     """
     title = item["label"]
-
     thumbnail = item.get("thumbnail")
     if thumbnail:
         thumbnail = media_library.thumbnail_url(thumbnail)
+
+    media_class = None
 
     if "songid" in item:
         media_content_type = MEDIA_TYPE_TRACK
@@ -213,16 +230,18 @@ def item_payload(item, media_library):
     else:
         # this case is for the top folder of each type
         # possible content types: album, artist, movie, library_music, tvshow
+        media_class = MEDIA_CLASS_DIRECTORY
         media_content_type = item["type"]
         media_content_id = ""
         can_play = False
         can_expand = True
 
-    try:
-        media_class = CONTENT_TYPE_MEDIA_CLASS[media_content_type]
-    except KeyError as err:
-        _LOGGER.debug("Unknown media type received: %s", media_content_type)
-        raise UnknownMediaType from err
+    if media_class is None:
+        try:
+            media_class = CHILD_TYPE_MEDIA_CLASS[media_content_type]
+        except KeyError as err:
+            _LOGGER.debug("Unknown media type received: %s", media_content_type)
+            raise UnknownMediaType from err
 
     return BrowseMedia(
         title=title,

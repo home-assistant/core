@@ -2,7 +2,7 @@
 
 MAJOR_VERSION = 0
 MINOR_VERSION = 115
-PATCH_VERSION = "0b4"
+PATCH_VERSION = "0b6"
 __short_version__ = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__ = f"{__short_version__}.{PATCH_VERSION}"
 REQUIRED_PYTHON_VER = (3, 7, 1)
@@ -180,6 +180,7 @@ CONF_UNTIL = "until"
 CONF_URL = "url"
 CONF_USERNAME = "username"
 CONF_VALUE_TEMPLATE = "value_template"
+CONF_VARIABLES = "variables"
 CONF_VERIFY_SSL = "verify_ssl"
 CONF_WAIT_FOR_TRIGGER = "wait_for_trigger"
 CONF_WAIT_TEMPLATE = "wait_template"
