@@ -10,7 +10,13 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DOMAIN as SENSOR_DOMAIN,
 )
-from homeassistant.const import CONF_URL, DATA_BYTES, STATE_UNKNOWN, TIME_SECONDS
+from homeassistant.const import (
+    CONF_URL,
+    DATA_BYTES,
+    DATA_RATE_BYTES_PER_SECOND,
+    STATE_UNKNOWN,
+    TIME_SECONDS,
+)
 
 from . import HuaweiLteBaseEntity
 from .const import (
@@ -41,7 +47,35 @@ SENSOR_META = {
     ),
     (KEY_DEVICE_SIGNAL, "band"): dict(name="Band"),
     (KEY_DEVICE_SIGNAL, "cell_id"): dict(name="Cell ID"),
+    (KEY_DEVICE_SIGNAL, "dl_mcs"): dict(name="Downlink MCS"),
+    (KEY_DEVICE_SIGNAL, "dlbandwidth"): dict(
+        name="Downlink bandwidth",
+        icon=lambda x: (x is None or x < 8)
+        and "mdi:speedometer-slow"
+        or x < 15
+        and "mdi:speedometer-medium"
+        or "mdi:speedometer",
+    ),
+    (KEY_DEVICE_SIGNAL, "earfcn"): dict(name="EARFCN"),
     (KEY_DEVICE_SIGNAL, "lac"): dict(name="LAC", icon="mdi:map-marker"),
+    (KEY_DEVICE_SIGNAL, "plmn"): dict(name="PLMN"),
+    (KEY_DEVICE_SIGNAL, "rac"): dict(name="RAC", icon="mdi:map-marker"),
+    (KEY_DEVICE_SIGNAL, "rrc_status"): dict(name="RRC status"),
+    (KEY_DEVICE_SIGNAL, "tac"): dict(name="TAC", icon="mdi:map-marker"),
+    (KEY_DEVICE_SIGNAL, "tdd"): dict(name="TDD"),
+    (KEY_DEVICE_SIGNAL, "txpower"): dict(
+        name="Transmit power",
+        device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
+    ),
+    (KEY_DEVICE_SIGNAL, "ul_mcs"): dict(name="Uplink MCS"),
+    (KEY_DEVICE_SIGNAL, "ulbandwidth"): dict(
+        name="Uplink bandwidth",
+        icon=lambda x: (x is None or x < 8)
+        and "mdi:speedometer-slow"
+        or x < 15
+        and "mdi:speedometer-medium"
+        or "mdi:speedometer",
+    ),
     (KEY_DEVICE_SIGNAL, "mode"): dict(
         name="Mode",
         formatter=lambda x: ({"0": "2G", "2": "3G", "7": "4G"}.get(x, "Unknown"), None),
@@ -161,8 +195,18 @@ SENSOR_META = {
     (KEY_MONITORING_TRAFFIC_STATISTICS, "CurrentDownload"): dict(
         name="Current connection download", unit=DATA_BYTES, icon="mdi:download"
     ),
+    (KEY_MONITORING_TRAFFIC_STATISTICS, "CurrentDownloadRate"): dict(
+        name="Current download rate",
+        unit=DATA_RATE_BYTES_PER_SECOND,
+        icon="mdi:download",
+    ),
     (KEY_MONITORING_TRAFFIC_STATISTICS, "CurrentUpload"): dict(
         name="Current connection upload", unit=DATA_BYTES, icon="mdi:upload"
+    ),
+    (KEY_MONITORING_TRAFFIC_STATISTICS, "CurrentUploadRate"): dict(
+        name="Current upload rate",
+        unit=DATA_RATE_BYTES_PER_SECOND,
+        icon="mdi:upload",
     ),
     (KEY_MONITORING_TRAFFIC_STATISTICS, "TotalConnectTime"): dict(
         name="Total connected duration", unit=TIME_SECONDS, icon="mdi:timer-outline"
@@ -173,7 +217,9 @@ SENSOR_META = {
     (KEY_MONITORING_TRAFFIC_STATISTICS, "TotalUpload"): dict(
         name="Total upload", unit=DATA_BYTES, icon="mdi:upload"
     ),
-    KEY_NET_CURRENT_PLMN: dict(exclude=re.compile(r"^(Rat|ShortName)$", re.IGNORECASE)),
+    KEY_NET_CURRENT_PLMN: dict(
+        exclude=re.compile(r"^(Rat|ShortName|Spn)$", re.IGNORECASE)
+    ),
     (KEY_NET_CURRENT_PLMN, "State"): dict(
         name="Operator search mode",
         formatter=lambda x: ({"0": "Auto", "1": "Manual"}.get(x, "Unknown"), None),
@@ -200,8 +246,52 @@ SENSOR_META = {
             None,
         ),
     ),
+    (KEY_SMS_SMS_COUNT, "LocalDeleted"): dict(
+        name="SMS deleted (device)",
+        icon="mdi:email-minus",
+    ),
+    (KEY_SMS_SMS_COUNT, "LocalDraft"): dict(
+        name="SMS drafts (device)",
+        icon="mdi:email-send-outline",
+    ),
+    (KEY_SMS_SMS_COUNT, "LocalInbox"): dict(
+        name="SMS inbox (device)",
+        icon="mdi:email",
+    ),
+    (KEY_SMS_SMS_COUNT, "LocalMax"): dict(
+        name="SMS capacity (device)",
+        icon="mdi:email",
+    ),
+    (KEY_SMS_SMS_COUNT, "LocalOutbox"): dict(
+        name="SMS outbox (device)",
+        icon="mdi:email-send",
+    ),
     (KEY_SMS_SMS_COUNT, "LocalUnread"): dict(
-        name="SMS unread",
+        name="SMS unread (device)",
+        icon="mdi:email-receive",
+    ),
+    (KEY_SMS_SMS_COUNT, "SimDraft"): dict(
+        name="SMS drafts (SIM)",
+        icon="mdi:email-send-outline",
+    ),
+    (KEY_SMS_SMS_COUNT, "SimInbox"): dict(
+        name="SMS inbox (SIM)",
+        icon="mdi:email",
+    ),
+    (KEY_SMS_SMS_COUNT, "SimMax"): dict(
+        name="SMS capacity (SIM)",
+        icon="mdi:email",
+    ),
+    (KEY_SMS_SMS_COUNT, "SimOutbox"): dict(
+        name="SMS outbox (SIM)",
+        icon="mdi:email-send",
+    ),
+    (KEY_SMS_SMS_COUNT, "SimUnread"): dict(
+        name="SMS unread (SIM)",
+        icon="mdi:email-receive",
+    ),
+    (KEY_SMS_SMS_COUNT, "SimUsed"): dict(
+        name="SMS messages (SIM)",
         icon="mdi:email-receive",
     ),
 }
