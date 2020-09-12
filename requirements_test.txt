@@ -9,7 +9,7 @@ codecov==2.1.9
 coverage==5.2.1
 jsonpickle==1.4.1
 mock-open==1.4.0
-mypy==0.780
+mypy==0.782
 pre-commit==2.7.1
 pylint==2.6.0
 astroid==2.4.2
