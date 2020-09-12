@@ -325,10 +325,9 @@ class KodiEntity(MediaPlayerEntity):
         self._app_properties["muted"] = data["muted"]
         self.async_write_ha_state()
 
-    @callback
-    def async_on_quit(self, sender, data):
+    async def async_on_quit(self, sender, data):
         """Reset the player state on quit action."""
-        self.hass.async_create_task(self._clear_connection())
+        await self._clear_connection()
 
     async def _clear_connection(self, close=True):
         self._reset_state()
