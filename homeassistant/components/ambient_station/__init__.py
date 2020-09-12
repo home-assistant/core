@@ -6,6 +6,7 @@ from aioambient import Client
 from aioambient.errors import WebsocketError
 import voluptuous as vol
 
+from homeassistant.components.binary_sensor import DEVICE_CLASS_CONNECTIVITY
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_LOCATION,
@@ -175,16 +176,16 @@ SENSOR_TYPES = {
     TYPE_LASTRAIN: ("Last Rain", None, TYPE_SENSOR, "timestamp"),
     TYPE_MAXDAILYGUST: ("Max Gust", SPEED_MILES_PER_HOUR, TYPE_SENSOR, None),
     TYPE_MONTHLYRAININ: ("Monthly Rain", "in", TYPE_SENSOR, None),
-    TYPE_RELAY10: ("Relay 10", None, TYPE_BINARY_SENSOR, "connectivity"),
-    TYPE_RELAY1: ("Relay 1", None, TYPE_BINARY_SENSOR, "connectivity"),
-    TYPE_RELAY2: ("Relay 2", None, TYPE_BINARY_SENSOR, "connectivity"),
-    TYPE_RELAY3: ("Relay 3", None, TYPE_BINARY_SENSOR, "connectivity"),
-    TYPE_RELAY4: ("Relay 4", None, TYPE_BINARY_SENSOR, "connectivity"),
-    TYPE_RELAY5: ("Relay 5", None, TYPE_BINARY_SENSOR, "connectivity"),
-    TYPE_RELAY6: ("Relay 6", None, TYPE_BINARY_SENSOR, "connectivity"),
-    TYPE_RELAY7: ("Relay 7", None, TYPE_BINARY_SENSOR, "connectivity"),
-    TYPE_RELAY8: ("Relay 8", None, TYPE_BINARY_SENSOR, "connectivity"),
-    TYPE_RELAY9: ("Relay 9", None, TYPE_BINARY_SENSOR, "connectivity"),
+    TYPE_RELAY10: ("Relay 10", None, TYPE_BINARY_SENSOR, DEVICE_CLASS_CONNECTIVITY),
+    TYPE_RELAY1: ("Relay 1", None, TYPE_BINARY_SENSOR, DEVICE_CLASS_CONNECTIVITY),
+    TYPE_RELAY2: ("Relay 2", None, TYPE_BINARY_SENSOR, DEVICE_CLASS_CONNECTIVITY),
+    TYPE_RELAY3: ("Relay 3", None, TYPE_BINARY_SENSOR, DEVICE_CLASS_CONNECTIVITY),
+    TYPE_RELAY4: ("Relay 4", None, TYPE_BINARY_SENSOR, DEVICE_CLASS_CONNECTIVITY),
+    TYPE_RELAY5: ("Relay 5", None, TYPE_BINARY_SENSOR, DEVICE_CLASS_CONNECTIVITY),
+    TYPE_RELAY6: ("Relay 6", None, TYPE_BINARY_SENSOR, DEVICE_CLASS_CONNECTIVITY),
+    TYPE_RELAY7: ("Relay 7", None, TYPE_BINARY_SENSOR, DEVICE_CLASS_CONNECTIVITY),
+    TYPE_RELAY8: ("Relay 8", None, TYPE_BINARY_SENSOR, DEVICE_CLASS_CONNECTIVITY),
+    TYPE_RELAY9: ("Relay 9", None, TYPE_BINARY_SENSOR, DEVICE_CLASS_CONNECTIVITY),
     TYPE_SOILHUM10: ("Soil Humidity 10", PERCENTAGE, TYPE_SENSOR, "humidity"),
     TYPE_SOILHUM1: ("Soil Humidity 1", PERCENTAGE, TYPE_SENSOR, "humidity"),
     TYPE_SOILHUM2: ("Soil Humidity 2", PERCENTAGE, TYPE_SENSOR, "humidity"),

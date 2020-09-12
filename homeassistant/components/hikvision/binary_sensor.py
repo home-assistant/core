@@ -5,7 +5,11 @@ import logging
 from pyhik.hikvision import HikCamera
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_CONNECTIVITY,
+    PLATFORM_SCHEMA,
+    BinarySensorEntity,
+)
 from homeassistant.const import (
     ATTR_LAST_TRIP_TIME,
     CONF_CUSTOMIZE,
@@ -42,8 +46,8 @@ DEVICE_CLASS_MAP = {
     "Shelter Alarm": None,
     "Disk Full": None,
     "Disk Error": None,
-    "Net Interface Broken": "connectivity",
-    "IP Conflict": "connectivity",
+    "Net Interface Broken": DEVICE_CLASS_CONNECTIVITY,
+    "IP Conflict": DEVICE_CLASS_CONNECTIVITY,
     "Illegal Access": None,
     "Video Mismatch": None,
     "Bad Video": None,
