@@ -3,6 +3,7 @@ import logging
 from typing import Callable
 
 from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_CONNECTIVITY,
     DEVICE_CLASS_DOOR,
     DEVICE_CLASS_MOISTURE,
     DEVICE_CLASS_SMOKE,
@@ -35,7 +36,7 @@ BINARY_SENSOR_TYPES = {
     SENSOR_DOOR: ("Door", DEVICE_CLASS_DOOR),
     SENSOR_GARAGE_DOOR: ("Garage Door", "garage_door"),
     SENSOR_LEAK: ("Leak Detector", DEVICE_CLASS_MOISTURE),
-    SENSOR_MISSING: ("Missing", "connectivity"),
+    SENSOR_MISSING: ("Missing", DEVICE_CLASS_CONNECTIVITY),
     SENSOR_SAFE: ("Safe", DEVICE_CLASS_DOOR),
     SENSOR_SLIDING: ("Sliding Door/Window", DEVICE_CLASS_DOOR),
     SENSOR_SMOKE_CO: ("Smoke/Carbon Monoxide Detector", DEVICE_CLASS_SMOKE),

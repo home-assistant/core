@@ -4,6 +4,7 @@ from typing import Callable, Dict
 from aioguardian import Client
 
 from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_CONNECTIVITY,
     DEVICE_CLASS_MOISTURE,
     BinarySensorEntity,
 )
@@ -25,7 +26,7 @@ ATTR_CONNECTED_CLIENTS = "connected_clients"
 SENSOR_KIND_AP_INFO = "ap_enabled"
 SENSOR_KIND_LEAK_DETECTED = "leak_detected"
 SENSORS = [
-    (SENSOR_KIND_AP_INFO, "Onboard AP Enabled", "connectivity"),
+    (SENSOR_KIND_AP_INFO, "Onboard AP Enabled", DEVICE_CLASS_CONNECTIVITY),
     (SENSOR_KIND_LEAK_DETECTED, "Leak Detected", DEVICE_CLASS_MOISTURE),
 ]
 
