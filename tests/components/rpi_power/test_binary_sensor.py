@@ -3,11 +3,16 @@ from datetime import timedelta
 import logging
 
 from homeassistant.components.rpi_power import DOMAIN
+from homeassistant.components.rpi_power.binary_sensor import (
+    DESCRIPTION_NORMALIZED,
+    DESCRIPTION_UNDER_VOLTAGE,
+)
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import MagicMock, async_fire_time_changed, patch
+from tests.async_mock import MagicMock
+from tests.common import async_fire_time_changed, patch
 
 ENTITY_ID = "binary_sensor.rpi_power_status"
 
@@ -48,7 +53,17 @@ async def test_new_detected(hass, caplog):
     mocked_under_voltage = await _async_setup_component(hass, True)
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_ON
-    assert len([x for x in caplog.records if x.levelno == logging.WARNING]) == 1
+    assert (
+        len(
+            [
+                x
+                for x in caplog.records
+                if x.levelno == logging.WARNING
+                and x.message == DESCRIPTION_UNDER_VOLTAGE
+            ]
+        )
+        == 1
+    )
 
     # back to normal
     type(mocked_under_voltage).get = MagicMock(return_value=False)
@@ -56,5 +71,13 @@ async def test_new_detected(hass, caplog):
     async_fire_time_changed(hass, future)
     await hass.async_block_till_done()
     state = hass.states.get(ENTITY_ID)
-    assert state.state == STATE_OFF
-    assert len([x for x in caplog.records if x.levelno == logging.WARNING]) == 2
+    assert (
+        len(
+            [
+                x
+                for x in caplog.records
+                if x.levelno == logging.INFO and x.message == DESCRIPTION_NORMALIZED
+            ]
+        )
+        == 1
+    )
