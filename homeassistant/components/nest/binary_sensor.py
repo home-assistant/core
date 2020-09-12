@@ -3,6 +3,7 @@ from itertools import chain
 import logging
 
 from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_CONNECTIVITY,
     DEVICE_CLASS_OCCUPANCY,
     DEVICE_CLASS_SOUND,
     BinarySensorEntity,
@@ -13,7 +14,7 @@ from . import CONF_BINARY_SENSORS, DATA_NEST, DATA_NEST_CONFIG, NestSensorDevice
 
 _LOGGER = logging.getLogger(__name__)
 
-BINARY_TYPES = {"online": "connectivity"}
+BINARY_TYPES = {"online": DEVICE_CLASS_CONNECTIVITY}
 
 CLIMATE_BINARY_TYPES = {
     "fan": None,
