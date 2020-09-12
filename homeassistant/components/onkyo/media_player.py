@@ -141,7 +141,11 @@ SUPPORT_ONKYO = (
 )
 
 SUPPORT_ONKYO_WO_VOLUME = (
-    SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE | SUPPORT_PLAY_MEDIA
+    SUPPORT_TURN_ON
+    | SUPPORT_TURN_OFF
+    | SUPPORT_SELECT_SOURCE
+    | SUPPORT_PLAY_MEDIA
+    | SUPPORT_VOLUME_MUTE
 )
 
 SUPPORT_ONKYO_WO_SOUND_MODE = (
@@ -343,12 +347,12 @@ class OnkyoAVR(MediaPlayerEntity):
                 self._attributes.pop(ATTR_PRESET, None)
                 self._attributes.pop(ATTR_VIDEO_OUT, None)
 
-        elif command in ["volume", "master-volume"]:
+        elif command in ["volume", "master-volume"] and value != "N/A":
             self._supports_volume = True
             self._volume = min(value / self._max_volume, 1)
-        elif command == "audio-muting":
+        elif command in ["muting", "audio-muting"]:
             self._muted = bool(value == "on")
-        elif command == "input-selector":
+        elif command in ["selector", "input-selector"]:
             self._parse_source(value)
             self._query_delayed_av_info()
         elif command == "hdmi-output-selector":
@@ -387,6 +391,9 @@ class OnkyoAVR(MediaPlayerEntity):
             self._query_avr("listening-mode")
             self._query_avr("audio-information")
             self._query_avr("video-information")
+        else:
+            self._query_avr("muting")
+            self._query_avr("selector")
 
     @property
     def supported_features(self):
@@ -451,7 +458,9 @@ class OnkyoAVR(MediaPlayerEntity):
         """Change AVR to the designated source (by name)."""
         if source in self._source_list:
             source = self._reverse_mapping[source]
-        self._update_avr("input-selector", source)
+        self._update_avr(
+            "input-selector" if self._zone == "main" else "selector", source
+        )
 
     async def async_select_sound_mode(self, sound_mode):
         """Change AVR to the designated sound_mode (by name)."""
@@ -461,7 +470,7 @@ class OnkyoAVR(MediaPlayerEntity):
 
     async def async_turn_off(self):
         """Turn AVR power off."""
-        self._update_avr("power", "off")
+        self._update_avr("power", "standby")
 
     async def async_turn_on(self):
         """Turn AVR power on."""
@@ -482,7 +491,10 @@ class OnkyoAVR(MediaPlayerEntity):
 
     async def async_mute_volume(self, mute):
         """Engage AVR mute."""
-        self._update_avr("audio-muting", "on" if mute else "off")
+        self._update_avr(
+            "audio-muting" if self._zone == "main" else "muting",
+            "on" if mute else "off",
+        )
 
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Play radio station by preset number."""
@@ -550,7 +562,7 @@ class OnkyoAVR(MediaPlayerEntity):
         }
 
     def _query_delayed_av_info(self):
-        if not self._query_timer:
+        if self._zone == "main" and not self._query_timer:
             self._query_timer = self.hass.loop.call_later(
                 AUDIO_VIDEO_INFORMATION_UPDATE_INTERVAL, self._query_av_info
             )
