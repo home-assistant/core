@@ -1,83 +1,24 @@
 """The tests for the Canary component."""
-import unittest
+from homeassistant.components.canary import DOMAIN
+from homeassistant.setup import async_setup_component
 
-from homeassistant import setup
-import homeassistant.components.canary as canary
-
-from tests.async_mock import MagicMock, PropertyMock, patch
-from tests.common import get_test_home_assistant
+from tests.async_mock import patch
 
 
-def mock_device(device_id, name, is_online=True, device_type_name=None):
-    """Mock Canary Device class."""
-    device = MagicMock()
-    type(device).device_id = PropertyMock(return_value=device_id)
-    type(device).name = PropertyMock(return_value=name)
-    type(device).is_online = PropertyMock(return_value=is_online)
-    type(device).device_type = PropertyMock(
-        return_value={"id": 1, "name": device_type_name}
-    )
-    return device
+async def test_setup_with_valid_config(hass, canary) -> None:
+    """Test setup with valid YAML."""
+    assert await async_setup_component(hass, "persistent_notification", {})
+    config = {DOMAIN: {"username": "foo@bar.org", "password": "bar"}}
 
-
-def mock_location(name, is_celsius=True, devices=None):
-    """Mock Canary Location class."""
-    location = MagicMock()
-    type(location).name = PropertyMock(return_value=name)
-    type(location).is_celsius = PropertyMock(return_value=is_celsius)
-    type(location).devices = PropertyMock(return_value=devices or [])
-    return location
-
-
-def mock_reading(sensor_type, sensor_value):
-    """Mock Canary Reading class."""
-    reading = MagicMock()
-    type(reading).sensor_type = PropertyMock(return_value=sensor_type)
-    type(reading).value = PropertyMock(return_value=sensor_value)
-    return reading
-
-
-class TestCanary(unittest.TestCase):
-    """Tests the Canary component."""
-
-    def setUp(self):
-        """Initialize values for this test case class."""
-        self.hass = get_test_home_assistant()
-        self.addCleanup(self.tear_down_cleanup)
-
-    def tear_down_cleanup(self):
-        """Stop everything that was started."""
-        self.hass.stop()
-
-    @patch("homeassistant.components.canary.CanaryData.update")
-    @patch("canary.api.Api.login")
-    def test_setup_with_valid_config(self, mock_login, mock_update):
-        """Test setup component."""
-        config = {"canary": {"username": "foo@bar.org", "password": "bar"}}
-
-        with patch(
-            "homeassistant.components.canary.alarm_control_panel.async_setup_entry",
-            return_value=True,
-        ), patch(
-            "homeassistant.components.canary.camera.async_setup_entry",
-            return_value=True,
-        ), patch(
-            "homeassistant.components.canary.sensor.async_setup_entry",
-            return_value=True,
-        ):
-            assert setup.setup_component(self.hass, canary.DOMAIN, config)
-
-        mock_update.assert_called_once_with()
-        mock_login.assert_called_once_with()
-
-    def test_setup_with_missing_password(self):
-        """Test setup component."""
-        config = {"canary": {"username": "foo@bar.org"}}
-
-        assert not setup.setup_component(self.hass, canary.DOMAIN, config)
-
-    def test_setup_with_missing_username(self):
-        """Test setup component."""
-        config = {"canary": {"password": "bar"}}
-
-        assert not setup.setup_component(self.hass, canary.DOMAIN, config)
+    with patch(
+        "homeassistant.components.canary.alarm_control_panel.setup_platform",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.canary.camera.setup_platform",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.canary.sensor.setup_platform",
+        return_value=True,
+    ):
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
