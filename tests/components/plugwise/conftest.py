@@ -198,6 +198,9 @@ def mock_stretch():
         smile_mock.return_value.full_update_device.side_effect = AsyncMock(
             return_value=True
         )
+        smile_mock.return_value.set_relay_state.side_effect = AsyncMock(
+            return_value=True
+        )
 
         smile_mock.return_value.get_all_devices.return_value = _read_json(
             chosen_env, "get_all_devices"

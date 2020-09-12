@@ -50,6 +50,18 @@ async def test_adam_climate_switch_changes(hass, mock_smile_adam):
     assert str(state.state) == "on"
 
 
+async def test_stretch_switch_entities(hass, mock_stretch):
+    """Test creation of climate related switch entities."""
+    entry = await async_init_integration(hass, mock_stretch)
+    assert entry.state == ENTRY_STATE_LOADED
+
+    state = hass.states.get("switch.koelkast_92c4a")
+    assert str(state.state) == "on"
+
+    state = hass.states.get("switch.droger_52559")
+    assert str(state.state) == "on"
+
+
 async def test_stretch_switch_changes(hass, mock_stretch):
     """Test changing of power related switch entities."""
     entry = await async_init_integration(hass, mock_stretch)
@@ -72,7 +84,7 @@ async def test_stretch_switch_changes(hass, mock_stretch):
         blocking=True,
     )
     state = hass.states.get("switch.droger_52559")
-    assert str(state.state) == "on"
+    assert str(state.state) == "off"
 
     await hass.services.async_call(
         "switch",
@@ -81,4 +93,4 @@ async def test_stretch_switch_changes(hass, mock_stretch):
         blocking=True,
     )
     state = hass.states.get("switch.droger_52559")
-    assert str(state.state) == "off"
+    assert str(state.state) == "on"

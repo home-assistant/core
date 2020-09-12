@@ -27,7 +27,7 @@ async def test_adam_climate_sensor_entities(hass, mock_smile_adam):
     )
 
     state = hass.states.get("sensor.zone_lisa_wk_battery")
-    assert float(state.state) == 34
+    assert int(state.state) == 34
 
 
 async def test_anna_climate_sensor_entities(hass, mock_smile_anna):
