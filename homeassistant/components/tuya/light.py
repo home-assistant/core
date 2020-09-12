@@ -20,7 +20,7 @@ from .const import DOMAIN, TUYA_DATA, TUYA_DISCOVERY_NEW
 PARALLEL_UPDATES = 0
 NORMAL_LIGHT_RANGE = (1, 255)
 TUYA_LIGHT_TURN_ON_RANGE = (28, 255)
-TUYA_LIGHT_RANGE = (10, 1000)
+TUYA_LIGHT_RANGE = (10.3, 1000)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
