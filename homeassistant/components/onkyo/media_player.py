@@ -261,7 +261,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         _LOGGER.debug("Received update callback from AVR: %s", message)
 
         _zone, _, _ = message
-        if any(active_zone._zone == _zone for active_zone in active_zones):
+        if any(active_zone.zone == _zone for active_zone in active_zones):
             for zone in active_zones:
                 zone.process_update(message)
         else:
@@ -398,6 +398,11 @@ class OnkyoAVR(MediaPlayerEntity):
         else:
             self._query_avr("muting")
             self._query_avr("selector")
+
+    @property
+    def zone(self):
+        """Return zone string of device."""
+        return self._zone
 
     @property
     def supported_features(self):
