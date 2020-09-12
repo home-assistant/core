@@ -1,4 +1,4 @@
-"Constants for Google Domains integration."
+"""Constants for Google Domains integration."""
 from _datetime import timedelta
 
 DEFAULT_TIMEOUT = 10

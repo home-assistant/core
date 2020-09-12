@@ -19,6 +19,7 @@ class GoogleDomainsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Google Domains Config Flow."""
 
     async def async_step_user(self, user_input=None):
+        """Config flow user step."""
         if user_input is not None:
             return self.async_create_entry(
                 title=user_input[CONF_DOMAIN], data=user_input
