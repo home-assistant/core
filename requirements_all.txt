@@ -1431,7 +1431,7 @@ pyitachip2ir==0.0.7
 pykira==0.1.1
 
 # homeassistant.components.kodi
-pykodi==0.1.2
+pykodi==0.2.0
 
 # homeassistant.components.kwb
 pykwb==0.0.8
