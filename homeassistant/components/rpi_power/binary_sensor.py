@@ -50,7 +50,7 @@ class RaspberryChargerBinarySensor(BinarySensorEntity):
             if self._is_on:
                 _LOGGER.warning(DESCRIPTION_UNDER_VOLTAGE)
             else:
-                _LOGGER.warning(DESCRIPTION_NORMALIZED)
+                _LOGGER.info(DESCRIPTION_NORMALIZED)
             self._last_is_on = self._is_on
 
     @property
