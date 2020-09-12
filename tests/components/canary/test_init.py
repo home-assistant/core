@@ -55,7 +55,17 @@ class TestCanary(unittest.TestCase):
         """Test setup component."""
         config = {"canary": {"username": "foo@bar.org", "password": "bar"}}
 
-        assert setup.setup_component(self.hass, canary.DOMAIN, config)
+        with patch(
+            "homeassistant.components.canary.alarm_control_panel.async_setup_entry",
+            return_value=True,
+        ), patch(
+            "homeassistant.components.canary.camera.async_setup_entry",
+            return_value=True,
+        ), patch(
+            "homeassistant.components.canary.sensor.async_setup_entry",
+            return_value=True,
+        ):
+            assert setup.setup_component(self.hass, canary.DOMAIN, config)
 
         mock_update.assert_called_once_with()
         mock_login.assert_called_once_with()
