@@ -2,7 +2,10 @@
 from itertools import chain
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_SOUND,
+    BinarySensorEntity,
+)
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 
 from . import CONF_BINARY_SENSORS, DATA_NEST, DATA_NEST_CONFIG, NestSensorDevice
@@ -20,7 +23,7 @@ CLIMATE_BINARY_TYPES = {
 
 CAMERA_BINARY_TYPES = {
     "motion_detected": "motion",
-    "sound_detected": "sound",
+    "sound_detected": DEVICE_CLASS_SOUND,
     "person_detected": "occupancy",
 }
 
