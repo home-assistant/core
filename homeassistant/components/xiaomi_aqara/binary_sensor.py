@@ -1,7 +1,10 @@
 """Support for Xiaomi aqara binary sensors."""
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_MOISTURE,
+    BinarySensorEntity,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_call_later
 
@@ -349,7 +352,7 @@ class XiaomiWaterLeakSensor(XiaomiBinarySensor):
             "Water Leak Sensor",
             xiaomi_hub,
             data_key,
-            "moisture",
+            DEVICE_CLASS_MOISTURE,
             config_entry,
         )
 

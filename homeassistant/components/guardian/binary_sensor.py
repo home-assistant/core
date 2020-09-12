@@ -3,7 +3,10 @@ from typing import Callable, Dict
 
 from aioguardian import Client
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_MOISTURE,
+    BinarySensorEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -23,7 +26,7 @@ SENSOR_KIND_AP_INFO = "ap_enabled"
 SENSOR_KIND_LEAK_DETECTED = "leak_detected"
 SENSORS = [
     (SENSOR_KIND_AP_INFO, "Onboard AP Enabled", "connectivity"),
-    (SENSOR_KIND_LEAK_DETECTED, "Leak Detected", "moisture"),
+    (SENSOR_KIND_LEAK_DETECTED, "Leak Detected", DEVICE_CLASS_MOISTURE),
 ]
 
 

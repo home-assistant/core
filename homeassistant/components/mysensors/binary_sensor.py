@@ -1,6 +1,7 @@
 """Support for MySensors binary sensors."""
 from homeassistant.components import mysensors
 from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_MOISTURE,
     DEVICE_CLASS_SAFETY,
     DEVICE_CLASS_SOUND,
     DEVICE_CLASS_VIBRATION,
@@ -18,7 +19,7 @@ SENSORS = {
     "S_WATER_LEAK": DEVICE_CLASS_SAFETY,
     "S_SOUND": DEVICE_CLASS_SOUND,
     "S_VIBRATION": DEVICE_CLASS_VIBRATION,
-    "S_MOISTURE": "moisture",
+    "S_MOISTURE": DEVICE_CLASS_MOISTURE,
 }
 
 

@@ -1,5 +1,8 @@
 """Demo platform that has two fake binary sensors."""
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_MOISTURE,
+    BinarySensorEntity,
+)
 
 from . import DOMAIN
 
@@ -8,7 +11,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Set up the Demo binary sensor platform."""
     async_add_entities(
         [
-            DemoBinarySensor("binary_1", "Basement Floor Wet", False, "moisture"),
+            DemoBinarySensor(
+                "binary_1", "Basement Floor Wet", False, DEVICE_CLASS_MOISTURE
+            ),
             DemoBinarySensor("binary_2", "Movement Backyard", True, "motion"),
         ]
     )
