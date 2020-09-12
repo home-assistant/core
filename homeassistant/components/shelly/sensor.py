@@ -58,6 +58,12 @@ SENSORS = {
         value=lambda value: round(value, 1),
         device_class=sensor.DEVICE_CLASS_POWER,
     ),
+    ("roller", "rollerPower"): BlockAttributeDescription(
+        name="Power",
+        unit=POWER_WATT,
+        value=lambda value: round(value, 1),
+        device_class=sensor.DEVICE_CLASS_POWER,
+    ),
     ("device", "energy"): BlockAttributeDescription(
         name="Energy",
         unit=ENERGY_KILO_WATT_HOUR,
@@ -78,6 +84,12 @@ SENSORS = {
         default_enabled=False,
     ),
     ("relay", "energy"): BlockAttributeDescription(
+        name="Energy",
+        unit=ENERGY_KILO_WATT_HOUR,
+        value=lambda value: round(value / 60 / 1000, 2),
+        device_class=sensor.DEVICE_CLASS_ENERGY,
+    ),
+    ("roller", "rollerEnergy"): BlockAttributeDescription(
         name="Energy",
         unit=ENERGY_KILO_WATT_HOUR,
         value=lambda value: round(value / 60 / 1000, 2),
