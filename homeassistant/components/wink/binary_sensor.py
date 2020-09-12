@@ -5,6 +5,7 @@ import pywink
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_MOISTURE,
+    DEVICE_CLASS_MOTION,
     DEVICE_CLASS_OCCUPANCY,
     DEVICE_CLASS_OPENING,
     DEVICE_CLASS_SMOKE,
@@ -25,7 +26,7 @@ SENSOR_TYPES = {
     "co_detected": "gas",
     "liquid_detected": DEVICE_CLASS_MOISTURE,
     "loudness": DEVICE_CLASS_SOUND,
-    "motion": "motion",
+    "motion": DEVICE_CLASS_MOTION,
     "noise": DEVICE_CLASS_SOUND,
     "opened": DEVICE_CLASS_OPENING,
     "presence": DEVICE_CLASS_OCCUPANCY,
