@@ -5,6 +5,7 @@ from pyspcwebgw.const import ZoneInput, ZoneType
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_MOTION,
+    DEVICE_CLASS_SMOKE,
     BinarySensorEntity,
 )
 from homeassistant.core import callback
@@ -19,7 +20,7 @@ def _get_device_class(zone_type):
     return {
         ZoneType.ALARM: DEVICE_CLASS_MOTION,
         ZoneType.ENTRY_EXIT: "opening",
-        ZoneType.FIRE: "smoke",
+        ZoneType.FIRE: DEVICE_CLASS_SMOKE,
         ZoneType.TECHNICAL: "power",
     }.get(zone_type)
 
