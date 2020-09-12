@@ -6,6 +6,7 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_MOTION,
+    DEVICE_CLASS_OCCUPANCY,
     PLATFORM_SCHEMA,
     BinarySensorEntity,
 )
@@ -20,7 +21,7 @@ SCAN_INTERVAL = timedelta(seconds=5)
 
 # Sensor types: Name, device_class, event
 SENSOR_TYPES = {
-    "button": ["Button", "occupancy", "device:sensor:button"],
+    "button": ["Button", DEVICE_CLASS_OCCUPANCY, "device:sensor:button"],
     "motion": ["Motion", DEVICE_CLASS_MOTION, "device:sensor:motion"],
 }
 

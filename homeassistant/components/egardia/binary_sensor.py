@@ -3,6 +3,7 @@ import logging
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_MOTION,
+    DEVICE_CLASS_OPENING,
     BinarySensorEntity,
 )
 from homeassistant.const import STATE_OFF, STATE_ON
@@ -13,7 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 
 EGARDIA_TYPE_TO_DEVICE_CLASS = {
     "IR Sensor": DEVICE_CLASS_MOTION,
-    "Door Contact": "opening",
+    "Door Contact": DEVICE_CLASS_OPENING,
     "IR": DEVICE_CLASS_MOTION,
 }
 
