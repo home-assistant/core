@@ -5,6 +5,7 @@ import logging
 import re
 
 import jsonrpc_base
+from pykodi import CannotConnectError
 import voluptuous as vol
 
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
@@ -324,11 +325,15 @@ class KodiEntity(MediaPlayerEntity):
         self._app_properties["muted"] = data["muted"]
         self.async_write_ha_state()
 
-    @callback
-    def async_on_quit(self, sender, data):
+    async def async_on_quit(self, sender, data):
         """Reset the player state on quit action."""
+        await self._clear_connection()
+
+    async def _clear_connection(self, close=True):
         self._reset_state()
-        self.hass.async_create_task(self._connection.close())
+        self.async_write_ha_state()
+        if close:
+            await self._connection.close()
 
     @property
     def unique_id(self):
@@ -386,14 +391,23 @@ class KodiEntity(MediaPlayerEntity):
         try:
             await self._connection.connect()
             self._on_ws_connected()
-        except jsonrpc_base.jsonrpc.TransportError:
-            _LOGGER.info("Unable to connect to Kodi via websocket")
+        except (jsonrpc_base.jsonrpc.TransportError, CannotConnectError):
             _LOGGER.debug("Unable to connect to Kodi via websocket", exc_info=True)
+            await self._clear_connection(False)
+
+    async def _ping(self):
+        try:
+            await self._kodi.ping()
+        except (jsonrpc_base.jsonrpc.TransportError, CannotConnectError):
+            _LOGGER.debug("Unable to ping Kodi via websocket", exc_info=True)
+            await self._clear_connection()
 
     async def _async_connect_websocket_if_disconnected(self, *_):
         """Reconnect the websocket if it fails."""
         if not self._connection.connected:
             await self._async_ws_connect()
+        else:
+            await self._ping()
 
     @callback
     def _register_ws_callbacks(self):
@@ -464,7 +478,7 @@ class KodiEntity(MediaPlayerEntity):
     @property
     def should_poll(self):
         """Return True if entity has to be polled for state."""
-        return (not self._connection.can_subscribe) or (not self._connection.connected)
+        return not self._connection.can_subscribe
 
     @property
     def volume_level(self):
