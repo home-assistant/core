@@ -2,7 +2,7 @@
   "domain": "kodi",
   "name": "Kodi",
   "documentation": "https://www.home-assistant.io/integrations/kodi",
-  "requirements": ["pykodi==0.1.2"],
+  "requirements": ["pykodi==0.2.0"],
   "codeowners": [
     "@OnFreund"
   ],

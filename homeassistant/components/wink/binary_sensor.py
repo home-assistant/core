@@ -6,6 +6,7 @@ import pywink
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_OCCUPANCY,
     DEVICE_CLASS_OPENING,
+    DEVICE_CLASS_SMOKE,
     DEVICE_CLASS_SOUND,
     DEVICE_CLASS_VIBRATION,
     BinarySensorEntity,
@@ -27,7 +28,7 @@ SENSOR_TYPES = {
     "noise": DEVICE_CLASS_SOUND,
     "opened": DEVICE_CLASS_OPENING,
     "presence": DEVICE_CLASS_OCCUPANCY,
-    "smoke_detected": "smoke",
+    "smoke_detected": DEVICE_CLASS_SMOKE,
     "vibration": DEVICE_CLASS_VIBRATION,
 }
 

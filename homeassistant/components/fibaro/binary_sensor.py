@@ -2,6 +2,8 @@
 import logging
 
 from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_DOOR,
+    DEVICE_CLASS_SMOKE,
     DEVICE_CLASS_WINDOW,
     DOMAIN,
     BinarySensorEntity,
@@ -15,9 +17,9 @@ _LOGGER = logging.getLogger(__name__)
 SENSOR_TYPES = {
     "com.fibaro.floodSensor": ["Flood", "mdi:water", "flood"],
     "com.fibaro.motionSensor": ["Motion", "mdi:run", "motion"],
-    "com.fibaro.doorSensor": ["Door", "mdi:window-open", "door"],
+    "com.fibaro.doorSensor": ["Door", "mdi:window-open", DEVICE_CLASS_DOOR],
     "com.fibaro.windowSensor": ["Window", "mdi:window-open", DEVICE_CLASS_WINDOW],
-    "com.fibaro.smokeSensor": ["Smoke", "mdi:smoking", "smoke"],
+    "com.fibaro.smokeSensor": ["Smoke", "mdi:smoking", DEVICE_CLASS_SMOKE],
     "com.fibaro.FGMS001": ["Motion", "mdi:run", "motion"],
     "com.fibaro.heatDetector": ["Heat", "mdi:fire", "heat"],
 }

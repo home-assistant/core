@@ -9,6 +9,7 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_OPENING,
     DEVICE_CLASS_SAFETY,
+    DEVICE_CLASS_SMOKE,
     DEVICE_CLASSES,
     PLATFORM_SCHEMA,
     BinarySensorEntity,
@@ -91,7 +92,7 @@ def get_opening_type(zone):
     if "KEY" in zone["name"]:
         return DEVICE_CLASS_SAFETY
     if "SMOKE" in zone["name"]:
-        return "smoke"
+        return DEVICE_CLASS_SMOKE
     if "WATER" in zone["name"]:
         return "water"
     return DEVICE_CLASS_OPENING
