@@ -205,6 +205,7 @@ def special_library_payload(parent_payload, special_type):
         media_content_type=parent_payload.media_content_type,
         can_play=False,
         can_expand=True,
+        children_media_class=parent_payload.children_media_class,
     )
 
 
