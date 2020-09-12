@@ -1,7 +1,7 @@
 """Config flow for Goal Zero Yeti integration."""
 import logging
 
-from goalzero import GoalZero, exceptions
+from goalzero import Yeti, exceptions
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -73,5 +73,5 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_try_connect(self, host):
         session = async_get_clientsession(self.hass)
-        api = GoalZero(host, self.hass.loop, session)
-        api.get_state()
+        api = Yeti(host, self.hass.loop, session)
+        await api.get_state()

@@ -2,7 +2,7 @@
 import asyncio
 import logging
 
-from goalzero import GoalZero, exceptions
+from goalzero import Yeti, exceptions
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -64,7 +64,7 @@ async def async_setup_entry(hass, entry):
     _LOGGER.debug("Setting up %s integration with host %s", DOMAIN, host)
 
     session = async_get_clientsession(hass)
-    api = GoalZero(host, hass.loop, session)
+    api = Yeti(host, hass.loop, session)
     try:
         await api.get_state()
     except exceptions.ConnectError as ex:

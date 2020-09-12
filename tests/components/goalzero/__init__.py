@@ -24,11 +24,11 @@ async def _create_mocked_yeti(raise_exception=False):
 
 
 def _patch_init_yeti(mocked_yeti):
-    return patch("homeassistant.components.goalzero.GoalZero", return_value=mocked_yeti)
+    return patch("homeassistant.components.goalzero.Yeti", return_value=mocked_yeti)
 
 
 def _patch_config_flow_yeti(mocked_yeti):
     return patch(
-        "homeassistant.components.goalzero.config_flow.GoalZero",
+        "homeassistant.components.goalzero.config_flow.Yeti",
         return_value=mocked_yeti,
     )
