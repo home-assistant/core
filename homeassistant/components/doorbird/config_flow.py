@@ -7,7 +7,13 @@ from doorbirdpy import DoorBird
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    HTTP_UNAUTHORIZED,
+)
 from homeassistant.core import callback
 from homeassistant.util.network import is_link_local
 
@@ -39,7 +45,7 @@ async def validate_input(hass: core.HomeAssistant, data):
         status = await hass.async_add_executor_job(device.ready)
         info = await hass.async_add_executor_job(device.info)
     except urllib.error.HTTPError as err:
-        if err.code == 401:
+        if err.code == HTTP_UNAUTHORIZED:
             raise InvalidAuth from err
         raise CannotConnect from err
     except OSError as err:

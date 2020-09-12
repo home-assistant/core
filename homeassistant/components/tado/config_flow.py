@@ -6,7 +6,12 @@ import requests.exceptions
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    HTTP_BAD_REQUEST,
+    HTTP_INTERNAL_SERVER_ERROR,
+)
 from homeassistant.core import callback
 
 from .const import CONF_FALLBACK, UNIQUE_ID
@@ -35,7 +40,10 @@ async def validate_input(hass: core.HomeAssistant, data):
     except RuntimeError as ex:
         raise CannotConnect from ex
     except requests.exceptions.HTTPError as ex:
-        if ex.response.status_code > 400 and ex.response.status_code < 500:
+        if (
+            ex.response.status_code > HTTP_BAD_REQUEST
+            and ex.response.status_code < HTTP_INTERNAL_SERVER_ERROR
+        ):
             raise InvalidAuth from ex
         raise CannotConnect from ex
 

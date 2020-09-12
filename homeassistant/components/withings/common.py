@@ -29,6 +29,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_WEBHOOK_ID,
+    HTTP_UNAUTHORIZED,
     MASS_KILOGRAMS,
     PERCENTAGE,
     SPEED_METERS_PER_SECOND,
@@ -54,7 +55,7 @@ from .const import Measurement
 
 _LOGGER = logging.getLogger(const.LOG_NAMESPACE)
 NOT_AUTHENTICATED_ERROR = re.compile(
-    "^401,.*",
+    f"^{HTTP_UNAUTHORIZED},.*",
     re.IGNORECASE,
 )
 DATA_UPDATED_SIGNAL = "withings_entity_state_updated"
