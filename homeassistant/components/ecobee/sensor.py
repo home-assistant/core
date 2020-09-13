@@ -5,7 +5,6 @@ from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
-    STATE_UNKNOWN,
     TEMP_FAHRENHEIT,
 )
 from homeassistant.helpers.entity import Entity
@@ -112,7 +111,7 @@ class EcobeeSensor(Entity):
         if self._state in [
             ECOBEE_STATE_CALIBRATING,
             ECOBEE_STATE_UNKNOWN,
-            STATE_UNKNOWN,
+            "unknown",
         ]:
             return None
 
