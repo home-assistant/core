@@ -87,8 +87,8 @@ class AlarmDecoderFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             ):
                 return self.async_abort(reason="already_configured")
             connection = {}
+            baud = None
             if self.protocol == PROTOCOL_SOCKET:
-                baud = connection[CONF_DEVICE_BAUD] = None
                 host = connection[CONF_HOST] = user_input[CONF_HOST]
                 port = connection[CONF_PORT] = user_input[CONF_PORT]
                 title = f"{host}:{port}"

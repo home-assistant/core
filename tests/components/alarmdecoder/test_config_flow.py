@@ -34,7 +34,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    "protocol,connection,baud,title",
+    "protocol,connection,title",
     [
         (
             PROTOCOL_SOCKET,
@@ -42,7 +42,6 @@ from tests.common import MockConfigEntry
                 CONF_HOST: "alarmdecoder123",
                 CONF_PORT: 10001,
             },
-            None,
             "alarmdecoder123:10001",
         ),
         (
@@ -51,12 +50,11 @@ from tests.common import MockConfigEntry
                 CONF_DEVICE_PATH: "/dev/ttyUSB123",
                 CONF_DEVICE_BAUD: 115000,
             },
-            115000,
             "/dev/ttyUSB123",
         ),
     ],
 )
-async def test_setups(hass: HomeAssistant, protocol, connection, baud, title):
+async def test_setups(hass: HomeAssistant, protocol, connection, title):
     """Test flow for setting up the available AlarmDecoder protocols."""
 
     result = await hass.config_entries.flow.async_init(
@@ -90,7 +88,6 @@ async def test_setups(hass: HomeAssistant, protocol, connection, baud, title):
         assert result["data"] == {
             **connection,
             CONF_PROTOCOL: protocol,
-            CONF_DEVICE_BAUD: baud,
         }
 
     await hass.async_block_till_done()

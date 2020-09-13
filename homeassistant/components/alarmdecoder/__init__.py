@@ -101,7 +101,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         hass.helpers.dispatcher.dispatcher_send(SIGNAL_REL_MESSAGE, message)
 
     controller = False
-    baud = ad_connection[CONF_DEVICE_BAUD]
+    baud = ad_connection.get(CONF_DEVICE_BAUD)
     if protocol == PROTOCOL_SOCKET:
         host = ad_connection[CONF_HOST]
         port = ad_connection[CONF_PORT]
