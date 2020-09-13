@@ -29,10 +29,14 @@ SLEEP_TIME = 1
 
 async def async_setup_entry(hass: HomeAssistantType, config_entry, async_add_entities):
     """Set up switches."""
-    for device in hass.data[TPLINK_DOMAIN][CONF_SWITCH]:
+    devices = hass.data[TPLINK_DOMAIN][CONF_SWITCH]
+    entities = []
+
+    for device in devices:
         await hass.async_add_executor_job(device.get_sysinfo)
-        async_add_entities([SmartPlugSwitch(device)], update_before_add=True)
-    return True
+        entities.append(SmartPlugSwitch(device))
+
+    async_add_entities(entities, update_before_add=True)
 
 
 class SmartPlugSwitch(SwitchEntity):

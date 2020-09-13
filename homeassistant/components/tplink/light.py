@@ -61,10 +61,14 @@ SLEEP_TIME = 2
 
 async def async_setup_entry(hass: HomeAssistantType, config_entry, async_add_entities):
     """Set up switches."""
-    for device in hass.data[TPLINK_DOMAIN][CONF_LIGHT]:
+    devices = hass.data[TPLINK_DOMAIN][CONF_LIGHT]
+    entities = []
+
+    for device in devices:
         await hass.async_add_executor_job(device.get_sysinfo)
-        async_add_entities([TPLinkSmartBulb(device)], update_before_add=True)
-    return True
+        entities.append(TPLinkSmartBulb(device))
+
+    async_add_entities(entities, update_before_add=True)
 
 
 def brightness_to_percentage(byt):
