@@ -13,6 +13,7 @@ FLOWS = [
     "agent_dvr",
     "airly",
     "airvisual",
+    "alarmdecoder",
     "almond",
     "ambiclimate",
     "ambient_station",
