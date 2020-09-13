@@ -47,13 +47,13 @@ async def test_alarm_control_panel(hass, canary) -> None:
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == None
+    assert state.state == STATE_ALARM_DISARMED
     assert state.attributes["private"] == "True"
 
     mock_location.is_private = False
 
     # test armed home
-    mock_location.mode = mock_mode(4, LOCATION_MODE_HOME)
+    mock_location.mode.return_value = mock_mode(4, LOCATION_MODE_HOME)
 
     await hass.helpers.entity_component.async_update_entity(entity_id)
     await hass.async_block_till_done()
@@ -63,7 +63,7 @@ async def test_alarm_control_panel(hass, canary) -> None:
     assert state.state == STATE_ALARM_ARMED_HOME
 
     # test armed away
-    mock_location.mode = mock_mode(5, LOCATION_MODE_AWAY)
+    mock_location.mode.return_value = mock_mode(5, LOCATION_MODE_AWAY)
 
     await hass.helpers.entity_component.async_update_entity(entity_id)
     await hass.async_block_till_done()
@@ -73,7 +73,7 @@ async def test_alarm_control_panel(hass, canary) -> None:
     assert state.state == STATE_ALARM_ARMED_AWAY
 
     # test armed night
-    mock_location.mode = mock_mode(6, LOCATION_MODE_NIGHT)
+    mock_location.mode.return_value = mock_mode(6, LOCATION_MODE_NIGHT)
 
     await hass.helpers.entity_component.async_update_entity(entity_id)
     await hass.async_block_till_done()
