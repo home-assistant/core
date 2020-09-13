@@ -50,7 +50,7 @@ async def test_alarm_control_panel(hass, canary) -> None:
     assert state.state == STATE_ALARM_DISARMED
     assert state.attributes["private"] == "True"
 
-    mock_location.is_private = False
+    mock_location.is_private.return_value = False
 
     # test armed home
     mock_location.mode.return_value = mock_mode(4, LOCATION_MODE_HOME)
