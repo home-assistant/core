@@ -50,6 +50,9 @@ accuweather==0.0.10
 # homeassistant.components.androidtv
 adb-shell[async]==0.2.1
 
+# homeassistant.components.alarmdecoder
+adext==0.3
+
 # homeassistant.components.adguard
 adguardhome==0.4.2
 
