@@ -3,6 +3,6 @@
   "name": "Goal Zero Yeti",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/goalzero",
-  "requirements": ["goalzero==0.1.3"],
+  "requirements": ["goalzero==0.1.4"],
   "codeowners": ["@tkdrob"]
 }
