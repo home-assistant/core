@@ -24,8 +24,6 @@ def mock_decorator(*args, **kwargs):
 def canary(hass):
     """Mock the CanaryApi for easier testing."""
     with patch.object(Api, "login", return_value=True), patch(
-        "homeassistant.util.Throttle", mock_decorator
-    ), patch(
         "homeassistant.components.canary.Api"
     ) as mock_canary:
         instance = mock_canary.return_value = Api(
@@ -44,3 +42,5 @@ def canary(hass):
         instance.set_location_mode = MagicMock(return_value=None)
 
         yield mock_canary
+
+patch("homeassistant.util.Throttle", mock_decorator).start()
