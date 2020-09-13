@@ -1,19 +1,14 @@
 """Support for Goal Zero Yeti Sensors."""
-import logging
-
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import CONF_NAME
 
 from . import YetiEntity
 from .const import (
     BINARY_SENSOR_DICT,
-    BINARY_SENSOR_LIST,
     DATA_KEY_API,
     DATA_KEY_COORDINATOR,
     DOMAIN,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
@@ -30,7 +25,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
             sensor_name,
             entry.entry_id,
         )
-        for sensor_name in BINARY_SENSOR_LIST
+        for sensor_name in BINARY_SENSOR_DICT
     ]
     async_add_entities(sensors, True)
 
@@ -46,9 +41,9 @@ class YetiBinarySensor(YetiEntity, BinarySensorEntity):
 
         variable_info = BINARY_SENSOR_DICT[sensor_name]
         self._condition_name = variable_info[0]
-        self._unit_of_measurement = variable_info[1]
         self._icon = variable_info[2]
         self.api = api
+        self._device_class = variable_info[1]
 
     @property
     def name(self):
@@ -61,7 +56,17 @@ class YetiBinarySensor(YetiEntity, BinarySensorEntity):
         return f"{self._server_unique_id}/{self._condition_name}"
 
     @property
+    def icon(self):
+        """Icon to use in the frontend, if any."""
+        return self._icon
+
+    @property
     def is_on(self):
         """Return if the service is on."""
         if self.api.data:
             return self.api.data[self._condition] == 1
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of this device."""
+        return self._device_class

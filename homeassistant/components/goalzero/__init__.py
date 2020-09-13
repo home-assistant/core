@@ -6,7 +6,7 @@ from goalzero import Yeti, exceptions
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_NAME, DEVICE_CLASS_BATTERY
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
@@ -129,11 +129,7 @@ class YetiEntity(CoordinatorEntity):
         self.api = _api
         self._name = name
         self._server_unique_id = server_unique_id
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return "mdi:battery"
+        self._device_class = DEVICE_CLASS_BATTERY
 
     @property
     def device_info(self):
@@ -143,3 +139,8 @@ class YetiEntity(CoordinatorEntity):
             "name": self._name,
             "manufacturer": "Goal Zero",
         }
+
+    @property
+    def device_class(self):
+        """Return the class of this device."""
+        return self._device_class

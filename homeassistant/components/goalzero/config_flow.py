@@ -28,9 +28,8 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             host = user_input[CONF_HOST]
             name = user_input[CONF_NAME]
-            endpoint = f"{host}"
 
-            if await self._async_endpoint_existed(endpoint):
+            if await self._async_endpoint_existed(host):
                 return self.async_abort(reason="already_configured")
 
             try:
@@ -66,10 +65,9 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def _async_endpoint_existed(self, endpoint):
-        existing_endpoints = [
-            f"{entry.data.get(CONF_HOST)}" for entry in self._async_current_entries()
-        ]
-        return endpoint in existing_endpoints
+        for entry in self._async_current_entries():
+            if endpoint == f"{entry.data.get(CONF_HOST)}":
+                return endpoint
 
     async def _async_try_connect(self, host):
         session = async_get_clientsession(self.hass)

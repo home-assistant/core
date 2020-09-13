@@ -3,8 +3,10 @@ from datetime import timedelta
 
 from homeassistant.const import (
     ATTR_VOLTAGE,
-    CONF_BINARY_SENSORS,
     CONF_NAME,
+    DEVICE_CLASS_ILLUMINANCE,
+    DEVICE_CLASS_POWER,
+    DEVICE_CLASS_SIGNAL_STRENGTH,
     ENERGY_WATT_HOUR,
     PERCENTAGE,
     POWER_WATT,
@@ -21,20 +23,12 @@ DATA_KEY_API = "api"
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
 BINARY_SENSOR_DICT = {
-    "v12PortStatus": ["12V Port Status", CONF_BINARY_SENSORS, None],
-    "usbPortStatus": ["USB Port Status", CONF_BINARY_SENSORS, None],
-    "acPortStatus": ["AC Port Status", CONF_BINARY_SENSORS, None],
-    "backlight": [
-        "Backlight",
-        CONF_BINARY_SENSORS,
-        ["mdi:clock-digital", "mdi:clock-digital"],
-    ],
-    "app_online": [
-        "App Online",
-        CONF_BINARY_SENSORS,
-        ["mdi:lan-disconnect", "mdi:lan-check"],
-    ],
-    "isCharging": ["Is Charging", CONF_BINARY_SENSORS, "mdi:battery-charging"],
+    "v12PortStatus": ["12V Port Status", DEVICE_CLASS_POWER, "mdi:toggle-switch"],
+    "usbPortStatus": ["USB Port Status", DEVICE_CLASS_POWER, "mdi:toggle-switch"],
+    "acPortStatus": ["AC Port Status", DEVICE_CLASS_POWER, "mdi:toggle-switch"],
+    "backlight": ["Backlight", DEVICE_CLASS_ILLUMINANCE, "mdi:clock-digital"],
+    "app_online": ["App Online", DEVICE_CLASS_SIGNAL_STRENGTH, "mdi:lan-check"],
+    "isCharging": ["Charging", DEVICE_CLASS_POWER, "mdi:battery-charging"],
 }
 
 SENSOR_DICT = {
@@ -54,5 +48,3 @@ SENSOR_DICT = {
     "firmwareVersion": ["Firmware Version", None, None],
     "version": ["Model Version", None, None],
 }
-BINARY_SENSOR_LIST = list(BINARY_SENSOR_DICT)
-SENSOR_LIST = list(SENSOR_DICT)
