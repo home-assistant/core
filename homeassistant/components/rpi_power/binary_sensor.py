@@ -48,6 +48,11 @@ class RaspberryChargerBinarySensor(BinarySensorEntity):
             self._last_is_on = self._is_on
 
     @property
+    def unique_id(self):
+        """Return the unique id of the sensor."""
+        return "rpi_power"  # only one sensor possible
+
+    @property
     def name(self):
         """Return the name of the sensor."""
         return "RPi Power status"
