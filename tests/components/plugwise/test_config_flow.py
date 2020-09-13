@@ -111,6 +111,34 @@ async def test_zeroconf_form(hass):
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
+    result3 = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=TEST_DISCOVERY,
+    )
+    assert result3["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result3["errors"] == {}
+
+    with patch(
+        "homeassistant.components.plugwise.config_flow.Smile.connect",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.plugwise.async_setup",
+        return_value=True,
+    ) as mock_setup, patch(
+        "homeassistant.components.plugwise.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result4 = await hass.config_entries.flow.async_configure(
+            result3["flow_id"],
+            {"password": TEST_PASSWORD},
+        )
+
+    await hass.async_block_till_done()
+
+    assert result4["type"] == "abort"
+    assert result4["reason"] == "already_configured"
+
 
 async def test_form_invalid_auth(hass, mock_smile):
     """Test we handle invalid auth."""
