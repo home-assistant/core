@@ -111,7 +111,6 @@ class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             if not errors:
-                await self.async_set_unique_id(api.gateway_id)
                 await self.async_set_unique_id(
                     api.smile_hostname or api.gateway_id, raise_on_progress=False
                 )
