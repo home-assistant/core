@@ -1,6 +1,7 @@
 """Platform for binary sensor integration."""
-
 import logging
+
+from niu import NiuCloud
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_BATTERY_CHARGING,
@@ -9,9 +10,8 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_POWER,
     BinarySensorEntity,
 )
-from homeassistant.const import ATTR_BATTERY_CHARGING, ATTR_BATTERY_LEVEL
 
-from . import DOMAIN
+from . import DOMAIN, NiuVehicle
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,28 +24,35 @@ SENSORS = {
 }
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(hass, config, async_add_entities):
     """Set up the sensor platform."""
+    print("Setting up binary sensor")
 
     entities = []
-    for vehicle in hass.data[DOMAIN].account.get_vehicles():
+
+    for vehicle in hass.data[DOMAIN][config.entry_id]["account"].get_vehicles():
         for key, value in SENSORS.items():
-            device = NiuBinarySensor(
-                hass.data[DOMAIN], vehicle, key, value[0], value[1], value[2]
+            entities.append(
+                NiuBinarySensor(
+                    hass.data[DOMAIN][config.entry_id]["account"],
+                    vehicle,
+                    hass.data[DOMAIN][config.entry_id]["coordinator"],
+                    key,
+                    value[0],
+                    value[1],
+                    value[2],
+                )
             )
-            entities.append(device)
 
-    add_entities(entities, True)
+    async_add_entities(entities, True)
 
 
-class NiuBinarySensor(BinarySensorEntity):
+class NiuBinarySensor(NiuVehicle, BinarySensorEntity):
     """Representation of a Sensor."""
 
-    def __init__(self, account, vehicle, attribute, name, device_class, icon):
+    def __init__(self, niu, vehicle, coordinator, attribute, name, device_class, icon):
         """Initialize the sensor."""
-        self._account = account
-        self._serial = vehicle.get_serial()
-        self._vehicle = vehicle
+        super().__init__(niu, vehicle, coordinator)
 
         self._attribute = attribute
         self._name = name
@@ -57,17 +64,12 @@ class NiuBinarySensor(BinarySensorEntity):
     @property
     def unique_id(self) -> str:
         """Return the unique id for the sensor."""
-        return f"{self._serial}_{self._attribute}"
-
-    @property
-    def should_poll(self) -> bool:
-        """Return false since data update is centralized in NiuAccount."""
-        return False
+        return f"{self.vehicle.serial_number}_{self._attribute}"
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return f"{self._vehicle.get_name()} {self._name}"
+        return f"{self.vehicle.name} {self._name}"
 
     @property
     def device_class(self):
@@ -84,66 +86,42 @@ class NiuBinarySensor(BinarySensorEntity):
         """Return the icon of the sensor."""
         return self._icon
 
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes of the device."""
-        return {
-            ATTR_BATTERY_LEVEL: self._vehicle.get_soc(),
-            ATTR_BATTERY_CHARGING: self._vehicle.is_charging(),
-        }
+    # async def async_update(self) -> None:
+    #    """Fetch new state data for the sensor.
 
-    @property
-    def device_info(self):
-        """Return the device_info of the device."""
-        return {
-            "identifiers": (DOMAIN, self._serial),
-            "name": self._vehicle.get_name(),
-            "manufacturer": "NIU",
-            "model": self._vehicle.get_model(),
-        }
+    #    This is the only method that should fetch new data for Home Assistant.
+    #    """
+    #    await super().async_update()
+    #    print("UPDATE ENTITY DATA")
+    #    # Update local vehicle reference
+    #    self.vehicle = next(
+    #        (
+    #            veh
+    #            for veh in self.niu.get_vehicles()
+    #            if veh.serial_number == self.vehicle.serial_number
+    #        ),
+    #        None,
+    #    )
 
-    def update_callback(self):
-        """Schedule a state update."""
-        self.schedule_update_ha_state(True)
+    #    if self.vehicle is None:
+    #        _LOGGER.error(
+    #            "Scooter %s has been removed from the cloud", self.vehicle.serial_number
+    #        )
 
-    async def async_added_to_hass(self):
-        """Register state update callback."""
+    #    _LOGGER.debug("Updating %s", self.name)
 
-        self._account.add_update_listener(self.update_callback)
+    #    if self._attribute == "charging":
+    #        self._state = self.vehicle.is_charging
 
-    def update(self) -> None:
-        """Fetch new state data for the sensor.
+    #    if self._attribute == "connection":
+    #        self._state = self.vehicle.is_connected
 
-        This is the only method that should fetch new data for Home Assistant.
-        """
+    #    if self._attribute == "power":
+    #        self._state = self.vehicle.is_on
 
-        # Update local vehicle reference
-        self._vehicle = next(
-            (
-                veh
-                for veh in self._account.account.get_vehicles()
-                if veh.get_serial() == self._serial
-            ),
-            None,
-        )
-
-        if self._vehicle is None:
-            _LOGGER.error("Scooter %s has been removed from the cloud", self._serial)
-
-        _LOGGER.debug("Updating %s", self.name)
-
-        if self._attribute == "charging":
-            self._state = self._vehicle.is_charging()
-
-        if self._attribute == "connection":
-            self._state = self._vehicle.is_connected()
-
-        if self._attribute == "power":
-            self._state = self._vehicle.is_on()
-
-        if self._attribute == "lock":
-            self._state = not self._vehicle.is_locked()
-            if self._state:
-                self._icon = "mdi:lock-open"
-            else:
-                self._icon = "mdi:lock"
+    #    if self._attribute == "lock":
+    #        self._state = not self.vehicle.is_locked
+    #        if self._state:
+    #            self._icon = "mdi:lock-open"
+    #        else:
+    #            self._icon = "mdi:lock"

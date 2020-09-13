@@ -2,6 +2,6 @@
 
 DOMAIN = "niu"
 
-DEFAULT_SCAN_INTERVAL = 1
-MIN_SCAN_INTERVAL = 1
-NIU_COMPONENTS = ["sensor", "binary_sensor"]
+DEFAULT_SCAN_INTERVAL = 30
+MIN_SCAN_INTERVAL = 10
+NIU_COMPONENTS = ["binary_sensor"]  # , "sensor"]

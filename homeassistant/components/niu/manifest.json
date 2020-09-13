@@ -1,8 +1,8 @@
 {
-	"domain": "niu",
-	"name": "NIU",
-	"config_flow": false,
-	"documentation": "https://www.home-assistant.io/integrations/niu",
-	"requirements": ["niu==0.1.5"],
-	"codeowners": ["@Bonnee"]
+  "domain": "niu",
+  "name": "NIU",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/niu",
+  "requirements": ["niu==0.2.4"],
+  "codeowners": ["@Bonnee"]
 }

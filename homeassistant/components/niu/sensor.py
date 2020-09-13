@@ -36,11 +36,11 @@ SENSORS_DUAL = {
 }
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(hass, config, add_entities, discovery_info=None):
     """Set up the sensor platform."""
-    vehicles = hass.data[DOMAIN].account.get_vehicles()
 
-    for vehicle in vehicles:
+    await hass.data[DOMAIN][config.entry_id]["account"].update_vehicles()
+    for vehicle in hass.data[DOMAIN][config.entry_id]["account"].get_vehicles():
         entities = []
 
         for key, value in SENSORS.items():
@@ -142,7 +142,7 @@ class NiuSensor(Entity):
         self._vehicle = next(
             (
                 veh
-                for veh in self._account.account.get_vehicles()
+                for veh in self._account.get_vehicles()
                 if veh.get_serial() == self._serial
             ),
             None,
