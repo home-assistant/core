@@ -36,7 +36,6 @@ DEFAULT_PORT = 60128
 
 CONF_SOURCES = "sources"
 CONF_MAX_VOLUME = "max_volume"
-CONF_ZONES = "zones"
 
 DEFAULT_NAME = "Onkyo Receiver"
 SUPPORTED_MAX_VOLUME = 90
@@ -167,7 +166,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             vol.Coerce(int), vol.Range(min=1)
         ),
         vol.Optional(CONF_SOURCES, default=DEFAULT_SOURCES): {cv.string: cv.string},
-        vol.Optional(CONF_ZONES, default=ZONES): {cv.string: cv.string},
     }
 )
 
@@ -225,7 +223,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     port = config[CONF_PORT]
     name = config[CONF_NAME]
     max_volume = config[CONF_MAX_VOLUME]
-    zones = config[CONF_ZONES]
     sources = config[CONF_SOURCES]
 
     platform = entity_platform.current_platform.get()
@@ -239,32 +236,26 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     active_zones = {}
 
-    def async_onkyo_discover_zones_callback(message):
+    def async_onkyo_discover_zones_callback(zone):
         """Receive the power status of the available zones on the AVR."""
-        zone, command, _ = message
-        if command in ["system-power", "power"]:
-            # When we receive the status for a zone, it is available on the AVR
-            # So we create an entity for the zone and continue discovery
-            if zone in zones:
-                _LOGGER.debug(
-                    "Discovered %s on %s, add to active zones", zones[zone], name
-                )
-                zone_entity = OnkyoAVR(
-                    avr, f"{name} {zones[zone]}", sources, zone, max_volume
-                )
-                active_zones[zone] = zone_entity
-                async_add_entities([zone_entity])
+        # When we receive the status for a zone, it is available on the AVR
+        # So we create an entity for the zone and add it to active_zones
+        if zone in ZONES:
+            _LOGGER.debug("Discovered %s on %s, add to active zones", ZONES[zone], name)
+            zone_entity = OnkyoAVR(avr, name, sources, zone, max_volume)
+            active_zones[zone] = zone_entity
+            async_add_entities([zone_entity])
 
     @callback
     def async_onkyo_update_callback(message):
         """Receive notification from transport that new data exists."""
         _LOGGER.debug("Received update callback from AVR: %s", message)
 
-        _zone, _, _ = message
-        if _zone in active_zones:
-            active_zones[_zone].process_update(message)
+        zone, _, _ = message
+        if zone in active_zones:
+            active_zones[zone].process_update(message)
         else:
-            async_onkyo_discover_zones_callback(message)
+            async_onkyo_discover_zones_callback(zone)
 
     @callback
     def async_onkyo_connect_callback():
@@ -285,11 +276,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     # Discover what zones are available for the avr by querying the power.
     # If we get a response for the specific zone, it means it is available.
-    for zone in zones:
+    for zone in ZONES:
         avr.query_property(zone, "power")
 
     # Add the main zone to active_zones, since it is always active
-    active_zones["main"] = OnkyoAVR(avr, name, sources, "main", max_volume)
+    main_entity = OnkyoAVR(avr, name, sources, "main", max_volume)
+    active_zones["main"] = main_entity
 
     @callback
     def close_avr(_event):
@@ -297,7 +289,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, close_avr)
 
-    async_add_entities(active_zones.values())
+    async_add_entities([main_entity])
 
 
 class OnkyoAVR(MediaPlayerEntity):
@@ -307,7 +299,7 @@ class OnkyoAVR(MediaPlayerEntity):
         """Initialize entity with transport."""
         super().__init__()
         self._avr = avr
-        self._name = name
+        self._name = f"{name} {ZONES[zone] if zone != 'main' else ''}"
         self._zone = zone
         self._volume = 0
         self._supports_volume = False
@@ -397,11 +389,6 @@ class OnkyoAVR(MediaPlayerEntity):
         else:
             self._query_avr("muting")
             self._query_avr("selector")
-
-    @property
-    def zone(self):
-        """Return zone string of device."""
-        return self._zone
 
     @property
     def supported_features(self):
