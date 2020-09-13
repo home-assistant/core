@@ -47,7 +47,7 @@ def setup(hass, config):
 
     try:
         hass.data[DATA_CANARY] = CanaryData(username, password, timeout)
-    except ConnectTimout as error:
+    except ConnectTimeout as error:
         raise PlatformNotReady from error
     except HTTPError as error:
         _LOGGER.error("Unable to connect to Canary service: %s", str(ex))
