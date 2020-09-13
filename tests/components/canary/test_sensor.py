@@ -1,6 +1,4 @@
 """The tests for the Canary sensor platform."""
-from datetime import timedelta
-
 from homeassistant.components.canary import DOMAIN
 from homeassistant.components.canary.sensor import (
     ATTR_AIR_QUALITY,
