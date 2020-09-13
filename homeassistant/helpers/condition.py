@@ -649,13 +649,16 @@ async def async_validate_condition_config(
 
 
 @callback
-def async_extract_entities(config: ConfigType) -> Set[str]:
+def async_extract_entities(config: Union[ConfigType, Template]) -> Set[str]:
     """Extract entities from a condition."""
     referenced: Set[str] = set()
     to_process = deque([config])
 
     while to_process:
         config = to_process.popleft()
+        if isinstance(config, Template):
+            continue
+
         condition = config[CONF_CONDITION]
 
         if condition in ("and", "not", "or"):
@@ -674,13 +677,16 @@ def async_extract_entities(config: ConfigType) -> Set[str]:
 
 
 @callback
-def async_extract_devices(config: ConfigType) -> Set[str]:
+def async_extract_devices(config: Union[ConfigType, Template]) -> Set[str]:
     """Extract devices from a condition."""
     referenced = set()
     to_process = deque([config])
 
     while to_process:
         config = to_process.popleft()
+        if isinstance(config, Template):
+            continue
+
         condition = config[CONF_CONDITION]
 
         if condition in ("and", "not", "or"):
