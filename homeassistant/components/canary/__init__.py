@@ -50,7 +50,7 @@ def setup(hass, config):
     except ConnectTimeout as error:
         raise PlatformNotReady from error
     except HTTPError as error:
-        _LOGGER.error("Unable to connect to Canary service: %s", str(ex))
+        _LOGGER.error("Unable to connect to Canary service: %s", str(error))
         hass.components.persistent_notification.create(
             f"Error: {error}<br />You will need to restart hass after fixing.",
             title=NOTIFICATION_TITLE,
