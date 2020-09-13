@@ -139,6 +139,9 @@ async def test_options_arm_flow(hass: HomeAssistant):
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
 
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -173,6 +176,9 @@ async def test_options_zone_flow(hass: HomeAssistant):
     zone_settings = {CONF_ZONE_NAME: "Front Entry", CONF_ZONE_TYPE: DEVICE_CLASS_WINDOW}
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
@@ -246,6 +252,9 @@ async def test_options_zone_flow_validation(hass: HomeAssistant):
     zone_settings = {CONF_ZONE_NAME: "Front Entry", CONF_ZONE_TYPE: DEVICE_CLASS_WINDOW}
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
