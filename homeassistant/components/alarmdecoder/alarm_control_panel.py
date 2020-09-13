@@ -15,7 +15,6 @@ from homeassistant.components.alarm_control_panel.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CODE,
-    ATTR_ENTITY_ID,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
@@ -40,21 +39,9 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 SERVICE_ALARM_TOGGLE_CHIME = "alarm_toggle_chime"
-ALARM_TOGGLE_CHIME_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID, default=[]): cv.entity_ids,
-        vol.Required(ATTR_CODE): cv.string,
-    }
-)
 
 SERVICE_ALARM_KEYPRESS = "alarm_keypress"
 ATTR_KEYPRESS = "keypress"
-ALARM_KEYPRESS_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID, default=[]): cv.entity_ids,
-        vol.Required(ATTR_KEYPRESS): cv.string,
-    }
-)
 
 
 async def async_setup_entry(
@@ -77,17 +64,19 @@ async def async_setup_entry(
 
     platform.async_register_entity_service(
         SERVICE_ALARM_TOGGLE_CHIME,
-        ALARM_TOGGLE_CHIME_SCHEMA,
+        {
+            vol.Required(ATTR_CODE): cv.string,
+        },
         "alarm_toggle_chime",
     )
 
     platform.async_register_entity_service(
         SERVICE_ALARM_KEYPRESS,
-        ALARM_KEYPRESS_SCHEMA,
+        {
+            vol.Required(ATTR_KEYPRESS): cv.string,
+        },
         "alarm_keypress",
     )
-
-    return True
 
 
 class AlarmDecoderAlarmPanel(AlarmControlPanelEntity):
