@@ -1,5 +1,4 @@
 """Support to send data to an Splunk instance."""
-import json
 import logging
 
 from splunk_http_event_collector import http_event_collector
@@ -12,14 +11,13 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_TOKEN,
     CONF_VERIFY_SSL,
+    EVENT_HOMEASSISTANT_STOP,
     EVENT_STATE_CHANGED,
     EVENT_TIME_CHANGED,
-    EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.helpers import state as state_helper
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA
-from homeassistant.helpers.json import JSONEncoder
 
 _LOGGER = logging.getLogger(__name__)
 
