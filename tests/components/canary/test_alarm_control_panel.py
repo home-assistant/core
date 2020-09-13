@@ -55,7 +55,7 @@ async def test_alarm_control_panel(hass, canary) -> None:
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_UNKNOWN
-    assert state.attributes["private"] == "False"
+    assert not state.attributes["private"]
 
     # test private system
     mocked_location.is_private.return_value = True
@@ -66,7 +66,7 @@ async def test_alarm_control_panel(hass, canary) -> None:
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_ALARM_DISARMED
-    assert state.attributes["private"] == "True"
+    assert state.attributes["private"]
 
     mocked_location.is_private.return_value = False
 
