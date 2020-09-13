@@ -100,7 +100,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def async_update_data() -> List[LyricLocation]:
         """Fetch data from Lyric."""
-        async with async_timeout.timeout(30):
+        async with async_timeout.timeout(60):
             try:
                 await lyric.get_locations()
             except (LyricAuthenticationException, LyricException) as exception:
