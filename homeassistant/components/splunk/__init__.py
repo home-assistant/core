@@ -2,8 +2,7 @@
 import json
 import logging
 
-from aiohttp.hdrs import AUTHORIZATION
-import requests
+from splunk_http_event_collector import http_event_collector
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -14,6 +13,8 @@ from homeassistant.const import (
     CONF_TOKEN,
     CONF_VERIFY_SSL,
     EVENT_STATE_CHANGED,
+    EVENT_TIME_CHANGED,
+    EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.helpers import state as state_helper
 import homeassistant.helpers.config_validation as cv
@@ -48,21 +49,6 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def post_request(event_collector, body, headers, verify_ssl):
-    """Post request to Splunk."""
-    try:
-        requests.post(
-            event_collector,
-            data=json.dumps(body, cls=JSONEncoder),
-            headers=headers,
-            timeout=10,
-            verify=verify_ssl,
-        )
-
-    except requests.exceptions.RequestException as error:
-        _LOGGER.exception("Error saving event to Splunk: %s", error)
-
-
 def setup(hass, config):
     """Set up the Splunk component."""
     conf = config[DOMAIN]
@@ -74,13 +60,11 @@ def setup(hass, config):
     name = conf.get(CONF_NAME)
     entity_filter = conf[CONF_FILTER]
 
-    if use_ssl:
-        uri_scheme = "https://"
-    else:
-        uri_scheme = "http://"
+    hec = http_event_collector(token, host, "json", name, port, use_ssl)
+    hec.SSL_verify = verify_ssl
 
-    event_collector = f"{uri_scheme}{host}:{port}/services/collector/event"
-    headers = {AUTHORIZATION: f"Splunk {token}"}
+    if not hec.check_connectivity():
+        _LOGGER.exception("Cannot connect to Splunk")
 
     def splunk_event_listener(event):
         """Listen for new messages on the bus and sends them to Splunk."""
@@ -94,7 +78,7 @@ def setup(hass, config):
         except ValueError:
             _state = state.state
 
-        json_body = {
+        payload = {
             "time": event.time_fired.timestamp(),
             "host": name,
             "event": {
@@ -104,9 +88,13 @@ def setup(hass, config):
                 "value": _state,
             },
         }
+        hec.batchEvent(payload)
 
-        post_request(event_collector, json_body, headers, verify_ssl)
+    def splunk_event_flush(event):
+        hec.flushBatch()
 
     hass.bus.listen(EVENT_STATE_CHANGED, splunk_event_listener)
+    hass.bus.listen(EVENT_TIME_CHANGED, splunk_event_flush)
+    hass.bus.listen(EVENT_HOMEASSISTANT_STOP, splunk_event_flush)
 
     return True
