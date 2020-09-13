@@ -4,7 +4,9 @@ from typing import Optional, Sequence
 from pysmartthings import Attribute, Capability
 
 from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_MOISTURE,
     DEVICE_CLASS_MOTION,
+    DEVICE_CLASS_MOVING,
     DEVICE_CLASS_OPENING,
     DEVICE_CLASS_PRESENCE,
     DEVICE_CLASS_PROBLEM,
@@ -27,7 +29,7 @@ CAPABILITY_TO_ATTRIB = {
     Capability.water_sensor: Attribute.water,
 }
 ATTRIB_TO_CLASS = {
-    Attribute.acceleration: "moving",
+    Attribute.acceleration: DEVICE_CLASS_MOVING,
     Attribute.contact: DEVICE_CLASS_OPENING,
     Attribute.filter_status: DEVICE_CLASS_PROBLEM,
     Attribute.motion: DEVICE_CLASS_MOTION,
@@ -35,7 +37,7 @@ ATTRIB_TO_CLASS = {
     Attribute.sound: DEVICE_CLASS_SOUND,
     Attribute.tamper: DEVICE_CLASS_PROBLEM,
     Attribute.valve: DEVICE_CLASS_OPENING,
-    Attribute.water: "moisture",
+    Attribute.water: DEVICE_CLASS_MOISTURE,
 }
 
 

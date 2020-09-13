@@ -3,7 +3,11 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_MOISTURE,
+    PLATFORM_SCHEMA,
+    BinarySensorEntity,
+)
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 import homeassistant.helpers.config_validation as cv
 
@@ -11,7 +15,7 @@ from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-SENSOR_TYPES = {"Rain": "moisture", "Night": None}
+SENSOR_TYPES = {"Rain": DEVICE_CLASS_MOISTURE, "Night": None}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {

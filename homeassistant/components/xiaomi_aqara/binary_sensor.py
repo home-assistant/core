@@ -2,6 +2,7 @@
 import logging
 
 from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_MOISTURE,
     DEVICE_CLASS_OPENING,
     BinarySensorEntity,
 )
@@ -352,7 +353,7 @@ class XiaomiWaterLeakSensor(XiaomiBinarySensor):
             "Water Leak Sensor",
             xiaomi_hub,
             data_key,
-            "moisture",
+            DEVICE_CLASS_MOISTURE,
             config_entry,
         )
 
