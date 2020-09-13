@@ -6,6 +6,7 @@ from functools import wraps
 import json
 import logging
 import math
+from operator import attrgetter
 import random
 import re
 from typing import Any, Iterable, List, Optional, Union
@@ -424,12 +425,7 @@ class AllStates:
     def __iter__(self):
         """Return all states."""
         self._collect_all()
-        return iter(
-            _wrap_state(self._hass, state)
-            for state in sorted(
-                self._hass.states.async_all(), key=lambda state: state.entity_id
-            )
-        )
+        return _state_iterator(self._hass, None)
 
     def __len__(self) -> int:
         """Return number of states."""
@@ -469,15 +465,7 @@ class DomainStates:
     def __iter__(self):
         """Return the iteration over all the states."""
         self._collect_domain()
-        return iter(
-            sorted(
-                (
-                    _wrap_state(self._hass, state)
-                    for state in self._hass.states.async_all(self._domain)
-                ),
-                key=lambda state: state.entity_id,
-            )
-        )
+        return _state_iterator(self._hass, self._domain)
 
     def __len__(self) -> int:
         """Return number of states."""
@@ -491,6 +479,8 @@ class DomainStates:
 
 class TemplateState(State):
     """Class to represent a state object in a template."""
+
+    __slots__ = ("_hass", "_state")
 
     # Inheritance is done so functions that check against State keep working
     # pylint: disable=super-init-not-called
@@ -547,11 +537,12 @@ def _collect_state(hass: HomeAssistantType, entity_id: str) -> None:
         entity_collect.entities.add(entity_id)
 
 
-def _wrap_state(
-    hass: HomeAssistantType, state: Optional[State]
-) -> Optional[TemplateState]:
-    """Wrap a state."""
-    return None if state is None else TemplateState(hass, state)
+def _state_iterator(hass: HomeAssistantType, domain: Optional[str]) -> Iterable:
+    """Create an state iterator for a domain or all states."""
+    return iter(
+        TemplateState(hass, state)
+        for state in sorted(hass.states.async_all(domain), key=attrgetter("entity_id"))
+    )
 
 
 def _get_state(hass: HomeAssistantType, entity_id: str) -> Optional[TemplateState]:
@@ -561,7 +552,7 @@ def _get_state(hass: HomeAssistantType, entity_id: str) -> Optional[TemplateStat
         # access to the state properties in the state wrapper.
         _collect_state(hass, entity_id)
         return None
-    return _wrap_state(hass, state)
+    return TemplateState(hass, state)
 
 
 def _resolve_state(
