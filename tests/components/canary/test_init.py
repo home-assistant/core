@@ -7,8 +7,8 @@ from tests.async_mock import patch
 
 async def test_setup_with_valid_config(hass, canary) -> None:
     """Test setup with valid YAML."""
-    assert await async_setup_component(hass, "persistent_notification", {})
-    config = {DOMAIN: {"username": "foo@bar.org", "password": "bar"}}
+    await async_setup_component(hass, "persistent_notification", {})
+    config = {DOMAIN: {"username": "test-username", "password": "test-password"}}
 
     with patch(
         "homeassistant.components.canary.alarm_control_panel.setup_platform",

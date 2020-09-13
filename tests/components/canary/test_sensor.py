@@ -1,4 +1,6 @@
 """The tests for the Canary sensor platform."""
+from datetime import timedelta
+
 from homeassistant.components.canary import DOMAIN
 from homeassistant.components.canary.sensor import (
     ATTR_AIR_QUALITY,
@@ -8,6 +10,7 @@ from homeassistant.components.canary.sensor import (
 )
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, PERCENTAGE, TEMP_CELSIUS
 from homeassistant.setup import async_setup_component
+from homeassistant.util.dt import utcnow
 
 from . import mock_device, mock_location, mock_reading
 
@@ -17,7 +20,7 @@ from tests.common import mock_registry
 
 async def test_sensors_pro(hass, canary) -> None:
     """Test the creation and values of the sensors for Canary Pro."""
-    assert await async_setup_component(hass, "persistent_notification", {})
+    await async_setup_component(hass, "persistent_notification", {})
 
     registry = mock_registry(hass)
     online_device_at_home = mock_device(20, "Dining Room", True, "Canary Pro")
@@ -34,17 +37,9 @@ async def test_sensors_pro(hass, canary) -> None:
     ]
 
     config = {DOMAIN: {"username": "test-username", "password": "test-password"}}
-    with patch(
-        "homeassistant.components.canary.alarm_control_panel.setup_platform",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.canary.camera.setup_platform",
-        return_value=True,
-    ):
+    with patch("homeassistant.components.canary.CANARY_COMPONENTS", ["sensor"]):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
-
-    await hass.async_block_till_done()
 
     sensors = {
         "home_dining_room_temperature": (
@@ -75,17 +70,17 @@ async def test_sensors_pro(hass, canary) -> None:
         assert entity_entry
         assert entity_entry.device_class == data[3]
         assert entity_entry.unique_id == data[0]
+        assert entity_entry.original_icon == data[4]
 
         state = hass.states.get(f"sensor.{sensor_id}")
         assert state
         assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == data[2]
         assert state.state == data[1]
-        assert state.icon == data[4]
 
 
 async def test_sensors_attributes_pro(hass, canary) -> None:
     """Test the creation and values of the sensors attributes for Canary Pro."""
-    assert await async_setup_component(hass, "persistent_notification", {})
+    await async_setup_component(hass, "persistent_notification", {})
 
     online_device_at_home = mock_device(20, "Dining Room", True, "Canary Pro")
 
@@ -101,17 +96,9 @@ async def test_sensors_attributes_pro(hass, canary) -> None:
     ]
 
     config = {DOMAIN: {"username": "test-username", "password": "test-password"}}
-    with patch(
-        "homeassistant.components.canary.alarm_control_panel.setup_platform",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.canary.camera.setup_platform",
-        return_value=True,
-    ):
+    with patch("homeassistant.components.canary.CANARY_COMPONENTS", ["sensor"]):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
-
-    await hass.async_block_till_done()
 
     entity_id = "sensor.home_dining_room_air_quality"
     state = hass.states.get(entity_id)
@@ -123,7 +110,11 @@ async def test_sensors_attributes_pro(hass, canary) -> None:
         mock_reading("humidity", "50.46"),
         mock_reading("air_quality", "0.4"),
     ]
-    await hass.helpers.entity_component.async_update_entity(entity_id)
+
+    future = utcnow() + timedelta(minutes=1)
+    with patch("homeassistant.util.dt.utcnow", return_value=future):
+        await hass.helpers.entity_component.async_update_entity(entity_id)
+        await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
     assert state
@@ -134,7 +125,11 @@ async def test_sensors_attributes_pro(hass, canary) -> None:
         mock_reading("humidity", "50.46"),
         mock_reading("air_quality", "1.0"),
     ]
-    await hass.helpers.entity_component.async_update_entity(entity_id)
+
+    future += timedelta(minutes=1)
+    with patch("homeassistant.util.dt.utcnow", return_value=future):
+        await hass.helpers.entity_component.async_update_entity(entity_id)
+        await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
     assert state
@@ -143,7 +138,7 @@ async def test_sensors_attributes_pro(hass, canary) -> None:
 
 async def test_sensors_flex(hass, canary) -> None:
     """Test the creation and values of the sensors for Canary Flex."""
-    assert await async_setup_component(hass, "persistent_notification", {})
+    await async_setup_component(hass, "persistent_notification", {})
 
     registry = mock_registry(hass)
     online_device_at_home = mock_device(20, "Dining Room", True, "Canary Flex")
@@ -159,27 +154,19 @@ async def test_sensors_flex(hass, canary) -> None:
     ]
 
     config = {DOMAIN: {"username": "test-username", "password": "test-password"}}
-    with patch(
-        "homeassistant.components.canary.alarm_control_panel.setup_platform",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.canary.camera.setup_platform",
-        return_value=True,
-    ):
+    with patch("homeassistant.components.canary.CANARY_COMPONENTS", ["sensor"]):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
-
-    await hass.async_block_till_done()
 
     sensors = {
         "home_dining_room_battery": (
             "20_battery",
-            "70.4567",
+            "70.46",
             PERCENTAGE,
             None,
             "mdi:battery-70",
         ),
-        "home_dining_room_wifi": ("20_wifi", "-57", "dBm", None, "mdi:wifi"),
+        "home_dining_room_wifi": ("20_wifi", "-57.0", "dBm", None, "mdi:wifi"),
     }
 
     for (sensor_id, data) in sensors.items():
@@ -187,9 +174,9 @@ async def test_sensors_flex(hass, canary) -> None:
         assert entity_entry
         assert entity_entry.device_class == data[3]
         assert entity_entry.unique_id == data[0]
+        assert entity_entry.original_icon == data[4]
 
         state = hass.states.get(f"sensor.{sensor_id}")
         assert state
         assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == data[2]
         assert state.state == data[1]
-        assert state.icon == data[4]

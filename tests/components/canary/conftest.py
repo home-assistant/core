@@ -1,8 +1,23 @@
 """Define fixtures available for all tests."""
+from functools import wraps
+
 from canary.api import Api
 from pytest import fixture
 
 from tests.async_mock import MagicMock, patch
+
+
+def mock_decorator(*args, **kwargs):
+    """Mock decorator to patch unwanted decorators."""
+
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            return f(*args, **kwargs)
+
+        return decorated_function
+
+    return decorator
 
 
 @fixture
@@ -27,3 +42,6 @@ def canary(hass):
         instance.set_location_mode = MagicMock(return_value=None)
 
         yield mock_canary
+
+
+patch("homeassistant.util.Throttle", mock_decorator).start()

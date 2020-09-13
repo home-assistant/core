@@ -1,5 +1,25 @@
 """Tests for the canary component."""
-from tests.async_mock import MagicMock, PropertyMock
+from unittest.mock import MagicMock, PropertyMock
+
+from canary.api import SensorType
+
+from homeassistant.components.homeassistant import (
+    DOMAIN as HA_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
+from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.core import HomeAssistant
+
+
+async def update_entity(hass: HomeAssistant, entity_id: str) -> None:
+    """Run an update action for an entity."""
+    await hass.services.async_call(
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
 
 
 def mock_device(device_id, name, is_online=True, device_type_name=None):
@@ -36,6 +56,6 @@ def mock_mode(mode_id, name):
 def mock_reading(sensor_type, sensor_value):
     """Mock Canary Reading class."""
     reading = MagicMock()
-    type(reading).sensor_type = PropertyMock(return_value=sensor_type)
+    type(reading).sensor_type = SensorType(sensor_type)
     type(reading).value = PropertyMock(return_value=sensor_value)
     return reading
