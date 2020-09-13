@@ -4,15 +4,15 @@
     "flow_title": "{name} via HomeKit Accessory Protocol",
     "step": {
       "user": {
-        "title": "Pair with HomeKit Accessory",
-        "description": "HomeKit Controller can control devices via HomeKit Accessory Protocol without the need for a separate HomeKit controller. Select the device you want to pair with",
+        "title": "Device Selection",
+        "description": "HomeKit Controller communicates over the local area network with a secure encrypted connection without a separate HomeKit controller or iCloud. Select the device you want to pair with:",
         "data": {
           "device": "Device"
         }
       },
       "pair": {
-        "title": "Pair with HomeKit Accessory",
-        "description": "{name} will be controlled by Home Assistant via HomeKit Accessory Protocol without the need for a separate HomeKit controller. Enter your HomeKit pairing code (in the format XXX-XX-XXX) to use this accessory",
+        "title": "Pair with Device via HomeKit Accessory Protocol",
+        "description": "HomeKit Controller communicates with {name} over the local area network with a secure encrypted connection without a separate HomeKit controller or iCloud. Enter your HomeKit pairing code (in the format XXX-XX-XXX) to use this accessory. This code is usually found on the device itself or in the packaging.",
         "data": {
           "pairing_code": "Pairing Code"
         }
@@ -44,6 +44,7 @@
       "already_configured": "Accessory is already configured with this controller.",
       "invalid_config_entry": "This device is showing as ready to pair but there is already a conflicting configuration entry for it in Home Assistant that must first be removed.",
       "accessory_not_found_error": "Cannot add pairing as device can no longer be found.",
+      "invalid_properties": "Invalid properties announced by device.",
       "already_in_progress": "Config flow for device is already in progress."
     }
   },
