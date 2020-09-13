@@ -1,19 +1,11 @@
-import asyncio
+"""Config flow for NIU."""
 import logging
 
 from niu import NiuAPIException, NiuCloud, NiuNetException, NiuServerException
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import (
-    CONF_PASSWORD,
-    CONF_SCAN_INTERVAL,
-    CONF_TOKEN,
-    CONF_USERNAME,
-)
-from homeassistant.helpers import config_validation as cv
-
-from .const import DOMAIN
+from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,7 +14,7 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-class NiuConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class NiuConfigFlow(config_entries.ConfigFlow):
     """Config Flow for NIU."""
 
     async def async_step_import(self, import_config):

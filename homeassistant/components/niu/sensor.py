@@ -1,13 +1,8 @@
 """Platform for sensor integration."""
 import logging
 
-from homeassistant.const import (
-    ATTR_BATTERY_CHARGING,
-    ATTR_BATTERY_LEVEL,
-    LENGTH_KILOMETERS,
-    TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
-)
+from homeassistant.const import (ATTR_BATTERY_CHARGING, ATTR_BATTERY_LEVEL,
+                                 LENGTH_KILOMETERS, PERCENTAGE, TEMP_CELSIUS)
 from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN
@@ -16,7 +11,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # Sensors present in all vehicles
 SENSORS = {
-    "level": ("Battery Level", UNIT_PERCENTAGE, "mdi:battery"),
+    "level": ("Battery Level", PERCENTAGE, "mdi:battery"),
     "odometer": ("Odometer", LENGTH_KILOMETERS, "mdi:counter"),
     "range": ("Range", LENGTH_KILOMETERS, "mdi:road-variant"),
     "charging time": ("Charging Time", None, "mdi:clock-outline"),
@@ -29,8 +24,8 @@ SENSORS_SINGLE = {
 
 # Sensors present in dual-battery vehicles
 SENSORS_DUAL = {
-    "level a": ("Battery A Level", UNIT_PERCENTAGE, "mdi:battery"),
-    "level b": ("Battery B Level", UNIT_PERCENTAGE, "mdi:battery"),
+    "level a": ("Battery A Level", PERCENTAGE, "mdi:battery"),
+    "level b": ("Battery B Level", PERCENTAGE, "mdi:battery"),
     "temp a": ("Battery A Temperature", TEMP_CELSIUS, "mdi:thermometer"),
     "temp b": ("Battery B Temperature", TEMP_CELSIUS, "mdi:thermometer"),
 }
