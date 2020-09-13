@@ -213,7 +213,8 @@ class PingDataSubProcess(PingData):
                     out_error,
                 )
 
-            if pinger.returncode != 0:
+            if pinger.returncode > 1:
+                # returncode of 1 means the host is unreachable
                 _LOGGER.exception(
                     "Error running command: `%s`, return code: %s",
                     " ".join(self._ping_cmd),
