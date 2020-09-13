@@ -22,6 +22,7 @@ from homeassistant.helpers.entityfilter import FILTER_SCHEMA
 _LOGGER = logging.getLogger(__name__)
 
 CONF_FILTER = "filter"
+FORMAT_JSON = "json"
 DOMAIN = "splunk"
 
 DEFAULT_HOST = "localhost"
@@ -58,11 +59,11 @@ def setup(hass, config):
     name = conf.get(CONF_NAME)
     entity_filter = conf[CONF_FILTER]
 
-    hec = http_event_collector(token, host, "json", name, port, use_ssl)
-    hec.SSL_verify = verify_ssl
+    event_collector = http_event_collector(token, host, FORMAT_JSON, name, port, use_ssl)
+    event_collector.SSL_verify = verify_ssl
 
-    if not hec.check_connectivity():
-        _LOGGER.exception("Cannot connect to Splunk")
+    if not event_collector.check_connectivity():
+        _LOGGER.exception("Error while trying to connect to Splunk")
 
     def splunk_event_listener(event):
         """Listen for new messages on the bus and sends them to Splunk."""
@@ -86,10 +87,10 @@ def setup(hass, config):
                 "value": _state,
             },
         }
-        hec.batchEvent(payload)
+        event_collector.batchEvent(payload)
 
     def splunk_event_flush(event):
-        hec.flushBatch()
+        event_collector.flushBatch()
 
     hass.bus.listen(EVENT_STATE_CHANGED, splunk_event_listener)
     hass.bus.listen(EVENT_TIME_CHANGED, splunk_event_flush)
