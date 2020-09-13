@@ -31,7 +31,7 @@ async def test_alarm_control_panel(hass, canary) -> None:
     mocked_location = mock_location(
         location_id=100,
         name="Home",
-        is_online=True,
+        is_celsius=True,
         is_private=False,
         mode=mock_mode(7, "standby"),
         devices=[online_device_at_home],
@@ -53,7 +53,7 @@ async def test_alarm_control_panel(hass, canary) -> None:
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == None
+    assert state.state is None
     assert state.attributes["private"] == "False"
 
     # test private system
@@ -109,7 +109,7 @@ async def test_alarm_control_panel_services(hass, canary) -> None:
     mocked_location = mock_location(
         location_id=100,
         name="Home",
-        is_online=True,
+        is_celsius=True,
         mode=mock_mode(1, "disarmed"),
         devices=[online_device_at_home],
     )
@@ -161,4 +161,3 @@ async def test_alarm_control_panel_services(hass, canary) -> None:
         blocking=True,
     )
     instance.set_location_mode.assert_called_with(100, "disarmed", True)
-
