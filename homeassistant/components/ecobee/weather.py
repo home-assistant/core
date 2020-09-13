@@ -1,5 +1,5 @@
 """Support for displaying weather info from Ecobee API."""
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from pyecobee.const import ECOBEE_STATE_UNKNOWN
 
@@ -165,10 +165,13 @@ class EcobeeWeather(WeatherEntity):
             return None
 
         forecasts = []
-        for day in range(1, 5):
+        date = datetime.now()
+        for day in range(0, 5):
             forecast = _process_forecast(self.weather["forecasts"][day])
             if forecast is None:
                 continue
+            forecast[ATTR_FORECAST_TIME] = date.isoformat()
+            date += timedelta(days=1)
             forecasts.append(forecast)
 
         if forecasts:
@@ -186,9 +189,6 @@ def _process_forecast(json):
     """Process a single ecobee API forecast to return expected values."""
     forecast = {}
     try:
-        forecast[ATTR_FORECAST_TIME] = datetime.strptime(
-            json["dateTime"], "%Y-%m-%d %H:%M:%S"
-        ).isoformat()
         forecast[ATTR_FORECAST_CONDITION] = ECOBEE_WEATHER_SYMBOL_TO_HASS[
             json["weatherSymbol"]
         ]
