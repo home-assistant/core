@@ -23,7 +23,7 @@ async def test_alarm_control_panel(hass, canary) -> None:
     registry = mock_registry(hass)
     online_device_at_home = mock_device(20, "Dining Room", True, "Canary Pro")
 
-    mock_location = mock_location(
+    mocked_location = mock_location(
         location_id=100,
         name="Home",
         is_online=True,
@@ -33,7 +33,7 @@ async def test_alarm_control_panel(hass, canary) -> None:
     )
 
     instance = canary.return_value
-    instance.get_locations.return_value = [mock_location]
+    instance.get_locations.return_value = [mocked_location]
 
     config = {DOMAIN: {"username": "test-username", "password": "test-password"}}
     with patch(
@@ -52,7 +52,7 @@ async def test_alarm_control_panel(hass, canary) -> None:
     assert state.attributes["private"] == "False"
 
     # test private system
-    mock_location.is_private.return_value = True
+    mocked_location.is_private.return_value = True
 
     await hass.helpers.entity_component.async_update_entity(entity_id)
     await hass.async_block_till_done()
@@ -62,10 +62,10 @@ async def test_alarm_control_panel(hass, canary) -> None:
     assert state.state == STATE_ALARM_DISARMED
     assert state.attributes["private"] == "True"
 
-    mock_location.is_private.return_value = False
+    mocked_location.is_private.return_value = False
 
     # test armed home
-    mock_location.mode.return_value = mock_mode(4, LOCATION_MODE_HOME)
+    mocked_location.mode.return_value = mock_mode(4, LOCATION_MODE_HOME)
 
     await hass.helpers.entity_component.async_update_entity(entity_id)
     await hass.async_block_till_done()
@@ -75,7 +75,7 @@ async def test_alarm_control_panel(hass, canary) -> None:
     assert state.state == STATE_ALARM_ARMED_HOME
 
     # test armed away
-    mock_location.mode.return_value = mock_mode(5, LOCATION_MODE_AWAY)
+    mocked_location.mode.return_value = mock_mode(5, LOCATION_MODE_AWAY)
 
     await hass.helpers.entity_component.async_update_entity(entity_id)
     await hass.async_block_till_done()
@@ -85,7 +85,7 @@ async def test_alarm_control_panel(hass, canary) -> None:
     assert state.state == STATE_ALARM_ARMED_AWAY
 
     # test armed night
-    mock_location.mode.return_value = mock_mode(6, LOCATION_MODE_NIGHT)
+    mocked_location.mode.return_value = mock_mode(6, LOCATION_MODE_NIGHT)
 
     await hass.helpers.entity_component.async_update_entity(entity_id)
     await hass.async_block_till_done()
