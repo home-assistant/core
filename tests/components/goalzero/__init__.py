@@ -20,6 +20,7 @@ CONF_CONFIG_FLOW = {
 
 async def _create_mocked_yeti(raise_exception=False):
     mocked_yeti = AsyncMock()
+    mocked_yeti.get_state = AsyncMock()
     return mocked_yeti
 
 
