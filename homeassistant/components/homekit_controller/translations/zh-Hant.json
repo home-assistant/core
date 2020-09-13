@@ -53,5 +53,25 @@
             }
         }
     },
+    "device_automation": {
+        "trigger_subtype": {
+            "button1": "\u6309\u9215 1",
+            "button10": "\u6309\u9215 10",
+            "button2": "\u6309\u9215 2",
+            "button3": "\u6309\u9215 3",
+            "button4": "\u6309\u9215 4",
+            "button5": "\u6309\u9215 5",
+            "button6": "\u6309\u9215 6",
+            "button7": "\u6309\u9215 7",
+            "button8": "\u6309\u9215 8",
+            "button9": "\u6309\u9215 9",
+            "doorbell": "\u9580\u9234"
+        },
+        "trigger_type": {
+            "double_press": "\"{subtype}\" \u6309\u4e0b\u5169\u6b21",
+            "long_press": "\"{subtype}\" \u6309\u4e0b\u4e26\u6309\u4f4f",
+            "single_press": "\"{subtype}\" \u6309\u4e0b"
+        }
+    },
     "title": "HomeKit \u63a7\u5236\u5668"
 }
