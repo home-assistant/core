@@ -69,6 +69,7 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry, async_add_ent
         entities.append(TPLinkSmartBulb(device))
 
     async_add_entities(entities, update_before_add=True)
+    return True
 
 
 def brightness_to_percentage(byt):
@@ -483,13 +484,17 @@ class TPLinkSmartBulb(LightEntity):
     async def async_update(self):
         """Update the TP-Link bulb's state."""
         for update_attempt in range(MAX_ATTEMPTS):
-            is_ready = await self.hass.async_add_executor_job(
-                self.attempt_update, update_attempt
-            )
+            try:
+                is_ready = await self.hass.async_add_executor_job(
+                    self.attempt_update, update_attempt
+                )
 
-            if is_ready:
-                self._is_available = True
-                break
+                if is_ready:
+                    self._is_available = True
+                    break
+            except Exception:
+                pass
+
             await asyncio.sleep(SLEEP_TIME)
         else:
             if self._is_available:
