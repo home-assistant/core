@@ -1,18 +1,18 @@
 {
   "title": "HomeKit Controller",
   "config": {
-    "flow_title": "HomeKit Accessory: {name}",
+    "flow_title": "{name} via HomeKit Accessory Protocol",
     "step": {
       "user": {
-        "title": "Pair with HomeKit Accessory",
-        "description": "Select the device you want to pair with",
+        "title": "Device selection",
+        "description": "HomeKit Controller communicates over the local area network using a secure encrypted connection without a separate HomeKit controller or iCloud. Select the device you want to pair with:",
         "data": {
           "device": "Device"
         }
       },
       "pair": {
-        "title": "Pair with HomeKit Accessory",
-        "description": "Enter your HomeKit pairing code (in the format XXX-XX-XXX) to use this accessory",
+        "title": "Pair with a device via HomeKit Accessory Protocol",
+        "description": "HomeKit Controller communicates with {name} over the local area network using a secure encrypted connection without a separate HomeKit controller or iCloud. Enter your HomeKit pairing code (in the format XXX-XX-XXX) to use this accessory. This code is usually found on the device itself or in the packaging.",
         "data": {
           "pairing_code": "Pairing Code"
         }

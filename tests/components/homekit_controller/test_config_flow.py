@@ -52,14 +52,17 @@ INVALID_PAIRING_CODES = [
     "111-11-111 ",
     "111-11-111a",
     "1111111",
+    "22222222",
 ]
 
 
 VALID_PAIRING_CODES = [
-    "111-11-111",
-    "123-45-678",
-    "11111111",
+    "114-11-111",
+    "123-45-679",
+    "123-45-679  ",
+    "11121111",
     "98765432",
+    "   98765432  ",
 ]
 
 
@@ -548,6 +551,7 @@ async def test_user_works(hass, controller):
     assert get_flow_context(hass, result) == {
         "source": "user",
         "unique_id": "00:00:00:00:00:00",
+        "title_placeholders": {"name": "TestDevice"},
     }
 
     result = await hass.config_entries.flow.async_configure(
