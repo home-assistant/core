@@ -6,7 +6,7 @@
   "requirements": ["aioesphomeapi==2.6.3"],
   "zeroconf": ["_esphomelib._tcp.local."],
   "codeowners": ["@OttoWinter"],
-  "dependencies": [
+  "after_dependencies": [
     "zeroconf"
   ]
 }

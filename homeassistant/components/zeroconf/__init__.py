@@ -27,10 +27,10 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     __version__,
 )
-from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.network import NoURLAvailableError, get_url
-from homeassistant.loader import async_get_homekit, async_get_zeroconf, bind_hass
+from homeassistant.helpers.singleton import singleton
+from homeassistant.loader import async_get_homekit, async_get_zeroconf
 
 from .usage import install_multiple_zeroconf_catcher
 
@@ -78,14 +78,26 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-@bind_hass
+@singleton(DOMAIN)
 async def async_get_instance(hass):
     """Zeroconf instance to be shared with other integrations that use it."""
-    if DOMAIN not in hass.data:
-        raise HomeAssistantError(
-            "async_get_instance called before zeroconf was setup. Ensure zeroconf is added to dependencies in manifest.json"
-        )
-    return hass.data[DOMAIN]
+    return await _async_get_instance(hass)
+
+
+async def _async_get_instance(hass, **zcargs):
+    logging.getLogger("zeroconf").setLevel(logging.NOTSET)
+
+    zeroconf = await hass.async_add_executor_job(partial(HaZeroconf, **zcargs))
+
+    install_multiple_zeroconf_catcher(zeroconf)
+
+    def _stop_zeroconf(_):
+        """Stop Zeroconf."""
+        zeroconf.ha_close()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_zeroconf)
+
+    return zeroconf
 
 
 class HaServiceBrowser(ServiceBrowser):
@@ -120,8 +132,6 @@ class HaZeroconf(Zeroconf):
 
 async def async_setup(hass, config):
     """Set up Zeroconf and make Home Assistant discoverable."""
-    logging.getLogger("zeroconf").setLevel(logging.NOTSET)
-
     zc_config = config.get(DOMAIN, {})
     zc_args = {}
     if zc_config.get(CONF_DEFAULT_INTERFACE, DEFAULT_DEFAULT_INTERFACE):
@@ -129,11 +139,7 @@ async def async_setup(hass, config):
     if not zc_config.get(CONF_IPV6, DEFAULT_IPV6):
         zc_args["ip_version"] = IPVersion.V4Only
 
-    zeroconf = hass.data[DOMAIN] = await hass.async_add_executor_job(
-        partial(HaZeroconf, **zc_args)
-    )
-
-    install_multiple_zeroconf_catcher(zeroconf)
+    zeroconf = hass.data[DOMAIN] = await _async_get_instance(hass, **zc_args)
 
     async def _async_zeroconf_hass_start(_event):
         """Expose Home Assistant on zeroconf when it starts.
@@ -150,11 +156,6 @@ async def async_setup(hass, config):
 
         await _async_start_zeroconf_browser(hass, zeroconf)
 
-    def _stop_zeroconf(_):
-        """Stop Zeroconf."""
-        zeroconf.ha_close()
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_zeroconf)
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_zeroconf_hass_start)
     hass.bus.async_listen_once(
         EVENT_HOMEASSISTANT_STARTED, _async_zeroconf_hass_started
