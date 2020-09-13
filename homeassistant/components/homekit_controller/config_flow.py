@@ -304,9 +304,8 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
             # Its possible that the first try may have been busy so
             # we always check to see if self.finish_paring has been
             # set.
-            discovery = await self.controller.find_ip_by_device_id(self.hkid)
-
             try:
+                discovery = await self.controller.find_ip_by_device_id(self.hkid)
                 self.finish_pairing = await discovery.start_pairing(self.hkid)
 
             except aiohomekit.BusyError:
