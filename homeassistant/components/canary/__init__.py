@@ -7,6 +7,7 @@ from requests import ConnectTimeout, HTTPError
 import voluptuous as vol
 
 from homeassistant.const import CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
@@ -46,10 +47,12 @@ def setup(hass, config):
 
     try:
         hass.data[DATA_CANARY] = CanaryData(username, password, timeout)
-    except (ConnectTimeout, HTTPError) as ex:
+    except ConnectTimout as error:
+        raise PlatformNotReady from error
+    except HTTPError as error:
         _LOGGER.error("Unable to connect to Canary service: %s", str(ex))
         hass.components.persistent_notification.create(
-            f"Error: {ex}<br />You will need to restart hass after fixing.",
+            f"Error: {error}<br />You will need to restart hass after fixing.",
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID,
         )
