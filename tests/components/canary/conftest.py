@@ -44,4 +44,4 @@ def canary(hass):
         yield mock_canary
 
 
-patch("homeassistant.util.Throttle", mock_decorator).start()
+patch("homeassistant.components.canary.Throttle", mock_decorator).start()
