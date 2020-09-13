@@ -44,6 +44,7 @@
       "already_configured": "Accessory is already configured with this controller.",
       "invalid_config_entry": "This device is showing as ready to pair but there is already a conflicting configuration entry for it in Home Assistant that must first be removed.",
       "accessory_not_found_error": "Cannot add pairing as device can no longer be found.",
+      "invalid_properties": "Invalid properties announced by device.",
       "already_in_progress": "Config flow for device is already in progress."
     }
   },
