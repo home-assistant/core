@@ -75,7 +75,7 @@ async def test_alarm_control_panel(hass, canary) -> None:
     )
 
     # test armed home
-    type(mocked_location).mode = PropertyMock
+    type(mocked_location).mode = PropertyMock(
         return_value=mock_mode(4, LOCATION_MODE_HOME)
     )
 
