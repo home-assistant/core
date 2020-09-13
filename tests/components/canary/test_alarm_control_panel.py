@@ -12,6 +12,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_DISARMED,
+    STATE_UNKNOWN,
 )
 from homeassistant.setup import async_setup_component
 
@@ -53,7 +54,7 @@ async def test_alarm_control_panel(hass, canary) -> None:
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state is None
+    assert state.state == STATE_UNKNOWN
     assert state.attributes["private"] == "False"
 
     # test private system
