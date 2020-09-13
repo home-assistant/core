@@ -41,8 +41,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     websession = async_get_clientsession(hass, verify_ssl=False)
 
     port = 80
-    host = (entry.data[CONF_HOST],)
-    password = (entry.data[CONF_PASSWORD],)
+    host = entry.data[CONF_HOST]
+    password = entry.data[CONF_PASSWORD]
 
     if ":" in host:
         port = int(host.split(":")[1])
