@@ -2176,8 +2176,8 @@ async def test_logbook_invalid_entity(hass, hass_client):
     assert response.status == 500
 
 
-async def test_icons(hass, hass_client):
-    """Test to ensure custom icons are returned."""
+async def test_icon_and_state(hass, hass_client):
+    """Test to ensure state and custom icons are returned."""
     await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(hass, "logbook", {})
     await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
@@ -2221,9 +2221,11 @@ async def test_icons(hass, hass_client):
     assert response_json[1]["message"] == "turned on"
     assert response_json[1]["entity_id"] == "light.kitchen"
     assert response_json[1]["icon"] == "mdi:security"
+    assert response_json[1]["state"] == STATE_ON
     assert response_json[2]["message"] == "turned off"
     assert response_json[2]["entity_id"] == "light.kitchen"
     assert response_json[2]["icon"] == "mdi:chemical-weapon"
+    assert response_json[2]["state"] == STATE_OFF
 
 
 class MockLazyEventPartialState(ha.Event):

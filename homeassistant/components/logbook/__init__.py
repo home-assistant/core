@@ -323,6 +323,7 @@ def humanify(hass, events, entity_attr_cache, context_lookup):
                         entity_id, domain, event, entity_attr_cache
                     ),
                     "domain": domain,
+                    "state": event.state,
                     "entity_id": entity_id,
                 }
 
