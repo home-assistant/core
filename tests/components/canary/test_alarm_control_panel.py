@@ -50,7 +50,8 @@ async def test_alarm_control_panel(hass, canary) -> None:
 
     entity_id = "alarm_control_panel.home"
     entity_entry = registry.async_get(entity_id)
-    assert not entity_entry
+    assert entity_entry
+    assert entity_entry.unique_id == "100"
 
     state = hass.states.get(entity_id)
     assert state
