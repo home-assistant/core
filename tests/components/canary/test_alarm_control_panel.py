@@ -18,7 +18,7 @@ from homeassistant.setup import async_setup_component
 
 from . import mock_device, mock_location, mock_mode
 
-from tests.async_mock import patch
+from tests.async_mock import PropertyMock, patch
 from tests.common import mock_registry
 
 
@@ -58,7 +58,9 @@ async def test_alarm_control_panel(hass, canary) -> None:
     assert not state.attributes["private"]
 
     # test private system
-    type(mocked_location).is_private.return_value = True
+    type(mocked_location).is_private = PropertyMock(
+        return_value=True
+    )
 
     await hass.helpers.entity_component.async_update_entity(entity_id)
     await hass.async_block_till_done()
@@ -68,10 +70,14 @@ async def test_alarm_control_panel(hass, canary) -> None:
     assert state.state == STATE_ALARM_DISARMED
     assert state.attributes["private"]
 
-    type(mocked_location).is_private.return_value = False
+    type(mocked_location).is_private = PropertyMock(
+        return_value=False
+    )
 
     # test armed home
-    mocked_location.mode.return_value = mock_mode(4, LOCATION_MODE_HOME)
+    type(mocked_location).mode = PropertyMock
+        return_value=mock_mode(4, LOCATION_MODE_HOME)
+    )
 
     await hass.helpers.entity_component.async_update_entity(entity_id)
     await hass.async_block_till_done()
@@ -81,7 +87,9 @@ async def test_alarm_control_panel(hass, canary) -> None:
     assert state.state == STATE_ALARM_ARMED_HOME
 
     # test armed away
-    mocked_location.mode.return_value = mock_mode(5, LOCATION_MODE_AWAY)
+    type(mocked_location).mode = PropertyMock(
+        return_value=mock_mode(5, LOCATION_MODE_AWAY)
+    )
 
     await hass.helpers.entity_component.async_update_entity(entity_id)
     await hass.async_block_till_done()
@@ -91,7 +99,9 @@ async def test_alarm_control_panel(hass, canary) -> None:
     assert state.state == STATE_ALARM_ARMED_AWAY
 
     # test armed night
-    mocked_location.mode.return_value = mock_mode(6, LOCATION_MODE_NIGHT)
+    type(mocked_location).mode = PropertyMock(
+        return_value=mock_mode(6, LOCATION_MODE_NIGHT)
+    )
 
     await hass.helpers.entity_component.async_update_entity(entity_id)
     await hass.async_block_till_done()
