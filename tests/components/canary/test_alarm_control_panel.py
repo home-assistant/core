@@ -27,23 +27,35 @@ async def test_alarm_control_panel(hass, canary) -> None:
         location_id=100,
         name="Home",
         is_online=True,
-        is_private=True,
+        is_private=False,
+        mode=None,
         devices=[online_device_at_home],
     )
 
     instance = canary.return_value
-    instance.get_locations.return_value = [
-       mock_location
-    ]
+    instance.get_locations.return_value = [mock_location]
 
     config = {DOMAIN: {"username": "test-username", "password": "test-password"}}
-    with patch("homeassistant.components.canary.CANARY_COMPONENTS", ["alarm_control_panel"]):
+    with patch(
+        "homeassistant.components.canary.CANARY_COMPONENTS", ["alarm_control_panel"]
+    ):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
 
     entity_id = "alarm_control_panel.home"
     entity_entry = registry.async_get(entity_id)
     assert not entity_entry
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == None
+    assert state.attributes["private"] == "False"
+
+    # test private system
+    mock_location.is_private.return_value = True
+
+    await hass.helpers.entity_component.async_update_entity(entity_id)
+    await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
     assert state
