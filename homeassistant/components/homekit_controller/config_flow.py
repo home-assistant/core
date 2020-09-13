@@ -8,12 +8,19 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.core import callback
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    async_get_registry as async_get_device_registry,
+)
 
 from .connection import get_accessory_name, get_bridge_information
 from .const import DOMAIN, KNOWN_DEVICES
 
-HOMEKIT_IGNORE = ["Home Assistant Bridge"]
 HOMEKIT_DIR = ".homekit"
+HOMEKIT_BRIDGE_DOMAIN = "homekit"
+HOMEKIT_BRIDGE_SERIAL_NUMBER = "homekit.bridge"
+HOMEKIT_BRIDGE_MODEL = "Home Assistant HomeKit Bridge"
+
 PAIRING_FILE = "pairing.json"
 
 PIN_FORMAT = re.compile(r"^(\d{3})-{0,1}(\d{2})-{0,1}(\d{3})$")
@@ -141,6 +148,17 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
 
         return self.async_abort(reason="no_devices")
 
+    async def _hkid_is_homekit_bridge(self, hkid):
+        """Determine if the device is a homekit bridge."""
+        dev_reg = await async_get_device_registry(self.hass)
+        device = dev_reg.async_get_device(
+            identifiers=set(), connections={(CONNECTION_NETWORK_MAC, hkid)}
+        )
+
+        if device is None:
+            return False
+        return device.model == HOMEKIT_BRIDGE_MODEL
+
     async def async_step_zeroconf(self, discovery_info):
         """Handle a discovered HomeKit accessory.
 
@@ -152,6 +170,12 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
         properties = {
             key.lower(): value for (key, value) in discovery_info["properties"].items()
         }
+
+        if "id" not in properties:
+            _LOGGER.warning(
+                "HomeKit device %s: id not exposed, in violation of spec", properties
+            )
+            return self.async_abort(reason="invalid_properties")
 
         # The hkid is a unique random number that looks like a pairing code.
         # It changes if a device is factory reset.
@@ -208,7 +232,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
         # Devices in HOMEKIT_IGNORE have native local integrations - users
         # should be encouraged to use native integration and not confused
         # by alternative HK API.
-        if model in HOMEKIT_IGNORE:
+        if await self._hkid_is_homekit_bridge(hkid):
             return self.async_abort(reason="ignored_model")
 
         self.model = model
