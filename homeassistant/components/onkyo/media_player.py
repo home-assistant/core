@@ -237,7 +237,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     _LOGGER.debug("Provisioning Onkyo AVR device at %s:%d", host, port)
 
-    active_zones = []
+    active_zones = {}
 
     def async_onkyo_discover_zones_callback(message):
         """Receive the power status of the available zones on the AVR."""
@@ -252,7 +252,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 zone_entity = OnkyoAVR(
                     avr, f"{name} {zones[zone]}", sources, zone, max_volume
                 )
-                active_zones.append(zone_entity)
+                active_zones[zone] = zone_entity
                 async_add_entities([zone_entity])
 
     @callback
@@ -261,9 +261,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         _LOGGER.debug("Received update callback from AVR: %s", message)
 
         _zone, _, _ = message
-        if any(active_zone.zone == _zone for active_zone in active_zones):
-            for zone in active_zones:
-                zone.process_update(message)
+        if _zone in active_zones:
+            active_zones[_zone].process_update(message)
         else:
             async_onkyo_discover_zones_callback(message)
 
@@ -271,7 +270,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     def async_onkyo_connect_callback():
         """Receiver (re)connected."""
         _LOGGER.debug("AVR (re)connected:")
-        for zone in active_zones:
+        for zone in active_zones.values():
             zone.backfill_state()
 
     try:
@@ -290,7 +289,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         avr.query_property(zone, "power")
 
     # Add the main zone to active_zones, since it is always active
-    active_zones.append(OnkyoAVR(avr, name, sources, "main", max_volume))
+    active_zones["main"] = OnkyoAVR(avr, name, sources, "main", max_volume)
 
     @callback
     def close_avr(_event):
@@ -298,7 +297,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, close_avr)
 
-    async_add_entities(active_zones)
+    async_add_entities(active_zones.values())
 
 
 class OnkyoAVR(MediaPlayerEntity):
