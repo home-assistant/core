@@ -156,10 +156,10 @@ class SmartPlugSwitch(SwitchEntity):
         except (SmartDeviceException, OSError) as ex:
             if update_attempt == 0:
                 _LOGGER.warning(
-                    "Retrying in %s seconds for %s|%s due to: %s",
+                    "Retrying in %s for %s|%s due to: %s",
                     SLEEP_TIME,
-                    self._light_features.host,
-                    self._light_features.alias,
+                    self._host,
+                    self._alias,
                     ex,
                 )
             return False
