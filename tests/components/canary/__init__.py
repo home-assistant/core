@@ -3,8 +3,6 @@ from unittest.mock import MagicMock, PropertyMock
 
 from canary.api import SensorType
 
-from homeassistant.core import HomeAssistant
-
 
 def mock_device(device_id, name, is_online=True, device_type_name=None):
     """Mock Canary Device class."""
