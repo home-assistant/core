@@ -156,7 +156,7 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
     hass.data[DOMAIN][entry.entry_id][DATA_REMOVE_UPDATE_LISTENER]()
     hass.data[DOMAIN][entry.entry_id][DATA_REMOVE_STOP_LISTENER]()
-    hass.data[DOMAIN][entry.entry_id][DATA_AD].close()
+    await hass.async_add_executor_job(hass.data[DOMAIN][entry.entry_id][DATA_AD].close)
 
     if hass.data[DOMAIN][entry.entry_id]:
         hass.data[DOMAIN].pop(entry.entry_id)
