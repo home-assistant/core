@@ -396,6 +396,13 @@ async def mqtt_mock(hass, mqtt_client_mock, mqtt_config):
 
 
 @pytest.fixture
+def mock_zeroconf():
+    """Mock zeroconf."""
+    with patch("homeassistant.components.zeroconf.HaZeroconf") as mock_zc:
+        yield mock_zc.return_value
+
+
+@pytest.fixture
 def legacy_patchable_time():
     """Allow time to be patchable by using event listeners instead of asyncio loop."""
 
