@@ -7,16 +7,7 @@ from tests.async_mock import MagicMock, patch
 
 def mock_canary_update(self, **kwargs):
     """Get the latest data from py-canary."""
-    for location in self._api.get_locations():
-        location_id = location.location_id
-
-        self._locations_by_id[location_id] = location
-
-        for device in location.devices:
-            if device.is_online:
-                self._readings_by_device_id[
-                    device.device_id
-                ] = self._api.get_latest_readings(device.device_id)
+    self._update(**kwargs)
 
 
 @fixture
