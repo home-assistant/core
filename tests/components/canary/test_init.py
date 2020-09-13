@@ -33,15 +33,5 @@ async def test_setup_with_http_error(hass, canary) -> None:
 
     canary.side_effect = HTTPError()
 
-    with patch(
-        "homeassistant.components.canary.alarm_control_panel.setup_platform",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.canary.camera.setup_platform",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.canary.sensor.setup_platform",
-        return_value=True,
-    ):
-        assert not await async_setup_component(hass, DOMAIN, config)
-        await hass.async_block_till_done()
+    assert not await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
