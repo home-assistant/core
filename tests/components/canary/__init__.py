@@ -18,7 +18,9 @@ def mock_device(device_id, name, is_online=True, device_type_name=None):
     return device
 
 
-def mock_location(location_id, name, is_celsius=True, devices=None, mode=None, is_private=False):
+def mock_location(
+    location_id, name, is_celsius=True, devices=None, mode=None, is_private=False
+):
     """Mock Canary Location class."""
     location = MagicMock()
     type(location).location_id = PropertyMock(return_value=location_id)
