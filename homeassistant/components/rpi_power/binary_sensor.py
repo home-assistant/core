@@ -11,6 +11,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_PROBLEM,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
@@ -19,19 +20,12 @@ DESCRIPTION_NORMALIZED = "Voltage normalized. Everything is working as intended.
 DESCRIPTION_UNDER_VOLTAGE = "Under-voltage was detected. Consider getting a uninterruptible power supply for your Raspberry Pi."
 
 
-def setup_platform(hass: HomeAssistant, config, add_entities, discovery_info=None):
-    """Set up the sensor platform."""
-    if discovery_info is None:
-        return
-
-    under_voltage = new_under_voltage()
-    if under_voltage is None:
-        _LOGGER.error(
-            "Can't find the system class needed for this component, make sure that your kernel is recent and the hardware is supported"
-        )
-        return
-
-    add_entities([RaspberryChargerBinarySensor(under_voltage)])
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+):
+    """Set up rpi_power binary sensor."""
+    under_voltage = await hass.async_add_executor_job(new_under_voltage)
+    async_add_entities([RaspberryChargerBinarySensor(under_voltage)], True)
 
 
 class RaspberryChargerBinarySensor(BinarySensorEntity):
