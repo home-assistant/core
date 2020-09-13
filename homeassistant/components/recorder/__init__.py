@@ -199,8 +199,6 @@ PurgeTask = namedtuple("PurgeTask", ["keep_days", "repack"])
 class WaitTask:
     """An object to insert into the recorder queue to tell it set the _queue_watch event."""
 
-    pass
-
 
 class Recorder(threading.Thread):
     """A threaded recorder class."""
