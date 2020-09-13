@@ -114,7 +114,7 @@ def main():
         try:
             start = monotonic()
             print(f"Validating {plugin.__name__.split('.')[-1]}...", end="", flush=True)
-            if plugin is requirements:
+            if plugin is requirements and not config.specific_integrations:
                 print()
             plugin.validate(integrations, config)
             print(" done in {:.2f}s".format(monotonic() - start))

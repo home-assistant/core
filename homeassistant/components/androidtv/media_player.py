@@ -380,7 +380,7 @@ def adb_decorator(override_available=False):
                 # An unforeseen exception occurred. Close the ADB connection so that
                 # it doesn't happen over and over again, then raise the exception.
                 await self.aftv.adb_close()
-                self._available = False  # pylint: disable=protected-access
+                self._available = False
                 raise
 
         return _adb_exception_catcher

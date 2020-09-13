@@ -896,6 +896,65 @@ def test_relative_time(mock_is_safe, hass):
     "homeassistant.helpers.template.TemplateEnvironment.is_safe_callable",
     return_value=True,
 )
+def test_timedelta(mock_is_safe, hass):
+    """Test relative_time method."""
+    now = datetime.strptime("2000-01-01 10:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z")
+    with patch("homeassistant.util.dt.now", return_value=now):
+        assert (
+            "0:02:00"
+            == template.Template(
+                "{{timedelta(seconds=120)}}",
+                hass,
+            ).async_render()
+        )
+        assert (
+            "1 day, 0:00:00"
+            == template.Template(
+                "{{timedelta(seconds=86400)}}",
+                hass,
+            ).async_render()
+        )
+        assert (
+            "1 day, 4:00:00"
+            == template.Template(
+                "{{timedelta(days=1, hours=4)}}",
+                hass,
+            ).async_render()
+        )
+        assert (
+            "1 hour"
+            == template.Template(
+                "{{relative_time(now() - timedelta(seconds=3600))}}",
+                hass,
+            ).async_render()
+        )
+        assert (
+            "1 day"
+            == template.Template(
+                "{{relative_time(now() - timedelta(seconds=86400))}}",
+                hass,
+            ).async_render()
+        )
+        assert (
+            "1 day"
+            == template.Template(
+                "{{relative_time(now() - timedelta(seconds=86401))}}",
+                hass,
+            ).async_render()
+        )
+        assert (
+            "15 days"
+            == template.Template(
+                "{{relative_time(now() - timedelta(weeks=2, days=1))}}",
+                hass,
+            ).async_render()
+        )
+
+
+@patch(
+    "homeassistant.helpers.template.TemplateEnvironment.is_safe_callable",
+    return_value=True,
+)
 def test_utcnow(mock_is_safe, hass):
     """Test utcnow method."""
     now = dt_util.utcnow()
@@ -2321,3 +2380,42 @@ async def test_protected_blocked(hass):
     tmp = template.Template('{{ states.sensor.any.__getattr__("any") }}', hass)
     with pytest.raises(TemplateError):
         tmp.async_render()
+
+
+async def test_demo_template(hass):
+    """Test the demo template works as expected."""
+    hass.states.async_set("sun.sun", "above", {"elevation": 50, "next_rising": "later"})
+    for i in range(2):
+        hass.states.async_set(f"sensor.sensor{i}", "on")
+
+    demo_template_str = """
+{## Imitate available variables: ##}
+{% set my_test_json = {
+  "temperature": 25,
+  "unit": "°C"
+} %}
+
+The temperature is {{ my_test_json.temperature }} {{ my_test_json.unit }}.
+
+{% if is_state("sun.sun", "above_horizon") -%}
+  The sun rose {{ relative_time(states.sun.sun.last_changed) }} ago.
+{%- else -%}
+  The sun will rise at {{ as_timestamp(strptime(state_attr("sun.sun", "next_rising"), "")) | timestamp_local }}.
+{%- endif %}
+
+For loop example getting 3 entity values:
+
+{% for states in states | slice(3) -%}
+  {% set state = states | first %}
+  {%- if loop.first %}The {% elif loop.last %} and the {% else %}, the {% endif -%}
+  {{ state.name | lower }} is {{state.state_with_unit}}
+{%- endfor %}.
+"""
+    tmp = template.Template(demo_template_str, hass)
+
+    result = tmp.async_render()
+    assert "The temperature is 25" in result
+    assert "is on" in result
+    assert "sensor0" in result
+    assert "sensor1" in result
+    assert "sun" in result

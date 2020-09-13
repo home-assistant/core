@@ -11,6 +11,14 @@ from yarl import URL
 
 from homeassistant.components.media_player import BrowseMedia, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
+    MEDIA_CLASS_ALBUM,
+    MEDIA_CLASS_ARTIST,
+    MEDIA_CLASS_DIRECTORY,
+    MEDIA_CLASS_EPISODE,
+    MEDIA_CLASS_GENRE,
+    MEDIA_CLASS_PLAYLIST,
+    MEDIA_CLASS_PODCAST,
+    MEDIA_CLASS_TRACK,
     MEDIA_TYPE_ALBUM,
     MEDIA_TYPE_ARTIST,
     MEDIA_TYPE_EPISODE,
@@ -95,6 +103,68 @@ LIBRARY_MAP = {
     "featured_playlists": "Featured Playlists",
     "new_releases": "New Releases",
 }
+
+CONTENT_TYPE_MEDIA_CLASS = {
+    "current_user_playlists": {
+        "parent": MEDIA_CLASS_DIRECTORY,
+        "children": MEDIA_CLASS_PLAYLIST,
+    },
+    "current_user_followed_artists": {
+        "parent": MEDIA_CLASS_DIRECTORY,
+        "children": MEDIA_CLASS_ARTIST,
+    },
+    "current_user_saved_albums": {
+        "parent": MEDIA_CLASS_DIRECTORY,
+        "children": MEDIA_CLASS_ALBUM,
+    },
+    "current_user_saved_tracks": {
+        "parent": MEDIA_CLASS_DIRECTORY,
+        "children": MEDIA_CLASS_TRACK,
+    },
+    "current_user_saved_shows": {
+        "parent": MEDIA_CLASS_DIRECTORY,
+        "children": MEDIA_CLASS_PODCAST,
+    },
+    "current_user_recently_played": {
+        "parent": MEDIA_CLASS_DIRECTORY,
+        "children": MEDIA_CLASS_TRACK,
+    },
+    "current_user_top_artists": {
+        "parent": MEDIA_CLASS_DIRECTORY,
+        "children": MEDIA_CLASS_ARTIST,
+    },
+    "current_user_top_tracks": {
+        "parent": MEDIA_CLASS_DIRECTORY,
+        "children": MEDIA_CLASS_TRACK,
+    },
+    "featured_playlists": {
+        "parent": MEDIA_CLASS_DIRECTORY,
+        "children": MEDIA_CLASS_PLAYLIST,
+    },
+    "categories": {"parent": MEDIA_CLASS_DIRECTORY, "children": MEDIA_CLASS_GENRE},
+    "category_playlists": {
+        "parent": MEDIA_CLASS_DIRECTORY,
+        "children": MEDIA_CLASS_PLAYLIST,
+    },
+    "new_releases": {"parent": MEDIA_CLASS_DIRECTORY, "children": MEDIA_CLASS_ALBUM},
+    MEDIA_TYPE_PLAYLIST: {
+        "parent": MEDIA_CLASS_PLAYLIST,
+        "children": MEDIA_CLASS_TRACK,
+    },
+    MEDIA_TYPE_ALBUM: {"parent": MEDIA_CLASS_ALBUM, "children": MEDIA_CLASS_TRACK},
+    MEDIA_TYPE_ARTIST: {"parent": MEDIA_CLASS_ARTIST, "children": MEDIA_CLASS_ALBUM},
+    MEDIA_TYPE_EPISODE: {"parent": MEDIA_CLASS_EPISODE, "children": None},
+    MEDIA_TYPE_SHOW: {"parent": MEDIA_CLASS_PODCAST, "children": MEDIA_CLASS_EPISODE},
+    MEDIA_TYPE_TRACK: {"parent": MEDIA_CLASS_TRACK, "children": None},
+}
+
+
+class MissingMediaInformation(BrowseError):
+    """Missing media required information."""
+
+
+class UnknownMediaType(BrowseError):
+    """Unknown media type."""
 
 
 async def async_setup_entry(
@@ -437,16 +507,16 @@ def build_item_response(spotify, user, payload):
         items = media.get("artists", {}).get("items", [])
     elif media_content_type == "current_user_saved_albums":
         media = spotify.current_user_saved_albums(limit=BROWSE_LIMIT)
-        items = media.get("items", [])
+        items = [item["album"] for item in media.get("items", [])]
     elif media_content_type == "current_user_saved_tracks":
         media = spotify.current_user_saved_tracks(limit=BROWSE_LIMIT)
-        items = media.get("items", [])
+        items = [item["track"] for item in media.get("items", [])]
     elif media_content_type == "current_user_saved_shows":
         media = spotify.current_user_saved_shows(limit=BROWSE_LIMIT)
-        items = media.get("items", [])
+        items = [item["show"] for item in media.get("items", [])]
     elif media_content_type == "current_user_recently_played":
         media = spotify.current_user_recently_played(limit=BROWSE_LIMIT)
-        items = media.get("items", [])
+        items = [item["track"] for item in media.get("items", [])]
     elif media_content_type == "current_user_top_artists":
         media = spotify.current_user_top_artists(limit=BROWSE_LIMIT)
         items = media.get("items", [])
@@ -474,7 +544,7 @@ def build_item_response(spotify, user, payload):
         items = media.get("albums", {}).get("items", [])
     elif media_content_type == MEDIA_TYPE_PLAYLIST:
         media = spotify.playlist(media_content_id)
-        items = media.get("tracks", {}).get("items", [])
+        items = [item["track"] for item in media.get("tracks", {}).get("items", [])]
     elif media_content_type == MEDIA_TYPE_ALBUM:
         media = spotify.album(media_content_id)
         items = media.get("tracks", {}).get("items", [])
@@ -497,25 +567,42 @@ def build_item_response(spotify, user, payload):
     if media is None:
         return None
 
+    try:
+        media_class = CONTENT_TYPE_MEDIA_CLASS[media_content_type]
+    except KeyError:
+        _LOGGER.debug("Unknown media type received: %s", media_content_type)
+        return None
+
     if media_content_type == "categories":
-        return BrowseMedia(
+        media_item = BrowseMedia(
             title=LIBRARY_MAP.get(media_content_id),
+            media_class=media_class["parent"],
+            children_media_class=media_class["children"],
             media_content_id=media_content_id,
             media_content_type=media_content_type,
             can_play=False,
             can_expand=True,
-            children=[
+            children=[],
+        )
+        for item in items:
+            try:
+                item_id = item["id"]
+            except KeyError:
+                _LOGGER.debug("Missing id for media item: %s", item)
+                continue
+            media_item.children.append(
                 BrowseMedia(
                     title=item.get("name"),
-                    media_content_id=item["id"],
+                    media_class=MEDIA_CLASS_PLAYLIST,
+                    children_media_class=MEDIA_CLASS_TRACK,
+                    media_content_id=item_id,
                     media_content_type="category_playlists",
                     thumbnail=fetch_image_url(item, key="icons"),
                     can_play=False,
                     can_expand=True,
                 )
-                for item in items
-            ],
-        )
+            )
+        return media_item
 
     if title is None:
         if "name" in media:
@@ -523,21 +610,28 @@ def build_item_response(spotify, user, payload):
         else:
             title = LIBRARY_MAP.get(payload["media_content_id"])
 
-    response = {
+    params = {
         "title": title,
+        "media_class": media_class["parent"],
+        "children_media_class": media_class["children"],
         "media_content_id": media_content_id,
         "media_content_type": media_content_type,
         "can_play": media_content_type in PLAYABLE_MEDIA_TYPES,
-        "children": [item_payload(item) for item in items],
+        "children": [],
         "can_expand": True,
     }
+    for item in items:
+        try:
+            params["children"].append(item_payload(item))
+        except (MissingMediaInformation, UnknownMediaType):
+            continue
 
     if "images" in media:
-        response["thumbnail"] = fetch_image_url(media)
+        params["thumbnail"] = fetch_image_url(media)
     elif image:
-        response["thumbnail"] = image
+        params["thumbnail"] = image
 
-    return BrowseMedia(**response)
+    return BrowseMedia(**params)
 
 
 def item_payload(item):
@@ -546,25 +640,31 @@ def item_payload(item):
 
     Used by async_browse_media.
     """
-    if MEDIA_TYPE_TRACK in item:
-        item = item[MEDIA_TYPE_TRACK]
-    elif MEDIA_TYPE_SHOW in item:
-        item = item[MEDIA_TYPE_SHOW]
-    elif MEDIA_TYPE_ARTIST in item:
-        item = item[MEDIA_TYPE_ARTIST]
-    elif MEDIA_TYPE_ALBUM in item and item["type"] != MEDIA_TYPE_TRACK:
-        item = item[MEDIA_TYPE_ALBUM]
+    try:
+        media_type = item["type"]
+        media_id = item["uri"]
+    except KeyError as err:
+        _LOGGER.debug("Missing type or uri for media item: %s", item)
+        raise MissingMediaInformation from err
 
-    can_expand = item["type"] not in [
+    try:
+        media_class = CONTENT_TYPE_MEDIA_CLASS[media_type]
+    except KeyError as err:
+        _LOGGER.debug("Unknown media type received: %s", media_type)
+        raise UnknownMediaType from err
+
+    can_expand = media_type not in [
         MEDIA_TYPE_TRACK,
         MEDIA_TYPE_EPISODE,
     ]
 
     payload = {
         "title": item.get("name"),
-        "media_content_id": item["uri"],
-        "media_content_type": item["type"],
-        "can_play": item["type"] in PLAYABLE_MEDIA_TYPES,
+        "media_class": media_class["parent"],
+        "children_media_class": media_class["children"],
+        "media_content_id": media_id,
+        "media_content_type": media_type,
+        "can_play": media_type in PLAYABLE_MEDIA_TYPES,
         "can_expand": can_expand,
     }
 
@@ -584,6 +684,7 @@ def library_payload():
     """
     library_info = {
         "title": "Media Library",
+        "media_class": MEDIA_CLASS_DIRECTORY,
         "media_content_id": "library",
         "media_content_type": "library",
         "can_play": False,
@@ -597,7 +698,9 @@ def library_payload():
                 {"name": item["name"], "type": item["type"], "uri": item["type"]}
             )
         )
-    return BrowseMedia(**library_info)
+    response = BrowseMedia(**library_info)
+    response.children_media_class = MEDIA_CLASS_DIRECTORY
+    return response
 
 
 def fetch_image_url(item, key="images"):

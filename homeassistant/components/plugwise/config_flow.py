@@ -96,6 +96,10 @@ class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if self.discovery_info:
                 user_input[CONF_HOST] = self.discovery_info[CONF_HOST]
 
+            for entry in self._async_current_entries():
+                if entry.data.get(CONF_HOST) == user_input[CONF_HOST]:
+                    return self.async_abort(reason="already_configured")
+
             try:
                 api = await validate_input(self.hass, user_input)
 
@@ -107,7 +111,9 @@ class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             if not errors:
-                await self.async_set_unique_id(api.gateway_id)
+                await self.async_set_unique_id(
+                    api.smile_hostname or api.gateway_id, raise_on_progress=False
+                )
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(title=api.smile_name, data=user_input)

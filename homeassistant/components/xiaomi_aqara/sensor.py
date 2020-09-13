@@ -86,8 +86,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             _LOGGER.warning("Unmapped Device Model")
 
     # Set up battery sensors
+    seen_sids = set()  # Set of device sids that are already seen
     for devices in gateway.devices.values():
         for device in devices:
+            if device["sid"] in seen_sids:
+                continue
+            seen_sids.add(device["sid"])
             if device["model"] in BATTERY_MODELS:
                 entities.append(
                     XiaomiBatterySensor(device, "Battery", gateway, config_entry)

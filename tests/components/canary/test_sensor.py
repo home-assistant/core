@@ -1,203 +1,175 @@
 """The tests for the Canary sensor platform."""
-import copy
-import unittest
-
-from homeassistant.components.canary import DATA_CANARY, sensor as canary
+from homeassistant.components.canary import DOMAIN
 from homeassistant.components.canary.sensor import (
     ATTR_AIR_QUALITY,
-    SENSOR_TYPES,
     STATE_AIR_QUALITY_ABNORMAL,
     STATE_AIR_QUALITY_NORMAL,
     STATE_AIR_QUALITY_VERY_ABNORMAL,
-    CanarySensor,
 )
-from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, PERCENTAGE, TEMP_CELSIUS
+from homeassistant.setup import async_setup_component
 
-from tests.async_mock import Mock
-from tests.common import get_test_home_assistant
-from tests.components.canary.test_init import mock_device, mock_location
+from . import mock_device, mock_location, mock_reading
 
-VALID_CONFIG = {"canary": {"username": "foo@bar.org", "password": "bar"}}
+from tests.async_mock import patch
+from tests.common import mock_registry
 
 
-class TestCanarySensorSetup(unittest.TestCase):
-    """Test the Canary platform."""
+async def test_sensors_pro(hass, canary) -> None:
+    """Test the creation and values of the sensors for Canary Pro."""
+    await async_setup_component(hass, "persistent_notification", {})
 
-    DEVICES = []
+    registry = mock_registry(hass)
+    online_device_at_home = mock_device(20, "Dining Room", True, "Canary Pro")
 
-    def add_entities(self, devices, action):
-        """Mock add devices."""
-        for device in devices:
-            self.DEVICES.append(device)
+    instance = canary.return_value
+    instance.get_locations.return_value = [
+        mock_location(100, "Home", True, devices=[online_device_at_home]),
+    ]
 
-    def setUp(self):
-        """Initialize values for this testcase class."""
-        self.hass = get_test_home_assistant()
-        self.config = copy.deepcopy(VALID_CONFIG)
-        self.addCleanup(self.hass.stop)
+    instance.get_latest_readings.return_value = [
+        mock_reading("temperature", "21.12"),
+        mock_reading("humidity", "50.46"),
+        mock_reading("air_quality", "0.59"),
+    ]
 
-    def test_setup_sensors(self):
-        """Test the sensor setup."""
-        online_device_at_home = mock_device(20, "Dining Room", True, "Canary Pro")
-        offline_device_at_home = mock_device(21, "Front Yard", False, "Canary Pro")
-        online_device_at_work = mock_device(22, "Office", True, "Canary Pro")
+    config = {DOMAIN: {"username": "test-username", "password": "test-password"}}
+    with patch("homeassistant.components.canary.CANARY_COMPONENTS", ["sensor"]):
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
 
-        self.hass.data[DATA_CANARY] = Mock()
-        self.hass.data[DATA_CANARY].locations = [
-            mock_location(
-                "Home", True, devices=[online_device_at_home, offline_device_at_home]
-            ),
-            mock_location("Work", True, devices=[online_device_at_work]),
-        ]
+    sensors = {
+        "home_dining_room_temperature": (
+            "20_temperature",
+            "21.12",
+            TEMP_CELSIUS,
+            None,
+            "mdi:thermometer",
+        ),
+        "home_dining_room_humidity": (
+            "20_humidity",
+            "50.46",
+            PERCENTAGE,
+            None,
+            "mdi:water-percent",
+        ),
+        "home_dining_room_air_quality": (
+            "20_air_quality",
+            "0.59",
+            None,
+            None,
+            "mdi:weather-windy",
+        ),
+    }
 
-        canary.setup_platform(self.hass, self.config, self.add_entities, None)
+    for (sensor_id, data) in sensors.items():
+        entity_entry = registry.async_get(f"sensor.{sensor_id}")
+        assert entity_entry
+        assert entity_entry.device_class == data[3]
+        assert entity_entry.unique_id == data[0]
+        assert entity_entry.original_icon == data[4]
 
-        assert len(self.DEVICES) == 6
+        state = hass.states.get(f"sensor.{sensor_id}")
+        assert state
+        assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == data[2]
+        assert state.state == data[1]
 
-    def test_temperature_sensor(self):
-        """Test temperature sensor with fahrenheit."""
-        device = mock_device(10, "Family Room", "Canary Pro")
-        location = mock_location("Home", False)
 
-        data = Mock()
-        data.get_reading.return_value = 21.1234
+async def test_sensors_attributes_pro(hass, canary) -> None:
+    """Test the creation and values of the sensors attributes for Canary Pro."""
+    await async_setup_component(hass, "persistent_notification", {})
 
-        sensor = CanarySensor(data, SENSOR_TYPES[0], location, device)
-        sensor.update()
+    online_device_at_home = mock_device(20, "Dining Room", True, "Canary Pro")
 
-        assert sensor.name == "Home Family Room Temperature"
-        assert sensor.unit_of_measurement == TEMP_CELSIUS
-        assert sensor.state == 21.12
-        assert sensor.icon == "mdi:thermometer"
+    instance = canary.return_value
+    instance.get_locations.return_value = [
+        mock_location(100, "Home", True, devices=[online_device_at_home]),
+    ]
 
-    def test_temperature_sensor_with_none_sensor_value(self):
-        """Test temperature sensor with fahrenheit."""
-        device = mock_device(10, "Family Room", "Canary Pro")
-        location = mock_location("Home", False)
+    instance.get_latest_readings.return_value = [
+        mock_reading("temperature", "21.12"),
+        mock_reading("humidity", "50.46"),
+        mock_reading("air_quality", "0.59"),
+    ]
 
-        data = Mock()
-        data.get_reading.return_value = None
+    config = {DOMAIN: {"username": "test-username", "password": "test-password"}}
+    with patch("homeassistant.components.canary.CANARY_COMPONENTS", ["sensor"]):
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
 
-        sensor = CanarySensor(data, SENSOR_TYPES[0], location, device)
-        sensor.update()
+    entity_id = "sensor.home_dining_room_air_quality"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes[ATTR_AIR_QUALITY] == STATE_AIR_QUALITY_ABNORMAL
 
-        assert sensor.state is None
+    instance.get_latest_readings.return_value = [
+        mock_reading("temperature", "21.12"),
+        mock_reading("humidity", "50.46"),
+        mock_reading("air_quality", "0.4"),
+    ]
 
-    def test_humidity_sensor(self):
-        """Test humidity sensor."""
-        device = mock_device(10, "Family Room", "Canary Pro")
-        location = mock_location("Home")
+    await hass.helpers.entity_component.async_update_entity(entity_id)
+    await hass.async_block_till_done()
 
-        data = Mock()
-        data.get_reading.return_value = 50.4567
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes[ATTR_AIR_QUALITY] == STATE_AIR_QUALITY_VERY_ABNORMAL
 
-        sensor = CanarySensor(data, SENSOR_TYPES[1], location, device)
-        sensor.update()
+    instance.get_latest_readings.return_value = [
+        mock_reading("temperature", "21.12"),
+        mock_reading("humidity", "50.46"),
+        mock_reading("air_quality", "1.0"),
+    ]
 
-        assert sensor.name == "Home Family Room Humidity"
-        assert sensor.unit_of_measurement == PERCENTAGE
-        assert sensor.state == 50.46
-        assert sensor.icon == "mdi:water-percent"
+    await hass.helpers.entity_component.async_update_entity(entity_id)
+    await hass.async_block_till_done()
 
-    def test_air_quality_sensor_with_very_abnormal_reading(self):
-        """Test air quality sensor."""
-        device = mock_device(10, "Family Room", "Canary Pro")
-        location = mock_location("Home")
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes[ATTR_AIR_QUALITY] == STATE_AIR_QUALITY_NORMAL
 
-        data = Mock()
-        data.get_reading.return_value = 0.4
 
-        sensor = CanarySensor(data, SENSOR_TYPES[2], location, device)
-        sensor.update()
+async def test_sensors_flex(hass, canary) -> None:
+    """Test the creation and values of the sensors for Canary Flex."""
+    await async_setup_component(hass, "persistent_notification", {})
 
-        assert sensor.name == "Home Family Room Air Quality"
-        assert sensor.unit_of_measurement is None
-        assert sensor.state == 0.4
-        assert sensor.icon == "mdi:weather-windy"
+    registry = mock_registry(hass)
+    online_device_at_home = mock_device(20, "Dining Room", True, "Canary Flex")
 
-        air_quality = sensor.device_state_attributes[ATTR_AIR_QUALITY]
-        assert air_quality == STATE_AIR_QUALITY_VERY_ABNORMAL
+    instance = canary.return_value
+    instance.get_locations.return_value = [
+        mock_location(100, "Home", True, devices=[online_device_at_home]),
+    ]
 
-    def test_air_quality_sensor_with_abnormal_reading(self):
-        """Test air quality sensor."""
-        device = mock_device(10, "Family Room", "Canary Pro")
-        location = mock_location("Home")
+    instance.get_latest_readings.return_value = [
+        mock_reading("battery", "70.4567"),
+        mock_reading("wifi", "-57"),
+    ]
 
-        data = Mock()
-        data.get_reading.return_value = 0.59
+    config = {DOMAIN: {"username": "test-username", "password": "test-password"}}
+    with patch("homeassistant.components.canary.CANARY_COMPONENTS", ["sensor"]):
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
 
-        sensor = CanarySensor(data, SENSOR_TYPES[2], location, device)
-        sensor.update()
+    sensors = {
+        "home_dining_room_battery": (
+            "20_battery",
+            "70.46",
+            PERCENTAGE,
+            None,
+            "mdi:battery-70",
+        ),
+        "home_dining_room_wifi": ("20_wifi", "-57.0", "dBm", None, "mdi:wifi"),
+    }
 
-        assert sensor.name == "Home Family Room Air Quality"
-        assert sensor.unit_of_measurement is None
-        assert sensor.state == 0.59
-        assert sensor.icon == "mdi:weather-windy"
+    for (sensor_id, data) in sensors.items():
+        entity_entry = registry.async_get(f"sensor.{sensor_id}")
+        assert entity_entry
+        assert entity_entry.device_class == data[3]
+        assert entity_entry.unique_id == data[0]
+        assert entity_entry.original_icon == data[4]
 
-        air_quality = sensor.device_state_attributes[ATTR_AIR_QUALITY]
-        assert air_quality == STATE_AIR_QUALITY_ABNORMAL
-
-    def test_air_quality_sensor_with_normal_reading(self):
-        """Test air quality sensor."""
-        device = mock_device(10, "Family Room", "Canary Pro")
-        location = mock_location("Home")
-
-        data = Mock()
-        data.get_reading.return_value = 1.0
-
-        sensor = CanarySensor(data, SENSOR_TYPES[2], location, device)
-        sensor.update()
-
-        assert sensor.name == "Home Family Room Air Quality"
-        assert sensor.unit_of_measurement is None
-        assert sensor.state == 1.0
-        assert sensor.icon == "mdi:weather-windy"
-
-        air_quality = sensor.device_state_attributes[ATTR_AIR_QUALITY]
-        assert air_quality == STATE_AIR_QUALITY_NORMAL
-
-    def test_air_quality_sensor_with_none_sensor_value(self):
-        """Test air quality sensor."""
-        device = mock_device(10, "Family Room", "Canary Pro")
-        location = mock_location("Home")
-
-        data = Mock()
-        data.get_reading.return_value = None
-
-        sensor = CanarySensor(data, SENSOR_TYPES[2], location, device)
-        sensor.update()
-
-        assert sensor.state is None
-        assert sensor.device_state_attributes is None
-
-    def test_battery_sensor(self):
-        """Test battery sensor."""
-        device = mock_device(10, "Family Room", "Canary Flex")
-        location = mock_location("Home")
-
-        data = Mock()
-        data.get_reading.return_value = 70.4567
-
-        sensor = CanarySensor(data, SENSOR_TYPES[4], location, device)
-        sensor.update()
-
-        assert sensor.name == "Home Family Room Battery"
-        assert sensor.unit_of_measurement == PERCENTAGE
-        assert sensor.state == 70.46
-        assert sensor.icon == "mdi:battery-70"
-
-    def test_wifi_sensor(self):
-        """Test battery sensor."""
-        device = mock_device(10, "Family Room", "Canary Flex")
-        location = mock_location("Home")
-
-        data = Mock()
-        data.get_reading.return_value = -57
-
-        sensor = CanarySensor(data, SENSOR_TYPES[3], location, device)
-        sensor.update()
-
-        assert sensor.name == "Home Family Room Wifi"
-        assert sensor.unit_of_measurement == "dBm"
-        assert sensor.state == -57
-        assert sensor.icon == "mdi:wifi"
+        state = hass.states.get(f"sensor.{sensor_id}")
+        assert state
+        assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == data[2]
+        assert state.state == data[1]

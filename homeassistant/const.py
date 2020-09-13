@@ -1,6 +1,6 @@
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 115
+MINOR_VERSION = 116
 PATCH_VERSION = "0.dev0"
 __short_version__ = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__ = f"{__short_version__}.{PATCH_VERSION}"
@@ -179,6 +179,7 @@ CONF_UNTIL = "until"
 CONF_URL = "url"
 CONF_USERNAME = "username"
 CONF_VALUE_TEMPLATE = "value_template"
+CONF_VARIABLES = "variables"
 CONF_VERIFY_SSL = "verify_ssl"
 CONF_WAIT_FOR_TRIGGER = "wait_for_trigger"
 CONF_WAIT_TEMPLATE = "wait_template"

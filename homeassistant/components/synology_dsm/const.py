@@ -16,7 +16,7 @@ from homeassistant.const import (
 )
 
 DOMAIN = "synology_dsm"
-PLATFORMS = ["binary_sensor", "sensor"]
+PLATFORMS = ["binary_sensor", "camera", "sensor"]
 
 # Entry keys
 SYNO_API = "syno_api"
@@ -30,6 +30,7 @@ DEFAULT_PORT = 5000
 DEFAULT_PORT_SSL = 5001
 # Options
 DEFAULT_SCAN_INTERVAL = 15  # min
+DEFAULT_TIMEOUT = 10  # sec
 
 
 ENTITY_NAME = "name"
@@ -45,15 +46,15 @@ STORAGE_DISK_BINARY_SENSORS = {
     f"{SynoStorage.API_KEY}:disk_exceed_bad_sector_thr": {
         ENTITY_NAME: "Exceeded Max Bad Sectors",
         ENTITY_UNIT: None,
-        ENTITY_ICON: "mdi:test-tube",
-        ENTITY_CLASS: None,
+        ENTITY_ICON: None,
+        ENTITY_CLASS: DEVICE_CLASS_SAFETY,
         ENTITY_ENABLE: True,
     },
     f"{SynoStorage.API_KEY}:disk_below_remain_life_thr": {
         ENTITY_NAME: "Below Min Remaining Life",
         ENTITY_UNIT: None,
-        ENTITY_ICON: "mdi:test-tube",
-        ENTITY_CLASS: None,
+        ENTITY_ICON: None,
+        ENTITY_CLASS: DEVICE_CLASS_SAFETY,
         ENTITY_ENABLE: True,
     },
 }

@@ -75,6 +75,38 @@ def get_url(
             except NoURLAvailableError:
                 pass
 
+    # For current request, we accept loopback interfaces (e.g., 127.0.0.1),
+    # the Supervisor hostname and localhost transparently
+    request_host = _get_request_host()
+    if (
+        require_current_request
+        and request_host is not None
+        and hass.config.api is not None
+    ):
+        scheme = "https" if hass.config.api.use_ssl else "http"
+        current_url = yarl.URL.build(
+            scheme=scheme, host=request_host, port=hass.config.api.port
+        )
+
+        known_hostname = None
+        if hass.components.hassio.is_hassio():
+            host_info = hass.components.hassio.get_host_info()
+            known_hostname = f"{host_info['hostname']}.local"
+
+        if (
+            (
+                (
+                    allow_ip
+                    and is_ip_address(request_host)
+                    and is_loopback(ip_address(request_host))
+                )
+                or request_host in ["localhost", known_hostname]
+            )
+            and (not require_ssl or current_url.scheme == "https")
+            and (not require_standard_port or current_url.is_default_port())
+        ):
+            return normalize_url(str(current_url))
+
     # We have to be honest now, we have no viable option available
     raise NoURLAvailableError
 
