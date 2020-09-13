@@ -202,22 +202,23 @@ class SlackNotificationService(BaseNotificationService):
         self, targets, message, title, blocks, username, icon
     ):
         """Send a text-only message."""
-        if self._icon.lower().startswith(("http://", "https://")):
-            icon_type = "url"
-        else:
-            icon_type = "emoji"
+        message_dict = {
+            "blocks": blocks,
+            "link_names": True,
+            "text": message,
+            "username": username,
+        }
+
+        if self._icon:
+            if self._icon.lower().startswith(("http://", "https://")):
+                icon_type = "url"
+            else:
+                icon_type = "emoji"
+
+            message_dict[f"icon_{icon_type}"] = icon
 
         tasks = {
-            target: self._client.chat_postMessage(
-                **{
-                    "blocks": blocks,
-                    "channel": target,
-                    "link_names": True,
-                    "text": message,
-                    "username": username,
-                    f"icon_{icon_type}": icon,
-                }
-            )
+            target: self._client.chat_postMessage(**message_dict, channel=target)
             for target in targets
         }
 
