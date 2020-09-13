@@ -665,8 +665,9 @@ def reset_virtual_keyboard(hass):
 
 
 def get_hour_to_say(h, m):
-    import babel.dates
     from datetime import time
+
+    import babel.dates
 
     t = time(h, m)
     message = "godzina: " + babel.dates.format_time(t, format="short", locale="pl")
@@ -2289,6 +2290,7 @@ async def async_process_json_from_frame(hass, json_req):
 
         # 2. register device and return webhook
         import secrets
+
         from homeassistant.const import CONF_WEBHOOK_ID
 
         webhook_id = secrets.token_hex()
@@ -2683,7 +2685,11 @@ async def async_setup(hass, config):
         timer = False
         if "timer" in service.data:
             timer = service.data["timer"]
-        quiet_mode = hass.states.get("input_boolean.ais_quiet_mode").state
+        # TODO - check this fix for 'NoneType' object has no attribute 'state'
+        if hass:
+            quiet_mode = hass.states.get("input_boolean.ais_quiet_mode").state
+        else:
+            return
 
         def apply_night_mode():
             _LOGGER.info("Start Night ")

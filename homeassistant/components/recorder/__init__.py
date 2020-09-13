@@ -452,7 +452,6 @@ class Recorder(threading.Thread):
             # than we commit right away
             if not self.commit_interval:
                 self._commit_event_session_or_retry()
-            self.queue.task_done()
 
     def _send_keep_alive(self):
         try:
