@@ -239,15 +239,14 @@ class DeviceRegistry:
                 device = deleted_device.to_device_entry()
             self._add_device(device)
 
-        else:
-            if default_manufacturer and not device.manufacturer:
-                manufacturer = default_manufacturer
+        if default_manufacturer is not _UNDEF and device.manufacturer is None:
+            manufacturer = default_manufacturer
 
-            if default_model and not device.model:
-                model = default_model
+        if default_model is not _UNDEF and device.model is None:
+            model = default_model
 
-            if default_name and not device.name:
-                name = default_name
+        if default_name is not _UNDEF and device.name is None:
+            name = default_name
 
         if via_device is not None:
             via = self.async_get_device({via_device}, set())

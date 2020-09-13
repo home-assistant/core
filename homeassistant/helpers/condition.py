@@ -4,6 +4,7 @@ from collections import deque
 from datetime import datetime, timedelta
 import functools as ft
 import logging
+import re
 import sys
 from typing import Any, Callable, Container, List, Optional, Set, Union, cast
 
@@ -47,6 +48,10 @@ FROM_CONFIG_FORMAT = "{}_from_config"
 ASYNC_FROM_CONFIG_FORMAT = "async_{}_from_config"
 
 _LOGGER = logging.getLogger(__name__)
+
+INPUT_ENTITY_ID = re.compile(
+    r"^input_(?:select|text|number|boolean|datetime)\.(?!.+__)(?!_)[\da-z_]+(?<!_)$"
+)
 
 ConditionCheckerType = Callable[[HomeAssistant, TemplateVarsType], bool]
 
@@ -308,13 +313,25 @@ def state(
 
     assert isinstance(entity, State)
 
+    if attribute is None:
+        value = entity.state
+    else:
+        value = str(entity.attributes.get(attribute))
+
     if isinstance(req_state, str):
         req_state = [req_state]
 
-    if attribute is None:
-        is_state = entity.state in req_state
-    else:
-        is_state = str(entity.attributes.get(attribute)) in req_state
+    is_state = False
+    for req_state_value in req_state:
+        state_value = req_state_value
+        if INPUT_ENTITY_ID.match(req_state_value) is not None:
+            state_entity = hass.states.get(req_state_value)
+            if not state_entity:
+                continue
+            state_value = state_entity.state
+        is_state = value == state_value
+        if is_state:
+            break
 
     if for_period is None or not is_state:
         return is_state

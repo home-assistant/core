@@ -6,6 +6,14 @@
             "toggle": "Inverser {nom_entit\u00e9}",
             "turn_off": "\u00c9teindre {entity_name}",
             "turn_on": "Allumer {entity_name}"
+        },
+        "condition_type": {
+            "is_off": "{entity_name} est d\u00e9sactiv\u00e9",
+            "is_on": "{entity_name} est activ\u00e9"
+        },
+        "trigger_type": {
+            "turned_off": "{entity_name} s'est \u00e9teint",
+            "turned_on": "{entity_name} s'est allum\u00e9"
         }
     },
     "state": {

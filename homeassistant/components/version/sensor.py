@@ -35,6 +35,7 @@ ALL_IMAGES = [
     "raspberrypi4-64",
     "tinker",
     "odroid-c2",
+    "odroid-n2",
     "odroid-xu",
 ]
 ALL_SOURCES = ["local", "pypi", "hassio", "docker", "haio"]

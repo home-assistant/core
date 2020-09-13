@@ -210,6 +210,12 @@ class ElectricalMeasurement(Sensor):
             return round(value, self._decimals)
         return round(value)
 
+    async def async_update(self) -> None:
+        """Retrieve latest state."""
+        if not self.available:
+            return
+        await super().async_update()
+
 
 @STRICT_MATCH(generic_ids=CHANNEL_ST_HUMIDITY_CLUSTER)
 @STRICT_MATCH(channel_names=CHANNEL_HUMIDITY)

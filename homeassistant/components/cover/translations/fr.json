@@ -5,7 +5,9 @@
             "close_tilt": "Fermer {entity_name}",
             "open": "Ouvrir {entity_name}",
             "open_tilt": "Ouvrir {entity_name}",
-            "set_position": "D\u00e9finir la position de {entity_name}"
+            "set_position": "D\u00e9finir la position de {entity_name}",
+            "set_tilt_position": "D\u00e9finir la position d'inclinaison de {entity_name}",
+            "stop": "Arr\u00eater {entity_name}"
         },
         "condition_type": {
             "is_closed": "{entity_name} est ferm\u00e9",

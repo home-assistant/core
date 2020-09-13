@@ -23,6 +23,7 @@ from homeassistant.helpers.event import (
     async_track_state_added_domain,
     async_track_state_change,
     async_track_state_change_event,
+    async_track_state_removed_domain,
     async_track_sunrise,
     async_track_sunset,
     async_track_template,
@@ -429,6 +430,132 @@ async def test_async_track_state_added_domain(hass):
     unsub_throws()
 
 
+async def test_async_track_state_removed_domain(hass):
+    """Test async_track_state_removed_domain."""
+    single_entity_id_tracker = []
+    multiple_entity_id_tracker = []
+
+    @ha.callback
+    def single_run_callback(event):
+        old_state = event.data.get("old_state")
+        new_state = event.data.get("new_state")
+
+        single_entity_id_tracker.append((old_state, new_state))
+
+    @ha.callback
+    def multiple_run_callback(event):
+        old_state = event.data.get("old_state")
+        new_state = event.data.get("new_state")
+
+        multiple_entity_id_tracker.append((old_state, new_state))
+
+    @ha.callback
+    def callback_that_throws(event):
+        raise ValueError
+
+    unsub_single = async_track_state_removed_domain(hass, "light", single_run_callback)
+    unsub_multi = async_track_state_removed_domain(
+        hass, ["light", "switch"], multiple_run_callback
+    )
+    unsub_throws = async_track_state_removed_domain(
+        hass, ["light", "switch"], callback_that_throws
+    )
+
+    # Adding state to state machine
+    hass.states.async_set("light.Bowl", "on")
+    hass.states.async_remove("light.Bowl")
+    await hass.async_block_till_done()
+    assert len(single_entity_id_tracker) == 1
+    assert single_entity_id_tracker[-1][1] is None
+    assert single_entity_id_tracker[-1][0] is not None
+    assert len(multiple_entity_id_tracker) == 1
+    assert multiple_entity_id_tracker[-1][1] is None
+    assert multiple_entity_id_tracker[-1][0] is not None
+
+    # Added and than removed (light)
+    hass.states.async_set("light.Bowl", "on")
+    hass.states.async_remove("light.Bowl")
+    await hass.async_block_till_done()
+    assert len(single_entity_id_tracker) == 2
+    assert len(multiple_entity_id_tracker) == 2
+
+    # Added and than removed (light)
+    hass.states.async_set("light.Bowl", "off")
+    hass.states.async_remove("light.Bowl")
+    await hass.async_block_till_done()
+    assert len(single_entity_id_tracker) == 3
+    assert len(multiple_entity_id_tracker) == 3
+
+    # Added and than removed (light)
+    hass.states.async_set("light.Bowl", "off", {"some_attr": 1})
+    hass.states.async_remove("light.Bowl")
+    await hass.async_block_till_done()
+    assert len(single_entity_id_tracker) == 4
+    assert len(multiple_entity_id_tracker) == 4
+
+    # Added and than removed (switch)
+    hass.states.async_set("switch.kitchen", "on")
+    hass.states.async_remove("switch.kitchen")
+    await hass.async_block_till_done()
+    assert len(single_entity_id_tracker) == 4
+    assert len(multiple_entity_id_tracker) == 5
+
+    unsub_single()
+    # Ensure unsubing the listener works
+    hass.states.async_set("light.new", "off")
+    hass.states.async_remove("light.new")
+    await hass.async_block_till_done()
+    assert len(single_entity_id_tracker) == 4
+    assert len(multiple_entity_id_tracker) == 6
+
+    unsub_multi()
+    unsub_throws()
+
+
+async def test_async_track_state_removed_domain_match_all(hass):
+    """Test async_track_state_removed_domain with a match_all."""
+    single_entity_id_tracker = []
+    match_all_entity_id_tracker = []
+
+    @ha.callback
+    def single_run_callback(event):
+        old_state = event.data.get("old_state")
+        new_state = event.data.get("new_state")
+
+        single_entity_id_tracker.append((old_state, new_state))
+
+    @ha.callback
+    def match_all_run_callback(event):
+        old_state = event.data.get("old_state")
+        new_state = event.data.get("new_state")
+
+        match_all_entity_id_tracker.append((old_state, new_state))
+
+    unsub_single = async_track_state_removed_domain(hass, "light", single_run_callback)
+    unsub_match_all = async_track_state_removed_domain(
+        hass, MATCH_ALL, match_all_run_callback
+    )
+    hass.states.async_set("light.new", "off")
+    hass.states.async_remove("light.new")
+    await hass.async_block_till_done()
+    assert len(single_entity_id_tracker) == 1
+    assert len(match_all_entity_id_tracker) == 1
+
+    hass.states.async_set("switch.new", "off")
+    hass.states.async_remove("switch.new")
+    await hass.async_block_till_done()
+    assert len(single_entity_id_tracker) == 1
+    assert len(match_all_entity_id_tracker) == 2
+
+    unsub_match_all()
+    unsub_single()
+    hass.states.async_set("switch.new", "off")
+    hass.states.async_remove("switch.new")
+    await hass.async_block_till_done()
+    assert len(single_entity_id_tracker) == 1
+    assert len(match_all_entity_id_tracker) == 2
+
+
 async def test_track_template(hass):
     """Test tracking template."""
     specific_runs = []
@@ -682,20 +809,33 @@ async def test_track_template_result_complex(hass):
     hass.states.async_set("light.one", "on")
     hass.states.async_set("lock.one", "locked")
 
-    async_track_template_result(
+    info = async_track_template_result(
         hass, [TrackTemplate(template_complex, None)], specific_run_callback
     )
     await hass.async_block_till_done()
+
+    assert info.listeners == {"all": True, "domains": set(), "entities": set()}
 
     hass.states.async_set("sensor.domain", "light")
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
     assert specific_runs[0].strip() == "['light.one']"
 
+    assert info.listeners == {
+        "all": False,
+        "domains": {"light"},
+        "entities": {"sensor.domain"},
+    }
+
     hass.states.async_set("sensor.domain", "lock")
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
     assert specific_runs[1].strip() == "['lock.one']"
+    assert info.listeners == {
+        "all": False,
+        "domains": {"lock"},
+        "entities": {"sensor.domain"},
+    }
 
     hass.states.async_set("sensor.domain", "all")
     await hass.async_block_till_done()
@@ -703,11 +843,17 @@ async def test_track_template_result_complex(hass):
     assert "light.one" in specific_runs[2]
     assert "lock.one" in specific_runs[2]
     assert "sensor.domain" in specific_runs[2]
+    assert info.listeners == {"all": True, "domains": set(), "entities": set()}
 
     hass.states.async_set("sensor.domain", "light")
     await hass.async_block_till_done()
     assert len(specific_runs) == 4
     assert specific_runs[3].strip() == "['light.one']"
+    assert info.listeners == {
+        "all": False,
+        "domains": {"light"},
+        "entities": {"sensor.domain"},
+    }
 
     hass.states.async_set("light.two", "on")
     await hass.async_block_till_done()
@@ -715,6 +861,11 @@ async def test_track_template_result_complex(hass):
     assert "light.one" in specific_runs[4]
     assert "light.two" in specific_runs[4]
     assert "sensor.domain" not in specific_runs[4]
+    assert info.listeners == {
+        "all": False,
+        "domains": {"light"},
+        "entities": {"sensor.domain"},
+    }
 
     hass.states.async_set("light.three", "on")
     await hass.async_block_till_done()
@@ -723,26 +874,51 @@ async def test_track_template_result_complex(hass):
     assert "light.two" in specific_runs[5]
     assert "light.three" in specific_runs[5]
     assert "sensor.domain" not in specific_runs[5]
+    assert info.listeners == {
+        "all": False,
+        "domains": {"light"},
+        "entities": {"sensor.domain"},
+    }
 
     hass.states.async_set("sensor.domain", "lock")
     await hass.async_block_till_done()
     assert len(specific_runs) == 7
     assert specific_runs[6].strip() == "['lock.one']"
+    assert info.listeners == {
+        "all": False,
+        "domains": {"lock"},
+        "entities": {"sensor.domain"},
+    }
 
     hass.states.async_set("sensor.domain", "single_binary_sensor")
     await hass.async_block_till_done()
     assert len(specific_runs) == 8
     assert specific_runs[7].strip() == "unknown"
+    assert info.listeners == {
+        "all": False,
+        "domains": set(),
+        "entities": {"binary_sensor.single", "sensor.domain"},
+    }
 
     hass.states.async_set("binary_sensor.single", "binary_sensor_on")
     await hass.async_block_till_done()
     assert len(specific_runs) == 9
     assert specific_runs[8].strip() == "binary_sensor_on"
+    assert info.listeners == {
+        "all": False,
+        "domains": set(),
+        "entities": {"binary_sensor.single", "sensor.domain"},
+    }
 
     hass.states.async_set("sensor.domain", "lock")
     await hass.async_block_till_done()
     assert len(specific_runs) == 10
     assert specific_runs[9].strip() == "['lock.one']"
+    assert info.listeners == {
+        "all": False,
+        "domains": {"lock"},
+        "entities": {"sensor.domain"},
+    }
 
 
 async def test_track_template_result_with_wildcard(hass):
@@ -766,7 +942,7 @@ async def test_track_template_result_with_wildcard(hass):
     hass.states.async_set("cover.office_window", "closed")
     hass.states.async_set("cover.office_skylight", "open")
 
-    async_track_template_result(
+    info = async_track_template_result(
         hass, [TrackTemplate(template_complex, None)], specific_run_callback
     )
     await hass.async_block_till_done()
@@ -774,6 +950,7 @@ async def test_track_template_result_with_wildcard(hass):
     hass.states.async_set("cover.office_window", "open")
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
+    assert info.listeners == {"all": True, "domains": set(), "entities": set()}
 
     assert "cover.office_drapes=closed" in specific_runs[0]
     assert "cover.office_window=open" in specific_runs[0]
@@ -808,10 +985,21 @@ async def test_track_template_result_with_group(hass):
     def specific_run_callback(event, updates):
         specific_runs.append(updates.pop().result)
 
-    async_track_template_result(
+    info = async_track_template_result(
         hass, [TrackTemplate(template_complex, None)], specific_run_callback
     )
     await hass.async_block_till_done()
+
+    assert info.listeners == {
+        "all": False,
+        "domains": set(),
+        "entities": {
+            "group.power_sensors",
+            "sensor.power_1",
+            "sensor.power_2",
+            "sensor.power_3",
+        },
+    }
 
     hass.states.async_set("sensor.power_1", 100.1)
     await hass.async_block_till_done()
@@ -851,10 +1039,11 @@ async def test_track_template_result_and_conditional(hass):
     def specific_run_callback(event, updates):
         specific_runs.append(updates.pop().result)
 
-    async_track_template_result(
+    info = async_track_template_result(
         hass, [TrackTemplate(template, None)], specific_run_callback
     )
     await hass.async_block_till_done()
+    assert info.listeners == {"all": False, "domains": set(), "entities": {"light.a"}}
 
     hass.states.async_set("light.b", "on")
     await hass.async_block_till_done()
@@ -864,11 +1053,21 @@ async def test_track_template_result_and_conditional(hass):
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
     assert specific_runs[0] == "on"
+    assert info.listeners == {
+        "all": False,
+        "domains": set(),
+        "entities": {"light.a", "light.b"},
+    }
 
     hass.states.async_set("light.b", "off")
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
     assert specific_runs[1] == "off"
+    assert info.listeners == {
+        "all": False,
+        "domains": set(),
+        "entities": {"light.a", "light.b"},
+    }
 
     hass.states.async_set("light.a", "off")
     await hass.async_block_till_done()
@@ -924,7 +1123,7 @@ async def test_track_template_result_iterator(hass):
     def filter_callback(event, updates):
         filter_runs.append(updates.pop().result)
 
-    async_track_template_result(
+    info = async_track_template_result(
         hass,
         [
             TrackTemplate(
@@ -939,6 +1138,11 @@ async def test_track_template_result_iterator(hass):
         filter_callback,
     )
     await hass.async_block_till_done()
+    assert info.listeners == {
+        "all": False,
+        "domains": {"sensor"},
+        "entities": {"sensor.test"},
+    }
 
     hass.states.async_set("sensor.test", 6)
     await hass.async_block_till_done()
@@ -1033,6 +1237,46 @@ async def test_track_template_result_errors(hass, caplog):
         assert not_exist_runs[2][1] == template_not_exist
         assert not_exist_runs[2][2] == "on"
         assert isinstance(not_exist_runs[2][3], TemplateError)
+
+
+async def test_static_string(hass):
+    """Test a static string."""
+    template_refresh = Template("{{ 'static' }}", hass)
+
+    refresh_runs = []
+
+    @ha.callback
+    def refresh_listener(event, updates):
+        refresh_runs.append(updates.pop().result)
+
+    info = async_track_template_result(
+        hass, [TrackTemplate(template_refresh, None)], refresh_listener
+    )
+    await hass.async_block_till_done()
+    info.async_refresh()
+    await hass.async_block_till_done()
+
+    assert refresh_runs == ["static"]
+
+
+async def test_string(hass):
+    """Test a string."""
+    template_refresh = Template("no_template", hass)
+
+    refresh_runs = []
+
+    @ha.callback
+    def refresh_listener(event, updates):
+        refresh_runs.append(updates.pop().result)
+
+    info = async_track_template_result(
+        hass, [TrackTemplate(template_refresh, None)], refresh_listener
+    )
+    await hass.async_block_till_done()
+    info.async_refresh()
+    await hass.async_block_till_done()
+
+    assert refresh_runs == ["no_template"]
 
 
 async def test_track_template_result_refresh_cancel(hass):

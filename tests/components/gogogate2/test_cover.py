@@ -16,7 +16,11 @@ from gogogate2_api.common import (
     Wifi,
 )
 
-from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
+from homeassistant.components.cover import (
+    DEVICE_CLASS_GARAGE,
+    DEVICE_CLASS_GATE,
+    DOMAIN as COVER_DOMAIN,
+)
 from homeassistant.components.gogogate2.const import (
     DEVICE_TYPE_GOGOGATE2,
     DEVICE_TYPE_ISMARTGATE,
@@ -26,6 +30,7 @@ from homeassistant.components.homeassistant import DOMAIN as HA_DOMAIN
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     CONF_DEVICE,
     CONF_IP_ADDRESS,
     CONF_NAME,
@@ -97,6 +102,7 @@ async def test_import(
             door_id=1,
             permission=True,
             name="Door1",
+            gate=False,
             mode=DoorMode.GARAGE,
             status=DoorStatus.OPENED,
             sensor=True,
@@ -109,6 +115,7 @@ async def test_import(
             door_id=2,
             permission=True,
             name=None,
+            gate=True,
             mode=DoorMode.GARAGE,
             status=DoorStatus.UNDEFINED,
             sensor=True,
@@ -121,6 +128,7 @@ async def test_import(
             door_id=3,
             permission=True,
             name=None,
+            gate=False,
             mode=DoorMode.GARAGE,
             status=DoorStatus.UNDEFINED,
             sensor=True,
@@ -151,6 +159,7 @@ async def test_import(
             door_id=1,
             permission=True,
             name="Door1",
+            gate=False,
             mode=DoorMode.GARAGE,
             status=DoorStatus.CLOSED,
             sensor=True,
@@ -166,6 +175,7 @@ async def test_import(
             door_id=1,
             permission=True,
             name=None,
+            gate=True,
             mode=DoorMode.GARAGE,
             status=DoorStatus.CLOSED,
             sensor=True,
@@ -181,6 +191,7 @@ async def test_import(
             door_id=1,
             permission=True,
             name=None,
+            gate=False,
             mode=DoorMode.GARAGE,
             status=DoorStatus.CLOSED,
             sensor=True,
@@ -249,6 +260,7 @@ async def test_open_close_update(gogogat2api_mock, hass: HomeAssistant) -> None:
                 door_id=1,
                 permission=True,
                 name="Door1",
+                gate=False,
                 mode=DoorMode.GARAGE,
                 status=door_status,
                 sensor=True,
@@ -261,6 +273,7 @@ async def test_open_close_update(gogogat2api_mock, hass: HomeAssistant) -> None:
                 door_id=2,
                 permission=True,
                 name=None,
+                gate=True,
                 mode=DoorMode.GARAGE,
                 status=DoorStatus.UNDEFINED,
                 sensor=True,
@@ -273,6 +286,7 @@ async def test_open_close_update(gogogat2api_mock, hass: HomeAssistant) -> None:
                 door_id=3,
                 permission=True,
                 name=None,
+                gate=False,
                 mode=DoorMode.GARAGE,
                 status=DoorStatus.UNDEFINED,
                 sensor=True,
@@ -356,6 +370,7 @@ async def test_availability(ismartgateapi_mock, hass: HomeAssistant) -> None:
             door_id=1,
             permission=True,
             name="Door1",
+            gate=False,
             mode=DoorMode.GARAGE,
             status=DoorStatus.CLOSED,
             sensor=True,
@@ -370,13 +385,14 @@ async def test_availability(ismartgateapi_mock, hass: HomeAssistant) -> None:
         door2=ISmartGateDoor(
             door_id=2,
             permission=True,
-            name=None,
+            name="Door2",
+            gate=True,
             mode=DoorMode.GARAGE,
-            status=DoorStatus.UNDEFINED,
+            status=DoorStatus.CLOSED,
             sensor=True,
             sensorid=None,
             camera=False,
-            events=0,
+            events=2,
             temperature=None,
             enabled=True,
             apicode="apicode0",
@@ -386,6 +402,7 @@ async def test_availability(ismartgateapi_mock, hass: HomeAssistant) -> None:
             door_id=3,
             permission=True,
             name=None,
+            gate=False,
             mode=DoorMode.GARAGE,
             status=DoorStatus.UNDEFINED,
             sensor=True,
@@ -421,6 +438,14 @@ async def test_availability(ismartgateapi_mock, hass: HomeAssistant) -> None:
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert hass.states.get("cover.door1")
+    assert (
+        hass.states.get("cover.door1").attributes[ATTR_DEVICE_CLASS]
+        == DEVICE_CLASS_GARAGE
+    )
+    assert (
+        hass.states.get("cover.door2").attributes[ATTR_DEVICE_CLASS]
+        == DEVICE_CLASS_GATE
+    )
 
     api.info.side_effect = Exception("Error")
 

@@ -1,10 +1,16 @@
 {
     "config": {
         "error": {
+            "already_configured": "Le compte a d\u00e9j\u00e0 \u00e9t\u00e9 configur\u00e9",
+            "authorization_error": "Erreur d'autorisation. V\u00e9rifiez vos identifiants.",
             "connection_error": "\u00c9chec de connexion"
         },
         "step": {
             "user": {
+                "data": {
+                    "password": "Mot de passe",
+                    "username": "Nom d'utilisateur"
+                },
                 "title": "Ajouter un compte OVO Energy"
             }
         }
