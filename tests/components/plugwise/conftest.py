@@ -73,6 +73,7 @@ def mock_smile_adam():
         smile_mock.return_value.heater_id = "90986d591dcd426cae3ec3e8111ff730"
         smile_mock.return_value.smile_version = "3.0.15"
         smile_mock.return_value.smile_type = "thermostat"
+        smile_mock.return_value.smile_hostname = "smile98765"
 
         smile_mock.return_value.connect.side_effect = AsyncMock(return_value=True)
         smile_mock.return_value.full_update_device.side_effect = AsyncMock(
@@ -112,6 +113,7 @@ def mock_smile_anna():
         smile_mock.return_value.heater_id = "1cbf783bb11e4a7c8a6843dee3a86927"
         smile_mock.return_value.smile_version = "4.0.15"
         smile_mock.return_value.smile_type = "thermostat"
+        smile_mock.return_value.smile_hostname = "smile98765"
 
         smile_mock.return_value.connect.side_effect = AsyncMock(return_value=True)
         smile_mock.return_value.full_update_device.side_effect = AsyncMock(
@@ -151,6 +153,7 @@ def mock_smile_p1():
         smile_mock.return_value.heater_id = None
         smile_mock.return_value.smile_version = "3.3.9"
         smile_mock.return_value.smile_type = "power"
+        smile_mock.return_value.smile_hostname = "smile98765"
 
         smile_mock.return_value.connect.side_effect = AsyncMock(return_value=True)
         smile_mock.return_value.full_update_device.side_effect = AsyncMock(
