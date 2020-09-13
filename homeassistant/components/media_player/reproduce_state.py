@@ -1,13 +1,10 @@
 """Module that groups code required to handle state restore for component."""
 import asyncio
-import logging
 from typing import Any, Dict, Iterable, Optional
 
 from homeassistant.const import (
-    ATTR_SNAPSHOT_AT,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
-    SERVICE_MEDIA_SEEK,
     SERVICE_MEDIA_STOP,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -27,9 +24,6 @@ from .const import (
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_ENQUEUE,
-    ATTR_MEDIA_POSITION,
-    ATTR_MEDIA_POSITION_UPDATED_AT,
-    ATTR_MEDIA_SEEK_POSITION,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
     ATTR_SOUND_MODE,
@@ -40,8 +34,6 @@ from .const import (
 )
 
 # mypy: allow-untyped-defs
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def _async_reproduce_states(
@@ -58,26 +50,8 @@ async def _async_reproduce_states(
         data = {"entity_id": state.entity_id}
         for key in keys:
             if key in state.attributes:
-                if key == ATTR_MEDIA_POSITION:
-                    # for this property only, the state does not match the service data
-                    if (
-                        state.state == STATE_PLAYING
-                        and ATTR_MEDIA_POSITION_UPDATED_AT in state.attributes
-                        and ATTR_SNAPSHOT_AT in state.attributes
-                    ):
-                        delta = (
-                            state.attributes[ATTR_SNAPSHOT_AT]
-                            - state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT]
-                        )
-                        data[ATTR_MEDIA_SEEK_POSITION] = str(
-                            int(state.attributes[key]) + int(delta.total_seconds())
-                        )
-                    else:
-                        data[ATTR_MEDIA_SEEK_POSITION] = state.attributes[key]
-                else:
-                    data[key] = state.attributes[key]
+                data[key] = state.attributes[key]
 
-        _LOGGER.debug("Calling %s with data %s", service, data)
         await hass.services.async_call(
             DOMAIN, service, data, blocking=True, context=context
         )
@@ -117,9 +91,6 @@ async def _async_reproduce_states(
             [ATTR_MEDIA_CONTENT_TYPE, ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_ENQUEUE],
         )
         already_playing = True
-
-    if ATTR_MEDIA_POSITION in state.attributes:
-        await call_service(SERVICE_MEDIA_SEEK, [ATTR_MEDIA_POSITION])
 
     if state.state == STATE_PLAYING and not already_playing:
         await call_service(SERVICE_MEDIA_PLAY, [])

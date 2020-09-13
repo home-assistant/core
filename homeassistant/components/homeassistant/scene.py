@@ -10,7 +10,6 @@ from homeassistant.components.light import ATTR_TRANSITION
 from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN, STATES, Scene
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_SNAPSHOT_AT,
     ATTR_STATE,
     CONF_ENTITIES,
     CONF_ICON,
@@ -30,7 +29,6 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.state import async_reproduce_state
 from homeassistant.loader import async_get_integration
-import homeassistant.util.dt as dt_util
 
 
 def _convert_states(states):
@@ -232,8 +230,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                     entity_id,
                 )
                 continue
-            attributes = {**state.attributes, ATTR_SNAPSHOT_AT: dt_util.utcnow()}
-            entities[entity_id] = State(entity_id, state.state, attributes)
+            entities[entity_id] = State(entity_id, state.state, state.attributes)
 
         if not entities:
             _LOGGER.warning("Empty scenes are not allowed")
