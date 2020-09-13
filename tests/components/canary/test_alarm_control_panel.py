@@ -33,7 +33,7 @@ async def test_alarm_control_panel(hass, canary) -> None:
         name="Home",
         is_online=True,
         is_private=False,
-        mode=None,
+        mode=mock_mode(7, "standby"),
         devices=[online_device_at_home],
     )
 
@@ -133,7 +133,7 @@ async def test_alarm_control_panel_services(hass, canary) -> None:
         service_data={"entity_id": entity_id},
         blocking=True,
     )
-    assert instance.set_location_mode.called_with(100, LOCATION_MODE_AWAY, False)
+    instance.set_location_mode.assert_called_with(100, LOCATION_MODE_AWAY, False)
 
     # test arm home
     await hass.services.async_call(
@@ -142,7 +142,7 @@ async def test_alarm_control_panel_services(hass, canary) -> None:
         service_data={"entity_id": entity_id},
         blocking=True,
     )
-    assert instance.set_location_mode.called_with(100, LOCATION_MODE_HOME, False)
+    instance.set_location_mode.assert_called_with(100, LOCATION_MODE_HOME, False)
 
     # test arm night
     await hass.services.async_call(
@@ -151,7 +151,7 @@ async def test_alarm_control_panel_services(hass, canary) -> None:
         service_data={"entity_id": entity_id},
         blocking=True,
     )
-    assert instance.set_location_mode.called_with(100, LOCATION_MODE_NIGHT, False)
+    instance.set_location_mode.assert_called_with(100, LOCATION_MODE_NIGHT, False)
 
     # test disarm
     await hass.services.async_call(
@@ -160,5 +160,5 @@ async def test_alarm_control_panel_services(hass, canary) -> None:
         service_data={"entity_id": entity_id},
         blocking=True,
     )
-    assert instance.set_location_mode.called_with(100, "disarmed", True)
+    instance.set_location_mode.assert_called_with(100, "disarmed", True)
 
