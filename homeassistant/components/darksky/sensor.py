@@ -7,11 +7,6 @@ from requests.exceptions import ConnectionError as ConnectError, HTTPError, Time
 import voluptuous as vol
 
 from homeassistant.components.sensor import DEVICE_CLASS_TEMPERATURE, PLATFORM_SCHEMA
-from homeassistant.components.weather import (
-    ATTR_CONDITION_CLEAR_NIGHT,
-    ATTR_CONDITION_CLOUDY,
-    ATTR_CONDITION_FOG,
-)
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_API_KEY,
@@ -387,7 +382,7 @@ SENSOR_TYPES = {
 
 CONDITION_PICTURES = {
     "clear-day": ["/static/images/darksky/weather-sunny.svg", "mdi:weather-sunny"],
-    ATTR_CONDITION_CLEAR_NIGHT: [
+    "clear-night": [
         "/static/images/darksky/weather-night.svg",
         "mdi:weather-night",
     ],
@@ -395,8 +390,8 @@ CONDITION_PICTURES = {
     "snow": ["/static/images/darksky/weather-snowy.svg", "mdi:weather-snowy"],
     "sleet": ["/static/images/darksky/weather-hail.svg", "mdi:weather-snowy-rainy"],
     "wind": ["/static/images/darksky/weather-windy.svg", "mdi:weather-windy"],
-    ATTR_CONDITION_FOG: ["/static/images/darksky/weather-fog.svg", "mdi:weather-fog"],
-    ATTR_CONDITION_CLOUDY: [
+    "fog": ["/static/images/darksky/weather-fog.svg", "mdi:weather-fog"],
+    "cloudy": [
         "/static/images/darksky/weather-cloudy.svg",
         "mdi:weather-cloudy",
     ],
