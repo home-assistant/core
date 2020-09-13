@@ -53,8 +53,6 @@ class SmartPlugSwitch(SwitchEntity):
         self._model = None
         self._device_id = None
 
-        self._is_ready = False
-
     @property
     def unique_id(self):
         """Return a unique ID."""
@@ -154,25 +152,26 @@ class SmartPlugSwitch(SwitchEntity):
                 except KeyError:
                     # Device returned no daily history
                     pass
-            self._is_ready = True
+            return True
         except (SmartDeviceException, OSError) as ex:
-            _LOGGER.warning(
-                "Attempt %s - retrying in %s for %s|%s due to: %s",
-                update_attempt,
-                SLEEP_TIME,
-                self._host,
-                self._alias,
-                ex,
-            )
+            if update_attempt == 0:
+                _LOGGER.warning(
+                    "Retrying in %s seconds for %s|%s due to: %s",
+                    SLEEP_TIME,
+                    self._light_features.host,
+                    self._light_features.alias,
+                    ex,
+                )
+            return False
 
     async def async_update(self):
         """Update the TP-Link switch's state."""
         for update_attempt in range(MAX_ATTEMPTS):
-            self._is_ready = False
+            is_ready = await self.hass.async_add_executor_job(
+                self.attempt_update, update_attempt
+            )
 
-            await self.hass.async_add_executor_job(self.attempt_update, update_attempt)
-
-            if self._is_ready:
+            if is_ready:
                 self._is_available = True
                 break
 

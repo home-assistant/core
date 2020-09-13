@@ -128,7 +128,6 @@ class TPLinkSmartBulb(LightEntity):
         self._last_current_power_update = None
         self._last_historical_power_update = None
         self._emeter_params = {}
-        self._is_ready = False
 
     @property
     def unique_id(self):
@@ -242,17 +241,18 @@ class TPLinkSmartBulb(LightEntity):
             if not self._light_features:
                 self._light_features = self._get_light_features_retry()
             self._light_state = self._get_light_state_retry()
-            self._is_ready = True
+            return True
 
         except (SmartDeviceException, OSError) as ex:
-            _LOGGER.warning(
-                "Attempt %s - retrying in %s seconds for %s|%s due to: %s",
-                update_attempt,
-                SLEEP_TIME,
-                self._light_features.host,
-                self._light_features.alias,
-                ex,
-            )
+            if update_attempt == 0:
+                _LOGGER.warning(
+                    "Retrying in %s seconds for %s|%s due to: %s",
+                    SLEEP_TIME,
+                    self._light_features.host,
+                    self._light_features.alias,
+                    ex,
+                )
+            return False
 
     @property
     def supported_features(self):
@@ -479,11 +479,11 @@ class TPLinkSmartBulb(LightEntity):
     async def async_update(self):
         """Update the TP-Link bulb's state."""
         for update_attempt in range(MAX_ATTEMPTS):
-            self._is_ready = False
+            is_ready = await self.hass.async_add_executor_job(
+                self.attempt_update, update_attempt
+            )
 
-            await self.hass.async_add_executor_job(self.attempt_update, update_attempt)
-
-            if self._is_ready:
+            if is_ready:
                 self._is_available = True
                 break
             await asyncio.sleep(SLEEP_TIME)
