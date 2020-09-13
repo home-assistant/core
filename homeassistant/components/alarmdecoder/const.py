@@ -16,6 +16,7 @@ CONF_ZONE_TYPE = "zone_type"
 DATA_AD = "alarmdecoder"
 DATA_REMOVE_STOP_LISTENER = "rm_stop_listener"
 DATA_REMOVE_UPDATE_LISTENER = "rm_update_listener"
+DATA_RESTART = "restart"
 
 DEFAULT_ALT_NIGHT_MODE = False
 DEFAULT_AUTO_BYPASS = False

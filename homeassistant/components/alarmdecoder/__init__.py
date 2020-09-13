@@ -23,6 +23,7 @@ from .const import (
     DATA_AD,
     DATA_REMOVE_STOP_LISTENER,
     DATA_REMOVE_UPDATE_LISTENER,
+    DATA_RESTART,
     DOMAIN,
     PROTOCOL_SERIAL,
     PROTOCOL_SOCKET,
@@ -35,7 +36,6 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-RESTART = False
 PLATFORMS = ["alarm_control_panel", "sensor", "binary_sensor"]
 
 
@@ -56,13 +56,11 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         if not hass.data.get(DOMAIN):
             return
         _LOGGER.debug("Shutting down alarmdecoder")
-        global RESTART  # pylint: disable=global-statement
-        RESTART = False
+        hass.data[DOMAIN][entry.entry_id][DATA_RESTART] = False
         controller.close()
 
     def open_connection(now=None):
         """Open a connection to AlarmDecoder."""
-        global RESTART  # pylint: disable=global-statement
         try:
             controller.open(baud)
         except NoDeviceError:
@@ -72,14 +70,13 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
             )
             return
         _LOGGER.debug("Established a connection with the alarmdecoder")
-        RESTART = True
+        hass.data[DOMAIN][entry.entry_id][DATA_RESTART] = True
 
     def handle_closed_connection(event):
         """Restart after unexpected loss of connection."""
-        global RESTART  # pylint: disable=global-statement
-        if not RESTART:
+        if not hass.data[DOMAIN][entry.entry_id][DATA_RESTART]:
             return
-        RESTART = False
+        hass.data[DOMAIN][entry.entry_id][DATA_RESTART] = False
         _LOGGER.warning("AlarmDecoder unexpectedly lost connection")
         hass.add_job(open_connection)
 
@@ -129,6 +126,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         DATA_AD: controller,
         DATA_REMOVE_UPDATE_LISTENER: undo_listener,
         DATA_REMOVE_STOP_LISTENER: remove_stop_listener,
+        DATA_RESTART: False,
     }
 
     open_connection()
@@ -142,8 +140,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
 async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Unload a AlarmDecoder entry."""
-    global RESTART  # pylint: disable=global-statement
-    RESTART = False
+    hass.data[DOMAIN][entry.entry_id][DATA_RESTART] = False
 
     unload_ok = all(
         await asyncio.gather(
