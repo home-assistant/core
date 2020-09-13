@@ -1,8 +1,13 @@
 """The tests for the Canary alarm_control_panel platform."""
 from canary.api import LOCATION_MODE_AWAY, LOCATION_MODE_HOME, LOCATION_MODE_NIGHT
 
+from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
 from homeassistant.components.canary import DOMAIN
 from homeassistant.const import (
+    SERVICE_ALARM_ARM_AWAY,
+    SERVICE_ALARM_ARM_HOME,
+    SERVICE_ALARM_ARM_NIGHT,
+    SERVICE_ALARM_DISARM,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
@@ -93,3 +98,67 @@ async def test_alarm_control_panel(hass, canary) -> None:
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_ALARM_ARMED_NIGHT
+
+
+async def test_alarm_control_panel_services(hass, canary) -> None:
+    """Test the services of the alarm_control_panel for Canary."""
+    await async_setup_component(hass, "persistent_notification", {})
+
+    online_device_at_home = mock_device(20, "Dining Room", True, "Canary Pro")
+
+    mocked_location = mock_location(
+        location_id=100,
+        name="Home",
+        is_online=True,
+        mode=mock_mode(1, "disarmed"),
+        devices=[online_device_at_home],
+    )
+
+    instance = canary.return_value
+    instance.get_locations.return_value = [mocked_location]
+
+    config = {DOMAIN: {"username": "test-username", "password": "test-password"}}
+    with patch(
+        "homeassistant.components.canary.CANARY_COMPONENTS", ["alarm_control_panel"]
+    ):
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+
+    entity_id = "alarm_control_panel.home"
+
+    # test arm away
+    await hass.services.async_call(
+        ALARM_DOMAIN,
+        SERVICE_ALARM_ARM_AWAY,
+        service_data={"entity_id": entity_id},
+        blocking=True,
+    )
+    assert instance.set_location_mode.called_with(100, LOCATION_MODE_AWAY, False)
+
+    # test arm home
+    await hass.services.async_call(
+        ALARM_DOMAIN,
+        SERVICE_ALARM_ARM_HOME,
+        service_data={"entity_id": entity_id},
+        blocking=True,
+    )
+    assert instance.set_location_mode.called_with(100, LOCATION_MODE_HOME, False)
+
+    # test arm night
+    await hass.services.async_call(
+        ALARM_DOMAIN,
+        SERVICE_ALARM_ARM_NIGHT,
+        service_data={"entity_id": entity_id},
+        blocking=True,
+    )
+    assert instance.set_location_mode.called_with(100, LOCATION_MODE_NIGHT, False)
+
+    # test disarm
+    await hass.services.async_call(
+        ALARM_DOMAIN,
+        SERVICE_ALARM_DISARM,
+        service_data={"entity_id": entity_id},
+        blocking=True,
+    )
+    assert instance.set_location_mode.called_with(100, "disarmed", True)
+
