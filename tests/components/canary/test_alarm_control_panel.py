@@ -58,9 +58,7 @@ async def test_alarm_control_panel(hass, canary) -> None:
     assert not state.attributes["private"]
 
     # test private system
-    type(mocked_location).is_private = PropertyMock(
-        return_value=True
-    )
+    type(mocked_location).is_private = PropertyMock(return_value=True)
 
     await hass.helpers.entity_component.async_update_entity(entity_id)
     await hass.async_block_till_done()
@@ -70,9 +68,7 @@ async def test_alarm_control_panel(hass, canary) -> None:
     assert state.state == STATE_ALARM_DISARMED
     assert state.attributes["private"]
 
-    type(mocked_location).is_private = PropertyMock(
-        return_value=False
-    )
+    type(mocked_location).is_private = PropertyMock(return_value=False)
 
     # test armed home
     type(mocked_location).mode = PropertyMock(
