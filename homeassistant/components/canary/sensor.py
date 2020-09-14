@@ -1,9 +1,15 @@
 """Support for Canary sensors."""
 from canary.api import SensorType
 
-from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
+from homeassistant.const import (
+    DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_SIGNAL_STRENGTH,
+    DEVICE_CLASS_TEMPERATURE,
+    PERCENTAGE,
+    TEMP_CELSIUS,
+)
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.icon import icon_for_battery_level
 
 from . import DATA_CANARY
 
@@ -18,13 +24,13 @@ CANARY_PRO = "Canary Pro"
 CANARY_FLEX = "Canary Flex"
 
 # Sensor types are defined like so:
-# sensor type name, unit_of_measurement, icon
+# sensor type name, unit_of_measurement, icon, device class, products supported
 SENSOR_TYPES = [
-    ["temperature", TEMP_CELSIUS, "mdi:thermometer", [CANARY_PRO]],
-    ["humidity", PERCENTAGE, "mdi:water-percent", [CANARY_PRO]],
-    ["air_quality", None, "mdi:weather-windy", [CANARY_PRO]],
-    ["wifi", "dBm", "mdi:wifi", [CANARY_FLEX]],
-    ["battery", PERCENTAGE, "mdi:battery-50", [CANARY_FLEX]],
+    ["temperature", TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE, [CANARY_PRO]],
+    ["humidity", PERCENTAGE, None, DEVICE_CLASS_HUMIDITY, [CANARY_PRO]],
+    ["air_quality", None, "mdi:weather-windy", None, [CANARY_PRO]],
+    ["wifi", "dBm", None, DEVICE_CLASS_SIGNAL_STRENGTH, [CANARY_FLEX]],
+    ["battery", PERCENTAGE, None, DEVICE_CLASS_BATTERY, [CANARY_FLEX]],
 ]
 
 STATE_AIR_QUALITY_NORMAL = "normal"
@@ -42,7 +48,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             if device.is_online:
                 device_type = device.device_type
                 for sensor_type in SENSOR_TYPES:
-                    if device_type.get("name") in sensor_type[3]:
+                    if device_type.get("name") in sensor_type[4]:
                         devices.append(
                             CanarySensor(data, sensor_type, location, device)
                         )
@@ -84,11 +90,13 @@ class CanarySensor(Entity):
         return self._sensor_type[1]
 
     @property
+    def device_class(self):
+        """Device class for the sensor."""
+        return self._sensor_type[3]
+
+    @property
     def icon(self):
         """Icon for the sensor."""
-        if self.state is not None and self._sensor_type[0] == "battery":
-            return icon_for_battery_level(battery_level=self.state)
-
         return self._sensor_type[2]
 
     @property
