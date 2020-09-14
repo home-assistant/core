@@ -15,15 +15,13 @@ from homeassistant.const import (  # pylint:disable=unused-import
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_registry import EntityRegistry
 
 from .const import (
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
-    DISCOVERED_DEVICES,
-    TRACKED_DEVICES,
+    DISCOVERED_DEVICES
 )
 
 _LOGGER = logging.getLogger(__name__)

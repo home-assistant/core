@@ -1,3 +1,5 @@
+"""Instant Virtual Controller abstraction class for HA"""
+
 import logging
 
 from instantpy import InstantVC
@@ -5,7 +7,7 @@ from instantpy import InstantVC
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import DOMAIN, DISCOVERED_DEVICES, TRACKED_DEVICES
+from .const import DOMAIN, TRACKED_DEVICES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -14,7 +16,7 @@ class VirtualController:
     """
     Instantiate an InstantVC object.
     """
-    _LOGGER.debug(f"Initializing Aruba Instant Virtual Controller")
+    _LOGGER.debug("Initializing Aruba Instant Virtual Controller")
     def __init__(self, hass: HomeAssistantType, entry: ConfigEntry):
         self.hass = hass
         self.vc_name = ""
