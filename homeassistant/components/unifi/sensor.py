@@ -2,7 +2,7 @@
 import logging
 
 from homeassistant.components.sensor import DOMAIN
-from homeassistant.const import DATA_MEGABYTES
+from homeassistant.const import DATA_MEGABYTES, TIME_SECONDS
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -14,6 +14,7 @@ LOGGER = logging.getLogger(__name__)
 RX_SENSOR = "rx"
 TX_SENSOR = "tx"
 UPTIME_SENSOR = "uptime"
+
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Sensor platform doesn't support configuration through configuration.yaml."""
@@ -100,6 +101,7 @@ class UniFiTxBandwidthSensor(UniFiBandwidthSensor):
         if self._is_wired:
             return self.client.wired_tx_bytes / 1000000
         return self.client.tx_bytes / 1000000
+    
     
 class UniFiUpTimeSensor(UniFiClient):
     """UniFi uptime sensor base class."""
