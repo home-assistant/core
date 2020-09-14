@@ -65,7 +65,7 @@ class CanarySensor(Entity):
         self._data = data
         self._sensor_type = sensor_type
         self._device_name = device.name
-        self._device_type_name = device.device_type.name
+        self._device_type_name = device.device_type["name"]
         self._device_id = device.device_id
         self._sensor_value = None
 
