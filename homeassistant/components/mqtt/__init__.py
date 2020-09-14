@@ -134,7 +134,7 @@ CONNECTION_FAILED = "connection_failed"
 CONNECTION_FAILED_RECOVERABLE = "connection_failed_recoverable"
 
 DISCOVERY_COOLDOWN = 2
-TIMEOUT_ACK = 1
+TIMEOUT_ACK = 2
 
 PLATFORMS = [
     "alarm_control_panel",
