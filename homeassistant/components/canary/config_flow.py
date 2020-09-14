@@ -1,12 +1,12 @@
 """Config flow for Canary."""
 import logging
+from requests import ConnectTimeout, HTTPError
 from typing import Any, Dict, Optional
 
 import voluptuous as vol
 
 from homeassistant.config_entries import CONN_CLASS_CLOUD_POLL, ConfigFlow
 from homeassistant.const import CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
-from homeassistant.core import callback
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from . import Api
@@ -23,8 +23,9 @@ def validate_input(hass: HomeAssistantType, data: dict) -> Dict[str, Any]:
     """
     # constructor does login call
     canary_api = Api(
-        data.get(CONF_USERNAME),
-        data.get(CONF_PASSWORD),
+        data[CONF_USERNAME],
+        data[CONF_PASSWORD],
+        data[CONF_TIMEOUT],
     )
 
     return True
@@ -59,7 +60,7 @@ class CanaryConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.hass.async_add_executor_job(
                     validate_input, self.hass, user_input
                 )
-            except NZBGetAPIException:
+            except (ConnectTimeout, HTTPError):
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
@@ -73,7 +74,6 @@ class CanaryConfigFlow(ConfigFlow, domain=DOMAIN):
         data_schema = {
             vol.Required(CONF_USERNAME): str,
             vol.Required(CONF_PASSWORD): str,
-            
         }
 
         if self.show_advanced_options:
