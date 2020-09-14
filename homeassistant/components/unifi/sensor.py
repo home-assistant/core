@@ -117,7 +117,7 @@ class UniFiUpTimeSensor(UniFiClient):
     def device_class(self) -> str:
         """Return device class."""
         return DEVICE_CLASS_TIMESTAMP
-    
+
     @property
     def name(self) -> str:
         """Return the name of the client."""
