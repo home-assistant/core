@@ -636,8 +636,7 @@ class _TrackTemplateResultInfo:
         if listener_name not in self._listeners:
             return
 
-        self._listeners[listener_name]()
-        del self._listeners[listener_name]
+        self._listeners.pop(listener_name)()
 
     @callback
     def _update_listeners(self) -> None:
