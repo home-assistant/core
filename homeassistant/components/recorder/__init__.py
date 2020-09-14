@@ -196,6 +196,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 PurgeTask = namedtuple("PurgeTask", ["keep_days", "repack"])
 
 
+class WaitTask:
+    """An object to insert into the recorder queue to tell it set the _queue_watch event."""
+
+
 class Recorder(threading.Thread):
     """A threaded recorder class."""
 
@@ -226,6 +230,7 @@ class Recorder(threading.Thread):
         self.db_retry_wait = db_retry_wait
         self.db_integrity_check = db_integrity_check
         self.async_db_ready = asyncio.Future()
+        self._queue_watch = threading.Event()
         self.engine: Any = None
         self.run_info: Any = None
 
@@ -352,6 +357,9 @@ class Recorder(threading.Thread):
                 # Schedule a new purge task if this one didn't finish
                 if not purge.purge_old_data(self, event.keep_days, event.repack):
                     self.queue.put(PurgeTask(event.keep_days, event.repack))
+                continue
+            if isinstance(event, WaitTask):
+                self._queue_watch.set()
                 continue
             if event.event_type == EVENT_TIME_CHANGED:
                 self._keepalive_count += 1
@@ -506,8 +514,9 @@ class Recorder(threading.Thread):
         after calling this to ensure the data
         is in the database.
         """
-        while not self.queue.empty():
-            time.sleep(0.025)
+        self._queue_watch.clear()
+        self.queue.put(WaitTask())
+        self._queue_watch.wait()
 
     def _setup_connection(self):
         """Ensure database is ready to fly."""
