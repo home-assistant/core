@@ -36,10 +36,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         """Update the values of the controller."""
         if controller.option_allow_bandwidth_sensors:
             add_bandwith_entities(controller, async_add_entities, clients)
-            
+
         if controller.option_allow_uptime_sensors:
             add_uptime_entities(controller, async_add_entities, clients)
-            
+
     for signal in (controller.signal_update, controller.signal_options_update):
         controller.listeners.append(async_dispatcher_connect(hass, signal, items_added))
 
@@ -61,8 +61,8 @@ def add_bandwith_entities(controller, async_add_entities, clients):
 
     if sensors:
         async_add_entities(sensors)
-        
-        
+
+
 @callback
 def add_uptime_entities(controller, async_add_entities, clients):
     """Add new sensor entities from the controller."""

@@ -152,7 +152,7 @@ async def test_sensors(hass):
 
     wireless_client_tx = hass.states.get("sensor.wireless_client_name_tx")
     assert wireless_client_tx.state == "6789.0"
-    
+
     uptime_client = hass.states.get("sensor.up_time")
     assert uptime_client.state == "1562600160"
 
@@ -163,7 +163,7 @@ async def test_remove_sensors(hass):
         hass,
         options={
             CONF_ALLOW_BANDWIDTH_SENSORS: True,
-            CONF_ALLOW_UPTIME_SENSORS: True
+            CONF_ALLOW_UPTIME_SENSORS: True,
          },
         clients_response=CLIENTS,
     )
@@ -202,6 +202,6 @@ async def test_remove_sensors(hass):
     assert wireless_client_rx is not None
     wireless_client_tx = hass.states.get("sensor.wireless_client_name_tx")
     assert wireless_client_tx is not None
-    
+
     uptime_client = hass.states.get("sensor.up_time")
     assert uptime_client is not None

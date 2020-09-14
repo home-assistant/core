@@ -344,7 +344,7 @@ async def test_advanced_option_flow(hass):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={CONF_ALLOW_BANDWIDTH_SENSORS: True}
     )
-    
+
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={CONF_ALLOW_UPTIME_SENSORS: True}
     )

@@ -46,6 +46,7 @@ from .const import (
     CONF_TRACK_WIRED_CLIENTS,
     CONTROLLER_ID,
     DEFAULT_ALLOW_BANDWIDTH_SENSORS,
+    DEFAULT_ALLOW_UPTIME_SENSORS,
     DEFAULT_DETECTION_TIME,
     DEFAULT_IGNORE_WIRED_BUG,
     DEFAULT_POE_CLIENTS,
@@ -184,7 +185,7 @@ class UniFiController:
         return self.config_entry.options.get(
             CONF_ALLOW_BANDWIDTH_SENSORS, DEFAULT_ALLOW_BANDWIDTH_SENSORS
         )
-        
+
     @property
     def option_allow_uptime_sensors(self):
         """Config entry option to allow uptime sensors."""
