@@ -2686,7 +2686,7 @@ async def async_setup(hass, config):
         if "timer" in service.data:
             timer = service.data["timer"]
         # TODO - check this fix for 'NoneType' object has no attribute 'state'
-        if hass:
+        if hass is not None:
             quiet_mode = hass.states.get("input_boolean.ais_quiet_mode").state
         else:
             return
