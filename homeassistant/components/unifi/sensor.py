@@ -148,3 +148,8 @@ class UniFiUpTimeSensor(UniFiClient):
     def state(self) -> int:
         """Return the uptime of the client."""
         return dt_util.utc_from_timestamp(float(self.client.uptime)).isoformat()
+
+    async def options_updated(self) -> None:
+        """Config entry options are updated, remove entity if option is disabled."""
+        if not self.controller.option_allow_uptime_sensors:
+            await self.remove_item({self.client.mac})
