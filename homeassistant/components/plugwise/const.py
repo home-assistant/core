@@ -17,7 +17,7 @@ DEFAULT_NAME = "Smile"
 DEFAULT_PORT = 80
 DEFAULT_USERNAME = "smile"
 DEFAULT_SCAN_INTERVAL = {"power": 10, "stretch": 60, "thermostat": 60}
-DEFAULT_TIMEOUT = 10
+DEFAULT_TIMEOUT = 60
 
 # Configuration directives
 CONF_BASE = "base"
