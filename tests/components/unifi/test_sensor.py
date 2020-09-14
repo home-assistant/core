@@ -103,7 +103,7 @@ async def test_sensors(hass):
     assert wireless_client_tx.state == "5678.0"
 
     uptime_client = hass.states.get("sensor.up_time")
-    assert uptime_client.state == "1562600160"
+    assert uptime_client.state == "1562600160.0"
 
     clients = deepcopy(CLIENTS)
     clients[0]["is_wired"] = False
@@ -154,7 +154,7 @@ async def test_sensors(hass):
     assert wireless_client_tx.state == "6789.0"
 
     uptime_client = hass.states.get("sensor.up_time")
-    assert uptime_client.state == "1562600160"
+    assert uptime_client.state == "1562600160.0"
 
 
 async def test_remove_sensors(hass):

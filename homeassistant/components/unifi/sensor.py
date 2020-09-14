@@ -70,12 +70,11 @@ def add_uptime_entities(controller, async_add_entities, clients):
     sensors = []
 
     for mac in clients:
-        for sensor_class in UniFiUpTimeSensor:
-            if mac in controller.entities[DOMAIN][sensor_class.TYPE]:
+        if mac in controller.entities[DOMAIN][UniFiUpTimeSensor.TYPE]:
                 continue
 
-            client = controller.api.clients[mac]
-            sensors.append(sensor_class(client, controller))
+        client = controller.api.clients[mac]
+        sensors.append(UniFiUpTimeSensor(client, controller))
 
     if sensors:
         async_add_entities(sensors)
