@@ -164,7 +164,7 @@ async def test_remove_sensors(hass):
         options={
             CONF_ALLOW_BANDWIDTH_SENSORS: True,
             CONF_ALLOW_UPTIME_SENSORS: True,
-         },
+        },
         clients_response=CLIENTS,
     )
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 5
