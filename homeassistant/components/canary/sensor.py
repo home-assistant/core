@@ -92,7 +92,7 @@ class CanarySensor(Entity):
             "identifiers": {(DOMAIN, str(self._device_id))},
             "name": self._device_name,
             "model": self._device_type_name,
-            "manufacturer": "Canary",
+            "manufacturer": "Canary Connect, Inc.",
         }
 
     @property
