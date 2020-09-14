@@ -2,6 +2,7 @@
 import logging
 
 from homeassistant.components import media_source
+import homeassistant.components.ais_dom.ais_global as ais_global
 from homeassistant.components.media_player import BrowseMedia
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_ALBUM,
@@ -11,13 +12,16 @@ from homeassistant.components.media_player.const import (
     MEDIA_CLASS_DIRECTORY,
     MEDIA_CLASS_EPISODE,
     MEDIA_CLASS_MOVIE,
+    MEDIA_CLASS_MUSIC,
     MEDIA_CLASS_PLAYLIST,
+    MEDIA_CLASS_PODCAST,
     MEDIA_CLASS_SEASON,
     MEDIA_CLASS_TRACK,
     MEDIA_CLASS_TV_SHOW,
     MEDIA_CLASS_VIDEO,
     MEDIA_TYPE_APP,
     MEDIA_TYPE_CHANNELS,
+    MEDIA_TYPE_MUSIC,
 )
 from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.components.media_source import const as media_source_const
@@ -43,6 +47,9 @@ async def browse_media(hass, media_content_type=None, media_content_id=None):
 
     if media_content_id.startswith("ais_music"):
         return ais_music_library()
+
+    if media_content_id.startswith("ais_favorites"):
+        return ais_favorites_library(hass)
 
     response = None
 
@@ -71,29 +78,29 @@ def ais_media_library() -> BrowseMedia:
             media_content_type=MEDIA_TYPE_APP,
             can_expand=True,
             can_play=False,
-            thumbnail="https://cdn2.iconfinder.com/data/icons/folders-22/512/Folder_Mac_Music.png",
+            thumbnail="http://www.ai-speaker.com/images/media-browser/harddisk.svg",
         )
     )
     ais_library_info.children.append(
         BrowseMedia(
             title="Ulubione",
-            media_class=MEDIA_CLASS_DIRECTORY,
-            media_content_id="ais_radio",
+            media_class=MEDIA_CLASS_PLAYLIST,
+            media_content_id="ais_favorites",
             media_content_type=MEDIA_TYPE_APP,
             can_expand=True,
             can_play=False,
-            thumbnail="https://1.bp.blogspot.com/-qZTfIjt9AXk/TxMWUFLKWLI/AAAAAAAAAWk/bwQqSX-Z3H0/s1600/Graphic__Music__Headphones__Heart_xlarge.gif",
+            thumbnail="http://www.ai-speaker.com/images/media-browser/heart.svg",
         )
     )
     ais_library_info.children.append(
         BrowseMedia(
             title="Radio",
-            media_class=MEDIA_CLASS_DIRECTORY,
+            media_class=MEDIA_CLASS_PODCAST,
             media_content_id="ais_radio",
             media_content_type=MEDIA_TYPE_APP,
             can_expand=True,
             can_play=False,
-            thumbnail="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/Radio.svg/1024px-Radio.svg.png",
+            thumbnail="http://www.ai-speaker.com/images/media-browser/radio.svg",
         )
     )
     ais_library_info.children.append(
@@ -104,7 +111,7 @@ def ais_media_library() -> BrowseMedia:
             media_content_type=MEDIA_TYPE_APP,
             can_expand=True,
             can_play=False,
-            thumbnail="https://www.mclellanmarketing.com/wp-content/uploads/2016/04/podcasting_opt.jpg",
+            thumbnail="http://www.ai-speaker.com/images/media-browser/podcast.svg",
         )
     )
     ais_library_info.children.append(
@@ -115,7 +122,7 @@ def ais_media_library() -> BrowseMedia:
             media_content_type=MEDIA_TYPE_APP,
             can_expand=True,
             can_play=False,
-            thumbnail="https://lh3.googleusercontent.com/proxy/wp_i9gaVHpM75OVae5HyUoBcgMyW-ssPsSS1tCK7QerVBjeKIE8-ruKLCVmjjc7_AwFvDhWDLYKWnurpPOQoSlA",
+            thumbnail="http://www.ai-speaker.com/images/media-browser/book-music.svg",
         )
     )
     ais_library_info.children.append(
@@ -126,46 +133,86 @@ def ais_media_library() -> BrowseMedia:
             media_content_type=MEDIA_TYPE_APP,
             can_expand=True,
             can_play=False,
-            thumbnail="https://mybroadband.co.za/news/wp-content/uploads/2019/03/YouTube-Music-vs-Spotify.png",
+            thumbnail="http://www.ai-speaker.com/images/media-browser/music.svg",
         )
     )
 
     return ais_library_info
 
 
+def ais_favorites_library(hass) -> BrowseMedia:
+    d = hass.data["ais_bookmarks"]
+    ais_favorites = []
+    for fav in reversed(d.favorites):
+        if "media_stream_image" in fav and fav["media_stream_image"] is not None:
+            img = fav["media_stream_image"]
+        else:
+            img = "/static/icons/tile-win-310x150.png"
+        if fav["name"].startswith(fav["source"]):
+            name = fav["name"]
+        else:
+            name = (
+                ais_global.G_NAME_FOR_AUDIO_NATURE.get(fav["source"], fav["source"])
+                + " "
+                + fav["name"]
+            )
+
+        ais_favorites.append(
+            BrowseMedia(
+                title=name,
+                media_class=MEDIA_CLASS_MUSIC,
+                media_content_id=fav["media_content_id"],
+                media_content_type=MEDIA_TYPE_MUSIC,
+                can_play=True,
+                can_expand=False,
+                thumbnail=img,
+            )
+        )
+
+    root = BrowseMedia(
+        title="Ulubione",
+        media_class=MEDIA_CLASS_PLAYLIST,
+        media_content_id="ais_favorites",
+        media_content_type=MEDIA_TYPE_APP,
+        can_expand=True,
+        can_play=False,
+        thumbnail="http://www.ai-speaker.com/images/media-browser/heart.svg",
+        children=ais_favorites,
+    )
+
+    return root
+
+
 def ais_music_library() -> BrowseMedia:
     """Create response payload to describe contents of a specific library."""
     ais_music_info = BrowseMedia(
         title="AIS Audio",
-        media_class=MEDIA_CLASS_DIRECTORY,
+        media_class=MEDIA_CLASS_MUSIC,
         media_content_id="ais_music",
         media_content_type=MEDIA_TYPE_APP,
         can_play=False,
         can_expand=True,
         children=[],
-        thumbnail="https://mybroadband.co.za/news/wp-content/uploads/2019/03/YouTube-Music-vs-Spotify.png",
     )
 
     ais_music_info.children.append(
         BrowseMedia(
             title="Spotify",
-            media_class=MEDIA_CLASS_DIRECTORY,
+            media_class=MEDIA_CLASS_MUSIC,
             media_content_id="ais_music",
             media_content_type=MEDIA_TYPE_APP,
             can_expand=True,
             can_play=False,
-            thumbnail="https://www.theyucatantimes.com/wp-content/uploads/2020/08/spotify-logo.png",
         )
     )
     ais_music_info.children.append(
         BrowseMedia(
             title="YouTube",
-            media_class=MEDIA_CLASS_DIRECTORY,
+            media_class=MEDIA_CLASS_VIDEO,
             media_content_id="ais_music",
             media_content_type=MEDIA_TYPE_APP,
             can_expand=True,
             can_play=False,
-            thumbnail="https://www.internetmatters.org/wp-content/uploads/2020/01/youtube.png",
         )
     )
     return ais_music_info
