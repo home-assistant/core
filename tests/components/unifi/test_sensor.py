@@ -88,7 +88,7 @@ async def test_sensors(hass):
     )
 
     assert len(controller.mock_requests) == 4
-    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 5
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 6
 
     wired_client_rx = hass.states.get("sensor.wired_client_name_rx")
     assert wired_client_rx.state == "1234.0"
@@ -96,14 +96,17 @@ async def test_sensors(hass):
     wired_client_tx = hass.states.get("sensor.wired_client_name_tx")
     assert wired_client_tx.state == "5678.0"
 
+    wired_client_uptime = hass.states.get("sensor.wired_client_name_up_time")
+    assert wired_client_uptime.state == "1562600160.0"
+
     wireless_client_rx = hass.states.get("sensor.wireless_client_name_rx")
     assert wireless_client_rx.state == "1234.0"
 
     wireless_client_tx = hass.states.get("sensor.wireless_client_name_tx")
     assert wireless_client_tx.state == "5678.0"
 
-    uptime_client = hass.states.get("sensor.up_time")
-    assert uptime_client.state == "1562600160.0"
+    wireless_client_uptime = hass.states.get("sensor.wireless_client_name_up_time")
+    assert wireless_client_uptime.state == "1562600160.0"
 
     clients = deepcopy(CLIENTS)
     clients[0]["is_wired"] = False
@@ -135,8 +138,11 @@ async def test_sensors(hass):
     wireless_client_tx = hass.states.get("sensor.wireless_client_name_tx")
     assert wireless_client_tx is None
 
-    uptime_client = hass.states.get("sensor.up_time")
-    assert uptime_client is None
+    wired_client_uptime = hass.states.get("sensor.wired_client_name_up_time")
+    assert wired_client_uptime is None
+
+    wireless_client_uptime = hass.states.get("sensor.wireless_client_name_up_time")
+    assert wireless_client_uptime is None
 
     hass.config_entries.async_update_entry(
         controller.config_entry,
@@ -153,8 +159,8 @@ async def test_sensors(hass):
     wireless_client_tx = hass.states.get("sensor.wireless_client_name_tx")
     assert wireless_client_tx.state == "6789.0"
 
-    uptime_client = hass.states.get("sensor.up_time")
-    assert uptime_client.state == "1562600160.0"
+    wireless_client_uptime = hass.states.get("sensor.wireless_client_name_up_time")
+    assert wireless_client_uptime.state == "1562600160.0"
 
 
 async def test_remove_sensors(hass):
@@ -175,13 +181,16 @@ async def test_remove_sensors(hass):
     wired_client_tx = hass.states.get("sensor.wired_client_name_tx")
     assert wired_client_tx is not None
 
+    wired__client_uptime = hass.states.get("sensor.wired_client_name_up_time")
+    assert wired__client_uptime is not None
+
     wireless_client_rx = hass.states.get("sensor.wireless_client_name_rx")
     assert wireless_client_rx is not None
     wireless_client_tx = hass.states.get("sensor.wireless_client_name_tx")
     assert wireless_client_tx is not None
 
-    uptime_client = hass.states.get("sensor.up_time")
-    assert uptime_client is not None
+    wireless_client_uptime = hass.states.get("sensor.wireless_client_name_up_time")
+    assert wireless_client_uptime is not None
 
     controller.api.websocket._data = {
         "meta": {"message": MESSAGE_CLIENT_REMOVED},
@@ -198,10 +207,13 @@ async def test_remove_sensors(hass):
     wired_client_tx = hass.states.get("sensor.wired_client_name_tx")
     assert wired_client_tx is None
 
+    wired__client_uptime = hass.states.get("sensor.wired_client_name_up_time")
+    assert wired__client_uptime is None
+
     wireless_client_rx = hass.states.get("sensor.wireless_client_name_rx")
     assert wireless_client_rx is not None
     wireless_client_tx = hass.states.get("sensor.wireless_client_name_tx")
     assert wireless_client_tx is not None
 
-    uptime_client = hass.states.get("sensor.up_time")
-    assert uptime_client is not None
+    wireless_client_uptime = hass.states.get("sensor.wireless_client_name_up_time")
+    assert wireless_client_uptime is not None

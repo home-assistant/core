@@ -142,6 +142,7 @@ class UniFiUpTimeSensor(UniFiClient):
     @property
     def name(self) -> str:
         """Return the name of the client."""
+        # For a sensor for each connection class (wired or wireless), use return f"{super().name} {self.TYPE.upper()}"
         return f"{super().name} {self.TYPE.upper()}"
 
     @property
