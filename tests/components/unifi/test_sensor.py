@@ -30,7 +30,7 @@ CLIENTS = [
         "sw_port": 1,
         "wired-rx_bytes": 1234000000,
         "wired-tx_bytes": 5678000000,
-        "up_time": 1600094505,
+        "uptime": 1600094505,
     },
     {
         "hostname": "Wireless client hostname",
@@ -44,7 +44,7 @@ CLIENTS = [
         "sw_port": 2,
         "rx_bytes": 1234000000,
         "tx_bytes": 5678000000,
-        "up_time": 1600094505,
+        "uptime": 1600094505,
     },
 ]
 
