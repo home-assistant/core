@@ -33,6 +33,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
+    CONF_ALLOW_UPTIME_SENSORS,
     CONF_BLOCK_CLIENT,
     CONF_CONTROLLER,
     CONF_DETECTION_TIME,
@@ -182,6 +183,13 @@ class UniFiController:
         """Config entry option to allow bandwidth sensors."""
         return self.config_entry.options.get(
             CONF_ALLOW_BANDWIDTH_SENSORS, DEFAULT_ALLOW_BANDWIDTH_SENSORS
+        )
+        
+    @property
+    def option_allow_uptime_sensors(self):
+        """Config entry option to allow uptime sensors."""
+        return self.config_entry.options.get(
+            CONF_ALLOW_UPTIME_SENSORS, DEFAULT_ALLOW_UPTIME_SENSORS
         )
 
     @callback

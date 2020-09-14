@@ -35,8 +35,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     ) -> None:
         """Update the values of the controller."""
         if controller.option_allow_bandwidth_sensors:
-            add_entities(controller, async_add_entities, clients)
-
+            add_bandwith_entities(controller, async_add_entities, clients)
+            
+        if controller.option_allow_uptime_sensors:
+            add_uptime_entities(controller, async_add_entities, clients)
+            
     for signal in (controller.signal_update, controller.signal_options_update):
         controller.listeners.append(async_dispatcher_connect(hass, signal, items_added))
 
@@ -44,12 +47,29 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 @callback
-def add_entities(controller, async_add_entities, clients):
+def add_bandwith_entities(controller, async_add_entities, clients):
     """Add new sensor entities from the controller."""
     sensors = []
 
     for mac in clients:
-        for sensor_class in (UniFiRxBandwidthSensor, UniFiTxBandwidthSensor, UniFiUpTimeSensor):
+        for sensor_class in (UniFiRxBandwidthSensor, UniFiTxBandwidthSensor):
+            if mac in controller.entities[DOMAIN][sensor_class.TYPE]:
+                continue
+
+            client = controller.api.clients[mac]
+            sensors.append(sensor_class(client, controller))
+
+    if sensors:
+        async_add_entities(sensors)
+        
+        
+@callback
+def add_uptime_entities(controller, async_add_entities, clients):
+    """Add new sensor entities from the controller."""
+    sensors = []
+
+    for mac in clients:
+        for sensor_class in (UniFiUpTimeSensor):
             if mac in controller.entities[DOMAIN][sensor_class.TYPE]:
                 continue
 
@@ -112,6 +132,7 @@ class UniFiUpTimeSensor(UniFiClient):
 
     DOMAIN = DOMAIN
     CLASS = DEVICE_CLASS_TIMESTAMP
+    TYPE = UPTIME_SENSOR
 
     @property
     def device_class(self) -> str:
