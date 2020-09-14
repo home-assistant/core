@@ -10,7 +10,7 @@ ais:
   paper-card-header-color: "var(--text-primary-color)"
   secondary-background-color: "var(--primary-background-color)"
   primary-text-color: "var(--text-primary-color)"
-  secondary-text-color: "var(--primary-color)"
+  secondary-text-color: "var(--primary-text-color)"
   paper-listbox-background-color: "var(--sidebar-text_-_background)"
   paper-toggle-button-checked-ink-color: "var(--dark-primary-color)"
   paper-toggle-button-checked-button-color: "var(--dark-primary-color)"
