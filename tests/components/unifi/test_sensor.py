@@ -173,7 +173,7 @@ async def test_remove_sensors(hass):
         },
         clients_response=CLIENTS,
     )
-    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 5
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 6
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 2
 
     wired_client_rx = hass.states.get("sensor.wired_client_name_rx")
