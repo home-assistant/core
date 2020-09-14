@@ -2176,6 +2176,58 @@ async def test_logbook_invalid_entity(hass, hass_client):
     assert response.status == 500
 
 
+async def test_icon_and_state(hass, hass_client):
+    """Test to ensure state and custom icons are returned."""
+    await hass.async_add_executor_job(init_recorder_component, hass)
+    await async_setup_component(hass, "logbook", {})
+    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+
+    hass.states.async_set("light.kitchen", STATE_OFF, {"icon": "mdi:chemical-weapon"})
+    hass.states.async_set(
+        "light.kitchen", STATE_ON, {"brightness": 100, "icon": "mdi:security"}
+    )
+    hass.states.async_set(
+        "light.kitchen", STATE_ON, {"brightness": 200, "icon": "mdi:security"}
+    )
+    hass.states.async_set(
+        "light.kitchen", STATE_ON, {"brightness": 300, "icon": "mdi:security"}
+    )
+    hass.states.async_set(
+        "light.kitchen", STATE_ON, {"brightness": 400, "icon": "mdi:security"}
+    )
+    hass.states.async_set("light.kitchen", STATE_OFF, {"icon": "mdi:chemical-weapon"})
+
+    await hass.async_block_till_done()
+
+    await hass.async_add_job(trigger_db_commit, hass)
+    await hass.async_block_till_done()
+    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+
+    client = await hass_client()
+
+    # Today time 00:00:00
+    start = dt_util.utcnow().date()
+    start_date = datetime(start.year, start.month, start.day)
+
+    # Test today entries without filters
+    response = await client.get(f"/api/logbook/{start_date.isoformat()}")
+    assert response.status == 200
+    response_json = await response.json()
+
+    assert len(response_json) == 3
+    assert response_json[0]["domain"] == "homeassistant"
+    assert response_json[1]["message"] == "turned on"
+    assert response_json[1]["entity_id"] == "light.kitchen"
+    assert response_json[1]["icon"] == "mdi:security"
+    assert response_json[1]["state"] == STATE_ON
+    assert response_json[2]["message"] == "turned off"
+    assert response_json[2]["entity_id"] == "light.kitchen"
+    assert response_json[2]["icon"] == "mdi:chemical-weapon"
+    assert response_json[2]["state"] == STATE_OFF
+
+
 class MockLazyEventPartialState(ha.Event):
     """Minimal mock of a Lazy event."""
 
