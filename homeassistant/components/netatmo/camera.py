@@ -284,9 +284,9 @@ class NetatmoCamera(NetatmoBase, Camera):
                 self._data.events.get(self._id, {})
             )
         elif self._model == "NOC":  # Smart Outdoor Camera
-            self.hass.data[DOMAIN][DATA_EVENTS][
-                self._id
-            ] = self._data.outdoor_events.get(self._id, {})
+            self.hass.data[DOMAIN][DATA_EVENTS][self._id] = self.process_events(
+                self._data.outdoor_events.get(self._id, {})
+            )
 
     def process_events(self, events):
         """Add meta data to events."""
