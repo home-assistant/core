@@ -1,5 +1,5 @@
 """The tests for the Canary sensor platform."""
-from homeassistant.components.canary import DOMAIN
+from homeassistant.components.canary.const import DOMAIN, MANUFACTURER
 from homeassistant.components.canary.sensor import (
     ATTR_AIR_QUALITY,
     STATE_AIR_QUALITY_ABNORMAL,
@@ -85,7 +85,7 @@ async def test_sensors_pro(hass, canary) -> None:
         assert state.state == data[1]
 
     device = device_registry.async_get_device({(DOMAIN, "20")}, set())
-    assert device.manufacturer == "Canary Connect, Inc."
+    assert device.manufacturer == MANUFACTURER
     assert device.name == "Dining Room"
     assert device.model == "Canary Pro"
 
@@ -198,6 +198,6 @@ async def test_sensors_flex(hass, canary) -> None:
         assert state.state == data[1]
 
     device = device_registry.async_get_device({(DOMAIN, "20")}, set())
-    assert device.manufacturer == "Canary Connect, Inc."
+    assert device.manufacturer == MANUFACTURER
     assert device.name == "Dining Room"
     assert device.model == "Canary Flex"
