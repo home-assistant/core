@@ -59,13 +59,13 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         hass.data[DOMAIN][entry.entry_id][DATA_RESTART] = False
         controller.close()
 
-    def open_connection(now=None):
+    async def open_connection(now=None):
         """Open a connection to AlarmDecoder."""
         try:
-            controller.open(baud)
+            await hass.async_add_executor_job(controller.open, baud)
         except NoDeviceError:
             _LOGGER.debug("Failed to connect. Retrying in 5 seconds")
-            hass.helpers.event.track_point_in_time(
+            hass.helpers.event.async_track_point_in_time(
                 open_connection, dt_util.utcnow() + timedelta(seconds=5)
             )
             return
@@ -128,7 +128,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         DATA_RESTART: False,
     }
 
-    open_connection()
+    await open_connection()
 
     for component in PLATFORMS:
         hass.async_create_task(
