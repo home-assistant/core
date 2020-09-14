@@ -142,7 +142,7 @@ async def test_sensors(hass):
         controller.config_entry,
         options={
             CONF_ALLOW_BANDWIDTH_SENSORS: True,
-            CONF_ALLOW_UPTIME_SENSORS: True
+            CONF_ALLOW_UPTIME_SENSORS: True,
         },
     )
     await hass.async_block_till_done()

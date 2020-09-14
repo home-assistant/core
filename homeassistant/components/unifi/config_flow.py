@@ -317,7 +317,7 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
                     vol.Optional(
                         CONF_ALLOW_UPTIME_SENSORS,
                         default=self.controller.option_allow_uptime_sensors,
-                    ): bool
+                    ): bool,
                 }
             ),
         )

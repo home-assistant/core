@@ -27,7 +27,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up sensors for UniFi integration."""
     controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
-    controller.entities[DOMAIN] = {RX_SENSOR: set(), TX_SENSOR: set(), UPTIME_SENSOR: set()}
+    controller.entities[DOMAIN] = {
+        RX_SENSOR: set(), 
+        TX_SENSOR: set(), 
+        UPTIME_SENSOR: set(),
+    }
 
     @callback
     def items_added(
@@ -69,7 +73,7 @@ def add_uptime_entities(controller, async_add_entities, clients):
     sensors = []
 
     for mac in clients:
-        for sensor_class in (UniFiUpTimeSensor):
+        for sensor_class in UniFiUpTimeSensor:
             if mac in controller.entities[DOMAIN][sensor_class.TYPE]:
                 continue
 
