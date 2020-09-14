@@ -24,7 +24,6 @@ from homeassistant.const import (
 DOMAIN = "openweathermap"
 DEFAULT_NAME = "OpenWeatherMap"
 DEFAULT_LANGUAGE = "en"
-DEFAULT_FORECAST_MODE = "onecall_daily"
 ATTRIBUTION = "Data provided by OpenWeatherMap"
 CONF_LANGUAGE = "language"
 ENTRY_NAME = "name"
@@ -48,7 +47,20 @@ SENSOR_UNIT = "sensor_unit"
 SENSOR_DEVICE_CLASS = "sensor_device_class"
 UPDATE_LISTENER = "update_listener"
 COMPONENTS = ["sensor", "weather"]
-FORECAST_MODES = ["hourly", "daily", "onecall_hourly", "onecall_daily"]
+
+FORECAST_MODE_HOURLY = "hourly"
+FORECAST_MODE_DAILY = "daily"
+FORECAST_MODE_FREE_DAILY = "freedaily"
+FORECAST_MODE_ONECALL_HOURLY = "onecall_hourly"
+FORECAST_MODE_ONECALL_DAILY = "onecall_daily"
+FORECAST_MODES = [
+    FORECAST_MODE_HOURLY,
+    FORECAST_MODE_DAILY,
+    FORECAST_MODE_ONECALL_HOURLY,
+    FORECAST_MODE_ONECALL_DAILY,
+]
+DEFAULT_FORECAST_MODE = FORECAST_MODE_ONECALL_DAILY
+
 MONITORED_CONDITIONS = [
     ATTR_API_WEATHER,
     ATTR_API_TEMPERATURE,

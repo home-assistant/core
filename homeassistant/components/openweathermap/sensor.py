@@ -3,6 +3,7 @@ import logging
 
 from .abstract_owm_sensor import AbstractOpenWeatherMapSensor
 from .const import (
+    ATTR_API_FORECAST,
     DOMAIN,
     ENTRY_NAME,
     ENTRY_WEATHER_COORDINATOR,
@@ -96,8 +97,7 @@ class OpenWeatherMapForecastSensor(AbstractOpenWeatherMapSensor):
     @property
     def state(self):
         """Return the state of the device."""
-        if len(self._weather_coordinator.data.get("forecast")) > 0:
-            return self._weather_coordinator.data.get("forecast")[0].get(
-                self._sensor_type, None
-            )
+        forecasts = self._weather_coordinator.data.get(ATTR_API_FORECAST)
+        if forecasts is not None and len(forecasts) > 0:
+            return forecasts[0].get(self._sensor_type, None)
         return None
