@@ -1923,6 +1923,9 @@ roonapi==0.0.21
 # homeassistant.components.rova
 rova==0.1.0
 
+# homeassistant.components.rpi_power
+rpi-bad-power==0.0.3
+
 # homeassistant.components.rpi_rf
 # rpi-rf==0.9.7
 
