@@ -54,7 +54,7 @@ class LocalSource(MediaSource):
         self.hass = hass
 
     @callback
-    def async_full_path(self, source_dir_id, location) -> Path:
+    def async_full_path(self, source_dir_id, location) -> str:
         """Return full path."""
         return self.hass.config.path("media", location)
 

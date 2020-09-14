@@ -1390,6 +1390,9 @@ class Config:
         # List of allowed external URLs that integrations may use
         self.allowlist_external_urls: Set[str] = set()
 
+        # Dictionary of Media folders that integrations may use
+        self.media_dirs: Dict[str, str] = {}
+
         # If Home Assistant is running in safe mode
         self.safe_mode: bool = False
 
@@ -1472,6 +1475,7 @@ class Config:
             "state": self.hass.state.value,
             "external_url": self.external_url,
             "internal_url": self.internal_url,
+            "media_dirs": self.media_dirs,
         }
 
     def set_time_zone(self, time_zone_str: str) -> None:

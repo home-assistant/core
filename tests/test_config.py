@@ -440,6 +440,7 @@ async def test_loading_configuration(hass):
             "allowlist_external_dirs": "/etc",
             "external_url": "https://www.example.com",
             "internal_url": "http://example.local",
+            "media_dirs": {"mymedia": "/usr"},
         },
     )
 
@@ -453,6 +454,8 @@ async def test_loading_configuration(hass):
     assert hass.config.internal_url == "http://example.local"
     assert len(hass.config.allowlist_external_dirs) == 3
     assert "/etc" in hass.config.allowlist_external_dirs
+    assert "/usr" in hass.config.allowlist_external_dirs
+    assert hass.config.media_dirs == {"mymedia": "/usr"}
     assert hass.config.config_source == config_util.SOURCE_YAML
 
 
