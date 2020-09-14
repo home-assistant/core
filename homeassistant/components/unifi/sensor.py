@@ -124,11 +124,6 @@ class UniFiUpTimeSensor(UniFiClient):
         return f"{super().name} {self.TYPE.upper()}"
 
     @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit of measurement of this entity."""
-        return None
-
-    @property
     def state(self) -> int:
         """Return the uptime of the client."""
         return dt_util.utc_from_timestamp(float(self.client.uptime))
