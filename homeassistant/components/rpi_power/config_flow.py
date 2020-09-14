@@ -34,9 +34,6 @@ class RPiPowerFlow(DiscoveryFlowHandler, domain=DOMAIN):
         self, data: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """Handle a flow initialized by onboarding."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         has_devices = await self._discovery_function(self.hass)
 
         if not has_devices:
