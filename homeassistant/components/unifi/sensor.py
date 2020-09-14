@@ -148,4 +148,4 @@ class UniFiUpTimeSensor(UniFiClient):
     @property
     def state(self) -> int:
         """Return the uptime of the client."""
-        return dt_util.utc_from_timestamp(float(self.client.uptime))
+        return dt_util.utc_from_timestamp(float(self.client.uptime)).isoformat()
