@@ -1,6 +1,7 @@
 """Support for Canary sensors."""
 from canary.api import SensorType
 
+from homeassistant.components.canary import DATA_CANARY, DOMAIN
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_HUMIDITY,
@@ -10,8 +11,6 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.helpers.entity import Entity
-
-from . import DATA_CANARY
 
 SENSOR_VALUE_PRECISION = 2
 ATTR_AIR_QUALITY = "air_quality"
