@@ -6,7 +6,15 @@ from homeassistant.components.canary.sensor import (
     STATE_AIR_QUALITY_NORMAL,
     STATE_AIR_QUALITY_VERY_ABNORMAL,
 )
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, PERCENTAGE, TEMP_CELSIUS
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_SIGNAL_STRENGTH,
+    DEVICE_CLASS_TEMPERATURE,
+    PERCENTAGE,
+    TEMP_CELSIUS,
+)
 from homeassistant.setup import async_setup_component
 
 from . import mock_device, mock_location, mock_reading
@@ -43,15 +51,15 @@ async def test_sensors_pro(hass, canary) -> None:
             "20_temperature",
             "21.12",
             TEMP_CELSIUS,
+            DEVICE_CLASS_TEMPERATURE,
             None,
-            "mdi:thermometer",
         ),
         "home_dining_room_humidity": (
             "20_humidity",
             "50.46",
             PERCENTAGE,
+            DEVICE_CLASS_HUMIDITY,
             None,
-            "mdi:water-percent",
         ),
         "home_dining_room_air_quality": (
             "20_air_quality",
@@ -156,10 +164,16 @@ async def test_sensors_flex(hass, canary) -> None:
             "20_battery",
             "70.46",
             PERCENTAGE,
+            DEVICE_CLASS_BATTERY,
             None,
-            "mdi:battery-70",
         ),
-        "home_dining_room_wifi": ("20_wifi", "-57.0", "dBm", None, "mdi:wifi"),
+        "home_dining_room_wifi": (
+            "20_wifi",
+            "-57.0",
+            "dBm",
+            DEVICE_CLASS_SIGNAL_STRENGTH,
+            None,
+        ),
     }
 
     for (sensor_id, data) in sensors.items():
