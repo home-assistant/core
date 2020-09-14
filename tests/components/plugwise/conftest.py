@@ -193,6 +193,7 @@ def mock_stretch():
         smile_mock.return_value.heater_id = None
         smile_mock.return_value.smile_version = "3.1.11"
         smile_mock.return_value.smile_type = "stretch"
+        smile_mock.return_value.smile_hostname = "stretch98765"
 
         smile_mock.return_value.connect.side_effect = AsyncMock(return_value=True)
         smile_mock.return_value.full_update_device.side_effect = AsyncMock(
