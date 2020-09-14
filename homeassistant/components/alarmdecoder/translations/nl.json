@@ -1,0 +1,9 @@
+{
+    "options": {
+        "step": {
+            "zone_select": {
+                "title": "Configureer AlarmDecoder"
+            }
+        }
+    }
+}

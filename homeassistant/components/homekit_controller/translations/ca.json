@@ -7,6 +7,7 @@
             "already_paired": "Aquest accessori ja est\u00e0 vinculat amb un altre dispositiu. Reinicia l'accessori i torna-ho a provar.",
             "ignored_model": "La disponibilitat de HomeKit per aquest model est\u00e0 bloquejada ja que, de moment, no hi ha una integraci\u00f3 nativa completa.",
             "invalid_config_entry": "Aquest dispositiu s'est\u00e0 mostrant com a llest per a ser vinculat per\u00f2 ja hi ha una entrada de configuraci\u00f3 conflictiva a Home Assistant que s'ha d'eliminar primer.",
+            "invalid_properties": "Propietats anunciades pel dispositiu no v\u00e0lides.",
             "no_devices": "No s'han trobat dispositius desvinculats."
         },
         "error": {
