@@ -1,11 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Vous ne pouvez configurer qu'un seul compte Netatmo.",
-            "missing_configuration": "Ce composant n'est pas configur\u00e9. Veuillez suivre la documentation."
+            "authorize_url_timeout": "D\u00e9lai de g\u00e9n\u00e9ration de l'URL d'authentification d\u00e9pass\u00e9.",
+            "missing_configuration": "Ce composant n'est pas configur\u00e9. Veuillez suivre la documentation.",
+            "single_instance_allowed": "D\u00e9j\u00e0 configur\u00e9. Une seule configuration possible."
         },
         "create_entry": {
-            "default": "Authentification r\u00e9ussie avec Netatmo."
+            "default": "Authentification r\u00e9ussie"
         },
         "step": {
             "pick_implementation": {
@@ -18,6 +19,10 @@
             "public_weather": {
                 "data": {
                     "area_name": "Nom de la zone",
+                    "lat_ne": "Latitude nord-est",
+                    "lat_sw": "Latitude sud-ouest",
+                    "lon_ne": "Longitude nord-est",
+                    "lon_sw": "Longitude sud-ouest",
                     "mode": "Calcul",
                     "show_on_map": "Montrer sur la carte"
                 },

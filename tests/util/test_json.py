@@ -149,12 +149,18 @@ def test_find_unserializable_data():
 
     bad_data = object()
 
-    assert find_paths_unserializable_data(
-        [State("mock_domain.mock_entity", "on", {"bad": bad_data})],
-        dump=partial(dumps, cls=MockJSONEncoder),
-    ) == {"$[0](state: mock_domain.mock_entity).attributes.bad": bad_data}
+    assert (
+        find_paths_unserializable_data(
+            [State("mock_domain.mock_entity", "on", {"bad": bad_data})],
+            dump=partial(dumps, cls=MockJSONEncoder),
+        )
+        == {"$[0](state: mock_domain.mock_entity).attributes.bad": bad_data}
+    )
 
-    assert find_paths_unserializable_data(
-        [Event("bad_event", {"bad_attribute": bad_data})],
-        dump=partial(dumps, cls=MockJSONEncoder),
-    ) == {"$[0](event: bad_event).data.bad_attribute": bad_data}
+    assert (
+        find_paths_unserializable_data(
+            [Event("bad_event", {"bad_attribute": bad_data})],
+            dump=partial(dumps, cls=MockJSONEncoder),
+        )
+        == {"$[0](event: bad_event).data.bad_attribute": bad_data}
+    )

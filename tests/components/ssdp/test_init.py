@@ -6,18 +6,17 @@ import aiohttp
 import pytest
 
 from homeassistant.components import ssdp
-from homeassistant.generated import ssdp as gn_ssdp
 
 from tests.common import mock_coro
 
 
 async def test_scan_match_st(hass):
     """Test matching based on ST."""
-    scanner = ssdp.Scanner(hass)
+    scanner = ssdp.Scanner(hass, {"mock-domain": [{"st": "mock-st"}]})
 
     with patch(
         "netdisco.ssdp.scan", return_value=[Mock(st="mock-st", location=None)]
-    ), patch.dict(gn_ssdp.SSDP, {"mock-domain": [{"st": "mock-st"}]}), patch.object(
+    ), patch.object(
         hass.config_entries.flow, "async_init", return_value=mock_coro()
     ) as mock_init:
         await scanner.async_scan(None)
@@ -42,12 +41,12 @@ async def test_scan_match_upnp_devicedesc(hass, aioclient_mock, key):
 </root>
     """,
     )
-    scanner = ssdp.Scanner(hass)
+    scanner = ssdp.Scanner(hass, {"mock-domain": [{key: "Paulus"}]})
 
     with patch(
         "netdisco.ssdp.scan",
         return_value=[Mock(st="mock-st", location="http://1.1.1.1")],
-    ), patch.dict(gn_ssdp.SSDP, {"mock-domain": [{key: "Paulus"}]}), patch.object(
+    ), patch.object(
         hass.config_entries.flow, "async_init", return_value=mock_coro()
     ) as mock_init:
         await scanner.async_scan(None)
@@ -69,13 +68,8 @@ async def test_scan_not_all_present(hass, aioclient_mock):
 </root>
     """,
     )
-    scanner = ssdp.Scanner(hass)
-
-    with patch(
-        "netdisco.ssdp.scan",
-        return_value=[Mock(st="mock-st", location="http://1.1.1.1")],
-    ), patch.dict(
-        gn_ssdp.SSDP,
+    scanner = ssdp.Scanner(
+        hass,
         {
             "mock-domain": [
                 {
@@ -84,6 +78,11 @@ async def test_scan_not_all_present(hass, aioclient_mock):
                 }
             ]
         },
+    )
+
+    with patch(
+        "netdisco.ssdp.scan",
+        return_value=[Mock(st="mock-st", location="http://1.1.1.1")],
     ), patch.object(
         hass.config_entries.flow, "async_init", return_value=mock_coro()
     ) as mock_init:
@@ -105,13 +104,8 @@ async def test_scan_not_all_match(hass, aioclient_mock):
 </root>
     """,
     )
-    scanner = ssdp.Scanner(hass)
-
-    with patch(
-        "netdisco.ssdp.scan",
-        return_value=[Mock(st="mock-st", location="http://1.1.1.1")],
-    ), patch.dict(
-        gn_ssdp.SSDP,
+    scanner = ssdp.Scanner(
+        hass,
         {
             "mock-domain": [
                 {
@@ -120,6 +114,11 @@ async def test_scan_not_all_match(hass, aioclient_mock):
                 }
             ]
         },
+    )
+
+    with patch(
+        "netdisco.ssdp.scan",
+        return_value=[Mock(st="mock-st", location="http://1.1.1.1")],
     ), patch.object(
         hass.config_entries.flow, "async_init", return_value=mock_coro()
     ) as mock_init:
@@ -132,7 +131,7 @@ async def test_scan_not_all_match(hass, aioclient_mock):
 async def test_scan_description_fetch_fail(hass, aioclient_mock, exc):
     """Test failing to fetch description."""
     aioclient_mock.get("http://1.1.1.1", exc=exc)
-    scanner = ssdp.Scanner(hass)
+    scanner = ssdp.Scanner(hass, {})
 
     with patch(
         "netdisco.ssdp.scan",
@@ -149,7 +148,7 @@ async def test_scan_description_parse_fail(hass, aioclient_mock):
 <root>INVALIDXML
     """,
     )
-    scanner = ssdp.Scanner(hass)
+    scanner = ssdp.Scanner(hass, {})
 
     with patch(
         "netdisco.ssdp.scan",

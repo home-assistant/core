@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Le p\u00e9riph\u00e9rique Roku est d\u00e9j\u00e0 configur\u00e9",
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
             "unknown": "Erreur inattendue"
         },
         "error": {
-            "cannot_connect": "Impossible de se connecter, veuillez r\u00e9essayer"
+            "cannot_connect": "\u00c9chec de connexion"
         },
         "flow_title": "Roku: {name}",
         "step": {

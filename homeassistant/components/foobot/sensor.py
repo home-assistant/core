@@ -82,9 +82,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         asyncio.TimeoutError,
         FoobotClient.TooManyRequests,
         FoobotClient.InternalError,
-    ):
+    ) as err:
         _LOGGER.exception("Failed to connect to foobot servers")
-        raise PlatformNotReady
+        raise PlatformNotReady from err
     except FoobotClient.ClientError:
         _LOGGER.error("Failed to fetch data from foobot servers")
         return

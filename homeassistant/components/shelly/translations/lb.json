@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert"
+        },
+        "error": {
+            "auth_not_supported": "Shelly Apparaten d\u00e9i eng Authentifikatioun ben\u00e9idegen ginn aktuell net \u00ebnnerst\u00ebtzt.",
+            "cannot_connect": "Feeler beim verbannen",
+            "unknown": "Onerwaarte Feeler"
+        },
+        "flow_title": "Shelly: {name}",
+        "step": {
+            "confirm_discovery": {
+                "description": "Soll de {model} um {host} konfigur\u00e9iert ginn?"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                }
+            }
+        }
+    },
+    "title": "Shelly"
+}

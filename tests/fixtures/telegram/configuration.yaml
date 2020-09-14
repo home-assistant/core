@@ -1,0 +1,4 @@
+notify:
+  - name: telegram_reloaded
+    platform: telegram
+    chat_id: 2

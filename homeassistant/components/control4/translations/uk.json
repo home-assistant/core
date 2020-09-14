@@ -1,0 +1,20 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "username": "\u0406\u043c'\u044f \u043a\u043e\u0440\u0438\u0441\u0442\u0443\u0432\u0430\u0447\u0430"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "\u0421\u0435\u043a\u0443\u043d\u0434 \u043c\u0456\u0436 \u043e\u043d\u043e\u0432\u043b\u0435\u043d\u043d\u044f\u043c\u0438"
+                }
+            }
+        }
+    }
+}

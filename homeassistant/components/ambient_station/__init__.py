@@ -293,14 +293,14 @@ async def async_setup_entry(hass, config_entry):
             Client(
                 config_entry.data[CONF_API_KEY],
                 config_entry.data[CONF_APP_KEY],
-                session,
+                session=session,
             ),
         )
         hass.loop.create_task(ambient.ws_connect())
         hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = ambient
     except WebsocketError as err:
         _LOGGER.error("Config entry failed: %s", err)
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from err
 
     hass.bus.async_listen_once(
         EVENT_HOMEASSISTANT_STOP, ambient.client.websocket.disconnect()

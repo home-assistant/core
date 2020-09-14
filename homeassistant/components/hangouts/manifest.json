@@ -3,6 +3,8 @@
   "name": "Google Hangouts",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/hangouts",
-  "requirements": ["hangups==0.4.9"],
+  "requirements": [
+    "hangups==0.4.10"
+  ],
   "codeowners": []
 }

@@ -14,6 +14,7 @@ HOMEKIT_ACCESSORY_DISPATCH = {
     "outlet": "switch",
     "switch": "switch",
     "thermostat": "climate",
+    "heater-cooler": "climate",
     "security-system": "alarm_control_panel",
     "garage-door-opener": "cover",
     "window": "cover",

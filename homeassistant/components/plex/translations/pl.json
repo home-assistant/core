@@ -4,8 +4,6 @@
             "all_configured": "Wszystkie znalezione serwery s\u0105 ju\u017c skonfigurowane.",
             "already_configured": "Ten serwer Plex jest ju\u017c skonfigurowany.",
             "already_in_progress": "Plex jest konfigurowany",
-            "invalid_import": "Zaimportowana konfiguracja jest nieprawid\u0142owa",
-            "non-interactive": "Nieinteraktywny import",
             "token_request_timeout": "Przekroczono limit czasu na uzyskanie tokena.",
             "unknown": "Nieznany b\u0142\u0105d"
         },

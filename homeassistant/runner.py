@@ -11,6 +11,18 @@ from homeassistant import bootstrap
 from homeassistant.core import callback
 from homeassistant.helpers.frame import warn_use
 
+#
+# Python 3.8 has significantly less workers by default
+# than Python 3.7.  In order to be consistent between
+# supported versions, we need to set max_workers.
+#
+# In most cases the workers are not I/O bound, as they
+# are sleeping/blocking waiting for data from integrations
+# updating so this number should be higher than the default
+# use case.
+#
+MAX_EXECUTOR_WORKERS = 64
+
 
 @dataclasses.dataclass
 class RuntimeConfig:
@@ -34,7 +46,7 @@ class RuntimeConfig:
 if sys.platform == "win32" and sys.version_info[:2] < (3, 8):
     PolicyBase = asyncio.WindowsProactorEventLoopPolicy
 else:
-    PolicyBase = asyncio.DefaultEventLoopPolicy  # pylint: disable=invalid-name
+    PolicyBase = asyncio.DefaultEventLoopPolicy
 
 
 class HassEventLoopPolicy(PolicyBase):  # type: ignore
@@ -57,7 +69,9 @@ class HassEventLoopPolicy(PolicyBase):  # type: ignore
         if self.debug:
             loop.set_debug(True)
 
-        executor = ThreadPoolExecutor(thread_name_prefix="SyncWorker")
+        executor = ThreadPoolExecutor(
+            thread_name_prefix="SyncWorker", max_workers=MAX_EXECUTOR_WORKERS
+        )
         loop.set_default_executor(executor)
         loop.set_default_executor = warn_use(  # type: ignore
             loop.set_default_executor, "sets default executor on the event loop"
@@ -103,7 +117,7 @@ def _async_loop_exception_handler(_: Any, context: Dict) -> None:
     )
 
 
-async def setup_and_run_hass(runtime_config: RuntimeConfig,) -> int:
+async def setup_and_run_hass(runtime_config: RuntimeConfig) -> int:
     """Set up Home Assistant and run."""
     hass = await bootstrap.async_setup_hass(runtime_config)
 

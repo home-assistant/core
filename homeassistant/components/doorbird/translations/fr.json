@@ -6,7 +6,7 @@
             "not_doorbird_device": "Cet appareil n'est pas un DoorBird"
         },
         "error": {
-            "cannot_connect": "Impossible de se connecter, veuillez r\u00e9essayer",
+            "cannot_connect": "\u00c9chec de connexion",
             "invalid_auth": "Authentification invalide",
             "unknown": "Erreur inattendue"
         },

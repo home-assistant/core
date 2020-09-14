@@ -34,7 +34,7 @@ class AccuWeatherFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             websession = async_get_clientsession(self.hass)
             try:
-                with timeout(10):
+                async with timeout(10):
                     accuweather = AccuWeather(
                         user_input[CONF_API_KEY],
                         websession,

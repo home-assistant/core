@@ -1,4 +1,4 @@
-"""Proides the constants needed for component."""
+"""Provides the constants needed for component."""
 
 ATTR_APP_ID = "app_id"
 ATTR_APP_NAME = "app_name"
@@ -40,6 +40,14 @@ MEDIA_TYPE_IMAGE = "image"
 MEDIA_TYPE_URL = "url"
 MEDIA_TYPE_GAME = "game"
 MEDIA_TYPE_APP = "app"
+MEDIA_TYPE_ALBUM = "album"
+MEDIA_TYPE_TRACK = "track"
+MEDIA_TYPE_ARTIST = "artist"
+MEDIA_TYPE_CONTRIBUTING_ARTIST = "contributing_artist"
+MEDIA_TYPE_PODCAST = "podcast"
+MEDIA_TYPE_SEASON = "season"
+MEDIA_TYPE_GENRE = "genre"
+MEDIA_TYPE_COMPOSER = "composer"
 
 SERVICE_CLEAR_PLAYLIST = "clear_playlist"
 SERVICE_PLAY_MEDIA = "play_media"
@@ -63,3 +71,4 @@ SUPPORT_CLEAR_PLAYLIST = 8192
 SUPPORT_PLAY = 16384
 SUPPORT_SHUFFLE_SET = 32768
 SUPPORT_SELECT_SOUND_MODE = 65536
+SUPPORT_BROWSE_MEDIA = 131072

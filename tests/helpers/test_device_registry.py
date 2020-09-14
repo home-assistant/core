@@ -839,3 +839,35 @@ async def test_restore_simple_device(hass, registry, update_events):
     assert update_events[2]["device_id"] == entry2.id
     assert update_events[3]["action"] == "create"
     assert update_events[3]["device_id"] == entry3.id
+
+
+async def test_get_or_create_sets_default_values(hass, registry):
+    """Make sure we do not duplicate entries."""
+    entry = registry.async_get_or_create(
+        identifiers={("bridgeid", "0123")}, config_entry_id="1234"
+    )
+    assert entry.name is None
+    assert entry.model is None
+    assert entry.manufacturer is None
+
+    entry = registry.async_get_or_create(
+        config_entry_id="1234",
+        identifiers={("bridgeid", "0123")},
+        default_name="default name 1",
+        default_model="default model 1",
+        default_manufacturer="default manufacturer 1",
+    )
+    assert entry.name == "default name 1"
+    assert entry.model == "default model 1"
+    assert entry.manufacturer == "default manufacturer 1"
+
+    entry = registry.async_get_or_create(
+        config_entry_id="1234",
+        identifiers={("bridgeid", "0123")},
+        default_name="default name 2",
+        default_model="default model 2",
+        default_manufacturer="default manufacturer 2",
+    )
+    assert entry.name == "default name 1"
+    assert entry.model == "default model 1"
+    assert entry.manufacturer == "default manufacturer 1"

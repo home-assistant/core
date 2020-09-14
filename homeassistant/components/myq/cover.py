@@ -32,6 +32,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     DOMAIN,
@@ -82,12 +83,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class MyQDevice(CoverEntity):
+class MyQDevice(CoordinatorEntity, CoverEntity):
     """Representation of a MyQ cover."""
 
     def __init__(self, coordinator, device):
         """Initialize with API object, device id."""
-        self._coordinator = coordinator
+        super().__init__(coordinator)
         self._device = device
         self._last_action_timestamp = 0
         self._scheduled_transition_update = None
@@ -108,7 +109,7 @@ class MyQDevice(CoverEntity):
     @property
     def available(self):
         """Return if the device is online."""
-        if not self._coordinator.last_update_success:
+        if not self.coordinator.last_update_success:
             return False
 
         # Not all devices report online so assume True if its missing
@@ -173,11 +174,7 @@ class MyQDevice(CoverEntity):
     async def _async_complete_schedule_update(self, _):
         """Update status of the cover via coordinator."""
         self._scheduled_transition_update = None
-        await self._coordinator.async_request_refresh()
-
-    async def async_update(self):
-        """Update status of cover."""
-        await self._coordinator.async_request_refresh()
+        await self.coordinator.async_request_refresh()
 
     @property
     def device_info(self):
@@ -204,15 +201,10 @@ class MyQDevice(CoverEntity):
 
         self.async_write_ha_state()
 
-    @property
-    def should_poll(self):
-        """Return False, updates are controlled via coordinator."""
-        return False
-
     async def async_added_to_hass(self):
         """Subscribe to updates."""
         self.async_on_remove(
-            self._coordinator.async_add_listener(self._async_consume_update)
+            self.coordinator.async_add_listener(self._async_consume_update)
         )
 
     async def async_will_remove_from_hass(self):

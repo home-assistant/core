@@ -1,12 +1,17 @@
 {
   "config": {
     "step": {
-      "pick_implementation": { "title": "Pick Authentication Method" }
+      "pick_implementation": { "title": "Pick Authentication Method" },
+      "reauth_confirm": {
+        "title": "Re-authenticate with Spotify",
+        "description": "The Spotify integration needs to re-authenticate with Spotify for account: {account}"
+      }
     },
     "abort": {
       "already_setup": "You can only configure one Spotify account.",
       "authorize_url_timeout": "Timeout generating authorize url.",
-      "missing_configuration": "The Spotify integration is not configured. Please follow the documentation."
+      "missing_configuration": "The Spotify integration is not configured. Please follow the documentation.",
+      "reauth_account_mismatch": "The Spotify account authenticated with, does not match the account needed re-authentication."
     },
     "create_entry": { "default": "Successfully authenticated with Spotify." }
   }

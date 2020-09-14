@@ -41,7 +41,8 @@ def mock_batch_timeout(hass, monkeypatch):
     """Mock the event bus listener and the batch timeout for tests."""
     hass.bus.listen = MagicMock()
     monkeypatch.setattr(
-        f"{INFLUX_PATH}.InfluxThread.batch_timeout", Mock(return_value=0),
+        f"{INFLUX_PATH}.InfluxThread.batch_timeout",
+        Mock(return_value=0),
     )
 
 
@@ -868,7 +869,11 @@ async def test_event_listener_default_measurement(
     handler_method = await _setup(hass, mock_client, config, get_write_api)
 
     state = MagicMock(
-        state=1, domain="fake", entity_id="fake.ok", object_id="ok", attributes={},
+        state=1,
+        domain="fake",
+        entity_id="fake.ok",
+        object_id="ok",
+        attributes={},
     )
     event = MagicMock(data={"new_state": state}, time_fired=12345)
     body = [
