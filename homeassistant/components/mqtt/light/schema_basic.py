@@ -52,6 +52,7 @@ CONF_BRIGHTNESS_COMMAND_TOPIC = "brightness_command_topic"
 CONF_BRIGHTNESS_SCALE = "brightness_scale"
 CONF_BRIGHTNESS_STATE_TOPIC = "brightness_state_topic"
 CONF_BRIGHTNESS_VALUE_TEMPLATE = "brightness_value_template"
+CONF_BRIGHTNESS_COMMAND_TEMPLATE = "brightness_command_template"
 CONF_COLOR_TEMP_COMMAND_TEMPLATE = "color_temp_command_template"
 CONF_COLOR_TEMP_COMMAND_TOPIC = "color_temp_command_topic"
 CONF_COLOR_TEMP_STATE_TOPIC = "color_temp_state_topic"
@@ -89,7 +90,11 @@ DEFAULT_ON_COMMAND_TYPE = "last"
 
 VALUES_ON_COMMAND_TYPE = ["first", "last", "brightness"]
 
-COMMAND_TEMPLATE_KEYS = [CONF_COLOR_TEMP_COMMAND_TEMPLATE, CONF_RGB_COMMAND_TEMPLATE]
+COMMAND_TEMPLATE_KEYS = [
+    CONF_BRIGHTNESS_COMMAND_TEMPLATE,
+    CONF_COLOR_TEMP_COMMAND_TEMPLATE,
+    CONF_RGB_COMMAND_TEMPLATE,
+]
 VALUE_TEMPLATE_KEYS = [
     CONF_BRIGHTNESS_VALUE_TEMPLATE,
     CONF_COLOR_TEMP_VALUE_TEMPLATE,
@@ -110,6 +115,7 @@ PLATFORM_SCHEMA_BASIC = (
             ): vol.All(vol.Coerce(int), vol.Range(min=1)),
             vol.Optional(CONF_BRIGHTNESS_STATE_TOPIC): mqtt.valid_subscribe_topic,
             vol.Optional(CONF_BRIGHTNESS_VALUE_TEMPLATE): cv.template,
+            vol.Optional(CONF_BRIGHTNESS_COMMAND_TEMPLATE): cv.template,
             vol.Optional(CONF_COLOR_TEMP_COMMAND_TEMPLATE): cv.template,
             vol.Optional(CONF_COLOR_TEMP_COMMAND_TOPIC): mqtt.valid_publish_topic,
             vol.Optional(CONF_COLOR_TEMP_STATE_TOPIC): mqtt.valid_subscribe_topic,
@@ -765,6 +771,11 @@ class MqttLight(
             )
             # Make sure the brightness is not rounded down to 0
             device_brightness = max(device_brightness, 1)
+            tpl = self._command_templates[CONF_BRIGHTNESS_COMMAND_TEMPLATE]
+
+            if tpl:
+                device_brightness = tpl({"value": device_brightness})
+
             mqtt.async_publish(
                 self.hass,
                 self._topic[CONF_BRIGHTNESS_COMMAND_TOPIC],

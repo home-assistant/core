@@ -14,6 +14,7 @@ ABBREVIATIONS = {
     "away_mode_stat_t": "away_mode_state_topic",
     "b_tpl": "blue_template",
     "bri_cmd_t": "brightness_command_topic",
+    "bri_cmd_tpl": "brightness_command_template",
     "bri_scl": "brightness_scale",
     "bri_stat_t": "brightness_state_topic",
     "bri_tpl": "brightness_template",
