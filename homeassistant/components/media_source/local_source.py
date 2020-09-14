@@ -48,9 +48,9 @@ class LocalSource(MediaSource):
             location = ""
 
         else:
-            source_dir_id, location = item.identifier.replace("/media/", "", 1).split(
-                "/", 1
-            )
+            source_dir_id, location = item.identifier.replace(
+                "/local_source/", "", 1
+            ).split("/", 1)
 
             if source_dir_id not in self.hass.config.media_dirs:
                 raise Unresolvable("Unknown source directory.")
@@ -146,7 +146,7 @@ class LocalSource(MediaSource):
 
         media = BrowseMediaSource(
             domain=DOMAIN,
-            identifier=f"media/{source_dir_id}/{path.relative_to(self.hass.config.media_dirs[source_dir_id])}",
+            identifier=f"local_source/{source_dir_id}/{path.relative_to(self.hass.config.media_dirs[source_dir_id])}",
             media_class=media_class,
             media_content_type=mime_type or "",
             title=title,
@@ -177,7 +177,7 @@ class LocalMediaView(HomeAssistantView):
     Returns media files in config/media.
     """
 
-    url = "/media/{source_dir_id}/{location:.*}"
+    url = "/local_source/{source_dir_id}/{location:.*}"
     name = "media"
 
     def __init__(self, hass: HomeAssistant):
