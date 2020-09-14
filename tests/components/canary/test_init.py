@@ -47,3 +47,4 @@ async def test_setup_with_timeout_error(hass, canary) -> None:
 
     with pytest.raises(PlatformNotReady):
         await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
