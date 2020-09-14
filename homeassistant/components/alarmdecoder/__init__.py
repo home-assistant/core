@@ -100,7 +100,6 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         """Handle relay or zone expander message from AlarmDecoder."""
         hass.helpers.dispatcher.dispatcher_send(SIGNAL_REL_MESSAGE, message)
 
-    controller = False
     baud = ad_connection.get(CONF_DEVICE_BAUD)
     if protocol == PROTOCOL_SOCKET:
         host = ad_connection[CONF_HOST]
