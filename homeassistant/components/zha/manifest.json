@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/zha",
   "requirements": [
-    "bellows==0.20.1",
+    "bellows==0.20.2",
     "pyserial==3.4",
     "zha-quirks==0.0.44",
     "zigpy-cc==0.5.2",
