@@ -1,8 +1,11 @@
 """Support for bandwidth sensors with UniFi clients."""
 import logging
 
-from homeassistant.components.sensor import DOMAIN
-from homeassistant.const import DATA_MEGABYTES, TIME_SECONDS
+from homeassistant.components.sensor import (
+    DOMAIN,
+    DEVICE_CLASS_TIMESTAMP,
+)
+from homeassistant.const import DATA_MEGABYTES
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -101,13 +104,18 @@ class UniFiTxBandwidthSensor(UniFiBandwidthSensor):
         if self._is_wired:
             return self.client.wired_tx_bytes / 1000000
         return self.client.tx_bytes / 1000000
-    
-    
+
+
 class UniFiUpTimeSensor(UniFiClient):
     """UniFi uptime sensor base class."""
 
     DOMAIN = DOMAIN
-    TYPE = UPTIME_SENSOR
+    CLASS = DEVICE_CLASS_TIMESTAMP
+
+    @property
+    def device_class(self) -> str:
+        """Return device class."""
+        return DEVICE_CLASS_TIMESTAMP
     
     @property
     def name(self) -> str:
@@ -117,9 +125,9 @@ class UniFiUpTimeSensor(UniFiClient):
     @property
     def unit_of_measurement(self) -> str:
         """Return the unit of measurement of this entity."""
-        return TIME_SECONDS
-    
+        return ""
+
     @property
     def state(self) -> int:
         """Return the uptime of the client."""
-        return self.client.uptime
+        return dt_util.utc_from_timestamp(float(self.client.uptime))
