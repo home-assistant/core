@@ -46,6 +46,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         "The Synology integration is deprecated."
         " Please use the Synology DSM integration"
         " (https://www.home-assistant.io/integrations/synology_dsm/) instead."
+        " This integration will be removed in version 0.118.0."
     )
 
     verify_ssl = config.get(CONF_VERIFY_SSL)
