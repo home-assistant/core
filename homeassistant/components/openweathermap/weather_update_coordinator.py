@@ -31,6 +31,11 @@ from .const import (
     ATTR_API_WIND_SPEED,
     CONDITION_CLASSES,
     DOMAIN,
+    FORECAST_MODE_DAILY,
+    FORECAST_MODE_FREE_DAILY,
+    FORECAST_MODE_HOURLY,
+    FORECAST_MODE_ONECALL_DAILY,
+    FORECAST_MODE_ONECALL_HOURLY,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,11 +52,11 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         self._latitude = latitude
         self._longitude = longitude
         self._forecast_mode = forecast_mode
-        if forecast_mode == "freedaily":
+        if forecast_mode == FORECAST_MODE_FREE_DAILY:
             # Auto convert to One Call for freedaily users
-            self._forecast_mode = "onecall_daily"
+            self._forecast_mode = FORECAST_MODE_ONECALL_DAILY
         self._forecast_limit = None
-        if forecast_mode == "daily":
+        if forecast_mode == FORECAST_MODE_DAILY:
             self._forecast_limit = 15
 
         super().__init__(
@@ -71,8 +76,8 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
     async def _get_owm_weather(self):
         weather = None
         if (
-            self._forecast_mode == "onecall_hourly"
-            or self._forecast_mode == "onecall_daily"
+            self._forecast_mode == FORECAST_MODE_ONECALL_HOURLY
+            or self._forecast_mode == FORECAST_MODE_ONECALL_DAILY
         ):
             weather = await self.hass.async_add_executor_job(
                 self._owm_client.one_call, self._latitude, self._longitude
@@ -81,9 +86,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             current_weather = await self.hass.async_add_executor_job(
                 self._owm_client.weather_at_coords, self._latitude, self._longitude
             )
-            interval = "daily"
-            if self._forecast_mode == "hourly":
-                interval = "3h"
+            interval = self._get_forecast_interval()
             forecast = await self.hass.async_add_executor_job(
                 self._owm_client.forecast_at_coords,
                 self._latitude,
@@ -95,18 +98,15 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
 
         return weather
 
+    def _get_forecast_interval(self):
+        interval = "daily"
+        if self._forecast_mode == FORECAST_MODE_HOURLY:
+            interval = "3h"
+        return interval
+
     def _convert_weather_response(self, weather_response):
         current_weather = weather_response.current
-
-        forecast_weather = []
-        forecast_arg = "forecast"
-        if self._forecast_mode == "onecall_hourly":
-            forecast_arg = "forecast_hourly"
-        elif self._forecast_mode == "onecall_daily":
-            forecast_arg = "forecast_daily"
-        forecast_weather = [
-            self._convert_forecast(x) for x in getattr(weather_response, forecast_arg)
-        ]
+        forecast_weather = self._get_forecast_from_weather_response(weather_response)
 
         return {
             ATTR_API_TEMPERATURE: current_weather.temperature("celsius").get("temp"),
@@ -122,6 +122,16 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             ATTR_API_WEATHER_CODE: current_weather.weather_code,
             ATTR_API_FORECAST: forecast_weather,
         }
+
+    def _get_forecast_from_weather_response(self, weather_response):
+        forecast_arg = "forecast"
+        if self._forecast_mode == FORECAST_MODE_ONECALL_HOURLY:
+            forecast_arg = "forecast_hourly"
+        elif self._forecast_mode == FORECAST_MODE_ONECALL_DAILY:
+            forecast_arg = "forecast_daily"
+        return [
+            self._convert_forecast(x) for x in getattr(weather_response, forecast_arg)
+        ]
 
     def _convert_forecast(self, entry):
         forecast = {

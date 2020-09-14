@@ -49,8 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     forecast_mode = _get_config_value(config_entry, CONF_MODE)
     language = _get_config_value(config_entry, CONF_LANGUAGE)
 
-    config_dict = get_default_config()
-    config_dict["language"] = language
+    config_dict = _get_owm_config(language)
 
     owm = OWM(api_key, config_dict).weather_manager()
     weather_coordinator = WeatherUpdateCoordinator(
@@ -122,3 +121,9 @@ def _get_config_value(config_entry, key):
     if config_entry.options:
         return config_entry.options[key]
     return config_entry.data[key]
+
+
+def _get_owm_config(language):
+    config_dict = get_default_config()
+    config_dict["language"] = language
+    return config_dict
