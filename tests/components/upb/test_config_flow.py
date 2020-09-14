@@ -1,9 +1,9 @@
 """Test the UPB Control config flow."""
 
-from asynctest import MagicMock, PropertyMock, patch
-
 from homeassistant import config_entries, setup
 from homeassistant.components.upb.const import DOMAIN
+
+from tests.async_mock import MagicMock, PropertyMock, patch
 
 
 def mocked_upb(sync_complete=True, config_ok=True):

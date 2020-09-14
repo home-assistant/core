@@ -14,5 +14,15 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "limit": "Limite",
+                    "order": "Ordem"
+                }
+            }
+        }
     }
 }

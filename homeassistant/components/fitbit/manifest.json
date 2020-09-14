@@ -4,5 +4,5 @@
   "documentation": "https://www.home-assistant.io/integrations/fitbit",
   "requirements": ["fitbit==0.3.1"],
   "dependencies": ["configurator", "http"],
-  "codeowners": ["@robbiet480"]
+  "codeowners": []
 }

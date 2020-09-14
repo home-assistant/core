@@ -78,7 +78,8 @@ async def setup_component(hass, config_file, hass_storage):
     """Load the SmartThing component."""
     hass_storage[STORAGE_KEY] = {"data": config_file, "version": STORAGE_VERSION}
     await async_process_ha_core_config(
-        hass, {"external_url": "https://test.local"},
+        hass,
+        {"external_url": "https://test.local"},
     )
     await async_setup_component(hass, "smartthings", {})
 
@@ -249,7 +250,7 @@ def subscription_factory_fixture():
 def device_factory_fixture():
     """Fixture for creating mock devices."""
     api = Mock(Api)
-    api.post_device_command.return_value = {}
+    api.post_device_command.return_value = {"results": [{"status": "ACCEPTED"}]}
 
     def _factory(label, capabilities, status: dict = None):
         device_data = {

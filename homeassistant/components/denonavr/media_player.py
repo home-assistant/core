@@ -1,12 +1,8 @@
 """Support for Denon AVR receivers using their HTTP interface."""
 
-from collections import namedtuple
 import logging
 
-import denonavr
-import voluptuous as vol
-
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
+from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_MUSIC,
@@ -25,10 +21,7 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    CONF_HOST,
-    CONF_NAME,
-    CONF_TIMEOUT,
-    CONF_ZONE,
+    CONF_MAC,
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_NONE,
     STATE_OFF,
@@ -36,24 +29,21 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import DOMAIN
+from . import CONF_RECEIVER
+from .config_flow import (
+    CONF_MANUFACTURER,
+    CONF_MODEL,
+    CONF_SERIAL_NUMBER,
+    CONF_TYPE,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_SOUND_MODE_RAW = "sound_mode_raw"
-
-CONF_INVALID_ZONES_ERR = "Invalid Zone (expected Zone2 or Zone3)"
-CONF_SHOW_ALL_SOURCES = "show_all_sources"
-CONF_VALID_ZONES = ["Zone2", "Zone3"]
-CONF_ZONES = "zones"
-
-DEFAULT_SHOW_SOURCES = False
-DEFAULT_TIMEOUT = 2
-
-KEY_DENON_CACHE = "denonavr_hosts"
 
 SUPPORT_DENON = (
     SUPPORT_VOLUME_STEP
@@ -73,99 +63,32 @@ SUPPORT_MEDIA_MODES = (
     | SUPPORT_PLAY
 )
 
-DENON_ZONE_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_ZONE): vol.In(CONF_VALID_ZONES, CONF_INVALID_ZONES_ERR),
-        vol.Optional(CONF_NAME): cv.string,
-    }
-)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_SHOW_ALL_SOURCES, default=DEFAULT_SHOW_SOURCES): cv.boolean,
-        vol.Optional(CONF_ZONES): vol.All(cv.ensure_list, [DENON_ZONE_SCHEMA]),
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-    }
-)
-
-NewHost = namedtuple("NewHost", ["host", "name"])
-
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Denon platform."""
-    # Initialize list with receivers to be started
-    receivers = []
-
-    cache = hass.data.get(KEY_DENON_CACHE)
-    if cache is None:
-        cache = hass.data[KEY_DENON_CACHE] = set()
-
-    # Get config option for show_all_sources and timeout
-    show_all_sources = config[CONF_SHOW_ALL_SOURCES]
-    timeout = config[CONF_TIMEOUT]
-
-    # Get config option for additional zones
-    zones = config.get(CONF_ZONES)
-    if zones is not None:
-        add_zones = {}
-        for entry in zones:
-            add_zones[entry[CONF_ZONE]] = entry.get(CONF_NAME)
-    else:
-        add_zones = None
-
-    # Start assignment of host and name
-    new_hosts = []
-    # 1. option: manual setting
-    if config.get(CONF_HOST) is not None:
-        host = config.get(CONF_HOST)
-        name = config.get(CONF_NAME)
-        new_hosts.append(NewHost(host=host, name=name))
-
-    # 2. option: discovery using netdisco
-    if discovery_info is not None:
-        host = discovery_info.get("host")
-        name = discovery_info.get("name")
-        new_hosts.append(NewHost(host=host, name=name))
-
-    # 3. option: discovery using denonavr library
-    if config.get(CONF_HOST) is None and discovery_info is None:
-        d_receivers = denonavr.discover()
-        # More than one receiver could be discovered by that method
-        for d_receiver in d_receivers:
-            host = d_receiver["host"]
-            name = d_receiver["friendlyName"]
-            new_hosts.append(NewHost(host=host, name=name))
-
-    for entry in new_hosts:
-        # Check if host not in cache, append it and save for later
-        # starting
-        if entry.host not in cache:
-            new_device = denonavr.DenonAVR(
-                host=entry.host,
-                name=entry.name,
-                show_all_inputs=show_all_sources,
-                timeout=timeout,
-                add_zones=add_zones,
-            )
-            for new_zone in new_device.zones.values():
-                receivers.append(DenonDevice(new_zone))
-            cache.add(host)
-            _LOGGER.info("Denon receiver at host %s initialized", host)
-
-    # Add all freshly discovered receivers
-    if receivers:
-        add_entities(receivers)
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the DenonAVR receiver from a config entry."""
+    entities = []
+    receiver = hass.data[DOMAIN][config_entry.entry_id][CONF_RECEIVER]
+    for receiver_zone in receiver.zones.values():
+        if config_entry.data[CONF_SERIAL_NUMBER] is not None:
+            unique_id = f"{config_entry.unique_id}-{receiver_zone.zone}"
+        else:
+            unique_id = None
+        entities.append(DenonDevice(receiver_zone, unique_id, config_entry))
+    _LOGGER.debug(
+        "%s receiver at host %s initialized", receiver.manufacturer, receiver.host
+    )
+    async_add_entities(entities)
 
 
 class DenonDevice(MediaPlayerEntity):
     """Representation of a Denon Media Player Device."""
 
-    def __init__(self, receiver):
+    def __init__(self, receiver, unique_id, config_entry):
         """Initialize the device."""
         self._receiver = receiver
         self._name = self._receiver.name
+        self._unique_id = unique_id
+        self._config_entry = config_entry
         self._muted = self._receiver.muted
         self._volume = self._receiver.volume
         self._current_source = self._receiver.input_func
@@ -236,6 +159,30 @@ class DenonDevice(MediaPlayerEntity):
         if self._sound_mode_support:
             self._sound_mode = self._receiver.sound_mode
             self._sound_mode_raw = self._receiver.sound_mode_raw
+
+    @property
+    def unique_id(self):
+        """Return the unique id of the zone."""
+        return self._unique_id
+
+    @property
+    def device_info(self):
+        """Return the device info of the receiver."""
+        if self._config_entry.data[CONF_SERIAL_NUMBER] is None:
+            return None
+
+        device_info = {
+            "identifiers": {(DOMAIN, self._config_entry.unique_id)},
+            "manufacturer": self._config_entry.data[CONF_MANUFACTURER],
+            "name": self._config_entry.title,
+            "model": f"{self._config_entry.data[CONF_MODEL]}-{self._config_entry.data[CONF_TYPE]}",
+        }
+        if self._config_entry.data[CONF_MAC] is not None:
+            device_info["connections"] = {
+                (dr.CONNECTION_NETWORK_MAC, self._config_entry.data[CONF_MAC])
+            }
+
+        return device_info
 
     @property
     def name(self):

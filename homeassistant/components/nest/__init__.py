@@ -347,7 +347,7 @@ class NestDevice:
                         _LOGGER.warning(
                             "Cannot retrieve device name for [%s]"
                             ", please check your Nest developer "
-                            "account permission settings.",
+                            "account permission settings",
                             device.serial,
                         )
                         continue

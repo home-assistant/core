@@ -177,7 +177,7 @@ class VoiceRSSProvider(Provider):
 
                 if request.status != HTTP_OK:
                     _LOGGER.error(
-                        "Error %d on load url %s.", request.status, request.url
+                        "Error %d on load url %s", request.status, request.url
                     )
                     return (None, None)
                 data = await request.read()

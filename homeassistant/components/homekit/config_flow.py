@@ -47,6 +47,7 @@ SUPPORTED_DOMAINS = [
     "demo",
     "device_tracker",
     "fan",
+    "humidifier",
     "input_boolean",
     "light",
     "lock",
@@ -65,6 +66,7 @@ DEFAULT_DOMAINS = [
     "alarm_control_panel",
     "climate",
     "cover",
+    "humidifier",
     "light",
     "lock",
     "media_player",
@@ -259,7 +261,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         data_schema = vol.Schema(
             {
                 vol.Optional(
-                    CONF_CAMERA_COPY, default=cameras_with_copy,
+                    CONF_CAMERA_COPY,
+                    default=cameras_with_copy,
                 ): cv.multi_select(self.included_cameras),
             }
         )

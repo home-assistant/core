@@ -17,10 +17,7 @@ class TestDteEnergyBridgeSetup(unittest.TestCase):
     def setUp(self):
         """Initialize values for this testcase class."""
         self.hass = get_test_home_assistant()
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     def test_setup_with_config(self):
         """Test the platform setup with configuration."""

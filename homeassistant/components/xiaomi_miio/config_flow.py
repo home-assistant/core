@@ -17,6 +17,7 @@ CONF_FLOW_TYPE = "config_flow_device"
 CONF_GATEWAY = "gateway"
 DEFAULT_GATEWAY_NAME = "Xiaomi Gateway"
 ZEROCONF_GATEWAY = "lumi-gateway"
+ZEROCONF_ACPARTNER = "lumi-acpartner"
 
 GATEWAY_SETTINGS = {
     vol.Required(CONF_TOKEN): vol.All(str, vol.Length(min=32, max=32)),
@@ -61,10 +62,15 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="not_xiaomi_miio")
 
         # Check which device is discovered.
-        if name.startswith(ZEROCONF_GATEWAY):
+        if name.startswith(ZEROCONF_GATEWAY) or name.startswith(ZEROCONF_ACPARTNER):
             unique_id = format_mac(mac_address)
             await self.async_set_unique_id(unique_id)
             self._abort_if_unique_id_configured({CONF_HOST: self.host})
+
+            # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+            self.context.update(
+                {"title_placeholders": {"name": f"Gateway {self.host}"}}
+            )
 
             return await self.async_step_gateway()
 

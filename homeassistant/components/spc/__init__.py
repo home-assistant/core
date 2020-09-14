@@ -57,7 +57,7 @@ async def async_setup(hass, config):
     hass.data[DATA_API] = spc
 
     if not await spc.async_load_parameters():
-        _LOGGER.error("Failed to load area/zone information from SPC.")
+        _LOGGER.error("Failed to load area/zone information from SPC")
         return False
 
     # add sensor devices for each zone (typically motion/fire/door sensors)

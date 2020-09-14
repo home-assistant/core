@@ -14,9 +14,10 @@
             "user": {
                 "data": {
                     "host": "Vert",
-                    "port": "Port"
+                    "port": ""
                 },
-                "description": "Vennligst fyll inn tilkoblingsinnstillingene for din SOMA Connect."
+                "description": "Vennligst fyll inn tilkoblingsinnstillingene for din SOMA Connect.",
+                "title": ""
             }
         }
     }

@@ -4,7 +4,6 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_NAME
-from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, entityfilter
 
 from . import flash_briefings, intent, smart_home_http
@@ -17,12 +16,12 @@ from .const import (
     CONF_ENTITY_CONFIG,
     CONF_FILTER,
     CONF_LOCALE,
+    CONF_PASSWORD,
     CONF_SUPPORTED_LOCALES,
     CONF_TEXT,
     CONF_TITLE,
     CONF_UID,
     DOMAIN,
-    EVENT_ALEXA_SMART_HOME,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -56,6 +55,7 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: {
             CONF_FLASH_BRIEFINGS: {
+                vol.Required(CONF_PASSWORD): cv.string,
                 cv.string: vol.All(
                     cv.ensure_list,
                     [
@@ -67,7 +67,7 @@ CONFIG_SCHEMA = vol.Schema(
                             vol.Optional(CONF_DISPLAY_URL): cv.template,
                         }
                     ],
-                )
+                ),
             },
             # vol.Optional here would mean we couldn't distinguish between an empty
             # smart_home: and none at all.
@@ -80,28 +80,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Activate the Alexa component."""
-
-    @callback
-    def async_describe_logbook_event(event):
-        """Describe a logbook event."""
-        data = event.data
-        entity_id = data["request"].get("entity_id")
-
-        if entity_id:
-            state = hass.states.get(entity_id)
-            name = state.name if state else entity_id
-            message = f"send command {data['request']['namespace']}/{data['request']['name']} for {name}"
-        else:
-            message = (
-                f"send command {data['request']['namespace']}/{data['request']['name']}"
-            )
-
-        return {"name": "Amazon Alexa", "message": message, "entity_id": entity_id}
-
-    hass.components.logbook.async_describe_event(
-        DOMAIN, EVENT_ALEXA_SMART_HOME, async_describe_logbook_event
-    )
-
     if DOMAIN not in config:
         return True
 

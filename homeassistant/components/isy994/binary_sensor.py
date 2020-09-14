@@ -49,7 +49,6 @@ from .const import (
 )
 from .entity import ISYNodeEntity, ISYProgramEntity
 from .helpers import migrate_old_unique_ids
-from .services import async_setup_device_services
 
 DEVICE_PARENT_REQUIRED = [
     DEVICE_CLASS_OPENING,
@@ -107,7 +106,7 @@ async def async_setup_entry(
             if not parent_device:
                 _LOGGER.error(
                     "Node %s has a parent node %s, but no device "
-                    "was created for the parent. Skipping.",
+                    "was created for the parent. Skipping",
                     node.address,
                     node.parent_node,
                 )
@@ -172,7 +171,6 @@ async def async_setup_entry(
 
     await migrate_old_unique_ids(hass, BINARY_SENSOR, devices)
     async_add_entities(devices)
-    async_setup_device_services(hass)
 
 
 def _detect_device_type_and_class(node: Union[Group, Node]) -> (str, str):

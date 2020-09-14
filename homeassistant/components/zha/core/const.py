@@ -9,6 +9,7 @@ import zigpy_cc.zigbee.application
 import zigpy_deconz.zigbee.application
 import zigpy_xbee.zigbee.application
 import zigpy_zigate.zigbee.application
+import zigpy_znp.zigbee.application
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
 from homeassistant.components.climate import DOMAIN as CLIMATE
@@ -169,21 +170,28 @@ POWER_BATTERY_OR_UNKNOWN = "Battery or Unknown"
 class RadioType(enum.Enum):
     """Possible options for radio type."""
 
+    znp = (
+        "ZNP = Texas Instruments Z-Stack ZNP protocol: CC253x, CC26x2, CC13x2",
+        zigpy_znp.zigbee.application.ControllerApplication,
+    )
     ezsp = (
-        "ESZP: HUSBZB-1, Elelabs, Telegesis, Silabs EmberZNet protocol",
+        "EZSP = Silicon Labs EmberZNet protocol: Elelabs, HUSBZB-1, Telegesis",
         bellows.zigbee.application.ControllerApplication,
     )
     deconz = (
-        "Conbee, Conbee II, RaspBee radios from dresden elektronik",
+        "deCONZ = dresden elektronik deCONZ protocol: ConBee I/II, RaspBee I/II",
         zigpy_deconz.zigbee.application.ControllerApplication,
     )
     ti_cc = (
-        "TI_CC: CC2531, CC2530, CC2652R, CC1352 etc, Texas Instruments ZNP protocol",
+        "Legacy TI_CC = Texas Instruments Z-Stack ZNP protocol: CC253x, CC26x2, CC13x2",
         zigpy_cc.zigbee.application.ControllerApplication,
     )
-    zigate = "ZiGate Radio", zigpy_zigate.zigbee.application.ControllerApplication
+    zigate = (
+        "ZiGate = ZiGate Zigbee radios: PiZiGate, ZiGate USB-TTL, ZiGate WiFi",
+        zigpy_zigate.zigbee.application.ControllerApplication,
+    )
     xbee = (
-        "Digi XBee S2C, XBee 3 radios",
+        "XBee = Digi XBee Zigbee radios: Digi XBee Series 2, 2C, 3",
         zigpy_xbee.zigbee.application.ControllerApplication,
     )
 
@@ -271,7 +279,6 @@ SIGNAL_REMOVE = "remove"
 SIGNAL_SET_LEVEL = "set_level"
 SIGNAL_STATE_ATTR = "update_state_attribute"
 SIGNAL_UPDATE_DEVICE = "{}_zha_update_device"
-SIGNAL_REMOVE_GROUP = "remove_group"
 SIGNAL_GROUP_ENTITY_REMOVED = "group_entity_removed"
 SIGNAL_GROUP_MEMBERSHIP_CHANGE = "group_membership_change"
 

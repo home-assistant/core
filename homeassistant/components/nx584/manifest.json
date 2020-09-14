@@ -2,6 +2,6 @@
   "domain": "nx584",
   "name": "NX584",
   "documentation": "https://www.home-assistant.io/integrations/nx584",
-  "requirements": ["pynx584==0.4"],
+  "requirements": ["pynx584==0.5"],
   "codeowners": []
 }

@@ -21,6 +21,8 @@ from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 
 from .test_gateway import API_KEY, BRIDGEID, setup_deconz_integration
 
+from tests.async_mock import patch
+
 
 async def test_flow_discovered_bridges(hass, aioclient_mock):
     """Test that config flow works for discovered bridges."""
@@ -86,7 +88,8 @@ async def test_flow_manual_configuration_decision(hass, aioclient_mock):
     assert result["step_id"] == "manual_input"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_HOST: "1.2.3.4", CONF_PORT: 80},
+        result["flow_id"],
+        user_input={CONF_HOST: "1.2.3.4", CONF_PORT: 80},
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -133,7 +136,8 @@ async def test_flow_manual_configuration(hass, aioclient_mock):
     assert result["step_id"] == "manual_input"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_HOST: "1.2.3.4", CONF_PORT: 80},
+        result["flow_id"],
+        user_input={CONF_HOST: "1.2.3.4", CONF_PORT: 80},
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -208,7 +212,8 @@ async def test_manual_configuration_update_configuration(hass, aioclient_mock):
     assert result["step_id"] == "manual_input"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_HOST: "2.3.4.5", CONF_PORT: 80},
+        result["flow_id"],
+        user_input={CONF_HOST: "2.3.4.5", CONF_PORT: 80},
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -253,7 +258,8 @@ async def test_manual_configuration_dont_update_configuration(hass, aioclient_mo
     assert result["step_id"] == "manual_input"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_HOST: "1.2.3.4", CONF_PORT: 80},
+        result["flow_id"],
+        user_input={CONF_HOST: "1.2.3.4", CONF_PORT: 80},
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -295,7 +301,8 @@ async def test_manual_configuration_timeout_get_bridge(hass, aioclient_mock):
     assert result["step_id"] == "manual_input"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_HOST: "1.2.3.4", CONF_PORT: 80},
+        result["flow_id"],
+        user_input={CONF_HOST: "1.2.3.4", CONF_PORT: 80},
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -399,19 +406,25 @@ async def test_ssdp_discovery_update_configuration(hass):
     """Test if a discovered bridge is configured but updates with new attributes."""
     gateway = await setup_deconz_integration(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        data={
-            ssdp.ATTR_SSDP_LOCATION: "http://2.3.4.5:80/",
-            ssdp.ATTR_UPNP_MANUFACTURER_URL: DECONZ_MANUFACTURERURL,
-            ssdp.ATTR_UPNP_SERIAL: BRIDGEID,
-        },
-        context={"source": "ssdp"},
-    )
+    with patch(
+        "homeassistant.components.deconz.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data={
+                ssdp.ATTR_SSDP_LOCATION: "http://2.3.4.5:80/",
+                ssdp.ATTR_UPNP_MANUFACTURER_URL: DECONZ_MANUFACTURERURL,
+                ssdp.ATTR_UPNP_SERIAL: BRIDGEID,
+            },
+            context={"source": "ssdp"},
+        )
+        await hass.async_block_till_done()
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
     assert gateway.config_entry.data[CONF_HOST] == "2.3.4.5"
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_ssdp_discovery_dont_update_configuration(hass):
@@ -469,9 +482,16 @@ async def test_flow_hassio_discovery(hass):
     assert result["step_id"] == "hassio_confirm"
     assert result["description_placeholders"] == {"addon": "Mock Addon"}
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
-    )
+    with patch(
+        "homeassistant.components.deconz.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.deconz.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+        await hass.async_block_till_done()
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["result"].data == {
@@ -479,28 +499,36 @@ async def test_flow_hassio_discovery(hass):
         CONF_PORT: 80,
         CONF_API_KEY: API_KEY,
     }
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_hassio_discovery_update_configuration(hass):
     """Test we can update an existing config entry."""
     gateway = await setup_deconz_integration(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        data={
-            CONF_HOST: "2.3.4.5",
-            CONF_PORT: 8080,
-            CONF_API_KEY: "updated",
-            CONF_SERIAL: BRIDGEID,
-        },
-        context={"source": "hassio"},
-    )
+    with patch(
+        "homeassistant.components.deconz.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data={
+                CONF_HOST: "2.3.4.5",
+                CONF_PORT: 8080,
+                CONF_API_KEY: "updated",
+                CONF_SERIAL: BRIDGEID,
+            },
+            context={"source": "hassio"},
+        )
+        await hass.async_block_till_done()
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
     assert gateway.config_entry.data[CONF_HOST] == "2.3.4.5"
     assert gateway.config_entry.data[CONF_PORT] == 8080
     assert gateway.config_entry.data[CONF_API_KEY] == "updated"
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_hassio_discovery_dont_update_configuration(hass):

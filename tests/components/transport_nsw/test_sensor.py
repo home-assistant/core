@@ -37,10 +37,7 @@ class TestRMVtransportSensor(unittest.TestCase):
     def setUp(self):
         """Set up things to run when tests begin."""
         self.hass = get_test_home_assistant()
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     @patch("TransportNSW.TransportNSW.get_departures", side_effect=get_departuresMock)
     def test_transportnsw_config(self, mock_get_departures):

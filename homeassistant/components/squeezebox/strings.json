@@ -1,0 +1,33 @@
+{
+  "title": "Logitech Squeezebox",
+  "config": {
+    "flow_title": "Logitech Squeezebox: {host}",
+    "step": {
+      "user": {
+	"title": "Configure Logitech Media Server",
+	"data": {
+	  "host": "[%key:common::config_flow::data::host%]"
+	}
+      },
+      "edit": {
+        "title": "Edit connection information",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+	  "port": "[%key:common::config_flow::data::port%]",
+	  "username": "[%key:common::config_flow::data::username%]",
+	  "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "no_server_found": "Could not automatically discover server."
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_server_found": "No LMS server found."
+    }
+  }
+}

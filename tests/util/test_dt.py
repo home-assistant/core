@@ -162,6 +162,9 @@ def test_get_age():
     diff = dt_util.now() - timedelta(minutes=320)
     assert dt_util.get_age(diff) == "5 hours"
 
+    diff = dt_util.now() - timedelta(minutes=1.6 * 60 * 24)
+    assert dt_util.get_age(diff) == "2 days"
+
     diff = dt_util.now() - timedelta(minutes=2 * 60 * 24)
     assert dt_util.get_age(diff) == "2 days"
 
@@ -214,6 +217,10 @@ def test_find_next_time_expression_time_basic():
 
     assert datetime(2018, 10, 8, 5, 0, 0) == find(
         datetime(2018, 10, 7, 10, 30, 0), 5, 0, 0
+    )
+
+    assert find(datetime(2018, 10, 7, 10, 30, 0, 999999), "*", "/30", 0) == datetime(
+        2018, 10, 7, 10, 30, 0
     )
 
 

@@ -72,6 +72,8 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     # For backwards compat, set unique ID
     if entry.unique_id is None:
         hass.config_entries.async_update_entry(entry, unique_id=conf[KEY_MAC])
+    elif ".local" in entry.unique_id:
+        hass.config_entries.async_update_entry(entry, unique_id=conf[KEY_MAC])
     daikin_api = await daikin_api_setup(
         hass,
         conf[CONF_HOST],
@@ -112,12 +114,12 @@ async def daikin_api_setup(hass, host, key, uuid, password):
             device = await Appliance.factory(
                 host, session, key=key, uuid=uuid, password=password
             )
-    except asyncio.TimeoutError:
+    except asyncio.TimeoutError as err:
         _LOGGER.debug("Connection to %s timed out", host)
-        raise ConfigEntryNotReady
-    except ClientConnectionError:
+        raise ConfigEntryNotReady from err
+    except ClientConnectionError as err:
         _LOGGER.debug("ClientConnectionError to %s", host)
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from err
     except Exception:  # pylint: disable=broad-except
         _LOGGER.error("Unexpected error creating device %s", host)
         return None

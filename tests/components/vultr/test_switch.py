@@ -42,8 +42,9 @@ class TestVultrSwitchSetup(unittest.TestCase):
             {CONF_SUBSCRIPTION: "123456", CONF_NAME: "Failed Server"},
             {CONF_SUBSCRIPTION: "555555", CONF_NAME: vultr.DEFAULT_NAME},
         ]
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):
+    def tear_down_cleanup(self):
         """Stop our started services."""
         self.hass.stop()
 

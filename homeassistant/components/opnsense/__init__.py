@@ -52,7 +52,7 @@ def setup(hass, config):
     try:
         interfaces_client.get_arp()
     except APIException:
-        _LOGGER.exception("Failure while connecting to OPNsense API endpoint.")
+        _LOGGER.exception("Failure while connecting to OPNsense API endpoint")
         return False
 
     if tracker_interfaces:

@@ -103,7 +103,7 @@ async def async_setup(hass, config, retry_delay=FIRST_RETRY_TIME):
         return True
 
     if not api.is_connected:
-        _LOGGER.error("Error connecting %s to %s.", DOMAIN, conf[CONF_HOST])
+        _LOGGER.error("Error connecting %s to %s", DOMAIN, conf[CONF_HOST])
         return False
 
     hass.data[DATA_ASUSWRT] = api

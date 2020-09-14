@@ -133,5 +133,5 @@ def _response_to_json(response):
 
         return active_clients
     except (ValueError, TypeError):
-        _LOGGER.error("Failed to decode response from AP.")
+        _LOGGER.error("Failed to decode response from AP")
         return {}

@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "no_server_found": "No s'ha trobat cap servidor LMS."
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "no_server_found": "No s'ha pogut descobrir el servidor autom\u00e0ticament.",
+            "unknown": "Error inesperat"
+        },
+        "flow_title": "Logitech Squeezebox: {host}",
+        "step": {
+            "edit": {
+                "data": {
+                    "host": "Amfitri\u00f3",
+                    "password": "Contrasenya",
+                    "port": "Port",
+                    "username": "Nom d'usuari"
+                },
+                "title": "Edita la informaci\u00f3 de connexi\u00f3"
+            },
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3"
+                },
+                "title": "Configura el servidor Logitech Media"
+            }
+        }
+    },
+    "title": "Logitech Squeezebox"
+}

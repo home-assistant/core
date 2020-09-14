@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "one_instance_allowed": "Povolena je pouze jedna instance.",
+            "wrong_server_id": "Id serveru nen\u00ed platn\u00e9."
+        },
+        "step": {
+            "user": {
+                "description": "Opravdu chcete nastavit SpeedTest?",
+                "title": "Nastavit SpeedTest"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "retrive_error": "P\u0159i na\u010d\u00edt\u00e1n\u00ed seznamu server\u016f do\u0161lo k chyb\u011b"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "manual": "Zak\u00e1zat automatickou aktualizaci",
+                    "scan_interval": "Frekvence aktualizace (minuty)",
+                    "server_name": "Vyberte testovac\u00ed server"
+                }
+            }
+        }
+    }
+}

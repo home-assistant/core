@@ -24,9 +24,11 @@ from homeassistant.core import callback
 
 from .const import (
     DOMAIN,
+    PREF_ALEXA_DEFAULT_EXPOSE,
     PREF_ALEXA_REPORT_STATE,
     PREF_ENABLE_ALEXA,
     PREF_ENABLE_GOOGLE,
+    PREF_GOOGLE_DEFAULT_EXPOSE,
     PREF_GOOGLE_REPORT_STATE,
     PREF_GOOGLE_SECURE_DEVICES_PIN,
     REQUEST_TIMEOUT,
@@ -70,6 +72,11 @@ _CLOUD_ERRORS = {
     InvalidTrustedProxies: (
         HTTP_INTERNAL_SERVER_ERROR,
         "Remote UI not compatible with 127.0.0.1/::1 as trusted proxies.",
+    ),
+    asyncio.TimeoutError: (502, "Unable to reach the Home Assistant cloud."),
+    aiohttp.ClientError: (
+        HTTP_INTERNAL_SERVER_ERROR,
+        "Error making internal request",
     ),
 }
 
@@ -120,11 +127,6 @@ async def async_setup(hass):
                 HTTP_BAD_REQUEST,
                 "Password change required.",
             ),
-            asyncio.TimeoutError: (502, "Unable to reach the Home Assistant cloud."),
-            aiohttp.ClientError: (
-                HTTP_INTERNAL_SERVER_ERROR,
-                "Error making internal request",
-            ),
         }
     )
 
@@ -166,10 +168,17 @@ def _ws_handle_cloud_errors(handler):
 
 def _process_cloud_exception(exc, where):
     """Process a cloud exception."""
-    err_info = _CLOUD_ERRORS.get(exc.__class__)
+    err_info = None
+
+    for err, value_info in _CLOUD_ERRORS.items():
+        if isinstance(exc, err):
+            err_info = value_info
+            break
+
     if err_info is None:
         _LOGGER.exception("Unexpected error processing request for %s", where)
         err_info = (502, f"Unexpected error: {exc}")
+
     return err_info
 
 
@@ -364,6 +373,8 @@ async def websocket_subscription(hass, connection, msg):
         vol.Optional(PREF_ENABLE_ALEXA): bool,
         vol.Optional(PREF_ALEXA_REPORT_STATE): bool,
         vol.Optional(PREF_GOOGLE_REPORT_STATE): bool,
+        vol.Optional(PREF_ALEXA_DEFAULT_EXPOSE): [str],
+        vol.Optional(PREF_GOOGLE_DEFAULT_EXPOSE): [str],
         vol.Optional(PREF_GOOGLE_SECURE_DEVICES_PIN): vol.Any(None, str),
     }
 )
@@ -507,7 +518,7 @@ async def google_assistant_list(hass, connection, msg):
     {
         "type": "cloud/google_assistant/entities/update",
         "entity_id": str,
-        vol.Optional("should_expose"): bool,
+        vol.Optional("should_expose"): vol.Any(None, bool),
         vol.Optional("override_name"): str,
         vol.Optional("aliases"): [str],
         vol.Optional("disable_2fa"): bool,
@@ -559,7 +570,7 @@ async def alexa_list(hass, connection, msg):
     {
         "type": "cloud/alexa/entities/update",
         "entity_id": str,
-        vol.Optional("should_expose"): bool,
+        vol.Optional("should_expose"): vol.Any(None, bool),
     }
 )
 async def alexa_update(hass, connection, msg):

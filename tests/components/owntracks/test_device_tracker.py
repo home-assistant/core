@@ -8,12 +8,7 @@ from homeassistant.const import STATE_NOT_HOME
 from homeassistant.setup import async_setup_component
 
 from tests.async_mock import patch
-from tests.common import (
-    MockConfigEntry,
-    async_fire_mqtt_message,
-    async_mock_mqtt_component,
-    mock_coro,
-)
+from tests.common import MockConfigEntry, async_fire_mqtt_message, mock_coro
 
 USER = "greg"
 DEVICE = "phone"
@@ -286,13 +281,12 @@ BAD_JSON_SUFFIX = "** and it ends here ^^"
 
 
 @pytest.fixture
-def setup_comp(hass, mock_device_tracker_conf):
+def setup_comp(hass, mock_device_tracker_conf, mqtt_mock):
     """Initialize components."""
     assert hass.loop.run_until_complete(
         async_setup_component(hass, "persistent_notification", {})
     )
     hass.loop.run_until_complete(async_setup_component(hass, "device_tracker", {}))
-    hass.loop.run_until_complete(async_mock_mqtt_component(hass))
 
     hass.states.async_set("zone.inner", "zoning", INNER_ZONE)
 
@@ -1234,8 +1228,8 @@ async def test_waypoint_import_simple(hass, context):
     assert wayp is not None
 
 
-async def test_waypoint_import_blacklist(hass, context):
-    """Test import of list of waypoints for blacklisted user."""
+async def test_waypoint_import_block(hass, context):
+    """Test import of list of waypoints for blocked user."""
     waypoints_message = WAYPOINTS_EXPORTED_MESSAGE.copy()
     await send_message(hass, WAYPOINTS_TOPIC_BLOCKED, waypoints_message)
     # Check if it made it into states
@@ -1324,12 +1318,12 @@ def generate_ciphers(secret):
     # PyNaCl ciphertext generation will fail if the module
     # cannot be imported. However, the test for decryption
     # also relies on this library and won't be run without it.
-    import pickle
     import base64
+    import pickle
 
     try:
-        from nacl.secret import SecretBox
         from nacl.encoding import Base64Encoder
+        from nacl.secret import SecretBox
 
         keylen = SecretBox.KEY_SIZE
         key = secret.encode("utf-8")
@@ -1375,8 +1369,8 @@ def mock_cipher():
 
     def mock_decrypt(ciphertext, key):
         """Decrypt/unpickle."""
-        import pickle
         import base64
+        import pickle
 
         (mkey, plaintext) = pickle.loads(base64.b64decode(ciphertext))
         if key != mkey:

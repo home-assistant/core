@@ -29,7 +29,6 @@ from homeassistant.components.mqtt import (
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
-    CONF_UNIQUE_ID,
     MqttAttributes,
     MqttAvailability,
     MqttDiscoveryUpdate,
@@ -44,6 +43,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_OPTIMISTIC,
     CONF_RGB,
+    CONF_UNIQUE_ID,
     CONF_WHITE_VALUE,
     CONF_XY,
     STATE_ON,
@@ -125,7 +125,7 @@ PLATFORM_SCHEMA_JSON = (
 
 
 async def async_setup_entity_json(
-    config: ConfigType, async_add_entities, config_entry, discovery_data
+    hass, config: ConfigType, async_add_entities, config_entry, discovery_data
 ):
     """Set up a MQTT JSON Light."""
     async_add_entities([MqttLightJson(config, config_entry, discovery_data)])

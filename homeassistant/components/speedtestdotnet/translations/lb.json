@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "one_instance_allowed": "N\u00ebmmen eng eenzeg Instanz ass n\u00e9ideg.",
+            "wrong_server_id": "Server ID ass ong\u00eblteg"
+        },
+        "step": {
+            "user": {
+                "description": "S\u00e9cher fir SpeedTest anzeriichten?",
+                "title": "SpeedTest ariichten"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "retrive_error": "Feeler beim ofruffen vun der Server L\u00ebscht"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "manual": "Auto Update deaktiv\u00e9ieren",
+                    "scan_interval": "Intervalle vun de Mise \u00e0 jour (Minutten)",
+                    "server_name": "Test Server auswielen"
+                }
+            }
+        }
+    }
+}

@@ -13,6 +13,8 @@ VERIFICATION_CODE_KEY = "verification_code"
 NOTIFICATION_ID = "august_notification"
 NOTIFICATION_TITLE = "August"
 
+MANUFACTURER = "August Home Inc."
+
 DEFAULT_AUGUST_CONFIG_FILE = ".august.conf"
 
 DATA_AUGUST = "data_august"

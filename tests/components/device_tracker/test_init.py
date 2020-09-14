@@ -225,12 +225,14 @@ async def test_discover_platform(mock_demo_setup_scanner, mock_see, hass):
 
 async def test_update_stale(hass, mock_device_tracker_conf):
     """Test stalled update."""
+
     scanner = getattr(hass.components, "test.device_tracker").SCANNER
     scanner.reset()
     scanner.come_home("DEV1")
 
-    register_time = datetime(2015, 9, 15, 23, tzinfo=dt_util.UTC)
-    scan_time = datetime(2015, 9, 15, 23, 1, tzinfo=dt_util.UTC)
+    now = dt_util.utcnow()
+    register_time = datetime(now.year + 1, 9, 15, 23, tzinfo=dt_util.UTC)
+    scan_time = datetime(now.year + 1, 9, 15, 23, 1, tzinfo=dt_util.UTC)
 
     with patch(
         "homeassistant.components.device_tracker.legacy.dt_util.utcnow",
@@ -433,8 +435,10 @@ async def test_see_state(hass, yaml_devices):
 
 async def test_see_passive_zone_state(hass, mock_device_tracker_conf):
     """Test that the device tracker sets gps for passive trackers."""
-    register_time = datetime(2015, 9, 15, 23, tzinfo=dt_util.UTC)
-    scan_time = datetime(2015, 9, 15, 23, 1, tzinfo=dt_util.UTC)
+    now = dt_util.utcnow()
+
+    register_time = datetime(now.year + 1, 9, 15, 23, tzinfo=dt_util.UTC)
+    scan_time = datetime(now.year + 1, 9, 15, 23, 1, tzinfo=dt_util.UTC)
 
     with assert_setup_component(1, zone.DOMAIN):
         zone_info = {

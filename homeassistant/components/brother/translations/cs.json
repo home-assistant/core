@@ -2,6 +2,11 @@
     "config": {
         "flow_title": "Tisk\u00e1rna Brother: {model} {serial_number}",
         "step": {
+            "user": {
+                "data": {
+                    "host": "Hostitel"
+                }
+            },
             "zeroconf_confirm": {
                 "data": {
                     "type": "Typ tisk\u00e1rny"

@@ -3,11 +3,12 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components import enocean
 from homeassistant.components.switch import PLATFORM_SCHEMA
 from homeassistant.const import CONF_ID, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
+
+from .device import EnOceanEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +33,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([EnOceanSwitch(dev_id, dev_name, channel)])
 
 
-class EnOceanSwitch(enocean.EnOceanDevice, ToggleEntity):
+class EnOceanSwitch(EnOceanEntity, ToggleEntity):
     """Representation of an EnOcean switch device."""
 
     def __init__(self, dev_id, dev_name, channel):

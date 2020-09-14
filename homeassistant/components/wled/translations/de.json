@@ -11,7 +11,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Hostname oder IP-Adresse"
+                    "host": "Host"
                 },
                 "description": "Richten Sie Ihren WLED f\u00fcr die Integration mit Home Assistant ein."
             },

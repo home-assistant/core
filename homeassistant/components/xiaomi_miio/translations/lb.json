@@ -8,6 +8,7 @@
             "connect_error": "Feeler beim verbannen",
             "no_device_selected": "Keen Apparat ausgewielt, wiel een Apparat aus w.e.g."
         },
+        "flow_title": "Xiaomi Miio: {name}",
         "step": {
             "gateway": {
                 "data": {

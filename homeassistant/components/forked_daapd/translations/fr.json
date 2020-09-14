@@ -28,8 +28,13 @@
         "step": {
             "init": {
                 "data": {
-                    "max_playlists": "Nombre maximal de listes de lecture utilis\u00e9es comme sources"
-                }
+                    "librespot_java_port": "Port pour le contr\u00f4le du pipe librespot-java (si utilis\u00e9)",
+                    "max_playlists": "Nombre maximal de listes de lecture utilis\u00e9es comme sources",
+                    "tts_pause_time": "Secondes pour faire une pause avant et apr\u00e8s TTS",
+                    "tts_volume": "Volume TTS (d\u00e9cimal dans la plage [0,1])"
+                },
+                "description": "D\u00e9finissez diverses options pour l'int\u00e9gration forked-daapd.",
+                "title": "Configurer les options forked-daapd"
             }
         }
     }

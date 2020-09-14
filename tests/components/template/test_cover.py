@@ -1034,3 +1034,89 @@ async def test_invalid_device_class(hass, calls):
 
     state = hass.states.get("cover.test_template_cover")
     assert not state
+
+
+async def test_unique_id(hass):
+    """Test unique_id option only creates one cover per id."""
+    await setup.async_setup_component(
+        hass,
+        "cover",
+        {
+            "cover": {
+                "platform": "template",
+                "covers": {
+                    "test_template_cover_01": {
+                        "unique_id": "not-so-unique-anymore",
+                        "value_template": "{{ true }}",
+                        "open_cover": {
+                            "service": "cover.open_cover",
+                            "entity_id": "cover.test_state",
+                        },
+                        "close_cover": {
+                            "service": "cover.close_cover",
+                            "entity_id": "cover.test_state",
+                        },
+                    },
+                    "test_template_cover_02": {
+                        "unique_id": "not-so-unique-anymore",
+                        "value_template": "{{ false }}",
+                        "open_cover": {
+                            "service": "cover.open_cover",
+                            "entity_id": "cover.test_state",
+                        },
+                        "close_cover": {
+                            "service": "cover.close_cover",
+                            "entity_id": "cover.test_state",
+                        },
+                    },
+                },
+            },
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 1
+
+
+async def test_state_gets_lowercased(hass):
+    """Test True/False is lowercased."""
+
+    hass.states.async_set("binary_sensor.garage_door_sensor", "off")
+
+    await setup.async_setup_component(
+        hass,
+        "cover",
+        {
+            "cover": {
+                "platform": "template",
+                "covers": {
+                    "garage_door": {
+                        "friendly_name": "Garage Door",
+                        "value_template": "{{ is_state('binary_sensor.garage_door_sensor', 'off') }}",
+                        "open_cover": {
+                            "service": "cover.open_cover",
+                            "entity_id": "cover.test_state",
+                        },
+                        "close_cover": {
+                            "service": "cover.close_cover",
+                            "entity_id": "cover.test_state",
+                        },
+                    },
+                },
+            },
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 2
+
+    assert hass.states.get("cover.garage_door").state == STATE_OPEN
+    hass.states.async_set("binary_sensor.garage_door_sensor", "on")
+    await hass.async_block_till_done()
+    assert hass.states.get("cover.garage_door").state == STATE_CLOSED

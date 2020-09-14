@@ -19,7 +19,7 @@
             },
             "user": {
                 "data": {
-                    "host": "IP address",
+                    "host": "IP Address",
                     "name": "Name"
                 },
                 "description": "Enter your Panasonic Viera TV's IP address",

@@ -7,7 +7,7 @@ import logging
 import queue
 import threading
 import time
-from typing import Any, Dict, Optional
+from typing import Any, Callable, List, Optional
 
 from sqlalchemy import create_engine, event as sqlalchemy_event, exc, select
 from sqlalchemy.orm import scoped_session, sessionmaker
@@ -17,10 +17,7 @@ import voluptuous as vol
 from homeassistant.components import persistent_notification
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    CONF_DOMAINS,
-    CONF_ENTITIES,
     CONF_EXCLUDE,
-    CONF_INCLUDE,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
     EVENT_STATE_CHANGED,
@@ -29,18 +26,20 @@ from homeassistant.const import (
 )
 from homeassistant.core import CoreState, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entityfilter import generate_filter
+from homeassistant.helpers.entityfilter import (
+    INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
+    INCLUDE_EXCLUDE_FILTER_SCHEMA_INNER,
+    convert_include_exclude_filter,
+)
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
 from . import migration, purge
-from .const import DATA_INSTANCE
+from .const import CONF_DB_INTEGRITY_CHECK, DATA_INSTANCE, DOMAIN, SQLITE_URL_PREFIX
 from .models import Base, Events, RecorderRuns, States
-from .util import session_scope
+from .util import session_scope, validate_or_move_away_sqlite_database
 
 _LOGGER = logging.getLogger(__name__)
-
-DOMAIN = "recorder"
 
 SERVICE_PURGE = "purge"
 
@@ -56,6 +55,7 @@ SERVICE_PURGE_SCHEMA = vol.Schema(
 
 DEFAULT_URL = "sqlite:///{hass_config_path}"
 DEFAULT_DB_FILE = "home-assistant_v2.db"
+DEFAULT_DB_INTEGRITY_CHECK = True
 DEFAULT_DB_MAX_RETRIES = 10
 DEFAULT_DB_RETRY_WAIT = 3
 KEEPALIVE_TIME = 30
@@ -69,22 +69,12 @@ CONF_PURGE_INTERVAL = "purge_interval"
 CONF_EVENT_TYPES = "event_types"
 CONF_COMMIT_INTERVAL = "commit_interval"
 
-FILTER_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_EXCLUDE, default={}): vol.Schema(
-            {
-                vol.Optional(CONF_DOMAINS): vol.All(cv.ensure_list, [cv.string]),
-                vol.Optional(CONF_ENTITIES): cv.entity_ids,
-                vol.Optional(CONF_EVENT_TYPES): vol.All(cv.ensure_list, [cv.string]),
-            }
-        ),
-        vol.Optional(CONF_INCLUDE, default={}): vol.Schema(
-            {
-                vol.Optional(CONF_DOMAINS): vol.All(cv.ensure_list, [cv.string]),
-                vol.Optional(CONF_ENTITIES): cv.entity_ids,
-            }
-        ),
-    }
+EXCLUDE_SCHEMA = INCLUDE_EXCLUDE_FILTER_SCHEMA_INNER.extend(
+    {vol.Optional(CONF_EVENT_TYPES): vol.All(cv.ensure_list, [cv.string])}
+)
+
+FILTER_SCHEMA = INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
+    {vol.Optional(CONF_EXCLUDE, default=EXCLUDE_SCHEMA({})): EXCLUDE_SCHEMA}
 )
 
 CONFIG_SCHEMA = vol.Schema(
@@ -110,6 +100,9 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Optional(
                         CONF_DB_RETRY_WAIT, default=DEFAULT_DB_RETRY_WAIT
                     ): cv.positive_int,
+                    vol.Optional(
+                        CONF_DB_INTEGRITY_CHECK, default=DEFAULT_DB_INTEGRITY_CHECK
+                    ): cv.boolean,
                 }
             ),
         )
@@ -146,13 +139,13 @@ def run_information_with_session(session, point_in_time: Optional[datetime] = No
     """Return information about current run from the database."""
     recorder_runs = RecorderRuns
 
-    res = (
-        session.query(recorder_runs)
-        .filter(
+    query = session.query(recorder_runs)
+    if point_in_time:
+        query = query.filter(
             (recorder_runs.start < point_in_time) & (recorder_runs.end > point_in_time)
         )
-        .first()
-    )
+
+    res = query.first()
     if res:
         session.expunge(res)
     return res
@@ -161,18 +154,19 @@ def run_information_with_session(session, point_in_time: Optional[datetime] = No
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the recorder."""
     conf = config[DOMAIN]
+    entity_filter = convert_include_exclude_filter(conf)
     auto_purge = conf[CONF_AUTO_PURGE]
     keep_days = conf[CONF_PURGE_KEEP_DAYS]
     commit_interval = conf[CONF_COMMIT_INTERVAL]
     db_max_retries = conf[CONF_DB_MAX_RETRIES]
     db_retry_wait = conf[CONF_DB_RETRY_WAIT]
+    db_integrity_check = conf[CONF_DB_INTEGRITY_CHECK]
 
     db_url = conf.get(CONF_DB_URL)
     if not db_url:
         db_url = DEFAULT_URL.format(hass_config_path=hass.config.path(DEFAULT_DB_FILE))
-
-    include = conf.get(CONF_INCLUDE, {})
-    exclude = conf.get(CONF_EXCLUDE, {})
+    exclude = conf[CONF_EXCLUDE]
+    exclude_t = exclude.get(CONF_EVENT_TYPES, [])
     instance = hass.data[DATA_INSTANCE] = Recorder(
         hass=hass,
         auto_purge=auto_purge,
@@ -181,8 +175,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         uri=db_url,
         db_max_retries=db_max_retries,
         db_retry_wait=db_retry_wait,
-        include=include,
-        exclude=exclude,
+        entity_filter=entity_filter,
+        exclude_t=exclude_t,
+        db_integrity_check=db_integrity_check,
     )
     instance.async_initialize()
     instance.start()
@@ -201,6 +196,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 PurgeTask = namedtuple("PurgeTask", ["keep_days", "repack"])
 
 
+class WaitTask:
+    """An object to insert into the recorder queue to tell it set the _queue_watch event."""
+
+
 class Recorder(threading.Thread):
     """A threaded recorder class."""
 
@@ -213,8 +212,9 @@ class Recorder(threading.Thread):
         uri: str,
         db_max_retries: int,
         db_retry_wait: int,
-        include: Dict,
-        exclude: Dict,
+        entity_filter: Callable[[str], bool],
+        exclude_t: List[str],
+        db_integrity_check: bool,
     ) -> None:
         """Initialize the recorder."""
         threading.Thread.__init__(self, name="Recorder")
@@ -223,27 +223,26 @@ class Recorder(threading.Thread):
         self.auto_purge = auto_purge
         self.keep_days = keep_days
         self.commit_interval = commit_interval
-        self.queue: Any = queue.Queue()
+        self.queue: Any = queue.SimpleQueue()
         self.recording_start = dt_util.utcnow()
         self.db_url = uri
         self.db_max_retries = db_max_retries
         self.db_retry_wait = db_retry_wait
+        self.db_integrity_check = db_integrity_check
         self.async_db_ready = asyncio.Future()
+        self._queue_watch = threading.Event()
         self.engine: Any = None
         self.run_info: Any = None
 
-        self.entity_filter = generate_filter(
-            include.get(CONF_DOMAINS, []),
-            include.get(CONF_ENTITIES, []),
-            exclude.get(CONF_DOMAINS, []),
-            exclude.get(CONF_ENTITIES, []),
-        )
-        self.exclude_t = exclude.get(CONF_EVENT_TYPES, [])
+        self.entity_filter = entity_filter
+        self.exclude_t = exclude_t
 
         self._timechanges_seen = 0
         self._keepalive_count = 0
+        self._old_state_ids = {}
         self.event_session = None
         self.get_session = None
+        self._completed_database_setup = False
 
     @callback
     def async_initialize(self):
@@ -347,20 +346,22 @@ class Recorder(threading.Thread):
         self.event_session = self.get_session()
         # Use a session for the event read loop
         # with a commit every time the event time
-        # has changed.  This reduces the disk io.
+        # has changed. This reduces the disk io.
         while True:
             event = self.queue.get()
             if event is None:
                 self._close_run()
                 self._close_connection()
-                self.queue.task_done()
                 return
             if isinstance(event, PurgeTask):
-                purge.purge_old_data(self, event.keep_days, event.repack)
-                self.queue.task_done()
+                # Schedule a new purge task if this one didn't finish
+                if not purge.purge_old_data(self, event.keep_days, event.repack):
+                    self.queue.put(PurgeTask(event.keep_days, event.repack))
+                continue
+            if isinstance(event, WaitTask):
+                self._queue_watch.set()
                 continue
             if event.event_type == EVENT_TIME_CHANGED:
-                self.queue.task_done()
                 self._keepalive_count += 1
                 if self._keepalive_count >= KEEPALIVE_TIME:
                     self._keepalive_count = 0
@@ -372,17 +373,17 @@ class Recorder(threading.Thread):
                         self._commit_event_session_or_retry()
                 continue
             if event.event_type in self.exclude_t:
-                self.queue.task_done()
                 continue
 
             entity_id = event.data.get(ATTR_ENTITY_ID)
             if entity_id is not None:
                 if not self.entity_filter(entity_id):
-                    self.queue.task_done()
                     continue
 
             try:
                 dbevent = Events.from_event(event)
+                if event.event_type == EVENT_STATE_CHANGED:
+                    dbevent.event_data = "{}"
                 self.event_session.add(dbevent)
                 self.event_session.flush()
             except (TypeError, ValueError):
@@ -394,8 +395,17 @@ class Recorder(threading.Thread):
             if dbevent and event.event_type == EVENT_STATE_CHANGED:
                 try:
                     dbstate = States.from_event(event)
+                    has_new_state = event.data.get("new_state")
+                    dbstate.old_state_id = self._old_state_ids.get(dbstate.entity_id)
+                    if not has_new_state:
+                        dbstate.state = None
                     dbstate.event_id = dbevent.event_id
                     self.event_session.add(dbstate)
+                    self.event_session.flush()
+                    if has_new_state:
+                        self._old_state_ids[dbstate.entity_id] = dbstate.state_id
+                    elif dbstate.entity_id in self._old_state_ids:
+                        del self._old_state_ids[dbstate.entity_id]
                 except (TypeError, ValueError):
                     _LOGGER.warning(
                         "State is not JSON serializable: %s",
@@ -410,8 +420,6 @@ class Recorder(threading.Thread):
             if not self.commit_interval:
                 self._commit_event_session_or_retry()
 
-            self.queue.task_done()
-
     def _send_keep_alive(self):
         try:
             _LOGGER.debug("Sending keepalive")
@@ -420,7 +428,8 @@ class Recorder(threading.Thread):
         except Exception as err:  # pylint: disable=broad-except
             # Must catch the exception to prevent the loop from collapsing
             _LOGGER.error(
-                "Error in database connectivity during keepalive: %s.", err,
+                "Error in database connectivity during keepalive: %s",
+                err,
             )
             self._reopen_event_session()
 
@@ -494,8 +503,20 @@ class Recorder(threading.Thread):
         self.queue.put(event)
 
     def block_till_done(self):
-        """Block till all events processed."""
-        self.queue.join()
+        """Block till all events processed.
+
+        This is only called in tests.
+
+        This only blocks until the queue is empty
+        which does not mean the recorder is done.
+
+        Call tests.common's wait_recording_done
+        after calling this to ensure the data
+        is in the database.
+        """
+        self._queue_watch.clear()
+        self.queue.put(WaitTask())
+        self._queue_watch.wait()
 
     def _setup_connection(self):
         """Ensure database is ready to fly."""
@@ -503,28 +524,49 @@ class Recorder(threading.Thread):
 
         def setup_recorder_connection(dbapi_connection, connection_record):
             """Dbapi specific connection settings."""
+            if self._completed_database_setup:
+                return
 
             # We do not import sqlite3 here so mysql/other
             # users do not have to pay for it to be loaded in
             # memory
-            if self.db_url.startswith("sqlite://"):
+            if self.db_url.startswith(SQLITE_URL_PREFIX):
                 old_isolation = dbapi_connection.isolation_level
                 dbapi_connection.isolation_level = None
                 cursor = dbapi_connection.cursor()
                 cursor.execute("PRAGMA journal_mode=WAL")
                 cursor.close()
                 dbapi_connection.isolation_level = old_isolation
+                # WAL mode only needs to be setup once
+                # instead of every time we open the sqlite connection
+                # as its persistent and isn't free to call every time.
+                self._completed_database_setup = True
             elif self.db_url.startswith("mysql"):
                 cursor = dbapi_connection.cursor()
                 cursor.execute("SET session wait_timeout=28800")
                 cursor.close()
 
-        if self.db_url == "sqlite://" or ":memory:" in self.db_url:
+        if self.db_url == SQLITE_URL_PREFIX or ":memory:" in self.db_url:
             kwargs["connect_args"] = {"check_same_thread": False}
             kwargs["poolclass"] = StaticPool
             kwargs["pool_reset_on_return"] = None
         else:
             kwargs["echo"] = False
+
+        if self.db_url != SQLITE_URL_PREFIX and self.db_url.startswith(
+            SQLITE_URL_PREFIX
+        ):
+            with self.hass.timeout.freeze(DOMAIN):
+                #
+                # Here we run an sqlite3 quick_check.  In the majority
+                # of cases, the quick_check takes under 10 seconds.
+                #
+                # On systems with very large databases and
+                # very slow disk or cpus, this can take a while.
+                #
+                validate_or_move_away_sqlite_database(
+                    self.db_url, self.db_integrity_check
+                )
 
         if self.engine is not None:
             self.engine.dispose()

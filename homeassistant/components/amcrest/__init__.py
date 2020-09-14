@@ -33,7 +33,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_s
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.service import async_extract_entity_ids
 
-from .binary_sensor import BINARY_SENSORS
+from .binary_sensor import BINARY_POLLED_SENSORS, BINARY_SENSORS, check_binary_sensors
 from .camera import CAMERA_SERVICES, STREAM_SOURCE_LIST
 from .const import (
     CAMERAS,
@@ -98,7 +98,7 @@ AMCREST_SCHEMA = vol.Schema(
         vol.Optional(CONF_FFMPEG_ARGUMENTS, default=DEFAULT_ARGUMENTS): cv.string,
         vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL): cv.time_period,
         vol.Optional(CONF_BINARY_SENSORS): vol.All(
-            cv.ensure_list, [vol.In(BINARY_SENSORS)], vol.Unique()
+            cv.ensure_list, [vol.In(BINARY_SENSORS)], vol.Unique(), check_binary_sensors
         ),
         vol.Optional(CONF_SENSORS): vol.All(
             cv.ensure_list, [vol.In(SENSORS)], vol.Unique()
@@ -271,7 +271,7 @@ def setup(hass, config):
             event_codes = [
                 BINARY_SENSORS[sensor_type][SENSOR_EVENT_CODE]
                 for sensor_type in binary_sensors
-                if BINARY_SENSORS[sensor_type][SENSOR_EVENT_CODE] is not None
+                if sensor_type not in BINARY_POLLED_SENSORS
             ]
             if event_codes:
                 _start_event_monitor(hass, name, api, event_codes)

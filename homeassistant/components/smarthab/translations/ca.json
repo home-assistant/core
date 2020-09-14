@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "service": "Error en l'intent de connexi\u00f3 a SmartHab. Pot ser que el servei no estigui disponible. Comprova la connexi\u00f3.",
+            "unknown_error": "Error inesperat",
+            "wrong_login": "Autenticaci\u00f3 inv\u00e0lida"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "Correu electr\u00f2nic",
+                    "password": "Contrasenya"
+                },
+                "description": "Per motius t\u00e8cnics, assegura't utilitzar un compte secundari espec\u00edfic per a la configuraci\u00f3 de Home Assistant. Pots crear-ne un des de l'aplicaci\u00f3 SmartHab.",
+                "title": "Configuraci\u00f3 de SmartHab"
+            }
+        }
+    }
+}

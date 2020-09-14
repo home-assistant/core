@@ -12,9 +12,11 @@
                     "home_control_url": "Home Control URL",
                     "mydevolo_url": "mydevolo URL",
                     "password": "Passord",
-                    "username": "Brukernavn"
-                }
+                    "username": "E-postadresse / devolo-ID"
+                },
+                "title": ""
             }
         }
-    }
+    },
+    "title": ""
 }

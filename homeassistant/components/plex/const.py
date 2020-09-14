@@ -9,10 +9,13 @@ DEFAULT_PORT = 32400
 DEFAULT_SSL = False
 DEFAULT_VERIFY_SSL = True
 
+PLEXTV_THROTTLE = 60
+
 DEBOUNCE_TIMEOUT = 1
 DISPATCHERS = "dispatchers"
 PLATFORMS = frozenset(["media_player", "sensor"])
 PLATFORMS_COMPLETED = "platforms_completed"
+PLAYER_SOURCE = "player_source"
 SERVERS = "servers"
 WEBSOCKETS = "websockets"
 
@@ -42,3 +45,5 @@ AUTOMATIC_SETUP_STRING = "Obtain a new token from plex.tv"
 MANUAL_SETUP_STRING = "Configure Plex server manually"
 
 SERVICE_PLAY_ON_SONOS = "play_on_sonos"
+SERVICE_REFRESH_LIBRARY = "refresh_library"
+SERVICE_SCAN_CLIENTS = "scan_for_clients"

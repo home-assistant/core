@@ -14,10 +14,10 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
+    PERCENTAGE,
     POWER_WATT,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -25,11 +25,9 @@ from homeassistant.util.temperature import fahrenheit_to_celsius
 
 from .core import discovery
 from .core.const import (
-    CHANNEL_ANALOG_INPUT,
     CHANNEL_ELECTRICAL_MEASUREMENT,
     CHANNEL_HUMIDITY,
     CHANNEL_ILLUMINANCE,
-    CHANNEL_MULTISTATE_INPUT,
     CHANNEL_POWER_CONFIGURATION,
     CHANNEL_PRESSURE,
     CHANNEL_SMARTENERGY_METERING,
@@ -100,10 +98,10 @@ class Sensor(ZhaEntity):
         await super().async_added_to_hass()
         self._device_state_attributes.update(await self.async_state_attr_provider())
 
-        await self.async_accept_signal(
+        self.async_accept_signal(
             self._channel, SIGNAL_ATTR_UPDATED, self.async_set_state
         )
-        await self.async_accept_signal(
+        self.async_accept_signal(
             self._channel, SIGNAL_STATE_ATTR, self.async_update_state_attribute
         )
 
@@ -153,20 +151,13 @@ class Sensor(ZhaEntity):
         return round(float(value * self._multiplier) / self._divisor)
 
 
-@STRICT_MATCH(channel_names=CHANNEL_ANALOG_INPUT)
-class AnalogInput(Sensor):
-    """Sensor that displays analog input values."""
-
-    SENSOR_ATTR = "present_value"
-
-
 @STRICT_MATCH(channel_names=CHANNEL_POWER_CONFIGURATION)
 class Battery(Sensor):
     """Battery sensor of power configuration cluster."""
 
     SENSOR_ATTR = "battery_percentage_remaining"
     _device_class = DEVICE_CLASS_BATTERY
-    _unit = UNIT_PERCENTAGE
+    _unit = PERCENTAGE
 
     @staticmethod
     def formatter(value):
@@ -219,17 +210,11 @@ class ElectricalMeasurement(Sensor):
             return round(value, self._decimals)
         return round(value)
 
-
-@STRICT_MATCH(channel_names=CHANNEL_MULTISTATE_INPUT)
-class Text(Sensor):
-    """Sensor that displays string values."""
-
-    _device_class = None
-    _unit = None
-
-    def formatter(self, value) -> str:
-        """Return string value."""
-        return value
+    async def async_update(self) -> None:
+        """Retrieve latest state."""
+        if not self.available:
+            return
+        await super().async_update()
 
 
 @STRICT_MATCH(generic_ids=CHANNEL_ST_HUMIDITY_CLUSTER)
@@ -240,7 +225,7 @@ class Humidity(Sensor):
     SENSOR_ATTR = "measured_value"
     _device_class = DEVICE_CLASS_HUMIDITY
     _divisor = 100
-    _unit = UNIT_PERCENTAGE
+    _unit = PERCENTAGE
 
 
 @STRICT_MATCH(channel_names=CHANNEL_ILLUMINANCE)

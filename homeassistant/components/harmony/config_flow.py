@@ -14,7 +14,7 @@ from homeassistant.components.remote import (
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import callback
 
-from .const import DOMAIN, UNIQUE_ID
+from .const import DOMAIN, PREVIOUS_ACTIVE_ACTIVITY, UNIQUE_ID
 from .util import (
     find_best_name_for_remote,
     find_unique_id_for_remote,
@@ -86,6 +86,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         parsed_url = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION])
         friendly_name = discovery_info[ssdp.ATTR_UPNP_FRIENDLY_NAME]
 
+        if self._host_already_configured(parsed_url.hostname):
+            return self.async_abort(reason="already_configured")
+
         # pylint: disable=no-member
         self.context["title_placeholders"] = {"name": friendly_name}
 
@@ -148,12 +151,25 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _async_create_entry_from_valid_input(self, validated, user_input):
         """Single path to create the config entry from validated input."""
 
-        data = {CONF_NAME: validated[CONF_NAME], CONF_HOST: validated[CONF_HOST]}
+        data = {
+            CONF_NAME: validated[CONF_NAME],
+            CONF_HOST: validated[CONF_HOST],
+        }
         # Options from yaml are preserved, we will pull them out when
         # we setup the config entry
         data.update(_options_from_user_input(user_input))
 
         return self.async_create_entry(title=validated[CONF_NAME], data=data)
+
+    def _host_already_configured(self, host):
+        """See if we already have a harmony entry matching the host."""
+        for entry in self._async_current_entries():
+            if CONF_HOST not in entry.data:
+                continue
+
+            if entry.data[CONF_HOST] == host:
+                return True
+        return False
 
 
 def _options_from_user_input(user_input):
@@ -188,8 +204,11 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     ),
                 ): vol.Coerce(float),
                 vol.Optional(
-                    ATTR_ACTIVITY, default=self.config_entry.options.get(ATTR_ACTIVITY),
-                ): vol.In(remote.activity_names),
+                    ATTR_ACTIVITY,
+                    default=self.config_entry.options.get(
+                        ATTR_ACTIVITY, PREVIOUS_ACTIVE_ACTIVITY
+                    ),
+                ): vol.In([PREVIOUS_ACTIVE_ACTIVITY, *remote.activity_names]),
             }
         )
         return self.async_show_form(step_id="init", data_schema=data_schema)

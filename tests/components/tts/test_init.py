@@ -1,6 +1,4 @@
 """The tests for the TTS component."""
-import ctypes
-
 import pytest
 import yarl
 
@@ -89,7 +87,8 @@ def mutagen_mock():
 async def internal_url_mock(hass):
     """Mock internal URL of the instance."""
     await async_process_ha_core_config(
-        hass, {"internal_url": "http://example.local:8123"},
+        hass,
+        {"internal_url": "http://example.local:8123"},
     )
 
 
@@ -175,6 +174,41 @@ async def test_setup_component_and_test_service_with_config_language(
     await hass.async_block_till_done()
     assert (
         empty_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_de_-_demo.mp3"
+    ).is_file()
+
+
+async def test_setup_component_and_test_service_with_config_language_special(
+    hass, empty_cache_dir
+):
+    """Set up the demo platform and call service with extend language."""
+    import homeassistant.components.demo.tts as demo_tts
+
+    demo_tts.SUPPORT_LANGUAGES.append("en_US")
+    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+
+    config = {tts.DOMAIN: {"platform": "demo", "language": "en_US"}}
+
+    with assert_setup_component(1, tts.DOMAIN):
+        assert await async_setup_component(hass, tts.DOMAIN, config)
+
+    await hass.services.async_call(
+        tts.DOMAIN,
+        "demo_say",
+        {
+            "entity_id": "media_player.something",
+            tts.ATTR_MESSAGE: "There is someone at the door.",
+        },
+        blocking=True,
+    )
+    assert len(calls) == 1
+    assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_MUSIC
+    assert (
+        calls[0].data[ATTR_MEDIA_CONTENT_ID]
+        == "http://example.local:8123/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_demo.mp3"
+    )
+    await hass.async_block_till_done()
+    assert (
+        empty_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_demo.mp3"
     ).is_file()
 
 
@@ -265,11 +299,11 @@ async def test_setup_component_and_test_service_with_service_options(
             "entity_id": "media_player.something",
             tts.ATTR_MESSAGE: "There is someone at the door.",
             tts.ATTR_LANGUAGE: "de",
-            tts.ATTR_OPTIONS: {"voice": "alex"},
+            tts.ATTR_OPTIONS: {"voice": "alex", "age": 5},
         },
         blocking=True,
     )
-    opt_hash = ctypes.c_size_t(hash(frozenset({"voice": "alex"}))).value
+    opt_hash = tts._hash_options({"voice": "alex", "age": 5})
 
     assert len(calls) == 1
     assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_MUSIC
@@ -306,7 +340,7 @@ async def test_setup_component_and_test_with_service_options_def(hass, empty_cac
             },
             blocking=True,
         )
-        opt_hash = ctypes.c_size_t(hash(frozenset({"voice": "alex"}))).value
+        opt_hash = tts._hash_options({"voice": "alex"})
 
         assert len(calls) == 1
         assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_MUSIC
@@ -343,7 +377,7 @@ async def test_setup_component_and_test_service_with_service_options_wrong(
         },
         blocking=True,
     )
-    opt_hash = ctypes.c_size_t(hash(frozenset({"speed": 1}))).value
+    opt_hash = tts._hash_options({"speed": 1})
 
     assert len(calls) == 0
     await hass.async_block_till_done()

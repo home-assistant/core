@@ -1,12 +1,10 @@
 {
-    "title": "Arcam FMJ",
     "config": {
         "abort": {
             "already_configured": "Device was already setup.",
             "already_in_progress": "Config flow for device is already in progress.",
             "unable_to_connect": "Unable to connect to device."
         },
-        "error": {},
         "flow_title": "Arcam FMJ on {host}",
         "step": {
             "confirm": {

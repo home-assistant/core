@@ -377,7 +377,7 @@ async def async_handle_not_impl_msg(hass, context, message):
 
 async def async_handle_unsupported_msg(hass, context, message):
     """Handle an unsupported or invalid message type."""
-    _LOGGER.warning("Received unsupported message type: %s.", message.get("_type"))
+    _LOGGER.warning("Received unsupported message type: %s", message.get("_type"))
 
 
 async def async_handle_message(hass, context, message):

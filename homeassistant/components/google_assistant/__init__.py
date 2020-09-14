@@ -39,7 +39,7 @@ _LOGGER = logging.getLogger(__name__)
 ENTITY_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_EXPOSE): cv.boolean,
+        vol.Optional(CONF_EXPOSE, default=True): cv.boolean,
         vol.Optional(CONF_ALIASES): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_ROOM_HINT): cv.string,
     }
@@ -106,7 +106,7 @@ async def async_setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
 
         if agent_user_id is None:
             _LOGGER.warning(
-                "No agent_user_id supplied for request_sync. Call as a user or pass in user id as agent_user_id."
+                "No agent_user_id supplied for request_sync. Call as a user or pass in user id as agent_user_id"
             )
             return
 

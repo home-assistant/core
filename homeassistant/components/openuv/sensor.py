@@ -48,32 +48,32 @@ SENSORS = {
     TYPE_MAX_UV_INDEX: ("Max UV Index", "mdi:weather-sunny", UV_INDEX),
     TYPE_SAFE_EXPOSURE_TIME_1: (
         "Skin Type 1 Safe Exposure Time",
-        "mdi:timer",
+        "mdi:timer-outline",
         TIME_MINUTES,
     ),
     TYPE_SAFE_EXPOSURE_TIME_2: (
         "Skin Type 2 Safe Exposure Time",
-        "mdi:timer",
+        "mdi:timer-outline",
         TIME_MINUTES,
     ),
     TYPE_SAFE_EXPOSURE_TIME_3: (
         "Skin Type 3 Safe Exposure Time",
-        "mdi:timer",
+        "mdi:timer-outline",
         TIME_MINUTES,
     ),
     TYPE_SAFE_EXPOSURE_TIME_4: (
         "Skin Type 4 Safe Exposure Time",
-        "mdi:timer",
+        "mdi:timer-outline",
         TIME_MINUTES,
     ),
     TYPE_SAFE_EXPOSURE_TIME_5: (
         "Skin Type 5 Safe Exposure Time",
-        "mdi:timer",
+        "mdi:timer-outline",
         TIME_MINUTES,
     ),
     TYPE_SAFE_EXPOSURE_TIME_6: (
         "Skin Type 6 Safe Exposure Time",
-        "mdi:timer",
+        "mdi:timer-outline",
         TIME_MINUTES,
     ),
 }

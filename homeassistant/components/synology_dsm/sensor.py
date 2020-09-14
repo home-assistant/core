@@ -1,4 +1,7 @@
 """Support for Synology DSM sensors."""
+from datetime import timedelta
+from typing import Dict
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DISKS,
@@ -10,11 +13,13 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.temperature import display_temp
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.util.dt import utcnow
 
-from . import SynologyDSMDeviceEntity, SynologyDSMEntity
+from . import SynoApi, SynologyDSMDeviceEntity, SynologyDSMEntity
 from .const import (
     CONF_VOLUMES,
     DOMAIN,
+    INFORMATION_SENSORS,
     STORAGE_DISK_SENSORS,
     STORAGE_VOL_SENSORS,
     SYNO_API,
@@ -54,6 +59,11 @@ async def async_setup_entry(
                 )
                 for sensor_type in STORAGE_DISK_SENSORS
             ]
+
+    entities += [
+        SynoDSMInfoSensor(api, sensor_type, INFORMATION_SENSORS[sensor_type])
+        for sensor_type in INFORMATION_SENSORS
+    ]
 
     async_add_entities(entities)
 
@@ -104,4 +114,35 @@ class SynoDSMStorageSensor(SynologyDSMDeviceEntity):
         if self.entity_type in TEMP_SENSORS_KEYS:
             return display_temp(self.hass, attr, TEMP_CELSIUS, PRECISION_TENTHS)
 
+        return attr
+
+
+class SynoDSMInfoSensor(SynologyDSMEntity):
+    """Representation a Synology information sensor."""
+
+    def __init__(self, api: SynoApi, entity_type: str, entity_info: Dict[str, str]):
+        """Initialize the Synology SynoDSMInfoSensor entity."""
+        super().__init__(api, entity_type, entity_info)
+        self._previous_uptime = None
+        self._last_boot = None
+
+    @property
+    def state(self):
+        """Return the state."""
+        attr = getattr(self._api.information, self.entity_type)
+        if attr is None:
+            return None
+
+        # Temperature
+        if self.entity_type in TEMP_SENSORS_KEYS:
+            return display_temp(self.hass, attr, TEMP_CELSIUS, PRECISION_TENTHS)
+
+        if self.entity_type == "uptime":
+            # reboot happened or entity creation
+            if self._previous_uptime is None or self._previous_uptime > attr:
+                last_boot = utcnow() - timedelta(seconds=attr)
+                self._last_boot = last_boot.replace(microsecond=0).isoformat()
+
+            self._previous_uptime = attr
+            return self._last_boot
         return attr

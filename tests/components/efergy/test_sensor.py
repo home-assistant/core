@@ -35,14 +35,16 @@ def mock_responses(mock):
     """Mock responses for Efergy."""
     base_url = "https://engage.efergy.com/mobile_proxy/"
     mock.get(
-        f"{base_url}getInstant?token={token}", text=load_fixture("efergy_instant.json"),
+        f"{base_url}getInstant?token={token}",
+        text=load_fixture("efergy_instant.json"),
     )
     mock.get(
         f"{base_url}getEnergy?token={token}&offset=300&period=day",
         text=load_fixture("efergy_energy.json"),
     )
     mock.get(
-        f"{base_url}getBudget?token={token}", text=load_fixture("efergy_budget.json"),
+        f"{base_url}getBudget?token={token}",
+        text=load_fixture("efergy_budget.json"),
     )
     mock.get(
         f"{base_url}getCost?token={token}&offset=300&period=day",
@@ -75,8 +77,9 @@ class TestEfergySensor(unittest.TestCase):
         """Initialize values for this test case class."""
         self.hass = get_test_home_assistant()
         self.config = ONE_SENSOR_CONFIG
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tear_down_cleanup(self):
         """Stop everything that was started."""
         self.hass.stop()
 

@@ -8,6 +8,17 @@
         "error": {
             "one": "um",
             "other": "v\u00e1rios"
+        },
+        "flow_title": "UPnP/IGD: {name}",
+        "step": {
+            "ssdp_confirm": {
+                "description": "Deseja configurar este dispositivo UPnP/IGD?"
+            },
+            "user": {
+                "data": {
+                    "usn": "Dispositivo"
+                }
+            }
         }
     }
 }

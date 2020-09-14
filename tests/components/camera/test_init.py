@@ -14,7 +14,7 @@ from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_START
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import PropertyMock, mock_open, patch
+from tests.async_mock import Mock, PropertyMock, mock_open, patch
 from tests.components.camera import common
 
 
@@ -27,7 +27,8 @@ async def mock_camera_fixture(hass):
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.demo.camera.Path.read_bytes", return_value=b"Test",
+        "homeassistant.components.demo.camera.Path.read_bytes",
+        return_value=b"Test",
     ):
         yield
 
@@ -113,8 +114,9 @@ async def test_snapshot_service(hass, mock_camera):
     """Test snapshot service."""
     mopen = mock_open()
 
-    with patch(
-        "homeassistant.components.camera.open", mopen, create=True
+    with patch("homeassistant.components.camera.open", mopen, create=True), patch(
+        "homeassistant.components.camera.os.path.exists",
+        Mock(spec="os.path.exists", return_value=True),
     ), patch.object(hass.config, "is_allowed_path", return_value=True):
         await hass.services.async_call(
             camera.DOMAIN,
@@ -258,7 +260,8 @@ async def test_play_stream_service_no_source(hass, mock_camera, mock_stream):
 async def test_handle_play_stream_service(hass, mock_camera, mock_stream):
     """Test camera play_stream service."""
     await async_process_ha_core_config(
-        hass, {"external_url": "https://example.com"},
+        hass,
+        {"external_url": "https://example.com"},
     )
     await async_setup_component(hass, "media_player", {})
     with patch(

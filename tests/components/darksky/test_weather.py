@@ -23,8 +23,9 @@ class TestDarkSky(unittest.TestCase):
         self.hass.config.units = METRIC_SYSTEM
         self.lat = self.hass.config.latitude = 37.8267
         self.lon = self.hass.config.longitude = -122.423
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):
+    def tear_down_cleanup(self):
         """Stop down everything that was started."""
         self.hass.stop()
 

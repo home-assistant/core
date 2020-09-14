@@ -25,6 +25,8 @@
         "step": {
             "init": {
                 "data": {
+                    "limit": "Limit",
+                    "order": "Order",
                     "scan_interval": "Update frequency"
                 },
                 "title": "Configure options for Transmission"

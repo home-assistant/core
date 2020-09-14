@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "unknown": "Erro inesperado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Servidor"
+                }
+            }
+        }
+    }
+}

@@ -19,7 +19,7 @@ async def test_invalid_path_setup(hass):
 async def test_valid_path_setup(hass):
     """Test that a valid path is setup."""
     cwd = os.path.join(os.path.dirname(__file__))
-    hass.config.whitelist_external_dirs = {cwd}
+    hass.config.allowlist_external_dirs = {cwd}
     with patch.object(folder_watcher, "Watcher"):
         assert await async_setup_component(
             hass,

@@ -16,6 +16,7 @@
             "response_error": "Onbekannte Feeler vum Apparat",
             "unknown_connection_error": "Onbekannte Feeler beim verbannen mam Apparat"
         },
+        "flow_title": "Huawei LTE: {name}",
         "step": {
             "user": {
                 "data": {

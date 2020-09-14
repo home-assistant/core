@@ -31,8 +31,7 @@ from homeassistant.const import (
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
 )
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers import config_validation as cv, event
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.sun import get_astral_event_date
 from homeassistant.util import slugify
@@ -224,7 +223,7 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
         if self.is_on:
             return
 
-        self.unsub_tracker = async_track_time_interval(
+        self.unsub_tracker = event.async_track_time_interval(
             self.hass,
             self.async_flux_update,
             datetime.timedelta(seconds=self._interval),

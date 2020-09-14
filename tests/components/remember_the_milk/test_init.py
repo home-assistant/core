@@ -30,8 +30,9 @@ class TestConfiguration(unittest.TestCase):
                 }
             }
         )
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):
+    def tear_down_cleanup(self):
         """Exit Home Assistant."""
         self.hass.stop()
 

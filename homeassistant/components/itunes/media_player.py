@@ -388,7 +388,7 @@ class ItunesDevice(MediaPlayerEntity):
 
     def media_next_track(self):
         """Send media_next command to media player."""
-        response = self.client.next()
+        response = self.client.next()  # pylint: disable=not-callable
         self.update_state(response)
 
     def media_previous_track(self):

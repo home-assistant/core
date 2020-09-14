@@ -87,10 +87,7 @@ class TestHDDTempSensor(unittest.TestCase):
                 "model": "WDC WD15EARS-00Z5B1",
             },
         }
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     @patch("telnetlib.Telnet", new=TelnetMock)
     def test_hddtemp_min_config(self):

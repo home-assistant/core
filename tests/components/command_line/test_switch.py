@@ -20,10 +20,7 @@ class TestCommandSwitch(unittest.TestCase):
     def setUp(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     def test_state_none(self):
         """Test with none state."""
@@ -183,13 +180,14 @@ class TestCommandSwitch(unittest.TestCase):
             "echo 'off command'",
             None,
             None,
+            15,
         ]
 
         no_state_device = command_line.CommandSwitch(*init_args)
         assert no_state_device.assumed_state
 
         # Set state command
-        init_args[-2] = "cat {}"
+        init_args[-3] = "cat {}"
 
         state_device = command_line.CommandSwitch(*init_args)
         assert not state_device.assumed_state
@@ -204,6 +202,7 @@ class TestCommandSwitch(unittest.TestCase):
             "echo 'off command'",
             False,
             None,
+            15,
         ]
 
         test_switch = command_line.CommandSwitch(*init_args)

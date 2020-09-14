@@ -1,0 +1,44 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "already_in_progress": "El flux de configuraci\u00f3 de la passarel\u00b7la ja est\u00e0 en curs.",
+            "not_xiaomi_aqara": "No \u00e9s una passarel\u00b7la Xiaomi Aqara, el dispositiu descobert no coincideix amb cap passarel\u00b7la coneguda"
+        },
+        "error": {
+            "discovery_error": "No s'ha pogut descobrir cap passarel\u00b7la Xiaomi Aqara, prova d'utilitzar la IP del dispositiu que executa Home Assistant com a interf\u00edcie",
+            "invalid_host": "Adre\u00e7a IP no v\u00e0lida, consulta https://www.home-assistant.io/integrations/xiaomi_aqara/#connection-problem",
+            "invalid_interface": "Interf\u00edcie de xarxa no v\u00e0lida",
+            "invalid_key": "Clau de la passarel\u00b7la no v\u00e0lida",
+            "invalid_mac": "Adre\u00e7a MAC no v\u00e0lida",
+            "not_found_error": "No s'ha pogut descobrir cap passarel\u00b7la Zeroconf per obtenir informaci\u00f3 necess\u00e0ria, prova d'utilitzar la IP del dispositiu que executa Home Assistant com a interf\u00edcie"
+        },
+        "flow_title": "Passarel\u00b7la Xiaomi Aqara: {name}",
+        "step": {
+            "select": {
+                "data": {
+                    "select_ip": "IP de la passarel\u00b7la"
+                },
+                "description": "Torna a executar la configuraci\u00f3 si vols connectar passarel\u00b7les addicionals",
+                "title": "Selecciona la passarel\u00b7la Xiaomi Aqara a la qual connectar-te"
+            },
+            "settings": {
+                "data": {
+                    "key": "Clau de la passarel\u00b7la",
+                    "name": "Nom de la passarel\u00b7la"
+                },
+                "description": "La clau (contrasenya) es pot obtenir mitjan\u00e7ant aquest tutorial: https://www.domoticz.com/wiki/Xiaomi_Gateway_(Aqara)#Adding_the_Xiaomi_Gateway_to_Domoticz. Si no es proporciona la clau, nom\u00e9s seran accessibles els sensors",
+                "title": "Passarel\u00b7la Xiaomi Aqara, configuraci\u00f3 opcional"
+            },
+            "user": {
+                "data": {
+                    "host": "Adre\u00e7a IP (opcional)",
+                    "interface": "Interf\u00edcie de xarxa a utilitzar",
+                    "mac": "Adre\u00e7a MAC (opcional)"
+                },
+                "description": "Connecta't a la teva passarel\u00b7la Xiaomi Aqara, si les adreces IP i MAC es deixen buides s'utilitzar\u00e0 els descobriment autom\u00e0tic",
+                "title": "Passarel\u00b7la Xiaomi Aqara"
+            }
+        }
+    }
+}

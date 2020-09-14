@@ -51,9 +51,9 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             vol.All(
-                cv.deprecated(CONF_USB_PATH, invalidation_version="0.112"),
-                cv.deprecated(CONF_BAUDRATE, invalidation_version="0.112"),
-                cv.deprecated(CONF_RADIO_TYPE, invalidation_version="0.112"),
+                cv.deprecated(CONF_USB_PATH),
+                cv.deprecated(CONF_BAUDRATE),
+                cv.deprecated(CONF_RADIO_TYPE),
                 ZHA_CONFIG_SCHEMA,
             ),
         ),

@@ -10,7 +10,6 @@ from homeassistant.helpers.typing import HomeAssistantType
 from .const import _LOGGER, DOMAIN as ISY994_DOMAIN, ISY994_NODES, ISY994_PROGRAMS
 from .entity import ISYNodeEntity, ISYProgramEntity
 from .helpers import migrate_old_unique_ids
-from .services import async_setup_device_services
 
 
 async def async_setup_entry(
@@ -29,7 +28,6 @@ async def async_setup_entry(
 
     await migrate_old_unique_ids(hass, SWITCH, devices)
     async_add_entities(devices)
-    async_setup_device_services(hass)
 
 
 class ISYSwitchEntity(ISYNodeEntity, SwitchEntity):
@@ -45,12 +43,12 @@ class ISYSwitchEntity(ISYNodeEntity, SwitchEntity):
     def turn_off(self, **kwargs) -> None:
         """Send the turn off command to the ISY994 switch."""
         if not self._node.turn_off():
-            _LOGGER.debug("Unable to turn off switch.")
+            _LOGGER.debug("Unable to turn off switch")
 
     def turn_on(self, **kwargs) -> None:
         """Send the turn on command to the ISY994 switch."""
         if not self._node.turn_on():
-            _LOGGER.debug("Unable to turn on switch.")
+            _LOGGER.debug("Unable to turn on switch")
 
     @property
     def icon(self) -> str:

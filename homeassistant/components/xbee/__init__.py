@@ -15,7 +15,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PIN,
     EVENT_HOMEASSISTANT_STOP,
-    UNIT_PERCENTAGE,
+    PERCENTAGE,
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
@@ -305,7 +305,7 @@ class XBeeDigitalIn(Entity):
         pin_name = xb_const.DIGITAL_PINS[self._config.pin]
         if pin_name not in sample:
             _LOGGER.warning(
-                "Pin %s (%s) was not in the sample provided by Zigbee device %s.",
+                "Pin %s (%s) was not in the sample provided by Zigbee device %s",
                 self._config.pin,
                 pin_name,
                 hexlify(self._config.address),
@@ -421,7 +421,7 @@ class XBeeAnalogIn(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
-        return UNIT_PERCENTAGE
+        return PERCENTAGE
 
     def update(self):
         """Get the latest reading from the ADC."""

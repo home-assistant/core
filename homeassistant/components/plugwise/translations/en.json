@@ -8,6 +8,7 @@
             "invalid_auth": "Invalid authentication, check the 8 characters of your Smile ID",
             "unknown": "Unexpected error"
         },
+        "flow_title": "Smile: {name}",
         "step": {
             "user": {
                 "data": {
@@ -16,6 +17,16 @@
                 },
                 "description": "Details",
                 "title": "Connect to the Smile"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Scan Interval (seconds)"
+                },
+                "description": "Adjust Plugwise Options"
             }
         }
     }

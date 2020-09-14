@@ -83,20 +83,78 @@ async def async_setup_entry(
     update_segments()
 
 
-class WLEDLight(LightEntity, WLEDDeviceEntity):
-    """Defines a WLED light."""
+class WLEDMasterLight(LightEntity, WLEDDeviceEntity):
+    """Defines a WLED master light."""
+
+    def __init__(self, entry_id: str, coordinator: WLEDDataUpdateCoordinator):
+        """Initialize WLED master light."""
+        super().__init__(
+            entry_id=entry_id,
+            coordinator=coordinator,
+            name=f"{coordinator.data.info.name} Master",
+            icon="mdi:led-strip-variant",
+        )
+
+    @property
+    def unique_id(self) -> str:
+        """Return the unique ID for this sensor."""
+        return f"{self.coordinator.data.info.mac_address}"
+
+    @property
+    def supported_features(self) -> int:
+        """Flag supported features."""
+        return SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
+
+    @property
+    def brightness(self) -> Optional[int]:
+        """Return the brightness of this light between 1..255."""
+        return self.coordinator.data.state.brightness
+
+    @property
+    def is_on(self) -> bool:
+        """Return the state of the light."""
+        return bool(self.coordinator.data.state.on)
+
+    @wled_exception_handler
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off the light."""
+        data = {ATTR_ON: False}
+
+        if ATTR_TRANSITION in kwargs:
+            # WLED uses 100ms per unit, so 10 = 1 second.
+            data[ATTR_TRANSITION] = round(kwargs[ATTR_TRANSITION] * 10)
+
+        await self.coordinator.wled.master(**data)
+
+    @wled_exception_handler
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn on the light."""
+        data = {ATTR_ON: True}
+
+        if ATTR_TRANSITION in kwargs:
+            # WLED uses 100ms per unit, so 10 = 1 second.
+            data[ATTR_TRANSITION] = round(kwargs[ATTR_TRANSITION] * 10)
+
+        if ATTR_BRIGHTNESS in kwargs:
+            data[ATTR_BRIGHTNESS] = kwargs[ATTR_BRIGHTNESS]
+
+        await self.coordinator.wled.master(**data)
+
+
+class WLEDSegmentLight(LightEntity, WLEDDeviceEntity):
+    """Defines a WLED light based on a segment."""
 
     def __init__(
         self, entry_id: str, coordinator: WLEDDataUpdateCoordinator, segment: int
     ):
-        """Initialize WLED light."""
+        """Initialize WLED segment light."""
         self._rgbw = coordinator.data.info.leds.rgbw
         self._segment = segment
 
-        # Only apply the segment ID if it is not the first segment
-        name = coordinator.data.info.name
-        if segment != 0:
-            name += f" {segment}"
+        # If this is the one and only segment, use a simpler name
+        name = f"{coordinator.data.info.name} Segment {self._segment}"
+        if len(coordinator.data.state.segments) == 1:
+            name = coordinator.data.info.name
 
         super().__init__(
             entry_id=entry_id,
@@ -155,7 +213,16 @@ class WLEDLight(LightEntity, WLEDDeviceEntity):
     @property
     def brightness(self) -> Optional[int]:
         """Return the brightness of this light between 1..255."""
-        return self.coordinator.data.state.brightness
+        state = self.coordinator.data.state
+
+        # If this is the one and only segment, calculate brightness based
+        # on the master and segment brightness
+        if len(state.segments) == 1:
+            return int(
+                (state.segments[self._segment].brightness * state.brightness) / 255
+            )
+
+        return state.segments[self._segment].brightness
 
     @property
     def white_value(self) -> Optional[int]:
@@ -187,18 +254,30 @@ class WLEDLight(LightEntity, WLEDDeviceEntity):
     @property
     def is_on(self) -> bool:
         """Return the state of the light."""
-        return bool(self.coordinator.data.state.on)
+        state = self.coordinator.data.state
+
+        # If there is a single segment, take master into account
+        if len(state.segments) == 1 and not state.on:
+            return False
+
+        return bool(state.segments[self._segment].on)
 
     @wled_exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
-        data = {ATTR_ON: False, ATTR_SEGMENT_ID: self._segment}
+        data = {ATTR_ON: False}
 
         if ATTR_TRANSITION in kwargs:
             # WLED uses 100ms per unit, so 10 = 1 second.
             data[ATTR_TRANSITION] = round(kwargs[ATTR_TRANSITION] * 10)
 
-        await self.coordinator.wled.light(**data)
+        # If there is a single segment, control via the master
+        if len(self.coordinator.data.state.segments) == 1:
+            await self.coordinator.wled.master(**data)
+            return
+
+        data[ATTR_SEGMENT_ID] = self._segment
+        await self.coordinator.wled.segment(**data)
 
     @wled_exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -248,7 +327,23 @@ class WLEDLight(LightEntity, WLEDDeviceEntity):
             else:
                 data[ATTR_COLOR_PRIMARY] += (self.white_value,)
 
-        await self.coordinator.wled.light(**data)
+        # When only 1 segment is present, switch along the master, and use
+        # the master for power/brightness control.
+        if len(self.coordinator.data.state.segments) == 1:
+            master_data = {ATTR_ON: True}
+            if ATTR_BRIGHTNESS in data:
+                master_data[ATTR_BRIGHTNESS] = data[ATTR_BRIGHTNESS]
+                data[ATTR_BRIGHTNESS] = 255
+
+            if ATTR_TRANSITION in data:
+                master_data[ATTR_TRANSITION] = data[ATTR_TRANSITION]
+                del data[ATTR_TRANSITION]
+
+            await self.coordinator.wled.segment(**data)
+            await self.coordinator.wled.master(**master_data)
+            return
+
+        await self.coordinator.wled.segment(**data)
 
     @wled_exception_handler
     async def async_effect(
@@ -273,45 +368,59 @@ class WLEDLight(LightEntity, WLEDDeviceEntity):
         if speed is not None:
             data[ATTR_SPEED] = speed
 
-        await self.coordinator.wled.light(**data)
+        await self.coordinator.wled.segment(**data)
 
 
 @callback
 def async_update_segments(
     entry: ConfigEntry,
     coordinator: WLEDDataUpdateCoordinator,
-    current: Dict[int, WLEDLight],
+    current: Dict[int, WLEDSegmentLight],
     async_add_entities,
 ) -> None:
     """Update segments."""
     segment_ids = {light.segment_id for light in coordinator.data.state.segments}
     current_ids = set(current)
 
-    # Process new segments, add them to Home Assistant
-    new_segments = []
-    for segment_id in segment_ids - current_ids:
-        current[segment_id] = WLEDLight(entry.entry_id, coordinator, segment_id)
-        new_segments.append(current[segment_id])
+    # Discard master (if present)
+    current_ids.discard(-1)
 
-    if new_segments:
-        async_add_entities(new_segments)
+    # Process new segments, add them to Home Assistant
+    new_entities = []
+    for segment_id in segment_ids - current_ids:
+        current[segment_id] = WLEDSegmentLight(entry.entry_id, coordinator, segment_id)
+        new_entities.append(current[segment_id])
+
+    # More than 1 segment now? Add master controls
+    if len(current_ids) < 2 and len(segment_ids) > 1:
+        current[-1] = WLEDMasterLight(entry.entry_id, coordinator)
+        new_entities.append(current[-1])
+
+    if new_entities:
+        async_add_entities(new_entities)
 
     # Process deleted segments, remove them from Home Assistant
     for segment_id in current_ids - segment_ids:
         coordinator.hass.async_create_task(
-            async_remove_segment(segment_id, coordinator, current)
+            async_remove_entity(segment_id, coordinator, current)
+        )
+
+    # Remove master if there is only 1 segment left
+    if len(current_ids) > 1 and len(segment_ids) < 2:
+        coordinator.hass.async_create_task(
+            async_remove_entity(-1, coordinator, current)
         )
 
 
-async def async_remove_segment(
-    segment_id: int,
+async def async_remove_entity(
+    index: int,
     coordinator: WLEDDataUpdateCoordinator,
-    current: Dict[int, WLEDLight],
+    current: Dict[int, WLEDSegmentLight],
 ) -> None:
     """Remove WLED segment light from Home Assistant."""
-    entity = current[segment_id]
+    entity = current[index]
     await entity.async_remove()
     registry = await async_get_entity_registry(coordinator.hass)
     if entity.entity_id in registry.entities:
         registry.async_remove(entity.entity_id)
-    del current[segment_id]
+    del current[index]

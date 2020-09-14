@@ -23,6 +23,7 @@ from homeassistant.const import CONF_NAME, CONF_PLATFORM, STATE_OFF, STATE_ON
 from homeassistant.setup import async_setup_component
 
 from .test_common import (
+    help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
     help_test_custom_availability_payload,
     help_test_default_availability_payload,
@@ -30,6 +31,7 @@ from .test_common import (
     help_test_discovery_removal,
     help_test_discovery_update,
     help_test_discovery_update_attr,
+    help_test_discovery_update_unchanged,
     help_test_entity_debug_info_message,
     help_test_entity_device_info_remove,
     help_test_entity_device_info_update,
@@ -44,6 +46,7 @@ from .test_common import (
     help_test_update_with_json_attrs_not_dict,
 )
 
+from tests.async_mock import patch
 from tests.common import async_fire_mqtt_message
 from tests.components.vacuum import common
 
@@ -543,6 +546,13 @@ async def test_missing_fan_speed_template(hass, mqtt_mock):
     assert state is None
 
 
+async def test_availability_when_connection_lost(hass, mqtt_mock):
+    """Test availability after MQTT disconnection."""
+    await help_test_availability_when_connection_lost(
+        hass, mqtt_mock, vacuum.DOMAIN, DEFAULT_CONFIG_2
+    )
+
+
 async def test_availability_without_topic(hass, mqtt_mock):
     """Test availability without defined availability topic."""
     await help_test_availability_without_topic(
@@ -617,7 +627,7 @@ async def test_unique_id(hass, mqtt_mock):
             },
         ]
     }
-    await help_test_unique_id(hass, vacuum.DOMAIN, config)
+    await help_test_unique_id(hass, mqtt_mock, vacuum.DOMAIN, config)
 
 
 async def test_discovery_removal_vacuum(hass, mqtt_mock, caplog):
@@ -633,6 +643,17 @@ async def test_discovery_update_vacuum(hass, mqtt_mock, caplog):
     await help_test_discovery_update(
         hass, mqtt_mock, caplog, vacuum.DOMAIN, data1, data2
     )
+
+
+async def test_discovery_update_unchanged_vacuum(hass, mqtt_mock, caplog):
+    """Test update of discovered vacuum."""
+    data1 = '{ "name": "Beer", "command_topic": "test_topic" }'
+    with patch(
+        "homeassistant.components.mqtt.vacuum.schema_legacy.MqttVacuum.discovery_update"
+    ) as discovery_update:
+        await help_test_discovery_update_unchanged(
+            hass, mqtt_mock, caplog, vacuum.DOMAIN, data1, discovery_update
+        )
 
 
 @pytest.mark.no_fail_on_log_exception

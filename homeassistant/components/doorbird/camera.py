@@ -10,7 +10,12 @@ from homeassistant.components.camera import SUPPORT_STREAM, Camera
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN, DOOR_STATION, DOOR_STATION_INFO
+from .const import (
+    DOMAIN,
+    DOOR_STATION,
+    DOOR_STATION_EVENT_ENTITY_IDS,
+    DOOR_STATION_INFO,
+)
 from .entity import DoorBirdEntity
 
 _LAST_VISITOR_INTERVAL = datetime.timedelta(minutes=2)
@@ -23,8 +28,9 @@ _TIMEOUT = 15  # seconds
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the DoorBird camera platform."""
     config_entry_id = config_entry.entry_id
-    doorstation = hass.data[DOMAIN][config_entry_id][DOOR_STATION]
-    doorstation_info = hass.data[DOMAIN][config_entry_id][DOOR_STATION_INFO]
+    config_data = hass.data[DOMAIN][config_entry_id]
+    doorstation = config_data[DOOR_STATION]
+    doorstation_info = config_data[DOOR_STATION_INFO]
     device = doorstation.device
 
     async_add_entities(
@@ -35,6 +41,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 device.live_image_url,
                 "live",
                 f"{doorstation.name} Live",
+                doorstation.doorstation_events,
                 _LIVE_INTERVAL,
                 device.rtsp_live_video_url,
             ),
@@ -44,6 +51,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 device.history_image_url(1, "doorbell"),
                 "last_ring",
                 f"{doorstation.name} Last Ring",
+                [],
                 _LAST_VISITOR_INTERVAL,
             ),
             DoorBirdCamera(
@@ -52,6 +60,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 device.history_image_url(1, "motionsensor"),
                 "last_motion",
                 f"{doorstation.name} Last Motion",
+                [],
                 _LAST_MOTION_INTERVAL,
             ),
         ]
@@ -68,6 +77,7 @@ class DoorBirdCamera(DoorBirdEntity, Camera):
         url,
         camera_id,
         name,
+        doorstation_events,
         interval=None,
         stream_url=None,
     ):
@@ -81,6 +91,7 @@ class DoorBirdCamera(DoorBirdEntity, Camera):
         self._interval = interval or datetime.timedelta
         self._last_update = datetime.datetime.min
         self._unique_id = f"{self._mac_addr}_{camera_id}"
+        self._doorstation_events = doorstation_events
 
     async def stream_source(self):
         """Return the stream source."""
@@ -124,3 +135,21 @@ class DoorBirdCamera(DoorBirdEntity, Camera):
                 "DoorBird %s: Error getting camera image: %s", self._name, error
             )
             return self._last_image
+
+    async def async_added_to_hass(self):
+        """Add callback after being added to hass.
+
+        Registers entity_id map for the logbook
+        """
+        event_to_entity_id = self.hass.data[DOMAIN].setdefault(
+            DOOR_STATION_EVENT_ENTITY_IDS, {}
+        )
+        for event in self._doorstation_events:
+            event_to_entity_id[event] = self.entity_id
+
+    async def will_remove_from_hass(self):
+        """Unregister entity_id map for the logbook."""
+        event_to_entity_id = self.hass.data[DOMAIN][DOOR_STATION_EVENT_ENTITY_IDS]
+        for event in self._doorstation_events:
+            if event in event_to_entity_id:
+                del event_to_entity_id[event]

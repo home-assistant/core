@@ -80,7 +80,9 @@ async def test_setup_recovers_when_setup_raises(hass):
     assert platform2_setup.called
 
 
-@patch("homeassistant.helpers.entity_component.EntityComponent.async_setup_platform",)
+@patch(
+    "homeassistant.helpers.entity_component.EntityComponent.async_setup_platform",
+)
 @patch("homeassistant.setup.async_setup_component", return_value=True)
 async def test_setup_does_discovery(mock_setup_component, mock_setup, hass):
     """Test setup for discovery."""
@@ -171,7 +173,7 @@ async def test_extract_from_service_available_device(hass):
     )
 
 
-async def test_platform_not_ready(hass):
+async def test_platform_not_ready(hass, legacy_patchable_time):
     """Test that we retry when platform not ready."""
     platform1_setup = Mock(side_effect=[PlatformNotReady, PlatformNotReady, None])
     mock_integration(hass, MockModule("mod1"))

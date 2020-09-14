@@ -1,10 +1,12 @@
 """The tests for the generic_thermostat."""
 import datetime
+from os import path
 
 import pytest
 import pytz
 import voluptuous as vol
 
+from homeassistant import config as hass_config
 from homeassistant.components import input_boolean, switch
 from homeassistant.components.climate.const import (
     ATTR_PRESET_MODE,
@@ -15,8 +17,12 @@ from homeassistant.components.climate.const import (
     PRESET_AWAY,
     PRESET_NONE,
 )
+from homeassistant.components.generic_thermostat import (
+    DOMAIN as GENERIC_THERMOSTAT_DOMAIN,
+)
 from homeassistant.const import (
     ATTR_TEMPERATURE,
+    SERVICE_RELOAD,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
@@ -32,7 +38,11 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from tests.async_mock import patch
-from tests.common import assert_setup_component, mock_restore_cache
+from tests.common import (
+    assert_setup_component,
+    async_fire_time_changed,
+    mock_restore_cache,
+)
 from tests.components.climate import common
 
 ENTITY = "climate.test"
@@ -949,13 +959,13 @@ async def test_temp_change_ac_trigger_on_long_enough_3(hass, setup_comp_7):
     await hass.async_block_till_done()
     await common.async_set_temperature(hass, 25)
     test_time = datetime.datetime.now(pytz.UTC)
-    _send_time_changed(hass, test_time)
+    async_fire_time_changed(hass, test_time)
     await hass.async_block_till_done()
     assert 0 == len(calls)
-    _send_time_changed(hass, test_time + datetime.timedelta(minutes=5))
+    async_fire_time_changed(hass, test_time + datetime.timedelta(minutes=5))
     await hass.async_block_till_done()
     assert 0 == len(calls)
-    _send_time_changed(hass, test_time + datetime.timedelta(minutes=10))
+    async_fire_time_changed(hass, test_time + datetime.timedelta(minutes=10))
     await hass.async_block_till_done()
     assert 1 == len(calls)
     call = calls[0]
@@ -972,24 +982,19 @@ async def test_temp_change_ac_trigger_off_long_enough_3(hass, setup_comp_7):
     await hass.async_block_till_done()
     await common.async_set_temperature(hass, 25)
     test_time = datetime.datetime.now(pytz.UTC)
-    _send_time_changed(hass, test_time)
+    async_fire_time_changed(hass, test_time)
     await hass.async_block_till_done()
     assert 0 == len(calls)
-    _send_time_changed(hass, test_time + datetime.timedelta(minutes=5))
+    async_fire_time_changed(hass, test_time + datetime.timedelta(minutes=5))
     await hass.async_block_till_done()
     assert 0 == len(calls)
-    _send_time_changed(hass, test_time + datetime.timedelta(minutes=10))
+    async_fire_time_changed(hass, test_time + datetime.timedelta(minutes=10))
     await hass.async_block_till_done()
     assert 1 == len(calls)
     call = calls[0]
     assert HASS_DOMAIN == call.domain
     assert SERVICE_TURN_OFF == call.service
     assert ENT_SWITCH == call.data["entity_id"]
-
-
-def _send_time_changed(hass, now):
-    """Send a time changed event."""
-    hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: now})
 
 
 @pytest.fixture
@@ -1025,13 +1030,13 @@ async def test_temp_change_heater_trigger_on_long_enough_2(hass, setup_comp_8):
     await hass.async_block_till_done()
     await common.async_set_temperature(hass, 25)
     test_time = datetime.datetime.now(pytz.UTC)
-    _send_time_changed(hass, test_time)
+    async_fire_time_changed(hass, test_time)
     await hass.async_block_till_done()
     assert 0 == len(calls)
-    _send_time_changed(hass, test_time + datetime.timedelta(minutes=5))
+    async_fire_time_changed(hass, test_time + datetime.timedelta(minutes=5))
     await hass.async_block_till_done()
     assert 0 == len(calls)
-    _send_time_changed(hass, test_time + datetime.timedelta(minutes=10))
+    async_fire_time_changed(hass, test_time + datetime.timedelta(minutes=10))
     await hass.async_block_till_done()
     assert 1 == len(calls)
     call = calls[0]
@@ -1048,13 +1053,13 @@ async def test_temp_change_heater_trigger_off_long_enough_2(hass, setup_comp_8):
     await hass.async_block_till_done()
     await common.async_set_temperature(hass, 25)
     test_time = datetime.datetime.now(pytz.UTC)
-    _send_time_changed(hass, test_time)
+    async_fire_time_changed(hass, test_time)
     await hass.async_block_till_done()
     assert 0 == len(calls)
-    _send_time_changed(hass, test_time + datetime.timedelta(minutes=5))
+    async_fire_time_changed(hass, test_time + datetime.timedelta(minutes=5))
     await hass.async_block_till_done()
     assert 0 == len(calls)
-    _send_time_changed(hass, test_time + datetime.timedelta(minutes=10))
+    async_fire_time_changed(hass, test_time + datetime.timedelta(minutes=10))
     await hass.async_block_till_done()
     assert 1 == len(calls)
     call = calls[0]
@@ -1247,3 +1252,46 @@ def _mock_restore_cache(hass, temperature=20, hvac_mode=HVAC_MODE_OFF):
             ),
         ),
     )
+
+
+async def test_reload(hass):
+    """Test we can reload."""
+
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "climate": {
+                "platform": "generic_thermostat",
+                "name": "test",
+                "heater": "switch.any",
+                "target_sensor": "sensor.any",
+            }
+        },
+    )
+
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 1
+    assert hass.states.get("climate.test") is not None
+
+    yaml_path = path.join(
+        _get_fixtures_base_path(),
+        "fixtures",
+        "generic_thermostat/configuration.yaml",
+    )
+    with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
+        await hass.services.async_call(
+            GENERIC_THERMOSTAT_DOMAIN,
+            SERVICE_RELOAD,
+            {},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 1
+    assert hass.states.get("climate.test") is None
+    assert hass.states.get("climate.reload")
+
+
+def _get_fixtures_base_path():
+    return path.dirname(path.dirname(path.dirname(__file__)))

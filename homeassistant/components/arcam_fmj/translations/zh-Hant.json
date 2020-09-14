@@ -1,4 +1,24 @@
 {
+    "config": {
+        "abort": {
+            "already_configured": "\u8a2d\u5099\u5df2\u8a2d\u5b9a\u3002",
+            "already_in_progress": "\u8a2d\u5099\u8a2d\u5b9a\u5df2\u7d93\u9032\u884c\u4e2d\u3002",
+            "unable_to_connect": "\u7121\u6cd5\u9023\u7dda\u81f3\u8a2d\u5099\u3002"
+        },
+        "flow_title": "Arcam FMJ \uff08{host}\uff09",
+        "step": {
+            "confirm": {
+                "description": "\u662f\u5426\u8981\u5c07 Arcam FMJ  `{host}` \u65b0\u589e\u81f3 Home Assistant\uff1f"
+            },
+            "user": {
+                "data": {
+                    "host": "\u4e3b\u6a5f\u7aef",
+                    "port": "\u901a\u8a0a\u57e0"
+                },
+                "description": "\u8acb\u8f38\u5165\u4e3b\u6a5f\u7aef\u540d\u7a31\u6216 Heos \u8a2d\u5099 IP \u4f4d\u5740\u3002"
+            }
+        }
+    },
     "device_automation": {
         "trigger_type": {
             "turn_on": "{entity_name} \u4f9d\u9700\u6c42\u958b\u555f"

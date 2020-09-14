@@ -59,7 +59,7 @@ class FreeboxWifiSwitch(SwitchEntity):
             await self._router.wifi.set_global_config(wifi_config)
         except InsufficientPermissionsError:
             _LOGGER.warning(
-                "Home Assistant does not have permissions to modify the Freebox settings. Please refer to documentation."
+                "Home Assistant does not have permissions to modify the Freebox settings. Please refer to documentation"
             )
 
     async def async_turn_on(self, **kwargs):

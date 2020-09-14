@@ -64,7 +64,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.warning(
             "Currency ID %s or display currency %s "
             "is not available. Using 1 (bitcoin) "
-            "and USD.",
+            "and USD",
             currency_id,
             display_currency,
         )

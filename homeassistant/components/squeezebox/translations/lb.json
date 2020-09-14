@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert",
+            "no_server_found": "Kee LMS Server fonnt."
+        },
+        "error": {
+            "cannot_connect": "Feeler beim verbannen",
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun",
+            "no_server_found": "Konnt kee Server automatesch entdecken.",
+            "unknown": "Onerwaarte Feeler"
+        },
+        "flow_title": "Logitech Squeezebox: {host}",
+        "step": {
+            "edit": {
+                "data": {
+                    "host": "Host",
+                    "password": "Passwuert",
+                    "port": "Port",
+                    "username": "Benotzernumm"
+                },
+                "title": "Verbindungs Informatiounen \u00e4nneren"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "title": "Logitech Media Server ariichten"
+            }
+        }
+    },
+    "title": "Logitech Squeezebox"
+}

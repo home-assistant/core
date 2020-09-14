@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "one_instance_allowed": "Une seule instance est n\u00e9cessaire.",
+            "wrong_server_id": "L'ID du serveur n'est pas valide"
+        },
+        "step": {
+            "user": {
+                "description": "Voulez-vous vraiment configurer SpeedTest ?",
+                "title": "Configurer SpeedTest"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "retrive_error": "Erreur lors de la r\u00e9cup\u00e9ration de la liste des serveurs"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "manual": "D\u00e9sactiver la mise \u00e0 jour automatique",
+                    "scan_interval": "Fr\u00e9quence de mise \u00e0 jour (minutes)",
+                    "server_name": "S\u00e9lectionner le serveur de test"
+                }
+            }
+        }
+    }
+}

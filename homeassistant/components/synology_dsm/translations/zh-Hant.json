@@ -44,7 +44,8 @@
         "step": {
             "init": {
                 "data": {
-                    "scan_interval": "\u6383\u63cf\u9593\u9694\u5206\u6578"
+                    "scan_interval": "\u6383\u63cf\u9593\u9694\u5206\u6578",
+                    "timeout": "\u903e\u6642\uff08\u79d2\uff09"
                 }
             }
         }

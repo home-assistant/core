@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado"
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar",
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
+            "old_firmware": "Firmware antiguo no compatible en el dispositivo Bond - actual\u00edzalo antes de continuar",
+            "unknown": "Error inesperado"
+        },
+        "flow_title": "Bond: {bond_id} ({host})",
+        "step": {
+            "confirm": {
+                "data": {
+                    "access_token": "Token de acceso"
+                },
+                "description": "\u00bfQuieres configurar {bond_id}?"
+            },
+            "user": {
+                "data": {
+                    "access_token": "Token de acceso",
+                    "host": "Host"
+                }
+            }
+        }
+    }
+}

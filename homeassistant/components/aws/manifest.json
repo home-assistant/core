@@ -3,5 +3,5 @@
   "name": "Amazon Web Services (AWS)",
   "documentation": "https://www.home-assistant.io/integrations/aws",
   "requirements": ["aiobotocore==0.11.1"],
-  "codeowners": ["@awarecan", "@robbiet480"]
+  "codeowners": ["@awarecan"]
 }

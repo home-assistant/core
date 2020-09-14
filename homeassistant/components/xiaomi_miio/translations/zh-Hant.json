@@ -8,6 +8,7 @@
             "connect_error": "\u9023\u7dda\u5931\u6557",
             "no_device_selected": "\u672a\u9078\u64c7\u8a2d\u5099\uff0c\u8acb\u9078\u64c7\u4e00\u9805\u8a2d\u5099\u3002"
         },
+        "flow_title": "Xiaomi Miio\uff1a{name}",
         "step": {
             "gateway": {
                 "data": {
@@ -15,7 +16,7 @@
                     "name": "\u7db2\u95dc\u540d\u7a31",
                     "token": "API \u5bc6\u9470"
                 },
-                "description": "\u5c07\u9700\u8981\u8f38\u5165 API \u5bc6\u9470\uff0c\u8acb\u53c3\u95b1 https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token \u4ee5\u7372\u5f97\u7372\u53d6\u5bc6\u9470\u7684\u6559\u5b78\u3002",
+                "description": "\u5c07\u9700\u8981\u8f38\u5165 32 \u4f4d\u5b57\u5143 API \u5bc6\u9470\uff0c\u8acb\u53c3\u95b1 https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token \u4ee5\u7372\u5f97\u7372\u53d6\u5bc6\u9470\u7684\u6559\u5b78\u3002\u8acb\u6ce8\u610f\uff1a\u6b64\u5bc6\u9470\u8207 Xiaomi Aqara \u6574\u5408\u6240\u4f7f\u7528\u4e4b\u5bc6\u9470\u4e0d\u540c\u3002",
                 "title": "\u9023\u7dda\u81f3\u5c0f\u7c73\u7db2\u95dc"
             },
             "user": {

@@ -14,8 +14,8 @@ from homeassistant.const import (
     CONF_SENSORS,
     CONF_TYPE,
     EVENT_HOMEASSISTANT_STOP,
+    PERCENTAGE,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -194,7 +194,7 @@ class LaCrosseHumidity(LaCrosseSensor):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return UNIT_PERCENTAGE
+        return PERCENTAGE
 
     @property
     def state(self):

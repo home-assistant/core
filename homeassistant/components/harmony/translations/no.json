@@ -15,7 +15,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Vertsnavn eller IP-adresse",
+                    "host": "Vert",
                     "name": "Navn p\u00e5 hub"
                 },
                 "title": "Sett opp Logitech Harmony Hub"

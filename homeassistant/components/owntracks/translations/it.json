@@ -4,7 +4,7 @@
             "one_instance_allowed": "\u00c8 necessaria una sola istanza."
         },
         "create_entry": {
-            "default": "\n\nSu Android, apri l'[app OwnTracks]({android_url}), vai su preferenze -> connessione. Modifica le seguenti impostazioni: \n - Modalit\u00e0: HTTP privato \n - Host: {webhook_url} \n - Identificazione: \n   - Nome utente: `<Your name>` \n   - ID dispositivo: `<Your device name>`\n\nSu iOS, apri l'[app OwnTracks]({ios_url}), tocca l'icona (i) in alto a sinistra -> impostazioni. Modifica le seguenti impostazioni: \n - Modalit\u00e0: HTTP \n - URL: {webhook_url} \n - Attiva autenticazione \n - UserID: `<Your name>` \n\n {secret} \n \n Vedi [la documentazione]({docs_url}) per maggiori informazioni."
+            "default": "\n\nSu Android, apri l'[app OwnTracks]({android_url}), vai su preferenze -> connessione. Modifica le seguenti impostazioni: \n - Modalit\u00e0: HTTP privato \n - Host: {webhook_url} \n - Identificazione: \n   - Nome utente: `'<Your name>'` \n   - ID dispositivo: `'<Your device name>'`\n\nSu iOS, apri l'[app OwnTracks]({ios_url}), tocca l'icona (i) in alto a sinistra -> impostazioni. Modifica le seguenti impostazioni: \n - Modalit\u00e0: HTTP \n - URL: {webhook_url} \n - Attiva autenticazione \n - UserID: `'<Your name>'` \n\n {secret} \n \n Vedi [la documentazione]({docs_url}) per maggiori informazioni."
         },
         "step": {
             "user": {

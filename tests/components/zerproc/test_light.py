@@ -1,5 +1,4 @@
 """Test the zerproc lights."""
-from asynctest import patch
 import pytest
 import pyzerproc
 
@@ -24,6 +23,7 @@ from homeassistant.const import (
 )
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 

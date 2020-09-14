@@ -10,6 +10,8 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_TVSHOW,
+    MEDIA_TYPE_VIDEO,
+    SUPPORT_BROWSE_MEDIA,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -35,6 +37,16 @@ from .const import (
     PLEX_UPDATE_MEDIA_PLAYER_SIGNAL,
     SERVERS,
 )
+from .media_browser import browse_media
+
+LIVE_TV_SECTION = "-4"
+PLAYLISTS_BROWSE_PAYLOAD = {
+    "title": "Playlists",
+    "media_content_id": "all",
+    "media_content_type": "playlists",
+    "can_play": False,
+    "can_expand": True,
+}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,11 +100,12 @@ def _async_add_entities(
 class PlexMediaPlayer(MediaPlayerEntity):
     """Representation of a Plex device."""
 
-    def __init__(self, plex_server, device, session=None):
+    def __init__(self, plex_server, device, player_source, session=None):
         """Initialize the Plex device."""
         self.plex_server = plex_server
         self.device = device
         self.session = session
+        self.player_source = player_source
         self._app_name = ""
         self._available = False
         self._device_protocol_capabilities = None
@@ -246,17 +259,23 @@ class PlexMediaPlayer(MediaPlayerEntity):
 
         if self._is_player_active and self.session is not None:
             self._session_type = self.session.type
-            self._media_duration = int(self.session.duration / 1000)
+            if self.session.duration:
+                self._media_duration = int(self.session.duration / 1000)
+            else:
+                self._media_duration = None
             #  title (movie name, tv episode name, music song name)
             self._media_summary = self.session.summary
             self._media_title = self.session.title
             # media type
             self._set_media_type()
-            self._app_name = (
-                self.session.section().title
-                if self.session.section() is not None
-                else ""
-            )
+            if self.session.librarySectionID == LIVE_TV_SECTION:
+                self._app_name = "Live TV"
+            else:
+                self._app_name = (
+                    self.session.section().title
+                    if self.session.section() is not None
+                    else ""
+                )
             self._set_media_image()
         else:
             self._session_type = None
@@ -267,7 +286,10 @@ class PlexMediaPlayer(MediaPlayerEntity):
             self.media_content_type is MEDIA_TYPE_TVSHOW
             and not self.plex_server.option_use_episode_art
         ):
-            thumb_url = self.session.url(self.session.grandparentThumb)
+            if self.session.librarySectionID == LIVE_TV_SECTION:
+                thumb_url = self.session.grandparentThumb
+            else:
+                thumb_url = self.session.url(self.session.grandparentThumb)
 
         if thumb_url is None:
             _LOGGER.debug(
@@ -292,7 +314,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
             self._state = STATE_OFF
 
     def _set_media_type(self):
-        if self._session_type in ["clip", "episode"]:
+        if self._session_type == "episode":
             self._media_content_type = MEDIA_TYPE_TVSHOW
 
             # season number (00)
@@ -301,7 +323,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
             self._media_series_title = self.session.grandparentTitle
             # episode number (00)
             if self.session.index is not None:
-                self._media_episode = str(self.session.index).zfill(2)
+                self._media_episode = self.session.index
 
         elif self._session_type == "movie":
             self._media_content_type = MEDIA_TYPE_MOVIE
@@ -321,6 +343,12 @@ class PlexMediaPlayer(MediaPlayerEntity):
                     self.name,
                 )
                 self._media_artist = self._media_album_artist
+
+        elif self._session_type == "clip":
+            _LOGGER.debug(
+                "Clip content type detected, compatibility may vary: %s", self.name
+            )
+            self._media_content_type = MEDIA_TYPE_VIDEO
 
     def force_idle(self):
         """Force client to idle."""
@@ -385,19 +413,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
     @property
     def media_content_type(self):
         """Return the content type of current playing media."""
-        if self._session_type == "clip":
-            _LOGGER.debug(
-                "Clip content type detected, compatibility may vary: %s", self.name
-            )
-            return MEDIA_TYPE_TVSHOW
-        if self._session_type == "episode":
-            return MEDIA_TYPE_TVSHOW
-        if self._session_type == "movie":
-            return MEDIA_TYPE_MOVIE
-        if self._session_type == "track":
-            return MEDIA_TYPE_MUSIC
-
-        return None
+        return self._media_content_type
 
     @property
     def media_artist(self):
@@ -482,9 +498,10 @@ class PlexMediaPlayer(MediaPlayerEntity):
                 | SUPPORT_PLAY
                 | SUPPORT_PLAY_MEDIA
                 | SUPPORT_VOLUME_MUTE
+                | SUPPORT_BROWSE_MEDIA
             )
 
-        return SUPPORT_PLAY_MEDIA
+        return SUPPORT_BROWSE_MEDIA | SUPPORT_PLAY_MEDIA
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
@@ -585,6 +602,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
             "session_username": self.username,
             "media_library_name": self._app_name,
             "summary": self.media_summary,
+            "player_source": self.player_source,
         }
 
         return attr
@@ -603,3 +621,13 @@ class PlexMediaPlayer(MediaPlayerEntity):
             "sw_version": self._device_version,
             "via_device": (PLEX_DOMAIN, self.plex_server.machine_identifier),
         }
+
+    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+        """Implement the websocket media browsing helper."""
+        return await self.hass.async_add_executor_job(
+            browse_media,
+            self.entity_id,
+            self.plex_server,
+            media_content_type,
+            media_content_id,
+        )

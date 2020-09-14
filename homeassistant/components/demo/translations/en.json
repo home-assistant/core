@@ -4,6 +4,7 @@
             "options_1": {
                 "data": {
                     "bool": "Optional boolean",
+                    "constant": "Constant",
                     "int": "Numeric input"
                 }
             },

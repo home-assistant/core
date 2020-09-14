@@ -1,0 +1,7 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "No s'ha pogut connectar a la placa Frimata durant la configuraci\u00f3"
+        }
+    }
+}

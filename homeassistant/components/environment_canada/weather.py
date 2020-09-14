@@ -3,11 +3,12 @@ import datetime
 import logging
 import re
 
-from env_canada import ECData
+from env_canada import ECData  # pylint: disable=import-error
 import voluptuous as vol
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
+    ATTR_FORECAST_PRECIPITATION_PROBABILITY,
     ATTR_FORECAST_TEMP,
     ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_TIME,
@@ -98,7 +99,7 @@ class ECWeather(WeatherEntity):
     @property
     def temperature(self):
         """Return the temperature."""
-        if self.ec_data.conditions.get("temperature").get("value"):
+        if self.ec_data.conditions.get("temperature", {}).get("value"):
             return float(self.ec_data.conditions["temperature"]["value"])
         if self.ec_data.hourly_forecasts[0].get("temperature"):
             return float(self.ec_data.hourly_forecasts[0]["temperature"])
@@ -112,35 +113,35 @@ class ECWeather(WeatherEntity):
     @property
     def humidity(self):
         """Return the humidity."""
-        if self.ec_data.conditions.get("humidity").get("value"):
+        if self.ec_data.conditions.get("humidity", {}).get("value"):
             return float(self.ec_data.conditions["humidity"]["value"])
         return None
 
     @property
     def wind_speed(self):
         """Return the wind speed."""
-        if self.ec_data.conditions.get("wind_speed").get("value"):
+        if self.ec_data.conditions.get("wind_speed", {}).get("value"):
             return float(self.ec_data.conditions["wind_speed"]["value"])
         return None
 
     @property
     def wind_bearing(self):
         """Return the wind bearing."""
-        if self.ec_data.conditions.get("wind_bearing").get("value"):
+        if self.ec_data.conditions.get("wind_bearing", {}).get("value"):
             return float(self.ec_data.conditions["wind_bearing"]["value"])
         return None
 
     @property
     def pressure(self):
         """Return the pressure."""
-        if self.ec_data.conditions.get("pressure").get("value"):
+        if self.ec_data.conditions.get("pressure", {}).get("value"):
             return 10 * float(self.ec_data.conditions["pressure"]["value"])
         return None
 
     @property
     def visibility(self):
         """Return the visibility."""
-        if self.ec_data.conditions.get("visibility").get("value"):
+        if self.ec_data.conditions.get("visibility", {}).get("value"):
             return float(self.ec_data.conditions["visibility"]["value"])
         return None
 
@@ -149,7 +150,7 @@ class ECWeather(WeatherEntity):
         """Return the weather condition."""
         icon_code = None
 
-        if self.ec_data.conditions.get("icon_code").get("value"):
+        if self.ec_data.conditions.get("icon_code", {}).get("value"):
             icon_code = self.ec_data.conditions["icon_code"]["value"]
         elif self.ec_data.hourly_forecasts[0].get("icon_code"):
             icon_code = self.ec_data.hourly_forecasts[0]["icon_code"]
@@ -183,6 +184,9 @@ def get_forecast(ec_data, forecast_type):
                     ATTR_FORECAST_CONDITION: icon_code_to_condition(
                         int(half_days[0]["icon_code"])
                     ),
+                    ATTR_FORECAST_PRECIPITATION_PROBABILITY: int(
+                        half_days[0]["precip_probability"]
+                    ),
                 }
             )
             half_days = half_days[2:]
@@ -200,6 +204,9 @@ def get_forecast(ec_data, forecast_type):
                     ATTR_FORECAST_CONDITION: icon_code_to_condition(
                         int(half_days[high]["icon_code"])
                     ),
+                    ATTR_FORECAST_PRECIPITATION_PROBABILITY: int(
+                        half_days[high]["precip_probability"]
+                    ),
                 }
             )
 
@@ -214,6 +221,9 @@ def get_forecast(ec_data, forecast_type):
                     ATTR_FORECAST_TEMP: int(hours[hour]["temperature"]),
                     ATTR_FORECAST_CONDITION: icon_code_to_condition(
                         int(hours[hour]["icon_code"])
+                    ),
+                    ATTR_FORECAST_PRECIPITATION_PROBABILITY: int(
+                        hours[hour]["precip_probability"]
                     ),
                 }
             )

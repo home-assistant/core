@@ -12,7 +12,7 @@
             "user": {
                 "data": {
                     "access_token": "Jeton d'Acc\u00e8s",
-                    "host": "Nom d'h\u00f4te ou IP du routeur"
+                    "host": "Nom d'h\u00f4te ou adresse IP"
                 },
                 "title": "Connectez-vous au routeur Vilfo"
             }

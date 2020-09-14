@@ -146,7 +146,7 @@ async def _login(hass, modem_data, password):
 async def _retry_login(hass, modem_data, password):
     """Sleep and retry setup."""
 
-    _LOGGER.warning("Could not connect to %s. Will keep trying.", modem_data.host)
+    _LOGGER.warning("Could not connect to %s. Will keep trying", modem_data.host)
 
     modem_data.connected = False
     delay = 15

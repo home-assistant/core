@@ -95,12 +95,13 @@ async def async_setup_entry(hass, entry):
         await hass.async_add_executor_job(
             tuya.init, username, password, country_code, platform
         )
-    except (TuyaNetException, TuyaServerException):
-        raise ConfigEntryNotReady()
+    except (TuyaNetException, TuyaServerException) as exc:
+        raise ConfigEntryNotReady() from exc
 
     except TuyaAPIException as exc:
         _LOGGER.error(
-            "Connection error during integration setup. Error: %s", exc,
+            "Connection error during integration setup. Error: %s",
+            exc,
         )
         return False
 
@@ -147,7 +148,7 @@ async def async_setup_entry(hass, entry):
 
     async def async_poll_devices_update(event_time):
         """Check if accesstoken is expired and pull device list from server."""
-        _LOGGER.debug("Pull devices from Tuya.")
+        _LOGGER.debug("Pull devices from Tuya")
         # Add new discover device.
         device_list = await hass.async_add_executor_job(_get_updated_devices)
         await async_load_devices(device_list)

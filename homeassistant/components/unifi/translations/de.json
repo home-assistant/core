@@ -5,7 +5,7 @@
         },
         "error": {
             "faulty_credentials": "Ung\u00fcltige Anmeldeinformationen",
-            "service_unavailable": "Kein Dienst verf\u00fcgbar",
+            "service_unavailable": "Verbindung fehlgeschlagen",
             "unknown_client_mac": "Unter dieser MAC-Adresse ist kein Client verf\u00fcgbar."
         },
         "step": {

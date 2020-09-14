@@ -1,6 +1,5 @@
 """Define tests for the Acmeda config flow."""
 import aiopulse
-from asynctest.mock import patch
 import pytest
 
 from homeassistant import data_entry_flow
@@ -8,6 +7,7 @@ from homeassistant.components.acmeda.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 DUMMY_HOST1 = "127.0.0.1"

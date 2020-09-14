@@ -30,8 +30,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 
-# see https://github.com/PyCQA/pylint/issues/3202 about the DOMAIN's pylint issue
 from .const import CONNECTION_TIMEOUT, DEFAULT_DEVICE_NAME, DEFAULT_NOTIFY_SERVICE_NAME
+
+# see https://github.com/PyCQA/pylint/issues/3202 about the DOMAIN's pylint issue
 from .const import DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
@@ -206,13 +207,19 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input=user_input, errors=errors
             )
 
-        title = await self.hass.async_add_executor_job(get_router_title, conn)
+        # pylint: disable=no-member
+        title = self.context.get("title_placeholders", {}).get(
+            CONF_NAME
+        ) or await self.hass.async_add_executor_job(get_router_title, conn)
         await self.hass.async_add_executor_job(logout)
 
         return self.async_create_entry(title=title, data=user_input)
 
     async def async_step_ssdp(self, discovery_info):
         """Handle SSDP initiated config flow."""
+        await self.async_set_unique_id(discovery_info[ssdp.ATTR_UPNP_UDN])
+        self._abort_if_unique_id_configured()
+
         # Attempt to distinguish from other non-LTE Huawei router devices, at least
         # some ones we are interested in have "Mobile Wi-Fi" friendlyName.
         if "mobile" not in discovery_info.get(ssdp.ATTR_UPNP_FRIENDLY_NAME, "").lower():
@@ -235,6 +242,10 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if self._already_configured(user_input):
             return self.async_abort(reason="already_configured")
 
+        # pylint: disable=no-member
+        self.context["title_placeholders"] = {
+            CONF_NAME: discovery_info.get(ssdp.ATTR_UPNP_FRIENDLY_NAME)
+        }
         return await self._async_show_user_form(user_input)
 
 

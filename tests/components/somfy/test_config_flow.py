@@ -52,7 +52,7 @@ async def test_abort_if_existing_entry(hass):
     assert result["reason"] == "already_setup"
 
 
-async def test_full_flow(hass, aiohttp_client, aioclient_mock):
+async def test_full_flow(hass, aiohttp_client, aioclient_mock, current_request):
     """Check full flow."""
     assert await setup.async_setup_component(
         hass,

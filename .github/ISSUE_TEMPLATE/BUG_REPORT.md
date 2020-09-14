@@ -20,12 +20,12 @@ about: Report an issue with Home Assistant Core
 <!--
   Provide details about the versions you are using, which helps us to reproduce
   and find the issue quicker. Version information is found in the
-  Home Assistant frontend: Developer tools -> Info.
+  Home Assistant frontend: Configuration -> Info.
 -->
 
 - Home Assistant Core release with the issue: 
 - Last working Home Assistant Core release (if known): 
-- Operating environment (Home Assistant/Supervised/Docker/venv): 
+- Operating environment (OS/Container/Supervised/Core): 
 - Integration causing this issue: 
 - Link to integration documentation on our website: 
 

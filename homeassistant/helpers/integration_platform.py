@@ -4,7 +4,7 @@ import logging
 from typing import Any, Awaitable, Callable
 
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.loader import IntegrationNotFound, async_get_integration, bind_hass
+from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.setup import ATTR_COMPONENT, EVENT_COMPONENT_LOADED
 
 _LOGGER = logging.getLogger(__name__)
@@ -21,10 +21,20 @@ async def async_process_integration_platforms(
 
     async def _process(component_name: str) -> None:
         """Process the intents of a component."""
+        if "." in component_name:
+            return
+
+        integration = await async_get_integration(hass, component_name)
+
         try:
-            integration = await async_get_integration(hass, component_name)
             platform = integration.get_platform(platform_name)
-        except (IntegrationNotFound, ImportError):
+        except ImportError as err:
+            if f"{component_name}.{platform_name}" not in str(err):
+                _LOGGER.exception(
+                    "Unexpected error importing %s/%s.py",
+                    component_name,
+                    platform_name,
+                )
             return
 
         try:

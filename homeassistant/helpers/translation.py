@@ -20,12 +20,6 @@ _LOGGER = logging.getLogger(__name__)
 TRANSLATION_LOAD_LOCK = "translation_load_lock"
 TRANSLATION_FLATTEN_CACHE = "translation_flatten_cache"
 
-MOVED_TRANSLATIONS_DIRECTORY_MSG = (
-    "%s: the '.translations' directory has been moved, the new name is 'translations', "
-    "starting with Home Assistant 0.111 your translations will no longer "
-    "load if you do not move/rename this "
-)
-
 
 def recursive_flatten(prefix: Any, data: Dict) -> Dict[str, Any]:
     """Return a flattened representation of dict data."""
@@ -71,12 +65,7 @@ def component_translation_path(
     else:
         filename = f"{language}.json"
 
-    translation_legacy_path = integration.file_path / ".translations"
     translation_path = integration.file_path / "translations"
-
-    if translation_legacy_path.is_dir() and not translation_path.is_dir():
-        _LOGGER.warning(MOVED_TRANSLATIONS_DIRECTORY_MSG, domain)
-        return str(translation_legacy_path / filename)
 
     return str(translation_path / filename)
 
@@ -103,7 +92,9 @@ def load_translations_files(
 
 
 def merge_resources(
-    translation_strings: Dict[str, Dict[str, Any]], components: Set[str], category: str,
+    translation_strings: Dict[str, Dict[str, Any]],
+    components: Set[str],
+    category: str,
 ) -> Dict[str, Dict[str, Any]]:
     """Build and merge the resources response for the given components and platforms."""
     # Build response
@@ -164,7 +155,9 @@ def merge_resources(
 
 
 def build_resources(
-    translation_strings: Dict[str, Dict[str, Any]], components: Set[str], category: str,
+    translation_strings: Dict[str, Dict[str, Any]],
+    components: Set[str],
+    category: str,
 ) -> Dict[str, Dict[str, Any]]:
     """Build the resources response for the given components."""
     # Build response

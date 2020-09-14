@@ -6,9 +6,13 @@
         "step": {
             "user": {
                 "data": {
+                    "elevation": "Eleva\u00e7\u00e3o",
                     "latitude": "Latitude",
-                    "longitude": "Longitude"
-                }
+                    "longitude": "Longitude",
+                    "name": "Nome"
+                },
+                "description": "",
+                "title": "Localiza\u00e7\u00e3o"
             }
         }
     }

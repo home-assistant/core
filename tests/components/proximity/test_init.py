@@ -25,10 +25,7 @@ class TestProximity(unittest.TestCase):
             "zoning",
             {"name": "work", "latitude": 2.3, "longitude": 1.3, "radius": 10},
         )
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     def test_proximities(self):
         """Test a list of proximities."""
