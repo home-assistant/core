@@ -3,7 +3,10 @@ from typing import Callable, List, Optional
 
 from zoneminder.zm import ZoneMinder
 
-from homeassistant.components.binary_sensor import BinarySensorEntity, DEVICE_CLASS_CONNECTIVITY
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_CONNECTIVITY,
+    BinarySensorEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
