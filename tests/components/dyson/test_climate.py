@@ -307,7 +307,8 @@ class DysonTest(unittest.TestCase):
 
 
 @patch(
-    "homeassistant.components.dyson.DysonAccount.devices", return_value=[],
+    "homeassistant.components.dyson.DysonAccount.devices",
+    return_value=[],
 )
 @patch("homeassistant.components.dyson.DysonAccount.login", return_value=True)
 async def test_setup_component_without_devices(mocked_login, mocked_devices, hass):
