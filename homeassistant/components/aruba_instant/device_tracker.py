@@ -24,11 +24,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     coordinator = InstantCoordinator(hass, config_entry, async_add_entities)
     await coordinator.async_refresh()
-    # Iterate through entities and add clients to TRACKED_DEVICES where platform='aruba_instant'
     async_add_entities(
-        InstantClientEntity(coordinator, 0, ent)
-        # for ent in hass.data[DOMAIN][TRACKED_DEVICES][config_entry.entry_id]
-        for ent in config_entry.data["clients"]
+        InstantClientEntity(coordinator, client)
+        for client in config_entry.data["clients"]
     )
     hass.data[DOMAIN]["coordinator"] = {config_entry.entry_id: coordinator}
 
@@ -84,34 +82,48 @@ class InstantCoordinator(DataUpdateCoordinator):
 class InstantClientEntity(ScannerEntity):
     """Instant Client Entity"""
 
-    def __init__(self, coordinator, idx, ent):
+    def __init__(self, coordinator, ent):
         _LOGGER.debug(f"Creating entity for client {ent}.")
         self.coordinator = coordinator
         self.hass = self.coordinator.hass
-        self.idx = idx
         self._mac = ent
-        self._name = coordinator.data[self._mac].get("name")
-        self._ip = coordinator.data[self._mac].get("ip")
-        self._mac = coordinator.data[self._mac].get("mac")
-        self._os = coordinator.data[self._mac].get("os")
-        self._essid = coordinator.data[self._mac].get("essid")
-        self._ap = coordinator.data[self._mac].get("ap")
-        self._channel = coordinator.data[self._mac].get("channel")
-        self._phy = coordinator.data[self._mac].get("phy")
-        self._role = coordinator.data[self._mac].get("role")
-        self._ipv6 = coordinator.data[self._mac].get("ipv6")
-        self._signal = coordinator.data[self._mac].get("signal")
-        self._signal_text = coordinator.data[self._mac].get("signal_text")
-        self._speed = coordinator.data[self._mac].get("speed")
-        self._speed_text = coordinator.data[self._mac].get("speed_text")
-        self._lat = self.coordinator.hass.config.latitude
-        self._lon = self.coordinator.hass.config.longitude
-        # self.entity_id = f"{DOMAIN}.{self._mac}"
-        self._is_connected = True
-        self.hass.data[DOMAIN]["discovered_devices"][
-            self.coordinator.virtual_controller.entry_id
-        ].add(self._mac)
-        self.coordinator.entities.update({self.unique_id: self})
+        try:
+            self._name = coordinator.data[self._mac].get("name")
+            self._ip = coordinator.data[self._mac].get("ip")
+            self._mac = coordinator.data[self._mac].get("mac")
+            self._os = coordinator.data[self._mac].get("os")
+            self._essid = coordinator.data[self._mac].get("essid")
+            self._ap = coordinator.data[self._mac].get("ap")
+            self._channel = coordinator.data[self._mac].get("channel")
+            self._phy = coordinator.data[self._mac].get("phy")
+            self._role = coordinator.data[self._mac].get("role")
+            self._ipv6 = coordinator.data[self._mac].get("ipv6")
+            self._signal = coordinator.data[self._mac].get("signal")
+            self._signal_text = coordinator.data[self._mac].get("signal_text")
+            self._speed = coordinator.data[self._mac].get("speed")
+            self._speed_text = coordinator.data[self._mac].get("speed_text")
+            self._lat = self.coordinator.hass.config.latitude
+            self._lon = self.coordinator.hass.config.longitude
+            self._is_connected = True
+            self.coordinator.entities.update({self.unique_id: self})
+        except KeyError:
+            _LOGGER.debug(f"{self._mac} is not currently connected.")
+            self._is_connected = False
+            self._name = "Unknown"
+            self._ip = None
+            self._os = None
+            self._essid = None
+            self._ap = None
+            self._channel = None
+            self._phy = None
+            self._role = None
+            self._ipv6 = None
+            self._signal = None
+            self._signal_text = None
+            self._speed = None
+            self._speed_text = None
+            self._lat = None
+            self._lon = None
 
     def update_entity(self) -> None:
         """Update entity data."""
@@ -135,7 +147,6 @@ class InstantClientEntity(ScannerEntity):
             if self._is_connected is False:
                 _LOGGER.debug(f"{self._mac} - {self._name} is now connected.")
             self._is_connected = True
-            # self.async_update_ha_state()
         except KeyError:
             if self._is_connected is True:
                 _LOGGER.debug(f"{self._mac} - {self._name} is no longer connected.")
@@ -154,7 +165,6 @@ class InstantClientEntity(ScannerEntity):
             self._speed_text = None
             self._lat = None
             self._lon = None
-            # self.async_update_ha_state()
 
     @property
     def should_poll(self) -> bool:

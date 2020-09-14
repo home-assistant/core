@@ -164,29 +164,27 @@ class InstantOptionsFlowHandler(config_entries.OptionsFlow):
                 if user_input.get("track_none"):
                     return self.async_create_entry(title="", data={"track_none": True})
             return self.async_create_entry(title="", data=selected_macs)
-        else:
-            macs = {
-                mac: f"{self.hass.data[DOMAIN]['coordinator'][self.config_entry.entry_id].data.get(mac)['name']} ({mac})"
-                for mac in self.hass.data[DOMAIN][DISCOVERED_DEVICES][
-                    self.config_entry.entry_id
-                ]
+        macs = {}
+        for mac in self.hass.data[DOMAIN][DISCOVERED_DEVICES][self.config_entry.entry_id]:
+            if mac in self.hass.data[DOMAIN]['coordinator'][self.config_entry.entry_id].data.keys():
+                macs.update({mac: f"{self.hass.data[DOMAIN]['coordinator'][self.config_entry.entry_id].data.get(mac)['name']} ({mac})"})
+
+        macs = dict(sorted(macs.items(), key=lambda x: x[1].lower()))
+        track_client_data_schema = vol.Schema(
+            {
+                vol.Optional(
+                    "clients",
+                    description="Clients",
+                    default=set(self.hass.data[DOMAIN]['coordinator'][self.config_entry.entry_id].entities.keys()),
+                ): cv.multi_select(macs),
+                vol.Optional(
+                    "track_none", description="Stop tracking all devices."
+                ): bool,
             }
-            macs = dict(sorted(macs.items(), key=lambda x: x[1].lower()))
-            track_client_data_schema = vol.Schema(
-                {
-                    vol.Optional(
-                        "clients",
-                        description="Clients",
-                        default=set(self.hass.data[DOMAIN]['coordinator'][self.config_entry.entry_id].entities.keys()),
-                    ): cv.multi_select(macs),
-                    vol.Optional(
-                        "track_none", description="Stop tracking all devices."
-                    ): bool,
-                }
-            )
-            return self.async_show_form(
-                step_id="init", data_schema=track_client_data_schema, errors=errors,
-            )
+        )
+        return self.async_show_form(
+            step_id="init", data_schema=track_client_data_schema, errors=errors,
+        )
 
 
 class CannotConnect(exceptions.HomeAssistantError):
