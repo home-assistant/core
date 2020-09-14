@@ -8,6 +8,7 @@ from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.unifi.const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
+    CONF_ALLOW_UPTIME_SENSORS,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
     DOMAIN as UNIFI_DOMAIN,
@@ -29,6 +30,7 @@ CLIENTS = [
         "sw_port": 1,
         "wired-rx_bytes": 1234000000,
         "wired-tx_bytes": 5678000000,
+        "up_time": 1562600160,
     },
     {
         "hostname": "Wireless client hostname",
@@ -42,6 +44,7 @@ CLIENTS = [
         "sw_port": 2,
         "rx_bytes": 1234000000,
         "tx_bytes": 5678000000,
+        "up_time": 1562600160,
     },
 ]
 
@@ -61,7 +64,10 @@ async def test_no_clients(hass):
     """Test the update_clients function when no clients are found."""
     controller = await setup_unifi_integration(
         hass,
-        options={CONF_ALLOW_BANDWIDTH_SENSORS: True},
+        options={
+            CONF_ALLOW_BANDWIDTH_SENSORS: True,
+            CONF_ALLOW_UPTIME_SENSORS: True,
+        },
     )
 
     assert len(controller.mock_requests) == 4
@@ -74,6 +80,7 @@ async def test_sensors(hass):
         hass,
         options={
             CONF_ALLOW_BANDWIDTH_SENSORS: True,
+            CONF_ALLOW_UPTIME_SENSORS: True,
             CONF_TRACK_CLIENTS: False,
             CONF_TRACK_DEVICES: False,
         },
@@ -81,7 +88,7 @@ async def test_sensors(hass):
     )
 
     assert len(controller.mock_requests) == 4
-    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 4
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 5
 
     wired_client_rx = hass.states.get("sensor.wired_client_name_rx")
     assert wired_client_rx.state == "1234.0"
@@ -94,6 +101,9 @@ async def test_sensors(hass):
 
     wireless_client_tx = hass.states.get("sensor.wireless_client_name_tx")
     assert wireless_client_tx.state == "5678.0"
+
+    uptime_client = hass.states.get("sensor.up_time")
+    assert uptime_client.state == "1562600160"
 
     clients = deepcopy(CLIENTS)
     clients[0]["is_wired"] = False
@@ -112,7 +122,10 @@ async def test_sensors(hass):
 
     hass.config_entries.async_update_entry(
         controller.config_entry,
-        options={CONF_ALLOW_BANDWIDTH_SENSORS: False},
+        options={
+            CONF_ALLOW_BANDWIDTH_SENSORS: False,
+            CONF_ALLOW_UPTIME_SENSORS: False,
+        },
     )
     await hass.async_block_till_done()
 
@@ -122,9 +135,15 @@ async def test_sensors(hass):
     wireless_client_tx = hass.states.get("sensor.wireless_client_name_tx")
     assert wireless_client_tx is None
 
+    uptime_client = hass.states.get("sensor.up_time")
+    assert uptime_client is None
+
     hass.config_entries.async_update_entry(
         controller.config_entry,
-        options={CONF_ALLOW_BANDWIDTH_SENSORS: True},
+        options={
+            CONF_ALLOW_BANDWIDTH_SENSORS: True,
+            CONF_ALLOW_UPTIME_SENSORS: True
+        },
     )
     await hass.async_block_till_done()
 
@@ -133,16 +152,22 @@ async def test_sensors(hass):
 
     wireless_client_tx = hass.states.get("sensor.wireless_client_name_tx")
     assert wireless_client_tx.state == "6789.0"
+    
+    uptime_client = hass.states.get("sensor.up_time")
+    assert uptime_client.state == "1562600160"
 
 
 async def test_remove_sensors(hass):
     """Test the remove_items function with some clients."""
     controller = await setup_unifi_integration(
         hass,
-        options={CONF_ALLOW_BANDWIDTH_SENSORS: True},
+        options={
+            CONF_ALLOW_BANDWIDTH_SENSORS: True,
+            CONF_ALLOW_UPTIME_SENSORS: True
+         },
         clients_response=CLIENTS,
     )
-    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 4
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 5
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 2
 
     wired_client_rx = hass.states.get("sensor.wired_client_name_rx")
@@ -155,6 +180,9 @@ async def test_remove_sensors(hass):
     wireless_client_tx = hass.states.get("sensor.wireless_client_name_tx")
     assert wireless_client_tx is not None
 
+    uptime_client = hass.states.get("sensor.up_time")
+    assert uptime_client is not None
+
     controller.api.websocket._data = {
         "meta": {"message": MESSAGE_CLIENT_REMOVED},
         "data": [CLIENTS[0]],
@@ -162,7 +190,7 @@ async def test_remove_sensors(hass):
     controller.api.session_handler(SIGNAL_DATA)
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 3
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 1
 
     wired_client_rx = hass.states.get("sensor.wired_client_name_rx")
@@ -174,3 +202,6 @@ async def test_remove_sensors(hass):
     assert wireless_client_rx is not None
     wireless_client_tx = hass.states.get("sensor.wireless_client_name_tx")
     assert wireless_client_tx is not None
+    
+    uptime_client = hass.states.get("sensor.up_time")
+    assert uptime_client is not None

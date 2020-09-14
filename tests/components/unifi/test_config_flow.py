@@ -4,6 +4,7 @@ import aiounifi
 from homeassistant import data_entry_flow
 from homeassistant.components.unifi.const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
+    CONF_ALLOW_UPTIME_SENSORS,
     CONF_BLOCK_CLIENT,
     CONF_CONTROLLER,
     CONF_DETECTION_TIME,
@@ -343,6 +344,10 @@ async def test_advanced_option_flow(hass):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={CONF_ALLOW_BANDWIDTH_SENSORS: True}
     )
+    
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={CONF_ALLOW_UPTIME_SENSORS: True}
+    )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == {
@@ -355,6 +360,7 @@ async def test_advanced_option_flow(hass):
         CONF_POE_CLIENTS: False,
         CONF_BLOCK_CLIENT: [CLIENTS[0]["mac"]],
         CONF_ALLOW_BANDWIDTH_SENSORS: True,
+        CONF_ALLOW_UPTIME_SENSORS: True,
     }
 
 

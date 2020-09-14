@@ -39,6 +39,7 @@ CLIENT_1 = {
     "is_wired": False,
     "last_seen": 1562600145,
     "mac": "00:00:00:00:00:01",
+    "up_time": 1562600160,
 }
 CLIENT_2 = {
     "hostname": "client_2",
@@ -47,6 +48,7 @@ CLIENT_2 = {
     "last_seen": 1562600145,
     "mac": "00:00:00:00:00:02",
     "name": "Wired Client",
+    "up_time": 1562600160,
 }
 CLIENT_3 = {
     "essid": "ssid2",
@@ -55,6 +57,7 @@ CLIENT_3 = {
     "is_wired": False,
     "last_seen": 1562600145,
     "mac": "00:00:00:00:00:03",
+    "up_time": 1562600160,
 }
 CLIENT_4 = {
     "essid": "ssid",
@@ -63,6 +66,7 @@ CLIENT_4 = {
     "is_wired": True,
     "last_seen": 1562600145,
     "mac": "00:00:00:00:00:04",
+    "up_time": 1562600160,
 }
 CLIENT_5 = {
     "essid": "ssid",
@@ -71,6 +75,7 @@ CLIENT_5 = {
     "is_wired": True,
     "last_seen": None,
     "mac": "00:00:00:00:00:05",
+    "up_time": 1562600160,
 }
 
 DEVICE_1 = {
