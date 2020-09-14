@@ -8,6 +8,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import DATA_MEGABYTES
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN as UNIFI_DOMAIN
 from .unifi_client import UniFiClient
