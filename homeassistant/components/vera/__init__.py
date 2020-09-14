@@ -63,6 +63,8 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, base_config: dict) -> bool:
     """Set up for Vera controllers."""
+    hass.data[DOMAIN] = {}
+
     config = base_config.get(DOMAIN)
 
     if not config:
@@ -116,10 +118,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         all_devices = await hass.async_add_executor_job(controller.get_devices)
 
         all_scenes = await hass.async_add_executor_job(controller.get_scenes)
-    except RequestException:
+    except RequestException as exception:
         # There was a network related error connecting to the Vera controller.
         _LOGGER.exception("Error communicating with Vera API")
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from exception
 
     # Exclude devices unwanted by user.
     devices = [device for device in all_devices if device.device_id not in exclude_ids]
@@ -141,7 +143,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         config_entry=config_entry,
     )
 
-    set_controller_data(hass, config_entry.unique_id, controller_data)
+    set_controller_data(hass, config_entry, controller_data)
 
     # Forward the config data to the necessary platforms.
     for platform in get_configured_platforms(controller_data):
@@ -154,7 +156,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload Withings config entry."""
-    controller_data: ControllerData = get_controller_data(hass, config_entry.unique_id)
+    controller_data: ControllerData = get_controller_data(hass, config_entry)
 
     tasks = [
         hass.config_entries.async_forward_entry_unload(config_entry, platform)

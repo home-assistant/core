@@ -35,16 +35,18 @@ def get_configured_platforms(controller_data: ControllerData) -> Set[str]:
     return set(platforms)
 
 
-def get_controller_data(hass: HomeAssistant, config_unique_id: str) -> ControllerData:
+def get_controller_data(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> ControllerData:
     """Get controller data from hass data."""
-    return hass.data.setdefault(DOMAIN, {})[config_unique_id]
+    return hass.data[DOMAIN][config_entry.entry_id]
 
 
 def set_controller_data(
-    hass: HomeAssistant, config_unique_id: str, data: ControllerData
+    hass: HomeAssistant, config_entry: ConfigEntry, data: ControllerData
 ) -> None:
     """Set controller data in hass data."""
-    hass.data.setdefault(DOMAIN, {})[config_unique_id] = data
+    hass.data[DOMAIN][config_entry.entry_id] = data
 
 
 class SubscriptionRegistry(pv.AbstractSubscriptionRegistry):
