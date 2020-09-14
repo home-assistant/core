@@ -269,7 +269,7 @@ class SmileSensor(SmileGateway):
 
     @property
     def state(self):
-        """Device class of this entity."""
+        """Return the state of this entity."""
         return self._state
 
     @property
@@ -279,7 +279,7 @@ class SmileSensor(SmileGateway):
 
 
 class PwThermostatSensor(SmileSensor, Entity):
-    """Thermostat or generic sensor entities."""
+    """Auxiliary Device sensors."""
 
     def __init__(self, api, coordinator, name, dev_id, sensor, sensor_type):
         """Set up the Plugwise API."""
