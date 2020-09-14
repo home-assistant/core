@@ -15,7 +15,14 @@ async def test_scan_match_st(hass):
     scanner = ssdp.Scanner(hass, {"mock-domain": [{"st": "mock-st"}]})
 
     with patch(
-        "netdisco.ssdp.scan", return_value=[Mock(st="mock-st", location=None)]
+        "netdisco.ssdp.scan",
+        return_value=[
+            Mock(
+                st="mock-st",
+                location=None,
+                values={"usn": "mock-usn", "server": "mock-server", "ext": ""},
+            )
+        ],
     ), patch.object(
         hass.config_entries.flow, "async_init", return_value=mock_coro()
     ) as mock_init:
@@ -24,6 +31,13 @@ async def test_scan_match_st(hass):
     assert len(mock_init.mock_calls) == 1
     assert mock_init.mock_calls[0][1][0] == "mock-domain"
     assert mock_init.mock_calls[0][2]["context"] == {"source": "ssdp"}
+    assert mock_init.mock_calls[0][2]["data"] == {
+        ssdp.ATTR_SSDP_ST: "mock-st",
+        ssdp.ATTR_SSDP_LOCATION: None,
+        ssdp.ATTR_SSDP_USN: "mock-usn",
+        ssdp.ATTR_SSDP_SERVER: "mock-server",
+        ssdp.ATTR_SSDP_EXT: "",
+    }
 
 
 @pytest.mark.parametrize(
@@ -45,7 +59,7 @@ async def test_scan_match_upnp_devicedesc(hass, aioclient_mock, key):
 
     with patch(
         "netdisco.ssdp.scan",
-        return_value=[Mock(st="mock-st", location="http://1.1.1.1")],
+        return_value=[Mock(st="mock-st", location="http://1.1.1.1", values={})],
     ), patch.object(
         hass.config_entries.flow, "async_init", return_value=mock_coro()
     ) as mock_init:
@@ -82,7 +96,7 @@ async def test_scan_not_all_present(hass, aioclient_mock):
 
     with patch(
         "netdisco.ssdp.scan",
-        return_value=[Mock(st="mock-st", location="http://1.1.1.1")],
+        return_value=[Mock(st="mock-st", location="http://1.1.1.1", values={})],
     ), patch.object(
         hass.config_entries.flow, "async_init", return_value=mock_coro()
     ) as mock_init:
@@ -118,7 +132,7 @@ async def test_scan_not_all_match(hass, aioclient_mock):
 
     with patch(
         "netdisco.ssdp.scan",
-        return_value=[Mock(st="mock-st", location="http://1.1.1.1")],
+        return_value=[Mock(st="mock-st", location="http://1.1.1.1", values={})],
     ), patch.object(
         hass.config_entries.flow, "async_init", return_value=mock_coro()
     ) as mock_init:
@@ -135,7 +149,7 @@ async def test_scan_description_fetch_fail(hass, aioclient_mock, exc):
 
     with patch(
         "netdisco.ssdp.scan",
-        return_value=[Mock(st="mock-st", location="http://1.1.1.1")],
+        return_value=[Mock(st="mock-st", location="http://1.1.1.1", values={})],
     ):
         await scanner.async_scan(None)
 
@@ -152,6 +166,6 @@ async def test_scan_description_parse_fail(hass, aioclient_mock):
 
     with patch(
         "netdisco.ssdp.scan",
-        return_value=[Mock(st="mock-st", location="http://1.1.1.1")],
+        return_value=[Mock(st="mock-st", location="http://1.1.1.1", values={})],
     ):
         await scanner.async_scan(None)
