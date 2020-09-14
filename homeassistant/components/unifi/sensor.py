@@ -125,7 +125,7 @@ class UniFiUpTimeSensor(UniFiClient):
     @property
     def unit_of_measurement(self) -> str:
         """Return the unit of measurement of this entity."""
-        return ""
+        return None
 
     @property
     def state(self) -> int:
