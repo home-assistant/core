@@ -49,10 +49,10 @@ async def async_setup_entry(
         zone_loop = zone_info.get(CONF_ZONE_LOOP)
         relay_addr = zone_info.get(CONF_RELAY_ADDR)
         relay_chan = zone_info.get(CONF_RELAY_CHAN)
-        device = AlarmDecoderBinarySensor(
+        entity = AlarmDecoderBinarySensor(
             zone_num, zone_name, zone_type, zone_rfid, zone_loop, relay_addr, relay_chan
         )
-        entities.append(device)
+        entities.append(entity)
 
     async_add_entities(entities)
 
