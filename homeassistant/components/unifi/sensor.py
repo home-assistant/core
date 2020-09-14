@@ -1,10 +1,7 @@
 """Support for bandwidth sensors with UniFi clients."""
 import logging
 
-from homeassistant.components.sensor import (
-    DOMAIN,
-    DEVICE_CLASS_TIMESTAMP,
-)
+from homeassistant.components.sensor import DEVICE_CLASS_TIMESTAMP, DOMAIN
 from homeassistant.const import DATA_MEGABYTES
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -28,8 +25,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up sensors for UniFi integration."""
     controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
     controller.entities[DOMAIN] = {
-        RX_SENSOR: set(), 
-        TX_SENSOR: set(), 
+        RX_SENSOR: set(),
+        TX_SENSOR: set(),
         UPTIME_SENSOR: set(),
     }
 
