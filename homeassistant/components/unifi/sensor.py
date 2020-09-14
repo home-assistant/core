@@ -13,7 +13,7 @@ LOGGER = logging.getLogger(__name__)
 
 RX_SENSOR = "rx"
 TX_SENSOR = "tx"
-
+UPTIME_SENSOR = "uptime"
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Sensor platform doesn't support configuration through configuration.yaml."""
@@ -22,7 +22,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up sensors for UniFi integration."""
     controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
-    controller.entities[DOMAIN] = {RX_SENSOR: set(), TX_SENSOR: set()}
+    controller.entities[DOMAIN] = {RX_SENSOR: set(), TX_SENSOR: set(), UPTIME_SENSOR: set()}
 
     @callback
     def items_added(
@@ -44,7 +44,7 @@ def add_entities(controller, async_add_entities, clients):
     sensors = []
 
     for mac in clients:
-        for sensor_class in (UniFiRxBandwidthSensor, UniFiTxBandwidthSensor):
+        for sensor_class in (UniFiRxBandwidthSensor, UniFiTxBandwidthSensor, UniFiUpTimeSensor):
             if mac in controller.entities[DOMAIN][sensor_class.TYPE]:
                 continue
 
@@ -100,3 +100,24 @@ class UniFiTxBandwidthSensor(UniFiBandwidthSensor):
         if self._is_wired:
             return self.client.wired_tx_bytes / 1000000
         return self.client.tx_bytes / 1000000
+    
+class UniFiUpTimeSensor(UniFiClient):
+    """UniFi uptime sensor base class."""
+
+    DOMAIN = DOMAIN
+    TYPE = UPTIME_SENSOR
+    
+    @property
+    def name(self) -> str:
+        """Return the name of the client."""
+        return f"{super().name} {self.TYPE.upper()}"
+
+    @property
+    def unit_of_measurement(self) -> str:
+        """Return the unit of measurement of this entity."""
+        return TIME_SECONDS
+    
+    @property
+    def state(self) -> int:
+        """Return the uptime of the client."""
+        return self.client.uptime
