@@ -63,6 +63,8 @@ class CanarySensor(Entity):
         """Initialize the sensor."""
         self._data = data
         self._sensor_type = sensor_type
+        self._device_name = device.name
+        self._device_type_name = device.device_type.name
         self._device_id = device.device_id
         self._sensor_value = None
 
@@ -83,6 +85,16 @@ class CanarySensor(Entity):
     def unique_id(self):
         """Return the unique ID of this sensor."""
         return f"{self._device_id}_{self._sensor_type[0]}"
+
+    @property
+    def device_info(self):
+        """Return the device_info of the device."""
+        return {
+            "identifiers": {(DOMAIN, str(self._device_id))},
+            "name": self._device_name,
+            "model": self._device_type_name,
+            "manufacturer": "Canary",
+        }
 
     @property
     def unit_of_measurement(self):
