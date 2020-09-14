@@ -18,6 +18,7 @@ async def test_async_browse_media(hass):
         "12:34:56:78:90:ab": {
             1599152672: {
                 "id": "12345",
+                "type": "person",
                 "time": 1599152672,
                 "camera_id": "12:34:56:78:90:ab",
                 "snapshot": {
@@ -30,6 +31,7 @@ async def test_async_browse_media(hass):
             },
             1599152673: {
                 "id": "12346",
+                "type": "person",
                 "time": 1599152673,
                 "camera_id": "12:34:56:78:90:ab",
                 "snapshot": {
