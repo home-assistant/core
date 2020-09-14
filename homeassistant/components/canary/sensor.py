@@ -24,7 +24,7 @@ CANARY_PRO = "Canary Pro"
 CANARY_FLEX = "Canary Flex"
 
 # Sensor types are defined like so:
-# sensor type name, unit_of_measurement, icon
+# sensor type name, unit_of_measurement, icon, device class, products supported
 SENSOR_TYPES = [
     ["temperature", TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE, [CANARY_PRO]],
     ["humidity", PERCENTAGE, None, DEVICE_CLASS_HUMIDITY, [CANARY_PRO]],
