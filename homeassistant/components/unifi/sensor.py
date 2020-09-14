@@ -71,7 +71,7 @@ def add_uptime_entities(controller, async_add_entities, clients):
 
     for mac in clients:
         if mac in controller.entities[DOMAIN][UniFiUpTimeSensor.TYPE]:
-                continue
+            continue
 
         client = controller.api.clients[mac]
         sensors.append(UniFiUpTimeSensor(client, controller))
