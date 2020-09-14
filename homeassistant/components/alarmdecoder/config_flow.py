@@ -101,8 +101,8 @@ class AlarmDecoderFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             controller = AdExt(device)
             try:
-                with controller:
-                    controller.open(baudrate=baud)
+                await self.hass.async_add_executor_job(controller.open, baud)
+                await self.hass.async_add_executor_job(controller.close)
                 return self.async_create_entry(
                     title=title, data={CONF_PROTOCOL: self.protocol, **connection}
                 )
