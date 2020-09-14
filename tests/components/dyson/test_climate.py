@@ -494,7 +494,7 @@ async def test_purehotcool_update_state(devices, login, hass):
 async def test_purehotcool_empty_env_attributes(devices, login, hass):
     """Test empty environmental state update."""
     device = devices.return_value[0]
-    device.environmental_state.temperature = None
+    device.environmental_state.temperature = 0
     device.environmental_state.humidity = None
     await async_setup_component(hass, dyson_parent.DOMAIN, _get_config())
     await hass.async_block_till_done()
