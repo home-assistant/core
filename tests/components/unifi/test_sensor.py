@@ -30,7 +30,7 @@ CLIENTS = [
         "sw_port": 1,
         "wired-rx_bytes": 1234000000,
         "wired-tx_bytes": 5678000000,
-        "up_time": 1562600160,
+        "up_time": 1600094505,
     },
     {
         "hostname": "Wireless client hostname",
@@ -44,7 +44,7 @@ CLIENTS = [
         "sw_port": 2,
         "rx_bytes": 1234000000,
         "tx_bytes": 5678000000,
-        "up_time": 1562600160,
+        "up_time": 1600094505,
     },
 ]
 
@@ -97,7 +97,7 @@ async def test_sensors(hass):
     assert wired_client_tx.state == "5678.0"
 
     wired_client_uptime = hass.states.get("sensor.wired_client_name_uptime")
-    assert wired_client_uptime.state == "1562600160.0"
+    assert wired_client_uptime.state == "2020-09-14 14:41:45+00:00"
 
     wireless_client_rx = hass.states.get("sensor.wireless_client_name_rx")
     assert wireless_client_rx.state == "1234.0"
@@ -106,7 +106,7 @@ async def test_sensors(hass):
     assert wireless_client_tx.state == "5678.0"
 
     wireless_client_uptime = hass.states.get("sensor.wireless_client_name_uptime")
-    assert wireless_client_uptime.state == "1562600160.0"
+    assert wireless_client_uptime.state == "2020-09-14 14:41:45+00:00"
 
     clients = deepcopy(CLIENTS)
     clients[0]["is_wired"] = False
@@ -160,7 +160,7 @@ async def test_sensors(hass):
     assert wireless_client_tx.state == "6789.0"
 
     wireless_client_uptime = hass.states.get("sensor.wireless_client_name_uptime")
-    assert wireless_client_uptime.state == "1562600160.0"
+    assert wireless_client_uptime.state == "2020-09-14 14:41:45+00:00"
 
 
 async def test_remove_sensors(hass):
