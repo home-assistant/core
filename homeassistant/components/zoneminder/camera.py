@@ -8,6 +8,7 @@ from homeassistant.components.mjpeg.camera import (
     CONF_MJPEG_URL,
     CONF_STILL_IMAGE_URL,
     MjpegCamera,
+    filter_urllib3_logging,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_VERIFY_SSL
@@ -17,6 +18,11 @@ from homeassistant.helpers.entity import Entity
 from .common import get_client_from_data
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the ZoneMinder cameras."""
+    filter_urllib3_logging()
 
 
 async def async_setup_entry(

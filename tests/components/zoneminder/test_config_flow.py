@@ -87,7 +87,8 @@ async def test_user(hass: HomeAssistant) -> None:
 
         zm_client.login.side_effect = requests.exceptions.ConnectionError()
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], conf_data,
+            result["flow_id"],
+            conf_data,
         )
         assert result
         assert result["type"] == "form"
@@ -98,7 +99,8 @@ async def test_user(hass: HomeAssistant) -> None:
         zm_client.login.side_effect = None
         zm_client.login.return_value = False
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], conf_data,
+            result["flow_id"],
+            conf_data,
         )
         assert result
         assert result["type"] == "form"
@@ -109,7 +111,8 @@ async def test_user(hass: HomeAssistant) -> None:
         zm_client.login.return_value = True
         zm_client.get_zms_url.return_value = "http://host1/path_zms1"
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], conf_data,
+            result["flow_id"],
+            conf_data,
         )
         assert result
         assert result["type"] == "create_entry"

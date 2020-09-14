@@ -55,7 +55,7 @@ HOST_CONFIG_SCHEMA = vol.Schema(
 )
 
 CONFIG_SCHEMA = vol.All(
-    cv.deprecated(const.DOMAIN, invalidation_version="0.114"),
+    cv.deprecated(const.DOMAIN, invalidation_version="0.118"),
     vol.Schema(
         {const.DOMAIN: vol.All(cv.ensure_list, [HOST_CONFIG_SCHEMA])},
         extra=vol.ALLOW_EXTRA,
@@ -161,7 +161,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
             )
         )
 
-    # Remove service is no other configs are loaded.
+    # If this is the last config to exist, remove the service too.
     if len(hass.config_entries.async_entries(const.DOMAIN)) <= 1:
         hass.services.async_remove(const.DOMAIN, const.SERVICE_SET_RUN_STATE)
 
