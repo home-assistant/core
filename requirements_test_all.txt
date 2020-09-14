@@ -35,9 +35,6 @@ PyXiaomiGateway==0.13.2
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.2
 
-# homeassistant.components.splunk
-Splunk-HEC==1.11
-
 # homeassistant.components.onvif
 WSDiscovery==2.0.0
 
