@@ -59,7 +59,9 @@ def setup(hass, config):
     name = conf.get(CONF_NAME)
     entity_filter = conf[CONF_FILTER]
 
-    event_collector = http_event_collector(token, host, FORMAT_JSON, name, port, use_ssl)
+    event_collector = http_event_collector(
+        token, host, FORMAT_JSON, name, port, use_ssl
+    )
     event_collector.SSL_verify = verify_ssl
 
     if not event_collector.check_connectivity():
