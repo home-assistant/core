@@ -96,7 +96,6 @@ class SmartPlugSwitch(SwitchEntity):
     def turn_off(self, **kwargs):
         """Turn the switch off."""
         self.smartplug.turn_off()
-        self.update_state()
 
     @property
     def device_state_attributes(self):
@@ -180,7 +179,7 @@ class SmartPlugSwitch(SwitchEntity):
                 if is_ready:
                     self._is_available = True
                     break
-            except (SmartDeviceException, OSError) as ex:
+            except (SmartDeviceException, OSError):
                 pass
             await asyncio.sleep(SLEEP_TIME)
 

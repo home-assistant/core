@@ -492,7 +492,7 @@ class TPLinkSmartBulb(LightEntity):
                 if is_ready:
                     self._is_available = True
                     break
-            except (SmartDeviceException, OSError) as ex:
+            except (SmartDeviceException, OSError):
                 pass
 
             await asyncio.sleep(SLEEP_TIME)
