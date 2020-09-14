@@ -35,7 +35,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 omni = OmniLogic(username, password)
                 await omni.connect()
             except LoginException:
-                errors["base"] = "cannot_connect"
+                errors["base"] = "invalid_auth"
             except OmniLogicException:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
