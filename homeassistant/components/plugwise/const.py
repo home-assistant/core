@@ -22,18 +22,14 @@ DEFAULT_TIMEOUT = 60
 # Configuration directives
 CONF_BASE = "base"
 CONF_GAS = "gas"
-CONF_HEATER = "heater"
 CONF_MAX_TEMP = "max_temp"
 CONF_MIN_TEMP = "min_temp"
 CONF_POWER = "power"
-CONF_SOLAR = "solar"
 CONF_THERMOSTAT = "thermostat"
 
 ATTR_ILLUMINANCE = "illuminance"
 
 UNIT_LUMEN = "lm"
-
-CURRENT_HVAC_DHW = "hot_water"
 
 DEVICE_STATE = "device_state"
 
