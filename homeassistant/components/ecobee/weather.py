@@ -1,5 +1,5 @@
 """Support for displaying weather info from Ecobee API."""
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from pyecobee.const import ECOBEE_STATE_UNKNOWN
 
@@ -13,6 +13,7 @@ from homeassistant.components.weather import (
     WeatherEntity,
 )
 from homeassistant.const import TEMP_FAHRENHEIT
+from homeassistant.util import dt as dt_util
 
 from .const import (
     _LOGGER,
@@ -165,7 +166,7 @@ class EcobeeWeather(WeatherEntity):
             return None
 
         forecasts = []
-        date = datetime.now()
+        date = dt_util.utcnow()
         for day in range(0, 5):
             forecast = _process_forecast(self.weather["forecasts"][day])
             if forecast is None:
