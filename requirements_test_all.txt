@@ -186,7 +186,7 @@ azure-eventhub==5.1.0
 base36==0.1.1
 
 # homeassistant.components.zha
-bellows==0.20.1
+bellows==0.20.2
 
 # homeassistant.components.blebox
 blebox_uniapi==1.3.2
