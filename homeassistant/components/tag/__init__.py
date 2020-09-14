@@ -70,7 +70,7 @@ class TagStorageCollection(collection.StorageCollection):
             data[TAG_ID] = str(uuid.uuid4())
         # make last_scanned JSON serializeable
         if LAST_SCANNED in data:
-            data[LAST_SCANNED] = str(data[LAST_SCANNED])
+            data[LAST_SCANNED] = data[LAST_SCANNED].isoformat()
         return data
 
     @callback
@@ -83,7 +83,7 @@ class TagStorageCollection(collection.StorageCollection):
         data = {**data, **self.UPDATE_SCHEMA(update_data)}
         # make last_scanned JSON serializeable
         if LAST_SCANNED in data:
-            data[LAST_SCANNED] = str(data[LAST_SCANNED])
+            data[LAST_SCANNED] = data[LAST_SCANNED].isoformat()
         return data
 
 
