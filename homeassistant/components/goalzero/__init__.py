@@ -6,7 +6,7 @@ from goalzero import Yeti, exceptions
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME, DEVICE_CLASS_BATTERY
+from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
@@ -129,7 +129,7 @@ class YetiEntity(CoordinatorEntity):
         self.api = _api
         self._name = name
         self._server_unique_id = server_unique_id
-        self._device_class = DEVICE_CLASS_BATTERY
+        self._device_class = None
 
     @property
     def device_info(self):

@@ -51,17 +51,12 @@ class YetiBinarySensor(YetiEntity, BinarySensorEntity):
         return f"{self._server_unique_id}/{self._condition_name}"
 
     @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return self._icon
-
-    @property
     def is_on(self):
         """Return if the service is on."""
         if self.api.data:
             return self.api.data[self._condition] == 1
 
     @property
-    def device_class(self) -> str:
-        """Return the class of this device."""
-        return self._device_class
+    def icon(self):
+        """Icon to use in the frontend, if any."""
+        return self._icon
