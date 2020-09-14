@@ -83,7 +83,7 @@ async def test_without_config(hass):
 
 
 async def test_with_invalid_credentials(hass):
-    """Test with invalid credentials, unable to connect, or unknown error on connect."""
+    """Test with invalid credentials."""
 
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
@@ -98,35 +98,6 @@ async def test_with_invalid_credentials(hass):
             result["flow_id"],
             DATA,
         )
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "invalid_auth"}
-
-    with patch(
-        "homeassistant.components.omnilogic.OmniLogic.connect",
-        side_effect=OmniLogicException,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            DATA,
-        )
-
-    assert result2["type"] == "form"
-    assert result2["step_id"] == "user"
-    assert result2["errors"] == {"base": "cannot_connect"}
-
-    with patch(
-        "homeassistant.components.omnilogic.OmniLogic.connect", side_effect=Exception
-    ):
-        result3 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            DATA,
-        )
-
-    assert result3["type"] == "form"
-    assert result3["step_id"] == "user"
-    assert result3["errors"] == {"base": "unknown"}
 
 
 async def test_form_cannot_connect(hass):
@@ -149,3 +120,24 @@ async def test_form_cannot_connect(hass):
     assert result["type"] == "form"
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_with_unknown_error(hass):
+    """Test with unknown error response from Hayward."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.omnilogic.OmniLogic.connect",
+        side_effect=Exception,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            DATA,
+        )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "unknown"}
