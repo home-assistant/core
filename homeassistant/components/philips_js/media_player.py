@@ -5,9 +5,16 @@ import logging
 from haphilipsjs import PhilipsTV
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
+from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA,
+    BrowseMedia,
+    MediaPlayerEntity,
+)
 from homeassistant.components.media_player.const import (
+    MEDIA_CLASS_CHANNEL,
+    MEDIA_CLASS_DIRECTORY,
     MEDIA_TYPE_CHANNEL,
+    MEDIA_TYPE_CHANNELS,
     SUPPORT_BROWSE_MEDIA,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PLAY_MEDIA,
@@ -281,21 +288,25 @@ class PhilipsTVMediaPlayer(MediaPlayerEntity):
                 f"Media not found: {media_content_type} / {media_content_id}"
             )
 
-        return {
-            "title": "Channels",
-            "media_content_id": "",
-            "media_content_type": "library",
-            "can_play": False,
-            "children": [
-                {
-                    "title": channel,
-                    "media_content_id": channel,
-                    "media_content_type": MEDIA_TYPE_CHANNEL,
-                    "can_play": True,
-                }
+        return BrowseMedia(
+            title="Channels",
+            media_class=MEDIA_CLASS_DIRECTORY,
+            media_content_id="",
+            media_content_type=MEDIA_TYPE_CHANNELS,
+            can_play=False,
+            can_expand=True,
+            children=[
+                BrowseMedia(
+                    title=channel,
+                    media_class=MEDIA_CLASS_CHANNEL,
+                    media_content_id=channel,
+                    media_content_type=MEDIA_TYPE_CHANNEL,
+                    can_play=True,
+                    can_expand=False,
+                )
                 for channel in self._channels.values()
             ],
-        }
+        )
 
     def update(self):
         """Get the latest data and update device state."""

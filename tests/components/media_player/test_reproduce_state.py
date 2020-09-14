@@ -7,7 +7,6 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_ENQUEUE,
-    ATTR_MEDIA_SEEK_POSITION,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
     ATTR_SOUND_MODE,
@@ -20,7 +19,6 @@ from homeassistant.components.media_player.reproduce_state import async_reproduc
 from homeassistant.const import (
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
-    SERVICE_MEDIA_SEEK,
     SERVICE_MEDIA_STOP,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -53,6 +51,8 @@ ENTITY_2 = "media_player.test2"
 async def test_state(hass, service, state):
     """Test that we can turn a state into a service call."""
     calls_1 = async_mock_service(hass, DOMAIN, service)
+    if service != SERVICE_TURN_ON:
+        async_mock_service(hass, DOMAIN, SERVICE_TURN_ON)
 
     await async_reproduce_states(hass, [State(ENTITY_1, state)])
 
@@ -149,7 +149,6 @@ async def test_attribute_no_state(hass):
     [
         (SERVICE_VOLUME_SET, ATTR_MEDIA_VOLUME_LEVEL),
         (SERVICE_VOLUME_MUTE, ATTR_MEDIA_VOLUME_MUTED),
-        (SERVICE_MEDIA_SEEK, ATTR_MEDIA_SEEK_POSITION),
         (SERVICE_SELECT_SOURCE, ATTR_INPUT_SOURCE),
         (SERVICE_SELECT_SOUND_MODE, ATTR_SOUND_MODE),
     ],

@@ -33,7 +33,11 @@ omit =
     homeassistant/components/airvisual/air_quality.py
     homeassistant/components/airvisual/sensor.py
     homeassistant/components/aladdin_connect/cover.py
-    homeassistant/components/alarmdecoder/*
+    homeassistant/components/alarmdecoder/__init__.py
+    homeassistant/components/alarmdecoder/alarm_control_panel.py
+    homeassistant/components/alarmdecoder/binary_sensor.py
+    homeassistant/components/alarmdecoder/const.py
+    homeassistant/components/alarmdecoder/sensor.py
     homeassistant/components/alpha_vantage/sensor.py
     homeassistant/components/amazon_polly/tts.py
     homeassistant/components/ambiclimate/climate.py
@@ -117,7 +121,6 @@ omit =
     homeassistant/components/buienradar/util.py
     homeassistant/components/buienradar/weather.py
     homeassistant/components/caldav/calendar.py
-    homeassistant/components/canary/alarm_control_panel.py
     homeassistant/components/canary/camera.py
     homeassistant/components/cast/*
     homeassistant/components/cert_expiry/helper.py
@@ -446,6 +449,7 @@ omit =
     homeassistant/components/knx/climate.py
     homeassistant/components/knx/cover.py
     homeassistant/components/kodi/__init__.py
+    homeassistant/components/kodi/browse_media.py
     homeassistant/components/kodi/const.py
     homeassistant/components/kodi/media_player.py
     homeassistant/components/kodi/notify.py
@@ -588,7 +592,6 @@ omit =
     homeassistant/components/nut/sensor.py
     homeassistant/components/nx584/alarm_control_panel.py
     homeassistant/components/nzbget/coordinator.py
-    homeassistant/components/nzbget/sensor.py
     homeassistant/components/obihai/*
     homeassistant/components/octoprint/*
     homeassistant/components/oem/climate.py
@@ -656,11 +659,6 @@ omit =
     homeassistant/components/plaato/*
     homeassistant/components/plex/media_player.py
     homeassistant/components/plex/sensor.py
-    homeassistant/components/plugwise/__init__.py
-    homeassistant/components/plugwise/binary_sensor.py
-    homeassistant/components/plugwise/climate.py
-    homeassistant/components/plugwise/sensor.py
-    homeassistant/components/plugwise/switch.py
     homeassistant/components/plum_lightpad/light.py
     homeassistant/components/pocketcasts/sensor.py
     homeassistant/components/point/*
@@ -759,6 +757,8 @@ omit =
     homeassistant/components/shodan/sensor.py
     homeassistant/components/shelly/__init__.py
     homeassistant/components/shelly/binary_sensor.py
+    homeassistant/components/shelly/cover.py
+    homeassistant/components/shelly/entity.py
     homeassistant/components/shelly/light.py
     homeassistant/components/shelly/sensor.py
     homeassistant/components/shelly/switch.py
@@ -832,6 +832,7 @@ omit =
     homeassistant/components/synology/camera.py
     homeassistant/components/synology_chat/notify.py
     homeassistant/components/synology_dsm/__init__.py
+    homeassistant/components/synology_dsm/camera.py
     homeassistant/components/synology_dsm/binary_sensor.py
     homeassistant/components/synology_dsm/sensor.py
     homeassistant/components/synology_srm/device_tracker.py

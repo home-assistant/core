@@ -38,7 +38,7 @@ from homeassistant.helpers import device_registry, entity_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import BASE_FILTER_SCHEMA, FILTER_SCHEMA
 from homeassistant.helpers.reload import async_integration_yaml_config
-from homeassistant.loader import async_get_integration
+from homeassistant.loader import IntegrationNotFound, async_get_integration
 from homeassistant.util import get_local_ip
 
 from .accessories import get_accessory
@@ -712,8 +712,13 @@ class HomeKit:
                 if dev_reg_ent.sw_version:
                     ent_cfg[ATTR_SOFTWARE_VERSION] = dev_reg_ent.sw_version
         if ATTR_MANUFACTURER not in ent_cfg:
-            integration = await async_get_integration(self.hass, ent_reg_ent.platform)
-            ent_cfg[ATTR_INTERGRATION] = integration.name
+            try:
+                integration = await async_get_integration(
+                    self.hass, ent_reg_ent.platform
+                )
+                ent_cfg[ATTR_INTERGRATION] = integration.name
+            except IntegrationNotFound:
+                ent_cfg[ATTR_INTERGRATION] = ent_reg_ent.platform
 
 
 class HomeKitPairingQRView(HomeAssistantView):

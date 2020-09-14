@@ -12,6 +12,7 @@ from homeassistant.components.media_player import (
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_APP,
     MEDIA_TYPE_CHANNEL,
+    SUPPORT_BROWSE_MEDIA,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -23,6 +24,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_STEP,
 )
+from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.const import (
     STATE_HOME,
     STATE_IDLE,
@@ -34,6 +36,7 @@ from homeassistant.const import (
 from homeassistant.helpers import entity_platform
 
 from . import RokuDataUpdateCoordinator, RokuEntity, roku_exception_handler
+from .browse_media import build_item_response, library_payload
 from .const import ATTR_KEYWORD, DOMAIN, SERVICE_SEARCH
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,6 +52,7 @@ SUPPORT_ROKU = (
     | SUPPORT_PLAY_MEDIA
     | SUPPORT_TURN_ON
     | SUPPORT_TURN_OFF
+    | SUPPORT_BROWSE_MEDIA
 )
 
 SEARCH_SCHEMA = {vol.Required(ATTR_KEYWORD): str}
@@ -234,6 +238,24 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         """Emulate opening the search screen and entering the search keyword."""
         await self.coordinator.roku.search(keyword)
 
+    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+        """Implement the websocket media browsing helper."""
+        if media_content_type in [None, "library"]:
+            return library_payload(self.coordinator)
+
+        payload = {
+            "search_type": media_content_type,
+            "search_id": media_content_id,
+        }
+        response = build_item_response(self.coordinator, payload)
+
+        if response is None:
+            raise BrowseError(
+                f"Media not found: {media_content_type} / {media_content_id}"
+            )
+
+        return response
+
     @roku_exception_handler
     async def async_turn_on(self) -> None:
         """Turn on the Roku."""
@@ -298,15 +320,20 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     @roku_exception_handler
     async def async_play_media(self, media_type: str, media_id: str, **kwargs) -> None:
         """Tune to channel."""
-        if media_type != MEDIA_TYPE_CHANNEL:
+        if media_type not in (MEDIA_TYPE_APP, MEDIA_TYPE_CHANNEL):
             _LOGGER.error(
-                "Invalid media type %s. Only %s is supported",
+                "Invalid media type %s. Only %s and %s are supported",
                 media_type,
+                MEDIA_TYPE_APP,
                 MEDIA_TYPE_CHANNEL,
             )
             return
 
-        await self.coordinator.roku.tune(media_id)
+        if media_type == MEDIA_TYPE_APP:
+            await self.coordinator.roku.launch(media_id)
+        elif media_type == MEDIA_TYPE_CHANNEL:
+            await self.coordinator.roku.tune(media_id)
+
         await self.coordinator.async_request_refresh()
 
     @roku_exception_handler

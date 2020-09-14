@@ -6,6 +6,9 @@ import pytest
 from homeassistant.components.tag import DOMAIN, TAGS, async_scan_tag
 from homeassistant.helpers import collection
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
+
+from tests.async_mock import patch
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,7 +63,10 @@ async def test_tag_scanned(hass, hass_ws_client, storage_setup):
     assert len(result) == 1
     assert "test tag" in result
 
-    await async_scan_tag(hass, "new tag", "some_scanner")
+    now = dt_util.utcnow()
+    with patch("homeassistant.util.dt.utcnow", return_value=now):
+        await async_scan_tag(hass, "new tag", "some_scanner")
+
     await client.send_json({"id": 7, "type": f"{DOMAIN}/list"})
     resp = await client.receive_json()
     assert resp["success"]
@@ -70,7 +76,7 @@ async def test_tag_scanned(hass, hass_ws_client, storage_setup):
     assert len(result) == 2
     assert "test tag" in result
     assert "new tag" in result
-    assert result["new tag"]["last_scanned"] is not None
+    assert result["new tag"]["last_scanned"] == now.isoformat()
 
 
 def track_changes(coll: collection.ObservableCollection):

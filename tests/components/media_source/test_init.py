@@ -2,6 +2,7 @@
 import pytest
 
 from homeassistant.components import media_source
+from homeassistant.components.media_player.const import MEDIA_CLASS_DIRECTORY
 from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.components.media_source import const
 from homeassistant.setup import async_setup_component
@@ -41,8 +42,8 @@ async def test_async_browse_media(hass):
 
     # Test non-media ignored (/media has test.mp3 and not_media.txt)
     media = await media_source.async_browse_media(hass, "")
-    assert isinstance(media, media_source.models.BrowseMedia)
-    assert media.name == "media/"
+    assert isinstance(media, media_source.models.BrowseMediaSource)
+    assert media.title == "media/"
     assert len(media.children) == 1
 
     # Test invalid media content
@@ -51,9 +52,9 @@ async def test_async_browse_media(hass):
 
     # Test base URI returns all domains
     media = await media_source.async_browse_media(hass, const.URI_SCHEME)
-    assert isinstance(media, media_source.models.BrowseMedia)
+    assert isinstance(media, media_source.models.BrowseMediaSource)
     assert len(media.children) == 1
-    assert media.children[0].name == "Local Media"
+    assert media.children[0].title == "Local Media"
 
 
 async def test_async_resolve_media(hass):
@@ -73,7 +74,15 @@ async def test_websocket_browse_media(hass, hass_ws_client):
 
     client = await hass_ws_client(hass)
 
-    media = media_source.models.BrowseMedia(const.DOMAIN, "/media", False, True)
+    media = media_source.models.BrowseMediaSource(
+        domain=const.DOMAIN,
+        identifier="/media",
+        title="Local Media",
+        media_class=MEDIA_CLASS_DIRECTORY,
+        media_content_type="listing",
+        can_play=False,
+        can_expand=True,
+    )
 
     with patch(
         "homeassistant.components.media_source.async_browse_media",
@@ -90,7 +99,7 @@ async def test_websocket_browse_media(hass, hass_ws_client):
 
     assert msg["success"]
     assert msg["id"] == 1
-    assert media.to_media_player_item() == msg["result"]
+    assert media.as_dict() == msg["result"]
 
     with patch(
         "homeassistant.components.media_source.async_browse_media",

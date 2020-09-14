@@ -3,7 +3,7 @@ from typing import Callable, List, Optional
 
 from zoneminder.zm import ZoneMinder
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import BinarySensorEntity, DEVICE_CLASS_CONNECTIVITY
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
@@ -49,7 +49,7 @@ class ZMAvailabilitySensor(BinarySensorEntity):
     @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return "connectivity"
+        return DEVICE_CLASS_CONNECTIVITY
 
     def update(self):
         """Update the state of this sensor (availability of ZoneMinder)."""

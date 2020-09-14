@@ -19,5 +19,15 @@
                 "title": "Connecta't amb el Smile"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Interval d'escaneig (segons)"
+                },
+                "description": "Ajusta les opcions de Plugwise"
+            }
+        }
     }
 }

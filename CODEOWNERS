@@ -120,6 +120,7 @@ homeassistant/components/elkm1/* @gwww @bdraco
 homeassistant/components/elv/* @majuss
 homeassistant/components/emby/* @mezz64
 homeassistant/components/emoncms/* @borpin
+homeassistant/components/emulated_kasa/* @kbickar
 homeassistant/components/enigma2/* @fbradyirl
 homeassistant/components/enocean/* @bdurrer
 homeassistant/components/entur_public_transport/* @hfurubotten
@@ -235,6 +236,7 @@ homeassistant/components/linux_battery/* @fabaff
 homeassistant/components/local_ip/* @issacg
 homeassistant/components/logger/* @home-assistant/core
 homeassistant/components/logi_circle/* @evanjd
+homeassistant/components/loopenergy/* @pavoni
 homeassistant/components/lovelace/* @home-assistant/frontend
 homeassistant/components/luci/* @fbradyirl @mzdrale
 homeassistant/components/luftdaten/* @fabaff
@@ -252,7 +254,7 @@ homeassistant/components/met/* @danielhiversen @thimic
 homeassistant/components/meteo_france/* @hacf-fr @oncleben31 @Quentame
 homeassistant/components/meteoalarm/* @rolfberkenbosch
 homeassistant/components/metoffice/* @MrHarcombe
-homeassistant/components/miflora/* @danielhiversen @ChristianKuehnel
+homeassistant/components/miflora/* @danielhiversen @ChristianKuehnel @basnijholt
 homeassistant/components/mikrotik/* @engrbm87
 homeassistant/components/mill/* @danielhiversen
 homeassistant/components/min_max/* @fabaff
@@ -355,6 +357,7 @@ homeassistant/components/rmvtransport/* @cgtobi
 homeassistant/components/roku/* @ctalkington
 homeassistant/components/roomba/* @pschmitt @cyr-ius @shenxn
 homeassistant/components/roon/* @pavoni
+homeassistant/components/rpi_power/* @shenxn @swetoast
 homeassistant/components/safe_mode/* @home-assistant/core
 homeassistant/components/saj/* @fredericvl
 homeassistant/components/salt/* @bjornorri
@@ -407,7 +410,7 @@ homeassistant/components/starline/* @anonym-tsk
 homeassistant/components/statistics/* @fabaff
 homeassistant/components/stiebel_eltron/* @fucm
 homeassistant/components/stookalert/* @fwestenberg
-homeassistant/components/stream/* @hunterjm
+homeassistant/components/stream/* @hunterjm @uvjustin
 homeassistant/components/stt/* @pvizeli
 homeassistant/components/suez_water/* @ooii
 homeassistant/components/sun/* @Swamp-Ig
@@ -419,7 +422,7 @@ homeassistant/components/switchbot/* @danielhiversen
 homeassistant/components/switcher_kis/* @tomerfi
 homeassistant/components/switchmate/* @danielhiversen
 homeassistant/components/syncthru/* @nielstron
-homeassistant/components/synology_dsm/* @ProtoThis @Quentame
+homeassistant/components/synology_dsm/* @hacf-fr @Quentame
 homeassistant/components/synology_srm/* @aerialls
 homeassistant/components/syslog/* @fabaff
 homeassistant/components/tado/* @michaelarnauts @bdraco
@@ -464,7 +467,7 @@ homeassistant/components/velbus/* @Cereal2nd @brefra
 homeassistant/components/velux/* @Julius2342
 homeassistant/components/vera/* @vangorra
 homeassistant/components/versasense/* @flamm3blemuff1n
-homeassistant/components/version/* @fabaff
+homeassistant/components/version/* @fabaff @ludeeus
 homeassistant/components/vesync/* @markperdue @webdjoe @thegardenmonkey
 homeassistant/components/vicare/* @oischinger
 homeassistant/components/vilfo/* @ManneW
