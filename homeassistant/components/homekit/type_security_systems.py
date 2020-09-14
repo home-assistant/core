@@ -40,6 +40,9 @@ HASS_TO_HOMEKIT = {
     STATE_ALARM_ARMED_NIGHT: 2,
     STATE_ALARM_DISARMED: 3,
     STATE_ALARM_TRIGGERED: 4,
+}
+
+HASS_TO_HOMEKIT_SERVICES = {
     SERVICE_ALARM_ARM_HOME: 0,
     SERVICE_ALARM_ARM_AWAY: 1,
     SERVICE_ALARM_ARM_NIGHT: 2,
@@ -91,19 +94,25 @@ class SecuritySystem(HomeAccessory):
             HASS_TO_HOMEKIT[STATE_ALARM_DISARMED],
             HASS_TO_HOMEKIT[STATE_ALARM_TRIGGERED],
         ]
-        target_supported_services = [HASS_TO_HOMEKIT[SERVICE_ALARM_DISARM]]
+        target_supported_services = [HASS_TO_HOMEKIT_SERVICES[SERVICE_ALARM_DISARM]]
 
         if supported_states & SUPPORT_ALARM_ARM_HOME:
             current_supported_states.append(HASS_TO_HOMEKIT[STATE_ALARM_ARMED_HOME])
-            target_supported_services.append(HASS_TO_HOMEKIT[SERVICE_ALARM_ARM_HOME])
+            target_supported_services.append(
+                HASS_TO_HOMEKIT_SERVICES[SERVICE_ALARM_ARM_HOME]
+            )
 
         if supported_states & SUPPORT_ALARM_ARM_AWAY:
             current_supported_states.append(HASS_TO_HOMEKIT[STATE_ALARM_ARMED_AWAY])
-            target_supported_services.append(HASS_TO_HOMEKIT[SERVICE_ALARM_ARM_AWAY])
+            target_supported_services.append(
+                HASS_TO_HOMEKIT_SERVICES[SERVICE_ALARM_ARM_AWAY]
+            )
 
         if supported_states & SUPPORT_ALARM_ARM_NIGHT:
             current_supported_states.append(HASS_TO_HOMEKIT[STATE_ALARM_ARMED_NIGHT])
-            target_supported_services.append(HASS_TO_HOMEKIT[SERVICE_ALARM_ARM_NIGHT])
+            target_supported_services.append(
+                HASS_TO_HOMEKIT_SERVICES[SERVICE_ALARM_ARM_NIGHT]
+            )
 
         new_current_states = {
             key: val
