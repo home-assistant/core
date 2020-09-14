@@ -20,7 +20,7 @@ from homeassistant.setup import async_setup_component
 from . import mock_device, mock_location, mock_reading
 
 from tests.async_mock import patch
-from tests.common import mock_registry
+from tests.common import mock_device_registry, mock_registry
 
 
 async def test_sensors_pro(hass, canary) -> None:
@@ -28,6 +28,8 @@ async def test_sensors_pro(hass, canary) -> None:
     await async_setup_component(hass, "persistent_notification", {})
 
     registry = mock_registry(hass)
+    device_registry = mock_device_registry(hass)
+
     online_device_at_home = mock_device(20, "Dining Room", True, "Canary Pro")
 
     instance = canary.return_value
@@ -81,6 +83,11 @@ async def test_sensors_pro(hass, canary) -> None:
         assert state
         assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == data[2]
         assert state.state == data[1]
+
+    device = device_registry.async_get_device({(DOMAIN, "20")}, set())
+    assert device.manufacturer == "Canary"
+    assert device.name == "Dining Room"
+    assert device.model == "Canary Pro"
 
 
 async def test_sensors_attributes_pro(hass, canary) -> None:
@@ -142,6 +149,8 @@ async def test_sensors_flex(hass, canary) -> None:
     await async_setup_component(hass, "persistent_notification", {})
 
     registry = mock_registry(hass)
+    device_registry = mock_device_registry(hass)
+
     online_device_at_home = mock_device(20, "Dining Room", True, "Canary Flex")
 
     instance = canary.return_value
@@ -187,3 +196,8 @@ async def test_sensors_flex(hass, canary) -> None:
         assert state
         assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == data[2]
         assert state.state == data[1]
+
+    device = device_registry.async_get_device({(DOMAIN, "20")}, set())
+    assert device.manufacturer == "Canary"
+    assert device.name == "Dining Room"
+    assert device.model == "Canary Flex"
