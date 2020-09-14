@@ -1,4 +1,5 @@
 """Local Media Source Implementation."""
+import logging
 import mimetypes
 from pathlib import Path
 from typing import Tuple
@@ -14,6 +15,8 @@ from homeassistant.util import sanitize_path
 
 from .const import DOMAIN, MEDIA_CLASS_MAP, MEDIA_MIME_TYPES
 from .models import BrowseMediaSource, MediaSource, MediaSourceItem, PlayMedia
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @callback
@@ -70,6 +73,12 @@ class LocalSource(MediaSource):
         self, item: MediaSourceItem, media_types: Tuple[str] = MEDIA_MIME_TYPES
     ) -> BrowseMediaSource:
         """Return media."""
+        # AIS TODO
+        # _LOGGER.error(str(item))
+        # if item.identifier == "":
+        #     import homeassistant.components.ais_exo_player.media_browser as ais_media_browser
+        #
+        #     return await ais_media_browser.browse_media(self.hass, None, None)
         try:
             source_dir_id, location = async_parse_identifier(item)
         except Unresolvable as err:
