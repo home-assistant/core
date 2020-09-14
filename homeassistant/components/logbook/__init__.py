@@ -39,12 +39,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import (
-    DOMAIN as HA_DOMAIN,
-    callback,
-    split_entity_id,
-    valid_entity_id,
-)
+from homeassistant.core import DOMAIN as HA_DOMAIN, callback, split_entity_id
 from homeassistant.exceptions import InvalidEntityFormatError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import (
@@ -208,7 +203,15 @@ class LogbookView(HomeAssistantView):
         else:
             period = int(period)
 
-        entity_id = request.query.get("entity")
+        entity_ids = request.query.get("entity")
+        if entity_ids:
+            try:
+                entity_ids = cv.entity_ids(entity_ids)
+            except vol.Invalid:
+                raise InvalidEntityFormatError(
+                    f"Invalid entity id(s) encountered: {entity_ids}. "
+                    "Format should be <domain>.<object_id>"
+                ) from vol.Invalid
 
         end_time = request.query.get("end_time")
         if end_time is None:
@@ -231,7 +234,7 @@ class LogbookView(HomeAssistantView):
                     hass,
                     start_day,
                     end_day,
-                    entity_id,
+                    entity_ids,
                     self.filters,
                     self.entities_filter,
                     entity_matches_only,
@@ -409,7 +412,7 @@ def _get_events(
     hass,
     start_day,
     end_day,
-    entity_id=None,
+    entity_ids=None,
     filters=None,
     entities_filter=None,
     entity_matches_only=False,
@@ -417,7 +420,6 @@ def _get_events(
     """Get events for a period of time."""
     entity_attr_cache = EntityAttributeCache(hass)
     context_lookup = {None: None}
-    entity_id_lower = None
     apply_sql_entities_filter = True
 
     def yield_events(query):
@@ -428,14 +430,8 @@ def _get_events(
             if _keep_event(hass, event, entities_filter):
                 yield event
 
-    if entity_id is not None:
-        entity_id_lower = entity_id.lower()
-        if not valid_entity_id(entity_id_lower):
-            raise InvalidEntityFormatError(
-                f"Invalid entity id encountered: {entity_id_lower}. "
-                "Format should be <domain>.<object_id>"
-            )
-        entities_filter = generate_filter([], [entity_id_lower], [], [])
+    if entity_ids is not None:
+        entities_filter = generate_filter([], entity_ids, [], [])
         apply_sql_entities_filter = False
 
     with session_scope(hass=hass) as session:
@@ -484,26 +480,31 @@ def _get_events(
             .filter((Events.time_fired > start_day) & (Events.time_fired < end_day))
         )
 
-        if entity_id_lower is not None:
+        if entity_ids is not None:
             if entity_matches_only:
                 # When entity_matches_only is provided, contexts and events that do not
-                # contain the entity_id are not included in the logbook response.
-                entity_id_json = ENTITY_ID_JSON_TEMPLATE.format(entity_id_lower)
+                # contain the entity_ids are not included in the logbook response.
+                states_matchers = Events.event_data.contains(
+                    ENTITY_ID_JSON_TEMPLATE.format(entity_ids[0])
+                )
+
+                for entity_id in entity_ids[1:]:
+                    states_matchers |= Events.event_data.contains(
+                        ENTITY_ID_JSON_TEMPLATE.format(entity_id)
+                    )
+
                 query = query.filter(
                     (
                         (States.last_updated == States.last_changed)
-                        & (States.entity_id == entity_id_lower)
+                        & States.entity_id.in_(entity_ids)
                     )
-                    | (
-                        States.state_id.is_(None)
-                        & Events.event_data.contains(entity_id_json)
-                    )
+                    | (States.state_id.is_(None) & states_matchers)
                 )
             else:
                 query = query.filter(
                     (
                         (States.last_updated == States.last_changed)
-                        & (States.entity_id == entity_id_lower)
+                        & States.entity_id.in_(entity_ids)
                     )
                     | (States.state_id.is_(None))
                 )
