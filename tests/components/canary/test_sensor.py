@@ -85,7 +85,7 @@ async def test_sensors_pro(hass, canary) -> None:
         assert state.state == data[1]
 
     device = device_registry.async_get_device({(DOMAIN, "20")}, set())
-    assert device.manufacturer == "Canary"
+    assert device.manufacturer == "Canary Connect, Inc."
     assert device.name == "Dining Room"
     assert device.model == "Canary Pro"
 
@@ -198,6 +198,6 @@ async def test_sensors_flex(hass, canary) -> None:
         assert state.state == data[1]
 
     device = device_registry.async_get_device({(DOMAIN, "20")}, set())
-    assert device.manufacturer == "Canary"
+    assert device.manufacturer == "Canary Connect, Inc."
     assert device.name == "Dining Room"
     assert device.model == "Canary Flex"
