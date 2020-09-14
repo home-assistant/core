@@ -6,6 +6,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import (
+    CONF_BASE,
     CONF_HOST,
     CONF_NAME,
     CONF_PASSWORD,
@@ -126,12 +127,12 @@ class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 api = await validate_gw_input(self.hass, user_input)
 
             except CannotConnect:
-                errors["base"] = "cannot_connect"
+                errors[CONF_BASE] = "cannot_connect"
             except InvalidAuth:
-                errors["base"] = "invalid_auth"
+                errors[CONF_BASE] = "invalid_auth"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+                errors[CONF_BASE] = "unknown"
             if not errors:
                 await self.async_set_unique_id(
                     api.smile_hostname or api.gateway_id, raise_on_progress=False

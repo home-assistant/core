@@ -7,7 +7,7 @@ from Plugwise_Smile.Smile import Smile
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import callback
 
-from .const import COORDINATOR, DOMAIN
+from .const import COORDINATOR, DOMAIN, SWITCH_ICON
 from .gateway import SmileGateway
 
 _LOGGER = logging.getLogger(__name__)
@@ -53,6 +53,7 @@ class PwSwitch(SmileGateway, SwitchEntity):
         self._model = model
 
         self._is_on = False
+        self._icon = SWITCH_ICON
 
         self._unique_id = f"{dev_id}-plug"
 
@@ -60,6 +61,11 @@ class PwSwitch(SmileGateway, SwitchEntity):
     def is_on(self):
         """Return true if device is on."""
         return self._is_on
+
+    @property
+    def icon(self):
+        """Return the icon of this entity."""
+        return self._icon
 
     async def async_turn_on(self, **kwargs):
         """Turn the device on."""

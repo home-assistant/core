@@ -91,7 +91,6 @@ class PwBinarySensor(SmileSensor, BinarySensorEntity):
 
         self._is_on = data[self._binary_sensor]
 
-        self._state = STATE_OFF
         self._state = STATE_ON if self._is_on else STATE_OFF
         if self._binary_sensor == "dhw_state":
             self._icon = FLOW_ON_ICON if self._is_on else FLOW_OFF_ICON
