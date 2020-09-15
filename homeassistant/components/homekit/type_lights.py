@@ -24,6 +24,10 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import callback
+from homeassistant.util.color import (
+    color_temperature_mired_to_kelvin,
+    color_temperature_to_hs,
+)
 
 from .accessories import TYPES, HomeAccessory
 from .const import (
@@ -64,8 +68,6 @@ class Light(HomeAccessory):
         if self._features & SUPPORT_COLOR:
             self.chars.append(CHAR_HUE)
             self.chars.append(CHAR_SATURATION)
-            self._hue = None
-            self._saturation = None
         elif self._features & SUPPORT_COLOR_TEMP:
             # ColorTemperature and Hue characteristic should not be
             # exposed both. Both states are tracked separately in HomeKit,
@@ -179,7 +181,16 @@ class Light(HomeAccessory):
 
         # Handle Color
         if CHAR_SATURATION in self.chars and CHAR_HUE in self.chars:
-            hue, saturation = new_state.attributes.get(ATTR_HS_COLOR, (None, None))
+            if ATTR_HS_COLOR in new_state.attributes:
+                hue, saturation = new_state.attributes[ATTR_HS_COLOR]
+            elif ATTR_COLOR_TEMP in new_state.attributes:
+                hue, saturation = color_temperature_to_hs(
+                    color_temperature_mired_to_kelvin(
+                        new_state.attributes[ATTR_COLOR_TEMP]
+                    )
+                )
+            else:
+                hue, saturation = None, None
             if isinstance(hue, (int, float)) and isinstance(saturation, (int, float)):
                 hue = round(hue, 0)
                 saturation = round(saturation, 0)
