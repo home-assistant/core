@@ -299,11 +299,19 @@ class DysonTest(unittest.TestCase):
         # Result should be in celsius, hence then subtraction of 273.
         assert entity.current_temperature == 289 - 273
 
-    def test_property_target_temperature(self):
-        """Test properties of target temperature."""
-        device = _get_device_heat_on()
-        entity = dyson.DysonPureHotCoolLinkEntity(device)
-        assert entity.target_temperature == 23
+
+@patch(
+    "homeassistant.components.dyson.DysonAccount.devices",
+    return_value=[_get_device_heat_on()],
+)
+@patch("homeassistant.components.dyson.DysonAccount.login", return_value=True)
+async def test_dyson_heat_on(mocked_login, mocked_devices, hass):
+    """Test set climate temperature."""
+    await async_setup_component(hass, dyson_parent.DOMAIN, _get_config())
+    await hass.async_block_till_done()
+
+    state = hass.states.get("climate.temp_name")
+    assert state.attributes["temperature"] == 23
 
 
 @patch(
