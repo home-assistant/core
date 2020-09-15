@@ -1547,6 +1547,13 @@ def library_payload(media_library):
 
     Used by async_browse_media.
     """
+    if not media_library.browse_by_idstring(
+        "tracks",
+        "",
+        max_items=1,
+    ):
+        raise BrowseError("Local library not found")
+
     children = []
     for item in media_library.browse():
         try:

@@ -103,7 +103,7 @@ aioguardian==1.0.1
 aioharmony==0.2.6
 
 # homeassistant.components.homekit_controller
-aiohomekit[IP]==0.2.49
+aiohomekit==0.2.53
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -183,7 +183,7 @@ azure-eventhub==5.1.0
 base36==0.1.1
 
 # homeassistant.components.zha
-bellows==0.20.1
+bellows==0.20.2
 
 # homeassistant.components.blebox
 blebox_uniapi==1.3.2
@@ -334,7 +334,7 @@ gios==0.1.4
 glances_api==0.2.0
 
 # homeassistant.components.gogogate2
-gogogate2-api==2.0.1
+gogogate2-api==2.0.2
 
 # homeassistant.components.google
 google-api-python-client==1.6.4
