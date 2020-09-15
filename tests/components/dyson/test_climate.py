@@ -28,6 +28,7 @@ from homeassistant.components.climate.const import (
     ATTR_FAN_MODE,
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
+    ATTR_HVAC_MODES,
     CURRENT_HVAC_COOL,
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
@@ -214,14 +215,6 @@ class DysonTest(unittest.TestCase):
         set_config = device.set_configuration
         set_config.assert_called_with(heat_mode=HeatMode.HEAT_OFF)
 
-    def test_dyson_operation_list(self):
-        """Test get operation list."""
-        device = _get_device_heat_on()
-        entity = dyson.DysonPureHotCoolLinkEntity(device)
-        assert len(entity.hvac_modes) == 2
-        assert dyson.HVAC_MODE_HEAT in entity.hvac_modes
-        assert dyson.HVAC_MODE_COOL in entity.hvac_modes
-
     def test_dyson_heat_off(self):
         """Test turn off heat."""
         device = _get_device_heat_off()
@@ -296,6 +289,9 @@ async def test_dyson_heat_on(mocked_login, mocked_devices, hass):
     assert state.attributes["current_temperature"] == 289 - 273
     assert state.attributes["current_humidity"] == 53
     assert state.state == HVAC_MODE_HEAT
+    assert len(state.attributes[ATTR_HVAC_MODES]) == 2
+    assert HVAC_MODE_HEAT in state.attributes[ATTR_HVAC_MODES]
+    assert HVAC_MODE_COOL in state.attributes[ATTR_HVAC_MODES]
 
 
 @patch(
