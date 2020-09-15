@@ -6,10 +6,12 @@ from typing import Callable, List
 
 from haffmpeg.camera import CameraMjpeg
 from haffmpeg.tools import IMAGE_JPEG, ImageFrame
+import voluptuous as vol
 
-from homeassistant.components.camera import Camera
+from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
 from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
@@ -28,6 +30,9 @@ _LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_SESSION_RENEW = timedelta(seconds=90)
 
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Optional(CONF_FFMPEG_ARGUMENTS, default=DEFAULT_ARGUMENTS): cv.string}
+)
 
 async def async_setup_entry(
     hass: HomeAssistantType,
