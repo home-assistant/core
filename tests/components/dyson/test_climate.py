@@ -23,11 +23,16 @@ from homeassistant.components.climate import (
 )
 from homeassistant.components.climate.const import (
     ATTR_CURRENT_HUMIDITY,
+    ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
     ATTR_FAN_MODES,
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     ATTR_HVAC_MODES,
+    ATTR_MAX_TEMP,
+    ATTR_MIN_TEMP,
+    ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW,
     CURRENT_HVAC_COOL,
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
@@ -212,9 +217,9 @@ async def test_pure_hot_cool_link_state(mocked_login, mocked_devices, hass):
 
     state = hass.states.get("climate.temp_name")
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == SUPPORT_FLAGS
-    assert state.attributes["temperature"] == 23
-    assert state.attributes["current_temperature"] == 289 - 273
-    assert state.attributes["current_humidity"] == 53
+    assert state.attributes[ATTR_TEMPERATURE] == 23
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 289 - 273
+    assert state.attributes[ATTR_CURRENT_HUMIDITY] == 53
     assert state.state == HVAC_MODE_HEAT
     assert len(state.attributes[ATTR_HVAC_MODES]) == 2
     assert HVAC_MODE_HEAT in state.attributes[ATTR_HVAC_MODES]
@@ -283,7 +288,7 @@ async def test_setup_component_without_devices(mocked_login, mocked_devices, has
     await async_setup_component(hass, DYSON_DOMAIN, _get_config())
     await hass.async_block_till_done()
 
-    entity_ids = hass.states.async_entity_ids("climate")
+    entity_ids = hass.states.async_entity_ids(DOMAIN)
     assert not entity_ids
 
 
@@ -306,8 +311,8 @@ async def test_dyson_set_temperature(mocked_login, mocked_devices, hass):
         SERVICE_SET_TEMPERATURE,
         {
             ATTR_ENTITY_ID: "climate.temp_name",
-            "target_temp_high": 25.0,
-            "target_temp_low": 15.0,
+            ATTR_TARGET_TEMP_HIGH: 25.0,
+            ATTR_TARGET_TEMP_LOW: 15.0,
         },
         True,
     )
@@ -393,7 +398,7 @@ async def test_setup_component_with_parent_discovery(
     await async_setup_component(hass, DYSON_DOMAIN, _get_config())
     await hass.async_block_till_done()
 
-    entity_ids = hass.states.async_entity_ids("climate")
+    entity_ids = hass.states.async_entity_ids(DOMAIN)
     assert len(entity_ids) == 2
 
 
@@ -408,7 +413,7 @@ async def test_purehotcool_component_setup_only_once(devices, login, hass):
     await async_setup_component(hass, DYSON_DOMAIN, config)
     await hass.async_block_till_done()
 
-    entity_ids = hass.states.async_entity_ids("climate")
+    entity_ids = hass.states.async_entity_ids(DOMAIN)
     assert len(entity_ids) == 1
     state = hass.states.get(entity_ids[0])
     assert state.name == "Living room"
@@ -425,7 +430,7 @@ async def test_purehotcoollink_component_setup_only_once(devices, login, hass):
     await async_setup_component(hass, DYSON_DOMAIN, config)
     await hass.async_block_till_done()
 
-    entity_ids = hass.states.async_entity_ids("climate")
+    entity_ids = hass.states.async_entity_ids(DOMAIN)
     assert len(entity_ids) == 1
     state = hass.states.get(entity_ids[0])
     assert state.name == "Temp Name"
@@ -571,8 +576,8 @@ async def test_purehotcool_set_temperature(devices, login, hass):
     await hass.async_block_till_done()
     state = hass.states.get("climate.living_room")
     attributes = state.attributes
-    min_temp = attributes["min_temp"]
-    max_temp = attributes["max_temp"]
+    min_temp = attributes[ATTR_MIN_TEMP]
+    max_temp = attributes[ATTR_MAX_TEMP]
 
     await hass.services.async_call(
         DOMAIN,
