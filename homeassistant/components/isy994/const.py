@@ -44,6 +44,7 @@ from homeassistant.components.lock import DOMAIN as LOCK
 from homeassistant.components.sensor import DOMAIN as SENSOR
 from homeassistant.components.switch import DOMAIN as SWITCH
 from homeassistant.const import (
+    AREA_SQUARE_METERS,
     CONCENTRATION_PARTS_PER_MILLION,
     DEGREE,
     ENERGY_KILO_WATT_HOUR,
@@ -379,7 +380,7 @@ UOM_FRIENDLY_NAME = {
     "71": UV_INDEX,
     "72": VOLT,
     "73": POWER_WATT,
-    "74": f"{POWER_WATT}/{LENGTH_METERS}²",
+    "74": f"{POWER_WATT}/{AREA_SQUARE_METERS}",
     "75": "weekday",
     "76": DEGREE,
     "77": TIME_YEARS,

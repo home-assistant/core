@@ -12,6 +12,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.const import (
+    AREA_SQUARE_METERS,
     ATTR_ATTRIBUTION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -60,7 +61,12 @@ SENSOR_TYPES = {
     "wind_max_bearing": ("Top Wind Bearing", DEGREE, f"WSR {DEGREE}", int),
     "sun_last_hour": ("Sun Last Hour", PERCENTAGE, f"SO {PERCENTAGE}", int),
     "temperature": ("Temperature", TEMP_CELSIUS, f"T {TEMP_CELSIUS}", float),
-    "precipitation": ("Precipitation", "l/m²", "N l/m²", float),
+    "precipitation": (
+        "Precipitation",
+        f"l/{AREA_SQUARE_METERS}",
+        f"N l/{AREA_SQUARE_METERS}",
+        float,
+    ),
     "dewpoint": ("Dew Point", TEMP_CELSIUS, f"TP {TEMP_CELSIUS}", float),
     # The following probably not useful for general consumption,
     # but we need them to fill in internal attributes
