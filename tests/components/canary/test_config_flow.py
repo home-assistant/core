@@ -95,6 +95,10 @@ async def test_user_form_cannot_connect_timeout(hass, canary):
     """Test we handle cannot connect error from timeout."""
     canary.side_effect = ConnectTimeout()
 
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         USER_INPUT,
