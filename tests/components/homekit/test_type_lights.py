@@ -293,8 +293,24 @@ async def test_light_color_temperature_and_rgb_color(hass, hk_driver, cls, event
     )
     await hass.async_block_till_done()
     acc = cls.light(hass, hk_driver, "Light", entity_id, 2, None)
+    assert acc.char_hue.value == 260
+    assert acc.char_saturation.value == 90
 
     assert not hasattr(acc, "char_color_temperature")
+
+    hass.states.async_set(entity_id, STATE_ON, {ATTR_COLOR_TEMP: 224})
+    await hass.async_block_till_done()
+    await acc.run_handler()
+    await hass.async_block_till_done()
+    assert acc.char_hue.value == 27
+    assert acc.char_saturation.value == 27
+
+    hass.states.async_set(entity_id, STATE_ON, {ATTR_COLOR_TEMP: 352})
+    await hass.async_block_till_done()
+    await acc.run_handler()
+    await hass.async_block_till_done()
+    assert acc.char_hue.value == 28
+    assert acc.char_saturation.value == 61
 
 
 async def test_light_rgb_color(hass, hk_driver, cls, events):
