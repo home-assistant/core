@@ -918,7 +918,7 @@ samsungtvws==1.4.0
 sense_energy==0.8.0
 
 # homeassistant.components.sentry
-sentry-sdk==0.17.4
+sentry-sdk==0.17.5
 
 # homeassistant.components.sharkiq
 sharkiqpy==0.1.8
