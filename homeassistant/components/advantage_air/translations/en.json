@@ -1,0 +1,20 @@
+{
+  "config": {
+    "flow_title": "Advantage Air Setup",
+    "error": {
+      "connection_error": "Could not connect to the API, check the URL is correct.",
+      "timeout_error": "The connection timed out, check the URL is correct.",
+      "data_error": "No Airconditioners were found."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "url": "Tablet IP and Port"
+        },
+        "description": "Connect to the API of your Advantage Air wall mounted tablet.",
+        "title": "Connect"
+      }
+    }
+  },
+  "title": "Advantage Air"
+}

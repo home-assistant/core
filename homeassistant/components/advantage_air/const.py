@@ -1,0 +1,7 @@
+DOMAIN = "advantage_air"
+ADVANTAGE_AIR_ZONE_OPEN = "open"
+ADVANTAGE_AIR_ZONE_CLOSE = "close"
+ADVANTAGE_AIR_PLATFORMS = ["climate", "binary_sensor", "sensor", "cover", "switch"]
+ADVANTAGE_AIR_SYNC_INTERVAL = 15
+ADVANTAGE_AIR_RETRY = 5
+ADVANTAGE_AIR_SET_COUNTDOWN_VALUE = "minutes"

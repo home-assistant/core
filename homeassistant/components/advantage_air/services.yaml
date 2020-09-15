@@ -1,0 +1,9 @@
+set_time_to:
+    description: Sets Time To On/Off
+    fields:
+        entity_id:
+            description: Time To entity
+            example: "sensor.ac_time_to_on"
+        minutes:
+            description: Minutes until action
+            example: "60"
