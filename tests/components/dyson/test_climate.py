@@ -14,6 +14,7 @@ from libpurecool.dyson_pure_hotcool import DysonPureHotCool
 from libpurecool.dyson_pure_hotcool_link import DysonPureHotCoolLink
 from libpurecool.dyson_pure_state import DysonPureHotCoolState
 from libpurecool.dyson_pure_state_v2 import DysonPureHotCoolV2State
+import pytest
 
 from homeassistant.components.climate import (
     DOMAIN,
@@ -46,12 +47,7 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_OFF,
 )
 from homeassistant.components.dyson import CONF_LANGUAGE, DOMAIN as DYSON_DOMAIN
-from homeassistant.components.dyson.climate import (
-    FAN_DIFFUSE,
-    FAN_FOCUS,
-    SUPPORT_FLAGS,
-    DysonPureHotCoolEntity,
-)
+from homeassistant.components.dyson.climate import FAN_DIFFUSE, FAN_FOCUS, SUPPORT_FLAGS
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
@@ -70,6 +66,8 @@ from tests.async_mock import Mock, call, patch
 
 class MockDysonState(DysonPureHotCoolState):
     """Mock Dyson state."""
+
+    # pylint: disable=super-init-not-called
 
     def __init__(self):
         """Create new Mock Dyson State."""
@@ -136,6 +134,13 @@ def _get_device_heat_on():
     device.environmental_state.temperature = 289
     device.environmental_state.humidity = 53
     return device
+
+
+@pytest.fixture(autouse=True)
+def patch_platforms_fixture():
+    """Only set up the climate platform for the climate tests."""
+    with patch("homeassistant.components.dyson.DYSON_PLATFORMS", new=[DOMAIN]):
+        yield
 
 
 @patch(
@@ -476,12 +481,9 @@ async def test_purehotcool_update_state(devices, login, hass):
         },
     }
     device.state = DysonPureHotCoolV2State(json.dumps(event))
+    update_callback = device.add_message_listener.call_args[0][0]
 
-    for add_call in device.add_message_listener.call_args_list:
-        callback = add_call[0][0]
-        if type(callback.__self__) == DysonPureHotCoolEntity:
-            callback(device.state)
-
+    await hass.async_add_executor_job(update_callback, device.state)
     await hass.async_block_till_done()
     state = hass.states.get("climate.living_room")
     attributes = state.attributes
