@@ -45,6 +45,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR
 from homeassistant.components.switch import DOMAIN as SWITCH
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
+    CURRENCY_DOLLAR,
     DEGREE,
     ENERGY_KILO_WATT_HOUR,
     FREQUENCY_HERTZ,
@@ -396,7 +397,7 @@ UOM_FRIENDLY_NAME = {
     UOM_8_BIT_RANGE: "",  # Range 0-255, no unit.
     UOM_DOUBLE_TEMP: UOM_DOUBLE_TEMP,
     "102": "kWs",
-    "103": "$",
+    "103": CURRENCY_DOLLAR,
     "104": "¢",
     "105": LENGTH_INCHES,
     "106": f"mm/{TIME_DAYS}",
