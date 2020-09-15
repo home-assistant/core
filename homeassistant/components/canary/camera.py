@@ -34,6 +34,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Optional(CONF_FFMPEG_ARGUMENTS, default=DEFAULT_FFMPEG_ARGUMENTS): cv.string}
 )
 
+
 async def async_setup_entry(
     hass: HomeAssistantType,
     entry: ConfigEntry,
