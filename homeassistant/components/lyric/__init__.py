@@ -2,7 +2,7 @@
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 from aiohttp.client_exceptions import ClientResponseError
 from aiolyric import Lyric
@@ -29,14 +29,7 @@ from homeassistant.helpers.update_coordinator import (
 
 from .api import ConfigEntryLyricClient, LyricLocalOAuth2Implementation
 from .config_flow import OAuth2FlowHandler
-from .const import (
-    DATA_COORDINATOR,
-    DATA_LYRIC,
-    DOMAIN,
-    OAUTH2_AUTHORIZE,
-    OAUTH2_TOKEN,
-    SERVICE_HOLD_TIME,
-)
+from .const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN, SERVICE_HOLD_TIME
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -105,14 +98,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.warning(exception)
         raise ConfigEntryNotReady from exception
 
-    async def async_update_data() -> List[LyricLocation]:
+    async def async_update_data() -> Lyric:
         """Fetch data from Lyric."""
         async with async_timeout.timeout(60):
             try:
                 await lyric.get_locations()
             except (LyricAuthenticationException, LyricException) as exception:
                 raise UpdateFailed(exception) from exception
-            return lyric.locations
+            return lyric
 
     coordinator = DataUpdateCoordinator(
         hass,
@@ -124,10 +117,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_interval=timedelta(seconds=120),
     )
 
-    hass.data[DOMAIN][entry.entry_id] = {
-        DATA_COORDINATOR: coordinator,
-        DATA_LYRIC: lyric,
-    }
+    hass.data[DOMAIN][entry.entry_id] = coordinator
 
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_refresh()
@@ -165,7 +155,6 @@ class LyricEntity(CoordinatorEntity):
 
     def __init__(
         self,
-        lyric: Lyric,
         coordinator: DataUpdateCoordinator,
         location: LyricLocation,
         device: LyricDevice,
@@ -175,7 +164,6 @@ class LyricEntity(CoordinatorEntity):
     ) -> None:
         """Initialize the Honeywell Lyric entity."""
         super().__init__(coordinator)
-        self._lyric = lyric
         self._device = device
         self._location = location
         self._key = key

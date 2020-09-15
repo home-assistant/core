@@ -1,9 +1,7 @@
 """Support for Honeywell Lyric sensors."""
 from datetime import datetime, timedelta
 import logging
-from typing import List
 
-from aiolyric import Lyric
 from aiolyric.objects.device import LyricDevice
 from aiolyric.objects.location import LyricLocation
 
@@ -19,8 +17,6 @@ from homeassistant.util import dt as dt_util
 
 from . import LyricDeviceEntity
 from .const import (
-    DATA_COORDINATOR,
-    DATA_LYRIC,
     DOMAIN,
     PRESET_HOLD_UNTIL,
     PRESET_NO_HOLD,
@@ -39,47 +35,32 @@ async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the Honeywell Lyric sensor platform based on a config entry."""
-    lyric: Lyric = hass.data[DOMAIN][entry.entry_id][DATA_LYRIC]
-    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        DATA_COORDINATOR
-    ]
+    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     entities = []
 
-    locations: List[LyricLocation] = coordinator.data
-
-    for location in locations:
+    for location in coordinator.data.locations:
         for device in location.devices:
             if device.indoorTemperature:
                 entities.append(
-                    LyricIndoorTemperatureSensor(
-                        hass, lyric, coordinator, location, device
-                    )
+                    LyricIndoorTemperatureSensor(hass, coordinator, location, device)
                 )
             if device.outdoorTemperature:
                 entities.append(
-                    LyricOutdoorTemperatureSensor(
-                        hass, lyric, coordinator, location, device
-                    )
+                    LyricOutdoorTemperatureSensor(hass, coordinator, location, device)
                 )
             if device.displayedOutdoorHumidity:
                 entities.append(
-                    LyricOutdoorHumiditySensor(
-                        hass, lyric, coordinator, location, device
-                    )
+                    LyricOutdoorHumiditySensor(hass, coordinator, location, device)
                 )
             if device.changeableValues:
                 if device.changeableValues.nextPeriodTime:
                     entities.append(
-                        LyricNextPeriodSensor(
-                            hass, lyric, coordinator, location, device
-                        )
+                        LyricNextPeriodSensor(hass, coordinator, location, device)
                     )
                 if device.changeableValues.thermostatSetpointStatus:
                     entities.append(
-                        LyricSetpointStatusSensor(
-                            hass, lyric, coordinator, location, device
-                        )
+                        LyricSetpointStatusSensor(hass, coordinator, location, device)
                     )
 
     async_add_entities(entities, True)
@@ -90,7 +71,6 @@ class LyricSensor(LyricDeviceEntity):
 
     def __init__(
         self,
-        lyric: Lyric,
         coordinator: DataUpdateCoordinator,
         location: LyricLocation,
         device: LyricDevice,
@@ -104,7 +84,7 @@ class LyricSensor(LyricDeviceEntity):
         self._device_class = device_class
         self._unit_of_measurement = unit_of_measurement
 
-        super().__init__(lyric, coordinator, location, device, key, name, icon)
+        super().__init__(coordinator, location, device, key, name, icon)
 
     @property
     def device_class(self) -> str:
@@ -123,7 +103,6 @@ class LyricIndoorTemperatureSensor(LyricSensor):
     def __init__(
         self,
         hass: HomeAssistantType,
-        lyric: Lyric,
         coordinator: DataUpdateCoordinator,
         location: LyricLocation,
         device: LyricDevice,
@@ -131,7 +110,6 @@ class LyricIndoorTemperatureSensor(LyricSensor):
         """Initialize Honeywell Lyric sensor."""
 
         super().__init__(
-            lyric,
             coordinator,
             location,
             device,
@@ -145,7 +123,7 @@ class LyricIndoorTemperatureSensor(LyricSensor):
     @property
     def state(self) -> str:
         """Return the state of the sensor."""
-        for location in self.coordinator.data:
+        for location in self.coordinator.data.locations:
             for device in location.devices:
                 if device.macID == self._device.macID:
                     return device.indoorTemperature
@@ -157,7 +135,6 @@ class LyricOutdoorTemperatureSensor(LyricSensor):
     def __init__(
         self,
         hass: HomeAssistantType,
-        lyric: Lyric,
         coordinator: DataUpdateCoordinator,
         location: LyricLocation,
         device: LyricDevice,
@@ -165,7 +142,6 @@ class LyricOutdoorTemperatureSensor(LyricSensor):
         """Initialize Honeywell Lyric sensor."""
 
         super().__init__(
-            lyric,
             coordinator,
             location,
             device,
@@ -179,7 +155,7 @@ class LyricOutdoorTemperatureSensor(LyricSensor):
     @property
     def state(self) -> str:
         """Return the state of the sensor."""
-        for location in self.coordinator.data:
+        for location in self.coordinator.data.locations:
             for device in location.devices:
                 if device.macID == self._device.macID:
                     return device.outdoorTemperature
@@ -191,7 +167,6 @@ class LyricOutdoorHumiditySensor(LyricSensor):
     def __init__(
         self,
         hass: HomeAssistantType,
-        lyric: Lyric,
         coordinator: DataUpdateCoordinator,
         location: LyricLocation,
         device: LyricDevice,
@@ -199,7 +174,6 @@ class LyricOutdoorHumiditySensor(LyricSensor):
         """Initialize Honeywell Lyric sensor."""
 
         super().__init__(
-            lyric,
             coordinator,
             location,
             device,
@@ -213,7 +187,7 @@ class LyricOutdoorHumiditySensor(LyricSensor):
     @property
     def state(self) -> str:
         """Return the state of the sensor."""
-        for location in self.coordinator.data:
+        for location in self.coordinator.data.locations:
             for device in location.devices:
                 if device.macID == self._device.macID:
                     return device.displayedOutdoorHumidity
@@ -225,7 +199,6 @@ class LyricNextPeriodSensor(LyricSensor):
     def __init__(
         self,
         hass: HomeAssistantType,
-        lyric: Lyric,
         coordinator: DataUpdateCoordinator,
         location: LyricLocation,
         device: LyricDevice,
@@ -233,7 +206,6 @@ class LyricNextPeriodSensor(LyricSensor):
         """Initialize Honeywell Lyric sensor."""
 
         super().__init__(
-            lyric,
             coordinator,
             location,
             device,
@@ -246,7 +218,7 @@ class LyricNextPeriodSensor(LyricSensor):
     @property
     def state(self) -> datetime:
         """Return the state of the sensor."""
-        for location in self.coordinator.data:
+        for location in self.coordinator.data.locations:
             for device in location.devices:
                 if device.macID == self._device.macID:
                     time = dt_util.parse_time(device.changeableValues.nextPeriodTime)
@@ -262,7 +234,6 @@ class LyricSetpointStatusSensor(LyricSensor):
     def __init__(
         self,
         hass: HomeAssistantType,
-        lyric: Lyric,
         coordinator: DataUpdateCoordinator,
         location: LyricLocation,
         device: LyricDevice,
@@ -270,7 +241,6 @@ class LyricSetpointStatusSensor(LyricSensor):
         """Initialize Honeywell Lyric sensor."""
 
         super().__init__(
-            lyric,
             coordinator,
             location,
             device,
@@ -282,7 +252,7 @@ class LyricSetpointStatusSensor(LyricSensor):
     @property
     def state(self) -> str:
         """Return the state of the sensor."""
-        for location in self.coordinator.data:
+        for location in self.coordinator.data.locations:
             for device in location.devices:
                 if device.macID == self._device.macID:
                     return (

@@ -3,7 +3,6 @@ import logging
 from typing import List, Optional
 
 from aiohttp.client_exceptions import ClientResponseError
-from aiolyric import Lyric
 from aiolyric.exceptions import LyricAuthenticationException, LyricException
 from aiolyric.objects.device import LyricDevice
 from aiolyric.objects.location import LyricLocation
@@ -28,8 +27,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import LyricDeviceEntity
 from .const import (
-    DATA_COORDINATOR,
-    DATA_LYRIC,
     DOMAIN,
     PRESET_HOLD_UNTIL,
     PRESET_NO_HOLD,
@@ -69,18 +66,13 @@ async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the Honeywell Lyric climate platform based on a config entry."""
-    lyric: Lyric = hass.data[DOMAIN][entry.entry_id][DATA_LYRIC]
-    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        DATA_COORDINATOR
-    ]
-
-    locations: List[LyricLocation] = coordinator.data
+    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     entities = []
 
-    for location in locations:
+    for location in coordinator.data.locations:
         for device in location.devices:
-            entities.append(LyricClimate(hass, lyric, coordinator, location, device))
+            entities.append(LyricClimate(hass, coordinator, location, device))
 
     async_add_entities(entities, True)
 
@@ -91,13 +83,11 @@ async def async_setup_entry(
 
         _LOGGER.debug("set_hold_time: %s; %s", entity_ids, time)
 
-        await lyric.get_locations()
-
         if entity_ids == "all":
-            for location in locations:
+            for location in coordinator.data.locations:
                 for device in location.devices:
                     try:
-                        await lyric.update_thermostat(
+                        await coordinator.data.update_thermostat(
                             location, device, nextPeriodTime=time
                         )
                     except (
@@ -107,10 +97,10 @@ async def async_setup_entry(
                     ) as exception:
                         _LOGGER.error(exception)
         else:
-            for location in locations:
+            for location in coordinator.data.locations:
                 for device in location.devices:
                     try:
-                        await lyric.update_thermostat(
+                        await coordinator.data.update_thermostat(
                             location,
                             device,
                             thermostatSetpointStatus=PRESET_HOLD_UNTIL,
@@ -123,6 +113,8 @@ async def async_setup_entry(
                     ) as exception:
                         _LOGGER.error(exception)
 
+        await coordinator.async_refresh()
+
     hass.services.async_register(
         DOMAIN, SERVICE_HOLD_TIME, hold_time_service, schema=HOLD_PERIOD_SCHEMA
     )
@@ -134,7 +126,6 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
     def __init__(
         self,
         hass: HomeAssistantType,
-        lyric: Lyric,
         coordinator: DataUpdateCoordinator,
         location: LyricLocation,
         device: LyricDevice,
@@ -156,7 +147,6 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
             self._hvac_modes.append(HVAC_MODE_HEAT_COOL)
 
         super().__init__(
-            lyric,
             coordinator,
             location,
             device,
@@ -178,7 +168,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
     @property
     def current_temperature(self) -> Optional[float]:
         """Return the current temperature."""
-        for location in self.coordinator.data:
+        for location in self.coordinator.data.locations:
             for device in location.devices:
                 if device.macID == self._device.macID:
                     return device.indoorTemperature
@@ -186,7 +176,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
     @property
     def hvac_mode(self) -> str:
         """Return the hvac mode."""
-        for location in self.coordinator.data:
+        for location in self.coordinator.data.locations:
             for device in location.devices:
                 if device.macID == self._device.macID:
                     return HVAC_MODES[device.changeableValues.mode]
@@ -199,7 +189,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
     @property
     def target_temperature(self) -> Optional[float]:
         """Return the temperature we try to reach."""
-        for location in self.coordinator.data:
+        for location in self.coordinator.data.locations:
             for device in location.devices:
                 if device.macID == self._device.macID:
                     if not device.hasDualSetpointStatus:
@@ -208,7 +198,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
     @property
     def target_temperature_low(self) -> Optional[float]:
         """Return the upper bound temperature we try to reach."""
-        for location in self.coordinator.data:
+        for location in self.coordinator.data.locations:
             for device in location.devices:
                 if device.macID == self._device.macID:
                     if device.hasDualSetpointStatus:
@@ -217,7 +207,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
     @property
     def target_temperature_high(self) -> Optional[float]:
         """Return the upper bound temperature we try to reach."""
-        for location in self.coordinator.data:
+        for location in self.coordinator.data.locations:
             for device in location.devices:
                 if device.macID == self._device.macID:
                     if device.hasDualSetpointStatus:
@@ -226,7 +216,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
     @property
     def preset_mode(self) -> Optional[str]:
         """Return current preset mode."""
-        for location in self.coordinator.data:
+        for location in self.coordinator.data.locations:
             for device in location.devices:
                 if device.macID == self._device.macID:
                     return device.changeableValues.thermostatSetpointStatus
@@ -245,7 +235,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
     @property
     def min_temp(self) -> float:
         """Identify min_temp in Lyric API or defaults if not available."""
-        for location in self.coordinator.data:
+        for location in self.coordinator.data.locations:
             for device in location.devices:
                 if device.macID == self._device.macID:
                     return (
@@ -257,7 +247,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
     @property
     def max_temp(self) -> float:
         """Identify max_temp in Lyric API or defaults if not available."""
-        for location in self.coordinator.data:
+        for location in self.coordinator.data.locations:
             for device in location.devices:
                 if device.macID == self._device.macID:
                     return (
@@ -271,7 +261,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
         target_temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
 
-        for location in self.coordinator.data:
+        for location in self.coordinator.data.locations:
             for device in location.devices:
                 if device.macID == self._device.macID:
                     if device.hasDualSetpointStatus:
@@ -281,7 +271,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
                         temp = kwargs.get(ATTR_TEMPERATURE)
                     _LOGGER.debug("Set temperature: %s", temp)
                     try:
-                        await self._lyric.update_thermostat(
+                        await self.coordinator.data.update_thermostat(
                             location, device, heatSetpoint=temp
                         )
                     except (
@@ -294,12 +284,12 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set hvac mode."""
-        for location in self.coordinator.data:
+        for location in self.coordinator.data.locations:
             for device in location.devices:
                 if device.macID == self._device.macID:
                     _LOGGER.debug("Set hvac mode: %s", hvac_mode)
                     try:
-                        await self._lyric.update_thermostat(
+                        await self.coordinator.data.update_thermostat(
                             location, device, mode=LYRIC_HVAC_MODES[hvac_mode]
                         )
                     except (
@@ -312,12 +302,12 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset (PermanentHold, HoldUntil, NoHold, VacationHold) mode."""
-        for location in self.coordinator.data:
+        for location in self.coordinator.data.locations:
             for device in location.devices:
                 if device.macID == self._device.macID:
                     _LOGGER.debug("Set preset mode: %s", preset_mode)
                     try:
-                        await self._lyric.update_thermostat(
+                        await self.coordinator.data.update_thermostat(
                             location, device, thermostatSetpointStatus=preset_mode
                         )
                     except (
@@ -330,11 +320,11 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
 
     async def async_set_preset_period(self, period: str) -> None:
         """Set preset period (time)."""
-        for location in self.coordinator.data:
+        for location in self.coordinator.data.locations:
             for device in location.devices:
                 if device.macID == self._device.macID:
                     try:
-                        await self._lyric.update_thermostat(
+                        await self.coordinator.data.update_thermostat(
                             location, device, nextPeriodTime=period
                         )
                     except (
