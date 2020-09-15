@@ -1,6 +1,5 @@
 """Test the Dyson fan component."""
 import json
-import unittest
 
 from libpurecool.const import (
     FanPower,
@@ -55,7 +54,6 @@ from homeassistant.setup import async_setup_component
 from .common import load_mock_device
 
 from tests.async_mock import Mock, call, patch
-from tests.common import get_test_home_assistant
 
 
 class MockDysonState(DysonPureHotCoolState):
@@ -97,35 +95,10 @@ def _get_dyson_purehotcool_device():
     return device
 
 
-def _get_device_with_no_state():
-    """Return a device with no state."""
-    device = Mock(spec=DysonPureHotCoolLink)
-    load_mock_device(device)
-    device.state = None
-    device.environmental_state = None
-    return device
-
-
 def _get_device_off():
     """Return a device with state off."""
     device = Mock(spec=DysonPureHotCoolLink)
     load_mock_device(device)
-    return device
-
-
-def _get_device_focus():
-    """Return a device with fan state of focus mode."""
-    device = Mock(spec=DysonPureHotCoolLink)
-    load_mock_device(device)
-    device.state.focus_mode = FocusMode.FOCUS_ON.value
-    return device
-
-
-def _get_device_diffuse():
-    """Return a device with fan state of diffuse mode."""
-    device = Mock(spec=DysonPureHotCoolLink)
-    load_mock_device(device)
-    device.state.focus_mode = FocusMode.FOCUS_OFF.value
     return device
 
 
@@ -136,15 +109,6 @@ def _get_device_cool():
     device.state.focus_mode = FocusMode.FOCUS_OFF.value
     device.state.heat_target = HeatTarget.celsius(12)
     device.state.heat_mode = HeatMode.HEAT_OFF.value
-    device.state.heat_state = HeatState.HEAT_STATE_OFF.value
-    return device
-
-
-def _get_device_heat_off():
-    """Return a device with state of heat reached target."""
-    device = Mock(spec=DysonPureHotCoolLink)
-    load_mock_device(device)
-    device.state.heat_mode = HeatMode.HEAT_ON.value
     device.state.heat_state = HeatState.HEAT_STATE_OFF.value
     return device
 
@@ -162,47 +126,37 @@ def _get_device_heat_on():
     return device
 
 
-class DysonTest(unittest.TestCase):
-    """Dyson Climate component test class."""
+@patch(
+    "homeassistant.components.dyson.DysonAccount.devices",
+    return_value=[_get_device_heat_on()],
+)
+@patch("homeassistant.components.dyson.DysonAccount.login", return_value=True)
+async def test_pure_hot_cool_link_set_mode(mocked_login, mocked_devices, hass):
+    """Test set climate mode."""
+    await async_setup_component(hass, dyson_parent.DOMAIN, _get_config())
+    await hass.async_block_till_done()
 
-    def setUp(self):  # pylint: disable=invalid-name
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        self.addCleanup(self.tear_down_cleanup)
+    device = mocked_devices.return_value[0]
 
-    def tear_down_cleanup(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: "climate.temp_name", ATTR_HVAC_MODE: HVAC_MODE_HEAT},
+        True,
+    )
 
-    def test_dyson_set_hvac_mode(self):
-        """Test set operation mode."""
-        device = _get_device_heat_on()
-        entity = dyson.DysonPureHotCoolLinkEntity(device)
-        assert not entity.should_poll
+    set_config = device.set_configuration
+    assert set_config.call_args == call(heat_mode=HeatMode.HEAT_ON)
 
-        entity.set_hvac_mode(dyson.HVAC_MODE_HEAT)
-        set_config = device.set_configuration
-        set_config.assert_called_with(heat_mode=HeatMode.HEAT_ON)
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: "climate.temp_name", ATTR_HVAC_MODE: HVAC_MODE_COOL},
+        True,
+    )
 
-        entity.set_hvac_mode(dyson.HVAC_MODE_COOL)
-        set_config = device.set_configuration
-        set_config.assert_called_with(heat_mode=HeatMode.HEAT_OFF)
-
-    def test_dyson_heat_off(self):
-        """Test turn off heat."""
-        device = _get_device_heat_off()
-        entity = dyson.DysonPureHotCoolLinkEntity(device)
-        entity.set_hvac_mode(dyson.HVAC_MODE_COOL)
-        set_config = device.set_configuration
-        set_config.assert_called_with(heat_mode=HeatMode.HEAT_OFF)
-
-    def test_dyson_heat_on(self):
-        """Test turn on heat."""
-        device = _get_device_heat_on()
-        entity = dyson.DysonPureHotCoolLinkEntity(device)
-        entity.set_hvac_mode(dyson.HVAC_MODE_HEAT)
-        set_config = device.set_configuration
-        set_config.assert_called_with(heat_mode=HeatMode.HEAT_ON)
+    set_config = device.set_configuration
+    assert set_config.call_args == call(heat_mode=HeatMode.HEAT_OFF)
 
 
 @patch(
@@ -211,7 +165,7 @@ class DysonTest(unittest.TestCase):
 )
 @patch("homeassistant.components.dyson.DysonAccount.login", return_value=True)
 async def test_pure_hot_cool_link_set_fan(mocked_login, mocked_devices, hass):
-    """Test set climate temperature."""
+    """Test set climate fan."""
     await async_setup_component(hass, dyson_parent.DOMAIN, _get_config())
     await hass.async_block_till_done()
 
