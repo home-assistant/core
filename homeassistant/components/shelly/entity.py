@@ -42,11 +42,11 @@ async def async_setup_entry_attribute_entities(
     if not blocks:
         return
 
-    counts = Counter([item[0].type for item in blocks])
+    counts = Counter([item[1] for item in blocks])
 
     async_add_entities(
         [
-            sensor_class(wrapper, block, sensor_id, description, counts[block.type])
+            sensor_class(wrapper, block, sensor_id, description, counts[sensor_id])
             for block, sensor_id, description in blocks
         ]
     )
