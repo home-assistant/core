@@ -128,7 +128,7 @@ class UniFiTxBandwidthSensor(UniFiBandwidthSensor):
 
 
 class UniFiUpTimeSensor(UniFiClient):
-    """UniFi uptime sensor base class."""
+    """UniFi uptime sensor."""
 
     DOMAIN = DOMAIN
     CLASS = DEVICE_CLASS_TIMESTAMP
