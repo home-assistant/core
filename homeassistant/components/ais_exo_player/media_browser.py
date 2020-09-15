@@ -77,7 +77,7 @@ def ais_media_library() -> BrowseMedia:
     """Create response payload to describe contents of a specific library."""
     ais_library_info = BrowseMedia(
         title="AIS Audio",
-        media_class=MEDIA_CLASS_DIRECTORY,
+        media_class=MEDIA_CLASS_APP,
         media_content_id="library",
         media_content_type="library",
         can_play=False,
@@ -88,78 +88,71 @@ def ais_media_library() -> BrowseMedia:
     ais_library_info.children.append(
         BrowseMedia(
             title="Dyski",
-            media_class=MEDIA_CLASS_DIRECTORY,
+            media_class="nas",
             media_content_id=f"{media_source_const.URI_SCHEME}{media_source_const.DOMAIN}",
             media_content_type=MEDIA_TYPE_APP,
             can_expand=True,
             can_play=False,
-            thumbnail="http://www.ai-speaker.com/images/media-browser/harddisk.svg",
         )
     )
     ais_library_info.children.append(
         BrowseMedia(
             title="Ulubione",
-            media_class=MEDIA_CLASS_PLAYLIST,
+            media_class="heart",
             media_content_id="ais_favorites",
             media_content_type=MEDIA_TYPE_APP,
             can_expand=True,
             can_play=False,
-            thumbnail="http://www.ai-speaker.com/images/media-browser/heart.svg",
         )
     )
     ais_library_info.children.append(
         BrowseMedia(
             title="Zakładki",
-            media_class=MEDIA_CLASS_PLAYLIST,
+            media_class="bookmark",
             media_content_id="ais_bookmarks",
             media_content_type=MEDIA_TYPE_APP,
             can_expand=True,
             can_play=False,
-            thumbnail="http://www.ai-speaker.com/images/media-browser/bookmarks.svg",
         )
     )
     ais_library_info.children.append(
         BrowseMedia(
             title="Radio",
-            media_class=MEDIA_CLASS_PODCAST,
+            media_class="radio",
             media_content_id="ais_radio",
             media_content_type=MEDIA_TYPE_APP,
             can_expand=True,
             can_play=False,
-            thumbnail="http://www.ai-speaker.com/images/media-browser/radio.svg",
         )
     )
     ais_library_info.children.append(
         BrowseMedia(
             title="Podcast",
-            media_class=MEDIA_CLASS_DIRECTORY,
+            media_class=MEDIA_CLASS_PODCAST,
             media_content_id="ais_podcast",
             media_content_type=MEDIA_TYPE_APP,
             can_expand=True,
             can_play=False,
-            thumbnail="http://www.ai-speaker.com/images/media-browser/podcast.svg",
         )
     )
     ais_library_info.children.append(
         BrowseMedia(
             title="Audio książki",
-            media_class=MEDIA_CLASS_DIRECTORY,
+            media_class="book",
             media_content_id="ais_audio_books",
             media_content_type=MEDIA_TYPE_APP,
             can_expand=True,
             can_play=False,
-            thumbnail="http://www.ai-speaker.com/images/media-browser/book-music.svg",
         )
     )
     ais_library_info.children.append(
         BrowseMedia(
             title="Muzyka",
-            media_class=MEDIA_CLASS_DIRECTORY,
+            media_class=MEDIA_CLASS_MUSIC,
             media_content_id="ais_music",
             media_content_type=MEDIA_TYPE_APP,
             can_expand=True,
             can_play=False,
-            thumbnail="http://www.ai-speaker.com/images/media-browser/music.svg",
         )
     )
 
@@ -190,12 +183,11 @@ async def ais_audio_books_library(hass, media_content_id) -> BrowseMedia:
             ais_authors.append(
                 BrowseMedia(
                     title=author,
-                    media_class=MEDIA_CLASS_ARTIST,
+                    media_class="book",
                     media_content_id="ais_audio_books/" + author,
                     media_content_type=MEDIA_TYPE_APP,
                     can_play=False,
                     can_expand=True,
-                    thumbnail="http://www.ai-speaker.com/images/media-browser/book.svg",
                 )
             )
 
@@ -206,7 +198,6 @@ async def ais_audio_books_library(hass, media_content_id) -> BrowseMedia:
             media_content_type=MEDIA_TYPE_APP,
             can_expand=True,
             can_play=False,
-            thumbnail="http://www.ai-speaker.com/images/media-browser/autobooks.svg",
             children=ais_authors,
         )
         return root
@@ -231,12 +222,11 @@ async def ais_audio_books_library(hass, media_content_id) -> BrowseMedia:
             )
         root = BrowseMedia(
             title="Podcast",
-            media_class=MEDIA_CLASS_PLAYLIST,
+            media_class=MEDIA_CLASS_PODCAST,
             media_content_id=media_content_id,
             media_content_type=MEDIA_TYPE_APP,
             can_expand=True,
             can_play=False,
-            thumbnail="http://www.ai-speaker.com/images/media-browser/radio.svg",
             children=ais_radio_stations,
         )
         return root
@@ -276,7 +266,6 @@ async def ais_audio_books_library(hass, media_content_id) -> BrowseMedia:
                     media_content_type=MEDIA_TYPE_CHANNELS,
                     can_expand=True,
                     can_play=False,
-                    thumbnail="http://www.ai-speaker.com/images/media-browser/podcast.svg",
                     children=ais_podcast_episodes,
                 )
                 return root
@@ -295,22 +284,20 @@ async def ais_podcast_library(hass, media_content_id) -> BrowseMedia:
             ais_podcast_types.append(
                 BrowseMedia(
                     title=item,
-                    media_class=MEDIA_CLASS_PLAYLIST,
+                    media_class=MEDIA_CLASS_PODCAST,
                     media_content_id="ais_podcast/" + item,
                     media_content_type=MEDIA_TYPE_APP,
                     can_play=False,
                     can_expand=True,
-                    thumbnail="http://www.ai-speaker.com/images/media-browser/podcast.svg",
                 )
             )
         root = BrowseMedia(
             title="Podcasty",
-            media_class=MEDIA_CLASS_PLAYLIST,
+            media_class=MEDIA_CLASS_PODCAST,
             media_content_id="ais_podcast",
             media_content_type=MEDIA_TYPE_APP,
             can_expand=True,
             can_play=False,
-            thumbnail="http://www.ai-speaker.com/images/media-browser/radio.svg",
             children=ais_podcast_types,
         )
         return root
@@ -340,7 +327,6 @@ async def ais_podcast_library(hass, media_content_id) -> BrowseMedia:
             media_content_type=MEDIA_TYPE_APP,
             can_expand=True,
             can_play=False,
-            thumbnail="http://www.ai-speaker.com/images/media-browser/radio.svg",
             children=ais_radio_stations,
         )
         return root
@@ -365,7 +351,7 @@ async def ais_podcast_library(hass, media_content_id) -> BrowseMedia:
                     ais_podcast_episodes.append(
                         BrowseMedia(
                             title=e.title,
-                            media_class=MEDIA_CLASS_EPISODE,
+                            media_class=MEDIA_CLASS_PLAYLIST,
                             media_content_id=e.enclosures[0]["url"],
                             media_content_type=MEDIA_TYPE_MUSIC,
                             can_play=True,
@@ -400,12 +386,11 @@ def ais_radio_library(hass, media_content_id) -> BrowseMedia:
             ais_radio_types.append(
                 BrowseMedia(
                     title=item,
-                    media_class=MEDIA_CLASS_PLAYLIST,
+                    media_class=MEDIA_CLASS_DIRECTORY,
                     media_content_id="ais_radio/" + item,
                     media_content_type=MEDIA_TYPE_APP,
                     can_play=False,
                     can_expand=True,
-                    thumbnail="http://www.ai-speaker.com/images/media-browser/radio.svg",
                 )
             )
         root = BrowseMedia(
