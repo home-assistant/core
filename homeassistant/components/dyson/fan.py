@@ -16,10 +16,12 @@ from homeassistant.components.fan import (
     SUPPORT_SET_SPEED,
     FanEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 
-from . import DYSON_DEVICES
+from . import DOMAIN, DysonEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,9 +35,6 @@ ATTR_HEPA_FILTER = "hepa_filter"
 ATTR_CARBON_FILTER = "carbon_filter"
 ATTR_DYSON_SPEED = "dyson_speed"
 ATTR_DYSON_SPEED_LIST = "dyson_speed_list"
-
-DYSON_DOMAIN = "dyson"
-DYSON_FAN_DEVICES = "dyson_fan_devices"
 
 SERVICE_SET_NIGHT_MODE = "set_night_mode"
 SERVICE_SET_AUTO_MODE = "set_auto_mode"
@@ -88,109 +87,117 @@ SET_DYSON_SPEED_SCHEMA = vol.Schema(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+# def setup_platform(hass, config, add_entities, discovery_info=None):
+#     """Set up the Dyson fan components."""
+
+#     if discovery_info is None:
+#         return
+
+#     _LOGGER.debug("Creating new Dyson fans")
+#     if DYSON_FAN_DEVICES not in hass.data:
+#         hass.data[DYSON_FAN_DEVICES] = []
+
+#     # Get Dyson Devices from parent component
+#     has_purecool_devices = False
+#     device_serials = [device.serial for device in hass.data[DYSON_FAN_DEVICES]]
+#     for device in hass.data[DYSON_DEVICES]:
+#         if device.serial not in device_serials:
+#             if isinstance(device, DysonPureCool):
+#                 has_purecool_devices = True
+#                 dyson_entity = DysonPureCoolDevice(device)
+#                 hass.data[DYSON_FAN_DEVICES].append(dyson_entity)
+#             elif isinstance(device, DysonPureCoolLink):
+#                 dyson_entity = DysonPureCoolLinkDevice(hass, device)
+#                 hass.data[DYSON_FAN_DEVICES].append(dyson_entity)
+
+#     add_entities(hass.data[DYSON_FAN_DEVICES])
+
+#     def service_handle(service):
+#         """Handle the Dyson services."""
+#         entity_id = service.data[ATTR_ENTITY_ID]
+#         fan_device = next(
+#             (fan for fan in hass.data[DYSON_FAN_DEVICES] if fan.entity_id == entity_id),
+#             None,
+#         )
+#         if fan_device is None:
+#             _LOGGER.warning("Unable to find Dyson fan device %s", str(entity_id))
+#             return
+
+#         if service.service == SERVICE_SET_NIGHT_MODE:
+#             fan_device.set_night_mode(service.data[ATTR_NIGHT_MODE])
+
+#         if service.service == SERVICE_SET_AUTO_MODE:
+#             fan_device.set_auto_mode(service.data[ATTR_AUTO_MODE])
+
+#         if service.service == SERVICE_SET_ANGLE:
+#             fan_device.set_angle(
+#                 service.data[ATTR_ANGLE_LOW], service.data[ATTR_ANGLE_HIGH]
+#             )
+
+#         if service.service == SERVICE_SET_FLOW_DIRECTION_FRONT:
+#             fan_device.set_flow_direction_front(service.data[ATTR_FLOW_DIRECTION_FRONT])
+
+#         if service.service == SERVICE_SET_TIMER:
+#             fan_device.set_timer(service.data[ATTR_TIMER])
+
+#         if service.service == SERVICE_SET_DYSON_SPEED:
+#             fan_device.set_dyson_speed(service.data[ATTR_DYSON_SPEED])
+
+#     # Register dyson service(s)
+#     hass.services.register(
+#         DYSON_DOMAIN,
+#         SERVICE_SET_NIGHT_MODE,
+#         service_handle,
+#         schema=DYSON_SET_NIGHT_MODE_SCHEMA,
+#     )
+
+#     hass.services.register(
+#         DYSON_DOMAIN, SERVICE_SET_AUTO_MODE, service_handle, schema=SET_AUTO_MODE_SCHEMA
+#     )
+#     if has_purecool_devices:
+#         hass.services.register(
+#             DYSON_DOMAIN, SERVICE_SET_ANGLE, service_handle, schema=SET_ANGLE_SCHEMA
+#         )
+
+#         hass.services.register(
+#             DYSON_DOMAIN,
+#             SERVICE_SET_FLOW_DIRECTION_FRONT,
+#             service_handle,
+#             schema=SET_FLOW_DIRECTION_FRONT_SCHEMA,
+#         )
+
+#         hass.services.register(
+#             DYSON_DOMAIN, SERVICE_SET_TIMER, service_handle, schema=SET_TIMER_SCHEMA
+#         )
+
+#         hass.services.register(
+#             DYSON_DOMAIN,
+#             SERVICE_SET_DYSON_SPEED,
+#             service_handle,
+#             schema=SET_DYSON_SPEED_SCHEMA,
+#         )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+):
     """Set up the Dyson fan components."""
+    entities = []
+    # has_purecool_devices = False
+    for device in hass.data[DOMAIN][config_entry.entry_id]:
+        if isinstance(device, DysonPureCool):
+            # has_purecool_devices = True
+            entities.append(DysonPureCoolDevice(device))
+        elif isinstance(device, DysonPureCoolLink):
+            entities.append(DysonPureCoolLinkDevice(device))
 
-    if discovery_info is None:
-        return
+    async_add_entities(entities)
 
-    _LOGGER.debug("Creating new Dyson fans")
-    if DYSON_FAN_DEVICES not in hass.data:
-        hass.data[DYSON_FAN_DEVICES] = []
-
-    # Get Dyson Devices from parent component
-    has_purecool_devices = False
-    device_serials = [device.serial for device in hass.data[DYSON_FAN_DEVICES]]
-    for device in hass.data[DYSON_DEVICES]:
-        if device.serial not in device_serials:
-            if isinstance(device, DysonPureCool):
-                has_purecool_devices = True
-                dyson_entity = DysonPureCoolDevice(device)
-                hass.data[DYSON_FAN_DEVICES].append(dyson_entity)
-            elif isinstance(device, DysonPureCoolLink):
-                dyson_entity = DysonPureCoolLinkDevice(hass, device)
-                hass.data[DYSON_FAN_DEVICES].append(dyson_entity)
-
-    add_entities(hass.data[DYSON_FAN_DEVICES])
-
-    def service_handle(service):
-        """Handle the Dyson services."""
-        entity_id = service.data[ATTR_ENTITY_ID]
-        fan_device = next(
-            (fan for fan in hass.data[DYSON_FAN_DEVICES] if fan.entity_id == entity_id),
-            None,
-        )
-        if fan_device is None:
-            _LOGGER.warning("Unable to find Dyson fan device %s", str(entity_id))
-            return
-
-        if service.service == SERVICE_SET_NIGHT_MODE:
-            fan_device.set_night_mode(service.data[ATTR_NIGHT_MODE])
-
-        if service.service == SERVICE_SET_AUTO_MODE:
-            fan_device.set_auto_mode(service.data[ATTR_AUTO_MODE])
-
-        if service.service == SERVICE_SET_ANGLE:
-            fan_device.set_angle(
-                service.data[ATTR_ANGLE_LOW], service.data[ATTR_ANGLE_HIGH]
-            )
-
-        if service.service == SERVICE_SET_FLOW_DIRECTION_FRONT:
-            fan_device.set_flow_direction_front(service.data[ATTR_FLOW_DIRECTION_FRONT])
-
-        if service.service == SERVICE_SET_TIMER:
-            fan_device.set_timer(service.data[ATTR_TIMER])
-
-        if service.service == SERVICE_SET_DYSON_SPEED:
-            fan_device.set_dyson_speed(service.data[ATTR_DYSON_SPEED])
-
-    # Register dyson service(s)
-    hass.services.register(
-        DYSON_DOMAIN,
-        SERVICE_SET_NIGHT_MODE,
-        service_handle,
-        schema=DYSON_SET_NIGHT_MODE_SCHEMA,
-    )
-
-    hass.services.register(
-        DYSON_DOMAIN, SERVICE_SET_AUTO_MODE, service_handle, schema=SET_AUTO_MODE_SCHEMA
-    )
-    if has_purecool_devices:
-        hass.services.register(
-            DYSON_DOMAIN, SERVICE_SET_ANGLE, service_handle, schema=SET_ANGLE_SCHEMA
-        )
-
-        hass.services.register(
-            DYSON_DOMAIN,
-            SERVICE_SET_FLOW_DIRECTION_FRONT,
-            service_handle,
-            schema=SET_FLOW_DIRECTION_FRONT_SCHEMA,
-        )
-
-        hass.services.register(
-            DYSON_DOMAIN, SERVICE_SET_TIMER, service_handle, schema=SET_TIMER_SCHEMA
-        )
-
-        hass.services.register(
-            DYSON_DOMAIN,
-            SERVICE_SET_DYSON_SPEED,
-            service_handle,
-            schema=SET_DYSON_SPEED_SCHEMA,
-        )
+    # TODO: register services
 
 
-class DysonPureCoolLinkDevice(FanEntity):
+class DysonPureCoolLinkDevice(DysonEntity, FanEntity):
     """Representation of a Dyson fan."""
-
-    def __init__(self, hass, device):
-        """Initialize the fan."""
-        _LOGGER.debug("Creating device %s", device.name)
-        self.hass = hass
-        self._device = device
-
-    async def async_added_to_hass(self):
-        """Call when entity is added to hass."""
-        self.hass.async_add_job(self._device.add_message_listener, self.on_message)
 
     def on_message(self, message):
         """Call when new messages received from the fan."""
@@ -198,16 +205,6 @@ class DysonPureCoolLinkDevice(FanEntity):
         if isinstance(message, DysonPureCoolState):
             _LOGGER.debug("Message received for fan device %s: %s", self.name, message)
             self.schedule_update_ha_state()
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def name(self):
-        """Return the display name of this fan."""
-        return self._device.name
 
     def set_speed(self, speed: str) -> None:
         """Set the speed of the fan. Never called ??."""
@@ -330,12 +327,8 @@ class DysonPureCoolLinkDevice(FanEntity):
         return {ATTR_NIGHT_MODE: self.night_mode, ATTR_AUTO_MODE: self.auto_mode}
 
 
-class DysonPureCoolDevice(FanEntity):
+class DysonPureCoolDevice(DysonEntity, FanEntity):
     """Representation of a Dyson Purecool (TP04/DP04) fan."""
-
-    def __init__(self, device):
-        """Initialize the fan."""
-        self._device = device
 
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
@@ -348,16 +341,6 @@ class DysonPureCoolDevice(FanEntity):
         if isinstance(message, DysonPureCoolV2State):
             _LOGGER.debug("Message received for fan device %s: %s", self.name, message)
             self.schedule_update_ha_state()
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def name(self):
-        """Return the display name of this fan."""
-        return self._device.name
 
     def turn_on(self, speed: str = None, **kwargs) -> None:
         """Turn on the fan."""

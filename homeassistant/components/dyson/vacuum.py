@@ -15,17 +15,17 @@ from homeassistant.components.vacuum import (
     SUPPORT_TURN_ON,
     VacuumEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.icon import icon_for_battery_level
 
-from . import DYSON_DEVICES
+from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_CLEAN_ID = "clean_id"
 ATTR_FULL_CLEAN_TYPE = "full_clean_type"
 ATTR_POSITION = "position"
-
-DYSON_360_EYE_DEVICES = "dyson_360_eye_devices"
 
 SUPPORT_DYSON = (
     SUPPORT_TURN_ON
@@ -39,19 +39,17 @@ SUPPORT_DYSON = (
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+):
     """Set up the Dyson 360 Eye robot vacuum platform."""
     _LOGGER.debug("Creating new Dyson 360 Eye robot vacuum")
-    if DYSON_360_EYE_DEVICES not in hass.data:
-        hass.data[DYSON_360_EYE_DEVICES] = []
-
     # Get Dyson Devices from parent component
-    for device in [d for d in hass.data[DYSON_DEVICES] if isinstance(d, Dyson360Eye)]:
-        dyson_entity = Dyson360EyeDevice(device)
-        hass.data[DYSON_360_EYE_DEVICES].append(dyson_entity)
-
-    add_entities(hass.data[DYSON_360_EYE_DEVICES])
-    return True
+    entities = []
+    for device in hass.data[DOMAIN][config_entry.entry_id]:
+        if isinstance(device, Dyson360Eye):
+            entities.append(Dyson360EyeDevice(device))
+    async_add_entities(entities)
 
 
 class Dyson360EyeDevice(VacuumEntity):

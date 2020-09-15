@@ -1,12 +1,16 @@
-"""Support for Dyson Pure Cool Link devices."""
+"""The Dyson integration."""
+import asyncio
+from functools import partial
 import logging
 
 from libpurecool.dyson import DysonAccount
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntry, ConfigEntryNotReady
 from homeassistant.const import CONF_DEVICES, CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
-from homeassistant.helpers import discovery
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -15,8 +19,7 @@ CONF_RETRY = "retry"
 
 DEFAULT_TIMEOUT = 5
 DEFAULT_RETRY = 10
-DYSON_DEVICES = "dyson_devices"
-DYSON_PLATFORMS = ["sensor", "fan", "vacuum", "climate", "air_quality"]
+PLATFORMS = ["sensor", "fan", "vacuum", "climate", "air_quality"]
 
 DOMAIN = "dyson"
 
@@ -37,42 +40,51 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
-    """Set up the Dyson parent component."""
+async def async_setup(hass: HomeAssistant, config: dict):
+    """Set up the Dyson component."""
+    # TODO: import
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+    """Set up Dyson from a config entry."""
     _LOGGER.info("Creating new Dyson component")
 
-    if DYSON_DEVICES not in hass.data:
-        hass.data[DYSON_DEVICES] = []
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = {}
 
     dyson_account = DysonAccount(
-        config[DOMAIN].get(CONF_USERNAME),
-        config[DOMAIN].get(CONF_PASSWORD),
-        config[DOMAIN].get(CONF_LANGUAGE),
+        entry.data[CONF_USERNAME],
+        entry.data[CONF_PASSWORD],
+        entry.data[CONF_LANGUAGE],
     )
 
-    logged = dyson_account.login()
+    logged = await hass.async_add_executor_job(dyson_account.login)
 
-    timeout = config[DOMAIN].get(CONF_TIMEOUT)
-    retry = config[DOMAIN].get(CONF_RETRY)
+    timeout = DEFAULT_TIMEOUT
+    retry = DEFAULT_RETRY
 
     if not logged:
         _LOGGER.error("Not connected to Dyson account. Unable to add devices")
-        return False
+        raise ConfigEntryNotReady
 
     _LOGGER.info("Connected to Dyson account")
-    dyson_devices = dyson_account.devices()
-    if CONF_DEVICES in config[DOMAIN] and config[DOMAIN].get(CONF_DEVICES):
-        configured_devices = config[DOMAIN].get(CONF_DEVICES)
+    data_devices = []
+    dyson_devices = await hass.async_add_executor_job(dyson_account.devices)
+    if CONF_DEVICES in entry.data and entry.data.get(CONF_DEVICES):
+        configured_devices = entry.data.get(CONF_DEVICES)
         for device in configured_devices:
             dyson_device = next(
                 (d for d in dyson_devices if d.serial == device["device_id"]), None
             )
             if dyson_device:
                 try:
-                    connected = dyson_device.connect(device["device_ip"])
+                    connected = await hass.async_add_executor_job(
+                        partial(dyson_device.connect, device["device_ip"])
+                    )
                     if connected:
                         _LOGGER.info("Connected to device %s", dyson_device)
-                        hass.data[DYSON_DEVICES].append(dyson_device)
+                        data_devices.append(dyson_device)
                     else:
                         _LOGGER.warning("Unable to connect to device %s", dyson_device)
                 except OSError as ose:
@@ -94,17 +106,79 @@ def setup(hass, config):
                 timeout,
                 retry,
             )
-            connected = device.auto_connect(timeout, retry)
+            connected = await hass.async_add_executor_job(
+                partial(device.auto_connect, timeout, retry)
+            )
             if connected:
                 _LOGGER.info("Connected to device %s", device)
-                hass.data[DYSON_DEVICES].append(device)
+                data_devices.append(device)
             else:
                 _LOGGER.warning("Unable to connect to device %s", device)
 
+    hass.data[DOMAIN][entry.entry_id] = data_devices
+
     # Start fan/sensors components
-    if hass.data[DYSON_DEVICES]:
+    if data_devices:
         _LOGGER.debug("Starting sensor/fan components")
-        for platform in DYSON_PLATFORMS:
-            discovery.load_platform(hass, platform, DOMAIN, {}, config)
+        for platform in PLATFORMS:
+            hass.async_create_task(
+                hass.config_entries.async_forward_entry_setup(entry, platform)
+            )
 
     return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+    """Unload a config entry."""
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, component)
+                for component in PLATFORMS
+            ]
+        )
+    )
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id)
+
+    return unload_ok
+
+
+class DysonEntity(Entity):
+    """Represents a dyson entity."""
+
+    def __init__(self, device):
+        """Initialize the entity."""
+        self._device = device
+
+    async def async_added_to_hass(self):
+        """Call when entity is added to hass."""
+        self.hass.async_add_job(self._device.add_message_listener, self.on_message)
+
+    def on_message(self, message):
+        """Call when new messages received."""
+
+    @property
+    def should_poll(self):
+        """No polling needed."""
+        return False
+
+    @property
+    def name(self):
+        """Return the display name of the entity."""
+        return self._device.name
+
+    @property
+    def unique_id(self):
+        """Return the unique id of the entity."""
+        return self._device.serial
+
+    @property
+    def device_info(self):
+        """Return the device information of the entity."""
+        return {
+            "identifiers": {(DOMAIN, self._device.serial)},
+            "name": self._device.name,
+            "manufacturer": "Dyson",
+            "sw_version": self._device.version,
+        }

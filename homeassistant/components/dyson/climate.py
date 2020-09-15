@@ -34,9 +34,11 @@ from homeassistant.components.climate.const import (
     SUPPORT_FAN_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.core import HomeAssistant
 
-from . import DYSON_DEVICES
+from . import DOMAIN, DysonEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,8 +47,6 @@ SUPPORT_FAN_PCOOL = [FAN_OFF, FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH]
 SUPPORT_HVAG = [HVAC_MODE_COOL, HVAC_MODE_HEAT]
 SUPPORT_HVAC_PCOOL = [HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_OFF]
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
-
-DYSON_KNOWN_CLIMATE_DEVICES = "dyson_known_climate_devices"
 
 SPEED_MAP = {
     FanSpeed.FAN_SPEED_1.value: FAN_LOW,
@@ -63,41 +63,29 @@ SPEED_MAP = {
 }
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+):
     """Set up the Dyson fan components."""
-    if discovery_info is None:
-        return
+    entities = []
+    for device in hass.data[DOMAIN][config_entry.entry_id]:
+        if isinstance(device, DysonPureHotCool):
+            dyson_entity = DysonPureHotCoolEntity(device)
+            entities.append(dyson_entity)
+        elif isinstance(device, DysonPureHotCoolLink):
+            dyson_entity = DysonPureHotCoolLinkEntity(device)
+            entities.append(dyson_entity)
 
-    known_devices = hass.data.setdefault(DYSON_KNOWN_CLIMATE_DEVICES, set())
-
-    # Get Dyson Devices from parent component
-    new_entities = []
-
-    for device in hass.data[DYSON_DEVICES]:
-        if device.serial not in known_devices:
-            if isinstance(device, DysonPureHotCool):
-                dyson_entity = DysonPureHotCoolEntity(device)
-                new_entities.append(dyson_entity)
-                known_devices.add(device.serial)
-            elif isinstance(device, DysonPureHotCoolLink):
-                dyson_entity = DysonPureHotCoolLinkEntity(device)
-                new_entities.append(dyson_entity)
-                known_devices.add(device.serial)
-
-    add_entities(new_entities)
+    async_add_entities(entities)
 
 
-class DysonPureHotCoolLinkEntity(ClimateEntity):
+class DysonPureHotCoolLinkEntity(DysonEntity, ClimateEntity):
     """Representation of a Dyson climate fan."""
 
     def __init__(self, device):
         """Initialize the fan."""
-        self._device = device
+        super().__init__(device)
         self._current_temp = None
-
-    async def async_added_to_hass(self):
-        """Call when entity is added to hass."""
-        self.hass.async_add_job(self._device.add_message_listener, self.on_message)
 
     def on_message(self, message):
         """Call when new messages received from the climate."""
@@ -108,19 +96,9 @@ class DysonPureHotCoolLinkEntity(ClimateEntity):
             self.schedule_update_ha_state()
 
     @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
     def supported_features(self):
         """Return the list of supported features."""
         return SUPPORT_FLAGS
-
-    @property
-    def name(self):
-        """Return the display name of this climate."""
-        return self._device.name
 
     @property
     def temperature_unit(self):
@@ -234,18 +212,8 @@ class DysonPureHotCoolLinkEntity(ClimateEntity):
         return 37
 
 
-class DysonPureHotCoolEntity(ClimateEntity):
+class DysonPureHotCoolEntity(DysonEntity, ClimateEntity):
     """Representation of a Dyson climate hot+cool fan."""
-
-    def __init__(self, device):
-        """Initialize the fan."""
-        self._device = device
-
-    async def async_added_to_hass(self):
-        """Call when entity is added to hass."""
-        self.hass.async_add_executor_job(
-            self._device.add_message_listener, self.on_message
-        )
 
     def on_message(self, message):
         """Call when new messages received from the climate device."""
@@ -256,19 +224,9 @@ class DysonPureHotCoolEntity(ClimateEntity):
             self.schedule_update_ha_state()
 
     @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
     def supported_features(self):
         """Return the list of supported features."""
         return SUPPORT_FLAGS
-
-    @property
-    def name(self):
-        """Return the display name of this climate."""
-        return self._device.name
 
     @property
     def temperature_unit(self):

@@ -4,39 +4,29 @@ import logging
 from libpurecool.dyson_pure_cool import DysonPureCool
 from libpurecool.dyson_pure_state_v2 import DysonEnvironmentalSensorV2State
 
-from homeassistant.components.air_quality import DOMAIN, AirQualityEntity
+from homeassistant.components.air_quality import AirQualityEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 
-from . import DYSON_DEVICES
+from . import DOMAIN
 
 ATTRIBUTION = "Dyson purifier air quality sensor"
 
 _LOGGER = logging.getLogger(__name__)
 
-DYSON_AIQ_DEVICES = "dyson_aiq_devices"
-
 ATTR_VOC = "volatile_organic_compounds"
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+):
     """Set up the Dyson Sensors."""
-
-    if discovery_info is None:
-        return
-
-    hass.data.setdefault(DYSON_AIQ_DEVICES, [])
-
     # Get Dyson Devices from parent component
-    device_ids = [device.unique_id for device in hass.data[DYSON_AIQ_DEVICES]]
-    new_entities = []
-    for device in hass.data[DYSON_DEVICES]:
-        if isinstance(device, DysonPureCool) and device.serial not in device_ids:
-            new_entities.append(DysonAirSensor(device))
-
-    if not new_entities:
-        return
-
-    hass.data[DYSON_AIQ_DEVICES].extend(new_entities)
-    add_entities(hass.data[DYSON_AIQ_DEVICES])
+    entities = []
+    for device in hass.data[DOMAIN][config_entry.entry_id]:
+        if isinstance(device, DysonPureCool):
+            entities.append(DysonAirSensor(device))
+    async_add_entities(entities)
 
 
 class DysonAirSensor(AirQualityEntity):
@@ -57,7 +47,7 @@ class DysonAirSensor(AirQualityEntity):
     def on_message(self, message):
         """Handle new messages which are received from the fan."""
         _LOGGER.debug(
-            "%s: Message received for %s device: %s", DOMAIN, self.name, message
+            "air_quality: Message received for %s device: %s", self.name, message
         )
         if (
             self._old_value is None
