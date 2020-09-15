@@ -118,7 +118,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.entry_title = title
             return await self.async_step_pairing()
 
-        default_domains = [] if self._async_current_entries() else DEFAULT_DOMAINS
+        default_domains = [] if self._async_current_names() else DEFAULT_DOMAINS
         setup_schema = vol.Schema(
             {
                 vol.Optional(CONF_AUTO_START, default=DEFAULT_AUTO_START): bool,
@@ -147,16 +147,26 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     @callback
+    def _async_current_names(self):
+        """Return a set of bridge names."""
+        current_entries = self._async_current_entries()
+
+        return {
+            entry.data[CONF_NAME]
+            for entry in current_entries
+            if CONF_NAME in entry.data
+        }
+
+    @callback
     def _async_available_name(self):
         """Return an available for the bridge."""
-        current_entries = self._async_current_entries()
 
         # We always pick a RANDOM name to avoid Zeroconf
         # name collisions.  If the name has been seen before
         # pairing will probably fail.
         acceptable_chars = string.ascii_uppercase + string.digits
         trailer = "".join(random.choices(acceptable_chars, k=4))
-        all_names = {entry.data[CONF_NAME] for entry in current_entries}
+        all_names = self._async_current_names()
         suggested_name = f"{SHORT_BRIDGE_NAME} {trailer}"
         while suggested_name in all_names:
             trailer = "".join(random.choices(acceptable_chars, k=4))
