@@ -1,0 +1,74 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu AlarmDecoder ja est\u00e0 configurat."
+        },
+        "create_entry": {
+            "default": "S'ha connectat correctament amb AlarmDecoder."
+        },
+        "error": {
+            "service_unavailable": "Ha fallat la connexi\u00f3"
+        },
+        "step": {
+            "protocol": {
+                "data": {
+                    "device_baudrate": "Velocitat, en baudis, del dispositiu",
+                    "device_path": "Ruta del dispositiu",
+                    "host": "Amfitri\u00f3",
+                    "port": "Port"
+                },
+                "title": "Configuraci\u00f3 dels par\u00e0metres de connexi\u00f3"
+            },
+            "user": {
+                "data": {
+                    "protocol": "Protocol"
+                },
+                "title": "Selecciona el protocol d'AlarmDecoder"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "int": "El camp seg\u00fcent ha de ser un nombre enter.",
+            "loop_range": "El bucle RF ha de ser un nombre enter entre 1 i 4.",
+            "loop_rfid": "El bucle RF no es pot utilitzar sense RF s\u00e8rie.",
+            "relay_inclusive": "L'adre\u00e7a i el canal de rel\u00e9 s\u00f3n codependents i s'han d'incloure junts."
+        },
+        "step": {
+            "arm_settings": {
+                "data": {
+                    "alt_night_mode": "Mode nocturn alternatiu",
+                    "auto_bypass": "Bypass autom\u00e0tic en l'activaci\u00f3",
+                    "code_arm_required": "Codi necessari per a l'activaci\u00f3"
+                },
+                "title": "Configuraci\u00f3 d'AlarmDecoder"
+            },
+            "init": {
+                "data": {
+                    "edit_select": "Edita"
+                },
+                "description": "Qu\u00e8 voldries editar?",
+                "title": "Configuraci\u00f3 d'AlarmDecoder"
+            },
+            "zone_details": {
+                "data": {
+                    "zone_loop": "Bucle RF",
+                    "zone_name": "Nom de la zona",
+                    "zone_relayaddr": "Adre\u00e7a del rel\u00e9",
+                    "zone_relaychan": "Canal del rel\u00e9",
+                    "zone_rfid": "RF s\u00e8rie",
+                    "zone_type": "Tipus de zona"
+                },
+                "description": "Introdueix els detalls de la zona {zone_number}. Per suprimir la zona {zone_number}, deixa el nom de la zona en blanc.",
+                "title": "Configuraci\u00f3 d'AlarmDecoder"
+            },
+            "zone_select": {
+                "data": {
+                    "zone_number": "N\u00famero de zona"
+                },
+                "description": "Introdueix el n\u00famero de zona que vulguis afegir, editar o eliminar.",
+                "title": "Configuraci\u00f3 d'AlarmDecoder"
+            }
+        }
+    }
+}

@@ -19,5 +19,15 @@
                 "title": "Conectarse a Smile"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Intervalo de escaneo (segundos)"
+                },
+                "description": "Ajustar las opciones de Plugwise"
+            }
+        }
     }
 }

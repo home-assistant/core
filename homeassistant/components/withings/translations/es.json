@@ -3,7 +3,8 @@
         "abort": {
             "already_configured": "Configuraci\u00f3n actualizada para el perfil.",
             "authorize_url_timeout": "Tiempo de espera agotado generando la url de autorizaci\u00f3n.",
-            "missing_configuration": "La integraci\u00f3n de Withings no est\u00e1 configurada. Por favor, siga la documentaci\u00f3n."
+            "missing_configuration": "La integraci\u00f3n de Withings no est\u00e1 configurada. Por favor, siga la documentaci\u00f3n.",
+            "no_url_available": "No hay URL disponible. Para obtener informaci\u00f3n sobre este error, [consulta la secci\u00f3n de ayuda]({docs_url})"
         },
         "create_entry": {
             "default": "Autenticado correctamente con Withings."

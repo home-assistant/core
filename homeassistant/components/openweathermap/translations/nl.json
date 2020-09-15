@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "OpenWeatherMap-integratie voor deze co\u00f6rdinaten is al geconfigureerd."
+        },
+        "error": {
+            "auth": "API-sleutel is niet correct.",
+            "connection": "Kan geen verbinding maken met OWM API"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "OpenWeatherMap API-sleutel",
+                    "language": "Taal",
+                    "latitude": "Breedtegraad",
+                    "longitude": "Lengtegraad",
+                    "mode": "Mode",
+                    "name": "Naam van de integratie"
+                },
+                "title": "OpenWeatherMap"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "language": "Taal",
+                    "mode": "Mode"
+                }
+            }
+        }
+    }
+}

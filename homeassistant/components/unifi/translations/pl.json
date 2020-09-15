@@ -5,7 +5,7 @@
         },
         "error": {
             "faulty_credentials": "Niepoprawne uwierzytelnienie.",
-            "service_unavailable": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia.",
+            "service_unavailable": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
             "unknown_client_mac": "Brak klienta z tym adresem MAC"
         },
         "step": {
