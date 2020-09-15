@@ -6,7 +6,7 @@ import logging
 import aiohttp
 import async_timeout
 
-from homeassistant.const import MATCH_ALL, STATE_ON
+from homeassistant.const import HTTP_ACCEPTED, MATCH_ALL, STATE_ON
 import homeassistant.util.dt as dt_util
 
 from .const import API_CHANGE, Cause
@@ -109,7 +109,7 @@ async def async_send_changereport_message(
     _LOGGER.debug("Sent: %s", json.dumps(message_serialized))
     _LOGGER.debug("Received (%s): %s", response.status, response_text)
 
-    if response.status == 202:
+    if response.status == HTTP_ACCEPTED:
         return
 
     response_json = json.loads(response_text)
@@ -240,7 +240,7 @@ async def async_send_doorbell_event_message(hass, config, alexa_entity):
     _LOGGER.debug("Sent: %s", json.dumps(message_serialized))
     _LOGGER.debug("Received (%s): %s", response.status, response_text)
 
-    if response.status == 202:
+    if response.status == HTTP_ACCEPTED:
         return
 
     response_json = json.loads(response_text)

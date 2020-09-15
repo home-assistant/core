@@ -80,7 +80,11 @@ from homeassistant.components.http.ban import (
 )
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
-from homeassistant.const import HTTP_BAD_REQUEST, HTTP_NOT_FOUND
+from homeassistant.const import (
+    HTTP_BAD_REQUEST,
+    HTTP_METHOD_NOT_ALLOWED,
+    HTTP_NOT_FOUND,
+)
 
 from . import indieauth
 
@@ -153,7 +157,7 @@ class LoginFlowIndexView(HomeAssistantView):
 
     async def get(self, request):
         """Do not allow index of flows in progress."""
-        return web.Response(status=405)
+        return web.Response(status=HTTP_METHOD_NOT_ALLOWED)
 
     @RequestDataValidator(
         vol.Schema(
