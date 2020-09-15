@@ -1,6 +1,7 @@
 """The tests for the Canary component."""
 from requests import ConnectTimeout
 
+from homeassistant.components.camera.const import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.canary.const import DEFAULT_TIMEOUT, DOMAIN
 from homeassistant.config_entries import (
     ENTRY_STATE_LOADED,
@@ -30,6 +31,30 @@ async def test_import_from_yaml(hass, canary) -> None:
     assert entries[0].data[CONF_USERNAME] == "test-username"
     assert entries[0].data[CONF_PASSWORD] == "test-password"
     assert entries[0].data[CONF_TIMEOUT] == DEFAULT_TIMEOUT
+
+
+async def test_import_from_yaml_ffmpeg(hass, canary) -> None:
+    """Test import from YAML with ffmpeg arguments."""
+    with patch(
+        "homeassistant.components.canary.async_setup_entry",
+        return_value=True,
+    ):
+        assert await async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                DOMAIN: YAML_CONFIG,
+                CAMERA_DOMAIN: {DOMAIN: {CONF_FFMPEG_ARGUMENTS: 6}}
+            }
+        )
+        await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+
+    assert entries[0].data[CONF_USERNAME] == "test-username"
+    assert entries[0].data[CONF_PASSWORD] == "test-password"
+    assert entries[0].data[CONF_TIMEOUT] == 6
 
 
 async def test_unload_entry(hass, canary):
