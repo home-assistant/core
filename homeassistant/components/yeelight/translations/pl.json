@@ -5,7 +5,7 @@
             "no_devices_found": "Nie znaleziono urz\u0105dze\u0144 w sieci."
         },
         "error": {
-            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia."
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
         },
         "step": {
             "pick_device": {

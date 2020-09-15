@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "no_agreements": "Dit account heeft geen Toon schermen."
+            "no_agreements": "Dit account heeft geen Toon schermen.",
+            "no_url_available": "Geen URL beschikbaar. Voor informatie over deze fout [check the help section] ( {docs_url} )"
         }
     }
 }

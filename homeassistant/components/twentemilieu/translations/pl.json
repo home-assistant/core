@@ -4,7 +4,7 @@
             "address_exists": "Adres jest ju\u017c skonfigurowany."
         },
         "error": {
-            "connection_error": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia.",
+            "connection_error": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
             "invalid_address": "Nie znaleziono adresu w obszarze us\u0142ugi Twente Milieu."
         },
         "step": {

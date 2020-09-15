@@ -4,7 +4,7 @@
             "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
         },
         "error": {
-            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia.",
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
             "invalid_api_key": "Nieprawid\u0142owy klucz API.",
             "requests_exceeded": "Dozwolona liczba zapyta\u0144 do interfejsu API AccuWeather zosta\u0142a przekroczona. Musisz poczeka\u0107 lub zmieni\u0107 klucz API."
         },
