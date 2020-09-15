@@ -19,7 +19,7 @@ from homeassistant.setup import async_setup_component
 from . import USER_INPUT, _patch_async_setup, _patch_async_setup_entry, init_integration
 
 
-async def test_user_form(hass, canary):
+async def test_user_form(hass, canary_config_flow):
     """Test we get the user initiated form."""
     await async_setup_component(hass, "persistent_notification", {})
 
@@ -44,7 +44,7 @@ async def test_user_form(hass, canary):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_user_form_show_advanced_options(hass, canary):
+async def test_user_form_show_advanced_options(hass, canary_config_flow):
     """Test we get the user initiated form with advanced options shown."""
     await async_setup_component(hass, "persistent_notification", {})
 
@@ -74,9 +74,9 @@ async def test_user_form_show_advanced_options(hass, canary):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_user_form_cannot_connect(hass, canary):
+async def test_user_form_cannot_connect(hass, canary_config_flow):
     """Test we handle cannot connect error."""
-    canary.side_effect = HTTPError()
+    canary_config_flow.side_effect = HTTPError()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -91,9 +91,9 @@ async def test_user_form_cannot_connect(hass, canary):
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_user_form_cannot_connect_timeout(hass, canary):
+async def test_user_form_cannot_connect_timeout(hass, canary_config_flow):
     """Test we handle cannot connect error from timeout."""
-    canary.side_effect = ConnectTimeout()
+    canary_config_flow.side_effect = ConnectTimeout()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -108,9 +108,9 @@ async def test_user_form_cannot_connect_timeout(hass, canary):
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_user_form_unexpected_exception(hass, canary):
+async def test_user_form_unexpected_exception(hass, canary_config_flow):
     """Test we handle unexpected exception."""
-    canary.side_effect = Exception()
+    canary_config_flow.side_effect = Exception()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -125,7 +125,7 @@ async def test_user_form_unexpected_exception(hass, canary):
     assert result["reason"] == "unknown"
 
 
-async def test_user_form_single_instance_allowed(hass, canary):
+async def test_user_form_single_instance_allowed(hass, canary_config_flow):
     """Test that configuring more than one instance is rejected."""
     await init_integration(hass, skip_entry_setup=True)
 
