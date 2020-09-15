@@ -46,7 +46,7 @@ async def test_import_from_yaml_ffmpeg(hass, canary) -> None:
         assert await async_setup_component(
             hass,
             DOMAIN,
-            {DOMAIN: YAML_CONFIG, CAMERA_DOMAIN: {DOMAIN: {CONF_FFMPEG_ARGUMENTS: ""}}},
+            {DOMAIN: YAML_CONFIG, CAMERA_DOMAIN: [{"platform": DOMAIN, CONF_FFMPEG_ARGUMENTS: "-v"}]},
         )
         await hass.async_block_till_done()
 
@@ -56,7 +56,7 @@ async def test_import_from_yaml_ffmpeg(hass, canary) -> None:
     assert entries[0].data[CONF_USERNAME] == "test-username"
     assert entries[0].data[CONF_PASSWORD] == "test-password"
     assert entries[0].data[CONF_TIMEOUT] == DEFAULT_TIMEOUT
-    assert entries[0].data.get(CONF_FFMPEG_ARGUMENTS) == ""
+    assert entries[0].data.get(CONF_FFMPEG_ARGUMENTS) == "-v"
 
 
 async def test_unload_entry(hass, canary):
