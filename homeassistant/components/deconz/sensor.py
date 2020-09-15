@@ -12,6 +12,7 @@ from pydeconz.sensor import (
     Thermostat,
 )
 
+from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     ATTR_VOLTAGE,
@@ -74,6 +75,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the deCONZ sensors."""
     gateway = get_gateway_from_config_entry(hass, config_entry)
+    gateway.entities[DOMAIN] = {DOMAIN: set(), "Battery": set(), "Event": set()}
 
     batteries = set()
     battery_handler = DeconzBatteryHandler(gateway)
@@ -126,6 +128,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 class DeconzSensor(DeconzDevice):
     """Representation of a deCONZ sensor."""
+
+    DOMAIN = DOMAIN
+    TYPE = DOMAIN
 
     @callback
     def async_update_callback(self, force_update=False, ignore_update=False):
@@ -191,6 +196,9 @@ class DeconzSensor(DeconzDevice):
 
 class DeconzBattery(DeconzDevice):
     """Battery class for when a device is only represented as an event."""
+
+    DOMAIN = DOMAIN
+    TYPE = "Battery"
 
     @callback
     def async_update_callback(self, force_update=False, ignore_update=False):

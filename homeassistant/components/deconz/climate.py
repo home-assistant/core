@@ -1,7 +1,7 @@
 """Support for deCONZ climate devices."""
 from pydeconz.sensor import Thermostat
 
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import DOMAIN, ClimateEntity
 from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO,
     HVAC_MODE_HEAT,
@@ -29,6 +29,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     Thermostats are based on the same device class as sensors in deCONZ.
     """
     gateway = get_gateway_from_config_entry(hass, config_entry)
+    gateway.entities[DOMAIN] = {DOMAIN: set()}
 
     @callback
     def async_add_climate(sensors, new=True):
@@ -60,6 +61,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 class DeconzThermostat(DeconzDevice, ClimateEntity):
     """Representation of a deCONZ thermostat."""
+
+    DOMAIN = DOMAIN
+    TYPE = DOMAIN
 
     @property
     def supported_features(self):

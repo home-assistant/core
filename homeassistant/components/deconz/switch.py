@@ -1,5 +1,5 @@
 """Support for deCONZ switches."""
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import DOMAIN, SwitchEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -18,6 +18,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     Switches are based same device class as lights in deCONZ.
     """
     gateway = get_gateway_from_config_entry(hass, config_entry)
+    gateway.entities[DOMAIN] = {"PowerPlug": set(), "Siren": set()}
 
     @callback
     def async_add_switch(lights):
@@ -46,6 +47,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class DeconzPowerPlug(DeconzDevice, SwitchEntity):
     """Representation of a deCONZ power plug."""
 
+    DOMAIN = DOMAIN
+    TYPE = "PowerPlug"
+
     @property
     def is_on(self):
         """Return true if switch is on."""
@@ -64,6 +68,9 @@ class DeconzPowerPlug(DeconzDevice, SwitchEntity):
 
 class DeconzSiren(DeconzDevice, SwitchEntity):
     """Representation of a deCONZ siren."""
+
+    DOMAIN = DOMAIN
+    TYPE = "Siren"
 
     @property
     def is_on(self):

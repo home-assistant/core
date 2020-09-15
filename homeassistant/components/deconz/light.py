@@ -6,6 +6,7 @@ from homeassistant.components.light import (
     ATTR_FLASH,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
+    DOMAIN,
     EFFECT_COLORLOOP,
     FLASH_LONG,
     FLASH_SHORT,
@@ -40,6 +41,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the deCONZ lights and groups from a config entry."""
     gateway = get_gateway_from_config_entry(hass, config_entry)
+    gateway.entities[DOMAIN] = {"Light": set(), "Group": set()}
 
     @callback
     def async_add_light(lights):
@@ -84,6 +86,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 class DeconzBaseLight(DeconzDevice, LightEntity):
     """Representation of a deCONZ light."""
+
+    DOMAIN = DOMAIN
 
     def __init__(self, device, gateway):
         """Set up light."""
@@ -207,6 +211,8 @@ class DeconzBaseLight(DeconzDevice, LightEntity):
 class DeconzLight(DeconzBaseLight):
     """Representation of a deCONZ light."""
 
+    TYPE = "Light"
+
     @property
     def max_mireds(self):
         """Return the warmest color_temp that this light supports."""
@@ -221,15 +227,16 @@ class DeconzLight(DeconzBaseLight):
 class DeconzGroup(DeconzBaseLight):
     """Representation of a deCONZ group."""
 
+    TYPE = "Group"
+
     def __init__(self, device, gateway):
         """Set up group and create an unique id."""
+        group_id_base = gateway.config_entry.unique_id
+        if CONF_GROUP_ID_BASE in gateway.config_entry.data:
+            group_id_base = gateway.config_entry.data[CONF_GROUP_ID_BASE]
+        self._unique_id = f"{group_id_base}-{device.deconz_id}"
+
         super().__init__(device, gateway)
-
-        group_id_base = self.gateway.config_entry.unique_id
-        if CONF_GROUP_ID_BASE in self.gateway.config_entry.data:
-            group_id_base = self.gateway.config_entry.data[CONF_GROUP_ID_BASE]
-
-        self._unique_id = f"{group_id_base}-{self._device.deconz_id}"
 
     @property
     def unique_id(self):

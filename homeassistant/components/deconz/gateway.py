@@ -49,6 +49,8 @@ class DeconzGateway:
         self.events = []
         self.listeners = []
 
+        self.entities = {}
+
         self._current_option_allow_clip_sensor = self.option_allow_clip_sensor
         self._current_option_allow_deconz_groups = self.option_allow_deconz_groups
 

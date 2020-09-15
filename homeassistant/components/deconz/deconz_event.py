@@ -1,6 +1,7 @@
 """Representation of a deCONZ remote."""
 from pydeconz.sensor import Switch
 
+from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import CONF_EVENT, CONF_ID, CONF_UNIQUE_ID
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -56,6 +57,9 @@ class DeconzEvent(DeconzBase):
     instead of a sensor entity in hass.
     """
 
+    DOMAIN = DOMAIN
+    TYPE = "Event"
+
     def __init__(self, device, gateway):
         """Register callback that will be used for signals."""
         super().__init__(device, gateway)
@@ -76,6 +80,7 @@ class DeconzEvent(DeconzBase):
         """Disconnect event object when removed."""
         self._device.remove_callback(self.async_update_callback)
         self._device = None
+        self.gateway.hass.async_create_task(super().async_will_remove_from_hass())
 
     @callback
     def async_update_callback(self, force_update=False, ignore_update=False):

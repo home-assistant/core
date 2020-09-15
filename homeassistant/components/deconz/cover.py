@@ -2,6 +2,7 @@
 from homeassistant.components.cover import (
     ATTR_POSITION,
     DEVICE_CLASS_WINDOW,
+    DOMAIN,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
@@ -26,6 +27,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     Covers are based on same device class as lights in deCONZ.
     """
     gateway = get_gateway_from_config_entry(hass, config_entry)
+    gateway.entities[DOMAIN] = {DOMAIN: set()}
 
     @callback
     def async_add_cover(lights):
@@ -49,6 +51,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 class DeconzCover(DeconzDevice, CoverEntity):
     """Representation of a deCONZ cover."""
+
+    DOMAIN = DOMAIN
+    TYPE = DOMAIN
 
     def __init__(self, device, gateway):
         """Set up cover device."""

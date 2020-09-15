@@ -8,6 +8,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_OPENING,
     DEVICE_CLASS_SMOKE,
     DEVICE_CLASS_VIBRATION,
+    DOMAIN,
     BinarySensorEntity,
 )
 from homeassistant.const import ATTR_TEMPERATURE
@@ -39,6 +40,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the deCONZ binary sensor."""
     gateway = get_gateway_from_config_entry(hass, config_entry)
+    gateway.entities[DOMAIN] = {DOMAIN: set()}
 
     @callback
     def async_add_sensor(sensors, new=True):
@@ -72,6 +74,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 class DeconzBinarySensor(DeconzDevice, BinarySensorEntity):
     """Representation of a deCONZ binary sensor."""
+
+    DOMAIN = DOMAIN
+    TYPE = DOMAIN
 
     @callback
     def async_update_callback(self, force_update=False, ignore_update=False):
