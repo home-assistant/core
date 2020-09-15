@@ -59,13 +59,13 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         hass.data[DOMAIN][entry.entry_id][DATA_RESTART] = False
         controller.close()
 
-    def open_connection(now=None):
+    async def open_connection(now=None):
         """Open a connection to AlarmDecoder."""
         try:
-            controller.open(baud)
+            await hass.async_add_executor_job(controller.open, baud)
         except NoDeviceError:
             _LOGGER.debug("Failed to connect. Retrying in 5 seconds")
-            hass.helpers.event.track_point_in_time(
+            hass.helpers.event.async_track_point_in_time(
                 open_connection, dt_util.utcnow() + timedelta(seconds=5)
             )
             return
@@ -100,8 +100,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         """Handle relay or zone expander message from AlarmDecoder."""
         hass.helpers.dispatcher.dispatcher_send(SIGNAL_REL_MESSAGE, message)
 
-    controller = False
-    baud = ad_connection[CONF_DEVICE_BAUD]
+    baud = ad_connection.get(CONF_DEVICE_BAUD)
     if protocol == PROTOCOL_SOCKET:
         host = ad_connection[CONF_HOST]
         port = ad_connection[CONF_PORT]
@@ -129,7 +128,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         DATA_RESTART: False,
     }
 
-    open_connection()
+    await open_connection()
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -156,7 +155,7 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
     hass.data[DOMAIN][entry.entry_id][DATA_REMOVE_UPDATE_LISTENER]()
     hass.data[DOMAIN][entry.entry_id][DATA_REMOVE_STOP_LISTENER]()
-    hass.data[DOMAIN][entry.entry_id][DATA_AD].close()
+    await hass.async_add_executor_job(hass.data[DOMAIN][entry.entry_id][DATA_AD].close)
 
     if hass.data[DOMAIN][entry.entry_id]:
         hass.data[DOMAIN].pop(entry.entry_id)

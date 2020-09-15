@@ -87,8 +87,8 @@ class AlarmDecoderFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             ):
                 return self.async_abort(reason="already_configured")
             connection = {}
+            baud = None
             if self.protocol == PROTOCOL_SOCKET:
-                baud = connection[CONF_DEVICE_BAUD] = None
                 host = connection[CONF_HOST] = user_input[CONF_HOST]
                 port = connection[CONF_PORT] = user_input[CONF_PORT]
                 title = f"{host}:{port}"
@@ -100,9 +100,13 @@ class AlarmDecoderFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 device = SerialDevice(interface=path)
 
             controller = AdExt(device)
+
+            def test_connection():
+                controller.open(baud)
+                controller.close()
+
             try:
-                with controller:
-                    controller.open(baudrate=baud)
+                await self.hass.async_add_executor_job(test_connection)
                 return self.async_create_entry(
                     title=title, data={CONF_PROTOCOL: self.protocol, **connection}
                 )
