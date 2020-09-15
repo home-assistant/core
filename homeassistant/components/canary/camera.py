@@ -31,7 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 MIN_TIME_BETWEEN_SESSION_RENEW = timedelta(seconds=90)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Optional(CONF_FFMPEG_ARGUMENTS, default=DEFAULT_ARGUMENTS): cv.string}
+    {vol.Optional(CONF_FFMPEG_ARGUMENTS, default=DEFAULT_FFMPEG_ARGUMENTS): cv.string}
 )
 
 async def async_setup_entry(
