@@ -9,13 +9,7 @@ from homeassistant.components.climacell.config_flow import (
     _get_config_schema,
     _get_unique_id,
 )
-from homeassistant.components.climacell.const import (
-    CONF_FORECAST_TYPE,
-    DAILY,
-    DOMAIN,
-    HOURLY,
-    NOWCAST,
-)
+from homeassistant.components.climacell.const import DOMAIN
 from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -27,7 +21,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def test_load_and_unload(
-    hass: HomeAssistantType, climacell_config_entry_update: pytest.fixture,
+    hass: HomeAssistantType,
+    climacell_config_entry_update: pytest.fixture,
 ) -> None:
     """Test loading and unloading entry."""
     config_entry = MockConfigEntry(
@@ -47,42 +42,19 @@ async def test_load_and_unload(
     assert len(hass.states.async_entity_ids(AIR_QUALITY_DOMAIN)) == 0
 
 
-async def test_all_forecast_types(
-    hass: HomeAssistantType, climacell_config_entry_update: pytest.fixture,
+async def test_update_interval(
+    hass: HomeAssistantType,
+    climacell_config_entry_update: pytest.fixture,
 ) -> None:
-    """Test all forecast types."""
+    """Test that update_interval changes based on number of entries."""
     config = _get_config_schema(hass)(MIN_CONFIG)
-    config[CONF_FORECAST_TYPE] = DAILY
-    config_entry = MockConfigEntry(
-        domain=DOMAIN, data=config, unique_id=_get_unique_id(hass, config)
-    )
-    config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert hass.data[DOMAIN][config_entry.entry_id].update_interval == timedelta(
-        minutes=4
-    )
-
-    config = config.copy()
-    config[CONF_FORECAST_TYPE] = NOWCAST
-    config_entry = MockConfigEntry(
-        domain=DOMAIN, data=config, unique_id=_get_unique_id(hass, config)
-    )
-    config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert hass.data[DOMAIN][config_entry.entry_id].update_interval == timedelta(
-        minutes=7
-    )
-
-    config = config.copy()
-    config[CONF_FORECAST_TYPE] = HOURLY
-    config_entry = MockConfigEntry(
-        domain=DOMAIN, data=config, unique_id=_get_unique_id(hass, config)
-    )
-    config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert hass.data[DOMAIN][config_entry.entry_id].update_interval == timedelta(
-        minutes=10
-    )
+    for i in range(0, 2):
+        config_entry = MockConfigEntry(
+            domain=DOMAIN, data=config, unique_id=_get_unique_id(hass, config) + str(i)
+        )
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert hass.data[DOMAIN][config_entry.entry_id].update_interval == timedelta(
+            minutes=(4 + (i * 3))
+        )

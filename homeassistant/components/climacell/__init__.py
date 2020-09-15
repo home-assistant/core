@@ -25,9 +25,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 
 from .const import (
     ATTRIBUTION,
@@ -212,20 +215,15 @@ class ClimaCellDataUpdateCoordinator(DataUpdateCoordinator):
             raise UpdateFailed(error)
 
 
-class ClimaCellEntity(Entity):
+class ClimaCellEntity(CoordinatorEntity):
     """Base ClimaCell Entity."""
 
     def __init__(
         self, config_entry: ConfigEntry, coordinator: ClimaCellDataUpdateCoordinator
     ) -> None:
         """Initialize ClimaCell Entity."""
+        super().__init__(coordinator)
         self._config_entry = config_entry
-        self._coordinator = coordinator
-        self._async_unsub_listeners = []
-
-    async def async_update(self) -> None:
-        """Retrieve latest state of the device."""
-        await self._coordinator.async_request_refresh()
 
     @staticmethod
     def _get_cc_value(
@@ -233,33 +231,6 @@ class ClimaCellEntity(Entity):
     ) -> Optional[Union[int, str]]:
         """Return property from weather_dict."""
         return weather_dict.get(key, {}).get("value")
-
-    def refresh_state(self) -> None:
-        """Refresh state for entity after DataUpdateCoordinator update."""
-        raise NotImplementedError
-
-    async def async_added_to_hass(self) -> None:
-        """Connect to dispatcher listening for entity data notifications."""
-        self._async_unsub_listeners.append(
-            self._coordinator.async_add_listener(self.refresh_state)
-        )
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect callbacks when entity is removed."""
-        for listener in self._async_unsub_listeners:
-            listener()
-
-        self._async_unsub_listeners.clear()
-
-    @property
-    def should_poll(self):
-        """Return the polling requirement of the entity."""
-        return False
-
-    @property
-    def available(self) -> bool:
-        """Return the availabiliity of the entity."""
-        return self._coordinator.last_update_success
 
     @property
     def name(self) -> str:

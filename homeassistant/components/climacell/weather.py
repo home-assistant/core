@@ -34,7 +34,7 @@ from homeassistant.util.distance import convert as distance_convert
 from homeassistant.util.pressure import convert as pressure_convert
 from homeassistant.util.temperature import convert as temp_convert
 
-from . import ClimaCellDataUpdateCoordinator, ClimaCellEntity
+from . import ClimaCellEntity
 from .const import (
     CC_ATTR_CONDITION,
     CC_ATTR_HUMIDITY,
@@ -167,24 +167,10 @@ async def async_setup_entry(
 class ClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
     """Entity that talks to ClimaCell API to retrieve weather data."""
 
-    def __init__(
-        self, config_entry: ConfigEntry, coordinator: ClimaCellDataUpdateCoordinator
-    ) -> None:
-        """Initialize ClimaCell Entity."""
-        self._data_current = {}
-        self._data_forecasts = []
-        super().__init__(config_entry, coordinator)
-
-    def refresh_state(self) -> None:
-        """Refresh state for entity after DataUpdateCoordinator update."""
-        self._data_current = self._coordinator.data[CURRENT]
-        self._data_forecasts = self._coordinator.data[FORECASTS]
-        self.async_write_ha_state()
-
     @property
     def temperature(self):
         """Return the platform temperature."""
-        return self._get_cc_value(self._data_current, CC_ATTR_TEMPERATURE)
+        return self._get_cc_value(self.coordinator.data[CURRENT], CC_ATTR_TEMPERATURE)
 
     @property
     def temperature_unit(self):
@@ -194,7 +180,7 @@ class ClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
     @property
     def pressure(self):
         """Return the pressure."""
-        pressure = self._get_cc_value(self._data_current, CC_ATTR_PRESSURE)
+        pressure = self._get_cc_value(self.coordinator.data[CURRENT], CC_ATTR_PRESSURE)
         if self.hass.config.units.is_metric and pressure:
             return pressure_convert(pressure, PRESSURE_INHG, PRESSURE_HPA)
         return pressure
@@ -202,13 +188,15 @@ class ClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
     @property
     def humidity(self):
         """Return the humidity."""
-        humidity = self._get_cc_value(self._data_current, CC_ATTR_HUMIDITY)
+        humidity = self._get_cc_value(self.coordinator.data[CURRENT], CC_ATTR_HUMIDITY)
         return humidity / 100 if humidity else None
 
     @property
     def wind_speed(self):
         """Return the wind speed."""
-        wind_speed = self._get_cc_value(self._data_current, CC_ATTR_WIND_SPEED)
+        wind_speed = self._get_cc_value(
+            self.coordinator.data[CURRENT], CC_ATTR_WIND_SPEED
+        )
         if self.hass.config.units.is_metric and wind_speed:
             return distance_convert(wind_speed, LENGTH_MILES, LENGTH_KILOMETERS)
         return wind_speed
@@ -217,25 +205,28 @@ class ClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
     def wind_bearing(self):
         """Return the wind bearing."""
         return _translate_wind_direction(
-            self._get_cc_value(self._data_current, CC_ATTR_WIND_DIRECTION)
+            self._get_cc_value(self.coordinator.data[CURRENT], CC_ATTR_WIND_DIRECTION)
         )
 
     @property
     def ozone(self):
         """Return the O3 (ozone) level."""
-        return self._get_cc_value(self._data_current, CC_ATTR_OZONE)
+        return self._get_cc_value(self.coordinator.data[CURRENT], CC_ATTR_OZONE)
 
     @property
     def condition(self):
         """Return the condition."""
         return _translate_condition(
-            self._get_cc_value(self._data_current, CC_ATTR_CONDITION), is_up(self.hass),
+            self._get_cc_value(self.coordinator.data[CURRENT], CC_ATTR_CONDITION),
+            is_up(self.hass),
         )
 
     @property
     def visibility(self):
         """Return the visibility."""
-        visibility = self._get_cc_value(self._data_current, CC_ATTR_VISIBILITY)
+        visibility = self._get_cc_value(
+            self.coordinator.data[CURRENT], CC_ATTR_VISIBILITY
+        )
         if self.hass.config.units.is_metric and visibility:
             return distance_convert(visibility, LENGTH_MILES, LENGTH_KILOMETERS)
         return visibility
@@ -247,9 +238,9 @@ class ClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
 
         if (
             self._config_entry.data[CONF_FORECAST_TYPE] == DAILY
-            and self._data_forecasts
+            and self.coordinator.data[FORECASTS]
         ):
-            for forecast in self._data_forecasts:
+            for forecast in self.coordinator.data[FORECASTS]:
                 temp_max = None
                 temp_min = None
                 for item in forecast[CC_ATTR_TEMPERATURE]:
@@ -276,9 +267,9 @@ class ClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
 
         if (
             self._config_entry.data[CONF_FORECAST_TYPE] == HOURLY
-            and self._data_forecasts
+            and self.coordinator.data[FORECASTS]
         ):
-            for forecast in self._data_forecasts:
+            for forecast in self.coordinator.data[FORECASTS]:
                 forecasts.append(
                     _forecast_dict(
                         self.hass,
@@ -298,9 +289,9 @@ class ClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
 
         if (
             self._config_entry.data[CONF_FORECAST_TYPE] == NOWCAST
-            and self._data_forecasts
+            and self.coordinator.data[FORECASTS]
         ):
-            for forecast in self._data_forecasts:
+            for forecast in self.coordinator.data[FORECASTS]:
                 # Precipitation is forecasted in CONF_TIMESTEP increments
                 # but per hour, so this converts to an amount
                 precipitation: Optional[Union[float, int]] = self._get_cc_value(
