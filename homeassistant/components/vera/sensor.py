@@ -13,7 +13,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import convert
 
 from . import VeraDevice
-from .const import DOMAIN
+from .common import ControllerData, get_controller_data
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,10 +26,10 @@ async def async_setup_entry(
     async_add_entities: Callable[[List[Entity], bool], None],
 ) -> None:
     """Set up the sensor config entry."""
-    controller_data = hass.data[DOMAIN]
+    controller_data = get_controller_data(hass, entry)
     async_add_entities(
         [
-            VeraSensor(device, controller_data.controller)
+            VeraSensor(device, controller_data)
             for device in controller_data.devices.get(PLATFORM_DOMAIN)
         ]
     )
@@ -38,12 +38,12 @@ async def async_setup_entry(
 class VeraSensor(VeraDevice, Entity):
     """Representation of a Vera Sensor."""
 
-    def __init__(self, vera_device, controller):
+    def __init__(self, vera_device, controller_data: ControllerData):
         """Initialize the sensor."""
         self.current_value = None
         self._temperature_units = None
         self.last_changed_time = None
-        VeraDevice.__init__(self, vera_device, controller)
+        VeraDevice.__init__(self, vera_device, controller_data)
         self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
     @property
