@@ -380,6 +380,10 @@ ELECTRICAL_VOLT_AMPERE = f"{VOLT}{ELECTRICAL_CURRENT_AMPERE}"
 # Degree units
 DEGREE = "°"
 
+# Currency units
+CURRENCY_EURO = "€"
+CURRENCY_DOLLAR = "$"
+
 # Temperature units
 TEMP_CELSIUS = f"{DEGREE}C"
 TEMP_FAHRENHEIT = f"{DEGREE}F"
