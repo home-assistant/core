@@ -4,6 +4,7 @@ from functools import partial
 
 from nest.nest import AUTHORIZE_URL, AuthorizationError, NestAuth
 
+from homeassistant.const import HTTP_UNAUTHORIZED
 from homeassistant.core import callback
 
 from . import config_flow
@@ -42,7 +43,7 @@ async def resolve_auth_code(hass, client_id, client_secret, code):
         await hass.async_add_job(auth.login)
         return await result
     except AuthorizationError as err:
-        if err.response.status_code == 401:
+        if err.response.status_code == HTTP_UNAUTHORIZED:
             raise config_flow.CodeInvalid()
         raise config_flow.NestAuthError(
             f"Unknown error: {err} ({err.response.status_code})"
