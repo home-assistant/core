@@ -27,6 +27,7 @@ from homeassistant.const import (
     HTTP_INTERNAL_SERVER_ERROR,
     HTTP_NOT_FOUND,
     HTTP_OK,
+    HTTP_UNAUTHORIZED,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
@@ -880,7 +881,7 @@ class MediaPlayerImageView(HomeAssistantView):
         """Start a get request."""
         player = self.component.get_entity(entity_id)
         if player is None:
-            status = HTTP_NOT_FOUND if request[KEY_AUTHENTICATED] else 401
+            status = HTTP_NOT_FOUND if request[KEY_AUTHENTICATED] else HTTP_UNAUTHORIZED
             return web.Response(status=status)
 
         authenticated = (
@@ -889,7 +890,7 @@ class MediaPlayerImageView(HomeAssistantView):
         )
 
         if not authenticated:
-            return web.Response(status=401)
+            return web.Response(status=HTTP_UNAUTHORIZED)
 
         data, content_type = await player.async_get_media_image()
 
