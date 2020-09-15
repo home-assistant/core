@@ -110,6 +110,7 @@ async def test_import(
             camera=False,
             events=2,
             temperature=None,
+            voltage=40,
         ),
         door2=GogoGate2Door(
             door_id=2,
@@ -123,6 +124,7 @@ async def test_import(
             camera=False,
             events=0,
             temperature=None,
+            voltage=40,
         ),
         door3=GogoGate2Door(
             door_id=3,
@@ -136,6 +138,7 @@ async def test_import(
             camera=False,
             events=0,
             temperature=None,
+            voltage=40,
         ),
         outputs=Outputs(output1=True, output2=False, output3=True),
         network=Network(ip=""),
@@ -170,6 +173,7 @@ async def test_import(
             enabled=True,
             apicode="apicode0",
             customimage=False,
+            voltage=40,
         ),
         door2=ISmartGateDoor(
             door_id=1,
@@ -186,6 +190,7 @@ async def test_import(
             enabled=True,
             apicode="apicode0",
             customimage=False,
+            voltage=40,
         ),
         door3=ISmartGateDoor(
             door_id=1,
@@ -202,6 +207,7 @@ async def test_import(
             enabled=True,
             apicode="apicode0",
             customimage=False,
+            voltage=40,
         ),
         network=Network(ip=""),
         wifi=Wifi(SSID="", linkquality="", signal=""),
@@ -268,6 +274,7 @@ async def test_open_close_update(gogogat2api_mock, hass: HomeAssistant) -> None:
                 camera=False,
                 events=2,
                 temperature=None,
+                voltage=40,
             ),
             door2=GogoGate2Door(
                 door_id=2,
@@ -281,6 +288,7 @@ async def test_open_close_update(gogogat2api_mock, hass: HomeAssistant) -> None:
                 camera=False,
                 events=0,
                 temperature=None,
+                voltage=40,
             ),
             door3=GogoGate2Door(
                 door_id=3,
@@ -294,6 +302,7 @@ async def test_open_close_update(gogogat2api_mock, hass: HomeAssistant) -> None:
                 camera=False,
                 events=0,
                 temperature=None,
+                voltage=40,
             ),
             outputs=Outputs(output1=True, output2=False, output3=True),
             network=Network(ip=""),
@@ -381,6 +390,7 @@ async def test_availability(ismartgateapi_mock, hass: HomeAssistant) -> None:
             enabled=True,
             apicode="apicode0",
             customimage=False,
+            voltage=40,
         ),
         door2=ISmartGateDoor(
             door_id=2,
@@ -397,6 +407,7 @@ async def test_availability(ismartgateapi_mock, hass: HomeAssistant) -> None:
             enabled=True,
             apicode="apicode0",
             customimage=False,
+            voltage=40,
         ),
         door3=ISmartGateDoor(
             door_id=3,
@@ -413,6 +424,7 @@ async def test_availability(ismartgateapi_mock, hass: HomeAssistant) -> None:
             enabled=True,
             apicode="apicode0",
             customimage=False,
+            voltage=40,
         ),
         network=Network(ip=""),
         wifi=Wifi(SSID="", linkquality="", signal=""),
