@@ -169,18 +169,6 @@ class DysonTest(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
-    def test_dyson_fan_mode_focus(self):
-        """Test fan focus mode."""
-        device = _get_device_focus()
-        entity = dyson.DysonPureHotCoolLinkEntity(device)
-        assert entity.fan_mode == dyson.FAN_FOCUS
-
-    def test_dyson_fan_mode_diffuse(self):
-        """Test fan diffuse mode."""
-        device = _get_device_diffuse()
-        entity = dyson.DysonPureHotCoolLinkEntity(device)
-        assert entity.fan_mode == dyson.FAN_DIFFUSE
-
     def test_dyson_set_hvac_mode(self):
         """Test set operation mode."""
         device = _get_device_heat_on()
@@ -223,14 +211,6 @@ class DysonTest(unittest.TestCase):
         entity = dyson.DysonPureHotCoolLinkEntity(device)
         assert entity.hvac_mode == dyson.HVAC_MODE_HEAT
         assert entity.hvac_action == dyson.CURRENT_HVAC_IDLE
-
-    def test_on_message(self):
-        """Test when message is received."""
-        device = _get_device_heat_on()
-        entity = dyson.DysonPureHotCoolLinkEntity(device)
-        entity.schedule_update_ha_state = Mock()
-        entity.on_message(MockDysonState())
-        entity.schedule_update_ha_state.assert_called_with()
 
     def test_general_properties(self):
         """Test properties of entity."""
@@ -293,7 +273,7 @@ async def test_dyson_heat_on_set_fan(mocked_login, mocked_devices, hass):
     return_value=[_get_device_heat_on()],
 )
 @patch("homeassistant.components.dyson.DysonAccount.login", return_value=True)
-async def test_dyson_heat_on_state(mocked_login, mocked_devices, hass):
+async def test_pure_hot_cool_link_state(mocked_login, mocked_devices, hass):
     """Test set climate temperature."""
     await async_setup_component(hass, dyson_parent.DOMAIN, _get_config())
     await hass.async_block_till_done()
@@ -309,6 +289,21 @@ async def test_dyson_heat_on_state(mocked_login, mocked_devices, hass):
     assert len(state.attributes[ATTR_FAN_MODES]) == 2
     assert FAN_FOCUS in state.attributes[ATTR_FAN_MODES]
     assert FAN_DIFFUSE in state.attributes[ATTR_FAN_MODES]
+
+    device = mocked_devices.return_value[0]
+    update_callback = device.add_message_listener.call_args[0][0]
+
+    device.state.focus_mode = FocusMode.FOCUS_ON.value
+    await hass.async_add_executor_job(update_callback, MockDysonState())
+
+    state = hass.states.get("climate.temp_name")
+    assert state.attributes[ATTR_FAN_MODE] == FAN_FOCUS
+
+    device.state.focus_mode = FocusMode.FOCUS_OFF.value
+    await hass.async_add_executor_job(update_callback, MockDysonState())
+
+    state = hass.states.get("climate.temp_name")
+    assert state.attributes[ATTR_FAN_MODE] == FAN_DIFFUSE
 
 
 @patch(
