@@ -169,20 +169,6 @@ class DysonTest(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
-    def test_dyson_set_fan_mode(self):
-        """Test set fan mode."""
-        device = _get_device_heat_on()
-        entity = dyson.DysonPureHotCoolLinkEntity(device)
-        assert not entity.should_poll
-
-        entity.set_fan_mode(dyson.FAN_FOCUS)
-        set_config = device.set_configuration
-        set_config.assert_called_with(focus_mode=FocusMode.FOCUS_ON)
-
-        entity.set_fan_mode(dyson.FAN_DIFFUSE)
-        set_config = device.set_configuration
-        set_config.assert_called_with(focus_mode=FocusMode.FOCUS_OFF)
-
     def test_dyson_fan_mode_focus(self):
         """Test fan focus mode."""
         device = _get_device_focus()
@@ -273,7 +259,41 @@ class DysonTest(unittest.TestCase):
     return_value=[_get_device_heat_on()],
 )
 @patch("homeassistant.components.dyson.DysonAccount.login", return_value=True)
-async def test_dyson_heat_on(mocked_login, mocked_devices, hass):
+async def test_dyson_heat_on_set_fan(mocked_login, mocked_devices, hass):
+    """Test set climate temperature."""
+    await async_setup_component(hass, dyson_parent.DOMAIN, _get_config())
+    await hass.async_block_till_done()
+
+    device = mocked_devices.return_value[0]
+    device.temp_unit = TEMP_CELSIUS
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_FAN_MODE,
+        {ATTR_ENTITY_ID: "climate.temp_name", ATTR_FAN_MODE: FAN_FOCUS},
+        True,
+    )
+
+    set_config = device.set_configuration
+    assert set_config.call_args == call(focus_mode=FocusMode.FOCUS_ON)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_FAN_MODE,
+        {ATTR_ENTITY_ID: "climate.temp_name", ATTR_FAN_MODE: FAN_DIFFUSE},
+        True,
+    )
+
+    set_config = device.set_configuration
+    assert set_config.call_args == call(focus_mode=FocusMode.FOCUS_OFF)
+
+
+@patch(
+    "homeassistant.components.dyson.DysonAccount.devices",
+    return_value=[_get_device_heat_on()],
+)
+@patch("homeassistant.components.dyson.DysonAccount.login", return_value=True)
+async def test_dyson_heat_on_state(mocked_login, mocked_devices, hass):
     """Test set climate temperature."""
     await async_setup_component(hass, dyson_parent.DOMAIN, _get_config())
     await hass.async_block_till_done()
