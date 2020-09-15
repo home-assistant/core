@@ -76,11 +76,11 @@ async def test_user_form_show_advanced_options(hass, canary):
 
 async def test_user_form_cannot_connect(hass, canary):
     """Test we handle cannot connect error."""
+    canary.side_effect = HTTPError()
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-
-    canary.side_effect = HTTPError()
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -90,6 +90,9 @@ async def test_user_form_cannot_connect(hass, canary):
     assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
+
+async def test_user_form_cannot_connect_timeout(hass, canary):
+    """Test we handle cannot connect error from timeout."""
     canary.side_effect = ConnectTimeout()
 
     result = await hass.config_entries.flow.async_configure(
@@ -103,11 +106,11 @@ async def test_user_form_cannot_connect(hass, canary):
 
 async def test_user_form_unexpected_exception(hass, canary):
     """Test we handle unexpected exception."""
+    canary.side_effect = Exception()
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-
-    canary.side_effect = Exception()
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
