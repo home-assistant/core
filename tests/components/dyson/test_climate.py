@@ -292,13 +292,6 @@ class DysonTest(unittest.TestCase):
         entity = dyson.DysonPureHotCoolLinkEntity(device)
         assert entity.current_humidity is None
 
-    def test_property_current_temperature(self):
-        """Test properties of current temperature."""
-        device = _get_device_heat_on()
-        entity = dyson.DysonPureHotCoolLinkEntity(device)
-        # Result should be in celsius, hence then subtraction of 273.
-        assert entity.current_temperature == 289 - 273
-
 
 @patch(
     "homeassistant.components.dyson.DysonAccount.devices",
@@ -312,6 +305,7 @@ async def test_dyson_heat_on(mocked_login, mocked_devices, hass):
 
     state = hass.states.get("climate.temp_name")
     assert state.attributes["temperature"] == 23
+    assert state.attributes["current_temperature"] == 289 - 273
 
 
 @patch(
