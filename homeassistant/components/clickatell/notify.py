@@ -34,7 +34,7 @@ class ClickatellNotificationService(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
-        data = {"apiKey": self.api_key, "to": self.recipient, "from":self.sender, "content": message}
+        data = {"apiKey": self.api_key, "to": self.recipient, "from": self.sender, "content": message}
 
         resp = requests.get(BASE_API_URL, params=data, timeout=5)
         if (resp.status_code != HTTP_OK) or (resp.status_code != 202):
