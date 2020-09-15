@@ -26,6 +26,7 @@ from homeassistant.components.climate import (
 from homeassistant.components.climate.const import (
     ATTR_CURRENT_HUMIDITY,
     ATTR_FAN_MODE,
+    ATTR_FAN_MODES,
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     ATTR_HVAC_MODES,
@@ -42,6 +43,7 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_OFF,
 )
 from homeassistant.components.dyson import climate as dyson
+from homeassistant.components.dyson.climate import FAN_DIFFUSE, FAN_FOCUS
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.setup import async_setup_component
 
@@ -181,14 +183,6 @@ class DysonTest(unittest.TestCase):
         set_config = device.set_configuration
         set_config.assert_called_with(focus_mode=FocusMode.FOCUS_OFF)
 
-    def test_dyson_fan_modes(self):
-        """Test get fan list."""
-        device = _get_device_heat_on()
-        entity = dyson.DysonPureHotCoolLinkEntity(device)
-        assert len(entity.fan_modes) == 2
-        assert dyson.FAN_FOCUS in entity.fan_modes
-        assert dyson.FAN_DIFFUSE in entity.fan_modes
-
     def test_dyson_fan_mode_focus(self):
         """Test fan focus mode."""
         device = _get_device_focus()
@@ -292,6 +286,9 @@ async def test_dyson_heat_on(mocked_login, mocked_devices, hass):
     assert len(state.attributes[ATTR_HVAC_MODES]) == 2
     assert HVAC_MODE_HEAT in state.attributes[ATTR_HVAC_MODES]
     assert HVAC_MODE_COOL in state.attributes[ATTR_HVAC_MODES]
+    assert len(state.attributes[ATTR_FAN_MODES]) == 2
+    assert FAN_FOCUS in state.attributes[ATTR_FAN_MODES]
+    assert FAN_DIFFUSE in state.attributes[ATTR_FAN_MODES]
 
 
 @patch(
