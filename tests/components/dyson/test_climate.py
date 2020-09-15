@@ -238,12 +238,6 @@ class DysonTest(unittest.TestCase):
         set_config = device.set_configuration
         set_config.assert_called_with(heat_mode=HeatMode.HEAT_ON)
 
-    def test_dyson_heat_value_on(self):
-        """Test get heat value on."""
-        device = _get_device_heat_on()
-        entity = dyson.DysonPureHotCoolLinkEntity(device)
-        assert entity.hvac_mode == dyson.HVAC_MODE_HEAT
-
     def test_dyson_heat_value_off(self):
         """Test get heat value off."""
         device = _get_device_cool()
@@ -301,6 +295,7 @@ async def test_dyson_heat_on(mocked_login, mocked_devices, hass):
     assert state.attributes["temperature"] == 23
     assert state.attributes["current_temperature"] == 289 - 273
     assert state.attributes["current_humidity"] == 53
+    assert state.state == HVAC_MODE_HEAT
 
 
 @patch(
