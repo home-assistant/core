@@ -24,7 +24,7 @@ ATTR_TOTAL_ENERGY_KWH = "total_energy_kwh"
 ATTR_CURRENT_A = "current_a"
 
 MAX_ATTEMPTS = 20
-SLEEP_TIME = 1
+SLEEP_TIME = 2
 
 
 async def async_setup_entry(hass: HomeAssistantType, config_entry, async_add_entities):
