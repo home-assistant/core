@@ -1,4 +1,4 @@
-"""Support for the Airly sensor service."""
+"""Support for the AirNow sensor service."""
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_DEVICE_CLASS,
@@ -50,7 +50,7 @@ SENSOR_TYPES = {
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up Airly sensor entities based on a config entry."""
+    """Set up AirNow sensor entities based on a config entry."""
     name = config_entry.data[CONF_NAME]
 
     coordinator = hass.data[DOMAIN][config_entry.entry_id]

@@ -6,10 +6,6 @@
   "requirements": [
     "pyairnow==1.1.0"
   ],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
-  "dependencies": [],
   "codeowners": [
     "@asymworks"
   ]
