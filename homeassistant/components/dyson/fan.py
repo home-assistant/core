@@ -21,7 +21,7 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 
-from . import DOMAIN, DysonEntity
+from . import DATA_DEVICES, DOMAIN, DysonEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -184,7 +184,7 @@ async def async_setup_entry(
     """Set up the Dyson fan components."""
     entities = []
     # has_purecool_devices = False
-    for device in hass.data[DOMAIN][config_entry.entry_id]:
+    for device in hass.data[DOMAIN][config_entry.entry_id][DATA_DEVICES]:
         if isinstance(device, DysonPureCool):
             # has_purecool_devices = True
             entities.append(DysonPureCoolDevice(device))

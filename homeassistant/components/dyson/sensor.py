@@ -8,7 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, STATE_OFF, TEMP_CELSIUS, TIME_HOURS
 from homeassistant.core import HomeAssistant
 
-from . import DOMAIN, DysonEntity
+from . import DATA_DEVICES, DOMAIN, DysonEntity
 
 SENSOR_UNITS = {
     "air_quality": None,
@@ -44,7 +44,7 @@ async def async_setup_entry(
 
     # Get Dyson Devices from parent component
     entities = []
-    for device in hass.data[DOMAIN][config_entry.entry_id]:
+    for device in hass.data[DOMAIN][config_entry.entry_id][DATA_DEVICES]:
         if isinstance(device, DysonPureCool):
             entities.append(DysonTemperatureSensor(device, unit))
             entities.append(DysonHumiditySensor(device))

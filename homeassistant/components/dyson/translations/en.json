@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+            "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
         },
         "error": {
             "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
@@ -14,6 +14,17 @@
                     "password": "[%key:common::config_flow::data::password%]",
                     "username": "[%key:common::config_flow::data::username%]"
                 }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "device": "Device",
+                    "ip_address": "[%key:common::config_flow::data::ip%]"
+                },
+                "description": "This option is used to manually configure IP addresses for devices. If your devices are discoverable, they will be added automatically."
             }
         }
     },

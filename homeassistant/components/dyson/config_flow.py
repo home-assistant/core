@@ -5,12 +5,20 @@ from libpurecool.dyson import DysonAccount
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_DEVICE,
+    CONF_IP_ADDRESS,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
+from homeassistant.core import callback
 
 from . import CONF_LANGUAGE
 from . import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
+
+CONF_ACTION = "action"
 
 
 async def validate_input(hass: core.HomeAssistant, data):
@@ -28,6 +36,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: config_entries.ConfigEntry):
+        """Return the options flow handler."""
+        return OptionsFlowHandler(config_entry)
+
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
         errors = {}
@@ -35,7 +49,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 username = user_input[CONF_USERNAME]
                 language = user_input[CONF_LANGUAGE]
-                await self.async_set_unique_id("{language}_{username}")
+                if any(
+                    username == entry.data[CONF_USERNAME]
+                    and language == entry.data[CONF_LANGUAGE]
+                    for entry in self._async_current_entries()
+                ):
+                    return self.async_abort(reason="already_configured")
+                await self.async_set_unique_id(f"{language}_{username}")
                 self._abort_if_unique_id_configured()
 
                 await validate_input(self.hass, user_input)
@@ -66,6 +86,36 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
+        )
+
+
+class OptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle a options flow for Dyson."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry):
+        """Initialize the flow."""
+        self._config_entry = config_entry
+
+    async def async_step_init(self, user_input=None):
+        """Handle the initial step."""
+        if user_input is not None:
+            options = {**self._config_entry.options}
+            options[user_input[CONF_DEVICE]] = user_input.get(CONF_IP_ADDRESS, "")
+            return self.async_create_entry(title="", data=options)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_DEVICE): vol.In(
+                        [
+                            serial
+                            for serial, ip_addr in self._config_entry.options.items()
+                        ]
+                    ),
+                    vol.Optional(CONF_IP_ADDRESS): str,
+                }
+            ),
         )
 
 

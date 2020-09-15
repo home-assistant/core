@@ -14,6 +14,9 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
+DATA_DEVICES = "devices"
+DATA_UNSUB = "unsub"
+
 CONF_LANGUAGE = "language"
 CONF_RETRY = "retry"
 
@@ -49,6 +52,16 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Dyson from a config entry."""
     _LOGGER.info("Creating new Dyson component")
+    _LOGGER.debug("Start set up")
+
+    # Move device list from data to options for imported entries
+    if entry.options is None:
+        data = {**entry.data}
+        if entry.data[CONF_DEVICES] is not None:
+            options = data.pop(CONF_DEVICES)
+        else:
+            options = {}
+        hass.config_entries.async_update_entry(entry, data=data, options=options)
 
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
@@ -67,39 +80,45 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if not logged:
         _LOGGER.error("Not connected to Dyson account. Unable to add devices")
         raise ConfigEntryNotReady
-
     _LOGGER.info("Connected to Dyson account")
-    data_devices = []
+
     dyson_devices = await hass.async_add_executor_job(dyson_account.devices)
-    if CONF_DEVICES in entry.data and entry.data.get(CONF_DEVICES):
-        configured_devices = entry.data.get(CONF_DEVICES)
-        for device in configured_devices:
-            dyson_device = next(
-                (d for d in dyson_devices if d.serial == device["device_id"]), None
-            )
-            if dyson_device:
-                try:
-                    connected = await hass.async_add_executor_job(
-                        partial(dyson_device.connect, device["device_ip"])
-                    )
-                    if connected:
-                        _LOGGER.info("Connected to device %s", dyson_device)
-                        data_devices.append(dyson_device)
-                    else:
-                        _LOGGER.warning("Unable to connect to device %s", dyson_device)
-                except OSError as ose:
-                    _LOGGER.error(
-                        "Unable to connect to device %s: %s",
-                        str(dyson_device.network_device),
-                        str(ose),
-                    )
-            else:
-                _LOGGER.warning(
-                    "Unable to find device %s in Dyson account", device["device_id"]
+
+    # Update device list in options
+    options = {}
+    for device in dyson_devices:
+        if device.serial not in entry.options:
+            options[device.serial] = ""  # Empty string means discovery
+        else:
+            options[device.serial] = entry.options[device.serial]
+    hass.config_entries.async_update_entry(entry, options=options)
+
+    # Listen to options update
+    unsub = entry.add_update_listener(async_update_listener)
+    hass.data[DOMAIN][entry.entry_id] = {DATA_UNSUB: unsub}
+
+    _LOGGER.debug(entry.options)
+    data_devices = []
+    for device in dyson_devices:
+        if entry.options[device.serial]:
+            # Manually set up with IP address
+            try:
+                connected = await hass.async_add_executor_job(
+                    partial(device.connect, entry.options[device.serial])
                 )
-    else:
-        # Not yet reliable
-        for device in dyson_devices:
+                if connected:
+                    _LOGGER.info("Connected to device %s", device)
+                    data_devices.append(device)
+                else:
+                    _LOGGER.warning("Unable to connect to device %s", device)
+            except OSError as ose:
+                _LOGGER.error(
+                    "Unable to connect to device %s: %s",
+                    str(device.network_device),
+                    str(ose),
+                )
+        else:
+            # Discovery
             _LOGGER.info(
                 "Trying to connect to device %s with timeout=%i and retry=%i",
                 device,
@@ -114,16 +133,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 data_devices.append(device)
             else:
                 _LOGGER.warning("Unable to connect to device %s", device)
+    hass.data[DOMAIN][entry.entry_id][DATA_DEVICES] = data_devices
 
-    hass.data[DOMAIN][entry.entry_id] = data_devices
-
-    # Start fan/sensors components
-    if data_devices:
-        _LOGGER.debug("Starting sensor/fan components")
-        for platform in PLATFORMS:
-            hass.async_create_task(
-                hass.config_entries.async_forward_entry_setup(entry, platform)
-            )
+    for component in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, component)
+        )
 
     return True
 
@@ -139,9 +154,16 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
     )
     if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
+        data = hass.data[DOMAIN].pop(entry.entry_id)
+        data[DATA_UNSUB]()
 
+    _LOGGER.debug("Finish unload")
     return unload_ok
+
+
+async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
+    """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 class DysonEntity(Entity):

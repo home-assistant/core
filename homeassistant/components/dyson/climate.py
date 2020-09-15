@@ -38,7 +38,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 
-from . import DOMAIN, DysonEntity
+from . import DATA_DEVICES, DOMAIN, DysonEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,7 +68,7 @@ async def async_setup_entry(
 ):
     """Set up the Dyson fan components."""
     entities = []
-    for device in hass.data[DOMAIN][config_entry.entry_id]:
+    for device in hass.data[DOMAIN][config_entry.entry_id][DATA_DEVICES]:
         if isinstance(device, DysonPureHotCool):
             dyson_entity = DysonPureHotCoolEntity(device)
             entities.append(dyson_entity)

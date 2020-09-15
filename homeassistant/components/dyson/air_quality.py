@@ -8,7 +8,7 @@ from homeassistant.components.air_quality import AirQualityEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from . import DOMAIN
+from . import DATA_DEVICES, DOMAIN, DysonEntity
 
 ATTRIBUTION = "Dyson purifier air quality sensor"
 
@@ -23,26 +23,19 @@ async def async_setup_entry(
     """Set up the Dyson Sensors."""
     # Get Dyson Devices from parent component
     entities = []
-    for device in hass.data[DOMAIN][config_entry.entry_id]:
+    for device in hass.data[DOMAIN][config_entry.entry_id][DATA_DEVICES]:
         if isinstance(device, DysonPureCool):
             entities.append(DysonAirSensor(device))
     async_add_entities(entities)
 
 
-class DysonAirSensor(AirQualityEntity):
+class DysonAirSensor(DysonEntity, AirQualityEntity):
     """Representation of a generic Dyson air quality sensor."""
 
     def __init__(self, device):
         """Create a new generic air quality Dyson sensor."""
-        self._device = device
+        super().__init__(device)
         self._old_value = None
-        self._name = device.name
-
-    async def async_added_to_hass(self):
-        """Call when entity is added to hass."""
-        self.hass.async_add_executor_job(
-            self._device.add_message_listener, self.on_message
-        )
 
     def on_message(self, message):
         """Handle new messages which are received from the fan."""
@@ -55,16 +48,6 @@ class DysonAirSensor(AirQualityEntity):
         ) and isinstance(message, DysonEnvironmentalSensorV2State):
             self._old_value = self._device.environmental_state
             self.schedule_update_ha_state()
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def name(self):
-        """Return the name of the Dyson sensor."""
-        return self._name
 
     @property
     def attribution(self):
