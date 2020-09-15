@@ -31,7 +31,7 @@ async def test_form(hass):
                 "api_key": "abc123",
                 "latitude": "34.053718",
                 "longitude": "-118.244842",
-                "distance": "75",
+                "radius": "75",
                 "name": "Home",
             },
         )
@@ -42,7 +42,7 @@ async def test_form(hass):
         "api_key": "abc123",
         "latitude": "34.053718",
         "longitude": "-118.244842",
-        "distance": "75",
+        "radius": "75",
         "name": "Home",
     }
     await hass.async_block_till_done()
@@ -66,7 +66,7 @@ async def test_form_invalid_auth(hass):
                 "api_key": "abc123",
                 "latitude": "34.053718",
                 "longitude": "-118.244842",
-                "distance": "75",
+                "radius": "75",
                 "name": "Home",
             },
         )
@@ -91,7 +91,7 @@ async def test_form_invalid_location(hass):
                 "api_key": "abc123",
                 "latitude": "34.053718",
                 "longitude": "-118.244842",
-                "distance": "75",
+                "radius": "75",
                 "name": "Home",
             },
         )
@@ -116,7 +116,7 @@ async def test_form_cannot_connect(hass):
                 "api_key": "abc123",
                 "latitude": "34.053718",
                 "longitude": "-118.244842",
-                "distance": "75",
+                "radius": "75",
                 "name": "Home",
             },
         )

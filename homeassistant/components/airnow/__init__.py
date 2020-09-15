@@ -150,30 +150,30 @@ class AirNowDataUpdateCoordinator(DataUpdateCoordinator):
         max_aqi_level = 0
         max_aqi_desc = ""
         max_aqi_poll = ""
-        for ob in obs:
+        for obv in obs:
             # Convert AQIs to Concentration
-            pollutant = ob[ATTR_API_AQI_PARAM]
-            concentration = aqi_to_concentration(ob[ATTR_API_AQI], pollutant)
-            data[ob[ATTR_API_AQI_PARAM]] = concentration
+            pollutant = obv[ATTR_API_AQI_PARAM]
+            concentration = aqi_to_concentration(obv[ATTR_API_AQI], pollutant)
+            data[obv[ATTR_API_AQI_PARAM]] = concentration
 
             # Overall AQI is the max of all pollutant AQIs
-            if ob[ATTR_API_AQI] > max_aqi:
-                max_aqi = ob[ATTR_API_AQI]
-                max_aqi_level = ob[ATTR_API_CATEGORY][ATTR_API_CAT_LEVEL]
-                max_aqi_desc = ob[ATTR_API_CATEGORY][ATTR_API_CAT_DESCRIPTION]
+            if obv[ATTR_API_AQI] > max_aqi:
+                max_aqi = obv[ATTR_API_AQI]
+                max_aqi_level = obv[ATTR_API_CATEGORY][ATTR_API_CAT_LEVEL]
+                max_aqi_desc = obv[ATTR_API_CATEGORY][ATTR_API_CAT_DESCRIPTION]
                 max_aqi_poll = pollutant
 
             # Copy other data from PM2.5 Value
-            if ob[ATTR_API_AQI_PARAM] == ATTR_API_PM25:
+            if obv[ATTR_API_AQI_PARAM] == ATTR_API_PM25:
                 # Copy Report Details
-                data[ATTR_API_REPORT_DATE] = ob[ATTR_API_REPORT_DATE]
-                data[ATTR_API_REPORT_HOUR] = ob[ATTR_API_REPORT_HOUR]
+                data[ATTR_API_REPORT_DATE] = obv[ATTR_API_REPORT_DATE]
+                data[ATTR_API_REPORT_HOUR] = obv[ATTR_API_REPORT_HOUR]
 
                 # Copy Station Details
-                data[ATTR_API_STATE] = ob[ATTR_API_STATE]
-                data[ATTR_API_STATION] = ob[ATTR_API_STATION]
-                data[ATTR_API_STATION_LATITUDE] = ob[ATTR_API_STATION_LATITUDE]
-                data[ATTR_API_STATION_LONGITUDE] = ob[ATTR_API_STATION_LONGITUDE]
+                data[ATTR_API_STATE] = obv[ATTR_API_STATE]
+                data[ATTR_API_STATION] = obv[ATTR_API_STATION]
+                data[ATTR_API_STATION_LATITUDE] = obv[ATTR_API_STATION_LATITUDE]
+                data[ATTR_API_STATION_LONGITUDE] = obv[ATTR_API_STATION_LONGITUDE]
 
         # Store Overall AQI
         data[ATTR_API_AQI] = max_aqi

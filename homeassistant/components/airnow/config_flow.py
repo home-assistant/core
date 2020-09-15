@@ -33,23 +33,23 @@ async def validate_input(hass: core.HomeAssistant, data):
     # Check that we can connect to AirNow with the given API Key
     try:
         await client.observations.latLong(34.053718, -118.244842)
-    except InvalidKeyError:
-        raise InvalidAuth
-    except AirNowError:
-        raise CannotConnect
+    except InvalidKeyError as e:
+        raise InvalidAuth from e
+    except AirNowError as e:
+        raise CannotConnect from e
 
     # Check that the provided latitude/longitude provide a response
     try:
         lat = data[CONF_LATITUDE]
         lng = data[CONF_LONGITUDE]
-        range = data[CONF_RADIUS]
-        data = await client.observations.latLong(lat, lng, distance=range)
+        distance = data[CONF_RADIUS]
+        data = await client.observations.latLong(lat, lng, distance=distance)
         if len(data) == 0:
             raise InvalidLocation
-    except InvalidKeyError:
-        raise InvalidAuth
-    except AirNowError:
-        raise CannotConnect
+    except InvalidKeyError as e:
+        raise InvalidAuth from e
+    except AirNowError as e:
+        raise CannotConnect from e
 
     # Validation Succeeded
     return True
