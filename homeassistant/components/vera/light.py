@@ -17,7 +17,7 @@ from homeassistant.helpers.entity import Entity
 import homeassistant.util.color as color_util
 
 from . import VeraDevice
-from .const import DOMAIN
+from .common import ControllerData, get_controller_data
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,10 +28,10 @@ async def async_setup_entry(
     async_add_entities: Callable[[List[Entity], bool], None],
 ) -> None:
     """Set up the sensor config entry."""
-    controller_data = hass.data[DOMAIN]
+    controller_data = get_controller_data(hass, entry)
     async_add_entities(
         [
-            VeraLight(device, controller_data.controller)
+            VeraLight(device, controller_data)
             for device in controller_data.devices.get(PLATFORM_DOMAIN)
         ]
     )
@@ -40,12 +40,12 @@ async def async_setup_entry(
 class VeraLight(VeraDevice, LightEntity):
     """Representation of a Vera Light, including dimmable."""
 
-    def __init__(self, vera_device, controller):
+    def __init__(self, vera_device, controller_data: ControllerData):
         """Initialize the light."""
         self._state = False
         self._color = None
         self._brightness = None
-        VeraDevice.__init__(self, vera_device, controller)
+        VeraDevice.__init__(self, vera_device, controller_data)
         self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
     @property

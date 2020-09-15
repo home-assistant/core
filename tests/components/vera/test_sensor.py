@@ -23,6 +23,7 @@ async def run_sensor_test(
     """Test generic sensor."""
     vera_device = MagicMock(spec=pv.VeraSensor)  # type: pv.VeraSensor
     vera_device.device_id = 1
+    vera_device.vera_device_id = vera_device.device_id
     vera_device.name = "dev1"
     vera_device.category = category
     setattr(vera_device, class_property, "33")
@@ -34,7 +35,7 @@ async def run_sensor_test(
             devices=(vera_device,), setup_callback=setup_callback
         ),
     )
-    update_callback = component_data.controller_data.update_callback
+    update_callback = component_data.controller_data[0].update_callback
 
     for (initial_value, state_value) in assert_states:
         setattr(vera_device, class_property, initial_value)
@@ -175,6 +176,7 @@ async def test_scene_controller_sensor(
     """Test function."""
     vera_device = MagicMock(spec=pv.VeraSensor)  # type: pv.VeraSensor
     vera_device.device_id = 1
+    vera_device.vera_device_id = vera_device.device_id
     vera_device.name = "dev1"
     vera_device.category = pv.CATEGORY_SCENE_CONTROLLER
     vera_device.get_last_scene_id = MagicMock(return_value="id0")
@@ -185,7 +187,7 @@ async def test_scene_controller_sensor(
         hass=hass,
         controller_config=new_simple_controller_config(devices=(vera_device,)),
     )
-    update_callback = component_data.controller_data.update_callback
+    update_callback = component_data.controller_data[0].update_callback
 
     vera_device.get_last_scene_time.return_value = "1111"
     update_callback(vera_device)

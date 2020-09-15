@@ -8,7 +8,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
-from .const import DOMAIN, VERA_ID_FORMAT
+from .common import ControllerData, get_controller_data
+from .const import VERA_ID_FORMAT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,22 +20,19 @@ async def async_setup_entry(
     async_add_entities: Callable[[List[Entity], bool], None],
 ) -> None:
     """Set up the sensor config entry."""
-    controller_data = hass.data[DOMAIN]
+    controller_data = get_controller_data(hass, entry)
     async_add_entities(
-        [
-            VeraScene(device, controller_data.controller)
-            for device in controller_data.scenes
-        ]
+        [VeraScene(device, controller_data) for device in controller_data.scenes]
     )
 
 
 class VeraScene(Scene):
     """Representation of a Vera scene entity."""
 
-    def __init__(self, vera_scene, controller):
+    def __init__(self, vera_scene, controller_data: ControllerData):
         """Initialize the scene."""
         self.vera_scene = vera_scene
-        self.controller = controller
+        self.controller = controller_data.controller
 
         self._name = self.vera_scene.name
         # Append device id to prevent name clashes in HA.
