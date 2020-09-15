@@ -6,7 +6,7 @@ from typing import Optional
 from aiopvpc import PVPCData
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_NAME, ENERGY_KILO_WATT_HOUR
+from homeassistant.const import CONF_NAME, CURRENCY_EURO, ENERGY_KILO_WATT_HOUR
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_call_later, async_track_time_change
@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_PRICE = "price"
 ICON = "mdi:currency-eur"
-UNIT = f"€/{ENERGY_KILO_WATT_HOUR}"
+UNIT = f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}"
 
 _DEFAULT_TIMEOUT = 10
 
