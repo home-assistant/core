@@ -210,13 +210,6 @@ class DysonTest(unittest.TestCase):
         entity = dyson.DysonPureHotCoolLinkEntity(device)
         assert entity.hvac_mode == dyson.HVAC_MODE_COOL
 
-    def test_dyson_heat_value_idle(self):
-        """Test get heat value idle."""
-        device = _get_device_heat_off()
-        entity = dyson.DysonPureHotCoolLinkEntity(device)
-        assert entity.hvac_mode == dyson.HVAC_MODE_HEAT
-        assert entity.hvac_action == dyson.CURRENT_HVAC_IDLE
-
     def test_property_current_humidity_with_invalid_env_state(self):
         """Test properties of current humidity with invalid env state."""
         device = _get_device_off()
@@ -302,6 +295,14 @@ async def test_pure_hot_cool_link_state(mocked_login, mocked_devices, hass):
 
     state = hass.states.get("climate.temp_name")
     assert state.attributes[ATTR_FAN_MODE] == FAN_DIFFUSE
+
+    device.state.heat_mode = HeatMode.HEAT_ON.value
+    device.state.heat_state = HeatState.HEAT_STATE_OFF.value
+    await hass.async_add_executor_job(update_callback, MockDysonState())
+
+    state = hass.states.get("climate.temp_name")
+    assert state.state == HVAC_MODE_HEAT
+    assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_IDLE
 
 
 @patch(
