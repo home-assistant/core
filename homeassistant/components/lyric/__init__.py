@@ -29,7 +29,14 @@ from homeassistant.helpers.update_coordinator import (
 
 from .api import ConfigEntryLyricClient, LyricLocalOAuth2Implementation
 from .config_flow import OAuth2FlowHandler
-from .const import DATA_COORDINATOR, DATA_LYRIC, DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
+from .const import (
+    DATA_COORDINATOR,
+    DATA_LYRIC,
+    DOMAIN,
+    OAUTH2_AUTHORIZE,
+    OAUTH2_TOKEN,
+    SERVICE_HOLD_TIME,
+)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -135,6 +142,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
+
+    # Remove the climate service
+    hass.services.async_remove(DOMAIN, SERVICE_HOLD_TIME)
+
     unload_ok = all(
         await asyncio.gather(
             *[

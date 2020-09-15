@@ -36,6 +36,7 @@ from .const import (
     PRESET_PERMANENT_HOLD,
     PRESET_TEMPORARY_HOLD,
     PRESET_VACATION_HOLD,
+    SERVICE_HOLD_TIME,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -82,6 +83,49 @@ async def async_setup_entry(
             entities.append(LyricClimate(hass, lyric, coordinator, location, device))
 
     async_add_entities(entities, True)
+
+    async def hold_time_service(service) -> None:
+        """Set the time to hold until."""
+        entity_ids = service.data[ATTR_ENTITY_ID]
+        time = service.data[ATTR_TIME]
+
+        _LOGGER.debug("set_hold_time: %s; %s", entity_ids, time)
+
+        await lyric.get_locations()
+
+        if entity_ids == "all":
+            for location in locations:
+                for device in location.devices:
+                    try:
+                        await lyric.update_thermostat(
+                            location, device, nextPeriodTime=time
+                        )
+                    except (
+                        LyricAuthenticationException,
+                        LyricException,
+                        ClientResponseError,
+                    ) as exception:
+                        _LOGGER.error(exception)
+        else:
+            for location in locations:
+                for device in location.devices:
+                    try:
+                        await lyric.update_thermostat(
+                            location,
+                            device,
+                            thermostatSetpointStatus=PRESET_HOLD_UNTIL,
+                            nextPeriodTime=time,
+                        )
+                    except (
+                        LyricAuthenticationException,
+                        LyricException,
+                        ClientResponseError,
+                    ) as exception:
+                        _LOGGER.error(exception)
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_HOLD_TIME, hold_time_service, schema=HOLD_PERIOD_SCHEMA
+    )
 
 
 class LyricClimate(LyricDeviceEntity, ClimateEntity):
