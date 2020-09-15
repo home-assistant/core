@@ -20,7 +20,8 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, ATTR_TIME
+from homeassistant.const import ATTR_TEMPERATURE, ATTR_TIME
+from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -39,13 +40,6 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
-
-HOLD_PERIOD_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids,
-        vol.Required(ATTR_TIME): cv.string,
-    }
-)
 
 LYRIC_HVAC_MODES = {
     HVAC_MODE_OFF: "Off",
@@ -76,47 +70,12 @@ async def async_setup_entry(
 
     async_add_entities(entities, True)
 
-    async def hold_time_service(service) -> None:
-        """Set the time to hold until."""
-        entity_ids = service.data[ATTR_ENTITY_ID]
-        time = service.data[ATTR_TIME]
+    platform = entity_platform.current_platform.get()
 
-        _LOGGER.debug("set_hold_time: %s; %s", entity_ids, time)
-
-        if entity_ids == "all":
-            for location in coordinator.data.locations:
-                for device in location.devices:
-                    try:
-                        await coordinator.data.update_thermostat(
-                            location, device, nextPeriodTime=time
-                        )
-                    except (
-                        LyricAuthenticationException,
-                        LyricException,
-                        ClientResponseError,
-                    ) as exception:
-                        _LOGGER.error(exception)
-        else:
-            for location in coordinator.data.locations:
-                for device in location.devices:
-                    try:
-                        await coordinator.data.update_thermostat(
-                            location,
-                            device,
-                            thermostatSetpointStatus=PRESET_HOLD_UNTIL,
-                            nextPeriodTime=time,
-                        )
-                    except (
-                        LyricAuthenticationException,
-                        LyricException,
-                        ClientResponseError,
-                    ) as exception:
-                        _LOGGER.error(exception)
-
-        await coordinator.async_refresh()
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_HOLD_TIME, hold_time_service, schema=HOLD_PERIOD_SCHEMA
+    platform.async_register_entity_service(
+        SERVICE_HOLD_TIME,
+        {vol.Required(ATTR_TIME): cv.string},
+        "set_hold_time",
     )
 
 
@@ -326,6 +285,28 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
                     try:
                         await self.coordinator.data.update_thermostat(
                             location, device, nextPeriodTime=period
+                        )
+                    except (
+                        LyricAuthenticationException,
+                        LyricException,
+                        ClientResponseError,
+                    ) as exception:
+                        _LOGGER.error(exception)
+        await self.coordinator.async_refresh()
+
+    async def set_hold_time(self, time: str) -> None:
+        """Set the time to hold until."""
+        _LOGGER.debug("set_hold_time: %s", time)
+
+        for location in self.coordinator.data.locations:
+            for device in location.devices:
+                if device.macID == self._device.macID:
+                    try:
+                        await self.coordinator.data.update_thermostat(
+                            location,
+                            device,
+                            thermostatSetpointStatus=PRESET_HOLD_UNTIL,
+                            nextPeriodTime=time,
                         )
                     except (
                         LyricAuthenticationException,
