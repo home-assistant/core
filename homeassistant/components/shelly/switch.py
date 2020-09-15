@@ -14,7 +14,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     wrapper = hass.data[DOMAIN][config_entry.entry_id]
 
     # In roller mode the relay blocks exist but do not contain required info
-    if wrapper.model == "SHSW-25" and wrapper.device.settings["mode"] != "relay":
+    if (
+        wrapper.model in ["SHSW-21", "SHSW-25"]
+        and wrapper.device.settings["mode"] != "relay"
+    ):
         return
 
     relay_blocks = [block for block in wrapper.device.blocks if block.type == "relay"]
