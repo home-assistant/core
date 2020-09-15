@@ -7,7 +7,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -91,7 +91,7 @@ async def async_setup_entry(hass, entry):
         DATA_KEY_COORDINATOR: coordinator,
     }
 
-    for platform in _async_platforms(entry):
+    for platform in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, platform)
         )
@@ -112,12 +112,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
-
-
-@callback
-def _async_platforms(entry):
-    """Return platforms to be loaded / unloaded."""
-    return PLATFORMS
 
 
 class YetiEntity(CoordinatorEntity):
