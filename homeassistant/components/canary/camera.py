@@ -2,10 +2,10 @@
 import asyncio
 from datetime import timedelta
 import logging
+from typing import Callable, List
 
 from haffmpeg.camera import CameraMjpeg
 from haffmpeg.tools import IMAGE_JPEG, ImageFrame
-import voluptuous as vol
 
 from homeassistant.components.camera import Camera
 from homeassistant.components.ffmpeg import DATA_FFMPEG
@@ -14,8 +14,6 @@ from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import Throttle
-
-from typing import Callable, List
 
 from . import CanaryData
 from .const import (
