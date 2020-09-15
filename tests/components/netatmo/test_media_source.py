@@ -18,9 +18,9 @@ async def test_async_browse_media(hass):
 
     # Prepare cached Netatmo event date
     hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][DATA_EVENTS] = {
-        k: v for k, v in ast.literal_eval(load_fixture("netatmo/events.txt")).items()
-    }
+    hass.data[DOMAIN][DATA_EVENTS] = ast.literal_eval(
+        load_fixture("netatmo/events.txt")
+    )
 
     hass.data[DOMAIN][DATA_CAMERAS] = {
         "12:34:56:78:90:ab": "MyCamera",
