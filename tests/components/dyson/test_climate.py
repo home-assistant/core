@@ -210,13 +210,6 @@ class DysonTest(unittest.TestCase):
         entity = dyson.DysonPureHotCoolLinkEntity(device)
         assert entity.hvac_mode == dyson.HVAC_MODE_COOL
 
-    def test_property_current_humidity_with_invalid_env_state(self):
-        """Test properties of current humidity with invalid env state."""
-        device = _get_device_off()
-        device.environmental_state.humidity = 0
-        entity = dyson.DysonPureHotCoolLinkEntity(device)
-        assert entity.current_humidity is None
-
     def test_property_current_humidity_without_env_state(self):
         """Test properties of current humidity without env state."""
         device = _get_device_with_no_state()
@@ -286,12 +279,14 @@ async def test_pure_hot_cool_link_state(mocked_login, mocked_devices, hass):
 
     device.state.focus_mode = FocusMode.FOCUS_ON.value
     await hass.async_add_executor_job(update_callback, MockDysonState())
+    await hass.async_block_till_done()
 
     state = hass.states.get("climate.temp_name")
     assert state.attributes[ATTR_FAN_MODE] == FAN_FOCUS
 
     device.state.focus_mode = FocusMode.FOCUS_OFF.value
     await hass.async_add_executor_job(update_callback, MockDysonState())
+    await hass.async_block_till_done()
 
     state = hass.states.get("climate.temp_name")
     assert state.attributes[ATTR_FAN_MODE] == FAN_DIFFUSE
@@ -299,10 +294,18 @@ async def test_pure_hot_cool_link_state(mocked_login, mocked_devices, hass):
     device.state.heat_mode = HeatMode.HEAT_ON.value
     device.state.heat_state = HeatState.HEAT_STATE_OFF.value
     await hass.async_add_executor_job(update_callback, MockDysonState())
+    await hass.async_block_till_done()
 
     state = hass.states.get("climate.temp_name")
     assert state.state == HVAC_MODE_HEAT
     assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_IDLE
+
+    device.environmental_state.humidity = 0
+    await hass.async_add_executor_job(update_callback, MockDysonState())
+    await hass.async_block_till_done()
+
+    state = hass.states.get("climate.temp_name")
+    assert state.attributes.get(ATTR_CURRENT_HUMIDITY) is None
 
 
 @patch(
