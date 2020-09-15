@@ -2,6 +2,7 @@
 import logging
 from typing import Any, Dict, Optional
 
+from canary.api import Api
 from requests import ConnectTimeout, HTTPError
 import voluptuous as vol
 
@@ -10,7 +11,6 @@ from homeassistant.const import CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from . import Api
 from .const import CONF_FFMPEG_ARGUMENTS, DEFAULT_FFMPEG_ARGUMENTS, DEFAULT_TIMEOUT
 from .const import DOMAIN  # pylint: disable=unused-import
 
