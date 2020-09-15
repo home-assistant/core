@@ -210,7 +210,7 @@ class DysonTest(unittest.TestCase):
     return_value=[_get_device_heat_on()],
 )
 @patch("homeassistant.components.dyson.DysonAccount.login", return_value=True)
-async def test_dyson_heat_on_set_fan(mocked_login, mocked_devices, hass):
+async def test_pure_hot_cool_link_set_fan(mocked_login, mocked_devices, hass):
     """Test set climate temperature."""
     await async_setup_component(hass, dyson_parent.DOMAIN, _get_config())
     await hass.async_block_till_done()
