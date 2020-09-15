@@ -204,12 +204,6 @@ class DysonTest(unittest.TestCase):
         set_config = device.set_configuration
         set_config.assert_called_with(heat_mode=HeatMode.HEAT_ON)
 
-    def test_dyson_heat_value_off(self):
-        """Test get heat value off."""
-        device = _get_device_cool()
-        entity = dyson.DysonPureHotCoolLinkEntity(device)
-        assert entity.hvac_mode == dyson.HVAC_MODE_COOL
-
 
 @patch(
     "homeassistant.components.dyson.DysonAccount.devices",
@@ -307,6 +301,15 @@ async def test_pure_hot_cool_link_state(mocked_login, mocked_devices, hass):
 
     state = hass.states.get("climate.temp_name")
     assert state.attributes.get(ATTR_CURRENT_HUMIDITY) is None
+
+    device.state.heat_mode = HeatMode.HEAT_OFF.value
+    device.state.heat_state = HeatState.HEAT_STATE_OFF.value
+    await hass.async_add_executor_job(update_callback, MockDysonState())
+    await hass.async_block_till_done()
+
+    state = hass.states.get("climate.temp_name")
+    assert state.state == HVAC_MODE_COOL
+    assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_COOL
 
 
 @patch(
