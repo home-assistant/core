@@ -2,6 +2,12 @@
 import pytest
 
 from homeassistant.components.alarm_control_panel import DOMAIN
+from homeassistant.components.alarm_control_panel.const import (
+    SUPPORT_ALARM_ARM_AWAY,
+    SUPPORT_ALARM_ARM_HOME,
+    SUPPORT_ALARM_ARM_NIGHT,
+    SUPPORT_ALARM_TRIGGER,
+)
 from homeassistant.components.homekit.const import ATTR_VALUE
 from homeassistant.components.homekit.type_security_systems import SecuritySystem
 from homeassistant.const import (
@@ -129,3 +135,48 @@ async def test_no_alarm_code(hass, hk_driver, config, events):
     assert acc.char_target_state.value == 0
     assert len(events) == 1
     assert events[-1].data[ATTR_VALUE] is None
+
+
+async def test_supported_states(hass, hk_driver, events):
+    """Test different supported states."""
+    code = "1234"
+    config = {ATTR_CODE: code}
+    entity_id = "alarm_control_panel.test"
+
+    # Set up a number of test configuration
+    test_configs = [
+        {"features": SUPPORT_ALARM_ARM_HOME, "target_values": 2},
+        {
+            "features": SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY,
+            "target_values": 3,
+        },
+        {
+            "features": SUPPORT_ALARM_ARM_HOME
+            | SUPPORT_ALARM_ARM_AWAY
+            | SUPPORT_ALARM_ARM_NIGHT,
+            "target_values": 4,
+        },
+        {
+            "features": SUPPORT_ALARM_ARM_HOME
+            | SUPPORT_ALARM_ARM_AWAY
+            | SUPPORT_ALARM_ARM_NIGHT
+            | SUPPORT_ALARM_TRIGGER,
+            "target_values": 4,
+        },
+    ]
+
+    for test_config in test_configs:
+        attrs = {"supported_features": test_config.get("features")}
+
+        hass.states.async_set(entity_id, None, attributes=attrs)
+        await hass.async_block_till_done()
+
+        acc = SecuritySystem(hass, hk_driver, "SecuritySystem", entity_id, 2, config)
+        await acc.run_handler()
+        await hass.async_block_till_done()
+
+        valid_current_values = acc.char_current_state.properties.get("ValidValues")
+        valid_target_values = acc.char_target_state.properties.get("ValidValues")
+
+        assert len(valid_current_values) == test_config.get("target_values") + 1
+        assert len(valid_target_values) == test_config.get("target_values")

@@ -2,6 +2,7 @@
 import logging
 
 from pyhap.const import CATEGORY_ALARM_SYSTEM
+from pyhap.loader import get_loader
 
 from homeassistant.components.alarm_control_panel import DOMAIN
 from homeassistant.components.alarm_control_panel.const import (
@@ -69,14 +70,6 @@ class SecuritySystem(HomeAccessory):
         state = self.hass.states.get(self.entity_id)
         self._alarm_code = self.config.get(ATTR_CODE)
 
-        serv_alarm = self.add_preload_service(SERV_SECURITY_SYSTEM)
-        self.char_current_state = serv_alarm.configure_char(
-            CHAR_CURRENT_SECURITY_STATE, value=3
-        )
-        self.char_target_state = serv_alarm.configure_char(
-            CHAR_TARGET_SECURITY_STATE, value=3, setter_callback=self.set_security_state
-        )
-
         supported_states = state.attributes.get(
             "supported_features",
             (
@@ -87,8 +80,13 @@ class SecuritySystem(HomeAccessory):
             ),
         )
 
-        old_current_states = self.char_current_state.properties.get("ValidValues")
-        old_target_services = self.char_target_state.properties.get("ValidValues")
+        loader = get_loader()
+        default_current_states = loader.get_char(
+            "SecuritySystemCurrentState"
+        ).properties.get("ValidValues")
+        default_target_services = loader.get_char(
+            "SecuritySystemTargetState"
+        ).properties.get("ValidValues")
 
         current_supported_states = [
             HASS_TO_HOMEKIT[STATE_ALARM_DISARMED],
@@ -116,17 +114,25 @@ class SecuritySystem(HomeAccessory):
 
         new_current_states = {
             key: val
-            for key, val in old_current_states.items()
+            for key, val in default_current_states.items()
             if val in current_supported_states
         }
         new_target_services = {
             key: val
-            for key, val in old_target_services.items()
+            for key, val in default_target_services.items()
             if val in target_supported_services
         }
 
-        self.char_current_state.override_properties(valid_values=new_current_states)
-        self.char_target_state.override_properties(valid_values=new_target_services)
+        serv_alarm = self.add_preload_service(SERV_SECURITY_SYSTEM)
+        self.char_current_state = serv_alarm.configure_char(
+            CHAR_CURRENT_SECURITY_STATE, value=3, valid_values=new_current_states
+        )
+        self.char_target_state = serv_alarm.configure_char(
+            CHAR_TARGET_SECURITY_STATE,
+            value=3,
+            valid_values=new_target_services,
+            setter_callback=self.set_security_state,
+        )
 
         # Set the state so it is in sync on initial
         # GET to avoid an event storm after homekit startup
