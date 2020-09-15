@@ -15,7 +15,6 @@ from libpurecool.dyson_pure_hotcool_link import DysonPureHotCoolLink
 from libpurecool.dyson_pure_state import DysonPureHotCoolState
 from libpurecool.dyson_pure_state_v2 import DysonPureHotCoolV2State
 
-from homeassistant.components import dyson as dyson_parent
 from homeassistant.components.climate import (
     DOMAIN,
     SERVICE_SET_FAN_MODE,
@@ -41,12 +40,20 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
 )
-from homeassistant.components.dyson import climate as dyson
-from homeassistant.components.dyson.climate import FAN_DIFFUSE, FAN_FOCUS, SUPPORT_FLAGS
+from homeassistant.components.dyson import CONF_LANGUAGE, DOMAIN as DYSON_DOMAIN
+from homeassistant.components.dyson.climate import (
+    FAN_DIFFUSE,
+    FAN_FOCUS,
+    SUPPORT_FLAGS,
+    DysonPureHotCoolEntity,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
+    CONF_DEVICES,
+    CONF_PASSWORD,
+    CONF_USERNAME,
     TEMP_CELSIUS,
 )
 from homeassistant.setup import async_setup_component
@@ -70,11 +77,11 @@ class MockDysonState(DysonPureHotCoolState):
 def _get_config():
     """Return a config dictionary."""
     return {
-        dyson_parent.DOMAIN: {
-            dyson_parent.CONF_USERNAME: "email",
-            dyson_parent.CONF_PASSWORD: "password",
-            dyson_parent.CONF_LANGUAGE: "GB",
-            dyson_parent.CONF_DEVICES: [
+        DYSON_DOMAIN: {
+            CONF_USERNAME: "email",
+            CONF_PASSWORD: "password",
+            CONF_LANGUAGE: "GB",
+            CONF_DEVICES: [
                 {"device_id": "XX-XXXXX-XX", "device_ip": "192.168.0.1"},
                 {"device_id": "YY-YYYYY-YY", "device_ip": "192.168.0.2"},
             ],
@@ -133,7 +140,7 @@ def _get_device_heat_on():
 @patch("homeassistant.components.dyson.DysonAccount.login", return_value=True)
 async def test_pure_hot_cool_link_set_mode(mocked_login, mocked_devices, hass):
     """Test set climate mode."""
-    await async_setup_component(hass, dyson_parent.DOMAIN, _get_config())
+    await async_setup_component(hass, DYSON_DOMAIN, _get_config())
     await hass.async_block_till_done()
 
     device = mocked_devices.return_value[0]
@@ -166,7 +173,7 @@ async def test_pure_hot_cool_link_set_mode(mocked_login, mocked_devices, hass):
 @patch("homeassistant.components.dyson.DysonAccount.login", return_value=True)
 async def test_pure_hot_cool_link_set_fan(mocked_login, mocked_devices, hass):
     """Test set climate fan."""
-    await async_setup_component(hass, dyson_parent.DOMAIN, _get_config())
+    await async_setup_component(hass, DYSON_DOMAIN, _get_config())
     await hass.async_block_till_done()
 
     device = mocked_devices.return_value[0]
@@ -200,7 +207,7 @@ async def test_pure_hot_cool_link_set_fan(mocked_login, mocked_devices, hass):
 @patch("homeassistant.components.dyson.DysonAccount.login", return_value=True)
 async def test_pure_hot_cool_link_state(mocked_login, mocked_devices, hass):
     """Test set climate temperature."""
-    await async_setup_component(hass, dyson_parent.DOMAIN, _get_config())
+    await async_setup_component(hass, DYSON_DOMAIN, _get_config())
     await hass.async_block_till_done()
 
     state = hass.states.get("climate.temp_name")
@@ -273,7 +280,7 @@ async def test_pure_hot_cool_link_state(mocked_login, mocked_devices, hass):
 @patch("homeassistant.components.dyson.DysonAccount.login", return_value=True)
 async def test_setup_component_without_devices(mocked_login, mocked_devices, hass):
     """Test setup component with no devices."""
-    await async_setup_component(hass, dyson_parent.DOMAIN, _get_config())
+    await async_setup_component(hass, DYSON_DOMAIN, _get_config())
     await hass.async_block_till_done()
 
     entity_ids = hass.states.async_entity_ids("climate")
@@ -287,7 +294,7 @@ async def test_setup_component_without_devices(mocked_login, mocked_devices, has
 @patch("homeassistant.components.dyson.DysonAccount.login", return_value=True)
 async def test_dyson_set_temperature(mocked_login, mocked_devices, hass):
     """Test set climate temperature."""
-    await async_setup_component(hass, dyson_parent.DOMAIN, _get_config())
+    await async_setup_component(hass, DYSON_DOMAIN, _get_config())
     await hass.async_block_till_done()
 
     device = mocked_devices.return_value[0]
@@ -355,7 +362,7 @@ async def test_dyson_set_temperature_when_cooling_mode(
     mocked_login, mocked_devices, hass
 ):
     """Test set climate temperature when heating is off."""
-    await async_setup_component(hass, dyson_parent.DOMAIN, _get_config())
+    await async_setup_component(hass, DYSON_DOMAIN, _get_config())
     await hass.async_block_till_done()
 
     device = mocked_devices.return_value[0]
@@ -383,7 +390,7 @@ async def test_setup_component_with_parent_discovery(
     mocked_login, mocked_devices, hass
 ):
     """Test setup_component using discovery."""
-    await async_setup_component(hass, dyson_parent.DOMAIN, _get_config())
+    await async_setup_component(hass, DYSON_DOMAIN, _get_config())
     await hass.async_block_till_done()
 
     entity_ids = hass.states.async_entity_ids("climate")
@@ -398,7 +405,7 @@ async def test_setup_component_with_parent_discovery(
 async def test_purehotcool_component_setup_only_once(devices, login, hass):
     """Test if entities are created only once."""
     config = _get_config()
-    await async_setup_component(hass, dyson_parent.DOMAIN, config)
+    await async_setup_component(hass, DYSON_DOMAIN, config)
     await hass.async_block_till_done()
 
     entity_ids = hass.states.async_entity_ids("climate")
@@ -415,7 +422,7 @@ async def test_purehotcool_component_setup_only_once(devices, login, hass):
 async def test_purehotcoollink_component_setup_only_once(devices, login, hass):
     """Test if entities are created only once."""
     config = _get_config()
-    await async_setup_component(hass, dyson_parent.DOMAIN, config)
+    await async_setup_component(hass, DYSON_DOMAIN, config)
     await hass.async_block_till_done()
 
     entity_ids = hass.states.async_entity_ids("climate")
@@ -432,7 +439,7 @@ async def test_purehotcoollink_component_setup_only_once(devices, login, hass):
 async def test_purehotcool_update_state(devices, login, hass):
     """Test state update."""
     device = devices.return_value[0]
-    await async_setup_component(hass, dyson_parent.DOMAIN, _get_config())
+    await async_setup_component(hass, DYSON_DOMAIN, _get_config())
     await hass.async_block_till_done()
     event = {
         "msg": "CURRENT-STATE",
@@ -467,7 +474,7 @@ async def test_purehotcool_update_state(devices, login, hass):
 
     for add_call in device.add_message_listener.call_args_list:
         callback = add_call[0][0]
-        if type(callback.__self__) == dyson.DysonPureHotCoolEntity:
+        if type(callback.__self__) == DysonPureHotCoolEntity:
             callback(device.state)
 
     await hass.async_block_till_done()
@@ -488,7 +495,7 @@ async def test_purehotcool_empty_env_attributes(devices, login, hass):
     device = devices.return_value[0]
     device.environmental_state.temperature = 0
     device.environmental_state.humidity = None
-    await async_setup_component(hass, dyson_parent.DOMAIN, _get_config())
+    await async_setup_component(hass, DYSON_DOMAIN, _get_config())
     await hass.async_block_till_done()
 
     state = hass.states.get("climate.living_room")
@@ -506,7 +513,7 @@ async def test_purehotcool_fan_state_off(devices, login, hass):
     """Test device fan state off."""
     device = devices.return_value[0]
     device.state.fan_state = FanState.FAN_OFF.value
-    await async_setup_component(hass, dyson_parent.DOMAIN, _get_config())
+    await async_setup_component(hass, DYSON_DOMAIN, _get_config())
     await hass.async_block_till_done()
 
     state = hass.states.get("climate.living_room")
@@ -524,7 +531,7 @@ async def test_purehotcool_hvac_action_cool(devices, login, hass):
     """Test device HVAC action cool."""
     device = devices.return_value[0]
     device.state.fan_power = FanPower.POWER_ON.value
-    await async_setup_component(hass, dyson_parent.DOMAIN, _get_config())
+    await async_setup_component(hass, DYSON_DOMAIN, _get_config())
     await hass.async_block_till_done()
 
     state = hass.states.get("climate.living_room")
@@ -543,7 +550,7 @@ async def test_purehotcool_hvac_action_idle(devices, login, hass):
     device = devices.return_value[0]
     device.state.fan_power = FanPower.POWER_ON.value
     device.state.heat_mode = HeatMode.HEAT_ON.value
-    await async_setup_component(hass, dyson_parent.DOMAIN, _get_config())
+    await async_setup_component(hass, DYSON_DOMAIN, _get_config())
     await hass.async_block_till_done()
 
     state = hass.states.get("climate.living_room")
@@ -560,7 +567,7 @@ async def test_purehotcool_hvac_action_idle(devices, login, hass):
 async def test_purehotcool_set_temperature(devices, login, hass):
     """Test set temperature."""
     device = devices.return_value[0]
-    await async_setup_component(hass, dyson_parent.DOMAIN, _get_config())
+    await async_setup_component(hass, DYSON_DOMAIN, _get_config())
     await hass.async_block_till_done()
     state = hass.states.get("climate.living_room")
     attributes = state.attributes
@@ -611,7 +618,7 @@ async def test_purehotcool_set_temperature(devices, login, hass):
 async def test_purehotcool_set_fan_mode(devices, login, hass):
     """Test set fan mode."""
     device = devices.return_value[0]
-    await async_setup_component(hass, dyson_parent.DOMAIN, _get_config())
+    await async_setup_component(hass, DYSON_DOMAIN, _get_config())
     await hass.async_block_till_done()
 
     await hass.services.async_call(
@@ -675,7 +682,7 @@ async def test_purehotcool_set_fan_mode(devices, login, hass):
 async def test_purehotcool_set_hvac_mode(devices, login, hass):
     """Test set HVAC mode."""
     device = devices.return_value[0]
-    await async_setup_component(hass, dyson_parent.DOMAIN, _get_config())
+    await async_setup_component(hass, DYSON_DOMAIN, _get_config())
     await hass.async_block_till_done()
 
     await hass.services.async_call(
