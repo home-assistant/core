@@ -24,27 +24,6 @@ MAX_REQUESTS_PER_DAY = 1000
 
 AQI_FIELD_LOOKUP = {USA: "epa_aqi", CHINA: "china_aqi"}
 
-DIRECTIONS_LIST = [
-    "N",
-    "NNE",
-    "NE",
-    "ENE",
-    "E",
-    "ESE",
-    "SE",
-    "SSE",
-    "S",
-    "SSW",
-    "SW",
-    "WSW",
-    "W",
-    "WNW",
-    "NW",
-    "NNW",
-]
-
-WIND_DIRECTIONS = {name: idx * 360 / 16 for idx, name in enumerate(DIRECTIONS_LIST)}
-
 CONDITIONS = {
     "freezing_rain_heavy": "snowy-rainy",
     "freezing_rain": "snowy-rainy",

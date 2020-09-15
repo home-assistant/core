@@ -60,7 +60,6 @@ from .const import (
     FORECASTS,
     HOURLY,
     NOWCAST,
-    WIND_DIRECTIONS,
 )
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
@@ -81,13 +80,6 @@ def _translate_condition(
     return CONDITIONS[condition]
 
 
-def _translate_wind_direction(direction: Optional[float]) -> Optional[str]:
-    """Translate ClimaCell wind direction in degrees to a bearing."""
-    if direction:
-        return WIND_DIRECTIONS.get(int(direction * 16 / 360))
-    return None
-
-
 def _forecast_dict(
     hass: HomeAssistantType,
     time: str,
@@ -101,7 +93,6 @@ def _forecast_dict(
     wind_speed: Optional[float],
 ) -> Dict[str, Any]:
     """Return formatted Forecast dict from ClimaCell forecast data."""
-    wind_bearing = _translate_wind_direction(wind_direction)
     if use_datetime:
         translated_condition = _translate_condition(
             condition,
@@ -118,7 +109,7 @@ def _forecast_dict(
             ATTR_FORECAST_PRECIPITATION_PROBABILITY: precipitation_probability,
             ATTR_FORECAST_TEMP: temp,
             ATTR_FORECAST_TEMP_LOW: temp_low,
-            ATTR_FORECAST_WIND_BEARING: wind_bearing,
+            ATTR_FORECAST_WIND_BEARING: wind_direction,
             ATTR_FORECAST_WIND_SPEED: wind_speed,
         }
     else:
@@ -140,7 +131,7 @@ def _forecast_dict(
             )
             if temp_low
             else None,
-            ATTR_FORECAST_WIND_BEARING: wind_bearing,
+            ATTR_FORECAST_WIND_BEARING: wind_direction,
             ATTR_FORECAST_WIND_SPEED: distance_convert(
                 wind_speed, LENGTH_MILES, LENGTH_KILOMETERS
             )
@@ -188,8 +179,7 @@ class ClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
     @property
     def humidity(self):
         """Return the humidity."""
-        humidity = self._get_cc_value(self.coordinator.data[CURRENT], CC_ATTR_HUMIDITY)
-        return humidity / 100 if humidity else None
+        return self._get_cc_value(self.coordinator.data[CURRENT], CC_ATTR_HUMIDITY)
 
     @property
     def wind_speed(self):
@@ -204,8 +194,8 @@ class ClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
     @property
     def wind_bearing(self):
         """Return the wind bearing."""
-        return _translate_wind_direction(
-            self._get_cc_value(self.coordinator.data[CURRENT], CC_ATTR_WIND_DIRECTION)
+        return self._get_cc_value(
+            self.coordinator.data[CURRENT], CC_ATTR_WIND_DIRECTION
         )
 
     @property
