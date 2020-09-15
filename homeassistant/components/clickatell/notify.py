@@ -15,7 +15,12 @@ DEFAULT_NAME = "clickatell"
 BASE_API_URL = "https://platform.clickatell.com/messages/http/send"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_API_KEY): cv.string, vol.Required(CONF_RECIPIENT): cv.string, vol.Required(CONF_SENDER): cv.string})
+    {
+        vol.Required(CONF_API_KEY): cv.string, 
+        vol.Required(CONF_RECIPIENT): cv.string, 
+        vol.Required(CONF_SENDER): cv.string
+    }
+)
 
 
 def get_service(hass, config, discovery_info=None):
@@ -34,7 +39,12 @@ class ClickatellNotificationService(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
-        data = {"apiKey": self.api_key, "to": self.recipient, "from": self.sender, "content": message}
+        data = {
+            "apiKey": self.api_key, 
+            "to": self.recipient, 
+            "from": self.sender, 
+            "content": message
+        }
 
         resp = requests.get(BASE_API_URL, params=data, timeout=5)
         if (resp.status_code != HTTP_OK) or (resp.status_code != 202):
