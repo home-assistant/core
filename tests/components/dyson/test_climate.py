@@ -273,12 +273,6 @@ class DysonTest(unittest.TestCase):
         assert entity.supported_features == dyson.SUPPORT_FLAGS
         assert entity.temperature_unit == TEMP_CELSIUS
 
-    def test_property_current_humidity(self):
-        """Test properties of current humidity."""
-        device = _get_device_heat_on()
-        entity = dyson.DysonPureHotCoolLinkEntity(device)
-        assert entity.current_humidity == 53
-
     def test_property_current_humidity_with_invalid_env_state(self):
         """Test properties of current humidity with invalid env state."""
         device = _get_device_off()
@@ -306,6 +300,7 @@ async def test_dyson_heat_on(mocked_login, mocked_devices, hass):
     state = hass.states.get("climate.temp_name")
     assert state.attributes["temperature"] == 23
     assert state.attributes["current_temperature"] == 289 - 273
+    assert state.attributes["current_humidity"] == 53
 
 
 @patch(
