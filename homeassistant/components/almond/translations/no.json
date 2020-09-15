@@ -3,7 +3,8 @@
         "abort": {
             "already_setup": "Du kan bare konfigurere en Almond konto.",
             "cannot_connect": "Kan ikke koble til Almond-serveren.",
-            "missing_configuration": "Vennligst sjekk dokumentasjonen om hvordan du setter opp Almond."
+            "missing_configuration": "Vennligst sjekk dokumentasjonen om hvordan du setter opp Almond.",
+            "no_url_available": "Ingen URL tilgjengelig. For informasjon om denne feilen, [sjekk {docs_url} ] ( {docs_url} )"
         },
         "step": {
             "hassio_confirm": {

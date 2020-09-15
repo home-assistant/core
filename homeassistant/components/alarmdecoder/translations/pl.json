@@ -1,0 +1,16 @@
+{
+    "options": {
+        "step": {
+            "zone_details": {
+                "data": {
+                    "zone_relaychan": "Kana\u0142 przeka\u017anika"
+                }
+            },
+            "zone_select": {
+                "data": {
+                    "zone_number": "Numer strefy"
+                }
+            }
+        }
+    }
+}

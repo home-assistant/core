@@ -1,0 +1,31 @@
+{
+    "config": {
+        "step": {
+            "pick_device": {
+                "data": {
+                    "device": "Apparaat"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Als u host leeg laat, wordt detectie gebruikt om apparaten te vinden."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "model": "Model (optioneel)",
+                    "nightlight_switch": "Gebruik Nachtlichtschakelaar",
+                    "transition": "Overgangstijd (ms)",
+                    "use_music_mode": "Schakel de muziekmodus in"
+                },
+                "description": "Als u model leeg laat, wordt het automatisch gedetecteerd."
+            }
+        }
+    },
+    "title": "Yeelight"
+}

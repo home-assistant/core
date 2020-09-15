@@ -20,7 +20,7 @@
             "unable_to_pair": "No s'ha pogut vincular, torna-ho a provar.",
             "unknown_error": "El dispositiu ha em\u00e8s un error desconegut. Vinculaci\u00f3 fallida."
         },
-        "flow_title": "Accessori HomeKit: {name}",
+        "flow_title": "{name} a trav\u00e9s de HomeKit Accessory Protocol",
         "step": {
             "busy_error": {
                 "description": "Atura la vinculaci\u00f3 a tots els controladors o prova de reiniciar el dispositiu, despr\u00e9s, segueix amb la vinculaci\u00f3.",
@@ -34,8 +34,8 @@
                 "data": {
                     "pairing_code": "Codi de vinculaci\u00f3"
                 },
-                "description": "Introdueix el codi de vinculaci\u00f3 de HomeKit per utilitzar aquest accessori (format XXX-XX-XXX)",
-                "title": "Vinculaci\u00f3 amb"
+                "description": "El controlador HomeKit es comunica amb {name} a trav\u00e9s de la xarxa d'\u00e0rea local utilitzant una connexi\u00f3 segura encriptada sense un HomeKit o iCloud separats. Introdueix el codi de vinculaci\u00f3 de HomeKit (en format XXX-XX-XXX) per utilitzar aquest accessori. Aquest codi es troba normalment en el propi dispositiu o en la seva caixa.",
+                "title": "Vinculaci\u00f3 amb un dispositiu a trav\u00e9s de HomeKit Accessory Protocol"
             },
             "protocol_error": {
                 "description": "\u00c9s possible que el dispositiu no estigui en mode de vinculaci\u00f3, potser cal pr\u00e9mer un bot\u00f3 f\u00edsic o virtual. Assegura't que el dispositiu est\u00e0 en mode vinculaci\u00f3 o prova de reiniciar-lo, despr\u00e9s, segueix amb la vinculaci\u00f3.",
@@ -49,8 +49,8 @@
                 "data": {
                     "device": "Dispositiu"
                 },
-                "description": "Selecciona el dispositiu amb el qual et vols vincular",
-                "title": "Vinculaci\u00f3 amb un accessori HomeKit"
+                "description": "El controlador HomeKit es comunica a trav\u00e9s de la xarxa d'\u00e0rea local utilitzant una connexi\u00f3 segura encriptada sense un HomeKit o iCloud separats. Selecciona el dispositiu amb el qual et vols vincular:",
+                "title": "Selecci\u00f3 de dispositiu"
             }
         }
     },

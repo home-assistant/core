@@ -5,7 +5,7 @@
             "not_songpal_device": "To nie jest urz\u0105dzenie Songpal."
         },
         "error": {
-            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia."
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
         },
         "flow_title": "Sony Songpal {name} ({host})",
         "step": {

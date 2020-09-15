@@ -39,5 +39,14 @@
                 "title": "Synology DSM"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "timeout": "Time-out (seconden)"
+                }
+            }
+        }
     }
 }
