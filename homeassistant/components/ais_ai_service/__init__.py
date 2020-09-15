@@ -2691,6 +2691,9 @@ async def async_setup(hass, config):
             if hass.states.get("input_boolean.ais_quiet_mode") is not None:
                 quiet_mode = hass.states.get("input_boolean.ais_quiet_mode").state
         if quiet_mode == "":
+            hass.async_add_job(
+                hass.services.async_call("frontend", "set_theme", {"name": "ais"})
+            )
             return
 
         def apply_night_mode():
@@ -2732,7 +2735,7 @@ async def async_setup(hass, config):
                     )
                 )
             hass.async_add_job(
-                hass.services.async_call("frontend", "set_theme", {"name": "default"})
+                hass.services.async_call("frontend", "set_theme", {"name": "ais"})
             )
 
         if not timer:
