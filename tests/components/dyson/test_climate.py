@@ -56,6 +56,10 @@ class MockDysonState(DysonPureHotCoolState):
     def __init__(self):
         """Create new Mock Dyson State."""
 
+    def __repr__(self):
+        """Mock repr because original one fails since constructor not called."""
+        return "<MockDysonState>"
+
 
 def _get_config():
     """Return a config dictionary."""
