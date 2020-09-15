@@ -228,7 +228,7 @@ class LyricNextPeriodSensor(LyricSensor):
         )
 
     @property
-    def state(self) -> str:
+    def state(self) -> datetime:
         """Return the state of the sensor."""
         for location in self.coordinator.data:
             for device in location.devices:
