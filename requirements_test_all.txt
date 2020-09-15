@@ -134,7 +134,7 @@ aiopvpc==2.0.2
 aiopylgtv==0.3.3
 
 # homeassistant.components.shelly
-aioshelly==0.3.1
+aioshelly==0.3.2
 
 # homeassistant.components.switcher_kis
 aioswitcher==1.2.1
