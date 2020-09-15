@@ -120,7 +120,7 @@ async def test_user_form_unexpected_exception(hass, canary):
 
 async def test_user_form_single_instance_allowed(hass, canary):
     """Test that configuring more than one instance is rejected."""
-    await init_integration(skip_entry_setup=True)
+    await init_integration(hass, skip_entry_setup=True)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -133,7 +133,7 @@ async def test_user_form_single_instance_allowed(hass, canary):
 
 async def test_options_flow(hass):
     """Test updating options."""
-    entry = await init_integration(skip_entry_setup=True)
+    entry = await init_integration(hass, skip_entry_setup=True)
     assert entry.options[CONF_FFMPEG_ARGUMENTS] == DEFAULT_FFMPEG_ARGUMENTS
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
