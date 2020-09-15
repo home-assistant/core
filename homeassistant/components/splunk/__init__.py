@@ -64,8 +64,7 @@ def setup(hass, config):
     )
     event_collector.SSL_verify = verify_ssl
 
-    if not event_collector.check_connectivity():
-        _LOGGER.exception("Error while trying to connect to Splunk")
+    event_collector.check_connectivity()
 
     def splunk_event_listener(event):
         """Listen for new messages on the bus and sends them to Splunk."""
