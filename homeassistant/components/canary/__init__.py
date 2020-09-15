@@ -51,10 +51,7 @@ async def async_setup(hass: HomeAssistantType, config: dict) -> bool:
     if hass.config_entries.async_entries(DOMAIN):
         return True
 
-    if (
-        CAMERA_DOMAIN in config
-        and DOMAIN in config[CAMERA_DOMAIN]
-    ):
+    if CAMERA_DOMAIN in config and DOMAIN in config[CAMERA_DOMAIN]:
         ffmpeg_arguments = config[CAMERA_DOMAIN][DOMAIN].get(
             CONF_FFMPEG_ARGUMENTS, DEFAULT_FFMPEG_ARGUMENTS
         )
