@@ -15,6 +15,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     VOLT,
+    VOLUME_CUBIC_METERS,
 )
 
 SENSORS = {
@@ -36,7 +37,7 @@ SENSORS = {
     "V_KWH": [ENERGY_KILO_WATT_HOUR, None],
     "V_LIGHT_LEVEL": [PERCENTAGE, "mdi:white-balance-sunny"],
     "V_FLOW": [LENGTH_METERS, "mdi:gauge"],
-    "V_VOLUME": ["m³", None],
+    "V_VOLUME": [f"{VOLUME_CUBIC_METERS}", None],
     "V_LEVEL": {
         "S_SOUND": ["dB", "mdi:volume-high"],
         "S_VIBRATION": [FREQUENCY_HERTZ, None],
