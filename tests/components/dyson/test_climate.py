@@ -43,8 +43,13 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_OFF,
 )
 from homeassistant.components.dyson import climate as dyson
-from homeassistant.components.dyson.climate import FAN_DIFFUSE, FAN_FOCUS
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.components.dyson.climate import FAN_DIFFUSE, FAN_FOCUS, SUPPORT_FLAGS
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
+    ATTR_TEMPERATURE,
+    TEMP_CELSIUS,
+)
 from homeassistant.setup import async_setup_component
 
 from .common import load_mock_device
@@ -212,14 +217,6 @@ class DysonTest(unittest.TestCase):
         assert entity.hvac_mode == dyson.HVAC_MODE_HEAT
         assert entity.hvac_action == dyson.CURRENT_HVAC_IDLE
 
-    def test_general_properties(self):
-        """Test properties of entity."""
-        device = _get_device_with_no_state()
-        entity = dyson.DysonPureHotCoolLinkEntity(device)
-        assert entity.should_poll is False
-        assert entity.supported_features == dyson.SUPPORT_FLAGS
-        assert entity.temperature_unit == TEMP_CELSIUS
-
     def test_property_current_humidity_with_invalid_env_state(self):
         """Test properties of current humidity with invalid env state."""
         device = _get_device_off()
@@ -279,6 +276,7 @@ async def test_pure_hot_cool_link_state(mocked_login, mocked_devices, hass):
     await hass.async_block_till_done()
 
     state = hass.states.get("climate.temp_name")
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == SUPPORT_FLAGS
     assert state.attributes["temperature"] == 23
     assert state.attributes["current_temperature"] == 289 - 273
     assert state.attributes["current_humidity"] == 53
