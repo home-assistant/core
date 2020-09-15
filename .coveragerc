@@ -146,7 +146,6 @@ omit =
     homeassistant/components/clicksend/notify.py
     homeassistant/components/clicksend_tts/notify.py
     homeassistant/components/climacell/__init__.py
-    homeassistant/components/climacell/air_quality.py
     homeassistant/components/climacell/weather.py
     homeassistant/components/cmus/media_player.py
     homeassistant/components/co2signal/*

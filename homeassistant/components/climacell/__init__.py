@@ -212,7 +212,7 @@ class ClimaCellDataUpdateCoordinator(DataUpdateCoordinator):
             RateLimitedException,
             UnknownException,
         ) as error:
-            raise UpdateFailed(error)
+            raise UpdateFailed from error
 
 
 class ClimaCellEntity(CoordinatorEntity):
