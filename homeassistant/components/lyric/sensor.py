@@ -8,6 +8,11 @@ from aiolyric.objects.device import LyricDevice
 from aiolyric.objects.location import LyricLocation
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_TIMESTAMP,
+)
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
@@ -92,12 +97,19 @@ class LyricSensor(LyricDeviceEntity):
         key: str,
         name: str,
         icon: str,
-        unit_of_measurement: str = "",
+        device_class: str = None,
+        unit_of_measurement: str = None,
     ) -> None:
         """Initialize Honeywell Lyric sensor."""
+        self._device_class = device_class
         self._unit_of_measurement = unit_of_measurement
 
         super().__init__(lyric, coordinator, location, device, key, name, icon)
+
+    @property
+    def device_class(self) -> str:
+        """Return the device class of the sensor."""
+        return self._device_class
 
     @property
     def unit_of_measurement(self) -> str:
@@ -126,6 +138,7 @@ class LyricIndoorTemperatureSensor(LyricSensor):
             f"{device.macID}_indoor_temperature",
             "Indoor Temperature",
             "mdi:thermometer",
+            DEVICE_CLASS_TEMPERATURE,
             hass.config.units.temperature_unit,
         )
 
@@ -159,6 +172,7 @@ class LyricOutdoorTemperatureSensor(LyricSensor):
             f"{device.macID}_outdoor_temperature",
             "Outdoor Temperature",
             "mdi:thermometer",
+            DEVICE_CLASS_TEMPERATURE,
             hass.config.units.temperature_unit,
         )
 
@@ -192,6 +206,7 @@ class LyricOutdoorHumiditySensor(LyricSensor):
             f"{device.macID}_outdoor_humidity",
             "Outdoor Humidity",
             "mdi:water-percent",
+            DEVICE_CLASS_HUMIDITY,
             "%",
         )
 
@@ -225,6 +240,7 @@ class LyricNextPeriodSensor(LyricSensor):
             f"{device.macID}_next_period_time",
             "Next Period Time",
             "mdi:clock",
+            DEVICE_CLASS_TIMESTAMP,
         )
 
     @property
