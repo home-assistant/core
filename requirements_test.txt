@@ -20,7 +20,7 @@ pytest-cov==2.10.1
 pytest-test-groups==1.0.3
 pytest-sugar==0.9.4
 pytest-timeout==1.4.2
-pytest-xdist==1.32.0
+pytest-xdist==2.1.0
 pytest==6.0.2
 requests_mock==1.8.0
 responses==0.12.0
