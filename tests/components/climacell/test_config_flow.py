@@ -52,7 +52,8 @@ async def test_user_flow_minimum_fields(hass: HomeAssistantType) -> None:
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=_get_config_schema(hass, MIN_CONFIG)(MIN_CONFIG),
+        result["flow_id"],
+        user_input=_get_config_schema(hass, MIN_CONFIG)(MIN_CONFIG),
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -75,7 +76,9 @@ async def test_user_flow_same_unique_ids(hass: HomeAssistantType) -> None:
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=user_input,
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data=user_input,
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
