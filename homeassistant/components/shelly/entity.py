@@ -23,7 +23,7 @@ def temperature_unit(block_info: dict) -> str:
 def shelly_naming(
     self, wrapper: ShellyDeviceWrapper, block, entity_type: str, channels: int
 ):
-    """Naming for switch and sensors"""
+    """Naming for switch and sensors."""
     if channels > 1:
         entity_name = self.wrapper.device.settings["relays"][int(self.block.channel)][
             "name"
