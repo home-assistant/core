@@ -85,6 +85,29 @@ async def test_form_invalid_auth(hass):
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
+async def test_user_unexpected_exception(hass):
+    """Test we handle an unexpected exception."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.august.config_flow.AugustGateway.async_authenticate",
+        side_effect=ValueError,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_LOGIN_METHOD: "email",
+                CONF_USERNAME: "my@email.tld",
+                CONF_PASSWORD: "test-password",
+            },
+        )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "unknown"}
+
+
 async def test_form_cannot_connect(hass):
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
