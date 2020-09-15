@@ -2,7 +2,7 @@
 from requests import ConnectTimeout
 
 from homeassistant.components.camera.const import DOMAIN as CAMERA_DOMAIN
-from homeassistant.components.canary.const import DEFAULT_TIMEOUT, DOMAIN
+from homeassistant.components.canary.const import CONF_FFMPEG_ARGUMENTS, DEFAULT_TIMEOUT, DOMAIN
 from homeassistant.config_entries import (
     ENTRY_STATE_LOADED,
     ENTRY_STATE_NOT_LOADED,
@@ -42,10 +42,7 @@ async def test_import_from_yaml_ffmpeg(hass, canary) -> None:
         assert await async_setup_component(
             hass,
             DOMAIN,
-            {
-                DOMAIN: YAML_CONFIG,
-                CAMERA_DOMAIN: {DOMAIN: {CONF_FFMPEG_ARGUMENTS: 6}}
-            }
+            {DOMAIN: YAML_CONFIG, CAMERA_DOMAIN: {DOMAIN: {CONF_FFMPEG_ARGUMENTS: 6}}},
         )
         await hass.async_block_till_done()
 
