@@ -142,7 +142,7 @@ class UniFiUpTimeSensor(UniFiClient):
     @property
     def name(self) -> str:
         """Return the name of the client."""
-        return f"{super().name} {self.TYPE.upper()}"
+        return f"{super().name} {self.TYPE.capitalize()}"
 
     @property
     def state(self) -> int:
