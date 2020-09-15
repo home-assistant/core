@@ -34,7 +34,7 @@ from .const import (
     MIN_TIME_BETWEEN_DETAIL_UPDATES,
     VERIFICATION_CODE_KEY,
 )
-from .exceptions import InvalidAuth, RequireValidation
+from .exceptions import CannotConnect, InvalidAuth, RequireValidation
 from .gateway import AugustGateway
 from .subscriber import AugustSubscriberMixin
 
@@ -118,7 +118,7 @@ async def async_setup_august(hass, config_entry, august_gateway):
         await august_gateway.async_authenticate()
     except RequireValidation:
         await async_request_validation(hass, config_entry, august_gateway)
-        return False
+        raise
 
     # We still use the configurator to get a new 2fa code
     # when needed since config_flow doesn't have a way
@@ -182,7 +182,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     except InvalidAuth:
         _async_start_reauth(hass, entry)
         return False
-    except asyncio.TimeoutError as err:
+    except RequireValidation:
+        return False
+    except (CannotConnect, asyncio.TimeoutError) as err:
         raise ConfigEntryNotReady from err
 
 
