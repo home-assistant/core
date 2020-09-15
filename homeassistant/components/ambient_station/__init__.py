@@ -9,6 +9,7 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import DEVICE_CLASS_CONNECTIVITY
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
+    AREA_SQUARE_METERS,
     ATTR_LOCATION,
     ATTR_NAME,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
@@ -206,7 +207,12 @@ SENSOR_TYPES = {
     TYPE_SOILTEMP7F: ("Soil Temp 7", TEMP_FAHRENHEIT, TYPE_SENSOR, "temperature"),
     TYPE_SOILTEMP8F: ("Soil Temp 8", TEMP_FAHRENHEIT, TYPE_SENSOR, "temperature"),
     TYPE_SOILTEMP9F: ("Soil Temp 9", TEMP_FAHRENHEIT, TYPE_SENSOR, "temperature"),
-    TYPE_SOLARRADIATION: ("Solar Rad", f"{POWER_WATT}/m^2", TYPE_SENSOR, None),
+    TYPE_SOLARRADIATION: (
+        "Solar Rad",
+        f"{POWER_WATT}/{AREA_SQUARE_METERS}",
+        TYPE_SENSOR,
+        None,
+    ),
     TYPE_SOLARRADIATION_LX: ("Solar Rad (lx)", "lx", TYPE_SENSOR, "illuminance"),
     TYPE_TEMP10F: ("Temp 10", TEMP_FAHRENHEIT, TYPE_SENSOR, "temperature"),
     TYPE_TEMP1F: ("Temp 1", TEMP_FAHRENHEIT, TYPE_SENSOR, "temperature"),
