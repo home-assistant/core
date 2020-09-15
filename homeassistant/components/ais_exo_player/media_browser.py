@@ -27,6 +27,7 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.components.media_source import const as media_source_const
+from homeassistant.components.media_source.error import MediaSourceError
 from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN
@@ -193,12 +194,13 @@ async def ais_audio_books_library(hass, media_content_id) -> BrowseMedia:
 
         root = BrowseMedia(
             title="Autorzy",
-            media_class=MEDIA_CLASS_ARTIST,
+            media_class=MEDIA_CLASS_DIRECTORY,
             media_content_id="ais_audio_books",
             media_content_type=MEDIA_TYPE_APP,
             can_expand=True,
             can_play=False,
             children=ais_authors,
+            thumbnail="http://www.ai-speaker.com/images/media-browser/book-music.svg",
         )
         return root
     elif media_content_id.count("/") == 1:
@@ -237,8 +239,8 @@ async def ais_audio_books_library(hass, media_content_id) -> BrowseMedia:
             web_session = aiohttp_client.async_get_clientsession(hass)
             import feedparser
 
-            #  3 sec should be enough
-            with async_timeout.timeout(30):
+            #  5 sec should be enough
+            with async_timeout.timeout(50):
                 ws_resp = await web_session.get(lookup_url)
                 response_text = await ws_resp.text()
                 d = feedparser.parse(response_text)
@@ -281,10 +283,43 @@ async def ais_podcast_library(hass, media_content_id) -> BrowseMedia:
         json_ws_resp = ws_resp.json()
         ais_podcast_types = []
         for item in json_ws_resp["data"]:
+            media_class = MEDIA_CLASS_PODCAST
+            if item == "Biznes":
+                media_class = "podcastbuisnes"
+            elif item == "Edukacja":
+                media_class = "podcasteducation"
+            elif item == "Familijne":
+                media_class = "podcastfamily"
+            elif item == "Gry i Hobby":
+                media_class = "podcastgames"
+            elif item == "Humor":
+                media_class = "podcastsmile"
+            elif item == "nformacyjne":
+                media_class = "podcastinfo"
+            elif item == "Komedia":
+                media_class = "podcastcomedy"
+            elif item == "Książki":
+                media_class = "podcastbooks"
+            elif item == "Kuchnia":
+                media_class = "podcastcook"
+            elif item == "Marketing":
+                media_class = "podcastmarket"
+            elif item == "Sport i rekreacja":
+                media_class = "podcastsport"
+            elif item == "Sztuka":
+                media_class = "podcastart"
+            elif item == "TV i film":
+                media_class = "podcasttv"
+            elif item == "Technologia":
+                media_class = "podcasttechno"
+            elif item == "Tyflopodcast":
+                media_class = "podcasttyflo"
+            elif item == "Zdrowie":
+                media_class = "podcastdoctor"
             ais_podcast_types.append(
                 BrowseMedia(
                     title=item,
-                    media_class=MEDIA_CLASS_PODCAST,
+                    media_class=media_class,
                     media_content_id="ais_podcast/" + item,
                     media_content_type=MEDIA_TYPE_APP,
                     can_play=False,
@@ -299,6 +334,7 @@ async def ais_podcast_library(hass, media_content_id) -> BrowseMedia:
             can_expand=True,
             can_play=False,
             children=ais_podcast_types,
+            thumbnail="http://www.ai-speaker.com/images/media-browser/podcast.svg",
         )
         return root
     elif media_content_id.count("/") == 1:
@@ -328,6 +364,7 @@ async def ais_podcast_library(hass, media_content_id) -> BrowseMedia:
             can_expand=True,
             can_play=False,
             children=ais_radio_stations,
+            thumbnail="http://www.ai-speaker.com/images/media-browser/podcast.svg",
         )
         return root
     else:
@@ -337,8 +374,8 @@ async def ais_podcast_library(hass, media_content_id) -> BrowseMedia:
             web_session = aiohttp_client.async_get_clientsession(hass)
             import feedparser
 
-            #  3 sec should be enough
-            with async_timeout.timeout(30):
+            #  5 sec should be enough
+            with async_timeout.timeout(50):
                 ws_resp = await web_session.get(lookup_url)
                 response_text = await ws_resp.text()
                 d = feedparser.parse(response_text)
@@ -351,7 +388,7 @@ async def ais_podcast_library(hass, media_content_id) -> BrowseMedia:
                     ais_podcast_episodes.append(
                         BrowseMedia(
                             title=e.title,
-                            media_class=MEDIA_CLASS_PLAYLIST,
+                            media_class=MEDIA_CLASS_MUSIC,
                             media_content_id=e.enclosures[0]["url"],
                             media_content_type=MEDIA_TYPE_MUSIC,
                             can_play=True,
@@ -372,6 +409,7 @@ async def ais_podcast_library(hass, media_content_id) -> BrowseMedia:
                 return root
         except Exception as e:
             _LOGGER.warning("Timeout when reading RSS %s", lookup_url)
+            raise MediaSourceError("Invalid path.")
 
 
 def ais_radio_library(hass, media_content_id) -> BrowseMedia:
@@ -383,10 +421,42 @@ def ais_radio_library(hass, media_content_id) -> BrowseMedia:
         # ais_radio_types = [ais_global.G_FAVORITE_OPTION]
         ais_radio_types = []
         for item in json_ws_resp["data"]:
+            media_class = MEDIA_CLASS_DIRECTORY
+            if item == "Dzieci":
+                media_class = "radiokids"
+            elif item == "Filmowe":
+                media_class = "radiofils"
+            elif item == "Historyczne":
+                media_class = "radiohistory"
+            elif item == "Informacyjne":
+                media_class = "radionews"
+            elif item == "Inne":
+                media_class = "radioothers"
+            elif item == "Katolickie":
+                media_class = "radiochurch"
+            elif item == "Klasyczne":
+                media_class = "radioclasic"
+            elif item == "Muzyczne":
+                media_class = "radiomusic"
+            elif item == "Muzyczne - Rock":
+                media_class = "radiomusicrock"
+            elif item == "Naukowe":
+                media_class = "radioschool"
+            elif item == "Regionalne":
+                media_class = "radiolocal"
+            elif item == "Publiczne":
+                media_class = "radiopublic"
+            elif item == "Sportowe":
+                media_class = "radiosport"
+            elif item == "Słowo":
+                media_class = "radiopen"
+            elif item == "Trendy TuneIn":
+                media_class = "radiotuneintrend"
+
             ais_radio_types.append(
                 BrowseMedia(
                     title=item,
-                    media_class=MEDIA_CLASS_DIRECTORY,
+                    media_class=media_class,
                     media_content_id="ais_radio/" + item,
                     media_content_type=MEDIA_TYPE_APP,
                     can_play=False,

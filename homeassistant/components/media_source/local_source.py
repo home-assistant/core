@@ -134,6 +134,15 @@ class LocalSource(MediaSource):
             can_play=is_file,
             can_expand=is_dir,
         )
+        # ais icons
+        if str(path).endswith("/AIS/media"):
+            media.thumbnail = "http://www.ai-speaker.com/images/media-browser/nas.svg"
+        elif str(path).endswith("/AIS/media/dyski-wymienne"):
+            media.media_class = "flashDrive"
+        elif str(path).endswith("/AIS/media/dyski-zdalne"):
+            media.media_class = "microsoftOnedrive"
+        elif str(path).endswith("/AIS/media/dysk-wewnętrzny"):
+            media.media_class = "harddisk"
 
         if is_file or is_child:
             return media
