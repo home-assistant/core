@@ -210,12 +210,6 @@ class DysonTest(unittest.TestCase):
         entity = dyson.DysonPureHotCoolLinkEntity(device)
         assert entity.hvac_mode == dyson.HVAC_MODE_COOL
 
-    def test_property_current_humidity_without_env_state(self):
-        """Test properties of current humidity without env state."""
-        device = _get_device_with_no_state()
-        entity = dyson.DysonPureHotCoolLinkEntity(device)
-        assert entity.current_humidity is None
-
 
 @patch(
     "homeassistant.components.dyson.DysonAccount.devices",
@@ -301,6 +295,13 @@ async def test_pure_hot_cool_link_state(mocked_login, mocked_devices, hass):
     assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_IDLE
 
     device.environmental_state.humidity = 0
+    await hass.async_add_executor_job(update_callback, MockDysonState())
+    await hass.async_block_till_done()
+
+    state = hass.states.get("climate.temp_name")
+    assert state.attributes.get(ATTR_CURRENT_HUMIDITY) is None
+
+    device.environmental_state = None
     await hass.async_add_executor_job(update_callback, MockDysonState())
     await hass.async_block_till_done()
 
