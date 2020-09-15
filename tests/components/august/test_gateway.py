@@ -11,6 +11,7 @@ async def test_refresh_access_token(hass):
     await _patched_refresh_access_token(hass, "new_token", 5678)
 
 
+@patch("homeassistant.components.august.gateway.ApiAsync.async_get_operable_locks")
 @patch("homeassistant.components.august.gateway.AuthenticatorAsync.async_authenticate")
 @patch("homeassistant.components.august.gateway.AuthenticatorAsync.should_refresh")
 @patch(
@@ -23,6 +24,7 @@ async def _patched_refresh_access_token(
     refresh_access_token_mock,
     should_refresh_mock,
     authenticate_mock,
+    async_get_operable_locks_mock,
 ):
     authenticate_mock.side_effect = MagicMock(
         return_value=_mock_august_authentication("original_token", 1234)

@@ -3,13 +3,18 @@ import asyncio
 import itertools
 import logging
 
-from aiohttp import ClientError
+from aiohttp import ClientError, ClientResponseError
 from august.authenticator import ValidationResult
 from august.exceptions import AugustApiAIOHTTPError
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_TIMEOUT,
+    CONF_USERNAME,
+    HTTP_UNAUTHORIZED,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 import homeassistant.helpers.config_validation as cv
@@ -114,9 +119,6 @@ async def async_setup_august(hass, config_entry, august_gateway):
     except RequireValidation:
         await async_request_validation(hass, config_entry, august_gateway)
         return False
-    except InvalidAuth:
-        _LOGGER.error("Password is no longer valid. Please set up August again")
-        return False
 
     # We still use the configurator to get a new 2fa code
     # when needed since config_flow doesn't have a way
@@ -171,8 +173,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     try:
         await august_gateway.async_setup(entry.data)
         return await async_setup_august(hass, entry, august_gateway)
+    except ClientResponseError as err:
+        if err.status == HTTP_UNAUTHORIZED:
+            _async_start_reauth(hass, entry)
+            return False
+
+        raise ConfigEntryNotReady from err
+    except InvalidAuth:
+        _async_start_reauth(hass, entry)
+        return False
     except asyncio.TimeoutError as err:
         raise ConfigEntryNotReady from err
+
+
+def _async_start_reauth(hass: HomeAssistant, entry: ConfigEntry):
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "reauth"},
+            data=entry.data,
+        )
+    )
+    _LOGGER.error("Password is no longer valid. Please reauthenticate.")
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
