@@ -4,6 +4,7 @@ from homeassistant.const import (
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
+    LENGTH_MILLIMETERS,
     PERCENTAGE,
     PRESSURE_HPA,
     SPEED_KILOMETERS_PER_HOUR,
@@ -108,7 +109,7 @@ SENSOR_TYPES = {
     },
     "precipitation": {
         ENTITY_NAME: "Daily precipitation",
-        ENTITY_UNIT: "mm",
+        ENTITY_UNIT: LENGTH_MILLIMETERS,
         ENTITY_ICON: "mdi:cup-water",
         ENTITY_DEVICE_CLASS: None,
         ENTITY_ENABLE: True,

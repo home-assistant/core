@@ -24,6 +24,7 @@ from homeassistant.components.homematicip_cloud.sensor import (
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
+    LENGTH_MILLIMETERS,
     PERCENTAGE,
     POWER_WATT,
     SPEED_KILOMETERS_PER_HOUR,
@@ -337,7 +338,7 @@ async def test_hmip_today_rain_sensor(hass, default_mock_hap_factory):
     )
 
     assert ha_state.state == "3.9"
-    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "mm"
+    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == LENGTH_MILLIMETERS
     await async_manipulate_test_data(hass, hmip_device, "todayRainCounter", 14.2)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == "14.2"
