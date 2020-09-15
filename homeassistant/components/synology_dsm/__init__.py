@@ -102,7 +102,6 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Set up Synology DSM sensors."""
-    api = SynoApi(hass, entry)
 
     # Migrate old unique_id
     @callback
@@ -163,6 +162,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     await entity_registry.async_migrate_entries(hass, entry.entry_id, _async_migrator)
 
     # Continue setup
+    api = SynoApi(hass, entry)
     await api.async_setup()
 
     undo_listener = entry.add_update_listener(_async_update_listener)
@@ -254,10 +254,11 @@ class SynoApi:
             self._entry.data[CONF_PASSWORD],
             self._entry.data[CONF_SSL],
             timeout=self._entry.options.get(CONF_TIMEOUT),
-            device_token=self._entry.data.get("device_token"),
+        )
+        await self._hass.async_add_executor_job(
+            self.dsm.login, self._entry.data.get("device_token")
         )
 
-        await self._hass.async_add_executor_job(self.dsm.discover_apis)
         self._with_surveillance_station = bool(
             self.dsm.apis.get(SynoSurveillanceStation.CAMERA_API_KEY)
         )
@@ -336,7 +337,6 @@ class SynoApi:
     def _fetch_device_configuration(self):
         """Fetch initial device config."""
         self.information = self.dsm.information
-        self.information.update()
         self.network = self.dsm.network
         self.network.update()
 
