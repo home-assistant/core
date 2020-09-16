@@ -509,7 +509,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: Dict) -> Non
         hac.set_time_zone(config[CONF_TIME_ZONE])
 
     if CONF_MEDIA_DIRS not in config:
-        if "HASSIO" in os.environ or is_docker_env():
+        if is_docker_env():
             hac.media_dirs = {"media": "/media"}
         else:
             hac.media_dirs = {"media": hass.config.path("media")}

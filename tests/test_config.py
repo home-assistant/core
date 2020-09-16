@@ -486,15 +486,15 @@ async def test_loading_configuration_temperature_unit(hass):
     assert hass.config.config_source == config_util.SOURCE_YAML
 
 
-async def test_loading_configuration_default_media_dirs_hassio(hass, monkeypatch):
+async def test_loading_configuration_default_media_dirs_docker(hass):
     """Test loading core config onto hass object."""
-    monkeypatch.setenv("HASSIO", "Yes")
-    await config_util.async_process_ha_core_config(
-        hass,
-        {
-            "name": "Huis",
-        },
-    )
+    with patch("homeassistant.config.is_docker_env", return_value=True):
+        await config_util.async_process_ha_core_config(
+            hass,
+            {
+                "name": "Huis",
+            },
+        )
 
     assert hass.config.location_name == "Huis"
     assert len(hass.config.allowlist_external_dirs) == 2
