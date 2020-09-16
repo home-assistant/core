@@ -2,5 +2,11 @@
   "domain": "splunk",
   "name": "Splunk",
   "documentation": "https://www.home-assistant.io/integrations/splunk",
-  "codeowners": []
+  "requirements": [
+    "splunk-data-sender==0.0.7",
+    "requests==2.24.0"
+  ],
+  "codeowners": [
+    "@Bre77"
+  ]
 }
