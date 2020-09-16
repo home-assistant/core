@@ -1,6 +1,8 @@
 """Support for Vera scenes."""
 import logging
-from typing import Any, Callable, List
+from typing import Any, Callable, Dict, List, Optional
+
+import pyvera as veraApi
 
 from homeassistant.components.scene import Scene
 from homeassistant.config_entries import ConfigEntry
@@ -29,7 +31,7 @@ async def async_setup_entry(
 class VeraScene(Scene):
     """Representation of a Vera scene entity."""
 
-    def __init__(self, vera_scene, controller_data: ControllerData):
+    def __init__(self, vera_scene: veraApi.VeraScene, controller_data: ControllerData):
         """Initialize the scene."""
         self.vera_scene = vera_scene
         self.controller = controller_data.controller
@@ -40,7 +42,7 @@ class VeraScene(Scene):
             slugify(vera_scene.name), vera_scene.scene_id
         )
 
-    def update(self):
+    def update(self) -> None:
         """Update the scene status."""
         self.vera_scene.refresh()
 
@@ -49,11 +51,11 @@ class VeraScene(Scene):
         self.vera_scene.activate()
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the scene."""
         return self._name
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return the state attributes of the scene."""
         return {"vera_scene_id": self.vera_scene.vera_scene_id}
