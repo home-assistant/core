@@ -73,12 +73,11 @@ class LocalSource(MediaSource):
         self, item: MediaSourceItem, media_types: Tuple[str] = MEDIA_MIME_TYPES
     ) -> BrowseMediaSource:
         """Return media."""
-        # AIS TODO
-        # _LOGGER.error(str(item))
-        # if item.identifier == "":
-        #     import homeassistant.components.ais_exo_player.media_browser as ais_media_browser
-        #
-        #     return await ais_media_browser.browse_media(self.hass, None, None)
+        # AIS - allow to play ais lib in browser
+        if item.identifier == "":
+            import homeassistant.components.ais_exo_player.media_browser as ais_media_browser
+
+            return await ais_media_browser.browse_media(self.hass, None, "library")
         try:
             source_dir_id, location = async_parse_identifier(item)
         except Unresolvable as err:
