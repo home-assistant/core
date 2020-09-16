@@ -102,7 +102,7 @@ class LocalSource(MediaSource):
             )
 
             base.children = [
-                self._browse_media(source_dir_id, location)
+                self._browse_media(source_dir_id, "")
                 for source_dir_id in self.hass.config.media_dirs
             ]
 
