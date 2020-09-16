@@ -131,6 +131,7 @@ class UniFiUpTimeSensor(UniFiClient):
     """UniFi uptime sensor."""
 
     DOMAIN = DOMAIN
+    TYPE = UPTIME_SENSOR
 
     @property
     def device_class(self) -> str:
