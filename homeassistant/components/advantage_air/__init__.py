@@ -1,33 +1,34 @@
-"""MyAir climate integration."""
+"""Advantage Air climate integration."""
 
-import asyncio
 import collections.abc
 from datetime import timedelta
-import json
 import logging
 
-from aiohttp import ClientError, ClientTimeout, ServerConnectionError, request
+from advantage_air import advantage_air
 
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
-from homeassistant.helpers import collection, device_registry, entity_component
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import *
+from .const import ADVANTAGE_AIR_RETRY, DOMAIN
+
+ADVANTAGE_AIR_SYNC_INTERVAL = 15
+ADVANTAGE_AIR_PLATFORMS = ["climate", "binary_sensor", "sensor", "cover", "switch"]
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def update(d, u):
-    for k, v in u.items():
-        if isinstance(v, collections.abc.Mapping):
-            d[k] = update(d.get(k, {}), v)
+def update(original, updates):
+    """Deep update a dictionary."""
+    for key, val in updates.items():
+        if isinstance(val, collections.abc.Mapping):
+            original[key] = update(original.get(key, {}), val)
         else:
-            d[k] = v
-    return d
+            original[key] = val
+    return original
 
 
 async def async_setup(hass, config):
-    """Set up MyAir."""
+    """Set up AdvantageAir."""
     hass.data[DOMAIN] = {}
     for platform in ADVANTAGE_AIR_PLATFORMS:
         hass.async_create_task(
@@ -37,74 +38,18 @@ async def async_setup(hass, config):
 
 
 async def async_setup_entry(hass, config_entry):
-    """Set up MyAir Config."""
-    url = config_entry.data["url"]
-
-    async def async_update_data():
-        data = {}
-        count = 0
-        while count < ADVANTAGE_AIR_RETRY:
-            try:
-                async with request(
-                    "GET", f"{url}/getSystemData", timeout=ClientTimeout(total=4)
-                ) as resp:
-                    assert resp.status == 200
-                    data = await resp.json(content_type=None)
-            except ConnectionResetError:
-                pass
-            except ServerConnectionError:
-                pass
-            except ClientError as err:
-                raise UpdateFailed(f"Client Error {err}")
-
-            if "aircons" in data:
-                return data
-
-            count += 1
-            _LOGGER.debug(f"Waiting and then retrying, Try: {count}")
-            await asyncio.sleep(1)
-        raise UpdateFailed(f"Tried {ADVANTAGE_AIR_RETRY} times to get MyAir data")
+    """Set up AdvantageAir Config."""
+    ip_address = config_entry.data[CONF_IP_ADDRESS]
+    port = config_entry.data[CONF_PORT]
+    api = advantage_air(ip_address, port, ADVANTAGE_AIR_RETRY)
 
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
-        name="MyAir",
-        update_method=async_update_data,
+        name="AdvantageAir",
+        update_method=api.async_get,
         update_interval=timedelta(seconds=ADVANTAGE_AIR_SYNC_INTERVAL),
     )
-
-    ready = True
-    queue = {}
-
-    async def async_set_data(change):
-        nonlocal ready
-        nonlocal queue
-        queue = update(queue, change)
-        if ready:
-            ready = False
-            while queue:
-                while queue:
-                    payload = queue
-                    queue = {}
-                    # try:
-                    async with request(
-                        "GET",
-                        f"{url}/setAircon",
-                        params={"json": json.dumps(payload)},
-                        timeout=ClientTimeout(total=4),
-                    ) as resp:
-                        data = await resp.json(content_type=None)
-                    # except ClientError as err:
-                    #    raise UpdateFailed(err)
-
-                    if data["ack"] == False:
-                        ready = True
-                        raise Exception(data["reason"])
-                await coordinator.async_refresh()  # Request refresh once queue is empty
-            ready = (
-                True  # Ready only once refresh has finished and queue is still empty
-            )
-        return
 
     # Fetch initial data so we have data when entities subscribe
     while not coordinator.data:
@@ -121,9 +66,15 @@ async def async_setup_entry(hass, config_entry):
     else:
         device = None
 
-    hass.data[DOMAIN][url] = {
+    async def async_change(change):
+        queued = await api.async_change(change)
+        if not queued:
+            await coordinator.async_refresh()
+        return
+
+    hass.data[DOMAIN][ip_address] = {
         "coordinator": coordinator,
-        "async_set_data": async_set_data,
+        "async_change": async_change,
         "device": device,
     }
 
