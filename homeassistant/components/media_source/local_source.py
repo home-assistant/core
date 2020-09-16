@@ -190,10 +190,10 @@ class LocalMediaView(HomeAssistantView):
     ) -> web.FileResponse:
         """Start a GET request."""
         if location != sanitize_path(location):
-            return web.HTTPNotFound()
+            raise web.HTTPNotFound()
 
         if source_dir_id not in self.hass.config.media_dirs:
-            return web.HTTPNotFound()
+            raise web.HTTPNotFound()
 
         media_path = self.source.async_full_path(source_dir_id, location)
 
