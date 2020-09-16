@@ -1,6 +1,8 @@
 """Support for Vera switches."""
 import logging
-from typing import Callable, List
+from typing import Any, Callable, List, Optional
+
+import pyvera as veraApi
 
 from homeassistant.components.switch import (
     DOMAIN as PLATFORM_DOMAIN,
@@ -33,39 +35,41 @@ async def async_setup_entry(
     )
 
 
-class VeraSwitch(VeraDevice, SwitchEntity):
+class VeraSwitch(VeraDevice[veraApi.VeraSwitch], SwitchEntity):
     """Representation of a Vera Switch."""
 
-    def __init__(self, vera_device, controller_data: ControllerData):
+    def __init__(
+        self, vera_device: veraApi.VeraSwitch, controller_data: ControllerData
+    ):
         """Initialize the Vera device."""
         self._state = False
         VeraDevice.__init__(self, vera_device, controller_data)
         self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
         self.vera_device.switch_on()
         self._state = True
         self.schedule_update_ha_state()
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
         self.vera_device.switch_off()
         self._state = False
         self.schedule_update_ha_state()
 
     @property
-    def current_power_w(self):
+    def current_power_w(self) -> Optional[float]:
         """Return the current power usage in W."""
         power = self.vera_device.power
         if power:
             return convert(power, float, 0.0)
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if device is on."""
         return self._state
 
-    def update(self):
+    def update(self) -> None:
         """Update device state."""
         self._state = self.vera_device.is_switched_on()
