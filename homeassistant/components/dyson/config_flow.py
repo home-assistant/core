@@ -99,21 +99,65 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None):
         """Handle the initial step."""
         if user_input is not None:
-            options = {**self._config_entry.options}
-            options[user_input[CONF_DEVICE]] = user_input.get(CONF_IP_ADDRESS, "")
-            return self.async_create_entry(title="", data=options)
+            if user_input[CONF_ACTION] == "add":
+                return await self.async_step_add()
+            return await self.async_step_remove()
 
         return self.async_show_form(
             step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_ACTION): vol.In(
+                        {
+                            "add": "Add a new device",
+                            "remove": "Remove an existed device",
+                        }
+                    )
+                }
+            ),
+        )
+
+    async def async_step_add(self, user_input=None):
+        """Handle the step to add a new device."""
+        if user_input is not None:
+            options = {**self._config_entry.options}
+            options[user_input[CONF_DEVICE]] = user_input[CONF_IP_ADDRESS]
+            return self.async_create_entry(title="", data=options)
+
+        return self.async_show_form(
+            step_id="add",
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_DEVICE): vol.In(
                         [
                             serial
                             for serial, ip_addr in self._config_entry.options.items()
+                            if ip_addr == ""
                         ]
                     ),
-                    vol.Optional(CONF_IP_ADDRESS): str,
+                    vol.Required(CONF_IP_ADDRESS): str,
+                }
+            ),
+        )
+
+    async def async_step_remove(self, user_input=None):
+        """Handle the step to remove an existed device."""
+        if user_input is not None:
+            options = {**self._config_entry.options}
+            options[CONF_DEVICE] = ""
+            return self.async_create_entry(title="", data=options)
+
+        return self.async_show_form(
+            step_id="remove",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_DEVICE): vol.In(
+                        [
+                            serial
+                            for serial, ip_addr in self._config_entry.options.items()
+                            if ip_addr != ""
+                        ]
+                    )
                 }
             ),
         )

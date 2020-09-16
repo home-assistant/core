@@ -21,10 +21,20 @@
   "options": {
     "step": {
       "init": {
-        "description": "This option is used to manually configure IP addresses for devices. If your devices are discoverable, they will be added automatically.",
+        "description": "This option is used to manually add devices using IP addresses. If your devices are discoverable, they will be added automatically.",
+        "data": {
+          "action": "Action"
+        }
+      },
+      "add": {
         "data": {
           "device": "Device",
           "ip_address": "[%key:common::config_flow::data::ip%]"
+        }
+      },
+      "remove": {
+        "data": {
+          "device": "Device"
         }
       }
     }
