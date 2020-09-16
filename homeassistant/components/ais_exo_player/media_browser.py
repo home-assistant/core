@@ -11,6 +11,7 @@ from homeassistant.components.media_player.const import (
     MEDIA_CLASS_APP,
     MEDIA_CLASS_ARTIST,
     MEDIA_CLASS_DIRECTORY,
+    MEDIA_CLASS_IMAGE,
     MEDIA_CLASS_MUSIC,
     MEDIA_CLASS_PODCAST,
     MEDIA_CLASS_VIDEO,
@@ -42,6 +43,12 @@ async def browse_media(hass, media_content_type=None, media_content_id=None):
 
     if media_content_id.startswith("ais_music"):
         return ais_music_library()
+
+    if media_content_id.startswith("ais_spotify"):
+        return await ais_spotify_library(hass)
+
+    if media_content_id.startswith("ais_youtube"):
+        return await ais_youtube_library(hass)
 
     if media_content_id.startswith("ais_favorites"):
         return ais_favorites_library(hass)
@@ -79,7 +86,16 @@ def ais_media_library() -> BrowseMedia:
         can_expand=True,
         children=[],
     )
-
+    ais_library_info.children.append(
+        BrowseMedia(
+            title="Galeria",
+            media_class=MEDIA_CLASS_IMAGE,
+            media_content_id=f"{media_source_const.URI_SCHEME}{media_source_const.DOMAIN}",
+            media_content_type=MEDIA_TYPE_APP,
+            can_expand=True,
+            can_play=False,
+        )
+    )
     ais_library_info.children.append(
         BrowseMedia(
             title="Dyski",
@@ -122,16 +138,6 @@ def ais_media_library() -> BrowseMedia:
     )
     ais_library_info.children.append(
         BrowseMedia(
-            title="TuneIn",
-            media_class="radiopublic",
-            media_content_id="ais_tunein",
-            media_content_type=MEDIA_TYPE_APP,
-            can_expand=True,
-            can_play=False,
-        )
-    )
-    ais_library_info.children.append(
-        BrowseMedia(
             title="Podcast",
             media_class=MEDIA_CLASS_PODCAST,
             media_content_id="ais_podcast",
@@ -150,11 +156,42 @@ def ais_media_library() -> BrowseMedia:
             can_play=False,
         )
     )
+    # TODO if more musics providers appears
+    # ais_library_info.children.append(
+    #     BrowseMedia(
+    #         title="Muzyka",
+    #         media_class=MEDIA_CLASS_MUSIC,
+    #         media_content_id="ais_music",
+    #         media_content_type=MEDIA_TYPE_APP,
+    #         can_expand=True,
+    #         can_play=False,
+    #     )
+    # )
     ais_library_info.children.append(
         BrowseMedia(
-            title="Muzyka",
-            media_class=MEDIA_CLASS_MUSIC,
-            media_content_id="ais_music",
+            title="Spotify",
+            media_class="spotify",
+            media_content_id="ais_spotify",
+            media_content_type=MEDIA_TYPE_APP,
+            can_expand=True,
+            can_play=False,
+        )
+    )
+    ais_library_info.children.append(
+        BrowseMedia(
+            title="YouTube",
+            media_class="youtube",
+            media_content_id="ais_youtube",
+            media_content_type=MEDIA_TYPE_APP,
+            can_expand=True,
+            can_play=False,
+        )
+    )
+    ais_library_info.children.append(
+        BrowseMedia(
+            title="TuneIn",
+            media_class="radiopublic",
+            media_content_id="ais_tunein",
             media_content_type=MEDIA_TYPE_APP,
             can_expand=True,
             can_play=False,
@@ -619,6 +656,76 @@ def ais_favorites_library(hass) -> BrowseMedia:
     return root
 
 
+async def ais_spotify_library() -> BrowseMedia:
+    """Create response payload to describe contents of a specific library."""
+    ais_music_info = BrowseMedia(
+        title="AIS Music",
+        media_class=MEDIA_CLASS_MUSIC,
+        media_content_id="ais_music",
+        media_content_type=MEDIA_TYPE_APP,
+        can_play=False,
+        can_expand=True,
+        children=[],
+    )
+
+    ais_music_info.children.append(
+        BrowseMedia(
+            title="Spotify",
+            media_class=MEDIA_CLASS_MUSIC,
+            media_content_id="ais_music",
+            media_content_type=MEDIA_TYPE_APP,
+            can_expand=True,
+            can_play=False,
+        )
+    )
+    ais_music_info.children.append(
+        BrowseMedia(
+            title="YouTube",
+            media_class=MEDIA_CLASS_VIDEO,
+            media_content_id="ais_music",
+            media_content_type=MEDIA_TYPE_APP,
+            can_expand=True,
+            can_play=False,
+        )
+    )
+    return ais_music_info
+
+
+async def ais_youtube_library() -> BrowseMedia:
+    """Create response payload to describe contents of a specific library."""
+    ais_music_info = BrowseMedia(
+        title="AIS Music",
+        media_class=MEDIA_CLASS_MUSIC,
+        media_content_id="ais_music",
+        media_content_type=MEDIA_TYPE_APP,
+        can_play=False,
+        can_expand=True,
+        children=[],
+    )
+
+    ais_music_info.children.append(
+        BrowseMedia(
+            title="Spotify",
+            media_class=MEDIA_CLASS_MUSIC,
+            media_content_id="ais_music",
+            media_content_type=MEDIA_TYPE_APP,
+            can_expand=True,
+            can_play=False,
+        )
+    )
+    ais_music_info.children.append(
+        BrowseMedia(
+            title="YouTube",
+            media_class=MEDIA_CLASS_VIDEO,
+            media_content_id="ais_music",
+            media_content_type=MEDIA_TYPE_APP,
+            can_expand=True,
+            can_play=False,
+        )
+    )
+    return ais_music_info
+
+
 def ais_music_library() -> BrowseMedia:
     """Create response payload to describe contents of a specific library."""
     ais_music_info = BrowseMedia(
@@ -667,6 +774,12 @@ async def get_tunein_stream(hass, media_content_id):
                 ws_resp = await web_session.get(response_text)
                 response_text = await ws_resp.text()
                 response_text = response_text.split("\n")[1].replace("File1=", "")
+                _LOGGER.warning(response_text)
+        if response_text.startswith("mms:"):
+            with async_timeout.timeout(5):
+                ws_resp = await web_session.get(response_text.replace("mms:", "http:"))
+                response_text = await ws_resp.text()
+                response_text = response_text.split("\n")[1].replace("Ref1=", "")
                 _LOGGER.warning(response_text)
     return response_text
 
