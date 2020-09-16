@@ -62,11 +62,11 @@ class PilightLight(PilightBaseDevice, LightEntity):
     def turn_on(self, **kwargs):
         """Turn the switch on by calling pilight.send service with on code."""
         # Update brightness only if provided as an argument, this will allow the switch to keep its previous brightness level.
+        dimlevel = None
+
         if ATTR_BRIGHTNESS in kwargs:
             self._brightness = kwargs[ATTR_BRIGHTNESS]
 
-        dimlevel = None
-        if self._brightness is not None:
             # Calculate pilight brightness (as a range of 0 to 15)
             # By creating a percentage
             percentage = self._brightness / 255
