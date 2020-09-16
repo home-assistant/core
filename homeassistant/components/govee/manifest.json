@@ -1,0 +1,12 @@
+{
+  "domain": "govee",
+  "name": "Govee LED strips",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/govee",
+  "requirements": ["govee-api-laggat==0.0.11"],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": ["@LaggAt"]
+}
