@@ -92,7 +92,7 @@ class LocalSource(MediaSource):
         if source_dir_id == "":
             base = BrowseMediaSource(
                 domain=DOMAIN,
-                identifier=None,
+                identifier="",
                 media_class=MEDIA_CLASS_DIRECTORY,
                 media_content_type=None,
                 title=self.name,
