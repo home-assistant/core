@@ -13,8 +13,9 @@ from homeassistant.components.unifi.const import (
     CONF_TRACK_DEVICES,
     DOMAIN as UNIFI_DOMAIN,
 )
-from homeassistant.setup import async_setup_component
+
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.setup import async_setup_component
 
 from .test_controller import setup_unifi_integration
 
