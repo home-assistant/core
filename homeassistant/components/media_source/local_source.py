@@ -145,7 +145,7 @@ class LocalSource(MediaSource):
 
         media = BrowseMediaSource(
             domain=DOMAIN,
-            identifier=f"local_source/{source_dir_id}/{path.relative_to(self.hass.config.media_dirs[source_dir_id])}",
+            identifier=f"{source_dir_id}/{path.relative_to(self.hass.config.media_dirs[source_dir_id])}",
             media_class=media_class,
             media_content_type=mime_type or "",
             title=title,
