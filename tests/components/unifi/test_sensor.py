@@ -14,6 +14,7 @@ from homeassistant.components.unifi.const import (
     DOMAIN as UNIFI_DOMAIN,
 )
 from homeassistant.setup import async_setup_component
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .test_controller import setup_unifi_integration
 
