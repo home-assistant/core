@@ -161,6 +161,7 @@ homeassistant/components/gogogate2/* @vangorra
 homeassistant/components/google_assistant/* @home-assistant/cloud
 homeassistant/components/google_cloud/* @lufton
 homeassistant/components/google_translate/* @awarecan
+homeassistant/components/govee/* @LaggAt
 homeassistant/components/gpsd/* @fabaff
 homeassistant/components/greeneye_monitor/* @jkeljo
 homeassistant/components/griddy/* @bdraco

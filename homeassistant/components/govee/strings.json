@@ -1,0 +1,21 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Already configured. Only a single configuration possible."
+    },
+    "error": {
+      "cannot_connect": "Cannot connect. Is the API-Key correct and the internet connection working?",
+      "unknown": "Unknown Error."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "API Key",
+          "delay": "Poll Interval"
+        },
+        "description": "Get your API Key from the Govee Home App. For Details see https://www.home-assistant.io/integrations/govee"
+      }
+    }
+  },
+  "title": "Govee LED strips"
+}
