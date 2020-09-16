@@ -3,15 +3,11 @@ import pytest
 
 from homeassistant.components import media_source
 from homeassistant.components.media_source import const
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.setup import async_setup_component
 
 
 async def test_async_browse_media(hass):
     """Test browse media."""
-    await async_process_ha_core_config(hass, {})
-    await hass.async_block_till_done()
-
     assert await async_setup_component(hass, const.DOMAIN, {})
     await hass.async_block_till_done()
 
@@ -52,9 +48,6 @@ async def test_async_browse_media(hass):
 
 async def test_media_view(hass, hass_client):
     """Test media view."""
-    await async_process_ha_core_config(hass, {})
-    await hass.async_block_till_done()
-
     assert await async_setup_component(hass, const.DOMAIN, {})
     await hass.async_block_till_done()
 
