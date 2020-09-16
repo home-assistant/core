@@ -35,15 +35,15 @@ def _convert_states(states):
     """Convert state definitions to State objects."""
     result = {}
 
-    for entity_id in states:
+    for entity_id, info in states.items():
         entity_id = cv.entity_id(entity_id)
 
-        if isinstance(states[entity_id], dict):
-            entity_attrs = states[entity_id].copy()
+        if isinstance(info, dict):
+            entity_attrs = info.copy()
             state = entity_attrs.pop(ATTR_STATE, None)
             attributes = entity_attrs
         else:
-            state = states[entity_id]
+            state = info
             attributes = {}
 
         # YAML translates 'on' to a boolean
