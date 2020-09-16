@@ -100,46 +100,28 @@ def _forecast_dict(
     else:
         translated_condition = _translate_condition(condition, True)
 
+    if hass.config.units.is_metric:
+        if precipitation:
+            precipitation = (
+                distance_convert(precipitation / 12, LENGTH_FEET, LENGTH_METERS) * 1000
+            )
+        if temp:
+            temp = temp_convert(temp, TEMP_FAHRENHEIT, TEMP_CELSIUS)
+        if temp_low:
+            temp_low = temp_convert(temp_low, TEMP_FAHRENHEIT, TEMP_CELSIUS)
+        if wind_speed:
+            wind_speed = distance_convert(wind_speed, LENGTH_MILES, LENGTH_KILOMETERS)
+
     data = {
         ATTR_FORECAST_TIME: time,
         ATTR_FORECAST_CONDITION: translated_condition,
+        ATTR_FORECAST_PRECIPITATION: precipitation,
         ATTR_FORECAST_PRECIPITATION_PROBABILITY: precipitation_probability,
+        ATTR_FORECAST_TEMP: temp,
+        ATTR_FORECAST_TEMP_LOW: temp_low,
         ATTR_FORECAST_WIND_BEARING: wind_direction,
+        ATTR_FORECAST_WIND_SPEED: wind_speed,
     }
-
-    if not hass.config.units.is_metric:
-        data.update(
-            {
-                ATTR_FORECAST_PRECIPITATION: precipitation,
-                ATTR_FORECAST_TEMP: temp,
-                ATTR_FORECAST_TEMP_LOW: temp_low,
-                ATTR_FORECAST_WIND_SPEED: wind_speed,
-            }
-        )
-    else:
-        data.update(
-            {
-                ATTR_FORECAST_PRECIPITATION: distance_convert(
-                    precipitation / 12, LENGTH_FEET, LENGTH_METERS
-                )
-                * 1000
-                if precipitation
-                else None,
-                ATTR_FORECAST_TEMP: temp_convert(temp, TEMP_FAHRENHEIT, TEMP_CELSIUS)
-                if temp
-                else None,
-                ATTR_FORECAST_TEMP_LOW: temp_convert(
-                    temp_low, TEMP_FAHRENHEIT, TEMP_CELSIUS
-                )
-                if temp_low
-                else None,
-                ATTR_FORECAST_WIND_SPEED: distance_convert(
-                    wind_speed, LENGTH_MILES, LENGTH_KILOMETERS
-                )
-                if wind_speed
-                else None,
-            }
-        )
 
     return {k: v for k, v in data.items() if v is not None}
 
