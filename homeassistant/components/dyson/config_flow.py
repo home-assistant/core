@@ -7,6 +7,7 @@ import voluptuous as vol
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import (
     CONF_DEVICE,
+    CONF_DEVICES,
     CONF_IP_ADDRESS,
     CONF_PASSWORD,
     CONF_USERNAME,
@@ -19,6 +20,8 @@ from . import DOMAIN  # pylint:disable=unused-import
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ACTION = "action"
+CONF_DEVICE_ID = "device_id"
+CONF_DEVICE_IP = "device_ip"
 
 
 async def validate_input(hass: core.HomeAssistant, data):
@@ -42,27 +45,30 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Return the options flow handler."""
         return OptionsFlowHandler(config_entry)
 
+    async def _async_step_common(self, user_input):
+        username = user_input[CONF_USERNAME]
+        language = user_input[CONF_LANGUAGE]
+        if any(
+            entry.data[CONF_USERNAME] == username
+            and entry.data[CONF_LANGUAGE] == language
+            for entry in self._async_current_entries()
+        ):
+            return self.async_abort(reason="already_configured")
+        await self.async_set_unique_id(f"{language}_{username}")
+        self._abort_if_unique_id_configured()
+
+        await validate_input(self.hass, user_input)
+        return self.async_create_entry(
+            title=f"{username} ({language})",
+            data=user_input,
+        )
+
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
             try:
-                username = user_input[CONF_USERNAME]
-                language = user_input[CONF_LANGUAGE]
-                if any(
-                    username == entry.data[CONF_USERNAME]
-                    and language == entry.data[CONF_LANGUAGE]
-                    for entry in self._async_current_entries()
-                ):
-                    return self.async_abort(reason="already_configured")
-                await self.async_set_unique_id(f"{language}_{username}")
-                self._abort_if_unique_id_configured()
-
-                await validate_input(self.hass, user_input)
-                return self.async_create_entry(
-                    title=f"{username} ({language})",
-                    data=user_input,
-                )
+                return await self._async_step_common(user_input)
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
             except Exception:  # pylint: disable=broad-except
@@ -87,6 +93,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
+
+    async def async_step_import(self, user_input=None):
+        """Handle the import step."""
+        try:
+            conf_devices = user_input.get(CONF_DEVICES, [])
+            data_devices = {}
+            for device in conf_devices:
+                data_devices[device[CONF_DEVICE_ID]] = device[CONF_DEVICE_IP]
+            user_input[CONF_DEVICES] = data_devices
+            return await self._async_step_common(user_input)
+        except InvalidAuth:
+            return self.async_abort(reason="invalid_auth")
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
@@ -144,7 +162,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         """Handle the step to remove an existed device."""
         if user_input is not None:
             options = {**self._config_entry.options}
-            options[CONF_DEVICE] = ""
+            options[user_input[CONF_DEVICE]] = ""
             return self.async_create_entry(title="", data=options)
 
         return self.async_show_form(

@@ -6,7 +6,7 @@ import logging
 from libpurecool.dyson import DysonAccount
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryNotReady
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry, ConfigEntryNotReady
 from homeassistant.const import CONF_DEVICES, CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -45,7 +45,14 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Dyson component."""
-    # TODO: import
+    if DOMAIN in config:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data=config[DOMAIN],
+            )
+        )
     return True
 
 
@@ -55,12 +62,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     _LOGGER.debug("Start set up")
 
     # Move device list from data to options for imported entries
-    if entry.options is None:
+    if CONF_DEVICES in entry.data:
         data = {**entry.data}
-        if entry.data[CONF_DEVICES] is not None:
-            options = data.pop(CONF_DEVICES)
-        else:
-            options = {}
+        options = data.pop(CONF_DEVICES)
         hass.config_entries.async_update_entry(entry, data=data, options=options)
 
     if DOMAIN not in hass.data:
