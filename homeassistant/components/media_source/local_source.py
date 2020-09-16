@@ -60,13 +60,13 @@ class LocalSource(MediaSource):
     async def async_resolve_media(self, item: MediaSourceItem) -> str:
         """Resolve media to a url."""
         source_dir_id, location = self.async_parse_identifier(item)
-        if source_dir_id != "" or source_dir_id not in self.hass.config.media_dirs:
+        if source_dir_id == "" or source_dir_id not in self.hass.config.media_dirs:
             raise Unresolvable("Unknown source directory.")
 
         mime_type, _ = mimetypes.guess_type(
             self.async_full_path(source_dir_id, location)
         )
-        return PlayMedia(item.identifier, mime_type)
+        return PlayMedia(f"/local_source{item.identifier}", mime_type)
 
     async def async_browse_media(
         self, item: MediaSourceItem, media_types: Tuple[str] = MEDIA_MIME_TYPES
