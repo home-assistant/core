@@ -10,16 +10,9 @@ from homeassistant.components.media_player.const import (
     MEDIA_CLASS_ALBUM,
     MEDIA_CLASS_APP,
     MEDIA_CLASS_ARTIST,
-    MEDIA_CLASS_CHANNEL,
     MEDIA_CLASS_DIRECTORY,
-    MEDIA_CLASS_EPISODE,
-    MEDIA_CLASS_MOVIE,
     MEDIA_CLASS_MUSIC,
-    MEDIA_CLASS_PLAYLIST,
     MEDIA_CLASS_PODCAST,
-    MEDIA_CLASS_SEASON,
-    MEDIA_CLASS_TRACK,
-    MEDIA_CLASS_TV_SHOW,
     MEDIA_CLASS_VIDEO,
     MEDIA_TYPE_APP,
     MEDIA_TYPE_CHANNELS,
@@ -42,7 +35,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def browse_media(hass, media_content_type=None, media_content_id=None):
     """Implement the websocket media browsing helper."""
-    if media_content_type in [None, "library"]:
+    if media_content_id in [None, "library"]:
         return ais_media_library()
 
     if media_content_id.startswith(media_source_const.URI_SCHEME):
@@ -160,20 +153,23 @@ def ais_media_library() -> BrowseMedia:
     return ais_library_info
 
 
-async def ais_audio_books_library(hass, media_content_id) -> BrowseMedia:
-    ais_cloud_ws = ais_cloud.AisCloudWS(hass)
-    data = ais_audiobooks_service.AudioBooksData(hass, None)
+async def get_books_lib(hass):
     import json
     import os
 
+    path = hass.config.path() + ais_audiobooks_service.PERSISTENCE_AUDIOBOOKS
+    if not os.path.isfile(path):
+        return json({})
+    with open(path) as file:
+        return json.loads(file.read())
+
+
+async def ais_audio_books_library(hass, media_content_id) -> BrowseMedia:
+    ais_cloud_ws = ais_cloud.AisCloudWS(hass)
+    # get all books
+    all_books = await get_books_lib(hass)
     if media_content_id == "ais_audio_books":
         # get authors
-        path = hass.config.path() + ais_audiobooks_service.PERSISTENCE_AUDIOBOOKS
-        if not os.path.isfile(path):
-            return
-        with open(path) as file:
-            all_books = json.loads(file.read())
-
         authors = []
         for item in all_books:
             if item["author"] not in authors:
@@ -184,7 +180,7 @@ async def ais_audio_books_library(hass, media_content_id) -> BrowseMedia:
             ais_authors.append(
                 BrowseMedia(
                     title=author,
-                    media_class="book",
+                    media_class=MEDIA_CLASS_DIRECTORY,
                     media_content_id="ais_audio_books/" + author,
                     media_content_type=MEDIA_TYPE_APP,
                     can_play=False,
@@ -204,75 +200,87 @@ async def ais_audio_books_library(hass, media_content_id) -> BrowseMedia:
         )
         return root
     elif media_content_id.count("/") == 1:
-        # get podcasts for types
-        ws_resp = ais_cloud_ws.audio_name(
-            ais_global.G_AN_PODCAST, media_content_id.replace("ais_podcast/", "")
-        )
-        json_ws_resp = ws_resp.json()
-        ais_radio_stations = []
-        for item in json_ws_resp["data"]:
-            ais_radio_stations.append(
-                BrowseMedia(
-                    title=item["NAME"],
-                    media_class=MEDIA_CLASS_PODCAST,
-                    media_content_id=media_content_id + "/" + item["LOOKUP_URL"],
-                    media_content_type=MEDIA_TYPE_CHANNELS,
-                    can_play=False,
-                    can_expand=True,
-                    thumbnail=item["IMAGE_URL"],
+        # get books for author
+        ais_books = []
+        for item in all_books:
+            if item["author"] == media_content_id.replace("ais_audio_books/", ""):
+                try:
+                    thumbnail = "https://wolnelektury.pl/media/" + item["cover_thumb"]
+                except Exception:
+                    thumbnail = item["simple_thumb"]
+
+                ais_books.append(
+                    BrowseMedia(
+                        title=item["title"],
+                        media_class=MEDIA_CLASS_DIRECTORY,
+                        media_content_id=media_content_id
+                        + "/"
+                        + item["title"]
+                        + "/"
+                        + item["href"],
+                        media_content_type=MEDIA_TYPE_APP,
+                        can_play=False,
+                        can_expand=True,
+                        thumbnail=thumbnail,
+                    )
                 )
-            )
         root = BrowseMedia(
-            title="Podcast",
-            media_class=MEDIA_CLASS_PODCAST,
+            title=media_content_id.replace("ais_audio_books/", ""),
+            media_class=MEDIA_CLASS_DIRECTORY,
             media_content_id=media_content_id,
             media_content_type=MEDIA_TYPE_APP,
             can_expand=True,
             can_play=False,
-            children=ais_radio_stations,
+            children=ais_books,
+            thumbnail="http://www.ai-speaker.com/images/media-browser/book-music.svg",
         )
         return root
     else:
-        # get podcast tracks
+        # get book chapters
+        lookup_url = media_content_id.split("/", 3)[3]
+        _LOGGER.error(lookup_url)
+        web_session = aiohttp_client.async_get_clientsession(hass)
+        #  5 sec should be enough
         try:
-            lookup_url = media_content_id.split("/", 2)[2]
-            web_session = aiohttp_client.async_get_clientsession(hass)
-            import feedparser
-
-            #  5 sec should be enough
             with async_timeout.timeout(50):
-                ws_resp = await web_session.get(lookup_url)
-                response_text = await ws_resp.text()
-                d = feedparser.parse(response_text)
-                ais_podcast_episodes = []
-                for e in d.entries:
-                    try:
-                        thumbnail = d.feed.image.href
-                    except Exception:
-                        thumbnail = ""
-                    ais_podcast_episodes.append(
-                        BrowseMedia(
-                            title=e.title,
-                            media_class=MEDIA_CLASS_EPISODE,
-                            media_content_id=e.enclosures[0]["url"],
-                            media_content_type=MEDIA_TYPE_MUSIC,
-                            can_play=True,
-                            can_expand=False,
-                            thumbnail=thumbnail,
+                ws_resp = await web_session.get(lookup_url + "?format=json")
+                data = await ws_resp.json()
+                ais_book_chapters = []
+                for item in data["media"]:
+                    if item["type"] == "ogg":
+                        try:
+                            thumbnail = data["cover"]
+                        except Exception:
+                            thumbnail = data["simple_cover"]
+                        ais_book_chapters.append(
+                            BrowseMedia(
+                                title=item["name"],
+                                media_class=MEDIA_CLASS_DIRECTORY,
+                                media_content_id=item["url"],
+                                media_content_type=MEDIA_TYPE_APP,
+                                can_play=True,
+                                can_expand=False,
+                                thumbnail=thumbnail,
+                            )
                         )
-                    )
                 root = BrowseMedia(
-                    title="Podcast",
-                    media_class=MEDIA_CLASS_PODCAST,
+                    title=media_content_id.split("/", 3)[2],
+                    media_class=MEDIA_CLASS_DIRECTORY,
                     media_content_id=media_content_id,
-                    media_content_type=MEDIA_TYPE_CHANNELS,
+                    media_content_type=MEDIA_TYPE_APP,
                     can_expand=True,
                     can_play=False,
-                    children=ais_podcast_episodes,
+                    children=ais_book_chapters,
+                    thumbnail="http://www.ai-speaker.com/images/media-browser/book-music.svg",
                 )
                 return root
+
         except Exception as e:
-            _LOGGER.warning("Timeout when reading RSS %s", lookup_url)
+            _LOGGER.error("Can't load chapters: " + str(e))
+            hass.services.call(
+                "ais_ai_service", "say_it", {"text": "Nie można pobrać rozdziałów"}
+            )
+            raise MediaSourceError("Invalid path.")
 
 
 async def ais_podcast_library(hass, media_content_id) -> BrowseMedia:
@@ -349,7 +357,11 @@ async def ais_podcast_library(hass, media_content_id) -> BrowseMedia:
                 BrowseMedia(
                     title=item["NAME"],
                     media_class=MEDIA_CLASS_PODCAST,
-                    media_content_id=media_content_id + "/" + item["LOOKUP_URL"],
+                    media_content_id=media_content_id
+                    + "/"
+                    + item["NAME"]
+                    + "/"
+                    + item["LOOKUP_URL"],
                     media_content_type=MEDIA_TYPE_CHANNELS,
                     can_play=False,
                     can_expand=True,
@@ -357,8 +369,8 @@ async def ais_podcast_library(hass, media_content_id) -> BrowseMedia:
                 )
             )
         root = BrowseMedia(
-            title="Podcast",
-            media_class=MEDIA_CLASS_PLAYLIST,
+            title=media_content_id.replace("ais_podcast/", ""),
+            media_class=MEDIA_CLASS_DIRECTORY,
             media_content_id=media_content_id,
             media_content_type=MEDIA_TYPE_APP,
             can_expand=True,
@@ -370,7 +382,7 @@ async def ais_podcast_library(hass, media_content_id) -> BrowseMedia:
     else:
         # get podcast tracks
         try:
-            lookup_url = media_content_id.split("/", 2)[2]
+            lookup_url = media_content_id.split("/", 3)[3]
             web_session = aiohttp_client.async_get_clientsession(hass)
             import feedparser
 
@@ -397,7 +409,7 @@ async def ais_podcast_library(hass, media_content_id) -> BrowseMedia:
                         )
                     )
                 root = BrowseMedia(
-                    title="Podcast",
+                    title=media_content_id.split("/", 3)[2],
                     media_class=MEDIA_CLASS_PODCAST,
                     media_content_id=media_content_id,
                     media_content_type=MEDIA_TYPE_CHANNELS,
@@ -465,7 +477,7 @@ def ais_radio_library(hass, media_content_id) -> BrowseMedia:
             )
         root = BrowseMedia(
             title="Radio",
-            media_class=MEDIA_CLASS_PLAYLIST,
+            media_class=MEDIA_CLASS_DIRECTORY,
             media_content_id="ais_radio",
             media_content_type=MEDIA_TYPE_APP,
             can_expand=True,
@@ -485,9 +497,9 @@ def ais_radio_library(hass, media_content_id) -> BrowseMedia:
             ais_radio_stations.append(
                 BrowseMedia(
                     title=item["NAME"],
-                    media_class=MEDIA_CLASS_MUSIC,
+                    media_class=MEDIA_CLASS_DIRECTORY,
                     media_content_id=item["STREAM_URL"],
-                    media_content_type=MEDIA_TYPE_MUSIC,
+                    media_content_type=MEDIA_TYPE_APP,
                     can_play=True,
                     can_expand=False,
                     thumbnail=item["IMAGE_URL"],
@@ -495,7 +507,7 @@ def ais_radio_library(hass, media_content_id) -> BrowseMedia:
             )
         root = BrowseMedia(
             title=media_content_id.replace("ais_radio/", ""),
-            media_class=MEDIA_CLASS_PLAYLIST,
+            media_class=MEDIA_CLASS_DIRECTORY,
             media_content_id=media_content_id,
             media_content_type=MEDIA_TYPE_APP,
             can_expand=True,
@@ -542,7 +554,7 @@ def ais_bookmarks_library(hass) -> BrowseMedia:
 
     root = BrowseMedia(
         title="Zakładki",
-        media_class=MEDIA_CLASS_PLAYLIST,
+        media_class=MEDIA_CLASS_DIRECTORY,
         media_content_id="ais_bookmarks",
         media_content_type=MEDIA_TYPE_APP,
         can_expand=True,
@@ -585,7 +597,7 @@ def ais_favorites_library(hass) -> BrowseMedia:
 
     root = BrowseMedia(
         title="Ulubione",
-        media_class=MEDIA_CLASS_PLAYLIST,
+        media_class=MEDIA_CLASS_DIRECTORY,
         media_content_id="ais_favorites",
         media_content_type=MEDIA_TYPE_APP,
         can_expand=True,
