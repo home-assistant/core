@@ -131,9 +131,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
                 return
 
             # Call native tag scan
-            if service_name == 'tag_scanned':
-                tag_id = service_data['tag_id']
-                device_id = service_data['device_id']
+            if service_name == "tag_scanned":
+                tag_id = service_data["tag_id"]
+                device_id = service_data["device_id"]
                 hass.async_create_task(
                     hass.components.tag.async_scan_tag(tag_id, device_id)
                 )
