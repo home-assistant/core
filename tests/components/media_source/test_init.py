@@ -5,6 +5,8 @@ from homeassistant.components import media_source
 from homeassistant.components.media_player.const import MEDIA_CLASS_DIRECTORY
 from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.components.media_source import const
+from homeassistant.components.media_source.error import Unresolvable
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.setup import async_setup_component
 
 from tests.async_mock import patch
@@ -37,6 +39,9 @@ async def test_generate_media_source_id():
 
 async def test_async_browse_media(hass):
     """Test browse media."""
+    await async_process_ha_core_config(hass, {})
+    await hass.async_block_till_done()
+
     assert await async_setup_component(hass, const.DOMAIN, {})
     await hass.async_block_till_done()
 
@@ -59,12 +64,32 @@ async def test_async_browse_media(hass):
 
 async def test_async_resolve_media(hass):
     """Test browse media."""
+    await async_process_ha_core_config(hass, {})
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(hass, const.DOMAIN, {})
+    await hass.async_block_till_done()
+
+    media = await media_source.async_resolve_media(
+        hass,
+        media_source.generate_media_source_id(
+            const.DOMAIN, "local_source/media/test.mp3"
+        ),
+    )
+    assert isinstance(media, media_source.models.PlayMedia)
+
+
+async def test_async_unresolve_media(hass):
+    """Test browse media."""
+    await async_process_ha_core_config(hass, {})
+    await hass.async_block_till_done()
+
     assert await async_setup_component(hass, const.DOMAIN, {})
     await hass.async_block_till_done()
 
     # Test no media content
-    media = await media_source.async_resolve_media(hass, "")
-    assert isinstance(media, media_source.models.PlayMedia)
+    with pytest.raises(Unresolvable):
+        await media_source.async_resolve_media(hass, "")
 
 
 async def test_websocket_browse_media(hass, hass_ws_client):

@@ -48,9 +48,11 @@ class LocalSource(MediaSource):
             location = ""
 
         else:
-            source_dir_id, location = item.identifier.replace(
-                "/local_source/", "", 1
-            ).split("/", 1)
+            source_dir_id, location = (
+                item.identifier.replace("/local_source/", "", 1)
+                .lstrip("/")
+                .split("/", 1)
+            )
 
             if source_dir_id not in self.hass.config.media_dirs:
                 raise Unresolvable("Unknown source directory.")
@@ -63,6 +65,9 @@ class LocalSource(MediaSource):
     async def async_resolve_media(self, item: MediaSourceItem) -> str:
         """Resolve media to a url."""
         source_dir_id, location = self.async_parse_identifier(item)
+        if source_dir_id == "":
+            raise Unresolvable("Unknown source directory.")
+
         mime_type, _ = mimetypes.guess_type(
             self.async_full_path(source_dir_id, location)
         )
@@ -189,6 +194,9 @@ class LocalMediaView(HomeAssistantView):
     ) -> web.FileResponse:
         """Start a GET request."""
         if location != sanitize_path(location):
+            return web.HTTPNotFound()
+
+        if source_dir_id not in self.hass.config.media_dirs:
             return web.HTTPNotFound()
 
         media_path = Path(self.hass.config.media_dirs[source_dir_id], location)
