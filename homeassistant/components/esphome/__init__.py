@@ -66,6 +66,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
     password = entry.data[CONF_PASSWORD]
+    device_id = None
 
     zeroconf_instance = await zeroconf.async_get_instance(hass)
 
@@ -134,9 +135,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
             if service_name == "tag_scanned":
                 tag_id = service_data["tag_id"]
                 hass.async_create_task(
-                    hass.components.tag.async_scan_tag(
-                        tag_id, entry_data.device_info.name
-                    )
+                    hass.components.tag.async_scan_tag(tag_id, device_id)
                 )
                 return
 
@@ -177,10 +176,13 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
     async def on_login() -> None:
         """Subscribe to states and list entities on successful API login."""
+        nonlocal device_id
         try:
             entry_data.device_info = await cli.device_info()
             entry_data.available = True
-            await _async_setup_device_registry(hass, entry, entry_data.device_info)
+            device_id = await _async_setup_device_registry(
+                hass, entry, entry_data.device_info
+            )
             entry_data.async_update_device_state(hass)
 
             entity_infos, services = await cli.list_entities_services()
@@ -276,7 +278,7 @@ async def _async_setup_device_registry(
     if device_info.compilation_time:
         sw_version += f" ({device_info.compilation_time})"
     device_registry = await dr.async_get_registry(hass)
-    device_registry.async_get_or_create(
+    entry = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)},
         name=device_info.name,
@@ -284,6 +286,7 @@ async def _async_setup_device_registry(
         model=device_info.model,
         sw_version=sw_version,
     )
+    return entry.id
 
 
 async def _register_service(
