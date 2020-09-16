@@ -20,9 +20,7 @@ def temperature_unit(block_info: dict) -> str:
     return TEMP_CELSIUS
 
 
-def shelly_naming(
-    self, wrapper: ShellyDeviceWrapper, block, entity_type: str, channels: int
-):
+def shelly_naming(self, block, entity_type: str, channels: int):
     """Naming for switch and sensors."""
     if channels > 1:
         entity_name = self.wrapper.device.settings["relays"][int(self.block.channel)][
@@ -96,7 +94,7 @@ class ShellyBlockEntity(entity.Entity):
         """Initialize Shelly entity."""
         self.wrapper = wrapper
         self.block = block
-        self._name = shelly_naming(self, wrapper, block, "switch", 1)
+        self._name = shelly_naming(self, block, "switch", 1)
 
     @property
     def name(self):
@@ -163,7 +161,7 @@ class ShellyBlockAttributeEntity(ShellyBlockEntity, entity.Entity):
 
         self._unit = unit
         self._unique_id = f"{super().unique_id}-{self.attribute}"
-        self._name = shelly_naming(self, wrapper, block, "sensor", same_type_count)
+        self._name = shelly_naming(self, block, "sensor", same_type_count)
 
     @property
     def unique_id(self):
