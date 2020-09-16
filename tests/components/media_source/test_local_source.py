@@ -3,11 +3,18 @@ import pytest
 
 from homeassistant.components import media_source
 from homeassistant.components.media_source import const
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.setup import async_setup_component
 
 
 async def test_async_browse_media(hass):
     """Test browse media."""
+    local_media = hass.config.path("media")
+    await async_process_ha_core_config(
+        hass, {"media_dirs": {"media": local_media, "recordings": local_media}}
+    )
+    await hass.async_block_till_done()
+
     assert await async_setup_component(hass, const.DOMAIN, {})
     await hass.async_block_till_done()
 
@@ -41,26 +48,52 @@ async def test_async_browse_media(hass):
 
     # Test successful listing
     media = await media_source.async_browse_media(
+        hass, f"{const.URI_SCHEME}{const.DOMAIN}"
+    )
+    assert media
+
+    media = await media_source.async_browse_media(
         hass, f"{const.URI_SCHEME}{const.DOMAIN}/media/."
+    )
+    assert media
+
+    media = await media_source.async_browse_media(
+        hass, f"{const.URI_SCHEME}{const.DOMAIN}/recordings/."
     )
     assert media
 
 
 async def test_media_view(hass, hass_client):
     """Test media view."""
+    local_media = hass.config.path("media")
+    await async_process_ha_core_config(
+        hass, {"media_dirs": {"media": local_media, "recordings": local_media}}
+    )
+    await hass.async_block_till_done()
+
     assert await async_setup_component(hass, const.DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_client()
 
     # Protects against non-existent files
-    resp = await client.get("/media/invalid.txt")
+    resp = await client.get("/local_source/media/invalid.txt")
+    assert resp.status == 404
+
+    resp = await client.get("/local_source/recordings/invalid.txt")
     assert resp.status == 404
 
     # Protects against non-media files
-    resp = await client.get("/media/not_media.txt")
+    resp = await client.get("/local_source/media/not_media.txt")
+    assert resp.status == 404
+
+    # Protects against unknown local media sources
+    resp = await client.get("/local_source/unknown_source/not_media.txt")
     assert resp.status == 404
 
     # Fetch available media
-    resp = await client.get("/media/test.mp3")
+    resp = await client.get("/local_source/media/test.mp3")
+    assert resp.status == 200
+
+    resp = await client.get("/local_source/recordings/test.mp3")
     assert resp.status == 200

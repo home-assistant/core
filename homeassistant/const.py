@@ -2,7 +2,7 @@
 
 MAJOR_VERSION = 0
 MINOR_VERSION = 115
-PATCH_VERSION = "0b10"
+PATCH_VERSION = "0b11"
 __short_version__ = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__ = f"{__short_version__}.{PATCH_VERSION}"
 REQUIRED_PYTHON_VER = (3, 7, 1)
@@ -117,6 +117,7 @@ CONF_LIGHTS = "lights"
 CONF_LONGITUDE = "longitude"
 CONF_MAC = "mac"
 CONF_MAXIMUM = "maximum"
+CONF_MEDIA_DIRS = "media_dirs"
 CONF_METHOD = "method"
 CONF_MINIMUM = "minimum"
 CONF_MODE = "mode"
