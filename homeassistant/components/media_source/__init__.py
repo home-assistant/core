@@ -121,6 +121,19 @@ async def websocket_resolve_media(hass, connection, msg):
             msg["id"], {"url": msg["media_content_id"], "mime_type": "audio/mpeg"}
         )
         return
+    elif msg["media_content_id"].startswith("ais_tunein"):
+        import async_timeout
+
+        from homeassistant.helpers import aiohttp_client
+
+        web_session = aiohttp_client.async_get_clientsession(hass)
+        url_to_call = msg["media_content_id"].split("/", 3)[3]
+        with async_timeout.timeout(5):
+            ws_resp = await web_session.get(url_to_call)
+            response_text = await ws_resp.text()
+            connection.send_result(
+                msg["id"], {"url": response_text, "mime_type": "audio/mpeg"}
+            )
     try:
         media = await async_resolve_media(hass, msg["media_content_id"])
         url = media.url

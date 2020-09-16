@@ -23,8 +23,6 @@ from homeassistant.components.media_source import const as media_source_const
 from homeassistant.components.media_source.error import MediaSourceError
 from homeassistant.helpers import aiohttp_client
 
-from .const import DOMAIN
-
 
 class UnknownMediaType(BrowseError):
     """Unknown media type."""
@@ -53,6 +51,9 @@ async def browse_media(hass, media_content_type=None, media_content_id=None):
 
     if media_content_id.startswith("ais_radio"):
         return ais_radio_library(hass, media_content_id)
+
+    if media_content_id.startswith("ais_tunein"):
+        return await ais_tunein_library(hass, media_content_id)
 
     if media_content_id.startswith("ais_podcast"):
         return await ais_podcast_library(hass, media_content_id)
@@ -114,6 +115,16 @@ def ais_media_library() -> BrowseMedia:
             title="Radio",
             media_class="radio",
             media_content_id="ais_radio",
+            media_content_type=MEDIA_TYPE_APP,
+            can_expand=True,
+            can_play=False,
+        )
+    )
+    ais_library_info.children.append(
+        BrowseMedia(
+            title="TuneIn",
+            media_class="radiopublic",
+            media_content_id="ais_tunein",
             media_content_type=MEDIA_TYPE_APP,
             can_expand=True,
             can_play=False,
@@ -241,7 +252,7 @@ async def ais_audio_books_library(hass, media_content_id) -> BrowseMedia:
         web_session = aiohttp_client.async_get_clientsession(hass)
         #  5 sec should be enough
         try:
-            with async_timeout.timeout(50):
+            with async_timeout.timeout(5):
                 ws_resp = await web_session.get(lookup_url + "?format=json")
                 data = await ws_resp.json()
                 ais_book_chapters = []
@@ -386,7 +397,7 @@ async def ais_podcast_library(hass, media_content_id) -> BrowseMedia:
             import feedparser
 
             #  5 sec should be enough
-            with async_timeout.timeout(50):
+            with async_timeout.timeout(5):
                 ws_resp = await web_session.get(lookup_url)
                 response_text = await ws_resp.text()
                 d = feedparser.parse(response_text)
@@ -641,3 +652,134 @@ def ais_music_library() -> BrowseMedia:
         )
     )
     return ais_music_info
+
+
+async def ais_tunein_library(hass, media_content_id) -> BrowseMedia:
+    import xml.etree.ElementTree as ET
+
+    web_session = aiohttp_client.async_get_clientsession(hass)
+    if media_content_id == "ais_tunein":
+        try:
+            #  5 sec should be enough
+            with async_timeout.timeout(5):
+                ws_resp = await web_session.get("http://opml.radiotime.com/")
+                response_text = await ws_resp.text()
+                root = ET.fromstring(response_text)  # nosec
+                tunein_types = []
+                for item in root.findall("body/outline"):
+                    tunein_types.append(
+                        BrowseMedia(
+                            title=item.get("text"),
+                            media_class=MEDIA_CLASS_DIRECTORY,
+                            media_content_id=media_content_id
+                            + "/2/"
+                            + item.get("text")
+                            + "/"
+                            + item.get("URL"),
+                            media_content_type=MEDIA_TYPE_APP,
+                            can_play=False,
+                            can_expand=True,
+                            thumbnail="",
+                        )
+                    )
+
+                root = BrowseMedia(
+                    title="TuneIn",
+                    media_class=MEDIA_CLASS_DIRECTORY,
+                    media_content_id=media_content_id,
+                    media_content_type=MEDIA_TYPE_APP,
+                    can_expand=True,
+                    can_play=False,
+                    children=tunein_types,
+                    thumbnail="http://www.ai-speaker.com/images/media-browser/tunein.svg",
+                )
+                return root
+
+        except Exception as e:
+            _LOGGER.error("Can't connect tune in api: " + str(e))
+            raise MediaSourceError("Invalid path.")
+    elif media_content_id.startswith("ais_tunein/2/"):
+        try:
+            #  5 sec should be enough
+            with async_timeout.timeout(5):
+                url_to_call = media_content_id.split("/", 3)[3]
+                ws_resp = await web_session.get(url_to_call)
+                response_text = await ws_resp.text()
+                root = ET.fromstring(response_text)  # nosec
+                tunein_items = []
+                for item in root.findall("body/outline"):
+                    if item.get("type") == "audio":
+                        tunein_items.append(
+                            BrowseMedia(
+                                title=item.get("text"),
+                                media_class=MEDIA_CLASS_DIRECTORY,
+                                media_content_id="ais_tunein/2/"
+                                + item.get("text")
+                                + "/"
+                                + item.get("URL"),
+                                media_content_type=MEDIA_TYPE_APP,
+                                can_play=True,
+                                can_expand=False,
+                                thumbnail=item.get("image"),
+                            )
+                        )
+                    elif item.get("type") == "link":
+                        tunein_items.append(
+                            BrowseMedia(
+                                title=item.get("text"),
+                                media_class=MEDIA_CLASS_DIRECTORY,
+                                media_content_id="ais_tunein/2/"
+                                + item.get("text")
+                                + "/"
+                                + item.get("URL"),
+                                media_content_type=MEDIA_TYPE_APP,
+                                can_play=False,
+                                can_expand=True,
+                            )
+                        )
+                for item in root.findall("body/outline/outline"):
+                    if item.get("type") == "audio":
+                        tunein_items.append(
+                            BrowseMedia(
+                                title=item.get("text"),
+                                media_class=MEDIA_CLASS_DIRECTORY,
+                                media_content_id="ais_tunein/2/"
+                                + item.get("text")
+                                + "/"
+                                + item.get("URL"),
+                                media_content_type=MEDIA_TYPE_APP,
+                                can_play=True,
+                                can_expand=False,
+                                thumbnail=item.get("image"),
+                            )
+                        )
+                    elif item.get("type") == "link":
+                        tunein_items.append(
+                            BrowseMedia(
+                                title=item.get("text"),
+                                media_class=MEDIA_CLASS_DIRECTORY,
+                                media_content_id="ais_tunein/2/"
+                                + item.get("text")
+                                + "/"
+                                + item.get("URL"),
+                                media_content_type=MEDIA_TYPE_APP,
+                                can_play=False,
+                                can_expand=True,
+                            )
+                        )
+
+                root = BrowseMedia(
+                    title=media_content_id.split("/", 3)[2],
+                    media_class=MEDIA_CLASS_DIRECTORY,
+                    media_content_id=media_content_id,
+                    media_content_type=MEDIA_TYPE_APP,
+                    can_expand=True,
+                    can_play=False,
+                    children=tunein_items,
+                    thumbnail="http://www.ai-speaker.com/images/media-browser/tunein.svg",
+                )
+                return root
+
+        except Exception as e:
+            _LOGGER.error("Can't connect tune in api: " + str(e))
+            raise MediaSourceError("Invalid path.")
