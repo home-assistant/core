@@ -1,5 +1,4 @@
 """Local Media Source Implementation."""
-import asyncio
 import mimetypes
 from pathlib import Path
 from typing import Tuple
@@ -98,14 +97,12 @@ class LocalSource(MediaSource):
                 children_media_class=MEDIA_CLASS_DIRECTORY,
             )
 
-            base.children = await asyncio.gather(
-                *[
-                    self.hass.async_add_executor_job(
-                        self._browse_media, source_dir_id, location
-                    )
-                    for source_dir_id in self.hass.config.media_dirs
-                ]
-            )
+            base.children = [
+                await self.hass.async_add_executor_job(
+                    self._browse_media, source_dir_id, location
+                )
+                for source_dir_id in self.hass.config.media_dirs
+            ]
             return base
 
         return await self.hass.async_add_executor_job(
