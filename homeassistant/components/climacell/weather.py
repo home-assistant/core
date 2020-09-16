@@ -58,7 +58,7 @@ from .const import (
     DAILY,
     DOMAIN,
     FORECASTS,
-    HOURLY,
+    NOWCAST,
 )
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
@@ -212,18 +212,17 @@ class ClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
         if self.coordinator.data[FORECASTS]:
             forecasts = []
 
-            # For all parameters where if the value is available, the key is the same,
-            # try to get the value regardless of forecast type. For each forecast type,
-            # override the forecast type specific parameters.
+            # Set default values (in cases where keys don't exist), None will be
+            # returned. Override properties per forecast type as needed
             for forecast in self.coordinator.data[FORECASTS]:
                 timestamp = self._get_cc_value(forecast, CC_ATTR_TIMESTAMP)
-                use_datetime = None
+                use_datetime = True
                 condition = self._get_cc_value(forecast, CC_ATTR_CONDITION)
-                precipitation = None
+                precipitation = self._get_cc_value(forecast, CC_ATTR_PRECIPITATION)
                 precipitation_probability = self._get_cc_value(
                     forecast, CC_ATTR_PRECIPITATION_PROBABILITY
                 )
-                temp = None
+                temp = self._get_cc_value(forecast, CC_ATTR_TEMPERATURE)
                 temp_low = None
                 wind_direction = self._get_cc_value(forecast, CC_ATTR_WIND_DIRECTION)
                 wind_speed = self._get_cc_value(forecast, CC_ATTR_WIND_SPEED)
@@ -238,22 +237,14 @@ class ClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
                             temp = self._get_cc_value(item, CC_ATTR_TEMPERATURE_HIGH)
                         if "min" in item:
                             temp_low = self._get_cc_value(item, CC_ATTR_TEMPERATURE_LOW)
-                elif self._config_entry.data[CONF_FORECAST_TYPE] == HOURLY:
-                    use_datetime = True
-                    precipitation = self._get_cc_value(forecast, CC_ATTR_PRECIPITATION)
-                    temp = self._get_cc_value(forecast, CC_ATTR_TEMPERATURE)
-                # NowCast
-                else:
-                    use_datetime = True
+                elif self._config_entry.data[CONF_FORECAST_TYPE] == NOWCAST:
                     # Precipitation is forecasted in CONF_TIMESTEP increments but in a
                     # per hour rate, so value needs to be converted to an amount.
-                    precipitation = self._get_cc_value(forecast, CC_ATTR_PRECIPITATION)
                     precipitation = (
                         precipitation / 60 * self._config_entry.options[CONF_TIMESTEP]
                         if precipitation
                         else None
                     )
-                    temp = self._get_cc_value(forecast, CC_ATTR_TEMPERATURE)
 
                 forecasts.append(
                     _forecast_dict(
