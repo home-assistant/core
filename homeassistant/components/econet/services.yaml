@@ -1,5 +1,5 @@
 add_vacation:
-  description: Add a vacation to your water heater.
+  description: (Feature no longer supported) Add a vacation to your water heater.
   fields:
     entity_id:
       description: Name(s) of entities to change.
@@ -12,7 +12,7 @@ add_vacation:
       example: 1513445520
 
 delete_vacation:
-  description: Delete your existing vacation from your water heater.
+  description: (Feature no longer supported) Delete your existing vacation from your water heater.
   fields:
     entity_id:
       description: Name(s) of entities to change.
