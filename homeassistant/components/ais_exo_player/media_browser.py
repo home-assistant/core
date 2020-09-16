@@ -21,7 +21,6 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.components.media_source import const as media_source_const
-from homeassistant.components.media_source.error import MediaSourceError
 from homeassistant.helpers import aiohttp_client
 
 
@@ -327,7 +326,7 @@ async def ais_audio_books_library(hass, media_content_id) -> BrowseMedia:
             hass.services.call(
                 "ais_ai_service", "say_it", {"text": "Nie można pobrać rozdziałów"}
             )
-            raise MediaSourceError("Invalid path.")
+            raise BrowseError("Can't load chapters: " + str(e))
 
 
 async def ais_podcast_library(hass, media_content_id) -> BrowseMedia:
@@ -468,7 +467,7 @@ async def ais_podcast_library(hass, media_content_id) -> BrowseMedia:
                 return root
         except Exception as e:
             _LOGGER.warning("Timeout when reading RSS %s", lookup_url)
-            raise MediaSourceError("Invalid path.")
+            raise BrowseError("Timeout when reading RSS %s", lookup_url)
 
 
 def ais_radio_library(hass, media_content_id) -> BrowseMedia:
@@ -656,7 +655,7 @@ def ais_favorites_library(hass) -> BrowseMedia:
     return root
 
 
-async def ais_spotify_library() -> BrowseMedia:
+async def ais_spotify_library(hass) -> BrowseMedia:
     """Create response payload to describe contents of a specific library."""
     ais_music_info = BrowseMedia(
         title="AIS Music",
@@ -691,39 +690,9 @@ async def ais_spotify_library() -> BrowseMedia:
     return ais_music_info
 
 
-async def ais_youtube_library() -> BrowseMedia:
+async def ais_youtube_library(hass) -> BrowseMedia:
     """Create response payload to describe contents of a specific library."""
-    ais_music_info = BrowseMedia(
-        title="AIS Music",
-        media_class=MEDIA_CLASS_MUSIC,
-        media_content_id="ais_music",
-        media_content_type=MEDIA_TYPE_APP,
-        can_play=False,
-        can_expand=True,
-        children=[],
-    )
-
-    ais_music_info.children.append(
-        BrowseMedia(
-            title="Spotify",
-            media_class=MEDIA_CLASS_MUSIC,
-            media_content_id="ais_music",
-            media_content_type=MEDIA_TYPE_APP,
-            can_expand=True,
-            can_play=False,
-        )
-    )
-    ais_music_info.children.append(
-        BrowseMedia(
-            title="YouTube",
-            media_class=MEDIA_CLASS_VIDEO,
-            media_content_id="ais_music",
-            media_content_type=MEDIA_TYPE_APP,
-            can_expand=True,
-            can_play=False,
-        )
-    )
-    return ais_music_info
+    raise BrowseError("AIS TODO")
 
 
 def ais_music_library() -> BrowseMedia:
@@ -834,7 +803,7 @@ async def ais_tunein_library(hass, media_content_id) -> BrowseMedia:
 
         except Exception as e:
             _LOGGER.error("Can't connect tune in api: " + str(e))
-            raise MediaSourceError("Invalid path.")
+            raise BrowseError("Can't connect tune in api: " + str(e))
     elif media_content_id.startswith("ais_tunein/2/"):
         try:
             #  5 sec should be enough
@@ -924,4 +893,4 @@ async def ais_tunein_library(hass, media_content_id) -> BrowseMedia:
 
         except Exception as e:
             _LOGGER.error("Can't connect tune in api: " + str(e))
-            raise MediaSourceError("Invalid path.")
+            raise BrowseError("Can't connect tune in api: " + str(e))
