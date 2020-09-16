@@ -1,6 +1,8 @@
 """Support for Vera lights."""
 import logging
-from typing import Callable, List
+from typing import Any, Callable, List, Optional, Tuple
+
+import pyvera as veraApi
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -37,10 +39,12 @@ async def async_setup_entry(
     )
 
 
-class VeraLight(VeraDevice, LightEntity):
+class VeraLight(VeraDevice[veraApi.VeraDimmer], LightEntity):
     """Representation of a Vera Light, including dimmable."""
 
-    def __init__(self, vera_device, controller_data: ControllerData):
+    def __init__(
+        self, vera_device: veraApi.VeraDimmer, controller_data: ControllerData
+    ):
         """Initialize the light."""
         self._state = False
         self._color = None
@@ -49,23 +53,23 @@ class VeraLight(VeraDevice, LightEntity):
         self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
     @property
-    def brightness(self):
+    def brightness(self) -> Optional[int]:
         """Return the brightness of the light."""
         return self._brightness
 
     @property
-    def hs_color(self):
+    def hs_color(self) -> Optional[Tuple[float, float]]:
         """Return the color of the light."""
         return self._color
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Flag supported features."""
         if self._color:
             return SUPPORT_BRIGHTNESS | SUPPORT_COLOR
         return SUPPORT_BRIGHTNESS
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         if ATTR_HS_COLOR in kwargs and self._color:
             rgb = color_util.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
@@ -78,18 +82,18 @@ class VeraLight(VeraDevice, LightEntity):
         self._state = True
         self.schedule_update_ha_state(True)
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any):
         """Turn the light off."""
         self.vera_device.switch_off()
         self._state = False
         self.schedule_update_ha_state()
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if device is on."""
         return self._state
 
-    def update(self):
+    def update(self) -> None:
         """Call to update state."""
         self._state = self.vera_device.is_switched_on()
         if self.vera_device.is_dimmable:
