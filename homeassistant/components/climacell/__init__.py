@@ -228,7 +228,7 @@ class ClimaCellEntity(CoordinatorEntity):
     @staticmethod
     def _get_cc_value(
         weather_dict: Dict[str, Any], key: str
-    ) -> Optional[Union[int, str]]:
+    ) -> Optional[Union[int, float, str]]:
         """Return property from weather_dict."""
         return weather_dict.get(key, {}).get("value")
 
