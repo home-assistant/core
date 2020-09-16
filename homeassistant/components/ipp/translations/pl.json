@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane.",
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
             "connection_error": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
             "connection_upgrade": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z drukark\u0105 z powodu konieczno\u015bci uaktualnienia po\u0142\u0105czenia.",
             "ipp_error": "Wyst\u0105pi\u0142 b\u0142\u0105d IPP.",
