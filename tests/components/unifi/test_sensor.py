@@ -169,14 +169,20 @@ async def test_sensors(hass):
     wired_client_uptime = hass.states.get("sensor.wired_client_name_uptime")
     assert wired_client_uptime.state == "2020-09-14T14:41:45+00:00"
 
-    # Try to add the sensors again, I guess
-    hass.config_entries.async_update_entry(
-        controller.config_entry,
-        options={
-            CONF_ALLOW_BANDWIDTH_SENSORS: True,
-            CONF_ALLOW_UPTIME_SENSORS: True,
-        },
+    # Try to add the sensors again, using a signal
+    clients_connected = set()
+    devices_connected = set()
+
+    clients_connected.add(clients[0]["mac"])
+    clients_connected.add(clients[1]["mac"])
+
+    async_dispatcher_send(
+        hass,
+        controller.signal_update,
+        clients_connected,
+        devices_connected,
     )
+
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 6
