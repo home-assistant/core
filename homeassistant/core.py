@@ -1475,7 +1475,6 @@ class Config:
             "state": self.hass.state.value,
             "external_url": self.external_url,
             "internal_url": self.internal_url,
-            "media_dirs": self.media_dirs,
         }
 
     def set_time_zone(self, time_zone_str: str) -> None:
