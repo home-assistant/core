@@ -48,6 +48,11 @@ async def test_async_browse_media(hass):
 
     # Test successful listing
     media = await media_source.async_browse_media(
+        hass, f"{const.URI_SCHEME}{const.DOMAIN}"
+    )
+    assert media
+
+    media = await media_source.async_browse_media(
         hass, f"{const.URI_SCHEME}{const.DOMAIN}/media/."
     )
     assert media
