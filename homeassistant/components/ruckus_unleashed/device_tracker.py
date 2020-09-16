@@ -1,6 +1,4 @@
 """Support for Ruckus Unleashed devices."""
-from typing import Optional
-
 from homeassistant.components.device_tracker import SOURCE_TYPE_ROUTER
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.config_entries import ConfigEntry
@@ -86,7 +84,7 @@ class RuckusUnleashedDevice(CoordinatorEntity, ScannerEntity):
         return self._mac
 
     @property
-    def name(self) -> Optional[str]:
+    def name(self) -> str:
         """Return the name."""
         if self.is_connected:
             return (
