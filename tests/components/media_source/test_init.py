@@ -72,9 +72,7 @@ async def test_async_resolve_media(hass):
 
     media = await media_source.async_resolve_media(
         hass,
-        media_source.generate_media_source_id(
-            const.DOMAIN, "local_source/media/test.mp3"
-        ),
+        media_source.generate_media_source_id(const.DOMAIN, "/media/test.mp3"),
     )
     assert isinstance(media, media_source.models.PlayMedia)
 
