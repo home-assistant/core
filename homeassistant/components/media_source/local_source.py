@@ -81,10 +81,18 @@ class LocalSource(MediaSource):
         except Unresolvable as err:
             raise BrowseError(str(err)) from err
 
+        return await self.hass.async_add_executor_job(
+            self._browse_media, source_dir_id, location
+        )
+
+    def _browse_media(self, source_dir_id: str, location: Path):
+        """Browse media."""
+
         # If only one media dir is configured, use that as the local media root
         if source_dir_id == "" and len(self.hass.config.media_dirs) == 1:
             source_dir_id = list(self.hass.config.media_dirs)[0]
 
+        # Multiple folder, root is requested
         if source_dir_id == "":
             base = BrowseMediaSource(
                 domain=DOMAIN,
@@ -98,19 +106,12 @@ class LocalSource(MediaSource):
             )
 
             base.children = [
-                await self.hass.async_add_executor_job(
-                    self._browse_media, source_dir_id, location
-                )
+                self._browse_media(source_dir_id, location)
                 for source_dir_id in self.hass.config.media_dirs
             ]
+
             return base
 
-        return await self.hass.async_add_executor_job(
-            self._browse_media, source_dir_id, location
-        )
-
-    def _browse_media(self, source_dir_id, location):
-        """Browse media."""
         full_path = Path(self.hass.config.media_dirs[source_dir_id], location)
 
         if not full_path.exists():
