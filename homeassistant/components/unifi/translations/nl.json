@@ -36,6 +36,7 @@
                 "data": {
                     "detection_time": "Tijd in seconden vanaf laatst gezien tot beschouwd als weg",
                     "ignore_wired_bug": "Schakel UniFi bedrade buglogica uit",
+                    "ssid_filter": "Selecteer SSID's om draadloze clients op te volgen",
                     "track_clients": "Volg netwerkclients",
                     "track_devices": "Netwerkapparaten volgen (Ubiquiti-apparaten)",
                     "track_wired_clients": "Inclusief bedrade netwerkcli\u00ebnten"
@@ -59,6 +60,7 @@
                 "data": {
                     "allow_bandwidth_sensors": "Maak bandbreedtegebruiksensoren voor netwerkclients"
                 },
+                "description": "Configureer statistische sensoren",
                 "title": "UniFi-opties 3/3"
             }
         }
