@@ -1,9 +1,9 @@
-"""Support to send data to an Splunk instance."""
+"""Support to send data to a Splunk instance."""
 import json
 import logging
 import time
 
-from requests.exceptions import ConnectionError, HTTPError, Timeout, TooManyRedirects
+from requests import exceptions as request_exceptions
 from splunk_data_sender import SplunkSender
 import voluptuous as vol
 
@@ -94,14 +94,17 @@ def setup(hass, config):
 
     try:
         event_collector._send_to_splunk("send-event", json.dumps(payload))
-    except HTTPError as e:
-        if e.response.status_code in (401, 403):
+    except request_exceptions.HTTPError as err:
+        if err.response.status_code in (401, 403):
             _LOGGER.error("Invalid or disabled token")
             return False
-        else:
-            _LOGGER.warn(e)
-    except (Timeout, ConnectionError, TooManyRedirects) as e:
-        _LOGGER.warn(e)
+        _LOGGER.warning(err)
+    except (
+        request_exceptions.Timeout,
+        request_exceptions.ConnectionError,
+        request_exceptions.TooManyRedirects,
+    ) as err:
+        _LOGGER.warninging(err)
 
     def splunk_event_listener(event):
         """Listen for new messages on the bus and sends them to Splunk."""
@@ -134,13 +137,18 @@ def setup(hass, config):
     def splunk_send(event=None):
         """Send batched messages to Splunk every second."""
         nonlocal batch
-        if len(batch):
+        if len(batch) > 0:
             events = batch
             batch = []
             try:
                 event_collector._send_to_splunk("send-event", "".join(events))
-            except (HTTPError, Timeout, ConnectionError, TooManyRedirects) as e:
-                _LOGGER.warn(e)
+            except (
+                request_exceptions.HTTPError,
+                request_exceptions.Timeout,
+                request_exceptions.ConnectionError,
+                request_exceptions.TooManyRedirects,
+            ) as err:
+                _LOGGER.warning(err)
 
     def splunk_stop(event):
         queue(
