@@ -15,8 +15,6 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-LENGTH_MILLIMETERS = LENGTH_MILLIMETERS
-
 CONF_I2C_ADDRESS = "i2c_address"
 CONF_I2C_BUS = "i2c_bus"
 CONF_XSHUT = "xshut"
