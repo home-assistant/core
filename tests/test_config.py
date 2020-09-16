@@ -499,7 +499,7 @@ async def test_loading_configuration_default_media_dirs_docker(hass):
     assert hass.config.location_name == "Huis"
     assert len(hass.config.allowlist_external_dirs) == 2
     assert "/media" in hass.config.allowlist_external_dirs
-    assert hass.config.media_dirs == {"media": "/media"}
+    assert hass.config.media_dirs == {"local": "/media"}
 
 
 async def test_loading_configuration_from_packages(hass):
