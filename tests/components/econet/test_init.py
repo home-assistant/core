@@ -147,7 +147,7 @@ async def test_setup(econetapi_mock, hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     water_heater_1.set_mode.assert_called_with(WaterHeaterOperationMode.OFF)
 
-    # Confirm updates to the update calback update the state.
+    # Confirm updates to the update callback update the state.
     update_callback = water_heater_1.set_update_callback.call_args_list[0][0][0]
     water_heater_1.mode = WaterHeaterOperationMode.OFF
     assert hass.states.get(state.entity_id).state == STATE_ELECTRIC
