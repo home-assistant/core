@@ -125,11 +125,13 @@ class SecuritySystem(HomeAccessory):
 
         serv_alarm = self.add_preload_service(SERV_SECURITY_SYSTEM)
         self.char_current_state = serv_alarm.configure_char(
-            CHAR_CURRENT_SECURITY_STATE, value=3, valid_values=new_current_states
+            CHAR_CURRENT_SECURITY_STATE,
+            value=HASS_TO_HOMEKIT[STATE_ALARM_DISARMED],
+            valid_values=new_current_states,
         )
         self.char_target_state = serv_alarm.configure_char(
             CHAR_TARGET_SECURITY_STATE,
-            value=3,
+            value=HASS_TO_HOMEKIT_SERVICES[SERVICE_ALARM_DISARM],
             valid_values=new_target_services,
             setter_callback=self.set_security_state,
         )

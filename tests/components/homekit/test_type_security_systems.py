@@ -1,4 +1,5 @@
 """Test different accessory types: Security Systems."""
+from pyhap.loader import get_loader
 import pytest
 
 from homeassistant.components.alarm_control_panel import DOMAIN
@@ -143,25 +144,90 @@ async def test_supported_states(hass, hk_driver, events):
     config = {ATTR_CODE: code}
     entity_id = "alarm_control_panel.test"
 
+    loader = get_loader()
+    default_current_states = loader.get_char(
+        "SecuritySystemCurrentState"
+    ).properties.get("ValidValues")
+    default_target_services = loader.get_char(
+        "SecuritySystemTargetState"
+    ).properties.get("ValidValues")
+
     # Set up a number of test configuration
     test_configs = [
-        {"features": SUPPORT_ALARM_ARM_HOME, "target_values": 2},
+        {
+            "features": SUPPORT_ALARM_ARM_HOME,
+            "current_values": [
+                default_current_states["Disarmed"],
+                default_current_states["AlarmTriggered"],
+                default_current_states["StayArm"],
+            ],
+            "target_values": [
+                default_target_services["Disarm"],
+                default_target_services["StayArm"],
+            ],
+        },
+        {
+            "features": SUPPORT_ALARM_ARM_AWAY,
+            "current_values": [
+                default_current_states["Disarmed"],
+                default_current_states["AlarmTriggered"],
+                default_current_states["AwayArm"],
+            ],
+            "target_values": [
+                default_target_services["Disarm"],
+                default_target_services["AwayArm"],
+            ],
+        },
         {
             "features": SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY,
-            "target_values": 3,
+            "current_values": [
+                default_current_states["Disarmed"],
+                default_current_states["AlarmTriggered"],
+                default_current_states["StayArm"],
+                default_current_states["AwayArm"],
+            ],
+            "target_values": [
+                default_target_services["Disarm"],
+                default_target_services["StayArm"],
+                default_target_services["AwayArm"],
+            ],
         },
         {
             "features": SUPPORT_ALARM_ARM_HOME
             | SUPPORT_ALARM_ARM_AWAY
             | SUPPORT_ALARM_ARM_NIGHT,
-            "target_values": 4,
+            "current_values": [
+                default_current_states["Disarmed"],
+                default_current_states["AlarmTriggered"],
+                default_current_states["StayArm"],
+                default_current_states["AwayArm"],
+                default_current_states["NightArm"],
+            ],
+            "target_values": [
+                default_target_services["Disarm"],
+                default_target_services["StayArm"],
+                default_target_services["AwayArm"],
+                default_target_services["NightArm"],
+            ],
         },
         {
             "features": SUPPORT_ALARM_ARM_HOME
             | SUPPORT_ALARM_ARM_AWAY
             | SUPPORT_ALARM_ARM_NIGHT
             | SUPPORT_ALARM_TRIGGER,
-            "target_values": 4,
+            "current_values": [
+                default_current_states["Disarmed"],
+                default_current_states["AlarmTriggered"],
+                default_current_states["StayArm"],
+                default_current_states["AwayArm"],
+                default_current_states["NightArm"],
+            ],
+            "target_values": [
+                default_target_services["Disarm"],
+                default_target_services["StayArm"],
+                default_target_services["AwayArm"],
+                default_target_services["NightArm"],
+            ],
         },
     ]
 
@@ -178,5 +244,8 @@ async def test_supported_states(hass, hk_driver, events):
         valid_current_values = acc.char_current_state.properties.get("ValidValues")
         valid_target_values = acc.char_target_state.properties.get("ValidValues")
 
-        assert len(valid_current_values) == test_config.get("target_values") + 1
-        assert len(valid_target_values) == test_config.get("target_values")
+        for val in valid_current_values.values():
+            assert val in test_config.get("current_values")
+
+        for val in valid_target_values.values():
+            assert val in test_config.get("target_values")
