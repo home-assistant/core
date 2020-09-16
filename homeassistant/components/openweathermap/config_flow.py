@@ -21,8 +21,6 @@ from .const import (
     DEFAULT_FORECAST_MODE,
     DEFAULT_LANGUAGE,
     DEFAULT_NAME,
-    FORECAST_MODE_FREE_DAILY,
-    FORECAST_MODE_ONECALL_DAILY,
     FORECAST_MODES,
     LANGUAGES,
 )
@@ -120,10 +118,7 @@ class OpenWeatherMapOptionsFlow(config_entries.OptionsFlow):
             {
                 vol.Optional(
                     CONF_MODE,
-                    default=FORECAST_MODE_ONECALL_DAILY
-                    if self.config_entry.options.get(CONF_MODE)
-                    == FORECAST_MODE_FREE_DAILY
-                    else self.config_entry.options.get(
+                    default=self.config_entry.options.get(
                         CONF_MODE, DEFAULT_FORECAST_MODE
                     ),
                 ): vol.In(FORECAST_MODES),
