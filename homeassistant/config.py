@@ -510,9 +510,9 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: Dict) -> Non
 
     if CONF_MEDIA_DIRS not in config:
         if is_docker_env():
-            hac.media_dirs = {"media": "/media"}
+            hac.media_dirs = {"local": "/media"}
         else:
-            hac.media_dirs = {"media": hass.config.path("media")}
+            hac.media_dirs = {"local": hass.config.path("media")}
 
     # Init whitelist external dir
     hac.allowlist_external_dirs = {hass.config.path("www"), *hac.media_dirs.values()}

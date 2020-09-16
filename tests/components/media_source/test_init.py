@@ -65,7 +65,7 @@ async def test_async_resolve_media(hass):
 
     media = await media_source.async_resolve_media(
         hass,
-        media_source.generate_media_source_id(const.DOMAIN, "media/test.mp3"),
+        media_source.generate_media_source_id(const.DOMAIN, "local/test.mp3"),
     )
     assert isinstance(media, media_source.models.PlayMedia)
 
@@ -140,7 +140,7 @@ async def test_websocket_resolve_media(hass, hass_ws_client):
 
     client = await hass_ws_client(hass)
 
-    media = media_source.models.PlayMedia("/local_source/media/test.mp3", "audio/mpeg")
+    media = media_source.models.PlayMedia("/media/local/test.mp3", "audio/mpeg")
 
     with patch(
         "homeassistant.components.media_source.async_resolve_media",
@@ -150,7 +150,7 @@ async def test_websocket_resolve_media(hass, hass_ws_client):
             {
                 "id": 1,
                 "type": "media_source/resolve_media",
-                "media_content_id": f"{const.URI_SCHEME}{const.DOMAIN}/media/test.mp3",
+                "media_content_id": f"{const.URI_SCHEME}{const.DOMAIN}/local/test.mp3",
             }
         )
 

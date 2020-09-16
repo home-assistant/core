@@ -205,7 +205,7 @@ async def async_test_home_assistant(loop):
     hass.config.elevation = 0
     hass.config.time_zone = date_util.get_time_zone("US/Pacific")
     hass.config.units = METRIC_SYSTEM
-    hass.config.media_dirs = {"media": get_test_config_dir("media")}
+    hass.config.media_dirs = {"local": get_test_config_dir("media")}
     hass.config.skip_pip = True
 
     hass.config_entries = config_entries.ConfigEntries(hass, {})
