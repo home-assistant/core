@@ -1,5 +1,9 @@
 """Support for Ruckus Unleashed devices."""
-from homeassistant.components.device_tracker import SOURCE_TYPE_ROUTER
+from homeassistant.components.device_tracker import (
+    ATTR_MAC,
+    ATTR_SOURCE_TYPE,
+    SOURCE_TYPE_ROUTER,
+)
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
@@ -103,3 +107,11 @@ class RuckusUnleashedDevice(CoordinatorEntity, ScannerEntity):
     def source_type(self) -> str:
         """Return the source type."""
         return SOURCE_TYPE_ROUTER
+
+    @property
+    def state_attributes(self) -> dict:
+        """Return the state attributes."""
+        return {
+            ATTR_SOURCE_TYPE: self.source_type,
+            ATTR_MAC: self._mac,
+        }
