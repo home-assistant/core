@@ -1,6 +1,8 @@
 """The tests for the august platform."""
 import asyncio
 
+from aiohttp import ClientResponseError
+from august.authenticator_common import AuthenticationState
 from august.exceptions import AugustApiAIOHTTPError
 
 from homeassistant import setup
@@ -12,7 +14,10 @@ from homeassistant.components.august.const import (
     DOMAIN,
 )
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
-from homeassistant.config_entries import ENTRY_STATE_SETUP_RETRY
+from homeassistant.config_entries import (
+    ENTRY_STATE_SETUP_ERROR,
+    ENTRY_STATE_SETUP_RETRY,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_PASSWORD,
@@ -30,6 +35,7 @@ from tests.async_mock import patch
 from tests.common import MockConfigEntry
 from tests.components.august.mocks import (
     _create_august_with_devices,
+    _mock_august_authentication,
     _mock_doorsense_enabled_august_lock_detail,
     _mock_doorsense_missing_august_lock_detail,
     _mock_get_config,
@@ -54,8 +60,8 @@ async def test_august_is_offline(hass):
         side_effect=asyncio.TimeoutError,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
 
-    await hass.async_block_till_done()
     assert config_entry.state == ENTRY_STATE_SETUP_RETRY
 
 
@@ -158,7 +164,7 @@ async def test_set_up_from_yaml(hass):
     await hass.async_block_till_done()
     assert len(mock_setup_august.mock_calls) == 1
     call = mock_setup_august.call_args
-    args, kwargs = call
+    args, _ = call
     imported_config_entry = args[1]
     # The import must use DEFAULT_AUGUST_CONFIG_FILE so they
     # do not loose their token when config is migrated
@@ -170,3 +176,133 @@ async def test_set_up_from_yaml(hass):
         CONF_TIMEOUT: None,
         CONF_USERNAME: "mocked_username",
     }
+
+
+async def test_auth_fails(hass):
+    """Config entry state is ENTRY_STATE_SETUP_ERROR when auth fails."""
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=_mock_get_config()[DOMAIN],
+        title="August august",
+    )
+    config_entry.add_to_hass(hass)
+    assert hass.config_entries.flow.async_progress() == []
+
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    with patch(
+        "august.authenticator_async.AuthenticatorAsync.async_authenticate",
+        side_effect=ClientResponseError(None, None, status=401),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state == ENTRY_STATE_SETUP_ERROR
+
+    flows = hass.config_entries.flow.async_progress()
+
+    assert flows[0]["step_id"] == "user"
+
+
+async def test_bad_password(hass):
+    """Config entry state is ENTRY_STATE_SETUP_ERROR when the password has been changed."""
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=_mock_get_config()[DOMAIN],
+        title="August august",
+    )
+    config_entry.add_to_hass(hass)
+    assert hass.config_entries.flow.async_progress() == []
+
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    with patch(
+        "august.authenticator_async.AuthenticatorAsync.async_authenticate",
+        return_value=_mock_august_authentication(
+            "original_token", 1234, AuthenticationState.BAD_PASSWORD
+        ),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state == ENTRY_STATE_SETUP_ERROR
+
+    flows = hass.config_entries.flow.async_progress()
+
+    assert flows[0]["step_id"] == "user"
+
+
+async def test_http_failure(hass):
+    """Config entry state is ENTRY_STATE_SETUP_RETRY when august is offline."""
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=_mock_get_config()[DOMAIN],
+        title="August august",
+    )
+    config_entry.add_to_hass(hass)
+    assert hass.config_entries.flow.async_progress() == []
+
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    with patch(
+        "august.authenticator_async.AuthenticatorAsync.async_authenticate",
+        side_effect=ClientResponseError(None, None, status=500),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state == ENTRY_STATE_SETUP_RETRY
+
+    assert hass.config_entries.flow.async_progress() == []
+
+
+async def test_unknown_auth_state(hass):
+    """Config entry state is ENTRY_STATE_SETUP_ERROR when august is in an unknown auth state."""
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=_mock_get_config()[DOMAIN],
+        title="August august",
+    )
+    config_entry.add_to_hass(hass)
+    assert hass.config_entries.flow.async_progress() == []
+
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    with patch(
+        "august.authenticator_async.AuthenticatorAsync.async_authenticate",
+        return_value=_mock_august_authentication("original_token", 1234, None),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state == ENTRY_STATE_SETUP_ERROR
+
+    flows = hass.config_entries.flow.async_progress()
+
+    assert flows[0]["step_id"] == "user"
+
+
+async def test_requires_validation_state(hass):
+    """Config entry state is ENTRY_STATE_SETUP_ERROR when august requires validation."""
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=_mock_get_config()[DOMAIN],
+        title="August august",
+    )
+    config_entry.add_to_hass(hass)
+    assert hass.config_entries.flow.async_progress() == []
+
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    with patch(
+        "august.authenticator_async.AuthenticatorAsync.async_authenticate",
+        return_value=_mock_august_authentication(
+            "original_token", 1234, AuthenticationState.REQUIRES_VALIDATION
+        ),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state == ENTRY_STATE_SETUP_ERROR
+
+    assert hass.config_entries.flow.async_progress() == []
