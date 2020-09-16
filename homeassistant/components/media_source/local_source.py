@@ -43,14 +43,12 @@ class LocalSource(MediaSource):
     def async_parse_identifier(self, item: MediaSourceItem) -> Tuple[str, str]:
         """Parse identifier."""
         if not item.identifier:
-            source_dir_id = ""
-            location = ""
+            # Empty source_dir_id and location
+            return "", ""
 
-        else:
-            source_dir_id, location = item.identifier.split("/", 1)
-
-            if source_dir_id not in self.hass.config.media_dirs:
-                raise Unresolvable("Unknown source directory.")
+        source_dir_id, location = item.identifier.split("/", 1)
+        if source_dir_id not in self.hass.config.media_dirs:
+            raise Unresolvable("Unknown source directory.")
 
         if location != sanitize_path(location):
             raise Unresolvable("Invalid path.")
