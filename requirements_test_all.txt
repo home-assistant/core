@@ -775,7 +775,7 @@ pyqwikswitch==0.93
 pyrisco==0.3.0
 
 # homeassistant.components.ruckus_unleashed
-pyruckus==0.6
+pyruckus==0.7
 
 # homeassistant.components.acer_projector
 # homeassistant.components.zha

@@ -1,5 +1,5 @@
 """Test the Ruckus Unleashed config flow."""
-from pyruckus.RuckusSSH import LoginError
+from pyruckus.exceptions import AuthenticationError
 
 from homeassistant import config_entries, setup
 from homeassistant.components.ruckus_unleashed.const import DOMAIN
@@ -50,7 +50,7 @@ async def test_form_invalid_auth(hass):
 
     with patch(
         "homeassistant.components.ruckus_unleashed.Ruckus.connect",
-        side_effect=LoginError,
+        side_effect=AuthenticationError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

@@ -2,7 +2,6 @@
 import asyncio
 
 from pyruckus import Ruckus
-from pyruckus.RuckusSSH import LoginError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -33,8 +32,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     except ConnectionError as error:
         raise ConfigEntryNotReady from error
-    except LoginError:
-        return False
 
     coordinator = RuckusUnleashedDataUpdateCoordinator(hass, ruckus=ruckus)
 

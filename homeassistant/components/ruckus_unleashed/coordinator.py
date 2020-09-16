@@ -2,6 +2,7 @@
 from datetime import timedelta
 
 from pyruckus import Ruckus
+from pyruckus.exceptions import AuthenticationError
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -31,5 +32,5 @@ class RuckusUnleashedDataUpdateCoordinator(DataUpdateCoordinator):
             return {
                 CLIENTS: await self.hass.async_add_executor_job(self.ruckus.clients)
             }
-        except Exception as error:  # pylint: disable=broad-except
+        except (AuthenticationError, ConnectionError) as error:
             raise UpdateFailed(error) from error

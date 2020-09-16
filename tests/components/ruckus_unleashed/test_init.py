@@ -1,5 +1,5 @@
 """Test the Ruckus Unleashed config flow."""
-from pyruckus.RuckusSSH import LoginError
+from pyruckus.exceptions import AuthenticationError
 
 from homeassistant.components.ruckus_unleashed import DOMAIN
 from homeassistant.config_entries import (
@@ -17,7 +17,7 @@ async def test_setup_entry_login_error(hass):
     entry = mock_config_entry()
     with patch(
         "homeassistant.components.ruckus_unleashed.Ruckus",
-        side_effect=LoginError,
+        side_effect=AuthenticationError,
     ):
         entry.add_to_hass(hass)
         result = await hass.config_entries.async_setup(entry.entry_id)

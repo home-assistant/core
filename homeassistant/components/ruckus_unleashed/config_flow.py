@@ -1,6 +1,6 @@
 """Config flow for Ruckus Unleashed integration."""
 from pyruckus import Ruckus
-from pyruckus.RuckusSSH import LoginError
+from pyruckus.exceptions import AuthenticationError
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
@@ -21,12 +21,10 @@ async def validate_input(hass: core.HomeAssistant, data):
         ruckus = await hass.async_add_executor_job(
             Ruckus, data[CONF_HOST], data[CONF_USERNAME], data[CONF_PASSWORD]
         )
-    except LoginError as error:
+    except AuthenticationError as error:
         raise InvalidAuth from error
     except ConnectionError as error:
         raise CannotConnect from error
-    except Exception:  # pylint: disable=broad-except
-        pass
 
     mesh_name = ruckus.mesh_name()
 
