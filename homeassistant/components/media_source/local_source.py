@@ -90,6 +90,9 @@ class LocalSource(MediaSource):
 
         # Multiple folder, root is requested
         if source_dir_id == "":
+            if location:
+                raise BrowseError("Folder not found.")
+
             base = BrowseMediaSource(
                 domain=DOMAIN,
                 identifier="",
