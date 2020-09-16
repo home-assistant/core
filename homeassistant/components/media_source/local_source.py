@@ -62,7 +62,7 @@ class LocalSource(MediaSource):
             raise Unresolvable("Unknown source directory.")
 
         mime_type, _ = mimetypes.guess_type(
-            self.async_full_path(source_dir_id, location)
+            str(self.async_full_path(source_dir_id, location))
         )
         return PlayMedia(f"/local_source/{item.identifier}", mime_type)
 
