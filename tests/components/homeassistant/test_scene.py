@@ -320,3 +320,12 @@ async def test_config(hass):
     no_icon = hass.states.get("scene.scene_no_icon")
     assert no_icon is not None
     assert "icon" not in no_icon.attributes
+
+
+def test_validator():
+    """Test validators."""
+    parsed = ha_scene.STATES_SCHEMA({"light.Test": {"state": "on"}})
+    assert len(parsed) == 1
+    assert "light.test" in parsed
+    assert parsed["light.test"].entity_id == "light.test"
+    assert parsed["light.test"].state == "on"
