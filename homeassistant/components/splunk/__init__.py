@@ -1,4 +1,5 @@
 """Support to send data to a Splunk instance."""
+from collections import deque
 import json
 import logging
 import time
@@ -14,9 +15,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_TOKEN,
     CONF_VERIFY_SSL,
-    EVENT_HOMEASSISTANT_STOP,
     EVENT_STATE_CHANGED,
-    EVENT_TIME_CHANGED,
 )
 from homeassistant.helpers import state as state_helper
 import homeassistant.helpers.config_validation as cv
@@ -28,6 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "splunk"
 CONF_FILTER = "filter"
 SPLUNK_ENDPOINT = "collector/event"
+SPLUNK_SIZE_LIMIT = 102400  # 100KB, Actual limit is 512KB
 
 DEFAULT_HOST = "localhost"
 DEFAULT_PORT = 8088
@@ -63,37 +63,29 @@ def setup(hass, config):
     name = conf.get(CONF_NAME)
     entity_filter = conf[CONF_FILTER]
 
-    if verify_ssl and not use_ssl:
-        _LOGGER.error("You cannot use verify_ssl without ssl")
-        return False
-
     event_collector = SplunkSender(
         host=host,
         port=port,
         token=token,
         hostname=name,
         protocol=["http", "https"][use_ssl],
-        verify=verify_ssl,
+        verify=(use_ssl and verify_ssl),
         api_url=SPLUNK_ENDPOINT,
     )
-
-    batch = []
-
-    def queue(payload):
-        batch.append(json.dumps(payload, cls=JSONEncoder))
 
     payload = {
         "time": time.time(),
         "host": name,
         "event": {
             "domain": DOMAIN,
-            "meta": "Home Assistant has started",
-            "value": 1,
+            "meta": "Splunk integration has started",
         },
     }
 
     try:
-        event_collector._send_to_splunk("send-event", json.dumps(payload))
+        event_collector._send_to_splunk(  # pylint: disable=protected-access
+            "send-event", json.dumps(payload)
+        )
     except request_exceptions.HTTPError as err:
         if err.response.status_code in (401, 403):
             _LOGGER.error("Invalid or disabled token")
@@ -103,11 +95,18 @@ def setup(hass, config):
         request_exceptions.Timeout,
         request_exceptions.ConnectionError,
         request_exceptions.TooManyRedirects,
+        json.decoder.JSONDecodeError,
     ) as err:
-        _LOGGER.warninging(err)
+        _LOGGER.warning(err)
+
+    batch = deque()
+    post_in_progress = False
 
     def splunk_event_listener(event):
         """Listen for new messages on the bus and sends them to Splunk."""
+        nonlocal batch
+        nonlocal post_in_progress
+
         state = event.data.get("new_state")
 
         if state is None or not entity_filter(state.entity_id):
@@ -118,52 +117,63 @@ def setup(hass, config):
         except ValueError:
             _state = state.state
 
-        queue(
-            {
-                "time": event.time_fired.timestamp(),
-                "host": name,
-                "event": {
-                    "domain": state.domain,
-                    "entity_id": state.object_id,
-                    "attributes": dict(state.attributes),
-                    "value": _state,
-                },
-            }
-        )
+        payload = {
+            "time": event.time_fired.timestamp(),
+            "host": name,
+            "event": {
+                "domain": state.domain,
+                "entity_id": state.object_id,
+                "attributes": dict(state.attributes),
+                "value": _state,
+            },
+        }
+        batch.append(json.dumps(payload, cls=JSONEncoder))
 
-    def splunk_send(event=None):
-        """Send batched messages to Splunk every second."""
-        nonlocal batch
-        if not batch:
-            return
-            events = batch
-            batch = []
-            try:
-                event_collector._send_to_splunk("send-event", "".join(events))
-            except (
-                request_exceptions.HTTPError,
-                request_exceptions.Timeout,
-                request_exceptions.ConnectionError,
-                request_exceptions.TooManyRedirects,
-            ) as err:
-                _LOGGER.warning(err)
-
-    def splunk_stop(event):
-        queue(
-            {
-                "time": event.time_fired.timestamp(),
-                "host": name,
-                "event": {
-                    "domain": DOMAIN,
-                    "meta": "Home Assistant is stopping",
-                    "value": 0,
-                },
-            }
-        )
-        splunk_send()
+        # Enforce only one loop is running
+        if not post_in_progress:
+            post_in_progress = True
+            # Run until there are no new events to sent
+            while batch:
+                size = len(batch[0])
+                events = deque()
+                # Do Until loop to get events until maximum payload size or no more events
+                # Ensures at least 1 event is always sent even if it exceeds the size limit
+                while True:
+                    # Add first event
+                    events.append(batch.popleft())
+                    # Stop if no more events
+                    if not batch:
+                        break
+                    # Add size of next event
+                    size += len(batch[0])
+                    # Stop if next event exceeds limit
+                    if size > SPLUNK_SIZE_LIMIT:
+                        break
+                _LOGGER.debug(
+                    "Sending %s of %s events", len(events), len(events) + len(batch)
+                )
+                # Send the selected events
+                try:
+                    event_collector._send_to_splunk(  # pylint: disable=protected-access
+                        "send-event", "\n".join(events)
+                    )
+                except (
+                    request_exceptions.HTTPError,
+                    request_exceptions.Timeout,
+                    request_exceptions.ConnectionError,
+                    request_exceptions.TooManyRedirects,
+                ) as err:
+                    _LOGGER.warning(err)
+                    # Requeue failed events
+                    batch = events + batch
+                    break
+                except json.decoder.JSONDecodeError:
+                    _LOGGER.warning("Unexpected response")
+                    # Requeue failed events
+                    batch = events + batch
+                    break
+            post_in_progress = False
 
     hass.bus.listen(EVENT_STATE_CHANGED, splunk_event_listener)
-    hass.bus.listen(EVENT_TIME_CHANGED, splunk_send)
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, splunk_stop)
 
     return True
