@@ -1,31 +1,55 @@
+"""Sensor platform for Advantage Air integration."""
 import voluptuous as vol
 
-from homeassistant.helpers import config_validation as cv, entity_platform, service
+from homeassistant.const import (
+    CONF_IP_ADDRESS,
+    PERCENTAGE,
+    STATE_OFF,
+    STATE_ON,
+    STATE_OPEN,
+)
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity import Entity
 
-from .const import ADVANTAGE_AIR_SET_COUNTDOWN_VALUE, DOMAIN
+from .const import DOMAIN
+
+ADVANTAGE_AIR_SET_COUNTDOWN_VALUE = "minutes"
+ADVANTAGE_AIR_SET_COUNTDOWN_UNIT = "min"
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Platform setup isnt required."""
     return True
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up MyAir sensor platform."""
+    """Set up AdvantageAir sensor platform."""
 
-    my = hass.data[DOMAIN][config_entry.data.get("url")]
+    instance = hass.data[DOMAIN][config_entry.data[CONF_IP_ADDRESS]]
 
     entities = []
-    for _, acx in enumerate(my["coordinator"].data["aircons"]):
-        entities.append(MyAirTimeTo(my, acx, "On"))
-        entities.append(MyAirTimeTo(my, acx, "Off"))
-        for _, zx in enumerate(my["coordinator"].data["aircons"][acx]["zones"]):
+    for _, ac_index in enumerate(instance["coordinator"].data["aircons"]):
+        entities.append(AdvantageAirTimeTo(instance, ac_index, STATE_ON))
+        entities.append(AdvantageAirTimeTo(instance, ac_index, STATE_OFF))
+        for _, zone_index in enumerate(
+            instance["coordinator"].data["aircons"][ac_index]["zones"]
+        ):
             # Only show damper sensors when zone is in temperature control
-            if my["coordinator"].data["aircons"][acx]["zones"][zx]["type"] != 0:
-                entities.append(MyAirZoneVent(my, acx, zx))
+            if (
+                instance["coordinator"].data["aircons"][ac_index]["zones"][zone_index][
+                    "type"
+                ]
+                != 0
+            ):
+                entities.append(AdvantageAirZoneVent(instance, ac_index, zone_index))
             # Only show wireless signal strength sensors when using wireless sensors
-            if my["coordinator"].data["aircons"][acx]["zones"][zx]["rssi"] > 0:
-                entities.append(MyAirZoneSignal(my, acx, zx))
+            if (
+                instance["coordinator"].data["aircons"][ac_index]["zones"][zone_index][
+                    "rssi"
+                ]
+                > 0
+            ):
+                entities.append(AdvantageAirZoneSignal(instance, ac_index, zone_index))
     async_add_entities(entities)
 
     platform = entity_platform.current_platform.get()
@@ -36,58 +60,70 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     return True
 
 
-class MyAirTimeTo(Entity):
-    """MyAir CountDown"""
+class AdvantageAirTimeTo(Entity):
+    """Representation of Advantage Air timer control."""
 
-    def __init__(self, my, acx, to):
-        self.coordinator = my["coordinator"]
-        self.async_set_data = my["async_set_data"]
-        self.device = my["device"]
-        self.acx = acx
-        self.to = to
+    def __init__(self, instance, ac_index, time_period):
+        """Initialize the Advantage Air timer control."""
+        self.coordinator = instance["coordinator"]
+        self.async_change = instance["async_change"]
+        self.device = instance["device"]
+        self.ac_index = ac_index
+        self.time_period = time_period
 
     @property
     def name(self):
-        return f"{self.coordinator.data['aircons'][self.acx]['info']['name']} Time To {self.to}"
+        """Return the name."""
+        return f"{self.coordinator.data['aircons'][self.ac_index]['info']['name']} Time To {self.time_period}"
 
     @property
     def unique_id(self):
-        return f"{self.coordinator.data['system']['rid']}-{self.acx}-sensor:timeto{self.to}"
+        """Return a unique id."""
+        return f"{self.coordinator.data['system']['rid']}-{self.ac_index}-sensor:timeto{self.time_period}"
 
     @property
     def state(self):
-        return self.coordinator.data["aircons"][self.acx]["info"][
-            f"countDownTo{self.to}"
+        """Return the current value."""
+        return self.coordinator.data["aircons"][self.ac_index]["info"][
+            f"countDownTo{self.time_period}"
         ]
 
     @property
     def unit_of_measurement(self):
-        return "min"
+        """Return the unit of measurement."""
+        return ADVANTAGE_AIR_SET_COUNTDOWN_UNIT
 
     @property
     def icon(self):
+        """Return a representative icon of the timer."""
         return ["mdi:timer-off-outline", "mdi:timer-outline"][
-            self.coordinator.data["aircons"][self.acx]["info"][f"countDownTo{self.to}"]
+            self.coordinator.data["aircons"][self.ac_index]["info"][
+                f"countDownTo{self.time_period}"
+            ]
             > 0
         ]
 
     @property
     def should_poll(self):
+        """No polling needed."""
         return False
 
     @property
     def available(self):
+        """Return if platform is avaliable."""
         return self.coordinator.last_update_success
 
     @property
     def device_info(self):
+        """Return parent device information."""
         return self.device
 
     async def set_time_to(self, **kwargs):
+        """Set the timer value."""
         if ADVANTAGE_AIR_SET_COUNTDOWN_VALUE in kwargs:
             value = min(720, max(0, int(kwargs[ADVANTAGE_AIR_SET_COUNTDOWN_VALUE])))
-            await self.async_set_data(
-                {self.acx: {"info": {f"countDownTo{self.to}": value}}}
+            await self.async_change(
+                {self.ac_index: {"info": {f"countDownTo{self.time_period}": value}}}
             )
 
     async def async_added_to_hass(self):
@@ -97,60 +133,73 @@ class MyAirTimeTo(Entity):
         )
 
     async def async_update(self):
+        """Request update."""
         await self.coordinator.async_request_refresh()
 
 
-class MyAirZoneVent(Entity):
-    """MyAir Zone Vent"""
+class AdvantageAirZoneVent(Entity):
+    """Representation of Advantage Air Zone Vent Sensor."""
 
-    def __init__(self, my, acx, zx):
-        self.coordinator = my["coordinator"]
-        self.async_set_data = my["async_set_data"]
-        self.device = my["device"]
-        self.acx = acx
-        self.zx = zx
+    def __init__(self, instance, ac_index, zone_index):
+        """Initialize the Advantage Air Zone Vent Sensor."""
+        self.coordinator = instance["coordinator"]
+        self.async_change = instance["async_change"]
+        self.device = instance["device"]
+        self.ac_index = ac_index
+        self.zone_index = zone_index
 
     @property
     def name(self):
-        return f"{self.coordinator.data['aircons'][self.acx]['zones'][self.zx]['name']} Vent"
+        """Return the name."""
+        return f"{self.coordinator.data['aircons'][self.ac_index]['zones'][self.zone_index]['name']} Vent"
 
     @property
     def unique_id(self):
-        return (
-            f"{self.coordinator.data['system']['rid']}-{self.acx}-{self.zx}-sensor:vent"
-        )
+        """Return a unique id."""
+        return f"{self.coordinator.data['system']['rid']}-{self.ac_index}-{self.zone_index}-sensor:vent"
 
     @property
     def state(self):
+        """Return the current value of the air vent."""
         if (
-            self.coordinator.data["aircons"][self.acx]["zones"][self.zx]["state"]
-            == ADVANTAGE_AIR_ZONE_OPEN
+            self.coordinator.data["aircons"][self.ac_index]["zones"][self.zone_index][
+                "state"
+            ]
+            == STATE_OPEN
         ):
-            return self.coordinator.data["aircons"][self.acx]["zones"][self.zx]["value"]
-        else:
-            return 0
+            return self.coordinator.data["aircons"][self.ac_index]["zones"][
+                self.zone_index
+            ]["value"]
+        return 0
 
     @property
     def unit_of_measurement(self):
-        return "%"
+        """Return the percent sign."""
+        return PERCENTAGE
 
     @property
     def icon(self):
+        """Return a representative icon."""
         return ["mdi:fan-off", "mdi:fan"][
-            self.coordinator.data["aircons"][self.acx]["zones"][self.zx]["state"]
-            == ADVANTAGE_AIR_ZONE_OPEN
+            self.coordinator.data["aircons"][self.ac_index]["zones"][self.zone_index][
+                "state"
+            ]
+            == STATE_OPEN
         ]
 
     @property
     def should_poll(self):
+        """No polling needed."""
         return False
 
     @property
     def available(self):
+        """Return if platform is avaliable."""
         return self.coordinator.last_update_success
 
     @property
     def device_info(self):
+        """Return parent device information."""
         return self.device
 
     async def async_added_to_hass(self):
@@ -160,58 +209,90 @@ class MyAirZoneVent(Entity):
         )
 
     async def async_update(self):
+        """Request update."""
         await self.coordinator.async_request_refresh()
 
 
-class MyAirZoneSignal(Entity):
-    """MyAir Zone Signal"""
+class AdvantageAirZoneSignal(Entity):
+    """Representation of Advantage Air Zone wireless signal sensor."""
 
-    def __init__(self, my, acx, zx):
-        self.coordinator = my["coordinator"]
-        self.async_set_data = my["async_set_data"]
-        self.device = my["device"]
-        self.acx = acx
-        self.zx = zx
+    def __init__(self, instance, ac_index, zone_index):
+        """Initialize the Advantage Air Zone wireless signal sensor."""
+        self.coordinator = instance["coordinator"]
+        self.async_change = instance["async_change"]
+        self.device = instance["device"]
+        self.ac_index = ac_index
+        self.zone_index = zone_index
 
     @property
     def name(self):
-        return f"{self.coordinator.data['aircons'][self.acx]['zones'][self.zx]['name']} Signal"
+        """Return the name."""
+        return f"{self.coordinator.data['aircons'][self.ac_index]['zones'][self.zone_index]['name']} Signal"
 
     @property
     def unique_id(self):
-        return f"{self.coordinator.data['system']['rid']}-{self.acx}-{self.zx}-sensor:signal"
+        """Return a unique id."""
+        return f"{self.coordinator.data['system']['rid']}-{self.ac_index}-{self.zone_index}-sensor:signal"
 
     @property
     def state(self):
-        return self.coordinator.data["aircons"][self.acx]["zones"][self.zx]["rssi"]
+        """Return the current value of the wireless signal."""
+        return self.coordinator.data["aircons"][self.ac_index]["zones"][
+            self.zone_index
+        ]["rssi"]
 
     @property
     def unit_of_measurement(self):
-        return "%"
+        """Return the percent sign."""
+        return PERCENTAGE
 
     @property
     def icon(self):
-        if self.coordinator.data["aircons"][self.acx]["zones"][self.zx]["rssi"] >= 80:
+        """Return a representative icon."""
+        if (
+            self.coordinator.data["aircons"][self.ac_index]["zones"][self.zone_index][
+                "rssi"
+            ]
+            >= 80
+        ):
             return "mdi:wifi-strength-4"
-        elif self.coordinator.data["aircons"][self.acx]["zones"][self.zx]["rssi"] >= 60:
+        elif (
+            self.coordinator.data["aircons"][self.ac_index]["zones"][self.zone_index][
+                "rssi"
+            ]
+            >= 60
+        ):
             return "mdi:wifi-strength-3"
-        elif self.coordinator.data["aircons"][self.acx]["zones"][self.zx]["rssi"] >= 40:
+        elif (
+            self.coordinator.data["aircons"][self.ac_index]["zones"][self.zone_index][
+                "rssi"
+            ]
+            >= 40
+        ):
             return "mdi:wifi-strength-2"
-        elif self.coordinator.data["aircons"][self.acx]["zones"][self.zx]["rssi"] >= 20:
+        elif (
+            self.coordinator.data["aircons"][self.ac_index]["zones"][self.zone_index][
+                "rssi"
+            ]
+            >= 20
+        ):
             return "mdi:wifi-strength-1"
         else:
             return "mdi:wifi-strength-outline"
 
     @property
     def should_poll(self):
+        """No polling needed."""
         return False
 
     @property
     def available(self):
+        """Return if platform is avaliable."""
         return self.coordinator.last_update_success
 
     @property
     def device_info(self):
+        """Return parent device information."""
         return self.device
 
     async def async_added_to_hass(self):
@@ -221,4 +302,5 @@ class MyAirZoneSignal(Entity):
         )
 
     async def async_update(self):
+        """Request update."""
         await self.coordinator.async_request_refresh()
