@@ -64,6 +64,7 @@ def restore_entities(registry, coordinator, entry, async_add_entities, tracked):
                         coordinator, entity.unique_id, entity.original_name
                     )
                 )
+                tracked.add(entity.unique_id)
 
     if missing:
         async_add_entities(missing, True)
