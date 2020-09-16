@@ -66,7 +66,7 @@ class LocalSource(MediaSource):
         mime_type, _ = mimetypes.guess_type(
             self.async_full_path(source_dir_id, location)
         )
-        return PlayMedia(f"/local_source{item.identifier}", mime_type)
+        return PlayMedia(f"/local_source/{item.identifier}", mime_type)
 
     async def async_browse_media(
         self, item: MediaSourceItem, media_types: Tuple[str] = MEDIA_MIME_TYPES
