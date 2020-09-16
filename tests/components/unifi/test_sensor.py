@@ -207,8 +207,8 @@ async def test_remove_sensors(hass):
     wired_client_tx = hass.states.get("sensor.wired_client_name_tx")
     assert wired_client_tx is not None
 
-    wired__client_uptime = hass.states.get("sensor.wired_client_name_uptime")
-    assert wired__client_uptime is not None
+    wired_client_uptime = hass.states.get("sensor.wired_client_name_uptime")
+    assert wired_client_uptime is not None
 
     wireless_client_rx = hass.states.get("sensor.wireless_client_name_rx")
     assert wireless_client_rx is not None
@@ -233,8 +233,8 @@ async def test_remove_sensors(hass):
     wired_client_tx = hass.states.get("sensor.wired_client_name_tx")
     assert wired_client_tx is None
 
-    wired__client_uptime = hass.states.get("sensor.wired_client_name_uptime")
-    assert wired__client_uptime is None
+    wired_client_uptime = hass.states.get("sensor.wired_client_name_uptime")
+    assert wired_client_uptime is None
 
     wireless_client_rx = hass.states.get("sensor.wireless_client_name_rx")
     assert wireless_client_rx is not None
