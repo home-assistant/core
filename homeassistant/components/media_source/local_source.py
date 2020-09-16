@@ -64,7 +64,7 @@ class LocalSource(MediaSource):
         mime_type, _ = mimetypes.guess_type(
             str(self.async_full_path(source_dir_id, location))
         )
-        return PlayMedia(f"/local_source/{item.identifier}", mime_type)
+        return PlayMedia(f"/media/{item.identifier}", mime_type)
 
     async def async_browse_media(
         self, item: MediaSourceItem, media_types: Tuple[str] = MEDIA_MIME_TYPES
@@ -177,7 +177,7 @@ class LocalMediaView(HomeAssistantView):
     Returns media files in config/media.
     """
 
-    url = "/local_source/{source_dir_id}/{location:.*}"
+    url = "/media/{source_dir_id}/{location:.*}"
     name = "media"
 
     def __init__(self, hass: HomeAssistant, source: LocalSource):
@@ -190,10 +190,10 @@ class LocalMediaView(HomeAssistantView):
     ) -> web.FileResponse:
         """Start a GET request."""
         if location != sanitize_path(location):
-            return web.HTTPNotFound()
+            raise web.HTTPNotFound()
 
         if source_dir_id not in self.hass.config.media_dirs:
-            return web.HTTPNotFound()
+            raise web.HTTPNotFound()
 
         media_path = self.source.async_full_path(source_dir_id, location)
 
