@@ -50,7 +50,7 @@ CONTROLLER_HOST = {
     "sw_port": 1,
     "wired-rx_bytes": 1234000000,
     "wired-tx_bytes": 5678000000,
-    "up_time": 1562600160,
+    "uptime": 1562600160,
 }
 
 CONTROLLER_DATA = {

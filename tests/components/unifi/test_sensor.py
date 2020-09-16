@@ -112,6 +112,7 @@ async def test_sensors(hass):
     clients[0]["is_wired"] = False
     clients[1]["rx_bytes"] = 2345000000
     clients[1]["tx_bytes"] = 6789000000
+    clients[1]["uptime"] = 1600180860
 
     event = {"meta": {"message": MESSAGE_CLIENT}, "data": clients}
     controller.api.message_handler(event)
@@ -122,6 +123,9 @@ async def test_sensors(hass):
 
     wireless_client_tx = hass.states.get("sensor.wireless_client_name_tx")
     assert wireless_client_tx.state == "6789.0"
+
+    wireless_client_uptime = hass.states.get("sensor.wireless_client_name_uptime")
+    assert wireless_client_uptime.state == "2020-09-15T14:41:00+00:00"
 
     hass.config_entries.async_update_entry(
         controller.config_entry,
@@ -160,7 +164,7 @@ async def test_sensors(hass):
     assert wireless_client_tx.state == "6789.0"
 
     wireless_client_uptime = hass.states.get("sensor.wireless_client_name_uptime")
-    assert wireless_client_uptime.state == "2020-09-14T14:41:45+00:00"
+    assert wireless_client_uptime.state == "2020-09-15T14:41:00+00:00"
 
 
 async def test_remove_sensors(hass):
