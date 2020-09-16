@@ -108,8 +108,6 @@ def setup(hass, config):
 
     def splunk_event_listener(event):
         """Listen for new messages on the bus and sends them to Splunk."""
-
-        nonlocal batch
         state = event.data.get("new_state")
 
         if state is None or not entity_filter(state.entity_id):
@@ -132,12 +130,12 @@ def setup(hass, config):
                 },
             }
         )
-        return True
 
     def splunk_send(event=None):
         """Send batched messages to Splunk every second."""
         nonlocal batch
-        if len(batch) > 0:
+        if not batch:
+            return
             events = batch
             batch = []
             try:

@@ -1890,9 +1890,6 @@ recollect-waste==1.0.1
 # homeassistant.components.rainmachine
 regenmaschine==2.1.0
 
-# homeassistant.components.splunk
-requests==2.24.0
-
 # homeassistant.components.python_script
 restrictedpython==5.0
 
