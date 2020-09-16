@@ -66,12 +66,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     longitude = entry.data[CONF_LONGITUDE]
     distance = entry.data[CONF_RADIUS]
 
-    # Lat/Long default to Hass Configuration
-    if latitude is None:
-        latitude = hass.configuration.latitude
-    if longitude is None:
-        longitude = hass.configuration.longitude
-
     # Reports are published hourly but update twice per hour
     update_interval = datetime.timedelta(minutes=30)
 

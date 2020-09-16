@@ -6,7 +6,7 @@
         "title": "AirNow",
         "description": "Set up AirNow air quality integration. To generate API key go to https://docs.airnowapi.org/account/request/",
         "data": {
-          "name": "Name of the Entity",
+          "name": "Name of the integration",
           "api_key": "API Key",
           "latitude": "Latitude",
           "longitude": "Longitude",
