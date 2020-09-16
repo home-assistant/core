@@ -196,7 +196,7 @@ def _async_start_reauth(hass: HomeAssistant, entry: ConfigEntry):
             data=entry.data,
         )
     )
-    _LOGGER.error("Password is no longer valid. Please reauthenticate.")
+    _LOGGER.error("Password is no longer valid. Please reauthenticate")
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
