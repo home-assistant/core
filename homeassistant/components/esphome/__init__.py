@@ -129,6 +129,16 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
                     "Can only generate events under esphome domain! (%s)", host
                 )
                 return
+
+            # Call native tag scan
+            if service_name == "tag_scanned":
+                tag_id = service_data["tag_id"]
+                device_id = service_data["device_id"]
+                hass.async_create_task(
+                    hass.components.tag.async_scan_tag(tag_id, device_id)
+                )
+                return
+
             hass.bus.async_fire(service.service, service_data)
         else:
             hass.async_create_task(
