@@ -21,7 +21,7 @@ def async_setup(hass: HomeAssistant):
     """Set up local media source."""
     source = LocalSource(hass)
     hass.data[DOMAIN][DOMAIN] = source
-    hass.http.register_view(LocalMediaView(hass))
+    hass.http.register_view(LocalMediaView(hass, source))
 
 
 class LocalSource(MediaSource):
@@ -35,9 +35,9 @@ class LocalSource(MediaSource):
         self.hass = hass
 
     @callback
-    def async_full_path(self, source_dir_id, location) -> str:
+    def async_full_path(self, source_dir_id, location) -> Path:
         """Return full path."""
-        return str(Path(self.hass.config.media_dirs[source_dir_id], location))
+        return Path(self.hass.config.media_dirs[source_dir_id], location)
 
     @callback
     def async_parse_identifier(self, item: MediaSourceItem) -> Tuple[str, str]:
@@ -182,9 +182,10 @@ class LocalMediaView(HomeAssistantView):
     url = "/local_source/{source_dir_id}/{location:.*}"
     name = "media"
 
-    def __init__(self, hass: HomeAssistant):
+    def __init__(self, hass: HomeAssistant, source: LocalSource):
         """Initialize the media view."""
         self.hass = hass
+        self.source = source
 
     async def get(
         self, request: web.Request, source_dir_id: str, location: str
@@ -196,7 +197,7 @@ class LocalMediaView(HomeAssistantView):
         if source_dir_id not in self.hass.config.media_dirs:
             return web.HTTPNotFound()
 
-        media_path = Path(self.hass.config.media_dirs[source_dir_id], location)
+        media_path = self.source.async_full_path(source_dir_id, location)
 
         # Check that the file exists
         if not media_path.is_file():
