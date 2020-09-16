@@ -52,7 +52,7 @@ class VeraSwitch(VeraDevice[veraApi.VeraSwitch], SwitchEntity):
         self._state = True
         self.schedule_update_ha_state()
 
-    def turn_off(self, **kwargss: Any) -> None:
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
         self.vera_device.switch_off()
         self._state = False
