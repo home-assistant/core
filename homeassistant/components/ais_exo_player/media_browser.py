@@ -654,6 +654,23 @@ def ais_music_library() -> BrowseMedia:
     return ais_music_info
 
 
+async def get_tunein_stream(hass, media_content_id):
+    web_session = aiohttp_client.async_get_clientsession(hass)
+    url_to_call = media_content_id.split("/", 3)[3]
+    with async_timeout.timeout(5):
+        ws_resp = await web_session.get(url_to_call)
+        response_text = await ws_resp.text()
+        _LOGGER.warning(response_text)
+        response_text = response_text.split("\n")[0]
+        if response_text.endswith(".pls"):
+            with async_timeout.timeout(5):
+                ws_resp = await web_session.get(response_text)
+                response_text = await ws_resp.text()
+                response_text = response_text.split("\n")[1].replace("File1=", "")
+                _LOGGER.warning(response_text)
+    return response_text
+
+
 async def ais_tunein_library(hass, media_content_id) -> BrowseMedia:
     import xml.etree.ElementTree as ET
 
@@ -662,7 +679,14 @@ async def ais_tunein_library(hass, media_content_id) -> BrowseMedia:
         try:
             #  5 sec should be enough
             with async_timeout.timeout(5):
-                ws_resp = await web_session.get("http://opml.radiotime.com/")
+                # we need this only for demo
+                if ais_global.get_sercure_android_id_dom() == "dom-demo":
+                    headers = {"accept-language": "pl"}
+                    ws_resp = await web_session.get(
+                        "http://opml.radiotime.com/", headers=headers
+                    )
+                else:
+                    ws_resp = await web_session.get("http://opml.radiotime.com/")
                 response_text = await ws_resp.text()
                 root = ET.fromstring(response_text)  # nosec
                 tunein_types = []
@@ -703,7 +727,12 @@ async def ais_tunein_library(hass, media_content_id) -> BrowseMedia:
             #  5 sec should be enough
             with async_timeout.timeout(5):
                 url_to_call = media_content_id.split("/", 3)[3]
-                ws_resp = await web_session.get(url_to_call)
+                # we need to set language only for demo
+                if ais_global.get_sercure_android_id_dom() == "dom-demo":
+                    headers = {"accept-language": "pl"}
+                    ws_resp = await web_session.get(url_to_call, headers=headers)
+                else:
+                    ws_resp = await web_session.get(url_to_call)
                 response_text = await ws_resp.text()
                 root = ET.fromstring(response_text)  # nosec
                 tunein_items = []
