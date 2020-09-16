@@ -70,7 +70,7 @@ async def browse_media(hass, media_content_type=None, media_content_id=None):
 def ais_media_library() -> BrowseMedia:
     """Create response payload to describe contents of a specific library."""
     ais_library_info = BrowseMedia(
-        title="AIS Audio",
+        title="AI-Speaker",
         media_class=MEDIA_CLASS_APP,
         media_content_id="library",
         media_content_type="library",
@@ -238,7 +238,6 @@ async def ais_audio_books_library(hass, media_content_id) -> BrowseMedia:
     else:
         # get book chapters
         lookup_url = media_content_id.split("/", 3)[3]
-        _LOGGER.error(lookup_url)
         web_session = aiohttp_client.async_get_clientsession(hass)
         #  5 sec should be enough
         try:
@@ -612,7 +611,7 @@ def ais_favorites_library(hass) -> BrowseMedia:
 def ais_music_library() -> BrowseMedia:
     """Create response payload to describe contents of a specific library."""
     ais_music_info = BrowseMedia(
-        title="AIS Audio",
+        title="AIS Music",
         media_class=MEDIA_CLASS_MUSIC,
         media_content_id="ais_music",
         media_content_type=MEDIA_TYPE_APP,
