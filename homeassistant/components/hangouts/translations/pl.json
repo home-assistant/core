@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Google Hangouts jest ju\u017c skonfigurowany.",
-            "unknown": "Nieoczekiwany b\u0142\u0105d."
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
         "error": {
             "invalid_2fa": "Nieprawid\u0142owe uwierzytelnienie dwusk\u0142adnikowe, spr\u00f3buj ponownie.",

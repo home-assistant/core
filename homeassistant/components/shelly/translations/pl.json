@@ -1,13 +1,13 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane."
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
         },
         "error": {
             "auth_not_supported": "Urz\u0105dzenia Shelly wymagaj\u0105ce uwierzytelnienia nie s\u0105 obecnie obs\u0142ugiwane.",
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
-            "invalid_auth": "Niepoprawne uwierzytelnienie.",
-            "unknown": "Nieoczekiwany b\u0142\u0105d."
+            "invalid_auth": "Niepoprawne uwierzytelnienie",
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
         "flow_title": "Shelly: {name}",
         "step": {

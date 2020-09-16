@@ -4,7 +4,7 @@
             "already_configured": "TelldusLive jest ju\u017c skonfigurowany",
             "authorize_url_fail": "Nieznany b\u0142\u0105d podczas generowania url autoryzacji.",
             "authorize_url_timeout": "Przekroczono limit czasu generowania URL autoryzacji.",
-            "unknown": "Nieoczekiwany b\u0142\u0105d."
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
         "error": {
             "auth_error": "B\u0142\u0105d uwierzytelniania, spr\u00f3buj ponownie"
