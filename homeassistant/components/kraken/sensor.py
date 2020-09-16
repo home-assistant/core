@@ -3,6 +3,7 @@ import logging
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import async_entries_for_config_entry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -21,15 +22,25 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add kraken entities from a config_entry."""
 
     @callback
-    async def async_add_sensors(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    async def async_update_sensors(
+        hass: HomeAssistant, config_entry: ConfigEntry
+    ) -> None:
+        device_registry = await hass.helpers.device_registry.async_get_registry()
+
+        existing_devices = {
+            device.name: device.id
+            for device in async_entries_for_config_entry(
+                device_registry, config_entry.entry_id
+            )
+        }
+
         for tracked_asset_pair in config_entry.options[CONF_TRACKED_ASSET_PAIRS]:
-            sensors = []
-            for sensor_type in SENSOR_TYPES:
-                # Only add sensor if it is not registered already
-                state = hass.states.get(
-                    f"sensor.{get_unique_id(tracked_asset_pair, sensor_type)}"
-                )
-                if state is None:
+            # Only create new devices
+            if create_device_name(tracked_asset_pair) in existing_devices.keys():
+                existing_devices.pop(create_device_name(tracked_asset_pair))
+            else:
+                sensors = []
+                for sensor_type in SENSOR_TYPES:
                     sensors.append(
                         KrakenSensor(
                             hass.data[DOMAIN],
@@ -37,14 +48,20 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                             sensor_type,
                         )
                     )
-            async_add_entities(sensors, True)
+                async_add_entities(sensors, True)
 
-    await async_add_sensors(hass, config_entry)
+        # Remove devices for asset pairs which are no longer tracked
+        for device_id in existing_devices.values():
+            device_registry.async_remove_device(device_id)
 
-    async_dispatcher_connect(
-        hass,
-        DISPATCH_CONFIG_UPDATED,
-        async_add_sensors,
+    await async_update_sensors(hass, config_entry)
+
+    hass.data[DOMAIN].unsub_listeners.append(
+        async_dispatcher_connect(
+            hass,
+            DISPATCH_CONFIG_UPDATED,
+            async_update_sensors,
+        )
     )
 
 
@@ -67,8 +84,14 @@ class KrakenSensor(CoordinatorEntity):
         self._sensor_type = sensor_type
         self._unit_of_measurement = self._target_asset
         self._device_name = f"{self._source_asset} {self._target_asset}"
-        self._name = get_unique_id(tracked_asset_pair, self._sensor_type)
-        self._initialized = False
+        self._name = "_".join(
+            [
+                tracked_asset_pair.split("/")[0],
+                tracked_asset_pair.split("/")[1],
+                sensor_type,
+            ]
+        )
+        self._received_data_at_least_once = False
         self._available = True
 
     @property
@@ -86,10 +109,10 @@ class KrakenSensor(CoordinatorEntity):
         """Return the state."""
         try:
             state = self._try_get_state()
-            self._initialized = True  # Received data at least one time.
+            self._received_data_at_least_once = True  # Received data at least one time.
             return state
         except TypeError:
-            if self._initialized:
+            if self._received_data_at_least_once:
                 if self._available:
                     _LOGGER.warning(
                         "Asset Pair %s is no longer available",
@@ -147,13 +170,17 @@ class KrakenSensor(CoordinatorEntity):
     @property
     def icon(self):
         """Return the icon."""
-        if self._name.split("_")[1][-3:] == "EUR":
+        if self._target_asset == "EUR":
             return "mdi:currency-eur"
-        if self._name.split("_")[1][-3:] == "USD":
+        if self._target_asset == "GBP":
+            return "mdi:currency-gbp"
+        if self._target_asset == "USD":
             return "mdi:currency-usd"
-        if self._name.split("_")[1][-3:] == "XBT":
+        if self._target_asset == "JPY":
+            return "mdi:currency-jpy"
+        if self._target_asset == "XBT":
             return "mdi:currency-btc"
-        return "mdi:currency-usd-circle"
+        return "mdi:cash"
 
     @property
     def unit_of_measurement(self):
@@ -180,12 +207,6 @@ class KrakenSensor(CoordinatorEntity):
         }
 
 
-def get_unique_id(tracked_asset_pair: str, sensor_type: str) -> str:
-    """Get the unique id for a sensor given the asset pair and sensor type."""
-    return "_".join(
-        [
-            tracked_asset_pair.split("/")[0],
-            tracked_asset_pair.split("/")[1],
-            sensor_type,
-        ]
-    )
+def create_device_name(tracked_asset_pair: str) -> str:
+    """Create the device name for a given tracked asset pair."""
+    return f"{tracked_asset_pair.split('/')[0]} {tracked_asset_pair.split('/')[1]}"

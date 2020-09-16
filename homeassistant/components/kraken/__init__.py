@@ -36,8 +36,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up kraken from a config entry."""
     kraken_data = KrakenData(hass)
-    if not await kraken_data.async_setup():
-        return False
+    await kraken_data.async_setup()
     hass.data[DOMAIN] = kraken_data
     await add_options(hass, config_entry)
     config_entry.add_update_listener(options_updated)
@@ -58,6 +57,8 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
         )
     )
     if unload_ok:
+        for unsub_listener in hass.data[DOMAIN].unsub_listeners:
+            unsub_listener()
         hass.data.pop(DOMAIN)
 
     return unload_ok
@@ -72,6 +73,7 @@ class KrakenData:
         self._api = pykrakenapi.KrakenAPI(krakenex.API(), retry=0, crl_sleep=0)
         self.tradable_asset_pairs = None
         self.coordinator = None
+        self.unsub_listeners = []
 
     async def async_update(self) -> None:
         """Get the latest data from the Kraken.com REST API.
@@ -124,7 +126,7 @@ class KrakenData:
             get_tradable_asset_pairs, self._api
         )
 
-    async def async_setup(self) -> bool:
+    async def async_setup(self) -> None:
         """Set up the Kraken integration."""
         await self._async_refresh_tradable_asset_pairs()
         await asyncio.sleep(1)  # Wait 1 second to avoid triggering the CallRateLimiter
@@ -135,9 +137,7 @@ class KrakenData:
             update_method=self.async_update,
             update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
         )
-        await self.coordinator.async_refresh()
-
-        return True
+        await self.coordinator.async_request_refresh()
 
     def _get_websocket_name_asset_pairs(self) -> list:
         return ",".join(wsname for wsname in self.tradable_asset_pairs.values())

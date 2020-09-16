@@ -1,10 +1,5 @@
 """Tests for the kraken config_flow."""
-from homeassistant.components.kraken.const import (
-    CONF_TRACKED_ASSET_PAIRS,
-    DEFAULT_SCAN_INTERVAL,
-    DEFAULT_TRACKED_ASSET_PAIR,
-    DOMAIN,
-)
+from homeassistant.components.kraken.const import CONF_TRACKED_ASSET_PAIRS, DOMAIN
 from homeassistant.const import CONF_SCAN_INTERVAL
 
 from .const import TICKER_INFORMATION_RESPONSE, TRADEABLE_ASSET_PAIR_RESPONSE
@@ -60,16 +55,39 @@ async def test_options(hass):
         "pykrakenapi.KrakenAPI.get_ticker_information",
         return_value=TICKER_INFORMATION_RESPONSE,
     ):
-        entry = MockConfigEntry(domain=DOMAIN)
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            options={
+                CONF_SCAN_INTERVAL: 60,
+                CONF_TRACKED_ASSET_PAIRS: [
+                    "ADA/XBT",
+                    "ADA/ETH",
+                    "XBT/EUR",
+                    "XBT/GBP",
+                    "XBT/USD",
+                    "XBT/JPY",
+                ],
+            },
+        )
         entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert hass.states.get("sensor.xbt_usd_last_trade_closed")
 
         result = await hass.config_entries.options.async_init(entry.entry_id)
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             {
-                CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
-                CONF_TRACKED_ASSET_PAIRS: [DEFAULT_TRACKED_ASSET_PAIR],
+                CONF_SCAN_INTERVAL: 10,
+                CONF_TRACKED_ASSET_PAIRS: ["ADA/ETH"],
             },
         )
         assert result["type"] == "create_entry"
-        assert result["data"][CONF_SCAN_INTERVAL] == DEFAULT_SCAN_INTERVAL
+        await hass.async_block_till_done()
+
+        ada_eth_sensor = hass.states.get("sensor.ada_eth_last_trade_closed")
+        assert ada_eth_sensor.state == "0.0003478"
+
+        assert hass.states.get("sensor.xbt_usd_last_trade_closed") is None

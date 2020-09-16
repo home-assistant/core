@@ -9,10 +9,8 @@ def get_tradable_asset_pairs(kraken_api: KrakenAPI) -> Dict[str, str]:
     tradable_asset_pairs = {}
     asset_pairs_df = kraken_api.get_tradable_asset_pairs()
     for pair in zip(asset_pairs_df.index.values, asset_pairs_df["wsname"]):
-        try:
-            if ".d" not in pair[0]:  # Remove strange duplicates
-                tradable_asset_pairs[pair[1]] = pair[0]
-        except AttributeError:
-            # Ignore NaN
-            pass
+        if (
+            ".d" not in pair[0]
+        ):  # Remove darkpools https://support.kraken.com/hc/en-us/articles/360001391906-Introducing-the-Kraken-Dark-Pool
+            tradable_asset_pairs[pair[1]] = pair[0]
     return tradable_asset_pairs

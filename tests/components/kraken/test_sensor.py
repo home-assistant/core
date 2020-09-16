@@ -33,7 +33,14 @@ async def test_sensor(hass):
             domain=DOMAIN,
             options={
                 CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
-                CONF_TRACKED_ASSET_PAIRS: [DEFAULT_TRACKED_ASSET_PAIR],
+                CONF_TRACKED_ASSET_PAIRS: [
+                    "ADA/XBT",
+                    "ADA/ETH",
+                    "XBT/EUR",
+                    "XBT/GBP",
+                    "XBT/USD",
+                    "XBT/JPY",
+                ],
             },
         )
         entry.add_to_hass(hass)
@@ -45,8 +52,29 @@ async def test_sensor(hass):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         await hass.async_block_till_done()
 
-        sensor = hass.states.get("sensor.xbt_usd_last_trade_closed")
-        assert sensor.state == "0.0003478"
+        xbt_usd_sensor = hass.states.get("sensor.xbt_usd_last_trade_closed")
+        assert xbt_usd_sensor.state == "0.0003478"
+        assert xbt_usd_sensor.attributes["icon"] == "mdi:currency-usd"
+
+        xbt_eur_sensor = hass.states.get("sensor.xbt_eur_last_trade_closed")
+        assert xbt_eur_sensor.state == "0.0003478"
+        assert xbt_eur_sensor.attributes["icon"] == "mdi:currency-eur"
+
+        ada_xbt_sensor = hass.states.get("sensor.ada_xbt_last_trade_closed")
+        assert ada_xbt_sensor.state == "0.0003478"
+        assert ada_xbt_sensor.attributes["icon"] == "mdi:currency-btc"
+
+        xbt_jpy_sensor = hass.states.get("sensor.xbt_jpy_last_trade_closed")
+        assert xbt_jpy_sensor.state == "0.0003478"
+        assert xbt_jpy_sensor.attributes["icon"] == "mdi:currency-jpy"
+
+        xbt_gbp_sensor = hass.states.get("sensor.xbt_gbp_last_trade_closed")
+        assert xbt_gbp_sensor.state == "0.0003478"
+        assert xbt_gbp_sensor.attributes["icon"] == "mdi:currency-gbp"
+
+        ada_eth_sensor = hass.states.get("sensor.ada_eth_last_trade_closed")
+        assert ada_eth_sensor.state == "0.0003478"
+        assert ada_eth_sensor.attributes["icon"] == "mdi:cash"
 
 
 async def test_missing_pair_marks_sensor_unavailable(hass):
@@ -84,14 +112,6 @@ async def test_missing_pair_marks_sensor_unavailable(hass):
             "pykrakenapi.KrakenAPI.get_ticker_information",
             side_effect=KrakenAPIError("EQuery:Unknown asset pair"),
         ):
-            async_fire_time_changed(
-                hass, utcnow + timedelta(seconds=DEFAULT_SCAN_INTERVAL * 2)
-            )
-            await hass.async_block_till_done()
-
-            sensor = hass.states.get("sensor.xbt_usd_last_trade_closed")
-            assert sensor.state == "unknown"
-
             async_fire_time_changed(
                 hass, utcnow + timedelta(seconds=DEFAULT_SCAN_INTERVAL * 2)
             )
