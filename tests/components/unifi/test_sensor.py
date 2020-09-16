@@ -166,6 +166,21 @@ async def test_sensors(hass):
     wireless_client_uptime = hass.states.get("sensor.wireless_client_name_uptime")
     assert wireless_client_uptime.state == "2020-09-15T14:41:00+00:00"
 
+    wired_client_uptime = hass.states.get("sensor.wired_client_name_uptime")
+    assert wired_client_uptime.state == "2020-09-14T14:41:45+00:00"
+
+    # Try to add the sensors again, I guess
+    hass.config_entries.async_update_entry(
+        controller.config_entry,
+        options={
+            CONF_ALLOW_BANDWIDTH_SENSORS: True,
+            CONF_ALLOW_UPTIME_SENSORS: True,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 6
+
 
 async def test_remove_sensors(hass):
     """Test the remove_items function with some clients."""
