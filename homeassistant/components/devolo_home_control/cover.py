@@ -12,7 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DOMAIN
-from .devolo_device import DevoloDeviceEntity
+from .devolo_multi_level_switch import DevoloMultiLevelSwitchDeviceEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,29 +37,13 @@ async def async_setup_entry(
     async_add_entities(entities, False)
 
 
-class DevoloCoverDeviceEntity(DevoloDeviceEntity, CoverEntity):
+class DevoloCoverDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, CoverEntity):
     """Representation of a cover device within devolo Home Control."""
-
-    def __init__(self, homecontrol, device_instance, element_uid):
-        """Initialize a devolo blinds device."""
-        super().__init__(
-            homecontrol=homecontrol,
-            device_instance=device_instance,
-            element_uid=element_uid,
-            name=device_instance.item_name,
-            sync=self._sync,
-        )
-
-        self._multi_level_switch_property = (
-            device_instance.multi_level_switch_property.get(element_uid)
-        )
-
-        self._position = self._multi_level_switch_property.value
 
     @property
     def current_cover_position(self):
         """Return the current position. 0 is closed. 100 is open."""
-        return self._position
+        return self._value
 
     @property
     def device_class(self):
@@ -69,7 +53,7 @@ class DevoloCoverDeviceEntity(DevoloDeviceEntity, CoverEntity):
     @property
     def is_closed(self):
         """Return if the blind is closed or not."""
-        return not bool(self._position)
+        return not bool(self._value)
 
     @property
     def supported_features(self):
@@ -87,13 +71,3 @@ class DevoloCoverDeviceEntity(DevoloDeviceEntity, CoverEntity):
     def set_cover_position(self, **kwargs):
         """Set the blind to the given position."""
         self._multi_level_switch_property.set(kwargs["position"])
-
-    def _sync(self, message=None):
-        """Update the binary sensor state."""
-        if message[0] == self._unique_id:
-            self._position = message[1]
-        elif message[0].startswith("hdm"):
-            self._available = self._device_instance.is_online()
-        else:
-            _LOGGER.debug("Not valid message received: %s", message)
-        self.schedule_update_ha_state()

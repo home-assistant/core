@@ -58,11 +58,6 @@ class DevoloSwitch(DevoloDeviceEntity, SwitchEntity):
             self._consumption = None
 
     @property
-    def device_id(self):
-        """Return the ID of this switch."""
-        return self._unique_id
-
-    @property
     def is_on(self):
         """Return the state."""
         return self._is_on

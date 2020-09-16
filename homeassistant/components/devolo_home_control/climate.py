@@ -14,7 +14,7 @@ from homeassistant.const import PRECISION_HALVES
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DOMAIN
-from .devolo_device import DevoloDeviceEntity
+from .devolo_multi_level_switch import DevoloMultiLevelSwitchDeviceEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,29 +42,13 @@ async def async_setup_entry(
     async_add_entities(entities, False)
 
 
-class DevoloClimateDeviceEntity(DevoloDeviceEntity, ClimateEntity):
+class DevoloClimateDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, ClimateEntity):
     """Representation of a climate/thermostat device within devolo Home Control."""
-
-    def __init__(self, homecontrol, device_instance, element_uid):
-        """Initialize a devolo climate/thermostat device."""
-        super().__init__(
-            homecontrol=homecontrol,
-            device_instance=device_instance,
-            element_uid=element_uid,
-            name=device_instance.item_name,
-            sync=self._sync,
-        )
-
-        self._multi_level_switch_property = (
-            device_instance.multi_level_switch_property.get(element_uid)
-        )
-
-        self._temperature = self._multi_level_switch_property.value
 
     @property
     def current_temperature(self) -> Optional[float]:
         """Return the current temperature."""
-        return self._temperature
+        return self._value
 
     @property
     def hvac_mode(self) -> str:
@@ -104,13 +88,3 @@ class DevoloClimateDeviceEntity(DevoloDeviceEntity, ClimateEntity):
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
         self._multi_level_switch_property.set(kwargs[ATTR_TEMPERATURE])
-
-    def _sync(self, message=None):
-        """Update the climate entity triggered by web socket connection."""
-        if message[0] == self._unique_id:
-            self._temperature = message[1]
-        elif message[0].startswith("hdm"):
-            self._available = self._device_instance.is_online()
-        else:
-            _LOGGER.debug("Not valid message received: %s", message)
-        self.schedule_update_ha_state()

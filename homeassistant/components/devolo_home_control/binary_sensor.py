@@ -89,8 +89,6 @@ class DevoloBinaryDeviceEntity(DevoloDeviceEntity, BinarySensorEntity):
 
         self._state = self._binary_sensor_property.state
 
-        self._subscriber = None
-
     @property
     def is_on(self):
         """Return the state."""
@@ -131,8 +129,6 @@ class DevoloRemoteControl(DevoloDeviceEntity, BinarySensorEntity):
         self._key = key
 
         self._state = False
-
-        self._subscriber = None
 
     @property
     def is_on(self):
