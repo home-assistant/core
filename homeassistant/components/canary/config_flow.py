@@ -58,10 +58,13 @@ class CanaryConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="single_instance_allowed")
 
         errors = {}
+        default_username = ""
 
         if user_input is not None:
             if CONF_TIMEOUT not in user_input:
                 user_input[CONF_TIMEOUT] = DEFAULT_TIMEOUT
+
+            default_username = user_input[CONF_USERNAME]
 
             try:
                 await self.hass.async_add_executor_job(
@@ -79,8 +82,8 @@ class CanaryConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         data_schema = {
-            vol.Required(CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")): str,
-            vol.Required(CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, "")): str,
+            vol.Required(CONF_USERNAME, default=default_username): str,
+            vol.Required(CONF_PASSWORD): str,
         }
 
         return self.async_show_form(
