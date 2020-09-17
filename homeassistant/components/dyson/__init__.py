@@ -128,7 +128,7 @@ class DysonEntity(Entity):
 
     def on_message_filter(self, message):
         """Filter new messages received."""
-        if isinstance(message, self._state_type):
+        if self._state_type is None or isinstance(message, self._state_type):
             _LOGGER.debug(
                 "Message received for %s device %s : %s",
                 self._entity_type,
@@ -155,4 +155,4 @@ class DysonEntity(Entity):
     @property
     def unique_id(self):
         """Return the sensor's unique id."""
-        return f"{self._entity_type}/{self._device.serial}"
+        return f"{self._device.serial}/{self._entity_type}"
