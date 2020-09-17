@@ -31,9 +31,9 @@ def _base_schema(discovery_info):
 
     if not discovery_info:
         base_schema[vol.Required(CONF_HOST)] = str
+        base_schema[vol.Optional(CONF_PORT, default=DEFAULT_PORT)] = int
 
     base_schema[vol.Required(CONF_PASSWORD)] = str
-    base_schema[vol.Optional(CONF_PORT, default=DEFAULT_PORT)] = int
 
     return vol.Schema(base_schema)
 
