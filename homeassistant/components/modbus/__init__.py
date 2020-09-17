@@ -4,6 +4,7 @@ import threading
 
 from pymodbus.client.sync import ModbusSerialClient, ModbusTcpClient, ModbusUdpClient
 from pymodbus.transaction import ModbusRtuFramer
+from SungrowModbusTcpClient import SungrowModbusTcpClient
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -56,7 +57,7 @@ ETHERNET_SCHEMA = BASE_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PORT): cv.port,
-        vol.Required(CONF_TYPE): vol.Any("tcp", "udp", "rtuovertcp"),
+        vol.Required(CONF_TYPE): vol.Any("tcp", "udp", "rtuovertcp", "sungrow"),
         vol.Optional(CONF_TIMEOUT, default=3): cv.socket_timeout,
         vol.Optional(CONF_DELAY, default=0): cv.positive_int,
     }
@@ -205,6 +206,12 @@ class ModbusHub:
             )
         elif self._config_type == "udp":
             self._client = ModbusUdpClient(
+                host=self._config_host,
+                port=self._config_port,
+                timeout=self._config_timeout,
+            )
+        elif self._config_type == "sungrow":
+            self._client = SungrowModbusTcpClient(
                 host=self._config_host,
                 port=self._config_port,
                 timeout=self._config_timeout,
