@@ -157,7 +157,7 @@ async def async_setup_hass(
         _LOGGER.info("Starting in AIS dom safe mode")
         hass.config.safe_mode = True
 
-        ais_conf = await (conf_util.async_ais_config_yaml(hass)) or {}
+        http_conf = await (conf_util.async_ais_config_yaml(hass)) or {}
         # http_conf = (await http.async_get_last_config(hass)) or {}
 
         await async_from_config_dict(
