@@ -21,6 +21,7 @@ from homeassistant.const import (
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
+    LIGHT_LUX,
     PERCENTAGE,
     PRESSURE_HPA,
     TEMP_CELSIUS,
@@ -307,7 +308,7 @@ class XiaomiGatewayIlluminanceSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity."""
-        return "lux"
+        return LIGHT_LUX
 
     @property
     def device_class(self):
