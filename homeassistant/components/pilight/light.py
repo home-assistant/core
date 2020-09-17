@@ -61,7 +61,8 @@ class PilightLight(PilightBaseDevice, LightEntity):
 
     def turn_on(self, **kwargs):
         """Turn the switch on by calling pilight.send service with on code."""
-        # Update brightness only if provided as an argument, this will allow the switch to keep its previous brightness level.
+        # Update brightness only if provided as an argument.
+        # This will allow the switch to keep its previous brightness level.
         dimlevel = None
 
         if ATTR_BRIGHTNESS in kwargs:
