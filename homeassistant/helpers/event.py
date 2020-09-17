@@ -581,6 +581,11 @@ class _TrackTemplateResultInfo:
 
         self._last_info = self._info.copy()
         self._create_listeners()
+        _LOGGER.debug(
+            "Template group %s listens for %s",
+            self._track_templates,
+            self.listeners,
+        )
 
     @property
     def listeners(self) -> Dict:
@@ -726,6 +731,10 @@ class _TrackTemplateResultInfo:
             ):
                 continue
 
+            _LOGGER.debug(
+                "Template update %s triggered by event: %s", template.template, event
+            )
+
             self._info[template] = template.async_render_to_info(
                 track_template_.variables
             )
@@ -751,6 +760,11 @@ class _TrackTemplateResultInfo:
 
         if info_changed:
             self._update_listeners()
+            _LOGGER.debug(
+                "Template group %s listens for %s",
+                self._track_templates,
+                self.listeners,
+            )
             self._last_info = self._info.copy()
 
         if not updates:
