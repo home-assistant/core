@@ -668,7 +668,7 @@ async def test_track_template_error(hass, caplog):
         hass.states.async_set("switch.not_exist", "off")
         await hass.async_block_till_done()
 
-    assert "lunch" not in caplog.text
+    assert "no filter named 'lunch'" not in caplog.text
     assert "TemplateAssertionError" not in caplog.text
 
 
