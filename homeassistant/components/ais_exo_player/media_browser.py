@@ -11,24 +11,116 @@ from homeassistant.components.media_player.const import (
     MEDIA_CLASS_APP,
     MEDIA_CLASS_ARTIST,
     MEDIA_CLASS_DIRECTORY,
+    MEDIA_CLASS_EPISODE,
+    MEDIA_CLASS_GENRE,
     MEDIA_CLASS_IMAGE,
     MEDIA_CLASS_MUSIC,
+    MEDIA_CLASS_PLAYLIST,
     MEDIA_CLASS_PODCAST,
+    MEDIA_CLASS_TRACK,
     MEDIA_CLASS_VIDEO,
+    MEDIA_TYPE_ALBUM,
     MEDIA_TYPE_APP,
+    MEDIA_TYPE_ARTIST,
     MEDIA_TYPE_CHANNELS,
+    MEDIA_TYPE_EPISODE,
     MEDIA_TYPE_MUSIC,
+    MEDIA_TYPE_PLAYLIST,
+    MEDIA_TYPE_TRACK,
 )
 from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.components.media_source import const as media_source_const
 from homeassistant.helpers import aiohttp_client
+
+MEDIA_TYPE_SHOW = "show"
+BROWSE_LIMIT = 48
+_LOGGER = logging.getLogger(__name__)
+
+
+class MissingMediaInformation(BrowseError):
+    """Missing media required information."""
 
 
 class UnknownMediaType(BrowseError):
     """Unknown media type."""
 
 
-_LOGGER = logging.getLogger(__name__)
+SPOTIFY_LIBRARY_MAP = {
+    "current_user_playlists": "Playlisty",
+    "current_user_followed_artists": "Artyści",
+    "current_user_saved_albums": "Albumy",
+    "current_user_saved_tracks": "Utwory",
+    "current_user_saved_shows": "Podkasty",
+    "current_user_recently_played": "Ostatnio grane",
+    "current_user_top_artists": "Najpopularniejsi artyści",
+    "current_user_top_tracks": "Najlepsze utwory",
+    "categories": "Kategorie",
+    "featured_playlists": "Polecane playlisty",
+    "new_releases": "Nowo wydane",
+}
+
+SPOTIFY_CONTENT_TYPE_MEDIA_CLASS = {
+    "current_user_playlists": {
+        "parent": MEDIA_CLASS_DIRECTORY,
+        "children": MEDIA_CLASS_PLAYLIST,
+    },
+    "current_user_followed_artists": {
+        "parent": MEDIA_CLASS_DIRECTORY,
+        "children": MEDIA_CLASS_ARTIST,
+    },
+    "current_user_saved_albums": {
+        "parent": MEDIA_CLASS_DIRECTORY,
+        "children": MEDIA_CLASS_ALBUM,
+    },
+    "current_user_saved_tracks": {
+        "parent": MEDIA_CLASS_DIRECTORY,
+        "children": MEDIA_CLASS_TRACK,
+    },
+    "current_user_saved_shows": {
+        "parent": MEDIA_CLASS_DIRECTORY,
+        "children": MEDIA_CLASS_PODCAST,
+    },
+    "current_user_recently_played": {
+        "parent": MEDIA_CLASS_DIRECTORY,
+        "children": MEDIA_CLASS_TRACK,
+    },
+    "current_user_top_artists": {
+        "parent": MEDIA_CLASS_DIRECTORY,
+        "children": MEDIA_CLASS_ARTIST,
+    },
+    "current_user_top_tracks": {
+        "parent": MEDIA_CLASS_DIRECTORY,
+        "children": MEDIA_CLASS_TRACK,
+    },
+    "featured_playlists": {
+        "parent": MEDIA_CLASS_DIRECTORY,
+        "children": MEDIA_CLASS_PLAYLIST,
+    },
+    "categories": {"parent": MEDIA_CLASS_DIRECTORY, "children": MEDIA_CLASS_GENRE},
+    "category_playlists": {
+        "parent": MEDIA_CLASS_DIRECTORY,
+        "children": MEDIA_CLASS_PLAYLIST,
+    },
+    "new_releases": {"parent": MEDIA_CLASS_DIRECTORY, "children": MEDIA_CLASS_ALBUM},
+    MEDIA_TYPE_PLAYLIST: {
+        "parent": MEDIA_CLASS_PLAYLIST,
+        "children": MEDIA_CLASS_TRACK,
+    },
+    MEDIA_TYPE_ALBUM: {"parent": MEDIA_CLASS_ALBUM, "children": MEDIA_CLASS_TRACK},
+    MEDIA_TYPE_ARTIST: {"parent": MEDIA_CLASS_ARTIST, "children": MEDIA_CLASS_ALBUM},
+    MEDIA_TYPE_EPISODE: {"parent": MEDIA_CLASS_EPISODE, "children": None},
+    MEDIA_TYPE_SHOW: {"parent": MEDIA_CLASS_PODCAST, "children": MEDIA_CLASS_EPISODE},
+    MEDIA_TYPE_TRACK: {"parent": MEDIA_CLASS_TRACK, "children": None},
+}
+
+SPOTIFY_PLAYABLE_MEDIA_TYPES = [
+    MEDIA_TYPE_PLAYLIST,
+    MEDIA_TYPE_ALBUM,
+    MEDIA_TYPE_ARTIST,
+    MEDIA_TYPE_EPISODE,
+    MEDIA_TYPE_SHOW,
+    MEDIA_TYPE_TRACK,
+]
 
 
 async def browse_media(hass, media_content_type=None, media_content_id=None):
@@ -40,11 +132,11 @@ async def browse_media(hass, media_content_type=None, media_content_id=None):
         result = await media_source.async_browse_media(hass, media_content_id)
         return result
 
-    if media_content_id.startswith("ais_music"):
-        return ais_music_library()
+    # if media_content_id.startswith("ais_music"):
+    #     return ais_music_library()
 
     if media_content_id.startswith("ais_spotify"):
-        return await ais_spotify_library(hass)
+        return await ais_spotify_library(hass, media_content_type, media_content_id)
 
     if media_content_id.startswith("ais_youtube"):
         return await ais_youtube_library(hass)
@@ -655,79 +747,250 @@ def ais_favorites_library(hass) -> BrowseMedia:
     return root
 
 
-async def ais_spotify_library(hass) -> BrowseMedia:
+async def ais_spotify_library(
+    hass, media_content_type, media_content_id
+) -> BrowseMedia:
     """Create response payload to describe contents of a specific library."""
-    ais_music_info = BrowseMedia(
-        title="AIS Music",
-        media_class=MEDIA_CLASS_MUSIC,
-        media_content_id="ais_music",
-        media_content_type=MEDIA_TYPE_APP,
-        can_play=False,
-        can_expand=True,
-        children=[],
-    )
+    if hass.services.has_service("ais_spotify_service", "get_favorites"):
+        if media_content_id == "ais_spotify":
+            library_info = {
+                "title": "Media Library",
+                "media_class": MEDIA_CLASS_DIRECTORY,
+                "media_content_id": "library",
+                "media_content_type": "library",
+                "can_play": False,
+                "can_expand": True,
+                "children": [],
+            }
 
-    ais_music_info.children.append(
-        BrowseMedia(
-            title="Spotify",
-            media_class=MEDIA_CLASS_MUSIC,
-            media_content_id="ais_music",
-            media_content_type=MEDIA_TYPE_APP,
-            can_expand=True,
-            can_play=False,
+            for item in [
+                {"name": n, "type": t} for t, n in SPOTIFY_LIBRARY_MAP.items()
+            ]:
+                library_info["children"].append(
+                    spotify_item_payload(
+                        {
+                            "name": item["name"],
+                            "type": item["type"],
+                            "uri": "ais_spotify:" + item["type"],
+                        }
+                    )
+                )
+            response = BrowseMedia(**library_info)
+            response.children_media_class = MEDIA_CLASS_DIRECTORY
+            return response
+        else:
+            spotify_data = hass.data["ais_spotify_service"]
+            spotify, user = spotify_data.refresh_spotify_instance()
+            payload = {
+                "media_content_type": media_content_type,
+                "media_content_id": media_content_id,
+            }
+            return spotify_build_item_response(
+                spotify=spotify, user=user, payload=payload
+            )
+    else:
+        raise BrowseError(
+            "AIS - dodaj Spotify zgodnie z instrukcją na stronie ai-speaker.com"
         )
-    )
-    ais_music_info.children.append(
-        BrowseMedia(
-            title="YouTube",
-            media_class=MEDIA_CLASS_VIDEO,
-            media_content_id="ais_music",
-            media_content_type=MEDIA_TYPE_APP,
-            can_expand=True,
-            can_play=False,
+
+
+def spotify_build_item_response(spotify, user, payload):
+    """Create response payload for the provided media query."""
+    media_content_type = payload["media_content_type"]
+    media_content_id = payload["media_content_id"]
+    # AIS
+    if media_content_id.startswith(""):
+        media_content_id = media_content_id.replace("ais_spotify:", "")
+    title = None
+    image = None
+    if media_content_type == "current_user_playlists":
+        media = spotify.current_user_playlists(limit=BROWSE_LIMIT)
+        items = media.get("items", [])
+    elif media_content_type == "current_user_followed_artists":
+        media = spotify.current_user_followed_artists(limit=BROWSE_LIMIT)
+        items = media.get("artists", {}).get("items", [])
+    elif media_content_type == "current_user_saved_albums":
+        media = spotify.current_user_saved_albums(limit=BROWSE_LIMIT)
+        items = [item["album"] for item in media.get("items", [])]
+    elif media_content_type == "current_user_saved_tracks":
+        media = spotify.current_user_saved_tracks(limit=BROWSE_LIMIT)
+        items = [item["track"] for item in media.get("items", [])]
+    elif media_content_type == "current_user_saved_shows":
+        media = spotify.current_user_saved_shows(limit=BROWSE_LIMIT)
+        items = [item["show"] for item in media.get("items", [])]
+    elif media_content_type == "current_user_recently_played":
+        media = spotify.current_user_recently_played(limit=BROWSE_LIMIT)
+        items = [item["track"] for item in media.get("items", [])]
+    elif media_content_type == "current_user_top_artists":
+        media = spotify.current_user_top_artists(limit=BROWSE_LIMIT)
+        items = media.get("items", [])
+    elif media_content_type == "current_user_top_tracks":
+        media = spotify.current_user_top_tracks(limit=BROWSE_LIMIT)
+        items = media.get("items", [])
+    elif media_content_type == "featured_playlists":
+        media = spotify.featured_playlists(country=user["country"], limit=BROWSE_LIMIT)
+        items = media.get("playlists", {}).get("items", [])
+    elif media_content_type == "categories":
+        media = spotify.categories(country=user["country"], limit=BROWSE_LIMIT)
+        items = media.get("categories", {}).get("items", [])
+    elif media_content_type == "category_playlists":
+        media = spotify.category_playlists(
+            category_id=media_content_id,
+            country=user["country"],
+            limit=BROWSE_LIMIT,
         )
-    )
-    return ais_music_info
+        category = spotify.category(media_content_id, country=user["country"])
+        title = category.get("name")
+        image = spotify_fetch_image_url(category, key="icons")
+        items = media.get("playlists", {}).get("items", [])
+    elif media_content_type == "new_releases":
+        media = spotify.new_releases(country=user["country"], limit=BROWSE_LIMIT)
+        items = media.get("albums", {}).get("items", [])
+    elif media_content_type == MEDIA_TYPE_PLAYLIST:
+        media = spotify.playlist(media_content_id)
+        items = [item["track"] for item in media.get("tracks", {}).get("items", [])]
+    elif media_content_type == MEDIA_TYPE_ALBUM:
+        media = spotify.album(media_content_id)
+        items = media.get("tracks", {}).get("items", [])
+    elif media_content_type == MEDIA_TYPE_ARTIST:
+        media = spotify.artist_albums(media_content_id, limit=BROWSE_LIMIT)
+        artist = spotify.artist(media_content_id)
+        title = artist.get("name")
+        image = spotify_fetch_image_url(artist)
+        items = media.get("items", [])
+    elif media_content_type == MEDIA_TYPE_SHOW:
+        media = spotify.show_episodes(media_content_id, limit=BROWSE_LIMIT)
+        show = spotify.show(media_content_id)
+        title = show.get("name")
+        image = spotify_fetch_image_url(show)
+        items = media.get("items", [])
+    else:
+        media = None
+        items = []
+
+    if media is None:
+        return None
+
+    try:
+        media_class = SPOTIFY_CONTENT_TYPE_MEDIA_CLASS[media_content_type]
+    except KeyError:
+        _LOGGER.debug("Unknown media type received: %s", media_content_type)
+        return None
+
+    if media_content_type == "categories":
+        media_item = BrowseMedia(
+            title=SPOTIFY_LIBRARY_MAP.get(media_content_id),
+            media_class=media_class["parent"],
+            children_media_class=media_class["children"],
+            media_content_id=media_content_id,
+            media_content_type=media_content_type,
+            can_play=False,
+            can_expand=True,
+            children=[],
+        )
+        for item in items:
+            try:
+                item_id = item["id"]
+            except KeyError:
+                _LOGGER.debug("Missing id for media item: %s", item)
+                continue
+            media_item.children.append(
+                BrowseMedia(
+                    title=item.get("name"),
+                    media_class=MEDIA_CLASS_PLAYLIST,
+                    children_media_class=MEDIA_CLASS_TRACK,
+                    media_content_id=item_id,
+                    media_content_type="category_playlists",
+                    thumbnail=spotify_fetch_image_url(item, key="icons"),
+                    can_play=False,
+                    can_expand=True,
+                )
+            )
+        return media_item
+
+    if title is None:
+        if "name" in media:
+            title = media.get("name")
+        else:
+            title = SPOTIFY_LIBRARY_MAP.get(payload["media_content_id"])
+
+    params = {
+        "title": title,
+        "media_class": media_class["parent"],
+        "children_media_class": media_class["children"],
+        "media_content_id": media_content_id,
+        "media_content_type": media_content_type,
+        "can_play": media_content_type in SPOTIFY_PLAYABLE_MEDIA_TYPES,
+        "children": [],
+        "can_expand": True,
+    }
+    for item in items:
+        try:
+            params["children"].append(spotify_item_payload(item))
+        except (MissingMediaInformation, UnknownMediaType):
+            continue
+
+    if "images" in media:
+        params["thumbnail"] = spotify_fetch_image_url(media)
+    elif image:
+        params["thumbnail"] = image
+
+    return BrowseMedia(**params)
+
+
+def spotify_fetch_image_url(item, key="images"):
+    """Fetch image url."""
+    try:
+        return item.get(key, [])[0].get("url")
+    except IndexError:
+        return None
+
+
+def spotify_item_payload(item):
+    """
+    Create response payload for a single media item.
+
+    Used by async_browse_media.
+    """
+    try:
+        media_type = item["type"]
+        media_id = item["uri"]
+    except KeyError as err:
+        _LOGGER.debug("Missing type or uri for media item: %s", item)
+        raise MissingMediaInformation from err
+
+    try:
+        media_class = SPOTIFY_CONTENT_TYPE_MEDIA_CLASS[media_type]
+    except KeyError as err:
+        _LOGGER.debug("Unknown media type received: %s", media_type)
+        raise UnknownMediaType from err
+
+    can_expand = media_type not in [
+        MEDIA_TYPE_TRACK,
+        MEDIA_TYPE_EPISODE,
+    ]
+
+    payload = {
+        "title": item.get("name"),
+        "media_class": media_class["parent"],
+        "children_media_class": media_class["children"],
+        "media_content_id": media_id,
+        "media_content_type": media_type,
+        "can_play": media_type in SPOTIFY_PLAYABLE_MEDIA_TYPES,
+        "can_expand": can_expand,
+    }
+
+    if "images" in item:
+        payload["thumbnail"] = spotify_fetch_image_url(item)
+    elif MEDIA_TYPE_ALBUM in item:
+        payload["thumbnail"] = spotify_fetch_image_url(item[MEDIA_TYPE_ALBUM])
+
+    return BrowseMedia(**payload)
 
 
 async def ais_youtube_library(hass) -> BrowseMedia:
     """Create response payload to describe contents of a specific library."""
-    raise BrowseError("AIS TODO")
-
-
-def ais_music_library() -> BrowseMedia:
-    """Create response payload to describe contents of a specific library."""
-    ais_music_info = BrowseMedia(
-        title="AIS Music",
-        media_class=MEDIA_CLASS_MUSIC,
-        media_content_id="ais_music",
-        media_content_type=MEDIA_TYPE_APP,
-        can_play=False,
-        can_expand=True,
-        children=[],
-    )
-
-    ais_music_info.children.append(
-        BrowseMedia(
-            title="Spotify",
-            media_class=MEDIA_CLASS_MUSIC,
-            media_content_id="ais_music",
-            media_content_type=MEDIA_TYPE_APP,
-            can_expand=True,
-            can_play=False,
-        )
-    )
-    ais_music_info.children.append(
-        BrowseMedia(
-            title="YouTube",
-            media_class=MEDIA_CLASS_VIDEO,
-            media_content_id="ais_music",
-            media_content_type=MEDIA_TYPE_APP,
-            can_expand=True,
-            can_play=False,
-        )
-    )
-    return ais_music_info
+    raise BrowseError("AIS TODO - Jeszcze pracujemy nad tym.:)")
 
 
 async def get_tunein_stream(hass, media_content_id):
