@@ -138,6 +138,9 @@ class TPLinkSmartBulb(LightEntity):
         self._last_current_power_update = None
         self._last_historical_power_update = None
         self._emeter_params = {}
+        self._light_features.mac = None
+        self._light_features.alias = None
+        self._light_features.host = None
 
     @property
     def unique_id(self):
