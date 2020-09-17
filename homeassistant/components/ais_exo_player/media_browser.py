@@ -771,7 +771,7 @@ async def ais_spotify_library(
                         {
                             "name": item["name"],
                             "type": item["type"],
-                            "uri": "ais_spotify:" + item["type"],
+                            "uri": "ais_spotify/" + item["type"],
                         }
                     )
                 )
@@ -779,6 +779,8 @@ async def ais_spotify_library(
             response.children_media_class = MEDIA_CLASS_DIRECTORY
             return response
         else:
+            _LOGGER.error(str("media_content_type: " + media_content_type))
+            _LOGGER.error(str("media_content_id: " + media_content_id))
             spotify_data = hass.data["ais_spotify_service"]
             spotify, user = spotify_data.refresh_spotify_instance()
             payload = {
@@ -796,11 +798,8 @@ async def ais_spotify_library(
 
 def spotify_build_item_response(spotify, user, payload):
     """Create response payload for the provided media query."""
-    media_content_type = payload["media_content_type"]
+    media_content_type = payload["media_content_id"].replace("ais_spotify/", "")
     media_content_id = payload["media_content_id"]
-    # AIS
-    if media_content_id.startswith(""):
-        media_content_id = media_content_id.replace("ais_spotify:", "")
     title = None
     image = None
     if media_content_type == "current_user_playlists":
@@ -899,7 +898,7 @@ def spotify_build_item_response(spotify, user, payload):
                     title=item.get("name"),
                     media_class=MEDIA_CLASS_PLAYLIST,
                     children_media_class=MEDIA_CLASS_TRACK,
-                    media_content_id=item_id,
+                    media_content_id="ais_spotify/" + item_id,
                     media_content_type="category_playlists",
                     thumbnail=spotify_fetch_image_url(item, key="icons"),
                     can_play=False,
@@ -954,7 +953,7 @@ def spotify_item_payload(item):
     """
     try:
         media_type = item["type"]
-        media_id = item["uri"]
+        media_id = item["uri"].replace("ais_spotify/", "")
     except KeyError as err:
         _LOGGER.debug("Missing type or uri for media item: %s", item)
         raise MissingMediaInformation from err
@@ -974,7 +973,7 @@ def spotify_item_payload(item):
         "title": item.get("name"),
         "media_class": media_class["parent"],
         "children_media_class": media_class["children"],
-        "media_content_id": media_id,
+        "media_content_id": "ais_spotify/" + media_id,
         "media_content_type": media_type,
         "can_play": media_type in SPOTIFY_PLAYABLE_MEDIA_TYPES,
         "can_expand": can_expand,
