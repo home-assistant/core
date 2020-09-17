@@ -8,7 +8,7 @@ from homeassistant.components.light import LightEntity
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.util import Throttle
 
-from .const import CONF_SITE_ID, LIGHT_UPDATE_DELAY
+from .const import CONF_SITE_ID, DOMAIN, LIGHT_UPDATE_DELAY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,6 +80,17 @@ class SolarEdgeLight(LightEntity):
         self._light_key = light_key
         self._light_service = light_service
         self._state = self._light_service.devices[self._light_key]
+
+    @property
+    def device_info(self):
+        """Return device info."""
+        return {
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "name": self.name,
+            "manufacturer": self._state["manufacturer"],
+            "model": self._state["model"],
+            "sw_version": self._state["swVersion"],
+        }
 
     @property
     def unique_id(self):
