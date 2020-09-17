@@ -106,10 +106,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if device.serial not in device_serials:
             if isinstance(device, DysonPureCool):
                 has_purecool_devices = True
-                dyson_entity = DysonPureCoolDevice(device)
+                dyson_entity = DysonPureCoolEntity(device)
                 hass.data[DYSON_FAN_DEVICES].append(dyson_entity)
             elif isinstance(device, DysonPureCoolLink):
-                dyson_entity = DysonPureCoolLinkDevice(device)
+                dyson_entity = DysonPureCoolLinkEntity(device)
                 hass.data[DYSON_FAN_DEVICES].append(dyson_entity)
 
     add_entities(hass.data[DYSON_FAN_DEVICES])
@@ -193,7 +193,7 @@ class DysonFanEntity(DysonEntity, FanEntity):
         return self._device.state.night_mode == "ON"
 
 
-class DysonPureCoolLinkDevice(DysonFanEntity):
+class DysonPureCoolLinkEntity(DysonFanEntity):
     """Representation of a Dyson fan."""
 
     def __init__(self, device):
@@ -316,7 +316,7 @@ class DysonPureCoolLinkDevice(DysonFanEntity):
         return {ATTR_NIGHT_MODE: self.night_mode, ATTR_AUTO_MODE: self.auto_mode}
 
 
-class DysonPureCoolDevice(DysonFanEntity):
+class DysonPureCoolEntity(DysonFanEntity):
     """Representation of a Dyson Purecool (TP04/DP04) fan."""
 
     def __init__(self, device):
