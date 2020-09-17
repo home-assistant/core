@@ -12,6 +12,9 @@ homeassistant:
   allowlist_external_dirs:
   - /data/data/pl.sviete.dom/files/home/AIS/
   - /data/data/pl.sviete.dom/files/home/AIS/www/
+  media_dirs:
+    dyski: /data/data/pl.sviete.dom/files/home/dom
+    galeria: /data/data/pl.sviete.dom/files/home/AIS/www/img
 
 #
 system_health:
