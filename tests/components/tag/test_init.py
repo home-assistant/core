@@ -48,6 +48,30 @@ async def test_ws_list(hass, hass_ws_client, storage_setup):
     assert "test tag" in result
 
 
+async def test_ws_update(hass, hass_ws_client, storage_setup):
+    """Test listing tags via WS."""
+    assert await storage_setup()
+    await async_scan_tag(hass, "test tag", "some_scanner")
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            "id": 6,
+            "type": f"{DOMAIN}/update",
+            f"{DOMAIN}_id": "test tag",
+            "name": "New name",
+        }
+    )
+    resp = await client.receive_json()
+    assert resp["success"]
+
+    item = resp["result"]
+
+    assert item["id"] == "test tag"
+    assert item["name"] == "New name"
+
+
 async def test_tag_scanned(hass, hass_ws_client, storage_setup):
     """Test scanning tags."""
     assert await storage_setup()
