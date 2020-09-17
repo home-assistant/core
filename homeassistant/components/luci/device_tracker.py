@@ -94,6 +94,7 @@ class LuciDeviceScanner(DeviceScanner):
 
         last_results = []
         for device in result:
-            last_results.append(device)
+            if device.reachable:
+                last_results.append(device)
 
         self.last_results = last_results
