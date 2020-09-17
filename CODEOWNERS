@@ -109,7 +109,7 @@ homeassistant/components/dweet/* @fabaff
 homeassistant/components/dynalite/* @ziv1234
 homeassistant/components/dyson/* @etheralm
 homeassistant/components/eafm/* @Jc2k
-homeassistant/components/easee/* @fondberg @tmjo @olalid
+homeassistant/components/easee/* @fondberg
 homeassistant/components/ecobee/* @marthoc
 homeassistant/components/ecovacs/* @OverloadUT
 homeassistant/components/edl21/* @mtdcr

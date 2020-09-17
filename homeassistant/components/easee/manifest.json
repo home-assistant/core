@@ -5,7 +5,6 @@
   "requirements": [
     "easee==0.7.16"
   ],
-  "homeassistant": "0.113.0",
   "config_flow": true,
   "dependencies": [
     "configurator"
