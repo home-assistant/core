@@ -4,7 +4,10 @@ import logging
 from libpurecool.dyson_pure_cool import DysonPureCool
 from libpurecool.dyson_pure_state_v2 import DysonEnvironmentalSensorV2State
 
-from homeassistant.components.air_quality import DOMAIN, AirQualityEntity
+from homeassistant.components.air_quality import (
+    DOMAIN as AIR_QUALITY_DOMAIN,
+    AirQualityEntity,
+)
 
 from . import DYSON_DEVICES, DysonEntity
 
@@ -47,20 +50,18 @@ class DysonAirSensor(DysonEntity, AirQualityEntity):
 
     def __init__(self, device):
         """Create a new generic air quality Dyson sensor."""
-        super().__init__(device, "air_quality")
+        super().__init__(device, DysonEnvironmentalSensorV2State, AIR_QUALITY_DOMAIN)
         self._old_value = None
 
     def on_message(self, message):
         """Handle new messages which are received from the fan."""
-        _LOGGER.debug(
-            "%s: Message received for %s device: %s", DOMAIN, self.name, message
-        )
         if (
             self._old_value is None
             or self._old_value != self._device.environmental_state
-        ) and isinstance(message, DysonEnvironmentalSensorV2State):
+        ):
             self._old_value = self._device.environmental_state
-            self.schedule_update_ha_state()
+            return True
+        return False
 
     @property
     def attribution(self):

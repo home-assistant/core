@@ -114,19 +114,33 @@ def setup(hass, config):
 class DysonEntity(Entity):
     """Representation of a Dyson entity."""
 
-    def __init__(self, device, entity_type="device"):
+    def __init__(self, device, state_type, entity_type):
         """Initialize the entity."""
         self._device = device
-        self._type = entity_type
+        self._state_type = state_type
+        self._entity_type = entity_type
 
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
         self.hass.async_add_executor_job(
-            self._device.add_message_listener, self.on_message
+            self._device.add_message_listener, self.on_message_filter
         )
+
+    def on_message_filter(self, message):
+        """Filter new messages received."""
+        if isinstance(message, self._state_type):
+            _LOGGER.debug(
+                "Message received for %s device %s : %s",
+                self._entity_type,
+                self.name,
+                message,
+            )
+            if self.on_message(message):
+                self.schedule_update_ha_state()
 
     def on_message(self, message):
         """Handle new messages received."""
+        return True
 
     @property
     def should_poll(self):
@@ -141,4 +155,4 @@ class DysonEntity(Entity):
     @property
     def unique_id(self):
         """Return the sensor's unique id."""
-        return f"{self._type}/{self._device.serial}"
+        return f"{self._entity_type}/{self._device.serial}"
