@@ -38,8 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     kraken_data = KrakenData(hass, config_entry)
     await kraken_data.async_setup()
     hass.data[DOMAIN] = kraken_data
-    await add_options(hass, config_entry)
-    config_entry.add_update_listener(options_updated)
+    config_entry.add_update_listener(async_options_updated)
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(config_entry, "sensor")
     )
@@ -129,6 +128,14 @@ class KrakenData:
 
     async def async_setup(self) -> None:
         """Set up the Kraken integration."""
+        if not self._config_entry.options:
+            options = {
+                CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
+                CONF_TRACKED_ASSET_PAIRS: [DEFAULT_TRACKED_ASSET_PAIR],
+            }
+            self._hass.config_entries.async_update_entry(
+                self._config_entry, options=options
+            )
         await self._async_refresh_tradable_asset_pairs()
         await asyncio.sleep(1)  # Wait 1 second to avoid triggering the CallRateLimiter
         self.coordinator = DataUpdateCoordinator(
@@ -150,17 +157,7 @@ class KrakenData:
         self.coordinator.update_interval = timedelta(seconds=update_interval)
 
 
-async def options_updated(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+async def async_options_updated(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Triggered by config entry options updates."""
     hass.data[DOMAIN].set_update_interval(config_entry.options[CONF_SCAN_INTERVAL])
     async_dispatcher_send(hass, DISPATCH_CONFIG_UPDATED, hass, config_entry)
-
-
-async def add_options(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
-    """Add options for Kraken integration."""
-    if not config_entry.options:
-        options = {
-            CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
-            CONF_TRACKED_ASSET_PAIRS: [DEFAULT_TRACKED_ASSET_PAIR],
-        }
-        hass.config_entries.async_update_entry(config_entry, options=options)
