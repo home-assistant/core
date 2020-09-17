@@ -226,7 +226,7 @@ homeassistant/components/keenetic_ndms2/* @foxel
 homeassistant/components/kef/* @basnijholt
 homeassistant/components/keyboard_remote/* @bendavid
 homeassistant/components/knx/* @Julius2342 @farmio @marvin-w
-homeassistant/components/kodi/* @OnFreund
+homeassistant/components/kodi/* @OnFreund @cgtobi
 homeassistant/components/konnected/* @heythisisnate @kit-klein
 homeassistant/components/lametric/* @robbiet480
 homeassistant/components/launch_library/* @ludeeus
