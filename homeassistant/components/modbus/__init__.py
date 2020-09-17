@@ -2,7 +2,7 @@
 import logging
 import threading
 
-from .sungrow_modbus_tcp_client import sungrow_modbus_tcp_client
+from .sungrow_modbus_tcp_client import SungrowModbusTcpClient
 from pymodbus.client.sync import ModbusSerialClient, ModbusTcpClient, ModbusUdpClient
 from pymodbus.transaction import ModbusRtuFramer
 import voluptuous as vol
@@ -211,7 +211,7 @@ class ModbusHub:
                 timeout=self._config_timeout,
             )
         elif self._config_type == "sungrow":
-            self._client = sungrow_modbus_tcp_client(
+            self._client = SungrowModbusTcpClient(
                 host=self._config_host,
                 port=self._config_port,
                 timeout=self._config_timeout,

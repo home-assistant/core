@@ -12,7 +12,7 @@ GET_KEY = b"\x68\x68\x00\x00\x00\x06\xf7\x04\x0a\xe7\x00\x08"
 HEADER = bytes([0x68, 0x68])
 
 
-class sungrow_modbus_tcp_client(ModbusTcpClient):
+class SungrowModbusTcpClient(ModbusTcpClient):
     """Wrapping class around pymodbus ModbusTcpClient that adds support for Sungrow Solar Inverters with modbus AES encryption over TCP."""
 
     def __init__(self, **kwargs):
