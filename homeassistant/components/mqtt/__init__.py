@@ -60,6 +60,7 @@ from .const import (
     CONF_RETAIN,
     CONF_STATE_TOPIC,
     CONF_WILL_MESSAGE,
+    DATA_MQTT_CONFIG,
     DEFAULT_BIRTH,
     DEFAULT_DISCOVERY,
     DEFAULT_PAYLOAD_AVAILABLE,
@@ -88,7 +89,6 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "mqtt"
 
 DATA_MQTT = "mqtt"
-DATA_MQTT_CONFIG = "mqtt_config"
 
 SERVICE_PUBLISH = "publish"
 SERVICE_DUMP = "dump"

@@ -17,6 +17,8 @@ CONF_RETAIN = ATTR_RETAIN
 CONF_STATE_TOPIC = "state_topic"
 CONF_WILL_MESSAGE = "will_message"
 
+DATA_MQTT_CONFIG = "mqtt_config"
+
 DEFAULT_PREFIX = "homeassistant"
 DEFAULT_BIRTH_WILL_TOPIC = DEFAULT_PREFIX + "/status"
 DEFAULT_DISCOVERY = False
