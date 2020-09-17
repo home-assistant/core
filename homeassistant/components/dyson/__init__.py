@@ -7,6 +7,7 @@ import voluptuous as vol
 from homeassistant.const import CONF_DEVICES, CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -108,3 +109,36 @@ def setup(hass, config):
             discovery.load_platform(hass, platform, DOMAIN, {}, config)
 
     return True
+
+
+class DysonEntity(Entity):
+    """Representation of a Dyson entity."""
+
+    def __init__(self, device, entity_type="device"):
+        """Initialize the entity."""
+        self._device = device
+        self._type = entity_type
+
+    async def async_added_to_hass(self):
+        """Call when entity is added to hass."""
+        self.hass.async_add_executor_job(
+            self._device.add_message_listener, self.on_message
+        )
+
+    def on_message(self, message):
+        """Handle new messages received."""
+
+    @property
+    def should_poll(self):
+        """No polling needed."""
+        return False
+
+    @property
+    def name(self):
+        """Return the name of the Dyson sensor."""
+        return self._device.name
+
+    @property
+    def unique_id(self):
+        """Return the sensor's unique id."""
+        return f"{self._type}/{self._device.serial}"
