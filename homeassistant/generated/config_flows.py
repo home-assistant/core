@@ -214,5 +214,6 @@ FLOWS = [
     "yeelight",
     "zerproc",
     "zha",
+    "zoneminder",
     "zwave"
 ]
