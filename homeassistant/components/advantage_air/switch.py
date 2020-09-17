@@ -6,7 +6,7 @@ from .const import DOMAIN
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Platform setup isnt required."""
+    """Platform setup isn't required."""
     return True
 
 
@@ -24,40 +24,38 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 ]
                 != "none"
             ):
-                entities.append(AdvantageAirZoneFreshAir(instance, ac_index))
+                entities.append(AdvantageAirFreshAir(instance, ac_index))
         async_add_entities(entities)
     return True
 
 
-class AdvantageAirZoneFreshAir(ToggleEntity):
+class AdvantageAirFreshAir(ToggleEntity):
     """Representation of Advantage Air fresh air control."""
 
     def __init__(self, instance, ac_index):
-        """Initialize the Advantage Air Zone fresh air control."""
+        """Initialize the Advantage Air fresh air control."""
         self.coordinator = instance["coordinator"]
         self.async_change = instance["async_change"]
         self.device = instance["device"]
         self.ac_index = ac_index
+        self.aircon = self.coordinator.data["aircons"][self.ac_index]["info"]
 
     @property
     def name(self):
         """Return the name."""
-        return f"{self.coordinator.data['aircons'][self.ac_index]['info']['name']} Fresh Air"
+        return f'{self.aircon["name"]} Fresh Air'
 
     @property
     def unique_id(self):
         """Return a unique id."""
         return (
-            f"{self.coordinator.data['system']['rid']}-{self.ac_index}-toggle:freshair"
+            f'{self.coordinator.data["system"]["rid"]}-{self.ac_index}-toggle:freshair'
         )
 
     @property
     def is_on(self):
         """Return the fresh air status."""
-        return (
-            self.coordinator.data["aircons"][self.ac_index]["info"]["freshAirStatus"]
-            == "on"
-        )
+        return self.aircon["freshAirStatus"] == "on"
 
     @property
     def should_poll(self):
@@ -71,10 +69,12 @@ class AdvantageAirZoneFreshAir(ToggleEntity):
 
     @property
     def available(self):
+        """Return if platform is available."""
         return self.coordinator.last_update_success
 
     @property
     def device_info(self):
+        """Return parent device information."""
         return self.device
 
     async def async_turn_on(self, **kwargs):

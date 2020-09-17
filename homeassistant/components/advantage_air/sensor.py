@@ -18,7 +18,7 @@ ADVANTAGE_AIR_SET_COUNTDOWN_UNIT = "min"
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Platform setup isnt required."""
+    """Platform setup isn't required."""
     return True
 
 
@@ -70,23 +70,22 @@ class AdvantageAirTimeTo(Entity):
         self.device = instance["device"]
         self.ac_index = ac_index
         self.time_period = time_period
+        self.aircon = self.coordinator.data["aircons"][self.ac_index]["info"]
 
     @property
     def name(self):
         """Return the name."""
-        return f"{self.coordinator.data['aircons'][self.ac_index]['info']['name']} Time To {self.time_period}"
+        return f'{self.coordinator.data["aircons"][self.ac_index]["info"]["name"]} Time To {self.time_period}'
 
     @property
     def unique_id(self):
         """Return a unique id."""
-        return f"{self.coordinator.data['system']['rid']}-{self.ac_index}-sensor:timeto{self.time_period}"
+        return f'{self.coordinator.data["system"]["rid"]}-{self.ac_index}-sensor:timeto{self.time_period}'
 
     @property
     def state(self):
         """Return the current value."""
-        return self.coordinator.data["aircons"][self.ac_index]["info"][
-            f"countDownTo{self.time_period}"
-        ]
+        return self.aircon[f"countDownTo{self.time_period}"]
 
     @property
     def unit_of_measurement(self):
@@ -97,10 +96,7 @@ class AdvantageAirTimeTo(Entity):
     def icon(self):
         """Return a representative icon of the timer."""
         return ["mdi:timer-off-outline", "mdi:timer-outline"][
-            self.coordinator.data["aircons"][self.ac_index]["info"][
-                f"countDownTo{self.time_period}"
-            ]
-            > 0
+            self.aircon[f"countDownTo{self.time_period}"] > 0
         ]
 
     @property
@@ -110,7 +106,7 @@ class AdvantageAirTimeTo(Entity):
 
     @property
     def available(self):
-        """Return if platform is avaliable."""
+        """Return if platform is available."""
         return self.coordinator.last_update_success
 
     @property
@@ -147,29 +143,25 @@ class AdvantageAirZoneVent(Entity):
         self.device = instance["device"]
         self.ac_index = ac_index
         self.zone_index = zone_index
+        self.zone = self.coordinator.data["aircons"][self.ac_index]["zones"][
+            self.zone_index
+        ]
 
     @property
     def name(self):
         """Return the name."""
-        return f"{self.coordinator.data['aircons'][self.ac_index]['zones'][self.zone_index]['name']} Vent"
+        return f'{self.zone["name"]} Vent'
 
     @property
     def unique_id(self):
         """Return a unique id."""
-        return f"{self.coordinator.data['system']['rid']}-{self.ac_index}-{self.zone_index}-sensor:vent"
+        return f'{self.coordinator.data["system"]["rid"]}-{self.ac_index}-{self.zone_index}-sensor:vent'
 
     @property
     def state(self):
         """Return the current value of the air vent."""
-        if (
-            self.coordinator.data["aircons"][self.ac_index]["zones"][self.zone_index][
-                "state"
-            ]
-            == STATE_OPEN
-        ):
-            return self.coordinator.data["aircons"][self.ac_index]["zones"][
-                self.zone_index
-            ]["value"]
+        if self.zone["state"] == STATE_OPEN:
+            return self.zone["value"]
         return 0
 
     @property
@@ -180,12 +172,7 @@ class AdvantageAirZoneVent(Entity):
     @property
     def icon(self):
         """Return a representative icon."""
-        return ["mdi:fan-off", "mdi:fan"][
-            self.coordinator.data["aircons"][self.ac_index]["zones"][self.zone_index][
-                "state"
-            ]
-            == STATE_OPEN
-        ]
+        return ["mdi:fan-off", "mdi:fan"][self.zone["state"] == STATE_OPEN]
 
     @property
     def should_poll(self):
@@ -194,7 +181,7 @@ class AdvantageAirZoneVent(Entity):
 
     @property
     def available(self):
-        """Return if platform is avaliable."""
+        """Return if platform is available."""
         return self.coordinator.last_update_success
 
     @property
@@ -223,23 +210,24 @@ class AdvantageAirZoneSignal(Entity):
         self.device = instance["device"]
         self.ac_index = ac_index
         self.zone_index = zone_index
+        self.zone = self.coordinator.data["aircons"][self.ac_index]["zones"][
+            self.zone_index
+        ]
 
     @property
     def name(self):
         """Return the name."""
-        return f"{self.coordinator.data['aircons'][self.ac_index]['zones'][self.zone_index]['name']} Signal"
+        return f'{self.zone["name"]} Signal'
 
     @property
     def unique_id(self):
         """Return a unique id."""
-        return f"{self.coordinator.data['system']['rid']}-{self.ac_index}-{self.zone_index}-sensor:signal"
+        return f'{self.coordinator.data["system"]["rid"]}-{self.ac_index}-{self.zone_index}-sensor:signal'
 
     @property
     def state(self):
         """Return the current value of the wireless signal."""
-        return self.coordinator.data["aircons"][self.ac_index]["zones"][
-            self.zone_index
-        ]["rssi"]
+        return self.zone["rssi"]
 
     @property
     def unit_of_measurement(self):
@@ -249,36 +237,15 @@ class AdvantageAirZoneSignal(Entity):
     @property
     def icon(self):
         """Return a representative icon."""
-        if (
-            self.coordinator.data["aircons"][self.ac_index]["zones"][self.zone_index][
-                "rssi"
-            ]
-            >= 80
-        ):
+        if self.zone["rssi"] >= 80:
             return "mdi:wifi-strength-4"
-        elif (
-            self.coordinator.data["aircons"][self.ac_index]["zones"][self.zone_index][
-                "rssi"
-            ]
-            >= 60
-        ):
+        if self.zone["rssi"] >= 60:
             return "mdi:wifi-strength-3"
-        elif (
-            self.coordinator.data["aircons"][self.ac_index]["zones"][self.zone_index][
-                "rssi"
-            ]
-            >= 40
-        ):
+        if self.zone["rssi"] >= 40:
             return "mdi:wifi-strength-2"
-        elif (
-            self.coordinator.data["aircons"][self.ac_index]["zones"][self.zone_index][
-                "rssi"
-            ]
-            >= 20
-        ):
+        if self.zone["rssi"] >= 20:
             return "mdi:wifi-strength-1"
-        else:
-            return "mdi:wifi-strength-outline"
+        return "mdi:wifi-strength-outline"
 
     @property
     def should_poll(self):
@@ -287,7 +254,7 @@ class AdvantageAirZoneSignal(Entity):
 
     @property
     def available(self):
-        """Return if platform is avaliable."""
+        """Return if platform is available."""
         return self.coordinator.last_update_success
 
     @property
