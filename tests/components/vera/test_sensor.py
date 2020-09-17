@@ -3,7 +3,7 @@ from typing import Any, Callable, Tuple
 
 import pyvera as pv
 
-from homeassistant.const import PERCENTAGE
+from homeassistant.const import LIGHT_LUX, PERCENTAGE
 from homeassistant.core import HomeAssistant
 
 from .common import ComponentFactory, new_simple_controller_config
@@ -88,7 +88,7 @@ async def test_light_sensor(
         category=pv.CATEGORY_LIGHT_SENSOR,
         class_property="light",
         assert_states=(("12", "12"), ("13", "13")),
-        assert_unit_of_measurement="lx",
+        assert_unit_of_measurement=LIGHT_LUX,
     )
 
 
