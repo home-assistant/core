@@ -836,10 +836,10 @@ class ExoPlayerDevice(MediaPlayerEntity):
                         )
                     )
         else:
-            if media_content_id.startswith("ais_tunein"):
+            if media_content_id.startswith("ais_"):
                 from homeassistant.components.ais_exo_player import media_browser
 
-                media_content_id = media_browser.get_tunein_stream(
+                media_content_id = media_browser.get_media_content_id_form_ais(
                     self.hass, media_content_id
                 )
             # TODO remove this - it is only used in one case - for local media_extractor
