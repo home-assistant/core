@@ -244,7 +244,6 @@ class DysonPureHotCoolEntity(DysonClimateEntity):
     def __init__(self, device):
         """Initialize the fan."""
         super().__init__(device, DysonPureHotCoolV2State)
-        self._current_temp = None
 
     @property
     def current_temperature(self):
