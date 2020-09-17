@@ -84,9 +84,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
             CONF_FFMPEG_ARGUMENTS: entry.data.get(
                 CONF_FFMPEG_ARGUMENTS, DEFAULT_FFMPEG_ARGUMENTS
             ),
-            CONF_TIMEOUT: entry.data.get(
-                CONF_TIMEOUT, DEFAULT_TIMEOUT
-            ),
+            CONF_TIMEOUT: entry.data.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
         }
         hass.config_entries.async_update_entry(entry, options=options)
 
