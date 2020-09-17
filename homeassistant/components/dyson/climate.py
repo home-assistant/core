@@ -105,6 +105,17 @@ class DysonClimateEntity(DysonEntity, ClimateEntity):
         return TEMP_CELSIUS
 
     @property
+    def current_temperature(self):
+        """Return the current temperature."""
+        if (
+            self._device.environmental_state
+            and self._device.environmental_state.temperature
+        ):
+            temperature_kelvin = self._device.environmental_state.temperature
+            return float("{:.1f}".format(temperature_kelvin - 273))
+        return None
+
+    @property
     def target_temperature(self):
         """Return the target temperature."""
         heat_target = int(self._device.state.heat_target) / 10
@@ -153,16 +164,6 @@ class DysonPureHotCoolLinkEntity(DysonClimateEntity):
     def __init__(self, device):
         """Initialize the fan."""
         super().__init__(device, DysonPureHotCoolState)
-        self._current_temp = None
-
-    @property
-    def current_temperature(self):
-        """Return the current temperature."""
-        if self._device.environmental_state:
-            temperature_kelvin = self._device.environmental_state.temperature
-            if temperature_kelvin != 0:
-                self._current_temp = float(f"{(temperature_kelvin - 273):.1f}")
-        return self._current_temp
 
     @property
     def hvac_mode(self):
@@ -235,15 +236,6 @@ class DysonPureHotCoolEntity(DysonClimateEntity):
     def __init__(self, device):
         """Initialize the fan."""
         super().__init__(device, DysonPureHotCoolV2State)
-
-    @property
-    def current_temperature(self):
-        """Return the current temperature."""
-        if self._device.environmental_state.temperature is not None:
-            temperature_kelvin = self._device.environmental_state.temperature
-            if temperature_kelvin != 0:
-                return float("{:.1f}".format(temperature_kelvin - 273))
-        return None
 
     @property
     def hvac_mode(self):
