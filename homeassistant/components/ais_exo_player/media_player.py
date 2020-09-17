@@ -842,8 +842,7 @@ class ExoPlayerDevice(MediaPlayerEntity):
                 media_content_id = media_browser.get_media_content_id_form_ais(
                     self.hass, media_content_id
                 )
-            # TODO remove this - it is only used in one case - for local media_extractor
-            # play only
+            # this is currently used when the media are taken from gallery
             self._media_content_id = media_content_id
             self._media_position = 0
             self._media_status_received_time = dt_util.utcnow()
