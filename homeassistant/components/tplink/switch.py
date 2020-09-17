@@ -42,7 +42,7 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry, async_add_ent
 def get_devices_sysinfo(devices):
     """Get sysinfo for all devices."""
     for device in devices:
-        device.get_sysinfo
+        device.get_sysinfo()
 
 
 class SmartPlugSwitch(SwitchEntity):
