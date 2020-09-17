@@ -1,3 +1,4 @@
+"""Wrapping class around pymodbus ModbusTcpClient that adds support for Sungrow Solar Inverters with modbus AES encryption over TCP"""
 from pymodbus.client.sync import ModbusTcpClient
 from Crypto.Cipher import AES
 
@@ -7,8 +8,12 @@ NO_CRYPTO2 = b"\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"
 GET_KEY = b"\x68\x68\x00\x00\x00\x06\xf7\x04\x0a\xe7\x00\x08"
 HEADER = bytes([0x68, 0x68])
 
+"""Wrapping class around pymodbus ModbusTcpClient that adds support for Sungrow Solar Inverters with modbus AES encryption over TCP"""
+
 
 class sungrow_modbus_tcp_client(ModbusTcpClient):
+    """class ctor, receives host, port and timeout, delegates enterely to super class"""
+
     def __init__(self, **kwargs):
         ModbusTcpClient.__init__(self, **kwargs)
         self._fifo = bytes()
@@ -29,6 +34,8 @@ class sungrow_modbus_tcp_client(ModbusTcpClient):
             self._recv = self._recv_decipher
         else:
             self._key = b"no encryption"
+
+    """overrides connect to retrieve the public key prior to any other communication with the inverter"""
 
     def connect(self):
         self.close()
