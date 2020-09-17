@@ -546,7 +546,7 @@ class EntityPlatform:
 
         async def handle_service(call: ServiceCall) -> None:
             """Handle the service."""
-            await service.entity_service_call(  # type: ignore
+            await service.entity_service_call(
                 self.hass,
                 [
                     plf
