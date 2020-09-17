@@ -56,9 +56,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     new_entities = []
     for device in hass.data[DYSON_DEVICES]:
         if isinstance(device, DysonPureCool):
-            if f"{device.serial}/sensor/temperature" not in device_ids:
+            if f"{device.serial}-temperature" not in device_ids:
                 new_entities.append(DysonTemperatureSensor(device, unit))
-            if f"{device.serial}/sensor/humidity" not in device_ids:
+            if f"{device.serial}-humidity" not in device_ids:
                 new_entities.append(DysonHumiditySensor(device))
 
             # For PureCool+Humidify devices, a single filter exists, called "Combi Filter".
@@ -105,6 +105,11 @@ class DysonSensor(DysonEntity, Entity):
     def name(self):
         """Return the name of the Dyson sensor name."""
         return f"{super().name} {SENSOR_NAMES[self._sensor_type]}"
+
+    @property
+    def unique_id(self):
+        """Return the sensor's unique id."""
+        return f"{self._device.serial}-{self._sensor_type}"
 
     @property
     def unit_of_measurement(self):

@@ -154,4 +154,4 @@ class DysonEntity(Entity):
     @property
     def unique_id(self):
         """Return the sensor's unique id."""
-        return f"{self._device.serial}/{self._entity_type}"
+        return self._device.serial
