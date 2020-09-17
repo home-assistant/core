@@ -724,15 +724,16 @@ class _TrackTemplateResultInfo:
 
         for track_template_ in self._track_templates:
             template = track_template_.template
-            _LOGGER.debug(
-                "Template[%s] update triggered by event: %s", template.template, event
-            )
             if (
                 entity_id
                 and len(self._last_info) > 1
                 and not self._last_info[template].filter_lifecycle(entity_id)
             ):
                 continue
+
+            _LOGGER.debug(
+                "Template[%s] update triggered by event: %s", template.template, event
+            )
 
             self._info[template] = template.async_render_to_info(
                 track_template_.variables
