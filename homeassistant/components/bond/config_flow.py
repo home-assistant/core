@@ -28,18 +28,22 @@ async def _validate_input(data: Dict[str, Any]) -> str:
         version = await bond.version()
         # call to non-version API is needed to validate authentication
         await bond.devices()
-    except ClientConnectionError:
-        raise InputValidationError("cannot_connect")
+    except ClientConnectionError as error:
+        raise InputValidationError("cannot_connect") from error
     except ClientResponseError as error:
         if error.status == 401:
-            raise InputValidationError("invalid_auth")
-        raise InputValidationError("unknown")
-    except Exception:
+            raise InputValidationError("invalid_auth") from error
+        raise InputValidationError("unknown") from error
+    except Exception as error:
         _LOGGER.exception("Unexpected exception")
-        raise InputValidationError("unknown")
+        raise InputValidationError("unknown") from error
 
     # Return unique ID from the hub to be stored in the config entry.
-    return version["bondid"]
+    bond_id = version.get("bondid")
+    if not bond_id:
+        raise InputValidationError("old_firmware")
+
+    return bond_id
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

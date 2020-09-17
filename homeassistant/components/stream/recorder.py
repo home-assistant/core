@@ -1,5 +1,5 @@
 """Provide functionality to record stream."""
-
+import os
 import threading
 from typing import List
 
@@ -15,16 +15,20 @@ def async_setup_recorder(hass):
     """Only here so Provider Registry works."""
 
 
-def recorder_save_worker(file_out: str, segments: List[Segment]):
+def recorder_save_worker(file_out: str, segments: List[Segment], container_format: str):
     """Handle saving stream."""
-    first_pts = None
-    output = av.open(file_out, "w")
+    if not os.path.exists(os.path.dirname(file_out)):
+        os.makedirs(os.path.dirname(file_out), exist_ok=True)
+
+    first_pts = {"video": None, "audio": None}
+    output = av.open(file_out, "w", format=container_format)
     output_v = None
+    output_a = None
 
     for segment in segments:
         # Seek to beginning and open segment
         segment.segment.seek(0)
-        source = av.open(segment.segment, "r", format="mpegts")
+        source = av.open(segment.segment, "r", format=container_format)
         source_v = source.streams.video[0]
 
         # Add output streams
@@ -32,16 +36,18 @@ def recorder_save_worker(file_out: str, segments: List[Segment]):
             output_v = output.add_stream(template=source_v)
             context = output_v.codec_context
             context.flags |= "GLOBAL_HEADER"
+        if not output_a and len(source.streams.audio) > 0:
+            source_a = source.streams.audio[0]
+            output_a = output.add_stream(template=source_a)
 
         # Remux video
-        for packet in source.demux(source_v):
+        for packet in source.demux():
             if packet is not None and packet.dts is not None:
-                if first_pts is None:
-                    first_pts = packet.pts
-
-                packet.pts -= first_pts
-                packet.dts -= first_pts
-                packet.stream = output_v
+                if first_pts[packet.stream.type] is None:
+                    first_pts[packet.stream.type] = packet.pts
+                packet.pts -= first_pts[packet.stream.type]
+                packet.dts -= first_pts[packet.stream.type]
+                packet.stream = output_v if packet.stream.type == "video" else output_a
                 output.mux(packet)
 
         source.close()
@@ -67,17 +73,17 @@ class RecorderOutput(StreamOutput):
     @property
     def format(self) -> str:
         """Return container format."""
-        return "mpegts"
+        return "mp4"
 
     @property
-    def audio_codec(self) -> str:
+    def audio_codecs(self) -> str:
         """Return desired audio codec."""
-        return "aac"
+        return {"aac", "ac3", "mp3"}
 
     @property
-    def video_codec(self) -> str:
-        """Return desired video codec."""
-        return "h264"
+    def video_codecs(self) -> tuple:
+        """Return desired video codecs."""
+        return {"hevc", "h264"}
 
     def prepend(self, segments: List[Segment]) -> None:
         """Prepend segments to existing list."""
@@ -96,7 +102,7 @@ class RecorderOutput(StreamOutput):
         thread = threading.Thread(
             name="recorder_save_worker",
             target=recorder_save_worker,
-            args=(self.video_path, self._segments),
+            args=(self.video_path, self._segments, self.format),
         )
         thread.start()
 

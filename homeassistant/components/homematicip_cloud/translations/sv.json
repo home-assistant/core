@@ -6,7 +6,7 @@
             "unknown": "Ett ok\u00e4nt fel har intr\u00e4ffat"
         },
         "error": {
-            "invalid_pin": "Ogiltig PIN-kod, f\u00f6rs\u00f6k igen.",
+            "invalid_sgtin_or_pin": "Ogiltig PIN-kod, f\u00f6rs\u00f6k igen.",
             "press_the_button": "V\u00e4nligen tryck p\u00e5 den bl\u00e5 knappen.",
             "register_failed": "Misslyckades med att registrera, f\u00f6rs\u00f6k igen.",
             "timeout_button": "Bl\u00e5 knapptryckning timeout, f\u00f6rs\u00f6k igen."

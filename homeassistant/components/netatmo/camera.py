@@ -5,26 +5,29 @@ import pyatmo
 import requests
 import voluptuous as vol
 
-from homeassistant.components.camera import (
-    DOMAIN as CAMERA_DOMAIN,
-    SUPPORT_STREAM,
-    Camera,
-)
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.components.camera import SUPPORT_STREAM, Camera
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
+    ATTR_CAMERA_LIGHT_MODE,
     ATTR_PERSON,
     ATTR_PERSONS,
     ATTR_PSEUDO,
+    CAMERA_LIGHT_MODES,
+    DATA_CAMERAS,
+    DATA_EVENTS,
     DATA_HANDLER,
     DATA_PERSONS,
     DOMAIN,
+    EVENT_TYPE_OFF,
+    EVENT_TYPE_ON,
     MANUFACTURER,
     MODELS,
-    SERVICE_SETPERSONAWAY,
-    SERVICE_SETPERSONSHOME,
+    SERVICE_SET_CAMERA_LIGHT,
+    SERVICE_SET_PERSON_AWAY,
+    SERVICE_SET_PERSONS_HOME,
     SIGNAL_NAME,
 )
 from .data_handler import CAMERA_DATA_CLASS_NAME
@@ -33,20 +36,6 @@ from .netatmo_entity_base import NetatmoBase
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_QUALITY = "high"
-
-SCHEMA_SERVICE_SETPERSONSHOME = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_domain(CAMERA_DOMAIN),
-        vol.Required(ATTR_PERSONS): vol.All(cv.ensure_list, [cv.string]),
-    }
-)
-
-SCHEMA_SERVICE_SETPERSONAWAY = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_domain(CAMERA_DOMAIN),
-        vol.Optional(ATTR_PERSON): cv.string,
-    }
-)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -108,27 +97,32 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     if data_handler.data[CAMERA_DATA_CLASS_NAME] is not None:
         platform.async_register_entity_service(
-            SERVICE_SETPERSONSHOME,
-            SCHEMA_SERVICE_SETPERSONSHOME,
-            "_service_setpersonshome",
+            SERVICE_SET_PERSONS_HOME,
+            {vol.Required(ATTR_PERSONS): vol.All(cv.ensure_list, [cv.string])},
+            "_service_set_persons_home",
         )
         platform.async_register_entity_service(
-            SERVICE_SETPERSONAWAY,
-            SCHEMA_SERVICE_SETPERSONAWAY,
-            "_service_setpersonaway",
+            SERVICE_SET_PERSON_AWAY,
+            {vol.Optional(ATTR_PERSON): cv.string},
+            "_service_set_person_away",
         )
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Netatmo camera platform."""
-    return
+        platform.async_register_entity_service(
+            SERVICE_SET_CAMERA_LIGHT,
+            {vol.Required(ATTR_CAMERA_LIGHT_MODE): vol.In(CAMERA_LIGHT_MODES)},
+            "_service_set_camera_light",
+        )
 
 
 class NetatmoCamera(NetatmoBase, Camera):
     """Representation of a Netatmo camera."""
 
     def __init__(
-        self, data_handler, camera_id, camera_type, home_id, quality,
+        self,
+        data_handler,
+        camera_id,
+        camera_type,
+        home_id,
+        quality,
     ):
         """Set up for access to the Netatmo camera images."""
         Camera.__init__(self)
@@ -156,16 +150,21 @@ class NetatmoCamera(NetatmoBase, Camera):
         """Entity created."""
         await super().async_added_to_hass()
 
-        self._listeners.append(
-            self.hass.bus.async_listen("netatmo_event", self.handle_event)
-        )
+        for event_type in (EVENT_TYPE_OFF, EVENT_TYPE_ON):
+            self._listeners.append(
+                async_dispatcher_connect(
+                    self.hass,
+                    f"signal-{DOMAIN}-webhook-{event_type}",
+                    self.handle_event,
+                )
+            )
 
-    async def handle_event(self, event):
+        self.hass.data[DOMAIN][DATA_CAMERAS][self._id] = self._device_name
+
+    @callback
+    def handle_event(self, event):
         """Handle webhook events."""
-        data = event.data["data"]
-
-        if not data.get("event_type"):
-            return
+        data = event["data"]
 
         if not data.get("camera_id"):
             return
@@ -190,7 +189,9 @@ class NetatmoCamera(NetatmoBase, Camera):
                 )
             elif self._vpnurl:
                 response = requests.get(
-                    f"{self._vpnurl}/live/snapshot_720.jpg", timeout=10, verify=True,
+                    f"{self._vpnurl}/live/snapshot_720.jpg",
+                    timeout=10,
+                    verify=True,
                 )
             else:
                 _LOGGER.error("Welcome/Presence VPN URL is None")
@@ -278,7 +279,31 @@ class NetatmoCamera(NetatmoBase, Camera):
         self._is_local = camera.get("is_local")
         self.is_streaming = bool(self._status == "on")
 
-    def _service_setpersonshome(self, **kwargs):
+        if self._model == "NACamera":  # Smart Indoor Camera
+            self.hass.data[DOMAIN][DATA_EVENTS][self._id] = self.process_events(
+                self._data.events.get(self._id, {})
+            )
+        elif self._model == "NOC":  # Smart Outdoor Camera
+            self.hass.data[DOMAIN][DATA_EVENTS][self._id] = self.process_events(
+                self._data.outdoor_events.get(self._id, {})
+            )
+
+    def process_events(self, events):
+        """Add meta data to events."""
+        for event in events.values():
+            if "video_id" not in event:
+                continue
+            if self._is_local:
+                event[
+                    "media_url"
+                ] = f"{self._localurl}/vod/{event['video_id']}/files/{self._quality}/index.m3u8"
+            else:
+                event[
+                    "media_url"
+                ] = f"{self._vpnurl}/vod/{event['video_id']}/files/{self._quality}/index.m3u8"
+        return events
+
+    def _service_set_persons_home(self, **kwargs):
         """Service to change current home schedule."""
         persons = kwargs.get(ATTR_PERSONS)
         person_ids = []
@@ -288,9 +313,9 @@ class NetatmoCamera(NetatmoBase, Camera):
                     person_ids.append(pid)
 
         self._data.set_persons_home(person_ids=person_ids, home_id=self._home_id)
-        _LOGGER.info("Set %s as at home", persons)
+        _LOGGER.debug("Set %s as at home", persons)
 
-    def _service_setpersonaway(self, **kwargs):
+    def _service_set_person_away(self, **kwargs):
         """Service to mark a person as away or set the home as empty."""
         person = kwargs.get(ATTR_PERSON)
         person_id = None
@@ -301,12 +326,24 @@ class NetatmoCamera(NetatmoBase, Camera):
 
         if person_id is not None:
             self._data.set_persons_away(
-                person_id=person_id, home_id=self._home_id,
+                person_id=person_id,
+                home_id=self._home_id,
             )
-            _LOGGER.info("Set %s as away", person)
+            _LOGGER.debug("Set %s as away", person)
 
         else:
             self._data.set_persons_away(
-                person_id=person_id, home_id=self._home_id,
+                person_id=person_id,
+                home_id=self._home_id,
             )
-            _LOGGER.info("Set home as empty")
+            _LOGGER.debug("Set home as empty")
+
+    def _service_set_camera_light(self, **kwargs):
+        """Service to set light mode."""
+        mode = kwargs.get(ATTR_CAMERA_LIGHT_MODE)
+        _LOGGER.debug("Turn camera '%s' %s", self._name, mode)
+        self._data.set_state(
+            home_id=self._home_id,
+            camera_id=self._id,
+            floodlight=mode,
+        )

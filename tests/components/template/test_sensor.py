@@ -4,13 +4,18 @@ from unittest.mock import patch
 
 from homeassistant.bootstrap import async_from_config_dict
 from homeassistant.const import (
+    ATTR_ENTITY_PICTURE,
+    ATTR_ICON,
     EVENT_COMPONENT_LOADED,
     EVENT_HOMEASSISTANT_START,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import CoreState, callback
+from homeassistant.helpers.template import Template
 from homeassistant.setup import ATTR_COMPONENT, async_setup_component, setup_component
+import homeassistant.util.dt as dt_util
 
 from tests.common import assert_setup_component, get_test_home_assistant
 
@@ -469,7 +474,8 @@ async def test_creating_sensor_loads_group(hass):
     hass.bus.async_listen(EVENT_COMPONENT_LOADED, set_after_dep_event)
 
     with patch(
-        "homeassistant.components.group.async_setup", new=async_setup_group,
+        "homeassistant.components.group.async_setup",
+        new=async_setup_group,
     ), patch(
         "homeassistant.components.template.sensor.async_setup_platform",
         new=async_setup_template,
@@ -544,9 +550,13 @@ async def test_invalid_attribute_template(hass, caplog):
     )
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 2
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
     await hass.helpers.entity_component.async_update_entity("sensor.invalid_template")
 
-    assert ("Error rendering attribute test_attribute") in caplog.text
+    assert "TemplateError" in caplog.text
+    assert "test_attribute" in caplog.text
 
 
 async def test_invalid_availability_template_keeps_component_available(hass, caplog):
@@ -577,8 +587,10 @@ async def test_invalid_availability_template_keeps_component_available(hass, cap
 
 
 async def test_no_template_match_all(hass, caplog):
-    """Test that we do not allow sensors that match on all."""
+    """Test that we allow static templates."""
     hass.states.async_set("sensor.test_sensor", "startup")
+
+    hass.state = CoreState.not_running
 
     await async_setup_component(
         hass,
@@ -617,31 +629,6 @@ async def test_no_template_match_all(hass, caplog):
 
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 6
-    assert (
-        "Template sensor 'invalid_state' has no entity ids "
-        "configured to track nor were we able to extract the entities to "
-        "track from the value template"
-    ) in caplog.text
-    assert (
-        "Template sensor 'invalid_icon' has no entity ids "
-        "configured to track nor were we able to extract the entities to "
-        "track from the icon template"
-    ) in caplog.text
-    assert (
-        "Template sensor 'invalid_entity_picture' has no entity ids "
-        "configured to track nor were we able to extract the entities to "
-        "track from the entity_picture template"
-    ) in caplog.text
-    assert (
-        "Template sensor 'invalid_friendly_name' has no entity ids "
-        "configured to track nor were we able to extract the entities to "
-        "track from the friendly_name template"
-    ) in caplog.text
-    assert (
-        "Template sensor 'invalid_attribute' has no entity ids "
-        "configured to track nor were we able to extract the entities to "
-        "track from the test_attribute template"
-    ) in caplog.text
 
     assert hass.states.get("sensor.invalid_state").state == "unknown"
     assert hass.states.get("sensor.invalid_icon").state == "unknown"
@@ -712,3 +699,290 @@ async def test_unique_id(hass):
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 1
+
+
+async def test_sun_renders_once_per_sensor(hass):
+    """Test sun change renders the template only once per sensor."""
+
+    now = dt_util.utcnow()
+    hass.states.async_set(
+        "sun.sun", "above_horizon", {"elevation": 45.3, "next_rising": now}
+    )
+
+    await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": {
+                "platform": "template",
+                "sensors": {
+                    "solar_angle": {
+                        "friendly_name": "Sun angle",
+                        "unit_of_measurement": "degrees",
+                        "value_template": "{{ state_attr('sun.sun', 'elevation') }}",
+                    },
+                    "sunrise": {
+                        "value_template": "{{ state_attr('sun.sun', 'next_rising') }}"
+                    },
+                },
+            }
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 3
+
+    assert hass.states.get("sensor.solar_angle").state == "45.3"
+    assert hass.states.get("sensor.sunrise").state == str(now)
+
+    async_render_calls = []
+
+    @callback
+    def _record_async_render(self, *args, **kwargs):
+        """Catch async_render."""
+        async_render_calls.append(self.template)
+        return "mocked"
+
+    later = dt_util.utcnow()
+
+    with patch.object(Template, "async_render", _record_async_render):
+        hass.states.async_set("sun.sun", {"elevation": 50, "next_rising": later})
+        await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.solar_angle").state == "mocked"
+    assert hass.states.get("sensor.sunrise").state == "mocked"
+
+    assert len(async_render_calls) == 2
+    assert set(async_render_calls) == {
+        "{{ state_attr('sun.sun', 'elevation') }}",
+        "{{ state_attr('sun.sun', 'next_rising') }}",
+    }
+
+
+async def test_self_referencing_sensor_loop(hass, caplog):
+    """Test a self referencing sensor does not loop forever."""
+
+    await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": {
+                "platform": "template",
+                "sensors": {
+                    "test": {
+                        "value_template": "{{ ((states.sensor.test.state or 0) | int) + 1 }}",
+                    },
+                },
+            }
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 1
+
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    assert "Template loop detected" in caplog.text
+
+    state = hass.states.get("sensor.test")
+    assert int(state.state) == 1
+    await hass.async_block_till_done()
+    assert int(state.state) == 1
+
+
+async def test_self_referencing_sensor_with_icon_loop(hass, caplog):
+    """Test a self referencing sensor loops forever with a valid self referencing icon."""
+
+    await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": {
+                "platform": "template",
+                "sensors": {
+                    "test": {
+                        "value_template": "{{ ((states.sensor.test.state or 0) | int) + 1 }}",
+                        "icon_template": "{% if ((states.sensor.test.state or 0) | int) >= 1 %}mdi:greater{% else %}mdi:less{% endif %}",
+                    },
+                },
+            }
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 1
+
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    assert "Template loop detected" in caplog.text
+
+    state = hass.states.get("sensor.test")
+    assert int(state.state) == 2
+    assert state.attributes[ATTR_ICON] == "mdi:greater"
+
+    await hass.async_block_till_done()
+    assert int(state.state) == 2
+
+
+async def test_self_referencing_sensor_with_icon_and_picture_entity_loop(hass, caplog):
+    """Test a self referencing sensor loop forevers with a valid self referencing icon."""
+
+    await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": {
+                "platform": "template",
+                "sensors": {
+                    "test": {
+                        "value_template": "{{ ((states.sensor.test.state or 0) | int) + 1 }}",
+                        "icon_template": "{% if ((states.sensor.test.state or 0) | int) > 3 %}mdi:greater{% else %}mdi:less{% endif %}",
+                        "entity_picture_template": "{% if ((states.sensor.test.state or 0) | int) >= 1 %}bigpic{% else %}smallpic{% endif %}",
+                    },
+                },
+            }
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 1
+
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    assert "Template loop detected" in caplog.text
+
+    state = hass.states.get("sensor.test")
+    assert int(state.state) == 3
+    assert state.attributes[ATTR_ICON] == "mdi:less"
+    assert state.attributes[ATTR_ENTITY_PICTURE] == "bigpic"
+
+    await hass.async_block_till_done()
+    assert int(state.state) == 3
+
+
+async def test_self_referencing_entity_picture_loop(hass, caplog):
+    """Test a self referencing sensor does not loop forever with a looping self referencing entity picture."""
+
+    await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": {
+                "platform": "template",
+                "sensors": {
+                    "test": {
+                        "value_template": "{{ 1 }}",
+                        "entity_picture_template": "{{ ((states.sensor.test.attributes['entity_picture'] or 0) | int) + 1 }}",
+                    },
+                },
+            }
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 1
+
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    assert "Template loop detected" in caplog.text
+
+    state = hass.states.get("sensor.test")
+    assert int(state.state) == 1
+    assert state.attributes[ATTR_ENTITY_PICTURE] == "1"
+
+    await hass.async_block_till_done()
+    assert int(state.state) == 1
+
+
+async def test_self_referencing_icon_with_no_loop(hass, caplog):
+    """Test a self referencing icon that does not loop."""
+
+    hass.states.async_set("sensor.heartworm_high_80", 10)
+    hass.states.async_set("sensor.heartworm_low_57", 10)
+    hass.states.async_set("sensor.heartworm_avg_64", 10)
+    hass.states.async_set("sensor.heartworm_avg_57", 10)
+
+    value_template_str = """{% if (states.sensor.heartworm_high_80.state|int >= 10) and (states.sensor.heartworm_low_57.state|int >= 10) %}
+            extreme
+          {% elif (states.sensor.heartworm_avg_64.state|int >= 30) %}
+            high
+          {% elif (states.sensor.heartworm_avg_64.state|int >= 14) %}
+            moderate
+          {% elif (states.sensor.heartworm_avg_64.state|int >= 5) %}
+            slight
+          {% elif (states.sensor.heartworm_avg_57.state|int >= 5) %}
+            marginal
+          {% elif (states.sensor.heartworm_avg_57.state|int < 5) %}
+            none
+          {% endif %}"""
+
+    icon_template_str = """{% if is_state('sensor.heartworm_risk',"extreme") %}
+            mdi:hazard-lights
+          {% elif is_state('sensor.heartworm_risk',"high") %}
+            mdi:triangle-outline
+          {% elif is_state('sensor.heartworm_risk',"moderate") %}
+            mdi:alert-circle-outline
+          {% elif is_state('sensor.heartworm_risk',"slight") %}
+            mdi:exclamation
+          {% elif is_state('sensor.heartworm_risk',"marginal") %}
+            mdi:heart
+          {% elif is_state('sensor.heartworm_risk',"none") %}
+            mdi:snowflake
+          {% endif %}"""
+
+    await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": {
+                "platform": "template",
+                "sensors": {
+                    "heartworm_risk": {
+                        "value_template": value_template_str,
+                        "icon_template": icon_template_str,
+                    },
+                },
+            }
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 5
+
+    hass.states.async_set("sensor.heartworm_high_80", 10)
+
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    assert "Template loop detected" not in caplog.text
+
+    state = hass.states.get("sensor.heartworm_risk")
+    assert state.state == "extreme"
+    assert state.attributes[ATTR_ICON] == "mdi:hazard-lights"
+
+    await hass.async_block_till_done()
+    assert state.state == "extreme"
+    assert state.attributes[ATTR_ICON] == "mdi:hazard-lights"
+    assert "Template loop detected" not in caplog.text

@@ -8,14 +8,12 @@
             "cannot_connect": "Tilkobling mislyktes.",
             "invalid_auth": "Ugyldig godkjenning"
         },
-        "flow_title": "",
         "step": {
             "user": {
                 "data": {
                     "api_key": "API N\u00f8kkel",
                     "base_path": "Bane til API",
                     "host": "Vert",
-                    "port": "",
                     "ssl": "Sonarr bruker et SSL-sertifikat",
                     "verify_ssl": "Sonarr bruker et riktig sertifikat"
                 },
@@ -32,6 +30,5 @@
                 }
             }
         }
-    },
-    "title": ""
+    }
 }

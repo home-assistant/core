@@ -133,10 +133,17 @@ class MpdDevice(MediaPlayerEntity):
         self._status = self._client.status()
         self._currentsong = self._client.currentsong()
 
-        position = self._status.get("time")
+        position = self._status.get("elapsed")
+
+        if position is None:
+            position = self._status.get("time")
+
+            if isinstance(position, str) and ":" in position:
+                position = position.split(":")[0]
+
         if position is not None and self._media_position != position:
             self._media_position_updated_at = dt_util.utcnow()
-            self._media_position = position
+            self._media_position = int(float(position))
 
         self._update_playlists()
 
@@ -152,8 +159,9 @@ class MpdDevice(MediaPlayerEntity):
                 self._connect()
 
             self._fetch_status()
-        except (mpd.ConnectionError, OSError, BrokenPipeError, ValueError):
+        except (mpd.ConnectionError, OSError, BrokenPipeError, ValueError) as error:
             # Cleanly disconnect in case connection is not in valid state
+            _LOGGER.debug("Error updating status: %s", error)
             self._disconnect()
 
     @property
@@ -307,7 +315,10 @@ class MpdDevice(MediaPlayerEntity):
 
     def media_play(self):
         """Service to send the MPD the command for play/pause."""
-        self._client.pause(0)
+        if self._status["state"] == "pause":
+            self._client.pause(0)
+        else:
+            self._client.play()
 
     def media_pause(self):
         """Service to send the MPD the command for play/pause."""

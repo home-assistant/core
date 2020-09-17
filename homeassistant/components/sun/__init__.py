@@ -104,7 +104,7 @@ class Sun(Entity):
             if location == self.location:
                 return
             self.location = location
-            self.update_events(dt_util.utcnow())
+            self.update_events()
 
         update_location(None)
         self.hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, update_location)
@@ -148,8 +148,10 @@ class Sun(Entity):
         return next_utc
 
     @callback
-    def update_events(self, utc_point_in_time):
+    def update_events(self, now=None):
         """Update the attributes containing solar events."""
+        # Grab current time in case system clock changed since last time we ran.
+        utc_point_in_time = dt_util.utcnow()
         self._next_change = utc_point_in_time + timedelta(days=400)
 
         # Work our way around the solar cycle, figure out the next
@@ -207,7 +209,7 @@ class Sun(Entity):
         _LOGGER.debug(
             "sun phase_update@%s: phase=%s", utc_point_in_time.isoformat(), self.phase
         )
-        self.update_sun_position(utc_point_in_time)
+        self.update_sun_position()
 
         # Set timer for the next solar event
         event.async_track_point_in_utc_time(
@@ -216,8 +218,10 @@ class Sun(Entity):
         _LOGGER.debug("next time: %s", self._next_change.isoformat())
 
     @callback
-    def update_sun_position(self, utc_point_in_time):
+    def update_sun_position(self, now=None):
         """Calculate the position of the sun."""
+        # Grab current time in case system clock changed since last time we ran.
+        utc_point_in_time = dt_util.utcnow()
         self.solar_azimuth = round(self.location.solar_azimuth(utc_point_in_time), 2)
         self.solar_elevation = round(
             self.location.solar_elevation(utc_point_in_time), 2

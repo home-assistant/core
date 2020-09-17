@@ -7,63 +7,137 @@ To update, run python3 -m script.hassfest
 
 ZEROCONF = {
     "_Volumio._tcp.local.": [
-        "volumio"
+        {
+            "domain": "volumio"
+        }
     ],
     "_api._udp.local.": [
-        "guardian"
+        {
+            "domain": "guardian"
+        }
     ],
     "_axis-video._tcp.local.": [
-        "axis",
-        "doorbird"
+        {
+            "domain": "axis",
+            "macaddress": "00408C*"
+        },
+        {
+            "domain": "axis",
+            "macaddress": "ACCC8E*"
+        },
+        {
+            "domain": "axis",
+            "macaddress": "B8A44F*"
+        },
+        {
+            "domain": "doorbird",
+            "macaddress": "1CCAE3*"
+        }
     ],
     "_bond._tcp.local.": [
-        "bond"
+        {
+            "domain": "bond"
+        }
     ],
     "_daap._tcp.local.": [
-        "forked_daapd"
+        {
+            "domain": "forked_daapd"
+        }
     ],
     "_dkapi._tcp.local.": [
-        "daikin"
+        {
+            "domain": "daikin"
+        }
     ],
     "_elg._tcp.local.": [
-        "elgato"
+        {
+            "domain": "elgato"
+        }
     ],
     "_esphomelib._tcp.local.": [
-        "esphome"
+        {
+            "domain": "esphome"
+        }
     ],
     "_googlecast._tcp.local.": [
-        "cast"
+        {
+            "domain": "cast"
+        }
     ],
     "_hap._tcp.local.": [
-        "homekit_controller"
+        {
+            "domain": "homekit_controller"
+        }
+    ],
+    "_http._tcp.local.": [
+        {
+            "domain": "shelly",
+            "name": "shelly*"
+        }
     ],
     "_ipp._tcp.local.": [
-        "ipp"
+        {
+            "domain": "ipp"
+        }
     ],
     "_ipps._tcp.local.": [
-        "ipp"
+        {
+            "domain": "ipp"
+        }
     ],
     "_miio._udp.local.": [
-        "xiaomi_aqara",
-        "xiaomi_miio"
+        {
+            "domain": "xiaomi_aqara"
+        },
+        {
+            "domain": "xiaomi_miio"
+        }
     ],
     "_nut._tcp.local.": [
-        "nut"
+        {
+            "domain": "nut"
+        }
     ],
     "_plugwise._tcp.local.": [
-        "plugwise"
+        {
+            "domain": "plugwise"
+        }
     ],
     "_printer._tcp.local.": [
-        "brother"
+        {
+            "domain": "brother",
+            "name": "brother*"
+        }
     ],
     "_spotify-connect._tcp.local.": [
-        "spotify"
+        {
+            "domain": "spotify"
+        }
+    ],
+    "_ssh._tcp.local.": [
+        {
+            "domain": "smappee",
+            "name": "smappee1*"
+        },
+        {
+            "domain": "smappee",
+            "name": "smappee2*"
+        }
     ],
     "_viziocast._tcp.local.": [
-        "vizio"
+        {
+            "domain": "vizio"
+        }
     ],
     "_wled._tcp.local.": [
-        "wled"
+        {
+            "domain": "wled"
+        }
+    ],
+    "_xbmc-jsonrpc-h._tcp.local.": [
+        {
+            "domain": "kodi"
+        }
     ]
 }
 
@@ -79,8 +153,10 @@ HOMEKIT = {
     "PowerView": "hunterdouglas_powerview",
     "Presence": "netatmo",
     "Rachio": "rachio",
+    "Socket": "wemo",
     "TRADFRI": "tradfri",
     "Welcome": "netatmo",
     "Wemo": "wemo",
+    "iSmartGate": "gogogate2",
     "tado": "tado"
 }

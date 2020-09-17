@@ -72,7 +72,11 @@ async def test_import(hass):
 
 async def test_integration_already_configured(hass):
     """Test integration is already configured."""
-    entry = MockConfigEntry(domain=DOMAIN, data={}, options={},)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        options={},
+    )
     entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
         islamic_prayer_times.DOMAIN, context={"source": "user"}

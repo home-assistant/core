@@ -2,6 +2,6 @@
   "domain": "lg_soundbar",
   "name": "LG Soundbars",
   "documentation": "https://www.home-assistant.io/integrations/lg_soundbar",
-  "requirements": ["temescal==0.1"],
+  "requirements": ["temescal==0.3"],
   "codeowners": []
 }

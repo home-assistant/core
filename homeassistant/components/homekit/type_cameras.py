@@ -220,15 +220,18 @@ class Camera(HomeAccessory, PyhapCamera):
                 serv_doorbell = self.add_preload_service(SERV_DOORBELL)
                 self.set_primary_service(serv_doorbell)
                 self._char_doorbell_detected = serv_doorbell.configure_char(
-                    CHAR_PROGRAMMABLE_SWITCH_EVENT, value=0,
+                    CHAR_PROGRAMMABLE_SWITCH_EVENT,
+                    value=0,
                 )
                 serv_stateless_switch = self.add_preload_service(
                     SERV_STATELESS_PROGRAMMABLE_SWITCH
                 )
-                self._char_doorbell_detected_switch = serv_stateless_switch.configure_char(
-                    CHAR_PROGRAMMABLE_SWITCH_EVENT,
-                    value=0,
-                    valid_values={"SinglePress": DOORBELL_SINGLE_PRESS},
+                self._char_doorbell_detected_switch = (
+                    serv_stateless_switch.configure_char(
+                        CHAR_PROGRAMMABLE_SWITCH_EVENT,
+                        value=0,
+                        valid_values={"SinglePress": DOORBELL_SINGLE_PRESS},
+                    )
                 )
                 serv_speaker = self.add_preload_service(SERV_SPEAKER)
                 serv_speaker.configure_char(CHAR_MUTE, value=0)
@@ -387,7 +390,9 @@ class Camera(HomeAccessory, PyhapCamera):
             await self._async_ffmpeg_watch(session_info["id"])
 
         session_info[FFMPEG_WATCHER] = async_track_time_interval(
-            self.hass, watch_session, FFMPEG_WATCH_INTERVAL,
+            self.hass,
+            watch_session,
+            FFMPEG_WATCH_INTERVAL,
         )
 
         return await self._async_ffmpeg_watch(session_info["id"])

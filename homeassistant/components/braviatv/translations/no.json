@@ -21,8 +21,7 @@
                 "data": {
                     "host": "Vert"
                 },
-                "description": "Sett opp Sony Bravia TV-integrasjon. Hvis du har problemer med konfigurasjonen, g\u00e5 til: [https://www.home-assistant.io/integrations/braviatv](https://www.home-assistant.io/integrations/braviatv)\n\n Forsikre deg om at TV-en er sl\u00e5tt p\u00e5.",
-                "title": ""
+                "description": "Sett opp Sony Bravia TV-integrasjon. Hvis du har problemer med konfigurasjonen, g\u00e5 til: [https://www.home-assistant.io/integrations/braviatv](https://www.home-assistant.io/integrations/braviatv)\n\n Forsikre deg om at TV-en er sl\u00e5tt p\u00e5."
             }
         }
     },

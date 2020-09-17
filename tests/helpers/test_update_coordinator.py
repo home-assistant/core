@@ -11,7 +11,7 @@ import requests
 from homeassistant.helpers import update_coordinator
 from homeassistant.util.dt import utcnow
 
-from tests.async_mock import AsyncMock, Mock
+from tests.async_mock import AsyncMock, Mock, patch
 from tests.common import async_fire_time_changed
 
 LOGGER = logging.getLogger(__name__)
@@ -224,3 +224,29 @@ async def test_refresh_recover(crd, caplog):
 
     assert crd.last_update_success is True
     assert "Fetching test data recovered" in caplog.text
+
+
+async def test_coordinator_entity(crd):
+    """Test the CoordinatorEntity class."""
+    entity = update_coordinator.CoordinatorEntity(crd)
+
+    assert entity.should_poll is False
+
+    crd.last_update_success = False
+    assert entity.available is False
+
+    await entity.async_update()
+    assert entity.available is True
+
+    with patch(
+        "homeassistant.helpers.entity.Entity.async_on_remove"
+    ) as mock_async_on_remove:
+        await entity.async_added_to_hass()
+
+    assert mock_async_on_remove.called
+
+    # Verify we do not update if the entity is disabled
+    crd.last_update_success = False
+    with patch("homeassistant.helpers.entity.Entity.enabled", False):
+        await entity.async_update()
+    assert entity.available is False

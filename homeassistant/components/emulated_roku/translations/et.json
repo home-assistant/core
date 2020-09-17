@@ -3,11 +3,9 @@
         "step": {
             "user": {
                 "data": {
-                    "host_ip": "",
                     "name": "Nimi"
                 }
             }
         }
-    },
-    "title": ""
+    }
 }
