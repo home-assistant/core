@@ -17,8 +17,6 @@ from .const import ATTRIBUTION, CONF_STATION, DOMAIN, MANUFACTURER
 
 _LOGGER = logging.getLogger(__name__)
 
-ICON = "mdi:elevator-passenger"
-
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the binary_sensor platform."""
@@ -32,39 +30,41 @@ async def async_setup_entry(hass, entry, async_add_entities):
         """Convert station information into a list of elevators."""
         elevators = {}
 
-        if station_information is not None:
-            for partial_station in station_information.get("partialStations", []):
-                for elevator in partial_station.get("elevators", []):
+        if station_information is None:
+            return {}
 
-                    state = elevator.get("state") != "READY"
-                    available = elevator.get("state") != "UNKNOWN"
-                    label = elevator.get("label")
-                    description = elevator.get("description")
+        for partial_station in station_information.get("partialStations", []):
+            for elevator in partial_station.get("elevators", []):
 
-                    name = f"Elevator {label} at {station_name} ({description})"
-                    lines = elevator.get("lines")
+                state = elevator.get("state") != "READY"
+                available = elevator.get("state") != "UNKNOWN"
+                label = elevator.get("label")
+                description = elevator.get("description")
 
-                    idx = f"{station_name}-{label}-{lines}"
+                name = f"Elevator {label} at {station_name} ({description})"
+                lines = elevator.get("lines")
 
-                    elevators.update(
-                        {
-                            idx: {
-                                "state": state,
-                                "name": name,
-                                "available": available,
-                                "attributes": {
-                                    "cabin_width": elevator.get("cabinWidth"),
-                                    "cabin_length": elevator.get("cabinLength"),
-                                    "door_width": elevator.get("doorWidth"),
-                                    "elevator_type": elevator.get("elevatorType"),
-                                    "button_type": elevator.get("buttonType"),
-                                    "cause": elevator.get("cause"),
-                                    "lines": lines,
-                                    ATTR_ATTRIBUTION: ATTRIBUTION,
-                                },
-                            }
+                idx = f"{station_name}-{label}-{lines}"
+
+                elevators.update(
+                    {
+                        idx: {
+                            "state": state,
+                            "name": name,
+                            "available": available,
+                            "attributes": {
+                                "cabin_width": elevator.get("cabinWidth"),
+                                "cabin_length": elevator.get("cabinLength"),
+                                "door_width": elevator.get("doorWidth"),
+                                "elevator_type": elevator.get("elevatorType"),
+                                "button_type": elevator.get("buttonType"),
+                                "cause": elevator.get("cause"),
+                                "lines": lines,
+                                ATTR_ATTRIBUTION: ATTRIBUTION,
+                            },
                         }
-                    )
+                    }
+                )
         return elevators
 
     async def async_update_data():
@@ -154,11 +154,6 @@ class HvvDepartureBinarySensor(BinarySensorEntity):
     def name(self):
         """Return the name of the sensor."""
         return self.coordinator.data[self.idx]["name"]
-
-    @property
-    def icon(self):
-        """Return the icon of the sensor."""
-        return ICON
 
     @property
     def unique_id(self):
