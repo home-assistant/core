@@ -2,10 +2,7 @@
 from requests import ConnectTimeout
 
 from homeassistant.components.camera.const import DOMAIN as CAMERA_DOMAIN
-from homeassistant.components.canary.const import (
-    CONF_FFMPEG_ARGUMENTS,
-    DOMAIN,
-)
+from homeassistant.components.canary.const import CONF_FFMPEG_ARGUMENTS, DOMAIN
 from homeassistant.config_entries import (
     ENTRY_STATE_LOADED,
     ENTRY_STATE_NOT_LOADED,
