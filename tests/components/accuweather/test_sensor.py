@@ -6,7 +6,6 @@ from homeassistant.components.accuweather.const import (
     ATTRIBUTION,
     CONCENTRATION_PARTS_PER_CUBIC_METER,
     DOMAIN,
-    LENGTH_MILIMETERS,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
@@ -17,6 +16,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     DEVICE_CLASS_TEMPERATURE,
     LENGTH_METERS,
+    LENGTH_MILLIMETERS,
     PERCENTAGE,
     SPEED_KILOMETERS_PER_HOUR,
     STATE_UNAVAILABLE,
@@ -52,7 +52,7 @@ async def test_sensor_without_forecast(hass):
     assert state
     assert state.state == "0.0"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == LENGTH_MILIMETERS
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == LENGTH_MILLIMETERS
     assert state.attributes.get(ATTR_ICON) == "mdi:weather-rainy"
     assert state.attributes.get("type") is None
 
