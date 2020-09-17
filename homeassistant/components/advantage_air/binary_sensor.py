@@ -10,7 +10,7 @@ from .const import DOMAIN
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Platform setup isnt required."""
+    """Platform setup isn't required."""
     return True
 
 
@@ -49,18 +49,17 @@ class AdvantageAirZoneFilter(BinarySensorEntity):
         self.async_change = instance["async_change"]
         self.device = instance["device"]
         self.ac_index = ac_index
+        self.aircon = self.coordinator.data["aircons"][self.ac_index]["info"]
 
     @property
     def name(self):
         """Return the name."""
-        return (
-            f"{self.coordinator.data['aircons'][self.ac_index]['info']['name']} Filter"
-        )
+        return f'{self.aircon["name"]} Filter'
 
     @property
     def unique_id(self):
         """Return a unique id."""
-        return f"{self.coordinator.data['system']['rid']}-{self.ac_index}-binary:filter"
+        return f'{self.coordinator.data["system"]["rid"]}-{self.ac_index}-binary:filter'
 
     @property
     def device_class(self):
@@ -70,9 +69,7 @@ class AdvantageAirZoneFilter(BinarySensorEntity):
     @property
     def is_on(self):
         """Return if filter needs cleaning."""
-        return self.coordinator.data["aircons"][self.ac_index]["info"][
-            "filterCleanStatus"
-        ]
+        return self.aircon["filterCleanStatus"]
 
     @property
     def should_poll(self):
@@ -81,7 +78,7 @@ class AdvantageAirZoneFilter(BinarySensorEntity):
 
     @property
     def available(self):
-        """Return if platform is avaliable."""
+        """Return if platform is available."""
         return self.coordinator.last_update_success
 
     @property
@@ -110,16 +107,19 @@ class AdvantageAirZoneMotion(BinarySensorEntity):
         self.device = instance["device"]
         self.ac_index = ac_index
         self.zone_index = zone_index
+        self.zone = self.coordinator.data["aircons"][self.ac_index]["zones"][
+            self.zone_index
+        ]
 
     @property
     def name(self):
         """Return the name."""
-        return f"{self.coordinator.data['aircons'][self.ac_index]['zones'][self.zone_index]['name']} Motion"
+        return f'{self.zone["name"]} Motion'
 
     @property
     def unique_id(self):
         """Return a unique id."""
-        return f"{self.coordinator.data['system']['rid']}-{self.ac_index}-{self.zone_index}-binary:motion"
+        return f'{self.coordinator.data["system"]["rid"]}-{self.ac_index}-{self.zone_index}-binary:motion'
 
     @property
     def device_class(self):
@@ -129,18 +129,12 @@ class AdvantageAirZoneMotion(BinarySensorEntity):
     @property
     def is_on(self):
         """Return if motion is detect."""
-        return self.coordinator.data["aircons"][self.ac_index]["zones"][
-            self.zone_index
-        ]["motion"]
+        return self.zone["motion"]
 
     @property
     def device_state_attributes(self):
         """Return additional motion configuration."""
-        return {
-            "motionConfig": self.coordinator.data["aircons"][self.ac_index]["zones"][
-                self.zone_index
-            ]["motionConfig"]
-        }
+        return {"motionConfig": self.zone["motionConfig"]}
 
     @property
     def should_poll(self):
@@ -149,7 +143,7 @@ class AdvantageAirZoneMotion(BinarySensorEntity):
 
     @property
     def available(self):
-        """Return if platform is avaliable."""
+        """Return if platform is available."""
         return self.coordinator.last_update_success
 
     @property

@@ -27,8 +27,9 @@ class AdvantageAirConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
+    DOMAIN = DOMAIN
 
-    async def async_step_user(self, user_input):
+    async def async_step_user(self, user_input=None):
         """Get configuration from the user."""
         if not user_input:
             return self._show_form()
@@ -39,7 +40,7 @@ class AdvantageAirConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             data = await api.async_get()
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             return self._show_form({"base": "connection_error"})
         if "aircons" not in data:
             return self._show_form({"base": "data_error"})

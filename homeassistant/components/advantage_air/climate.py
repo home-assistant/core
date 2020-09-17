@@ -48,7 +48,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Platform setup isnt required."""
+    """Platform setup isn't required."""
     return True
 
 
@@ -84,16 +84,17 @@ class AdvantageAirAC(ClimateEntity):
         self.async_change = instance["async_change"]
         self.device = instance["device"]
         self.ac_index = ac_index
+        self.aircon = self.coordinator.data["aircons"][self.ac_index]["info"]
 
     @property
     def name(self):
         """Return the name."""
-        return self.coordinator.data["aircons"][self.ac_index]["info"]["name"]
+        return self.aircon["name"]
 
     @property
     def unique_id(self):
         """Return a unique id."""
-        return f"{self.coordinator.data['system']['rid']}-{self.ac_index}-climate"
+        return f'{self.coordinator.data["system"]["rid"]}-{self.ac_index}-climate'
 
     @property
     def temperature_unit(self):
@@ -103,7 +104,7 @@ class AdvantageAirAC(ClimateEntity):
     @property
     def target_temperature(self):
         """Return the current target temperature."""
-        return self.coordinator.data["aircons"][self.ac_index]["info"]["setTemp"]
+        return self.aircon["setTemp"]
 
     @property
     def target_temperature_step(self):
@@ -123,10 +124,10 @@ class AdvantageAirAC(ClimateEntity):
     @property
     def hvac_mode(self):
         """Return the current HVAC modes."""
-        if self.coordinator.data["aircons"][self.ac_index]["info"]["state"] == STATE_ON:
+        if self.aircon["state"] == STATE_ON:
             return ADVANTAGE_AIR_HVAC_MODES.get(
-                self.coordinator.data["aircons"][self.ac_index]["info"]["mode"],
-                self.coordinator.data["aircons"][self.ac_index]["info"]["mode"],
+                self.aircon["mode"],
+                self.aircon["mode"],
             )
         return HVAC_MODE_OFF
 
@@ -144,9 +145,7 @@ class AdvantageAirAC(ClimateEntity):
     @property
     def fan_mode(self):
         """Return the current fan modes."""
-        return ADVANTAGE_AIR_FAN_MODES.get(
-            self.coordinator.data["aircons"][self.ac_index]["info"]["fan"], FAN_OFF
-        )
+        return ADVANTAGE_AIR_FAN_MODES.get(self.aircon["fan"], FAN_OFF)
 
     @property
     def fan_modes(self):
@@ -161,7 +160,7 @@ class AdvantageAirAC(ClimateEntity):
     @property
     def device_state_attributes(self):
         """Return additional attributes about AC unit."""
-        return self.coordinator.data["aircons"][self.ac_index]["info"]
+        return self.aircon
 
     @property
     def should_poll(self):
@@ -170,7 +169,7 @@ class AdvantageAirAC(ClimateEntity):
 
     @property
     def available(self):
-        """Return if platform is avaliable."""
+        """Return if platform is available."""
         return self.coordinator.last_update_success
 
     @property
@@ -226,6 +225,9 @@ class AdvantageAirZone(ClimateEntity):
         self.device = instance["device"]
         self.ac_index = ac_index
         self.zone_index = zone_index
+        self.zone = self.coordinator.data["aircons"][self.ac_index]["zones"][
+            self.zone_index
+        ]
 
     @property
     def name(self):
@@ -237,7 +239,7 @@ class AdvantageAirZone(ClimateEntity):
     @property
     def unique_id(self):
         """Return a unique id."""
-        return f"{self.coordinator.data['system']['rid']}-{self.ac_index}-{self.zone_index}-climate"
+        return f'{self.coordinator.data["system"]["rid"]}-{self.ac_index}-{self.zone_index}-climate'
 
     @property
     def temperature_unit(self):
@@ -276,12 +278,7 @@ class AdvantageAirZone(ClimateEntity):
     @property
     def hvac_mode(self):
         """Return the current HVAC modes."""
-        if (
-            self.coordinator.data["aircons"][self.ac_index]["zones"][self.zone_index][
-                "state"
-            ]
-            == STATE_OPEN
-        ):
+        if self.zone["state"] == STATE_OPEN:
             return HVAC_MODE_FAN_ONLY
         return HVAC_MODE_OFF
 
@@ -293,23 +290,13 @@ class AdvantageAirZone(ClimateEntity):
     @property
     def fan_mode(self):
         """Return current fan modes."""
-        if (
-            self.coordinator.data["aircons"][self.ac_index]["zones"][self.zone_index][
-                "state"
-            ]
-            == STATE_OPEN
-        ):
-            if self.coordinator.data["aircons"][self.ac_index]["zones"][
-                self.zone_index
-            ]["value"] <= (FAN_SPEEDS[FAN_LOW] + 10):
-                return FAN_LOW
-            elif self.coordinator.data["aircons"][self.ac_index]["zones"][
-                self.zone_index
-            ]["value"] <= (FAN_SPEEDS[FAN_MEDIUM] + 10):
-                return FAN_MEDIUM
-            else:
-                return FAN_HIGH
-        return FAN_OFF
+        if self.zone["state"] == STATE_CLOSE:
+            return FAN_OFF
+        if self.zone["value"] <= (FAN_SPEEDS[FAN_LOW] + 10):
+            return FAN_LOW
+        if self.zone["value"] <= (FAN_SPEEDS[FAN_MEDIUM] + 10):
+            return FAN_MEDIUM
+        return FAN_HIGH
 
     @property
     def fan_modes(self):
@@ -318,8 +305,8 @@ class AdvantageAirZone(ClimateEntity):
 
     @property
     def device_state_attributes(self):
-        """Return additional attributes about AC unit."""
-        return self.coordinator.data["aircons"][self.ac_index]["zones"][self.zone_index]
+        """Return additional attributes about Zone."""
+        return self.zone
 
     @property
     def supported_features(self):
@@ -333,7 +320,7 @@ class AdvantageAirZone(ClimateEntity):
 
     @property
     def available(self):
-        """Return if platform is avaliable."""
+        """Return if platform is available."""
         return self.coordinator.last_update_success
 
     @property
