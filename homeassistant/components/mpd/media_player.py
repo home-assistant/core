@@ -143,7 +143,7 @@ class MpdDevice(MediaPlayerEntity):
 
         if position is not None and self._media_position != position:
             self._media_position_updated_at = dt_util.utcnow()
-            self._media_position = int(position)
+            self._media_position = int(float(position))
 
         self._update_playlists()
 
