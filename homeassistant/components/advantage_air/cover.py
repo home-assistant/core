@@ -14,7 +14,7 @@ from .const import DOMAIN, STATE_CLOSE
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Platform setup isnt required."""
+    """Platform setup isn't required."""
     return True
 
 
@@ -50,16 +50,19 @@ class AdvantageAirZoneVent(CoverEntity):
         self.device = instance["device"]
         self.ac_index = ac_index
         self.zone_index = zone_index
+        self.zone = self.coordinator.data["aircons"][self.ac_index]["zones"][
+            self.zone_index
+        ]
 
     @property
     def name(self):
         """Return the name."""
-        return f"{self.coordinator.data['aircons'][self.ac_index]['zones'][self.zone_index]['name']} Vent"
+        return f'{self.zone["name"]} Vent'
 
     @property
     def unique_id(self):
         """Return a unique id."""
-        return f"{self.coordinator.data['system']['rid']}-{self.ac_index}-{self.zone_index}-cover"
+        return f'{self.coordinator.data["system"]["rid"]}-{self.ac_index}-{self.zone_index}-cover'
 
     @property
     def device_class(self):
@@ -74,12 +77,7 @@ class AdvantageAirZoneVent(CoverEntity):
     @property
     def is_closed(self):
         """Return if vent is fully closed."""
-        return (
-            self.coordinator.data["aircons"][self.ac_index]["zones"][self.zone_index][
-                "state"
-            ]
-            == STATE_CLOSE
-        )
+        return self.zone["state"] == STATE_CLOSE
 
     @property
     def is_opening(self):
@@ -93,27 +91,15 @@ class AdvantageAirZoneVent(CoverEntity):
 
     @property
     def current_cover_position(self):
-        """Return vents current possition as a percentage."""
-        if (
-            self.coordinator.data["aircons"][self.ac_index]["zones"][self.zone_index][
-                "state"
-            ]
-            == STATE_OPEN
-        ):
-            return self.coordinator.data["aircons"][self.ac_index]["zones"][
-                self.zone_index
-            ]["value"]
+        """Return vents current position as a percentage."""
+        if self.zone["state"] == STATE_OPEN:
+            return self.zone["value"]
         return 0
 
     @property
     def icon(self):
         """Return vent icon."""
-        return ["mdi:fan-off", "mdi:fan"][
-            self.coordinator.data["aircons"][self.ac_index]["zones"][self.zone_index][
-                "state"
-            ]
-            == STATE_OPEN
-        ]
+        return ["mdi:fan-off", "mdi:fan"][self.zone["state"] == STATE_OPEN]
 
     @property
     def should_poll(self):
@@ -122,7 +108,7 @@ class AdvantageAirZoneVent(CoverEntity):
 
     @property
     def available(self):
-        """Return if platform is avaliable."""
+        """Return if platform is available."""
         return self.coordinator.last_update_success
 
     @property
