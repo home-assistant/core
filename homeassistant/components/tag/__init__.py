@@ -27,13 +27,13 @@ CREATE_FIELDS = {
     vol.Optional(TAG_ID): cv.string,
     vol.Optional(CONF_NAME): vol.All(str, vol.Length(min=1)),
     vol.Optional("description"): cv.string,
-    vol.Optional(LAST_SCANNED): cv.datetime,
+    vol.Optional(LAST_SCANNED): cv.string,
 }
 
 UPDATE_FIELDS = {
     vol.Optional(CONF_NAME): vol.All(str, vol.Length(min=1)),
     vol.Optional("description"): cv.string,
-    vol.Optional(LAST_SCANNED): cv.datetime,
+    vol.Optional(LAST_SCANNED): cv.string,
 }
 
 
