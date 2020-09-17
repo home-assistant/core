@@ -268,9 +268,6 @@ dsmr_parser==0.18
 # homeassistant.components.dynalite
 dynalite_devices==0.1.46
 
-# homeassistant.components.easee
-easee==0.7.16
-
 # homeassistant.components.ee_brightbox
 eebrightbox==0.0.4
 
