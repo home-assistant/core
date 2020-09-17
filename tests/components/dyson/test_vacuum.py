@@ -101,7 +101,7 @@ class DysonTest(unittest.TestCase):
         component = Dyson360EyeDevice(device)
         component.entity_id = "entity_id"
         component.schedule_update_ha_state = mock.Mock()
-        component.on_message_filter(mock.Mock())
+        component.on_message(mock.Mock())
         assert component.schedule_update_ha_state.called
 
     def test_should_poll(self):
