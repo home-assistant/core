@@ -102,7 +102,7 @@ class DevoloBinaryDeviceEntity(DevoloDeviceEntity, BinarySensorEntity):
     def _sync(self, message=None):
         """Update the binary sensor state."""
         if message[0] == self._unique_id:	
-            self._temperature = message[1]
+            self._state = message[1]
         elif message[0].startswith("hdm"):
             self._available = self._device_instance.is_online()
         else:
