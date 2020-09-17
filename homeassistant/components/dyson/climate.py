@@ -165,15 +165,6 @@ class DysonPureHotCoolLinkEntity(DysonClimateEntity):
         return self._current_temp
 
     @property
-    def current_humidity(self):
-        """Return the current humidity."""
-        if self._device.environmental_state:
-            if self._device.environmental_state.humidity == 0:
-                return None
-            return self._device.environmental_state.humidity
-        return None
-
-    @property
     def hvac_mode(self):
         """Return hvac operation ie. heat, cool mode.
 
