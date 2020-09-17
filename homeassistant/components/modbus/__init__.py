@@ -4,7 +4,7 @@ import threading
 
 from pymodbus.client.sync import ModbusSerialClient, ModbusTcpClient, ModbusUdpClient
 from pymodbus.transaction import ModbusRtuFramer
-from .SungrowModbusTcpClient import SungrowModbusTcpClient
+from .sungrow_modbus_tcp_client import sungrow_modbus_tcp_client
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -211,7 +211,7 @@ class ModbusHub:
                 timeout=self._config_timeout,
             )
         elif self._config_type == "sungrow":
-            self._client = SungrowModbusTcpClient(
+            self._client = sungrow_modbus_tcp_client(
                 host=self._config_host,
                 port=self._config_port,
                 timeout=self._config_timeout,

@@ -1,25 +1,29 @@
 from pymodbus.client.sync import ModbusTcpClient
 from Crypto.Cipher import AES
 
-priv_key = b"Grow#0*2Sun68CbE"
+PRIV_KEY = b"Grow#0*2Sun68CbE"
 NO_CRYPTO1 = b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
 NO_CRYPTO2 = b"\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"
 GET_KEY = b"\x68\x68\x00\x00\x00\x06\xf7\x04\x0a\xe7\x00\x08"
 HEADER = bytes([0x68, 0x68])
 
 
-class SungrowModbusTcpClient(ModbusTcpClient):
+class sungrow_modbus_tcp_client(ModbusTcpClient):
     def __init__(self, **kwargs):
         ModbusTcpClient.__init__(self, **kwargs)
         self._fifo = bytes()
         self._key = None
+        self._key_packet = None
+        self._pub_key = None
+        self._aes_ecb = None
+        self._transaction_id = None
 
     def _getkey(self):
         self._send(GET_KEY)
         self._key_packet = self._recv(25)
         self._pub_key = self._key_packet[9:]
         if (self._pub_key != NO_CRYPTO1) and (self._pub_key != NO_CRYPTO2):
-            self._key = bytes(a ^ b for (a, b) in zip(self._pub_key, priv_key))
+            self._key = bytes(a ^ b for (a, b) in zip(self._pub_key, PRIV_KEY))
             self._aes_ecb = AES.new(self._key, AES.MODE_ECB)
             self._send = self._send_cipher
             self._recv = self._recv_decipher
@@ -38,7 +42,7 @@ class SungrowModbusTcpClient(ModbusTcpClient):
         self._fifo = bytes()
         length = len(request)
         padding = 16 - (length % 16)
-        self._transactionID = request[:2]
+        self._transaction_id = request[:2]
         request = HEADER + bytes(request[2:]) + bytes([0xFF for i in range(0, padding)])
         crypto_header = bytes([1, 0, length, padding])
         encrypted_request = crypto_header + self._aes_ecb.encrypt(request)
@@ -58,7 +62,7 @@ class SungrowModbusTcpClient(ModbusTcpClient):
                 encrypted_packet = ModbusTcpClient._recv(self, length)
                 if encrypted_packet and len(encrypted_packet) == length:
                     packet = self._aes_ecb.decrypt(encrypted_packet)
-                    packet = self._transactionID + packet[2:]
+                    packet = self._transaction_id + packet[2:]
                     self._fifo = self._fifo + packet[:packet_len]
 
         if size is None:
