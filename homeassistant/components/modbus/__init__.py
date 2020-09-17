@@ -4,7 +4,7 @@ import threading
 
 from pymodbus.client.sync import ModbusSerialClient, ModbusTcpClient, ModbusUdpClient
 from pymodbus.transaction import ModbusRtuFramer
-from homeassistant.components.sungrow import sungrow_modbus_tcp_client
+from .sungrow_modbus_tcp_client import sungrow_modbus_tcp_client
 import voluptuous as vol
 
 from homeassistant.const import (
