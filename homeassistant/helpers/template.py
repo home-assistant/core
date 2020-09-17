@@ -8,7 +8,7 @@ import logging
 import math
 import random
 import re
-from typing import Any, Dict, Iterable, List, Optional, Union
+from typing import Any, Iterable, List, Optional, Union
 from urllib.parse import urlencode as urllib_urlencode
 import weakref
 
@@ -16,6 +16,7 @@ import jinja2
 from jinja2 import contextfilter, contextfunction
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace  # type: ignore
+import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -28,7 +29,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import State, callback, split_entity_id, valid_entity_id
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import location as loc_helper
+from homeassistant.helpers import config_validation as cv, location as loc_helper
+from homeassistant.helpers.frame import report
 from homeassistant.helpers.typing import HomeAssistantType, TemplateVarsType
 from homeassistant.loader import bind_hass
 from homeassistant.util import convert, dt as dt_util, location as loc_util
@@ -46,11 +48,15 @@ _ENVIRONMENT = "template.environment"
 
 _RE_NONE_ENTITIES = re.compile(r"distance\(|closest\(", re.I | re.M)
 _RE_GET_ENTITIES = re.compile(
-    r"(?:(?:states\.|(?P<func>is_state|is_state_attr|state_attr|states|expand)"
-    r"\((?:[\ \'\"]?))(?P<entity_id>[\w]+\.[\w]+)|(?P<variable>[\w]+))",
+    r"(?:(?:(?:states\.|(?P<func>is_state|is_state_attr|state_attr|states|expand)\((?:[\ \'\"]?))(?P<entity_id>[\w]+\.[\w]+)|states\.(?P<domain_outer>[a-z]+)|states\[(?:[\'\"]?)(?P<domain_inner>[\w]+))|(?P<variable>[\w]+))",
     re.I | re.M,
 )
-_RE_JINJA_DELIMITERS = re.compile(r"\{%|\{\{")
+
+_RE_JINJA_DELIMITERS = re.compile(r"\{%|\{\{|\{#")
+
+_RESERVED_NAMES = {"contextfunction", "evalcontextfunction", "environmentfunction"}
+
+_GROUP_DOMAIN_PREFIX = "group."
 
 
 @bind_hass
@@ -59,9 +65,10 @@ def attach(hass: HomeAssistantType, obj: Any) -> None:
     if isinstance(obj, list):
         for child in obj:
             attach(hass, child)
-    elif isinstance(obj, dict):
-        for child in obj.values():
-            attach(hass, child)
+    elif isinstance(obj, collections.abc.Mapping):
+        for child_key, child_value in obj.items():
+            attach(hass, child_key)
+            attach(hass, child_value)
     elif isinstance(obj, Template):
         obj.hass = hass
 
@@ -70,20 +77,47 @@ def render_complex(value: Any, variables: TemplateVarsType = None) -> Any:
     """Recursive template creator helper function."""
     if isinstance(value, list):
         return [render_complex(item, variables) for item in value]
-    if isinstance(value, dict):
-        return {key: render_complex(item, variables) for key, item in value.items()}
+    if isinstance(value, collections.abc.Mapping):
+        return {
+            render_complex(key, variables): render_complex(item, variables)
+            for key, item in value.items()
+        }
     if isinstance(value, Template):
         return value.async_render(variables)
+
     return value
+
+
+def is_complex(value: Any) -> bool:
+    """Test if data structure is a complex template."""
+    if isinstance(value, Template):
+        return True
+    if isinstance(value, list):
+        return any(is_complex(val) for val in value)
+    if isinstance(value, collections.abc.Mapping):
+        return any(is_complex(val) for val in value.keys()) or any(
+            is_complex(val) for val in value.values()
+        )
+    return False
+
+
+def is_template_string(maybe_template: str) -> bool:
+    """Check if the input is a Jinja2 template."""
+    return _RE_JINJA_DELIMITERS.search(maybe_template) is not None
 
 
 def extract_entities(
     hass: HomeAssistantType,
     template: Optional[str],
-    variables: Optional[Dict[str, Any]] = None,
+    variables: TemplateVarsType = None,
 ) -> Union[str, List[str]]:
     """Extract all entities for state_changed listener from template string."""
-    if template is None or _RE_JINJA_DELIMITERS.search(template) is None:
+
+    report(
+        "called template.extract_entities. Please use event.async_track_template_result instead as it can accurately handle watching entities"
+    )
+
+    if template is None or not is_template_string(template):
         return []
 
     if _RE_NONE_ENTITIES.search(template):
@@ -105,6 +139,12 @@ def extract_entities(
                     extraction_final.append(entity.entity_id)
 
             extraction_final.append(result.group("entity_id"))
+        elif result.group("domain_inner") or result.group("domain_outer"):
+            extraction_final.extend(
+                hass.states.async_entity_ids(
+                    result.group("domain_inner") or result.group("domain_outer")
+                )
+            )
 
         if (
             variables
@@ -132,39 +172,44 @@ class RenderInfo:
         # Will be set sensibly once frozen.
         self.filter_lifecycle = _true
         self._result = None
-        self._exception = None
-        self._all_states = False
-        self._domains = []
-        self._entities = []
+        self.is_static = False
+        self.exception = None
+        self.all_states = False
+        self.domains = set()
+        self.entities = set()
 
     def filter(self, entity_id: str) -> bool:
         """Template should re-render if the state changes."""
-        return entity_id in self._entities
+        return entity_id in self.entities
 
     def _filter_lifecycle(self, entity_id: str) -> bool:
         """Template should re-render if the state changes."""
         return (
-            split_entity_id(entity_id)[0] in self._domains
-            or entity_id in self._entities
+            split_entity_id(entity_id)[0] in self.domains or entity_id in self.entities
         )
 
-    @property
     def result(self) -> str:
         """Results of the template computation."""
-        if self._exception is not None:
-            raise self._exception
+        if self.exception is not None:
+            raise self.exception
         return self._result
 
+    def _freeze_static(self) -> None:
+        self.is_static = True
+        self.entities = frozenset(self.entities)
+        self.domains = frozenset(self.domains)
+        self.all_states = False
+
     def _freeze(self) -> None:
-        self._entities = frozenset(self._entities)
-        if self._all_states:
-            # Leave lifecycle_filter as True
-            del self._domains
-        elif not self._domains:
-            del self._domains
+        self.entities = frozenset(self.entities)
+        self.domains = frozenset(self.domains)
+
+        if self.all_states or self.exception:
+            return
+
+        if not self.domains:
             self.filter_lifecycle = self.filter
         else:
-            self._domains = frozenset(self._domains)
             self.filter_lifecycle = self._filter_lifecycle
 
 
@@ -180,6 +225,7 @@ class Template:
         self._compiled_code = None
         self._compiled = None
         self.hass = hass
+        self.is_static = not is_template_string(template)
 
     @property
     def _env(self):
@@ -198,16 +244,22 @@ class Template:
         try:
             self._compiled_code = self._env.compile(self.template)
         except jinja2.exceptions.TemplateSyntaxError as err:
-            raise TemplateError(err)
+            raise TemplateError(err) from err
 
     def extract_entities(
-        self, variables: Optional[Dict[str, Any]] = None
+        self, variables: TemplateVarsType = None
     ) -> Union[str, List[str]]:
         """Extract all entities for state_changed listener."""
+        if self.is_static:
+            return []
+
         return extract_entities(self.hass, self.template, variables)
 
     def render(self, variables: TemplateVarsType = None, **kwargs: Any) -> str:
         """Render given template."""
+        if self.is_static:
+            return self.template.strip()
+
         if variables is not None:
             kwargs.update(variables)
 
@@ -221,6 +273,9 @@ class Template:
 
         This method must be run in the event loop.
         """
+        if self.is_static:
+            return self.template.strip()
+
         compiled = self._compiled or self._ensure_compiled()
 
         if variables is not None:
@@ -229,7 +284,7 @@ class Template:
         try:
             return compiled.render(kwargs).strip()
         except jinja2.TemplateError as err:
-            raise TemplateError(err)
+            raise TemplateError(err) from err
 
     @callback
     def async_render_to_info(
@@ -237,15 +292,24 @@ class Template:
     ) -> RenderInfo:
         """Render the template and collect an entity filter."""
         assert self.hass and _RENDER_INFO not in self.hass.data
-        render_info = self.hass.data[_RENDER_INFO] = RenderInfo(self)
+
+        render_info = RenderInfo(self)
+
         # pylint: disable=protected-access
+        if self.is_static:
+            render_info._result = self.template.strip()
+            render_info._freeze_static()
+            return render_info
+
+        self.hass.data[_RENDER_INFO] = render_info
         try:
             render_info._result = self.async_render(variables, **kwargs)
         except TemplateError as ex:
-            render_info._exception = ex
+            render_info.exception = ex
         finally:
             del self.hass.data[_RENDER_INFO]
-            render_info._freeze()
+
+        render_info._freeze()
         return render_info
 
     def render_with_possible_json_value(self, value, error_value=_SENTINEL):
@@ -253,6 +317,9 @@ class Template:
 
         If valid JSON will expose value_json too.
         """
+        if self.is_static:
+            return self.template
+
         return run_callback_threadsafe(
             self.hass.loop,
             self.async_render_with_possible_json_value,
@@ -270,6 +337,9 @@ class Template:
 
         This method must be run in the event loop.
         """
+        if self.is_static:
+            return self.template
+
         if self._compiled is None:
             self._ensure_compiled()
 
@@ -337,15 +407,19 @@ class AllStates:
             if not valid_entity_id(name):
                 raise TemplateError(f"Invalid entity ID '{name}'")
             return _get_state(self._hass, name)
+
+        if name in _RESERVED_NAMES:
+            return None
+
         if not valid_entity_id(f"{name}.entity"):
             raise TemplateError(f"Invalid domain name '{name}'")
+
         return DomainStates(self._hass, name)
 
     def _collect_all(self) -> None:
         render_info = self._hass.data.get(_RENDER_INFO)
         if render_info is not None:
-            # pylint: disable=protected-access
-            render_info._all_states = True
+            render_info.all_states = True
 
     def __iter__(self):
         """Return all states."""
@@ -390,8 +464,7 @@ class DomainStates:
     def _collect_domain(self) -> None:
         entity_collect = self._hass.data.get(_RENDER_INFO)
         if entity_collect is not None:
-            # pylint: disable=protected-access
-            entity_collect._domains.append(self._domain)
+            entity_collect.domains.add(self._domain)
 
     def __iter__(self):
         """Return the iteration over all the states."""
@@ -400,8 +473,7 @@ class DomainStates:
             sorted(
                 (
                     _wrap_state(self._hass, state)
-                    for state in self._hass.states.async_all()
-                    if state.domain == self._domain
+                    for state in self._hass.states.async_all(self._domain)
                 ),
                 key=lambda state: state.entity_id,
             )
@@ -430,7 +502,6 @@ class TemplateState(State):
     def _access_state(self):
         state = object.__getattribute__(self, "_state")
         hass = object.__getattribute__(self, "_hass")
-
         _collect_state(hass, state.entity_id)
         return state
 
@@ -442,6 +513,13 @@ class TemplateState(State):
         if unit is None:
             return state.state
         return f"{state.state} {unit}"
+
+    def __eq__(self, other: Any) -> bool:
+        """Ensure we collect on equality check."""
+        state = object.__getattribute__(self, "_state")
+        hass = object.__getattribute__(self, "_hass")
+        _collect_state(hass, state.entity_id)
+        return super().__eq__(other)
 
     def __getattribute__(self, name):
         """Return an attribute of the state."""
@@ -466,8 +544,7 @@ class TemplateState(State):
 def _collect_state(hass: HomeAssistantType, entity_id: str) -> None:
     entity_collect = hass.data.get(_RENDER_INFO)
     if entity_collect is not None:
-        # pylint: disable=protected-access
-        entity_collect._entities.append(entity_id)
+        entity_collect.entities.add(entity_id)
 
 
 def _wrap_state(
@@ -498,6 +575,19 @@ def _resolve_state(
     return None
 
 
+def result_as_boolean(template_result: Optional[str]) -> bool:
+    """Convert the template result to a boolean.
+
+    True/not 0/'1'/'true'/'yes'/'on'/'enable' are considered truthy
+    False/0/None/'0'/'false'/'no'/'off'/'disable' are considered falsy
+
+    """
+    try:
+        return cv.boolean(template_result)
+    except vol.Invalid:
+        return False
+
+
 def expand(hass: HomeAssistantType, *args: Any) -> Iterable[State]:
     """Expand out any groups into entity states."""
     search = list(args)
@@ -518,16 +608,15 @@ def expand(hass: HomeAssistantType, *args: Any) -> Iterable[State]:
             # ignore other types
             continue
 
-        # pylint: disable=import-outside-toplevel
-        from homeassistant.components import group
-
-        if split_entity_id(entity_id)[0] == group.DOMAIN:
+        if entity_id.startswith(_GROUP_DOMAIN_PREFIX):
             # Collect state will be called in here since it's wrapped
             group_entities = entity.attributes.get(ATTR_ENTITY_ID)
             if group_entities:
                 search += group_entities
         else:
+            _collect_state(hass, entity_id)
             found[entity_id] = entity
+
     return sorted(found.values(), key=lambda a: a.entity_id)
 
 
@@ -613,7 +702,10 @@ def distance(hass, *args):
 
     while to_process:
         value = to_process.pop(0)
-        point_state = _resolve_state(hass, value)
+        if isinstance(value, str) and not valid_entity_id(value):
+            point_state = None
+        else:
+            point_state = _resolve_state(hass, value)
 
         if point_state is None:
             # We expect this and next value to be lat&lng
@@ -972,6 +1064,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["atan2"] = arc_tangent2
         self.filters["sqrt"] = square_root
         self.filters["as_timestamp"] = forgiving_as_timestamp
+        self.filters["as_local"] = dt_util.as_local
         self.filters["timestamp_custom"] = timestamp_custom
         self.filters["timestamp_local"] = timestamp_local
         self.filters["timestamp_utc"] = timestamp_utc
@@ -1005,6 +1098,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["atan2"] = arc_tangent2
         self.globals["float"] = forgiving_float
         self.globals["now"] = dt_util.now
+        self.globals["as_local"] = dt_util.as_local
         self.globals["utcnow"] = dt_util.utcnow
         self.globals["as_timestamp"] = forgiving_as_timestamp
         self.globals["relative_time"] = relative_time
@@ -1042,7 +1136,13 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
     def is_safe_attribute(self, obj, attr, value):
         """Test if attribute is safe."""
-        return isinstance(obj, Namespace) or super().is_safe_attribute(obj, attr, value)
+        if isinstance(obj, Namespace):
+            return True
+
+        if isinstance(obj, (AllStates, DomainStates, TemplateState)):
+            return not attr.startswith("_")
+
+        return super().is_safe_attribute(obj, attr, value)
 
     def compile(self, source, name=None, filename=None, raw=False, defer_init=False):
         """Compile the template."""

@@ -75,7 +75,9 @@ async def async_setup_entry(
     platform = entity_platform.current_platform.get()
 
     platform.async_register_entity_service(
-        SERVICE_CLIMATE_TIMER, CLIMATE_TIMER_SCHEMA, "set_timer",
+        SERVICE_CLIMATE_TIMER,
+        CLIMATE_TIMER_SCHEMA,
+        "set_timer",
     )
 
     if entities:

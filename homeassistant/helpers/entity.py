@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import functools as ft
 import logging
 from timeit import default_timer as timer
-from typing import Any, Awaitable, Dict, Iterable, List, Optional, Union
+from typing import Any, Awaitable, Dict, Iterable, List, Optional
 
 from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.const import (
@@ -25,14 +25,26 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
-from homeassistant.exceptions import NoEntitySpecifiedError
+from homeassistant.exceptions import HomeAssistantError, NoEntitySpecifiedError
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.event import Event, async_track_entity_registry_updated_event
+from homeassistant.helpers.typing import StateType
+from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util, ensure_unique_string, slugify
 
 _LOGGER = logging.getLogger(__name__)
 SLOW_UPDATE_WARNING = 10
+DATA_ENTITY_SOURCE = "entity_info"
+SOURCE_CONFIG_ENTRY = "config_entry"
+SOURCE_PLATFORM_CONFIG = "platform_config"
+
+
+@callback
+@bind_hass
+def entity_sources(hass: HomeAssistant) -> Dict[str, Dict[str, str]]:
+    """Get the entity sources."""
+    return hass.data.get(DATA_ENTITY_SOURCE, {})
 
 
 def generate_entity_id(
@@ -108,6 +120,9 @@ class Entity(ABC):
     _context: Optional[Context] = None
     _context_set: Optional[datetime] = None
 
+    # If entity is added to an entity platform
+    _added = False
+
     @property
     def should_poll(self) -> bool:
         """Return True if entity has to be polled for state.
@@ -127,7 +142,7 @@ class Entity(ABC):
         return None
 
     @property
-    def state(self) -> Union[None, str, int, float]:
+    def state(self) -> StateType:
         """Return the state of the entity."""
         return STATE_UNKNOWN
 
@@ -453,9 +468,7 @@ class Entity(ABC):
             if hasattr(self, "async_update"):
                 await self.async_update()  # type: ignore
             elif hasattr(self, "update"):
-                await self.hass.async_add_executor_job(
-                    self.update  # type: ignore
-                )
+                await self.hass.async_add_executor_job(self.update)  # type: ignore
         finally:
             self._update_staged = False
             if warning:
@@ -476,9 +489,48 @@ class Entity(ABC):
         To be extended by integrations.
         """
 
+    @callback
+    def add_to_platform_start(
+        self,
+        hass: HomeAssistant,
+        platform: EntityPlatform,
+        parallel_updates: Optional[asyncio.Semaphore],
+    ) -> None:
+        """Start adding an entity to a platform."""
+        if self._added:
+            raise HomeAssistantError(
+                f"Entity {self.entity_id} cannot be added a second time to an entity platform"
+            )
+
+        self.hass = hass
+        self.platform = platform
+        self.parallel_updates = parallel_updates
+        self._added = True
+
+    @callback
+    def add_to_platform_abort(self) -> None:
+        """Abort adding an entity to a platform."""
+        self.hass = None
+        self.platform = None
+        self.parallel_updates = None
+        self._added = False
+
+    async def add_to_platform_finish(self) -> None:
+        """Finish adding an entity to a platform."""
+        await self.async_internal_added_to_hass()
+        await self.async_added_to_hass()
+        self.async_write_ha_state()
+
     async def async_remove(self) -> None:
         """Remove entity from Home Assistant."""
         assert self.hass is not None
+
+        if self.platform and not self._added:
+            raise HomeAssistantError(
+                f"Entity {self.entity_id} async_remove called twice"
+            )
+
+        self._added = False
 
         if self._on_remove is not None:
             while self._on_remove:
@@ -506,8 +558,25 @@ class Entity(ABC):
 
         Not to be extended by integrations.
         """
+        assert self.hass is not None
+
+        if self.platform:
+            info = {"domain": self.platform.platform_name}
+
+            if self.platform.config_entry:
+                info["source"] = SOURCE_CONFIG_ENTRY
+                info["config_entry"] = self.platform.config_entry.entry_id
+            else:
+                info["source"] = SOURCE_PLATFORM_CONFIG
+
+            self.hass.data.setdefault(DATA_ENTITY_SOURCE, {})[self.entity_id] = info
+
         if self.registry_entry is not None:
-            assert self.hass is not None
+            # This is an assert as it should never happen, but helps in tests
+            assert (
+                not self.registry_entry.disabled_by
+            ), f"Entity {self.entity_id} is being added while it's disabled"
+
             self.async_on_remove(
                 async_track_entity_registry_updated_event(
                     self.hass, self.entity_id, self._async_registry_updated
@@ -519,6 +588,9 @@ class Entity(ABC):
 
         Not to be extended by integrations.
         """
+        if self.platform:
+            assert self.hass is not None
+            self.hass.data[DATA_ENTITY_SOURCE].pop(self.entity_id)
 
     async def _async_registry_updated(self, event: Event) -> None:
         """Handle entity registry update."""

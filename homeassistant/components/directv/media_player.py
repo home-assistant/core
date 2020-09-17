@@ -1,10 +1,13 @@
 """Support for the DirecTV receivers."""
 import logging
-from typing import Callable, List
+from typing import Callable, List, Optional
 
 from directv import DIRECTV
 
-from homeassistant.components.media_player import MediaPlayerEntity
+from homeassistant.components.media_player import (
+    DEVICE_CLASS_RECEIVER,
+    MediaPlayerEntity,
+)
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_MOVIE,
@@ -70,7 +73,9 @@ async def async_setup_entry(
     for location in dtv.device.locations:
         entities.append(
             DIRECTVMediaPlayer(
-                dtv=dtv, name=str.title(location.name), address=location.address,
+                dtv=dtv,
+                name=str.title(location.name),
+                address=location.address,
             )
         )
 
@@ -83,7 +88,9 @@ class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerEntity):
     def __init__(self, *, dtv: DIRECTV, name: str, address: str = "0") -> None:
         """Initialize DirecTV media player."""
         super().__init__(
-            dtv=dtv, name=name, address=address,
+            dtv=dtv,
+            name=name,
+            address=address,
         )
 
         self._assumed_state = None
@@ -132,6 +139,11 @@ class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerEntity):
     def name(self):
         """Return the name of the device."""
         return self._name
+
+    @property
+    def device_class(self) -> Optional[str]:
+        """Return the class of this device."""
+        return DEVICE_CLASS_RECEIVER
 
     @property
     def unique_id(self):

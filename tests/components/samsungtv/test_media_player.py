@@ -203,7 +203,9 @@ async def test_setup_websocket_2(hass, mock_now):
     entity_id = f"{DOMAIN}.fake"
 
     entry = MockConfigEntry(
-        domain=SAMSUNGTV_DOMAIN, data=MOCK_ENTRY_WS, unique_id=entity_id,
+        domain=SAMSUNGTV_DOMAIN,
+        data=MOCK_ENTRY_WS,
+        unique_id=entity_id,
     )
     entry.add_to_hass(hass)
 

@@ -1,13 +1,33 @@
 {
     "config": {
         "abort": {
+            "already_configured_device": "El dispositiu ja est\u00e0 configurat",
+            "already_configured_local_device": "Dispositiu(s) local ja configurat. Elimina'ls primer abans de configurar un dispositiu al n\u00favol.",
             "authorize_url_timeout": "Temps d'espera esgotat generant l'URL d'autoritzaci\u00f3.",
-            "missing_configuration": "El component no est\u00e0 configurat. Mira'n la documentaci\u00f3.",
-            "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
+            "connection_error": "No s'ha pogut connectar amb el Smappee.",
+            "invalid_mdns": "Dispositiu no compatible amb la integraci\u00f3 de Smappee.",
+            "missing_configuration": "El component no est\u00e0 configurat. Mira'n la documentaci\u00f3."
         },
+        "flow_title": "Smappee: {name}",
         "step": {
+            "environment": {
+                "data": {
+                    "environment": "Entorn"
+                },
+                "description": "Configura el teu Smappee per a integrar-lo amb Home Assistant."
+            },
+            "local": {
+                "data": {
+                    "host": "Amfitri\u00f3"
+                },
+                "description": "Introdueix l'amfitri\u00f3 per iniciar la integraci\u00f3 local de Smappee"
+            },
             "pick_implementation": {
                 "title": "Selecciona un m\u00e8tode d'autenticaci\u00f3"
+            },
+            "zeroconf_confirm": {
+                "description": "Vols afegir el dispositiu Smappee amb n\u00famero de s\u00e8rie `{serialnumber}` a Home Assistant?",
+                "title": "Dispositiu Smappee descobert"
             }
         }
     }

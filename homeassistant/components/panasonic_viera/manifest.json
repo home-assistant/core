@@ -2,7 +2,7 @@
   "domain": "panasonic_viera",
   "name": "Panasonic Viera",
   "documentation": "https://www.home-assistant.io/integrations/panasonic_viera",
-  "requirements": ["panasonic_viera==0.3.5"],
+  "requirements": ["panasonic_viera==0.3.6"],
   "codeowners": ["@joogps"],
   "config_flow": true
 }

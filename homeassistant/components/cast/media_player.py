@@ -1,5 +1,7 @@
 """Provide functionality to interact with Cast devices on the network."""
 import asyncio
+from datetime import timedelta
+import functools as ft
 import json
 import logging
 from typing import Optional
@@ -14,12 +16,15 @@ from pychromecast.socket_client import (
 )
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
+from homeassistant.auth.models import RefreshToken
+from homeassistant.components import media_source, zeroconf
+from homeassistant.components.http.auth import async_sign_path
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_TVSHOW,
+    SUPPORT_BROWSE_MEDIA,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -44,6 +49,7 @@ from homeassistant.core import callback
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 import homeassistant.util.dt as dt_util
 from homeassistant.util.logging import async_create_catching_coro
@@ -140,7 +146,7 @@ async def async_setup_platform(
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Cast from a config entry."""
-    config = hass.data[CAST_DOMAIN].get("media_player", {})
+    config = hass.data[CAST_DOMAIN].get("media_player") or {}
     if not isinstance(config, list):
         config = [config]
 
@@ -339,6 +345,48 @@ class CastDevice(MediaPlayerEntity):
 
     def new_media_status(self, media_status):
         """Handle updates of the media status."""
+        if (
+            media_status
+            and media_status.player_is_idle
+            and media_status.idle_reason == "ERROR"
+        ):
+            external_url = None
+            internal_url = None
+            tts_base_url = None
+            url_description = ""
+            if "tts" in self.hass.config.components:
+                try:
+                    tts_base_url = self.hass.components.tts.get_base_url(self.hass)
+                except KeyError:
+                    # base_url not configured, ignore
+                    pass
+            try:
+                external_url = get_url(self.hass, allow_internal=False)
+            except NoURLAvailableError:
+                # external_url not configured, ignore
+                pass
+            try:
+                internal_url = get_url(self.hass, allow_external=False)
+            except NoURLAvailableError:
+                # internal_url not configured, ignore
+                pass
+
+            if media_status.content_id:
+                if tts_base_url and media_status.content_id.startswith(tts_base_url):
+                    url_description = f" from tts.base_url ({tts_base_url})"
+                if external_url and media_status.content_id.startswith(external_url):
+                    url_description = f" from external_url ({external_url})"
+                if internal_url and media_status.content_id.startswith(internal_url):
+                    url_description = f" from internal_url ({internal_url})"
+
+            _LOGGER.error(
+                "Failed to cast media %s%s. Please make sure the URL is: "
+                "Reachable from the cast device and either a publicly resolvable "
+                "hostname or an IP address",
+                media_status.content_id,
+                url_description,
+            )
+
         self.media_status = media_status
         self.media_status_received = dt_util.utcnow()
         self.schedule_update_ha_state()
@@ -387,7 +435,7 @@ class CastDevice(MediaPlayerEntity):
     # ========== Service Calls ==========
     def _media_controller(self):
         """
-        Return media status.
+        Return media controller.
 
         First try from our own cast, then groups which our cast is a member in.
         """
@@ -458,6 +506,44 @@ class CastDevice(MediaPlayerEntity):
         """Seek the media to a specific location."""
         media_controller = self._media_controller()
         media_controller.seek(position)
+
+    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+        """Implement the websocket media browsing helper."""
+        result = await media_source.async_browse_media(self.hass, media_content_id)
+        return result
+
+    async def async_play_media(self, media_type, media_id, **kwargs):
+        """Play a piece of media."""
+        # Handle media_source
+        if media_source.is_media_source_id(media_id):
+            sourced_media = await media_source.async_resolve_media(self.hass, media_id)
+            media_type = sourced_media.mime_type
+            media_id = sourced_media.url
+
+        # If media ID is a relative URL, we serve it from HA.
+        # Create a signed path.
+        if media_id[0] == "/":
+            # Sign URL with Home Assistant Cast User
+            config_entries = self.hass.config_entries.async_entries(CAST_DOMAIN)
+            user_id = config_entries[0].data["user_id"]
+            user = await self.hass.auth.async_get_user(user_id)
+            if user.refresh_tokens:
+                refresh_token: RefreshToken = list(user.refresh_tokens.values())[0]
+
+                media_id = async_sign_path(
+                    self.hass,
+                    refresh_token.id,
+                    media_id,
+                    timedelta(minutes=5),
+                )
+
+            # prepend external URL
+            hass_url = get_url(self.hass, prefer_external=True)
+            media_id = f"{hass_url}{media_id}"
+
+        await self.hass.async_add_job(
+            ft.partial(self.play_media, media_type, media_id, **kwargs)
+        )
 
     def play_media(self, media_type, media_id, **kwargs):
         """Play media from a URL."""
@@ -602,7 +688,9 @@ class CastDevice(MediaPlayerEntity):
 
         images = media_status.images
 
-        return images[0].url if images and images[0].url else None
+        return (
+            images[0].url.replace("http://", "//") if images and images[0].url else None
+        )
 
     @property
     def media_image_remotely_accessible(self) -> bool:
@@ -680,6 +768,9 @@ class CastDevice(MediaPlayerEntity):
                 support |= SUPPORT_NEXT_TRACK
             if media_status.supports_seek:
                 support |= SUPPORT_SEEK
+
+        if "media_source" in self.hass.config.components:
+            support |= SUPPORT_BROWSE_MEDIA
 
         return support
 

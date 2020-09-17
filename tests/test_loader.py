@@ -218,6 +218,23 @@ def test_integration_properties(hass):
     assert integration.zeroconf is None
     assert integration.ssdp is None
 
+    integration = loader.Integration(
+        hass,
+        "custom_components.hue",
+        None,
+        {
+            "name": "Philips Hue",
+            "domain": "hue",
+            "dependencies": ["test-dep"],
+            "zeroconf": [{"type": "_hue._tcp.local.", "name": "hue*"}],
+            "requirements": ["test-req==1.0.0"],
+        },
+    )
+    assert integration.is_built_in is False
+    assert integration.homekit is None
+    assert integration.zeroconf == [{"type": "_hue._tcp.local.", "name": "hue*"}]
+    assert integration.ssdp is None
+
 
 async def test_integrations_only_once(hass):
     """Test that we load integrations only once."""
@@ -247,6 +264,25 @@ def _get_test_integration(hass, name, config_flow):
             "dependencies": [],
             "requirements": [],
             "zeroconf": [f"_{name}._tcp.local."],
+            "homekit": {"models": [name]},
+            "ssdp": [{"manufacturer": name, "modelName": name}],
+        },
+    )
+
+
+def _get_test_integration_with_zeroconf_matcher(hass, name, config_flow):
+    """Return a generated test integration with a zeroconf matcher."""
+    return loader.Integration(
+        hass,
+        f"homeassistant.components.{name}",
+        None,
+        {
+            "name": name,
+            "domain": name,
+            "config_flow": config_flow,
+            "dependencies": [],
+            "requirements": [],
+            "zeroconf": [{"type": f"_{name}._tcp.local.", "name": f"{name}*"}],
             "homekit": {"models": [name]},
             "ssdp": [{"manufacturer": name, "modelName": name}],
         },
@@ -289,7 +325,9 @@ async def test_get_config_flows(hass):
 async def test_get_zeroconf(hass):
     """Verify that custom components with zeroconf are found."""
     test_1_integration = _get_test_integration(hass, "test_1", True)
-    test_2_integration = _get_test_integration(hass, "test_2", True)
+    test_2_integration = _get_test_integration_with_zeroconf_matcher(
+        hass, "test_2", True
+    )
 
     with patch("homeassistant.loader.async_get_custom_components") as mock_get:
         mock_get.return_value = {
@@ -297,8 +335,10 @@ async def test_get_zeroconf(hass):
             "test_2": test_2_integration,
         }
         zeroconf = await loader.async_get_zeroconf(hass)
-        assert zeroconf["_test_1._tcp.local."] == ["test_1"]
-        assert zeroconf["_test_2._tcp.local."] == ["test_2"]
+        assert zeroconf["_test_1._tcp.local."] == [{"domain": "test_1"}]
+        assert zeroconf["_test_2._tcp.local."] == [
+            {"domain": "test_2", "name": "test_2*"}
+        ]
 
 
 async def test_get_homekit(hass):

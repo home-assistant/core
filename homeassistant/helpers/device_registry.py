@@ -2,12 +2,12 @@
 from collections import OrderedDict
 import logging
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple, Union
-import uuid
 
 import attr
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import Event, callback
+import homeassistant.util.uuid as uuid_util
 
 from .debounce import Debouncer
 from .singleton import singleton
@@ -73,7 +73,7 @@ class DeviceEntry:
     area_id: str = attr.ib(default=None)
     name_by_user: str = attr.ib(default=None)
     entry_type: str = attr.ib(default=None)
-    id: str = attr.ib(factory=lambda: uuid.uuid4().hex)
+    id: str = attr.ib(factory=uuid_util.uuid_v1mc_hex)
     # This value is not stored, just used to keep track of events to fire.
     is_new: bool = attr.ib(default=False)
 
@@ -209,6 +209,9 @@ class DeviceRegistry:
         manufacturer=_UNDEF,
         model=_UNDEF,
         name=_UNDEF,
+        default_manufacturer=_UNDEF,
+        default_model=_UNDEF,
+        default_name=_UNDEF,
         sw_version=_UNDEF,
         entry_type=_UNDEF,
         via_device=None,
@@ -235,6 +238,15 @@ class DeviceRegistry:
                 self._remove_device(deleted_device)
                 device = deleted_device.to_device_entry()
             self._add_device(device)
+
+        if default_manufacturer is not _UNDEF and device.manufacturer is None:
+            manufacturer = default_manufacturer
+
+        if default_model is not _UNDEF and device.model is None:
+            model = default_model
+
+        if default_name is not _UNDEF and device.name is None:
+            name = default_name
 
         if via_device is not None:
             via = self.async_get_device({via_device}, set())

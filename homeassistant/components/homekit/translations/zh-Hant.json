@@ -13,7 +13,7 @@
                     "auto_start": "\u81ea\u52d5\u555f\u52d5\uff08\u5047\u5982\u4f7f\u7528 Z-Wave \u6216\u5176\u4ed6\u5ef6\u9072\u555f\u52d5\u7cfb\u7d71\u6642\u3001\u8acb\u95dc\u9589\uff09",
                     "include_domains": "\u5305\u542b Domain"
                 },
-                "description": "HomeKit Bridge \u5c07\u53ef\u5141\u8a31\u65bc  Homekit \u4e2d\u4f7f\u7528 Home Assistant \u7269\u4ef6\u3002HomeKit Bridges \u6700\u9ad8\u9650\u5236\u70ba 150 \u500b\u914d\u4ef6\u3001\u5305\u542b Bridge \u672c\u8eab\u3002\u5047\u5982\u60f3\u8981\u4f7f\u7528\u8d85\u904e\u9650\u5236\u4ee5\u4e0a\u7684\u914d\u4ef6\uff0c\u5efa\u8b70\u53ef\u4ee5\u4e0d\u540c Domain \u4f7f\u7528\u591a\u500b HomeKit bridges \u9054\u5230\u6b64\u9700\u6c42\u3002\u50c5\u80fd\u65bc\u4e3b Bridge \u4ee5 YAML \u8a2d\u5b9a\u8a73\u7d30\u7269\u4ef6\u3002",
+                "description": "HomeKit Bridge \u5c07\u53ef\u5141\u8a31\u65bc  Homekit \u4e2d\u4f7f\u7528 Home Assistant \u5be6\u9ad4\u3002HomeKit Bridges \u6700\u9ad8\u9650\u5236\u70ba 150 \u500b\u914d\u4ef6\u3001\u5305\u542b Bridge \u672c\u8eab\u3002\u5047\u5982\u60f3\u8981\u4f7f\u7528\u8d85\u904e\u9650\u5236\u4ee5\u4e0a\u7684\u914d\u4ef6\uff0c\u5efa\u8b70\u53ef\u4ee5\u4e0d\u540c Domain \u4f7f\u7528\u591a\u500b HomeKit bridges \u9054\u5230\u6b64\u9700\u6c42\u3002\u50c5\u80fd\u65bc\u4e3b Bridge \u4ee5 YAML \u8a2d\u5b9a\u8a73\u7d30\u5be6\u9ad4\u3002",
                 "title": "\u555f\u7528 HomeKit Bridge"
             }
         }
@@ -23,8 +23,7 @@
             "advanced": {
                 "data": {
                     "auto_start": "\u81ea\u52d5\u555f\u52d5\uff08\u5047\u5982\u4f7f\u7528 Z-Wave \u6216\u5176\u4ed6\u5ef6\u9072\u555f\u52d5\u7cfb\u7d71\u6642\u3001\u8acb\u95dc\u9589\uff09",
-                    "safe_mode": "\u5b89\u5168\u6a21\u5f0f\uff08\u50c5\u65bc\u914d\u5c0d\u5931\u6557\u6642\u4f7f\u7528\uff09",
-                    "zeroconf_default_interface": "\u4f7f\u7528\u9810\u8a2d zeroconf \u4ecb\u9762\uff08\u50c5\u65bc\u5bb6\u5ead App \u627e\u4e0d\u5230 Bridge \u6642\u958b\u555f\uff09"
+                    "safe_mode": "\u5b89\u5168\u6a21\u5f0f\uff08\u50c5\u65bc\u914d\u5c0d\u5931\u6557\u6642\u4f7f\u7528\uff09"
                 },
                 "description": "\u50c5\u65bc Homekit bridge \u7121\u6cd5\u6b63\u5e38\u4f7f\u7528\u6642\uff0c\u8abf\u6574\u6b64\u4e9b\u8a2d\u5b9a\u3002",
                 "title": "\u9032\u968e\u8a2d\u5b9a"
@@ -38,20 +37,20 @@
             },
             "exclude": {
                 "data": {
-                    "exclude_entities": "\u6392\u9664\u7269\u4ef6"
+                    "exclude_entities": "\u6392\u9664\u5be6\u9ad4"
                 },
-                "description": "\u9078\u64c7\u4e0d\u9032\u884c\u6a4b\u63a5\u7684\u7269\u4ef6\u3002",
-                "title": "\u65bc\u6240\u9078 Domain \u4e2d\u6240\u8981\u6392\u9664\u7684\u7269\u4ef6"
+                "description": "\u9078\u64c7\u4e0d\u9032\u884c\u6a4b\u63a5\u7684\u5be6\u9ad4\u3002",
+                "title": "\u65bc\u6240\u9078 Domain \u4e2d\u6240\u8981\u6392\u9664\u7684\u5be6\u9ad4"
             },
             "init": {
                 "data": {
                     "include_domains": "\u5305\u542b Domain"
                 },
-                "description": "\u300c\u5305\u542b Domain\u300d\u4e2d\u7684\u7269\u4ef6\u5c07\u6703\u6a4b\u63a5\u81f3 Homekit\u3001\u53ef\u4ee5\u65bc\u4e0b\u4e00\u500b\u756b\u9762\u4e2d\u9078\u64c7\u6240\u8981\u5305\u542b\u6216\u6392\u9664\u7684\u7269\u4ef6\u5217\u8868\u3002",
+                "description": "\u300c\u5305\u542b Domain\u300d\u4e2d\u7684\u5be6\u9ad4\u5c07\u6703\u6a4b\u63a5\u81f3 Homekit\u3001\u53ef\u4ee5\u65bc\u4e0b\u4e00\u500b\u756b\u9762\u4e2d\u9078\u64c7\u6240\u8981\u5305\u542b\u6216\u6392\u9664\u7684\u5be6\u9ad4\u5217\u8868\u3002",
                 "title": "\u9078\u64c7\u6240\u8981\u6a4b\u63a5\u7684 Domain\u3002"
             },
             "yaml": {
-                "description": "\u6b64\u7269\u4ef6\u70ba\u900f\u904e YAML \u63a7\u5236",
+                "description": "\u6b64\u5be6\u9ad4\u70ba\u900f\u904e YAML \u63a7\u5236",
                 "title": "\u8abf\u6574 HomeKit Bridge \u9078\u9805"
             }
         }

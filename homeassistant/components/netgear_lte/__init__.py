@@ -306,17 +306,19 @@ async def _login(hass, modem_data, password):
     await modem_data.async_update()
     hass.data[DATA_KEY].modem_data[modem_data.host] = modem_data
 
-    async def cleanup(event):
-        """Clean up resources."""
-        await modem_data.modem.logout()
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, cleanup)
-
     async def _update(now):
         """Periodic update."""
         await modem_data.async_update()
 
-    async_track_time_interval(hass, _update, SCAN_INTERVAL)
+    update_unsub = async_track_time_interval(hass, _update, SCAN_INTERVAL)
+
+    async def cleanup(event):
+        """Clean up resources."""
+        update_unsub()
+        await modem_data.modem.logout()
+        del hass.data[DATA_KEY].modem_data[modem_data.host]
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, cleanup)
 
 
 async def _retry_login(hass, modem_data, password):

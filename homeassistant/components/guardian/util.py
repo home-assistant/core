@@ -45,5 +45,5 @@ class GuardianDataUpdateCoordinator(DataUpdateCoordinator[dict]):
             try:
                 resp = await self._api_coro()
             except GuardianError as err:
-                raise UpdateFailed(err)
+                raise UpdateFailed(err) from err
         return resp["data"]

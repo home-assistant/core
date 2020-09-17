@@ -10,6 +10,7 @@ on:
   pull_request: ~
 
 env:
+  CACHE_VERSION: 1
   DEFAULT_PYTHON: 3.7
   PRE_COMMIT_HOME: ~/.cache/pre-commit
 
@@ -24,7 +25,7 @@ jobs:
         uses: actions/checkout@v2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v2.1.1
+        uses: actions/setup-python@v2.1.2
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: Restore base Python virtual environment
@@ -33,34 +34,31 @@ jobs:
         with:
           path: venv
           key: >-
-            ${{ runner.os }}-base-venv-${{ steps.python.outputs.python-version
-            }}-${{ hashFiles('requirements.txt') }}-${{
+            ${{ env.CACHE_VERSION}}-${{ runner.os }}-base-venv-${{
+            steps.python.outputs.python-version }}-${{
+            hashFiles('requirements.txt') }}-${{
             hashFiles('requirements_test.txt') }}-${{
             hashFiles('homeassistant/package_constraints.txt') }}
           restore-keys: |
-            ${{ runner.os }}-base-venv-${{ steps.python.outputs.python-version }}-${{ hashFiles('requirements.txt') }}-${{ hashFiles('requirements_test.txt') }}-
-            ${{ runner.os }}-base-venv-${{ steps.python.outputs.python-version }}-${{ hashFiles('requirements.txt') }}
-            ${{ runner.os }}-base-venv-${{ steps.python.outputs.python-version }}-
+            ${{ env.CACHE_VERSION}}-${{ runner.os }}-base-venv-${{ steps.python.outputs.python-version }}-${{ hashFiles('requirements.txt') }}-${{ hashFiles('requirements_test.txt') }}-
+            ${{ env.CACHE_VERSION}}-${{ runner.os }}-base-venv-${{ steps.python.outputs.python-version }}-${{ hashFiles('requirements.txt') }}
+            ${{ env.CACHE_VERSION}}-${{ runner.os }}-base-venv-${{ steps.python.outputs.python-version }}-
       - name: Create Python virtual environment
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
           python -m venv venv
           . venv/bin/activate
-          pip install -U pip==20.1.1 setuptools
+          pip install -U pip setuptools
           pip install -r requirements.txt -r requirements_test.txt
-          # Uninstalling typing as a workaround. Eventually we should make sure
-          # all our dependencies drop typing.
-          # Find offending deps with `pipdeptree -r -p typing`
-          pip uninstall -y typing
       - name: Restore pre-commit environment from cache
         id: cache-precommit
         uses: actions/cache@v2
         with:
           path: ${{ env.PRE_COMMIT_HOME }}
           key: |
-            ${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+            ${{ env.CACHE_VERSION}}-${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
           restore-keys: |
-            ${{ runner.os }}-pre-commit-
+            ${{ env.CACHE_VERSION}}-${{ runner.os }}-pre-commit-
       - name: Install pre-commit dependencies
         if: steps.cache-precommit.outputs.cache-hit != 'true'
         run: |
@@ -75,7 +73,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v2.1.1
+        uses: actions/setup-python@v2.1.2
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -85,8 +83,9 @@ jobs:
         with:
           path: venv
           key: >-
-            ${{ runner.os }}-base-venv-${{ steps.python.outputs.python-version
-            }}-${{ hashFiles('requirements.txt') }}-${{
+            ${{ env.CACHE_VERSION}}-${{ runner.os }}-base-venv-${{
+            steps.python.outputs.python-version }}-${{
+            hashFiles('requirements.txt') }}-${{
             hashFiles('requirements_test.txt') }}-${{
             hashFiles('homeassistant/package_constraints.txt') }}
       - name: Fail job if Python cache restore failed
@@ -100,7 +99,7 @@ jobs:
         with:
           path: ${{ env.PRE_COMMIT_HOME }}
           key: |
-            ${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+            ${{ env.CACHE_VERSION}}-${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
       - name: Fail job if cache restore failed
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
@@ -119,7 +118,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v2.1.1
+        uses: actions/setup-python@v2.1.2
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -129,8 +128,9 @@ jobs:
         with:
           path: venv
           key: >-
-            ${{ runner.os }}-base-venv-${{ steps.python.outputs.python-version
-            }}-${{ hashFiles('requirements.txt') }}-${{
+            ${{ env.CACHE_VERSION}}-${{ runner.os }}-base-venv-${{
+            steps.python.outputs.python-version }}-${{
+            hashFiles('requirements.txt') }}-${{
             hashFiles('requirements_test.txt') }}-${{
             hashFiles('homeassistant/package_constraints.txt') }}
       - name: Fail job if Python cache restore failed
@@ -144,7 +144,7 @@ jobs:
         with:
           path: ${{ env.PRE_COMMIT_HOME }}
           key: |
-            ${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+            ${{ env.CACHE_VERSION}}-${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
       - name: Fail job if cache restore failed
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
@@ -163,7 +163,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v2.1.1
+        uses: actions/setup-python@v2.1.2
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -173,8 +173,9 @@ jobs:
         with:
           path: venv
           key: >-
-            ${{ runner.os }}-base-venv-${{ steps.python.outputs.python-version
-            }}-${{ hashFiles('requirements.txt') }}-${{
+            ${{ env.CACHE_VERSION}}-${{ runner.os }}-base-venv-${{
+            steps.python.outputs.python-version }}-${{
+            hashFiles('requirements.txt') }}-${{
             hashFiles('requirements_test.txt') }}-${{
             hashFiles('homeassistant/package_constraints.txt') }}
       - name: Fail job if Python cache restore failed
@@ -188,7 +189,7 @@ jobs:
         with:
           path: ${{ env.PRE_COMMIT_HOME }}
           key: |
-            ${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+            ${{ env.CACHE_VERSION}}-${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
       - name: Fail job if cache restore failed
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
@@ -229,7 +230,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v2.1.1
+        uses: actions/setup-python@v2.1.2
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -239,8 +240,9 @@ jobs:
         with:
           path: venv
           key: >-
-            ${{ runner.os }}-base-venv-${{ steps.python.outputs.python-version
-            }}-${{ hashFiles('requirements.txt') }}-${{
+            ${{ env.CACHE_VERSION}}-${{ runner.os }}-base-venv-${{
+            steps.python.outputs.python-version }}-${{
+            hashFiles('requirements.txt') }}-${{
             hashFiles('requirements_test.txt') }}-${{
             hashFiles('homeassistant/package_constraints.txt') }}
       - name: Fail job if Python cache restore failed
@@ -254,7 +256,7 @@ jobs:
         with:
           path: ${{ env.PRE_COMMIT_HOME }}
           key: |
-            ${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+            ${{ env.CACHE_VERSION}}-${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
       - name: Fail job if cache restore failed
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
@@ -276,7 +278,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v2.1.1
+        uses: actions/setup-python@v2.1.2
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -286,8 +288,9 @@ jobs:
         with:
           path: venv
           key: >-
-            ${{ runner.os }}-base-venv-${{ steps.python.outputs.python-version
-            }}-${{ hashFiles('requirements.txt') }}-${{
+            ${{ env.CACHE_VERSION}}-${{ runner.os }}-base-venv-${{
+            steps.python.outputs.python-version }}-${{
+            hashFiles('requirements.txt') }}-${{
             hashFiles('requirements_test.txt') }}-${{
             hashFiles('homeassistant/package_constraints.txt') }}
       - name: Fail job if Python cache restore failed
@@ -301,7 +304,7 @@ jobs:
         with:
           path: ${{ env.PRE_COMMIT_HOME }}
           key: |
-            ${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+            ${{ env.CACHE_VERSION}}-${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
       - name: Fail job if cache restore failed
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
@@ -323,7 +326,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v2.1.1
+        uses: actions/setup-python@v2.1.2
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -333,8 +336,9 @@ jobs:
         with:
           path: venv
           key: >-
-            ${{ runner.os }}-base-venv-${{ steps.python.outputs.python-version
-            }}-${{ hashFiles('requirements.txt') }}-${{
+            ${{ env.CACHE_VERSION}}-${{ runner.os }}-base-venv-${{
+            steps.python.outputs.python-version }}-${{
+            hashFiles('requirements.txt') }}-${{
             hashFiles('requirements_test.txt') }}-${{
             hashFiles('homeassistant/package_constraints.txt') }}
       - name: Fail job if Python cache restore failed
@@ -348,7 +352,7 @@ jobs:
         with:
           path: ${{ env.PRE_COMMIT_HOME }}
           key: |
-            ${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+            ${{ env.CACHE_VERSION}}-${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
       - name: Fail job if cache restore failed
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
@@ -367,7 +371,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v2.1.1
+        uses: actions/setup-python@v2.1.2
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -377,8 +381,9 @@ jobs:
         with:
           path: venv
           key: >-
-            ${{ runner.os }}-base-venv-${{ steps.python.outputs.python-version
-            }}-${{ hashFiles('requirements.txt') }}-${{
+            ${{ env.CACHE_VERSION}}-${{ runner.os }}-base-venv-${{
+            steps.python.outputs.python-version }}-${{
+            hashFiles('requirements.txt') }}-${{
             hashFiles('requirements_test.txt') }}-${{
             hashFiles('homeassistant/package_constraints.txt') }}
       - name: Fail job if Python cache restore failed
@@ -392,7 +397,7 @@ jobs:
         with:
           path: ${{ env.PRE_COMMIT_HOME }}
           key: |
-            ${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+            ${{ env.CACHE_VERSION}}-${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
       - name: Fail job if cache restore failed
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
@@ -414,7 +419,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v2.1.1
+        uses: actions/setup-python@v2.1.2
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -424,8 +429,9 @@ jobs:
         with:
           path: venv
           key: >-
-            ${{ runner.os }}-base-venv-${{ steps.python.outputs.python-version
-            }}-${{ hashFiles('requirements.txt') }}-${{
+            ${{ env.CACHE_VERSION}}-${{ runner.os }}-base-venv-${{
+            steps.python.outputs.python-version }}-${{
+            hashFiles('requirements.txt') }}-${{
             hashFiles('requirements_test.txt') }}-${{
             hashFiles('homeassistant/package_constraints.txt') }}
       - name: Fail job if Python cache restore failed
@@ -439,7 +445,7 @@ jobs:
         with:
           path: ${{ env.PRE_COMMIT_HOME }}
           key: |
-            ${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+            ${{ env.CACHE_VERSION}}-${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
       - name: Fail job if cache restore failed
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
@@ -469,7 +475,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v2.1.1
+        uses: actions/setup-python@v2.1.2
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -479,8 +485,9 @@ jobs:
         with:
           path: venv
           key: >-
-            ${{ runner.os }}-base-venv-${{ steps.python.outputs.python-version
-            }}-${{ hashFiles('requirements.txt') }}-${{
+            ${{ env.CACHE_VERSION}}-${{ runner.os }}-base-venv-${{
+            steps.python.outputs.python-version }}-${{
+            hashFiles('requirements.txt') }}-${{
             hashFiles('requirements_test.txt') }}-${{
             hashFiles('homeassistant/package_constraints.txt') }}
       - name: Fail job if Python cache restore failed
@@ -494,7 +501,7 @@ jobs:
         with:
           path: ${{ env.PRE_COMMIT_HOME }}
           key: |
-            ${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+            ${{ env.CACHE_VERSION}}-${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
       - name: Fail job if cache restore failed
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
@@ -516,7 +523,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v2.1.1
+        uses: actions/setup-python@v2.1.2
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -526,8 +533,9 @@ jobs:
         with:
           path: venv
           key: >-
-            ${{ runner.os }}-base-venv-${{ steps.python.outputs.python-version
-            }}-${{ hashFiles('requirements.txt') }}-${{
+            ${{ env.CACHE_VERSION}}-${{ runner.os }}-base-venv-${{
+            steps.python.outputs.python-version }}-${{
+            hashFiles('requirements.txt') }}-${{
             hashFiles('requirements_test.txt') }}-${{
             hashFiles('homeassistant/package_constraints.txt') }}
       - name: Fail job if Python cache restore failed
@@ -548,7 +556,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v2.1.1
+        uses: actions/setup-python@v2.1.2
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -558,8 +566,9 @@ jobs:
         with:
           path: venv
           key: >-
-            ${{ runner.os }}-base-venv-${{ steps.python.outputs.python-version
-            }}-${{ hashFiles('requirements.txt') }}-${{
+            ${{ env.CACHE_VERSION}}-${{ runner.os }}-base-venv-${{
+            steps.python.outputs.python-version }}-${{
+            hashFiles('requirements.txt') }}-${{
             hashFiles('requirements_test.txt') }}-${{
             hashFiles('homeassistant/package_constraints.txt') }}
       - name: Fail job if Python cache restore failed
@@ -582,34 +591,28 @@ jobs:
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
-      - name:
-          Restore full Python ${{ matrix.python-version }} virtual environment
+      - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
         uses: actions/cache@v2
         with:
           path: venv
           key: >-
-            ${{ runner.os }}-venv-${{ matrix.python-version }}-${{
-            hashFiles('requirements_test.txt') }}-${{
-            hashFiles('requirements_all.txt') }}-${{
+            ${{ env.CACHE_VERSION}}-${{ runner.os }}-venv-${{
+            matrix.python-version }}-${{ hashFiles('requirements_test.txt')
+            }}-${{ hashFiles('requirements_all.txt') }}-${{
             hashFiles('homeassistant/package_constraints.txt') }}
           restore-keys: |
-            ${{ runner.os }}-venv-${{ matrix.python-version }}-${{ hashFiles('requirements_test.txt') }}-${{ hashFiles('requirements_all.txt') }}
-            ${{ runner.os }}-venv-${{ matrix.python-version }}-${{ hashFiles('requirements_test.txt') }}
-            ${{ runner.os }}-venv-${{ matrix.python-version }}-
-      - name:
-          Create full Python ${{ matrix.python-version }} virtual environment
+            ${{ env.CACHE_VERSION}}-${{ runner.os }}-venv-${{ matrix.python-version }}-${{ hashFiles('requirements_test.txt') }}-${{ hashFiles('requirements_all.txt') }}
+            ${{ env.CACHE_VERSION}}-${{ runner.os }}-venv-${{ matrix.python-version }}-${{ hashFiles('requirements_test.txt') }}
+            ${{ env.CACHE_VERSION}}-${{ runner.os }}-venv-${{ matrix.python-version }}-
+      - name: Create full Python ${{ matrix.python-version }} virtual environment
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
           python -m venv venv
           . venv/bin/activate
-          pip install -U pip==20.1.1 setuptools wheel
+          pip install -U pip setuptools wheel
           pip install -r requirements_all.txt
           pip install -r requirements_test.txt
-          # Uninstalling typing as a workaround. Eventually we should make sure
-          # all our dependencies drop typing.
-          # Find offending deps with `pipdeptree -r -p typing`
-          pip uninstall -y typing
           pip install -e .
 
   pylint:
@@ -623,16 +626,15 @@ jobs:
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
-      - name:
-          Restore full Python ${{ matrix.python-version }} virtual environment
+      - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
         uses: actions/cache@v2
         with:
           path: venv
           key: >-
-            ${{ runner.os }}-venv-${{ matrix.python-version }}-${{
-            hashFiles('requirements_test.txt') }}-${{
-            hashFiles('requirements_all.txt') }}-${{
+            ${{ env.CACHE_VERSION}}-${{ runner.os }}-venv-${{
+            matrix.python-version }}-${{ hashFiles('requirements_test.txt')
+            }}-${{ hashFiles('requirements_all.txt') }}-${{
             hashFiles('homeassistant/package_constraints.txt') }}
       - name: Fail job if Python cache restore failed
         if: steps.cache-venv.outputs.cache-hit != 'true'
@@ -658,16 +660,15 @@ jobs:
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
-      - name:
-          Restore full Python ${{ matrix.python-version }} virtual environment
+      - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
         uses: actions/cache@v2
         with:
           path: venv
           key: >-
-            ${{ runner.os }}-venv-${{ matrix.python-version }}-${{
-            hashFiles('requirements_test.txt') }}-${{
-            hashFiles('requirements_all.txt') }}-${{
+            ${{ env.CACHE_VERSION}}-${{ runner.os }}-venv-${{
+            matrix.python-version }}-${{ hashFiles('requirements_test.txt')
+            }}-${{ hashFiles('requirements_all.txt') }}-${{
             hashFiles('homeassistant/package_constraints.txt') }}
       - name: Fail job if Python cache restore failed
         if: steps.cache-venv.outputs.cache-hit != 'true'
@@ -695,16 +696,15 @@ jobs:
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
-      - name:
-          Restore full Python ${{ matrix.python-version }} virtual environment
+      - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
         uses: actions/cache@v2
         with:
           path: venv
           key: >-
-            ${{ runner.os }}-venv-${{ matrix.python-version }}-${{
-            hashFiles('requirements_test.txt') }}-${{
-            hashFiles('requirements_all.txt') }}-${{
+            ${{ env.CACHE_VERSION}}-${{ runner.os }}-venv-${{
+            matrix.python-version }}-${{ hashFiles('requirements_test.txt')
+            }}-${{ hashFiles('requirements_all.txt') }}-${{
             hashFiles('homeassistant/package_constraints.txt') }}
       - name: Fail job if Python cache restore failed
         if: steps.cache-venv.outputs.cache-hit != 'true'
@@ -737,7 +737,7 @@ jobs:
             -p no:sugar \
             tests
       - name: Upload coverage artifact
-        uses: actions/upload-artifact@v2.1.3
+        uses: actions/upload-artifact@v2.1.4
         with:
           name: coverage-${{ matrix.python-version }}-group${{ matrix.group }}
           path: .coverage
@@ -756,16 +756,15 @@ jobs:
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
-      - name:
-          Restore full Python ${{ matrix.python-version }} virtual environment
+      - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
         uses: actions/cache@v2
         with:
           path: venv
           key: >-
-            ${{ runner.os }}-venv-${{ matrix.python-version }}-${{
-            hashFiles('requirements_test.txt') }}-${{
-            hashFiles('requirements_all.txt') }}-${{
+            ${{ env.CACHE_VERSION}}-${{ runner.os }}-venv-${{
+            matrix.python-version }}-${{ hashFiles('requirements_test.txt')
+            }}-${{ hashFiles('requirements_all.txt') }}-${{
             hashFiles('homeassistant/package_constraints.txt') }}
       - name: Fail job if Python cache restore failed
         if: steps.cache-venv.outputs.cache-hit != 'true'
@@ -781,4 +780,4 @@ jobs:
           coverage report --fail-under=94
           coverage xml
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v1.0.12
+        uses: codecov/codecov-action@v1.0.13

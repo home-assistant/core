@@ -3,7 +3,7 @@
   "name": "Hi-Link HLK-SW16",
   "documentation": "https://www.home-assistant.io/integrations/hlk_sw16",
   "requirements": [
-    "hlk-sw16==0.0.8"
+    "hlk-sw16==0.0.9"
   ],
   "codeowners": [
     "@jameshilliard"

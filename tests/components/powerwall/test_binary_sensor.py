@@ -18,7 +18,8 @@ async def test_sensors(hass):
         "homeassistant.components.powerwall.config_flow.Powerwall",
         return_value=mock_powerwall,
     ), patch(
-        "homeassistant.components.powerwall.Powerwall", return_value=mock_powerwall,
+        "homeassistant.components.powerwall.Powerwall",
+        return_value=mock_powerwall,
     ):
         assert await async_setup_component(hass, DOMAIN, _mock_get_config())
         await hass.async_block_till_done()

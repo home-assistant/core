@@ -1,0 +1,31 @@
+{
+    "config": {
+        "error": {
+            "auth": "Klucz API jest nieprawid\u0142owy.",
+            "connection": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z OWM"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Klucz API OpenWeatherMap",
+                    "language": "J\u0119zyk",
+                    "latitude": "Szeroko\u015b\u0107 geograficzna",
+                    "longitude": "D\u0142ugo\u015b\u0107 geograficzna",
+                    "mode": "Tryb",
+                    "name": "Nazwa integracji"
+                },
+                "title": "OpenWeatherMap"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "language": "J\u0119zyk",
+                    "mode": "Tryb"
+                }
+            }
+        }
+    }
+}

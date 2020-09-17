@@ -54,6 +54,7 @@ LOCATIONS = [
     "NWTasmania",
     "Perth",
     "PortHedland",
+    "Rainbow",
     "SellicksHill",
     "SouthDoodlakine",
     "Sydney",

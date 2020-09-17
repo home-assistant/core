@@ -153,11 +153,15 @@ light:
   payload_off: "off"
 
 """
+import json
+from os import path
+
 import pytest
 
+from homeassistant import config as hass_config
 from homeassistant.components import light, mqtt
 from homeassistant.components.mqtt.discovery import async_start
-from homeassistant.const import ATTR_ASSUMED_STATE, STATE_OFF, STATE_ON
+from homeassistant.const import ATTR_ASSUMED_STATE, SERVICE_RELOAD, STATE_OFF, STATE_ON
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
 
@@ -645,6 +649,35 @@ async def test_controlling_state_via_topic_with_templates(hass, mqtt_mock):
     assert state.attributes.get("xy_color") == (0.14, 0.131)
 
 
+async def test_controlling_state_via_topic_with_value_template(hass, mqtt_mock):
+    """Test the setting of the state with undocumented value_template."""
+    config = {
+        light.DOMAIN: {
+            "platform": "mqtt",
+            "name": "test",
+            "state_topic": "test_light_rgb/status",
+            "command_topic": "test_light_rgb/set",
+            "value_template": "{{ value_json.hello }}",
+        }
+    }
+
+    assert await async_setup_component(hass, light.DOMAIN, config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.test")
+    assert state.state == STATE_OFF
+
+    async_fire_mqtt_message(hass, "test_light_rgb/status", '{"hello": "ON"}')
+
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+
+    async_fire_mqtt_message(hass, "test_light_rgb/status", '{"hello": "OFF"}')
+
+    state = hass.states.get("light.test")
+    assert state.state == STATE_OFF
+
+
 async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
     """Test the sending of command in optimistic mode."""
     config = {
@@ -716,9 +749,8 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
         hass, "light.test", brightness=50, xy_color=[0.123, 0.123]
     )
     await common.async_turn_on(hass, "light.test", brightness=50, hs_color=[359, 78])
-    await common.async_turn_on(
-        hass, "light.test", rgb_color=[255, 128, 0], white_value=80
-    )
+    await common.async_turn_on(hass, "light.test", rgb_color=[255, 128, 0])
+    await common.async_turn_on(hass, "light.test", white_value=80, color_temp=125)
 
     mqtt_mock.async_publish.assert_has_calls(
         [
@@ -728,6 +760,7 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
             call("test_light_rgb/hs/set", "359.0,78.0", 2, False),
             call("test_light_rgb/white_value/set", 80, 2, False),
             call("test_light_rgb/xy/set", "0.14,0.131", 2, False),
+            call("test_light_rgb/color_temp/set", 125, 2, False),
         ],
         any_order=True,
     )
@@ -1434,20 +1467,471 @@ async def test_discovery_deprecated(hass, mqtt_mock, caplog):
     assert state.name == "Beer"
 
 
-async def test_discovery_update_light(hass, mqtt_mock, caplog):
+async def test_discovery_update_light_topic_and_template(hass, mqtt_mock, caplog):
     """Test update of discovered light."""
-    data1 = (
-        '{ "name": "Beer",'
-        '  "state_topic": "test_topic",'
-        '  "command_topic": "test_topic" }'
+    data1 = json.dumps(
+        {
+            "name": "Beer",
+            "state_topic": "test_light_rgb/state1",
+            "command_topic": "test_light_rgb/set",
+            "brightness_command_topic": "test_light_rgb/state1",
+            "rgb_command_topic": "test_light_rgb/rgb/set",
+            "color_temp_command_topic": "test_light_rgb/state1",
+            "effect_command_topic": "test_light_rgb/effect/set",
+            "hs_command_topic": "test_light_rgb/hs/set",
+            "white_value_command_topic": "test_light_rgb/white_value/set",
+            "xy_command_topic": "test_light_rgb/xy/set",
+            "brightness_state_topic": "test_light_rgb/state1",
+            "color_temp_state_topic": "test_light_rgb/state1",
+            "effect_state_topic": "test_light_rgb/state1",
+            "hs_state_topic": "test_light_rgb/state1",
+            "rgb_state_topic": "test_light_rgb/state1",
+            "white_value_state_topic": "test_light_rgb/state1",
+            "xy_state_topic": "test_light_rgb/state1",
+            "state_value_template": "{{ value_json.state1.state }}",
+            "brightness_value_template": "{{ value_json.state1.brightness }}",
+            "color_temp_value_template": "{{ value_json.state1.ct }}",
+            "effect_value_template": "{{ value_json.state1.fx }}",
+            "hs_value_template": "{{ value_json.state1.hs }}",
+            "rgb_value_template": "{{ value_json.state1.rgb }}",
+            "white_value_template": "{{ value_json.state1.white }}",
+            "xy_value_template": "{{ value_json.state1.xy }}",
+        }
     )
-    data2 = (
-        '{ "name": "Milk",'
-        '  "state_topic": "test_topic",'
-        '  "command_topic": "test_topic" }'
+
+    data2 = json.dumps(
+        {
+            "name": "Milk",
+            "state_topic": "test_light_rgb/state2",
+            "command_topic": "test_light_rgb/set",
+            "brightness_command_topic": "test_light_rgb/state2",
+            "rgb_command_topic": "test_light_rgb/rgb/set",
+            "color_temp_command_topic": "test_light_rgb/state2",
+            "effect_command_topic": "test_light_rgb/effect/set",
+            "hs_command_topic": "test_light_rgb/hs/set",
+            "white_value_command_topic": "test_light_rgb/white_value/set",
+            "xy_command_topic": "test_light_rgb/xy/set",
+            "brightness_state_topic": "test_light_rgb/state2",
+            "color_temp_state_topic": "test_light_rgb/state2",
+            "effect_state_topic": "test_light_rgb/state2",
+            "hs_state_topic": "test_light_rgb/state2",
+            "rgb_state_topic": "test_light_rgb/state2",
+            "white_value_state_topic": "test_light_rgb/state2",
+            "xy_state_topic": "test_light_rgb/state2",
+            "state_value_template": "{{ value_json.state2.state }}",
+            "brightness_value_template": "{{ value_json.state2.brightness }}",
+            "color_temp_value_template": "{{ value_json.state2.ct }}",
+            "effect_value_template": "{{ value_json.state2.fx }}",
+            "hs_value_template": "{{ value_json.state2.hs }}",
+            "rgb_value_template": "{{ value_json.state2.rgb }}",
+            "white_value_template": "{{ value_json.state2.white }}",
+            "xy_value_template": "{{ value_json.state2.xy }}",
+        }
     )
+    state_data1 = [
+        (
+            [
+                (
+                    "test_light_rgb/state1",
+                    '{"state1":{"state":"ON", "brightness":100, "ct":123, "fx":"cycle"}}',
+                )
+            ],
+            "on",
+            [("brightness", 100), ("color_temp", 123), ("effect", "cycle")],
+        ),
+        (
+            [("test_light_rgb/state1", '{"state1":{"state":"OFF"}}')],
+            "off",
+            None,
+        ),
+        (
+            [
+                (
+                    "test_light_rgb/state1",
+                    '{"state1":{"state":"ON", "hs":"1,2"}}',
+                )
+            ],
+            "on",
+            [("hs_color", (1, 2))],
+        ),
+        (
+            [
+                (
+                    "test_light_rgb/state1",
+                    '{"state1":{"rgb":"255,127,63"}}',
+                )
+            ],
+            "on",
+            [("rgb_color", (255, 127, 63))],
+        ),
+        (
+            [
+                (
+                    "test_light_rgb/state1",
+                    '{"state1":{"white":50, "xy":"0.3, 0.4"}}',
+                )
+            ],
+            "on",
+            [("white_value", 50), ("xy_color", (0.3, 0.401))],
+        ),
+    ]
+    state_data2 = [
+        (
+            [
+                (
+                    "test_light_rgb/state2",
+                    '{"state2":{"state":"ON", "brightness":50, "ct":200, "fx":"loop"}}',
+                )
+            ],
+            "on",
+            [("brightness", 50), ("color_temp", 200), ("effect", "loop")],
+        ),
+        (
+            [
+                (
+                    "test_light_rgb/state1",
+                    '{"state1":{"state":"ON", "brightness":100, "ct":123, "fx":"cycle"}}',
+                ),
+                (
+                    "test_light_rgb/state1",
+                    '{"state2":{"state":"ON", "brightness":100, "ct":123, "fx":"cycle"}}',
+                ),
+                (
+                    "test_light_rgb/state2",
+                    '{"state1":{"state":"ON", "brightness":100, "ct":123, "fx":"cycle"}}',
+                ),
+            ],
+            "on",
+            [("brightness", 50), ("color_temp", 200), ("effect", "loop")],
+        ),
+        (
+            [("test_light_rgb/state1", '{"state1":{"state":"OFF"}}')],
+            "on",
+            None,
+        ),
+        (
+            [("test_light_rgb/state1", '{"state2":{"state":"OFF"}}')],
+            "on",
+            None,
+        ),
+        (
+            [("test_light_rgb/state2", '{"state1":{"state":"OFF"}}')],
+            "on",
+            None,
+        ),
+        (
+            [("test_light_rgb/state2", '{"state2":{"state":"OFF"}}')],
+            "off",
+            None,
+        ),
+        (
+            [
+                (
+                    "test_light_rgb/state2",
+                    '{"state2":{"state":"ON", "hs":"1.2,2.2"}}',
+                )
+            ],
+            "on",
+            [("hs_color", (1.2, 2.2))],
+        ),
+        (
+            [
+                (
+                    "test_light_rgb/state1",
+                    '{"state1":{"state":"ON", "hs":"1,2"}}',
+                ),
+                (
+                    "test_light_rgb/state1",
+                    '{"state2":{"state":"ON", "hs":"1,2"}}',
+                ),
+                (
+                    "test_light_rgb/state2",
+                    '{"state1":{"state":"ON", "hs":"1,2"}}',
+                ),
+            ],
+            "on",
+            [("hs_color", (1.2, 2.2))],
+        ),
+        (
+            [
+                (
+                    "test_light_rgb/state2",
+                    '{"state2":{"rgb":"63,127,255"}}',
+                )
+            ],
+            "on",
+            [("rgb_color", (63, 127, 255))],
+        ),
+        (
+            [
+                (
+                    "test_light_rgb/state1",
+                    '{"state1":{"rgb":"255,127,63"}}',
+                ),
+                (
+                    "test_light_rgb/state1",
+                    '{"state2":{"rgb":"255,127,63"}}',
+                ),
+                (
+                    "test_light_rgb/state2",
+                    '{"state1":{"rgb":"255,127,63"}}',
+                ),
+            ],
+            "on",
+            [("rgb_color", (63, 127, 255))],
+        ),
+        (
+            [
+                (
+                    "test_light_rgb/state2",
+                    '{"state2":{"white":75, "xy":"0.4, 0.3"}}',
+                )
+            ],
+            "on",
+            [("white_value", 75), ("xy_color", (0.4, 0.3))],
+        ),
+        (
+            [
+                (
+                    "test_light_rgb/state1",
+                    '{"state1":{"white":50, "xy":"0.3, 0.4"}}',
+                ),
+                (
+                    "test_light_rgb/state1",
+                    '{"state2":{"white":50, "xy":"0.3, 0.4"}}',
+                ),
+                (
+                    "test_light_rgb/state2",
+                    '{"state1":{"white":50, "xy":"0.3, 0.4"}}',
+                ),
+            ],
+            "on",
+            [("white_value", 75), ("xy_color", (0.4, 0.3))],
+        ),
+    ]
+
     await help_test_discovery_update(
-        hass, mqtt_mock, caplog, light.DOMAIN, data1, data2
+        hass,
+        mqtt_mock,
+        caplog,
+        light.DOMAIN,
+        data1,
+        data2,
+        state_data1=state_data1,
+        state_data2=state_data2,
+    )
+
+
+async def test_discovery_update_light_template(hass, mqtt_mock, caplog):
+    """Test update of discovered light."""
+    data1 = json.dumps(
+        {
+            "name": "Beer",
+            "state_topic": "test_light_rgb/state1",
+            "command_topic": "test_light_rgb/set",
+            "brightness_command_topic": "test_light_rgb/state1",
+            "rgb_command_topic": "test_light_rgb/rgb/set",
+            "color_temp_command_topic": "test_light_rgb/state1",
+            "effect_command_topic": "test_light_rgb/effect/set",
+            "hs_command_topic": "test_light_rgb/hs/set",
+            "white_value_command_topic": "test_light_rgb/white_value/set",
+            "xy_command_topic": "test_light_rgb/xy/set",
+            "brightness_state_topic": "test_light_rgb/state1",
+            "color_temp_state_topic": "test_light_rgb/state1",
+            "effect_state_topic": "test_light_rgb/state1",
+            "hs_state_topic": "test_light_rgb/state1",
+            "rgb_state_topic": "test_light_rgb/state1",
+            "white_value_state_topic": "test_light_rgb/state1",
+            "xy_state_topic": "test_light_rgb/state1",
+            "state_value_template": "{{ value_json.state1.state }}",
+            "brightness_value_template": "{{ value_json.state1.brightness }}",
+            "color_temp_value_template": "{{ value_json.state1.ct }}",
+            "effect_value_template": "{{ value_json.state1.fx }}",
+            "hs_value_template": "{{ value_json.state1.hs }}",
+            "rgb_value_template": "{{ value_json.state1.rgb }}",
+            "white_value_template": "{{ value_json.state1.white }}",
+            "xy_value_template": "{{ value_json.state1.xy }}",
+        }
+    )
+
+    data2 = json.dumps(
+        {
+            "name": "Milk",
+            "state_topic": "test_light_rgb/state1",
+            "command_topic": "test_light_rgb/set",
+            "brightness_command_topic": "test_light_rgb/state1",
+            "rgb_command_topic": "test_light_rgb/rgb/set",
+            "color_temp_command_topic": "test_light_rgb/state1",
+            "effect_command_topic": "test_light_rgb/effect/set",
+            "hs_command_topic": "test_light_rgb/hs/set",
+            "white_value_command_topic": "test_light_rgb/white_value/set",
+            "xy_command_topic": "test_light_rgb/xy/set",
+            "brightness_state_topic": "test_light_rgb/state1",
+            "color_temp_state_topic": "test_light_rgb/state1",
+            "effect_state_topic": "test_light_rgb/state1",
+            "hs_state_topic": "test_light_rgb/state1",
+            "rgb_state_topic": "test_light_rgb/state1",
+            "white_value_state_topic": "test_light_rgb/state1",
+            "xy_state_topic": "test_light_rgb/state1",
+            "state_value_template": "{{ value_json.state2.state }}",
+            "brightness_value_template": "{{ value_json.state2.brightness }}",
+            "color_temp_value_template": "{{ value_json.state2.ct }}",
+            "effect_value_template": "{{ value_json.state2.fx }}",
+            "hs_value_template": "{{ value_json.state2.hs }}",
+            "rgb_value_template": "{{ value_json.state2.rgb }}",
+            "white_value_template": "{{ value_json.state2.white }}",
+            "xy_value_template": "{{ value_json.state2.xy }}",
+        }
+    )
+    state_data1 = [
+        (
+            [
+                (
+                    "test_light_rgb/state1",
+                    '{"state1":{"state":"ON", "brightness":100, "ct":123, "fx":"cycle"}}',
+                )
+            ],
+            "on",
+            [("brightness", 100), ("color_temp", 123), ("effect", "cycle")],
+        ),
+        (
+            [("test_light_rgb/state1", '{"state1":{"state":"OFF"}}')],
+            "off",
+            None,
+        ),
+        (
+            [
+                (
+                    "test_light_rgb/state1",
+                    '{"state1":{"state":"ON", "hs":"1,2"}}',
+                )
+            ],
+            "on",
+            [("hs_color", (1, 2))],
+        ),
+        (
+            [
+                (
+                    "test_light_rgb/state1",
+                    '{"state1":{"rgb":"255,127,63"}}',
+                )
+            ],
+            "on",
+            [("rgb_color", (255, 127, 63))],
+        ),
+        (
+            [
+                (
+                    "test_light_rgb/state1",
+                    '{"state1":{"white":50, "xy":"0.3, 0.4"}}',
+                )
+            ],
+            "on",
+            [("white_value", 50), ("xy_color", (0.3, 0.401))],
+        ),
+    ]
+    state_data2 = [
+        (
+            [
+                (
+                    "test_light_rgb/state1",
+                    '{"state2":{"state":"ON", "brightness":50, "ct":200, "fx":"loop"}}',
+                )
+            ],
+            "on",
+            [("brightness", 50), ("color_temp", 200), ("effect", "loop")],
+        ),
+        (
+            [
+                (
+                    "test_light_rgb/state1",
+                    '{"state1":{"state":"ON", "brightness":100, "ct":123, "fx":"cycle"}}',
+                ),
+            ],
+            "on",
+            [("brightness", 50), ("color_temp", 200), ("effect", "loop")],
+        ),
+        (
+            [("test_light_rgb/state1", '{"state1":{"state":"OFF"}}')],
+            "on",
+            None,
+        ),
+        (
+            [("test_light_rgb/state1", '{"state2":{"state":"OFF"}}')],
+            "off",
+            None,
+        ),
+        (
+            [
+                (
+                    "test_light_rgb/state1",
+                    '{"state2":{"state":"ON", "hs":"1.2,2.2"}}',
+                )
+            ],
+            "on",
+            [("hs_color", (1.2, 2.2))],
+        ),
+        (
+            [
+                (
+                    "test_light_rgb/state1",
+                    '{"state1":{"state":"ON", "hs":"1,2"}}',
+                )
+            ],
+            "on",
+            [("hs_color", (1.2, 2.2))],
+        ),
+        (
+            [
+                (
+                    "test_light_rgb/state1",
+                    '{"state2":{"rgb":"63,127,255"}}',
+                )
+            ],
+            "on",
+            [("rgb_color", (63, 127, 255))],
+        ),
+        (
+            [
+                (
+                    "test_light_rgb/state1",
+                    '{"state1":{"rgb":"255,127,63"}}',
+                )
+            ],
+            "on",
+            [("rgb_color", (63, 127, 255))],
+        ),
+        (
+            [
+                (
+                    "test_light_rgb/state1",
+                    '{"state2":{"white":75, "xy":"0.4, 0.3"}}',
+                )
+            ],
+            "on",
+            [("white_value", 75), ("xy_color", (0.4, 0.3))],
+        ),
+        (
+            [
+                (
+                    "test_light_rgb/state1",
+                    '{"state1":{"white":50, "xy":"0.3, 0.4"}}',
+                )
+            ],
+            "on",
+            [("white_value", 75), ("xy_color", (0.4, 0.3))],
+        ),
+    ]
+
+    await help_test_discovery_update(
+        hass,
+        mqtt_mock,
+        caplog,
+        light.DOMAIN,
+        data1,
+        data2,
+        state_data1=state_data1,
+        state_data2=state_data2,
     )
 
 
@@ -1547,3 +2031,43 @@ async def test_max_mireds(hass, mqtt_mock):
     state = hass.states.get("light.test")
     assert state.attributes.get("min_mireds") == 153
     assert state.attributes.get("max_mireds") == 370
+
+
+async def test_reloadable(hass, mqtt_mock):
+    """Test reloading an mqtt light."""
+    config = {
+        light.DOMAIN: {
+            "platform": "mqtt",
+            "name": "test",
+            "command_topic": "test/set",
+        }
+    }
+
+    assert await async_setup_component(hass, light.DOMAIN, config)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("light.test")
+    assert len(hass.states.async_all()) == 1
+
+    yaml_path = path.join(
+        _get_fixtures_base_path(),
+        "fixtures",
+        "mqtt/configuration.yaml",
+    )
+    with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
+        await hass.services.async_call(
+            "mqtt",
+            SERVICE_RELOAD,
+            {},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 1
+
+    assert hass.states.get("light.test") is None
+    assert hass.states.get("light.reload")
+
+
+def _get_fixtures_base_path():
+    return path.dirname(path.dirname(path.dirname(__file__)))

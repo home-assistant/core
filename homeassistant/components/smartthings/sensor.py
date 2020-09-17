@@ -13,10 +13,10 @@ from homeassistant.const import (
     DEVICE_CLASS_TIMESTAMP,
     ENERGY_KILO_WATT_HOUR,
     MASS_KILOGRAMS,
+    PERCENTAGE,
     POWER_WATT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    UNIT_PERCENTAGE,
     VOLT,
 )
 
@@ -36,9 +36,9 @@ CAPABILITY_TO_SENSORS = {
         Map(Attribute.air_quality, "Air Quality", "CAQI", None)
     ],
     Capability.alarm: [Map(Attribute.alarm, "Alarm", None, None)],
-    Capability.audio_volume: [Map(Attribute.volume, "Volume", UNIT_PERCENTAGE, None)],
+    Capability.audio_volume: [Map(Attribute.volume, "Volume", PERCENTAGE, None)],
     Capability.battery: [
-        Map(Attribute.battery, "Battery", UNIT_PERCENTAGE, DEVICE_CLASS_BATTERY)
+        Map(Attribute.battery, "Battery", PERCENTAGE, DEVICE_CLASS_BATTERY)
     ],
     Capability.body_mass_index_measurement: [
         Map(Attribute.bmi_measurement, "Body Mass Index", f"{MASS_KILOGRAMS}/m^2", None)
@@ -113,7 +113,7 @@ CAPABILITY_TO_SENSORS = {
         Map(Attribute.illuminance, "Illuminance", "lux", DEVICE_CLASS_ILLUMINANCE)
     ],
     Capability.infrared_level: [
-        Map(Attribute.infrared_level, "Infrared Level", UNIT_PERCENTAGE, None)
+        Map(Attribute.infrared_level, "Infrared Level", PERCENTAGE, None)
     ],
     Capability.media_input_source: [
         Map(Attribute.input_source, "Media Input Source", None, None)
@@ -151,7 +151,7 @@ CAPABILITY_TO_SENSORS = {
         Map(
             Attribute.humidity,
             "Relative Humidity Measurement",
-            UNIT_PERCENTAGE,
+            PERCENTAGE,
             DEVICE_CLASS_HUMIDITY,
         )
     ],

@@ -1,11 +1,11 @@
 """Support for Telegram bots using webhooks."""
 import datetime as dt
+from ipaddress import ip_address
 import logging
 
 from telegram.error import TimedOut
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.http.const import KEY_REAL_IP
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     HTTP_BAD_REQUEST,
@@ -96,7 +96,7 @@ class BotPushReceiver(HomeAssistantView, BaseTelegramBotEntity):
 
     async def post(self, request):
         """Accept the POST from telegram."""
-        real_ip = request[KEY_REAL_IP]
+        real_ip = ip_address(request.remote)
         if not any(real_ip in net for net in self.trusted_networks):
             _LOGGER.warning("Access denied from %s", real_ip)
             return self.json_message("Access denied", HTTP_UNAUTHORIZED)

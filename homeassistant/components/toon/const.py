@@ -12,9 +12,9 @@ from homeassistant.const import (
     ATTR_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
     ENERGY_KILO_WATT_HOUR,
+    PERCENTAGE,
     POWER_WATT,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
 )
 
 DOMAIN = "toon"
@@ -326,7 +326,7 @@ SENSOR_ENTITIES = {
         ATTR_NAME: "Boiler Modulation Level",
         ATTR_SECTION: "thermostat",
         ATTR_MEASUREMENT: "current_modulation_level",
-        ATTR_UNIT_OF_MEASUREMENT: UNIT_PERCENTAGE,
+        ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
         ATTR_DEVICE_CLASS: None,
         ATTR_ICON: "mdi:percent",
         ATTR_DEFAULT_ENABLED: False,
@@ -335,7 +335,7 @@ SENSOR_ENTITIES = {
         ATTR_NAME: "Current Power Usage Covered By Solar",
         ATTR_SECTION: "power_usage",
         ATTR_MEASUREMENT: "current_covered_by_solar",
-        ATTR_UNIT_OF_MEASUREMENT: UNIT_PERCENTAGE,
+        ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
         ATTR_DEVICE_CLASS: None,
         ATTR_ICON: "mdi:solar-power",
         ATTR_DEFAULT_ENABLED: True,
