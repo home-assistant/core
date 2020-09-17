@@ -23,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_TOTAL_ENERGY_KWH = "total_energy_kwh"
 ATTR_CURRENT_A = "current_a"
 
-MAX_ATTEMPTS = 20
+MAX_ATTEMPTS = 300
 SLEEP_TIME = 2
 
 
@@ -183,6 +183,13 @@ class SmartPlugSwitch(SwitchEntity):
 
                 if is_ready:
                     self._is_available = True
+                    if update_attempt > 0:
+                        _LOGGER.warning(
+                            "Device %s|%s responded after %s attempts",
+                            self._host,
+                            self._alias,
+                            update_attempt,
+                        )
                     break
             except (SmartDeviceException, OSError):
                 pass

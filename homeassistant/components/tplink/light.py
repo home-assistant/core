@@ -55,7 +55,7 @@ LIGHT_SYSINFO_IS_DIMMABLE = "is_dimmable"
 LIGHT_SYSINFO_IS_VARIABLE_COLOR_TEMP = "is_variable_color_temp"
 LIGHT_SYSINFO_IS_COLOR = "is_color"
 
-MAX_ATTEMPTS = 20
+MAX_ATTEMPTS = 300
 SLEEP_TIME = 2
 
 
@@ -138,7 +138,6 @@ class TPLinkSmartBulb(LightEntity):
         self._last_current_power_update = None
         self._last_historical_power_update = None
         self._emeter_params = {}
-        self._light_features.mac = None
         self._light_features.alias = None
         self._light_features.host = None
 
@@ -499,6 +498,13 @@ class TPLinkSmartBulb(LightEntity):
 
                 if is_ready:
                     self._is_available = True
+                    if update_attempt > 0:
+                        _LOGGER.warning(
+                            "Device %s|%s responded after %s attempts",
+                            self._light_features.host,
+                            self._light_features.alias,
+                            update_attempt,
+                        )
                     break
             except (SmartDeviceException, OSError):
                 pass
