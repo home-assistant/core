@@ -221,6 +221,12 @@ def _get_external_url(
             return _get_cloud_url(hass, require_current_request=require_current_request)
         except NoURLAvailableError:
             pass
+    # get ais url
+    remote_access = hass.states.get("input_boolean.ais_remote_access").state
+    if remote_access == "on":
+        return hass.states.get("camera.remote_access").state
+    else:
+        return "http://" + hass.states.get("sensor.internal_ip_address").state + ":8180"
 
     raise NoURLAvailableError
 
