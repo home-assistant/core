@@ -212,7 +212,7 @@ class LdapAuthProvider(AuthProvider):
 
         except ldap3.core.exceptions.LDAPBindError as exc:
             _LOGGER.error("Bind failed: %s", exc)
-            raise InvalidAuthError
+            raise InvalidAuthError from exc
 
     async def async_get_or_create_credentials(
         self, flow_result: Dict[str, str]
