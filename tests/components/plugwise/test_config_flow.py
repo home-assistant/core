@@ -3,7 +3,11 @@ from Plugwise_Smile.Smile import Smile
 import pytest
 
 from homeassistant import config_entries, data_entry_flow, setup
-from homeassistant.components.plugwise.const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from homeassistant.components.plugwise.const import (
+    DEFAULT_PORT,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_SCAN_INTERVAL
 
@@ -13,8 +17,7 @@ from tests.common import MockConfigEntry
 TEST_HOST = "1.1.1.1"
 TEST_HOSTNAME = "smileabcdef"
 TEST_PASSWORD = "test_password"
-TEST_HOST_PORT = "1.1.1.1:80"
-TEST_HOST_FPORT = "1.1.1.1:81"
+TEST_PORT = 81
 
 TEST_DISCOVERY = {
     "host": TEST_HOST,
@@ -62,15 +65,16 @@ async def test_form(hass):
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": TEST_HOST_PORT, "password": TEST_PASSWORD},
+            {"host": TEST_HOST, "password": TEST_PASSWORD},
         )
 
     await hass.async_block_till_done()
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result2["data"] == {
-        "host": TEST_HOST_PORT,
+        "host": TEST_HOST,
         "password": TEST_PASSWORD,
+        "port": DEFAULT_PORT,
     }
 
     assert len(mock_setup.mock_calls) == 1
@@ -109,6 +113,7 @@ async def test_zeroconf_form(hass):
     assert result2["data"] == {
         "host": TEST_HOST,
         "password": TEST_PASSWORD,
+        "port": DEFAULT_PORT,
     }
 
     assert len(mock_setup.mock_calls) == 1
@@ -190,7 +195,7 @@ async def test_form_cannot_connect_port(hass, mock_smile):
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"host": TEST_HOST_FPORT, "password": TEST_PASSWORD},
+        {"host": TEST_HOST, "password": TEST_PASSWORD, "port": TEST_PORT},
     )
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM

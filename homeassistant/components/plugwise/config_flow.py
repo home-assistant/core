@@ -5,12 +5,16 @@ from Plugwise_Smile.Smile import Smile
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import DiscoveryInfoType
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN  # pylint:disable=unused-import
+from .const import (  # pylint:disable=unused-import
+    DEFAULT_PORT,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,6 +33,7 @@ def _base_schema(discovery_info):
         base_schema[vol.Required(CONF_HOST)] = str
 
     base_schema[vol.Required(CONF_PASSWORD)] = str
+    base_schema[vol.Optional(CONF_PORT, default=DEFAULT_PORT)] = int
 
     return vol.Schema(base_schema)
 
@@ -41,18 +46,10 @@ async def validate_input(hass: core.HomeAssistant, data):
     """
     websession = async_get_clientsession(hass, verify_ssl=False)
 
-    port = 80
-    host = data[CONF_HOST]
-    password = data[CONF_PASSWORD]
-
-    if ":" in host:
-        port = int(host.split(":")[1])
-        host = host.split(":")[0]
-
     api = Smile(
-        host=host,
-        password=password,
-        port=port,
+        host=data[CONF_HOST],
+        password=data[CONF_PASSWORD],
+        port=data[CONF_PORT],
         timeout=30,
         websession=websession,
     )
