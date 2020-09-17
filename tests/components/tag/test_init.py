@@ -51,7 +51,7 @@ async def test_ws_list(hass, hass_ws_client, storage_setup):
 async def test_ws_update(hass, hass_ws_client, storage_setup):
     """Test listing tags via WS."""
     assert await storage_setup()
-    await async_scan_tag(hass, "new tag", "some_scanner")
+    await async_scan_tag(hass, "test tag", "some_scanner")
 
     client = await hass_ws_client(hass)
 
