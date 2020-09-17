@@ -6,8 +6,7 @@
         "title": "Connect to Canary",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]",
-          "timeout": "Request Timeout (seconds)"
+          "password": "[%key:common::config_flow::data::password%]"
         }
       }
     },
@@ -23,7 +22,8 @@
     "step": {
       "init": {
         "data": {
-          "ffmpeg_arguments": "Arguments passed to ffmpeg for cameras"
+          "ffmpeg_arguments": "Arguments passed to ffmpeg for cameras",
+          "timeout": "Request Timeout (seconds)"
         }
       }
     }

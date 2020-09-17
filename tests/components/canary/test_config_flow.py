@@ -142,6 +142,7 @@ async def test_options_flow(hass):
     """Test updating options."""
     entry = await init_integration(hass, skip_entry_setup=True)
     assert entry.options[CONF_FFMPEG_ARGUMENTS] == DEFAULT_FFMPEG_ARGUMENTS
+    assert entry.options[CONF_TIMEOUT] == DEFAULT_TIMEOUT
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
     assert result["type"] == RESULT_TYPE_FORM
@@ -149,8 +150,9 @@ async def test_options_flow(hass):
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={CONF_FFMPEG_ARGUMENTS: ""},
+        user_input={CONF_FFMPEG_ARGUMENTS: "-v", CONF_TIMEOUT: 7},
     )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["data"][CONF_FFMPEG_ARGUMENTS] == ""
+    assert result["data"][CONF_FFMPEG_ARGUMENTS] == "-v"
+    assert result["data"][CONF_TIMEOUT] == 7

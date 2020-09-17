@@ -17,10 +17,12 @@ from tests.common import MockConfigEntry
 ENTRY_CONFIG = {
     CONF_PASSWORD: "test-password",
     CONF_USERNAME: "test-username",
-    CONF_TIMEOUT: 1,
 }
 
-ENTRY_OPTIONS = {CONF_FFMPEG_ARGUMENTS: DEFAULT_FFMPEG_ARGUMENTS}
+ENTRY_OPTIONS = {
+    CONF_FFMPEG_ARGUMENTS: DEFAULT_FFMPEG_ARGUMENTS,
+    CONF_TIMEOUT: DEFAULT_TIMEOUT,
+}
 
 USER_INPUT = {
     CONF_PASSWORD: "test-password",
@@ -30,6 +32,7 @@ USER_INPUT = {
 YAML_CONFIG = {
     CONF_PASSWORD: "test-password",
     CONF_USERNAME: "test-username",
+    CONF_TIMEOUT: 5,
 }
 
 

@@ -26,7 +26,7 @@ def validate_input(hass: HomeAssistantType, data: dict) -> Dict[str, Any]:
     Api(
         data[CONF_USERNAME],
         data[CONF_PASSWORD],
-        data[CONF_TIMEOUT],
+        data.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
     )
 
     return True
@@ -79,12 +79,9 @@ class CanaryConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         data_schema = {
-            vol.Required(CONF_USERNAME): str,
-            vol.Required(CONF_PASSWORD): str,
+            vol.Required(CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")): str,
+            vol.Required(CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, "")): str,
         }
-
-        if self.show_advanced_options:
-            data_schema[vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT)] = int
 
         return self.async_show_form(
             step_id="user",

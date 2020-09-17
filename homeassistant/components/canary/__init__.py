@@ -84,6 +84,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
             CONF_FFMPEG_ARGUMENTS: entry.data.get(
                 CONF_FFMPEG_ARGUMENTS, DEFAULT_FFMPEG_ARGUMENTS
             ),
+            CONF_TIMEOUT: entry.data.get(
+                CONF_TIMEOUT, DEFAULT_TIMEOUT
+            ),
         }
         hass.config_entries.async_update_entry(entry, options=options)
 
@@ -91,12 +94,11 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         canary_data = CanaryData(
             entry.data[CONF_USERNAME],
             entry.data[CONF_PASSWORD],
-            entry.data[CONF_TIMEOUT],
+            entry.options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
         )
-    except ConnectTimeout as error:
-        raise ConfigEntryNotReady from error
-    except HTTPError as error:
+    except (ConnectTimeout, HTTPError) as error:
         _LOGGER.error("Unable to connect to Canary service: %s", str(error))
+        raise ConfigEntryNotReady from error
         return False
 
     undo_listener = entry.add_update_listener(_async_update_listener)

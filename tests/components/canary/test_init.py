@@ -4,7 +4,6 @@ from requests import ConnectTimeout
 from homeassistant.components.camera.const import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.canary.const import (
     CONF_FFMPEG_ARGUMENTS,
-    DEFAULT_TIMEOUT,
     DOMAIN,
 )
 from homeassistant.config_entries import (
@@ -34,7 +33,7 @@ async def test_import_from_yaml(hass, canary) -> None:
 
     assert entries[0].data[CONF_USERNAME] == "test-username"
     assert entries[0].data[CONF_PASSWORD] == "test-password"
-    assert entries[0].data[CONF_TIMEOUT] == DEFAULT_TIMEOUT
+    assert entries[0].data[CONF_TIMEOUT] == 5
 
 
 async def test_import_from_yaml_ffmpeg(hass, canary) -> None:
@@ -58,7 +57,7 @@ async def test_import_from_yaml_ffmpeg(hass, canary) -> None:
 
     assert entries[0].data[CONF_USERNAME] == "test-username"
     assert entries[0].data[CONF_PASSWORD] == "test-password"
-    assert entries[0].data[CONF_TIMEOUT] == DEFAULT_TIMEOUT
+    assert entries[0].data[CONF_TIMEOUT] == 5
     assert entries[0].data.get(CONF_FFMPEG_ARGUMENTS) == "-v"
 
 
