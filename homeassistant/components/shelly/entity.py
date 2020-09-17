@@ -22,7 +22,6 @@ def temperature_unit(block_info: dict) -> str:
 
 def shelly_naming(self, block, entity_type: str):
     """Naming for switch and sensors."""
-
     if self.wrapper.model in ["SHDW-2", "SHHT-1", "SHWT-1"]:
         channels = 0
     else:
