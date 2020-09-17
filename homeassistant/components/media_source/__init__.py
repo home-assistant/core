@@ -6,7 +6,10 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.http.auth import async_sign_path
-from homeassistant.components.media_player.const import ATTR_MEDIA_CONTENT_ID
+from homeassistant.components.media_player.const import (
+    ATTR_MEDIA_CONTENT_ID,
+    ATTR_MEDIA_CONTENT_TYPE,
+)
 from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.integration_platform import (
@@ -70,11 +73,6 @@ async def async_browse_media(
     hass: HomeAssistant, media_content_id: str
 ) -> models.BrowseMediaSource:
     """Return media player browse media results."""
-    # AIS - allow to play ais lib in browser
-    if media_content_id.startswith("ais_") or media_content_id == "library":
-        import homeassistant.components.ais_exo_player.media_browser as ais_media_browser
-
-        return await ais_media_browser.browse_media(hass, "ais", media_content_id)
     return await _get_media_item(hass, media_content_id).async_browse()
 
 
@@ -90,13 +88,25 @@ async def async_resolve_media(
     {
         vol.Required("type"): "media_source/browse_media",
         vol.Optional(ATTR_MEDIA_CONTENT_ID, default=""): str,
+        vol.Optional(ATTR_MEDIA_CONTENT_TYPE, default=""): str,
     }
 )
 @websocket_api.async_response
 async def websocket_browse_media(hass, connection, msg):
     """Browse available media."""
     try:
-        media = await async_browse_media(hass, msg.get("media_content_id"))
+        # AIS - allow to play ais lib in browser like local media
+        if (
+            msg.get("media_content_id").startswith("ais_")
+            or msg.get("media_content_id") == "library"
+        ):
+            import homeassistant.components.ais_exo_player.media_browser as ais_media_browser
+
+            media = await ais_media_browser.browse_media(
+                hass, msg.get("media_content_type"), msg.get("media_content_id")
+            )
+        else:
+            media = await async_browse_media(hass, msg.get("media_content_id"))
         connection.send_result(
             msg["id"],
             media.as_dict(),
@@ -121,10 +131,12 @@ async def websocket_resolve_media(hass, connection, msg):
             msg["id"], {"url": msg["media_content_id"], "mime_type": "audio/mpeg"}
         )
         return
-    elif msg["media_content_id"].startswith("ais_tunein"):
+    elif msg["media_content_id"].startswith("ais_"):
         from homeassistant.components.ais_exo_player import media_browser
 
-        url = await media_browser.get_tunein_stream(hass, msg["media_content_id"])
+        url = await media_browser.get_media_content_id_form_ais(
+            hass, msg["media_content_id"]
+        )
         connection.send_result(msg["id"], {"url": url, "mime_type": "audio/mpeg"})
         return
     try:
