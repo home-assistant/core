@@ -60,7 +60,11 @@ CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend(
         vol.Optional(CONF_CA_CERTS_FILE, default=None): str,
         vol.Required(CONF_CERT_VALIDATION, default=DEFAULT_CONF_CERT_VALIDATION): bool,
         vol.Required(CONF_ENCRYPTION, default=CONF_ENCRYPTION_LDAPS): vol.In(
-            [CONF_ENCRYPTION_LDAPS, CONF_ENCRYPTION_NONE, CONF_ENCRYPTION_STARTTLS]
+            [
+                CONF_ENCRYPTION_LDAPS,
+                CONF_ENCRYPTION_NONE,
+                CONF_ENCRYPTION_STARTTLS,
+            ]
         ),
         vol.Required(CONF_PORT, default=DEFAULT_CONF_PORT): int,
         vol.Required(CONF_SERVER): str,
@@ -142,7 +146,10 @@ class LdapAuthProvider(AuthProvider):
                 _LOGGER.debug("Binding as %s", bind_dn)
                 # LDAP bind
                 conn = ldap3.Connection(
-                    server, user=bind_dn, password=bind_password, auto_bind=False,
+                    server,
+                    user=bind_dn,
+                    password=bind_password,
+                    auto_bind=False,
                 )
             conn.open(read_server_info=False)
             # Upgrade connection with START_TLS if requested.
