@@ -45,8 +45,9 @@ async def async_setup(hass, config):
     """Set up the Spotify platform."""
     global aisCloud
     aisCloud = ais_cloud.AisCloudWS(hass)
-    import spotipy.oauth2
     import json
+
+    import spotipy.oauth2
 
     global AIS_SPOTIFY_TOKEN
 
@@ -200,6 +201,7 @@ class SpotifyData:
         if token_refreshed or self._spotify is None:
             self._spotify = spotipy.Spotify(auth=self._token_info.get("access_token"))
             self._user = self._spotify.me()
+        return self._spotify, self._user
 
     def get_list_from_results(self, results, audio_type, list_info):
         items = []
@@ -213,7 +215,7 @@ class SpotifyData:
         elif audio_type == "artist":
             items = results["artists"]["items"]
             title_prefix = "Wykonawca: "
-            icon = "mdi:artist"
+            icon = "mdi:account-music"
         elif audio_type == "playlist":
             items = results["playlists"]["items"]
             title_prefix = "Playlista: "
@@ -225,7 +227,7 @@ class SpotifyData:
         elif audio_type == "user_artists":
             items = results["artists"]["items"]
             title_prefix = "Wykonawca: "
-            icon = "mdi:artist"
+            icon = "mdi:account-music"
         elif audio_type == "user_albums":
             items = results["items"]
             title_prefix = "Album: "
