@@ -181,7 +181,8 @@ def ais_media_library() -> BrowseMedia:
         BrowseMedia(
             title="Galeria",
             media_class=MEDIA_CLASS_IMAGE,
-            media_content_id=f"{media_source_const.URI_SCHEME}{media_source_const.DOMAIN}",
+            media_content_id=f"{media_source_const.URI_SCHEME}{media_source_const.DOMAIN}"
+            + "/galeria/.",
             media_content_type=MEDIA_TYPE_APP,
             can_expand=True,
             can_play=False,
@@ -191,7 +192,8 @@ def ais_media_library() -> BrowseMedia:
         BrowseMedia(
             title="Dyski",
             media_class="nas",
-            media_content_id=f"{media_source_const.URI_SCHEME}{media_source_const.DOMAIN}",
+            media_content_id=f"{media_source_const.URI_SCHEME}{media_source_const.DOMAIN}"
+            + "/dyski/.",
             media_content_type=MEDIA_TYPE_APP,
             can_expand=True,
             can_play=False,
@@ -247,17 +249,6 @@ def ais_media_library() -> BrowseMedia:
             can_play=False,
         )
     )
-    # TODO if more musics providers appears
-    # ais_library_info.children.append(
-    #     BrowseMedia(
-    #         title="Muzyka",
-    #         media_class=MEDIA_CLASS_MUSIC,
-    #         media_content_id="ais_music",
-    #         media_content_type=MEDIA_TYPE_APP,
-    #         can_expand=True,
-    #         can_play=False,
-    #     )
-    # )
     ais_library_info.children.append(
         BrowseMedia(
             title="Spotify",
@@ -754,9 +745,9 @@ async def ais_spotify_library(
     if hass.services.has_service("ais_spotify_service", "get_favorites"):
         if media_content_id == "ais_spotify":
             library_info = {
-                "title": "Media Library",
+                "title": "Spotify",
                 "media_class": MEDIA_CLASS_DIRECTORY,
-                "media_content_id": "library",
+                "media_content_id": "ais_spotify",
                 "media_content_type": "library",
                 "can_play": False,
                 "can_expand": True,
@@ -779,8 +770,6 @@ async def ais_spotify_library(
             response.children_media_class = MEDIA_CLASS_DIRECTORY
             return response
         else:
-            _LOGGER.error(str("media_content_type: " + media_content_type))
-            _LOGGER.error(str("media_content_id: " + media_content_id))
             spotify_data = hass.data["ais_spotify_service"]
             spotify, user = spotify_data.refresh_spotify_instance()
             payload = {
@@ -798,8 +787,8 @@ async def ais_spotify_library(
 
 def spotify_build_item_response(spotify, user, payload):
     """Create response payload for the provided media query."""
-    media_content_type = payload["media_content_id"].replace("ais_spotify/", "")
-    media_content_id = payload["media_content_id"]
+    media_content_type = payload["media_content_type"]
+    media_content_id = payload["media_content_id"].replace("ais_spotify/", "")
     title = None
     image = None
     if media_content_type == "current_user_playlists":
@@ -878,10 +867,10 @@ def spotify_build_item_response(spotify, user, payload):
 
     if media_content_type == "categories":
         media_item = BrowseMedia(
-            title=SPOTIFY_LIBRARY_MAP.get(media_content_id),
+            title=SPOTIFY_LIBRARY_MAP.get(media_content_type),
             media_class=media_class["parent"],
             children_media_class=media_class["children"],
-            media_content_id=media_content_id,
+            media_content_id="ais_spotify/" + media_content_id,
             media_content_type=media_content_type,
             can_play=False,
             can_expand=True,
@@ -911,13 +900,13 @@ def spotify_build_item_response(spotify, user, payload):
         if "name" in media:
             title = media.get("name")
         else:
-            title = SPOTIFY_LIBRARY_MAP.get(payload["media_content_id"])
+            title = SPOTIFY_LIBRARY_MAP.get(media_content_type)
 
     params = {
         "title": title,
         "media_class": media_class["parent"],
         "children_media_class": media_class["children"],
-        "media_content_id": media_content_id,
+        "media_content_id": "ais_spotify/" + media_content_id,
         "media_content_type": media_content_type,
         "can_play": media_content_type in SPOTIFY_PLAYABLE_MEDIA_TYPES,
         "children": [],
@@ -989,29 +978,31 @@ def spotify_item_payload(item):
 
 async def ais_youtube_library(hass) -> BrowseMedia:
     """Create response payload to describe contents of a specific library."""
-    raise BrowseError("AIS TODO - Jeszcze pracujemy nad tym.:)")
+    raise BrowseError("AIS TODO - pracujemy nad tym.:)")
 
 
-async def get_tunein_stream(hass, media_content_id):
-    web_session = aiohttp_client.async_get_clientsession(hass)
-    url_to_call = media_content_id.split("/", 3)[3]
-    with async_timeout.timeout(5):
-        ws_resp = await web_session.get(url_to_call)
-        response_text = await ws_resp.text()
-        _LOGGER.warning(response_text)
-        response_text = response_text.split("\n")[0]
-        if response_text.endswith(".pls"):
-            with async_timeout.timeout(5):
-                ws_resp = await web_session.get(response_text)
-                response_text = await ws_resp.text()
-                response_text = response_text.split("\n")[1].replace("File1=", "")
-                _LOGGER.warning(response_text)
-        if response_text.startswith("mms:"):
-            with async_timeout.timeout(5):
-                ws_resp = await web_session.get(response_text.replace("mms:", "http:"))
-                response_text = await ws_resp.text()
-                response_text = response_text.split("\n")[1].replace("Ref1=", "")
-                _LOGGER.warning(response_text)
+async def get_media_content_id_form_ais(hass, media_content_id):
+    if media_content_id.startswith("ais_tunein"):
+        web_session = aiohttp_client.async_get_clientsession(hass)
+        url_to_call = media_content_id.split("/", 3)[3]
+        with async_timeout.timeout(5):
+            ws_resp = await web_session.get(url_to_call)
+            response_text = await ws_resp.text()
+            response_text = response_text.split("\n")[0]
+            if response_text.endswith(".pls"):
+                with async_timeout.timeout(5):
+                    ws_resp = await web_session.get(response_text)
+                    response_text = await ws_resp.text()
+                    response_text = response_text.split("\n")[1].replace("File1=", "")
+            if response_text.startswith("mms:"):
+                with async_timeout.timeout(5):
+                    ws_resp = await web_session.get(
+                        response_text.replace("mms:", "http:")
+                    )
+                    response_text = await ws_resp.text()
+                    response_text = response_text.split("\n")[1].replace("Ref1=", "")
+    elif media_content_id.startswith("ais_spotify"):
+        response_text = media_content_id.replace("ais_spotify/", "")
     return response_text
 
 
@@ -1059,7 +1050,7 @@ async def ais_tunein_library(hass, media_content_id) -> BrowseMedia:
                     can_expand=True,
                     can_play=False,
                     children=tunein_types,
-                    thumbnail="http://www.ai-speaker.com/images/media-browser/tunein.svg",
+                    # thumbnail="http://www.ai-speaker.com/images/media-browser/tunein.svg",
                 )
                 return root
 
@@ -1149,7 +1140,7 @@ async def ais_tunein_library(hass, media_content_id) -> BrowseMedia:
                     can_expand=True,
                     can_play=False,
                     children=tunein_items,
-                    thumbnail="http://www.ai-speaker.com/images/media-browser/tunein.svg",
+                    # thumbnail="http://www.ai-speaker.com/images/media-browser/tunein.svg",
                 )
                 return root
 
