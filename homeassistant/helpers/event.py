@@ -732,7 +732,7 @@ class _TrackTemplateResultInfo:
                 continue
 
             _LOGGER.debug(
-                "Template[%s] update triggered by event: %s", template.template, event
+                "Template update %s triggered by event: %s", template.template, event
             )
 
             self._info[template] = template.async_render_to_info(
