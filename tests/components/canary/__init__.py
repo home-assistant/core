@@ -6,6 +6,7 @@ from canary.api import SensorType
 from homeassistant.components.canary.const import (
     CONF_FFMPEG_ARGUMENTS,
     DEFAULT_FFMPEG_ARGUMENTS,
+    DEFAULT_TIMEOUT,
     DOMAIN,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
