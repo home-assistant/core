@@ -5,20 +5,9 @@ HERE_API_KEYS = "here_api_keys"
 
 DEFAULT_SCAN_INTERVAL = 120
 
-CONF_API_KEY = "api_key"
-CONF_LOCATION_NAME = "location_name"
-CONF_ZIP_CODE = "zip_code"
 CONF_LANGUAGE = "language"
 CONF_OFFSET = "offset"
 CONF_OPTION = "option"
-CONF_OPTION_COORDINATES = "Using GPS Coordinates"
-CONF_OPTION_ZIP_CODE = "Using a US ZIP Code"
-CONF_OPTION_LOCATION_NAME = "Using a Location Name or Address"
-CONF_OPTIONS = [
-    CONF_OPTION_COORDINATES,
-    CONF_OPTION_ZIP_CODE,
-    CONF_OPTION_LOCATION_NAME,
-]
 
 MODE_ASTRONOMY = "forecast_astronomy"
 MODE_HOURLY = "forecast_hourly"
@@ -209,7 +198,7 @@ OBSERVATION_ATTRIBUTES = {
     "windSpeed": {"name": "Wind Speed", "unit_of_measurement": "km/h"},
     "windDirection": {"name": "Wind Direction", "unit_of_measurement": "°"},
     "windDesc": {"name": "Wind Description", "unit_of_measurement": "cm"},
-    "windDescShort": {"name": "Wind Description Short", "unit_of_measurement": "cm"},
+    "windDescShort": {"name": "Wind Description Short", "unit_of_measurement": None},
     "barometerPressure": {"name": "Barometric Pressure", "unit_of_measurement": "mbar"},
     "barometerTrend": {
         "name": "Barometric Pressure Trend",

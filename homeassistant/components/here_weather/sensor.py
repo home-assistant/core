@@ -1,11 +1,10 @@
 """Support for the HERE Destination Weather service."""
 import logging
-from typing import Dict, Optional, Union
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODE, CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import HEREWeatherData
 from .const import DOMAIN, SENSOR_TYPES
@@ -35,7 +34,7 @@ async def async_setup_entry(
     async_add_entities(sensors_to_add, True)
 
 
-class HEREDestinationWeatherSensor(Entity):
+class HEREDestinationWeatherSensor(CoordinatorEntity):
     """Implementation of an HERE Destination Weather sensor."""
 
     def __init__(
@@ -47,6 +46,7 @@ class HEREDestinationWeatherSensor(Entity):
         sensor_number: int = 0,  # Additional supported offsets will be added in a separate PR
     ) -> None:
         """Initialize the sensor."""
+        super().__init__(here_data.coordinator)
         self._base_name = name
         self._name_suffix = SENSOR_TYPES[sensor_type][weather_attribute]["name"]
         self._here_data = here_data
@@ -64,9 +64,9 @@ class HEREDestinationWeatherSensor(Entity):
         return f"{self._base_name} {self._name_suffix}"
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Set unique_id for sensor."""
-        return self.name
+        return f"{self._here_data.latitude}_{self._here_data.latitude}_{self._sensor_type}_{self._weather_attribute}_{self._sensor_number}"
 
     @property
     def state(self) -> str:
@@ -83,26 +83,9 @@ class HEREDestinationWeatherSensor(Entity):
         return self._unit_of_measurement
 
     @property
-    def device_state_attributes(
-        self,
-    ) -> Optional[Dict[str, Union[None, float, str, bool]]]:
-        """Return the state attributes."""
-        return None
-
-    @property
     def available(self):
         """Could the api be accessed during the last update call."""
         return self._here_data.coordinator.last_update_success
-
-    @property
-    def should_poll(self):
-        """Return the polling requirement for this sensor."""
-        return False
-
-    @property
-    def entity_registry_enabled_default(self):
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return True
 
     @property
     def device_info(self) -> dict:
@@ -112,14 +95,5 @@ class HEREDestinationWeatherSensor(Entity):
             "identifiers": {(DOMAIN, self._base_name)},
             "name": self._base_name,
             "manufacturer": "here.com",
+            "entry_type": "service",
         }
-
-    async def async_added_to_hass(self):
-        """When entity is added to hass."""
-        self.async_on_remove(
-            self._here_data.coordinator.async_add_listener(self.async_write_ha_state)
-        )
-
-    async def async_update(self):
-        """Get the latest data from HERE."""
-        await self._here_data.coordinator.async_request_refresh()

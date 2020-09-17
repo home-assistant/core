@@ -8,6 +8,7 @@ import herepy
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONF_API_KEY,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_MODE,
@@ -18,18 +19,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import (
-    CONF_API_KEY,
-    CONF_LOCATION_NAME,
-    CONF_ZIP_CODE,
-    DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-    HERE_API_KEYS,
-)
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, HERE_API_KEYS
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["sensor", "weather"]
+PLATFORMS = ["sensor"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
@@ -40,8 +34,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up here_weather from a config entry."""
     here_weather_data = HEREWeatherData(hass, config_entry)
-    if not await here_weather_data.async_setup():
-        return False
+    await here_weather_data.async_setup()
     hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = here_weather_data
 
     known_api_keys = hass.data.setdefault(HERE_API_KEYS, [])
@@ -81,36 +74,22 @@ class HEREWeatherData:
         self.hass = hass
         self.config_entry = config_entry
         self.here_client = herepy.DestinationWeatherApi(config_entry.data[CONF_API_KEY])
-        self.latitude = config_entry.data.get(CONF_LATITUDE)
-        self.longitude = config_entry.data.get(CONF_LONGITUDE)
-        self.location_name = config_entry.data.get(CONF_LOCATION_NAME)
-        self.zip_code = config_entry.data.get(CONF_ZIP_CODE)
+        self.latitude = config_entry.data[CONF_LATITUDE]
+        self.longitude = config_entry.data[CONF_LONGITUDE]
         self.weather_product_type = herepy.WeatherProductType[
             config_entry.data[CONF_MODE]
         ]
-        self.units = config_entry.data.get(CONF_UNIT_SYSTEM)
+        self.units = None
         self.coordinator = None
         self.unsub_handler = None
 
-    async def async_setup(self):
+    async def async_setup(self) -> list:
         """Set up the here_weather integration."""
         self.add_options()
+        self.units = self.config_entry.options[CONF_UNIT_SYSTEM]
         self.unsub_handler = self.config_entry.add_update_listener(
             self.async_options_updated
         )
-        await self._async_create_coordinator()
-        return True
-
-    def add_options(self):
-        """Add options for here_weather integration."""
-        if not self.config_entry.options:
-            options = {CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL}
-            self.hass.config_entries.async_update_entry(
-                self.config_entry, options=options
-            )
-
-    async def _async_create_coordinator(self):
-        """Create or recreate the DataUpdateCoordinator."""
         self.coordinator = DataUpdateCoordinator(
             self.hass,
             _LOGGER,
@@ -122,32 +101,36 @@ class HEREWeatherData:
         )
         await self.coordinator.async_refresh()
 
+    def add_options(self) -> None:
+        """Add options for here_weather integration."""
+        if not self.config_entry.options:
+            options = {
+                CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
+                CONF_UNIT_SYSTEM: self.hass.config.units.name,
+            }
+            self.hass.config_entries.async_update_entry(
+                self.config_entry, options=options
+            )
+
     async def async_update(self) -> None:
         """Handle data update with the DataUpdateCoordinator."""
         try:
             async with async_timeout.timeout(10):
                 return await self.hass.async_add_executor_job(self._get_data)
         except herepy.InvalidRequestError as error:
-            raise UpdateFailed(f"Unable to fetch data from HERE: {error.message}")
+            raise UpdateFailed(
+                f"Unable to fetch data from HERE: {error.message}"
+            ) from error
 
     def _get_data(self):
         """Get the latest data from HERE."""
-        is_metric = convert_units_to_boolean(self.units)
-        if self.zip_code is not None:
-            data = self.here_client.weather_for_zip_code(
-                self.zip_code, self.weather_product_type, metric=is_metric
-            )
-        elif self.location_name is not None:
-            data = self.here_client.weather_for_location_name(
-                self.location_name, self.weather_product_type, metric=is_metric
-            )
-        else:
-            data = self.here_client.weather_for_coordinates(
-                self.latitude,
-                self.longitude,
-                self.weather_product_type,
-                metric=is_metric,
-            )
+        is_metric = self.units == CONF_UNIT_SYSTEM_METRIC
+        data = self.here_client.weather_for_coordinates(
+            self.latitude,
+            self.longitude,
+            self.weather_product_type,
+            metric=is_metric,
+        )
         return extract_data_from_payload_for_product_type(
             data, self.weather_product_type
         )
@@ -157,18 +140,13 @@ class HEREWeatherData:
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> None:
         """Triggered by config entry options updates."""
-        await hass.data[DOMAIN][config_entry.entry_id].async_set_scan_interval(
+        hass.data[DOMAIN][config_entry.entry_id].set_update_interval(
             config_entry.options[CONF_SCAN_INTERVAL]
         )
 
-    async def async_set_scan_interval(self, scan_interval):
-        """Recreate the coordinator with the new scan interval."""
-        await self._async_create_coordinator()
-
-
-def convert_units_to_boolean(units: str) -> bool:
-    """Convert metric/imperial to true/false."""
-    return bool(units == CONF_UNIT_SYSTEM_METRIC)
+    def set_update_interval(self, update_interval: int) -> None:
+        """Set the coordinator update_interval to the supplied update_interval."""
+        self.coordinator.update_interval = timedelta(seconds=update_interval)
 
 
 def extract_data_from_payload_for_product_type(

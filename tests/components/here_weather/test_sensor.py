@@ -5,20 +5,20 @@ import herepy
 
 from homeassistant.components.here_weather.const import (
     ASTRONOMY_ATTRIBUTES,
-    CONF_API_KEY,
     DEFAULT_MODE,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     MODE_ASTRONOMY,
 )
 from homeassistant.const import (
+    CONF_API_KEY,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_MODE,
     CONF_NAME,
+    CONF_SCAN_INTERVAL,
     CONF_UNIT_SYSTEM,
     CONF_UNIT_SYSTEM_IMPERIAL,
-    CONF_UNIT_SYSTEM_METRIC,
     EVENT_HOMEASSISTANT_START,
 )
 import homeassistant.util.dt as dt_util
@@ -44,7 +44,6 @@ async def test_sensor_invalid_request(hass):
                     CONF_API_KEY: "test",
                     CONF_NAME: DOMAIN,
                     CONF_MODE: DEFAULT_MODE,
-                    CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
                     CONF_LATITUDE: "40.79962",
                     CONF_LONGITUDE: "-73.970314",
                 },
@@ -83,7 +82,6 @@ async def test_forecast_astronomy(hass):
                 CONF_API_KEY: "test",
                 CONF_NAME: DOMAIN,
                 CONF_MODE: MODE_ASTRONOMY,
-                CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
                 CONF_LATITUDE: "40.79962",
                 CONF_LONGITUDE: "-73.970314",
             },
@@ -117,6 +115,10 @@ async def test_imperial(hass):
                 CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
                 CONF_LATITUDE: "40.79962",
                 CONF_LONGITUDE: "-73.970314",
+            },
+            options={
+                CONF_SCAN_INTERVAL: 60,
+                CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
             },
         )
         entry.add_to_hass(hass)

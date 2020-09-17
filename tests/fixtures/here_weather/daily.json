@@ -1,0 +1,48 @@
+{
+    "forecasts": {
+        "forecastLocation": {
+            "forecast": [
+                {
+                    "daylight": "D",
+                    "daySegment": "Afternoon",
+                    "description": "Overcast. Chilly.",
+                    "skyInfo": "18",
+                    "skyDescription": "Overcast",
+                    "temperature": "4.00",
+                    "temperatureDesc": "Chilly",
+                    "comfort": "0.86",
+                    "humidity": "73",
+                    "dewPoint": "-0.40",
+                    "precipitationProbability": "9",
+                    "precipitationDesc": "",
+                    "rainFall": "*",
+                    "snowFall": "*",
+                    "airInfo": "*",
+                    "airDescription": "",
+                    "windSpeed": "12.96",
+                    "windDirection": "294",
+                    "windDesc": "Northwest",
+                    "windDescShort": "NW",
+                    "beaufortScale": "3",
+                    "beaufortDescription": "Gentle breeze",
+                    "visibility": "11.38",
+                    "icon": "7",
+                    "iconName": "cloudy",
+                    "iconLink": "https://weather.cit.api.here.com/static/weather/icon/17.png",
+                    "dayOfWeek": "3",
+                    "weekday": "Tuesday",
+                    "utcTime": "2019-11-19T12:00:00.000-05:00"
+                }
+            ],
+            "country": "United States",
+            "state": "New York",
+            "city": "New York",
+            "latitude": 43.00035,
+            "longitude": -75.4999,
+            "distance": 0.00,
+            "timezone": -5
+        }
+    },
+    "feedCreation": "2019-11-19T22:49:09.348Z",
+    "metric": true
+}

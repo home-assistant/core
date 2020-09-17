@@ -1,0 +1,27 @@
+{
+    "astronomy": {
+        "astronomy": [
+            {
+                "sunrise": "6:55AM",
+                "sunset": "6:33PM",
+                "moonrise": "1:27PM",
+                "moonset": "10:58PM",
+                "moonPhase": 0.328,
+                "moonPhaseDesc": "Waxing crescent",
+                "iconName": "cw_waxing_crescent",
+                "city": "Edgewater",
+                "latitude": 40.82,
+                "longitude": -73.97,
+                "utcTime": "2019-10-04T00:00:00.000-04:00"
+            }
+        ],
+        "country": "United States",
+        "state": "New York",
+        "city": "New York",
+        "latitude": 40.79962,
+        "longitude": -73.970314,
+        "timezone": -5
+    },
+    "feedCreation": "2019-10-04T14:22:46.164Z",
+    "metric": true
+}
