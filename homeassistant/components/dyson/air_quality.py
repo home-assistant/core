@@ -34,7 +34,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for device in hass.data[DYSON_DEVICES]:
         if (
             isinstance(device, DysonPureCool)
-            and f"air_quality/{device.serial}" not in device_ids
+            and f"{device.serial}/air_quality" not in device_ids
         ):
             new_entities.append(DysonAirSensor(device))
 
