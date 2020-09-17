@@ -90,6 +90,7 @@ class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {
             CONF_HOST: discovery_info[CONF_HOST],
+            CONF_PORT: discovery_info[CONF_PORT],
             "name": _name,
         }
         return await self.async_step_user()
@@ -102,6 +103,7 @@ class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if self.discovery_info:
                 user_input[CONF_HOST] = self.discovery_info[CONF_HOST]
+                user_input[CONF_PORT] = self.discovery_info[CONF_PORT]
 
             for entry in self._async_current_entries():
                 if entry.data.get(CONF_HOST) == user_input[CONF_HOST]:

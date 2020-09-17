@@ -21,6 +21,7 @@ TEST_PORT = 81
 
 TEST_DISCOVERY = {
     "host": TEST_HOST,
+    "port": DEFAULT_PORT,
     "hostname": f"{TEST_HOSTNAME}.local.",
     "server": f"{TEST_HOSTNAME}.local.",
     "properties": {
