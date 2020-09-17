@@ -69,7 +69,6 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry, async_add_ent
         entities.append(TPLinkSmartBulb(device))
 
     async_add_entities(entities, update_before_add=True)
-    return True
 
 
 def brightness_to_percentage(byt):

@@ -37,7 +37,6 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry, async_add_ent
         entities.append(SmartPlugSwitch(device))
 
     async_add_entities(entities, update_before_add=True)
-    return True
 
 
 class SmartPlugSwitch(SwitchEntity):
