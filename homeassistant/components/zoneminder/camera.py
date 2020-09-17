@@ -1,5 +1,8 @@
 """Support for ZoneMinder camera streaming."""
 import logging
+from typing import Callable, List, Optional
+
+from zoneminder.monitor import Monitor
 
 from homeassistant.components.mjpeg.camera import (
     CONF_MJPEG_URL,
@@ -7,9 +10,12 @@ from homeassistant.components.mjpeg.camera import (
     MjpegCamera,
     filter_urllib3_logging,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_VERIFY_SSL
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import Entity
 
-from . import DOMAIN as ZONEMINDER_DOMAIN
+from .common import get_client_from_data
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,23 +23,28 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the ZoneMinder cameras."""
     filter_urllib3_logging()
-    cameras = []
-    for zm_client in hass.data[ZONEMINDER_DOMAIN].values():
-        monitors = zm_client.get_monitors()
-        if not monitors:
-            _LOGGER.warning("Could not fetch monitors from ZoneMinder host: %s")
-            return
 
-        for monitor in monitors:
-            _LOGGER.info("Initializing camera %s", monitor.id)
-            cameras.append(ZoneMinderCamera(monitor, zm_client.verify_ssl))
-    add_entities(cameras)
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: Callable[[List[Entity], Optional[bool]], None],
+) -> None:
+    """Set up the sensor config entry."""
+    zm_client = get_client_from_data(hass, config_entry.unique_id)
+
+    async_add_entities(
+        [
+            ZoneMinderCamera(monitor, zm_client.verify_ssl, config_entry)
+            for monitor in await hass.async_add_job(zm_client.get_monitors)
+        ]
+    )
 
 
 class ZoneMinderCamera(MjpegCamera):
     """Representation of a ZoneMinder Monitor Stream."""
 
-    def __init__(self, monitor, verify_ssl):
+    def __init__(self, monitor: Monitor, verify_ssl: bool, config_entry: ConfigEntry):
         """Initialize as a subclass of MjpegCamera."""
         device_info = {
             CONF_NAME: monitor.name,
@@ -45,6 +56,12 @@ class ZoneMinderCamera(MjpegCamera):
         self._is_recording = None
         self._is_available = None
         self._monitor = monitor
+        self._config_entry = config_entry
+
+    @property
+    def unique_id(self) -> Optional[str]:
+        """Return a unique ID."""
+        return f"{self._config_entry.unique_id}_{self._monitor.id}_camera"
 
     @property
     def should_poll(self):
