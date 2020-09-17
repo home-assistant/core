@@ -84,8 +84,7 @@ class DysonSensor(DysonEntity, Entity):
         # Prevent refreshing if not needed
         if self._old_value is None or self._old_value != self.state:
             self._old_value = self.state
-            return True
-        return False
+            self.schedule_update_ha_state()
 
     @property
     def name(self):

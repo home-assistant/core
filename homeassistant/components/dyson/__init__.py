@@ -135,12 +135,11 @@ class DysonEntity(Entity):
                 self.name,
                 message,
             )
-            if self.on_message(message):
-                self.schedule_update_ha_state()
+            self.on_message(message)
 
-    def on_message(self, message):  # pylint: disable=no-self-use
+    def on_message(self, message):
         """Handle new messages received."""
-        return True
+        self.schedule_update_ha_state()
 
     @property
     def should_poll(self):

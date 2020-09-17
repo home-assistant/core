@@ -364,7 +364,7 @@ class DysonTest(unittest.TestCase):
         component = dyson.DysonPureCoolLinkDevice(device)
         component.entity_id = "entity_id"
         component.schedule_update_ha_state = mock.Mock()
-        component.on_message_filter(MockDysonState())
+        component.on_message(MockDysonState())
         component.schedule_update_ha_state.assert_called_with()
 
     def test_service_set_night_mode(self):

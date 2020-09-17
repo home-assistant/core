@@ -60,8 +60,7 @@ class DysonAirSensor(DysonEntity, AirQualityEntity):
             or self._old_value != self._device.environmental_state
         ):
             self._old_value = self._device.environmental_state
-            return True
-        return False
+            self.schedule_update_ha_state()
 
     @property
     def attribution(self):
