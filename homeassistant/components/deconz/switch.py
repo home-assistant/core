@@ -7,6 +7,9 @@ from .const import NEW_LIGHT, POWER_PLUGS, SIRENS
 from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
 
+POWER_PLUG = "power_plug"
+SIREN = "siren"
+
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Old way of setting up deCONZ platforms."""
@@ -15,10 +18,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up switches for deCONZ component.
 
-    Switches are based same device class as lights in deCONZ.
+    Switches are based on the same device class as lights in deCONZ.
     """
     gateway = get_gateway_from_config_entry(hass, config_entry)
-    gateway.entities[DOMAIN] = {"PowerPlug": set(), "Siren": set()}
+    gateway.entities[DOMAIN] = {POWER_PLUG: set(), SIREN: set()}
 
     @callback
     def async_add_switch(lights):
@@ -27,10 +30,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         for light in lights:
 
-            if light.type in POWER_PLUGS:
+            if (
+                light.type in POWER_PLUGS
+                and light.uniqueid not in gateway.entities[DOMAIN][POWER_PLUG]
+            ):
                 entities.append(DeconzPowerPlug(light, gateway))
 
-            elif light.type in SIRENS:
+            elif (
+                light.type in SIRENS
+                and light.uniqueid not in gateway.entities[DOMAIN][SIREN]
+            ):
                 entities.append(DeconzSiren(light, gateway))
 
         async_add_entities(entities, True)
@@ -48,7 +57,7 @@ class DeconzPowerPlug(DeconzDevice, SwitchEntity):
     """Representation of a deCONZ power plug."""
 
     DOMAIN = DOMAIN
-    TYPE = "PowerPlug"
+    TYPE = POWER_PLUG
 
     @property
     def is_on(self):
@@ -70,7 +79,7 @@ class DeconzSiren(DeconzDevice, SwitchEntity):
     """Representation of a deCONZ siren."""
 
     DOMAIN = DOMAIN
-    TYPE = "Siren"
+    TYPE = SIREN
 
     @property
     def is_on(self):

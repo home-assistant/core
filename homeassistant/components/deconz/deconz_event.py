@@ -12,6 +12,8 @@ from .deconz_device import DeconzBase
 
 CONF_DECONZ_EVENT = "deconz_event"
 
+EVENT = "Event"
+
 
 async def async_setup_events(gateway) -> None:
     """Set up the deCONZ events."""
@@ -58,7 +60,7 @@ class DeconzEvent(DeconzBase):
     """
 
     DOMAIN = DOMAIN
-    TYPE = "Event"
+    TYPE = EVENT
 
     def __init__(self, device, gateway):
         """Register callback that will be used for signals."""

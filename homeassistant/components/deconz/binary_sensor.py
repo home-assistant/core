@@ -43,15 +43,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     gateway.entities[DOMAIN] = {DOMAIN: set()}
 
     @callback
-    def async_add_sensor(sensors, new=True):
+    def async_add_sensor(sensors):
         """Add binary sensor from deCONZ."""
         entities = []
 
         for sensor in sensors:
 
             if (
-                new
-                and sensor.BINARY
+                sensor.BINARY
+                and sensor.uniqueid not in gateway.entities[DOMAIN][DOMAIN]
                 and (
                     gateway.option_allow_clip_sensor
                     or not sensor.type.startswith("CLIP")

@@ -33,6 +33,9 @@ from .const import (
 from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
 
+LIGHT = "light"
+GROUP = "group"
+
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Old way of setting up deCONZ platforms."""
@@ -41,7 +44,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the deCONZ lights and groups from a config entry."""
     gateway = get_gateway_from_config_entry(hass, config_entry)
-    gateway.entities[DOMAIN] = {"Light": set(), "Group": set()}
+    gateway.entities[DOMAIN] = {LIGHT: set(), GROUP: set()}
 
     @callback
     def async_add_light(lights):
@@ -49,7 +52,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         entities = []
 
         for light in lights:
-            if light.type not in COVER_TYPES + SWITCH_TYPES:
+            if (
+                light.type not in COVER_TYPES + SWITCH_TYPES
+                and light.uniqueid not in gateway.entities[DOMAIN][LIGHT]
+            ):
                 entities.append(DeconzLight(light, gateway))
 
         async_add_entities(entities, True)
@@ -69,8 +75,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         entities = []
 
         for group in groups:
-            if group.lights:
-                entities.append(DeconzGroup(group, gateway))
+            if not group.lights:
+                continue
+
+            new_group = DeconzGroup(group, gateway)
+            if new_group.unique_id not in gateway.entities[DOMAIN][GROUP]:
+                entities.append(new_group)
 
         async_add_entities(entities, True)
 
@@ -211,7 +221,7 @@ class DeconzBaseLight(DeconzDevice, LightEntity):
 class DeconzLight(DeconzBaseLight):
     """Representation of a deCONZ light."""
 
-    TYPE = "Light"
+    TYPE = LIGHT
 
     @property
     def max_mireds(self):
@@ -227,7 +237,7 @@ class DeconzLight(DeconzBaseLight):
 class DeconzGroup(DeconzBaseLight):
     """Representation of a deCONZ group."""
 
-    TYPE = "Group"
+    TYPE = GROUP
 
     def __init__(self, device, gateway):
         """Set up group and create an unique id."""
