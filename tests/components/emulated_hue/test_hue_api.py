@@ -96,7 +96,7 @@ def hass_hue(loop, hass):
         )
     )
 
-    with patch("homeassistant.components.emulated_hue.UPNPResponderThread"):
+    with patch("homeassistant.components.emulated_hue.create_upnp_datagram_endpoint"):
         loop.run_until_complete(
             setup.async_setup_component(
                 hass,
@@ -283,7 +283,37 @@ async def test_light_without_brightness_supported(hass_hue, hue_client):
     assert light_without_brightness_json["state"][HUE_API_STATE_ON] is True
     assert light_without_brightness_json["type"] == "On/Off light"
 
-    # BRI required for alexa compat
+
+async def test_lights_all_dimmable(hass, aiohttp_client):
+    """Test CONF_LIGHTS_ALL_DIMMABLE."""
+    # create a lamp without brightness support
+    hass.states.async_set("light.no_brightness", "on", {})
+    await setup.async_setup_component(
+        hass, http.DOMAIN, {http.DOMAIN: {http.CONF_SERVER_PORT: HTTP_SERVER_PORT}}
+    )
+    await hass.async_block_till_done()
+    hue_config = {
+        emulated_hue.CONF_LISTEN_PORT: BRIDGE_SERVER_PORT,
+        emulated_hue.CONF_EXPOSE_BY_DEFAULT: True,
+        emulated_hue.CONF_LIGHTS_ALL_DIMMABLE: True,
+    }
+    with patch("homeassistant.components.emulated_hue.create_upnp_datagram_endpoint"):
+        await setup.async_setup_component(
+            hass,
+            emulated_hue.DOMAIN,
+            {emulated_hue.DOMAIN: hue_config},
+        )
+        await hass.async_block_till_done()
+    config = Config(None, hue_config)
+    config.numbers = ENTITY_IDS_BY_NUMBER
+    web_app = hass.http.app
+    HueOneLightStateView(config).register(web_app, web_app.router)
+    client = await aiohttp_client(web_app)
+    light_without_brightness_json = await perform_get_light_state(
+        client, "light.no_brightness", HTTP_OK
+    )
+    assert light_without_brightness_json["state"][HUE_API_STATE_ON] is True
+    assert light_without_brightness_json["type"] == "Dimmable light"
     assert (
         light_without_brightness_json["state"][HUE_API_STATE_BRI]
         == HUE_API_STATE_BRI_MAX
@@ -473,6 +503,24 @@ async def test_discover_config(hue_client):
     # Make sure the device announces a link button
     assert "linkbutton" in config_json
     assert config_json["linkbutton"] is True
+
+    # Test without username
+    result = await hue_client.get("/api/config")
+
+    assert result.status == 200
+    assert "application/json" in result.headers["content-type"]
+
+    config_json = await result.json()
+    assert "error" not in config_json
+
+    # Test with wrong username username
+    result = await hue_client.get("/api/wronguser/config")
+
+    assert result.status == 200
+    assert "application/json" in result.headers["content-type"]
+
+    config_json = await result.json()
+    assert "error" not in config_json
 
 
 async def test_get_light_state(hass_hue, hue_client):
@@ -1164,7 +1212,7 @@ async def test_external_ip_blocked(hue_client):
     postUrls = ["/api"]
     putUrls = ["/api/username/lights/light.ceiling_lights/state"]
     with patch(
-        "homeassistant.components.http.real_ip.ip_address",
+        "homeassistant.components.emulated_hue.hue_api.ip_address",
         return_value=ip_address("45.45.45.45"),
     ):
         for getUrl in getUrls:
@@ -1184,7 +1232,6 @@ async def test_unauthorized_user_blocked(hue_client):
     """Test unauthorized_user blocked."""
     getUrls = [
         "/api/wronguser",
-        "/api/wronguser/config",
     ]
     for getUrl in getUrls:
         result = await hue_client.get(getUrl)

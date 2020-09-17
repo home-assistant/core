@@ -177,7 +177,8 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
             )
 
         return self.async_create_entry(
-            title=self.discovery_info[CONF_NAME], data=self.discovery_info,
+            title=self.discovery_info[CONF_NAME],
+            data=self.discovery_info,
         )
 
     def _show_setup_form(self, errors: Optional[Dict] = None) -> Dict[str, Any]:

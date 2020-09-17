@@ -165,7 +165,7 @@ class LogErrorQueueHandler(logging.handlers.QueueHandler):
         """Emit a log record."""
         try:
             self.enqueue(record)
-        except asyncio.CancelledError:  # pylint: disable=try-except-raise
+        except asyncio.CancelledError:
             raise
         except Exception:  # pylint: disable=broad-except
             self.handleError(record)

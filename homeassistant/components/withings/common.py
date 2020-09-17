@@ -30,9 +30,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_WEBHOOK_ID,
     MASS_KILOGRAMS,
+    PERCENTAGE,
     SPEED_METERS_PER_SECOND,
     TIME_SECONDS,
-    UNIT_PERCENTAGE,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -53,7 +53,10 @@ from . import const
 from .const import Measurement
 
 _LOGGER = logging.getLogger(const.LOG_NAMESPACE)
-NOT_AUTHENTICATED_ERROR = re.compile("^401,.*", re.IGNORECASE,)
+NOT_AUTHENTICATED_ERROR = re.compile(
+    "^401,.*",
+    re.IGNORECASE,
+)
 DATA_UPDATED_SIGNAL = "withings_entity_state_updated"
 
 MeasurementData = Dict[Measurement, Any]
@@ -208,7 +211,7 @@ WITHINGS_ATTRIBUTES = [
         Measurement.FAT_RATIO_PCT,
         MeasureType.FAT_RATIO,
         "Fat Ratio",
-        UNIT_PERCENTAGE,
+        PERCENTAGE,
         None,
         SENSOR_DOMAIN,
         True,
@@ -248,7 +251,7 @@ WITHINGS_ATTRIBUTES = [
         Measurement.SPO2_PCT,
         MeasureType.SP02,
         "SP02",
-        UNIT_PERCENTAGE,
+        PERCENTAGE,
         None,
         SENSOR_DOMAIN,
         True,
@@ -621,8 +624,8 @@ class DataManager:
         def empty_listener() -> None:
             pass
 
-        self._cancel_subscription_update = self.subscription_update_coordinator.async_add_listener(
-            empty_listener
+        self._cancel_subscription_update = (
+            self.subscription_update_coordinator.async_add_listener(empty_listener)
         )
 
     def async_stop_polling_webhook_subscriptions(self) -> None:
@@ -753,7 +756,8 @@ class DataManager:
 
                 # Start a reauth flow.
                 await self._hass.config_entries.flow.async_init(
-                    const.DOMAIN, context=context,
+                    const.DOMAIN,
+                    context=context,
                 )
                 return
 
@@ -883,7 +887,9 @@ async def async_get_entity_id(
     hass: HomeAssistant, attribute: WithingsAttribute, user_id: int
 ) -> Optional[str]:
     """Get an entity id for a user's attribute."""
-    entity_registry: EntityRegistry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry: EntityRegistry = (
+        await hass.helpers.entity_registry.async_get_registry()
+    )
     unique_id = get_attribute_unique_id(attribute, user_id)
 
     entity_id = entity_registry.async_get_entity_id(

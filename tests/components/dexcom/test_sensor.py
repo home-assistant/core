@@ -98,7 +98,8 @@ async def test_sensors_options_changed(hass):
         return_value="test_session_id",
     ):
         hass.config_entries.async_update_entry(
-            entry=entry, options={CONF_UNIT_OF_MEASUREMENT: MMOL_L},
+            entry=entry,
+            options={CONF_UNIT_OF_MEASUREMENT: MMOL_L},
         )
         await hass.async_block_till_done()
 

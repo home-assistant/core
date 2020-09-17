@@ -12,11 +12,8 @@
             "user": {
                 "data": {
                     "host": "Vert",
-                    "limit": "Grense",
                     "name": "Navn",
-                    "order": "Rekkef\u00f8lge",
                     "password": "Passord",
-                    "port": "",
                     "username": "Brukernavn"
                 },
                 "title": "Oppsett av Transmission-klient"

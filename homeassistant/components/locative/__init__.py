@@ -128,5 +128,4 @@ async def async_unload_entry(hass, entry):
     return await hass.config_entries.async_forward_entry_unload(entry, DEVICE_TRACKER)
 
 
-# pylint: disable=invalid-name
 async_remove_entry = config_entry_flow.webhook_async_remove_entry

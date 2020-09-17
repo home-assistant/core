@@ -60,7 +60,8 @@ async def test_platform_manually_configured(hass):
 async def test_no_clients(hass):
     """Test the update_clients function when no clients are found."""
     controller = await setup_unifi_integration(
-        hass, options={CONF_ALLOW_BANDWIDTH_SENSORS: True},
+        hass,
+        options={CONF_ALLOW_BANDWIDTH_SENSORS: True},
     )
 
     assert len(controller.mock_requests) == 4
@@ -110,7 +111,8 @@ async def test_sensors(hass):
     assert wireless_client_tx.state == "6789.0"
 
     hass.config_entries.async_update_entry(
-        controller.config_entry, options={CONF_ALLOW_BANDWIDTH_SENSORS: False},
+        controller.config_entry,
+        options={CONF_ALLOW_BANDWIDTH_SENSORS: False},
     )
     await hass.async_block_till_done()
 
@@ -121,7 +123,8 @@ async def test_sensors(hass):
     assert wireless_client_tx is None
 
     hass.config_entries.async_update_entry(
-        controller.config_entry, options={CONF_ALLOW_BANDWIDTH_SENSORS: True},
+        controller.config_entry,
+        options={CONF_ALLOW_BANDWIDTH_SENSORS: True},
     )
     await hass.async_block_till_done()
 
@@ -135,7 +138,9 @@ async def test_sensors(hass):
 async def test_remove_sensors(hass):
     """Test the remove_items function with some clients."""
     controller = await setup_unifi_integration(
-        hass, options={CONF_ALLOW_BANDWIDTH_SENSORS: True}, clients_response=CLIENTS,
+        hass,
+        options={CONF_ALLOW_BANDWIDTH_SENSORS: True},
+        clients_response=CLIENTS,
     )
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 4
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 2

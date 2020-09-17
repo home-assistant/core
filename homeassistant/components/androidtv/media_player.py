@@ -374,8 +374,14 @@ def adb_decorator(override_available=False):
                     err,
                 )
                 await self.aftv.adb_close()
-                self._available = False  # pylint: disable=protected-access
+                self._available = False
                 return None
+            except Exception:
+                # An unforeseen exception occurred. Close the ADB connection so that
+                # it doesn't happen over and over again, then raise the exception.
+                await self.aftv.adb_close()
+                self._available = False
+                raise
 
         return _adb_exception_catcher
 
@@ -421,10 +427,8 @@ class ADBDevice(MediaPlayerEntity):
             # Using "adb_shell" (Python ADB implementation)
             self.exceptions = (
                 AdbTimeoutError,
-                AttributeError,
                 BrokenPipeError,
                 ConnectionResetError,
-                TypeError,
                 ValueError,
                 InvalidChecksumError,
                 InvalidCommandError,
@@ -597,7 +601,8 @@ class ADBDevice(MediaPlayerEntity):
 
             msg = f"Output from service '{SERVICE_LEARN_SENDEVENT}' from {self.entity_id}: '{output}'"
             self.hass.components.persistent_notification.async_create(
-                msg, title="Android TV",
+                msg,
+                title="Android TV",
             )
             _LOGGER.info("%s", msg)
 

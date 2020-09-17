@@ -219,6 +219,10 @@ def test_find_next_time_expression_time_basic():
         datetime(2018, 10, 7, 10, 30, 0), 5, 0, 0
     )
 
+    assert find(datetime(2018, 10, 7, 10, 30, 0, 999999), "*", "/30", 0) == datetime(
+        2018, 10, 7, 10, 30, 0
+    )
+
 
 def test_find_next_time_expression_time_dst():
     """Test daylight saving time for find_next_time_expression_time."""

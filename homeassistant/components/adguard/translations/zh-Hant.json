@@ -1,8 +1,6 @@
 {
     "config": {
         "abort": {
-            "adguard_home_addon_outdated": "\u6574\u5408\u9700\u8981 AdGuard Home {minimal_version} \u6216\u66f4\u65b0\u7248\u672c\uff0c\u60a8\u76ee\u524d\u4f7f\u7528\u7248\u672c\u70ba {current_version}\u3002\u8acb\u66f4\u65b0 Hass.io AdGuard Home \u5143\u4ef6\u3002",
-            "adguard_home_outdated": "\u6574\u5408\u9700\u8981 AdGuard Home {minimal_version} \u6216\u66f4\u65b0\u7248\u672c\uff0c\u60a8\u76ee\u524d\u4f7f\u7528\u7248\u672c\u70ba {current_version}\u3002",
             "existing_instance_updated": "\u5df2\u66f4\u65b0\u73fe\u6709\u8a2d\u5b9a\u3002",
             "single_instance_allowed": "\u50c5\u5141\u8a31\u8a2d\u5b9a\u4e00\u7d44 AdGuard Home\u3002"
         },

@@ -145,18 +145,25 @@ async def async_get_config_flows(hass: "HomeAssistant") -> Set[str]:
     return flows
 
 
-async def async_get_zeroconf(hass: "HomeAssistant") -> Dict[str, List]:
+async def async_get_zeroconf(hass: "HomeAssistant") -> Dict[str, List[Dict[str, str]]]:
     """Return cached list of zeroconf types."""
-    zeroconf: Dict[str, List] = ZEROCONF.copy()
+    zeroconf: Dict[str, List[Dict[str, str]]] = ZEROCONF.copy()
 
     integrations = await async_get_custom_components(hass)
     for integration in integrations.values():
         if not integration.zeroconf:
             continue
-        for typ in integration.zeroconf:
-            zeroconf.setdefault(typ, [])
-            if integration.domain not in zeroconf[typ]:
-                zeroconf[typ].append(integration.domain)
+        for entry in integration.zeroconf:
+            data = {"domain": integration.domain}
+            if isinstance(entry, dict):
+                typ = entry["type"]
+                entry_without_type = entry.copy()
+                del entry_without_type["type"]
+                data.update(entry_without_type)
+            else:
+                typ = entry
+
+            zeroconf.setdefault(typ, []).append(data)
 
     return zeroconf
 
@@ -270,6 +277,11 @@ class Integration:
     def name(self) -> str:
         """Return name."""
         return cast(str, self.manifest["name"])
+
+    @property
+    def disabled(self) -> Optional[str]:
+        """Return reason integration is disabled."""
+        return cast(Optional[str], self.manifest.get("disabled"))
 
     @property
     def domain(self) -> str:

@@ -43,7 +43,7 @@
                     "name": "Nome (opzionale)",
                     "type": "Tipo di sensore binario"
                 },
-                "description": "Si prega di selezionare le opzioni per il sensore binario collegato alla {zone}",
+                "description": "Opzioni {zone}",
                 "title": "Configurare il Sensore Binario"
             },
             "options_digital": {
@@ -52,7 +52,7 @@
                     "poll_interval": "Intervallo di sondaggio (minuti) (opzionale)",
                     "type": "Tipo di sensore"
                 },
-                "description": "Si prega di selezionare le opzioni per il sensore digitale collegato alla {zone}",
+                "description": "Opzioni {zone}",
                 "title": "Configurare il Sensore Digitale"
             },
             "options_io": {
@@ -87,6 +87,7 @@
                 "data": {
                     "api_host": "Sovrascrivi l'URL dell'host API (opzionale)",
                     "blink": "Attiva il lampeggio del LED del pannello durante l'invio del cambiamento di stato ",
+                    "discovery": "Rispondi alle richieste di rilevamento sulla tua rete",
                     "override_api_host": "Sovrascrivi l'URL predefinito del pannello host API di Home Assistant"
                 },
                 "description": "Seleziona il comportamento desiderato per il tuo pannello",
@@ -101,7 +102,7 @@
                     "pause": "Pausa tra gli impulsi (ms) (opzionale)",
                     "repeat": "Numero di volte da ripetere (-1 = infinito) (opzionale)"
                 },
-                "description": "Selezionare le opzioni di uscita per {zone}: stato {state}",
+                "description": "Opzioni {zone}: stato {state}",
                 "title": "Configurare l'uscita commutabile"
             }
         }

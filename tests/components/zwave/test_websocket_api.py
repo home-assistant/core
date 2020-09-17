@@ -2,6 +2,7 @@
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.zwave.const import (
     CONF_AUTOHEAL,
+    CONF_NETWORK_KEY,
     CONF_POLLING_INTERVAL,
     CONF_USB_STICK_PATH,
 )
@@ -19,6 +20,7 @@ async def test_zwave_ws_api(hass, mock_openzwave, hass_ws_client):
                 CONF_AUTOHEAL: False,
                 CONF_USB_STICK_PATH: "/dev/zwave",
                 CONF_POLLING_INTERVAL: 6000,
+                CONF_NETWORK_KEY: "0xTE, 0xST, 0xTE, 0xST, 0xTE, 0xST, 0xTE, 0xST, 0xTE, 0xST, 0xTE, 0xST, 0xTE, 0xST, 0xTE, 0xST",
             }
         },
     )
@@ -35,3 +37,13 @@ async def test_zwave_ws_api(hass, mock_openzwave, hass_ws_client):
     assert result[CONF_USB_STICK_PATH] == "/dev/zwave"
     assert not result[CONF_AUTOHEAL]
     assert result[CONF_POLLING_INTERVAL] == 6000
+
+    await client.send_json({ID: 6, TYPE: "zwave/get_migration_config"})
+    msg = await client.receive_json()
+    result = msg["result"]
+
+    assert result[CONF_USB_STICK_PATH] == "/dev/zwave"
+    assert (
+        result[CONF_NETWORK_KEY]
+        == "0xTE, 0xST, 0xTE, 0xST, 0xTE, 0xST, 0xTE, 0xST, 0xTE, 0xST, 0xTE, 0xST, 0xTE, 0xST, 0xTE, 0xST"
+    )

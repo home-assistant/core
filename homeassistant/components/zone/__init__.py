@@ -76,7 +76,8 @@ def empty_value(value: Any) -> Any:
 CONFIG_SCHEMA = vol.Schema(
     {
         vol.Optional(DOMAIN, default=[]): vol.Any(
-            vol.All(cv.ensure_list, [vol.Schema(CREATE_FIELDS)]), empty_value,
+            vol.All(cv.ensure_list, [vol.Schema(CREATE_FIELDS)]),
+            empty_value,
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -188,7 +189,7 @@ async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
 
     storage_collection = ZoneStorageCollection(
         storage.Store(hass, STORAGE_VERSION, STORAGE_KEY),
-        logging.getLogger(f"{__name__}_storage_collection"),
+        logging.getLogger(f"{__name__}.storage_collection"),
         id_manager,
     )
     collection.attach_entity_component_collection(
@@ -234,7 +235,10 @@ async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
     if component.get_entity("zone.home"):
         return True
 
-    home_zone = Zone(_home_conf(hass), True,)
+    home_zone = Zone(
+        _home_conf(hass),
+        True,
+    )
     home_zone.entity_id = ENTITY_ID_HOME
     await component.async_add_entities([home_zone])
 

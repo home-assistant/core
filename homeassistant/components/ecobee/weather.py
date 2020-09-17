@@ -1,5 +1,5 @@
 """Support for displaying weather info from Ecobee API."""
-from datetime import datetime
+from datetime import timedelta
 
 from pyecobee.const import ECOBEE_STATE_UNKNOWN
 
@@ -13,6 +13,7 @@ from homeassistant.components.weather import (
     WeatherEntity,
 )
 from homeassistant.const import TEMP_FAHRENHEIT
+from homeassistant.util import dt as dt_util
 
 from .const import (
     _LOGGER,
@@ -50,8 +51,8 @@ class EcobeeWeather(WeatherEntity):
         try:
             forecast = self.weather["forecasts"][index]
             return forecast[param]
-        except (ValueError, IndexError, KeyError):
-            raise ValueError
+        except (IndexError, KeyError) as err:
+            raise ValueError from err
 
     @property
     def name(self):
@@ -165,10 +166,13 @@ class EcobeeWeather(WeatherEntity):
             return None
 
         forecasts = []
-        for day in range(1, 5):
+        date = dt_util.utcnow()
+        for day in range(0, 5):
             forecast = _process_forecast(self.weather["forecasts"][day])
             if forecast is None:
                 continue
+            forecast[ATTR_FORECAST_TIME] = date.isoformat()
+            date += timedelta(days=1)
             forecasts.append(forecast)
 
         if forecasts:
@@ -186,9 +190,6 @@ def _process_forecast(json):
     """Process a single ecobee API forecast to return expected values."""
     forecast = {}
     try:
-        forecast[ATTR_FORECAST_TIME] = datetime.strptime(
-            json["dateTime"], "%Y-%m-%d %H:%M:%S"
-        ).isoformat()
         forecast[ATTR_FORECAST_CONDITION] = ECOBEE_WEATHER_SYMBOL_TO_HASS[
             json["weatherSymbol"]
         ]

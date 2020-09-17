@@ -43,7 +43,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 )
                 continue
             switches.append(
-                NumatoGpioSwitch(port_name, device_id, port, invert_logic, api,)
+                NumatoGpioSwitch(
+                    port_name,
+                    device_id,
+                    port,
+                    invert_logic,
+                    api,
+                )
             )
     add_entities(switches, True)
 

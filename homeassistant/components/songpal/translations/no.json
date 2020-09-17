@@ -7,7 +7,6 @@
         "error": {
             "cannot_connect": "Tilkobling mislyktes."
         },
-        "flow_title": "",
         "step": {
             "init": {
                 "description": "Vil du sette opp {name} ({host})?"

@@ -12,7 +12,7 @@
                 "data": {
                     "host": "Nom d'h\u00f4te ou adresse IP",
                     "passkey": "Cha\u00eene de cl\u00e9 d'acc\u00e8s",
-                    "port": "Num\u00e9ro de port"
+                    "port": "Port"
                 },
                 "description": "Configurez votre appareil BSB-Lan pour l'int\u00e9grer \u00e0 HomeAssistant.",
                 "title": "Connectez-vous \u00e0 l'appareil BSB-Lan"
