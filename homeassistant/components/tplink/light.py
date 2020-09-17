@@ -64,12 +64,15 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry, async_add_ent
     devices = hass.data[TPLINK_DOMAIN][CONF_LIGHT]
     entities = []
 
+    await hass.async_add_executor_job(get_devices_sysinfo,devices)
     for device in devices:
-        await hass.async_add_executor_job(device.get_sysinfo)
         entities.append(TPLinkSmartBulb(device))
 
     async_add_entities(entities, update_before_add=True)
 
+def get_devices_sysinfo(devices):
+    for device in devices:
+        device.get_sysinfo
 
 def brightness_to_percentage(byt):
     """Convert brightness from absolute 0..255 to percentage."""

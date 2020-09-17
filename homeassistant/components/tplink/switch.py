@@ -32,11 +32,16 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry, async_add_ent
     devices = hass.data[TPLINK_DOMAIN][CONF_SWITCH]
     entities = []
 
+    await hass.async_add_executor_job(get_devices_sysinfo, devices)
     for device in devices:
-        await hass.async_add_executor_job(device.get_sysinfo)
         entities.append(SmartPlugSwitch(device))
 
     async_add_entities(entities, update_before_add=True)
+
+
+def get_devices_sysinfo(devices):
+    for device in devices:
+        device.get_sysinfo
 
 
 class SmartPlugSwitch(SwitchEntity):
@@ -159,7 +164,7 @@ class SmartPlugSwitch(SwitchEntity):
         except (SmartDeviceException, OSError) as ex:
             if update_attempt == 0:
                 _LOGGER.warning(
-                    "Retrying in %s for %s|%s due to: %s",
+                    "Retrying in %s seconds for %s|%s due to: %s",
                     SLEEP_TIME,
                     self._host,
                     self._alias,
