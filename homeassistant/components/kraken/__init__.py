@@ -35,7 +35,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up kraken from a config entry."""
-    kraken_data = KrakenData(hass)
+    kraken_data = KrakenData(hass, config_entry)
     await kraken_data.async_setup()
     hass.data[DOMAIN] = kraken_data
     await add_options(hass, config_entry)
@@ -67,9 +67,10 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 class KrakenData:
     """Define an object to hold kraken data."""
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize."""
         self._hass = hass
+        self._config_entry = config_entry
         self._api = pykrakenapi.KrakenAPI(krakenex.API(), retry=0, crl_sleep=0)
         self.tradable_asset_pairs = None
         self.coordinator = None
@@ -135,7 +136,9 @@ class KrakenData:
             _LOGGER,
             name=DOMAIN,
             update_method=self.async_update,
-            update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
+            update_interval=timedelta(
+                seconds=self._config_entry.options[CONF_SCAN_INTERVAL]
+            ),
         )
         await self.coordinator.async_request_refresh()
 
