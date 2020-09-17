@@ -1,5 +1,4 @@
 """The Tag integration."""
-import datetime as dt
 import logging
 import typing
 import uuid
@@ -69,9 +68,6 @@ class TagStorageCollection(collection.StorageCollection):
         data = self.CREATE_SCHEMA(data)
         if not data[TAG_ID]:
             data[TAG_ID] = str(uuid.uuid4())
-        # make last_scanned JSON serializeable
-        if LAST_SCANNED in data and isinstance(data[LAST_SCANNED], dt.datetime):
-            data[LAST_SCANNED] = data[LAST_SCANNED].isoformat()
         return data
 
     @callback
@@ -82,9 +78,6 @@ class TagStorageCollection(collection.StorageCollection):
     async def _update_data(self, data: dict, update_data: typing.Dict) -> typing.Dict:
         """Return a new updated data object."""
         data = {**data, **self.UPDATE_SCHEMA(update_data)}
-        # make last_scanned JSON serializeable
-        if LAST_SCANNED in data and isinstance(data[LAST_SCANNED], dt.datetime):
-            data[LAST_SCANNED] = data[LAST_SCANNED].isoformat()
         return data
 
 
@@ -101,6 +94,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
     collection.StorageCollectionWebsocket(
         storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
     ).async_setup(hass)
+
     return True
 
 
@@ -115,7 +109,11 @@ async def async_scan_tag(hass, tag_id, device_id, context=None):
     )
     helper = hass.data[DOMAIN][TAGS]
     if tag_id in helper.data:
-        await helper.async_update_item(tag_id, {LAST_SCANNED: dt_util.utcnow()})
+        await helper.async_update_item(
+            tag_id, {LAST_SCANNED: dt_util.utcnow().isoformat()}
+        )
     else:
-        await helper.async_create_item({TAG_ID: tag_id, LAST_SCANNED: dt_util.utcnow()})
+        await helper.async_create_item(
+            {TAG_ID: tag_id, LAST_SCANNED: dt_util.utcnow().isoformat()}
+        )
     _LOGGER.debug("Tag: %s scanned by device: %s", tag_id, device_id)
