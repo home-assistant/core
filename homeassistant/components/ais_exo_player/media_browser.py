@@ -170,7 +170,7 @@ def ais_media_library() -> BrowseMedia:
     """Create response payload to describe contents of a specific library."""
     ais_library_info = BrowseMedia(
         title="AI-Speaker",
-        media_class=MEDIA_CLASS_APP,
+        media_class=MEDIA_CLASS_DIRECTORY,
         media_content_id="library",
         media_content_type="library",
         can_play=False,
