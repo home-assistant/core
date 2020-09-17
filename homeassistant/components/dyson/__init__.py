@@ -138,7 +138,7 @@ class DysonEntity(Entity):
             if self.on_message(message):
                 self.schedule_update_ha_state()
 
-    def on_message(self, message):
+    def on_message(self, message):  # pylint: disable=no-self-use
         """Handle new messages received."""
         return True
 
