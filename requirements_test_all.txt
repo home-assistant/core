@@ -665,7 +665,7 @@ pygatt[GATTTOOL]==4.0.5
 pygti==0.6.0
 
 # homeassistant.components.version
-pyhaversion==3.4.0
+pyhaversion==3.4.2
 
 # homeassistant.components.heos
 pyheos==0.6.0
