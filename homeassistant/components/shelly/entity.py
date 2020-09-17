@@ -34,9 +34,11 @@ def shelly_naming(self, block, entity_type: str, channels: int):
             if entity_name:
                 return f"{entity_name} {self.description.name}"
             return f"{self.wrapper.name} {str(block.channel)} {self.description.name}"
-    if entity_type == "switch":
-        return f"{self.wrapper.name} {self.block.description.replace('_', ' ')}"
-    return f"{self.wrapper.name} {self.description.name}"
+    if channels == 1:
+        if entity_type == "switch":
+            return f"{self.wrapper.name} {self.block.description.replace('_', ' ')}"
+        return f"{self.wrapper.name} {self.description.name}"
+    raise ValueError
 
 
 async def async_setup_entry_attribute_entities(
