@@ -65,7 +65,7 @@ async def async_setup(hass, config):
         host=host,
         port=port,
         token=token,
-        ssl=use_ssl,  # use_ssl
+        use_ssl=use_ssl,
         verify_ssl=verify_ssl,
     )
 
