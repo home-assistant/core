@@ -48,7 +48,6 @@ LIGHT_STATE_SATURATION = "saturation"
 LIGHT_STATE_ERROR_MSG = "err_msg"
 
 LIGHT_SYSINFO_MAC = "mac"
-LIGHT_SYSINFO_HOST = "host"
 LIGHT_SYSINFO_ALIAS = "alias"
 LIGHT_SYSINFO_MODEL = "model"
 LIGHT_SYSINFO_IS_DIMMABLE = "is_dimmable"
@@ -116,7 +115,6 @@ class LightFeatures(NamedTuple):
 
     sysinfo: Dict[str, Any]
     mac: str
-    host: str
     alias: str
     model: str
     supported_features: int
@@ -258,7 +256,7 @@ class TPLinkSmartBulb(LightEntity):
                 _LOGGER.warning(
                     "Retrying in %s seconds for %s|%s due to: %s",
                     SLEEP_TIME,
-                    self._light_features.host,
+                    self.smartbulb.host,
                     self._light_features.alias,
                     ex,
                 )
@@ -285,7 +283,6 @@ class TPLinkSmartBulb(LightEntity):
         supported_features = 0
         # Calling api here as it reformats
         mac = self.smartbulb.mac
-        host = self.smartbulb.host
         alias = sysinfo[LIGHT_SYSINFO_ALIAS]
         model = sysinfo[LIGHT_SYSINFO_MODEL]
         min_mireds = None
@@ -307,7 +304,6 @@ class TPLinkSmartBulb(LightEntity):
         return LightFeatures(
             sysinfo=sysinfo,
             mac=mac,
-            host=host,
             alias=alias,
             model=model,
             supported_features=supported_features,
@@ -499,7 +495,7 @@ class TPLinkSmartBulb(LightEntity):
                     if update_attempt > 0:
                         _LOGGER.warning(
                             "Device %s|%s responded after %s attempts",
-                            self._light_features.host,
+                            self.smartbulb.host,
                             self._light_features.alias,
                             update_attempt,
                         )
@@ -512,7 +508,7 @@ class TPLinkSmartBulb(LightEntity):
             if self._is_available:
                 _LOGGER.warning(
                     "Could not read state for %s|%s",
-                    self._light_features.host,
+                    self.smartbulb.host,
                     self._light_features.alias,
                 )
             self._is_available = False
