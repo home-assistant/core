@@ -1,7 +1,6 @@
 """Light platform support for yeelight."""
 from functools import partial
 import logging
-from typing import Optional
 
 import voluptuous as vol
 import yeelight
@@ -937,12 +936,10 @@ class YeelightAmbientLight(YeelightColorLightWithoutNightlightSwitch):
         self._light_type = LightType.Ambient
 
     @property
-    def unique_id(self) -> Optional[str]:
+    def unique_id(self) -> str:
         """Return a unique ID."""
         unique = super().unique_id
-
-        if unique:
-            return unique + "-ambilight"
+        return f"{unique}-ambilight"
 
     @property
     def name(self) -> str:

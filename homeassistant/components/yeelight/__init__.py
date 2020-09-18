@@ -21,6 +21,12 @@ from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 
+from .migrator import (
+    _async_migrate_device_unique_id,
+    _async_migrate_entity_unique_id,
+    _async_migrate_name,
+)
+
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "yeelight"
@@ -180,14 +186,12 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Yeelight from a config entry."""
 
-    # TODO: migrate entity ID
-    # TODO: migrate device ID
-    # TODO: move name from options back to data
+    # Migrate from old structure
+    await _async_migrate_device_unique_id(hass, entry)
+    await _async_migrate_entity_unique_id(hass, entry)
 
     async def _initialize(host: str, capabilities: Optional[dict] = None) -> None:
-        device = await _async_setup_device(
-            hass, host, entry.data[CONF_NAME], entry.options, capabilities
-        )
+        device = await _async_setup_device(hass, host, entry, capabilities)
         hass.data[DOMAIN][DATA_CONFIG_ENTRIES][entry.entry_id][DATA_DEVICE] = device
         for component in PLATFORMS:
             hass.async_create_task(
@@ -258,12 +262,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 async def _async_setup_device(
     hass: HomeAssistant,
     host: str,
-    name: str,
-    config: dict,
+    entry: ConfigEntry,
     capabilities: Optional[dict],
 ) -> None:
     # Get model from config and capabilities
-    model = config.get(CONF_MODEL)
+    model = entry.options.get(CONF_MODEL)
     if not model and capabilities is not None:
         model = capabilities.get("model")
 
@@ -271,7 +274,21 @@ async def _async_setup_device(
     bulb = Bulb(host, model=model or None)
     if capabilities is None:
         capabilities = await hass.async_add_executor_job(bulb.get_capabilities)
-    device = YeelightDevice(hass, host, name, config, bulb, capabilities)
+
+    # Migrate name
+    if not entry.data.get(CONF_NAME):
+        # Disable update listener temporarily to avoid reload
+        hass.data[DOMAIN][DATA_CONFIG_ENTRIES][entry.entry_id][
+            DATA_UNSUB_UPDATE_LISTENER
+        ]()
+        _async_migrate_name(hass, entry, capabilities)
+        hass.data[DOMAIN][DATA_CONFIG_ENTRIES][entry.entry_id][
+            DATA_UNSUB_UPDATE_LISTENER
+        ] = entry.add_update_listener(_async_update_listener)
+
+    device = YeelightDevice(
+        hass, host, entry.data[CONF_NAME], entry.options, bulb, capabilities
+    )
     await hass.async_add_executor_job(device.update)
     await device.async_setup()
     return device
