@@ -61,10 +61,6 @@ class DeconzBase:
 class DeconzDevice(DeconzBase, Entity):
     """Representation of a deCONZ device."""
 
-    def __init__(self, device, gateway):
-        """Set up device and add update callback to get data from websocket."""
-        super().__init__(device, gateway)
-
     @property
     def entity_registry_enabled_default(self):
         """Return if the entity should be enabled when first added to the entity registry.
