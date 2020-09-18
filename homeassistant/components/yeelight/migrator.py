@@ -9,7 +9,7 @@ from homeassistant.helpers import device_registry, entity_registry
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "yeelight"  # TODO: Move all constants to const.py
+DOMAIN = "yeelight"
 
 
 async def _async_migrate_entity_unique_id(
