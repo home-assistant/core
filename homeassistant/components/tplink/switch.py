@@ -61,6 +61,7 @@ class SmartPlugSwitch(SwitchEntity):
         self._alias = None
         self._model = None
         self._device_id = None
+        self._host = None
 
     @property
     def unique_id(self):
@@ -126,6 +127,7 @@ class SmartPlugSwitch(SwitchEntity):
                 self._sysinfo = self.smartplug.sys_info
                 self._mac = self._sysinfo["mac"]
                 self._model = self._sysinfo["model"]
+                self._host = self.smartplug.host
                 if self.smartplug.context is None:
                     self._alias = self._sysinfo["alias"]
                     self._device_id = self._mac
@@ -165,7 +167,7 @@ class SmartPlugSwitch(SwitchEntity):
                 _LOGGER.warning(
                     "Retrying in %s seconds for %s|%s due to: %s",
                     SLEEP_TIME,
-                    self.smartplug.host,
+                    self._host,
                     self._alias,
                     ex,
                 )
@@ -184,7 +186,7 @@ class SmartPlugSwitch(SwitchEntity):
                     if update_attempt > 0:
                         _LOGGER.warning(
                             "Device %s|%s responded after %s attempts",
-                            self.smartplug.host,
+                            self._host,
                             self._alias,
                             update_attempt,
                         )

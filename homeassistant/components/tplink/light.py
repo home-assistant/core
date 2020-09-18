@@ -137,6 +137,9 @@ class TPLinkSmartBulb(LightEntity):
         self._last_historical_power_update = None
         self._emeter_params = {}
 
+        self._host = None
+        self._alias = None
+
     @property
     def unique_id(self):
         """Return a unique ID."""
@@ -248,6 +251,8 @@ class TPLinkSmartBulb(LightEntity):
             # Update light features only once.
             if not self._light_features:
                 self._light_features = self._get_light_features_retry()
+                self._alias = self._light_features.alias
+                self._host = self._light_features.host
             self._light_state = self._get_light_state_retry()
             return True
 
@@ -256,8 +261,8 @@ class TPLinkSmartBulb(LightEntity):
                 _LOGGER.warning(
                     "Retrying in %s seconds for %s|%s due to: %s",
                     SLEEP_TIME,
-                    self.smartbulb.host,
-                    self._light_features.alias,
+                    self._host,
+                    self._alias,
                     ex,
                 )
             return False
@@ -495,8 +500,8 @@ class TPLinkSmartBulb(LightEntity):
                     if update_attempt > 0:
                         _LOGGER.warning(
                             "Device %s|%s responded after %s attempts",
-                            self.smartbulb.host,
-                            self._light_features.alias,
+                            self._host,
+                            self._alias,
                             update_attempt,
                         )
                     break
@@ -508,8 +513,8 @@ class TPLinkSmartBulb(LightEntity):
             if self._is_available:
                 _LOGGER.warning(
                     "Could not read state for %s|%s",
-                    self.smartbulb.host,
-                    self._light_features.alias,
+                    self._host,
+                    self._alias,
                 )
             self._is_available = False
 
