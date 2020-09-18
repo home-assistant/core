@@ -44,6 +44,11 @@ class CanaryAlarm(AlarmControlPanelEntity):
         return location.name
 
     @property
+    def unique_id(self):
+        """Return the unique ID of the alarm."""
+        return str(self._location_id)
+
+    @property
     def state(self):
         """Return the state of the device."""
         location = self._data.get_location(self._location_id)

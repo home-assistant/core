@@ -1,0 +1,4 @@
+sensor:
+  - platform: statistics
+    entity_id: sensor.cpu
+    name: cputest

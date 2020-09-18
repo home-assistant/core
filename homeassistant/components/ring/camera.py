@@ -109,7 +109,10 @@ class RingCam(RingEntityMixin, Camera):
             return
 
         image = await asyncio.shield(
-            ffmpeg.get_image(self._video_url, output_format=IMAGE_JPEG,)
+            ffmpeg.get_image(
+                self._video_url,
+                output_format=IMAGE_JPEG,
+            )
         )
         return image
 

@@ -58,6 +58,7 @@ class TestSplunk(unittest.TestCase):
 
     def _setup(self, mock_requests):
         """Test the setup."""
+        # pylint: disable=attribute-defined-outside-init
         self.mock_post = mock_requests.post
         self.mock_request_exception = Exception
         mock_requests.exceptions.RequestException = self.mock_request_exception
@@ -115,7 +116,7 @@ class TestSplunk(unittest.TestCase):
             )
             self.mock_post.reset_mock()
 
-    def _setup_with_filter(self):
+    def _setup_with_filter(self, addl_filters=None):
         """Test the setup."""
         config = {
             "splunk": {
@@ -128,18 +129,45 @@ class TestSplunk(unittest.TestCase):
                 },
             }
         }
+        if addl_filters:
+            config["splunk"]["filter"].update(addl_filters)
 
         setup_component(self.hass, splunk.DOMAIN, config)
 
     @mock.patch.object(splunk, "post_request")
     def test_splunk_entityfilter(self, mock_requests):
         """Test event listener."""
+        # pylint: disable=no-member
         self._setup_with_filter()
 
         testdata = [
             {"entity_id": "other_domain.other_entity", "filter_expected": False},
             {"entity_id": "other_domain.excluded_entity", "filter_expected": True},
             {"entity_id": "excluded_domain.other_entity", "filter_expected": True},
+        ]
+
+        for test in testdata:
+            mock_state_change_event(self.hass, State(test["entity_id"], "on"))
+            self.hass.block_till_done()
+
+            if test["filter_expected"]:
+                assert not splunk.post_request.called
+            else:
+                assert splunk.post_request.called
+
+            splunk.post_request.reset_mock()
+
+    @mock.patch.object(splunk, "post_request")
+    def test_splunk_entityfilter_with_glob_filter(self, mock_requests):
+        """Test event listener."""
+        # pylint: disable=no-member
+        self._setup_with_filter({"exclude_entity_globs": ["*.skip_*"]})
+
+        testdata = [
+            {"entity_id": "other_domain.other_entity", "filter_expected": False},
+            {"entity_id": "other_domain.excluded_entity", "filter_expected": True},
+            {"entity_id": "excluded_domain.other_entity", "filter_expected": True},
+            {"entity_id": "test.skip_me", "filter_expected": True},
         ]
 
         for test in testdata:

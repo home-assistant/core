@@ -28,12 +28,12 @@
     },
     "device_automation": {
         "trigger_subtype": {
-            "button_1": "pierwszy przycisk",
-            "button_2": "drugi przycisk",
-            "button_3": "trzeci przycisk",
-            "button_4": "czwarty przycisk",
-            "button_5": "pi\u0105ty przycisk",
-            "button_6": "sz\u00f3sty przycisk",
+            "button_1": "pierwszy",
+            "button_2": "drugi",
+            "button_3": "trzeci",
+            "button_4": "czwarty",
+            "button_5": "pi\u0105ty",
+            "button_6": "sz\u00f3sty",
             "turn_off": "nast\u0105pi wy\u0142\u0105czenie",
             "turn_on": "nast\u0105pi w\u0142\u0105czenie"
         },
@@ -46,6 +46,38 @@
             "button_short_press": "\"{subtype}\" zostanie naci\u015bni\u0119ty",
             "button_short_release": "\"{subtype}\" zostanie zwolniony",
             "button_triple_press": "\"{subtype}\" zostanie trzykrotnie naci\u015bni\u0119ty"
+        }
+    },
+    "options": {
+        "error": {
+            "bad_birth": "Nieprawid\u0142owy temat \"birth\".",
+            "bad_will": "Nieprawid\u0142owy temat \"will\".",
+            "cannot_connect": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z po\u015brednikiem."
+        },
+        "step": {
+            "broker": {
+                "data": {
+                    "broker": "Po\u015brednik",
+                    "password": "[%key_id:common::config_flow::data::password%]",
+                    "port": "Port",
+                    "username": "[%key_id:common::config_flow::data::username%]"
+                },
+                "description": "Wprowad\u017a informacje o po\u0142\u0105czeniu po\u015brednika MQTT"
+            },
+            "options": {
+                "data": {
+                    "birth_payload": "Warto\u015b\u0107 wiadomo\u015bci \"birth\"",
+                    "birth_qos": "QoS wiadomo\u015bci \"birth\"",
+                    "birth_retain": "Flaga \"retain\" wiadomo\u015bci \"birth\"",
+                    "birth_topic": "Temat wiadomo\u015bci \"birth\"",
+                    "discovery": "W\u0142\u0105cz wykrywanie",
+                    "will_payload": "Warto\u015b\u0107 wiadomo\u015bci \"will\"",
+                    "will_qos": "QoS wiadomo\u015bci \"will\"",
+                    "will_retain": "Flaga \"retain\" wiadomo\u015bci \"will\"",
+                    "will_topic": "Temat "
+                },
+                "description": "Opcje MQTT"
+            }
         }
     }
 }

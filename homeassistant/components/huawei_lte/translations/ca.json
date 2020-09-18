@@ -16,6 +16,7 @@
             "response_error": "S'ha produ\u00eft un error desconegut del dispositiu",
             "unknown_connection_error": "S'ha produ\u00eft un error desconegut en connectar-se al dispositiu"
         },
+        "flow_title": "Huawei LTE: {name}",
         "step": {
             "user": {
                 "data": {

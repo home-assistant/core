@@ -25,6 +25,7 @@ import homeassistant.helpers.config_validation as cv
 from .const import (
     ATTR_ADDRESS,
     ATTR_CHANNEL,
+    ATTR_DEVICE_TYPE,
     ATTR_DISCOVER_DEVICES,
     ATTR_DISCOVERY_TYPE,
     ATTR_ERRORCODE,
@@ -99,6 +100,7 @@ DEVICE_SCHEMA = vol.Schema(
         vol.Required(ATTR_NAME): cv.string,
         vol.Required(ATTR_ADDRESS): cv.string,
         vol.Required(ATTR_INTERFACE): cv.string,
+        vol.Optional(ATTR_DEVICE_TYPE): cv.string,
         vol.Optional(ATTR_CHANNEL, default=DEFAULT_CHANNEL): vol.Coerce(int),
         vol.Optional(ATTR_PARAM): cv.string,
         vol.Optional(ATTR_UNIQUE_ID): cv.string,
@@ -533,6 +535,7 @@ def _get_devices(hass, discovery_type, keys, interface):
                     ATTR_ADDRESS: key,
                     ATTR_INTERFACE: interface,
                     ATTR_NAME: name,
+                    ATTR_DEVICE_TYPE: class_name,
                     ATTR_CHANNEL: channel,
                     ATTR_UNIQUE_ID: unique_id,
                 }

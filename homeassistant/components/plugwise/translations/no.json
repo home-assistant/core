@@ -8,6 +8,7 @@
             "invalid_auth": "Ugyldig godkjenning, sjekk din 8-tegns Smile ID",
             "unknown": "Uventet feil"
         },
+        "flow_title": "",
         "step": {
             "user": {
                 "data": {
@@ -16,6 +17,16 @@
                 },
                 "description": "Detaljer",
                 "title": "Koble til Smile"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Skanneintervall (sekunder)"
+                },
+                "description": "Juster Plugwise-alternativer"
             }
         }
     }

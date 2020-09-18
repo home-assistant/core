@@ -1,0 +1,48 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi, si prega di riprovare",
+            "invalid_auth": "Autenticazione non valida",
+            "no_results": "Nessun risultato. Prova con un'altra stazione/indirizzo"
+        },
+        "step": {
+            "station": {
+                "data": {
+                    "station": "Stazione/Indirizzo"
+                },
+                "title": "Inserisci stazione/indirizzo"
+            },
+            "station_select": {
+                "data": {
+                    "station": "Stazione/Indirizzo"
+                },
+                "title": "Seleziona Stazione/Indirizzo"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "username": "Nome utente"
+                },
+                "title": "Connettiti all'API HVV"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "filter": "Seleziona le linee",
+                    "offset": "Offset (minuti)",
+                    "real_time": "Usa dati in tempo reale"
+                },
+                "description": "Modifica le opzioni per questo sensore di partenza",
+                "title": "Opzioni"
+            }
+        }
+    },
+    "title": "Partenze HVV"
+}

@@ -3,5 +3,5 @@
   "name": "Google Maps Travel Time",
   "documentation": "https://www.home-assistant.io/integrations/google_travel_time",
   "requirements": ["googlemaps==2.5.1"],
-  "codeowners": ["@robbiet480"]
+  "codeowners": []
 }

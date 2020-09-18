@@ -28,8 +28,10 @@ from homeassistant.components.vacuum import (
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN, STATE_OFF, STATE_ON
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.util.dt import as_utc
 
 from .const import (
+    SERVICE_CLEAN_SEGMENT,
     SERVICE_CLEAN_ZONE,
     SERVICE_GOTO,
     SERVICE_MOVE_REMOTE_CONTROL,
@@ -72,6 +74,7 @@ ATTR_RC_VELOCITY = "velocity"
 ATTR_STATUS = "status"
 ATTR_ZONE_ARRAY = "zone"
 ATTR_ZONE_REPEATER = "repeats"
+ATTR_TIMERS = "timers"
 
 SUPPORT_XIAOMI = (
     SUPPORT_STATE
@@ -88,20 +91,26 @@ SUPPORT_XIAOMI = (
 
 
 STATE_CODE_TO_STATE = {
-    2: STATE_IDLE,
-    3: STATE_IDLE,
-    5: STATE_CLEANING,
-    6: STATE_RETURNING,
-    7: STATE_CLEANING,
-    8: STATE_DOCKED,
-    9: STATE_ERROR,
-    10: STATE_PAUSED,
-    11: STATE_CLEANING,
-    12: STATE_ERROR,
-    15: STATE_RETURNING,
-    16: STATE_CLEANING,
-    17: STATE_CLEANING,
-    18: STATE_CLEANING,
+    1: STATE_IDLE,  # "Starting"
+    2: STATE_IDLE,  # "Charger disconnected"
+    3: STATE_IDLE,  # "Idle"
+    4: STATE_CLEANING,  # "Remote control active"
+    5: STATE_CLEANING,  # "Cleaning"
+    6: STATE_RETURNING,  # "Returning home"
+    7: STATE_CLEANING,  # "Manual mode"
+    8: STATE_DOCKED,  # "Charging"
+    9: STATE_ERROR,  # "Charging problem"
+    10: STATE_PAUSED,  # "Paused"
+    11: STATE_CLEANING,  # "Spot cleaning"
+    12: STATE_ERROR,  # "Error"
+    13: STATE_IDLE,  # "Shutting down"
+    14: STATE_DOCKED,  # "Updating"
+    15: STATE_RETURNING,  # "Docking"
+    16: STATE_CLEANING,  # "Going to target"
+    17: STATE_CLEANING,  # "Zoned cleaning"
+    18: STATE_CLEANING,  # "Segment cleaning"
+    100: STATE_DOCKED,  # "Charging complete"
+    101: STATE_ERROR,  # "Device offline"
 }
 
 
@@ -196,6 +205,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         },
         MiroboVacuum.async_goto.__name__,
     )
+    platform.async_register_entity_service(
+        SERVICE_CLEAN_SEGMENT,
+        {vol.Required("segments"): vol.Any(vol.Coerce(int), [vol.Coerce(int)])},
+        MiroboVacuum.async_clean_segment.__name__,
+    )
 
 
 class MiroboVacuum(StateVacuumEntity):
@@ -215,6 +229,8 @@ class MiroboVacuum(StateVacuumEntity):
         self.last_clean = None
         self._fan_speeds = None
         self._fan_speeds_reverse = None
+
+        self._timers = None
 
     @property
     def name(self):
@@ -263,6 +279,18 @@ class MiroboVacuum(StateVacuumEntity):
         return list(self._fan_speeds) if self._fan_speeds else []
 
     @property
+    def timers(self):
+        """Get the list of added timers of the vacuum cleaner."""
+        return [
+            {
+                "enabled": timer.enabled,
+                "cron": timer.cron,
+                "next_schedule": as_utc(timer.next_schedule),
+            }
+            for timer in self._timers
+        ]
+
+    @property
     def device_state_attributes(self):
         """Return the specific state attributes of this vacuum cleaner."""
         attrs = {}
@@ -307,6 +335,9 @@ class MiroboVacuum(StateVacuumEntity):
 
             if self.vacuum_state.got_error:
                 attrs[ATTR_ERROR] = self.vacuum_state.error
+
+            if self.timers:
+                attrs[ATTR_TIMERS] = self.timers
         return attrs
 
     @property
@@ -428,6 +459,17 @@ class MiroboVacuum(StateVacuumEntity):
             y_coord=y_coord,
         )
 
+    async def async_clean_segment(self, segments):
+        """Clean the specified segments(s)."""
+        if isinstance(segments, int):
+            segments = [segments]
+
+        await self._try_command(
+            "Unable to start cleaning of the specified segments: %s",
+            self._vacuum.segment_clean,
+            segments=segments,
+        )
+
     def update(self):
         """Fetch state from the device."""
         try:
@@ -441,6 +483,8 @@ class MiroboVacuum(StateVacuumEntity):
             self.clean_history = self._vacuum.clean_history()
             self.last_clean = self._vacuum.last_clean_details()
             self.dnd_state = self._vacuum.dnd_status()
+
+            self._timers = self._vacuum.timer()
 
             self._available = True
         except OSError as exc:

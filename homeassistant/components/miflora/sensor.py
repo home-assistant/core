@@ -5,7 +5,7 @@ import logging
 
 import btlewrap
 from btlewrap import BluetoothBackendException
-from miflora import miflora_poller
+from miflora import miflora_poller  # pylint: disable=import-error
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -17,9 +17,9 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SCAN_INTERVAL,
     EVENT_HOMEASSISTANT_START,
+    PERCENTAGE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -54,9 +54,9 @@ ATTR_LAST_SUCCESSFUL_UPDATE = "last_successful_update"
 SENSOR_TYPES = {
     "temperature": ["Temperature", TEMP_CELSIUS, "mdi:thermometer"],
     "light": ["Light intensity", "lx", "mdi:white-balance-sunny"],
-    "moisture": ["Moisture", UNIT_PERCENTAGE, "mdi:water-percent"],
+    "moisture": ["Moisture", PERCENTAGE, "mdi:water-percent"],
     "conductivity": ["Conductivity", CONDUCTIVITY, "mdi:flash-circle"],
-    "battery": ["Battery", UNIT_PERCENTAGE, "mdi:battery-charging"],
+    "battery": ["Battery", PERCENTAGE, "mdi:battery-charging"],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -79,7 +79,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the MiFlora sensor."""
     backend = BACKEND
-    _LOGGER.debug("Miflora is using %s backend.", backend.__name__)
+    _LOGGER.debug("Miflora is using %s backend", backend.__name__)
 
     cache = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL).total_seconds()
     poller = miflora_poller.MiFloraPoller(

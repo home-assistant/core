@@ -119,7 +119,7 @@ async def test_erronous_network_key_fails_validation(hass, mock_openzwave):
             zwave.CONFIG_SCHEMA({"zwave": {"network_key": value}})
 
 
-async def test_auto_heal_midnight(hass, mock_openzwave):
+async def test_auto_heal_midnight(hass, mock_openzwave, legacy_patchable_time):
     """Test network auto-heal at midnight."""
     await async_setup_component(hass, "zwave", {"zwave": {"autoheal": True}})
     await hass.async_block_till_done()
@@ -1762,12 +1762,15 @@ class TestZWaveServices(unittest.TestCase):
 
         assert node.refresh_value.called
         assert len(node.refresh_value.mock_calls) == 2
-        assert sorted(
-            [
-                node.refresh_value.mock_calls[0][1][0],
-                node.refresh_value.mock_calls[1][1][0],
-            ]
-        ) == sorted([value.value_id, power_value.value_id])
+        assert (
+            sorted(
+                [
+                    node.refresh_value.mock_calls[0][1][0],
+                    node.refresh_value.mock_calls[1][1][0],
+                ]
+            )
+            == sorted([value.value_id, power_value.value_id])
+        )
 
     def test_refresh_node(self):
         """Test zwave refresh_node service."""

@@ -82,10 +82,6 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-# dicttoxml (used by huawei-lte-api) has uselessly verbose INFO level.
-# https://github.com/quandyfactory/dicttoxml/issues/60
-logging.getLogger("dicttoxml").setLevel(logging.WARNING)
-
 SCAN_INTERVAL = timedelta(seconds=10)
 
 NOTIFY_SCHEMA = vol.Any(
@@ -167,6 +163,14 @@ class Router:
         return DEFAULT_DEVICE_NAME
 
     @property
+    def device_identifiers(self) -> Set[Tuple[str, str]]:
+        """Get router identifiers for device registry."""
+        try:
+            return {(DOMAIN, self.data[KEY_DEVICE_INFORMATION]["SerialNumber"])}
+        except (KeyError, TypeError):
+            return set()
+
+    @property
     def device_connections(self) -> Set[Tuple[str, str]]:
         """Get router connections for device registry."""
         return {(dr.CONNECTION_NETWORK_MAC, self.mac)} if self.mac else set()
@@ -191,7 +195,8 @@ class Router:
                 _LOGGER.debug("Trying to authorize again...")
                 if self.connection.enforce_authorized_connection():
                     _LOGGER.debug(
-                        "...success, %s will be updated by a future periodic run", key,
+                        "...success, %s will be updated by a future periodic run",
+                        key,
                     )
                 else:
                     _LOGGER.debug("...failed")
@@ -380,9 +385,6 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
     sw_version = None
     if router.data.get(KEY_DEVICE_INFORMATION):
         device_info = router.data[KEY_DEVICE_INFORMATION]
-        serial_number = device_info.get("SerialNumber")
-        if serial_number:
-            device_data["identifiers"] = {(DOMAIN, serial_number)}
         sw_version = device_info.get("SoftwareVersion")
         if device_info.get("DeviceName"):
             device_data["model"] = device_info["DeviceName"]
@@ -394,6 +396,7 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections=router.device_connections,
+        identifiers=router.device_identifiers,
         name=router.device_name,
         manufacturer="Huawei",
         **device_data,
@@ -460,6 +463,10 @@ async def async_unload_entry(
 async def async_setup(hass: HomeAssistantType, config) -> bool:
     """Set up Huawei LTE component."""
 
+    # dicttoxml (used by huawei-lte-api) has uselessly verbose INFO level.
+    # https://github.com/quandyfactory/dicttoxml/issues/60
+    logging.getLogger("dicttoxml").setLevel(logging.WARNING)
+
     # Arrange our YAML config to dict with normalized URLs as keys
     domain_config = {}
     if DOMAIN not in hass.data:
@@ -514,7 +521,10 @@ async def async_setup(hass: HomeAssistantType, config) -> bool:
 
     for service in ADMIN_SERVICES:
         hass.helpers.service.async_register_admin_service(
-            DOMAIN, service, service_handler, schema=SERVICE_SCHEMA,
+            DOMAIN,
+            service,
+            service_handler,
+            schema=SERVICE_SCHEMA,
         )
 
     for url, router_config in domain_config.items():
@@ -594,7 +604,10 @@ class HuaweiLteBaseEntity(Entity):
     @property
     def device_info(self) -> Dict[str, Any]:
         """Get info for matching with parent router."""
-        return {"connections": self.router.device_connections}
+        return {
+            "identifiers": self.router.device_identifiers,
+            "connections": self.router.device_connections,
+        }
 
     async def async_update(self) -> None:
         """Update state."""

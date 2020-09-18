@@ -14,6 +14,7 @@ async def test_cover(
     """Test function."""
     vera_device = MagicMock(spec=pv.VeraCurtain)  # type: pv.VeraCurtain
     vera_device.device_id = 1
+    vera_device.vera_device_id = vera_device.device_id
     vera_device.name = "dev1"
     vera_device.category = pv.CATEGORY_CURTAIN
     vera_device.is_closed = False
@@ -24,13 +25,15 @@ async def test_cover(
         hass=hass,
         controller_config=new_simple_controller_config(devices=(vera_device,)),
     )
-    update_callback = component_data.controller_data.update_callback
+    update_callback = component_data.controller_data[0].update_callback
 
     assert hass.states.get(entity_id).state == "closed"
     assert hass.states.get(entity_id).attributes["current_position"] == 0
 
     await hass.services.async_call(
-        "cover", "open_cover", {"entity_id": entity_id},
+        "cover",
+        "open_cover",
+        {"entity_id": entity_id},
     )
     await hass.async_block_till_done()
     vera_device.open.assert_called()
@@ -42,7 +45,9 @@ async def test_cover(
     assert hass.states.get(entity_id).attributes["current_position"] == 100
 
     await hass.services.async_call(
-        "cover", "set_cover_position", {"entity_id": entity_id, "position": 50},
+        "cover",
+        "set_cover_position",
+        {"entity_id": entity_id, "position": 50},
     )
     await hass.async_block_till_done()
     vera_device.set_level.assert_called_with(50)
@@ -54,7 +59,9 @@ async def test_cover(
     assert hass.states.get(entity_id).attributes["current_position"] == 50
 
     await hass.services.async_call(
-        "cover", "stop_cover", {"entity_id": entity_id},
+        "cover",
+        "stop_cover",
+        {"entity_id": entity_id},
     )
     await hass.async_block_till_done()
     vera_device.stop.assert_called()
@@ -64,7 +71,9 @@ async def test_cover(
     assert hass.states.get(entity_id).attributes["current_position"] == 50
 
     await hass.services.async_call(
-        "cover", "close_cover", {"entity_id": entity_id},
+        "cover",
+        "close_cover",
+        {"entity_id": entity_id},
     )
     await hass.async_block_till_done()
     vera_device.close.assert_called()

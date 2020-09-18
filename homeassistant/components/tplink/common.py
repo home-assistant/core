@@ -184,7 +184,7 @@ async def async_add_entities_retry(
                 result = False
 
             if result is True or result is None:
-                _LOGGER.debug("Added object.")
+                _LOGGER.debug("Added object")
                 add_objects.remove(add_object)
             else:
                 _LOGGER.debug("Failed to add object, will try again later")

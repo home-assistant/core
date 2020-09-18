@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "one_instance_allowed": "\u50c5\u9700\u8a2d\u5b9a\u4e00\u7d44\u8a2d\u5099\u5373\u53ef\u3002",
+            "wrong_server_id": "\u4f3a\u670d\u5668 ID \u7121\u6548"
+        },
+        "step": {
+            "user": {
+                "description": "\u662f\u5426\u8981\u8a2d\u5b9a SpeedTest\uff1f",
+                "title": "\u8a2d\u5b9a SpeedTest"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "retrive_error": "\u63a5\u6536\u4f3a\u670d\u5668\u5217\u8868\u932f\u8aa4"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "manual": "\u95dc\u9589\u81ea\u52d5\u66f4\u65b0",
+                    "scan_interval": "\u66f4\u65b0\u983b\u7387\uff08\u5206\u9418\uff09",
+                    "server_name": "\u9078\u64c7\u6e2c\u8a66\u4f3a\u670d\u5668"
+                }
+            }
+        }
+    }
+}

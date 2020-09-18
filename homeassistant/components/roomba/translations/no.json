@@ -9,7 +9,7 @@
                     "blid": "Blid",
                     "continuous": "Kontinuerlige",
                     "delay": "Forsinkelse",
-                    "host": "Vertsnavn eller IP-adresse",
+                    "host": "Vert",
                     "password": "Passord"
                 },
                 "description": "Henting av BLID og passord er en manuell prosess. F\u00f8lg trinnene som er beskrevet i dokumentasjonen p\u00e5: https://www.home-assistant.io/integrations/roomba/#retrieving-your-credentials",

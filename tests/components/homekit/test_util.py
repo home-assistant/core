@@ -215,7 +215,7 @@ def test_density_to_air_quality():
     assert density_to_air_quality(300) == 5
 
 
-async def test_show_setup_msg(hass):
+async def test_show_setup_msg(hass, hk_driver):
     """Test show setup message as persistence notification."""
     pincode = b"123-45-678"
 

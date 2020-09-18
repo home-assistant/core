@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "one_instance_allowed": "Solo se necesita una instancia.",
+            "wrong_server_id": "Id del servidor no v\u00e1lido"
+        },
+        "step": {
+            "user": {
+                "description": "\u00bfEst\u00e1s seguro de que quieres configurar SpeedTest?",
+                "title": "Configurar SpeedTest"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "retrive_error": "Error al recuperar la lista de servidores"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "manual": "Desactivar actualizaci\u00f3n autom\u00e1tica",
+                    "scan_interval": "Frecuencia de actualizaci\u00f3n (minutos)",
+                    "server_name": "Seleccione el servidor de prueba"
+                }
+            }
+        }
+    }
+}

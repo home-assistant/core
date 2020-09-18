@@ -9,6 +9,7 @@ from plexwebsocket import PlexWebsocket
 import requests.exceptions
 import voluptuous as vol
 
+from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
@@ -42,6 +43,7 @@ from .const import (
 )
 from .errors import ShouldUpdateConfigEntry
 from .server import PlexServer
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__package__)
 
@@ -52,6 +54,8 @@ async def async_setup(hass, config):
         PLEX_DOMAIN,
         {SERVERS: {}, DISPATCHERS: {}, WEBSOCKETS: {}, PLATFORMS_COMPLETED: {}},
     )
+
+    await async_setup_services(hass)
 
     return True
 
@@ -64,6 +68,11 @@ async def async_setup_entry(hass, entry):
         hass.config_entries.async_update_entry(
             entry, unique_id=entry.data[CONF_SERVER_IDENTIFIER]
         )
+
+    if MP_DOMAIN not in entry.options:
+        options = dict(entry.options)
+        options.setdefault(MP_DOMAIN, {})
+        hass.config_entries.async_update_entry(entry, options=options)
 
     plex_server = PlexServer(
         hass, server_config, entry.data[CONF_SERVER_IDENTIFIER], entry.options
@@ -85,7 +94,7 @@ async def async_setup_entry(hass, entry):
             server_config[CONF_URL],
             error,
         )
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from error
     except (
         plexapi.exceptions.BadRequest,
         plexapi.exceptions.Unauthorized,
@@ -155,12 +164,20 @@ async def async_setup_entry(hass, entry):
         }
     )
 
-    hass.services.async_register(
-        PLEX_DOMAIN,
-        SERVICE_PLAY_ON_SONOS,
-        async_play_on_sonos_service,
-        schema=play_on_sonos_schema,
-    )
+    def get_plex_account(plex_server):
+        try:
+            return plex_server.account
+        except (plexapi.exceptions.BadRequest, plexapi.exceptions.Unauthorized):
+            return None
+
+    plex_account = await hass.async_add_executor_job(get_plex_account, plex_server)
+    if plex_account:
+        hass.services.async_register(
+            PLEX_DOMAIN,
+            SERVICE_PLAY_ON_SONOS,
+            async_play_on_sonos_service,
+            schema=play_on_sonos_schema,
+        )
 
     return True
 
@@ -201,13 +218,16 @@ def play_on_sonos(hass, service_call):
 
     sonos = hass.components.sonos
     try:
-        sonos_id = sonos.get_coordinator_id(entity_id)
+        sonos_name = sonos.get_coordinator_name(entity_id)
     except HomeAssistantError as err:
         _LOGGER.error("Cannot get Sonos device: %s", err)
         return
 
     if isinstance(content, int):
         content = {"plex_key": content}
+        content_type = PLEX_DOMAIN
+    else:
+        content_type = "music"
 
     plex_server_name = content.get("plex_server")
     shuffle = content.pop("shuffle", 0)
@@ -219,20 +239,20 @@ def play_on_sonos(hass, service_call):
             _LOGGER.error(
                 "Requested Plex server '%s' not found in %s",
                 plex_server_name,
-                list(map(lambda x: x.friendly_name, plex_servers)),
+                [x.friendly_name for x in plex_servers],
             )
             return
     else:
         plex_server = next(iter(plex_servers))
 
-    sonos_speaker = plex_server.account.sonos_speaker_by_id(sonos_id)
+    sonos_speaker = plex_server.account.sonos_speaker(sonos_name)
     if sonos_speaker is None:
         _LOGGER.error(
-            "Sonos speaker '%s' could not be found on this Plex account", sonos_id
+            "Sonos speaker '%s' could not be found on this Plex account", sonos_name
         )
         return
 
-    media = plex_server.lookup_media("music", **content)
+    media = plex_server.lookup_media(content_type, **content)
     if media is None:
         _LOGGER.error("Media could not be found: %s", content)
         return

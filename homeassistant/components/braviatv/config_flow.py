@@ -55,7 +55,8 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.braviarc.connect, pin, CLIENTID_PREFIX, NICKNAME
         )
 
-        if not self.braviarc.is_connected():
+        connected = await self.hass.async_add_executor_job(self.braviarc.is_connected)
+        if not connected:
             raise CannotConnect()
 
         system_info = await self.hass.async_add_executor_job(
@@ -161,7 +162,8 @@ class BraviaTVOptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None):
         """Manage the options."""
         self.braviarc = self.hass.data[DOMAIN][self.config_entry.entry_id][BRAVIARC]
-        if not self.braviarc.is_connected():
+        connected = await self.hass.async_add_executor_job(self.braviarc.is_connected)
+        if not connected:
             await self.hass.async_add_executor_job(
                 self.braviarc.connect, self.pin, CLIENTID_PREFIX, NICKNAME
             )

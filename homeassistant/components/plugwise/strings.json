@@ -1,4 +1,14 @@
 {
+  "options": {
+    "step": {
+      "init": {
+        "description": "Adjust Plugwise Options",
+        "data": {
+          "scan_interval": "Scan Interval (seconds)"
+        }
+      }
+    }
+  },
   "config": {
     "step": {
       "user": {
@@ -17,6 +27,7 @@
     },
     "abort": {
       "already_configured": "This Smile is already configured"
-    }
+    },
+    "flow_title": "Smile: {name}"
   }
 }

@@ -77,10 +77,10 @@ def _verify_otp(secret: str, otp: str, count: int) -> bool:
 class NotifySetting:
     """Store notify setting for one user."""
 
-    secret = attr.ib(type=str, factory=_generate_secret)  # not persistent
-    counter = attr.ib(type=int, factory=_generate_random)  # not persistent
-    notify_service = attr.ib(type=Optional[str], default=None)
-    target = attr.ib(type=Optional[str], default=None)
+    secret: str = attr.ib(factory=_generate_secret)  # not persistent
+    counter: int = attr.ib(factory=_generate_random)  # not persistent
+    notify_service: Optional[str] = attr.ib(default=None)
+    target: Optional[str] = attr.ib(default=None)
 
 
 _UsersDict = Dict[str, NotifySetting]

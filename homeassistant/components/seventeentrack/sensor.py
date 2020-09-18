@@ -259,7 +259,7 @@ class SeventeenTrackPackageSensor(Entity):
             self._friendly_name if self._friendly_name else self._tracking_number
         )
         message = NOTIFICATION_DELIVERED_MESSAGE.format(
-            self._tracking_number, identification
+            identification, self._tracking_number
         )
         title = NOTIFICATION_DELIVERED_TITLE.format(identification)
         notification_id = NOTIFICATION_DELIVERED_TITLE.format(self._tracking_number)

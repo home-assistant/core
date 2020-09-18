@@ -14,6 +14,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNKNOWN,
 )
+from homeassistant.helpers.event import TRACK_STATE_CHANGE_CALLBACKS
 from homeassistant.setup import async_setup_component, setup_component
 
 from tests.async_mock import patch
@@ -390,7 +391,12 @@ class TestComponentsGroup(unittest.TestCase):
             "group.second_group",
             "group.test_group",
         ]
-        assert self.hass.bus.listeners["state_changed"] == 3
+        assert self.hass.bus.listeners["state_changed"] == 1
+        assert len(self.hass.data[TRACK_STATE_CHANGE_CALLBACKS]["hello.world"]) == 1
+        assert len(self.hass.data[TRACK_STATE_CHANGE_CALLBACKS]["sensor.happy"]) == 1
+        assert len(self.hass.data[TRACK_STATE_CHANGE_CALLBACKS]["light.bowl"]) == 1
+        assert len(self.hass.data[TRACK_STATE_CHANGE_CALLBACKS]["test.one"]) == 1
+        assert len(self.hass.data[TRACK_STATE_CHANGE_CALLBACKS]["test.two"]) == 1
 
         with patch(
             "homeassistant.config.load_yaml_config_file",
@@ -405,7 +411,10 @@ class TestComponentsGroup(unittest.TestCase):
             "group.all_tests",
             "group.hello",
         ]
-        assert self.hass.bus.listeners["state_changed"] == 2
+        assert self.hass.bus.listeners["state_changed"] == 1
+        assert len(self.hass.data[TRACK_STATE_CHANGE_CALLBACKS]["light.bowl"]) == 1
+        assert len(self.hass.data[TRACK_STATE_CHANGE_CALLBACKS]["test.one"]) == 1
+        assert len(self.hass.data[TRACK_STATE_CHANGE_CALLBACKS]["test.two"]) == 1
 
     def test_modify_group(self):
         """Test modifying a group."""
@@ -481,3 +490,76 @@ async def test_service_group_set_group_remove_group(hass):
 
     group_state = hass.states.get("group.user_test_group")
     assert group_state is None
+
+
+async def test_group_order(hass):
+    """Test that order gets incremented when creating a new group."""
+    hass.states.async_set("light.bowl", STATE_ON)
+
+    assert await async_setup_component(
+        hass,
+        "group",
+        {
+            "group": {
+                "group_zero": {"entities": "light.Bowl", "icon": "mdi:work"},
+                "group_one": {"entities": "light.Bowl", "icon": "mdi:work"},
+                "group_two": {"entities": "light.Bowl", "icon": "mdi:work"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("group.group_zero").attributes["order"] == 0
+    assert hass.states.get("group.group_one").attributes["order"] == 1
+    assert hass.states.get("group.group_two").attributes["order"] == 2
+
+
+async def test_group_order_with_dynamic_creation(hass):
+    """Test that order gets incremented when creating a new group."""
+    hass.states.async_set("light.bowl", STATE_ON)
+
+    assert await async_setup_component(
+        hass,
+        "group",
+        {
+            "group": {
+                "group_zero": {"entities": "light.Bowl", "icon": "mdi:work"},
+                "group_one": {"entities": "light.Bowl", "icon": "mdi:work"},
+                "group_two": {"entities": "light.Bowl", "icon": "mdi:work"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("group.group_zero").attributes["order"] == 0
+    assert hass.states.get("group.group_one").attributes["order"] == 1
+    assert hass.states.get("group.group_two").attributes["order"] == 2
+
+    await hass.services.async_call(
+        group.DOMAIN,
+        group.SERVICE_SET,
+        {"object_id": "new_group", "name": "New Group", "entities": "light.bowl"},
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("group.new_group").attributes["order"] == 3
+
+    await hass.services.async_call(
+        group.DOMAIN,
+        group.SERVICE_REMOVE,
+        {
+            "object_id": "new_group",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert not hass.states.get("group.new_group")
+
+    await hass.services.async_call(
+        group.DOMAIN,
+        group.SERVICE_SET,
+        {"object_id": "new_group2", "name": "New Group 2", "entities": "light.bowl"},
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("group.new_group2").attributes["order"] == 4

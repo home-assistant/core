@@ -56,7 +56,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Required(CONF_DEVICE_PORT): cv.port,
                 vol.Optional(
                     CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
-                ): vol.All(cv.time_period, cv.positive_timedelta),
+                ): cv.positive_time_period,
                 vol.Optional(CONF_ZONES, default=DEFAULT_ZONES): vol.All(
                     cv.ensure_list, [ZONE_SCHEMA]
                 ),

@@ -41,6 +41,7 @@ _SERVICE_MAP = {
     "light_flash": "trigger_remote_light_flash",
     "sound_horn": "trigger_remote_horn",
     "activate_air_conditioning": "trigger_remote_air_conditioning",
+    "find_vehicle": "trigger_remote_vehicle_finder",
 }
 
 
@@ -144,7 +145,7 @@ class BMWConnectedDriveAccount:
         except OSError as exception:
             _LOGGER.error(
                 "Could not connect to the BMW Connected Drive portal. "
-                "The vehicle state could not be updated."
+                "The vehicle state could not be updated"
             )
             _LOGGER.exception(exception)
 

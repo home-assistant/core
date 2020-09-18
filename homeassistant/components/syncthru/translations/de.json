@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist schon konfiguriert"
+        },
+        "error": {
+            "invalid_url": "Ung\u00fcltige URL",
+            "syncthru_not_supported": "Ger\u00e4t unterst\u00fctzt kein SyncThru",
+            "unknown_state": "Druckerstatus unbekannt, \u00fcberpr\u00fcfe URL und Netzwerkverbindung"
+        },
+        "step": {
+            "confirm": {
+                "data": {
+                    "name": "Name"
+                }
+            },
+            "user": {
+                "data": {
+                    "name": "Name"
+                }
+            }
+        }
+    }
+}

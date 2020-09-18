@@ -114,12 +114,14 @@ async def test_view(hass):
     """Test view."""
     hass.config_entries.flow.async_init = AsyncMock()
 
-    request = aiohttp.MockRequest(b"", query_string="code=test_code")
+    request = aiohttp.MockRequest(
+        b"", query_string="code=test_code", mock_source="test"
+    )
     request.app = {"hass": hass}
     view = config_flow.AmbiclimateAuthCallbackView()
     assert await view.get(request) == "OK!"
 
-    request = aiohttp.MockRequest(b"", query_string="")
+    request = aiohttp.MockRequest(b"", query_string="", mock_source="test")
     request.app = {"hass": hass}
     view = config_flow.AmbiclimateAuthCallbackView()
     assert await view.get(request) == "No code"

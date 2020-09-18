@@ -19,13 +19,16 @@ async def async_setup_entry(
     entities = []
     for device in devices:
         for binary_switch in device.binary_switch_property:
-            entities.append(
-                DevoloSwitch(
-                    homecontrol=hass.data[DOMAIN]["homecontrol"],
-                    device_instance=device,
-                    element_uid=binary_switch,
+            # Exclude the binary switch which also has multi_level_switches here,
+            # because those are implemented as light entities now.
+            if not hasattr(device, "multi_level_switch_property"):
+                entities.append(
+                    DevoloSwitch(
+                        homecontrol=hass.data[DOMAIN]["homecontrol"],
+                        device_instance=device,
+                        element_uid=binary_switch,
+                    )
                 )
-            )
     async_add_entities(entities)
 
 
@@ -40,7 +43,9 @@ class DevoloSwitch(SwitchEntity):
         self._unique_id = element_uid
 
         self._homecontrol = homecontrol
-        self._name = self._device_instance.itemName
+        self._name = self._device_instance.item_name
+
+        # This is not doing I/O. It fetches an internal state of the API
         self._available = self._device_instance.is_online()
 
         # Get the brand and model information
@@ -63,7 +68,9 @@ class DevoloSwitch(SwitchEntity):
 
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
-        self.subscriber = Subscriber(self._device_instance.itemName, callback=self.sync)
+        self.subscriber = Subscriber(
+            self._device_instance.item_name, callback=self.sync
+        )
         self._homecontrol.publisher.register(
             self._device_instance.uid, self.subscriber, self.sync
         )

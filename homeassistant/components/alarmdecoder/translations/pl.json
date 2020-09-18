@@ -1,0 +1,29 @@
+{
+    "config": {
+        "error": {
+            "service_unavailable": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
+        },
+        "step": {
+            "protocol": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP",
+                    "port": "Port"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "zone_details": {
+                "data": {
+                    "zone_relaychan": "Kana\u0142 przeka\u017anika"
+                }
+            },
+            "zone_select": {
+                "data": {
+                    "zone_number": "Numer strefy"
+                }
+            }
+        }
+    }
+}

@@ -161,7 +161,7 @@ async def async_setup(hass, config):
                 "Received unknown intent %s", request["intent"]["intentName"]
             )
         except intent.IntentError:
-            _LOGGER.exception("Error while handling intent: %s.", intent_type)
+            _LOGGER.exception("Error while handling intent: %s", intent_type)
 
     await hass.components.mqtt.async_subscribe(INTENT_TOPIC, message_received)
 

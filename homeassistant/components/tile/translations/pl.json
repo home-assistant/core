@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Has\u0142o",
+                    "username": "Adres e-mail"
+                }
+            }
+        }
+    }
+}

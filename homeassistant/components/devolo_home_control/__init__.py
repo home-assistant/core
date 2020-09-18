@@ -50,8 +50,8 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         hass.data[DOMAIN]["homecontrol"] = await hass.async_add_executor_job(
             partial(HomeControl, gateway_id=gateway_id, url=mprm_url)
         )
-    except ConnectionError:
-        raise ConfigEntryNotReady
+    except ConnectionError as err:
+        raise ConfigEntryNotReady from err
 
     for platform in PLATFORMS:
         hass.async_create_task(

@@ -137,9 +137,7 @@ class UnitSystem:
             raise TypeError(f"{volume!s} is not a numeric value.")
 
         # type ignore: https://github.com/python/mypy/issues/7207
-        return volume_util.convert(  # type: ignore
-            volume, from_unit, self.volume_unit
-        )
+        return volume_util.convert(volume, from_unit, self.volume_unit)  # type: ignore
 
     def as_dict(self) -> dict:
         """Convert the unit system to a dictionary."""

@@ -76,6 +76,10 @@ class CanaryData:
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self, **kwargs):
+        """Get the latest data from py-canary with a throttle."""
+        self._update(**kwargs)
+
+    def _update(self, **kwargs):
         """Get the latest data from py-canary."""
         for location in self._api.get_locations():
             location_id = location.location_id

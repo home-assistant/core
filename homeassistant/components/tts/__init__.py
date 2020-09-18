@@ -1,6 +1,5 @@
 """Provide functionality for TTS."""
 import asyncio
-import ctypes
 import functools as ft
 import hashlib
 import io
@@ -8,7 +7,7 @@ import logging
 import mimetypes
 import os
 import re
-from typing import Optional
+from typing import Dict, Optional
 
 from aiohttp import web
 import mutagen
@@ -46,6 +45,8 @@ ATTR_LANGUAGE = "language"
 ATTR_MESSAGE = "message"
 ATTR_OPTIONS = "options"
 ATTR_PLATFORM = "platform"
+
+BASE_URL_KEY = "tts_base_url"
 
 CONF_BASE_URL = "base_url"
 CONF_CACHE = "cache"
@@ -116,10 +117,11 @@ async def async_setup(hass, config):
         cache_dir = conf.get(CONF_CACHE_DIR, DEFAULT_CACHE_DIR)
         time_memory = conf.get(CONF_TIME_MEMORY, DEFAULT_TIME_MEMORY)
         base_url = conf.get(CONF_BASE_URL) or get_url(hass)
+        hass.data[BASE_URL_KEY] = base_url
 
         await tts.async_init_cache(use_cache, cache_dir, time_memory, base_url)
-    except (HomeAssistantError, KeyError) as err:
-        _LOGGER.error("Error on cache init %s", err)
+    except (HomeAssistantError, KeyError):
+        _LOGGER.exception("Error on cache init")
         return False
 
     hass.http.register_view(TextToSpeechView(tts))
@@ -176,7 +178,11 @@ async def async_setup(hass, config):
             }
 
             await hass.services.async_call(
-                DOMAIN_MP, SERVICE_PLAY_MEDIA, data, blocking=True
+                DOMAIN_MP,
+                SERVICE_PLAY_MEDIA,
+                data,
+                blocking=True,
+                context=service.context,
             )
 
         service_name = p_config.get(CONF_SERVICE_NAME, f"{p_type}_{SERVICE_SAY}")
@@ -212,6 +218,16 @@ async def async_setup(hass, config):
     return True
 
 
+def _hash_options(options: Dict) -> str:
+    """Hashes an options dictionary."""
+    opts_hash = hashlib.blake2s(digest_size=5)
+    for key, value in sorted(options.items()):
+        opts_hash.update(str(key).encode())
+        opts_hash.update(str(value).encode())
+
+    return opts_hash.hexdigest()
+
+
 class SpeechManager:
     """Representation of a speech store."""
 
@@ -238,14 +254,14 @@ class SpeechManager:
                 _init_tts_cache_dir, self.hass, cache_dir
             )
         except OSError as err:
-            raise HomeAssistantError(f"Can't init cache dir {err}")
+            raise HomeAssistantError(f"Can't init cache dir {err}") from err
 
         try:
             cache_files = await self.hass.async_add_executor_job(
                 _get_cache_files, self.cache_dir
             )
         except OSError as err:
-            raise HomeAssistantError(f"Can't read cache dir {err}")
+            raise HomeAssistantError(f"Can't read cache dir {err}") from err
 
         if cache_files:
             self.file_cache.update(cache_files)
@@ -304,11 +320,13 @@ class SpeechManager:
             ]
             if invalid_opts:
                 raise HomeAssistantError(f"Invalid options found: {invalid_opts}")
-            options_key = ctypes.c_size_t(hash(frozenset(options))).value
+            options_key = _hash_options(options)
         else:
             options_key = "-"
 
-        key = KEY_PATTERN.format(msg_hash, language, options_key, engine).lower()
+        key = KEY_PATTERN.format(
+            msg_hash, language.replace("_", "-"), options_key, engine
+        ).lower()
 
         # Is speech already in memory
         if key in self.mem_cache:
@@ -339,9 +357,14 @@ class SpeechManager:
         # Create file infos
         filename = f"{key}.{extension}".lower()
 
-        data = self.write_tags(filename, data, provider, message, language, options)
+        # Validate filename
+        if not _RE_VOICE_FILE.match(filename):
+            raise HomeAssistantError(
+                f"TTS filename '{filename}' from {engine} is invalid!"
+            )
 
         # Save to memory
+        data = self.write_tags(filename, data, provider, message, language, options)
         self._async_store_to_memcache(key, filename, data)
 
         if cache:
@@ -385,9 +408,9 @@ class SpeechManager:
 
         try:
             data = await self.hass.async_add_executor_job(load_speech)
-        except OSError:
+        except OSError as err:
             del self.file_cache[key]
-            raise HomeAssistantError(f"Can't read {voice_file}")
+            raise HomeAssistantError(f"Can't read {voice_file}") from err
 
         self._async_store_to_memcache(key, filename, data)
 
@@ -579,3 +602,8 @@ class TextToSpeechView(HomeAssistantView):
             return web.Response(status=HTTP_NOT_FOUND)
 
         return web.Response(body=data, content_type=content)
+
+
+def get_base_url(hass):
+    """Get base URL."""
+    return hass.data[BASE_URL_KEY]

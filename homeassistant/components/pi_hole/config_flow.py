@@ -60,10 +60,6 @@ class PiHoleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             if await self._async_endpoint_existed(endpoint):
                 return self.async_abort(reason="already_configured")
-            if await self._async_name_existed(name):
-                if is_import:
-                    _LOGGER.error("Failed to import: name %s already existed", name)
-                return self.async_abort(reason="duplicated_name")
 
             try:
                 await self._async_try_connect(
@@ -126,12 +122,6 @@ class PiHoleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             for entry in self._async_current_entries()
         ]
         return endpoint in existing_endpoints
-
-    async def _async_name_existed(self, name):
-        existing_names = [
-            entry.data.get(CONF_NAME) for entry in self._async_current_entries()
-        ]
-        return name in existing_names
 
     async def _async_try_connect(self, host, location, tls, verify_tls, api_token):
         session = async_get_clientsession(self.hass, verify_tls)

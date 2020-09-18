@@ -3,10 +3,14 @@ from abc import abstractmethod
 from datetime import timedelta
 import logging
 
+import voluptuous as vol
+
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import callback
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.util.dt import as_timestamp, now
+from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.util.dt import as_timestamp, now, parse_datetime, utc_from_timestamp
 
 from .const import (
     CONF_MANUAL_RUN_MINS,
@@ -23,11 +27,16 @@ from .const import (
     KEY_NAME,
     KEY_ON,
     KEY_RAIN_DELAY,
+    KEY_RAIN_DELAY_END,
     KEY_SCHEDULE_ID,
     KEY_SUBTYPE,
     KEY_SUMMARY,
+    KEY_TYPE,
     KEY_ZONE_ID,
     KEY_ZONE_NUMBER,
+    SCHEDULE_TYPE_FIXED,
+    SCHEDULE_TYPE_FLEX,
+    SERVICE_SET_ZONE_MOISTURE,
     SIGNAL_RACHIO_CONTROLLER_UPDATE,
     SIGNAL_RACHIO_RAIN_DELAY_UPDATE,
     SIGNAL_RACHIO_SCHEDULE_UPDATE,
@@ -53,9 +62,11 @@ from .webhooks import (
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_PERCENT = "percent"
 ATTR_SCHEDULE_SUMMARY = "Summary"
 ATTR_SCHEDULE_ENABLED = "Enabled"
 ATTR_SCHEDULE_DURATION = "Duration"
+ATTR_SCHEDULE_TYPE = "Type"
 ATTR_ZONE_NUMBER = "Zone number"
 ATTR_ZONE_SHADE = "Shade"
 ATTR_ZONE_SLOPE = "Slope"
@@ -65,10 +76,23 @@ ATTR_ZONE_TYPE = "Type"
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Rachio switches."""
-    # Add all zones from all controllers as switches
+    has_flex_sched = False
     entities = await hass.async_add_executor_job(_create_entities, hass, config_entry)
+    for entity in entities:
+        if isinstance(entity, RachioSchedule) and entity.type == SCHEDULE_TYPE_FLEX:
+            has_flex_sched = True
+            break
+
     async_add_entities(entities)
     _LOGGER.info("%d Rachio switch(es) added", len(entities))
+
+    platform = entity_platform.current_platform.get()
+    if has_flex_sched:
+        platform.async_register_entity_service(
+            SERVICE_SET_ZONE_MOISTURE,
+            {vol.Required(ATTR_PERCENT): cv.positive_int},
+            "set_moisture_percent",
+        )
 
 
 def _create_entities(hass, config_entry):
@@ -177,6 +201,11 @@ class RachioStandbySwitch(RachioSwitch):
 class RachioRainDelay(RachioSwitch):
     """Representation of a rain delay status/switch."""
 
+    def __init__(self, controller):
+        """Set up a Rachio rain delay switch."""
+        self._cancel_update = None
+        super().__init__(controller)
+
     @property
     def name(self) -> str:
         """Return the name of the switch."""
@@ -195,11 +224,27 @@ class RachioRainDelay(RachioSwitch):
     @callback
     def _async_handle_update(self, *args, **kwargs) -> None:
         """Update the state using webhook data."""
+        if self._cancel_update:
+            self._cancel_update()
+            self._cancel_update = None
+
         if args[0][0][KEY_SUBTYPE] == SUBTYPE_RAIN_DELAY_ON:
+            endtime = parse_datetime(args[0][0][KEY_RAIN_DELAY_END])
+            _LOGGER.debug("Rain delay expires at %s", endtime)
             self._state = True
+            self._cancel_update = async_track_point_in_utc_time(
+                self.hass, self._delay_expiration, endtime
+            )
         elif args[0][0][KEY_SUBTYPE] == SUBTYPE_RAIN_DELAY_OFF:
             self._state = False
 
+        self.async_write_ha_state()
+
+    @callback
+    def _delay_expiration(self, *args) -> None:
+        """Trigger when a rain delay expires."""
+        self._state = False
+        self._cancel_update = None
         self.async_write_ha_state()
 
     def turn_on(self, **kwargs) -> None:
@@ -218,6 +263,16 @@ class RachioRainDelay(RachioSwitch):
             self._state = self._controller.init_data[
                 KEY_RAIN_DELAY
             ] / 1000 > as_timestamp(now())
+
+        # If the controller was in a rain delay state during a reboot, this re-sets the timer
+        if self._state is True:
+            delay_end = utc_from_timestamp(
+                self._controller.init_data[KEY_RAIN_DELAY] / 1000
+            )
+            _LOGGER.debug("Re-setting rain delay timer for %s", delay_end)
+            self._cancel_update = async_track_point_in_utc_time(
+                self.hass, self._delay_expiration, delay_end
+            )
 
         self.async_on_remove(
             async_dispatcher_connect(
@@ -322,6 +377,11 @@ class RachioZone(RachioSwitch):
         """Stop watering all zones."""
         self._controller.stop_watering()
 
+    def set_moisture_percent(self, percent) -> None:
+        """Set the zone moisture percent."""
+        _LOGGER.debug("Setting %s moisture to %s percent", self._zone_name, percent)
+        self._controller.rachio.zone.setMoisturePercent(self._id, percent / 100)
+
     @callback
     def _async_handle_update(self, *args, **kwargs) -> None:
         """Handle incoming webhook zone data."""
@@ -358,6 +418,7 @@ class RachioSchedule(RachioSwitch):
         self._duration = data[KEY_DURATION]
         self._schedule_enabled = data[KEY_ENABLED]
         self._summary = data[KEY_SUMMARY]
+        self.type = data.get(KEY_TYPE, SCHEDULE_TYPE_FIXED)
         self._current_schedule = current_schedule
         super().__init__(controller)
 
@@ -383,6 +444,7 @@ class RachioSchedule(RachioSwitch):
             ATTR_SCHEDULE_SUMMARY: self._summary,
             ATTR_SCHEDULE_ENABLED: self.schedule_is_enabled,
             ATTR_SCHEDULE_DURATION: f"{round(self._duration / 60)} minutes",
+            ATTR_SCHEDULE_TYPE: self.type,
         }
 
     @property
@@ -392,10 +454,11 @@ class RachioSchedule(RachioSwitch):
 
     def turn_on(self, **kwargs) -> None:
         """Start this schedule."""
-
         self._controller.rachio.schedulerule.start(self._schedule_id)
         _LOGGER.debug(
-            "Schedule %s started on %s", self.name, self._controller.name,
+            "Schedule %s started on %s",
+            self.name,
+            self._controller.name,
         )
 
     def turn_off(self, **kwargs) -> None:

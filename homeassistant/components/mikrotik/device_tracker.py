@@ -12,7 +12,7 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.dt as dt_util
 
-from .const import ATTR_MANUFACTURER, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -115,10 +115,10 @@ class MikrotikHubTracker(ScannerEntity):
         """Return a client description for device registry."""
         info = {
             "connections": {(CONNECTION_NETWORK_MAC, self.device.mac)},
-            "manufacturer": ATTR_MANUFACTURER,
             "identifiers": {(DOMAIN, self.device.mac)},
-            "name": self.name,
-            "via_device": (DOMAIN, self.hub.serial_num),
+            # We only get generic info from device discovery and so don't want
+            # to override API specific info that integrations can provide
+            "default_name": self.name,
         }
         return info
 

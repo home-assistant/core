@@ -503,12 +503,19 @@ class TodoistProjectData:
                 continue
             due_date = _parse_due_date(task["due"])
             if start_date < due_date < end_date:
+                if due_date.hour == 0 and due_date.minute == 0:
+                    # If the due date has no time data, return just the date so that it
+                    # will render correctly as an all day event on a calendar.
+                    due_date_value = due_date.strftime("%Y-%m-%d")
+                else:
+                    due_date_value = due_date.isoformat()
                 event = {
                     "uid": task["id"],
                     "title": task["content"],
-                    "start": due_date.isoformat(),
-                    "end": due_date.isoformat(),
+                    "start": due_date_value,
+                    "end": due_date_value,
                     "allDay": True,
+                    "summary": task["content"],
                 }
                 events.append(event)
         return events

@@ -260,49 +260,66 @@ async def _test_self_reset(hass, config, start_time, expect_reset=True):
         assert state.state == "5"
 
 
-async def test_self_reset_hourly(hass):
+async def test_self_reset_hourly(hass, legacy_patchable_time):
     """Test hourly reset of meter."""
     await _test_self_reset(
         hass, gen_config("hourly"), "2017-12-31T23:59:00.000000+00:00"
     )
 
 
-async def test_self_reset_daily(hass):
+async def test_self_reset_daily(hass, legacy_patchable_time):
     """Test daily reset of meter."""
     await _test_self_reset(
         hass, gen_config("daily"), "2017-12-31T23:59:00.000000+00:00"
     )
 
 
-async def test_self_reset_weekly(hass):
+async def test_self_reset_weekly(hass, legacy_patchable_time):
     """Test weekly reset of meter."""
     await _test_self_reset(
         hass, gen_config("weekly"), "2017-12-31T23:59:00.000000+00:00"
     )
 
 
-async def test_self_reset_monthly(hass):
+async def test_self_reset_monthly(hass, legacy_patchable_time):
     """Test monthly reset of meter."""
     await _test_self_reset(
         hass, gen_config("monthly"), "2017-12-31T23:59:00.000000+00:00"
     )
 
 
-async def test_self_reset_quarterly(hass):
+async def test_self_reset_bimonthly(hass, legacy_patchable_time):
+    """Test bimonthly reset of meter occurs on even months."""
+    await _test_self_reset(
+        hass, gen_config("bimonthly"), "2017-12-31T23:59:00.000000+00:00"
+    )
+
+
+async def test_self_no_reset_bimonthly(hass, legacy_patchable_time):
+    """Test bimonthly reset of meter does not occur on odd months."""
+    await _test_self_reset(
+        hass,
+        gen_config("bimonthly"),
+        "2018-01-01T23:59:00.000000+00:00",
+        expect_reset=False,
+    )
+
+
+async def test_self_reset_quarterly(hass, legacy_patchable_time):
     """Test quarterly reset of meter."""
     await _test_self_reset(
         hass, gen_config("quarterly"), "2017-03-31T23:59:00.000000+00:00"
     )
 
 
-async def test_self_reset_yearly(hass):
+async def test_self_reset_yearly(hass, legacy_patchable_time):
     """Test yearly reset of meter."""
     await _test_self_reset(
         hass, gen_config("yearly"), "2017-12-31T23:59:00.000000+00:00"
     )
 
 
-async def test_self_no_reset_yearly(hass):
+async def test_self_no_reset_yearly(hass, legacy_patchable_time):
     """Test yearly reset of meter does not occur after 1st January."""
     await _test_self_reset(
         hass,
@@ -312,7 +329,7 @@ async def test_self_no_reset_yearly(hass):
     )
 
 
-async def test_reset_yearly_offset(hass):
+async def test_reset_yearly_offset(hass, legacy_patchable_time):
     """Test yearly reset of meter."""
     await _test_self_reset(
         hass,
@@ -321,7 +338,7 @@ async def test_reset_yearly_offset(hass):
     )
 
 
-async def test_no_reset_yearly_offset(hass):
+async def test_no_reset_yearly_offset(hass, legacy_patchable_time):
     """Test yearly reset of meter."""
     await _test_self_reset(
         hass,

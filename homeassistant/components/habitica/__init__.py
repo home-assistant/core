@@ -33,7 +33,7 @@ SENSORS_TYPES = {
     "exp": ST("EXP", "mdi:star", "EXP", ["stats", "exp"]),
     "toNextLevel": ST("Next Lvl", "mdi:star", "EXP", ["stats", "toNextLevel"]),
     "lvl": ST("Lvl", "mdi:arrow-up-bold-circle-outline", "Lvl", ["stats", "lvl"]),
-    "gp": ST("Gold", "mdi:coin", "Gold", ["stats", "gp"]),
+    "gp": ST("Gold", "mdi:currency-usd-circle", "Gold", ["stats", "gp"]),
     "class": ST("Class", "mdi:sword", "", ["stats", "class"]),
 }
 
@@ -49,7 +49,7 @@ INSTANCE_SCHEMA = vol.Schema(
     }
 )
 
-has_unique_values = vol.Schema(vol.Unique())  # pylint: disable=invalid-name
+has_unique_values = vol.Schema(vol.Unique())
 # because we want a handy alias
 
 

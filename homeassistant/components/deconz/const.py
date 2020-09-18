@@ -44,4 +44,6 @@ POWER_PLUGS = ["On/Off light", "On/Off plug-in unit", "Smart plug"]
 SIRENS = ["Warning device"]
 SWITCH_TYPES = POWER_PLUGS + SIRENS
 
+CONF_ANGLE = "angle"
 CONF_GESTURE = "gesture"
+CONF_XY = "xy"

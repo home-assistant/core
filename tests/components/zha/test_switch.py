@@ -106,6 +106,8 @@ async def test_switch(hass, zha_device_joined_restored, zigpy_device):
     entity_id = await find_entity_id(DOMAIN, zha_device, hass)
     assert entity_id is not None
 
+    assert hass.states.get(entity_id).state == STATE_OFF
+    await async_enable_traffic(hass, [zha_device], enabled=False)
     # test that the switch was created and that its state is unavailable
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 

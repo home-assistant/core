@@ -73,6 +73,11 @@ class CanaryCamera(Camera):
         return self._device.name
 
     @property
+    def unique_id(self):
+        """Return the unique ID of this camera."""
+        return str(self._device.device_id)
+
+    @property
     def is_recording(self):
         """Return true if the device is recording."""
         return self._location.is_recording

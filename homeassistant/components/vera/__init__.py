@@ -2,6 +2,7 @@
 import asyncio
 from collections import defaultdict
 import logging
+from typing import Any, Dict, Generic, List, Optional, Type, TypeVar
 
 import pyvera as veraApi
 from requests.exceptions import RequestException
@@ -19,17 +20,25 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import convert, slugify
 from homeassistant.util.dt import utc_from_timestamp
 
-from .common import ControllerData, get_configured_platforms
+from .common import (
+    ControllerData,
+    SubscriptionRegistry,
+    get_configured_platforms,
+    get_controller_data,
+    set_controller_data,
+)
 from .config_flow import fix_device_id_list, new_options
 from .const import (
     ATTR_CURRENT_ENERGY_KWH,
     ATTR_CURRENT_POWER_W,
     CONF_CONTROLLER,
+    CONF_LEGACY_UNIQUE_ID,
     DOMAIN,
     VERA_ID_FORMAT,
 )
@@ -54,6 +63,8 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, base_config: dict) -> bool:
     """Set up for Vera controllers."""
+    hass.data[DOMAIN] = {}
+
     config = base_config.get(DOMAIN)
 
     if not config:
@@ -61,7 +72,9 @@ async def async_setup(hass: HomeAssistant, base_config: dict) -> bool:
 
     hass.async_create_task(
         hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config,
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=config,
         )
     )
 
@@ -95,21 +108,20 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         )
 
     # Initialize the Vera controller.
-    controller = veraApi.VeraController(base_url)
-    controller.start()
+    subscription_registry = SubscriptionRegistry(hass)
+    controller = veraApi.VeraController(base_url, subscription_registry)
+    await hass.async_add_executor_job(controller.start)
 
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, lambda event: controller.stop()
-    )
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, controller.stop)
 
     try:
         all_devices = await hass.async_add_executor_job(controller.get_devices)
 
         all_scenes = await hass.async_add_executor_job(controller.get_scenes)
-    except RequestException:
+    except RequestException as exception:
         # There was a network related error connecting to the Vera controller.
         _LOGGER.exception("Error communicating with Vera API")
-        return False
+        raise ConfigEntryNotReady from exception
 
     # Exclude devices unwanted by user.
     devices = [device for device in all_devices if device.device_id not in exclude_ids]
@@ -117,20 +129,21 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     vera_devices = defaultdict(list)
     for device in devices:
         device_type = map_vera_device(device, light_ids)
-        if device_type is None:
-            continue
-
-        vera_devices[device_type].append(device)
+        if device_type is not None:
+            vera_devices[device_type].append(device)
 
     vera_scenes = []
     for scene in all_scenes:
         vera_scenes.append(scene)
 
     controller_data = ControllerData(
-        controller=controller, devices=vera_devices, scenes=vera_scenes
+        controller=controller,
+        devices=vera_devices,
+        scenes=vera_scenes,
+        config_entry=config_entry,
     )
 
-    hass.data[DOMAIN] = controller_data
+    set_controller_data(hass, config_entry, controller_data)
 
     # Forward the config data to the necessary platforms.
     for platform in get_configured_platforms(controller_data):
@@ -143,75 +156,90 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload Withings config entry."""
-    controller_data = hass.data[DOMAIN]
+    controller_data: ControllerData = get_controller_data(hass, config_entry)
 
     tasks = [
         hass.config_entries.async_forward_entry_unload(config_entry, platform)
         for platform in get_configured_platforms(controller_data)
     ]
+    tasks.append(hass.async_add_executor_job(controller_data.controller.stop))
     await asyncio.gather(*tasks)
 
     return True
 
 
-def map_vera_device(vera_device, remap):
+def map_vera_device(vera_device: veraApi.VeraDevice, remap: List[int]) -> str:
     """Map vera classes to Home Assistant types."""
 
-    if isinstance(vera_device, veraApi.VeraDimmer):
-        return "light"
-    if isinstance(vera_device, veraApi.VeraBinarySensor):
-        return "binary_sensor"
-    if isinstance(vera_device, veraApi.VeraSensor):
-        return "sensor"
-    if isinstance(vera_device, veraApi.VeraArmableDevice):
-        return "switch"
-    if isinstance(vera_device, veraApi.VeraLock):
-        return "lock"
-    if isinstance(vera_device, veraApi.VeraThermostat):
-        return "climate"
-    if isinstance(vera_device, veraApi.VeraCurtain):
-        return "cover"
-    if isinstance(vera_device, veraApi.VeraSceneController):
-        return "sensor"
-    if isinstance(vera_device, veraApi.VeraSwitch):
-        if vera_device.device_id in remap:
+    type_map = {
+        veraApi.VeraDimmer: "light",
+        veraApi.VeraBinarySensor: "binary_sensor",
+        veraApi.VeraSensor: "sensor",
+        veraApi.VeraArmableDevice: "switch",
+        veraApi.VeraLock: "lock",
+        veraApi.VeraThermostat: "climate",
+        veraApi.VeraCurtain: "cover",
+        veraApi.VeraSceneController: "sensor",
+        veraApi.VeraSwitch: "switch",
+    }
+
+    def map_special_case(instance_class: Type, entity_type: str) -> str:
+        if instance_class is veraApi.VeraSwitch and vera_device.device_id in remap:
             return "light"
-        return "switch"
-    return None
+        return entity_type
+
+    return next(
+        iter(
+            map_special_case(instance_class, entity_type)
+            for instance_class, entity_type in type_map.items()
+            if isinstance(vera_device, instance_class)
+        ),
+        None,
+    )
 
 
-class VeraDevice(Entity):
+DeviceType = TypeVar("DeviceType", bound=veraApi.VeraDevice)
+
+
+class VeraDevice(Generic[DeviceType], Entity):
     """Representation of a Vera device entity."""
 
-    def __init__(self, vera_device, controller):
+    def __init__(self, vera_device: DeviceType, controller_data: ControllerData):
         """Initialize the device."""
         self.vera_device = vera_device
-        self.controller = controller
+        self.controller = controller_data.controller
 
         self._name = self.vera_device.name
         # Append device id to prevent name clashes in HA.
         self.vera_id = VERA_ID_FORMAT.format(
-            slugify(vera_device.name), vera_device.device_id
+            slugify(vera_device.name), vera_device.vera_device_id
         )
 
-        self.controller.register(vera_device, self._update_callback)
+        if controller_data.config_entry.data.get(CONF_LEGACY_UNIQUE_ID):
+            self._unique_id = str(self.vera_device.vera_device_id)
+        else:
+            self._unique_id = f"vera_{controller_data.config_entry.unique_id}_{self.vera_device.vera_device_id}"
 
-    def _update_callback(self, _device):
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to updates."""
+        self.controller.register(self.vera_device, self._update_callback)
+
+    def _update_callback(self, _device: DeviceType) -> None:
         """Update the state."""
         self.schedule_update_ha_state(True)
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the device."""
         return self._name
 
     @property
-    def should_poll(self):
+    def should_poll(self) -> bool:
         """Get polling requirement from vera device."""
         return self.vera_device.should_poll
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return the state attributes of the device."""
         attr = {}
 
@@ -250,4 +278,4 @@ class VeraDevice(Entity):
 
         The Vera assigns a unique and immutable ID number to each device.
         """
-        return str(self.vera_device.vera_device_id)
+        return self._unique_id

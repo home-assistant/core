@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "P\u0159\u00edstupov\u00fd token",
+                    "host": "Hostitel"
+                }
+            }
+        }
+    }
+}

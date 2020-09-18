@@ -41,7 +41,7 @@
                     "name": "\u540d\u7a31\uff08\u9078\u9805\uff09",
                     "type": "\u4e8c\u9032\u4f4d\u611f\u61c9\u5668\u985e\u578b"
                 },
-                "description": "\u8acb\u9078\u64c7\u6b78\u7d0d\u70ba {zone}\u7684\u4e8c\u9032\u4f4d\u611f\u61c9\u5668\u8f38\u51fa\u9078\u9805",
+                "description": "{zone}\u9078\u9805",
                 "title": "\u8a2d\u5b9a\u4e8c\u9032\u4f4d\u611f\u61c9\u5668"
             },
             "options_digital": {
@@ -50,7 +50,7 @@
                     "poll_interval": "\u66f4\u65b0\u9593\u8ddd\uff08\u5206\u9418\uff09\uff08\u9078\u9805\uff09",
                     "type": "\u611f\u61c9\u5668\u985e\u578b"
                 },
-                "description": "\u8acb\u9078\u64c7\u6b78\u7d0d\u70ba {zone}\u7684\u6578\u4f4d\u611f\u61c9\u5668\u8f38\u51fa\u9078\u9805",
+                "description": "{zone}\u9078\u9805",
                 "title": "\u8a2d\u5b9a\u6578\u4f4d\u611f\u61c9\u5668"
             },
             "options_io": {
@@ -85,6 +85,7 @@
                 "data": {
                     "api_host": "\u8986\u5beb API \u4e3b\u6a5f\u7aef URL\uff08\u9078\u9805\uff09",
                     "blink": "\u7576\u50b3\u9001\u72c0\u614b\u8b8a\u66f4\u6642\u3001\u9583\u720d\u9762\u677f LED",
+                    "discovery": "\u56de\u61c9\u7db2\u8def\u4e0a\u7684\u63a2\u7d22\u8acb\u6c42",
                     "override_api_host": "\u8986\u5beb\u9810\u8a2d Home Assistant API \u4e3b\u6a5f\u7aef\u9762\u677f URL"
                 },
                 "description": "\u8acb\u9078\u64c7\u9762\u677f\u671f\u671b\u884c\u70ba",
@@ -99,7 +100,7 @@
                     "pause": "\u66ab\u505c\u9593\u8ddd\uff08ms\uff09\uff08\u9078\u9805\uff09",
                     "repeat": "\u91cd\u8907\u6642\u9593\uff08-1=\u7121\u9650\uff09\uff08\u9078\u9805\uff09"
                 },
-                "description": "\u8acb\u9078\u64c7 {zone}\u8f38\u51fa\u9078\u9805\uff1a\u72c0\u614b {state}",
+                "description": "{zone}\u9078\u9805\uff1a\u72c0\u614b {state}",
                 "title": "\u8a2d\u5b9a Switchable \u8f38\u51fa"
             }
         }

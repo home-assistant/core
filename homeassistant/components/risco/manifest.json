@@ -1,0 +1,13 @@
+{
+  "domain": "risco",
+  "name": "Risco",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/risco",
+  "requirements": [
+    "pyrisco==0.3.0"
+  ],
+  "codeowners": [
+    "@OnFreund"
+  ],
+  "quality_scale": "platinum"
+}

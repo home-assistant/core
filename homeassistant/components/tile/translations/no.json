@@ -8,6 +8,10 @@
         },
         "step": {
             "user": {
+                "data": {
+                    "password": "Passord",
+                    "username": "E-post"
+                },
                 "title": "Konfigurer Tile"
             }
         }

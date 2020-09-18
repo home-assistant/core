@@ -44,12 +44,18 @@ class JewishCalendarSensor(Entity):
         self._havdalah_offset = data["havdalah_offset"]
         self._diaspora = data["diaspora"]
         self._state = None
+        self._prefix = data["prefix"]
         self._holiday_attrs = {}
 
     @property
     def name(self):
         """Return the name of the sensor."""
         return self._name
+
+    @property
+    def unique_id(self) -> str:
+        """Generate a unique id."""
+        return f"{self._prefix}_{self._type}"
 
     @property
     def icon(self):

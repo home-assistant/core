@@ -1,6 +1,5 @@
 """Define tests for the Elexa Guardian config flow."""
 from aioguardian.errors import GuardianError
-from asynctest import patch
 
 from homeassistant import data_entry_flow
 from homeassistant.components.guardian import CONF_UID, DOMAIN
@@ -11,6 +10,7 @@ from homeassistant.components.guardian.config_flow import (
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
@@ -35,7 +35,8 @@ async def test_connect_error(hass):
     conf = {CONF_IP_ADDRESS: "192.168.1.100", CONF_PORT: 7777}
 
     with patch(
-        "aioguardian.client.Client.connect", side_effect=GuardianError,
+        "aioguardian.client.Client.connect",
+        side_effect=GuardianError,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=conf

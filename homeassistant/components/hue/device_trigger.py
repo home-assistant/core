@@ -3,21 +3,22 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.components.automation.event as event
 from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
+from homeassistant.components.homeassistant.triggers import event as event_trigger
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_EVENT,
     CONF_PLATFORM,
     CONF_TYPE,
+    CONF_UNIQUE_ID,
 )
 
 from . import DOMAIN
-from .hue_event import CONF_HUE_EVENT, CONF_UNIQUE_ID
+from .hue_event import CONF_HUE_EVENT
 
 _LOGGER = logging.getLogger(__file__)
 
@@ -52,6 +53,12 @@ HUE_DIMMER_REMOTE = {
     (CONF_LONG_RELEASE, CONF_TURN_OFF): {CONF_EVENT: 4003},
 }
 
+HUE_BUTTON_REMOTE_MODEL = "Hue Smart button"  # ZLLSWITCH/ROM001
+HUE_BUTTON_REMOTE = {
+    (CONF_SHORT_RELEASE, CONF_TURN_ON): {CONF_EVENT: 1002},
+    (CONF_LONG_RELEASE, CONF_TURN_ON): {CONF_EVENT: 1003},
+}
+
 HUE_TAP_REMOTE_MODEL = "Hue tap switch"  # ZGPSWITCH
 HUE_TAP_REMOTE = {
     (CONF_SHORT_PRESS, CONF_BUTTON_1): {CONF_EVENT: 34},
@@ -80,6 +87,7 @@ HUE_FOHSWITCH_REMOTE = {
 REMOTES = {
     HUE_DIMMER_REMOTE_MODEL: HUE_DIMMER_REMOTE,
     HUE_TAP_REMOTE_MODEL: HUE_TAP_REMOTE,
+    HUE_BUTTON_REMOTE_MODEL: HUE_BUTTON_REMOTE,
     HUE_FOHSWITCH_REMOTE_MODEL: HUE_FOHSWITCH_REMOTE,
 }
 
@@ -131,13 +139,13 @@ async def async_attach_trigger(hass, config, action, automation_info):
     trigger = REMOTES[device.model][trigger]
 
     event_config = {
-        event.CONF_PLATFORM: "event",
-        event.CONF_EVENT_TYPE: CONF_HUE_EVENT,
-        event.CONF_EVENT_DATA: {CONF_UNIQUE_ID: hue_event.unique_id, **trigger},
+        event_trigger.CONF_PLATFORM: "event",
+        event_trigger.CONF_EVENT_TYPE: CONF_HUE_EVENT,
+        event_trigger.CONF_EVENT_DATA: {CONF_UNIQUE_ID: hue_event.unique_id, **trigger},
     }
 
-    event_config = event.TRIGGER_SCHEMA(event_config)
-    return await event.async_attach_trigger(
+    event_config = event_trigger.TRIGGER_SCHEMA(event_config)
+    return await event_trigger.async_attach_trigger(
         hass, event_config, action, automation_info, platform_type="device"
     )
 

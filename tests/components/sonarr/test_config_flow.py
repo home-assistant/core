@@ -19,6 +19,8 @@ from tests.async_mock import patch
 from tests.components.sonarr import (
     HOST,
     MOCK_USER_INPUT,
+    _patch_async_setup,
+    _patch_async_setup_entry,
     mock_connection,
     mock_connection_error,
     mock_connection_invalid_auth,
@@ -27,31 +29,11 @@ from tests.components.sonarr import (
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_options(hass, aioclient_mock: AiohttpClientMocker):
-    """Test updating options."""
-    entry = await setup_integration(hass, aioclient_mock)
-    assert entry.options[CONF_UPCOMING_DAYS] == DEFAULT_UPCOMING_DAYS
-    assert entry.options[CONF_WANTED_MAX_ITEMS] == DEFAULT_WANTED_MAX_ITEMS
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == "init"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_UPCOMING_DAYS: 2, CONF_WANTED_MAX_ITEMS: 100},
-    )
-
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["data"][CONF_UPCOMING_DAYS] == 2
-    assert result["data"][CONF_WANTED_MAX_ITEMS] == 100
-
-
 async def test_show_user_form(hass: HomeAssistantType) -> None:
     """Test that the user set up form is served."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_USER},
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_USER},
     )
 
     assert result["step_id"] == "user"
@@ -66,7 +48,9 @@ async def test_cannot_connect(
 
     user_input = MOCK_USER_INPUT.copy()
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data=user_input,
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_USER},
+        data=user_input,
     )
 
     assert result["type"] == RESULT_TYPE_FORM
@@ -82,7 +66,9 @@ async def test_invalid_auth(
 
     user_input = MOCK_USER_INPUT.copy()
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data=user_input,
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_USER},
+        data=user_input,
     )
 
     assert result["type"] == RESULT_TYPE_FORM
@@ -100,7 +86,9 @@ async def test_unknown_error(
         side_effect=Exception,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data=user_input,
+            DOMAIN,
+            context={CONF_SOURCE: SOURCE_USER},
+            data=user_input,
         )
 
     assert result["type"] == RESULT_TYPE_ABORT
@@ -114,19 +102,19 @@ async def test_full_import_flow_implementation(
     mock_connection(aioclient_mock)
 
     user_input = MOCK_USER_INPUT.copy()
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_IMPORT}, data=user_input,
-    )
+
+    with _patch_async_setup(), _patch_async_setup_entry():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={CONF_SOURCE: SOURCE_IMPORT},
+            data=user_input,
+        )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == HOST
 
     assert result["data"]
     assert result["data"][CONF_HOST] == HOST
-
-    assert result["result"]
-    assert result["result"].options[CONF_UPCOMING_DAYS] == DEFAULT_UPCOMING_DAYS
-    assert result["result"].options[CONF_WANTED_MAX_ITEMS] == DEFAULT_WANTED_MAX_ITEMS
 
 
 async def test_full_user_flow_implementation(
@@ -136,16 +124,20 @@ async def test_full_user_flow_implementation(
     mock_connection(aioclient_mock)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_USER},
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_USER},
     )
 
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "user"
 
     user_input = MOCK_USER_INPUT.copy()
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=user_input,
-    )
+
+    with _patch_async_setup(), _patch_async_setup_entry():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=user_input,
+        )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == HOST
@@ -171,9 +163,12 @@ async def test_full_user_flow_advanced_options(
         **MOCK_USER_INPUT,
         CONF_VERIFY_SSL: True,
     }
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=user_input,
-    )
+
+    with _patch_async_setup(), _patch_async_setup_entry():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=user_input,
+        )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == HOST
@@ -181,3 +176,25 @@ async def test_full_user_flow_advanced_options(
     assert result["data"]
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_VERIFY_SSL]
+
+
+async def test_options_flow(hass, aioclient_mock: AiohttpClientMocker):
+    """Test updating options."""
+    entry = await setup_integration(hass, aioclient_mock, skip_entry_setup=True)
+    assert entry.options[CONF_UPCOMING_DAYS] == DEFAULT_UPCOMING_DAYS
+    assert entry.options[CONF_WANTED_MAX_ITEMS] == DEFAULT_WANTED_MAX_ITEMS
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    with _patch_async_setup(), _patch_async_setup_entry():
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={CONF_UPCOMING_DAYS: 2, CONF_WANTED_MAX_ITEMS: 100},
+        )
+
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["data"][CONF_UPCOMING_DAYS] == 2
+    assert result["data"][CONF_WANTED_MAX_ITEMS] == 100

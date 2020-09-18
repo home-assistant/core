@@ -1,21 +1,21 @@
 {
     "state": {
         "_": {
-            "clear-night": "pogodnie, noc",
-            "cloudy": "pochmurno",
+            "clear-night": "Pogodna noc",
+            "cloudy": "Pochmurno",
             "exceptional": "wyj\u0105tkowy",
-            "fog": "mg\u0142a",
-            "hail": "grad",
-            "lightning": "b\u0142yskawice",
-            "lightning-rainy": "burza",
-            "partlycloudy": "cz\u0119\u015bciowe zachmurzenie",
-            "pouring": "ulewa",
-            "rainy": "deszczowo",
-            "snowy": "\u015bnie\u017cnie",
-            "snowy-rainy": "\u015bnie\u017cnie, deszczowo",
-            "sunny": "s\u0142onecznie",
-            "windy": "wietrznie",
-            "windy-variant": "wietrznie"
+            "fog": "Mg\u0142a",
+            "hail": "Grad",
+            "lightning": "B\u0142yskawice",
+            "lightning-rainy": "Burza",
+            "partlycloudy": "Cz\u0119\u015bciowe zachmurzenie",
+            "pouring": "Ulewa",
+            "rainy": "Deszczowo",
+            "snowy": "\u015anie\u017cnie",
+            "snowy-rainy": "\u015anie\u017cnie, deszczowo",
+            "sunny": "S\u0142onecznie",
+            "windy": "Wietrznie",
+            "windy-variant": "Wietrznie"
         }
     }
 }

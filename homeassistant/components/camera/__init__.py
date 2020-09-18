@@ -6,6 +6,7 @@ from contextlib import suppress
 from datetime import timedelta
 import hashlib
 import logging
+import os
 from random import SystemRandom
 
 from aiohttp import web
@@ -119,8 +120,8 @@ SCHEMA_WS_CAMERA_THUMBNAIL = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
 class Image:
     """Represent an image."""
 
-    content_type = attr.ib(type=str)
-    content = attr.ib(type=bytes)
+    content_type: str = attr.ib()
+    content: bytes = attr.ib()
 
 
 @bind_hass
@@ -493,7 +494,7 @@ class CameraView(HomeAssistantView):
             raise web.HTTPUnauthorized()
 
         if not camera.is_on:
-            _LOGGER.debug("Camera is off.")
+            _LOGGER.debug("Camera is off")
             raise web.HTTPServiceUnavailable()
 
         return await self.handle(request, camera)
@@ -539,8 +540,8 @@ class CameraMjpegStream(CameraView):
             if interval < MIN_STREAM_INTERVAL:
                 raise ValueError(f"Stream interval must be be > {MIN_STREAM_INTERVAL}")
             return await camera.handle_async_still_stream(request, interval)
-        except ValueError:
-            raise web.HTTPBadRequest()
+        except ValueError as err:
+            raise web.HTTPBadRequest() from err
 
 
 @websocket_api.async_response
@@ -549,7 +550,7 @@ async def websocket_camera_thumbnail(hass, connection, msg):
 
     Async friendly.
     """
-    _LOGGER.warning("The websocket command 'camera_thumbnail' has been deprecated.")
+    _LOGGER.warning("The websocket command 'camera_thumbnail' has been deprecated")
     try:
         image = await async_get_image(hass, msg["entity_id"])
         await connection.send_big_result(
@@ -660,6 +661,8 @@ async def async_handle_snapshot_service(camera, service):
 
     def _write_image(to_file, image_data):
         """Executor helper to write image."""
+        if not os.path.exists(os.path.dirname(to_file)):
+            os.makedirs(os.path.dirname(to_file), exist_ok=True)
         with open(to_file, "wb") as img_file:
             img_file.write(image_data)
 

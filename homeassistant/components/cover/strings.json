@@ -4,6 +4,7 @@
     "action_type": {
       "open": "Open {entity_name}",
       "close": "Close {entity_name}",
+      "stop": "Stop {entity_name}",
       "open_tilt": "Open {entity_name} tilt",
       "close_tilt": "Close {entity_name} tilt",
       "set_position": "Set {entity_name} position",

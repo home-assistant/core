@@ -11,6 +11,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_TOKEN,
     CONF_USERNAME,
+    HTTP_UNAUTHORIZED,
 )
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
@@ -140,11 +141,11 @@ async def validate_input(hass: core.HomeAssistant, data):
             test_login=True
         )
     except TeslaException as ex:
-        if ex.code == 401:
+        if ex.code == HTTP_UNAUTHORIZED:
             _LOGGER.error("Invalid credentials: %s", ex)
-            raise InvalidAuth()
+            raise InvalidAuth() from ex
         _LOGGER.error("Unable to communicate with Tesla API: %s", ex)
-        raise CannotConnect()
+        raise CannotConnect() from ex
     _LOGGER.debug("Credentials successfully connected to the Tesla API")
     return config
 

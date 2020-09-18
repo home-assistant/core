@@ -241,6 +241,7 @@ class DarkSkyData:
         self.currently = None
         self.hourly = None
         self.daily = None
+        self._connect_error = False
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -252,8 +253,13 @@ class DarkSkyData:
             self.currently = self.data.currently()
             self.hourly = self.data.hourly()
             self.daily = self.data.daily()
+            if self._connect_error:
+                self._connect_error = False
+                _LOGGER.info("Reconnected to Dark Sky")
         except (ConnectError, HTTPError, Timeout, ValueError) as error:
-            _LOGGER.error("Unable to connect to Dark Sky. %s", error)
+            if not self._connect_error:
+                self._connect_error = True
+                _LOGGER.error("Unable to connect to Dark Sky. %s", error)
             self.data = None
 
     @property

@@ -1,0 +1,28 @@
+{
+    "device_automation": {
+        "action_type": {
+            "set_humidity": "ustaw wilgotno\u015b\u0107 dla {entity_name}",
+            "set_mode": "zmie\u0144 tryb pracy dla {entity_name}",
+            "toggle": "prze\u0142\u0105cz {entity_name}",
+            "turn_off": "wy\u0142\u0105cz {entity_name}",
+            "turn_on": "w\u0142\u0105cz {entity_name}"
+        },
+        "condition_type": {
+            "is_mode": "{entity_name} ma ustawiony tryb",
+            "is_off": "nawil\u017cacz {entity_name} jest wy\u0142\u0105czony",
+            "is_on": "nawil\u017cacz{entity_name} jest w\u0142\u0105czony"
+        },
+        "trigger_type": {
+            "target_humidity_changed": "zmieni si\u0119 wilgotno\u015b\u0107 docelowa{entity_name}",
+            "turned_off": "nast\u0105pi wy\u0142\u0105czenie {entity_name}",
+            "turned_on": "nast\u0105pi w\u0142\u0105czenie {entity_name}"
+        }
+    },
+    "state": {
+        "_": {
+            "off": "wy\u0142\u0105czony",
+            "on": "w\u0142\u0105czony"
+        }
+    },
+    "title": "Nawil\u017cacz"
+}

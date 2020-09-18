@@ -12,6 +12,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.const import (
+    AREA_SQUARE_METERS,
     ATTR_ATTRIBUTION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -19,9 +20,9 @@ from homeassistant.const import (
     CONF_NAME,
     DEGREE,
     LENGTH_METERS,
+    PERCENTAGE,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
     __version__,
 )
 import homeassistant.helpers.config_validation as cv
@@ -43,7 +44,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
 SENSOR_TYPES = {
     "pressure": ("Pressure", "hPa", "LDstat hPa", float),
     "pressure_sealevel": ("Pressure at Sea Level", "hPa", "LDred hPa", float),
-    "humidity": ("Humidity", UNIT_PERCENTAGE, "RF %", int),
+    "humidity": ("Humidity", PERCENTAGE, "RF %", int),
     "wind_speed": (
         "Wind Speed",
         SPEED_KILOMETERS_PER_HOUR,
@@ -58,9 +59,14 @@ SENSOR_TYPES = {
         float,
     ),
     "wind_max_bearing": ("Top Wind Bearing", DEGREE, f"WSR {DEGREE}", int),
-    "sun_last_hour": ("Sun Last Hour", UNIT_PERCENTAGE, f"SO {UNIT_PERCENTAGE}", int),
+    "sun_last_hour": ("Sun Last Hour", PERCENTAGE, f"SO {PERCENTAGE}", int),
     "temperature": ("Temperature", TEMP_CELSIUS, f"T {TEMP_CELSIUS}", float),
-    "precipitation": ("Precipitation", "l/m²", "N l/m²", float),
+    "precipitation": (
+        "Precipitation",
+        f"l/{AREA_SQUARE_METERS}",
+        f"N l/{AREA_SQUARE_METERS}",
+        float,
+    ),
     "dewpoint": ("Dew Point", TEMP_CELSIUS, f"TP {TEMP_CELSIUS}", float),
     # The following probably not useful for general consumption,
     # but we need them to fill in internal attributes

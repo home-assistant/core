@@ -3,10 +3,11 @@
   "name": "TensorFlow",
   "documentation": "https://www.home-assistant.io/integrations/tensorflow",
   "requirements": [
-    "tensorflow==1.13.2",
-    "numpy==1.18.5",
-    "protobuf==3.6.1",
-    "pillow==7.1.2"
+    "tensorflow==2.3.0",
+    "tf-models-official==2.3.0",
+    "pycocotools==2.0.1",
+    "numpy==1.19.2",
+    "pillow==7.2.0"
   ],
   "codeowners": []
 }

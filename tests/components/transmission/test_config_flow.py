@@ -8,7 +8,11 @@ from homeassistant import data_entry_flow
 from homeassistant.components import transmission
 from homeassistant.components.transmission import config_flow
 from homeassistant.components.transmission.const import (
+    CONF_LIMIT,
+    CONF_ORDER,
+    DEFAULT_LIMIT,
     DEFAULT_NAME,
+    DEFAULT_ORDER,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
 )
@@ -158,6 +162,8 @@ async def test_import(hass, api):
             CONF_HOST: HOST,
             CONF_PORT: DEFAULT_PORT,
             CONF_SCAN_INTERVAL: timedelta(seconds=DEFAULT_SCAN_INTERVAL),
+            CONF_LIMIT: DEFAULT_LIMIT,
+            CONF_ORDER: DEFAULT_ORDER,
         }
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -176,6 +182,8 @@ async def test_import(hass, api):
             CONF_PASSWORD: PASSWORD,
             CONF_PORT: PORT,
             CONF_SCAN_INTERVAL: timedelta(seconds=SCAN_INTERVAL),
+            CONF_LIMIT: DEFAULT_LIMIT,
+            CONF_ORDER: DEFAULT_ORDER,
         }
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -196,12 +204,30 @@ async def test_host_already_configured(hass, api):
         options={CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL},
     )
     entry.add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
-        transmission.DOMAIN, context={"source": "user"}, data=MOCK_ENTRY
-    )
 
+    mock_entry_unique_name = MOCK_ENTRY.copy()
+    mock_entry_unique_name[CONF_NAME] = "Transmission 1"
+    result = await hass.config_entries.flow.async_init(
+        transmission.DOMAIN, context={"source": "user"}, data=mock_entry_unique_name
+    )
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
+
+    mock_entry_unique_port = MOCK_ENTRY.copy()
+    mock_entry_unique_port[CONF_PORT] = 9092
+    mock_entry_unique_port[CONF_NAME] = "Transmission 2"
+    result = await hass.config_entries.flow.async_init(
+        transmission.DOMAIN, context={"source": "user"}, data=mock_entry_unique_port
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+    mock_entry_unique_host = MOCK_ENTRY.copy()
+    mock_entry_unique_host[CONF_HOST] = "192.168.1.101"
+    mock_entry_unique_host[CONF_NAME] = "Transmission 3"
+    result = await hass.config_entries.flow.async_init(
+        transmission.DOMAIN, context={"source": "user"}, data=mock_entry_unique_host
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
 
 async def test_name_already_configured(hass, api):

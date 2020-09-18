@@ -51,7 +51,10 @@ class AbortFlow(FlowError):
 class FlowManager(abc.ABC):
     """Manage all the flows that are in progress."""
 
-    def __init__(self, hass: HomeAssistant,) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+    ) -> None:
         """Initialize the flow manager."""
         self.hass = hass
         self._initializing: Dict[str, List[asyncio.Future]] = {}

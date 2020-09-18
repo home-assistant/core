@@ -4,13 +4,32 @@
             "already_configured": "City already configured",
             "unknown": "Unknown error: please retry later"
         },
+        "error": {
+            "empty": "No result in city search: please check the city field"
+        },
         "step": {
+            "cities": {
+                "data": {
+                    "city": "City"
+                },
+                "description": "Choose your city from the list",
+                "title": "M\u00e9t\u00e9o-France"
+            },
             "user": {
                 "data": {
                     "city": "City"
                 },
                 "description": "Enter the postal code (only for France, recommended) or city name",
                 "title": "M\u00e9t\u00e9o-France"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "mode": "Forecast mode"
+                }
             }
         }
     }

@@ -8,6 +8,7 @@
             "invalid_auth": "Autenticazione non valida. Controllare gli 8 caratteri dell'ID Smile",
             "unknown": "Errore imprevisto"
         },
+        "flow_title": "Smile: {name}",
         "step": {
             "user": {
                 "data": {
@@ -16,6 +17,16 @@
                 },
                 "description": "Dettagli",
                 "title": "Connettersi al dispositivo"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Intervallo di scansione (secondi)"
+                },
+                "description": "Regolare le opzioni Plugwise"
             }
         }
     }

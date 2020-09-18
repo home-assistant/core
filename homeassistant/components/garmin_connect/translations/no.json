@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Denne kontoen er allerede konfigurert."
+        },
         "error": {
             "cannot_connect": "Kunne ikke koble til, pr\u00f8v igjen.",
             "invalid_auth": "Ugyldig godkjenning.",
