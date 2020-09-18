@@ -96,7 +96,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class PhilipsTVMediaPlayer(MediaPlayerEntity):
     """Representation of a Philips TV exposing the JointSpace API."""
 
-    def __init__(self, tv, name, on_script):
+    def __init__(self, tv: PhilipsTV, name: str, on_script: Script):
         """Initialize the Philips TV."""
         self._tv = tv
         self._name = name
