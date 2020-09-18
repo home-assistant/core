@@ -282,7 +282,7 @@ class TPLinkSmartBulb(LightEntity):
         sysinfo = self.smartbulb.sys_info
         supported_features = 0
         # Calling api here as it reformats
-        mac = self.smartbulb.mac
+        mac = sysinfo[LIGHT_SYSINFO_MAC]
         alias = sysinfo[LIGHT_SYSINFO_ALIAS]
         model = sysinfo[LIGHT_SYSINFO_MODEL]
         min_mireds = None

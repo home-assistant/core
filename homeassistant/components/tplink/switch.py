@@ -124,10 +124,10 @@ class SmartPlugSwitch(SwitchEntity):
         try:
             if not self._sysinfo:
                 self._sysinfo = self.smartplug.sys_info
-                self._mac = self.smartplug.mac
-                self._model = self.smartplug.model
+                self._mac = self._sysinfo["mac"]
+                self._model = self._sysinfo["model"]
                 if self.smartplug.context is None:
-                    self._alias = self.smartplug.alias
+                    self._alias = self._sysinfo["alias"]
                     self._device_id = self._mac
                 else:
                     self._alias = self._plug_from_context["alias"]
