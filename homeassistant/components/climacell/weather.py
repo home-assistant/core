@@ -29,6 +29,7 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.sun import is_up
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 from homeassistant.util.distance import convert as distance_convert
 from homeassistant.util.pressure import convert as pressure_convert
@@ -52,12 +53,13 @@ from .const import (
     CC_ATTR_WIND_SPEED,
     CLEAR_CONDITIONS,
     CONDITIONS,
-    CONF_FORECAST_TYPE,
+    CONF_FORECAST_TYPES,
     CONF_TIMESTEP,
     CURRENT,
     DAILY,
     DOMAIN,
     FORECASTS,
+    HOURLY,
     NOWCAST,
 )
 
@@ -134,13 +136,42 @@ async def async_setup_entry(
     """Set up a config entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    entity = ClimaCellWeatherEntity(config_entry, coordinator)
+    entities = []
+    for forecast_type in [DAILY, HOURLY, NOWCAST]:
+        entities.append(
+            ClimaCellWeatherEntity(config_entry, coordinator, forecast_type)
+        )
 
-    async_add_entities([entity], update_before_add=True)
+    async_add_entities(entities, update_before_add=True)
 
 
 class ClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
     """Entity that talks to ClimaCell API to retrieve weather data."""
+
+    def __init__(
+        self,
+        config_entry: ConfigEntry,
+        coordinator: DataUpdateCoordinator,
+        forecast_type: str,
+    ) -> None:
+        """Initialize ClimaCell weather entity."""
+        super().__init__(config_entry, coordinator)
+        self.forecast_type = forecast_type
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return self.forecast_type in self._config_entry.data[CONF_FORECAST_TYPES]
+
+    @property
+    def name(self) -> str:
+        """Return the name of the entity."""
+        return f"{super().name} - {self.forecast_type.title()}"
+
+    @property
+    def unique_id(self) -> str:
+        """Return the unique id of the entity."""
+        return f"{super().unique_id}_{self.forecast_type}"
 
     @property
     def temperature(self):
@@ -208,13 +239,13 @@ class ClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
     @property
     def forecast(self):
         """Return the forecast."""
-        # Check if forecasts are enabled
-        if self.coordinator.data[FORECASTS]:
+        # Check if forecasts are available
+        if self.coordinator.data[FORECASTS].get(self.forecast_type):
             forecasts = []
 
             # Set default values (in cases where keys don't exist), None will be
             # returned. Override properties per forecast type as needed
-            for forecast in self.coordinator.data[FORECASTS]:
+            for forecast in self.coordinator.data[FORECASTS][self.forecast_type]:
                 timestamp = self._get_cc_value(forecast, CC_ATTR_TIMESTAMP)
                 use_datetime = True
                 condition = self._get_cc_value(forecast, CC_ATTR_CONDITION)
@@ -227,7 +258,7 @@ class ClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
                 wind_direction = self._get_cc_value(forecast, CC_ATTR_WIND_DIRECTION)
                 wind_speed = self._get_cc_value(forecast, CC_ATTR_WIND_SPEED)
 
-                if self._config_entry.data[CONF_FORECAST_TYPE] == DAILY:
+                if self.forecast_type == DAILY:
                     use_datetime = False
                     precipitation = self._get_cc_value(
                         forecast, CC_ATTR_PRECIPITATION_DAILY
@@ -237,7 +268,7 @@ class ClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
                             temp = self._get_cc_value(item, CC_ATTR_TEMPERATURE_HIGH)
                         if "min" in item:
                             temp_low = self._get_cc_value(item, CC_ATTR_TEMPERATURE_LOW)
-                elif self._config_entry.data[CONF_FORECAST_TYPE] == NOWCAST:
+                elif self.forecast_type == NOWCAST:
                     # Precipitation is forecasted in CONF_TIMESTEP increments but in a
                     # per hour rate, so value needs to be converted to an amount.
                     precipitation = (

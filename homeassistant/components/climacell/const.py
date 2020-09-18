@@ -1,14 +1,26 @@
 """Constants for the ClimaCell integration."""
-CONF_FORECAST_TYPE = "forecast_type"
-CONF_AQI_COUNTRY = "aqi_country"
+
+from homeassistant.components.weather import (
+    ATTR_CONDITION_CLEAR_NIGHT,
+    ATTR_CONDITION_CLOUDY,
+    ATTR_CONDITION_FOG,
+    ATTR_CONDITION_HAIL,
+    ATTR_CONDITION_LIGHTNING,
+    ATTR_CONDITION_PARTLYCLOUDY,
+    ATTR_CONDITION_POURING,
+    ATTR_CONDITION_RAINY,
+    ATTR_CONDITION_SNOWY,
+    ATTR_CONDITION_SNOWY_RAINY,
+    ATTR_CONDITION_SUNNY,
+)
+
+CONF_FORECAST_TYPES = "forecast_types"
 CONF_TIMESTEP = "timestep"
 
-DISABLE_FORECASTS = "disable"
 DAILY = "daily"
 HOURLY = "hourly"
 NOWCAST = "nowcast"
-USA = "usa"
-CHINA = "china"
+FORECAST_TYPES = [DAILY, HOURLY, NOWCAST]
 
 CURRENT = "current"
 FORECASTS = "forecasts"
@@ -16,39 +28,36 @@ FORECASTS = "forecasts"
 DEFAULT_NAME = "ClimaCell"
 DEFAULT_TIMESTEP = 15
 DEFAULT_FORECAST_TYPE = DAILY
-DEFAULT_AQI_COUNTRY = USA
 DOMAIN = "climacell"
 ATTRIBUTION = "Powered by ClimaCell"
 
 MAX_REQUESTS_PER_DAY = 1000
 
-AQI_FIELD_LOOKUP = {USA: "epa_aqi", CHINA: "china_aqi"}
-
 CONDITIONS = {
-    "freezing_rain_heavy": "snowy-rainy",
-    "freezing_rain": "snowy-rainy",
-    "freezing_rain_light": "snowy-rainy",
-    "freezing_drizzle": "snowy-rainy",
-    "ice_pellets_heavy": "hail",
-    "ice_pellets": "hail",
-    "ice_pellets_light": "hail",
-    "snow_heavy": "snowy",
-    "snow": "snowy",
-    "snow_light": "snowy",
-    "flurries": "snowy",
-    "tstorm": "lightning",
-    "rain_heavy": "pouring",
-    "rain": "rainy",
-    "rain_light": "rainy",
-    "drizzle": "rainy",
-    "fog_light": "fog",
-    "fog": "fog",
-    "cloudy": "cloudy",
-    "mostly_cloudy": "cloudy",
-    "partly_cloudy": "partlycloudy",
+    "freezing_rain_heavy": ATTR_CONDITION_SNOWY_RAINY,
+    "freezing_rain": ATTR_CONDITION_SNOWY_RAINY,
+    "freezing_rain_light": ATTR_CONDITION_SNOWY_RAINY,
+    "freezing_drizzle": ATTR_CONDITION_SNOWY_RAINY,
+    "ice_pellets_heavy": ATTR_CONDITION_HAIL,
+    "ice_pellets": ATTR_CONDITION_HAIL,
+    "ice_pellets_light": ATTR_CONDITION_HAIL,
+    "snow_heavy": ATTR_CONDITION_SNOWY,
+    "snow": ATTR_CONDITION_SNOWY,
+    "snow_light": ATTR_CONDITION_SNOWY,
+    "flurries": ATTR_CONDITION_SNOWY,
+    "tstorm": ATTR_CONDITION_LIGHTNING,
+    "rain_heavy": ATTR_CONDITION_POURING,
+    "rain": ATTR_CONDITION_RAINY,
+    "rain_light": ATTR_CONDITION_RAINY,
+    "drizzle": ATTR_CONDITION_RAINY,
+    "fog_light": ATTR_CONDITION_FOG,
+    "fog": ATTR_CONDITION_FOG,
+    "cloudy": ATTR_CONDITION_CLOUDY,
+    "mostly_cloudy": ATTR_CONDITION_CLOUDY,
+    "partly_cloudy": ATTR_CONDITION_PARTLYCLOUDY,
 }
 
-CLEAR_CONDITIONS = {"night": "clear-night", "day": "sunny"}
+CLEAR_CONDITIONS = {"night": ATTR_CONDITION_CLEAR_NIGHT, "day": ATTR_CONDITION_SUNNY}
 
 CC_ATTR_TIMESTAMP = "observation_time"
 CC_ATTR_TEMPERATURE = "temp"

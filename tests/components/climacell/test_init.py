@@ -4,7 +4,6 @@ import logging
 
 import pytest
 
-from homeassistant.components.air_quality import DOMAIN as AIR_QUALITY_DOMAIN
 from homeassistant.components.climacell.config_flow import (
     _get_config_schema,
     _get_unique_id,
@@ -34,12 +33,10 @@ async def test_load_and_unload(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids(WEATHER_DOMAIN)) == 1
-    assert len(hass.states.async_entity_ids(AIR_QUALITY_DOMAIN)) == 0
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids(WEATHER_DOMAIN)) == 0
-    assert len(hass.states.async_entity_ids(AIR_QUALITY_DOMAIN)) == 0
 
 
 async def test_update_interval(
@@ -56,5 +53,5 @@ async def test_update_interval(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         assert hass.data[DOMAIN][config_entry.entry_id].update_interval == timedelta(
-            minutes=(4 + (i * 3))
+            minutes=7
         )

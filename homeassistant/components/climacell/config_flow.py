@@ -12,32 +12,22 @@ from pyclimacell.exceptions import (
 import voluptuous as vol
 
 from homeassistant import config_entries, core
-from homeassistant.components.air_quality import DOMAIN as AIR_QUALITY_DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_registry import (
-    async_entries_for_config_entry,
-    async_get_registry,
-)
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
-    CHINA,
-    CONF_AQI_COUNTRY,
-    CONF_FORECAST_TYPE,
+    CONF_FORECAST_TYPES,
     CONF_TIMESTEP,
     DAILY,
-    DEFAULT_AQI_COUNTRY,
     DEFAULT_FORECAST_TYPE,
     DEFAULT_NAME,
     DEFAULT_TIMESTEP,
-    DISABLE_FORECASTS,
     DOMAIN,
     HOURLY,
     NOWCAST,
-    USA,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -72,9 +62,11 @@ def _get_config_schema(
                 default=input_dict.get(CONF_LONGITUDE, hass.config.longitude),
             ): cv.longitude,
             vol.Optional(
-                CONF_FORECAST_TYPE,
-                default=input_dict.get(CONF_FORECAST_TYPE, DEFAULT_FORECAST_TYPE),
-            ): vol.In((DISABLE_FORECASTS, DAILY, HOURLY, NOWCAST)),
+                CONF_FORECAST_TYPES,
+                default=input_dict.get(CONF_FORECAST_TYPES, [DEFAULT_FORECAST_TYPE]),
+            ): cv.multi_select(
+                {DAILY: DAILY.title(), HOURLY: HOURLY.title(), NOWCAST: NOWCAST.title()}
+            ),
         },
         extra=vol.REMOVE_EXTRA,
     )
@@ -86,7 +78,6 @@ def _get_unique_id(hass: HomeAssistantType, input_dict: Dict[str, Any]):
         f"{input_dict[CONF_API_KEY]}"
         f"_{input_dict.get(CONF_LATITUDE, hass.config.latitude)}"
         f"_{input_dict.get(CONF_LONGITUDE, hass.config.longitude)}"
-        f"_{input_dict[CONF_FORECAST_TYPE]}"
     )
 
 
@@ -104,37 +95,12 @@ class ClimaCellOptionsConfigFlow(config_entries.OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        options_schema = {}
-
-        # Check if air_quality entity is enabled to display relevant option
-        entity_registry = await async_get_registry(self.hass)
-        for entity in async_entries_for_config_entry(
-            entity_registry, self._config_entry.entry_id
-        ):
-            if entity.domain == AIR_QUALITY_DOMAIN and not entity.disabled:
-                options_schema.update(
-                    {
-                        vol.Required(
-                            CONF_AQI_COUNTRY,
-                            default=self._config_entry.options.get(
-                                CONF_AQI_COUNTRY, DEFAULT_AQI_COUNTRY
-                            ),
-                        ): vol.In((USA, CHINA))
-                    }
-                )
-                break
-
-        if self._config_entry.data[CONF_FORECAST_TYPE] == NOWCAST:
-            options_schema.update(
-                {
-                    vol.Required(
-                        CONF_TIMESTEP,
-                        default=self._config_entry.options.get(
-                            CONF_TIMESTEP, DEFAULT_TIMESTEP
-                        ),
-                    ): vol.All(vol.Coerce(int), vol.Range(min=1, max=60))
-                }
-            )
+        options_schema = {
+            vol.Required(
+                CONF_TIMESTEP,
+                default=self._config_entry.options.get(CONF_TIMESTEP, DEFAULT_TIMESTEP),
+            ): vol.All(vol.Coerce(int), vol.Range(min=1, max=60))
+        }
 
         return self.async_show_form(
             step_id="init", data_schema=vol.Schema(options_schema)
@@ -160,10 +126,11 @@ class ClimaCellConfigFlow(config_entries.ConfigFlow):
         self, user_input: Dict[str, Any] = None
     ) -> Dict[str, Any]:
         """Handle the initial step."""
+        assert self.hass
         errors = {}
         if user_input is not None:
             await self.async_set_unique_id(
-                unique_id=_get_unique_id(self.hass, user_input), raise_on_progress=True
+                unique_id=_get_unique_id(self.hass, user_input)
             )
             self._abort_if_unique_id_configured()
 
