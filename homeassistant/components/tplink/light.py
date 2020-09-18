@@ -252,7 +252,7 @@ class TPLinkSmartBulb(LightEntity):
             if not self._light_features:
                 self._light_features = self._get_light_features_retry()
                 self._alias = self._light_features.alias
-                self._host = self._light_features.host
+                self._host = self.smartbulb.host
             self._light_state = self._get_light_state_retry()
             return True
 
