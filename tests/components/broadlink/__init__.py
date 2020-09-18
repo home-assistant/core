@@ -85,6 +85,9 @@ class BroadlinkDevice:
         with patch(
             "homeassistant.components.broadlink.device.blk.gendevice",
             return_value=mock_api,
+        ), patch(
+            "homeassistant.components.broadlink.updater.blk.discover",
+            return_value=[mock_api],
         ):
             await hass.config_entries.async_setup(mock_entry.entry_id)
             await hass.async_block_till_done()
