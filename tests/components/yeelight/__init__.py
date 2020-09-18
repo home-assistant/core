@@ -8,6 +8,7 @@ from homeassistant.components.yeelight import (
     CONF_SAVE_ON_CHANGE,
     DOMAIN,
     NIGHTLIGHT_SWITCH_TYPE_LIGHT,
+    YeelightScanner,
 )
 from homeassistant.const import CONF_DEVICES, CONF_ID, CONF_NAME
 
@@ -96,6 +97,8 @@ def _mocked_bulb(cannot_connect=False):
 
 
 def _patch_discovery(prefix, no_device=False):
+    YeelightScanner._scanner = None  # Clear class scanner to reset hass
+
     def _mocked_discovery(timeout=2, interface=False):
         if no_device:
             return []
