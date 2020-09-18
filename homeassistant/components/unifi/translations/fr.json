@@ -26,13 +26,16 @@
         "step": {
             "client_control": {
                 "data": {
-                    "block_client": "Clients contr\u00f4l\u00e9s par acc\u00e8s r\u00e9seau"
+                    "block_client": "Clients contr\u00f4l\u00e9s par acc\u00e8s r\u00e9seau",
+                    "poe_clients": "Autoriser le contr\u00f4le POE des clients"
                 },
+                "description": "Configurer les contr\u00f4les client \n\n Cr\u00e9ez des interrupteurs pour les num\u00e9ros de s\u00e9rie pour lesquels vous souhaitez contr\u00f4ler l'acc\u00e8s au r\u00e9seau.",
                 "title": "Options UniFi 2/3"
             },
             "device_tracker": {
                 "data": {
                     "detection_time": "Temps en secondes depuis la derni\u00e8re vue avant de consid\u00e9rer comme absent",
+                    "ignore_wired_bug": "D\u00e9sactiver la logique de bogue filaire UniFi",
                     "ssid_filter": "S\u00e9lectionnez les SSID pour suivre les clients sans fil",
                     "track_clients": "Suivre les clients du r\u00e9seau",
                     "track_devices": "Suivre les p\u00e9riph\u00e9riques r\u00e9seau (p\u00e9riph\u00e9riques Ubiquiti)",

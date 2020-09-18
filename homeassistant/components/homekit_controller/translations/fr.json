@@ -7,6 +7,7 @@
             "already_paired": "Cet accessoire est d\u00e9j\u00e0 associ\u00e9 \u00e0 un autre appareil. R\u00e9initialisez l\u2019accessoire et r\u00e9essayez.",
             "ignored_model": "La prise en charge de HomeKit pour ce mod\u00e8le est bloqu\u00e9e car une int\u00e9gration native plus compl\u00e8te est disponible.",
             "invalid_config_entry": "Cet appareil est pr\u00eat \u00e0 \u00eatre coupl\u00e9, mais il existe d\u00e9j\u00e0 une entr\u00e9e de configuration en conflit dans Home Assistant \u00e0 supprimer.",
+            "invalid_properties": "Propri\u00e9t\u00e9s invalides annonc\u00e9es par l'appareil.",
             "no_devices": "Aucun appareil non appair\u00e9 n'a pu \u00eatre trouv\u00e9"
         },
         "error": {
@@ -15,6 +16,7 @@
             "max_peers_error": "L'appareil a refus\u00e9 d'ajouter le couplage car il ne dispose pas de stockage de couplage libre.",
             "max_tries_error": "Le p\u00e9riph\u00e9rique a refus\u00e9 d'ajouter le couplage car il a re\u00e7u plus de 100 tentatives d'authentification infructueuses.",
             "pairing_failed": "Une erreur non g\u00e9r\u00e9e s'est produite lors de la tentative d'appairage avec cet appareil. Il se peut qu'il s'agisse d'une panne temporaire ou que votre appareil ne soit pas pris en charge actuellement.",
+            "protocol_error": "Erreur de communication avec l'accessoire. L'appareil peut ne pas \u00eatre en mode d'appairage et peut n\u00e9cessiter une pression sur un bouton physique ou virtuel.",
             "unable_to_pair": "Impossible d'appairer, veuillez r\u00e9essayer.",
             "unknown_error": "L'appareil a signal\u00e9 une erreur inconnue. L'appairage a \u00e9chou\u00e9."
         },
@@ -39,6 +41,10 @@
                 "description": "L\u2019appareil peut ne pas \u00eatre en mode appairement et peut n\u00e9cessiter une pression sur un bouton physique ou virtuel. Assurez-vous que l\u2019appareil est en mode appariement ou essayez de red\u00e9marrer l\u2019appareil, puis continuez \u00e0 reprendre l\u2019appariement.",
                 "title": "Erreur de communication avec l\u2019accessoire"
             },
+            "try_pair_later": {
+                "description": "Assurez-vous que l'appareil est en mode de couplage ou essayez de red\u00e9marrer l'appareil, puis continuez \u00e0 red\u00e9marrer le couplage.",
+                "title": "Couplage indisponible"
+            },
             "user": {
                 "data": {
                     "device": "Appareil"
@@ -46,6 +52,26 @@
                 "description": "S\u00e9lectionnez l'appareil avec lequel vous voulez appairer",
                 "title": "Appairer avec l'accessoire HomeKit"
             }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button1": "Bouton 1",
+            "button10": "Bouton 10",
+            "button2": "Bouton 2",
+            "button3": "Bouton 3",
+            "button4": "Bouton 4",
+            "button5": "Bouton 5",
+            "button6": "Bouton 6",
+            "button7": "Bouton 7",
+            "button8": "Bouton 8",
+            "button9": "Bouton 9",
+            "doorbell": "Sonnette"
+        },
+        "trigger_type": {
+            "double_press": "\" {subtype} \" appuy\u00e9 deux fois",
+            "long_press": "\" {subtype} \" enfonc\u00e9 et maintenu",
+            "single_press": "\" {subtype} \" press\u00e9"
         }
     },
     "title": "Accessoire HomeKit"

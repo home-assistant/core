@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9"
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
+            "no_server_found": "Aucun serveur LMS trouv\u00e9."
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
@@ -17,7 +18,8 @@
                     "password": "Mot de passe",
                     "port": "Port",
                     "username": "Username"
-                }
+                },
+                "title": "Modifier les informations de connexion"
             },
             "user": {
                 "data": {
