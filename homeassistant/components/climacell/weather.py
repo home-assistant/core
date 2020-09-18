@@ -262,11 +262,22 @@ class ClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
                     precipitation = self._get_cc_value(
                         forecast, CC_ATTR_PRECIPITATION_DAILY
                     )
-                    for item in forecast[CC_ATTR_TEMPERATURE]:
-                        if "max" in item:
-                            temp = self._get_cc_value(item, CC_ATTR_TEMPERATURE_HIGH)
-                        if "min" in item:
-                            temp_low = self._get_cc_value(item, CC_ATTR_TEMPERATURE_LOW)
+                    temp = next(
+                        (
+                            self._get_cc_value(item, CC_ATTR_TEMPERATURE_HIGH)
+                            for item in forecast[CC_ATTR_TEMPERATURE]
+                            if "max" in item
+                        ),
+                        temp,
+                    )
+                    temp_low = next(
+                        (
+                            self._get_cc_value(item, CC_ATTR_TEMPERATURE_LOW)
+                            for item in forecast[CC_ATTR_TEMPERATURE_LOW]
+                            if "max" in item
+                        ),
+                        temp_low,
+                    )
                 elif self.forecast_type == NOWCAST:
                     # Precipitation is forecasted in CONF_TIMESTEP increments but in a
                     # per hour rate, so value needs to be converted to an amount.
