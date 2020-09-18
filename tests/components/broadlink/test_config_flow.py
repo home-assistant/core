@@ -172,6 +172,25 @@ async def test_flow_user_device_not_found(hass):
     assert result["errors"] == {"base": "cannot_connect"}
 
 
+async def test_flow_user_device_not_supported(hass):
+    """Test we handle a device not supported in the user step."""
+    device = get_device("Kitchen")
+    mock_api = device.get_mock_api()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(DEVICE_DISCOVERY, return_value=[mock_api]):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"host": device.host},
+        )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "not_supported"
+
+
 async def test_flow_user_network_unreachable(hass):
     """Test we handle a network unreachable in the user step."""
     result = await hass.config_entries.flow.async_init(
@@ -629,6 +648,22 @@ async def test_flow_import_device_not_found(hass):
 
     assert result["type"] == "abort"
     assert result["reason"] == "cannot_connect"
+
+
+async def test_flow_import_device_not_supported(hass):
+    """Test we handle a device not supported in the import step."""
+    device = get_device("Kitchen")
+    mock_api = device.get_mock_api()
+
+    with patch(DEVICE_DISCOVERY, return_value=[mock_api]):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={"host": device.host},
+        )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "not_supported"
 
 
 async def test_flow_import_invalid_ip_address(hass):

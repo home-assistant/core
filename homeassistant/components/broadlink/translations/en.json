@@ -5,6 +5,7 @@
             "already_in_progress": "There is already a configuration flow in progress for this device",
             "cannot_connect": "Failed to connect",
             "invalid_host": "Invalid hostname or IP address",
+            "not_supported": "Device not supported",
             "unknown": "Unexpected error"
         },
         "error": {
