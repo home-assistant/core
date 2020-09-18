@@ -17,9 +17,6 @@ class DeconzBase:
         """Set up device and add update callback to get data from websocket."""
         self._device = device
         self.gateway = gateway
-
-    async def async_added_to_hass(self) -> None:
-        """Register unique id."""
         self.gateway.entities[self.DOMAIN][self.TYPE].add(self.unique_id)
 
     async def async_will_remove_from_hass(self) -> None:
@@ -74,7 +71,6 @@ class DeconzDevice(DeconzBase, Entity):
 
     async def async_added_to_hass(self):
         """Subscribe to device events."""
-        await super().async_added_to_hass()
         self._device.register_callback(self.async_update_callback)
         self.gateway.deconz_ids[self.entity_id] = self._device.deconz_id
         self.async_on_remove(

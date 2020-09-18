@@ -99,8 +99,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             if sensor.battery is not None:
                 battery_handler.remove_tracker(sensor)
 
+                known_batteries = list(gateway.entities[DOMAIN][BATTERY])
                 new_battery = DeconzBattery(sensor, gateway)
-                if new_battery.unique_id not in gateway.entities[DOMAIN][BATTERY]:
+                if new_battery.unique_id not in known_batteries:
                     entities.append(new_battery)
 
             else:

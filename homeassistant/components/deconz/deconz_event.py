@@ -81,7 +81,6 @@ class DeconzEvent(DeconzBase):
     def async_will_remove_from_hass(self) -> None:
         """Disconnect event object when removed."""
         self._device.remove_callback(self.async_update_callback)
-        self._device = None
         self.gateway.hass.async_create_task(super().async_will_remove_from_hass())
 
     @callback
