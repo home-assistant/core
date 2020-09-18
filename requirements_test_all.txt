@@ -349,7 +349,7 @@ griddypower==0.1.0
 ha-ffmpeg==2.0
 
 # homeassistant.components.hangouts
-hangups==0.4.10
+hangups==0.4.11
 
 # homeassistant.components.cloud
 hass-nabucasa==0.37.0
