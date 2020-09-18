@@ -60,6 +60,7 @@ from homeassistant.const import (
     MASS_POUNDS,
     PERCENTAGE,
     POWER_WATT,
+    PRESSURE_HPA,
     PRESSURE_INHG,
     SERVICE_LOCK,
     SERVICE_UNLOCK,
@@ -412,7 +413,7 @@ UOM_FRIENDLY_NAME = {
     "114": "",  # raw 4-byte signed value
     "116": LENGTH_MILES,
     "117": "mbar",
-    "118": "hPa",
+    "118": PRESSURE_HPA,
     "119": f"{POWER_WATT}{TIME_HOURS}",
     "120": f"{LENGTH_INCHES}/{TIME_DAYS}",
 }
