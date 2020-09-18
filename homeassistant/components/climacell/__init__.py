@@ -49,6 +49,37 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [W_DOMAIN]
 
 
+def _set_update_interval(
+    hass: HomeAssistantType, current_entry: ConfigEntry
+) -> timedelta:
+    """Recalculate update_interval based on existing ClimaCell instances and update them."""
+    # We check how many ClimaCell configured instances are using the same API key and
+    # calculate interval to not exceed allowed numbers of requests. Divide 90% of
+    # MAX_REQUESTS_PER_DAY by 2 because every update requires two API calls and we want
+    # a buffer in the number of API calls left at the end of the day.
+    other_instance_entry_ids = [
+        entry.entry_id
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        if entry.entry_id != current_entry.entry_id
+        and entry.data[CONF_API_KEY] == current_entry.data[CONF_API_KEY]
+    ]
+
+    interval = timedelta(
+        minutes=(
+            ceil(
+                (24 * 60 * (len(other_instance_entry_ids) + 1) * 4)
+                / (MAX_REQUESTS_PER_DAY * 0.9)
+            )
+        )
+    )
+
+    for entry_id in other_instance_entry_ids:
+        if entry_id in hass.data[DOMAIN]:
+            hass.data[DOMAIN][entry_id].update_interval = interval
+
+    return interval
+
+
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Set up the ClimaCell API component."""
     hass.data.setdefault(DOMAIN, {})
@@ -77,6 +108,7 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
             config_entry.data.get(CONF_LONGITUDE, hass.config.longitude),
             session=async_get_clientsession(hass),
         ),
+        _set_update_interval(hass, config_entry),
     )
 
     await coordinator.async_refresh()
@@ -122,6 +154,7 @@ class ClimaCellDataUpdateCoordinator(DataUpdateCoordinator):
         hass: HomeAssistantType,
         config_entry: ConfigEntry,
         api: ClimaCell,
+        update_interval: timedelta,
     ) -> None:
         """Initialize."""
 
@@ -134,9 +167,7 @@ class ClimaCellDataUpdateCoordinator(DataUpdateCoordinator):
             hass,
             _LOGGER,
             name=config_entry.data[CONF_NAME],
-            update_interval=timedelta(
-                minutes=(ceil((24 * 60 * 4) / (MAX_REQUESTS_PER_DAY * 0.9)))
-            ),
+            update_interval=update_interval,
         )
 
     async def _async_update_data(self) -> Dict[str, Any]:

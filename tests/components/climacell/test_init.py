@@ -45,7 +45,7 @@ async def test_update_interval(
 ) -> None:
     """Test that update_interval changes based on number of entries."""
     config = _get_config_schema(hass)(MIN_CONFIG)
-    for i in range(0, 2):
+    for i in range(1, 3):
         config_entry = MockConfigEntry(
             domain=DOMAIN, data=config, unique_id=_get_unique_id(hass, config) + str(i)
         )
@@ -53,5 +53,5 @@ async def test_update_interval(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         assert hass.data[DOMAIN][config_entry.entry_id].update_interval == timedelta(
-            minutes=7
+            minutes=1 + (i * 6)
         )
