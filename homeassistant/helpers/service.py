@@ -443,9 +443,12 @@ async def entity_service_call(
             continue
 
         # Skip entities that don't have the required feature.
-        if required_features is not None and not any(
-            entity.supported_features & feature_set == feature_set
-            for feature_set in required_features
+        if required_features is not None and (
+            entity.supported_features is None
+            or not any(
+                entity.supported_features & feature_set == feature_set
+                for feature_set in required_features
+            )
         ):
             continue
 
