@@ -7,10 +7,6 @@ from .const import DOMAIN
 PARALLEL_UPDATES = 0
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the HLK-SW16 switches."""
-
-
 def devices_from_entities(hass, entry):
     """Parse configuration and add HLK-SW16 switch devices."""
     device_client = hass.data[DOMAIN][entry.entry_id][DATA_DEVICE_REGISTER]

@@ -70,7 +70,8 @@ async def test_form(
     with patch(
         "homeassistant.components.roku.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.roku.async_setup_entry", return_value=True,
+        "homeassistant.components.roku.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             flow_id=result["flow_id"], user_input=user_input
@@ -113,7 +114,8 @@ async def test_form_unknown_error(hass: HomeAssistantType) -> None:
 
     user_input = {CONF_HOST: HOST}
     with patch(
-        "homeassistant.components.roku.config_flow.Roku.update", side_effect=Exception,
+        "homeassistant.components.roku.config_flow.Roku.update",
+        side_effect=Exception,
     ) as mock_validate_input:
         result = await hass.config_entries.flow.async_configure(
             flow_id=result["flow_id"], user_input=user_input
@@ -136,7 +138,8 @@ async def test_import(
     with patch(
         "homeassistant.components.roku.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.roku.async_setup_entry", return_value=True,
+        "homeassistant.components.roku.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={CONF_SOURCE: SOURCE_IMPORT}, data=user_input
@@ -161,7 +164,9 @@ async def test_ssdp_cannot_connect(
 
     discovery_info = MOCK_SSDP_DISCOVERY_INFO.copy()
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_SSDP}, data=discovery_info,
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_SSDP},
+        data=discovery_info,
     )
 
     assert result["type"] == RESULT_TYPE_ABORT
@@ -174,10 +179,13 @@ async def test_ssdp_unknown_error(
     """Test we abort SSDP flow on unknown error."""
     discovery_info = MOCK_SSDP_DISCOVERY_INFO.copy()
     with patch(
-        "homeassistant.components.roku.config_flow.Roku.update", side_effect=Exception,
+        "homeassistant.components.roku.config_flow.Roku.update",
+        side_effect=Exception,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={CONF_SOURCE: SOURCE_SSDP}, data=discovery_info,
+            DOMAIN,
+            context={CONF_SOURCE: SOURCE_SSDP},
+            data=discovery_info,
         )
 
     assert result["type"] == RESULT_TYPE_ABORT
@@ -202,7 +210,8 @@ async def test_ssdp_discovery(
     with patch(
         "homeassistant.components.roku.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.roku.async_setup_entry", return_value=True,
+        "homeassistant.components.roku.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             flow_id=result["flow_id"], user_input={}

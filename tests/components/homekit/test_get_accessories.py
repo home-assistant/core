@@ -24,9 +24,9 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
     CONF_TYPE,
+    PERCENTAGE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    UNIT_PERCENTAGE,
 )
 from homeassistant.core import State
 
@@ -186,7 +186,7 @@ def test_type_media_player(type_name, entity_id, state, attrs, config):
             "HumiditySensor",
             "sensor.humidity",
             "20",
-            {ATTR_DEVICE_CLASS: "humidity", ATTR_UNIT_OF_MEASUREMENT: UNIT_PERCENTAGE},
+            {ATTR_DEVICE_CLASS: "humidity", ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE},
         ),
         ("LightSensor", "sensor.light", "900", {ATTR_DEVICE_CLASS: "illuminance"}),
         ("LightSensor", "sensor.light", "900", {ATTR_UNIT_OF_MEASUREMENT: "lm"}),
@@ -271,7 +271,8 @@ def test_type_vacuum(type_name, entity_id, state, attrs):
 
 
 @pytest.mark.parametrize(
-    "type_name, entity_id, state, attrs", [("Camera", "camera.basic", "on", {})],
+    "type_name, entity_id, state, attrs",
+    [("Camera", "camera.basic", "on", {})],
 )
 def test_type_camera(type_name, entity_id, state, attrs):
     """Test if camera types are associated correctly."""

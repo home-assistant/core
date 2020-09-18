@@ -43,6 +43,7 @@ from .const import (
 )
 from .errors import ShouldUpdateConfigEntry
 from .server import PlexServer
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__package__)
 
@@ -53,6 +54,8 @@ async def async_setup(hass, config):
         PLEX_DOMAIN,
         {SERVERS: {}, DISPATCHERS: {}, WEBSOCKETS: {}, PLATFORMS_COMPLETED: {}},
     )
+
+    await async_setup_services(hass)
 
     return True
 
@@ -91,7 +94,7 @@ async def async_setup_entry(hass, entry):
             server_config[CONF_URL],
             error,
         )
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from error
     except (
         plexapi.exceptions.BadRequest,
         plexapi.exceptions.Unauthorized,
@@ -236,7 +239,7 @@ def play_on_sonos(hass, service_call):
             _LOGGER.error(
                 "Requested Plex server '%s' not found in %s",
                 plex_server_name,
-                list(map(lambda x: x.friendly_name, plex_servers)),
+                [x.friendly_name for x in plex_servers],
             )
             return
     else:

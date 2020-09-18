@@ -5,7 +5,8 @@ import aiohttp
 import pytest
 
 from homeassistant.components import nws
-from homeassistant.components.weather import ATTR_FORECAST
+from homeassistant.components.weather import ATTR_CONDITION_SUNNY, ATTR_FORECAST
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
@@ -35,7 +36,10 @@ async def test_imperial_metric(
 ):
     """Test with imperial and metric units."""
     hass.config.units = units
-    entry = MockConfigEntry(domain=nws.DOMAIN, data=NWS_CONFIG,)
+    entry = MockConfigEntry(
+        domain=nws.DOMAIN,
+        data=NWS_CONFIG,
+    )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -43,7 +47,7 @@ async def test_imperial_metric(
     state = hass.states.get("weather.abc_hourly")
 
     assert state
-    assert state.state == "sunny"
+    assert state.state == ATTR_CONDITION_SUNNY
 
     data = state.attributes
     for key, value in result_observation.items():
@@ -56,7 +60,7 @@ async def test_imperial_metric(
     state = hass.states.get("weather.abc_daynight")
 
     assert state
-    assert state.state == "sunny"
+    assert state.state == ATTR_CONDITION_SUNNY
 
     data = state.attributes
     for key, value in result_observation.items():
@@ -73,13 +77,16 @@ async def test_none_values(hass, mock_simple_nws):
     instance.observation = NONE_OBSERVATION
     instance.forecast = NONE_FORECAST
 
-    entry = MockConfigEntry(domain=nws.DOMAIN, data=NWS_CONFIG,)
+    entry = MockConfigEntry(
+        domain=nws.DOMAIN,
+        data=NWS_CONFIG,
+    )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     state = hass.states.get("weather.abc_daynight")
-    assert state.state == "unknown"
+    assert state.state == STATE_UNKNOWN
     data = state.attributes
     for key in EXPECTED_OBSERVATION_IMPERIAL:
         assert data.get(key) is None
@@ -95,14 +102,17 @@ async def test_none(hass, mock_simple_nws):
     instance.observation = None
     instance.forecast = None
 
-    entry = MockConfigEntry(domain=nws.DOMAIN, data=NWS_CONFIG,)
+    entry = MockConfigEntry(
+        domain=nws.DOMAIN,
+        data=NWS_CONFIG,
+    )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     state = hass.states.get("weather.abc_daynight")
     assert state
-    assert state.state == "unknown"
+    assert state.state == STATE_UNKNOWN
 
     data = state.attributes
     for key in EXPECTED_OBSERVATION_IMPERIAL:
@@ -118,7 +128,10 @@ async def test_error_station(hass, mock_simple_nws):
     instance = mock_simple_nws.return_value
     instance.set_station.side_effect = aiohttp.ClientError
 
-    entry = MockConfigEntry(domain=nws.DOMAIN, data=NWS_CONFIG,)
+    entry = MockConfigEntry(
+        domain=nws.DOMAIN,
+        data=NWS_CONFIG,
+    )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -133,7 +146,10 @@ async def test_entity_refresh(hass, mock_simple_nws):
 
     await async_setup_component(hass, "homeassistant", {})
 
-    entry = MockConfigEntry(domain=nws.DOMAIN, data=NWS_CONFIG,)
+    entry = MockConfigEntry(
+        domain=nws.DOMAIN,
+        data=NWS_CONFIG,
+    )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -171,7 +187,10 @@ async def test_error_observation(hass, mock_simple_nws):
         # first update fails
         instance.update_observation.side_effect = aiohttp.ClientError
 
-        entry = MockConfigEntry(domain=nws.DOMAIN, data=NWS_CONFIG,)
+        entry = MockConfigEntry(
+            domain=nws.DOMAIN,
+            data=NWS_CONFIG,
+        )
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -180,11 +199,11 @@ async def test_error_observation(hass, mock_simple_nws):
 
         state = hass.states.get("weather.abc_daynight")
         assert state
-        assert state.state == "unavailable"
+        assert state.state == STATE_UNAVAILABLE
 
         state = hass.states.get("weather.abc_hourly")
         assert state
-        assert state.state == "unavailable"
+        assert state.state == STATE_UNAVAILABLE
 
         # second update happens faster and succeeds
         instance.update_observation.side_effect = None
@@ -195,7 +214,7 @@ async def test_error_observation(hass, mock_simple_nws):
 
         state = hass.states.get("weather.abc_daynight")
         assert state
-        assert state.state == "sunny"
+        assert state.state == ATTR_CONDITION_SUNNY
 
         state = hass.states.get("weather.abc_hourly")
         assert state
@@ -211,11 +230,11 @@ async def test_error_observation(hass, mock_simple_nws):
 
         state = hass.states.get("weather.abc_daynight")
         assert state
-        assert state.state == "sunny"
+        assert state.state == ATTR_CONDITION_SUNNY
 
         state = hass.states.get("weather.abc_hourly")
         assert state
-        assert state.state == "sunny"
+        assert state.state == ATTR_CONDITION_SUNNY
 
         # after 20 minutes data caching expires, data is no longer shown
         increment_time(timedelta(minutes=10))
@@ -223,11 +242,11 @@ async def test_error_observation(hass, mock_simple_nws):
 
         state = hass.states.get("weather.abc_daynight")
         assert state
-        assert state.state == "unavailable"
+        assert state.state == STATE_UNAVAILABLE
 
         state = hass.states.get("weather.abc_hourly")
         assert state
-        assert state.state == "unavailable"
+        assert state.state == STATE_UNAVAILABLE
 
 
 async def test_error_forecast(hass, mock_simple_nws):
@@ -235,7 +254,10 @@ async def test_error_forecast(hass, mock_simple_nws):
     instance = mock_simple_nws.return_value
     instance.update_forecast.side_effect = aiohttp.ClientError
 
-    entry = MockConfigEntry(domain=nws.DOMAIN, data=NWS_CONFIG,)
+    entry = MockConfigEntry(
+        domain=nws.DOMAIN,
+        data=NWS_CONFIG,
+    )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -244,7 +266,7 @@ async def test_error_forecast(hass, mock_simple_nws):
 
     state = hass.states.get("weather.abc_daynight")
     assert state
-    assert state.state == "unavailable"
+    assert state.state == STATE_UNAVAILABLE
 
     instance.update_forecast.side_effect = None
 
@@ -255,7 +277,7 @@ async def test_error_forecast(hass, mock_simple_nws):
 
     state = hass.states.get("weather.abc_daynight")
     assert state
-    assert state.state == "sunny"
+    assert state.state == ATTR_CONDITION_SUNNY
 
 
 async def test_error_forecast_hourly(hass, mock_simple_nws):
@@ -263,14 +285,17 @@ async def test_error_forecast_hourly(hass, mock_simple_nws):
     instance = mock_simple_nws.return_value
     instance.update_forecast_hourly.side_effect = aiohttp.ClientError
 
-    entry = MockConfigEntry(domain=nws.DOMAIN, data=NWS_CONFIG,)
+    entry = MockConfigEntry(
+        domain=nws.DOMAIN,
+        data=NWS_CONFIG,
+    )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     state = hass.states.get("weather.abc_hourly")
     assert state
-    assert state.state == "unavailable"
+    assert state.state == STATE_UNAVAILABLE
 
     instance.update_forecast_hourly.assert_called_once()
 
@@ -283,4 +308,4 @@ async def test_error_forecast_hourly(hass, mock_simple_nws):
 
     state = hass.states.get("weather.abc_hourly")
     assert state
-    assert state.state == "sunny"
+    assert state.state == ATTR_CONDITION_SUNNY

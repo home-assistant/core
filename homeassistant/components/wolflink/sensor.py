@@ -25,7 +25,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TIME_HOURS,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,12 +55,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, True)
 
 
-class WolfLinkSensor(Entity):
+class WolfLinkSensor(CoordinatorEntity):
     """Base class for all Wolf entities."""
 
     def __init__(self, coordinator, wolf_object: Parameter, device_id):
         """Initialize."""
-        self.coordinator = coordinator
+        super().__init__(coordinator)
         self.wolf_object = wolf_object
         self.device_id = device_id
 
@@ -87,27 +87,6 @@ class WolfLinkSensor(Entity):
     def unique_id(self):
         """Return a unique_id for this entity."""
         return f"{self.device_id}:{self.wolf_object.parameter_id}"
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return self.coordinator.last_update_success
-
-    @property
-    def should_poll(self):
-        """No need to poll. Coordinator notifies entity of updates."""
-        return False
-
-    async def async_added_to_hass(self):
-        """When entity is added to hass."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
-        )
-
-    async def async_update(self):
-        """Update the sensor."""
-        await self.coordinator.async_request_refresh()
-        _LOGGER.debug("Updating %s", self.coordinator.data[self.wolf_object.value_id])
 
 
 class WolfLinkHours(WolfLinkSensor):

@@ -88,7 +88,8 @@ def location_info_fixture():
 def ps4_setup_fixture():
     """Patch ps4 setup entry."""
     with patch(
-        "homeassistant.components.ps4.async_setup_entry", return_value=True,
+        "homeassistant.components.ps4.async_setup_entry",
+        return_value=True,
     ):
         yield
 
@@ -329,7 +330,9 @@ async def test_0_pin(hass):
     """Test Pin with leading '0' is passed correctly."""
     with patch("pyps4_2ndscreen.Helper.get_creds", return_value=MOCK_CREDS):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "creds"}, data={},
+            DOMAIN,
+            context={"source": "creds"},
+            data={},
         )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "mode"

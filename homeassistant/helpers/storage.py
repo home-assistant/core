@@ -20,7 +20,12 @@ _LOGGER = logging.getLogger(__name__)
 
 @bind_hass
 async def async_migrator(
-    hass, old_path, store, *, old_conf_load_func=None, old_conf_migrate_func=None,
+    hass,
+    old_path,
+    store,
+    *,
+    old_conf_load_func=None,
+    old_conf_migrate_func=None,
 ):
     """Migrate old data to a store and then load data.
 

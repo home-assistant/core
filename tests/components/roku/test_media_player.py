@@ -3,6 +3,7 @@ from datetime import timedelta
 
 from rokuecp import RokuError
 
+from homeassistant.components.media_player import DEVICE_CLASS_RECEIVER, DEVICE_CLASS_TV
 from homeassistant.components.media_player.const import (
     ATTR_APP_ID,
     ATTR_APP_NAME,
@@ -10,13 +11,21 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CHANNEL,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
+    ATTR_MEDIA_DURATION,
+    ATTR_MEDIA_POSITION,
     ATTR_MEDIA_TITLE,
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MP_DOMAIN,
+    MEDIA_CLASS_APP,
+    MEDIA_CLASS_CHANNEL,
+    MEDIA_CLASS_DIRECTORY,
     MEDIA_TYPE_APP,
+    MEDIA_TYPE_APPS,
     MEDIA_TYPE_CHANNEL,
+    MEDIA_TYPE_CHANNELS,
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE,
+    SUPPORT_BROWSE_MEDIA,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -29,6 +38,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.components.roku.const import ATTR_KEYWORD, DOMAIN, SERVICE_SEARCH
+from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_MEDIA_NEXT_TRACK,
@@ -43,6 +53,7 @@ from homeassistant.const import (
     SERVICE_VOLUME_UP,
     STATE_HOME,
     STATE_IDLE,
+    STATE_ON,
     STATE_PAUSED,
     STATE_PLAYING,
     STATE_STANDBY,
@@ -74,6 +85,7 @@ async def test_setup(
 
     assert hass.states.get(MAIN_ENTITY_ID)
     assert main
+    assert main.device_class == DEVICE_CLASS_RECEIVER
     assert main.unique_id == UPNP_SERIAL
 
 
@@ -105,6 +117,7 @@ async def test_tv_setup(
 
     assert hass.states.get(TV_ENTITY_ID)
     assert tv
+    assert tv.device_class == DEVICE_CLASS_TV
     assert tv.unique_id == TV_SERIAL
 
 
@@ -152,6 +165,7 @@ async def test_supported_features(
         | SUPPORT_PLAY_MEDIA
         | SUPPORT_TURN_ON
         | SUPPORT_TURN_OFF
+        | SUPPORT_BROWSE_MEDIA
         == state.attributes.get("supported_features")
     )
 
@@ -181,6 +195,7 @@ async def test_tv_supported_features(
         | SUPPORT_PLAY_MEDIA
         | SUPPORT_TURN_ON
         | SUPPORT_TURN_OFF
+        | SUPPORT_BROWSE_MEDIA
         == state.attributes.get("supported_features")
     )
 
@@ -207,12 +222,29 @@ async def test_attributes_app(
     await setup_integration(hass, aioclient_mock, app="netflix")
 
     state = hass.states.get(MAIN_ENTITY_ID)
-    assert state.state == STATE_PLAYING
+    assert state.state == STATE_ON
 
     assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) == MEDIA_TYPE_APP
     assert state.attributes.get(ATTR_APP_ID) == "12"
     assert state.attributes.get(ATTR_APP_NAME) == "Netflix"
     assert state.attributes.get(ATTR_INPUT_SOURCE) == "Netflix"
+
+
+async def test_attributes_app_media_playing(
+    hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test attributes for app with playing media."""
+    await setup_integration(hass, aioclient_mock, app="pluto", media_state="play")
+
+    state = hass.states.get(MAIN_ENTITY_ID)
+    assert state.state == STATE_PLAYING
+
+    assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) == MEDIA_TYPE_APP
+    assert state.attributes.get(ATTR_MEDIA_DURATION) == 6496
+    assert state.attributes.get(ATTR_MEDIA_POSITION) == 38
+    assert state.attributes.get(ATTR_APP_ID) == "74519"
+    assert state.attributes.get(ATTR_APP_NAME) == "Pluto TV - It's Free TV"
+    assert state.attributes.get(ATTR_INPUT_SOURCE) == "Pluto TV - It's Free TV"
 
 
 async def test_attributes_app_media_paused(
@@ -225,6 +257,8 @@ async def test_attributes_app_media_paused(
     assert state.state == STATE_PAUSED
 
     assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) == MEDIA_TYPE_APP
+    assert state.attributes.get(ATTR_MEDIA_DURATION) == 6496
+    assert state.attributes.get(ATTR_MEDIA_POSITION) == 313
     assert state.attributes.get(ATTR_APP_ID) == "74519"
     assert state.attributes.get(ATTR_APP_NAME) == "Pluto TV - It's Free TV"
     assert state.attributes.get(ATTR_INPUT_SOURCE) == "Pluto TV - It's Free TV"
@@ -259,7 +293,7 @@ async def test_tv_attributes(
     )
 
     state = hass.states.get(TV_ENTITY_ID)
-    assert state.state == STATE_PLAYING
+    assert state.state == STATE_ON
 
     assert state.attributes.get(ATTR_APP_ID) == "tvinput.dtv"
     assert state.attributes.get(ATTR_APP_NAME) == "Antenna TV"
@@ -338,6 +372,20 @@ async def test_services(
         )
 
         remote_mock.assert_called_once_with("reverse")
+
+    with patch("homeassistant.components.roku.Roku.launch") as launch_mock:
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: MAIN_ENTITY_ID,
+                ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_APP,
+                ATTR_MEDIA_CONTENT_ID: "11",
+            },
+            blocking=True,
+        )
+
+        launch_mock.assert_called_once_with("11")
 
     with patch("homeassistant.components.roku.Roku.remote") as remote_mock:
         await hass.services.async_call(
@@ -423,6 +471,134 @@ async def test_tv_services(
         )
 
         tune_mock.assert_called_once_with("55")
+
+
+async def test_media_browse(hass, aioclient_mock, hass_ws_client):
+    """Test browsing media."""
+    await setup_integration(
+        hass,
+        aioclient_mock,
+        device="rokutv",
+        app="tvinput-dtv",
+        host=TV_HOST,
+        unique_id=TV_SERIAL,
+    )
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": TV_ENTITY_ID,
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["id"] == 1
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+
+    assert msg["result"]
+    assert msg["result"]["title"] == "Media Library"
+    assert msg["result"]["media_class"] == MEDIA_CLASS_DIRECTORY
+    assert msg["result"]["media_content_type"] == "library"
+    assert msg["result"]["can_expand"]
+    assert not msg["result"]["can_play"]
+    assert len(msg["result"]["children"]) == 2
+
+    # test apps
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "media_player/browse_media",
+            "entity_id": TV_ENTITY_ID,
+            "media_content_type": MEDIA_TYPE_APPS,
+            "media_content_id": "apps",
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["id"] == 2
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+
+    assert msg["result"]
+    assert msg["result"]["title"] == "Apps"
+    assert msg["result"]["media_class"] == MEDIA_CLASS_DIRECTORY
+    assert msg["result"]["media_content_type"] == MEDIA_TYPE_APPS
+    assert msg["result"]["can_expand"]
+    assert not msg["result"]["can_play"]
+    assert len(msg["result"]["children"]) == 11
+    assert msg["result"]["children_media_class"] == MEDIA_CLASS_APP
+
+    assert msg["result"]["children"][0]["title"] == "Satellite TV"
+    assert msg["result"]["children"][0]["media_content_type"] == MEDIA_TYPE_APP
+    assert msg["result"]["children"][0]["media_content_id"] == "tvinput.hdmi2"
+    assert (
+        msg["result"]["children"][0]["thumbnail"]
+        == "http://192.168.1.161:8060/query/icon/tvinput.hdmi2"
+    )
+    assert msg["result"]["children"][0]["can_play"]
+
+    assert msg["result"]["children"][3]["title"] == "Roku Channel Store"
+    assert msg["result"]["children"][3]["media_content_type"] == MEDIA_TYPE_APP
+    assert msg["result"]["children"][3]["media_content_id"] == "11"
+    assert (
+        msg["result"]["children"][3]["thumbnail"]
+        == "http://192.168.1.161:8060/query/icon/11"
+    )
+    assert msg["result"]["children"][3]["can_play"]
+
+    # test channels
+    await client.send_json(
+        {
+            "id": 3,
+            "type": "media_player/browse_media",
+            "entity_id": TV_ENTITY_ID,
+            "media_content_type": MEDIA_TYPE_CHANNELS,
+            "media_content_id": "channels",
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["id"] == 3
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+
+    assert msg["result"]
+    assert msg["result"]["title"] == "Channels"
+    assert msg["result"]["media_class"] == MEDIA_CLASS_DIRECTORY
+    assert msg["result"]["media_content_type"] == MEDIA_TYPE_CHANNELS
+    assert msg["result"]["can_expand"]
+    assert not msg["result"]["can_play"]
+    assert len(msg["result"]["children"]) == 2
+    assert msg["result"]["children_media_class"] == MEDIA_CLASS_CHANNEL
+
+    assert msg["result"]["children"][0]["title"] == "WhatsOn"
+    assert msg["result"]["children"][0]["media_content_type"] == MEDIA_TYPE_CHANNEL
+    assert msg["result"]["children"][0]["media_content_id"] == "1.1"
+    assert msg["result"]["children"][0]["can_play"]
+
+    # test invalid media type
+    await client.send_json(
+        {
+            "id": 4,
+            "type": "media_player/browse_media",
+            "entity_id": TV_ENTITY_ID,
+            "media_content_type": "invalid",
+            "media_content_id": "invalid",
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["id"] == 4
+    assert msg["type"] == TYPE_RESULT
+    assert not msg["success"]
 
 
 async def test_integration_services(

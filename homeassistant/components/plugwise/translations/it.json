@@ -19,5 +19,15 @@
                 "title": "Connettersi al dispositivo"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Intervallo di scansione (secondi)"
+                },
+                "description": "Regolare le opzioni Plugwise"
+            }
+        }
     }
 }

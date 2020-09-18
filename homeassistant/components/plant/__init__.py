@@ -12,12 +12,12 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONDUCTIVITY,
     CONF_SENSORS,
+    PERCENTAGE,
     STATE_OK,
     STATE_PROBLEM,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
@@ -134,7 +134,7 @@ class Plant(Entity):
 
     READINGS = {
         READING_BATTERY: {
-            ATTR_UNIT_OF_MEASUREMENT: UNIT_PERCENTAGE,
+            ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
             "min": CONF_MIN_BATTERY_LEVEL,
         },
         READING_TEMPERATURE: {
@@ -143,7 +143,7 @@ class Plant(Entity):
             "max": CONF_MAX_TEMPERATURE,
         },
         READING_MOISTURE: {
-            ATTR_UNIT_OF_MEASUREMENT: UNIT_PERCENTAGE,
+            ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
             "min": CONF_MIN_MOISTURE,
             "max": CONF_MAX_MOISTURE,
         },

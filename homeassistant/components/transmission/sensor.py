@@ -153,7 +153,9 @@ class TransmissionTorrentsSensor(TransmissionSensor):
         order = self._tm_client.config_entry.options[CONF_ORDER]
         torrents = self._tm_client.api.torrents[0:limit]
         info = _torrents_info(
-            torrents, order=order, statuses=self.SUBTYPE_MODES[self._sub_type],
+            torrents,
+            order=order,
+            statuses=self.SUBTYPE_MODES[self._sub_type],
         )
         return {
             STATE_ATTR_TORRENT_INFO: info,

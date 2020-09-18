@@ -19,5 +19,15 @@
                 "title": "\u9023\u7dda\u81f3 Smile"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "\u6383\u63cf\u9593\u8ddd\uff08\u79d2\uff09"
+                },
+                "description": "\u8abf\u6574 Plugwise \u9078\u9805"
+            }
+        }
     }
 }

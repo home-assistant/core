@@ -1,29 +1,27 @@
 """Support for interfacing with the XBMC/Kodi JSON-RPC API."""
-import asyncio
-from collections import OrderedDict
 from datetime import timedelta
 from functools import wraps
 import logging
 import re
-import socket
-import urllib
 
-import aiohttp
-import jsonrpc_async
 import jsonrpc_base
-import jsonrpc_websocket
+from pykodi import CannotConnectError
 import voluptuous as vol
 
-from homeassistant.components.kodi import SERVICE_CALL_METHOD
-from homeassistant.components.kodi.const import DOMAIN
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
+    MEDIA_TYPE_ALBUM,
+    MEDIA_TYPE_ARTIST,
     MEDIA_TYPE_CHANNEL,
+    MEDIA_TYPE_EPISODE,
     MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_PLAYLIST,
+    MEDIA_TYPE_SEASON,
+    MEDIA_TYPE_TRACK,
     MEDIA_TYPE_TVSHOW,
     MEDIA_TYPE_VIDEO,
+    SUPPORT_BROWSE_MEDIA,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -38,27 +36,42 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
+from homeassistant.components.media_player.errors import BrowseError
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_HOST,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_PROXY_SSL,
+    CONF_SSL,
     CONF_TIMEOUT,
     CONF_USERNAME,
-    EVENT_HOMEASSISTANT_STOP,
     STATE_IDLE,
     STATE_OFF,
     STATE_PAUSED,
     STATE_PLAYING,
 )
 from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv, script
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.template import Template
 import homeassistant.util.dt as dt_util
-from homeassistant.util.yaml import dump
+
+from .browse_media import build_item_response, library_payload
+from .const import (
+    CONF_WS_PORT,
+    DATA_CONNECTION,
+    DATA_KODI,
+    DATA_VERSION,
+    DEFAULT_PORT,
+    DEFAULT_SSL,
+    DEFAULT_TIMEOUT,
+    DEFAULT_WS_PORT,
+    DOMAIN,
+    EVENT_TURN_OFF,
+    EVENT_TURN_ON,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,13 +81,6 @@ CONF_TCP_PORT = "tcp_port"
 CONF_TURN_ON_ACTION = "turn_on_action"
 CONF_TURN_OFF_ACTION = "turn_off_action"
 CONF_ENABLE_WEBSOCKET = "enable_websocket"
-
-DEFAULT_NAME = "Kodi"
-DEFAULT_PORT = 8080
-DEFAULT_TCP_PORT = 9090
-DEFAULT_TIMEOUT = 5
-DEFAULT_PROXY_SSL = False
-DEFAULT_ENABLE_WEBSOCKET = True
 
 DEPRECATED_TURN_OFF_ACTIONS = {
     None: None,
@@ -106,27 +112,38 @@ MEDIA_TYPES = {
     "audio": MEDIA_TYPE_MUSIC,
 }
 
+MAP_KODI_MEDIA_TYPES = {
+    MEDIA_TYPE_MOVIE: "movieid",
+    MEDIA_TYPE_EPISODE: "episodeid",
+    MEDIA_TYPE_SEASON: "seasonid",
+    MEDIA_TYPE_TVSHOW: "tvshowid",
+}
+
 SUPPORT_KODI = (
-    SUPPORT_PAUSE
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_PREVIOUS_TRACK
+    SUPPORT_BROWSE_MEDIA
     | SUPPORT_NEXT_TRACK
-    | SUPPORT_SEEK
-    | SUPPORT_PLAY_MEDIA
-    | SUPPORT_STOP
-    | SUPPORT_SHUFFLE_SET
+    | SUPPORT_PAUSE
     | SUPPORT_PLAY
+    | SUPPORT_PLAY_MEDIA
+    | SUPPORT_PREVIOUS_TRACK
+    | SUPPORT_SEEK
+    | SUPPORT_SHUFFLE_SET
+    | SUPPORT_STOP
+    | SUPPORT_TURN_OFF
+    | SUPPORT_TURN_ON
+    | SUPPORT_VOLUME_MUTE
+    | SUPPORT_VOLUME_SET
     | SUPPORT_VOLUME_STEP
 )
+
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_TCP_PORT, default=DEFAULT_TCP_PORT): cv.port,
-        vol.Optional(CONF_PROXY_SSL, default=DEFAULT_PROXY_SSL): cv.boolean,
+        vol.Optional(CONF_TCP_PORT, default=DEFAULT_WS_PORT): cv.port,
+        vol.Optional(CONF_PROXY_SSL, default=DEFAULT_SSL): cv.boolean,
         vol.Optional(CONF_TURN_ON_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_TURN_OFF_ACTION): vol.Any(
             cv.SCRIPT_SCHEMA, vol.In(DEPRECATED_TURN_OFF_ACTIONS)
@@ -134,102 +151,93 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
         vol.Inclusive(CONF_USERNAME, "auth"): cv.string,
         vol.Inclusive(CONF_PASSWORD, "auth"): cv.string,
-        vol.Optional(
-            CONF_ENABLE_WEBSOCKET, default=DEFAULT_ENABLE_WEBSOCKET
-        ): cv.boolean,
+        vol.Optional(CONF_ENABLE_WEBSOCKET, default=True): cv.boolean,
     }
 )
 
 
-def _check_deprecated_turn_off(hass, turn_off_action):
-    """Create an equivalent script for old turn off actions."""
-    if isinstance(turn_off_action, str):
-        method = DEPRECATED_TURN_OFF_ACTIONS[turn_off_action]
-        new_config = OrderedDict(
-            [
-                ("service", f"{DOMAIN}.{SERVICE_CALL_METHOD}"),
-                (
-                    "data_template",
-                    OrderedDict([("entity_id", "{{ entity_id }}"), ("method", method)]),
-                ),
-            ]
-        )
-        example_conf = dump(OrderedDict([(CONF_TURN_OFF_ACTION, new_config)]))
-        _LOGGER.warning(
-            "The '%s' action for turn off Kodi is deprecated and "
-            "will cease to function in a future release. You need to "
-            "change it for a generic Home Assistant script sequence, "
-            "which is, for this turn_off action, like this:\n%s",
-            turn_off_action,
-            example_conf,
-        )
-        new_config["data_template"] = OrderedDict(
-            [
-                (key, Template(value, hass))
-                for key, value in new_config["data_template"].items()
-            ]
-        )
-        turn_off_action = [new_config]
-    return turn_off_action
+SERVICE_ADD_MEDIA = "add_to_playlist"
+SERVICE_CALL_METHOD = "call_method"
+
+ATTR_MEDIA_TYPE = "media_type"
+ATTR_MEDIA_NAME = "media_name"
+ATTR_MEDIA_ARTIST_NAME = "artist_name"
+ATTR_MEDIA_ID = "media_id"
+ATTR_METHOD = "method"
+
+
+KODI_ADD_MEDIA_SCHEMA = {
+    vol.Required(ATTR_MEDIA_TYPE): cv.string,
+    vol.Optional(ATTR_MEDIA_ID): cv.string,
+    vol.Optional(ATTR_MEDIA_NAME): cv.string,
+    vol.Optional(ATTR_MEDIA_ARTIST_NAME): cv.string,
+}
+
+KODI_CALL_METHOD_SCHEMA = cv.make_entity_service_schema(
+    {vol.Required(ATTR_METHOD): cv.string}, extra=vol.ALLOW_EXTRA
+)
+
+
+def find_matching_config_entries_for_host(hass, host):
+    """Search existing config entries for one matching the host."""
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        if entry.data[CONF_HOST] == host:
+            return entry
+    return None
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Kodi platform."""
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {}
-
-    unique_id = None
-    # Is this a manual configuration?
-    if discovery_info is None:
-        name = config.get(CONF_NAME)
-        host = config.get(CONF_HOST)
-        port = config.get(CONF_PORT)
-        tcp_port = config.get(CONF_TCP_PORT)
-        encryption = config.get(CONF_PROXY_SSL)
-        websocket = config.get(CONF_ENABLE_WEBSOCKET)
-    else:
-        name = f"{DEFAULT_NAME} ({discovery_info.get('hostname')})"
-        host = discovery_info.get("host")
-        port = discovery_info.get("port")
-        tcp_port = DEFAULT_TCP_PORT
-        encryption = DEFAULT_PROXY_SSL
-        websocket = DEFAULT_ENABLE_WEBSOCKET
-        properties = discovery_info.get("properties")
-        if properties is not None:
-            unique_id = properties.get("uuid", None)
-
-    # Only add a device once, so discovered devices do not override manual
-    # config.
-    ip_addr = socket.gethostbyname(host)
-    if ip_addr in hass.data[DOMAIN]:
+    if discovery_info:
+        # Now handled by zeroconf in the config flow
         return
 
-    # If we got an unique id, check that it does not exist already.
-    # This is necessary as netdisco does not deterministally return the same
-    # advertisement when the service is offered over multiple IP addresses.
-    if unique_id is not None:
-        for device in hass.data[DOMAIN].values():
-            if device.unique_id == unique_id:
-                return
+    host = config[CONF_HOST]
+    if find_matching_config_entries_for_host(hass, host):
+        return
 
-    entity = KodiDevice(
-        hass,
-        name=name,
-        host=host,
-        port=port,
-        tcp_port=tcp_port,
-        encryption=encryption,
-        username=config.get(CONF_USERNAME),
-        password=config.get(CONF_PASSWORD),
-        turn_on_action=config.get(CONF_TURN_ON_ACTION),
-        turn_off_action=config.get(CONF_TURN_OFF_ACTION),
-        timeout=config.get(CONF_TIMEOUT),
-        websocket=websocket,
-        unique_id=unique_id,
+    websocket = config.get(CONF_ENABLE_WEBSOCKET)
+    ws_port = config.get(CONF_TCP_PORT) if websocket else None
+
+    entry_data = {
+        CONF_NAME: config.get(CONF_NAME, host),
+        CONF_HOST: host,
+        CONF_PORT: config.get(CONF_PORT),
+        CONF_WS_PORT: ws_port,
+        CONF_USERNAME: config.get(CONF_USERNAME),
+        CONF_PASSWORD: config.get(CONF_PASSWORD),
+        CONF_SSL: config.get(CONF_PROXY_SSL),
+        CONF_TIMEOUT: config.get(CONF_TIMEOUT),
+    }
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=entry_data
+        )
     )
 
-    hass.data[DOMAIN][ip_addr] = entity
-    async_add_entities([entity], update_before_add=True)
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Kodi media player platform."""
+    platform = entity_platform.current_platform.get()
+    platform.async_register_entity_service(
+        SERVICE_ADD_MEDIA, KODI_ADD_MEDIA_SCHEMA, "async_add_media_to_playlist"
+    )
+    platform.async_register_entity_service(
+        SERVICE_CALL_METHOD, KODI_CALL_METHOD_SCHEMA, "async_call_method"
+    )
+
+    data = hass.data[DOMAIN][config_entry.entry_id]
+    connection = data[DATA_CONNECTION]
+    version = data[DATA_VERSION]
+    kodi = data[DATA_KODI]
+    name = config_entry.data[CONF_NAME]
+    uid = config_entry.unique_id
+    if uid is None:
+        uid = config_entry.entry_id
+
+    entity = KodiEntity(connection, kodi, name, uid, version)
+    async_add_entities([entity])
 
 
 def cmd(func):
@@ -253,95 +261,38 @@ def cmd(func):
     return wrapper
 
 
-class KodiDevice(MediaPlayerEntity):
+class KodiEntity(MediaPlayerEntity):
     """Representation of a XBMC/Kodi device."""
 
-    def __init__(
-        self,
-        hass,
-        name,
-        host,
-        port,
-        tcp_port,
-        encryption=False,
-        username=None,
-        password=None,
-        turn_on_action=None,
-        turn_off_action=None,
-        timeout=DEFAULT_TIMEOUT,
-        websocket=True,
-        unique_id=None,
-    ):
-        """Initialize the Kodi device."""
-        self.hass = hass
+    def __init__(self, connection, kodi, name, uid, version):
+        """Initialize the Kodi entity."""
+        self._connection = connection
+        self._kodi = kodi
         self._name = name
-        self._unique_id = unique_id
-        self._media_position_updated_at = None
-        self._media_position = None
-
-        kwargs = {"timeout": timeout, "session": async_get_clientsession(hass)}
-
-        if username is not None:
-            kwargs["auth"] = aiohttp.BasicAuth(username, password)
-            image_auth_string = f"{username}:{password}@"
-        else:
-            image_auth_string = ""
-
-        http_protocol = "https" if encryption else "http"
-        ws_protocol = "wss" if encryption else "ws"
-
-        self._http_url = f"{http_protocol}://{host}:{port}/jsonrpc"
-        self._image_url = f"{http_protocol}://{image_auth_string}{host}:{port}/image"
-        self._ws_url = f"{ws_protocol}://{host}:{tcp_port}/jsonrpc"
-
-        self._http_server = jsonrpc_async.Server(self._http_url, **kwargs)
-        if websocket:
-            # Setup websocket connection
-            self._ws_server = jsonrpc_websocket.Server(self._ws_url, **kwargs)
-
-            # Register notification listeners
-            self._ws_server.Player.OnPause = self.async_on_speed_event
-            self._ws_server.Player.OnPlay = self.async_on_speed_event
-            self._ws_server.Player.OnAVStart = self.async_on_speed_event
-            self._ws_server.Player.OnAVChange = self.async_on_speed_event
-            self._ws_server.Player.OnResume = self.async_on_speed_event
-            self._ws_server.Player.OnSpeedChanged = self.async_on_speed_event
-            self._ws_server.Player.OnSeek = self.async_on_speed_event
-            self._ws_server.Player.OnStop = self.async_on_stop
-            self._ws_server.Application.OnVolumeChanged = self.async_on_volume_changed
-            self._ws_server.System.OnQuit = self.async_on_quit
-            self._ws_server.System.OnRestart = self.async_on_quit
-            self._ws_server.System.OnSleep = self.async_on_quit
-
-            def on_hass_stop(event):
-                """Close websocket connection when hass stops."""
-                self.hass.async_create_task(self._ws_server.close())
-
-            self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
-        else:
-            self._ws_server = None
-
-        # Script creation for the turn on/off config options
-        if turn_on_action is not None:
-            turn_on_action = script.Script(
-                self.hass,
-                turn_on_action,
-                f"{self.name} turn ON script",
-                self.async_update_ha_state(True),
-            )
-        if turn_off_action is not None:
-            turn_off_action = script.Script(
-                self.hass,
-                _check_deprecated_turn_off(hass, turn_off_action),
-                f"{self.name} turn OFF script",
-            )
-        self._turn_on_action = turn_on_action
-        self._turn_off_action = turn_off_action
-        self._enable_websocket = websocket
-        self._players = []
+        self._unique_id = uid
+        self._version = version
+        self._players = None
         self._properties = {}
         self._item = {}
         self._app_properties = {}
+        self._media_position_updated_at = None
+        self._media_position = None
+
+    def _reset_state(self, players=None):
+        self._players = players
+        self._properties = {}
+        self._item = {}
+        self._app_properties = {}
+        self._media_position_updated_at = None
+        self._media_position = None
+
+    @property
+    def _kodi_is_off(self):
+        return self._players is None
+
+    @property
+    def _no_active_players(self):
+        return not self._players
 
     @callback
     def async_on_speed_event(self, sender, data):
@@ -361,14 +312,10 @@ class KodiDevice(MediaPlayerEntity):
     def async_on_stop(self, sender, data):
         """Handle the stop of the player playback."""
         # Prevent stop notifications which are sent after quit notification
-        if self._players is None:
+        if self._kodi_is_off:
             return
 
-        self._players = []
-        self._properties = {}
-        self._item = {}
-        self._media_position_updated_at = None
-        self._media_position = None
+        self._reset_state([])
         self.async_write_ha_state()
 
     @callback
@@ -378,24 +325,15 @@ class KodiDevice(MediaPlayerEntity):
         self._app_properties["muted"] = data["muted"]
         self.async_write_ha_state()
 
-    @callback
-    def async_on_quit(self, sender, data):
+    async def async_on_quit(self, sender, data):
         """Reset the player state on quit action."""
-        self._players = None
-        self._properties = {}
-        self._item = {}
-        self._app_properties = {}
-        self.hass.async_create_task(self._ws_server.close())
+        await self._clear_connection()
 
-    async def _get_players(self):
-        """Return the active player objects or None."""
-        try:
-            return await self.server.Player.GetActivePlayers()
-        except jsonrpc_base.jsonrpc.TransportError:
-            if self._players is not None:
-                _LOGGER.info("Unable to fetch kodi data")
-                _LOGGER.debug("Unable to fetch kodi data", exc_info=True)
-            return None
+    async def _clear_connection(self, close=True):
+        self._reset_state()
+        self.async_write_ha_state()
+        if close:
+            await self._connection.close()
 
     @property
     def unique_id(self):
@@ -403,12 +341,22 @@ class KodiDevice(MediaPlayerEntity):
         return self._unique_id
 
     @property
+    def device_info(self):
+        """Return device info for this device."""
+        return {
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "name": self.name,
+            "manufacturer": "Kodi",
+            "sw_version": self._version,
+        }
+
+    @property
     def state(self):
         """Return the state of the device."""
-        if self._players is None:
+        if self._kodi_is_off:
             return STATE_OFF
 
-        if not self._players:
+        if self._no_active_players:
             return STATE_IDLE
 
         if self._properties["speed"] == 0:
@@ -416,36 +364,13 @@ class KodiDevice(MediaPlayerEntity):
 
         return STATE_PLAYING
 
-    async def async_ws_connect(self):
-        """Connect to Kodi via websocket protocol."""
-        try:
-            ws_loop_future = await self._ws_server.ws_connect()
-        except jsonrpc_base.jsonrpc.TransportError:
-            _LOGGER.info("Unable to connect to Kodi via websocket")
-            _LOGGER.debug("Unable to connect to Kodi via websocket", exc_info=True)
-            return
-
-        async def ws_loop_wrapper():
-            """Catch exceptions from the websocket loop task."""
-            try:
-                await ws_loop_future
-            except jsonrpc_base.TransportError:
-                # Kodi abruptly ends ws connection when exiting. We will try
-                # to reconnect on the next poll.
-                pass
-            # Update HA state after Kodi disconnects
-            self.async_write_ha_state()
-
-        # Create a task instead of adding a tracking job, since this task will
-        # run until the websocket connection is closed.
-        self.hass.loop.create_task(ws_loop_wrapper())
-
     async def async_added_to_hass(self):
         """Connect the websocket if needed."""
-        if not self._enable_websocket:
+        if not self._connection.can_subscribe:
             return
 
-        asyncio.create_task(self.async_ws_connect())
+        if self._connection.connected:
+            self._on_ws_connected()
 
         self.async_on_remove(
             async_track_time_interval(
@@ -455,32 +380,71 @@ class KodiDevice(MediaPlayerEntity):
             )
         )
 
+    @callback
+    def _on_ws_connected(self):
+        """Call after ws is connected."""
+        self._register_ws_callbacks()
+        self.async_schedule_update_ha_state(True)
+
+    async def _async_ws_connect(self):
+        """Connect to Kodi via websocket protocol."""
+        try:
+            await self._connection.connect()
+            self._on_ws_connected()
+        except (jsonrpc_base.jsonrpc.TransportError, CannotConnectError):
+            _LOGGER.debug("Unable to connect to Kodi via websocket", exc_info=True)
+            await self._clear_connection(False)
+
+    async def _ping(self):
+        try:
+            await self._kodi.ping()
+        except (jsonrpc_base.jsonrpc.TransportError, CannotConnectError):
+            _LOGGER.debug("Unable to ping Kodi via websocket", exc_info=True)
+            await self._clear_connection()
+
     async def _async_connect_websocket_if_disconnected(self, *_):
         """Reconnect the websocket if it fails."""
-        if not self._ws_server.connected:
-            await self.async_ws_connect()
+        if not self._connection.connected:
+            await self._async_ws_connect()
+        else:
+            await self._ping()
+
+    @callback
+    def _register_ws_callbacks(self):
+        self._connection.server.Player.OnPause = self.async_on_speed_event
+        self._connection.server.Player.OnPlay = self.async_on_speed_event
+        self._connection.server.Player.OnAVStart = self.async_on_speed_event
+        self._connection.server.Player.OnAVChange = self.async_on_speed_event
+        self._connection.server.Player.OnResume = self.async_on_speed_event
+        self._connection.server.Player.OnSpeedChanged = self.async_on_speed_event
+        self._connection.server.Player.OnSeek = self.async_on_speed_event
+        self._connection.server.Player.OnStop = self.async_on_stop
+        self._connection.server.Application.OnVolumeChanged = (
+            self.async_on_volume_changed
+        )
+        self._connection.server.System.OnQuit = self.async_on_quit
+        self._connection.server.System.OnRestart = self.async_on_quit
+        self._connection.server.System.OnSleep = self.async_on_quit
 
     async def async_update(self):
         """Retrieve latest state."""
-        self._players = await self._get_players()
-
-        if self._players is None:
-            self._properties = {}
-            self._item = {}
-            self._app_properties = {}
+        if not self._connection.connected:
+            self._reset_state()
             return
 
-        self._app_properties = await self.server.Application.GetProperties(
-            ["volume", "muted"]
-        )
+        self._players = await self._kodi.get_players()
+
+        if self._kodi_is_off:
+            self._reset_state()
+            return
 
         if self._players:
-            player_id = self._players[0]["playerid"]
+            self._app_properties = await self._kodi.get_application_properties(
+                ["volume", "muted"]
+            )
 
-            assert isinstance(player_id, int)
-
-            self._properties = await self.server.Player.GetProperties(
-                player_id, ["time", "totaltime", "speed", "live"]
+            self._properties = await self._kodi.get_player_properties(
+                self._players[0], ["time", "totaltime", "speed", "live"]
             )
 
             position = self._properties["time"]
@@ -488,37 +452,23 @@ class KodiDevice(MediaPlayerEntity):
                 self._media_position_updated_at = dt_util.utcnow()
                 self._media_position = position
 
-            self._item = (
-                await self.server.Player.GetItem(
-                    player_id,
-                    [
-                        "title",
-                        "file",
-                        "uniqueid",
-                        "thumbnail",
-                        "artist",
-                        "albumartist",
-                        "showtitle",
-                        "album",
-                        "season",
-                        "episode",
-                    ],
-                )
-            )["item"]
+            self._item = await self._kodi.get_playing_item_properties(
+                self._players[0],
+                [
+                    "title",
+                    "file",
+                    "uniqueid",
+                    "thumbnail",
+                    "artist",
+                    "albumartist",
+                    "showtitle",
+                    "album",
+                    "season",
+                    "episode",
+                ],
+            )
         else:
-            self._properties = {}
-            self._item = {}
-            self._app_properties = {}
-            self._media_position = None
-            self._media_position_updated_at = None
-
-    @property
-    def server(self):
-        """Active server for json-rpc requests."""
-        if self._enable_websocket and self._ws_server.connected:
-            return self._ws_server
-
-        return self._http_server
+            self._reset_state([])
 
     @property
     def name(self):
@@ -528,13 +478,13 @@ class KodiDevice(MediaPlayerEntity):
     @property
     def should_poll(self):
         """Return True if entity has to be polled for state."""
-        return not (self._enable_websocket and self._ws_server.connected)
+        return not self._connection.can_subscribe
 
     @property
     def volume_level(self):
         """Volume level of the media player (0..1)."""
         if "volume" in self._app_properties:
-            return self._app_properties["volume"] / 100.0
+            return int(self._app_properties["volume"]) / 100.0
 
     @property
     def is_volume_muted(self):
@@ -596,9 +546,7 @@ class KodiDevice(MediaPlayerEntity):
         if thumbnail is None:
             return None
 
-        url_components = urllib.parse.urlparse(thumbnail)
-        if url_components.scheme == "image":
-            return f"{self._image_url}/{urllib.parse.quote_plus(thumbnail)}"
+        return self._kodi.thumbnail_url(thumbnail)
 
     @property
     def media_title(self):
@@ -648,157 +596,125 @@ class KodiDevice(MediaPlayerEntity):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        supported_features = SUPPORT_KODI
+        return SUPPORT_KODI
 
-        if self._turn_on_action is not None:
-            supported_features |= SUPPORT_TURN_ON
-
-        if self._turn_off_action is not None:
-            supported_features |= SUPPORT_TURN_OFF
-
-        return supported_features
-
-    @cmd
     async def async_turn_on(self):
-        """Execute turn_on_action to turn on media player."""
-        if self._turn_on_action is not None:
-            await self._turn_on_action.async_run(
-                variables={"entity_id": self.entity_id}
-            )
-        else:
-            _LOGGER.warning("turn_on requested but turn_on_action is none")
+        """Turn the media player on."""
+        _LOGGER.debug("Firing event to turn on device")
+        self.hass.bus.async_fire(EVENT_TURN_ON, {ATTR_ENTITY_ID: self.entity_id})
 
-    @cmd
     async def async_turn_off(self):
-        """Execute turn_off_action to turn off media player."""
-        if self._turn_off_action is not None:
-            await self._turn_off_action.async_run(
-                variables={"entity_id": self.entity_id}
-            )
-        else:
-            _LOGGER.warning("turn_off requested but turn_off_action is none")
+        """Turn the media player off."""
+        _LOGGER.debug("Firing event to turn off device")
+        self.hass.bus.async_fire(EVENT_TURN_OFF, {ATTR_ENTITY_ID: self.entity_id})
 
     @cmd
     async def async_volume_up(self):
         """Volume up the media player."""
-        assert (await self.server.Input.ExecuteAction("volumeup")) == "OK"
+        await self._kodi.volume_up()
 
     @cmd
     async def async_volume_down(self):
         """Volume down the media player."""
-        assert (await self.server.Input.ExecuteAction("volumedown")) == "OK"
+        await self._kodi.volume_down()
 
     @cmd
     async def async_set_volume_level(self, volume):
         """Set volume level, range 0..1."""
-        await self.server.Application.SetVolume(int(volume * 100))
+        await self._kodi.set_volume_level(int(volume * 100))
 
     @cmd
     async def async_mute_volume(self, mute):
         """Mute (true) or unmute (false) media player."""
-        await self.server.Application.SetMute(mute)
-
-    async def async_set_play_state(self, state):
-        """Handle play/pause/toggle."""
-        players = await self._get_players()
-
-        if players is not None and players:
-            await self.server.Player.PlayPause(players[0]["playerid"], state)
+        await self._kodi.mute(mute)
 
     @cmd
     async def async_media_play_pause(self):
         """Pause media on media player."""
-        await self.async_set_play_state("toggle")
+        await self._kodi.play_pause()
 
     @cmd
     async def async_media_play(self):
         """Play media."""
-        await self.async_set_play_state(True)
+        await self._kodi.play()
 
     @cmd
     async def async_media_pause(self):
         """Pause the media player."""
-        await self.async_set_play_state(False)
+        await self._kodi.pause()
 
     @cmd
     async def async_media_stop(self):
         """Stop the media player."""
-        players = await self._get_players()
-
-        if players:
-            await self.server.Player.Stop(players[0]["playerid"])
-
-    async def _goto(self, direction):
-        """Handle for previous/next track."""
-        players = await self._get_players()
-
-        if players:
-            if direction == "previous":
-                # First seek to position 0. Kodi goes to the beginning of the
-                # current track if the current track is not at the beginning.
-                await self.server.Player.Seek(players[0]["playerid"], 0)
-
-            await self.server.Player.GoTo(players[0]["playerid"], direction)
+        await self._kodi.stop()
 
     @cmd
     async def async_media_next_track(self):
         """Send next track command."""
-        await self._goto("next")
+        await self._kodi.next_track()
 
     @cmd
     async def async_media_previous_track(self):
         """Send next track command."""
-        await self._goto("previous")
+        await self._kodi.previous_track()
 
     @cmd
     async def async_media_seek(self, position):
         """Send seek command."""
-        players = await self._get_players()
-
-        time = {}
-
-        time["milliseconds"] = int((position % 1) * 1000)
-        position = int(position)
-
-        time["seconds"] = int(position % 60)
-        position /= 60
-
-        time["minutes"] = int(position % 60)
-        position /= 60
-
-        time["hours"] = int(position)
-
-        if players:
-            await self.server.Player.Seek(players[0]["playerid"], time)
+        await self._kodi.media_seek(position)
 
     @cmd
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Send the play_media command to the media player."""
-        if media_type == "CHANNEL":
-            await self.server.Player.Open({"item": {"channelid": int(media_id)}})
-        elif media_type == "PLAYLIST":
-            await self.server.Player.Open({"item": {"playlistid": int(media_id)}})
-        elif media_type == "DIRECTORY":
-            await self.server.Player.Open({"item": {"directory": str(media_id)}})
-        elif media_type == "PLUGIN":
-            await self.server.Player.Open({"item": {"file": str(media_id)}})
-        else:
-            await self.server.Player.Open({"item": {"file": str(media_id)}})
+        media_type_lower = media_type.lower()
 
+        if media_type_lower == MEDIA_TYPE_CHANNEL:
+            await self._kodi.play_channel(int(media_id))
+        elif media_type_lower == MEDIA_TYPE_PLAYLIST:
+            await self._kodi.play_playlist(int(media_id))
+        elif media_type_lower == "directory":
+            await self._kodi.play_directory(str(media_id))
+        elif media_type_lower in [
+            MEDIA_TYPE_ARTIST,
+            MEDIA_TYPE_ALBUM,
+        ]:
+            await self.async_clear_playlist()
+            params = {"playlistid": 0, "item": {f"{media_type}id": int(media_id)}}
+            # pylint: disable=protected-access
+            await self._kodi._server.Playlist.Add(params)
+            await self._kodi.play_playlist(0)
+        elif media_type_lower == MEDIA_TYPE_TRACK:
+            await self._kodi.clear_playlist()
+            params = {"playlistid": 0, "item": {"songid": int(media_id)}}
+            # pylint: disable=protected-access
+            await self._kodi._server.Playlist.Add(params)
+            await self._kodi.play_playlist(0)
+        elif media_type_lower in [
+            MEDIA_TYPE_MOVIE,
+            MEDIA_TYPE_EPISODE,
+            MEDIA_TYPE_SEASON,
+            MEDIA_TYPE_TVSHOW,
+        ]:
+            # pylint: disable=protected-access
+            await self._kodi._play_item(
+                {MAP_KODI_MEDIA_TYPES[media_type_lower]: int(media_id)}
+            )
+        else:
+            await self._kodi.play_file(str(media_id))
+
+    @cmd
     async def async_set_shuffle(self, shuffle):
         """Set shuffle mode, for the first player."""
-        if not self._players:
+        if self._no_active_players:
             raise RuntimeError("Error: No active player.")
-        await self.server.Player.SetShuffle(
-            {"playerid": self._players[0]["playerid"], "shuffle": shuffle}
-        )
+        await self._kodi.set_shuffle(shuffle)
 
     async def async_call_method(self, method, **kwargs):
         """Run Kodi JSONRPC API method with params."""
         _LOGGER.debug("Run API method %s, kwargs=%s", method, kwargs)
         result_ok = False
         try:
-            result = await getattr(self.server, method)(**kwargs)
+            result = self._kodi.call_method(method, **kwargs)
             result_ok = True
         except jsonrpc_base.jsonrpc.ProtocolError as exc:
             result = exc.args[2]["error"]
@@ -831,10 +747,14 @@ class KodiDevice(MediaPlayerEntity):
             )
         return result
 
+    async def async_clear_playlist(self):
+        """Clear default playlist (i.e. playlistid=0)."""
+        await self._kodi.clear_playlist()
+
     async def async_add_media_to_playlist(
         self, media_type, media_id=None, media_name="ALL", artist_name=""
     ):
-        """Add a media to default playlist (i.e. playlistid=0).
+        """Add a media to default playlist.
 
         First the media type must be selected, then
         the media can be specified in terms of id or
@@ -842,78 +762,43 @@ class KodiDevice(MediaPlayerEntity):
         All the albums of an artist can be added with
         media_name="ALL"
         """
-        params = {"playlistid": 0}
         if media_type == "SONG":
             if media_id is None:
-                media_id = await self.async_find_song(media_name, artist_name)
+                media_id = await self._async_find_song(media_name, artist_name)
             if media_id:
-                params["item"] = {"songid": int(media_id)}
+                self._kodi.add_song_to_playlist(int(media_id))
 
         elif media_type == "ALBUM":
             if media_id is None:
                 if media_name == "ALL":
-                    await self.async_add_all_albums(artist_name)
+                    await self._async_add_all_albums(artist_name)
                     return
 
-                media_id = await self.async_find_album(media_name, artist_name)
+                media_id = await self._async_find_album(media_name, artist_name)
             if media_id:
-                params["item"] = {"albumid": int(media_id)}
+                self._kodi.add_album_to_playlist(int(media_id))
 
         else:
             raise RuntimeError("Unrecognized media type.")
 
-        if media_id is not None:
-            try:
-                await self.server.Playlist.Add(params)
-            except jsonrpc_base.jsonrpc.ProtocolError as exc:
-                result = exc.args[2]["error"]
-                _LOGGER.error(
-                    "Run API method %s.Playlist.Add(%s) error: %s",
-                    self.entity_id,
-                    media_type,
-                    result,
-                )
-            except jsonrpc_base.jsonrpc.TransportError:
-                _LOGGER.warning(
-                    "TransportError trying to add playlist to %s", self.entity_id
-                )
-        else:
+        if media_id is None:
             _LOGGER.warning("No media detected for Playlist.Add")
 
-    async def async_add_all_albums(self, artist_name):
+    async def _async_add_all_albums(self, artist_name):
         """Add all albums of an artist to default playlist (i.e. playlistid=0).
 
         The artist is specified in terms of name.
         """
-        artist_id = await self.async_find_artist(artist_name)
+        artist_id = await self._async_find_artist(artist_name)
 
-        albums = await self.async_get_albums(artist_id)
+        albums = await self._kodi.get_albums(artist_id)
 
         for alb in albums["albums"]:
-            await self.server.Playlist.Add(
-                {"playlistid": 0, "item": {"albumid": int(alb["albumid"])}}
-            )
+            await self._kodi.add_album_to_playlist(int(alb["albumid"]))
 
-    async def async_clear_playlist(self):
-        """Clear default playlist (i.e. playlistid=0)."""
-        return self.server.Playlist.Clear({"playlistid": 0})
-
-    async def async_get_artists(self):
-        """Get artists list."""
-        return await self.server.AudioLibrary.GetArtists()
-
-    async def async_get_albums(self, artist_id=None):
-        """Get albums list."""
-        if artist_id is None:
-            return await self.server.AudioLibrary.GetAlbums()
-
-        return await self.server.AudioLibrary.GetAlbums(
-            {"filter": {"artistid": int(artist_id)}}
-        )
-
-    async def async_find_artist(self, artist_name):
+    async def _async_find_artist(self, artist_name):
         """Find artist by name."""
-        artists = await self.async_get_artists()
+        artists = await self._kodi.get_artists()
         try:
             out = self._find(artist_name, [a["artist"] for a in artists["artists"]])
             return artists["artists"][out[0][0]]["artistid"]
@@ -921,35 +806,26 @@ class KodiDevice(MediaPlayerEntity):
             _LOGGER.warning("No artists were found: %s", artist_name)
             return None
 
-    async def async_get_songs(self, artist_id=None):
-        """Get songs list."""
-        if artist_id is None:
-            return await self.server.AudioLibrary.GetSongs()
-
-        return await self.server.AudioLibrary.GetSongs(
-            {"filter": {"artistid": int(artist_id)}}
-        )
-
-    async def async_find_song(self, song_name, artist_name=""):
+    async def _async_find_song(self, song_name, artist_name=""):
         """Find song by name and optionally artist name."""
         artist_id = None
         if artist_name != "":
-            artist_id = await self.async_find_artist(artist_name)
+            artist_id = await self._async_find_artist(artist_name)
 
-        songs = await self.async_get_songs(artist_id)
+        songs = await self._kodi.get_songs(artist_id)
         if songs["limits"]["total"] == 0:
             return None
 
         out = self._find(song_name, [a["label"] for a in songs["songs"]])
         return songs["songs"][out[0][0]]["songid"]
 
-    async def async_find_album(self, album_name, artist_name=""):
+    async def _async_find_album(self, album_name, artist_name=""):
         """Find album by name and optionally artist name."""
         artist_id = None
         if artist_name != "":
-            artist_id = await self.async_find_artist(artist_name)
+            artist_id = await self._async_find_artist(artist_name)
 
-        albums = await self.async_get_albums(artist_id)
+        albums = await self._kodi.get_albums(artist_id)
         try:
             out = self._find(album_name, [a["label"] for a in albums["albums"]])
             return albums["albums"][out[0][0]]["albumid"]
@@ -973,3 +849,19 @@ class KodiDevice(MediaPlayerEntity):
             out[i][1] = rate
 
         return sorted(out, key=lambda out: out[1], reverse=True)
+
+    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+        """Implement the websocket media browsing helper."""
+        if media_content_type in [None, "library"]:
+            return await self.hass.async_add_executor_job(library_payload, self._kodi)
+
+        payload = {
+            "search_type": media_content_type,
+            "search_id": media_content_id,
+        }
+        response = await build_item_response(self._kodi, payload)
+        if response is None:
+            raise BrowseError(
+                f"Media not found: {media_content_type} / {media_content_id}"
+            )
+        return response

@@ -32,7 +32,7 @@ class DevoloDeviceEntity(Entity):
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         self.subscriber = Subscriber(
-            self._device_instance.itemName, callback=self.sync_callback
+            self._device_instance.item_name, callback=self.sync_callback
         )
         self._homecontrol.publisher.register(
             self._device_instance.uid, self.subscriber, self.sync_callback
@@ -54,7 +54,7 @@ class DevoloDeviceEntity(Entity):
         """Return the device info."""
         return {
             "identifiers": {(DOMAIN, self._device_instance.uid)},
-            "name": self._device_instance.itemName,
+            "name": self._device_instance.item_name,
             "manufacturer": self._brand,
             "model": self._model,
         }

@@ -3,7 +3,7 @@ import datetime
 import logging
 import re
 
-from env_canada import ECData
+from env_canada import ECData  # pylint: disable=import-error
 import voluptuous as vol
 
 from homeassistant.components.weather import (

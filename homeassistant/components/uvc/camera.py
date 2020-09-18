@@ -58,10 +58,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return False
     except nvr.NvrError as ex:
         _LOGGER.error("NVR refuses to talk to me: %s", str(ex))
-        raise PlatformNotReady
+        raise PlatformNotReady from ex
     except requests.exceptions.ConnectionError as ex:
         _LOGGER.error("Unable to connect to NVR: %s", str(ex))
-        raise PlatformNotReady
+        raise PlatformNotReady from ex
 
     add_entities(
         [

@@ -21,7 +21,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass, config_entry, async_add_entities,
+    hass,
+    config_entry,
+    async_add_entities,
 ):
     """Set up config entry."""
     discovery_info = config_entry.data

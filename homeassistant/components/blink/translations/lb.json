@@ -4,6 +4,8 @@
             "already_configured": "Apparat ass scho konfigur\u00e9iert"
         },
         "error": {
+            "cannot_connect": "Feeler beim verbannen",
+            "invalid_access_token": "Ong\u00ebltege Acc\u00e8s Jeton",
             "invalid_auth": "Ong\u00eblteg Authentifikatioun",
             "unknown": "Onerwaarte Feeler"
         },

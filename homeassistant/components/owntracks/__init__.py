@@ -183,10 +183,7 @@ async def handle_webhook(hass, webhook_id, request):
 
     response = []
 
-    for person in hass.states.async_all():
-        if person.domain != "person":
-            continue
-
+    for person in hass.states.async_all("person"):
         if "latitude" in person.attributes and "longitude" in person.attributes:
             response.append(
                 {

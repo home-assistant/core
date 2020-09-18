@@ -12,9 +12,7 @@
             "user": {
                 "data": {
                     "host": "Nazwa hosta lub adres IP",
-                    "limit": "Limit",
                     "name": "Nazwa",
-                    "order": "Kolejno\u015b\u0107",
                     "password": "Has\u0142o",
                     "port": "Port",
                     "username": "Nazwa u\u017cytkownika"

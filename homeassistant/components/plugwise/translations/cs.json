@@ -1,0 +1,11 @@
+{
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Interval sledov\u00e1n\u00ed (v sekund\u00e1ch)"
+                }
+            }
+        }
+    }
+}

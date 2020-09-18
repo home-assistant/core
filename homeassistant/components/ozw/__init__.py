@@ -26,7 +26,14 @@ from homeassistant.helpers.device_registry import async_get_registry as get_dev_
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from . import const
-from .const import DATA_UNSUBSCRIBE, DOMAIN, PLATFORMS, TOPIC_OPENZWAVE
+from .const import (
+    DATA_UNSUBSCRIBE,
+    DOMAIN,
+    MANAGER,
+    OPTIONS,
+    PLATFORMS,
+    TOPIC_OPENZWAVE,
+)
 from .discovery import DISCOVERY_SCHEMAS, check_node_schema, check_value_schema
 from .entity import (
     ZWaveDeviceEntityValues,
@@ -35,7 +42,7 @@ from .entity import (
     create_value_id,
 )
 from .services import ZWaveServices
-from .websocket_api import ZWaveWebsocketApi
+from .websocket_api import async_register_api
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,6 +74,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     options = OZWOptions(send_message=send_message, topic_prefix=f"{TOPIC_OPENZWAVE}/")
     manager = OZWManager(options)
+
+    hass.data[DOMAIN][MANAGER] = manager
+    hass.data[DOMAIN][OPTIONS] = options
 
     @callback
     def async_node_added(node):
@@ -114,7 +124,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
         # Filter out CommandClasses we're definitely not interested in.
         if value.command_class in [
-            CommandClass.VERSION,
             CommandClass.MANUFACTURER_SPECIFIC,
         ]:
             return
@@ -194,21 +203,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         ]
 
     # Listen to events for node and value changes
-    options.listen(EVENT_NODE_ADDED, async_node_added)
-    options.listen(EVENT_NODE_CHANGED, async_node_changed)
-    options.listen(EVENT_NODE_REMOVED, async_node_removed)
-    options.listen(EVENT_VALUE_ADDED, async_value_added)
-    options.listen(EVENT_VALUE_CHANGED, async_value_changed)
-    options.listen(EVENT_VALUE_REMOVED, async_value_removed)
-    options.listen(EVENT_INSTANCE_EVENT, async_instance_event)
+    for event, event_callback in (
+        (EVENT_NODE_ADDED, async_node_added),
+        (EVENT_NODE_CHANGED, async_node_changed),
+        (EVENT_NODE_REMOVED, async_node_removed),
+        (EVENT_VALUE_ADDED, async_value_added),
+        (EVENT_VALUE_CHANGED, async_value_changed),
+        (EVENT_VALUE_REMOVED, async_value_removed),
+        (EVENT_INSTANCE_EVENT, async_instance_event),
+    ):
+        ozw_data[DATA_UNSUBSCRIBE].append(options.listen(event, event_callback))
 
     # Register Services
     services = ZWaveServices(hass, manager)
     services.async_register()
 
     # Register WebSocket API
-    ws_api = ZWaveWebsocketApi(hass, manager)
-    ws_api.async_register_api()
+    async_register_api(hass)
 
     @callback
     def async_receive_message(msg):

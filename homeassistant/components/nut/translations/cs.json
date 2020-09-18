@@ -10,5 +10,12 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "description": "Zvolte zdroje senzoru."
+            }
+        }
     }
 }

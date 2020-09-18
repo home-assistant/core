@@ -1,4 +1,5 @@
 """The tests for the REST sensor platform."""
+from os import path
 import unittest
 
 import pytest
@@ -8,12 +9,13 @@ from requests.exceptions import RequestException, Timeout
 from requests.structures import CaseInsensitiveDict
 import requests_mock
 
+from homeassistant import config as hass_config
 import homeassistant.components.rest.sensor as rest
 import homeassistant.components.sensor as sensor
-from homeassistant.const import DATA_MEGABYTES
+from homeassistant.const import DATA_MEGABYTES, SERVICE_RELOAD
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.config_validation import template
-from homeassistant.setup import setup_component
+from homeassistant.setup import async_setup_component, setup_component
 
 from tests.async_mock import Mock, patch
 from tests.common import assert_setup_component, get_test_home_assistant
@@ -629,7 +631,8 @@ class TestRestSensor(unittest.TestCase):
         value_template.hass = self.hass
 
         self.rest.update = Mock(
-            "rest.RestData.update", side_effect=self.update_side_effect(None, None),
+            "rest.RestData.update",
+            side_effect=self.update_side_effect(None, None),
         )
         self.sensor = rest.RestSensor(
             self.hass,
@@ -677,3 +680,52 @@ class TestRestData(unittest.TestCase):
         """Test update when a request exception occurs."""
         self.rest.update()
         assert self.rest.data is None
+
+
+async def test_reload(hass, requests_mock):
+    """Verify we can reload reset sensors."""
+
+    requests_mock.get("http://localhost", text="test data")
+
+    await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": {
+                "platform": "rest",
+                "method": "GET",
+                "name": "mockrest",
+                "resource": "http://localhost",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 1
+
+    assert hass.states.get("sensor.mockrest")
+
+    yaml_path = path.join(
+        _get_fixtures_base_path(),
+        "fixtures",
+        "rest/configuration.yaml",
+    )
+    with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
+        await hass.services.async_call(
+            "rest",
+            SERVICE_RELOAD,
+            {},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 1
+
+    assert hass.states.get("sensor.mockreset") is None
+    assert hass.states.get("sensor.rollout")
+
+
+def _get_fixtures_base_path():
+    return path.dirname(path.dirname(path.dirname(__file__)))

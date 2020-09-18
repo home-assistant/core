@@ -58,7 +58,6 @@
         "step": {
             "init": {
                 "data": {
-                    "allow_how_groups": "Hue Gruppen erlaaben",
                     "allow_hue_groups": "Hue Gruppen erlaaben"
                 }
             }

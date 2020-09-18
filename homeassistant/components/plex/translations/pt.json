@@ -3,7 +3,6 @@
         "abort": {
             "already_configured": "Este servidor Plex j\u00e1 est\u00e1 configurado",
             "already_in_progress": "Plex est\u00e1 a ser configurado",
-            "invalid_import": "A configura\u00e7\u00e3o importada \u00e9 inv\u00e1lida",
             "unknown": "Falha por motivo desconhecido"
         },
         "error": {

@@ -31,6 +31,8 @@ async def _async_block_until_queue_empty(hass, sq):
     await hass.async_block_till_done()
     while not sq.empty():
         await asyncio.sleep(0.01)
+    hass.data[system_log.DOMAIN].acquire()
+    hass.data[system_log.DOMAIN].release()
     await hass.async_block_till_done()
 
 
@@ -180,8 +182,8 @@ def log_msg(nr=2):
     _LOGGER.error("error message %s", nr)
 
 
-async def test_dedup_logs(hass, simple_queue, hass_client):
-    """Test that duplicate log entries are dedup."""
+async def test_dedupe_logs(hass, simple_queue, hass_client):
+    """Test that duplicate log entries are dedupe."""
     await async_setup_component(hass, system_log.DOMAIN, {})
     _LOGGER.error("error message 1")
     log_msg()

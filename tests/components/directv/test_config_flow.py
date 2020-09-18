@@ -28,7 +28,8 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 async def test_show_user_form(hass: HomeAssistantType) -> None:
     """Test that the user set up form is served."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_USER},
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_USER},
     )
 
     assert result["step_id"] == "user"
@@ -59,7 +60,9 @@ async def test_cannot_connect(
 
     user_input = MOCK_USER_INPUT.copy()
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data=user_input,
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_USER},
+        data=user_input,
     )
 
     assert result["type"] == RESULT_TYPE_FORM
@@ -75,7 +78,9 @@ async def test_ssdp_cannot_connect(
 
     discovery_info = MOCK_SSDP_DISCOVERY_INFO.copy()
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_SSDP}, data=discovery_info,
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_SSDP},
+        data=discovery_info,
     )
 
     assert result["type"] == RESULT_TYPE_ABORT
@@ -107,7 +112,9 @@ async def test_user_device_exists_abort(
 
     user_input = MOCK_USER_INPUT.copy()
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data=user_input,
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_USER},
+        data=user_input,
     )
 
     assert result["type"] == RESULT_TYPE_ABORT
@@ -122,7 +129,9 @@ async def test_ssdp_device_exists_abort(
 
     discovery_info = MOCK_SSDP_DISCOVERY_INFO.copy()
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_SSDP}, data=discovery_info,
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_SSDP},
+        data=discovery_info,
     )
 
     assert result["type"] == RESULT_TYPE_ABORT
@@ -138,7 +147,9 @@ async def test_ssdp_with_receiver_id_device_exists_abort(
     discovery_info = MOCK_SSDP_DISCOVERY_INFO.copy()
     discovery_info[ATTR_UPNP_SERIAL] = UPNP_SERIAL
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_SSDP}, data=discovery_info,
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_SSDP},
+        data=discovery_info,
     )
 
     assert result["type"] == RESULT_TYPE_ABORT
@@ -155,7 +166,9 @@ async def test_unknown_error(
         side_effect=Exception,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data=user_input,
+            DOMAIN,
+            context={CONF_SOURCE: SOURCE_USER},
+            data=user_input,
         )
 
     assert result["type"] == RESULT_TYPE_ABORT
@@ -172,7 +185,9 @@ async def test_ssdp_unknown_error(
         side_effect=Exception,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={CONF_SOURCE: SOURCE_SSDP}, data=discovery_info,
+            DOMAIN,
+            context={CONF_SOURCE: SOURCE_SSDP},
+            data=discovery_info,
         )
 
     assert result["type"] == RESULT_TYPE_ABORT
@@ -209,7 +224,9 @@ async def test_full_import_flow_implementation(
         "homeassistant.components.directv.async_setup_entry", return_value=True
     ), patch("homeassistant.components.directv.async_setup", return_value=True):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={CONF_SOURCE: SOURCE_IMPORT}, data=user_input,
+            DOMAIN,
+            context={CONF_SOURCE: SOURCE_IMPORT},
+            data=user_input,
         )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
@@ -227,7 +244,8 @@ async def test_full_user_flow_implementation(
     mock_connection(aioclient_mock)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_USER},
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_USER},
     )
 
     assert result["type"] == RESULT_TYPE_FORM
@@ -238,7 +256,8 @@ async def test_full_user_flow_implementation(
         "homeassistant.components.directv.async_setup_entry", return_value=True
     ), patch("homeassistant.components.directv.async_setup", return_value=True):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=user_input,
+            result["flow_id"],
+            user_input=user_input,
         )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY

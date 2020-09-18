@@ -127,7 +127,6 @@ from homeassistant.auth.models import (
     User,
 )
 from homeassistant.components import websocket_api
-from homeassistant.components.http import KEY_REAL_IP
 from homeassistant.components.http.auth import async_sign_path
 from homeassistant.components.http.ban import log_invalid_auth
 from homeassistant.components.http.data_validator import RequestDataValidator
@@ -252,14 +251,10 @@ class TokenView(HomeAssistantView):
             return await self._async_handle_revoke_token(hass, data)
 
         if grant_type == "authorization_code":
-            return await self._async_handle_auth_code(
-                hass, data, str(request[KEY_REAL_IP])
-            )
+            return await self._async_handle_auth_code(hass, data, request.remote)
 
         if grant_type == "refresh_token":
-            return await self._async_handle_refresh_token(
-                hass, data, str(request[KEY_REAL_IP])
-            )
+            return await self._async_handle_refresh_token(hass, data, request.remote)
 
         return self.json(
             {"error": "unsupported_grant_type"}, status_code=HTTP_BAD_REQUEST

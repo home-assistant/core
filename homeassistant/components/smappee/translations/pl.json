@@ -1,11 +1,16 @@
 {
     "config": {
         "abort": {
+            "already_configured_device": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
             "authorize_url_timeout": "Przekroczono limit czasu generowania URL autoryzacji.",
-            "missing_configuration": "Komponent nie jest skonfigurowany. Post\u0119puj zgodnie z dokumentacj\u0105.",
-            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
+            "missing_configuration": "Komponent nie jest skonfigurowany. Post\u0119puj zgodnie z dokumentacj\u0105."
         },
         "step": {
+            "local": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP"
+                }
+            },
             "pick_implementation": {
                 "title": "Wybierz metod\u0119 uwierzytelniania"
             }

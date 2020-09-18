@@ -6,7 +6,15 @@
             "absenkbetrieb": "\uc911\ub2e8 \ub300\uccb4 \ubaa8\ub4dc",
             "absenkstop": "\uc911\ub2e8 \ub300\uccb4 \uc911\uc9c0",
             "aktiviert": "\ud65c\uc131\ud654",
-            "antilegionellenfunktion": "\ud56d \ub808\uc9c0\uc624\ub12c\ub77c\uade0 \uae30\ub2a5"
+            "antilegionellenfunktion": "\ud56d \ub808\uc9c0\uc624\ub12c\ub77c\uade0 \uae30\ub2a5",
+            "at_abschaltung": "OT \ub044\uae30",
+            "at_frostschutz": "OT \ube59\uacb0 \ubcf4\ud638",
+            "aus": "\ube44\ud65c\uc131\ud654",
+            "auto": "\uc790\ub3d9",
+            "auto_off_cool": "\ub0c9\ubc29 \uc790\ub3d9 \uaebc\uc9d0",
+            "auto_on_cool": "\ub0c9\ubc29 \uc790\ub3d9 \ucf1c\uc9d0",
+            "automatik_aus": "\uc790\ub3d9 \uaebc\uc9d0",
+            "automatik_ein": "\uc790\ub3d9 \ucf1c\uc9d0"
         }
     }
 }

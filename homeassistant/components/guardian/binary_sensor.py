@@ -3,7 +3,11 @@ from typing import Callable, Dict
 
 from aioguardian import Client
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_CONNECTIVITY,
+    DEVICE_CLASS_MOISTURE,
+    BinarySensorEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -22,8 +26,8 @@ ATTR_CONNECTED_CLIENTS = "connected_clients"
 SENSOR_KIND_AP_INFO = "ap_enabled"
 SENSOR_KIND_LEAK_DETECTED = "leak_detected"
 SENSORS = [
-    (SENSOR_KIND_AP_INFO, "Onboard AP Enabled", "connectivity"),
-    (SENSOR_KIND_LEAK_DETECTED, "Leak Detected", "moisture"),
+    (SENSOR_KIND_AP_INFO, "Onboard AP Enabled", DEVICE_CLASS_CONNECTIVITY),
+    (SENSOR_KIND_LEAK_DETECTED, "Leak Detected", DEVICE_CLASS_MOISTURE),
 ]
 
 
@@ -90,7 +94,7 @@ class GuardianBinarySensor(GuardianEntity, BinarySensorEntity):
     def _async_update_from_latest_data(self) -> None:
         """Update the entity."""
         if self._kind == SENSOR_KIND_AP_INFO:
-            self._is_on = self._coordinators[API_WIFI_STATUS].data["ap_enabled"]
+            self._is_on = self._coordinators[API_WIFI_STATUS].data["station_connected"]
             self._attrs.update(
                 {
                     ATTR_CONNECTED_CLIENTS: self._coordinators[API_WIFI_STATUS].data[

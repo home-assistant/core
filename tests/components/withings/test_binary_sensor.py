@@ -21,7 +21,9 @@ async def test_binary_sensor(
     person0 = new_profile_config("person0", 0)
     person1 = new_profile_config("person1", 1)
 
-    entity_registry: EntityRegistry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry: EntityRegistry = (
+        await hass.helpers.entity_registry.async_get_registry()
+    )
 
     await component_factory.configure_component(profile_configs=(person0, person1))
     assert not await async_get_entity_id(hass, in_bed_attribute, person0.user_id)

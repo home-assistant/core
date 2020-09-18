@@ -6,8 +6,15 @@ import pyatmo
 from homeassistant.components.light import LightEntity
 from homeassistant.core import callback
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import DATA_HANDLER, DOMAIN, MANUFACTURER, SIGNAL_NAME
+from .const import (
+    DATA_HANDLER,
+    DOMAIN,
+    EVENT_TYPE_LIGHT_MODE,
+    MANUFACTURER,
+    SIGNAL_NAME,
+)
 from .data_handler import CAMERA_DATA_CLASS_NAME, NetatmoDataHandler
 from .netatmo_entity_base import NetatmoBase
 
@@ -31,40 +38,37 @@ async def async_setup_entry(hass, entry, async_add_entities):
         )
 
         entities = []
+        all_cameras = []
+
+        if CAMERA_DATA_CLASS_NAME not in data_handler.data:
+            raise PlatformNotReady
+
         try:
-            all_cameras = []
             for home in data_handler.data[CAMERA_DATA_CLASS_NAME].cameras.values():
                 for camera in home.values():
                     all_cameras.append(camera)
 
-            for camera in all_cameras:
-                if camera["type"] == "NOC":
-                    if not data_handler.webhook:
-                        raise PlatformNotReady
-
-                    _LOGGER.debug(
-                        "Adding camera light %s %s", camera["id"], camera["name"]
-                    )
-                    entities.append(
-                        NetatmoLight(
-                            data_handler,
-                            camera["id"],
-                            camera["type"],
-                            camera["home_id"],
-                        )
-                    )
-
         except pyatmo.NoDevice:
             _LOGGER.debug("No cameras found")
+
+        for camera in all_cameras:
+            if camera["type"] == "NOC":
+                if not data_handler.webhook:
+                    raise PlatformNotReady
+
+                _LOGGER.debug("Adding camera light %s %s", camera["id"], camera["name"])
+                entities.append(
+                    NetatmoLight(
+                        data_handler,
+                        camera["id"],
+                        camera["type"],
+                        camera["home_id"],
+                    )
+                )
 
         return entities
 
     async_add_entities(await get_entities(), True)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Netatmo camera platform."""
-    return
 
 
 class NetatmoLight(NetatmoBase, LightEntity):
@@ -97,15 +101,17 @@ class NetatmoLight(NetatmoBase, LightEntity):
         await super().async_added_to_hass()
 
         self._listeners.append(
-            self.hass.bus.async_listen("netatmo_event", self.handle_event)
+            async_dispatcher_connect(
+                self.hass,
+                f"signal-{DOMAIN}-webhook-{EVENT_TYPE_LIGHT_MODE}",
+                self.handle_event,
+            )
         )
 
-    async def handle_event(self, event):
+    @callback
+    def handle_event(self, event):
         """Handle webhook events."""
-        data = event.data["data"]
-
-        if not data.get("event_type"):
-            return
+        data = event["data"]
 
         if not data.get("camera_id"):
             return
@@ -129,14 +135,18 @@ class NetatmoLight(NetatmoBase, LightEntity):
         """Turn camera floodlight on."""
         _LOGGER.debug("Turn camera '%s' on", self._name)
         self._data.set_state(
-            home_id=self._home_id, camera_id=self._id, floodlight="on",
+            home_id=self._home_id,
+            camera_id=self._id,
+            floodlight="on",
         )
 
     def turn_off(self, **kwargs):
         """Turn camera floodlight into auto mode."""
-        _LOGGER.debug("Turn camera '%s' off", self._name)
+        _LOGGER.debug("Turn camera '%s' to auto mode", self._name)
         self._data.set_state(
-            home_id=self._home_id, camera_id=self._id, floodlight="auto",
+            home_id=self._home_id,
+            camera_id=self._id,
+            floodlight="auto",
         )
 
     @callback

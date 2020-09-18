@@ -12,7 +12,7 @@
         },
         "step": {
             "mfa": {
-                "description": "Consulta el correu i busca-hi un missatge amb un enlla\u00e7 de SimpliSafe. Despr\u00e9s de verificar l'enlla\u00e7, torneu aqu\u00ed per completar la instal\u00b7laci\u00f3 de la integraci\u00f3.",
+                "description": "Consulta el correu i busca-hi un missatge amb un enlla\u00e7 de SimpliSafe. Despr\u00e9s de verificar l'enlla\u00e7, torna aqu\u00ed per completar la instal\u00b7laci\u00f3 de la integraci\u00f3.",
                 "title": "Autenticaci\u00f3 multi-factor SimpliSafe"
             },
             "reauth_confirm": {

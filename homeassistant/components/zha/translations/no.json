@@ -65,6 +65,7 @@
             "device_dropped": "Enhet droppet",
             "device_flipped": "Enheten snudd \"{subtype}\"",
             "device_knocked": "Enheten sl\u00e5tt \"{subtype}\"",
+            "device_offline": "Enheten er frakoblet",
             "device_rotated": "Enheten roterte \"{subtype}\"",
             "device_shaken": "Enhet er ristet",
             "device_slid": "Enheten skled \"{subtype}\"",

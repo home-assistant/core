@@ -8,10 +8,10 @@ import homeassistant.components.influxdb as influxdb
 from homeassistant.components.influxdb.const import DEFAULT_BUCKET
 from homeassistant.const import (
     EVENT_STATE_CHANGED,
+    PERCENTAGE,
     STATE_OFF,
     STATE_ON,
     STATE_STANDBY,
-    UNIT_PERCENTAGE,
 )
 from homeassistant.core import split_entity_id
 from homeassistant.setup import async_setup_component
@@ -41,7 +41,8 @@ def mock_batch_timeout(hass, monkeypatch):
     """Mock the event bus listener and the batch timeout for tests."""
     hass.bus.listen = MagicMock()
     monkeypatch.setattr(
-        f"{INFLUX_PATH}.InfluxThread.batch_timeout", Mock(return_value=0),
+        f"{INFLUX_PATH}.InfluxThread.batch_timeout",
+        Mock(return_value=0),
     )
 
 
@@ -238,7 +239,7 @@ async def test_event_listener(
             "unit_of_measurement": "foobars",
             "longitude": "1.1",
             "latitude": "2.2",
-            "battery_level": f"99{UNIT_PERCENTAGE}",
+            "battery_level": f"99{PERCENTAGE}",
             "temperature": "20c",
             "last_seen": "Last seen 23 minutes ago",
             "updated_at": datetime.datetime(2017, 1, 1, 0, 0),
@@ -260,7 +261,7 @@ async def test_event_listener(
                 "fields": {
                     "longitude": 1.1,
                     "latitude": 2.2,
-                    "battery_level_str": f"99{UNIT_PERCENTAGE}",
+                    "battery_level_str": f"99{PERCENTAGE}",
                     "battery_level": 99.0,
                     "temperature_str": "20c",
                     "temperature": 20.0,
@@ -868,7 +869,11 @@ async def test_event_listener_default_measurement(
     handler_method = await _setup(hass, mock_client, config, get_write_api)
 
     state = MagicMock(
-        state=1, domain="fake", entity_id="fake.ok", object_id="ok", attributes={},
+        state=1,
+        domain="fake",
+        entity_id="fake.ok",
+        object_id="ok",
+        attributes={},
     )
     event = MagicMock(data={"new_state": state}, time_fired=12345)
     body = [

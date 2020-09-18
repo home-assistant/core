@@ -31,14 +31,16 @@ async def test_form(hass):
     mock_flume_device_list = _get_mocked_flume_device_list()
 
     with patch(
-        "homeassistant.components.flume.config_flow.FlumeAuth", return_value=True,
+        "homeassistant.components.flume.config_flow.FlumeAuth",
+        return_value=True,
     ), patch(
         "homeassistant.components.flume.config_flow.FlumeDeviceList",
         return_value=mock_flume_device_list,
     ), patch(
         "homeassistant.components.flume.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.flume.async_setup_entry", return_value=True,
+        "homeassistant.components.flume.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -69,14 +71,16 @@ async def test_form_import(hass):
     mock_flume_device_list = _get_mocked_flume_device_list()
 
     with patch(
-        "homeassistant.components.flume.config_flow.FlumeAuth", return_value=True,
+        "homeassistant.components.flume.config_flow.FlumeAuth",
+        return_value=True,
     ), patch(
         "homeassistant.components.flume.config_flow.FlumeDeviceList",
         return_value=mock_flume_device_list,
     ), patch(
         "homeassistant.components.flume.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.flume.async_setup_entry", return_value=True,
+        "homeassistant.components.flume.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -109,7 +113,8 @@ async def test_form_invalid_auth(hass):
     )
 
     with patch(
-        "homeassistant.components.flume.config_flow.FlumeAuth", return_value=True,
+        "homeassistant.components.flume.config_flow.FlumeAuth",
+        return_value=True,
     ), patch(
         "homeassistant.components.flume.config_flow.FlumeDeviceList",
         side_effect=Exception,
@@ -134,7 +139,8 @@ async def test_form_cannot_connect(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     with patch(
-        "homeassistant.components.flume.config_flow.FlumeAuth", return_value=True,
+        "homeassistant.components.flume.config_flow.FlumeAuth",
+        return_value=True,
     ), patch(
         "homeassistant.components.flume.config_flow.FlumeDeviceList",
         side_effect=requests.exceptions.ConnectionError(),

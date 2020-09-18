@@ -4,7 +4,6 @@
             "already_configured": "Este c\u00f3digo postal ya ha sido configurado."
         },
         "error": {
-            "identifier_exists": "C\u00f3digo postal ya registrado",
             "invalid_zip_code": "El c\u00f3digo postal no es v\u00e1lido"
         },
         "step": {

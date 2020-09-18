@@ -1762,12 +1762,15 @@ class TestZWaveServices(unittest.TestCase):
 
         assert node.refresh_value.called
         assert len(node.refresh_value.mock_calls) == 2
-        assert sorted(
-            [
-                node.refresh_value.mock_calls[0][1][0],
-                node.refresh_value.mock_calls[1][1][0],
-            ]
-        ) == sorted([value.value_id, power_value.value_id])
+        assert (
+            sorted(
+                [
+                    node.refresh_value.mock_calls[0][1][0],
+                    node.refresh_value.mock_calls[1][1][0],
+                ]
+            )
+            == sorted([value.value_id, power_value.value_id])
+        )
 
     def test_refresh_node(self):
         """Test zwave refresh_node service."""

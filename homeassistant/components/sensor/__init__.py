@@ -7,13 +7,17 @@ import voluptuous as vol
 
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_CURRENT,
+    DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_POWER,
+    DEVICE_CLASS_POWER_FACTOR,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
+    DEVICE_CLASS_VOLTAGE,
 )
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -32,6 +36,8 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 SCAN_INTERVAL = timedelta(seconds=30)
 DEVICE_CLASSES = [
     DEVICE_CLASS_BATTERY,  # % of battery that is left
+    DEVICE_CLASS_CURRENT,  # current (A)
+    DEVICE_CLASS_ENERGY,  # energy (kWh, Wh)
     DEVICE_CLASS_HUMIDITY,  # % of humidity in the air
     DEVICE_CLASS_ILLUMINANCE,  # current light level (lx/lm)
     DEVICE_CLASS_SIGNAL_STRENGTH,  # signal strength (dB/dBm)
@@ -39,6 +45,8 @@ DEVICE_CLASSES = [
     DEVICE_CLASS_TIMESTAMP,  # timestamp (ISO8601)
     DEVICE_CLASS_PRESSURE,  # pressure (hPa/mbar)
     DEVICE_CLASS_POWER,  # power (W/kW)
+    DEVICE_CLASS_POWER_FACTOR,  # power factor (%)
+    DEVICE_CLASS_VOLTAGE,  # voltage (V)
 ]
 
 DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))

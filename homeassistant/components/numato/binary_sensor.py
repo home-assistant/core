@@ -58,7 +58,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 continue
 
             binary_sensors.append(
-                NumatoGpioBinarySensor(port_name, device_id, port, invert_logic, api,)
+                NumatoGpioBinarySensor(
+                    port_name,
+                    device_id,
+                    port,
+                    invert_logic,
+                    api,
+                )
             )
     add_entities(binary_sensors, True)
 

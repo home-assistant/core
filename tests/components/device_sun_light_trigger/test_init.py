@@ -222,7 +222,9 @@ async def test_initialize_start(hass):
     """Test we initialize when HA starts."""
     hass.state = CoreState.not_running
     assert await async_setup_component(
-        hass, device_sun_light_trigger.DOMAIN, {device_sun_light_trigger.DOMAIN: {}},
+        hass,
+        device_sun_light_trigger.DOMAIN,
+        {device_sun_light_trigger.DOMAIN: {}},
     )
 
     with patch(

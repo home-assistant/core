@@ -58,7 +58,6 @@
         "step": {
             "init": {
                 "data": {
-                    "allow_how_groups": "Consenti gruppi Hue",
                     "allow_hue_groups": "Consenti gruppi Hue",
                     "allow_unreachable": "Consentire alle lampadine irraggiungibili di segnalare correttamente il loro stato"
                 }
