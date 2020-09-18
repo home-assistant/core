@@ -24,7 +24,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import (
     async_entries_for_config_entry,
-    async_get_registry,
+    async_get_registry as async_get_device_registry,
 )
 
 from . import DOMAIN, get_device_id, get_rfx_object
@@ -65,6 +65,7 @@ class OptionsFlow(config_entries.OptionsFlow):
         self._config_entry = config_entry
         self._global_options = None
         self._selected_device = None
+        self._selected_device_entry_id = None
         self._selected_device_event_code = None
         self._selected_device_object = None
         self._device_entries = None
@@ -84,7 +85,9 @@ class OptionsFlow(config_entries.OptionsFlow):
                 CONF_AUTOMATIC_ADD: user_input[CONF_AUTOMATIC_ADD],
             }
             if CONF_DEVICE in user_input:
-                device_data = self._get_device_data(user_input[CONF_DEVICE])
+                entry_id = user_input[CONF_DEVICE]
+                device_data = self._get_device_data(entry_id)
+                self._selected_device_entry_id = entry_id
                 event_code = device_data[CONF_EVENT_CODE]
                 self._selected_device_event_code = event_code
                 self._selected_device = self._config_entry.data[CONF_DEVICES][
@@ -128,7 +131,7 @@ class OptionsFlow(config_entries.OptionsFlow):
 
                 return self.async_create_entry(title="", data={})
 
-        device_registry = await async_get_registry(self.hass)
+        device_registry = await async_get_device_registry(self.hass)
         device_entries = async_entries_for_config_entry(
             device_registry, self._config_entry.entry_id
         )
@@ -164,6 +167,10 @@ class OptionsFlow(config_entries.OptionsFlow):
                 self._selected_device_object.device,
                 data_bits=user_input.get(CONF_DATA_BITS),
             )
+
+            if CONF_REPLACE_DEVICE in user_input:
+                await self._async_replace_device(user_input[CONF_REPLACE_DEVICE])
+                return self.async_create_entry(title="", data={})
 
             try:
                 command_on = none_or_int(user_input.get(CONF_COMMAND_ON), 16)
@@ -281,6 +288,16 @@ class OptionsFlow(config_entries.OptionsFlow):
             data_schema=vol.Schema(data_schema),
             errors=errors,
         )
+
+    async def _async_replace_device(self, replace_device):
+        device_registry = self._device_registry
+        old_entry = device_registry.async_get(self._selected_device_entry_id)
+        device_registry.async_update_device(
+            replace_device,
+            area_id=old_entry.area_id,
+            name_by_user=old_entry.name_by_user,
+        )
+        return
 
     def _can_replace_device(self, entry_id):
         """Check if device can be replaced with selected device."""
