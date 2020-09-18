@@ -345,7 +345,7 @@ async def entity_service_call(
     platforms: Iterable["EntityPlatform"],
     func: Union[str, Callable[..., Any]],
     call: ha.ServiceCall,
-    required_features: Optional[Iterable] = None,
+    required_features: Optional[Iterable[int]] = None,
 ) -> None:
     """Handle an entity service call.
 
