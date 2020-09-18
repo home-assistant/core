@@ -135,12 +135,10 @@ async def async_setup_entry(
     """Set up a config entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    entities = []
-    for forecast_type in [DAILY, HOURLY, NOWCAST]:
-        entities.append(
-            ClimaCellWeatherEntity(config_entry, coordinator, forecast_type)
-        )
-
+    entities = [
+        ClimaCellWeatherEntity(config_entry, coordinator, forecast_type)
+        for forecast_type in [DAILY, HOURLY, NOWCAST]
+    ]
     async_add_entities(entities, update_before_add=True)
 
 
