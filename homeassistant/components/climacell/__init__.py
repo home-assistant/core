@@ -228,9 +228,9 @@ class ClimaCellEntity(CoordinatorEntity):
             if len(items) == 1:
                 return items[0].get("value")
             return next(
-                (item.get("value") for item in items if "max" in items),
+                (item.get("value") for item in items if "max" in item),
                 next(
-                    (item.get("value") for item in items if "min" in items),
+                    (item.get("value") for item in items if "min" in item),
                     items[0].get("value", None),
                 ),
             )
