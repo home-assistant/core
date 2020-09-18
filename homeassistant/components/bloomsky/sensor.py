@@ -8,6 +8,7 @@ from homeassistant.const import (
     AREA_SQUARE_METERS,
     CONF_MONITORED_CONDITIONS,
     PERCENTAGE,
+    PRESSURE_MBAR,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
@@ -41,7 +42,7 @@ SENSOR_UNITS_IMPERIAL = {
 SENSOR_UNITS_METRIC = {
     "Temperature": TEMP_CELSIUS,
     "Humidity": PERCENTAGE,
-    "Pressure": "mbar",
+    "Pressure": PRESSURE_MBAR,
     "Luminance": f"cd/{AREA_SQUARE_METERS}",
     "Voltage": "mV",
 }
