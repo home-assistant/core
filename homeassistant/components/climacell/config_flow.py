@@ -107,8 +107,7 @@ class ClimaCellOptionsConfigFlow(config_entries.OptionsFlow):
         )
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class ClimaCellConfigFlow(config_entries.ConfigFlow):
+class ClimaCellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for ClimaCell Weather API."""
 
     VERSION = 1

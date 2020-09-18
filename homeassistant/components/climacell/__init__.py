@@ -82,7 +82,6 @@ def _set_update_interval(
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Set up the ClimaCell API component."""
-    hass.data.setdefault(DOMAIN, {})
     return True
 
 
