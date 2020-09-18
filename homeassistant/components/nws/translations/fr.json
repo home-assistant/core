@@ -15,6 +15,7 @@
                     "longitude": "Longitude",
                     "station": "Code de la station METAR"
                 },
+                "description": "Si aucun code de station METAR n'est sp\u00e9cifi\u00e9, la latitude et la longitude seront utilis\u00e9es pour trouver la station la plus proche.",
                 "title": "Se connecter au National Weather Service"
             }
         }

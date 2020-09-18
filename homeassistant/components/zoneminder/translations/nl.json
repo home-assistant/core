@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "verify_ssl": "Verifieer SSLcertificaat"
+                },
+                "title": "Voeg ZoneMinder server toe."
+            }
+        }
+    }
+}

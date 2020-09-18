@@ -32,6 +32,7 @@
             "not_konn_panel": "Non reconnu comme appareil Konnected.io"
         },
         "error": {
+            "bad_host": "URL de substitution de l'h\u00f4te de l'API non valide",
             "one": "Vide",
             "other": "Vide"
         },
@@ -65,6 +66,7 @@
                     "7": "Zone 7",
                     "out": "OUT"
                 },
+                "description": "D\u00e9couverte d\u2019un {model} \u00e0 {host}. S\u00e9lectionnez la configuration de base de chaque E/S ci-dessous - en fonction de l\u2019E/S, il peut permettre des capteurs binaires (contacts ouverts/proches), des capteurs num\u00e9riques (dht et ds18b20) ou des sorties commutables. Vous pourrez configurer des options d\u00e9taill\u00e9es dans les \u00e9tapes suivantes.",
                 "title": "Configurer les E/S"
             },
             "options_io_ext": {
@@ -83,8 +85,10 @@
             },
             "options_misc": {
                 "data": {
+                    "api_host": "Remplacer l'URL de l'h\u00f4te de l'API (facultatif)",
                     "blink": "Voyant du panneau clignotant lors de l'envoi d'un changement d'\u00e9tat",
-                    "discovery": "R\u00e9pondre aux demandes de d\u00e9couverte sur votre r\u00e9seau"
+                    "discovery": "R\u00e9pondre aux demandes de d\u00e9couverte sur votre r\u00e9seau",
+                    "override_api_host": "Remplacer l'URL par d\u00e9faut du panneau h\u00f4te de l'API Home Assistant"
                 },
                 "description": "Veuillez s\u00e9lectionner le comportement souhat\u00e9 de votre panneau",
                 "title": "Configurer divers"
