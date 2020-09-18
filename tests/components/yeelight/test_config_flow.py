@@ -60,17 +60,23 @@ async def test_discovery(hass: HomeAssistant):
     assert result2["step_id"] == "pick_device"
     assert not result2["errors"]
 
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_DEVICE: ID}
+    )
+    assert result3["type"] == "form"
+    assert result3["step_id"] == "name"
+    assert not result3["errors"]
+
     with patch(f"{MODULE}.async_setup", return_value=True) as mock_setup, patch(
         f"{MODULE}.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
-        result3 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_DEVICE: ID}
+        result4 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_NAME: NAME}
         )
-
-    assert result3["type"] == "create_entry"
-    assert result3["title"] == NAME
-    assert result3["data"] == {CONF_ID: ID}
+    assert result4["type"] == "create_entry"
+    assert result4["title"] == NAME
+    assert result4["data"] == {CONF_ID: ID, CONF_HOST: None, CONF_NAME: NAME}
     await hass.async_block_till_done()
     mock_setup.assert_called_once()
     mock_setup_entry.assert_called_once()
@@ -125,7 +131,7 @@ async def test_import(hass: HomeAssistant):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config
         )
-    type(mocked_bulb).get_capabilities.assert_called_once()
+    type(mocked_bulb).get_properties.assert_called_once()
     assert result["type"] == "abort"
     assert result["reason"] == "cannot_connect"
 
@@ -140,7 +146,7 @@ async def test_import(hass: HomeAssistant):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config
         )
-    type(mocked_bulb).get_capabilities.assert_called_once()
+    type(mocked_bulb).get_properties.assert_called_once()
     assert result["type"] == "create_entry"
     assert result["title"] == DEFAULT_NAME
     assert result["data"] == {
@@ -194,17 +200,22 @@ async def test_manual(hass: HomeAssistant):
 
     # Success
     mocked_bulb = _mocked_bulb()
-    with patch(f"{MODULE_CONFIG_FLOW}.yeelight.Bulb", return_value=mocked_bulb), patch(
-        f"{MODULE}.async_setup", return_value=True
-    ), patch(
-        f"{MODULE}.async_setup_entry",
-        return_value=True,
-    ):
+    with patch(f"{MODULE_CONFIG_FLOW}.yeelight.Bulb", return_value=mocked_bulb):
         result4 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: IP_ADDRESS}
         )
-    assert result4["type"] == "create_entry"
-    assert result4["data"] == {CONF_HOST: IP_ADDRESS}
+    assert result4["type"] == "form"
+    assert result4["step_id"] == "name"
+    assert not result4["errors"]
+    with patch(f"{MODULE}.async_setup", return_value=True), patch(
+        f"{MODULE}.async_setup_entry",
+        return_value=True,
+    ):
+        result5 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_NAME: NAME}
+        )
+    assert result5["type"] == "create_entry"
+    assert result5["data"] == {CONF_ID: None, CONF_HOST: IP_ADDRESS, CONF_NAME: NAME}
 
     # Duplicate
     result = await hass.config_entries.flow.async_init(
@@ -221,7 +232,9 @@ async def test_manual(hass: HomeAssistant):
 
 async def test_options(hass: HomeAssistant):
     """Test options flow."""
-    config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: IP_ADDRESS})
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: IP_ADDRESS, CONF_NAME: NAME}
+    )
     config_entry.add_to_hass(hass)
 
     mocked_bulb = _mocked_bulb()
@@ -236,10 +249,7 @@ async def test_options(hass: HomeAssistant):
         CONF_SAVE_ON_CHANGE: DEFAULT_SAVE_ON_CHANGE,
         CONF_NIGHTLIGHT_SWITCH: DEFAULT_NIGHTLIGHT_SWITCH,
     }
-    assert config_entry.options == {
-        CONF_NAME: "",
-        **config,
-    }
+    assert config_entry.options == config
     assert hass.states.get(f"light.{NAME}_nightlight") is None
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
@@ -253,9 +263,6 @@ async def test_options(hass: HomeAssistant):
         )
         await hass.async_block_till_done()
     assert result2["type"] == "create_entry"
-    assert result2["data"] == {
-        CONF_NAME: "",
-        **config,
-    }
+    assert result2["data"] == config
     assert result2["data"] == config_entry.options
     assert hass.states.get(f"light.{NAME}_nightlight") is not None

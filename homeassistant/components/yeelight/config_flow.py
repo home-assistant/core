@@ -166,12 +166,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None):
         """Handle the initial step."""
         if user_input is not None:
-            # keep the name from imported entries
-            options = {
-                CONF_NAME: self._config_entry.options.get(CONF_NAME),
-                **user_input,
-            }
-            return self.async_create_entry(title="", data=options)
+            return self.async_create_entry(title="", data=user_input)
 
         options = self._config_entry.options
         return self.async_show_form(

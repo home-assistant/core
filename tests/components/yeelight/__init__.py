@@ -1,5 +1,5 @@
 """Tests for the Yeelight integration."""
-from yeelight import BulbType
+from yeelight import BulbException, BulbType
 from yeelight.main import _MODEL_SPECS
 
 from homeassistant.components.yeelight import (
@@ -27,7 +27,7 @@ CAPABILITIES = {
     "name": "",
 }
 
-NAME = f"yeelight_{MODEL}_{ID}"
+NAME = "NAME"
 
 MODULE = "homeassistant.components.yeelight"
 MODULE_CONFIG_FLOW = f"{MODULE}.config_flow"
@@ -79,6 +79,9 @@ def _mocked_bulb(cannot_connect=False):
     bulb = MagicMock()
     type(bulb).get_capabilities = MagicMock(
         return_value=None if cannot_connect else CAPABILITIES
+    )
+    type(bulb).get_properties = MagicMock(
+        side_effect=BulbException if cannot_connect else None
     )
     type(bulb).get_model_specs = MagicMock(return_value=_MODEL_SPECS[MODEL])
 
