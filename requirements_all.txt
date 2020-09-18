@@ -1277,7 +1277,7 @@ pycocotools==2.0.1
 pycomfoconnect==0.3
 
 # homeassistant.components.coolmaster
-pycoolmasternet-async==0.1.1
+pycoolmasternet-async==0.1.2
 
 # homeassistant.components.avri
 pycountry==19.8.18
@@ -1595,7 +1595,7 @@ pyrecswitch==1.0.2
 pyrepetier==3.0.5
 
 # homeassistant.components.risco
-pyrisco==0.3.0
+pyrisco==0.3.1
 
 # homeassistant.components.sabnzbd
 pysabnzbd==1.1.0
@@ -1837,7 +1837,7 @@ pyvesync==1.1.0
 pyvizio==0.1.56
 
 # homeassistant.components.velux
-pyvlx==0.2.16
+pyvlx==0.2.17
 
 # homeassistant.components.volumio
 pyvolumio==0.1.2
