@@ -772,7 +772,7 @@ pyps4-2ndscreen==1.1.1
 pyqwikswitch==0.93
 
 # homeassistant.components.risco
-pyrisco==0.3.0
+pyrisco==0.3.1
 
 # homeassistant.components.acer_projector
 # homeassistant.components.zha
