@@ -125,7 +125,7 @@ async def async_setup(hass: HomeAssistantType, config) -> bool:
     if domain_config:
         _LOGGER.warning(
             "Loading upcloud via top level config is deprecated and no longer "
-            "necessary as of 0.115. Please remove it from your YAML configuration."
+            "necessary as of 0.116. Please remove it from your YAML configuration."
         )
         hass.async_create_task(
             hass.config_entries.flow.async_init(
@@ -180,7 +180,7 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
 
     upcloud_data = hass.data.setdefault(DATA_UPCLOUD, UpCloudHassData())
 
-    # Handle pre config entry (0.115) scan interval migration to options
+    # Handle pre config entry (0.116) scan interval migration to options
     migrated_scan_interval = upcloud_data.scan_interval_migrations.pop(
         config_entry.data[CONF_USERNAME], None
     )
