@@ -221,7 +221,21 @@ class ClimaCellEntity(CoordinatorEntity):
         weather_dict: Dict[str, Any], key: str
     ) -> Optional[Union[int, float, str]]:
         """Return property from weather_dict."""
-        return weather_dict.get(key, {}).get("value")
+        items = weather_dict.get(key, {})
+        # Handle cases where value returned is a list.
+        # Optimistically find the best value to return.
+        if isinstance(items, list):
+            if len(items) == 1:
+                return items[0].get("value")
+            return next(
+                (item.get("value") for item in items if "max" in items),
+                next(
+                    (item.get("value") for item in items if "min" in items),
+                    items[0].get("value", None),
+                ),
+            )
+
+        return items.get("value")
 
     @property
     def name(self) -> str:
