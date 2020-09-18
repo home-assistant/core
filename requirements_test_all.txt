@@ -443,7 +443,7 @@ hdate==0.10.2
 
 # homeassistant.components.here_travel_time
 # homeassistant.components.here_weather
-herepy==3.0.1
+herepy==3.0.2
 
 # homeassistant.components.hlk_sw16
 hlk-sw16==0.0.9
