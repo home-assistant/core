@@ -22,22 +22,21 @@ def temperature_unit(block_info: dict) -> str:
 
 def shelly_naming(self, block, entity_type: str):
     """Naming for switch and sensors."""
-    channels = self.wrapper.device.shelly["num_outputs"]
-    if (
-        self.wrapper.model in ["SHSW-21", "SHSW-25"]
-        and self.wrapper.device.settings["mode"] == "roller"
-    ):
-        channels = 1
-    if channels > 1:
-        if block.type == "device":
-            return self.wrapper.name
+
+    if self.wrapper.model in ["SHDW-2", "SHHT-1", "SHWT-1"]:
+        channels = 0
+    else:
+        channels = self.wrapper.device.shelly["num_outputs"]
+        if (
+            self.wrapper.model in ["SHSW-21", "SHSW-25"]
+            and self.wrapper.device.settings["mode"] == "roller"
+        ):
+            channels = 1
+    entity_name = self.wrapper.name
+    if channels > 1 and block.type != "device":
         entity_name = self.wrapper.device.settings["relays"][int(block.channel)]["name"]
         if not entity_name:
             entity_name = f"{self.wrapper.name} - channel {str(int(block.channel)+1)}"
-    else:
-        entity_name = self.wrapper.device.settings["name"]
-        if not entity_name:
-            entity_name: f"{self.wrapper.name}"
     if entity_type == "switch":
         return entity_name
     if entity_type == "sensor":
