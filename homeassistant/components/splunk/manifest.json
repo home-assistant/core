@@ -3,7 +3,7 @@
   "name": "Splunk",
   "documentation": "https://www.home-assistant.io/integrations/splunk",
   "requirements": [
-    "splunk-data-sender==0.0.7"
+    "hass_splunk==0.0.3"
   ],
   "codeowners": [
     "@Bre77"

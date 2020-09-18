@@ -1,12 +1,9 @@
 """Support to send data to a Splunk instance."""
-import asyncio
-from collections import deque
 import json
 import logging
 import time
 
-from requests import exceptions as request_exceptions
-from splunk_data_sender import SplunkSender
+from hass_splunk import hass_splunk
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -19,6 +16,7 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
 )
 from homeassistant.helpers import state as state_helper
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA
 from homeassistant.helpers.json import JSONEncoder
@@ -27,8 +25,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "splunk"
 CONF_FILTER = "filter"
-SPLUNK_ENDPOINT = "collector/event"
-SPLUNK_SIZE_LIMIT = 102400  # 100KB, Actual limit is 512KB
 
 DEFAULT_HOST = "localhost"
 DEFAULT_PORT = 8088
@@ -64,16 +60,17 @@ async def async_setup(hass, config):
     name = conf.get(CONF_NAME)
     entity_filter = conf[CONF_FILTER]
 
-    event_collector = SplunkSender(
+    event_collector = hass_splunk(
+        session=async_get_clientsession(hass),
         host=host,
         port=port,
         token=token,
-        hostname=name,
-        protocol=["http", "https"][use_ssl],
-        verify=(use_ssl and verify_ssl),
-        api_url=SPLUNK_ENDPOINT,
-        retry_count=1,
+        ssl=use_ssl,  # use_ssl
+        verify_ssl=verify_ssl,
     )
+
+    if not await event_collector.check(connectivity=False, token=True, busy=False):
+        return False
 
     payload = {
         "time": time.time(),
@@ -84,32 +81,12 @@ async def async_setup(hass, config):
         },
     }
 
-    try:
-        event_collector._send_to_splunk(  # pylint: disable=protected-access
-            "send-event", json.dumps(payload)
-        )
-    except request_exceptions.HTTPError as err:
-        if err.response.status_code in (401, 403):
-            _LOGGER.error("Invalid or disabled token")
-            return False
-        _LOGGER.warning(err)
-    except (
-        request_exceptions.Timeout,
-        request_exceptions.ConnectionError,
-        request_exceptions.TooManyRedirects,
-        json.decoder.JSONDecodeError,
-    ) as err:
-        _LOGGER.warning(err)
-
-    batch = deque()
-    lock = asyncio.Lock()
+    await event_collector.queue(json.dumps(payload, cls=JSONEncoder), send=False)
 
     async def splunk_event_listener(event):
         """Listen for new messages on the bus and sends them to Splunk."""
-        nonlocal batch
 
         state = event.data.get("new_state")
-
         if state is None or not entity_filter(state.entity_id):
             return
 
@@ -128,56 +105,11 @@ async def async_setup(hass, config):
                 "value": _state,
             },
         }
-        batch.append(json.dumps(payload, cls=JSONEncoder))
 
-        # Enforce only one loop is running
-        if lock.locked():
-            return
-        async with lock:
-            # Run until there are no new events to sent
-            while batch:
-                size = len(batch[0])
-                events = deque()
-                # Do Until loop to get events until maximum payload size or no more events
-                # Ensures at least 1 event is always sent even if it exceeds the size limit
-                while True:
-                    # Add first event
-                    events.append(batch.popleft())
-                    # Stop if no more events
-                    if not batch:
-                        break
-                    # Add size of next event
-                    size += len(batch[0])
-                    # Stop if next event exceeds limit
-                    if size > SPLUNK_SIZE_LIMIT:
-                        break
-                _LOGGER.info(
-                    "Sending %s of %s events to Splunk",
-                    len(events),
-                    len(events) + len(batch),
-                )
-                # Send the selected events
-                try:
-                    await hass.async_add_executor_job(
-                        event_collector._send_to_splunk,  # pylint: disable=protected-access
-                        "send-event",
-                        "\n".join(events),
-                    )
-                except (
-                    request_exceptions.HTTPError,
-                    request_exceptions.Timeout,
-                    request_exceptions.ConnectionError,
-                    request_exceptions.TooManyRedirects,
-                ) as err:
-                    _LOGGER.warning(err)
-                    # Requeue failed events
-                    batch = events + batch
-                    break
-                except json.decoder.JSONDecodeError:
-                    _LOGGER.warning("Unexpected response")
-                    # Requeue failed events
-                    batch = events + batch
-                    break
+        try:
+            await event_collector.queue(json.dumps(payload, cls=JSONEncoder), send=True)
+        except Exception as err:  # pylint: disable=broad-except
+            _LOGGER.warning(err)
 
     hass.bus.async_listen(EVENT_STATE_CHANGED, splunk_event_listener)
 
