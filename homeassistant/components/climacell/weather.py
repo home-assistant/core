@@ -29,13 +29,12 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.sun import is_up
 from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 from homeassistant.util.distance import convert as distance_convert
 from homeassistant.util.pressure import convert as pressure_convert
 from homeassistant.util.temperature import convert as temp_convert
 
-from . import ClimaCellEntity
+from . import ClimaCellDataUpdateCoordinator, ClimaCellEntity
 from .const import (
     CC_ATTR_CONDITION,
     CC_ATTR_HUMIDITY,
@@ -151,7 +150,7 @@ class ClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
     def __init__(
         self,
         config_entry: ConfigEntry,
-        coordinator: DataUpdateCoordinator,
+        coordinator: ClimaCellDataUpdateCoordinator,
         forecast_type: str,
     ) -> None:
         """Initialize ClimaCell weather entity."""
