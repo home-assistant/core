@@ -29,9 +29,9 @@ def shelly_naming(self, block, entity_type: str):
     ):
         channels = 1
     if channels > 1:
-        entity_name = self.wrapper.device.settings["relays"][int(self.block.channel)][
-            "name"
-        ]
+        if block.type == "device":
+            return self.wrapper.name
+        entity_name = self.wrapper.device.settings["relays"][int(block.channel)]["name"]
         if entity_type == "switch":
             if entity_name:
                 return entity_name
@@ -40,9 +40,12 @@ def shelly_naming(self, block, entity_type: str):
             if entity_name:
                 return f"{entity_name} {self.description.name}"
             return f"{self.wrapper.name} {str(block.channel)} {self.description.name}"
-    if channels == 1:
+    else:
         if entity_type == "switch":
-            return f"{self.wrapper.name} {self.block.description.replace('_', ' ')}"
+            if self.wrapper.name:
+                return f"{self.wrapper.name}"
+            else:
+                return f"{self.wrapper.name} {self.block.description.replace('_', ' ')}"
         return f"{self.wrapper.name} {self.description.name}"
     raise ValueError
 
