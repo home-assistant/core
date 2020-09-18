@@ -17,6 +17,7 @@ from . import (
     CONF_NIGHTLIGHT_SWITCH_TYPE,
     CONF_SAVE_ON_CHANGE,
     CONF_TRANSITION,
+    DEFAULT_NAME,
     NIGHTLIGHT_SWITCH_TYPE_LIGHT,
 )
 from . import DOMAIN  # pylint:disable=unused-import
@@ -38,8 +39,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize the config flow."""
-        self._capabilities = None
         self._discovered_devices = {}
+        self._host = None
+        self._capabilities = {}
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
@@ -47,11 +49,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             if user_input.get(CONF_HOST):
                 try:
-                    await self._async_try_connect(user_input[CONF_HOST])
-                    return self.async_create_entry(
-                        title=self._async_default_name(),
-                        data=user_input,
-                    )
+                    self._host = user_input[CONF_HOST]
+                    await self._async_try_connect(self._host)
+                    return await self.async_step_name()
                 except CannotConnect:
                     errors["base"] = "cannot_connect"
                 except AlreadyConfigured:
@@ -59,9 +59,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 return await self.async_step_pick_device()
 
+        user_input = user_input or {}
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Optional(CONF_HOST): str}),
+            data_schema=vol.Schema(
+                {vol.Optional(CONF_HOST, default=user_input.get(CONF_HOST, "")): str}
+            ),
             errors=errors,
         )
 
@@ -70,10 +73,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             unique_id = user_input[CONF_DEVICE]
             self._capabilities = self._discovered_devices[unique_id]
-            return self.async_create_entry(
-                title=self._async_default_name(),
-                data={CONF_ID: unique_id},
-            )
+            return await self.async_step_name()
 
         configured_devices = {
             entry.data[CONF_ID]
@@ -120,27 +120,40 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
         return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
 
+    async def async_step_name(self, user_input=None):
+        """Handle the step to set name."""
+        if user_input is not None:
+            data = {
+                CONF_NAME: user_input[CONF_NAME],
+                CONF_ID: self._capabilities.get("id"),
+                CONF_HOST: self._host,
+            }
+            return self.async_create_entry(title=user_input[CONF_NAME], data=data)
+
+        if self._capabilities:
+            unique_id = self._capabilities["id"]
+            model = self._capabilities["model"]
+            name = f"yeelight_{model}_{unique_id}"
+        else:
+            name = DEFAULT_NAME
+        return self.async_show_form(
+            step_id="name",
+            data_schema=vol.Schema({vol.Required(CONF_NAME, default=name): str}),
+        )
+
     async def _async_try_connect(self, host):
         """Set up with options."""
+        for entry in self._async_current_entries():
+            if entry.data.get(CONF_HOST) == host:
+                raise AlreadyConfigured
+
         bulb = yeelight.Bulb(host)
         try:
-            capabilities = await self.hass.async_add_executor_job(bulb.get_capabilities)
-            if capabilities is None:  # timeout
-                _LOGGER.error("Failed to get capabilities from %s: timeout", host)
-                raise CannotConnect
-        except OSError as err:
-            _LOGGER.error("Failed to get capabilities from %s: %s", host, err)
+            await self.hass.async_add_executor_job(bulb.get_properties)
+        except yeelight.BulbException as err:
+            _LOGGER.error("Failed to get properties from %s: %s", host, err)
             raise CannotConnect from err
-        _LOGGER.debug("Get capabilities: %s", capabilities)
-        self._capabilities = capabilities
-        await self.async_set_unique_id(capabilities["id"])
-        self._abort_if_unique_id_configured()
-
-    @callback
-    def _async_default_name(self):
-        model = self._capabilities["model"]
-        unique_id = self._capabilities["id"]
-        return f"yeelight_{model}_{unique_id}"
+        _LOGGER.debug("Get properties: %s", bulb.last_properties)
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):

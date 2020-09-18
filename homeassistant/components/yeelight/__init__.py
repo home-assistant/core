@@ -7,7 +7,7 @@ from typing import Optional
 import voluptuous as vol
 from yeelight import Bulb, BulbException, discover_bulbs
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry, ConfigEntryNotReady
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_DEVICES,
     CONF_HOST,
@@ -180,8 +180,14 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Yeelight from a config entry."""
 
-    async def _initialize(host: str) -> None:
-        device = await _async_setup_device(hass, host, entry.options)
+    # TODO: migrate entity ID
+    # TODO: migrate device ID
+    # TODO: move name from options back to data
+
+    async def _initialize(host: str, capabilities: Optional[dict] = None) -> None:
+        device = await _async_setup_device(
+            hass, host, entry.data[CONF_NAME], entry.options, capabilities
+        )
         hass.data[DOMAIN][DATA_CONFIG_ENTRIES][entry.entry_id][DATA_DEVICE] = device
         for component in PLATFORMS:
             hass.async_create_task(
@@ -196,9 +202,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             data={
                 CONF_HOST: entry.data.get(CONF_HOST),
                 CONF_ID: entry.data.get(CONF_ID),
+                CONF_NAME: entry.data[CONF_NAME],
             },
             options={
-                CONF_NAME: entry.data.get(CONF_NAME, ""),
                 CONF_MODEL: entry.data.get(CONF_MODEL, ""),
                 CONF_TRANSITION: entry.data.get(CONF_TRANSITION, DEFAULT_TRANSITION),
                 CONF_MODE_MUSIC: entry.data.get(CONF_MODE_MUSIC, DEFAULT_MODE_MUSIC),
@@ -252,15 +258,20 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 async def _async_setup_device(
     hass: HomeAssistant,
     host: str,
+    name: str,
     config: dict,
+    capabilities: Optional[dict],
 ) -> None:
+    # Get model from config and capabilities
+    model = config.get(CONF_MODEL)
+    if not model and capabilities is not None:
+        model = capabilities.get("model")
+
     # Set up device
-    bulb = Bulb(host, model=config.get(CONF_MODEL) or None)
-    capabilities = await hass.async_add_executor_job(bulb.get_capabilities)
-    if capabilities is None:  # timeout
-        _LOGGER.error("Failed to get capabilities from %s", host)
-        raise ConfigEntryNotReady
-    device = YeelightDevice(hass, host, config, bulb)
+    bulb = Bulb(host, model=model or None)
+    if capabilities is None:
+        capabilities = await hass.async_add_executor_job(bulb.get_capabilities)
+    device = YeelightDevice(hass, host, name, config, bulb, capabilities)
     await hass.async_add_executor_job(device.update)
     await device.async_setup()
     return device
@@ -351,14 +362,14 @@ class YeelightScanner:
 class YeelightDevice:
     """Represents single Yeelight device."""
 
-    def __init__(self, hass, host, config, bulb):
+    def __init__(self, hass, host, name, config, bulb, capabilities):
         """Initialize device."""
         self._hass = hass
         self._config = config
         self._host = host
-        unique_id = bulb.capabilities.get("id")
-        self._name = config.get(CONF_NAME) or f"yeelight_{bulb.model}_{unique_id}"
+        self._name = name
         self._bulb_device = bulb
+        self._capabilities = capabilities or {}
         self._device_type = None
         self._available = False
         self._remove_time_tracker = None
@@ -396,7 +407,7 @@ class YeelightDevice:
     @property
     def fw_version(self):
         """Return the firmware version."""
-        return self._bulb_device.capabilities.get("fw_ver")
+        return self._capabilities.get("fw_ver")
 
     @property
     def is_nightlight_supported(self) -> bool:
@@ -448,11 +459,6 @@ class YeelightDevice:
             self._device_type = self.bulb.bulb_type
 
         return self._device_type
-
-    @property
-    def unique_id(self) -> Optional[str]:
-        """Return a unique ID."""
-        return self.bulb.capabilities.get("id")
 
     def turn_on(self, duration=DEFAULT_TRANSITION, light_type=None, power_mode=None):
         """Turn on device."""
@@ -532,15 +538,21 @@ class YeelightDevice:
 class YeelightEntity(Entity):
     """Represents single Yeelight entity."""
 
-    def __init__(self, device: YeelightDevice):
+    def __init__(self, device: YeelightDevice, unique_id: str):
         """Initialize the entity."""
         self._device = device
+        self._unique_id = f"v2-{unique_id}"  # Prefix to make migration easier
+
+    @property
+    def unique_id(self) -> str:
+        """Return the unique ID."""
+        return self._unique_id
 
     @property
     def device_info(self) -> dict:
         """Return the device info."""
         return {
-            "identifiers": {(DOMAIN, self._device.unique_id)},
+            "identifiers": {(DOMAIN, self._unique_id)},
             "name": self._device.name,
             "manufacturer": "Yeelight",
             "model": self._device.model,

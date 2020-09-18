@@ -241,7 +241,9 @@ async def async_setup_entry(
     device_type = device.type
 
     def _lights_setup_helper(klass):
-        lights.append(klass(device, custom_effects=custom_effects))
+        lights.append(
+            klass(device, config_entry.entry_id, custom_effects=custom_effects)
+        )
 
     if device_type == BulbType.White:
         _lights_setup_helper(YeelightGenericLight)
@@ -382,9 +384,9 @@ def _async_setup_services(hass: HomeAssistant):
 class YeelightGenericLight(YeelightEntity, LightEntity):
     """Representation of a Yeelight generic light."""
 
-    def __init__(self, device, custom_effects=None):
+    def __init__(self, device, unique_id, custom_effects=None):
         """Initialize the Yeelight light."""
-        super().__init__(device)
+        super().__init__(device, unique_id)
 
         self.config = device.config
 
@@ -417,12 +419,6 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
                 self._schedule_immediate_update,
             )
         )
-
-    @property
-    def unique_id(self) -> Optional[str]:
-        """Return a unique ID."""
-
-        return self.device.unique_id
 
     @property
     def supported_features(self) -> int:
@@ -852,14 +848,10 @@ class YeelightNightLightMode(YeelightGenericLight):
     """Representation of a Yeelight when in nightlight mode."""
 
     @property
-    def unique_id(self) -> Optional[str]:
+    def unique_id(self) -> str:
         """Return a unique ID."""
         unique = super().unique_id
-
-        if unique:
-            return unique + "-nightlight"
-
-        return None
+        return f"{unique}-nightlight"
 
     @property
     def name(self) -> str:

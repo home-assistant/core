@@ -12,6 +12,11 @@
         "data": {
           "device": "Device"
         }
+      },
+      "name": {
+        "data": {
+          "name": "Name"
+        }
       }
     },
     "error": {
