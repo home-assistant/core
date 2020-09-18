@@ -1,4 +1,5 @@
 """Support to send data to a Splunk instance."""
+import asyncio
 from collections import deque
 import json
 import logging
@@ -52,7 +53,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+async def async_setup(hass, config):
     """Set up the Splunk component."""
     conf = config[DOMAIN]
     host = conf.get(CONF_HOST)
@@ -71,6 +72,7 @@ def setup(hass, config):
         protocol=["http", "https"][use_ssl],
         verify=(use_ssl and verify_ssl),
         api_url=SPLUNK_ENDPOINT,
+        retry_count=1,
     )
 
     payload = {
@@ -100,12 +102,11 @@ def setup(hass, config):
         _LOGGER.warning(err)
 
     batch = deque()
-    post_in_progress = False
+    lock = asyncio.Lock()
 
-    def splunk_event_listener(event):
+    async def splunk_event_listener(event):
         """Listen for new messages on the bus and sends them to Splunk."""
         nonlocal batch
-        nonlocal post_in_progress
 
         state = event.data.get("new_state")
 
@@ -130,8 +131,9 @@ def setup(hass, config):
         batch.append(json.dumps(payload, cls=JSONEncoder))
 
         # Enforce only one loop is running
-        if not post_in_progress:
-            post_in_progress = True
+        if lock.locked():
+            return
+        async with lock:
             # Run until there are no new events to sent
             while batch:
                 size = len(batch[0])
@@ -149,13 +151,17 @@ def setup(hass, config):
                     # Stop if next event exceeds limit
                     if size > SPLUNK_SIZE_LIMIT:
                         break
-                _LOGGER.debug(
-                    "Sending %s of %s events", len(events), len(events) + len(batch)
+                _LOGGER.info(
+                    "Sending %s of %s events to Splunk",
+                    len(events),
+                    len(events) + len(batch),
                 )
                 # Send the selected events
                 try:
-                    event_collector._send_to_splunk(  # pylint: disable=protected-access
-                        "send-event", "\n".join(events)
+                    await hass.async_add_executor_job(
+                        event_collector._send_to_splunk,  # pylint: disable=protected-access
+                        "send-event",
+                        "\n".join(events),
                     )
                 except (
                     request_exceptions.HTTPError,
@@ -172,8 +178,7 @@ def setup(hass, config):
                     # Requeue failed events
                     batch = events + batch
                     break
-            post_in_progress = False
 
-    hass.bus.listen(EVENT_STATE_CHANGED, splunk_event_listener)
+    hass.bus.async_listen(EVENT_STATE_CHANGED, splunk_event_listener)
 
     return True
