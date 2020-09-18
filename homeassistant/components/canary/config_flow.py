@@ -112,7 +112,7 @@ class CanaryOptionsFlowHandler(OptionsFlow):
                     CONF_FFMPEG_ARGUMENTS, DEFAULT_FFMPEG_ARGUMENTS
                 ),
             ): str,
-            Vol.Optional(
+            vol.Optional(
                 CONF_TIMEOUT,
                 default=self.config_entry.options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
             ): int,
