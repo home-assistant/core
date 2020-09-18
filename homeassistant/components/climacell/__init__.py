@@ -55,7 +55,7 @@ def _set_update_interval(
     """Recalculate update_interval based on existing ClimaCell instances and update them."""
     # We check how many ClimaCell configured instances are using the same API key and
     # calculate interval to not exceed allowed numbers of requests. Divide 90% of
-    # MAX_REQUESTS_PER_DAY by 2 because every update requires two API calls and we want
+    # MAX_REQUESTS_PER_DAY by 4 because every update requires four API calls and we want
     # a buffer in the number of API calls left at the end of the day.
     other_instance_entry_ids = [
         entry.entry_id
