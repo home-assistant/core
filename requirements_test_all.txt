@@ -616,7 +616,7 @@ pybotvac==0.0.17
 pychromecast==7.2.1
 
 # homeassistant.components.coolmaster
-pycoolmasternet-async==0.1.1
+pycoolmasternet-async==0.1.2
 
 # homeassistant.components.avri
 pycountry==19.8.18
@@ -769,7 +769,7 @@ pyps4-2ndscreen==1.1.1
 pyqwikswitch==0.93
 
 # homeassistant.components.risco
-pyrisco==0.3.0
+pyrisco==0.3.1
 
 # homeassistant.components.acer_projector
 # homeassistant.components.zha

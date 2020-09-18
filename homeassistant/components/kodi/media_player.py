@@ -714,7 +714,7 @@ class KodiEntity(MediaPlayerEntity):
         _LOGGER.debug("Run API method %s, kwargs=%s", method, kwargs)
         result_ok = False
         try:
-            result = self._kodi.call_method(method, **kwargs)
+            result = await self._kodi.call_method(method, **kwargs)
             result_ok = True
         except jsonrpc_base.jsonrpc.ProtocolError as exc:
             result = exc.args[2]["error"]
