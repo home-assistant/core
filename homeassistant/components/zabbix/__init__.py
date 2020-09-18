@@ -112,15 +112,15 @@ def setup(hass, config):
     def event_to_metrics(event, float_keys, string_keys):
         """Add an event to the outgoing Zabbix list."""
         state = event.data.get("new_state")
-        entity_id = state.entity_id
         if (
             state is None
             or state.state in (STATE_UNKNOWN, "", STATE_UNAVAILABLE)
-            or entity_id in blacklist_e
+            or state.entity_id in blacklist_e
             or state.domain in blacklist_d
         ):
             return
 
+        entity_id = state.entity_id
         floats = {}
         strings = {}
         try:
