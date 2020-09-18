@@ -559,7 +559,7 @@ def websocket_get_themes(hass, connection, msg):
                     "themes": {
                         "safe_mode": {
                             "primary-color": "#db4437",
-                            "accent-color": "#eeee02",
+                            "accent-color": "#e0d202",
                         }
                     },
                     "default_theme": "safe_mode",
