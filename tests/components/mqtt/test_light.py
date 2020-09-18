@@ -811,6 +811,39 @@ async def test_sending_mqtt_rgb_command_with_template(hass, mqtt_mock):
     assert state.attributes["rgb_color"] == (255, 128, 63)
 
 
+async def test_set_brightness_via_template(hass, mqtt_mock):
+    """Test the brightness if command template is provided."""
+    config = {
+        light.DOMAIN: {
+            "platform": "mqtt",
+            "name": "test",
+            "command_topic": "test_light/set",
+            "brightness_command_topic": "test_light/brightness/set",
+            "brightness_command_template": '{ "brightness": {{ value }} }',
+        }
+    }
+
+    assert await async_setup_component(hass, light.DOMAIN, config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.test")
+    assert state.state == STATE_OFF
+
+    await common.async_turn_on(hass, "light.test", brightness=50)
+
+    mqtt_mock.async_publish.assert_has_calls(
+        [
+            call("test_light/brightness/set", '{ "brightness": 50 }', 0, False),
+            call("test_light/set", "ON", 0, False),
+        ],
+        any_order=True,
+    )
+
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+    assert state.attributes["brightness"] == 50
+
+
 async def test_sending_mqtt_color_temp_command_with_template(hass, mqtt_mock):
     """Test the sending of Color Temp command with template."""
     config = {
