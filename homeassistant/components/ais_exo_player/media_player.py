@@ -836,13 +836,38 @@ class ExoPlayerDevice(MediaPlayerEntity):
                         )
                     )
         else:
-            if media_content_id.startswith("ais_"):
-                from homeassistant.components.ais_exo_player import media_browser
-
-                media_content_id = media_browser.get_media_content_id_form_ais(
-                    self.hass, media_content_id
-                )
+            # do not call async from threads - this will it can lead to a deadlock!!!
+            # if media_content_id.startswith("ais_"):
+            #     from homeassistant.components.ais_exo_player import media_browser
+            #
+            #     media_content_id = media_browser.get_media_content_id_form_ais(
+            #         self.hass, media_content_id
+            #     )
             # this is currently used when the media are taken from gallery
+            if media_content_id.startswith("ais_"):
+                import requests
+
+                if media_content_id.startswith("ais_tunein"):
+                    url_to_call = media_content_id.split("/", 3)[3]
+                    try:
+                        response_text = requests.get(url_to_call, timeout=2).text
+                        response_text = response_text.split("\n")[0]
+                        if response_text.endswith(".pls"):
+                            response_text = requests.get(response_text, timeout=2).text
+                            media_content_id = response_text.split("\n")[1].replace(
+                                "File1=", ""
+                            )
+                        if response_text.startswith("mms:"):
+                            response_text = requests.get(
+                                response_text.replace("mms:", "http:"), timeout=2
+                            ).text
+                            media_content_id = response_text.split("\n")[1].replace(
+                                "Ref1=", ""
+                            )
+                    except Exception as e:
+                        pass
+                elif media_content_id.startswith("ais_spotify"):
+                    media_content_id = media_content_id.replace("ais_spotify/", "")
             self._media_content_id = media_content_id
             self._media_position = 0
             self._media_status_received_time = dt_util.utcnow()
