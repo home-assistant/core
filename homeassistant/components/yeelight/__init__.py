@@ -360,7 +360,7 @@ class YeelightScanner:
         """Register callback function."""
         host = self._seen.get(unique_id)
         if host is not None:
-            self._hass.async_add_job(callback_func(host))
+            self._hass.async_create_task(callback_func(host))
         else:
             self._callbacks[unique_id] = callback_func
             if len(self._callbacks) == 1:
