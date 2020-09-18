@@ -54,16 +54,17 @@ def assert_result_info(info, result, entities=None, domains=None, all_states=Fal
     """Check result info."""
     assert info.result() == result
     assert info.all_states == all_states
-    assert info.filter_lifecycle("invalid_entity_name.somewhere") == all_states
+    assert info.filter("invalid_entity_name.somewhere") == all_states
     if entities is not None:
         assert info.entities == frozenset(entities)
         assert all([info.filter(entity) for entity in entities])
-        assert not info.filter("invalid_entity_name.somewhere")
+        if not all_states:
+            assert not info.filter("invalid_entity_name.somewhere")
     else:
         assert not info.entities
     if domains is not None:
         assert info.domains == frozenset(domains)
-        assert all([info.filter_lifecycle(domain + ".entity") for domain in domains])
+        assert all([info.filter(domain + ".entity") for domain in domains])
     else:
         assert not hasattr(info, "_domains")
 
@@ -1958,7 +1959,8 @@ def test_generate_select(hass):
 
     tmp = template.Template(template_str, hass)
     info = tmp.async_render_to_info()
-    assert_result_info(info, "", [], ["sensor"])
+    assert_result_info(info, "", [], [])
+    assert info.domains_lifecycle == {"sensor"}
 
     hass.states.async_set("sensor.test_sensor", "off", {"attr": "value"})
     hass.states.async_set("sensor.test_sensor_on", "on")
@@ -1970,6 +1972,7 @@ def test_generate_select(hass):
         ["sensor.test_sensor", "sensor.test_sensor_on"],
         ["sensor"],
     )
+    assert info.domains_lifecycle == {"sensor"}
 
 
 async def test_async_render_to_info_in_conditional(hass):
@@ -2431,3 +2434,24 @@ async def test_slice_states(hass):
         hass,
     )
     assert tpl.async_render() == "sensor.test"
+
+
+async def test_lifecycle(hass):
+    """Test that we limit template render info for lifecycle events."""
+    hass.states.async_set("sun.sun", "above", {"elevation": 50, "next_rising": "later"})
+    for i in range(2):
+        hass.states.async_set(f"sensor.sensor{i}", "on")
+
+    tmp = template.Template("{{ states | count }}", hass)
+
+    info = tmp.async_render_to_info()
+    assert info.all_states is False
+    assert info.all_states_lifecycle is True
+    assert info.entities == set()
+    assert info.domains == set()
+    assert info.domains_lifecycle == set()
+
+    assert info.filter("sun.sun") is False
+    assert info.filter("sensor.sensor1") is False
+    assert info.filter_lifecycle("sensor.new") is True
+    assert info.filter_lifecycle("sensor.removed") is True
