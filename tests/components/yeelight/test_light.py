@@ -73,6 +73,7 @@ from homeassistant.components.yeelight.light import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_ID, CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry
 from homeassistant.setup import async_setup_component
 from homeassistant.util.color import (
     color_hs_to_RGB,
@@ -97,15 +98,23 @@ from . import (
 from tests.async_mock import MagicMock, patch
 from tests.common import MockConfigEntry
 
+CONFIG_ENTRY_DATA = {
+    CONF_ID: None,
+    CONF_HOST: IP_ADDRESS,
+    CONF_NAME: NAME,
+    CONF_TRANSITION: DEFAULT_TRANSITION,
+    CONF_MODE_MUSIC: DEFAULT_MODE_MUSIC,
+    CONF_SAVE_ON_CHANGE: DEFAULT_SAVE_ON_CHANGE,
+    CONF_NIGHTLIGHT_SWITCH: DEFAULT_NIGHTLIGHT_SWITCH,
+}
+
 
 async def test_services(hass: HomeAssistant, caplog):
     """Test Yeelight services."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_ID: "",
-            CONF_HOST: IP_ADDRESS,
-            CONF_TRANSITION: DEFAULT_TRANSITION,
+            **CONFIG_ENTRY_DATA,
             CONF_MODE_MUSIC: True,
             CONF_SAVE_ON_CHANGE: True,
             CONF_NIGHTLIGHT_SWITCH: True,
@@ -305,11 +314,7 @@ async def test_device_types(hass: HomeAssistant):
         config_entry = MockConfigEntry(
             domain=DOMAIN,
             data={
-                CONF_ID: "",
-                CONF_HOST: IP_ADDRESS,
-                CONF_TRANSITION: DEFAULT_TRANSITION,
-                CONF_MODE_MUSIC: DEFAULT_MODE_MUSIC,
-                CONF_SAVE_ON_CHANGE: DEFAULT_SAVE_ON_CHANGE,
+                **CONFIG_ENTRY_DATA,
                 CONF_NIGHTLIGHT_SWITCH: False,
             },
         )
@@ -329,6 +334,8 @@ async def test_device_types(hass: HomeAssistant):
 
         await hass.config_entries.async_unload(config_entry.entry_id)
         await config_entry.async_remove(hass)
+        registry = await entity_registry.async_get_registry(hass)
+        registry.async_clear_config_entry(config_entry.entry_id)
 
         # nightlight
         if nightlight_properties is None:
@@ -336,11 +343,7 @@ async def test_device_types(hass: HomeAssistant):
         config_entry = MockConfigEntry(
             domain=DOMAIN,
             data={
-                CONF_ID: "",
-                CONF_HOST: IP_ADDRESS,
-                CONF_TRANSITION: DEFAULT_TRANSITION,
-                CONF_MODE_MUSIC: DEFAULT_MODE_MUSIC,
-                CONF_SAVE_ON_CHANGE: DEFAULT_SAVE_ON_CHANGE,
+                **CONFIG_ENTRY_DATA,
                 CONF_NIGHTLIGHT_SWITCH: True,
             },
         )
@@ -358,6 +361,7 @@ async def test_device_types(hass: HomeAssistant):
 
         await hass.config_entries.async_unload(config_entry.entry_id)
         await config_entry.async_remove(hass)
+        registry.async_clear_config_entry(config_entry.entry_id)
 
     bright = round(255 * int(PROPERTIES["bright"]) / 100)
     current_brightness = round(255 * int(PROPERTIES["current_brightness"]) / 100)
@@ -518,14 +522,7 @@ async def test_effects(hass: HomeAssistant):
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={
-            CONF_ID: "",
-            CONF_HOST: IP_ADDRESS,
-            CONF_TRANSITION: DEFAULT_TRANSITION,
-            CONF_MODE_MUSIC: DEFAULT_MODE_MUSIC,
-            CONF_SAVE_ON_CHANGE: DEFAULT_SAVE_ON_CHANGE,
-            CONF_NIGHTLIGHT_SWITCH: DEFAULT_NIGHTLIGHT_SWITCH,
-        },
+        data=CONFIG_ENTRY_DATA,
     )
     config_entry.add_to_hass(hass)
 

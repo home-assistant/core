@@ -27,7 +27,7 @@ CAPABILITIES = {
     "name": "",
 }
 
-NAME = "NAME"
+NAME = "name"
 
 MODULE = "homeassistant.components.yeelight"
 MODULE_CONFIG_FLOW = f"{MODULE}.config_flow"
@@ -72,6 +72,7 @@ YAML_CONFIGURATION = {
 
 CONFIG_ENTRY_DATA = {
     CONF_ID: ID,
+    CONF_NAME: NAME,
 }
 
 
