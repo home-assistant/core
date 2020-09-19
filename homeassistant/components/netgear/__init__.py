@@ -46,7 +46,9 @@ async def async_setup(hass, config):
     for netgear_conf in conf:
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=netgear_conf,
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data=netgear_conf,
             )
         )
 
@@ -82,5 +84,7 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     if unload_ok:
         await hass.data[DOMAIN][entry.unique_id].async_unload()
         hass.data[DOMAIN].pop(entry.unique_id)
+        if not hass.data[DOMAIN]:
+            hass.data.pop(DOMAIN)
 
     return unload_ok
