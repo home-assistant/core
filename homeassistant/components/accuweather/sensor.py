@@ -100,10 +100,20 @@ class AccuWeatherSensor(CoordinatorEntity):
                 return self.coordinator.data[ATTR_FORECAST][self.forecast_day][
                     self.kind
                 ]["Speed"]["Value"]
-            if self.kind in ["Grass", "Mold", "Ragweed", "Tree", "UVIndex", "Ozone"]:
+            if self.kind in ["Grass", "Mold", "Ragweed", "Tree", "UVIndex"]:
                 return self.coordinator.data[ATTR_FORECAST][self.forecast_day][
                     self.kind
                 ]["Value"]
+            if self.kind == "Ozone":
+                return (
+                    self.coordinator.data[ATTR_FORECAST][self.forecast_day][self.kind][
+                        "Value"
+                    ]
+                    if self.coordinator.data[ATTR_FORECAST][self.forecast_day].get(
+                        self.kind
+                    )
+                    else None
+                )
             return self.coordinator.data[ATTR_FORECAST][self.forecast_day][self.kind]
         if self.kind == "Ceiling":
             return round(self.coordinator.data[self.kind][self._unit_system]["Value"])
@@ -148,7 +158,13 @@ class AccuWeatherSensor(CoordinatorEntity):
                 self._attrs["direction"] = self.coordinator.data[ATTR_FORECAST][
                     self.forecast_day
                 ][self.kind]["Direction"]["English"]
-            elif self.kind in ["Grass", "Mold", "Ragweed", "Tree", "UVIndex", "Ozone"]:
+            elif self.kind in ["Grass", "Mold", "Ragweed", "Tree", "UVIndex"]:
+                self._attrs["level"] = self.coordinator.data[ATTR_FORECAST][
+                    self.forecast_day
+                ][self.kind]["Category"]
+            elif self.kind == "Ozone" and self.coordinator.data[ATTR_FORECAST][
+                self.forecast_day
+            ].get(self.kind):
                 self._attrs["level"] = self.coordinator.data[ATTR_FORECAST][
                     self.forecast_day
                 ][self.kind]["Category"]
