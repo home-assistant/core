@@ -21,6 +21,7 @@ from homeassistant.const import (
     DEGREE,
     LENGTH_METERS,
     PERCENTAGE,
+    PRESSURE_HPA,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
     __version__,
@@ -42,8 +43,8 @@ DEFAULT_NAME = "zamg"
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
 
 SENSOR_TYPES = {
-    "pressure": ("Pressure", "hPa", "LDstat hPa", float),
-    "pressure_sealevel": ("Pressure at Sea Level", "hPa", "LDred hPa", float),
+    "pressure": ("Pressure", PRESSURE_HPA, "LDstat hPa", float),
+    "pressure_sealevel": ("Pressure at Sea Level", PRESSURE_HPA, "LDred hPa", float),
     "humidity": ("Humidity", PERCENTAGE, "RF %", int),
     "wind_speed": (
         "Wind Speed",
