@@ -171,7 +171,7 @@ class ModbusCoilSwitch(ToggleEntity, RestoreEntity):
             return
 
         self._available = True
-        return bool(result.bits[0])
+        return bool(result.bits[coil])
 
     def _write_coil(self, coil, value):
         """Write coil using the Modbus hub slave."""
