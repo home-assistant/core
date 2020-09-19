@@ -79,6 +79,9 @@ class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.discovery_info = discovery_info
         _properties = self.discovery_info.get("properties")
 
+        if not self.discovery_info.get(CONF_PORT):
+            self.discovery_info[CONF_PORT] = DEFAULT_PORT
+
         unique_id = self.discovery_info.get("hostname").split(".")[0]
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()

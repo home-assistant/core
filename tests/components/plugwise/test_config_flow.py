@@ -9,7 +9,13 @@ from homeassistant.components.plugwise.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_SCAN_INTERVAL
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SCAN_INTERVAL,
+)
 
 from tests.async_mock import MagicMock, patch
 from tests.common import MockConfigEntry
@@ -147,6 +153,44 @@ async def test_zeroconf_form(hass):
 
     assert result4["type"] == "abort"
     assert result4["reason"] == "already_configured"
+
+
+async def test_zeroconf_missing_port_form(hass):
+    """Test we get the form when port is absent from discovery."""
+    missing_port = TEST_DISCOVERY
+    missing_port.pop(CONF_PORT)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=missing_port
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.plugwise.config_flow.Smile.connect",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.plugwise.async_setup",
+        return_value=True,
+    ) as mock_setup, patch(
+        "homeassistant.components.plugwise.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"password": TEST_PASSWORD},
+        )
+
+    await hass.async_block_till_done()
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result2["data"] == {
+        "host": TEST_HOST,
+        "password": TEST_PASSWORD,
+        "port": DEFAULT_PORT,
+    }
+
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_form_invalid_auth(hass, mock_smile):
