@@ -60,7 +60,7 @@ class NetgearDeviceEntity(ScannerEntity):
         self._name = device["name"]
         self._mac = device["mac"]
         self._manufacturer = device["device_model"]
-        self._icon = icon_for_device(device)
+        self._icon = DEVICE_ICONS.get(device["device_type"], "mdi:help-network")
         self._active = True
         self._attrs = {}
 
@@ -127,11 +127,8 @@ class NetgearDeviceEntity(ScannerEntity):
         """Register state update callback."""
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, self._router.signal_device_update, self.update_device,
+                self.hass,
+                self._router.signal_device_update,
+                self.update_device,
             )
         )
-
-
-def icon_for_device(device) -> str:
-    """Return the device icon from his type."""
-    return DEVICE_ICONS.get(device["device_type"], "mdi:help-network")

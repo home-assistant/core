@@ -62,10 +62,7 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if not user_input:
             user_input = {}
 
-        if (
-            self.placeholders.get(CONF_URL)
-            and self.placeholders[CONF_URL] != "url_not_found"
-        ):
+        if self.placeholders.get(CONF_URL) != "url_not_found":
             user_input.update({CONF_URL: self.placeholders[CONF_URL]})
             step_id = "link"
             data_schema = _discovery_schema_with_defaults(user_input)
@@ -87,12 +84,7 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input and not self.placeholders.get(CONF_URL):
             self.placeholders[CONF_URL] = user_input.get(CONF_URL)
 
-        if self.source == config_entries.SOURCE_IMPORT:
-            if not user_input.get(CONF_HOST):
-                url = await self.hass.async_add_executor_job(autodetect_url)
-                self.placeholders[CONF_URL] = url or "url_not_found"
-
-        elif self.placeholders.get(CONF_URL) is None:
+        if self.placeholders.get(CONF_URL) is None:
             return await self.async_step_discover()
 
         if not user_input:
@@ -107,24 +99,20 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         username = user_input.get(CONF_USERNAME) or None
         password = user_input[CONF_PASSWORD]
 
-        try:
-            # Open connection and check authentication
-            api = await self.hass.async_add_executor_job(
-                Netgear, password, None, username, port, ssl, None
-            )
-            if not await self.hass.async_add_executor_job(api.login):
-                raise InvalidConfig
-
-            # Check if already configured
-            infos = await self.hass.async_add_executor_job(api.get_info)
-            await self.async_set_unique_id(infos["SerialNumber"])
-            self._abort_if_unique_id_configured()
-
-        except InvalidConfig:
+        # Open connection and check authentication
+        api = await self.hass.async_add_executor_job(
+            Netgear, password, None, username, port, ssl, None
+        )
+        if not await self.hass.async_add_executor_job(api.login):
             errors["base"] = "config"
 
         if errors:
             return await self._show_setup_form(user_input, errors)
+
+        # Check if already configured
+        infos = await self.hass.async_add_executor_job(api.get_info)
+        await self.async_set_unique_id(infos["SerialNumber"])
+        self._abort_if_unique_id_configured()
 
         config_data = {
             CONF_USERNAME: username,
@@ -138,7 +126,8 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             config_data[CONF_SSL] = ssl
 
         return self.async_create_entry(
-            title=f"{infos['ModelName']} - {infos['DeviceName']}", data=config_data,
+            title=f"{infos['ModelName']} - {infos['DeviceName']}",
+            data=config_data,
         )
 
     async def async_step_discover(self, user_input=None):
@@ -164,6 +153,10 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input=None):
         """Import a config entry."""
+        if not user_input.get(CONF_HOST):
+            url = await self.hass.async_add_executor_job(autodetect_url)
+            self.placeholders[CONF_URL] = url or "url_not_found"
+
         return await self.async_step_user(user_input)
 
     async def async_step_link(self, user_input):
