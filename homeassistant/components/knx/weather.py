@@ -1,4 +1,6 @@
 """Support for KNX/IP weather station."""
+from typing import Any, Dict, Optional
+
 from xknx.devices import Weather as XknxWeather
 
 from homeassistant.components.weather import WeatherEntity
@@ -65,3 +67,8 @@ class KNXWeather(WeatherEntity):
         return (
             self.device.wind_speed * 3.6 if self.device.wind_speed is not None else None
         )
+
+    @property
+    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+        """Return the device specific state attributes."""
+        return self.device.ha_state_attributes
