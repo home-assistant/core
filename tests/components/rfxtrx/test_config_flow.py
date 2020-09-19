@@ -7,7 +7,10 @@ from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.rfxtrx import DOMAIN, config_flow
 from homeassistant.helpers.device_registry import (
     async_entries_for_config_entry,
-    async_get_registry,
+    async_get_registry as async_get_device_registry,
+)
+from homeassistant.helpers.entity_registry import (
+    async_get_registry as async_get_entity_registry,
 )
 
 from tests.async_mock import MagicMock, patch, sentinel
@@ -581,7 +584,7 @@ async def test_options_add_remove_device(hass):
     assert state.state == "off"
     assert state.attributes.get("friendly_name") == "AC 213c7f2:48"
 
-    device_registry = await async_get_registry(hass)
+    device_registry = await async_get_device_registry(hass)
     device_entries = async_entries_for_config_entry(device_registry, entry.entry_id)
 
     assert device_entries[0].id
@@ -610,6 +613,169 @@ async def test_options_add_remove_device(hass):
     assert "0b1100cd0213c7f230010f71" not in entry.data["devices"]
 
     state = hass.states.get("binary_sensor.ac_213c7f2_48")
+    assert not state
+
+
+async def test_options_replace_device(hass):
+    """Test we can replace a device."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "host": None,
+            "port": None,
+            "device": "/dev/tty123",
+            "debug": False,
+            "automatic_add": False,
+            "devices": {
+                "0a520101f00400e22d0189": {"device_id": ["52", "1", "f0:04"]},
+                "0a520105230400c3260279": {"device_id": ["52", "1", "23:04"]},
+            },
+        },
+        unique_id=DOMAIN,
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(
+        "sensor.thgn122_123_thgn132_thgr122_228_238_268_f0_04_rssi_numeric"
+    )
+    assert state
+    state = hass.states.get(
+        "sensor.thgn122_123_thgn132_thgr122_228_238_268_f0_04_battery_numeric"
+    )
+    assert state
+    state = hass.states.get(
+        "sensor.thgn122_123_thgn132_thgr122_228_238_268_f0_04_humidity"
+    )
+    assert state
+    state = hass.states.get(
+        "sensor.thgn122_123_thgn132_thgr122_228_238_268_f0_04_humidity_status"
+    )
+    assert state
+    state = hass.states.get(
+        "sensor.thgn122_123_thgn132_thgr122_228_238_268_f0_04_temperature"
+    )
+    assert state
+    state = hass.states.get(
+        "sensor.thgn122_123_thgn132_thgr122_228_238_268_23_04_rssi_numeric"
+    )
+    assert state
+    state = hass.states.get(
+        "sensor.thgn122_123_thgn132_thgr122_228_238_268_23_04_battery_numeric"
+    )
+    assert state
+    state = hass.states.get(
+        "sensor.thgn122_123_thgn132_thgr122_228_238_268_23_04_humidity"
+    )
+    assert state
+    state = hass.states.get(
+        "sensor.thgn122_123_thgn132_thgr122_228_238_268_23_04_humidity_status"
+    )
+    assert state
+    state = hass.states.get(
+        "sensor.thgn122_123_thgn132_thgr122_228_238_268_23_04_temperature"
+    )
+    assert state
+
+    device_registry = await async_get_device_registry(hass)
+    device_entries = async_entries_for_config_entry(device_registry, entry.entry_id)
+
+    old_device = next(
+        (
+            elem.id
+            for elem in device_entries
+            if next(iter(elem.identifiers))[1:] == ("52", "1", "f0:04")
+        ),
+        None,
+    )
+    new_device = next(
+        (
+            elem.id
+            for elem in device_entries
+            if next(iter(elem.identifiers))[1:] == ("52", "1", "23:04")
+        ),
+        None,
+    )
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "prompt_options"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "debug": False,
+            "automatic_add": False,
+            "device": old_device,
+        },
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "set_device_options"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "replace_device": new_device,
+        },
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+    await hass.async_block_till_done()
+
+    entity_registry = await async_get_entity_registry(hass)
+
+    rssi_entity = entity_registry.async_get(
+        "sensor.thgn122_123_thgn132_thgr122_228_238_268_f0_04_rssi_numeric"
+    )
+    assert rssi_entity
+    assert rssi_entity.device_id == new_device
+    humidity_entity = entity_registry.async_get(
+        "sensor.thgn122_123_thgn132_thgr122_228_238_268_f0_04_humidity"
+    )
+    assert humidity_entity
+    assert humidity_entity.device_id == new_device
+    humidity_status_entity = entity_registry.async_get(
+        "sensor.thgn122_123_thgn132_thgr122_228_238_268_f0_04_humidity_status"
+    )
+    assert humidity_status_entity
+    assert humidity_status_entity.device_id == new_device
+    battery_numeric_entity = entity_registry.async_get(
+        "sensor.thgn122_123_thgn132_thgr122_228_238_268_f0_04_battery_numeric"
+    )
+    assert battery_numeric_entity
+    assert battery_numeric_entity.device_id == new_device
+    temperature_entity = entity_registry.async_get(
+        "sensor.thgn122_123_thgn132_thgr122_228_238_268_f0_04_temperature"
+    )
+    assert temperature_entity
+    assert temperature_entity.device_id == new_device
+
+    state = hass.states.get(
+        "sensor.thgn122_123_thgn132_thgr122_228_238_268_23_04_rssi_numeric"
+    )
+    assert not state
+    state = hass.states.get(
+        "sensor.thgn122_123_thgn132_thgr122_228_238_268_23_04_battery_numeric"
+    )
+    assert not state
+    state = hass.states.get(
+        "sensor.thgn122_123_thgn132_thgr122_228_238_268_23_04_humidity"
+    )
+    assert not state
+    state = hass.states.get(
+        "sensor.thgn122_123_thgn132_thgr122_228_238_268_23_04_humidity_status"
+    )
+    assert not state
+    state = hass.states.get(
+        "sensor.thgn122_123_thgn132_thgr122_228_238_268_23_04_temperature"
+    )
     assert not state
 
 
@@ -645,7 +811,7 @@ async def test_options_remove_multiple_devices(hass):
     state = hass.states.get("binary_sensor.ac_1118cdea_2")
     assert state
 
-    device_registry = await async_get_registry(hass)
+    device_registry = await async_get_device_registry(hass)
     device_entries = async_entries_for_config_entry(device_registry, entry.entry_id)
 
     assert len(device_entries) == 3
@@ -769,7 +935,7 @@ async def test_options_add_and_configure_device(hass):
     assert state.state == "off"
     assert state.attributes.get("friendly_name") == "PT2262 22670e"
 
-    device_registry = await async_get_registry(hass)
+    device_registry = await async_get_device_registry(hass)
     device_entries = async_entries_for_config_entry(device_registry, entry.entry_id)
 
     assert device_entries[0].id
