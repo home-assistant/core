@@ -12,7 +12,6 @@ from ipaddress import ip_address
 import logging
 import os
 import pathlib
-import random
 import re
 import threading
 from time import monotonic
@@ -33,7 +32,6 @@ from typing import (
     Union,
     cast,
 )
-import uuid
 
 import attr
 import voluptuous as vol
@@ -77,12 +75,13 @@ import homeassistant.util.dt as dt_util
 from homeassistant.util.thread import fix_threading_exception_logging
 from homeassistant.util.timeout import TimeoutManager
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
+import homeassistant.util.uuid as uuid_util
 
 # Typing imports that create a circular dependency
 if TYPE_CHECKING:
     from homeassistant.auth import AuthManager
-    from homeassistant.config_entries import ConfigEntries
     from homeassistant.components.http import HomeAssistantHTTP
+    from homeassistant.config_entries import ConfigEntries
 
 
 block_async_io.enable()
@@ -159,7 +158,7 @@ class CoreState(enum.Enum):
     final_write = "FINAL_WRITE"
     stopped = "STOPPED"
 
-    def __str__(self) -> str:
+    def __str__(self) -> str:  # pylint: disable=invalid-str-returned
         """Return the event."""
         return self.value  # type: ignore
 
@@ -303,6 +302,9 @@ class HomeAssistant:
         target: target to call.
         args: parameters for method to call.
         """
+        if target is None:
+            raise ValueError("Don't call async_add_job with None")
+
         task = None
 
         # Check for partials to properly determine if coroutine function
@@ -317,9 +319,7 @@ class HomeAssistant:
         elif is_callback(check_target):
             self.loop.call_soon(target, *args)
         else:
-            task = self.loop.run_in_executor(  # type: ignore
-                None, target, *args
-            )
+            task = self.loop.run_in_executor(None, target, *args)  # type: ignore
 
         # If a task is scheduled
         if self._track_task and task is not None:
@@ -510,13 +510,7 @@ class Context:
 
     user_id: str = attr.ib(default=None)
     parent_id: Optional[str] = attr.ib(default=None)
-    # The uuid1 uses a random multicast MAC address instead of the real MAC address
-    # of the machine without the overhead of calling the getrandom() system call.
-    #
-    # This is effectively equivalent to PostgreSQL's uuid_generate_v1mc() function
-    id: str = attr.ib(
-        factory=lambda: uuid.uuid1(node=random.getrandbits(48) | (1 << 40)).hex
-    )
+    id: str = attr.ib(factory=uuid_util.uuid_v1mc_hex)
 
     def as_dict(self) -> dict:
         """Return a dictionary representation of the context."""
@@ -529,7 +523,7 @@ class EventOrigin(enum.Enum):
     local = "LOCAL"
     remote = "REMOTE"
 
-    def __str__(self) -> str:
+    def __str__(self) -> str:  # pylint: disable=invalid-str-returned
         """Return the event."""
         return self.value  # type: ignore
 
@@ -759,6 +753,7 @@ class State:
     last_changed: last time the state was changed, not the attributes.
     last_updated: last time this object was updated.
     context: Context in which it was created
+    domain: Domain of this state.
     """
 
     __slots__ = [
@@ -768,6 +763,7 @@ class State:
         "last_changed",
         "last_updated",
         "context",
+        "domain",
     ]
 
     def __init__(
@@ -801,11 +797,7 @@ class State:
         self.last_updated = last_updated or dt_util.utcnow()
         self.last_changed = last_changed or self.last_updated
         self.context = context or Context()
-
-    @property
-    def domain(self) -> str:
-        """Domain of this state."""
-        return split_entity_id(self.entity_id)[0]
+        self.domain = split_entity_id(self.entity_id)[0]
 
     @property
     def object_id(self) -> str:
@@ -907,7 +899,9 @@ class StateMachine:
         return future.result()
 
     @callback
-    def async_entity_ids(self, domain_filter: Optional[str] = None) -> List[str]:
+    def async_entity_ids(
+        self, domain_filter: Optional[Union[str, Iterable]] = None
+    ) -> List[str]:
         """List of entity ids that are being tracked.
 
         This method must be run in the event loop.
@@ -915,25 +909,38 @@ class StateMachine:
         if domain_filter is None:
             return list(self._states.keys())
 
-        domain_filter = domain_filter.lower()
+        if isinstance(domain_filter, str):
+            domain_filter = (domain_filter.lower(),)
 
         return [
             state.entity_id
             for state in self._states.values()
-            if state.domain == domain_filter
+            if state.domain in domain_filter
         ]
 
-    def all(self) -> List[State]:
+    def all(self, domain_filter: Optional[Union[str, Iterable]] = None) -> List[State]:
         """Create a list of all states."""
-        return run_callback_threadsafe(self._loop, self.async_all).result()
+        return run_callback_threadsafe(
+            self._loop, self.async_all, domain_filter
+        ).result()
 
     @callback
-    def async_all(self) -> List[State]:
-        """Create a list of all states.
+    def async_all(
+        self, domain_filter: Optional[Union[str, Iterable]] = None
+    ) -> List[State]:
+        """Create a list of all states matching the filter.
 
         This method must be run in the event loop.
         """
-        return list(self._states.values())
+        if domain_filter is None:
+            return list(self._states.values())
+
+        if isinstance(domain_filter, str):
+            domain_filter = (domain_filter.lower(),)
+
+        return [
+            state for state in self._states.values() if state.domain in domain_filter
+        ]
 
     def get(self, entity_id: str) -> Optional[State]:
         """Retrieve state of entity_id or None if not found.
@@ -1383,6 +1390,9 @@ class Config:
         # List of allowed external URLs that integrations may use
         self.allowlist_external_urls: Set[str] = set()
 
+        # Dictionary of Media folders that integrations may use
+        self.media_dirs: Dict[str, str] = {}
+
         # If Home Assistant is running in safe mode
         self.safe_mode: bool = False
 
@@ -1488,6 +1498,7 @@ class Config:
         unit_system: Optional[str] = None,
         location_name: Optional[str] = None,
         time_zone: Optional[str] = None,
+        # pylint: disable=dangerous-default-value # _UNDEFs not modified
         external_url: Optional[Union[str, dict]] = _UNDEF,
         internal_url: Optional[Union[str, dict]] = _UNDEF,
     ) -> None:

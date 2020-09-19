@@ -18,8 +18,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 
 from .const import (
     ATTR_IDENTIFIERS,
@@ -110,7 +113,10 @@ class IPPDataUpdateCoordinator(DataUpdateCoordinator[IPPPrinter]):
         )
 
         super().__init__(
-            hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL,
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_interval=SCAN_INTERVAL,
         )
 
     async def _async_update_data(self) -> IPPPrinter:
@@ -118,10 +124,10 @@ class IPPDataUpdateCoordinator(DataUpdateCoordinator[IPPPrinter]):
         try:
             return await self.ipp.printer()
         except IPPError as error:
-            raise UpdateFailed(f"Invalid response from API: {error}")
+            raise UpdateFailed(f"Invalid response from API: {error}") from error
 
 
-class IPPEntity(Entity):
+class IPPEntity(CoordinatorEntity):
     """Defines a base IPP entity."""
 
     def __init__(
@@ -135,12 +141,12 @@ class IPPEntity(Entity):
         enabled_default: bool = True,
     ) -> None:
         """Initialize the IPP entity."""
+        super().__init__(coordinator)
         self._device_id = device_id
         self._enabled_default = enabled_default
         self._entry_id = entry_id
         self._icon = icon
         self._name = name
-        self.coordinator = coordinator
 
     @property
     def name(self) -> str:
@@ -153,29 +159,9 @@ class IPPEntity(Entity):
         return self._icon
 
     @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self.coordinator.last_update_success
-
-    @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
         return self._enabled_default
-
-    @property
-    def should_poll(self) -> bool:
-        """Return the polling requirement of the entity."""
-        return False
-
-    async def async_added_to_hass(self) -> None:
-        """Connect to dispatcher listening for entity data notifications."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
-        )
-
-    async def async_update(self) -> None:
-        """Update an IPP entity."""
-        await self.coordinator.async_request_refresh()
 
     @property
     def device_info(self) -> Dict[str, Any]:

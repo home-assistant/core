@@ -122,15 +122,17 @@ async def async_setup(hass, config):
 
                     if response.status < HTTP_BAD_REQUEST:
                         _LOGGER.debug(
-                            "Success. Url: %s. Status code: %d",
+                            "Success. Url: %s. Status code: %d. Payload: %s",
                             response.url,
                             response.status,
+                            payload,
                         )
                     else:
                         _LOGGER.warning(
-                            "Error. Url: %s. Status code %d",
+                            "Error. Url: %s. Status code %d. Payload: %s",
                             response.url,
                             response.status,
+                            payload,
                         )
 
             except asyncio.TimeoutError:

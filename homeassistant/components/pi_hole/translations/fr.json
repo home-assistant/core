@@ -9,8 +9,9 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "Cl\u00e9 API (facultatif)",
+                    "api_key": "Cl\u00e9 d'API",
                     "host": "H\u00f4te",
+                    "location": "Emplacement",
                     "name": "Nom",
                     "port": "Port",
                     "ssl": "Utiliser SSL",

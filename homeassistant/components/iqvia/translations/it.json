@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Questo codice di avviamento postale \u00e8 gi\u00e0 stato configurato."
+        },
         "error": {
             "invalid_zip_code": "Il CAP non \u00e8 valido"
         },

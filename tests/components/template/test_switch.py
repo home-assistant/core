@@ -541,7 +541,11 @@ async def test_off_action_optimistic(hass, calls):
 async def test_restore_state(hass):
     """Test state restoration."""
     mock_restore_cache(
-        hass, (State("switch.s1", STATE_ON), State("switch.s2", STATE_OFF),),
+        hass,
+        (
+            State("switch.s1", STATE_ON),
+            State("switch.s2", STATE_OFF),
+        ),
     )
 
     hass.state = CoreState.starting

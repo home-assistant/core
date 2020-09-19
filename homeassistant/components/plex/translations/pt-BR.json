@@ -7,6 +7,7 @@
         "step": {
             "manual_setup": {
                 "data": {
+                    "port": "Porta",
                     "ssl": "Usar SSL",
                     "token": "Token (Opcional)",
                     "verify_ssl": "Verifique o certificado SSL"

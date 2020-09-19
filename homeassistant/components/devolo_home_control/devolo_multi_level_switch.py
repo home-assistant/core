@@ -15,7 +15,7 @@ class DevoloMultiLevelSwitchDeviceEntity(DevoloDeviceEntity):
             homecontrol=homecontrol,
             device_instance=device_instance,
             element_uid=element_uid,
-            name=f"{device_instance.itemName}",
+            name=device_instance.item_name,
             sync=self._sync,
         )
         self._multi_level_switch_property = device_instance.multi_level_switch_property[

@@ -1,0 +1,7 @@
+{
+    "config": {
+        "abort": {
+            "reauth_successful": "Taasautentimine \u00f5nnestus"
+        }
+    }
+}

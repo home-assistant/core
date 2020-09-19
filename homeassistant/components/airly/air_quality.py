@@ -6,6 +6,7 @@ from homeassistant.components.air_quality import (
     AirQualityEntity,
 )
 from homeassistant.const import CONF_NAME
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     ATTR_API_ADVICE,
@@ -57,12 +58,12 @@ def round_state(func):
     return _decorator
 
 
-class AirlyAirQuality(AirQualityEntity):
+class AirlyAirQuality(CoordinatorEntity, AirQualityEntity):
     """Define an Airly air quality."""
 
     def __init__(self, coordinator, name):
         """Initialize."""
-        self.coordinator = coordinator
+        super().__init__(coordinator)
         self._name = name
         self._icon = "mdi:blur"
 
@@ -70,11 +71,6 @@ class AirlyAirQuality(AirQualityEntity):
     def name(self):
         """Return the name."""
         return self._name
-
-    @property
-    def should_poll(self):
-        """Return the polling requirement of the entity."""
-        return False
 
     @property
     def icon(self):
@@ -122,11 +118,6 @@ class AirlyAirQuality(AirQualityEntity):
         }
 
     @property
-    def available(self):
-        """Return True if entity is available."""
-        return self.coordinator.last_update_success
-
-    @property
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
@@ -138,13 +129,3 @@ class AirlyAirQuality(AirQualityEntity):
             LABEL_PM_10_LIMIT: self.coordinator.data[ATTR_API_PM10_LIMIT],
             LABEL_PM_10_PERCENT: round(self.coordinator.data[ATTR_API_PM10_PERCENT]),
         }
-
-    async def async_added_to_hass(self):
-        """Connect to dispatcher listening for entity data notifications."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
-        )
-
-    async def async_update(self):
-        """Update Airly entity."""
-        await self.coordinator.async_request_refresh()

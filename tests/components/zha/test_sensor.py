@@ -14,12 +14,13 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM,
     CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_UNIT_SYSTEM_METRIC,
+    PERCENTAGE,
     POWER_WATT,
+    PRESSURE_HPA,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    UNIT_PERCENTAGE,
 )
 from homeassistant.helpers import restore_state
 from homeassistant.util import dt as dt_util
@@ -36,7 +37,7 @@ from .common import (
 async def async_test_humidity(hass, cluster, entity_id):
     """Test humidity sensor."""
     await send_attributes_report(hass, cluster, {1: 1, 0: 1000, 2: 100})
-    assert_state(hass, entity_id, "10.0", UNIT_PERCENTAGE)
+    assert_state(hass, entity_id, "10.0", PERCENTAGE)
 
 
 async def async_test_temperature(hass, cluster, entity_id):
@@ -48,10 +49,10 @@ async def async_test_temperature(hass, cluster, entity_id):
 async def async_test_pressure(hass, cluster, entity_id):
     """Test pressure sensor."""
     await send_attributes_report(hass, cluster, {1: 1, 0: 1000, 2: 10000})
-    assert_state(hass, entity_id, "1000", "hPa")
+    assert_state(hass, entity_id, "1000", PRESSURE_HPA)
 
     await send_attributes_report(hass, cluster, {0: 1000, 20: -1, 16: 10000})
-    assert_state(hass, entity_id, "1000", "hPa")
+    assert_state(hass, entity_id, "1000", PRESSURE_HPA)
 
 
 async def async_test_illuminance(hass, cluster, entity_id):
@@ -268,7 +269,9 @@ async def test_temp_uom(
 
 
 async def test_electrical_measurement_init(
-    hass, zigpy_device_mock, zha_device_joined,
+    hass,
+    zigpy_device_mock,
+    zha_device_joined,
 ):
     """Test proper initialization of the electrical measurement cluster."""
 

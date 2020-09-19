@@ -105,7 +105,9 @@ async def test_fail_setup_without_command_topic(hass, mqtt_mock):
 async def test_update_state_via_state_topic(hass, mqtt_mock):
     """Test updating with via state topic."""
     assert await async_setup_component(
-        hass, alarm_control_panel.DOMAIN, DEFAULT_CONFIG,
+        hass,
+        alarm_control_panel.DOMAIN,
+        DEFAULT_CONFIG,
     )
     await hass.async_block_till_done()
 
@@ -131,7 +133,9 @@ async def test_update_state_via_state_topic(hass, mqtt_mock):
 async def test_ignore_update_state_if_unknown_via_state_topic(hass, mqtt_mock):
     """Test ignoring updates via state topic."""
     assert await async_setup_component(
-        hass, alarm_control_panel.DOMAIN, DEFAULT_CONFIG,
+        hass,
+        alarm_control_panel.DOMAIN,
+        DEFAULT_CONFIG,
     )
     await hass.async_block_till_done()
 
@@ -146,7 +150,9 @@ async def test_ignore_update_state_if_unknown_via_state_topic(hass, mqtt_mock):
 async def test_arm_home_publishes_mqtt(hass, mqtt_mock):
     """Test publishing of MQTT messages while armed."""
     assert await async_setup_component(
-        hass, alarm_control_panel.DOMAIN, DEFAULT_CONFIG,
+        hass,
+        alarm_control_panel.DOMAIN,
+        DEFAULT_CONFIG,
     )
     await hass.async_block_till_done()
 
@@ -162,7 +168,9 @@ async def test_arm_home_not_publishes_mqtt_with_invalid_code_when_req(hass, mqtt
     When code_arm_required = True
     """
     assert await async_setup_component(
-        hass, alarm_control_panel.DOMAIN, DEFAULT_CONFIG_CODE,
+        hass,
+        alarm_control_panel.DOMAIN,
+        DEFAULT_CONFIG_CODE,
     )
 
     call_count = mqtt_mock.async_publish.call_count
@@ -177,7 +185,11 @@ async def test_arm_home_publishes_mqtt_when_code_not_req(hass, mqtt_mock):
     """
     config = copy.deepcopy(DEFAULT_CONFIG_CODE)
     config[alarm_control_panel.DOMAIN]["code_arm_required"] = False
-    assert await async_setup_component(hass, alarm_control_panel.DOMAIN, config,)
+    assert await async_setup_component(
+        hass,
+        alarm_control_panel.DOMAIN,
+        config,
+    )
     await hass.async_block_till_done()
 
     await common.async_alarm_arm_home(hass)
@@ -189,7 +201,9 @@ async def test_arm_home_publishes_mqtt_when_code_not_req(hass, mqtt_mock):
 async def test_arm_away_publishes_mqtt(hass, mqtt_mock):
     """Test publishing of MQTT messages while armed."""
     assert await async_setup_component(
-        hass, alarm_control_panel.DOMAIN, DEFAULT_CONFIG,
+        hass,
+        alarm_control_panel.DOMAIN,
+        DEFAULT_CONFIG,
     )
     await hass.async_block_till_done()
 
@@ -205,7 +219,9 @@ async def test_arm_away_not_publishes_mqtt_with_invalid_code_when_req(hass, mqtt
     When code_arm_required = True
     """
     assert await async_setup_component(
-        hass, alarm_control_panel.DOMAIN, DEFAULT_CONFIG_CODE,
+        hass,
+        alarm_control_panel.DOMAIN,
+        DEFAULT_CONFIG_CODE,
     )
 
     call_count = mqtt_mock.async_publish.call_count
@@ -220,7 +236,11 @@ async def test_arm_away_publishes_mqtt_when_code_not_req(hass, mqtt_mock):
     """
     config = copy.deepcopy(DEFAULT_CONFIG_CODE)
     config[alarm_control_panel.DOMAIN]["code_arm_required"] = False
-    assert await async_setup_component(hass, alarm_control_panel.DOMAIN, config,)
+    assert await async_setup_component(
+        hass,
+        alarm_control_panel.DOMAIN,
+        config,
+    )
     await hass.async_block_till_done()
 
     await common.async_alarm_arm_away(hass)
@@ -232,7 +252,9 @@ async def test_arm_away_publishes_mqtt_when_code_not_req(hass, mqtt_mock):
 async def test_arm_night_publishes_mqtt(hass, mqtt_mock):
     """Test publishing of MQTT messages while armed."""
     assert await async_setup_component(
-        hass, alarm_control_panel.DOMAIN, DEFAULT_CONFIG,
+        hass,
+        alarm_control_panel.DOMAIN,
+        DEFAULT_CONFIG,
     )
     await hass.async_block_till_done()
 
@@ -248,7 +270,9 @@ async def test_arm_night_not_publishes_mqtt_with_invalid_code_when_req(hass, mqt
     When code_arm_required = True
     """
     assert await async_setup_component(
-        hass, alarm_control_panel.DOMAIN, DEFAULT_CONFIG_CODE,
+        hass,
+        alarm_control_panel.DOMAIN,
+        DEFAULT_CONFIG_CODE,
     )
 
     call_count = mqtt_mock.async_publish.call_count
@@ -263,7 +287,11 @@ async def test_arm_night_publishes_mqtt_when_code_not_req(hass, mqtt_mock):
     """
     config = copy.deepcopy(DEFAULT_CONFIG_CODE)
     config[alarm_control_panel.DOMAIN]["code_arm_required"] = False
-    assert await async_setup_component(hass, alarm_control_panel.DOMAIN, config,)
+    assert await async_setup_component(
+        hass,
+        alarm_control_panel.DOMAIN,
+        config,
+    )
     await hass.async_block_till_done()
 
     await common.async_alarm_arm_night(hass)
@@ -352,7 +380,9 @@ async def test_arm_custom_bypass_publishes_mqtt_when_code_not_req(hass, mqtt_moc
 async def test_disarm_publishes_mqtt(hass, mqtt_mock):
     """Test publishing of MQTT messages while disarmed."""
     assert await async_setup_component(
-        hass, alarm_control_panel.DOMAIN, DEFAULT_CONFIG,
+        hass,
+        alarm_control_panel.DOMAIN,
+        DEFAULT_CONFIG,
     )
     await hass.async_block_till_done()
 
@@ -370,7 +400,11 @@ async def test_disarm_publishes_mqtt_with_template(hass, mqtt_mock):
     config[alarm_control_panel.DOMAIN]["command_template"] = (
         '{"action":"{{ action }}",' '"code":"{{ code }}"}'
     )
-    assert await async_setup_component(hass, alarm_control_panel.DOMAIN, config,)
+    assert await async_setup_component(
+        hass,
+        alarm_control_panel.DOMAIN,
+        config,
+    )
     await hass.async_block_till_done()
 
     await common.async_alarm_disarm(hass, 1234)
@@ -387,7 +421,11 @@ async def test_disarm_publishes_mqtt_when_code_not_req(hass, mqtt_mock):
     config = copy.deepcopy(DEFAULT_CONFIG_CODE)
     config[alarm_control_panel.DOMAIN]["code"] = "1234"
     config[alarm_control_panel.DOMAIN]["code_disarm_required"] = False
-    assert await async_setup_component(hass, alarm_control_panel.DOMAIN, config,)
+    assert await async_setup_component(
+        hass,
+        alarm_control_panel.DOMAIN,
+        config,
+    )
     await hass.async_block_till_done()
 
     await common.async_alarm_disarm(hass)
@@ -400,7 +438,9 @@ async def test_disarm_not_publishes_mqtt_with_invalid_code_when_req(hass, mqtt_m
     When code_disarm_required = True
     """
     assert await async_setup_component(
-        hass, alarm_control_panel.DOMAIN, DEFAULT_CONFIG_CODE,
+        hass,
+        alarm_control_panel.DOMAIN,
+        DEFAULT_CONFIG_CODE,
     )
 
     call_count = mqtt_mock.async_publish.call_count
@@ -563,17 +603,71 @@ async def test_discovery_removal_alarm(hass, mqtt_mock, caplog):
     )
 
 
-async def test_discovery_update_alarm(hass, mqtt_mock, caplog):
+async def test_discovery_update_alarm_topic_and_template(hass, mqtt_mock, caplog):
     """Test update of discovered alarm_control_panel."""
     config1 = copy.deepcopy(DEFAULT_CONFIG[alarm_control_panel.DOMAIN])
     config2 = copy.deepcopy(DEFAULT_CONFIG[alarm_control_panel.DOMAIN])
     config1["name"] = "Beer"
     config2["name"] = "Milk"
+    config1["state_topic"] = "alarm/state1"
+    config2["state_topic"] = "alarm/state2"
+    config1["value_template"] = "{{ value_json.state1.state }}"
+    config2["value_template"] = "{{ value_json.state2.state }}"
+
+    state_data1 = [
+        ([("alarm/state1", '{"state1":{"state":"armed_away"}}')], "armed_away", None),
+    ]
+    state_data2 = [
+        ([("alarm/state1", '{"state1":{"state":"triggered"}}')], "armed_away", None),
+        ([("alarm/state1", '{"state2":{"state":"triggered"}}')], "armed_away", None),
+        ([("alarm/state2", '{"state1":{"state":"triggered"}}')], "armed_away", None),
+        ([("alarm/state2", '{"state2":{"state":"triggered"}}')], "triggered", None),
+    ]
 
     data1 = json.dumps(config1)
     data2 = json.dumps(config2)
     await help_test_discovery_update(
-        hass, mqtt_mock, caplog, alarm_control_panel.DOMAIN, data1, data2
+        hass,
+        mqtt_mock,
+        caplog,
+        alarm_control_panel.DOMAIN,
+        data1,
+        data2,
+        state_data1=state_data1,
+        state_data2=state_data2,
+    )
+
+
+async def test_discovery_update_alarm_template(hass, mqtt_mock, caplog):
+    """Test update of discovered alarm_control_panel."""
+    config1 = copy.deepcopy(DEFAULT_CONFIG[alarm_control_panel.DOMAIN])
+    config2 = copy.deepcopy(DEFAULT_CONFIG[alarm_control_panel.DOMAIN])
+    config1["name"] = "Beer"
+    config2["name"] = "Milk"
+    config1["state_topic"] = "alarm/state1"
+    config2["state_topic"] = "alarm/state1"
+    config1["value_template"] = "{{ value_json.state1.state }}"
+    config2["value_template"] = "{{ value_json.state2.state }}"
+
+    state_data1 = [
+        ([("alarm/state1", '{"state1":{"state":"armed_away"}}')], "armed_away", None),
+    ]
+    state_data2 = [
+        ([("alarm/state1", '{"state1":{"state":"triggered"}}')], "armed_away", None),
+        ([("alarm/state1", '{"state2":{"state":"triggered"}}')], "triggered", None),
+    ]
+
+    data1 = json.dumps(config1)
+    data2 = json.dumps(config2)
+    await help_test_discovery_update(
+        hass,
+        mqtt_mock,
+        caplog,
+        alarm_control_panel.DOMAIN,
+        data1,
+        data2,
+        state_data1=state_data1,
+        state_data2=state_data2,
     )
 
 

@@ -14,7 +14,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Tesla binary_sensors by config_entry."""
     entities = [
         TeslaDeviceEntity(
-            device, hass.data[TESLA_DOMAIN][config_entry.entry_id]["coordinator"],
+            device,
+            hass.data[TESLA_DOMAIN][config_entry.entry_id]["coordinator"],
         )
         for device in hass.data[TESLA_DOMAIN][config_entry.entry_id]["devices"][
             "devices_tracker"
@@ -25,11 +26,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 class TeslaDeviceEntity(TeslaDevice, TrackerEntity):
     """A class representing a Tesla device."""
-
-    def __init__(self, tesla_device, coordinator):
-        """Initialize the Tesla device scanner."""
-        super().__init__(tesla_device, coordinator)
-        self._attributes = {"trackr_id": self.unique_id}
 
     @property
     def latitude(self) -> Optional[float]:
@@ -54,9 +50,11 @@ class TeslaDeviceEntity(TeslaDevice, TrackerEntity):
         attr = super().device_state_attributes.copy()
         location = self.tesla_device.get_location()
         if location:
-            self._attributes = {
-                "trackr_id": self.unique_id,
-                "heading": location["heading"],
-                "speed": location["speed"],
-            }
+            attr.update(
+                {
+                    "trackr_id": self.unique_id,
+                    "heading": location["heading"],
+                    "speed": location["speed"],
+                }
+            )
         return attr

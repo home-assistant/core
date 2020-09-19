@@ -55,7 +55,9 @@ CONVERT_FUNCTIONS = {
 
 
 async def async_setup_entry(
-    hass, config_entry, async_add_entities,
+    hass,
+    config_entry,
+    async_add_entities,
 ):
     """Set up platform."""
     discovery_info = config_entry.data

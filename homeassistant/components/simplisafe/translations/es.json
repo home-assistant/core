@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Esta cuenta SimpliSafe ya est\u00e1 en uso.",
-            "reauth_successful": "SimpliSafe se ha reautenticado correctamente."
+            "reauth_successful": "SimpliSafe se volvi\u00f3 a autenticar con \u00e9xito."
         },
         "error": {
             "identifier_exists": "Cuenta ya registrada",

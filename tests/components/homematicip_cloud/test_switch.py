@@ -1,6 +1,6 @@
 """Tests for HomematicIP Cloud switch."""
 from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
-from homeassistant.components.homematicip_cloud.device import (
+from homeassistant.components.homematicip_cloud.generic_entity import (
     ATTR_GROUP_MEMBER_UNREACHABLE,
 )
 from homeassistant.components.switch import (

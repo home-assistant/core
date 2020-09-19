@@ -141,4 +141,4 @@ class ToonDataUpdateCoordinator(DataUpdateCoordinator[Status]):
         try:
             return await self.toon.update()
         except ToonError as error:
-            raise UpdateFailed(f"Invalid response from API: {error}")
+            raise UpdateFailed(f"Invalid response from API: {error}") from error

@@ -6,6 +6,7 @@ import logging
 import logging.handlers
 import os
 import sys
+import threading
 from time import monotonic
 from typing import TYPE_CHECKING, Any, Dict, Optional, Set
 
@@ -111,7 +112,8 @@ async def async_setup_hass(
             config_dict = await conf_util.async_hass_config_yaml(hass)
         except HomeAssistantError as err:
             _LOGGER.error(
-                "Failed to parse configuration.yaml: %s. Activating safe mode", err,
+                "Failed to parse configuration.yaml: %s. Activating safe mode",
+                err,
             )
         else:
             if not is_virtual_env():
@@ -159,7 +161,8 @@ async def async_setup_hass(
         http_conf = (await http.async_get_last_config(hass)) or {}
 
         await async_from_config_dict(
-            {"safe_mode": {}, "http": http_conf}, hass,
+            {"safe_mode": {}, "http": http_conf},
+            hass,
         )
 
     if runtime_config.open_ui:
@@ -308,6 +311,12 @@ def async_enable_logging(
         "Uncaught exception", exc_info=args  # type: ignore
     )
 
+    if sys.version_info[:2] >= (3, 8):
+        threading.excepthook = lambda args: logging.getLogger(None).exception(
+            "Uncaught thread exception",
+            exc_info=(args.exc_type, args.exc_value, args.exc_traceback),
+        )
+
     # Log errors to a file if we have write access to file or config dir
     if log_file is None:
         err_log_path = hass.config.path(ERROR_LOG_FILENAME)
@@ -324,8 +333,10 @@ def async_enable_logging(
     ):
 
         if log_rotate_days:
-            err_handler: logging.FileHandler = logging.handlers.TimedRotatingFileHandler(
-                err_log_path, when="midnight", backupCount=log_rotate_days
+            err_handler: logging.FileHandler = (
+                logging.handlers.TimedRotatingFileHandler(
+                    err_log_path, when="midnight", backupCount=log_rotate_days
+                )
             )
         else:
             err_handler = logging.FileHandler(err_log_path, mode="w", delay=True)
@@ -384,7 +395,8 @@ async def _async_log_pending_setups(
 
         if remaining:
             _LOGGER.warning(
-                "Waiting on integrations to complete setup: %s", ", ".join(remaining),
+                "Waiting on integrations to complete setup: %s",
+                ", ".join(remaining),
             )
 
 

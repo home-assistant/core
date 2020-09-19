@@ -10,6 +10,7 @@ from synology_dsm.api.core.utilization import SynoCoreUtilization
 from synology_dsm.api.dsm.information import SynoDSMInformation
 from synology_dsm.api.dsm.network import SynoDSMNetwork
 from synology_dsm.api.storage.storage import SynoStorage
+from synology_dsm.api.surveillance_station import SynoSurveillanceStation
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -22,6 +23,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SCAN_INTERVAL,
     CONF_SSL,
+    CONF_TIMEOUT,
     CONF_USERNAME,
 )
 from homeassistant.core import callback
@@ -88,7 +90,9 @@ async def async_setup(hass, config):
     for dsm_conf in conf:
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=dsm_conf,
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data=dsm_conf,
             )
         )
 
@@ -223,12 +227,15 @@ class SynoApi:
         self.security: SynoCoreSecurity = None
         self.storage: SynoStorage = None
         self.utilisation: SynoCoreUtilization = None
+        self.surveillance_station: SynoSurveillanceStation = None
 
         # Should we fetch them
         self._fetching_entities = {}
         self._with_security = True
         self._with_storage = True
         self._with_utilisation = True
+        self._with_information = True
+        self._with_surveillance_station = True
 
         self._unsub_dispatcher = None
 
@@ -245,7 +252,13 @@ class SynoApi:
             self._entry.data[CONF_USERNAME],
             self._entry.data[CONF_PASSWORD],
             self._entry.data[CONF_SSL],
+            timeout=self._entry.options.get(CONF_TIMEOUT),
             device_token=self._entry.data.get("device_token"),
+        )
+
+        await self._hass.async_add_executor_job(self.dsm.discover_apis)
+        self._with_surveillance_station = bool(
+            self.dsm.apis.get(SynoSurveillanceStation.CAMERA_API_KEY)
         )
 
         self._async_setup_api_requests()
@@ -292,8 +305,14 @@ class SynoApi:
         self._with_utilisation = bool(
             self._fetching_entities.get(SynoCoreUtilization.API_KEY)
         )
+        self._with_information = bool(
+            self._fetching_entities.get(SynoDSMInformation.API_KEY)
+        )
+        self._with_surveillance_station = bool(
+            self._fetching_entities.get(SynoSurveillanceStation.CAMERA_API_KEY)
+        )
 
-        # Reset not used API
+        # Reset not used API, information is not reset since it's used in device_info
         if not self._with_security:
             self.dsm.reset(self.security)
             self.security = None
@@ -306,10 +325,16 @@ class SynoApi:
             self.dsm.reset(self.utilisation)
             self.utilisation = None
 
+        if not self._with_surveillance_station:
+            self.dsm.reset(self.surveillance_station)
+            self.surveillance_station = None
+
     def _fetch_device_configuration(self):
         """Fetch initial device config."""
         self.information = self.dsm.information
+        self.information.update()
         self.network = self.dsm.network
+        self.network.update()
 
         if self._with_security:
             self.security = self.dsm.security
@@ -320,6 +345,9 @@ class SynoApi:
         if self._with_utilisation:
             self.utilisation = self.dsm.utilisation
 
+        if self._with_surveillance_station:
+            self.surveillance_station = self.dsm.surveillance_station
+
     async def async_unload(self):
         """Stop interacting with the NAS and prepare for removal from hass."""
         self._unsub_dispatcher()
@@ -327,7 +355,7 @@ class SynoApi:
     async def async_update(self, now=None):
         """Update function for updating API information."""
         self._async_setup_api_requests()
-        await self._hass.async_add_executor_job(self.dsm.update)
+        await self._hass.async_add_executor_job(self.dsm.update, self._with_information)
         async_dispatcher_send(self._hass, self.signal_sensor_update)
 
 
@@ -335,9 +363,14 @@ class SynologyDSMEntity(Entity):
     """Representation of a Synology NAS entry."""
 
     def __init__(
-        self, api: SynoApi, entity_type: str, entity_info: Dict[str, str],
+        self,
+        api: SynoApi,
+        entity_type: str,
+        entity_info: Dict[str, str],
     ):
         """Initialize the Synology DSM entity."""
+        super().__init__()
+
         self._api = api
         self._api_key = entity_type.split(":")[0]
         self.entity_type = entity_type.split(":")[-1]
@@ -439,7 +472,7 @@ class SynologyDSMDeviceEntity(SynologyDSMEntity):
         self._device_type = None
 
         if "volume" in entity_type:
-            volume = self._api.storage._get_volume(self._device_id)
+            volume = self._api.storage.get_volume(self._device_id)
             # Volume does not have a name
             self._device_name = volume["id"].replace("_", " ").capitalize()
             self._device_manufacturer = "Synology"
@@ -452,7 +485,7 @@ class SynologyDSMDeviceEntity(SynologyDSMEntity):
                 .replace("shr", "SHR")
             )
         elif "disk" in entity_type:
-            disk = self._api.storage._get_disk(self._device_id)
+            disk = self._api.storage.get_disk(self._device_id)
             self._device_name = disk["name"]
             self._device_manufacturer = disk["vendor"]
             self._device_model = disk["model"].strip()

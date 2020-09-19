@@ -44,6 +44,7 @@ async def test_humanify_homekit_changed_event(hass, hk_driver):
                 ),
             ],
             entity_attr_cache,
+            {},
         )
     )
 

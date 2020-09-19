@@ -1,4 +1,5 @@
 """Support to serve the Home Assistant API as WSGI application."""
+from contextvars import ContextVar
 from ipaddress import ip_network
 import logging
 import os
@@ -25,9 +26,10 @@ from homeassistant.util import ssl as ssl_util
 
 from .auth import setup_auth
 from .ban import setup_bans
-from .const import KEY_AUTHENTICATED, KEY_HASS, KEY_HASS_USER, KEY_REAL_IP  # noqa: F401
+from .const import KEY_AUTHENTICATED, KEY_HASS, KEY_HASS_USER  # noqa: F401
 from .cors import setup_cors
-from .real_ip import setup_real_ip
+from .forwarded import async_setup_forwarded
+from .request_context import setup_request_context
 from .static import CACHE_HEADERS, CachingStaticResource
 from .view import HomeAssistantView  # noqa: F401
 from .web_runner import HomeAssistantTCPSite
@@ -294,8 +296,13 @@ class HomeAssistantHTTP:
         )
         app[KEY_HASS] = hass
 
-        # This order matters
-        setup_real_ip(app, use_x_forwarded_for, trusted_proxies)
+        # Order matters, forwarded middleware needs to go first.
+        # Only register middleware if `use_x_forwarded_for` is enabled
+        # and trusted proxies are provided
+        if use_x_forwarded_for and trusted_proxies:
+            async_setup_forwarded(app, trusted_proxies)
+
+        setup_request_context(app, current_request)
 
         if is_ban_enabled:
             setup_bans(hass, app, login_threshold)
@@ -338,7 +345,7 @@ class HomeAssistantHTTP:
 
         view.register(self.app, self.app.router)
 
-    def register_redirect(self, url, redirect_to):
+    def register_redirect(self, url, redirect_to, *, redirect_exc=HTTPMovedPermanently):
         """Register a redirect with the server.
 
         If given this must be either a string or callable. In case of a
@@ -350,7 +357,7 @@ class HomeAssistantHTTP:
 
         async def redirect(request):
             """Redirect to location."""
-            raise HTTPMovedPermanently(redirect_to)
+            raise redirect_exc(redirect_to)
 
         self.app.router.add_route("GET", url, redirect)
 
@@ -447,3 +454,8 @@ async def start_http_server_and_save_config(
         ]
 
     await store.async_save(conf)
+
+
+current_request: ContextVar[Optional[web.Request]] = ContextVar(
+    "current_request", default=None
+)

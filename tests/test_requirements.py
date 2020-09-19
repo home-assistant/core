@@ -216,7 +216,8 @@ async def test_discovery_requirements_zeroconf(hass, partial_manifest):
     zeroconf = await loader.async_get_integration(hass, "zeroconf")
 
     mock_integration(
-        hass, MockModule("comp", partial_manifest=partial_manifest),
+        hass,
+        MockModule("comp", partial_manifest=partial_manifest),
     )
 
     with patch(

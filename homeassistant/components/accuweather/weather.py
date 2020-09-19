@@ -13,6 +13,7 @@ from homeassistant.components.weather import (
     WeatherEntity,
 )
 from homeassistant.const import CONF_NAME, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utc_from_timestamp
 
 from .const import (
@@ -37,13 +38,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities([AccuWeatherEntity(name, coordinator)], False)
 
 
-class AccuWeatherEntity(WeatherEntity):
+class AccuWeatherEntity(CoordinatorEntity, WeatherEntity):
     """Define an AccuWeather entity."""
 
     def __init__(self, name, coordinator):
         """Initialize."""
+        super().__init__(coordinator)
         self._name = name
-        self.coordinator = coordinator
         self._attrs = {}
         self._unit_system = "Metric" if self.coordinator.is_metric else "Imperial"
 
@@ -71,16 +72,6 @@ class AccuWeatherEntity(WeatherEntity):
             "manufacturer": MANUFACTURER,
             "entry_type": "service",
         }
-
-    @property
-    def should_poll(self):
-        """Return the polling requirement of the entity."""
-        return False
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return self.coordinator.last_update_success
 
     @property
     def condition(self):
@@ -168,16 +159,6 @@ class AccuWeatherEntity(WeatherEntity):
             for item in self.coordinator.data[ATTR_FORECAST]
         ]
         return forecast
-
-    async def async_added_to_hass(self):
-        """Connect to dispatcher listening for entity data notifications."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
-        )
-
-    async def async_update(self):
-        """Update AccuWeather entity."""
-        await self.coordinator.async_request_refresh()
 
     @staticmethod
     def _calc_precipitation(day: dict) -> float:

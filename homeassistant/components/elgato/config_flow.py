@@ -132,5 +132,9 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
     async def _get_elgato_info(self, host: str, port: int) -> Info:
         """Get device information from an Elgato Key Light device."""
         session = async_get_clientsession(self.hass)
-        elgato = Elgato(host, port=port, session=session,)
+        elgato = Elgato(
+            host,
+            port=port,
+            session=session,
+        )
         return await elgato.info()

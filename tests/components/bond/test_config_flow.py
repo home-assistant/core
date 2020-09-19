@@ -162,7 +162,8 @@ async def test_zeroconf_form(hass: core.HomeAssistant):
         return_value={"bondid": "test-bond-id"}
     ), patch_bond_device_ids(), _patch_async_setup() as mock_setup, _patch_async_setup_entry() as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_ACCESS_TOKEN: "test-token"},
+            result["flow_id"],
+            {CONF_ACCESS_TOKEN: "test-token"},
         )
 
     assert result2["type"] == "create_entry"
@@ -249,4 +250,7 @@ def _patch_async_setup():
 
 
 def _patch_async_setup_entry():
-    return patch("homeassistant.components.bond.async_setup_entry", return_value=True,)
+    return patch(
+        "homeassistant.components.bond.async_setup_entry",
+        return_value=True,
+    )

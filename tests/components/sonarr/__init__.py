@@ -18,6 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.typing import HomeAssistantType
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -54,19 +55,28 @@ def mock_connection(
     """Mock Sonarr connection."""
     if error:
         mock_connection_error(
-            aioclient_mock, host=host, port=port, base_path=base_path,
+            aioclient_mock,
+            host=host,
+            port=port,
+            base_path=base_path,
         )
         return
 
     if invalid_auth:
         mock_connection_invalid_auth(
-            aioclient_mock, host=host, port=port, base_path=base_path,
+            aioclient_mock,
+            host=host,
+            port=port,
+            base_path=base_path,
         )
         return
 
     if server_error:
         mock_connection_server_error(
-            aioclient_mock, host=host, port=port, base_path=base_path,
+            aioclient_mock,
+            host=host,
+            port=port,
+            base_path=base_path,
         )
         return
 
@@ -196,6 +206,10 @@ async def setup_integration(
             CONF_UPCOMING_DAYS: DEFAULT_UPCOMING_DAYS,
             CONF_WANTED_MAX_ITEMS: DEFAULT_WANTED_MAX_ITEMS,
         },
+        options={
+            CONF_UPCOMING_DAYS: DEFAULT_UPCOMING_DAYS,
+            CONF_WANTED_MAX_ITEMS: DEFAULT_WANTED_MAX_ITEMS,
+        },
     )
 
     entry.add_to_hass(hass)
@@ -215,3 +229,18 @@ async def setup_integration(
         await hass.async_block_till_done()
 
     return entry
+
+
+def _patch_async_setup(return_value=True):
+    """Patch the async setup of sonarr."""
+    return patch(
+        "homeassistant.components.sonarr.async_setup", return_value=return_value
+    )
+
+
+def _patch_async_setup_entry(return_value=True):
+    """Patch the async entry setup of sonarr."""
+    return patch(
+        "homeassistant.components.sonarr.async_setup_entry",
+        return_value=return_value,
+    )

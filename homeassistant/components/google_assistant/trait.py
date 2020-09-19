@@ -121,6 +121,7 @@ COMMAND_PREVIOUS_INPUT = f"{PREFIX_COMMANDS}PreviousInput"
 COMMAND_OPENCLOSE = f"{PREFIX_COMMANDS}OpenClose"
 COMMAND_SET_VOLUME = f"{PREFIX_COMMANDS}setVolume"
 COMMAND_VOLUME_RELATIVE = f"{PREFIX_COMMANDS}volumeRelative"
+COMMAND_MUTE = f"{PREFIX_COMMANDS}mute"
 COMMAND_ARMDISARM = f"{PREFIX_COMMANDS}ArmDisarm"
 COMMAND_MEDIA_NEXT = f"{PREFIX_COMMANDS}mediaNext"
 COMMAND_MEDIA_PAUSE = f"{PREFIX_COMMANDS}mediaPause"
@@ -314,6 +315,8 @@ class OnOffTrait(_Trait):
 
     def sync_attributes(self):
         """Return OnOff attributes for a sync request."""
+        if self.state.attributes.get(ATTR_ASSUMED_STATE, False):
+            return {"commandOnlyOnOff": True}
         return {}
 
     def query_attributes(self):
@@ -1280,6 +1283,9 @@ class ModesTrait(_Trait):
         if domain == humidifier.DOMAIN and features & humidifier.SUPPORT_MODES:
             return True
 
+        if domain == light.DOMAIN and features & light.SUPPORT_EFFECT:
+            return True
+
         if domain != media_player.DOMAIN:
             return False
 
@@ -1317,6 +1323,7 @@ class ModesTrait(_Trait):
             (media_player.DOMAIN, media_player.ATTR_SOUND_MODE_LIST, "sound mode"),
             (input_select.DOMAIN, input_select.ATTR_OPTIONS, "option"),
             (humidifier.DOMAIN, humidifier.ATTR_AVAILABLE_MODES, "mode"),
+            (light.DOMAIN, light.ATTR_EFFECT_LIST, "effect"),
         ):
             if self.state.domain != domain:
                 continue
@@ -1347,6 +1354,9 @@ class ModesTrait(_Trait):
         elif self.state.domain == humidifier.DOMAIN:
             if humidifier.ATTR_MODE in attrs:
                 mode_settings["mode"] = attrs.get(humidifier.ATTR_MODE)
+        elif self.state.domain == light.DOMAIN:
+            if light.ATTR_EFFECT in attrs:
+                mode_settings["effect"] = attrs.get(light.ATTR_EFFECT)
 
         if mode_settings:
             response["on"] = self.state.state not in (STATE_OFF, STATE_UNKNOWN)
@@ -1380,6 +1390,20 @@ class ModesTrait(_Trait):
                 {
                     humidifier.ATTR_MODE: requested_mode,
                     ATTR_ENTITY_ID: self.state.entity_id,
+                },
+                blocking=True,
+                context=data.context,
+            )
+            return
+
+        if self.state.domain == light.DOMAIN:
+            requested_effect = settings["effect"]
+            await self.hass.services.async_call(
+                light.DOMAIN,
+                SERVICE_TURN_ON,
+                {
+                    ATTR_ENTITY_ID: self.state.entity_id,
+                    light.ATTR_EFFECT: requested_effect,
                 },
                 blocking=True,
                 context=data.context,
@@ -1519,6 +1543,7 @@ class OpenCloseTrait(_Trait):
         response = {}
         if self.state.domain == binary_sensor.DOMAIN:
             response["queryOnlyOpenClose"] = True
+            response["discreteOnlyOpenClose"] = True
         return response
 
     def query_attributes(self):
@@ -1606,75 +1631,132 @@ class OpenCloseTrait(_Trait):
 
 @register_trait
 class VolumeTrait(_Trait):
-    """Trait to control brightness of a device.
+    """Trait to control volume of a device.
 
     https://developers.google.com/actions/smarthome/traits/volume
     """
 
     name = TRAIT_VOLUME
-    commands = [COMMAND_SET_VOLUME, COMMAND_VOLUME_RELATIVE]
+    commands = [COMMAND_SET_VOLUME, COMMAND_VOLUME_RELATIVE, COMMAND_MUTE]
 
     @staticmethod
     def supported(domain, features, device_class):
-        """Test if state is supported."""
+        """Test if trait is supported."""
         if domain == media_player.DOMAIN:
-            return features & media_player.SUPPORT_VOLUME_SET
+            return features & (
+                media_player.SUPPORT_VOLUME_SET | media_player.SUPPORT_VOLUME_STEP
+            )
 
         return False
 
     def sync_attributes(self):
-        """Return brightness attributes for a sync request."""
-        return {}
+        """Return volume attributes for a sync request."""
+        features = self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        return {
+            "volumeCanMuteAndUnmute": bool(features & media_player.SUPPORT_VOLUME_MUTE),
+            "commandOnlyVolume": self.state.attributes.get(ATTR_ASSUMED_STATE, False),
+            # Volume amounts in SET_VOLUME and VOLUME_RELATIVE are on a scale
+            # from 0 to this value.
+            "volumeMaxLevel": 100,
+            # Default change for queries like "Hey Google, volume up".
+            # 10% corresponds to the default behavior for the
+            # media_player.volume{up,down} services.
+            "levelStepSize": 10,
+        }
 
     def query_attributes(self):
-        """Return brightness query attributes."""
+        """Return volume query attributes."""
         response = {}
 
         level = self.state.attributes.get(media_player.ATTR_MEDIA_VOLUME_LEVEL)
-        muted = self.state.attributes.get(media_player.ATTR_MEDIA_VOLUME_MUTED)
         if level is not None:
             # Convert 0.0-1.0 to 0-100
             response["currentVolume"] = int(level * 100)
+
+        muted = self.state.attributes.get(media_player.ATTR_MEDIA_VOLUME_MUTED)
+        if muted is not None:
             response["isMuted"] = bool(muted)
 
         return response
 
-    async def _execute_set_volume(self, data, params):
-        level = params["volumeLevel"]
-
+    async def _set_volume_absolute(self, data, level):
         await self.hass.services.async_call(
             media_player.DOMAIN,
             media_player.SERVICE_VOLUME_SET,
             {
                 ATTR_ENTITY_ID: self.state.entity_id,
-                media_player.ATTR_MEDIA_VOLUME_LEVEL: level / 100,
+                media_player.ATTR_MEDIA_VOLUME_LEVEL: level,
             },
             blocking=True,
             context=data.context,
         )
 
+    async def _execute_set_volume(self, data, params):
+        level = max(0, min(100, params["volumeLevel"]))
+
+        if not (
+            self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+            & media_player.SUPPORT_VOLUME_SET
+        ):
+            raise SmartHomeError(ERR_NOT_SUPPORTED, "Command not supported")
+
+        await self._set_volume_absolute(data, level / 100)
+
     async def _execute_volume_relative(self, data, params):
-        # This could also support up/down commands using relativeSteps
-        relative = params["volumeRelativeLevel"]
-        current = self.state.attributes.get(media_player.ATTR_MEDIA_VOLUME_LEVEL)
+        relative = params["relativeSteps"]
+        features = self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+
+        if features & media_player.SUPPORT_VOLUME_SET:
+            current = self.state.attributes.get(media_player.ATTR_MEDIA_VOLUME_LEVEL)
+            target = max(0.0, min(1.0, current + relative / 100))
+
+            await self._set_volume_absolute(data, target)
+
+        elif features & media_player.SUPPORT_VOLUME_STEP:
+            svc = media_player.SERVICE_VOLUME_UP
+            if relative < 0:
+                svc = media_player.SERVICE_VOLUME_DOWN
+                relative = -relative
+
+            for _ in range(relative):
+                await self.hass.services.async_call(
+                    media_player.DOMAIN,
+                    svc,
+                    {ATTR_ENTITY_ID: self.state.entity_id},
+                    blocking=True,
+                    context=data.context,
+                )
+        else:
+            raise SmartHomeError(ERR_NOT_SUPPORTED, "Command not supported")
+
+    async def _execute_mute(self, data, params):
+        mute = params["mute"]
+
+        if not (
+            self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+            & media_player.SUPPORT_VOLUME_MUTE
+        ):
+            raise SmartHomeError(ERR_NOT_SUPPORTED, "Command not supported")
 
         await self.hass.services.async_call(
             media_player.DOMAIN,
-            media_player.SERVICE_VOLUME_SET,
+            media_player.SERVICE_VOLUME_MUTE,
             {
                 ATTR_ENTITY_ID: self.state.entity_id,
-                media_player.ATTR_MEDIA_VOLUME_LEVEL: current + relative / 100,
+                media_player.ATTR_MEDIA_VOLUME_MUTED: mute,
             },
             blocking=True,
             context=data.context,
         )
 
     async def execute(self, command, data, params, challenge):
-        """Execute a brightness command."""
+        """Execute a volume command."""
         if command == COMMAND_SET_VOLUME:
             await self._execute_set_volume(data, params)
         elif command == COMMAND_VOLUME_RELATIVE:
             await self._execute_volume_relative(data, params)
+        elif command == COMMAND_MUTE:
+            await self._execute_mute(data, params)
         else:
             raise SmartHomeError(ERR_NOT_SUPPORTED, "Command not supported")
 

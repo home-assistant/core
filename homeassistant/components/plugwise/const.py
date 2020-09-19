@@ -39,3 +39,6 @@ FLAME_ICON = "mdi:fire"
 IDLE_ICON = "mdi:circle-off-outline"
 FLOW_OFF_ICON = "mdi:water-pump-off"
 FLOW_ON_ICON = "mdi:water-pump"
+
+UNDO_UPDATE_LISTENER = "undo_update_listener"
+COORDINATOR = "coordinator"

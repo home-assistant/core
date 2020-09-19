@@ -43,7 +43,9 @@ class DevoloSwitch(SwitchEntity):
         self._unique_id = element_uid
 
         self._homecontrol = homecontrol
-        self._name = self._device_instance.itemName
+        self._name = self._device_instance.item_name
+
+        # This is not doing I/O. It fetches an internal state of the API
         self._available = self._device_instance.is_online()
 
         # Get the brand and model information
@@ -66,7 +68,9 @@ class DevoloSwitch(SwitchEntity):
 
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
-        self.subscriber = Subscriber(self._device_instance.itemName, callback=self.sync)
+        self.subscriber = Subscriber(
+            self._device_instance.item_name, callback=self.sync
+        )
         self._homecontrol.publisher.register(
             self._device_instance.uid, self.subscriber, self.sync
         )

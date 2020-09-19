@@ -334,14 +334,6 @@ async def test_missing_themes(hass, hass_ws_client):
     assert msg["result"]["themes"] == {}
 
 
-async def test_extra_urls(mock_http_client_with_urls, mock_onboarded):
-    """Test that extra urls are loaded."""
-    resp = await mock_http_client_with_urls.get("/lovelace?latest")
-    assert resp.status == 200
-    text = await resp.text()
-    assert text.find('href="https://domain.com/my_extra_url.html"') >= 0
-
-
 async def test_get_panels(hass, hass_ws_client, mock_http_client):
     """Test get_panels command."""
     events = async_capture_events(hass, EVENT_PANELS_UPDATED)
@@ -484,3 +476,12 @@ async def test_get_version(hass, hass_ws_client):
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
     assert msg["result"] == {"version": cur_version}
+
+
+async def test_static_paths(hass, mock_http_client):
+    """Test static paths."""
+    resp = await mock_http_client.get(
+        "/.well-known/change-password", allow_redirects=False
+    )
+    assert resp.status == 302
+    assert resp.headers["location"] == "/profile"

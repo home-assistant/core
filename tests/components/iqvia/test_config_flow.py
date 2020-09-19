@@ -47,9 +47,7 @@ async def test_step_user(hass):
     """Test that the user step works (without MFA)."""
     conf = {CONF_ZIP_CODE: "12345"}
 
-    with patch(
-        "homeassistant.components.simplisafe.async_setup_entry", return_value=True
-    ):
+    with patch("homeassistant.components.iqvia.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=conf
         )

@@ -74,7 +74,11 @@ async def help_test_default_availability_payload(
     # Add availability settings to config
     config = copy.deepcopy(config)
     config[domain]["availability_topic"] = "availability-topic"
-    assert await async_setup_component(hass, domain, config,)
+    assert await async_setup_component(
+        hass,
+        domain,
+        config,
+    )
     await hass.async_block_till_done()
 
     state = hass.states.get(f"{domain}.test")
@@ -123,7 +127,11 @@ async def help_test_default_availability_list_payload(
         {"topic": "availability-topic1"},
         {"topic": "availability-topic2"},
     ]
-    assert await async_setup_component(hass, domain, config,)
+    assert await async_setup_component(
+        hass,
+        domain,
+        config,
+    )
     await hass.async_block_till_done()
 
     state = hass.states.get(f"{domain}.test")
@@ -185,7 +193,11 @@ async def help_test_default_availability_list_single(
         {"topic": "availability-topic1"},
     ]
     config[domain]["availability_topic"] = "availability-topic"
-    assert await async_setup_component(hass, domain, config,)
+    assert await async_setup_component(
+        hass,
+        domain,
+        config,
+    )
     await hass.async_block_till_done()
 
     state = hass.states.get(f"{domain}.test")
@@ -214,7 +226,11 @@ async def help_test_custom_availability_payload(
     config[domain]["availability_topic"] = "availability-topic"
     config[domain]["payload_available"] = "good"
     config[domain]["payload_not_available"] = "nogood"
-    assert await async_setup_component(hass, domain, config,)
+    assert await async_setup_component(
+        hass,
+        domain,
+        config,
+    )
     await hass.async_block_till_done()
 
     state = hass.states.get(f"{domain}.test")
@@ -336,7 +352,11 @@ async def help_test_setting_attribute_via_mqtt_json_message(
     # Add JSON attributes settings to config
     config = copy.deepcopy(config)
     config[domain]["json_attributes_topic"] = "attr-topic"
-    assert await async_setup_component(hass, domain, config,)
+    assert await async_setup_component(
+        hass,
+        domain,
+        config,
+    )
     await hass.async_block_till_done()
 
     async_fire_mqtt_message(hass, "attr-topic", '{ "val": "100" }')
@@ -354,7 +374,11 @@ async def help_test_setting_attribute_with_template(hass, mqtt_mock, domain, con
     config = copy.deepcopy(config)
     config[domain]["json_attributes_topic"] = "attr-topic"
     config[domain]["json_attributes_template"] = "{{ value_json['Timer1'] | tojson }}"
-    assert await async_setup_component(hass, domain, config,)
+    assert await async_setup_component(
+        hass,
+        domain,
+        config,
+    )
     await hass.async_block_till_done()
 
     async_fire_mqtt_message(
@@ -376,7 +400,11 @@ async def help_test_update_with_json_attrs_not_dict(
     # Add JSON attributes settings to config
     config = copy.deepcopy(config)
     config[domain]["json_attributes_topic"] = "attr-topic"
-    assert await async_setup_component(hass, domain, config,)
+    assert await async_setup_component(
+        hass,
+        domain,
+        config,
+    )
     await hass.async_block_till_done()
 
     async_fire_mqtt_message(hass, "attr-topic", '[ "list", "of", "things"]')
@@ -396,7 +424,11 @@ async def help_test_update_with_json_attrs_bad_JSON(
     # Add JSON attributes settings to config
     config = copy.deepcopy(config)
     config[domain]["json_attributes_topic"] = "attr-topic"
-    assert await async_setup_component(hass, domain, config,)
+    assert await async_setup_component(
+        hass,
+        domain,
+        config,
+    )
     await hass.async_block_till_done()
 
     async_fire_mqtt_message(hass, "attr-topic", "This is not JSON")
@@ -471,7 +503,16 @@ async def help_test_discovery_removal(hass, mqtt_mock, caplog, domain, data):
     assert state is None
 
 
-async def help_test_discovery_update(hass, mqtt_mock, caplog, domain, data1, data2):
+async def help_test_discovery_update(
+    hass,
+    mqtt_mock,
+    caplog,
+    domain,
+    discovery_data1,
+    discovery_data2,
+    state_data1=None,
+    state_data2=None,
+):
     """Test update of discovered component.
 
     This is a test helper for the MqttDiscoveryUpdate mixin.
@@ -479,19 +520,41 @@ async def help_test_discovery_update(hass, mqtt_mock, caplog, domain, data1, dat
     entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
     await async_start(hass, "homeassistant", entry)
 
-    async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data1)
+    async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", discovery_data1)
     await hass.async_block_till_done()
 
     state = hass.states.get(f"{domain}.beer")
     assert state is not None
     assert state.name == "Beer"
 
-    async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data2)
+    if state_data1:
+        for (mqtt_messages, expected_state, attributes) in state_data1:
+            for (topic, data) in mqtt_messages:
+                async_fire_mqtt_message(hass, topic, data)
+            state = hass.states.get(f"{domain}.beer")
+            if expected_state:
+                assert state.state == expected_state
+            if attributes:
+                for (attr, value) in attributes:
+                    assert state.attributes.get(attr) == value
+
+    async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", discovery_data2)
     await hass.async_block_till_done()
 
     state = hass.states.get(f"{domain}.beer")
     assert state is not None
     assert state.name == "Milk"
+
+    if state_data2:
+        for (mqtt_messages, expected_state, attributes) in state_data2:
+            for (topic, data) in mqtt_messages:
+                async_fire_mqtt_message(hass, topic, data)
+            state = hass.states.get(f"{domain}.beer")
+            if expected_state:
+                assert state.state == expected_state
+            if attributes:
+                for (attr, value) in attributes:
+                    assert state.attributes.get(attr) == value
 
     state = hass.states.get(f"{domain}.milk")
     assert state is None
@@ -670,7 +733,11 @@ async def help_test_entity_id_update_subscriptions(
         topics = ["avty-topic", "test-topic"]
     assert len(topics) > 0
     registry = mock_registry(hass, {})
-    assert await async_setup_component(hass, domain, config,)
+    assert await async_setup_component(
+        hass,
+        domain,
+        config,
+    )
     await hass.async_block_till_done()
 
     state = hass.states.get(f"{domain}.test")

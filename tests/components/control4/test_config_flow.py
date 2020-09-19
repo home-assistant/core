@@ -64,7 +64,8 @@ async def test_form(hass):
     ), patch(
         "homeassistant.components.control4.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.control4.async_setup_entry", return_value=True,
+        "homeassistant.components.control4.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -171,7 +172,8 @@ async def test_option_flow(hass):
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_SCAN_INTERVAL: 4},
+        result["flow_id"],
+        user_input={CONF_SCAN_INTERVAL: 4},
     )
     assert result["type"] == "create_entry"
     assert result["data"] == {

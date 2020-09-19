@@ -174,8 +174,8 @@ class IslamicPrayerClient:
 
         try:
             await self.hass.async_add_executor_job(self.get_new_prayer_times)
-        except (exceptions.InvalidResponseError, ConnError):
-            raise ConfigEntryNotReady
+        except (exceptions.InvalidResponseError, ConnError) as err:
+            raise ConfigEntryNotReady from err
 
         await self.async_update()
         self.config_entry.add_update_listener(self.async_options_updated)

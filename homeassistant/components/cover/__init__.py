@@ -338,5 +338,6 @@ class CoverDevice(CoverEntity):
         """Print deprecation warning."""
         super().__init_subclass__(**kwargs)
         _LOGGER.warning(
-            "CoverDevice is deprecated, modify %s to extend CoverEntity", cls.__name__,
+            "CoverDevice is deprecated, modify %s to extend CoverEntity",
+            cls.__name__,
         )

@@ -12,7 +12,9 @@ from tests.async_mock import patch
 async def test_nightlight(hass: HomeAssistant):
     """Test nightlight sensor."""
     mocked_bulb = _mocked_bulb()
-    with patch(f"{MODULE}.Bulb", return_value=mocked_bulb):
+    with patch(f"{MODULE}.Bulb", return_value=mocked_bulb), patch(
+        f"{MODULE}.config_flow.yeelight.Bulb", return_value=mocked_bulb
+    ):
         await async_setup_component(hass, DOMAIN, YAML_CONFIGURATION)
         await hass.async_block_till_done()
 

@@ -14,10 +14,11 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
+    PERCENTAGE,
     POWER_WATT,
+    PRESSURE_HPA,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -157,7 +158,7 @@ class Battery(Sensor):
 
     SENSOR_ATTR = "battery_percentage_remaining"
     _device_class = DEVICE_CLASS_BATTERY
-    _unit = UNIT_PERCENTAGE
+    _unit = PERCENTAGE
 
     @staticmethod
     def formatter(value):
@@ -210,6 +211,12 @@ class ElectricalMeasurement(Sensor):
             return round(value, self._decimals)
         return round(value)
 
+    async def async_update(self) -> None:
+        """Retrieve latest state."""
+        if not self.available:
+            return
+        await super().async_update()
+
 
 @STRICT_MATCH(generic_ids=CHANNEL_ST_HUMIDITY_CLUSTER)
 @STRICT_MATCH(channel_names=CHANNEL_HUMIDITY)
@@ -219,7 +226,7 @@ class Humidity(Sensor):
     SENSOR_ATTR = "measured_value"
     _device_class = DEVICE_CLASS_HUMIDITY
     _divisor = 100
-    _unit = UNIT_PERCENTAGE
+    _unit = PERCENTAGE
 
 
 @STRICT_MATCH(channel_names=CHANNEL_ILLUMINANCE)
@@ -260,7 +267,7 @@ class Pressure(Sensor):
     SENSOR_ATTR = "measured_value"
     _device_class = DEVICE_CLASS_PRESSURE
     _decimals = 0
-    _unit = "hPa"
+    _unit = PRESSURE_HPA
 
 
 @STRICT_MATCH(channel_names=CHANNEL_TEMPERATURE)

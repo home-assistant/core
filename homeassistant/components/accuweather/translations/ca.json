@@ -16,7 +16,7 @@
                     "longitude": "Longitud",
                     "name": "Nom de la integraci\u00f3"
                 },
-                "description": "Si necessites ajuda amb la configuraci\u00f3, consulta: https://www.home-assistant.io/integrations/accuweather/ \n\n La previsi\u00f3 meteorol\u00f2gica no est\u00e0 habilitada de manera predeterminada. Pots activar-la en les opcions de la integraci\u00f3.",
+                "description": "Si necessites ajuda amb la configuraci\u00f3, consulta els seg\u00fcent enlla\u00e7: https://www.home-assistant.io/integrations/accuweather/ \n\n Alguns sensors no estan activats de manera predeterminada. Els pots activar des del registre d'entitats, despr\u00e9s de la configurraci\u00f3 de la integraci\u00f3.\n La previsi\u00f3 meteorol\u00f2gica no est\u00e0 activada de manera predeterminada. Pots activar-la en les opcions de la integraci\u00f3.",
                 "title": "AccuWeather"
             }
         }

@@ -1,7 +1,7 @@
 {
     "state": {
         "accuweather__pressure_tendency": {
-            "falling": "Caient",
+            "falling": "Disminuint",
             "rising": "Augmentant",
             "steady": "Estable"
         }

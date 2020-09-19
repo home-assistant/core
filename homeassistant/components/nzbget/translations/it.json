@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione.",
+            "unknown": "Errore imprevisto"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_auth": "Autenticazione non valida"
+        },
+        "flow_title": "NZBGet: {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Nome",
+                    "password": "Password",
+                    "port": "Porta",
+                    "ssl": "NZBGet utilizza un certificato SSL",
+                    "username": "Nome utente",
+                    "verify_ssl": "NZBGet utilizza un certificato proprio"
+                },
+                "title": "Connettiti a NZBGet"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Frequenza di aggiornamento (secondi)"
+                }
+            }
+        }
+    }
+}

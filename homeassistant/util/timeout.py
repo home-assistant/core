@@ -255,7 +255,10 @@ class _ZoneTaskContext:
     """Context manager that tracks an active task for a zone."""
 
     def __init__(
-        self, zone: _ZoneTimeoutManager, task: asyncio.Task[Any], timeout: float,
+        self,
+        zone: _ZoneTimeoutManager,
+        task: asyncio.Task[Any],
+        timeout: float,
     ) -> None:
         """Initialize internal timeout context manager."""
         self._loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()

@@ -103,7 +103,8 @@ async def async_setup_entry(hass, entry):
         """Call blink to send new pin."""
         pin = call.data[CONF_PIN]
         hass.data[DOMAIN][entry.entry_id].auth.send_auth_key(
-            hass.data[DOMAIN][entry.entry_id], pin,
+            hass.data[DOMAIN][entry.entry_id],
+            pin,
         )
 
     hass.services.async_register(DOMAIN, SERVICE_REFRESH, blink_refresh)

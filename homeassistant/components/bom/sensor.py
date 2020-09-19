@@ -21,9 +21,10 @@ from homeassistant.const import (
     CONF_NAME,
     LENGTH_KILOMETERS,
     LENGTH_METERS,
+    PERCENTAGE,
+    PRESSURE_MBAR,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -66,12 +67,12 @@ SENSOR_TYPES = {
     "gust_kt": ["Wind Gust kt", "kt"],
     "air_temp": ["Air Temp C", TEMP_CELSIUS],
     "dewpt": ["Dew Point C", TEMP_CELSIUS],
-    "press": ["Pressure mb", "mbar"],
+    "press": ["Pressure mb", PRESSURE_MBAR],
     "press_qnh": ["Pressure qnh", "qnh"],
     "press_msl": ["Pressure msl", "msl"],
     "press_tend": ["Pressure Tend", None],
     "rain_trace": ["Rain Today", "mm"],
-    "rel_hum": ["Relative Humidity", UNIT_PERCENTAGE],
+    "rel_hum": ["Relative Humidity", PERCENTAGE],
     "sea_state": ["Sea State", None],
     "swell_dir_worded": ["Swell Direction", None],
     "swell_height": ["Swell Height", LENGTH_METERS],
@@ -231,7 +232,11 @@ class BOMCurrentData:
         through the entire BOM provided dataset.
         """
         condition_readings = (entry[condition] for entry in self._data)
-        return next((x for x in condition_readings if x != "-"), None)
+        reading = next((x for x in condition_readings if x != "-"), None)
+
+        if isinstance(reading, (int, float)):
+            return round(reading, 2)
+        return reading
 
     def should_update(self):
         """Determine whether an update should occur.

@@ -4,6 +4,7 @@ from datetime import timedelta
 import logging
 
 from meteofrance.client import MeteoFranceClient
+from meteofrance.helpers import is_valid_warning_department
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -20,6 +21,7 @@ from .const import (
     COORDINATOR_RAIN,
     DOMAIN,
     PLATFORMS,
+    UNDO_UPDATE_LISTENER,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,7 +33,8 @@ SCAN_INTERVAL = timedelta(minutes=15)
 CITY_SCHEMA = vol.Schema({vol.Required(CONF_CITY): cv.string})
 
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema(vol.All(cv.ensure_list, [CITY_SCHEMA]))}, extra=vol.ALLOW_EXTRA,
+    {DOMAIN: vol.Schema(vol.All(cv.ensure_list, [CITY_SCHEMA]))},
+    extra=vol.ALLOW_EXTRA,
 )
 
 
@@ -77,15 +80,17 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
     async def _async_update_data_forecast_forecast():
         """Fetch data from API endpoint."""
-        return await hass.async_add_job(client.get_forecast, latitude, longitude)
+        return await hass.async_add_executor_job(
+            client.get_forecast, latitude, longitude
+        )
 
     async def _async_update_data_rain():
         """Fetch data from API endpoint."""
-        return await hass.async_add_job(client.get_rain, latitude, longitude)
+        return await hass.async_add_executor_job(client.get_rain, latitude, longitude)
 
     async def _async_update_data_alert():
         """Fetch data from API endpoint."""
-        return await hass.async_add_job(
+        return await hass.async_add_executor_job(
             client.get_warning_current_phenomenoms, department, 0, True
         )
 
@@ -126,9 +131,11 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
     department = coordinator_forecast.data.position.get("dept")
     _LOGGER.debug(
-        "Department corresponding to %s is %s", entry.title, department,
+        "Department corresponding to %s is %s",
+        entry.title,
+        department,
     )
-    if department:
+    if is_valid_warning_department(department):
         if not hass.data[DOMAIN].get(department):
             coordinator_alert = DataUpdateCoordinator(
                 hass,
@@ -152,14 +159,17 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
             )
     else:
         _LOGGER.warning(
-            "Weather alert not available: The city %s is not in France or Andorre.",
+            "Weather alert not available: The city %s is not in metropolitan France or Andorre.",
             entry.title,
         )
+
+    undo_listener = entry.add_update_listener(_async_update_listener)
 
     hass.data[DOMAIN][entry.entry_id] = {
         COORDINATOR_FORECAST: coordinator_forecast,
         COORDINATOR_RAIN: coordinator_rain,
         COORDINATOR_ALERT: coordinator_alert,
+        UNDO_UPDATE_LISTENER: undo_listener,
     }
 
     for platform in PLATFORMS:
@@ -192,8 +202,14 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
         )
     )
     if unload_ok:
+        hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
         hass.data[DOMAIN].pop(entry.entry_id)
-        if len(hass.data[DOMAIN]) == 0:
+        if not hass.data[DOMAIN]:
             hass.data.pop(DOMAIN)
 
     return unload_ok
+
+
+async def _async_update_listener(hass: HomeAssistantType, entry: ConfigEntry):
+    """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)

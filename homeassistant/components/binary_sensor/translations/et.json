@@ -41,8 +41,8 @@
             "on": "M\u00e4rg"
         },
         "motion": {
-            "off": "Puudub",
-            "on": "Tuvastatud"
+            "off": "Liikumine puudub",
+            "on": "Liikumine tuvastatud"
         },
         "occupancy": {
             "off": "Puudub",

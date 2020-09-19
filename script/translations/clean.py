@@ -12,7 +12,10 @@ def get_arguments() -> argparse.Namespace:
     """Get parsed passed in arguments."""
     parser = get_base_arg_parser()
     parser.add_argument(
-        "--target", type=str, default="core", choices=["core", "frontend"],
+        "--target",
+        type=str,
+        default="core",
+        choices=["core", "frontend"],
     )
     return parser.parse_args()
 

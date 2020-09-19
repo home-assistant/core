@@ -2,3 +2,5 @@
 
 CONF_COMMAND_TIMEOUT = "command_timeout"
 DEFAULT_TIMEOUT = 15
+DOMAIN = "command_line"
+PLATFORMS = ["binary_sensor", "cover", "sensor", "switch"]

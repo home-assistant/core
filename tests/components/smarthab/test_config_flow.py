@@ -84,7 +84,8 @@ async def test_form_unknown_error(hass):
     )
 
     with patch(
-        "pysmarthab.SmartHab.async_login", side_effect=Exception,
+        "pysmarthab.SmartHab.async_login",
+        side_effect=Exception,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

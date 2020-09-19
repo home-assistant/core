@@ -9,6 +9,7 @@
         },
         "error": {
             "faulty_credentials": "L'autorisation \u00e0 \u00e9chou\u00e9e",
+            "host_or_token": "Doit fournir au moins un h\u00f4te ou un jeton",
             "no_servers": "Aucun serveur li\u00e9 au compte",
             "not_found": "Serveur Plex introuvable",
             "ssl_error": "Probl\u00e8me de certificat SSL"
@@ -33,6 +34,7 @@
                 "title": "S\u00e9lectionnez le serveur Plex"
             },
             "user": {
+                "description": "Continuez sur [plex.tv] (https://plex.tv) pour lier un serveur Plex.",
                 "title": "Plex Media Server"
             },
             "user_advanced": {

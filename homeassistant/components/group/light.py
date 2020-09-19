@@ -36,11 +36,13 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import CALLBACK_TYPE, State, callback
+from homeassistant.core import State
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util import color as color_util
+
+from . import GroupEntity
 
 # mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs
@@ -76,7 +78,7 @@ async def async_setup_platform(
     )
 
 
-class LightGroup(light.LightEntity):
+class LightGroup(GroupEntity, light.LightEntity):
     """Representation of a light group."""
 
     def __init__(self, name: str, entity_ids: List[str]) -> None:
@@ -94,27 +96,22 @@ class LightGroup(light.LightEntity):
         self._effect_list: Optional[List[str]] = None
         self._effect: Optional[str] = None
         self._supported_features: int = 0
-        self._async_unsub_state_changed: Optional[CALLBACK_TYPE] = None
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
 
-        @callback
-        def async_state_changed_listener(*_):
+        async def async_state_changed_listener(event):
             """Handle child updates."""
-            self.async_schedule_update_ha_state(True)
+            self.async_set_context(event.context)
+            await self.async_defer_or_update_ha_state()
 
-        assert self.hass is not None
-        self._async_unsub_state_changed = async_track_state_change_event(
-            self.hass, self._entity_ids, async_state_changed_listener
+        assert self.hass
+        self.async_on_remove(
+            async_track_state_change_event(
+                self.hass, self._entity_ids, async_state_changed_listener
+            )
         )
-        await self.async_update()
-
-    async def async_will_remove_from_hass(self):
-        """Handle removal from Home Assistant."""
-        if self._async_unsub_state_changed is not None:
-            self._async_unsub_state_changed()
-            self._async_unsub_state_changed = None
+        await super().async_added_to_hass()
 
     @property
     def name(self) -> str:
