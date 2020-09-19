@@ -125,7 +125,7 @@ class HomematicipAccesspointStatus(HomematicipGenericEntity):
 
     def __init__(self, hap: HomematicipHAP) -> None:
         """Initialize access point status entity."""
-        super().__init__(hap, hap.home)
+        super().__init__(hap, hap.home, "Duty Cycle")
 
     @property
     def device_info(self) -> Dict[str, Any]:
@@ -134,7 +134,7 @@ class HomematicipAccesspointStatus(HomematicipGenericEntity):
         return {
             "identifiers": {
                 # Serial numbers of Homematic IP device
-                (HMIPC_DOMAIN, self._device.id)
+                (HMIPC_DOMAIN, self._home.id)
             }
         }
 
