@@ -61,6 +61,12 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = CONN_CLASS_LOCAL_POLL
 
+    def __init__(self):
+        """Initialize the flow."""
+        self._reauth = False
+        this._entry_id = None
+        self._entry_data = {}
+
     @staticmethod
     @callback
     def async_get_options_flow(config_entry):
@@ -73,30 +79,70 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a flow initiated by configuration file."""
         return await self.async_step_user(user_input)
 
+    async def async_step_reauth(
+        self, data: Optional[ConfigType] = None
+    ) -> Dict[str, Any]:
+        """Handle configuration by re-auth."""
+        entry_id = self.context.get("reauth_entry_id")
+
+        if not entry_id:
+            self.async_abort(reason="reauth_failure")
+
+        this._reauth = True
+        this._entry_id = entry_id
+        this._entry_data = dict(data)
+
+        return await self.async_step_user()
+
     async def async_step_user(
         self, user_input: Optional[ConfigType] = None
     ) -> Dict[str, Any]:
         """Handle a flow initiated by the user."""
-        if user_input is None:
-            return self._show_setup_form()
+        errors = {}
 
-        if CONF_VERIFY_SSL not in user_input:
-            user_input[CONF_VERIFY_SSL] = DEFAULT_VERIFY_SSL
+        if user_input is not None:
+            if self.reauth:
+                user_input = {**this._entry_data, **user_input}
 
-        try:
-            await validate_input(self.hass, user_input)
-        except SonarrAccessRestricted:
-            return self._show_setup_form({"base": "invalid_auth"})
-        except SonarrError:
-            return self._show_setup_form({"base": "cannot_connect"})
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
-            return self.async_abort(reason="unknown")
+            if CONF_VERIFY_SSL not in user_input:
+                user_input[CONF_VERIFY_SSL] = DEFAULT_VERIFY_SSL
 
-        return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
+            try:
+                await validate_input(self.hass, user_input)
+            except SonarrAccessRestricted:
+                errors = {"base": "invalid_auth"}
+            except SonarrError:
+                errors = {"base": "cannot_connect"}
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                return self.async_abort(reason="unknown")
+            else:
+                if self._reauth:
+                    for entry in self._async_current_entries():
+                        if entry.entry_id == self._entry_id:
+                            self.hass.config_entries.async_update_entry(
+                                entry, data=user_input
+                            )
 
-    def _show_setup_form(self, errors: Optional[Dict] = None) -> Dict[str, Any]:
-        """Show the setup form to the user."""
+                            await self.hass.config_entries.async_reload(self._entry_id)
+                            return self.async_abort(reason="reauth_successful")
+
+                    return self.async_abort(reason="reauth_failure")
+                    
+                return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
+        
+        data_schema = self._get_user_data_schema()
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema(data_schema),
+            errors=errors,
+        )
+
+    def _get_user_data_schema(self) -> Dict[str, Any]:
+        """Get the data schema to display user form."""
+        if self._reauth:
+            return {vol.Required(CONF_API_KEY): str}
+
         data_schema = {
             vol.Required(CONF_HOST): str,
             vol.Required(CONF_API_KEY): str,
@@ -110,11 +156,7 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
                 vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL)
             ] = bool
 
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema(data_schema),
-            errors=errors or {},
-        )
+        return data_schema
 
 
 class SonarrOptionsFlowHandler(OptionsFlow):
