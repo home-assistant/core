@@ -1,0 +1,49 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "protocol": "Protokoll"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "arm_settings": {
+                "data": {
+                    "alt_night_mode": "Alternatiivne \u00f6\u00f6re\u017eiim",
+                    "auto_bypass": "Automaatne m\u00f6\u00f6daviik valvestamisel",
+                    "code_arm_required": "Valvestamise kood"
+                },
+                "title": "Seadista AlarmDecoder"
+            },
+            "init": {
+                "data": {
+                    "edit_select": "Muuda"
+                },
+                "description": "Mida Te soovite muuta?",
+                "title": "Seadista AlarmDecoder"
+            },
+            "zone_details": {
+                "data": {
+                    "zone_loop": "RF silmus",
+                    "zone_name": "Tsooni nimi",
+                    "zone_relayaddr": "Relee aadress",
+                    "zone_relaychan": "Relee kanalinumber",
+                    "zone_rfid": "RF jada\u00fchendus",
+                    "zone_type": "Tsooni t\u00fc\u00fcp"
+                },
+                "description": "Sisestage tsooni {zone_number} \u00fcksikasjad. Tsooni {zone_number} kustutamiseks j\u00e4tke tsooni nimi t\u00fchjaks.",
+                "title": "Seadista AlarmDecoder"
+            },
+            "zone_select": {
+                "data": {
+                    "zone_number": "Tsooni number"
+                },
+                "description": "Sisestage tsooni number mida soovite lisada, muuta v\u00f5i eemaldada.",
+                "title": "Seadista AlarmDecoder"
+            }
+        }
+    }
+}
