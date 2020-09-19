@@ -22,6 +22,7 @@ from homeassistant.const import (
     ELECTRICAL_CURRENT_AMPERE,
     ENERGY_KILO_WATT_HOUR,
     FREQUENCY_HERTZ,
+    PERCENTAGE,
     POWER_WATT,
     TEMP_CELSIUS,
     VOLT,
@@ -231,7 +232,7 @@ STORAGE_SENSOR_TYPES = {
     ),
     "storage_battery_percentage": (
         "Battery percentage",
-        "%",
+        PERCENTAGE,
         "capacity",
         {"device_class": DEVICE_CLASS_BATTERY},
     ),
@@ -339,7 +340,7 @@ STORAGE_SENSOR_TYPES = {
     ),
     "storage_load_percentage": (
         "Load percentage",
-        "%",
+        PERCENTAGE,
         "loadPercent",
         {"device_class": DEVICE_CLASS_BATTERY, "round": 2},
     ),
