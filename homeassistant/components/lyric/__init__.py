@@ -132,10 +132,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-
-    # Remove the climate service
-    hass.services.async_remove(DOMAIN, SERVICE_HOLD_TIME)
-
     unload_ok = all(
         await asyncio.gather(
             *[
