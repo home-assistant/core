@@ -42,6 +42,7 @@ def build_item_response(coordinator, payload):
     thumbnail = None
     title = None
     media = None
+    children_media_class = None
 
     if search_type == MEDIA_TYPE_APPS:
         title = "Apps"
@@ -49,6 +50,7 @@ def build_item_response(coordinator, payload):
             {"app_id": item.app_id, "title": item.name, "type": MEDIA_TYPE_APP}
             for item in coordinator.data.apps
         ]
+        children_media_class = MEDIA_CLASS_APP
     elif search_type == MEDIA_TYPE_CHANNELS:
         title = "Channels"
         media = [
@@ -59,6 +61,7 @@ def build_item_response(coordinator, payload):
             }
             for item in coordinator.data.channels
         ]
+        children_media_class = MEDIA_CLASS_CHANNEL
 
     if media is None:
         return None
@@ -73,6 +76,7 @@ def build_item_response(coordinator, payload):
         can_play=search_type in PLAYABLE_MEDIA_TYPES and search_id,
         can_expand=True,
         children=[item_payload(item, coordinator) for item in media],
+        children_media_class=children_media_class,
         thumbnail=thumbnail,
     )
 
@@ -155,7 +159,5 @@ def library_payload(coordinator):
         for child in library_info.children
     ):
         library_info.children_media_class = MEDIA_CLASS_CHANNEL
-    else:
-        library_info.children_media_class = MEDIA_CLASS_DIRECTORY
 
     return library_info
