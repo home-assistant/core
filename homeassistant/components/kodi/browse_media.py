@@ -158,7 +158,7 @@ async def build_item_response(media_library, payload):
             }
         )
         media = media.get("channels")
-        title = "TV Channels"
+        title = "Channels"
 
     if media is None:
         return None
