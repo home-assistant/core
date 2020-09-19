@@ -527,7 +527,7 @@ async def test_media_browse(hass, aioclient_mock, hass_ws_client):
 
     assert msg["result"]
     assert msg["result"]["title"] == "Apps"
-    assert msg["result"]["media_class"] == MEDIA_CLASS_DIRECTORY
+    assert msg["result"]["media_class"] == MEDIA_CLASS_APP
     assert msg["result"]["media_content_type"] == MEDIA_TYPE_APPS
     assert msg["result"]["can_expand"]
     assert not msg["result"]["can_play"]
@@ -571,7 +571,7 @@ async def test_media_browse(hass, aioclient_mock, hass_ws_client):
 
     assert msg["result"]
     assert msg["result"]["title"] == "Channels"
-    assert msg["result"]["media_class"] == MEDIA_CLASS_DIRECTORY
+    assert msg["result"]["media_class"] == MEDIA_CLASS_CHANNEL
     assert msg["result"]["media_content_type"] == MEDIA_TYPE_CHANNELS
     assert msg["result"]["can_expand"]
     assert not msg["result"]["can_play"]
