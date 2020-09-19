@@ -174,6 +174,13 @@ class OptionsFlow(config_entries.OptionsFlow):
 
             if CONF_REPLACE_DEVICE in user_input:
                 await self._async_replace_device(user_input[CONF_REPLACE_DEVICE])
+
+                devices = {self._selected_device_event_code: None}
+
+                self.update_config_data(
+                    global_options=self._global_options, devices=devices
+                )
+
                 return self.async_create_entry(title="", data={})
 
             try:
@@ -304,52 +311,38 @@ class OptionsFlow(config_entries.OptionsFlow):
         )
 
         entity_registry = await async_get_entity_registry(self.hass)
-        new_entities = [
-            entry
-            for entry in entity_registry.entities.values()
-            if entry.device_id == replace_device and entry.domain == SENSOR_DOMAIN
-        ]
-        old_entities = [
-            entry
-            for entry in entity_registry.entities.values()
-            if entry.device_id == old_device_id and entry.domain == SENSOR_DOMAIN
-        ]
-        for entity in old_entities:
-            data_type = entity.unique_id.split("_")[-1]
-            replace_entity = self._find_data_type(new_entities, data_type)
-            if replace_entity is not None:
-                entity_registry.async_update_entity(
-                    replace_entity.entity_id,
-                    new_entity_id=entity.entity_id,
-                    name=entity.name,
-                    icon=entity.icon,
+        entity_migration_map = {}
+        for entry in entity_registry.entities.values():
+            if entry.device_id == replace_device and entry.domain == SENSOR_DOMAIN:
+                data_type = entry.unique_id.split("_")[-1]
+                data_suffix = f"_{data_type}"
+
+                old_entry = next(
+                    (
+                        entry
+                        for entry in entity_registry.entities.values()
+                        if entry.device_id == old_device_id
+                        and entry.domain == SENSOR_DOMAIN
+                        and data_suffix == entry.unique_id[-len(data_suffix) :]
+                    ),
+                    None,
                 )
-            return
 
-        # "_".join(x for x in self._device_id)
+                if old_entry is not None:
+                    entity_migration_map[entry.entity_id] = old_entry
 
-        # ent_reg = await async_get_entity_registry(hass)
-        # for zwave_entry in migration_map["entity_entries"].values():
-        #     zwave_entity_id = zwave_entry["entity_entry"].entity_id
-        #     ent_reg.async_remove(zwave_entity_id)
+        for entry in entity_migration_map.values():
+            entity_registry.async_remove(entry.entity_id)
 
-        # for ozw_entity_id, zwave_entry in migration_map["entity_entries"].items():
-        #     entity_entry = zwave_entry["entity_entry"]
-        #     ent_reg.async_update_entity(
-        #         ozw_entity_id,
-        #         new_entity_id=entity_entry.entity_id,
-        #         name=entity_entry.name,
-        #         icon=entity_entry.icon,
-        #     )
+        for entity_id, entry in entity_migration_map.items():
+            entity_registry.async_update_entity(
+                entity_id,
+                new_entity_id=entry.entity_id,
+                name=entry.name,
+                icon=entry.icon,
+            )
 
-        return
-
-    def _find_data_type(self, entities, data_type):
-        for entity in entities:
-            if data_type in entity.unique_id:
-                return entity
-
-        return None
+        device_registry.async_remove_device(old_device_id)
 
     def _can_replace_device(self, entry_id):
         """Check if device can be replaced with selected device."""
