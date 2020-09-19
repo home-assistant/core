@@ -176,7 +176,6 @@ class OptionsFlow(config_entries.OptionsFlow):
                 await self._async_replace_device(user_input[CONF_REPLACE_DEVICE])
 
                 devices = {self._selected_device_event_code: None}
-
                 self.update_config_data(
                     global_options=self._global_options, devices=devices
                 )
