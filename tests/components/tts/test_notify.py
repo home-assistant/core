@@ -81,7 +81,10 @@ async def test_setup_component_and_test_service(hass):
         notify.DOMAIN,
         "tts_test",
         {
-            notify.ATTR_MESSAGE: "There is someone at the door.",
+            tts.ATTR_MESSAGE: "There is someone at the door.",
+            "data": {
+                tts.ATTR_LANGUAGE: "en",
+            },
         },
         blocking=True,
     )
