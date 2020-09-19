@@ -56,6 +56,16 @@ BROADLINK_DEVICES = {
         20025,
         5,
     ),
+    "Kitchen": (  # Not supported.
+        "192.168.0.64",
+        "34ea34b61d2c",
+        "LB1",
+        "Broadlink",
+        "SmartBulb",
+        0x504E,
+        57,
+        5,
+    ),
 }
 
 
