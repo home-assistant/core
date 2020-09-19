@@ -300,6 +300,7 @@ class OptionsFlow(config_entries.OptionsFlow):
         )
 
     async def _async_replace_device(self, replace_device):
+        """Migrate properties of a device into another."""
         device_registry = self._device_registry
         old_device_id = self._selected_device_entry_id
         old_entry = device_registry.async_get(old_device_id)
