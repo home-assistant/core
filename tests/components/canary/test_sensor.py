@@ -42,7 +42,7 @@ async def test_sensors_pro(hass, canary) -> None:
     ]
 
     config = {DOMAIN: {"username": "test-username", "password": "test-password"}}
-    with patch("homeassistant.components.canary.CANARY_COMPONENTS", ["sensor"]):
+    with patch("homeassistant.components.canary.PLATFORMS", ["sensor"]):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
 
@@ -101,7 +101,7 @@ async def test_sensors_attributes_pro(hass, canary) -> None:
     ]
 
     config = {DOMAIN: {"username": "test-username", "password": "test-password"}}
-    with patch("homeassistant.components.canary.CANARY_COMPONENTS", ["sensor"]):
+    with patch("homeassistant.components.canary.PLATFORMS", ["sensor"]):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
 
@@ -155,7 +155,7 @@ async def test_sensors_flex(hass, canary) -> None:
     ]
 
     config = {DOMAIN: {"username": "test-username", "password": "test-password"}}
-    with patch("homeassistant.components.canary.CANARY_COMPONENTS", ["sensor"]):
+    with patch("homeassistant.components.canary.PLATFORMS", ["sensor"]):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
 

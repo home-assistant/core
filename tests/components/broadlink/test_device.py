@@ -164,7 +164,7 @@ async def test_device_setup_update_authorization_error(hass):
 
 async def test_device_setup_update_authentication_error(hass):
     """Test we handle an authentication error in the update step."""
-    device = get_device("Living Room")
+    device = get_device("Garage")
     mock_api = device.get_mock_api()
     mock_api.check_sensors.side_effect = blke.AuthorizationError()
     mock_api.auth.side_effect = (None, blke.AuthenticationError())
@@ -190,7 +190,7 @@ async def test_device_setup_update_authentication_error(hass):
 
 async def test_device_setup_update_broadlink_exception(hass):
     """Test we handle a Broadlink exception in the update step."""
-    device = get_device("Living Room")
+    device = get_device("Garage")
     mock_api = device.get_mock_api()
     mock_api.check_sensors.side_effect = blke.BroadlinkException()
 

@@ -42,9 +42,7 @@ async def test_alarm_control_panel(hass, canary) -> None:
     instance.get_locations.return_value = [mocked_location]
 
     config = {DOMAIN: {"username": "test-username", "password": "test-password"}}
-    with patch(
-        "homeassistant.components.canary.CANARY_COMPONENTS", ["alarm_control_panel"]
-    ):
+    with patch("homeassistant.components.canary.PLATFORMS", ["alarm_control_panel"]):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
 
@@ -126,9 +124,7 @@ async def test_alarm_control_panel_services(hass, canary) -> None:
     instance.get_locations.return_value = [mocked_location]
 
     config = {DOMAIN: {"username": "test-username", "password": "test-password"}}
-    with patch(
-        "homeassistant.components.canary.CANARY_COMPONENTS", ["alarm_control_panel"]
-    ):
+    with patch("homeassistant.components.canary.PLATFORMS", ["alarm_control_panel"]):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
 

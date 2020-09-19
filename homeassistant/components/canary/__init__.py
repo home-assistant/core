@@ -1,4 +1,5 @@
 """Support for Canary devices."""
+import asyncio
 from datetime import timedelta
 import logging
 
@@ -6,20 +7,26 @@ from canary.api import Api
 from requests import ConnectTimeout, HTTPError
 import voluptuous as vol
 
+from homeassistant.components.camera.const import DOMAIN as CAMERA_DOMAIN
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
-from homeassistant.helpers import discovery
+from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import Throttle
+
+from .const import (
+    CONF_FFMPEG_ARGUMENTS,
+    DATA_CANARY,
+    DATA_UNDO_UPDATE_LISTENER,
+    DEFAULT_FFMPEG_ARGUMENTS,
+    DEFAULT_TIMEOUT,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-NOTIFICATION_ID = "canary_notification"
-NOTIFICATION_TITLE = "Canary Setup"
-
-DOMAIN = "canary"
-DATA_CANARY = "canary"
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
-DEFAULT_TIMEOUT = 10
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -34,31 +41,99 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-CANARY_COMPONENTS = ["alarm_control_panel", "camera", "sensor"]
+PLATFORMS = ["alarm_control_panel", "camera", "sensor"]
 
 
-def setup(hass, config):
-    """Set up the Canary component."""
-    conf = config[DOMAIN]
-    username = conf[CONF_USERNAME]
-    password = conf[CONF_PASSWORD]
-    timeout = conf[CONF_TIMEOUT]
+async def async_setup(hass: HomeAssistantType, config: dict) -> bool:
+    """Set up the Canary integration."""
+    hass.data.setdefault(DOMAIN, {})
+
+    if hass.config_entries.async_entries(DOMAIN):
+        return True
+
+    ffmpeg_arguments = DEFAULT_FFMPEG_ARGUMENTS
+    if CAMERA_DOMAIN in config:
+        camera_config = next(
+            (item for item in config[CAMERA_DOMAIN] if item["platform"] == DOMAIN),
+            None,
+        )
+
+        if camera_config:
+            ffmpeg_arguments = camera_config.get(
+                CONF_FFMPEG_ARGUMENTS, DEFAULT_FFMPEG_ARGUMENTS
+            )
+
+    if DOMAIN in config:
+        if ffmpeg_arguments != DEFAULT_FFMPEG_ARGUMENTS:
+            config[DOMAIN][CONF_FFMPEG_ARGUMENTS] = ffmpeg_arguments
+
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data=config[DOMAIN],
+            )
+        )
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+    """Set up Canary from a config entry."""
+    if not entry.options:
+        options = {
+            CONF_FFMPEG_ARGUMENTS: entry.data.get(
+                CONF_FFMPEG_ARGUMENTS, DEFAULT_FFMPEG_ARGUMENTS
+            ),
+            CONF_TIMEOUT: entry.data.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
+        }
+        hass.config_entries.async_update_entry(entry, options=options)
 
     try:
-        hass.data[DATA_CANARY] = CanaryData(username, password, timeout)
-    except (ConnectTimeout, HTTPError) as ex:
-        _LOGGER.error("Unable to connect to Canary service: %s", str(ex))
-        hass.components.persistent_notification.create(
-            f"Error: {ex}<br />You will need to restart hass after fixing.",
-            title=NOTIFICATION_TITLE,
-            notification_id=NOTIFICATION_ID,
+        canary_data = CanaryData(
+            entry.data[CONF_USERNAME],
+            entry.data[CONF_PASSWORD],
+            entry.options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
         )
-        return False
+    except (ConnectTimeout, HTTPError) as error:
+        _LOGGER.error("Unable to connect to Canary service: %s", str(error))
+        raise ConfigEntryNotReady from error
 
-    for component in CANARY_COMPONENTS:
-        discovery.load_platform(hass, component, DOMAIN, {}, config)
+    undo_listener = entry.add_update_listener(_async_update_listener)
+
+    hass.data[DOMAIN][entry.entry_id] = {
+        DATA_CANARY: canary_data,
+        DATA_UNDO_UPDATE_LISTENER: undo_listener,
+    }
+
+    for component in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, component)
+        )
 
     return True
+
+
+async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, component)
+                for component in PLATFORMS
+            ]
+        )
+    )
+
+    if unload_ok:
+        hass.data[DOMAIN][entry.entry_id][DATA_UNDO_UPDATE_LISTENER]()
+        hass.data[DOMAIN].pop(entry.entry_id)
+
+    return unload_ok
+
+
+async def _async_update_listener(hass: HomeAssistantType, entry: ConfigEntry) -> None:
+    """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 class CanaryData:

@@ -17,6 +17,7 @@ from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
     POWER_WATT,
+    PRESSURE_HPA,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
 )
@@ -267,7 +268,7 @@ class Pressure(Sensor):
     SENSOR_ATTR = "measured_value"
     _device_class = DEVICE_CLASS_PRESSURE
     _decimals = 0
-    _unit = "hPa"
+    _unit = PRESSURE_HPA
 
 
 @STRICT_MATCH(channel_names=CHANNEL_TEMPERATURE)
