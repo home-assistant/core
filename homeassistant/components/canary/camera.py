@@ -79,6 +79,7 @@ class CanaryCamera(Camera):
         self._location = location
         self._device = device
         self._device_id = device.device_id
+        self._device_name = device.name
         self._device_type_name = device.device_type["name"]
         self._timeout = timeout
         self._live_stream_session = None
