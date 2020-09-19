@@ -384,6 +384,7 @@ DEGREE = "°"
 # Currency units
 CURRENCY_EURO = "€"
 CURRENCY_DOLLAR = "$"
+CURRENCY_CENT = "¢"
 
 # Temperature units
 TEMP_CELSIUS = f"{DEGREE}C"
