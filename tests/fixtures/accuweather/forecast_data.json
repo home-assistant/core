@@ -214,11 +214,6 @@
                 "UnitType": 17
             }
         },
-        "Ozone": {
-            "Value": 39,
-            "Category": "Good",
-            "CategoryValue": 1
-        },
         "Grass": {
             "Value": 0,
             "Category": "Low",

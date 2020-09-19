@@ -458,6 +458,14 @@ async def test_sensor_enabled_without_forecast(hass):
     assert entry
     assert entry.unique_id == "0123456-ozone-0"
 
+    # For some forecast days, the AccuWeather API does not provide an Ozone value.
+    state = hass.states.get("sensor.home_ozone_1d")
+    assert state is None
+
+    entry = registry.async_get("sensor.home_ozone_1d")
+    assert entry
+    assert entry.unique_id == "0123456-ozone-1"
+
     state = hass.states.get("sensor.home_ragweed_pollen_0d")
     assert state
     assert state.state == "0"
