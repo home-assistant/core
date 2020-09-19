@@ -13,8 +13,11 @@ from homeassistant.components.media_player.const import (
 
 CONTENT_TYPE_MEDIA_CLASS = {
     MEDIA_TYPE_APP: MEDIA_CLASS_APP,
-    MEDIA_TYPE_APPS: MEDIA_CLASS_APP,
     MEDIA_TYPE_CHANNEL: MEDIA_CLASS_CHANNEL,
+}
+
+CONTAINER_TYPES_SPECIFIC_MEDIA_CLASS = {
+    MEDIA_TYPE_APPS: MEDIA_CLASS_APP,
     MEDIA_TYPE_CHANNELS: MEDIA_CLASS_CHANNEL,
 }
 
@@ -59,7 +62,9 @@ def build_item_response(coordinator, payload):
         return None
 
     return BrowseMedia(
-        media_class=MEDIA_CLASS_DIRECTORY,
+        media_class=CONTAINER_TYPES_SPECIFIC_MEDIA_CLASS.get(
+            search_type, MEDIA_CLASS_DIRECTORY
+        ),
         media_content_id=search_id,
         media_content_type=search_type,
         title=title,
