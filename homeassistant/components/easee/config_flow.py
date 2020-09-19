@@ -55,6 +55,11 @@ class EaseeConfigFlow(config_entries.ConfigFlow):
                 easee = Easee(username, password, client_session)
                 # Check that login is possible
                 await easee.connect()
+
+                unique_id = username
+                await self.async_set_unique_id(unique_id)
+                self._abort_if_unique_id_configured()
+
                 return self.async_create_entry(title=username, data=user_input)
             except AuthorizationFailedException:
                 errors["base"] = "connection_failure"
@@ -66,10 +71,6 @@ class EaseeConfigFlow(config_entries.ConfigFlow):
             ),
             errors=errors,
         )
-
-    async def async_step_import(self, user_input: Optional[ConfigType] = None):
-        """Occurs when an entry is setup through config."""
-        return await self.async_step_user(user_input)
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):

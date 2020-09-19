@@ -1,4 +1,12 @@
 """Easee Charger constants."""
+from homeassistant.const import (
+    ELECTRICAL_CURRENT_AMPERE,
+    ENERGY_KILO_WATT_HOUR,
+    ENERGY_WATT_HOUR,
+    POWER_KILO_WATT,
+    POWER_WATT,
+)
+
 DOMAIN = "easee"
 MEASURED_CONSUMPTION_DAYS = "measured_consumption_days"
 CONF_MONITORED_SITES = "monitored_sites"
@@ -14,12 +22,12 @@ MEASURED_CONSUMPTION_OPTIONS = {
     "365": "365",
 }
 CUSTOM_UNITS_OPTIONS = {
-    "kW": "Power kW to W",
-    "kWh": "Energy kWh to Wh",
+    ENERGY_WATT_HOUR: "Power kW to W",
+    ENERGY_KILO_WATT_HOUR: "Energy kWh to Wh",
 }
 CUSTOM_UNITS_TABLE = {
-    "kW": "W",
-    "kWh": "Wh",
+    POWER_KILO_WATT: POWER_WATT,
+    ENERGY_KILO_WATT_HOUR: ENERGY_WATT_HOUR,
 }
 EASEE_ENTITIES = {
     "status": {
@@ -53,14 +61,14 @@ EASEE_ENTITIES = {
     "session_energy": {
         "key": "state.sessionEnergy",
         "attrs": [],
-        "units": "kWh",
+        "units": ENERGY_KILO_WATT_HOUR,
         "convert_units_func": "round_2_dec",
         "icon": "mdi:flash",
     },
     "energy_per_hour": {
         "key": "state.energyPerHour",
         "attrs": [],
-        "units": "kWh",
+        "units": ENERGY_KILO_WATT_HOUR,
         "convert_units_func": "round_2_dec",
         "icon": "mdi:flash",
     },
@@ -81,7 +89,7 @@ EASEE_ENTITIES = {
     "output_current": {
         "key": "state.outputCurrent",
         "attrs": [],
-        "units": "A",
+        "units": ELECTRICAL_CURRENT_AMPERE,
         "convert_units_func": "round_2_dec",
         "icon": "mdi:sine-wave",
     },
@@ -94,7 +102,7 @@ EASEE_ENTITIES = {
             "state.inCurrentT4",
             "state.inCurrentT5",
         ],
-        "units": "A",
+        "units": ELECTRICAL_CURRENT_AMPERE,
         "convert_units_func": "round_2_dec",
         "icon": "mdi:sine-wave",
         "state_func": lambda state: float(
@@ -120,7 +128,7 @@ EASEE_ENTITIES = {
             "state.circuitTotalPhaseConductorCurrentL2",
             "state.circuitTotalPhaseConductorCurrentL3",
         ],
-        "units": "A",
+        "units": ELECTRICAL_CURRENT_AMPERE,
         "convert_units_func": "round_2_dec",
         "icon": "mdi:sine-wave",
         "state_func": lambda state: float(
@@ -148,7 +156,7 @@ EASEE_ENTITIES = {
             "state.dynamicCircuitCurrentP2",
             "state.dynamicCircuitCurrentP3",
         ],
-        "units": "A",
+        "units": ELECTRICAL_CURRENT_AMPERE,
         "convert_units_func": "round_2_dec",
         "icon": "mdi:sine-wave",
         "state_func": lambda state: float(
@@ -170,7 +178,7 @@ EASEE_ENTITIES = {
             "config.circuitMaxCurrentP2",
             "config.circuitMaxCurrentP3",
         ],
-        "units": "A",
+        "units": ELECTRICAL_CURRENT_AMPERE,
         "convert_units_func": "round_2_dec",
         "icon": "mdi:sine-wave",
         "state_func": lambda config: float(
@@ -184,14 +192,14 @@ EASEE_ENTITIES = {
     "dynamic_charger_current": {
         "key": "state.dynamicChargerCurrent",
         "attrs": ["state.dynamicChargerCurrent"],
-        "units": "A",
+        "units": ELECTRICAL_CURRENT_AMPERE,
         "convert_units_func": "round_2_dec",
         "icon": "mdi:sine-wave",
     },
     "max_charger_current": {
         "key": "config.maxChargerCurrent",
         "attrs": ["config.maxChargerCurrent"],
-        "units": "A",
+        "units": ELECTRICAL_CURRENT_AMPERE,
         "convert_units_func": "round_2_dec",
         "icon": "mdi:sine-wave",
     },
