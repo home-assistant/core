@@ -1,4 +1,4 @@
-"""Support for locks which integrates with other components."""
+"""Support notifications through TTS service."""
 import logging
 
 import voluptuous as vol
