@@ -29,7 +29,7 @@ from homeassistant.helpers.update_coordinator import (
 
 from .api import ConfigEntryLyricClient, LyricLocalOAuth2Implementation
 from .config_flow import OAuth2FlowHandler
-from .const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN, SERVICE_HOLD_TIME
+from .const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 
 CONFIG_SCHEMA = vol.Schema(
     {
