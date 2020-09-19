@@ -11,6 +11,7 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
     POWER_WATT,
+    PRESSURE_HPA,
     TEMP_CELSIUS,
 )
 
@@ -24,7 +25,7 @@ SENSOR_TYPES = {
     "humidity": [PERCENTAGE, None, DEVICE_CLASS_HUMIDITY],
     "illumination": ["lm", None, DEVICE_CLASS_ILLUMINANCE],
     "lux": ["lx", None, DEVICE_CLASS_ILLUMINANCE],
-    "pressure": ["hPa", None, DEVICE_CLASS_PRESSURE],
+    "pressure": [PRESSURE_HPA, None, DEVICE_CLASS_PRESSURE],
     "bed_activity": ["μm", None, None],
     "load_power": [POWER_WATT, None, DEVICE_CLASS_POWER],
 }

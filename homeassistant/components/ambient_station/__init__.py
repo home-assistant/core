@@ -19,6 +19,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     PERCENTAGE,
     POWER_WATT,
+    PRESSURE_INHG,
     SPEED_MILES_PER_HOUR,
     TEMP_FAHRENHEIT,
 )
@@ -143,8 +144,8 @@ TYPE_WINDSPEEDMPH = "windspeedmph"
 TYPE_YEARLYRAININ = "yearlyrainin"
 SENSOR_TYPES = {
     TYPE_24HOURRAININ: ("24 Hr Rain", "in", TYPE_SENSOR, None),
-    TYPE_BAROMABSIN: ("Abs Pressure", "inHg", TYPE_SENSOR, "pressure"),
-    TYPE_BAROMRELIN: ("Rel Pressure", "inHg", TYPE_SENSOR, "pressure"),
+    TYPE_BAROMABSIN: ("Abs Pressure", PRESSURE_INHG, TYPE_SENSOR, "pressure"),
+    TYPE_BAROMRELIN: ("Rel Pressure", PRESSURE_INHG, TYPE_SENSOR, "pressure"),
     TYPE_BATT10: ("Battery 10", None, TYPE_BINARY_SENSOR, "battery"),
     TYPE_BATT1: ("Battery 1", None, TYPE_BINARY_SENSOR, "battery"),
     TYPE_BATT2: ("Battery 2", None, TYPE_BINARY_SENSOR, "battery"),
