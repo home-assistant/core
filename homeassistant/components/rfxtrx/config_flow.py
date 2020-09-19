@@ -9,6 +9,7 @@ import serial.tools.list_ports
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_COMMAND_OFF,
@@ -25,6 +26,9 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import (
     async_entries_for_config_entry,
     async_get_registry as async_get_device_registry,
+)
+from homeassistant.helpers.entity_registry import (
+    async_get_registry as async_get_entity_registry,
 )
 
 from . import DOMAIN, get_device_id, get_rfx_object
@@ -291,13 +295,61 @@ class OptionsFlow(config_entries.OptionsFlow):
 
     async def _async_replace_device(self, replace_device):
         device_registry = self._device_registry
-        old_entry = device_registry.async_get(self._selected_device_entry_id)
+        old_device_id = self._selected_device_entry_id
+        old_entry = device_registry.async_get(old_device_id)
         device_registry.async_update_device(
             replace_device,
             area_id=old_entry.area_id,
             name_by_user=old_entry.name_by_user,
         )
+
+        entity_registry = await async_get_entity_registry(self.hass)
+        new_entities = [
+            entry
+            for entry in entity_registry.entities.values()
+            if entry.device_id == replace_device and entry.domain == SENSOR_DOMAIN
+        ]
+        old_entities = [
+            entry
+            for entry in entity_registry.entities.values()
+            if entry.device_id == old_device_id and entry.domain == SENSOR_DOMAIN
+        ]
+        for entity in old_entities:
+            data_type = entity.unique_id.split("_")[-1]
+            replace_entity = self._find_data_type(new_entities, data_type)
+            if replace_entity is not None:
+                entity_registry.async_update_entity(
+                    replace_entity.entity_id,
+                    new_entity_id=entity.entity_id,
+                    name=entity.name,
+                    icon=entity.icon,
+                )
+            return
+
+        # "_".join(x for x in self._device_id)
+
+        # ent_reg = await async_get_entity_registry(hass)
+        # for zwave_entry in migration_map["entity_entries"].values():
+        #     zwave_entity_id = zwave_entry["entity_entry"].entity_id
+        #     ent_reg.async_remove(zwave_entity_id)
+
+        # for ozw_entity_id, zwave_entry in migration_map["entity_entries"].items():
+        #     entity_entry = zwave_entry["entity_entry"]
+        #     ent_reg.async_update_entity(
+        #         ozw_entity_id,
+        #         new_entity_id=entity_entry.entity_id,
+        #         name=entity_entry.name,
+        #         icon=entity_entry.icon,
+        #     )
+
         return
+
+    def _find_data_type(self, entities, data_type):
+        for entity in entities:
+            if data_type in entity.unique_id:
+                return entity
+
+        return None
 
     def _can_replace_device(self, entry_id):
         """Check if device can be replaced with selected device."""
