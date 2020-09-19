@@ -10,6 +10,8 @@
     "configurator"
   ],
   "codeowners": [
-    "@fondberg"
+    "@fondberg",
+    "@olalid",
+    "@tmjo"
   ]
 }
