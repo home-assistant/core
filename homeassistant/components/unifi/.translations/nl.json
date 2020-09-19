@@ -16,7 +16,7 @@
                     "port": "Poort",
                     "site": "Site ID",
                     "username": "Gebruikersnaam",
-                    "verify_ssl": "Controller gebruik van het juiste certificaat"
+                    "verify_ssl": "Controleer gebruik van het juiste certificaat"
                 },
                 "title": "Stel de UniFi-controller in"
             }
