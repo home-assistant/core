@@ -2,6 +2,8 @@
 
 DOMAIN = "canary"
 
+MANUFACTURER = "Canary Connect, Inc"
+
 # Configuration
 CONF_FFMPEG_ARGUMENTS = "ffmpeg_arguments"
 
