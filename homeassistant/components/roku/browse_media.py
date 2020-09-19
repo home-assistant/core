@@ -4,7 +4,6 @@ from homeassistant.components.media_player import BrowseMedia
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_APP,
     MEDIA_CLASS_CHANNEL,
-    MEDIA_CLASS_DIRECTORY,
     MEDIA_TYPE_APP,
     MEDIA_TYPE_APPS,
     MEDIA_TYPE_CHANNEL,
@@ -13,9 +12,9 @@ from homeassistant.components.media_player.const import (
 
 CONTENT_TYPE_MEDIA_CLASS = {
     MEDIA_TYPE_APP: MEDIA_CLASS_APP,
-    MEDIA_TYPE_APPS: MEDIA_CLASS_DIRECTORY,
+    MEDIA_TYPE_APPS: MEDIA_CLASS_APP,
     MEDIA_TYPE_CHANNEL: MEDIA_CLASS_CHANNEL,
-    MEDIA_TYPE_CHANNELS: MEDIA_CLASS_DIRECTORY,
+    MEDIA_TYPE_CHANNELS: MEDIA_CLASS_CHANNEL,
 }
 
 PLAYABLE_MEDIA_TYPES = [
