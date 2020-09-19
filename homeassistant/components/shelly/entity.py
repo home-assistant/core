@@ -35,7 +35,7 @@ def shelly_naming(self, block, entity_type: str):
     if channels > 1 and block.type != "device":
         entity_name = self.wrapper.device.settings["relays"][int(block.channel)]["name"]
         if not entity_name:
-            entity_name = f"{self.wrapper.name} - channel {str(int(block.channel)+1)}"
+            entity_name = f"{self.wrapper.name} channel {str(int(block.channel)+1)}"
     if entity_type == "switch":
         return entity_name
     if entity_type == "sensor":
