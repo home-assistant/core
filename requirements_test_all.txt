@@ -1068,7 +1068,7 @@ zha-quirks==0.0.44
 zigpy-cc==0.5.2
 
 # homeassistant.components.zha
-zigpy-deconz==0.9.2
+zigpy-deconz==0.10.0
 
 # homeassistant.components.zha
 zigpy-xbee==0.13.0
@@ -1080,7 +1080,7 @@ zigpy-zigate==0.6.2
 zigpy-znp==0.1.1
 
 # homeassistant.components.zha
-zigpy==0.23.2
+zigpy==0.24.1
 
 # homeassistant.components.zoneminder
 zm-py==0.4.0
