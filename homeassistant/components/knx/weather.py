@@ -1,21 +1,11 @@
 """Support for KNX/IP weather station."""
-from typing import Any, Dict, Optional
 
 from xknx.devices import Weather as XknxWeather
 
 from homeassistant.components.weather import WeatherEntity
 from homeassistant.const import TEMP_CELSIUS
 
-from .const import (
-    ATTR_BRIGHTNESS_EAST,
-    ATTR_BRIGHTNESS_NORTH,
-    ATTR_BRIGHTNESS_SOUTH,
-    ATTR_BRIGHTNESS_WEST,
-    ATTR_FROST_ALARM,
-    ATTR_RAIN_ALARM,
-    ATTR_WIND_ALARM,
-    DATA_KNX,
-)
+from .const import DATA_KNX
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -76,31 +66,3 @@ class KNXWeather(WeatherEntity):
         return (
             self.device.wind_speed * 3.6 if self.device.wind_speed is not None else None
         )
-
-    @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
-        """Return the device specific state attributes."""
-        attr = {}
-
-        if self.device.brightness_south:
-            attr[ATTR_BRIGHTNESS_SOUTH] = self.device.brightness_south
-
-        if self.device.brightness_north:
-            attr[ATTR_BRIGHTNESS_NORTH] = self.device.brightness_north
-
-        if self.device.brightness_east:
-            attr[ATTR_BRIGHTNESS_EAST] = self.device.brightness_east
-
-        if self.device.brightness_west:
-            attr[ATTR_BRIGHTNESS_WEST] = self.device.brightness_west
-
-        if self.device.rain_alarm:
-            attr[ATTR_RAIN_ALARM] = self.device.rain_alarm
-
-        if self.device.wind_alarm:
-            attr[ATTR_WIND_ALARM] = self.device.wind_alarm
-
-        if self.device.frost_alarm:
-            attr[ATTR_FROST_ALARM] = self.device.frost_alarm
-
-        return attr
