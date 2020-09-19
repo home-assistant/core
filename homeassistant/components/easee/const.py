@@ -5,6 +5,7 @@ from homeassistant.const import (
     ENERGY_WATT_HOUR,
     POWER_KILO_WATT,
     POWER_WATT,
+    VOLT,
 )
 
 DOMAIN = "easee"
@@ -217,7 +218,7 @@ EASEE_ENTITIES = {
             "state.inVoltageT3T5",
             "state.inVoltageT4T5",
         ],
-        "units": "V",
+        "units": VOLT,
         "convert_units_func": "round_2_dec",
         "icon": "mdi:sine-wave",
     },
