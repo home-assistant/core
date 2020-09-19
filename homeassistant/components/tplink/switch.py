@@ -164,14 +164,14 @@ class SmartPlugSwitch(SwitchEntity):
             return True
         except (SmartDeviceException, OSError) as ex:
             if update_attempt == 0:
-                _LOGGER.warning(
+                _LOGGER.debug(
                     "Retrying in %s seconds for %s|%s due to: %s",
                     SLEEP_TIME,
                     self._host,
                     self._alias,
                     ex,
                 )
-            return False
+            return
 
     async def async_update(self):
         """Update the TP-Link switch's state."""
@@ -184,7 +184,7 @@ class SmartPlugSwitch(SwitchEntity):
                 if is_ready:
                     self._is_available = True
                     if update_attempt > 0:
-                        _LOGGER.warning(
+                        _LOGGER.debug(
                             "Device %s|%s responded after %s attempts",
                             self._host,
                             self._alias,
