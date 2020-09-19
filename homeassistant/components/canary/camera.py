@@ -87,7 +87,7 @@ class CanaryCamera(Camera):
     @property
     def name(self):
         """Return the name of this device."""
-        return self._device.name
+        return self._device_name
 
     @property
     def unique_id(self):
