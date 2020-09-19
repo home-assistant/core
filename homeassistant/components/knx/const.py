@@ -60,3 +60,11 @@ PRESET_MODES = {
     "Standby": PRESET_AWAY,
     "Comfort": PRESET_COMFORT,
 }
+
+ATTR_BRIGHTNESS_SOUTH = "brightness_south"
+ATTR_BRIGHTNESS_NORTH = "brightness_north"
+ATTR_BRIGHTNESS_EAST = "brightness_east"
+ATTR_BRIGHTNESS_WEST = "brightness_west"
+ATTR_WIND_ALARM = "wind_alarm"
+ATTR_FROST_ALARM = "frost_alarm"
+ATTR_RAIN_ALARM = "rain_alarm"
