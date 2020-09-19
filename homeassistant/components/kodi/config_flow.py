@@ -116,6 +116,9 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
 
+        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+        self.context.update({"title_placeholders": {CONF_NAME: self._name}})
+
         try:
             await validate_http(self.hass, self._get_data())
             await validate_ws(self.hass, self._get_data())
@@ -129,8 +132,6 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unknown")
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-        self.context.update({"title_placeholders": {CONF_NAME: self._name}})
         return await self.async_step_discovery_confirm()
 
     async def async_step_discovery_confirm(self, user_input=None):
