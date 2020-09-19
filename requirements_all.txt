@@ -717,7 +717,7 @@ ha-philipsjs==0.0.8
 habitipy==0.2.0
 
 # homeassistant.components.hangouts
-hangups==0.4.10
+hangups==0.4.11
 
 # homeassistant.components.cloud
 hass-nabucasa==0.37.0
@@ -747,7 +747,7 @@ hole==0.5.1
 holidays==0.10.3
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200917.1
+home-assistant-frontend==20200918.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -1825,7 +1825,7 @@ pyuptimerobot==0.0.5
 # pyuserinput==0.1.11
 
 # homeassistant.components.vera
-pyvera==0.3.9
+pyvera==0.3.10
 
 # homeassistant.components.versasense
 pyversasense==0.0.6
@@ -2302,7 +2302,7 @@ ziggo-mediabox-xl==1.1.0
 zigpy-cc==0.5.2
 
 # homeassistant.components.zha
-zigpy-deconz==0.9.2
+zigpy-deconz==0.10.0
 
 # homeassistant.components.zha
 zigpy-xbee==0.13.0
@@ -2314,7 +2314,7 @@ zigpy-zigate==0.6.2
 zigpy-znp==0.1.1
 
 # homeassistant.components.zha
-zigpy==0.23.2
+zigpy==0.24.1
 
 # homeassistant.components.zoneminder
 zm-py==0.4.0
