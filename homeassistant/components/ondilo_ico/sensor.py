@@ -9,8 +9,8 @@ from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_TEMPERATURE,
+    PERCENTAGE,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -27,10 +27,10 @@ SENSOR_TYPES = {
     "orp": ["Oxydo Reduction Potential", "mV", "mdi:pool", None],
     "ph": ["pH", "", "mdi:pool", None],
     "tds": ["TDS", CONCENTRATION_PARTS_PER_MILLION, "mdi:pool", None],
-    "battery": ["Battery", UNIT_PERCENTAGE, "mdi:battery", DEVICE_CLASS_BATTERY],
+    "battery": ["Battery", PERCENTAGE, "mdi:battery", DEVICE_CLASS_BATTERY],
     "rssi": [
         "RSSI",
-        UNIT_PERCENTAGE,
+        PERCENTAGE,
         "mdi:wifi-strength-2",
         DEVICE_CLASS_SIGNAL_STRENGTH,
     ],
