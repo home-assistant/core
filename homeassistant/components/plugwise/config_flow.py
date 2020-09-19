@@ -79,9 +79,6 @@ class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.discovery_info = discovery_info
         _properties = self.discovery_info.get("properties")
 
-        if not self.discovery_info.get(CONF_PORT):
-            self.discovery_info[CONF_PORT] = DEFAULT_PORT
-
         unique_id = self.discovery_info.get("hostname").split(".")[0]
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
@@ -93,7 +90,7 @@ class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {
             CONF_HOST: discovery_info[CONF_HOST],
-            CONF_PORT: discovery_info[CONF_PORT],
+            CONF_PORT: discovery_info.get(CONF_PORT, DEFAULT_PORT),
             "name": _name,
         }
         return await self.async_step_user()
