@@ -375,9 +375,9 @@ class CastDevice(MediaPlayerEntity):
                 if tts_base_url and media_status.content_id.startswith(tts_base_url):
                     url_description = f" from tts.base_url ({tts_base_url})"
                 if external_url and media_status.content_id.startswith(external_url):
-                    url_description = " from external_url ({external_url})"
+                    url_description = f" from external_url ({external_url})"
                 if internal_url and media_status.content_id.startswith(internal_url):
-                    url_description = " from internal_url ({internal_url})"
+                    url_description = f" from internal_url ({internal_url})"
 
             _LOGGER.error(
                 "Failed to cast media %s%s. Please make sure the URL is: "

@@ -11,6 +11,7 @@
                     "password": "Mot de passe",
                     "username": "Nom d'utilisateur"
                 },
+                "description": "Configurez une instance OVO Energy pour acc\u00e9der \u00e0 votre consommation d'\u00e9nergie.",
                 "title": "Ajouter un compte OVO Energy"
             }
         }

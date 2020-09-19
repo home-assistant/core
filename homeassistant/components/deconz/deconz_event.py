@@ -3,7 +3,7 @@ from homeassistant.const import CONF_EVENT, CONF_ID, CONF_UNIQUE_ID
 from homeassistant.core import callback
 from homeassistant.util import slugify
 
-from .const import CONF_GESTURE, LOGGER
+from .const import CONF_ANGLE, CONF_GESTURE, CONF_XY, LOGGER
 from .deconz_device import DeconzBase
 
 CONF_DECONZ_EVENT = "deconz_event"
@@ -51,6 +51,12 @@ class DeconzEvent(DeconzBase):
 
         if self._device.gesture is not None:
             data[CONF_GESTURE] = self._device.gesture
+
+        if self._device.angle is not None:
+            data[CONF_ANGLE] = self._device.angle
+
+        if self._device.xy is not None:
+            data[CONF_XY] = self._device.xy
 
         self.gateway.hass.bus.async_fire(CONF_DECONZ_EVENT, data)
 

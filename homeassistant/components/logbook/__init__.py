@@ -26,6 +26,7 @@ from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
+    ATTR_ICON,
     ATTR_NAME,
     ATTR_SERVICE,
     EVENT_CALL_SERVICE,
@@ -60,6 +61,7 @@ import homeassistant.util.dt as dt_util
 ENTITY_ID_JSON_TEMPLATE = '"entity_id": "{}"'
 ENTITY_ID_JSON_EXTRACT = re.compile('"entity_id": "([^"]+)"')
 DOMAIN_JSON_EXTRACT = re.compile('"domain": "([^"]+)"')
+ICON_JSON_EXTRACT = re.compile('"icon": "([^"]+)"')
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -321,8 +323,13 @@ def humanify(hass, events, entity_attr_cache, context_lookup):
                         entity_id, domain, event, entity_attr_cache
                     ),
                     "domain": domain,
+                    "state": event.state,
                     "entity_id": entity_id,
                 }
+
+                icon = event.attributes_icon
+                if icon:
+                    data["icon"] = icon
 
                 if event.context_user_id:
                     data["context_user_id"] = event.context_user_id
@@ -723,6 +730,15 @@ class LazyEventPartialState:
         self.context_id = self._row.context_id
         self.context_user_id = self._row.context_user_id
         self.time_fired_minute = self._row.time_fired.minute
+
+    @property
+    def attributes_icon(self):
+        """Extract the icon from the decoded attributes or json."""
+        if self._attributes:
+            return self._attributes.get(ATTR_ICON)
+
+        result = ICON_JSON_EXTRACT.search(self._row.attributes)
+        return result and result.group(1)
 
     @property
     def data_entity_id(self):

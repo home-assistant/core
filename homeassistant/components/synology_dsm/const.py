@@ -2,6 +2,7 @@
 
 from synology_dsm.api.core.security import SynoCoreSecurity
 from synology_dsm.api.core.utilization import SynoCoreUtilization
+from synology_dsm.api.dsm.information import SynoDSMInformation
 from synology_dsm.api.storage.storage import SynoStorage
 
 from homeassistant.components.binary_sensor import DEVICE_CLASS_SAFETY
@@ -9,6 +10,8 @@ from homeassistant.const import (
     DATA_MEGABYTES,
     DATA_RATE_KILOBYTES_PER_SECOND,
     DATA_TERABYTES,
+    DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_TIMESTAMP,
     PERCENTAGE,
 )
 
@@ -213,15 +216,15 @@ STORAGE_VOL_SENSORS = {
     f"{SynoStorage.API_KEY}:volume_disk_temp_avg": {
         ENTITY_NAME: "Average Disk Temp",
         ENTITY_UNIT: None,
-        ENTITY_ICON: "mdi:thermometer",
-        ENTITY_CLASS: "temperature",
+        ENTITY_ICON: None,
+        ENTITY_CLASS: DEVICE_CLASS_TEMPERATURE,
         ENTITY_ENABLE: True,
     },
     f"{SynoStorage.API_KEY}:volume_disk_temp_max": {
         ENTITY_NAME: "Maximum Disk Temp",
         ENTITY_UNIT: None,
-        ENTITY_ICON: "mdi:thermometer",
-        ENTITY_CLASS: "temperature",
+        ENTITY_ICON: None,
+        ENTITY_CLASS: DEVICE_CLASS_TEMPERATURE,
         ENTITY_ENABLE: False,
     },
 }
@@ -243,11 +246,33 @@ STORAGE_DISK_SENSORS = {
     f"{SynoStorage.API_KEY}:disk_temp": {
         ENTITY_NAME: "Temperature",
         ENTITY_UNIT: None,
-        ENTITY_ICON: "mdi:thermometer",
-        ENTITY_CLASS: "temperature",
+        ENTITY_ICON: None,
+        ENTITY_CLASS: DEVICE_CLASS_TEMPERATURE,
         ENTITY_ENABLE: True,
     },
 }
 
+INFORMATION_SENSORS = {
+    f"{SynoDSMInformation.API_KEY}:temperature": {
+        ENTITY_NAME: "temperature",
+        ENTITY_UNIT: None,
+        ENTITY_ICON: None,
+        ENTITY_CLASS: DEVICE_CLASS_TEMPERATURE,
+        ENTITY_ENABLE: True,
+    },
+    f"{SynoDSMInformation.API_KEY}:uptime": {
+        ENTITY_NAME: "last boot",
+        ENTITY_UNIT: None,
+        ENTITY_ICON: None,
+        ENTITY_CLASS: DEVICE_CLASS_TIMESTAMP,
+        ENTITY_ENABLE: False,
+    },
+}
 
-TEMP_SENSORS_KEYS = ["volume_disk_temp_avg", "volume_disk_temp_max", "disk_temp"]
+
+TEMP_SENSORS_KEYS = [
+    "volume_disk_temp_avg",
+    "volume_disk_temp_max",
+    "disk_temp",
+    "temperature",
+]

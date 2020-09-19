@@ -226,7 +226,7 @@ homeassistant/components/keenetic_ndms2/* @foxel
 homeassistant/components/kef/* @basnijholt
 homeassistant/components/keyboard_remote/* @bendavid
 homeassistant/components/knx/* @Julius2342 @farmio @marvin-w
-homeassistant/components/kodi/* @OnFreund
+homeassistant/components/kodi/* @OnFreund @cgtobi
 homeassistant/components/konnected/* @heythisisnate @kit-klein
 homeassistant/components/lametric/* @robbiet480
 homeassistant/components/launch_library/* @ludeeus
@@ -357,6 +357,7 @@ homeassistant/components/rmvtransport/* @cgtobi
 homeassistant/components/roku/* @ctalkington
 homeassistant/components/roomba/* @pschmitt @cyr-ius @shenxn
 homeassistant/components/roon/* @pavoni
+homeassistant/components/rpi_power/* @shenxn @swetoast
 homeassistant/components/safe_mode/* @home-assistant/core
 homeassistant/components/saj/* @fredericvl
 homeassistant/components/salt/* @bjornorri
@@ -399,6 +400,7 @@ homeassistant/components/soma/* @ratsept
 homeassistant/components/somfy/* @tetienne
 homeassistant/components/sonarr/* @ctalkington
 homeassistant/components/songpal/* @rytilahti @shenxn
+homeassistant/components/sonos/* @cgtobi
 homeassistant/components/spaceapi/* @fabaff
 homeassistant/components/speedtestdotnet/* @rohankapoorcom @engrbm87
 homeassistant/components/spider/* @peternijssen
@@ -503,7 +505,7 @@ homeassistant/components/zeroconf/* @Kane610
 homeassistant/components/zerproc/* @emlove
 homeassistant/components/zha/* @dmulcahey @adminiuga
 homeassistant/components/zone/* @home-assistant/core
-homeassistant/components/zoneminder/* @rohankapoorcom
+homeassistant/components/zoneminder/* @rohankapoorcom @vangorra
 homeassistant/components/zwave/* @home-assistant/z-wave
 
 # Individual files

@@ -7,6 +7,7 @@
             "already_paired": "Dette tilbeh\u00f8ret er allerede sammenkoblet med en annen enhet. Vennligst tilbakestill tilbeh\u00f8ret og pr\u00f8v igjen.",
             "ignored_model": "HomeKit st\u00f8tte for denne modellen er blokkert da en mer funksjonsrik standard integrasjon er tilgjengelig.",
             "invalid_config_entry": "Denne enheten vises som klar til sammenkobling, men det er allerede en motstridende konfigurasjonsoppf\u00f8ring for den i Hjelpeassistenten som f\u00f8rst m\u00e5 fjernes.",
+            "invalid_properties": "Ugyldige egenskaper kunngjort av enheten.",
             "no_devices": "Ingen ukoblede enheter ble funnet"
         },
         "error": {
@@ -19,7 +20,7 @@
             "unable_to_pair": "Kunne ikke koble til, vennligst pr\u00f8v igjen.",
             "unknown_error": "Enheten rapporterte en ukjent feil. Sammenkobling mislyktes."
         },
-        "flow_title": "HomeKit Tilbeh\u00f8r: {name}",
+        "flow_title": "{name} via HomeKit Accessory Protocol",
         "step": {
             "busy_error": {
                 "description": "Avbryt sammenkobling p\u00e5 alle kontrollere, eller pr\u00f8v \u00e5 starte enheten p\u00e5 nytt, og fortsett deretter med \u00e5 fortsette sammenkoblingen.",
@@ -33,8 +34,8 @@
                 "data": {
                     "pairing_code": "Sammenkoblingskode"
                 },
-                "description": "Angi din HomeKit-sammenkoblingskode (i formatet XXX-XX-XXX) for \u00e5 bruke dette tilbeh\u00f8ret",
-                "title": "Koble til HomeKit tilbeh\u00f8r"
+                "description": "HomeKit Controller kommuniserer med {name} over lokalnettverket ved hjelp av en sikker kryptert tilkobling uten en separat HomeKit-kontroller eller iCloud. Skriv inn HomeKit-paringskoden (i formatet XXX-XX-XXX) for \u00e5 bruke dette tilbeh\u00f8ret. Denne koden finnes vanligvis p\u00e5 selve enheten eller i emballasjen.",
+                "title": "Par med en enhet via HomeKit Accessory Protocol"
             },
             "protocol_error": {
                 "description": "Enheten er kanskje ikke i paringsmodus og kan kreve et fysisk eller virtuelt knappetrykk. Kontroller at enheten er i paringsmodus eller pr\u00f8v \u00e5 starte enheten p\u00e5 nytt, og fortsett deretter \u00e5 fortsette paringen.",
@@ -48,9 +49,29 @@
                 "data": {
                     "device": "Enhet"
                 },
-                "description": "Velg enheten du vil koble til",
-                "title": "Koble til HomeKit tilbeh\u00f8r"
+                "description": "HomeKit Controller kommuniserer over lokalnettverket ved hjelp av en sikker kryptert tilkobling uten en separat HomeKit-kontroller eller iCloud. Velg enheten du vil pare med:",
+                "title": "Valg av enhet"
             }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button1": "Knapp 1",
+            "button10": "Knapp 10",
+            "button2": "Knapp 2",
+            "button3": "Knapp 3",
+            "button4": "Knapp 4",
+            "button5": "Knapp 5",
+            "button6": "Knapp 6",
+            "button7": "Knapp 7",
+            "button8": "Knapp 8",
+            "button9": "Knapp 9",
+            "doorbell": "D\u00f8r-klokke"
+        },
+        "trigger_type": {
+            "double_press": "{subtype} trykket to ganger",
+            "long_press": "{subtype} trykket og holdt",
+            "single_press": "{subtype}\u00bb trykket"
         }
     },
     "title": "HomeKit-kontroller"

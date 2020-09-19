@@ -26,6 +26,11 @@
                     "host": "Nom d'h\u00f4te ou adresse IP",
                     "port": "Port"
                 }
+            },
+            "user": {
+                "data": {
+                    "host": "S\u00e9lectionnez la passerelle deCONZ d\u00e9couverte"
+                }
             }
         }
     },

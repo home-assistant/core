@@ -1,0 +1,14 @@
+{
+    "config": {
+        "flow_title": "NZBGet: {name}"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Aktualisierungsh\u00e4ufigkeit (Sekunden)"
+                }
+            }
+        }
+    }
+}

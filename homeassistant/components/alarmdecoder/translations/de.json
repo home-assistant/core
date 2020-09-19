@@ -1,0 +1,41 @@
+{
+    "config": {
+        "error": {
+            "service_unavailable": "Verbindung konnte nicht hergestellt werden"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "protocol": "Protokoll"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "arm_settings": {
+                "data": {
+                    "alt_night_mode": "Alternativer Nachtmodus"
+                }
+            },
+            "init": {
+                "data": {
+                    "edit_select": "Bearbeiten"
+                },
+                "description": "Was m\u00f6chtest du bearbeiten?"
+            },
+            "zone_details": {
+                "data": {
+                    "zone_name": "Zonenname",
+                    "zone_type": "Zonentyp"
+                }
+            },
+            "zone_select": {
+                "data": {
+                    "zone_number": "Zonennummer"
+                },
+                "description": "Geben Sie die Zonennummer ein, die Sie hinzuf\u00fcgen, bearbeiten oder entfernen m\u00f6chten."
+            }
+        }
+    }
+}
