@@ -24,6 +24,7 @@ from .const import (
     DEFAULT_FFMPEG_ARGUMENTS,
     DEFAULT_TIMEOUT,
     DOMAIN,
+    MANUFACTURER,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -77,6 +78,8 @@ class CanaryCamera(Camera):
         self._data = data
         self._location = location
         self._device = device
+        self._device_type_name = device.device_type["name"]
+        self._device_id = device.device_id
         self._timeout = timeout
         self._live_stream_session = None
 
@@ -89,6 +92,16 @@ class CanaryCamera(Camera):
     def unique_id(self):
         """Return the unique ID of this camera."""
         return str(self._device.device_id)
+
+    @property
+    def device_info(self):
+        """Return the device_info of the device."""
+        return {
+            "identifiers": {(DOMAIN, str(self._device_id))},
+            "name": self._device_name,
+            "model": self._device_type_name,
+            "manufacturer": MANUFACTURER,
+        }
 
     @property
     def is_recording(self):
