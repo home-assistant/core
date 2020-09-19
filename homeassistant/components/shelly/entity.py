@@ -40,7 +40,7 @@ def shelly_naming(self, block, entity_type: str):
     if entity_type == "switch":
         return entity_name
     if entity_type == "sensor":
-        return f"{entity_name} - {self.description.name}"
+        return f"{entity_name} {self.description.name}"
     raise ValueError
 
 
