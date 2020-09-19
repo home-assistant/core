@@ -1,6 +1,9 @@
 """Support for Canary sensors."""
+from typing import Callable, List
+
 from canary.api import SensorType
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_HUMIDITY,
@@ -10,8 +13,10 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import HomeAssistantType
 
-from . import DATA_CANARY
+from . import CanaryData
+from .const import DATA_CANARY, DOMAIN
 
 SENSOR_VALUE_PRECISION = 2
 ATTR_AIR_QUALITY = "air_quality"
@@ -38,10 +43,14 @@ STATE_AIR_QUALITY_ABNORMAL = "abnormal"
 STATE_AIR_QUALITY_VERY_ABNORMAL = "very_abnormal"
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Canary sensors."""
-    data = hass.data[DATA_CANARY]
-    devices = []
+async def async_setup_entry(
+    hass: HomeAssistantType,
+    entry: ConfigEntry,
+    async_add_entities: Callable[[List[Entity], bool], None],
+) -> None:
+    """Set up Canary sensors based on a config entry."""
+    data: CanaryData = hass.data[DOMAIN][entry.entry_id][DATA_CANARY]
+    sensors = []
 
     for location in data.locations:
         for device in location.devices:
@@ -49,11 +58,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 device_type = device.device_type
                 for sensor_type in SENSOR_TYPES:
                     if device_type.get("name") in sensor_type[4]:
-                        devices.append(
+                        sensors.append(
                             CanarySensor(data, sensor_type, location, device)
                         )
 
-    add_entities(devices, True)
+    async_add_entities(sensors, True)
 
 
 class CanarySensor(Entity):
