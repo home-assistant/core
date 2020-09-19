@@ -16,7 +16,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import CanaryData
-from .const import DATA_CANARY, DOMAIN
+from .const import DATA_CANARY, DOMAIN, MANUFACTURER
 
 SENSOR_VALUE_PRECISION = 2
 ATTR_AIR_QUALITY = "air_quality"
@@ -73,6 +73,8 @@ class CanarySensor(Entity):
         self._data = data
         self._sensor_type = sensor_type
         self._device_id = device.device_id
+        self._device_name = device.name
+        self._device_type_name = device.device_type["name"]
         self._sensor_value = None
 
         sensor_type_name = sensor_type[0].replace("_", " ").title()
@@ -92,6 +94,16 @@ class CanarySensor(Entity):
     def unique_id(self):
         """Return the unique ID of this sensor."""
         return f"{self._device_id}_{self._sensor_type[0]}"
+
+    @property
+    def device_info(self):
+        """Return the device_info of the device."""
+        return {
+            "identifiers": {(DOMAIN, str(self._device_id))},
+            "name": self._device_name,
+            "model": self._device_type_name,
+            "manufacturer": MANUFACTURER,
+        }
 
     @property
     def unit_of_measurement(self):
