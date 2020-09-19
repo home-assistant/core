@@ -60,8 +60,6 @@ async def test_setup_component_and_test_service(hass):
     """Set up the demo platform and call service."""
     calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
-    print(calls)
-
     config = {
         tts.DOMAIN: {"platform": "demo"},
         media_player.DOMAIN: {"platform": "demo"},
