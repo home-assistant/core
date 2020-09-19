@@ -1,5 +1,6 @@
 """Support for Canary alarm."""
 import logging
+from typing import Callable, List
 
 from canary.api import LOCATION_MODE_AWAY, LOCATION_MODE_HOME, LOCATION_MODE_NIGHT
 
@@ -9,24 +10,32 @@ from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_HOME,
     SUPPORT_ALARM_ARM_NIGHT,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_DISARMED,
 )
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import HomeAssistantType
 
-from . import DATA_CANARY
+from . import CanaryData
+from .const import DATA_CANARY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Canary alarms."""
-    data = hass.data[DATA_CANARY]
-    devices = [CanaryAlarm(data, location.location_id) for location in data.locations]
+async def async_setup_entry(
+    hass: HomeAssistantType,
+    entry: ConfigEntry,
+    async_add_entities: Callable[[List[Entity], bool], None],
+) -> None:
+    """Set up Canary alarm control panels based on a config entry."""
+    data: CanaryData = hass.data[DOMAIN][entry.entry_id][DATA_CANARY]
+    alarms = [CanaryAlarm(data, location.location_id) for location in data.locations]
 
-    add_entities(devices, True)
+    async_add_entities(alarms, True)
 
 
 class CanaryAlarm(AlarmControlPanelEntity):
