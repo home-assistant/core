@@ -64,7 +64,7 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize the flow."""
         self._reauth = False
-        this._entry_id = None
+        self._entry_id = None
         self._entry_data = {}
 
     @staticmethod
@@ -88,9 +88,9 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
         if not entry_id:
             self.async_abort(reason="reauth_failure")
 
-        this._reauth = True
-        this._entry_id = entry_id
-        this._entry_data = dict(data)
+        self._reauth = True
+        self._entry_id = entry_id
+        self._entry_data = dict(data)
 
         return await self.async_step_user()
 
@@ -102,7 +102,7 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             if self.reauth:
-                user_input = {**this._entry_data, **user_input}
+                user_input = {**self._entry_data, **user_input}
 
             if CONF_VERIFY_SSL not in user_input:
                 user_input[CONF_VERIFY_SSL] = DEFAULT_VERIFY_SSL
