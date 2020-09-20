@@ -34,7 +34,11 @@ MIN_TIME_BETWEEN_SESSION_RENEW = timedelta(seconds=90)
 PLATFORM_SCHEMA = vol.All(
     cv.deprecated(CONF_FFMPEG_ARGUMENTS, invalidation_version="0.118"),
     PLATFORM_SCHEMA.extend(
-        {vol.Optional(CONF_FFMPEG_ARGUMENTS, default=DEFAULT_FFMPEG_ARGUMENTS): cv.string}
+        {
+            vol.Optional(
+                CONF_FFMPEG_ARGUMENTS, default=DEFAULT_FFMPEG_ARGUMENTS
+            ): cv.string
+        }
     ),
 )
 
