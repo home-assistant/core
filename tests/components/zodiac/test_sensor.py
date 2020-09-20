@@ -2,6 +2,7 @@
 from datetime import datetime
 
 import pytest
+
 from homeassistant.components.homeassistant import DOMAIN as HA_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.zodiac.const import DOMAIN
