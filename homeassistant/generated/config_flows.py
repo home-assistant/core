@@ -215,5 +215,6 @@ FLOWS = [
     "zerproc",
     "zha",
     "zoneminder",
+    "zoom",
     "zwave"
 ]

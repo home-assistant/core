@@ -1,0 +1,52 @@
+{
+    "title": "Zoom",
+    "config": {
+        "step": {
+            "user": {
+                "title": "Connect to a new Zoom app",
+                "data": {
+                    "client_id": "Client ID (obtained from Zoom app)",
+                    "client_secret": "Client Secret (obtained from Zoom app)",
+                    "verification_token": "Verification Token (obtained from the Features section of custom Zoom app)"
+                }
+            },
+            "choose_name": {
+                "title": "Create a name for your account",
+                "data": {
+                    "name": "Account Name"
+                }
+            }
+        },
+        "abort": {
+            "single_instance_allowed": "Already configured. Only a single configuration possible.",
+            "missing_configuration": "The component is not configured. Please follow the documentation.",
+            "authorize_url_timeout": "Timeout generating authorize URL."
+        },
+        "create_entry": {
+            "default": "Successfully authenticated. If you would like to monitor your contacts, visit the Integrations>Options menu."
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Choose Contact Types",
+                "description": "Select the type(s) of contacts you would like to monitor. If you select nothing, any existing contacts being monitored will be removed. To avoid this, close this dialog without submitting and no changes will be saved.",
+                "data": {
+                    "contact_types": "Contact Types"
+                }
+            },
+            "include_or_exclude_contacts": {
+                "title": "Choose Contacts to Monitor",
+                "description": "You can pick which contacts you want to monitor. If you choose `include`, only the contacts you select will be added. If you choose `exclude`, all contacts but the ones you select will be added. Any existing contacts you were monitoring that do not fit within these rules will be removed.",
+                "data": {
+                    "include_or_exclude": "Include or Exclude?",
+                    "contacts_to_include_or_exclude": "Contacts"
+                }
+            },
+            "no_contacts": {
+                "title": "No Contacts Found",
+                "description": "Unable to find any contacts for the contact types you selected. After clicking `Submit`, all existing contacts being monitored will be removed. To avoid this, close this dialog without submitting and no changes will be saved."
+            }
+        }
+    }
+}
