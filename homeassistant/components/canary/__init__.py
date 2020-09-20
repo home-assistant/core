@@ -145,7 +145,7 @@ def _get_canary_data_instance() -> CanaryData:
     return canary_data
 
 class CanaryData:
-    """Get the latest data and update the states."""
+    """Manages the data retrieved from Canary API."""
 
     def __init__(self, username, password, timeout):
         """Init the Canary data object."""
