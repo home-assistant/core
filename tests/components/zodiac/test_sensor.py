@@ -1,10 +1,13 @@
 """The test for the zodiac sensor platform."""
 from datetime import datetime
+import pytest
 
 from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.zodiac import DOMAIN
 from homeassistant.components.zodiac.sensor import (
     ATTR_ELEMENT,
     ATTR_MODALITY,
@@ -29,26 +32,33 @@ DAY2 = datetime(2020, 4, 20, tzinfo=dt_util.UTC)
 DAY3 = datetime(2020, 4, 21, tzinfo=dt_util.UTC)
 
 
-async def test_zodiac_day1(hass):
+@pytest.mark.parametrize(
+    "now,sign,element,modality",
+    [
+        (DAY1, SIGN_SCORPIO, ELEMENT_WATER, MODALITY_FIXED),
+        (DAY2, SIGN_ARIES, ELEMENT_FIRE, MODALITY_CARDINAL),
+        (DAY3, SIGN_TAURUS, ELEMENT_EARTH, MODALITY_FIXED),
+    ],
+)
+async def test_zodiac_day(hass, now, sign, element, modality):
     """Test the zodiac sensor."""
-    config = {"sensor": {"platform": "zodiac"}}
+    config = {SENSOR_DOMAIN: {"platform": DOMAIN}}
 
     await async_setup_component(hass, HA_DOMAIN, {})
-    assert await async_setup_component(hass, "sensor", config)
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.zodiac.sensor.dt_util.utcnow", return_value=now
+    ):
+        assert await async_setup_component(hass, SENSOR_DOMAIN, config)
+        await hass.async_block_till_done()
 
     assert hass.states.get("sensor.zodiac")
 
-    with patch(
-        "homeassistant.components.zodiac.sensor.dt_util.utcnow", return_value=DAY1
-    ):
-        await async_update_entity(hass, "sensor.zodiac")
 
-    assert hass.states.get("sensor.zodiac").state == SIGN_SCORPIO
+    assert hass.states.get("sensor.zodiac").state == sign
     data = hass.states.get("sensor.zodiac").attributes
-    assert data.get(ATTR_SIGN) == SIGN_SCORPIO
-    assert data.get(ATTR_ELEMENT) == ELEMENT_WATER
-    assert data.get(ATTR_MODALITY) == MODALITY_FIXED
+    assert data.get(ATTR_SIGN) == sign
+    assert data.get(ATTR_ELEMENT) == element
+    assert data.get(ATTR_MODALITY) == modality
 
 
 async def test_zodiac_day2(hass):
