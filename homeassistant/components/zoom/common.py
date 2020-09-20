@@ -1,7 +1,7 @@
 """Common classes and functions for Zoom."""
 import json
 from logging import getLogger
-from typing import Dict
+from typing import Dict, Optional
 
 from aiohttp.web import Request, Response
 
@@ -40,7 +40,7 @@ class ZoomOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implementatio
         client_secret: str,
         authorize_url: str,
         token_url: str,
-        verification_token: str,
+        verification_token: Optional[str],
     ) -> None:
         """Initialize local auth implementation."""
         self.verification_token = verification_token
@@ -73,7 +73,7 @@ class ZoomWebhookRequestView(HomeAssistantView):
     url = HA_URL
     name = HA_URL[1:].replace("/", ":")
 
-    def __init__(self, verification_token: str) -> None:
+    def __init__(self, verification_token: Optional[str]) -> None:
         """Initialize view."""
         self._verification_token = verification_token
 
@@ -84,7 +84,10 @@ class ZoomWebhookRequestView(HomeAssistantView):
 
         if not (
             "authorization" in headers
-            and headers["authorization"] == self._verification_token
+            and (
+                self._verification_token is None
+                or headers["authorization"] == self._verification_token
+            )
         ):
             _LOGGER.warning(
                 "Received unauthorized request: %s (Headers: %s)",

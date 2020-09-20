@@ -79,7 +79,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             entry.data[CONF_CLIENT_SECRET],
             OAUTH2_AUTHORIZE,
             OAUTH2_TOKEN,
-            entry.data[CONF_VERIFICATION_TOKEN],
+            entry.data.get(CONF_VERIFICATION_TOKEN),
         )
         ZoomOAuth2FlowHandler.async_register_implementation(hass, implementation)
 
@@ -94,7 +94,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
 
     # Register view
-    hass.http.register_view(ZoomWebhookRequestView(entry.data[CONF_VERIFICATION_TOKEN]))
+    hass.http.register_view(
+        ZoomWebhookRequestView(entry.data.get(CONF_VERIFICATION_TOKEN))
+    )
 
     for platform in PLATFORMS:
         hass.async_create_task(

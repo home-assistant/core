@@ -24,7 +24,7 @@ ZOOM_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_CLIENT_ID): vol.Coerce(str),
         vol.Required(CONF_CLIENT_SECRET): vol.Coerce(str),
-        vol.Required(CONF_VERIFICATION_TOKEN): vol.Coerce(str),
+        vol.Optional(CONF_VERIFICATION_TOKEN): vol.Coerce(str),
     }
 )
 

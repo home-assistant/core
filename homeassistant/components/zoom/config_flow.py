@@ -55,7 +55,7 @@ class ZoomOAuth2FlowHandler(
                     user_input[CONF_CLIENT_SECRET],
                     OAUTH2_AUTHORIZE,
                     OAUTH2_TOKEN,
-                    user_input[CONF_VERIFICATION_TOKEN],
+                    user_input.get(CONF_VERIFICATION_TOKEN),
                 ),
             )
 
