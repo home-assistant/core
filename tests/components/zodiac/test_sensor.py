@@ -47,10 +47,10 @@ async def test_zodiac_day(hass, now, sign, element, modality):
         assert await async_setup_component(hass, SENSOR_DOMAIN, config)
         await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.zodiac")
-
-    assert hass.states.get("sensor.zodiac").state == sign
-    data = hass.states.get("sensor.zodiac").attributes
-    assert data.get(ATTR_SIGN) == sign
-    assert data.get(ATTR_ELEMENT) == element
-    assert data.get(ATTR_MODALITY) == modality
+    state = hass.states.get("sensor.zodiac")
+    assert state
+    assert state.state == sign
+    assert state.attributes
+    assert state.attributes[ATTR_SIGN] == sign
+    assert state.attributes[ATTR_ELEMENT] == element
+    assert state.attributes[ATTR_MODALITY] == modality
