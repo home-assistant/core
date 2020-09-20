@@ -230,12 +230,16 @@ async def test_import_all_connection_failed(hass, autodetect_url, service_failed
 async def test_abort_if_already_setup(hass, autodetect_url, service):
     """Test we abort if the router is already setup."""
     MockConfigEntry(
-        domain=DOMAIN, data={CONF_PASSWORD: PASSWORD}, unique_id=SERIAL,
+        domain=DOMAIN,
+        data={CONF_PASSWORD: PASSWORD},
+        unique_id=SERIAL,
     ).add_to_hass(hass)
 
     # Should fail, same SERIAL (import)
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data={CONF_PASSWORD: PASSWORD},
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={CONF_PASSWORD: PASSWORD},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
@@ -243,7 +247,8 @@ async def test_abort_if_already_setup(hass, autodetect_url, service):
     # Should fail, same SERIAL (flow)
     result = await _discover_step_user(hass)
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_PASSWORD: PASSWORD},
+        result["flow_id"],
+        {CONF_PASSWORD: PASSWORD},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
@@ -252,7 +257,9 @@ async def test_abort_if_already_setup(hass, autodetect_url, service):
 async def test_form_ssdp_already_configured(hass):
     """Test ssdp abort when the router is already configured."""
     MockConfigEntry(
-        domain=DOMAIN, data={CONF_PASSWORD: PASSWORD}, unique_id=SERIAL,
+        domain=DOMAIN,
+        data={CONF_PASSWORD: PASSWORD},
+        unique_id=SERIAL,
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
