@@ -115,17 +115,11 @@ async def test_options_flow(hass):
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "init"
 
-    with patch(
-        "homeassistant.components.canary._async_update_listener"
-    ) as mock_update_reload:
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            user_input={CONF_FFMPEG_ARGUMENTS: "-v", CONF_TIMEOUT: 7},
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_FFMPEG_ARGUMENTS: "-v", CONF_TIMEOUT: 7},
+    )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["data"][CONF_FFMPEG_ARGUMENTS] == "-v"
     assert result["data"][CONF_TIMEOUT] == 7
-
-    mock_update_reload.assert_called_once()
