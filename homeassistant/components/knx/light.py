@@ -15,7 +15,7 @@ from homeassistant.components.light import (
 import homeassistant.util.color as color_util
 
 from .const import DOMAIN
-from .knx_device import KnxDevice
+from .knx_entity import KnxEntity
 
 DEFAULT_COLOR = (0.0, 0.0)
 DEFAULT_BRIGHTNESS = 255
@@ -31,7 +31,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(entities)
 
 
-class KNXLight(KnxDevice, LightEntity):
+class KNXLight(KnxEntity, LightEntity):
     """Representation of a KNX light."""
 
     def __init__(self, device: XknxLight):

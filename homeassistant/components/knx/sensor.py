@@ -4,7 +4,7 @@ from xknx.devices import Sensor as XknxSensor
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
-from .knx_device import KnxDevice
+from .knx_entity import KnxEntity
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -16,7 +16,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(entities)
 
 
-class KNXSensor(KnxDevice, Entity):
+class KNXSensor(KnxEntity, Entity):
     """Representation of a KNX sensor."""
 
     def __init__(self, device: XknxSensor):

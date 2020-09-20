@@ -15,7 +15,7 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
 from .const import DOMAIN, OPERATION_MODES, PRESET_MODES
-from .knx_device import KnxDevice
+from .knx_entity import KnxEntity
 
 OPERATION_MODES_INV = dict(reversed(item) for item in OPERATION_MODES.items())
 PRESET_MODES_INV = dict(reversed(item) for item in PRESET_MODES.items())
@@ -30,7 +30,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(entities)
 
 
-class KNXClimate(KnxDevice, ClimateEntity):
+class KNXClimate(KnxEntity, ClimateEntity):
     """Representation of a KNX climate device."""
 
     def __init__(self, device: XknxClimate):

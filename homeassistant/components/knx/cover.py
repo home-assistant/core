@@ -16,7 +16,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_utc_time_change
 
 from .const import DOMAIN
-from .knx_device import KnxDevice
+from .knx_entity import KnxEntity
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -28,7 +28,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(entities)
 
 
-class KNXCover(KnxDevice, CoverEntity):
+class KNXCover(KnxEntity, CoverEntity):
     """Representation of a KNX cover."""
 
     def __init__(self, device: XknxCover):

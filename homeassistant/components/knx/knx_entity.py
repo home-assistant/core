@@ -7,8 +7,8 @@ from homeassistant.helpers.entity import Entity
 from .const import DOMAIN
 
 
-class KnxDevice(Entity):
-    """Representation of a KNX device."""
+class KnxEntity(Entity):
+    """Representation of a KNX entity."""
 
     def __init__(self, device: XknxDevice):
         """Set up device."""

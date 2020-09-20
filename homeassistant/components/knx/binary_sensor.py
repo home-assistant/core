@@ -6,7 +6,7 @@ from xknx.devices import BinarySensor as XknxBinarySensor
 from homeassistant.components.binary_sensor import BinarySensorEntity
 
 from .const import ATTR_COUNTER, DOMAIN
-from .knx_device import KnxDevice
+from .knx_entity import KnxEntity
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -18,7 +18,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(entities)
 
 
-class KNXBinarySensor(KnxDevice, BinarySensorEntity):
+class KNXBinarySensor(KnxEntity, BinarySensorEntity):
     """Representation of a KNX binary sensor."""
 
     def __init__(self, device: XknxBinarySensor):
