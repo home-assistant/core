@@ -60,3 +60,5 @@ PRESET_MODES = {
     "Standby": PRESET_AWAY,
     "Comfort": PRESET_COMFORT,
 }
+
+ATTR_COUNTER = "counter"

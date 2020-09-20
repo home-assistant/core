@@ -1,11 +1,12 @@
 """Support for KNX/IP binary sensors."""
+from typing import Any, Dict, Optional
+
 from xknx.devices import BinarySensor as XknxBinarySensor
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import callback
 
-from .const import DATA_KNX, DOMAIN
+from .const import ATTR_COUNTER, DATA_KNX
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -31,15 +32,6 @@ class KNXBinarySensor(BinarySensorEntity):
         async def after_update_callback(device: XknxBinarySensor):
             """Call after device was updated."""
             self.async_write_ha_state()
-
-            self.hass.bus.fire(
-                f"{DOMAIN}_{self.entity_id}",
-                {
-                    # how often has the input sensor been pressed
-                    "counter": device.counter,
-                    "state": STATE_ON if device.state else STATE_OFF,
-                },
-            )
 
         self.device.register_device_updated_cb(after_update_callback)
 
@@ -75,3 +67,8 @@ class KNXBinarySensor(BinarySensorEntity):
     def is_on(self):
         """Return true if the binary sensor is on."""
         return self.device.is_on()
+
+    @property
+    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+        """Return device specific state attributes."""
+        return {ATTR_COUNTER: self.device.counter}
