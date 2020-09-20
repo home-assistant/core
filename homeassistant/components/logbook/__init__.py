@@ -463,19 +463,16 @@ def _get_events(
 
             query = events_query.union_all(states_query)
         else:
-            events_query = _generate_events_query(session)
-            events_query = _apply_event_time_filter(events_query, start_day, end_day)
-            events_query = _apply_events_states_filter(
-                hass, events_query, old_state
-            ).filter(
+            query = _generate_events_query(session)
+            query = _apply_event_time_filter(query, start_day, end_day)
+            query = _apply_events_states_filter(hass, query, old_state).filter(
                 (States.last_updated == States.last_changed)
                 | (Events.event_type != EVENT_STATE_CHANGED)
             )
             if filters:
-                events_query = events_query.filter(
+                query = query.filter(
                     filters.entity_filter() | (Events.event_type != EVENT_STATE_CHANGED)
                 )
-            query = events_query
 
         query = query.order_by(Events.time_fired)
 
