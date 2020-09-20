@@ -126,4 +126,4 @@ async def test_options_flow(hass):
     assert result["data"][CONF_FFMPEG_ARGUMENTS] == "-v"
     assert result["data"][CONF_TIMEOUT] == 7
 
-    assert mock_update_reload.assert_called_once()
+    mock_update_reload.assert_called_once()
