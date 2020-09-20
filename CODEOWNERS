@@ -404,6 +404,7 @@ homeassistant/components/sonos/* @cgtobi
 homeassistant/components/spaceapi/* @fabaff
 homeassistant/components/speedtestdotnet/* @rohankapoorcom @engrbm87
 homeassistant/components/spider/* @peternijssen
+homeassistant/components/splunk/* @Bre77
 homeassistant/components/spotify/* @frenck
 homeassistant/components/sql/* @dgomes
 homeassistant/components/squeezebox/* @rajlaud
