@@ -101,9 +101,10 @@ class GoveeLightEntity(LightEntity):
                 self._state.color = col
         elif ATTR_BRIGHTNESS in kwargs:
             brightness = kwargs[ATTR_BRIGHTNESS]
-            success, err = await self._hub.set_brightness(self._device, brightness)
+            bright100 = brightness * 100 // 255
+            success, err = await self._hub.set_brightness_100(self._device, bright100)
             if success:
-                self._state.power_state = True
+                self._state.power_state = bright100 > 0
                 self._state.brightness = brightness
         elif ATTR_COLOR_TEMP in kwargs:
             color_temp = kwargs[ATTR_COLOR_TEMP]
@@ -182,8 +183,9 @@ class GoveeLightEntity(LightEntity):
 
     @property
     def brightness(self):
-        """Return the rgb color value."""
-        return self._state.brightness
+        """Return the brightness value."""
+        # govee is reporting 0 to 254 - home assistant uses 1 to 255
+        return self._state.brightness + 1
 
     @property
     def min_mireds(self):
