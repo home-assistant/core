@@ -1,0 +1,7 @@
+{
+    "device_automation": {
+        "trigger_type": {
+            "remote_button_rotation_stopped": "Nupu \" {subtype} \"  p\u00f6\u00f6ramine peatus"
+        }
+    }
+}
