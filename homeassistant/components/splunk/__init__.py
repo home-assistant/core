@@ -1,9 +1,10 @@
-"""Support to send data to an Splunk instance."""
+"""Support to send data to a Splunk instance."""
 import json
 import logging
+import time
 
-from aiohttp.hdrs import AUTHORIZATION
-import requests
+from aiohttp import ClientConnectionError, ClientResponseError
+from hass_splunk import SplunkPayloadError, hass_splunk
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -16,14 +17,15 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
 )
 from homeassistant.helpers import state as state_helper
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA
 from homeassistant.helpers.json import JSONEncoder
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_FILTER = "filter"
 DOMAIN = "splunk"
+CONF_FILTER = "filter"
 
 DEFAULT_HOST = "localhost"
 DEFAULT_PORT = 8088
@@ -48,23 +50,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def post_request(event_collector, body, headers, verify_ssl):
-    """Post request to Splunk."""
-    try:
-        payload = {"host": event_collector, "event": body}
-        requests.post(
-            event_collector,
-            data=json.dumps(payload, cls=JSONEncoder),
-            headers=headers,
-            timeout=10,
-            verify=verify_ssl,
-        )
-
-    except requests.exceptions.RequestException as error:
-        _LOGGER.exception("Error saving event to Splunk: %s", error)
-
-
-def setup(hass, config):
+async def async_setup(hass, config):
     """Set up the Splunk component."""
     conf = config[DOMAIN]
     host = conf.get(CONF_HOST)
@@ -75,18 +61,33 @@ def setup(hass, config):
     name = conf.get(CONF_NAME)
     entity_filter = conf[CONF_FILTER]
 
-    if use_ssl:
-        uri_scheme = "https://"
-    else:
-        uri_scheme = "http://"
+    event_collector = hass_splunk(
+        session=async_get_clientsession(hass),
+        host=host,
+        port=port,
+        token=token,
+        use_ssl=use_ssl,
+        verify_ssl=verify_ssl,
+    )
 
-    event_collector = f"{uri_scheme}{host}:{port}/services/collector/event"
-    headers = {AUTHORIZATION: f"Splunk {token}"}
+    if not await event_collector.check(connectivity=False, token=True, busy=False):
+        return False
 
-    def splunk_event_listener(event):
+    payload = {
+        "time": time.time(),
+        "host": name,
+        "event": {
+            "domain": DOMAIN,
+            "meta": "Splunk integration has started",
+        },
+    }
+
+    await event_collector.queue(json.dumps(payload, cls=JSONEncoder), send=False)
+
+    async def splunk_event_listener(event):
         """Listen for new messages on the bus and sends them to Splunk."""
-        state = event.data.get("new_state")
 
+        state = event.data.get("new_state")
         if state is None or not entity_filter(state.entity_id):
             return
 
@@ -95,19 +96,29 @@ def setup(hass, config):
         except ValueError:
             _state = state.state
 
-        json_body = [
-            {
+        payload = {
+            "time": event.time_fired.timestamp(),
+            "host": name,
+            "event": {
                 "domain": state.domain,
                 "entity_id": state.object_id,
                 "attributes": dict(state.attributes),
-                "time": str(event.time_fired),
                 "value": _state,
-                "host": name,
-            }
-        ]
+            },
+        }
 
-        post_request(event_collector, json_body, headers, verify_ssl)
+        try:
+            await event_collector.queue(json.dumps(payload, cls=JSONEncoder), send=True)
+        except SplunkPayloadError as err:
+            if err.status == 401:
+                _LOGGER.error(err)
+            else:
+                _LOGGER.warning(err)
+        except ClientConnectionError as err:
+            _LOGGER.warning(err)
+        except ClientResponseError as err:
+            _LOGGER.error(err.message)
 
-    hass.bus.listen(EVENT_STATE_CHANGED, splunk_event_listener)
+    hass.bus.async_listen(EVENT_STATE_CHANGED, splunk_event_listener)
 
     return True
