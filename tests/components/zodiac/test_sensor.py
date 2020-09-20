@@ -3,8 +3,6 @@ from datetime import datetime
 
 import pytest
 
-from homeassistant.components.homeassistant import DOMAIN as HA_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.zodiac.const import (
     ATTR_ELEMENT,
     ATTR_MODALITY,
@@ -39,12 +37,12 @@ DAY3 = datetime(2020, 4, 21, tzinfo=dt_util.UTC)
 )
 async def test_zodiac_day(hass, now, sign, element, modality):
     """Test the zodiac sensor."""
-    config = {SENSOR_DOMAIN: {"platform": DOMAIN}}
+    config = {DOMAIN: {}}
 
     with patch(
         "homeassistant.components.zodiac.sensor.dt_util.utcnow", return_value=now
     ):
-        assert await async_setup_component(hass, SENSOR_DOMAIN, config)
+        assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.zodiac")
