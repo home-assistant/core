@@ -270,6 +270,7 @@ omit =
     homeassistant/components/firmata/const.py
     homeassistant/components/firmata/entity.py
     homeassistant/components/firmata/pin.py
+    homeassistant/components/firmata/sensor.py
     homeassistant/components/firmata/switch.py
     homeassistant/components/fitbit/sensor.py
     homeassistant/components/fixer/sensor.py

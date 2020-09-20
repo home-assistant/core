@@ -15,17 +15,20 @@ from .const import (
     CONF_ARDUINO_INSTANCE_ID,
     CONF_ARDUINO_WAIT,
     CONF_BINARY_SENSORS,
+    CONF_DIFFERENTIAL,
     CONF_INITIAL_STATE,
     CONF_NEGATE_STATE,
     CONF_PIN,
     CONF_PIN_MODE,
     CONF_SAMPLING_INTERVAL,
+    CONF_SENSORS,
     CONF_SERIAL_BAUD_RATE,
     CONF_SERIAL_PORT,
     CONF_SLEEP_TUNE,
     CONF_SWITCHES,
     DOMAIN,
     FIRMATA_MANUFACTURER,
+    PIN_MODE_ANALOG,
     PIN_MODE_INPUT,
     PIN_MODE_OUTPUT,
     PIN_MODE_PULLUP,
@@ -40,8 +43,8 @@ ANALOG_PIN_SCHEMA = vol.All(cv.string, vol.Match(r"^A[0-9]+$"))
 SWITCH_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): cv.string,
+        # Both digital and analog pins may be used as digital output
         vol.Required(CONF_PIN): vol.Any(cv.positive_int, ANALOG_PIN_SCHEMA),
-        # will be analog mode in future too
         vol.Required(CONF_PIN_MODE): PIN_MODE_OUTPUT,
         vol.Optional(CONF_INITIAL_STATE, default=False): cv.boolean,
         vol.Optional(CONF_NEGATE_STATE, default=False): cv.boolean,
@@ -52,10 +55,23 @@ SWITCH_SCHEMA = vol.Schema(
 BINARY_SENSOR_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): cv.string,
+        # Both digital and analog pins may be used as digital input
         vol.Required(CONF_PIN): vol.Any(cv.positive_int, ANALOG_PIN_SCHEMA),
-        # will be analog mode in future too
         vol.Required(CONF_PIN_MODE): vol.Any(PIN_MODE_INPUT, PIN_MODE_PULLUP),
         vol.Optional(CONF_NEGATE_STATE, default=False): cv.boolean,
+    },
+    required=True,
+)
+
+SENSOR_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_NAME): cv.string,
+        # Currently only analog input sensor is implemented
+        vol.Required(CONF_PIN): ANALOG_PIN_SCHEMA,
+        vol.Required(CONF_PIN_MODE): PIN_MODE_ANALOG,
+        # Default differential is 40 to avoid a flood of messages on initial setup
+        # in case pin is unplugged. Firmata responds really really fast
+        vol.Optional(CONF_DIFFERENTIAL, default=40): cv.positive_int,
     },
     required=True,
 )
@@ -72,6 +88,7 @@ BOARD_CONFIG_SCHEMA = vol.Schema(
         vol.Optional(CONF_SAMPLING_INTERVAL): cv.positive_int,
         vol.Optional(CONF_SWITCHES): [SWITCH_SCHEMA],
         vol.Optional(CONF_BINARY_SENSORS): [BINARY_SENSOR_SCHEMA],
+        vol.Optional(CONF_SENSORS): [SENSOR_SCHEMA],
     },
     required=True,
 )
@@ -159,6 +176,10 @@ async def async_setup_entry(
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(config_entry, "binary_sensor")
         )
+    if CONF_SENSORS in config_entry.data:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(config_entry, "sensor")
+        )
     if CONF_SWITCHES in config_entry.data:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(config_entry, "switch")
@@ -178,6 +199,10 @@ async def async_unload_entry(
             hass.config_entries.async_forward_entry_unload(
                 config_entry, "binary_sensor"
             )
+        )
+    if CONF_SENSORS in config_entry.data:
+        unload_entries.append(
+            hass.config_entries.async_forward_entry_unload(config_entry, "sensor")
         )
     if CONF_SWITCHES in config_entry.data:
         unload_entries.append(

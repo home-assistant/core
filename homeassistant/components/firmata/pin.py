@@ -5,7 +5,7 @@ from typing import Callable
 from homeassistant.core import callback
 
 from .board import FirmataBoard, FirmataPinType
-from .const import PIN_MODE_INPUT, PIN_MODE_PULLUP
+from .const import PIN_MODE_INPUT, PIN_MODE_PULLUP, PIN_TYPE_ANALOG
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,6 +24,10 @@ class FirmataBoardPin:
         self._pin_mode = pin_mode
         self._pin_type, self._firmata_pin = self.board.get_pin_type(self._pin)
         self._state = None
+
+        if self._pin_type == PIN_TYPE_ANALOG:
+            # Pymata wants the analog pin formatted as the # from "A#"
+            self._analog_pin = int(self._pin[1:])
 
     def setup(self):
         """Set up a pin and make sure it is valid."""
@@ -99,7 +103,7 @@ class FirmataBinaryDigitalInput(FirmataBoardPin):
     async def start_pin(self, forward_callback: Callable[[], None]) -> None:
         """Get initial state and start reporting a pin."""
         _LOGGER.debug(
-            "Starting reporting updates for input pin %s on board %s",
+            "Starting reporting updates for digital input pin %s on board %s",
             self._pin,
             self.board.name,
         )
@@ -148,6 +152,69 @@ class FirmataBinaryDigitalInput(FirmataBoardPin):
         if self._negate:
             new_state = not new_state
         if self._state == new_state:
+            return
+        self._state = new_state
+        self._forward_callback()
+
+
+class FirmataAnalogInput(FirmataBoardPin):
+    """Representation of a Firmata Analog Input Pin."""
+
+    def __init__(
+        self, board: FirmataBoard, pin: FirmataPinType, pin_mode: str, differential: int
+    ):
+        """Initialize the analog input pin."""
+        self._differential = differential
+        self._forward_callback = None
+        super().__init__(board, pin, pin_mode)
+
+    async def start_pin(self, forward_callback: Callable[[], None]) -> None:
+        """Get initial state and start reporting a pin."""
+        _LOGGER.debug(
+            "Starting reporting updates for analog input pin %s on board %s",
+            self._pin,
+            self.board.name,
+        )
+        self._forward_callback = forward_callback
+        api = self.board.api
+        # Only PIN_MODE_ANALOG_INPUT mode is supported as sensor input
+        await api.set_pin_mode_analog_input(
+            self._analog_pin, self.latch_callback, self._differential
+        )
+
+        self._state = (await self.board.api.analog_read(self._analog_pin))[0]
+
+        self._forward_callback()
+
+    async def stop_pin(self) -> None:
+        """Stop reporting analog input pin."""
+        _LOGGER.debug(
+            "Stopping reporting updates for analog input pin %s on board %s",
+            self._pin,
+            self.board.name,
+        )
+        api = self.board.api
+        await api.disable_analog_reporting(self._analog_pin)
+
+    @property
+    def state(self) -> int:
+        """Return sensor state."""
+        return self._state
+
+    @callback
+    async def latch_callback(self, data: list) -> None:
+        """Update pin state on callback."""
+        if data[1] != self._analog_pin:
+            return
+        _LOGGER.debug(
+            "Received latch %d for analog input pin %s on board %s",
+            data[2],
+            self._pin,
+            self.board.name,
+        )
+        new_state = data[2]
+        if self._state == new_state:
+            _LOGGER.debug("stopping")
             return
         self._state = new_state
         self._forward_callback()
