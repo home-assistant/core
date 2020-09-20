@@ -39,7 +39,7 @@ SOURCE_IGNORE = "ignore"
 # been removed and unloaded.
 SOURCE_UNIGNORE = "unignore"
 
-# This is used to signal that re-authentication is required and attention is required by the user.
+# This is used to signal that re-authentication is required by the user.
 SOURCE_REAUTH = "reauth"
 
 HANDLERS = Registry()
