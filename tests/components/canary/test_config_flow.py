@@ -115,10 +115,12 @@ async def test_options_flow(hass):
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "init"
 
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_FFMPEG_ARGUMENTS: "-v", CONF_TIMEOUT: 7},
-    )
+    with _patch_async_setup(), _patch_async_setup_entry():
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={CONF_FFMPEG_ARGUMENTS: "-v", CONF_TIMEOUT: 7},
+        )
+        await hass.async_block_till_done()
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["data"][CONF_FFMPEG_ARGUMENTS] == "-v"
