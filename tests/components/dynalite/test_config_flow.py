@@ -116,7 +116,8 @@ async def test_user_flow(hass):
         return_value=True,
     ):
         result = await hass.config_entries.flow.async_init(
-            dynalite.DOMAIN, context={"source": config_entries.SOURCE_USER},
+            dynalite.DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
         )
         assert result["type"] == "form"
         assert result["step_id"] == "user"
@@ -131,14 +132,18 @@ async def test_user_flow(hass):
 async def test_user_flow_with_existing(hass):
     """Try to add an already configured bridge."""
     host = "1.2.3.4"
-    entry = MockConfigEntry(domain=dynalite.DOMAIN, data={dynalite.CONF_HOST: host},)
+    entry = MockConfigEntry(
+        domain=dynalite.DOMAIN,
+        data={dynalite.CONF_HOST: host},
+    )
     entry.add_to_hass(hass)
     with patch(
         "homeassistant.components.dynalite.bridge.DynaliteDevices.async_setup",
         return_value=True,
     ):
         result = await hass.config_entries.flow.async_init(
-            dynalite.DOMAIN, context={"source": config_entries.SOURCE_USER},
+            dynalite.DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
         )
         assert result["type"] == "form"
         assert result["step_id"] == "user"
@@ -157,7 +162,8 @@ async def test_user_flow_bridge_unavailable(hass):
         return_value=False,
     ):
         result = await hass.config_entries.flow.async_init(
-            dynalite.DOMAIN, context={"source": config_entries.SOURCE_USER},
+            dynalite.DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
         )
         await hass.async_block_till_done()
         assert result["type"] == "form"
