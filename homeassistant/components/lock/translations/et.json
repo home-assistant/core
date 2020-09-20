@@ -1,4 +1,14 @@
 {
+    "device_automation": {
+        "condition_type": {
+            "is_locked": "{entity_name} on lukus",
+            "is_unlocked": "{entity_name} on lukustamata"
+        },
+        "trigger_type": {
+            "locked": "{entity_name} on lukus",
+            "unlocked": "{entity_name} on lukustamata"
+        }
+    },
     "state": {
         "_": {
             "locked": "Lukus",

@@ -1,4 +1,22 @@
 {
+    "device_automation": {
+        "condition_type": {
+            "is_closed": "{entity_name} on suletud",
+            "is_closing": "{entity_name} sulgub",
+            "is_open": "{entity_name} on avatud",
+            "is_opening": "{entity_name} avaneb",
+            "is_position": "Praegune {entity_name} asend on",
+            "is_tilt_position": "Praegune {entity_name} kalle on"
+        },
+        "trigger_type": {
+            "closed": "{entity_name} sulgus",
+            "closing": "{entity_name} sulgub",
+            "opened": "{entity_name} avanes",
+            "opening": "{entity_name} avaneb",
+            "position": "{entity_name} asend muutub",
+            "tilt_position": "{entity_name} kalle muutub"
+        }
+    },
     "state": {
         "_": {
             "closed": "Suletud",
