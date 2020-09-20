@@ -6,7 +6,12 @@ from xknx import XKNX
 from xknx.devices import DateTime, ExposeSensor
 from xknx.dpt import DPTArray, DPTBase, DPTBinary
 from xknx.exceptions import XKNXException
-from xknx.io import DEFAULT_MCAST_PORT, ConnectionConfig, ConnectionType
+from xknx.io import (
+    DEFAULT_MCAST_GRP,
+    DEFAULT_MCAST_PORT,
+    ConnectionConfig,
+    ConnectionType,
+)
 from xknx.telegram import AddressFilter, GroupAddress, Telegram
 
 from homeassistant.const import (
@@ -48,6 +53,9 @@ CONF_KNX_ROUTING = "routing"
 CONF_KNX_TUNNELING = "tunneling"
 CONF_KNX_FIRE_EVENT = "fire_event"
 CONF_KNX_FIRE_EVENT_FILTER = "fire_event_filter"
+CONF_KNX_INDIVIDUAL_ADDRESS = "individual_address"
+CONF_KNX_MCAST_GRP = "multicast_group"
+CONF_KNX_MCAST_PORT = "multicast_port"
 CONF_KNX_STATE_UPDATER = "state_updater"
 CONF_KNX_RATE_LIMIT = "rate_limit"
 CONF_KNX_EXPOSE = "expose"
@@ -72,6 +80,11 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Inclusive(CONF_KNX_FIRE_EVENT_FILTER, "fire_ev"): vol.All(
                     cv.ensure_list, [cv.string]
                 ),
+                vol.Optional(
+                    CONF_KNX_INDIVIDUAL_ADDRESS, default=XKNX.DEFAULT_ADDRESS
+                ): cv.string,
+                vol.Optional(CONF_KNX_MCAST_GRP, default=DEFAULT_MCAST_GRP): cv.string,
+                vol.Optional(CONF_KNX_MCAST_PORT, default=DEFAULT_MCAST_PORT): cv.port,
                 vol.Optional(CONF_KNX_STATE_UPDATER, default=True): cv.boolean,
                 vol.Optional(CONF_KNX_RATE_LIMIT, default=20): vol.All(
                     vol.Coerce(int), vol.Range(min=1, max=100)
@@ -130,17 +143,15 @@ async def async_setup(hass, config):
         hass.data[DATA_KNX].async_create_exposures()
         await hass.data[DATA_KNX].start()
     except XKNXException as ex:
-        _LOGGER.warning("Can't connect to KNX interface: %s", ex)
+        _LOGGER.warning("Could not connect to KNX interface: %s", ex)
         hass.components.persistent_notification.async_create(
-            f"Can't connect to KNX interface: <br><b>{ex}</b>", title="KNX"
+            f"Could not connect to KNX interface: <br><b>{ex}</b>", title="KNX"
         )
 
     for platform in SupportedPlatforms:
         if platform.value in config[DOMAIN]:
             for device_config in config[DOMAIN][platform.value]:
-                create_knx_device(
-                    hass, platform, hass.data[DATA_KNX].xknx, device_config
-                )
+                create_knx_device(platform, hass.data[DATA_KNX].xknx, device_config)
 
     # We need to wait until all entities are loaded into the device list since they could also be created from other platforms
     for platform in SupportedPlatforms:
@@ -181,7 +192,10 @@ class KNXModule:
         self.xknx = XKNX(
             config=self.config_file(),
             loop=self.hass.loop,
+            own_address=self.config[DOMAIN][CONF_KNX_INDIVIDUAL_ADDRESS],
             rate_limit=self.config[DOMAIN][CONF_KNX_RATE_LIMIT],
+            multicast_group=self.config[DOMAIN][CONF_KNX_MCAST_GRP],
+            multicast_port=self.config[DOMAIN][CONF_KNX_MCAST_PORT],
         )
 
     async def start(self):
@@ -229,12 +243,10 @@ class KNXModule:
     def connection_config_tunneling(self):
         """Return the connection_config if tunneling is configured."""
         gateway_ip = self.config[DOMAIN][CONF_KNX_TUNNELING][CONF_HOST]
-        gateway_port = self.config[DOMAIN][CONF_KNX_TUNNELING].get(CONF_PORT)
+        gateway_port = self.config[DOMAIN][CONF_KNX_TUNNELING][CONF_PORT]
         local_ip = self.config[DOMAIN][CONF_KNX_TUNNELING].get(
             ConnectionSchema.CONF_KNX_LOCAL_IP
         )
-        if gateway_port is None:
-            gateway_port = DEFAULT_MCAST_PORT
         return ConnectionConfig(
             connection_type=ConnectionType.TUNNELING,
             gateway_ip=gateway_ip,
@@ -267,7 +279,7 @@ class KNXModule:
             attribute = to_expose.get(ExposeSchema.CONF_KNX_EXPOSE_ATTRIBUTE)
             default = to_expose.get(ExposeSchema.CONF_KNX_EXPOSE_DEFAULT)
             address = to_expose.get(ExposeSchema.CONF_KNX_EXPOSE_ADDRESS)
-            if expose_type in ["time", "date", "datetime"]:
+            if expose_type.lower() in ["time", "date", "datetime"]:
                 exposure = KNXExposeTime(self.xknx, expose_type, address)
                 exposure.async_register()
                 self.exposures.append(exposure)
@@ -313,29 +325,29 @@ class KNXModule:
         payload = calculate_payload(attr_payload)
         address = GroupAddress(attr_address)
 
-        telegram = Telegram()
-        telegram.payload = payload
-        telegram.group_address = address
+        telegram = Telegram(group_address=address, payload=payload)
         await self.xknx.telegrams.put(telegram)
 
 
 class KNXExposeTime:
     """Object to Expose Time/Date object to KNX bus."""
 
-    def __init__(self, xknx, expose_type, address):
+    def __init__(self, xknx: XKNX, expose_type: str, address: str):
         """Initialize of Expose class."""
         self.xknx = xknx
-        self.type = expose_type
+        self.expose_type = expose_type
         self.address = address
         self.device = None
 
     @callback
     def async_register(self):
         """Register listener."""
-        broadcast_type_string = self.type.upper()
-        broadcast_type = broadcast_type_string
         self.device = DateTime(
-            self.xknx, "Time", broadcast_type=broadcast_type, group_address=self.address
+            self.xknx,
+            name=self.expose_type.capitalize(),
+            broadcast_type=self.expose_type.upper(),
+            localtime=True,
+            group_address=self.address,
         )
 
 
