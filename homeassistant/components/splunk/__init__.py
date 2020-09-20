@@ -117,7 +117,7 @@ async def async_setup(hass, config):
         except ClientConnectionError as err:
             _LOGGER.warning(err)
         except ClientResponseError as err:
-            _LOGGER.error(err)
+            _LOGGER.error(err.message)
 
     hass.bus.async_listen(EVENT_STATE_CHANGED, splunk_event_listener)
 
