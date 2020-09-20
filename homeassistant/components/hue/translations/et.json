@@ -1,13 +1,24 @@
 {
     "config": {
         "abort": {
+            "all_configured": "K\u00f5ik Philips Hue sillad on juba konfigureeritud",
+            "discover_timeout": "Ei leia Philips Hue sildu",
+            "no_bridges": "Philips Hue sildu ei avastatud",
             "unknown": "Ilmnes tundmatu viga"
+        },
+        "error": {
+            "linking": "Ilmnes tundmatu linkimist\u00f5rge.",
+            "register_failed": "Registreerimine nurjus. Proovige uuesti"
         },
         "step": {
             "init": {
                 "data": {
                     "host": ""
-                }
+                },
+                "title": "Valige Hue sild"
+            },
+            "link": {
+                "description": "Vajutage silla nuppu, et registreerida Philips Hue Home Assistant abil. \n\n ! [Nupu asukoht sillal] (/ static / images / config_philips_hue.jpg)"
             }
         }
     }
