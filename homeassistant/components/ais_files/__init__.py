@@ -103,7 +103,7 @@ async def _async_transfer_file(hass, path, name):
 
 
 async def _async_remove_file(hass, path):
-    if "" in path:
+    if "api/image/serve" in path:
         # remove file from hass image folder
         path = path.replace("/api/image/serve/", "")
         path = path.replace("/512x512", "")
