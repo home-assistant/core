@@ -7,6 +7,8 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 
 from .bridge import DynaliteBridge
+
+# pylint: disable=unused-import
 from .const import DEFAULT_NAME, DEFAULT_PORT, DOMAIN, LOGGER
 
 
