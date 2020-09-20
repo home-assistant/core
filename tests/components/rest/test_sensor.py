@@ -12,7 +12,7 @@ import requests_mock
 from homeassistant import config as hass_config
 import homeassistant.components.rest.sensor as rest
 import homeassistant.components.sensor as sensor
-from homeassistant.const import DATA_MEGABYTES, SERVICE_RELOAD
+from homeassistant.const import CONTENT_TYPE_TEXT_PLAIN, DATA_MEGABYTES, SERVICE_RELOAD
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.config_validation import template
 from homeassistant.setup import async_setup_component, setup_component
@@ -413,7 +413,7 @@ class TestRestSensor(unittest.TestCase):
             "rest.RestData.update",
             side_effect=self.update_side_effect(
                 "This is text rather than JSON data.",
-                CaseInsensitiveDict({"Content-Type": "text/plain"}),
+                CaseInsensitiveDict({"Content-Type": CONTENT_TYPE_TEXT_PLAIN}),
             ),
         )
         self.sensor = rest.RestSensor(
