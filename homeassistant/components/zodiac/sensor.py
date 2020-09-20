@@ -4,34 +4,32 @@ import logging
 from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
 
+from .const import (
+    ATTR_SIGN,
+    ATTR_ELEMENT,
+    ATTR_MODALITY,
+    ELEMENT_FIRE,
+    ELEMENT_AIR,
+    ELEMENT_EARTH,
+    ELEMENT_WATER,
+    MODALITY_CARDINAL,
+    MODALITY_FIXED,
+    MODALITY_MUTABLE,
+    SIGN_ARIES,
+    SIGN_TAURUS,
+    SIGN_GEMINI,
+    SIGN_CANCER,
+    SIGN_LEO,
+    SIGN_VIRGO,
+    SIGN_LIBRA,
+    SIGN_SCORPIO,
+    SIGN_SAGITTARIUS,
+    SIGN_CAPRICORN,
+    SIGN_AQUARIUS,
+    SIGN_PISCES,
+)
+
 _LOGGER = logging.getLogger(__name__)
-
-SIGN_ARIES = "aries"
-SIGN_TAURUS = "taurus"
-SIGN_GEMINI = "gemini"
-SIGN_CANCER = "cancer"
-SIGN_LEO = "leo"
-SIGN_VIRGO = "virgo"
-SIGN_LIBRA = "libra"
-SIGN_SCORPIO = "scorpio"
-SIGN_SAGITTARIUS = "sagittarius"
-SIGN_CAPRICORN = "capricorn"
-SIGN_AQUARIUS = "aquarius"
-SIGN_PISCES = "pisces"
-
-ELEMENT_FIRE = "fire"
-ELEMENT_AIR = "air"
-ELEMENT_EARTH = "earth"
-ELEMENT_WATER = "water"
-
-MODALITY_CARDINAL = "cardinal"
-MODALITY_FIXED = "fixed"
-MODALITY_MUTABLE = "mutable"
-
-
-ATTR_SIGN = "sign"
-ATTR_ELEMENT = "element"
-ATTR_MODALITY = "modality"
 
 STATE_ATTR = ATTR_SIGN
 
