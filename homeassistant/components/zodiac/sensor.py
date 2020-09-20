@@ -163,6 +163,9 @@ ZODIAC_ICONS = {
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Zodiac sensor platform."""
+    if discovery_info is None:
+        return
+
     async_add_entities([ZodiacSensor()], True)
 
 
