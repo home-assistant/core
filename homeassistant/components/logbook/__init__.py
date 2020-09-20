@@ -427,7 +427,6 @@ def _get_events(
     """Get events for a period of time."""
     entity_attr_cache = EntityAttributeCache(hass)
     context_lookup = {None: None}
-    apply_sql_entities_filter = True
 
     def yield_events(query):
         """Yield Events that are not filtered away."""
@@ -439,13 +438,9 @@ def _get_events(
 
     if entity_ids is not None:
         entities_filter = generate_filter([], entity_ids, [], [])
-        apply_sql_entities_filter = False
 
     with session_scope(hass=hass) as session:
         old_state = aliased(States, name="old_state")
-        entity_filter = None
-        if apply_sql_entities_filter and filters:
-            entity_filter = filters.entity_filter()
 
         if entity_ids is not None:
             events_query = _generate_events_query_without_states(session)
@@ -466,9 +461,6 @@ def _get_events(
                 # contain the entity_ids are not included in the logbook response.
                 events_query = _apply_state_matchers(events_query, entity_ids)
 
-            if entity_filter is not None:
-                states_query = states_query.filter(entity_filter)
-
             query = events_query.union_all(states_query)
         else:
             events_query = _generate_events_query(session)
@@ -479,9 +471,9 @@ def _get_events(
                 (States.last_updated == States.last_changed)
                 | (Events.event_type != EVENT_STATE_CHANGED)
             )
-            if entity_filter is not None:
+            if filters:
                 events_query = events_query.filter(
-                    entity_filter | (Events.event_type != EVENT_STATE_CHANGED)
+                    filters.entity_filter() | (Events.event_type != EVENT_STATE_CHANGED)
                 )
             query = events_query
 
