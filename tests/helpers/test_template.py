@@ -2483,3 +2483,31 @@ async def test_template_timeout(hass):
 """
     tmp5 = template.Template(slow_template_str, hass)
     assert await tmp5.async_render_will_timeout(0.000001) is True
+
+
+async def test_lights(hass):
+    """Test we can sort lights."""
+
+    tmpl = """
+          {% set lights_on = states.light|selectattr('state','eq','on')|map(attribute='name')|list %}
+          {% if lights_on|length == 0 %}
+            No lights on. Sleep well..
+          {% elif lights_on|length == 1 %}
+            The {{lights_on[0]}} light is on.
+          {% elif lights_on|length == 2 %}
+            The {{lights_on[0]}} and {{lights_on[1]}} lights are on.
+          {% else %}
+            The {{lights_on[:-1]|join(', ')}}, and {{lights_on[-1]}} lights are on.
+          {% endif %}
+    """
+    states = []
+    for i in range(10):
+        states.append(f"light.sensor{i}")
+        hass.states.async_set(f"light.sensor{i}", "on")
+
+    tmp = template.Template(tmpl, hass)
+    info = tmp.async_render_to_info()
+    assert info.entities == set(states)
+    assert "lights are on" in info.result()
+    for i in range(10):
+        assert f"sensor{i}" in info.result()
