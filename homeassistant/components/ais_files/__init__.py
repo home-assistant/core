@@ -32,6 +32,12 @@ async def async_setup(hass, config):
 
     # register services
     @asyncio.coroutine
+    async def async_transfer_file(call):
+        if "path" not in call.data or "name" not in call.data:
+            return
+        await _async_transfer_file(hass, call.data["path"], call.data["name"])
+
+    @asyncio.coroutine
     async def async_remove_file(call):
         if "path" not in call.data:
             return
@@ -61,6 +67,7 @@ async def async_setup(hass, config):
 
     hass.services.async_register(DOMAIN, "pick_file", async_pick_file)
     hass.services.async_register(DOMAIN, "refresh_files", async_refresh_files)
+    hass.services.async_register(DOMAIN, "transfer_file", async_transfer_file)
     hass.services.async_register(DOMAIN, "remove_file", async_remove_file)
     hass.services.async_register(
         DOMAIN, "change_logger_settings", async_change_logger_settings
@@ -77,11 +84,38 @@ async def async_setup(hass, config):
     return True
 
 
-async def _async_remove_file(hass, path):
-    path = path.replace("/local/", "/data/data/pl.sviete.dom/files/home/AIS/www/")
-    os.remove(path)
+# transfer file from HASS upload folder to ais gallery
+async def _async_transfer_file(hass, path, name):
+    # remove file from hass image folder
+    path = path.replace("/api/image/serve/", "")
+    path = path.replace("/512x512", "")
+    import shutil
+
+    # 1. transfer
+    shutil.copy(
+        hass.config.config_dir + "/image/" + path + "/original",
+        hass.config.config_dir + "/www/img/" + name + ".jpeg",
+    )
+    # 2. remove
+    shutil.rmtree(hass.config.config_dir + "/image/" + path)
+
     await _async_refresh_files(hass)
-    await _async_pick_file(hass, 0)
+
+
+async def _async_remove_file(hass, path):
+    if "" in path:
+        # remove file from hass image folder
+        path = path.replace("/api/image/serve/", "")
+        path = path.replace("/512x512", "")
+        import shutil
+
+        shutil.rmtree(hass.config.config_dir + "/image/" + path)
+    else:
+        # remove file from ais folder
+        path = path.replace("/local/", "/data/data/pl.sviete.dom/files/home/AIS/www/")
+        os.remove(path)
+        await _async_refresh_files(hass)
+        await _async_pick_file(hass, 0)
 
 
 async def _async_pick_file(hass, idx):
