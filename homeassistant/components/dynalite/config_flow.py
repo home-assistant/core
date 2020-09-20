@@ -23,7 +23,7 @@ class DynaliteFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def existing_host_entry(self, config) -> Any:
         """Check if a specific host is already configured and return its entry or None."""
-        for entry in self.hass.config_entries.async_entries(DOMAIN):
+        for entry in self._async_current_entries():
             if entry.data[CONF_HOST] == config[CONF_HOST]:
                 return entry
         return None
