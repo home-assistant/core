@@ -68,6 +68,7 @@ async def test_setup_component_and_test_service(hass):
             "name": "tts_test",
             "tts_service": "tts.demo_say",
             "media_player": "media_player.demo",
+            "language": "en",
         },
     }
 
@@ -82,9 +83,6 @@ async def test_setup_component_and_test_service(hass):
         "tts_test",
         {
             tts.ATTR_MESSAGE: "There is someone at the door.",
-            "data": {
-                tts.ATTR_LANGUAGE: "en",
-            },
         },
         blocking=True,
     )
