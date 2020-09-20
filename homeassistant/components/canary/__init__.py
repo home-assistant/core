@@ -137,10 +137,9 @@ async def _async_update_listener(hass: HomeAssistantType, entry: ConfigEntry) ->
 class CanaryData:
     """Manages the data retrieved from Canary API."""
 
-    def __init__(self, username, password, timeout):
+    def __init__(self, api: Api):
         """Init the Canary data object."""
-        self._api = Api(username, password, timeout)
-
+        self._api = api
         self._locations_by_id = {}
         self._readings_by_device_id = {}
 
@@ -199,12 +198,13 @@ class CanaryData:
 
 def _get_canary_data_instance(entry: ConfigEntry) -> CanaryData:
     """Initialize a new instance of CanaryData."""
-    canary_data = CanaryData(
+    canary = Api(
         entry.data[CONF_USERNAME],
         entry.data[CONF_PASSWORD],
         entry.options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
     )
 
+    canary_data = CanaryData(canary)
     canary_data.update()
 
     return canary_data
