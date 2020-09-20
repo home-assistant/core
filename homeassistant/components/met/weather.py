@@ -214,8 +214,9 @@ class MetWeather(CoordinatorEntity, WeatherEntity):
             ha_item = {
                 k: met_item[v] for k, v in FORECAST_MAP.items() if met_item.get(v)
             }
-            ha_item[ATTR_FORECAST_CONDITION] = format_condition(
-                ha_item[ATTR_FORECAST_CONDITION]
-            )
+            if ha_item.get(ATTR_FORECAST_CONDITION):
+                ha_item[ATTR_FORECAST_CONDITION] = format_condition(
+                    ha_item[ATTR_FORECAST_CONDITION]
+                )
             ha_forecast.append(ha_item)
         return ha_forecast
