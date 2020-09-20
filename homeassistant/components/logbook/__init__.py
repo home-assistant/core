@@ -577,15 +577,14 @@ def _apply_event_types_filter(hass, query, event_types):
 
 
 def _apply_state_matchers(events_query, entity_ids):
-    states_matchers = Events.event_data.contains(
-        ENTITY_ID_JSON_TEMPLATE.format(entity_ids[0])
-    )
-    for entity_id in entity_ids[1:]:
-        states_matchers |= Events.event_data.contains(
-            ENTITY_ID_JSON_TEMPLATE.format(entity_id)
+    return events_query.filter(
+        sqlalchemy.or_(
+            *[
+                Events.event_data.contains(ENTITY_ID_JSON_TEMPLATE.format(entity_id))
+                for entity_id in entity_ids
+            ]
         )
-
-    return events_query.filter(states_matchers)
+    )
 
 
 def _keep_event(hass, event, entities_filter):
