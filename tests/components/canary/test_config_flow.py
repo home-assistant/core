@@ -18,6 +18,8 @@ from homeassistant.setup import async_setup_component
 
 from . import USER_INPUT, _patch_async_setup, _patch_async_setup_entry, init_integration
 
+from tests.async_mock import patch
+
 
 async def test_user_form(hass, canary_config_flow):
     """Test we get the user initiated form."""
