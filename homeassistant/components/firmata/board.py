@@ -5,18 +5,21 @@ from typing import Union
 from pymata_express.pymata_express import PymataExpress
 from pymata_express.pymata_express_serial import serial
 
-from homeassistant.const import CONF_NAME
+from homeassistant.const import (
+    CONF_BINARY_SENSORS,
+    CONF_LIGHTS,
+    CONF_NAME,
+    CONF_SENSORS,
+    CONF_SWITCHES,
+)
 
 from .const import (
     CONF_ARDUINO_INSTANCE_ID,
     CONF_ARDUINO_WAIT,
-    CONF_BINARY_SENSORS,
     CONF_SAMPLING_INTERVAL,
-    CONF_SENSORS,
     CONF_SERIAL_BAUD_RATE,
     CONF_SERIAL_PORT,
     CONF_SLEEP_TUNE,
-    CONF_SWITCHES,
     PIN_TYPE_ANALOG,
     PIN_TYPE_DIGITAL,
 )
@@ -37,12 +40,15 @@ class FirmataBoard:
         self.protocol_version = None
         self.name = self.config[CONF_NAME]
         self.switches = []
+        self.lights = []
         self.binary_sensors = []
         self.sensors = []
         self.used_pins = []
 
         if CONF_SWITCHES in self.config:
             self.switches = self.config[CONF_SWITCHES]
+        if CONF_LIGHTS in self.config:
+            self.lights = self.config[CONF_LIGHTS]
         if CONF_BINARY_SENSORS in self.config:
             self.binary_sensors = self.config[CONF_BINARY_SENSORS]
         if CONF_SENSORS in self.config:

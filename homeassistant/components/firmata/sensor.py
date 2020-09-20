@@ -3,11 +3,11 @@
 import logging
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_PIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 
-from .const import CONF_DIFFERENTIAL, CONF_PIN, CONF_PIN_MODE, DOMAIN
+from .const import CONF_DIFFERENTIAL, CONF_PIN_MODE, DOMAIN
 from .entity import FirmataPinEntity
 from .pin import FirmataAnalogInput, FirmataPinUsedException
 

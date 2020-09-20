@@ -89,6 +89,53 @@ class FirmataBinaryDigitalOutput(FirmataBoardPin):
         self._state = False
 
 
+class FirmataPWMOutput(FirmataBoardPin):
+    """Representation of a Firmata PWM/analog Output Pin."""
+
+    def __init__(
+        self,
+        board: FirmataBoard,
+        pin: FirmataPinType,
+        pin_mode: str,
+        initial: bool,
+        minimum: int,
+        maximum: int,
+    ):
+        """Initialize the PWM/analog output pin."""
+        self._initial = initial
+        self._min = minimum
+        self._max = maximum
+        self._range = self._max - self._min
+        super().__init__(board, pin, pin_mode)
+
+    async def start_pin(self) -> None:
+        """Set initial state on a pin."""
+        _LOGGER.debug(
+            "Setting initial state for PWM/analog output pin %s on board %s to %d",
+            self._pin,
+            self.board.name,
+            self._initial,
+        )
+        api = self.board.api
+        await api.set_pin_mode_pwm_output(self._firmata_pin)
+
+        new_pin_state = round((self._initial * self._range) / 255) + self._min
+        await api.pwm_write(self._firmata_pin, new_pin_state)
+        self._state = self._initial
+
+    @property
+    def state(self) -> int:
+        """Return PWM/analog state."""
+        return self._state
+
+    async def set_level(self, level: int) -> None:
+        """Set PWM/analog output."""
+        _LOGGER.debug("Setting PWM/analog output on pin %s to %d", self._pin, level)
+        new_pin_state = round((level * self._range) / 255) + self._min
+        await self.board.api.pwm_write(self._firmata_pin, new_pin_state)
+        self._state = level
+
+
 class FirmataBinaryDigitalInput(FirmataBoardPin):
     """Representation of a Firmata Digital Input Pin."""
 

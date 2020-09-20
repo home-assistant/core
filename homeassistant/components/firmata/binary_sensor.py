@@ -4,10 +4,10 @@ import logging
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_PIN
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_NEGATE_STATE, CONF_PIN, CONF_PIN_MODE, DOMAIN
+from .const import CONF_NEGATE_STATE, CONF_PIN_MODE, DOMAIN
 from .entity import FirmataPinEntity
 from .pin import FirmataBinaryDigitalInput, FirmataPinUsedException
 
