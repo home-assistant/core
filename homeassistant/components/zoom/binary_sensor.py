@@ -3,7 +3,7 @@ from datetime import timedelta
 from logging import getLogger
 from typing import Any, Dict, List, Optional
 
-from aiohttp.web import HTTPUnauthorized
+from aiohttp.web import HTTPException, HTTPUnauthorized
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
@@ -224,7 +224,7 @@ class ZoomAuthenticatedUserBinarySensor(RestoreEntity, ZoomBaseBinarySensor):
                 exc_info=True,
             )
             await self._restore_state()
-        except Exception:
+        except HTTPException:
             _LOGGER.warning(
                 "Error retrieving initial zoom status, restoring state.", exc_info=True
             )

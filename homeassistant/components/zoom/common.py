@@ -3,7 +3,7 @@ import json
 from logging import getLogger
 from typing import Dict, Optional
 
-from aiohttp.web import Request, Response
+from aiohttp.web import HTTPException, Request, Response
 
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.const import HTTP_OK
@@ -16,17 +16,19 @@ from .const import HA_URL, HA_ZOOM_EVENT, WEBHOOK_RESPONSE_SCHEMA
 _LOGGER = getLogger(__name__)
 
 
-def get_contact_name(contact: Dict[str, str]) -> str:
+def get_contact_name(contact: Optional[Dict[str, str]]) -> Optional[str]:
     """Determine contact name from available first name, last naame, and email."""
-    contact_name = ""
-    if contact.get("first_name"):
-        contact_name = f"{contact['first_name']} "
-    if contact.get("last_name"):
-        contact_name += f"{contact['last_name']} "
+    if contact:
+        contact_name = ""
+        if contact.get("first_name"):
+            contact_name = f"{contact['first_name']} "
+        if contact.get("last_name"):
+            contact_name += f"{contact['last_name']} "
 
-    if contact_name:
-        return f"{contact_name}({contact['email']})"
-    return contact["email"]
+        if contact_name:
+            return f"{contact_name}({contact['email']})"
+        return contact["email"]
+    return None
 
 
 class ZoomOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implementation):
@@ -100,7 +102,7 @@ class ZoomWebhookRequestView(HomeAssistantView):
                 status = WEBHOOK_RESPONSE_SCHEMA(data)
                 _LOGGER.debug("Received event: %s", json.dumps(status))
                 hass.bus.async_fire(HA_ZOOM_EVENT, status)
-            except Exception:
+            except HTTPException:
                 _LOGGER.warning(
                     "Received authorized but unknown event: %s", await request.text()
                 )
