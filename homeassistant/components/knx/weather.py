@@ -1,4 +1,5 @@
 """Support for KNX/IP weather station."""
+
 from xknx.devices import Weather as XknxWeather
 
 from homeassistant.components.weather import WeatherEntity
