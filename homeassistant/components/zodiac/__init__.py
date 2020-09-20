@@ -14,8 +14,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the zodiac component."""
-    hass.async_create_task(
-        async_load_platform(hass, "sensor", DOMAIN, {}, config)
-    )
+    hass.async_create_task(async_load_platform(hass, "sensor", DOMAIN, {}, config))
 
     return True
