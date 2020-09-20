@@ -74,6 +74,8 @@ GROUP_BY_MINUTES = 15
 EMPTY_JSON_OBJECT = "{}"
 UNIT_OF_MEASUREMENT_JSON = '"unit_of_measurement":'
 
+HA_DOMAIN_ENTITY_ID = f"{HA_DOMAIN}."
+
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA}, extra=vol.ALLOW_EXTRA
 )
@@ -597,25 +599,27 @@ def _apply_state_matchers(events_query, entity_ids):
 
 def _keep_event(hass, event, entities_filter):
     if event.event_type == EVENT_STATE_CHANGED:
-        entity_id = event.entity_id
-    elif event.event_type in HOMEASSISTANT_EVENTS:
-        entity_id = f"{HA_DOMAIN}."
-    elif event.event_type == EVENT_CALL_SERVICE:
+        return entities_filter is None or entities_filter(event.entity_id)
+    if event.event_type in HOMEASSISTANT_EVENTS:
+        return entities_filter is None or entities_filter(HA_DOMAIN_ENTITY_ID)
+    if event.event_type == EVENT_CALL_SERVICE:
         return False
-    else:
-        entity_id = event.data_entity_id
-        if not entity_id:
-            if event.event_type in hass.data[DOMAIN]:
-                # If the entity_id isn't described, use the domain that describes
-                # the event for filtering.
-                domain = hass.data[DOMAIN][event.event_type][0]
-            else:
-                domain = event.data_domain
-            if domain is None:
-                return False
-            entity_id = f"{domain}."
 
-    return entities_filter is None or entities_filter(entity_id)
+    entity_id = event.data_entity_id
+    if entity_id:
+        return entities_filter is None or entities_filter(entity_id)
+
+    if event.event_type in hass.data[DOMAIN]:
+        # If the entity_id isn't described, use the domain that describes
+        # the event for filtering.
+        domain = hass.data[DOMAIN][event.event_type][0]
+    else:
+        domain = event.data_domain
+
+    if domain is None:
+        return False
+
+    return entities_filter is None or entities_filter(f"{domain}.")
 
 
 def _entry_message_from_event(entity_id, domain, event, entity_attr_cache):
