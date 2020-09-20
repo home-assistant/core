@@ -1,4 +1,4 @@
-"""Constants for Zodiac integration."""
+"""Constants for Zodiac."""
 DOMAIN = "zodiac"
 
 # Signs
