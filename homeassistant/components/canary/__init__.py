@@ -89,7 +89,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         hass.config_entries.async_update_entry(entry, options=options)
 
     try:
-        canary_data = await self.hass.async_add_executor_job(_get_canary_data_instance)
+        canary_data = await hass.async_add_executor_job(_get_canary_data_instance, entry)
     except (ConnectTimeout, HTTPError) as error:
         _LOGGER.error("Unable to connect to Canary service: %s", str(error))
         raise ConfigEntryNotReady from error
@@ -131,18 +131,6 @@ async def _async_update_listener(hass: HomeAssistantType, entry: ConfigEntry) ->
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
 
-
-def _get_canary_data_instance() -> CanaryData:
-    """Initialize a new instance of CanaryData."""
-    canary_data = CanaryData(
-        entry.data[CONF_USERNAME],
-        entry.data[CONF_PASSWORD],
-        entry.options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
-    )
-
-    canary_data.update()
-
-    return canary_data
 
 class CanaryData:
     """Manages the data retrieved from Canary API."""
@@ -205,3 +193,16 @@ class CanaryData:
     def get_live_stream_session(self, device):
         """Return live stream session."""
         return self._api.get_live_stream_session(device)
+
+
+def _get_canary_data_instance(entry: ConfigEntry) -> CanaryData:
+    """Initialize a new instance of CanaryData."""
+    canary_data = CanaryData(
+        entry.data[CONF_USERNAME],
+        entry.data[CONF_PASSWORD],
+        entry.options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
+    )
+
+    canary_data.update()
+
+    return canary_data
