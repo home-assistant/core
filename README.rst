@@ -1,8 +1,7 @@
 Assystent domowy
 =================================================================================
 
-Open source home automation platform that puts local control and privacy first.
-We are able to track and control all devices at home and offer a control by voice and automating the control.
+Platforma automatyki domowej typu OpenSource, która na pierwszym miejscu stawia kontrolę lokalną i prywatność.
 
 
 |screenshot-states|
