@@ -37,7 +37,7 @@ def mock_websocket():
 
 
 @pytest.fixture
-async def setup_plex_server(hass, entry, mock_plex_account, mock_websocket):
+def setup_plex_server(hass, entry, mock_plex_account, mock_websocket):
     """Set up and return a mocked Plex server instance."""
 
     async def _wrapper(**kwargs):
