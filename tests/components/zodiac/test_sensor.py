@@ -1,5 +1,6 @@
 """The test for the zodiac sensor platform."""
 from datetime import datetime
+
 import pytest
 
 from homeassistant.components.homeassistant import (
@@ -53,56 +54,11 @@ async def test_zodiac_day(hass, now, sign, element, modality):
 
     assert hass.states.get("sensor.zodiac")
 
-
     assert hass.states.get("sensor.zodiac").state == sign
     data = hass.states.get("sensor.zodiac").attributes
     assert data.get(ATTR_SIGN) == sign
     assert data.get(ATTR_ELEMENT) == element
     assert data.get(ATTR_MODALITY) == modality
-
-
-async def test_zodiac_day2(hass):
-    """Test the zodiac sensor."""
-    config = {"sensor": {"platform": "zodiac"}}
-
-    await async_setup_component(hass, HA_DOMAIN, {})
-    assert await async_setup_component(hass, "sensor", config)
-    await hass.async_block_till_done()
-
-    assert hass.states.get("sensor.zodiac")
-
-    with patch(
-        "homeassistant.components.zodiac.sensor.dt_util.utcnow", return_value=DAY2
-    ):
-        await async_update_entity(hass, "sensor.zodiac")
-
-    assert hass.states.get("sensor.zodiac").state == SIGN_ARIES
-    data = hass.states.get("sensor.zodiac").attributes
-    assert data.get(ATTR_SIGN) == SIGN_ARIES
-    assert data.get(ATTR_ELEMENT) == ELEMENT_FIRE
-    assert data.get(ATTR_MODALITY) == MODALITY_CARDINAL
-
-
-async def test_zodiac_day3(hass):
-    """Test the zodiac sensor."""
-    config = {"sensor": {"platform": "zodiac"}}
-
-    await async_setup_component(hass, HA_DOMAIN, {})
-    assert await async_setup_component(hass, "sensor", config)
-    await hass.async_block_till_done()
-
-    assert hass.states.get("sensor.zodiac")
-
-    with patch(
-        "homeassistant.components.zodiac.sensor.dt_util.utcnow", return_value=DAY3
-    ):
-        await async_update_entity(hass, "sensor.zodiac")
-
-    assert hass.states.get("sensor.zodiac").state == SIGN_TAURUS
-    data = hass.states.get("sensor.zodiac").attributes
-    assert data.get(ATTR_SIGN) == SIGN_TAURUS
-    assert data.get(ATTR_ELEMENT) == ELEMENT_EARTH
-    assert data.get(ATTR_MODALITY) == MODALITY_FIXED
 
 
 async def async_update_entity(hass, entity_id):
