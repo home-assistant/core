@@ -3,10 +3,6 @@ from datetime import datetime
 
 import pytest
 
-from homeassistant.components.homeassistant import (
-    DOMAIN as HA_DOMAIN,
-    SERVICE_UPDATE_ENTITY,
-)
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.zodiac.const import DOMAIN
 from homeassistant.components.zodiac.const import (
@@ -22,7 +18,6 @@ from homeassistant.components.zodiac.const import (
     SIGN_SCORPIO,
     SIGN_TAURUS,
 )
-from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -59,11 +54,3 @@ async def test_zodiac_day(hass, now, sign, element, modality):
     assert data.get(ATTR_SIGN) == sign
     assert data.get(ATTR_ELEMENT) == element
     assert data.get(ATTR_MODALITY) == modality
-
-
-async def async_update_entity(hass, entity_id):
-    """Run an update action for an entity."""
-    await hass.services.async_call(
-        HA_DOMAIN, SERVICE_UPDATE_ENTITY, {ATTR_ENTITY_ID: entity_id}, blocking=True,
-    )
-    await hass.async_block_till_done()
