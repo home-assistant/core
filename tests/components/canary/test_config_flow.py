@@ -103,7 +103,9 @@ async def test_user_form_single_instance_allowed(hass, canary_config_flow):
 
 async def test_options_flow(hass):
     """Test updating options."""
-    entry = await init_integration(hass, skip_entry_setup=True)
+    with patch("homeassistant.components.canary.PLATFORMS", []):
+        entry = await init_integration(hass)
+
     assert entry.options[CONF_FFMPEG_ARGUMENTS] == DEFAULT_FFMPEG_ARGUMENTS
     assert entry.options[CONF_TIMEOUT] == DEFAULT_TIMEOUT
 
@@ -111,11 +113,17 @@ async def test_options_flow(hass):
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "init"
 
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_FFMPEG_ARGUMENTS: "-v", CONF_TIMEOUT: 7},
-    )
+    with patch(
+        "homeassistant.components.canary._async_update_listener"
+    ) as mock_update_reload:
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={CONF_FFMPEG_ARGUMENTS: "-v", CONF_TIMEOUT: 7},
+        )
+        await hass.async_block_till_done()
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["data"][CONF_FFMPEG_ARGUMENTS] == "-v"
     assert result["data"][CONF_TIMEOUT] == 7
+
+    assert mock_update_reload.assert_called_once()
