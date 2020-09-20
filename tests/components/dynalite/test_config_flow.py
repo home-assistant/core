@@ -114,6 +114,9 @@ async def test_user_flow(hass):
     with patch(
         "homeassistant.components.dynalite.bridge.DynaliteDevices.async_setup",
         return_value=True,
+    ), patch(
+        "homeassistant.components.dynalite.async_setup_entry",
+        return_value=True,
     ):
         result = await hass.config_entries.flow.async_init(
             dynalite.DOMAIN,
@@ -138,6 +141,9 @@ async def test_user_flow_with_existing(hass):
     )
     entry.add_to_hass(hass)
     with patch(
+        "homeassistant.components.dynalite.bridge.DynaliteDevices.async_setup",
+        return_value=True,
+    ), patch(
         "homeassistant.components.dynalite.bridge.DynaliteDevices.async_setup",
         return_value=True,
     ):
