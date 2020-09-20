@@ -8,8 +8,8 @@ from homeassistant.components.homeassistant import (
     SERVICE_UPDATE_ENTITY,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.zodiac import DOMAIN
-from homeassistant.components.zodiac.sensor import (
+from homeassistant.components.zodiac.const import DOMAIN
+from homeassistant.components.zodiac.const import (
     ATTR_ELEMENT,
     ATTR_MODALITY,
     ATTR_SIGN,
