@@ -60,6 +60,7 @@ class AccuWeatherSensor(CoordinatorEntity):
         self._attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
         self._unit_system = "Metric" if self.coordinator.is_metric else "Imperial"
         self.forecast_day = forecast_day
+        self._valid_ozone_data = False
 
     @property
     def name(self):
@@ -105,14 +106,15 @@ class AccuWeatherSensor(CoordinatorEntity):
                     self.kind
                 ]["Value"]
             # For some forecast days, the AccuWeather API does not provide an Ozone value.
+            self._valid_ozone_data = bool(
+                self.coordinator.data[ATTR_FORECAST][self.forecast_day].get(self.kind)
+            )
             if self.kind == "Ozone":
                 return (
                     self.coordinator.data[ATTR_FORECAST][self.forecast_day][self.kind][
                         "Value"
                     ]
-                    if self.coordinator.data[ATTR_FORECAST][self.forecast_day].get(
-                        self.kind
-                    )
+                    if self._valid_ozone_data
                     else None
                 )
             return self.coordinator.data[ATTR_FORECAST][self.forecast_day][self.kind]
@@ -164,9 +166,7 @@ class AccuWeatherSensor(CoordinatorEntity):
                     self.forecast_day
                 ][self.kind]["Category"]
             # For some forecast days, the AccuWeather API does not provide an Ozone value.
-            elif self.kind == "Ozone" and self.coordinator.data[ATTR_FORECAST][
-                self.forecast_day
-            ].get(self.kind):
+            elif self.kind == "Ozone" and self._valid_ozone_data:
                 self._attrs["level"] = self.coordinator.data[ATTR_FORECAST][
                     self.forecast_day
                 ][self.kind]["Category"]
