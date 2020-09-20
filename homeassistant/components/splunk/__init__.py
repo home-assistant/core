@@ -3,7 +3,8 @@ import json
 import logging
 import time
 
-from hass_splunk import hass_splunk
+from aiohttp import ClientConnectionError, ClientResponseError
+from hass_splunk import SplunkPayloadError, hass_splunk
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -108,8 +109,15 @@ async def async_setup(hass, config):
 
         try:
             await event_collector.queue(json.dumps(payload, cls=JSONEncoder), send=True)
-        except Exception as err:  # pylint: disable=broad-except
+        except SplunkPayloadError as err:
+            if err.status == 401:
+                _LOGGER.error(err)
+            else:
+                _LOGGER.warning(err)
+        except ClientConnectionError as err:
             _LOGGER.warning(err)
+        except ClientResponseError as err:
+            _LOGGER.error(err)
 
     hass.bus.async_listen(EVENT_STATE_CHANGED, splunk_event_listener)
 
