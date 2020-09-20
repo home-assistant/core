@@ -213,7 +213,6 @@ class TemplateEntity(Entity):
         attribute = _TemplateAttribute(
             self, attribute, template, validator, on_update, none_on_template_error
         )
-        attribute.async_setup()
         self._template_attrs.setdefault(template, [])
         self._template_attrs[template].append(attribute)
 
@@ -257,9 +256,11 @@ class TemplateEntity(Entity):
 
     async def _async_template_startup(self, *_) -> None:
         # _handle_results will not write state until "_async_update" is set
-        template_var_tups = [
-            TrackTemplate(template, None) for template in self._template_attrs
-        ]
+        template_var_tups = []
+        for template, attributes in self._template_attrs.items():
+            template_var_tups.append(TrackTemplate(template, None))
+            for attribute in attributes:
+                attribute.async_setup()
 
         result_info = async_track_template_result(
             self.hass, template_var_tups, self._handle_results
