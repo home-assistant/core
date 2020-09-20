@@ -55,26 +55,6 @@ class DynaliteFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
         # This is for backwards compatibility.
-        return await self.async_step_init(user_input)
-
-    @callback
-    def init_form(self, defaults, error=None):
-        """Create the form for the init process."""
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(CONF_NAME, default=defaults.get(CONF_NAME)): str,
-                    vol.Required(CONF_HOST, default=defaults.get(CONF_HOST)): str,
-                    vol.Optional(CONF_PORT, default=defaults.get(CONF_PORT)): int,
-                }
-            ),
-            errors={"base": error} if error else None,
-        )
-
-    async def async_step_init(self, user_input=None):
-        """Handle a flow start."""
-
         if user_input is not None:
             # New entry
             if self.existing_host_entry(user_input):
@@ -86,3 +66,18 @@ class DynaliteFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
 
         return self.init_form({CONF_NAME: DEFAULT_NAME, CONF_PORT: DEFAULT_PORT})
+
+    @callback
+    def init_form(self, defaults, error=None):
+        """Create the form for the init process."""
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(CONF_NAME, default=defaults.get(CONF_NAME)): str,
+                    vol.Required(CONF_HOST, default=defaults.get(CONF_HOST)): str,
+                    vol.Optional(CONF_PORT, default=defaults.get(CONF_PORT)): int,
+                }
+            ),
+            errors={"base": error} if error else None,
+        )

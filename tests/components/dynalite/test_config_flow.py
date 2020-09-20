@@ -119,7 +119,7 @@ async def test_user_flow(hass):
             dynalite.DOMAIN, context={"source": config_entries.SOURCE_USER},
         )
         assert result["type"] == "form"
-        assert result["step_id"] == "init"
+        assert result["step_id"] == "user"
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={"host": host}
         )
@@ -141,7 +141,7 @@ async def test_user_flow_with_existing(hass):
             dynalite.DOMAIN, context={"source": config_entries.SOURCE_USER},
         )
         assert result["type"] == "form"
-        assert result["step_id"] == "init"
+        assert result["step_id"] == "user"
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={"host": host}
         )
@@ -161,10 +161,10 @@ async def test_user_flow_bridge_unavailable(hass):
         )
         await hass.async_block_till_done()
         assert result["type"] == "form"
-        assert result["step_id"] == "init"
+        assert result["step_id"] == "user"
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={"host": host}
         )
         assert result["type"] == "form"
-        assert result["step_id"] == "init"
+        assert result["step_id"] == "user"
         assert result["errors"]["base"] == "cannot_connect"
