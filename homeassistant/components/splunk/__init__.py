@@ -1,4 +1,5 @@
 """Support to send data to a Splunk instance."""
+import asyncio
 import json
 import logging
 import time
@@ -114,7 +115,7 @@ async def async_setup(hass, config):
                 _LOGGER.error(err)
             else:
                 _LOGGER.warning(err)
-        except ClientConnectionError as err:
+        except (ClientConnectionError, asyncio.TimeoutError) as err:
             _LOGGER.warning(err)
         except ClientResponseError as err:
             _LOGGER.error(err.message)
