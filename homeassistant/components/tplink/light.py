@@ -470,24 +470,20 @@ class TPLinkSmartBulb(LightEntity):
     async def async_update(self):
         """Update the TP-Link bulb's state."""
         for update_attempt in range(MAX_ATTEMPTS):
-            try:
-                is_ready = await self.hass.async_add_executor_job(
-                    self.attempt_update, update_attempt
-                )
+            is_ready = await self.hass.async_add_executor_job(
+                self.attempt_update, update_attempt
+            )
 
-                if is_ready:
-                    self._is_available = True
-                    if update_attempt > 0:
-                        _LOGGER.debug(
-                            "Device %s|%s responded after %s attempts",
-                            self._host,
-                            self._alias,
-                            update_attempt,
-                        )
-                    break
-            except (SmartDeviceException, OSError):
-                pass
-
+            if is_ready:
+                self._is_available = True
+                if update_attempt > 0:
+                    _LOGGER.debug(
+                        "Device %s|%s responded after %s attempts",
+                        self._host,
+                        self._alias,
+                        update_attempt,
+                    )
+                break
             await asyncio.sleep(SLEEP_TIME)
         else:
             if self._is_available:
