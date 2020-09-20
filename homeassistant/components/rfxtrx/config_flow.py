@@ -20,4 +20,5 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if entry and import_config.items() != entry.data.items():
             self.hass.config_entries.async_update_entry(entry, data=import_config)
             return self.async_abort(reason="already_configured")
+        self._abort_if_unique_id_configured()
         return self.async_create_entry(title="RFXTRX", data=import_config)
