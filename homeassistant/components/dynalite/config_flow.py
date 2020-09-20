@@ -54,30 +54,30 @@ class DynaliteFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
-        # This is for backwards compatibility.
+
+        @callback
+        def init_form(defaults, error=None):
+            """Create the form for the user process."""
+            return self.async_show_form(
+                step_id="user",
+                data_schema=vol.Schema(
+                    {
+                        vol.Optional(CONF_NAME, default=defaults.get(CONF_NAME)): str,
+                        vol.Required(CONF_HOST, default=defaults.get(CONF_HOST)): str,
+                        vol.Optional(CONF_PORT, default=defaults.get(CONF_PORT)): int,
+                    }
+                ),
+                errors={"base": error} if error else None,
+            )
+
         if user_input is not None:
             # New entry
             if self.existing_host_entry(user_input):
                 return self.async_abort(reason="already_configured")
             if not await self.check_bridge_connection(user_input):
                 LOGGER.error("Unable to setup bridge - init user_input=%s", user_input)
-                return self.init_form(user_input, "cannot_connect")
+                return init_form(user_input, "cannot_connect")
             LOGGER.debug("Creating entry for the bridge - %s", user_input)
             return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
 
-        return self.init_form({CONF_NAME: DEFAULT_NAME, CONF_PORT: DEFAULT_PORT})
-
-    @callback
-    def init_form(self, defaults, error=None):
-        """Create the form for the init process."""
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(CONF_NAME, default=defaults.get(CONF_NAME)): str,
-                    vol.Required(CONF_HOST, default=defaults.get(CONF_HOST)): str,
-                    vol.Optional(CONF_PORT, default=defaults.get(CONF_PORT)): int,
-                }
-            ),
-            errors={"base": error} if error else None,
-        )
+        return init_form({CONF_NAME: DEFAULT_NAME, CONF_PORT: DEFAULT_PORT})
