@@ -89,7 +89,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         hass.config_entries.async_update_entry(entry, options=options)
 
     try:
-        canary_data = await hass.async_add_executor_job(_get_canary_data_instance, entry)
+        canary_data = await hass.async_add_executor_job(
+            _get_canary_data_instance, entry
+        )
     except (ConnectTimeout, HTTPError) as error:
         _LOGGER.error("Unable to connect to Canary service: %s", str(error))
         raise ConfigEntryNotReady from error
