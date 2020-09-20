@@ -454,7 +454,7 @@ def _get_events(
             if entity_matches_only:
                 # When entity_matches_only is provided, contexts and events that do not
                 # contain the entity_ids are not included in the logbook response.
-                query = _apply_state_matchers(query, entity_ids)
+                query = _apply_event_entity_id_matchers(query, entity_ids)
 
             query = query.union_all(
                 _generate_states_query(
@@ -579,7 +579,7 @@ def _apply_event_types_filter(hass, query, event_types):
     )
 
 
-def _apply_state_matchers(events_query, entity_ids):
+def _apply_event_entity_id_matchers(events_query, entity_ids):
     return events_query.filter(
         sqlalchemy.or_(
             *[
