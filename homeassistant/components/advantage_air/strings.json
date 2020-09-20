@@ -3,7 +3,7 @@
     "flow_title": "Advantage Air Setup",
     "error": {
       "connection_error": "Could not connect to the API, check the URL is correct.",
-      "data_error": "No Airconditioners were found."
+      "data_error": "No Air Conditioners were found."
     },
     "step": {
       "user": {
