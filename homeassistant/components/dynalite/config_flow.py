@@ -5,7 +5,6 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
-from homeassistant.core import callback
 
 from .bridge import DynaliteBridge
 from .const import DEFAULT_NAME, DEFAULT_PORT, DOMAIN, LOGGER
@@ -55,29 +54,33 @@ class DynaliteFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
 
-        @callback
-        def init_form(defaults, error=None):
-            """Create the form for the user process."""
-            return self.async_show_form(
-                step_id="user",
-                data_schema=vol.Schema(
-                    {
-                        vol.Optional(CONF_NAME, default=defaults.get(CONF_NAME)): str,
-                        vol.Required(CONF_HOST, default=defaults.get(CONF_HOST)): str,
-                        vol.Optional(CONF_PORT, default=defaults.get(CONF_PORT)): int,
-                    }
-                ),
-                errors={"base": error} if error else None,
-            )
-
         if user_input is not None:
             # New entry
             if self.existing_host_entry(user_input):
                 return self.async_abort(reason="already_configured")
-            if not await self.check_bridge_connection(user_input):
-                LOGGER.error("Unable to setup bridge - init user_input=%s", user_input)
-                return init_form(user_input, "cannot_connect")
-            LOGGER.debug("Creating entry for the bridge - %s", user_input)
-            return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
+            if await self.check_bridge_connection(user_input):
+                LOGGER.debug("Creating entry for the bridge - %s", user_input)
+                return self.async_create_entry(
+                    title=user_input[CONF_HOST], data=user_input
+                )
+            LOGGER.error("Unable to setup bridge - init user_input=%s", user_input)
+            errors = {"base": "cannot_connect"}
+        else:
+            errors = None
+            user_input = {}
 
-        return init_form({CONF_NAME: DEFAULT_NAME, CONF_PORT: DEFAULT_PORT})
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_NAME, default=user_input.get(CONF_NAME, DEFAULT_NAME)
+                    ): str,
+                    vol.Required(CONF_HOST, default=user_input.get(CONF_HOST)): str,
+                    vol.Optional(
+                        CONF_PORT, default=user_input.get(CONF_PORT, DEFAULT_PORT)
+                    ): int,
+                }
+            ),
+            errors=errors,
+        )
