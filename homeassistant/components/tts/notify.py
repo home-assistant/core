@@ -40,12 +40,6 @@ class TTSNotificationService(BaseNotificationService):
         """Initialize the service."""
         _, self._tts_service = split_entity_id(config[CONF_TTS_SERVICE])
         self._media_player = config[CONF_MEDIA_PLAYER]
-        _LOGGER.debug(
-            "Creating notification service using %s and %s",
-            self._tts_service,
-            self._media_player,
-        )
-
         self._language = config.get(ATTR_LANGUAGE)
 
     async def async_send_message(self, message="", **kwargs):
