@@ -450,20 +450,16 @@ def _get_events(
             events_query = _apply_event_types_filter(
                 hass, events_query, ALL_EVENT_TYPES_EXCEPT_STATE_CHANGED
             )
-
-            states_query = _generate_states_query(
-                session, start_day, end_day, old_state
-            ).filter(
-                (States.last_updated == States.last_changed)
-                & States.entity_id.in_(entity_ids)
-            )
-
             if entity_matches_only:
                 # When entity_matches_only is provided, contexts and events that do not
                 # contain the entity_ids are not included in the logbook response.
                 events_query = _apply_state_matchers(events_query, entity_ids)
 
-            query = events_query.union_all(states_query)
+            query = events_query.union_all(
+                _generate_states_query(
+                    session, start_day, end_day, old_state, entity_ids
+                )
+            )
         else:
             query = _generate_events_query(session)
             query = _apply_event_time_filter(query, start_day, end_day)
@@ -511,7 +507,7 @@ def _generate_events_query_without_states(session):
     )
 
 
-def _generate_states_query(session, start_day, end_day, old_state):
+def _generate_states_query(session, start_day, end_day, old_state, entity_ids):
 
     return (
         _generate_events_query(session)
@@ -531,6 +527,10 @@ def _generate_states_query(session, start_day, end_day, old_state):
             | sqlalchemy.not_(States.attributes.contains(UNIT_OF_MEASUREMENT_JSON))
         )
         .filter((States.last_updated > start_day) & (States.last_updated < end_day))
+        .filter(
+            (States.last_updated == States.last_changed)
+            & States.entity_id.in_(entity_ids)
+        )
     )
 
 
