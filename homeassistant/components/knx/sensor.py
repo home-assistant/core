@@ -1,6 +1,7 @@
 """Support for KNX/IP sensors."""
 from xknx.devices import Sensor as XknxSensor
 
+from homeassistant.components.sensor import DEVICE_CLASSES
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
@@ -36,4 +37,6 @@ class KNXSensor(KnxEntity, Entity):
     @property
     def device_class(self):
         """Return the device class of the sensor."""
-        return self._device.ha_device_class()
+        if self._device.ha_device_class() in DEVICE_CLASSES:
+            return self._device.ha_device_class()
+        return None

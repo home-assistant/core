@@ -3,7 +3,7 @@ from typing import Any, Dict, Optional
 
 from xknx.devices import BinarySensor as XknxBinarySensor
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import DEVICE_CLASSES, BinarySensorEntity
 
 from .const import ATTR_COUNTER, DOMAIN
 from .knx_entity import KnxEntity
@@ -28,7 +28,9 @@ class KNXBinarySensor(KnxEntity, BinarySensorEntity):
     @property
     def device_class(self):
         """Return the class of this sensor."""
-        return self._device.device_class
+        if self._device.device_class in DEVICE_CLASSES:
+            return self._device.device_class
+        return None
 
     @property
     def is_on(self):

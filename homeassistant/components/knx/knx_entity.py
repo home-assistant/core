@@ -1,7 +1,6 @@
 """Base class for KNX devices."""
 from xknx.devices import Climate as XknxClimate, Device as XknxDevice
 
-from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
@@ -33,7 +32,6 @@ class KnxEntity(Entity):
         """Request a state update from KNX bus."""
         await self._device.sync()
 
-    @callback
     async def after_update_callback(self, device: XknxDevice):
         """Call after device was updated."""
         self.async_write_ha_state()
