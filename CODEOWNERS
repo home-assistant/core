@@ -396,7 +396,10 @@ homeassistant/components/roon/* @pavoni
 homeassistant/components/rpi_gpio_pwm/* @soldag
 homeassistant/components/rpi_power/* @shenxn @swetoast
 homeassistant/components/rpi_fanshim/* @csseal
+<<<<<<< HEAD
 homeassistant/components/ruckus_unleashed/* @gabe565
+=======
+>>>>>>> e3742dfeb7... Fix codeowners file
 homeassistant/components/safe_mode/* @home-assistant/core
 homeassistant/components/saj/* @fredericvl
 homeassistant/components/samsungtv/* @escoand
