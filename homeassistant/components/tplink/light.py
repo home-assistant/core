@@ -250,10 +250,10 @@ class TPLinkSmartBulb(LightEntity):
         try:
             # Update light features only once.
             if not self._light_features:
-                self._light_features = self._get_light_features_retry()
+                self._light_features = self._get_light_features()
                 self._alias = self._light_features.alias
                 self._host = self.smartbulb.host
-            self._light_state = self._get_light_state_retry()
+            self._light_state = self._get_light_state()
             return True
 
         except (SmartDeviceException, OSError) as ex:
@@ -271,16 +271,6 @@ class TPLinkSmartBulb(LightEntity):
     def supported_features(self):
         """Flag supported features."""
         return self._light_features.supported_features
-
-    def _get_light_features_retry(self) -> LightFeatures:
-        """Retry the retrieval of the supported features."""
-        try:
-            return self._get_light_features()
-        except (SmartDeviceException, OSError):
-            pass
-
-        _LOGGER.debug("Retrying getting light features")
-        return self._get_light_features()
 
     def _get_light_features(self):
         """Determine all supported features in one go."""
@@ -316,16 +306,6 @@ class TPLinkSmartBulb(LightEntity):
             max_mireds=max_mireds,
             has_emeter=has_emeter,
         )
-
-    def _get_light_state_retry(self) -> LightState:
-        """Retry the retrieval of getting light states."""
-        try:
-            return self._get_light_state()
-        except (SmartDeviceException, OSError):
-            pass
-
-        _LOGGER.debug("Retrying getting light state")
-        return self._get_light_state()
 
     def _light_state_from_params(self, light_state_params) -> LightState:
         brightness = None
