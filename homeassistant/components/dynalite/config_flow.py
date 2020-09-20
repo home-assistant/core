@@ -56,6 +56,7 @@ class DynaliteFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
 
+        errors = {}
         if user_input is not None:
             # New entry
             if self.existing_host_entry(user_input):
@@ -66,9 +67,8 @@ class DynaliteFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     title=user_input[CONF_HOST], data=user_input
                 )
             LOGGER.error("Unable to setup bridge - init user_input=%s", user_input)
-            errors = {"base": "cannot_connect"}
+            errors["base"] = "cannot_connect"
         else:
-            errors = None
             user_input = {}
 
         return self.async_show_form(
