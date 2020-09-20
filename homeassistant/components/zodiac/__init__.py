@@ -3,7 +3,7 @@ import voluptuous as vol
 
 from homeassistant.core import HomeAssistant
 
-DOMAIN = "zodiac"
+from .const import DOMAIN
 
 CONFIG_SCHEMA = vol.Schema(
     {vol.Optional(DOMAIN): {}},
