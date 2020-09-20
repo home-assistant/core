@@ -1,7 +1,7 @@
 """Support for the DOODS service."""
 import io
-import os
 import logging
+import os
 import time
 
 from PIL import Image, ImageDraw, UnidentifiedImageError
