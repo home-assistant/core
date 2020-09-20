@@ -8,6 +8,7 @@ from .const import (
     ATTR_ELEMENT,
     ATTR_MODALITY,
     ATTR_SIGN,
+    DOMAIN,
     ELEMENT_AIR,
     ELEMENT_EARTH,
     ELEMENT_FIRE,
@@ -171,6 +172,11 @@ class ZodiacSensor(Entity):
     def __init__(self):
         """Initialize the zodiac sensor."""
         self._attrs = None
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return DOMAIN
 
     @property
     def name(self):
