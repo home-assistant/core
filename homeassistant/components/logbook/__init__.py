@@ -425,6 +425,7 @@ def _get_events(
     entity_matches_only=False,
 ):
     """Get events for a period of time."""
+
     entity_attr_cache = EntityAttributeCache(hass)
     context_lookup = {None: None}
 
@@ -445,17 +446,17 @@ def _get_events(
         old_state = aliased(States, name="old_state")
 
         if entity_ids is not None:
-            events_query = _generate_events_query_without_states(session)
-            events_query = _apply_event_time_filter(events_query, start_day, end_day)
-            events_query = _apply_event_types_filter(
-                hass, events_query, ALL_EVENT_TYPES_EXCEPT_STATE_CHANGED
+            query = _generate_events_query_without_states(session)
+            query = _apply_event_time_filter(query, start_day, end_day)
+            query = _apply_event_types_filter(
+                hass, query, ALL_EVENT_TYPES_EXCEPT_STATE_CHANGED
             )
             if entity_matches_only:
                 # When entity_matches_only is provided, contexts and events that do not
                 # contain the entity_ids are not included in the logbook response.
-                events_query = _apply_state_matchers(events_query, entity_ids)
+                query = _apply_state_matchers(query, entity_ids)
 
-            query = events_query.union_all(
+            query = query.union_all(
                 _generate_states_query(
                     session, start_day, end_day, old_state, entity_ids
                 )
@@ -463,7 +464,9 @@ def _get_events(
         else:
             query = _generate_events_query(session)
             query = _apply_event_time_filter(query, start_day, end_day)
-            query = _apply_events_states_filter(hass, query, old_state).filter(
+            query = _apply_events_types_and_states_filter(
+                hass, query, old_state
+            ).filter(
                 (States.last_updated == States.last_changed)
                 | (Events.event_type != EVENT_STATE_CHANGED)
             )
@@ -534,7 +537,7 @@ def _generate_states_query(session, start_day, end_day, old_state, entity_ids):
     )
 
 
-def _apply_events_states_filter(hass, query, old_state):
+def _apply_events_types_and_states_filter(hass, query, old_state):
     events_query = (
         # The below filter, removes state change events that do not have
         # and old_state, new_state, or the old and
