@@ -4,10 +4,11 @@
         "step": {
             "user": {
                 "title": "Connect to a new Zoom app",
+                "description": "All values can be obtained from the custom Zoom app you create.",
                 "data": {
-                    "client_id": "Client ID (obtained from Zoom app)",
-                    "client_secret": "Client Secret (obtained from Zoom app)",
-                    "verification_token": "Verification Token (obtained from the Features section of custom Zoom app)"
+                    "client_id": "Client ID",
+                    "client_secret": "Client Secret",
+                    "verification_token": "Verification Token"
                 }
             },
             "choose_name": {
