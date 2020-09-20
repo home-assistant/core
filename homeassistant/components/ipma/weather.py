@@ -3,9 +3,7 @@ from datetime import timedelta
 import logging
 
 import async_timeout
-from pyipma.api import IPMA_API
 from pyipma.location import Location
-import voluptuous as vol
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
@@ -15,21 +13,13 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
     ATTR_FORECAST_WIND_SPEED,
-    PLATFORM_SCHEMA,
     WeatherEntity,
 )
-from homeassistant.const import (
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_MODE,
-    CONF_NAME,
-    TEMP_CELSIUS,
-)
-from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv, entity_registry
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.const import CONF_MODE, CONF_NAME, TEMP_CELSIUS
 from homeassistant.util import Throttle
 from homeassistant.util.dt import now, parse_datetime
+
+from .const import DOMAIN, IPMA_API, IPMA_LOCATION
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,46 +44,12 @@ CONDITION_CLASSES = {
     "exceptional": [],
 }
 
-FORECAST_MODE = ["hourly", "daily"]
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_LATITUDE): cv.latitude,
-        vol.Optional(CONF_LONGITUDE): cv.longitude,
-        vol.Optional(CONF_MODE, default="daily"): vol.In(FORECAST_MODE),
-    }
-)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the ipma platform.
-
-    Deprecated.
-    """
-    _LOGGER.warning("Loading IPMA via platform config is deprecated")
-
-    latitude = config.get(CONF_LATITUDE, hass.config.latitude)
-    longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
-
-    if None in (latitude, longitude):
-        _LOGGER.error("Latitude or longitude not set in Home Assistant config")
-        return
-
-    api = await async_get_api(hass)
-    location = await async_get_location(hass, api, latitude, longitude)
-
-    async_add_entities([IPMAWeather(location, api, config)], True)
-
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add a weather entity from a config_entry."""
-    latitude = config_entry.data[CONF_LATITUDE]
-    longitude = config_entry.data[CONF_LONGITUDE]
-    mode = config_entry.data[CONF_MODE]
-
-    api = await async_get_api(hass)
-    location = await async_get_location(hass, api, latitude, longitude)
+    hass_data = hass.data[DOMAIN][config_entry.entry_id]
+    api = hass_data[IPMA_API]
+    location = hass_data[IPMA_LOCATION]
 
     # Migrate old unique_id
     @callback
@@ -118,29 +74,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
     async_add_entities([IPMAWeather(location, api, config_entry.data)], True)
-
-
-async def async_get_api(hass):
-    """Get the pyipma api object."""
-    websession = async_get_clientsession(hass)
-    return IPMA_API(websession)
-
-
-async def async_get_location(hass, api, latitude, longitude):
-    """Retrieve pyipma location, location name to be used as the entity name."""
-    with async_timeout.timeout(30):
-        location = await Location.get(api, float(latitude), float(longitude))
-
-    _LOGGER.debug(
-        "Initializing for coordinates %s, %s -> station %s (%d, %d)",
-        latitude,
-        longitude,
-        location.station,
-        location.id_station,
-        location.global_id_local,
-    )
-
-    return location
 
 
 class IPMAWeather(WeatherEntity):
