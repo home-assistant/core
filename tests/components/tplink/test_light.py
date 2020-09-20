@@ -1,4 +1,5 @@
 """Tests for light platform."""
+import logging
 from typing import Callable, NamedTuple
 
 from pyHS100 import SmartDeviceException
@@ -29,7 +30,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import Mock, PropertyMock, patch
+from tests.async_mock import AsyncMock, Mock, PropertyMock, patch
 
 
 class LightMockData(NamedTuple):
@@ -534,3 +535,34 @@ async def test_get_light_state_retry(
     assert light_mock_data.get_sysinfo_mock.call_count < 40
     assert light_mock_data.get_light_state_mock.call_count < 40
     assert light_mock_data.set_light_state_mock.call_count < 10
+
+
+async def test_update_failure(
+    hass: HomeAssistant, light_mock_data: LightMockData, caplog
+):
+    """Test that update failures are logged."""
+
+    await async_setup_component(hass, HA_DOMAIN, {})
+    await hass.async_block_till_done()
+
+    await async_setup_component(
+        hass,
+        tplink.DOMAIN,
+        {
+            tplink.DOMAIN: {
+                CONF_DISCOVERY: False,
+                CONF_LIGHT: [{CONF_HOST: "123.123.123.123"}],
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    caplog.clear()
+    caplog.set_level(logging.WARNING)
+    await hass.helpers.entity_component.async_update_entity("light.light1")
+    assert caplog.text == ""
+
+    with patch("homeassistant.components.tplink.light.MAX_ATTEMPTS", 0):
+        caplog.clear()
+        caplog.set_level(logging.WARNING)
+        await hass.helpers.entity_component.async_update_entity("light.light1")
+        assert "Could not read state for 123.123.123.123|light1" in caplog.text
