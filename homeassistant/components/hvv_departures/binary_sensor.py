@@ -11,7 +11,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.const import ATTR_ATTRIBUTION
-from homeassistant.helpers.update_coordinator import CoordinatorEntity, DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 
 from .const import ATTRIBUTION, CONF_STATION, DOMAIN, MANUFACTURER
 
@@ -41,7 +45,14 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 label = elevator.get("label")
                 description = elevator.get("description")
 
-                name = f"Elevator {label} at {station_name} ({description})"
+                if label is not None:
+                    name = f"Elevator {label} at {station_name}"
+                else:
+                    name = f"Unknown elevator at {station_name}"
+
+                if description is not None:
+                    name += f" ({description})"
+
                 lines = elevator.get("lines")
 
                 idx = f"{station_name}-{label}-{lines}"
