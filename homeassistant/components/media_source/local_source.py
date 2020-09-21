@@ -170,6 +170,8 @@ class LocalSource(MediaSource):
             media.media_class = "microsoftOnedrive"
         elif str(path).endswith("/dom/dysk-wewnętrzny"):
             media.media_class = "harddisk"
+        elif "/AIS/www/img/" in str(path):
+            media.thumbnail = "local/img/" + str(path).split("/")[-1]
 
         if is_file or is_child:
             return media
