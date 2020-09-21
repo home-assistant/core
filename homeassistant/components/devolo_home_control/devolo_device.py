@@ -73,3 +73,13 @@ class DevoloDeviceEntity(Entity):
     def available(self) -> bool:
         """Return the online state."""
         return self._available
+
+    def _sync(self, message):
+        """Update the binary sensor state."""
+        if message[0] == self._unique_id:
+            self._value = message[1]
+        elif message[0].startswith("hdm"):
+            self._available = self._device_instance.is_online()
+        else:
+            _LOGGER.debug("No valid message received: %s", message)
+        self.schedule_update_ha_state()

@@ -87,27 +87,17 @@ class DevoloBinaryDeviceEntity(DevoloDeviceEntity, BinarySensorEntity):
             sync=self._sync,
         )
 
-        self._state = self._binary_sensor_property.state
+        self._value = self._binary_sensor_property.state
 
     @property
     def is_on(self):
         """Return the state."""
-        return self._state
+        return self._value
 
     @property
     def device_class(self):
         """Return device class."""
         return self._device_class
-
-    def _sync(self, message=None):
-        """Update the binary sensor state."""
-        if message[0] == self._unique_id:	
-            self._state = message[1]
-        elif message[0].startswith("hdm"):
-            self._available = self._device_instance.is_online()
-        else:
-            _LOGGER.debug("No valid message received: %s", message)
-        self.schedule_update_ha_state()
 
 
 class DevoloRemoteControl(DevoloDeviceEntity, BinarySensorEntity):
@@ -135,7 +125,7 @@ class DevoloRemoteControl(DevoloDeviceEntity, BinarySensorEntity):
         """Return the state."""
         return self._state
 
-    def _sync(self, message=None):
+    def _sync(self, message):
         """Update the binary sensor state."""
         if (
             message[0] == self._remote_control_property.element_uid
