@@ -133,8 +133,7 @@ async def async_get_addon_info(hass: HomeAssistantType, slug: str) -> dict:
     The caller of the function should handle HassioAPIError.
     """
     hassio = hass.data[DOMAIN]
-    result = await hassio.get_addon_info(slug)
-    return result["data"]
+    return await hassio.get_addon_info(slug)
 
 
 @bind_hass
