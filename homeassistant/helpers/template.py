@@ -647,7 +647,7 @@ class TemplateState(State):
 
     def __repr__(self) -> str:
         """Representation of Template State."""
-        return f"<template {self.state.__repr__()[1:]}"
+        return f"<template TemplateState({self._state.__repr__()})>" 
 
 
 def _collect_state(hass: HomeAssistantType, entity_id: str) -> None:
