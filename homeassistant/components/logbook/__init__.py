@@ -513,20 +513,11 @@ def _generate_events_query_without_states(session):
 
 
 def _generate_states_query(session, start_day, end_day, old_state, entity_ids):
-
     return (
         _generate_events_query(session)
         .outerjoin(Events, (States.event_id == Events.event_id))
         .outerjoin(old_state, (States.old_state_id == old_state.state_id))
-        # The below filter, removes state change events that do not have
-        # and old_state, new_state, or the old and
-        # new state.
-        #
-        .filter(_missing_old_state_matcher(old_state))
-        #
-        # Prefilter out continuous domains that have
-        # ATTR_UNIT_OF_MEASUREMENT as its much faster in sql.
-        #
+        .filter(_missing_state_matcher(old_state))
         .filter(_continuous_entity_matcher())
         .filter((States.last_updated > start_day) & (States.last_updated < end_day))
         .filter(
@@ -538,24 +529,12 @@ def _generate_states_query(session, start_day, end_day, old_state, entity_ids):
 
 def _apply_events_types_and_states_filter(hass, query, old_state):
     events_query = (
-        # The below filter, removes state change events that do not have
-        # and old_state, new_state, or the old and
-        # new state.
-        #
         query.outerjoin(States, (Events.event_id == States.event_id))
         .outerjoin(old_state, (States.old_state_id == old_state.state_id))
         .filter(
             (Events.event_type != EVENT_STATE_CHANGED)
-            | (
-                (States.state_id.isnot(None))
-                & (States.state.isnot(None))
-                & _missing_old_state_matcher(old_state)
-            )
+            | _missing_state_matcher(old_state)
         )
-        #
-        # Prefilter out continuous domains that have
-        # ATTR_UNIT_OF_MEASUREMENT as its much faster in sql.
-        #
         .filter(
             (Events.event_type != EVENT_STATE_CHANGED) | _continuous_entity_matcher()
         )
@@ -563,13 +542,22 @@ def _apply_events_types_and_states_filter(hass, query, old_state):
     return _apply_event_types_filter(hass, events_query, ALL_EVENT_TYPES)
 
 
-def _missing_old_state_matcher(old_state):
+def _missing_state_matcher(old_state):
+    # The below removes state change events that do not have
+    # and old_state or the old_state is missing (newly added entities)
+    # or the new_state is missing (removed entities)
     return sqlalchemy.and_(
-        old_state.state_id.isnot(None), (States.state != old_state.state)
+        old_state.state_id.isnot(None),
+        (States.state != old_state.state),
+        States.state.isnot(None),
     )
 
 
 def _continuous_entity_matcher():
+    #
+    # Prefilter out continuous domains that have
+    # ATTR_UNIT_OF_MEASUREMENT as its much faster in sql.
+    #
     return sqlalchemy.or_(
         sqlalchemy.not_(States.domain.in_(CONTINUOUS_DOMAINS)),
         sqlalchemy.not_(States.attributes.contains(UNIT_OF_MEASUREMENT_JSON)),
