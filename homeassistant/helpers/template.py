@@ -477,9 +477,7 @@ class AllStates:
     def __getattr__(self, name):
         """Return the domain state."""
         if "." in name:
-            if not valid_entity_id(name):
-                raise TemplateError(f"Invalid entity ID '{name}'")
-            return _get_state(self._hass, name)
+            return _get_state_if_valid(self._hass, name)
 
         if name in _RESERVED_NAMES:
             return None
@@ -533,10 +531,7 @@ class DomainStates:
 
     def __getattr__(self, name):
         """Return the states."""
-        entity_id = f"{self._domain}.{name}"
-        if not valid_entity_id(entity_id):
-            raise TemplateError(f"Invalid entity ID '{entity_id}'")
-        return _get_state(self._hass, entity_id)
+        return _get_state_if_valid(self._hass, f"{self._domain}.{name}")
 
     # Jinja will try __getitem__ first and it avoids the need
     # to call is_safe_attribute
@@ -692,8 +687,22 @@ def _state_generator(hass: HomeAssistantType, domain: Optional[str]) -> Generato
         yield TemplateState(hass, state)
 
 
-def _get_state(hass: HomeAssistantType, entity_id: str) -> Optional[TemplateState]:
+def _get_state_if_valid(
+    hass: HomeAssistantType, entity_id: str
+) -> Optional[TemplateState]:
     state = hass.states.get(entity_id)
+    if state is None and not valid_entity_id(entity_id):
+        raise TemplateError(f"Invalid entity ID '{entity_id}'")  # type: ignore
+    return _get_template_state_from_state(hass, entity_id, state)
+
+
+def _get_state(hass: HomeAssistantType, entity_id: str) -> Optional[TemplateState]:
+    return _get_template_state_from_state(hass, entity_id, hass.states.get(entity_id))
+
+
+def _get_template_state_from_state(
+    hass: HomeAssistantType, entity_id: str, state: Optional[State]
+) -> Optional[TemplateState]:
     if state is None:
         # Only need to collect if none, if not none collect first actual
         # access to the state properties in the state wrapper.

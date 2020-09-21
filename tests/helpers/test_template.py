@@ -2557,3 +2557,9 @@ async def test_unavailable_states(hass):
         hass,
     )
     assert tpl.async_render() == "light.none, light.unavailable, light.unknown"
+
+    tpl = template.Template(
+        "{{ states.light | selectattr('state', 'in', ['unavailable','unknown','none']) | map(attribute='entity_id') | list | join(', ') }}",
+        hass,
+    )
+    assert tpl.async_render() == "light.none, light.unavailable, light.unknown"
