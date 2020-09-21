@@ -9,7 +9,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import COORDINATOR, DOMAIN, OMNI_API, POLL_INTERVAL
+from .const import CONF_SCAN_INTERVAL, COORDINATOR, DOMAIN, OMNI_API
 from .omnilogic_common import OmniLogicUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,14 +30,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     conf = entry.data
     username = conf[CONF_USERNAME]
     password = conf[CONF_PASSWORD]
-    polling_interval = conf[POLL_INTERVAL]
+
+    polling_interval = 6
+    if CONF_SCAN_INTERVAL in conf:
+        polling_interval = conf[CONF_SCAN_INTERVAL]
+
     api = OmniLogic(username, password)
 
     try:
         await api.connect()
         await api.get_telemetry_data()
     except LoginException as error:
-        _LOGGER.debug("OmniLogic login error: %s", error)
+        _LOGGER.error("Login Failed: %s", error)
         return False
     except OmniLogicException as error:
         _LOGGER.debug("OmniLogic API error: %s", error)

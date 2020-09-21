@@ -12,8 +12,16 @@
             "user": {
                 "data": {
                     "password": "[%key:common::config_flow::data::password%]",
-                    "polling_interval": "Polling interval (in seconds)",
                     "username": "[%key:common::config_flow::data::username%]"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "polling_interval": "Polling interval (in seconds)"
                 }
             }
         }
