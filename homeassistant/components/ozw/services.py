@@ -105,6 +105,7 @@ class ZWaveServices:
             or value.type == ValueType.BYTE
             or value.type == ValueType.SHORT
         ):
+            selection = int(selection)  # sanitize
             if selection > value.max or selection < value.min:
                 _LOGGER.error(
                     "Value %s out of range for parameter %s (Min: %s Max: %s)",
@@ -114,8 +115,9 @@ class ZWaveServices:
                     value.max,
                 )
                 return
-            payload = int(selection)
+            payload = selection
 
+        # Note: DECIMAL is not a supported config parameter value type
         value.send_value(payload)  # send the payload
         _LOGGER.info(
             "Setting configuration parameter %s on Node %s with value %s",
