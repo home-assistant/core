@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "geography": {
+                "data": {
+                    "latitude": "Laiuskraad",
+                    "longitude": "Pikkuskraad"
+                }
+            }
+        }
+    }
+}

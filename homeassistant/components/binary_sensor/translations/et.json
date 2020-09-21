@@ -78,7 +78,15 @@
             "occupied": "{entity_name} h\u00f5ivati",
             "opened": "{entity_name} avanes",
             "plugged_in": "{entity_name} \u00fchendati",
-            "powered": "{entity_name} l\u00fcltus voolu alla"
+            "powered": "{entity_name} l\u00fcltus voolu alla",
+            "present": "{entity_name} on saadaval",
+            "problem": "{entity_name} avastas probleemi",
+            "smoke": "{entity_name} tuvastas suitsu",
+            "sound": "{entity_name} tuvastas heli",
+            "turned_off": "{entity_name} l\u00fclitus v\u00e4lja",
+            "turned_on": "{entity_name} l\u00fclitus sisse",
+            "unsafe": "{entity_name} on ebaturvaline",
+            "vibration": "{entity_name} registreeris vibratsiooni"
         }
     },
     "state": {

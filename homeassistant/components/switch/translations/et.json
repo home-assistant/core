@@ -1,4 +1,10 @@
 {
+    "device_automation": {
+        "condition_type": {
+            "is_off": "{entity_name} on v\u00e4lja l\u00fclitatud",
+            "is_on": "{entity_name} on sisse l\u00fclitatud"
+        }
+    },
     "state": {
         "_": {
             "off": "V\u00e4ljas",

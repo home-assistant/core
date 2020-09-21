@@ -17,7 +17,10 @@
             "illuminance": "{entity_name} valgustustugevus muutub",
             "power": "{entity_name} energiare\u017eiimi muutub",
             "pressure": "{entity_name} r\u00f5hk muutub",
-            "signal_strength": "{entity_name} signaalitugevus muutub"
+            "signal_strength": "{entity_name} signaalitugevus muutub",
+            "temperature": "{entity_name} temperatuur muutub",
+            "timestamp": "{entity_name} aeg muutub",
+            "value": "{entity_name} v\u00e4\u00e4rtus muutub"
         }
     },
     "state": {
