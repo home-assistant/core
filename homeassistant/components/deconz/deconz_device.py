@@ -10,18 +10,17 @@ from .const import DOMAIN as DECONZ_DOMAIN
 class DeconzBase:
     """Common base for deconz entities and events."""
 
-    DOMAIN = ""
     TYPE = ""
 
     def __init__(self, device, gateway):
         """Set up device and add update callback to get data from websocket."""
         self._device = device
         self.gateway = gateway
-        self.gateway.entities[self.DOMAIN][self.TYPE].add(self.unique_id)
+        self.gateway.entities[self.TYPE].add(self.unique_id)
 
     async def async_will_remove_from_hass(self) -> None:
         """Remove unique id."""
-        self.gateway.entities[self.DOMAIN][self.TYPE].remove(self.unique_id)
+        self.gateway.entities[self.TYPE].remove(self.unique_id)
 
     @property
     def unique_id(self):

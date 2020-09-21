@@ -27,7 +27,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     Covers are based on the same device class as lights in deCONZ.
     """
     gateway = get_gateway_from_config_entry(hass, config_entry)
-    gateway.entities[DOMAIN] = {DOMAIN: set()}
+    gateway.entities[DOMAIN] = set()
 
     @callback
     def async_add_cover(lights):
@@ -37,7 +37,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         for light in lights:
             if (
                 light.type in COVER_TYPES
-                and light.uniqueid not in gateway.entities[DOMAIN][DOMAIN]
+                and light.uniqueid not in gateway.entities[DOMAIN]
             ):
                 entities.append(DeconzCover(light, gateway))
 

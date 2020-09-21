@@ -1,5 +1,5 @@
 """Support for deCONZ switches."""
-from homeassistant.components.switch import DOMAIN, SwitchEntity
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -21,7 +21,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     Switches are based on the same device class as lights in deCONZ.
     """
     gateway = get_gateway_from_config_entry(hass, config_entry)
-    gateway.entities[DOMAIN] = {POWER_PLUG: set(), SIREN: set()}
+    gateway.entities[POWER_PLUG] = set()
+    gateway.entities[SIREN] = set()
 
     @callback
     def async_add_switch(lights):
@@ -32,14 +33,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
             if (
                 light.type in POWER_PLUGS
-                and light.uniqueid not in gateway.entities[DOMAIN][POWER_PLUG]
+                and light.uniqueid not in gateway.entities[POWER_PLUG]
             ):
                 entities.append(DeconzPowerPlug(light, gateway))
 
-            elif (
-                light.type in SIRENS
-                and light.uniqueid not in gateway.entities[DOMAIN][SIREN]
-            ):
+            elif light.type in SIRENS and light.uniqueid not in gateway.entities[SIREN]:
                 entities.append(DeconzSiren(light, gateway))
 
         async_add_entities(entities, True)
@@ -56,7 +54,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class DeconzPowerPlug(DeconzDevice, SwitchEntity):
     """Representation of a deCONZ power plug."""
 
-    DOMAIN = DOMAIN
     TYPE = POWER_PLUG
 
     @property
@@ -78,7 +75,6 @@ class DeconzPowerPlug(DeconzDevice, SwitchEntity):
 class DeconzSiren(DeconzDevice, SwitchEntity):
     """Representation of a deCONZ siren."""
 
-    DOMAIN = DOMAIN
     TYPE = SIREN
 
     @property

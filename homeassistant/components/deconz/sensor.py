@@ -77,7 +77,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the deCONZ sensors."""
     gateway = get_gateway_from_config_entry(hass, config_entry)
-    gateway.entities[DOMAIN] = {DOMAIN: set(), BATTERY: set(), EVENT: set()}
+    gateway.entities[BATTERY] = set()
+    gateway.entities[DOMAIN] = set()
+    gateway.entities[EVENT] = set()
 
     battery_handler = DeconzBatteryHandler(gateway)
 
@@ -99,7 +101,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             if sensor.battery is not None:
                 battery_handler.remove_tracker(sensor)
 
-                known_batteries = list(gateway.entities[DOMAIN][BATTERY])
+                known_batteries = list(gateway.entities[BATTERY])
                 new_battery = DeconzBattery(sensor, gateway)
                 if new_battery.unique_id not in known_batteries:
                     entities.append(new_battery)
@@ -111,7 +113,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 sensor.BINARY is False
                 and sensor.type
                 not in Battery.ZHATYPE + Switch.ZHATYPE + Thermostat.ZHATYPE
-                and sensor.uniqueid not in gateway.entities[DOMAIN][DOMAIN]
+                and sensor.uniqueid not in gateway.entities[DOMAIN]
             ):
                 entities.append(DeconzSensor(sensor, gateway))
 
@@ -131,7 +133,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class DeconzSensor(DeconzDevice):
     """Representation of a deCONZ sensor."""
 
-    DOMAIN = DOMAIN
     TYPE = DOMAIN
 
     @callback
@@ -199,7 +200,6 @@ class DeconzSensor(DeconzDevice):
 class DeconzBattery(DeconzDevice):
     """Battery class for when a device is only represented as an event."""
 
-    DOMAIN = DOMAIN
     TYPE = BATTERY
 
     @callback

@@ -40,7 +40,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the deCONZ binary sensor."""
     gateway = get_gateway_from_config_entry(hass, config_entry)
-    gateway.entities[DOMAIN] = {DOMAIN: set()}
+    gateway.entities[DOMAIN] = set()
 
     @callback
     def async_add_sensor(sensors):
@@ -51,7 +51,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
             if (
                 sensor.BINARY
-                and sensor.uniqueid not in gateway.entities[DOMAIN][DOMAIN]
+                and sensor.uniqueid not in gateway.entities[DOMAIN]
                 and (
                     gateway.option_allow_clip_sensor
                     or not sensor.type.startswith("CLIP")
@@ -75,7 +75,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class DeconzBinarySensor(DeconzDevice, BinarySensorEntity):
     """Representation of a deCONZ binary sensor."""
 
-    DOMAIN = DOMAIN
     TYPE = DOMAIN
 
     @callback

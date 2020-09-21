@@ -33,7 +33,6 @@ from .const import (
 from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
 
-LIGHT = "light"
 GROUP = "group"
 
 
@@ -44,7 +43,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the deCONZ lights and groups from a config entry."""
     gateway = get_gateway_from_config_entry(hass, config_entry)
-    gateway.entities[DOMAIN] = {LIGHT: set(), GROUP: set()}
+    gateway.entities[DOMAIN] = set()
+    gateway.entities[GROUP] = set()
 
     @callback
     def async_add_light(lights):
@@ -54,7 +54,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         for light in lights:
             if (
                 light.type not in COVER_TYPES + SWITCH_TYPES
-                and light.uniqueid not in gateway.entities[DOMAIN][LIGHT]
+                and light.uniqueid not in gateway.entities[DOMAIN]
             ):
                 entities.append(DeconzLight(light, gateway))
 
@@ -78,7 +78,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             if not group.lights:
                 continue
 
-            known_groups = list(gateway.entities[DOMAIN][GROUP])
+            known_groups = list(gateway.entities[GROUP])
             new_group = DeconzGroup(group, gateway)
             if new_group.unique_id not in known_groups:
                 entities.append(new_group)
@@ -97,8 +97,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 class DeconzBaseLight(DeconzDevice, LightEntity):
     """Representation of a deCONZ light."""
-
-    DOMAIN = DOMAIN
 
     def __init__(self, device, gateway):
         """Set up light."""
@@ -222,7 +220,7 @@ class DeconzBaseLight(DeconzDevice, LightEntity):
 class DeconzLight(DeconzBaseLight):
     """Representation of a deCONZ light."""
 
-    TYPE = LIGHT
+    TYPE = DOMAIN
 
     @property
     def max_mireds(self):

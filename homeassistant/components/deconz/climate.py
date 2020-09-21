@@ -29,7 +29,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     Thermostats are based on the same device class as sensors in deCONZ.
     """
     gateway = get_gateway_from_config_entry(hass, config_entry)
-    gateway.entities[DOMAIN] = {DOMAIN: set()}
+    gateway.entities[DOMAIN] = set()
 
     @callback
     def async_add_climate(sensors):
@@ -40,7 +40,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
             if (
                 sensor.type in Thermostat.ZHATYPE
-                and sensor.uniqueid not in gateway.entities[DOMAIN][DOMAIN]
+                and sensor.uniqueid not in gateway.entities[DOMAIN]
                 and (
                     gateway.option_allow_clip_sensor
                     or not sensor.type.startswith("CLIP")
@@ -62,7 +62,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class DeconzThermostat(DeconzDevice, ClimateEntity):
     """Representation of a deCONZ thermostat."""
 
-    DOMAIN = DOMAIN
     TYPE = DOMAIN
 
     @property

@@ -1,7 +1,6 @@
 """Representation of a deCONZ remote."""
 from pydeconz.sensor import Switch
 
-from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import CONF_EVENT, CONF_ID, CONF_UNIQUE_ID
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -59,7 +58,6 @@ class DeconzEvent(DeconzBase):
     instead of a sensor entity in hass.
     """
 
-    DOMAIN = DOMAIN
     TYPE = EVENT
 
     def __init__(self, device, gateway):
