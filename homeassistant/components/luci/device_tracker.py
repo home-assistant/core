@@ -94,7 +94,7 @@ class LuciDeviceScanner(DeviceScanner):
 
         last_results = []
         for device in result:
-            if device.reachable:
+            if self.router.router.owrt_version.major < 19 or device.reachable:
                 last_results.append(device)
 
         self.last_results = last_results
