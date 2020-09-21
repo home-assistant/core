@@ -3,7 +3,7 @@ from typing import Any, Callable, Tuple
 
 import pyvera as pv
 
-from homeassistant.const import PERCENTAGE
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, PERCENTAGE
 from homeassistant.core import HomeAssistant
 
 from .common import ComponentFactory, new_simple_controller_config
@@ -44,7 +44,9 @@ async def run_sensor_test(
         state = hass.states.get(entity_id)
         assert state.state == state_value
         if assert_unit_of_measurement:
-            assert state.attributes["unit_of_measurement"] == assert_unit_of_measurement
+            assert (
+                state.attributes[ATTR_UNIT_OF_MEASUREMENT] == assert_unit_of_measurement
+            )
 
 
 async def test_temperature_sensor_f(

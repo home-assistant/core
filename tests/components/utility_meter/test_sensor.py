@@ -13,6 +13,7 @@ from homeassistant.components.utility_meter.const import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_UNIT_OF_MEASUREMENT,
     ENERGY_KILO_WATT_HOUR,
     EVENT_HOMEASSISTANT_START,
 )
@@ -52,7 +53,9 @@ async def test_state(hass):
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     entity_id = config[DOMAIN]["energy_bill"]["source"]
-    hass.states.async_set(entity_id, 2, {"unit_of_measurement": ENERGY_KILO_WATT_HOUR})
+    hass.states.async_set(
+        entity_id, 2, {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR}
+    )
     await hass.async_block_till_done()
 
     now = dt_util.utcnow() + timedelta(seconds=10)
@@ -60,7 +63,7 @@ async def test_state(hass):
         hass.states.async_set(
             entity_id,
             3,
-            {"unit_of_measurement": ENERGY_KILO_WATT_HOUR},
+            {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR},
             force_update=True,
         )
         await hass.async_block_till_done()
@@ -91,7 +94,7 @@ async def test_state(hass):
         hass.states.async_set(
             entity_id,
             6,
-            {"unit_of_measurement": ENERGY_KILO_WATT_HOUR},
+            {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR},
             force_update=True,
         )
         await hass.async_block_till_done()
@@ -145,7 +148,9 @@ async def test_net_consumption(hass):
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     entity_id = config[DOMAIN]["energy_bill"]["source"]
-    hass.states.async_set(entity_id, 2, {"unit_of_measurement": ENERGY_KILO_WATT_HOUR})
+    hass.states.async_set(
+        entity_id, 2, {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR}
+    )
     await hass.async_block_till_done()
 
     now = dt_util.utcnow() + timedelta(seconds=10)
@@ -153,7 +158,7 @@ async def test_net_consumption(hass):
         hass.states.async_set(
             entity_id,
             1,
-            {"unit_of_measurement": ENERGY_KILO_WATT_HOUR},
+            {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR},
             force_update=True,
         )
         await hass.async_block_till_done()
@@ -178,7 +183,9 @@ async def test_non_net_consumption(hass):
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     entity_id = config[DOMAIN]["energy_bill"]["source"]
-    hass.states.async_set(entity_id, 2, {"unit_of_measurement": ENERGY_KILO_WATT_HOUR})
+    hass.states.async_set(
+        entity_id, 2, {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR}
+    )
     await hass.async_block_till_done()
 
     now = dt_util.utcnow() + timedelta(seconds=10)
@@ -186,7 +193,7 @@ async def test_non_net_consumption(hass):
         hass.states.async_set(
             entity_id,
             1,
-            {"unit_of_measurement": ENERGY_KILO_WATT_HOUR},
+            {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR},
             force_update=True,
         )
         await hass.async_block_till_done()
@@ -224,7 +231,7 @@ async def _test_self_reset(hass, config, start_time, expect_reset=True):
     with alter_time(now):
         async_fire_time_changed(hass, now)
         hass.states.async_set(
-            entity_id, 1, {"unit_of_measurement": ENERGY_KILO_WATT_HOUR}
+            entity_id, 1, {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR}
         )
         await hass.async_block_till_done()
 
@@ -234,7 +241,7 @@ async def _test_self_reset(hass, config, start_time, expect_reset=True):
         hass.states.async_set(
             entity_id,
             3,
-            {"unit_of_measurement": ENERGY_KILO_WATT_HOUR},
+            {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR},
             force_update=True,
         )
         await hass.async_block_till_done()
@@ -246,7 +253,7 @@ async def _test_self_reset(hass, config, start_time, expect_reset=True):
         hass.states.async_set(
             entity_id,
             6,
-            {"unit_of_measurement": ENERGY_KILO_WATT_HOUR},
+            {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR},
             force_update=True,
         )
         await hass.async_block_till_done()
