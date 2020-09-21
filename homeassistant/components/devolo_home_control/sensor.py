@@ -109,18 +109,6 @@ class DevoloMultiLevelDeviceEntity(DevoloDeviceEntity):
         """Return the unit of measurement of this entity."""
         return self._unit
 
-    def _sync(self, message=None):
-        """Update the multi level sensor state."""
-        if message[0] == self._multi_level_sensor_property.element_uid:
-            self._state = self._device_instance.multi_level_sensor_property[
-                message[0]
-            ].value
-        elif message[0].startswith("hdm"):
-            self._available = self._device_instance.is_online()
-        else:
-            _LOGGER.debug("No valid message received: %s", message)
-        self.schedule_update_ha_state()
-
 
 class DevoloConsumptionEntity(DevoloMultiLevelDeviceEntity):
     """Representation of a consumption entity within devolo Home Control."""
@@ -151,7 +139,7 @@ class DevoloConsumptionEntity(DevoloMultiLevelDeviceEntity):
         """Return the unique ID of the entity."""
         return f"{self._unique_id}_{self.sensor_type}"
 
-    def _sync(self, message=None):
+    def _sync(self, message):
         """Update the consumption sensor state."""
         if message[0] == self.element_uid:
             self._state = getattr(

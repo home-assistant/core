@@ -77,7 +77,7 @@ class DevoloSwitch(DevoloDeviceEntity, SwitchEntity):
         self._is_on = False
         self._binary_switch_property.set(state=False)
 
-    def _sync(self, message=None):
+    def _sync(self, message):
         """Update the binary switch state and consumption."""
         if message[0].startswith("devolo.BinarySwitch"):
             self._is_on = self._device_instance.binary_switch_property[message[0]].state
