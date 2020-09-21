@@ -1,7 +1,8 @@
 """Support for OpenWRT (ubus) routers."""
+from dataclasses import dataclass
 import json
 import logging
-import re
+from typing import Dict, List
 
 import requests
 import voluptuous as vol
@@ -65,6 +66,18 @@ def _refresh_on_access_denied(func):
     return decorator
 
 
+@dataclass
+class _Wlan:
+    hostapd: str
+    ssid: str
+
+
+@dataclass
+class _Device:
+    ssid: str
+    host: str
+
+
 class UbusDeviceScanner(DeviceScanner):
     """
     This class queries a wireless router running OpenWrt firmware.
@@ -74,23 +87,22 @@ class UbusDeviceScanner(DeviceScanner):
 
     def __init__(self, config):
         """Initialize the scanner."""
-        host = config[CONF_HOST]
+        self.host = config[CONF_HOST]
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
 
-        self.parse_api_pattern = re.compile(r"(?P<param>\w*) = (?P<value>.*);")
-        self.last_results = {}
-        self.url = f"http://{host}/ubus"
+        self.last_results: Dict[str, _Device] = {}
+        self.url = f"http://{self.host}/ubus"
 
         self.session_id = _get_session_id(self.url, self.username, self.password)
-        self.hostapd = []
+        self.wlans: [_Wlan] = []
         self.mac2name = None
         self.success_init = self.session_id is not None
 
-    def scan_devices(self):
+    def scan_devices(self) -> List[str]:
         """Scan for new devices and return a list with found device IDs."""
         self._update_info()
-        return self.last_results
+        return list(self.last_results.keys())
 
     def _generate_mac2name(self):
         """Return empty MAC to name dict. Overridden if DHCP server is set."""
@@ -118,27 +130,42 @@ class UbusDeviceScanner(DeviceScanner):
 
         _LOGGER.info("Checking hostapd")
 
-        if not self.hostapd:
+        if not self.wlans:
             hostapd = _req_json_rpc(self.url, self.session_id, "list", "hostapd.*", "")
-            self.hostapd.extend(hostapd.keys())
+            for name in hostapd.keys():
+                iwinfo = _req_json_rpc(
+                    self.url,
+                    self.session_id,
+                    "call",
+                    "iwinfo",
+                    "info",
+                    device=name.split(".", maxsplit=1)[1],
+                )
+                self.wlans.append(_Wlan(name, iwinfo.get("ssid", None)))
 
-        self.last_results = []
-        results = 0
+        self.last_results = {}
         # for each access point
-        for hostapd in self.hostapd:
+        for wlan in self.wlans:
             result = _req_json_rpc(
-                self.url, self.session_id, "call", hostapd, "get_clients"
+                self.url, self.session_id, "call", wlan.hostapd, "get_clients"
             )
 
             if result:
-                results = results + 1
                 # Check for each device is authorized (valid wpa key)
                 for key in result["clients"].keys():
                     device = result["clients"][key]
                     if device["authorized"]:
-                        self.last_results.append(key)
+                        self.last_results[key] = _Device(wlan.ssid, self.host)
 
-        return bool(results)
+    def get_extra_attributes(self, device: str) -> dict:
+        """
+        Get extra attributes of a device.
+
+        Some known extra attributes that may be returned in the device tuple
+        include associated router (host) and the name of the connected wlan (ssid).
+        """
+        found = self.last_results.get(device, None)
+        return found.__dict__ if found else None
 
 
 class DnsmasqUbusDeviceScanner(UbusDeviceScanner):
@@ -210,7 +237,6 @@ def _req_json_rpc(url, session_id, rpcmethod, subsystem, method, **params):
 
     try:
         res = requests.post(url, data=data, timeout=5)
-
     except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
         return
 
@@ -225,6 +251,12 @@ def _req_json_rpc(url, session_id, rpcmethod, subsystem, method, **params):
             raise HomeAssistantError(response["error"]["message"])
 
         if rpcmethod == "call":
+            if response["result"][0] == 6:
+                # 6 = UBUS_STATUS_PERMISSION_DENIED
+                _LOGGER.error(
+                    "Permission denied. Please check username/password and acl/user-permissions"
+                )
+                return
             try:
                 return response["result"][1]
             except IndexError:
@@ -244,4 +276,5 @@ def _get_session_id(url, username, password):
         username=username,
         password=password,
     )
-    return res["ubus_rpc_session"]
+    if res:
+        return res["ubus_rpc_session"]
