@@ -7,7 +7,6 @@ from homeassistant.util.dt import as_local, utcnow
 from .const import (
     ATTR_ELEMENT,
     ATTR_MODALITY,
-    ATTR_SIGN,
     DOMAIN,
     ELEMENT_AIR,
     ELEMENT_EARTH,
@@ -198,7 +197,7 @@ class ZodiacSensor(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        return ZODIAC_ICONS.get(self._attrs[STATE_ATTR])
+        return ZODIAC_ICONS.get(self._state)
 
     @property
     def device_state_attributes(self):

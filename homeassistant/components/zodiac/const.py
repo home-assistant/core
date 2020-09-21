@@ -27,6 +27,5 @@ MODALITY_FIXED = "fixed"
 MODALITY_MUTABLE = "mutable"
 
 # Attributes
-ATTR_SIGN = "sign"
 ATTR_ELEMENT = "element"
 ATTR_MODALITY = "modality"
