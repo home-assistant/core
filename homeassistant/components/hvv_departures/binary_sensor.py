@@ -123,6 +123,7 @@ class HvvDepartureBinarySensor(CoordinatorEntity, BinarySensorEntity):
 
     def __init__(self, coordinator, idx, config_entry):
         """Initialize."""
+        super().__init__(coordinator)
         self.coordinator = coordinator
         self.idx = idx
         self.config_entry = config_entry
