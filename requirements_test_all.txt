@@ -677,7 +677,7 @@ pyhomematic==0.1.68
 pyicloud==0.9.7
 
 # homeassistant.components.insteon
-pyinsteon==1.0.7
+pyinsteon==1.0.8
 
 # homeassistant.components.ipma
 pyipma==2.0.5
