@@ -128,7 +128,7 @@ class UbusDeviceScanner(DeviceScanner):
         if not self.success_init:
             return False
 
-        _LOGGER.info("Checking hostapd")
+        _LOGGER.info("Checking hostapd for host: %s", self.host)
 
         if not self.wlans:
             hostapd = _req_json_rpc(self.url, self.session_id, "list", "hostapd.*", "")
