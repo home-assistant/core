@@ -96,6 +96,14 @@ ALL_EVENT_TYPES = [
     *ALL_EVENT_TYPES_EXCEPT_STATE_CHANGED,
 ]
 
+EVENT_COLUMNS = [
+    Events.event_type,
+    Events.event_data,
+    Events.time_fired,
+    Events.context_id,
+    Events.context_user_id,
+]
+
 SCRIPT_AUTOMATION_EVENTS = [EVENT_AUTOMATION_TRIGGERED, EVENT_SCRIPT_STARTED]
 
 LOG_MESSAGE_SCHEMA = vol.Schema(
@@ -486,11 +494,7 @@ def _get_events(
 
 def _generate_events_query(session):
     return session.query(
-        Events.event_type,
-        Events.event_data,
-        Events.time_fired,
-        Events.context_id,
-        Events.context_user_id,
+        *EVENT_COLUMNS,
         States.state,
         States.entity_id,
         States.domain,
@@ -500,11 +504,7 @@ def _generate_events_query(session):
 
 def _generate_events_query_without_states(session):
     return session.query(
-        Events.event_type,
-        Events.event_data,
-        Events.time_fired,
-        Events.context_id,
-        Events.context_user_id,
+        *EVENT_COLUMNS,
         literal(None).label("state"),
         literal(None).label("entity_id"),
         literal(None).label("domain"),
@@ -522,15 +522,12 @@ def _generate_states_query(session, start_day, end_day, old_state, entity_ids):
         # and old_state, new_state, or the old and
         # new state.
         #
-        .filter((old_state.state_id.isnot(None)) & (States.state != old_state.state))
+        .filter(_missing_old_state_matcher(old_state))
         #
         # Prefilter out continuous domains that have
         # ATTR_UNIT_OF_MEASUREMENT as its much faster in sql.
         #
-        .filter(
-            sqlalchemy.not_(States.domain.in_(CONTINUOUS_DOMAINS))
-            | sqlalchemy.not_(States.attributes.contains(UNIT_OF_MEASUREMENT_JSON))
-        )
+        .filter(_continuous_entity_matcher())
         .filter((States.last_updated > start_day) & (States.last_updated < end_day))
         .filter(
             (States.last_updated == States.last_changed)
@@ -551,9 +548,8 @@ def _apply_events_types_and_states_filter(hass, query, old_state):
             (Events.event_type != EVENT_STATE_CHANGED)
             | (
                 (States.state_id.isnot(None))
-                & (old_state.state_id.isnot(None))
                 & (States.state.isnot(None))
-                & (States.state != old_state.state)
+                & _missing_old_state_matcher(old_state)
             )
         )
         #
@@ -561,12 +557,23 @@ def _apply_events_types_and_states_filter(hass, query, old_state):
         # ATTR_UNIT_OF_MEASUREMENT as its much faster in sql.
         #
         .filter(
-            (Events.event_type != EVENT_STATE_CHANGED)
-            | sqlalchemy.not_(States.domain.in_(CONTINUOUS_DOMAINS))
-            | sqlalchemy.not_(States.attributes.contains(UNIT_OF_MEASUREMENT_JSON))
+            (Events.event_type != EVENT_STATE_CHANGED) | _continuous_entity_matcher()
         )
     )
     return _apply_event_types_filter(hass, events_query, ALL_EVENT_TYPES)
+
+
+def _missing_old_state_matcher(old_state):
+    return sqlalchemy.and_(
+        old_state.state_id.isnot(None), (States.state != old_state.state)
+    )
+
+
+def _continuous_entity_matcher():
+    return sqlalchemy.or_(
+        sqlalchemy.not_(States.domain.in_(CONTINUOUS_DOMAINS)),
+        sqlalchemy.not_(States.attributes.contains(UNIT_OF_MEASUREMENT_JSON)),
+    )
 
 
 def _apply_event_time_filter(events_query, start_day, end_day):
