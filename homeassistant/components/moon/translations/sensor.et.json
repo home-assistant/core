@@ -1,0 +1,14 @@
+{
+    "state": {
+        "moon__phase": {
+            "first_quarter": "Kasvav poolkuu",
+            "full_moon": "T\u00e4iskuu",
+            "last_quarter": "Kahanev poolkuu",
+            "new_moon": "Kuu loomine",
+            "waning_crescent": "Kahanev kuu",
+            "waning_gibbous": "Kahanev kuu",
+            "waxing_crescent": "Noorkuu",
+            "waxing_gibbous": "Kasvav kuu"
+        }
+    }
+}
