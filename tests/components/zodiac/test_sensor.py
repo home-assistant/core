@@ -6,7 +6,6 @@ import pytest
 from homeassistant.components.zodiac.const import (
     ATTR_ELEMENT,
     ATTR_MODALITY,
-    ATTR_SIGN,
     DOMAIN,
     ELEMENT_EARTH,
     ELEMENT_FIRE,
@@ -47,6 +46,5 @@ async def test_zodiac_day(hass, now, sign, element, modality):
     assert state
     assert state.state == sign
     assert state.attributes
-    assert state.attributes[ATTR_SIGN] == sign
     assert state.attributes[ATTR_ELEMENT] == element
     assert state.attributes[ATTR_MODALITY] == modality
