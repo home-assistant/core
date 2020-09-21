@@ -28,6 +28,7 @@ from .const import (
     CONF_INITIAL_STATE,
     CONF_NEGATE_STATE,
     CONF_PIN_MODE,
+    CONF_PLATFORM_MAP,
     CONF_SAMPLING_INTERVAL,
     CONF_SERIAL_BAUD_RATE,
     CONF_SERIAL_PORT,
@@ -195,22 +196,11 @@ async def async_setup_entry(
         sw_version=board.firmware_version,
     )
 
-    if CONF_BINARY_SENSORS in config_entry.data:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, "binary_sensor")
-        )
-    if CONF_SENSORS in config_entry.data:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, "sensor")
-        )
-    if CONF_SWITCHES in config_entry.data:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, "switch")
-        )
-    if CONF_LIGHTS in config_entry.data:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, "light")
-        )
+    for (conf, platform) in CONF_PLATFORM_MAP.items():
+        if conf in config_entry.data:
+            hass.async_create_task(
+                hass.config_entries.async_forward_entry_setup(config_entry, platform)
+            )
     return True
 
 
@@ -221,24 +211,11 @@ async def async_unload_entry(
     _LOGGER.debug("Closing Firmata board %s", config_entry.data[CONF_NAME])
 
     unload_entries = []
-    if CONF_BINARY_SENSORS in config_entry.data:
-        unload_entries.append(
-            hass.config_entries.async_forward_entry_unload(
-                config_entry, "binary_sensor"
+    for (conf, platform) in CONF_PLATFORM_MAP.items():
+        if conf in config_entry.data:
+            unload_entries.append(
+                hass.config_entries.async_forward_entry_unload(config_entry, platform)
             )
-        )
-    if CONF_SENSORS in config_entry.data:
-        unload_entries.append(
-            hass.config_entries.async_forward_entry_unload(config_entry, "sensor")
-        )
-    if CONF_SWITCHES in config_entry.data:
-        unload_entries.append(
-            hass.config_entries.async_forward_entry_unload(config_entry, "switch")
-        )
-    if CONF_LIGHTS in config_entry.data:
-        unload_entries.append(
-            hass.config_entries.async_forward_entry_unload(config_entry, "light")
-        )
     results = []
     if unload_entries:
         results = await asyncio.gather(*unload_entries)

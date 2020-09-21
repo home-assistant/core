@@ -1,7 +1,10 @@
 """Constants for the Firmata component."""
-import logging
-
-LOGGER = logging.getLogger(__package__)
+from homeassistant.const import (
+    CONF_BINARY_SENSORS,
+    CONF_LIGHTS,
+    CONF_SENSORS,
+    CONF_SWITCHES,
+)
 
 CONF_ARDUINO_INSTANCE_ID = "arduino_instance_id"
 CONF_ARDUINO_WAIT = "arduino_wait"
@@ -24,3 +27,9 @@ CONF_SERIAL_PORT = "serial_port"
 CONF_SLEEP_TUNE = "sleep_tune"
 DOMAIN = "firmata"
 FIRMATA_MANUFACTURER = "Firmata"
+CONF_PLATFORM_MAP = {
+    CONF_BINARY_SENSORS: "binary_sensor",
+    CONF_LIGHTS: "light",
+    CONF_SENSORS: "sensor",
+    CONF_SWITCHES: "switch",
+}
