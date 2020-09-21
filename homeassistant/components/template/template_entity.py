@@ -251,11 +251,9 @@ class TemplateEntity(Entity):
                     event, update.template, update.last_result, update.result
                 )
 
-        if self._async_update:
-            self.async_write_ha_state()
+        self.async_write_ha_state()
 
     async def _async_template_startup(self, *_) -> None:
-        # _handle_results will not write state until "_async_update" is set
         template_var_tups = []
         for template, attributes in self._template_attrs.items():
             template_var_tups.append(TrackTemplate(template, None))
@@ -266,9 +264,8 @@ class TemplateEntity(Entity):
             self.hass, template_var_tups, self._handle_results
         )
         self.async_on_remove(result_info.async_remove)
-        result_info.async_refresh()
-        self.async_write_ha_state()
         self._async_update = result_info.async_refresh
+        result_info.async_refresh()
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
