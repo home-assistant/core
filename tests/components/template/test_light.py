@@ -936,18 +936,18 @@ class TestTemplateLight:
         )
         self.hass.block_till_done()
         assert len(self.calls) == 2
-        assert self.calls[0].data["h"] == "40"
-        assert self.calls[0].data["s"] == "50"
-        assert self.calls[1].data["h"] == "40"
-        assert self.calls[1].data["s"] == "50"
+        assert self.calls[0].data["h"] == "40.0"
+        assert self.calls[0].data["s"] == "50.0"
+        assert self.calls[1].data["h"] == "40.0"
+        assert self.calls[1].data["s"] == "50.0"
 
         state = self.hass.states.get("light.test_template_light")
         _LOGGER.info(str(state.attributes))
         assert state is not None
-        assert self.calls[0].data["h"] == "40"
-        assert self.calls[0].data["s"] == "50"
-        assert self.calls[1].data["h"] == "40"
-        assert self.calls[1].data["s"] == "50"
+        assert self.calls[0].data["h"] == "40.0"
+        assert self.calls[0].data["s"] == "50.0"
+        assert self.calls[1].data["h"] == "40.0"
+        assert self.calls[1].data["s"] == "50.0"
 
     @pytest.mark.parametrize(
         "expected_hs,template",

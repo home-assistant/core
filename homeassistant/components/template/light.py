@@ -326,8 +326,12 @@ class LightTemplate(TemplateEntity, LightEntity):
         if self._color_action:
             on_attrs["hs"] = self._color
             # Default values are None, so don't try to convert if None
-            on_attrs["h"] = int(self._color[0]) if self._color[0] is not None else None
-            on_attrs["s"] = int(self._color[1]) if self._color[1] is not None else None
+            on_attrs["h"] = (
+                round(self._color[0], 3) if self._color[0] is not None else None
+            )
+            on_attrs["s"] = (
+                round(self._color[1], 3) if self._color[1] is not None else None
+            )
 
         if ATTR_BRIGHTNESS in kwargs and self._level_action:
             on_attrs["brightness"] = kwargs[ATTR_BRIGHTNESS]
@@ -339,8 +343,8 @@ class LightTemplate(TemplateEntity, LightEntity):
             hs_value = kwargs[ATTR_HS_COLOR]
             on_attrs["hs"] = hs_value
             # Default values are none, so don't try to convert if None
-            on_attrs["h"] = int(hs_value[0]) if hs_value[0] is not None else None
-            on_attrs["s"] = int(hs_value[1]) if hs_value[1] is not None else None
+            on_attrs["h"] = round(hs_value[0], 3) if hs_value[0] is not None else None
+            on_attrs["s"] = round(hs_value[1], 3) if hs_value[1] is not None else None
 
         await self._on_script.async_run(on_attrs, context=self._context)
 
