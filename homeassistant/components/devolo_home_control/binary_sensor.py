@@ -113,7 +113,6 @@ class DevoloRemoteControl(DevoloDeviceEntity, BinarySensorEntity):
             device_instance=device_instance,
             element_uid=f"{element_uid}_{key}",
             name=device_instance.item_name,
-            sync=self._sync,
         )
 
         self._key = key

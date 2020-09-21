@@ -63,7 +63,6 @@ class DevoloMultiLevelDeviceEntity(DevoloDeviceEntity):
         device_instance,
         element_uid,
         multi_level_sensor_property=None,
-        sync=None,
     ):
         """Initialize a devolo multi level sensor."""
         if multi_level_sensor_property is None:
@@ -73,7 +72,7 @@ class DevoloMultiLevelDeviceEntity(DevoloDeviceEntity):
         else:
             self._multi_level_sensor_property = multi_level_sensor_property
 
-        self._state = self._multi_level_sensor_property.value
+        self._value = self._multi_level_sensor_property.value
 
         self._device_class = DEVICE_CLASS_MAPPING.get(
             self._multi_level_sensor_property.sensor_type
@@ -91,7 +90,6 @@ class DevoloMultiLevelDeviceEntity(DevoloDeviceEntity):
             device_instance=device_instance,
             element_uid=element_uid,
             name=name,
-            sync=self._sync if sync is None else sync,
         )
 
     @property
@@ -102,7 +100,7 @@ class DevoloMultiLevelDeviceEntity(DevoloDeviceEntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._state
+        return self._value
 
     @property
     def unit_of_measurement(self):
@@ -131,7 +129,6 @@ class DevoloConsumptionEntity(DevoloMultiLevelDeviceEntity):
             device_instance,
             element_uid,
             multi_level_sensor_property=self,
-            sync=self._sync,
         )
 
     @property
@@ -142,7 +139,7 @@ class DevoloConsumptionEntity(DevoloMultiLevelDeviceEntity):
     def _sync(self, message):
         """Update the consumption sensor state."""
         if message[0] == self.element_uid:
-            self._state = getattr(
+            self._value = getattr(
                 self._device_instance.consumption_property[self.element_uid],
                 self.sensor_type,
             )
