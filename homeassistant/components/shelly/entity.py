@@ -230,7 +230,20 @@ class ShellyBlockAttributeEntity(ShellyBlockEntity, entity.Entity):
 
         self._unit = unit
         self._unique_id = f"{super().unique_id}-{self.attribute}"
+<<<<<<< HEAD
         self._name = get_entity_name(wrapper, block, self.description.name)
+=======
+<<<<<<< HEAD
+        self._name = shelly_naming(self, block, "sensor")
+=======
+        name_parts = [self.wrapper.name]
+        if same_type_count > 1:
+            name_parts.append(str(block.channel))
+        name_parts.append(self.description.name)
+
+        self._name = " ".join(name_parts)
+>>>>>>> Added support for REST sensors
+>>>>>>> Added support for REST sensors
 
     @property
     def unique_id(self):
@@ -300,16 +313,11 @@ class ShellyRestAttributeEntity(entity.Entity):
         self._name = shelly_naming(self, None, "sensor")
         self.path = self.description.path
         self._attributes = self.description.attributes
-
+    
     @property
     def name(self):
         """Name of sensor."""
         return self._name
-
-    @property
-    def should_poll(self):
-        """Poll mode for sensor."""
-        return False
 
     @property
     def device_info(self):
@@ -363,8 +371,3 @@ class ShellyRestAttributeEntity(entity.Entity):
     async def async_added_to_hass(self):
         """When entity is added to HASS."""
         self.async_on_remove(self.wrapper.async_add_listener(self._update_callback))
-
-    @callback
-    def _update_callback(self):
-        """When device updates, clear control result that overrides state."""
-        self.async_write_ha_state()
