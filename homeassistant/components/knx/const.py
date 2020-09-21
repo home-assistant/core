@@ -15,7 +15,6 @@ from homeassistant.components.climate.const import (
 )
 
 DOMAIN = "knx"
-DATA_KNX = "data_knx"
 
 CONF_STATE_ADDRESS = "state_address"
 CONF_SYNC_STATE = "sync_state"
