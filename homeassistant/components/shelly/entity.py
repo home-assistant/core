@@ -174,10 +174,7 @@ class RestAttributeDescription:
     value: Callable[[Any], Any] = lambda val: val
     device_class: Optional[str] = None
     default_enabled: bool = True
-<<<<<<< HEAD
     attributes: Optional[dict] = None
-=======
->>>>>>> Added support for REST sensors
 
 
 class ShellyBlockEntity(entity.Entity):
@@ -200,7 +197,6 @@ class ShellyBlockEntity(entity.Entity):
         return False
 
     @property
-<<<<<<< HEAD
     def device_info(self):
         """Device info."""
         return {
@@ -254,16 +250,7 @@ class ShellyBlockAttributeEntity(ShellyBlockEntity, entity.Entity):
 
         self._unit = unit
         self._unique_id = f"{super().unique_id}-{self.attribute}"
-<<<<<<< HEAD
         self._name = shelly_naming(self, block, "sensor")
-=======
-        name_parts = [self.wrapper.name]
-        if same_type_count > 1:
-            name_parts.append(str(block.channel))
-        name_parts.append(self.description.name)
-
-        self._name = " ".join(name_parts)
->>>>>>> Added support for REST sensors
 
     @property
     def unique_id(self):
@@ -330,14 +317,9 @@ class ShellyRestAttributeEntity(entity.Entity):
         self.description = description
 
         self._unit = self.description.unit
-<<<<<<< HEAD
         self._name = shelly_naming(self, None, "sensor")
         self.path = self.description.path
         self._attributes = self.description.attributes
-=======
-        self._name = f"{self.wrapper.name} {self.description.name}"
-        self.path = self.description.path
-        self._state = None
 
     @property
     def state(self):
@@ -349,7 +331,6 @@ class ShellyRestAttributeEntity(entity.Entity):
                 self.path.split("/")[1]
             ]
         return _attribute_value
->>>>>>> Added support for REST sensors
 
     @property
     def name(self):
