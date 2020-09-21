@@ -446,7 +446,11 @@ class LightEntity(ToggleEntity):
             data[ATTR_HS_COLOR] = None
             data[ATTR_RGB_COLOR] = None
             data[ATTR_XY_COLOR] = None
-            if hs_color[0] is not None and hs_color[1] is not None:
+            if (
+                hs_color is not None
+                and hs_color[0] is not None
+                and hs_color[1] is not None
+            ):
                 data[ATTR_HS_COLOR] = (round(hs_color[0], 3), round(hs_color[1], 3))
                 data[ATTR_RGB_COLOR] = color_util.color_hs_to_RGB(*hs_color)
                 data[ATTR_XY_COLOR] = color_util.color_hs_to_xy(*hs_color)
