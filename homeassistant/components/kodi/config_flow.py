@@ -202,6 +202,10 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._ws_port = user_input.get(CONF_WS_PORT)
 
+            # optional ints return 0 rather than None when empty
+            if self._ws_port == 0:
+                self._ws_port = None
+
             try:
                 await validate_ws(self.hass, self._get_data())
             except WSCannotConnect:
