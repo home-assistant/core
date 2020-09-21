@@ -180,7 +180,16 @@ class HvvDepartureBinarySensor(CoordinatorEntity, BinarySensorEntity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return self.coordinator.data[self.idx]["attributes"]
+        if not (
+            self.coordinator.last_update_success
+            and self.coordinator.data[self.idx]["available"]
+        ):
+            return None
+        return {
+            k: v
+            for k, v in self.coordinator.data[self.idx]["attributes"].items()
+            if v is not None
+        }
 
     async def async_added_to_hass(self):
         """When entity is added to hass."""
