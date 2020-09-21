@@ -30,7 +30,7 @@ async def async_setup_entry(
             api.setup()
         except FirmataPinUsedException:
             _LOGGER.error(
-                "Could not setup sensor on pin %s since pin already in use.",
+                "Could not setup sensor on pin %s since pin already in use",
                 sensor[CONF_PIN],
             )
             continue

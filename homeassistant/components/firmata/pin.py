@@ -2,8 +2,6 @@
 import logging
 from typing import Callable
 
-from homeassistant.core import callback
-
 from .board import FirmataBoard, FirmataPinType
 from .const import PIN_MODE_INPUT, PIN_MODE_PULLUP, PIN_TYPE_ANALOG
 
@@ -184,7 +182,6 @@ class FirmataBinaryDigitalInput(FirmataBoardPin):
         """Return true if digital input is on."""
         return self._state
 
-    @callback
     async def latch_callback(self, data: list) -> None:
         """Update pin state on callback."""
         if data[1] != self._firmata_pin:
@@ -248,7 +245,6 @@ class FirmataAnalogInput(FirmataBoardPin):
         """Return sensor state."""
         return self._state
 
-    @callback
     async def latch_callback(self, data: list) -> None:
         """Update pin state on callback."""
         if data[1] != self._analog_pin:

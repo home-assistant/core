@@ -31,7 +31,7 @@ async def async_setup_entry(
             api.setup()
         except FirmataPinUsedException:
             _LOGGER.error(
-                "Could not setup switch on pin %s since pin already in use.",
+                "Could not setup switch on pin %s since pin already in use",
                 switch[CONF_PIN],
             )
             continue
@@ -49,7 +49,6 @@ class FirmataSwitch(FirmataPinEntity, SwitchEntity):
     async def async_added_to_hass(self) -> None:
         """Set up a switch."""
         await self._api.start_pin()
-        self.async_write_ha_state()
 
     @property
     def is_on(self) -> bool:
@@ -58,12 +57,10 @@ class FirmataSwitch(FirmataPinEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn on switch."""
-        _LOGGER.debug("Turning switch %s on", self._name)
         await self._api.turn_on()
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn off switch."""
-        _LOGGER.debug("Turning switch %s off", self._name)
         await self._api.turn_off()
         self.async_write_ha_state()

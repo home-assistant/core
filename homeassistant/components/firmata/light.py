@@ -38,7 +38,7 @@ async def async_setup_entry(
             api.setup()
         except FirmataPinUsedException:
             _LOGGER.error(
-                "Could not setup light on pin %s since pin already in use.",
+                "Could not setup light on pin %s since pin already in use",
                 light[CONF_PIN],
             )
             continue
@@ -69,7 +69,6 @@ class FirmataLight(FirmataPinEntity, LightEntity):
     async def async_added_to_hass(self) -> None:
         """Set up a light."""
         await self._api.start_pin()
-        self.async_write_ha_state()
 
     @property
     def is_on(self) -> bool:
@@ -88,7 +87,6 @@ class FirmataLight(FirmataPinEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn on light."""
-        _LOGGER.debug("Turning light %s on", self._name)
         level = kwargs.get(ATTR_BRIGHTNESS, self._last_on_level)
         await self._api.set_level(level)
         self.async_write_ha_state()
@@ -96,6 +94,5 @@ class FirmataLight(FirmataPinEntity, LightEntity):
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn off light."""
-        _LOGGER.debug("Turning light %s off", self._name)
         await self._api.set_level(0)
         self.async_write_ha_state()

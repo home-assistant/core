@@ -91,7 +91,9 @@ SENSOR_SCHEMA = vol.Schema(
         vol.Required(CONF_PIN_MODE): PIN_MODE_ANALOG,
         # Default differential is 40 to avoid a flood of messages on initial setup
         # in case pin is unplugged. Firmata responds really really fast
-        vol.Optional(CONF_DIFFERENTIAL, default=40): cv.positive_int,
+        vol.Optional(CONF_DIFFERENTIAL, default=40): vol.All(
+            cv.positive_int, vol.Range(min=1)
+        ),
     },
     required=True,
 )
