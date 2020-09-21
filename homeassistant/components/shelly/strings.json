@@ -4,6 +4,7 @@
     "flow_title": "Shelly: {name}",
     "step": {
       "user": {
+        "description": "If you need help with the configuration have a look here: https://www.home-assistant.io/integrations/shelly/\n\nBefore configuration, the battery-powered device must be woken up by pressing the button on the device.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         }
@@ -15,7 +16,7 @@
         }
       },
       "confirm_discovery": {
-        "description": "Do you want to set up the {model} at {host}?"
+        "description": "Do you want to set up the {model} at {host}?\n\nBefore configuration, the battery-powered device must be woken up by pressing the button on the device."
       }
     },
     "error": {
