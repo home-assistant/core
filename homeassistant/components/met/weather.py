@@ -5,6 +5,8 @@ import voluptuous as vol
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
+    ATTR_FORECAST_TEMP,
+    ATTR_FORECAST_TIME,
     ATTR_WEATHER_HUMIDITY,
     ATTR_WEATHER_PRESSURE,
     ATTR_WEATHER_TEMPERATURE,
@@ -209,8 +211,11 @@ class MetWeather(CoordinatorEntity, WeatherEntity):
             met_forecast = self.coordinator.data.hourly_forecast
         else:
             met_forecast = self.coordinator.data.daily_forecast
+        required_keys = {ATTR_FORECAST_TEMP, ATTR_FORECAST_TIME}
         ha_forecast = []
         for met_item in met_forecast:
+            if not set(met_item).issuperset(required_keys):
+                continue
             ha_item = {
                 k: met_item[v] for k, v in FORECAST_MAP.items() if met_item.get(v)
             }
