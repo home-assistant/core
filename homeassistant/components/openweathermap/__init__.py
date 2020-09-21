@@ -19,9 +19,12 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from .const import (
     COMPONENTS,
     CONF_LANGUAGE,
+    CONFIG_FLOW_VERSION,
     DOMAIN,
     ENTRY_NAME,
     ENTRY_WEATHER_COORDINATOR,
+    FORECAST_MODE_FREE_DAILY,
+    FORECAST_MODE_ONECALL_DAILY,
     UPDATE_LISTENER,
 )
 from .weather_update_coordinator import WeatherUpdateCoordinator
@@ -74,6 +77,28 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
 
     update_listener = config_entry.add_update_listener(async_update_options)
     hass.data[DOMAIN][config_entry.entry_id][UPDATE_LISTENER] = update_listener
+
+    return True
+
+
+async def async_migrate_entry(hass, entry):
+    """Migrate old entry."""
+    config_entries = hass.config_entries
+    data = entry.data
+    version = entry.version
+
+    _LOGGER.debug("Migrating OpenWeatherMap entry from Version %s", version)
+
+    if version == 1:
+        mode = data[CONF_MODE]
+        if mode == FORECAST_MODE_FREE_DAILY:
+            mode = FORECAST_MODE_ONECALL_DAILY
+
+        new_data = {**data, CONF_MODE: mode}
+        version = entry.version = CONFIG_FLOW_VERSION
+        config_entries.async_update_entry(entry, data=new_data)
+
+    _LOGGER.info("Migration to version %s successful", version)
 
     return True
 

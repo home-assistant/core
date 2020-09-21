@@ -18,6 +18,7 @@ import homeassistant.helpers.config_validation as cv
 
 from .const import (
     CONF_LANGUAGE,
+    CONFIG_FLOW_VERSION,
     DEFAULT_FORECAST_MODE,
     DEFAULT_LANGUAGE,
     DEFAULT_NAME,
@@ -43,7 +44,7 @@ _LOGGER = logging.getLogger(__name__)
 class OpenWeatherMapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Config flow for OpenWeatherMap."""
 
-    VERSION = 1
+    VERSION = CONFIG_FLOW_VERSION
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     @staticmethod

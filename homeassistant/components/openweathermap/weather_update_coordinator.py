@@ -32,7 +32,6 @@ from .const import (
     CONDITION_CLASSES,
     DOMAIN,
     FORECAST_MODE_DAILY,
-    FORECAST_MODE_FREE_DAILY,
     FORECAST_MODE_HOURLY,
     FORECAST_MODE_ONECALL_DAILY,
     FORECAST_MODE_ONECALL_HOURLY,
@@ -52,9 +51,6 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         self._latitude = latitude
         self._longitude = longitude
         self._forecast_mode = forecast_mode
-        if forecast_mode == FORECAST_MODE_FREE_DAILY:
-            # Auto convert to One Call for freedaily users
-            self._forecast_mode = FORECAST_MODE_ONECALL_DAILY
         self._forecast_limit = None
         if forecast_mode == FORECAST_MODE_DAILY:
             self._forecast_limit = 15

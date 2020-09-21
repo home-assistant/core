@@ -26,6 +26,7 @@ DEFAULT_NAME = "OpenWeatherMap"
 DEFAULT_LANGUAGE = "en"
 ATTRIBUTION = "Data provided by OpenWeatherMap"
 CONF_LANGUAGE = "language"
+CONFIG_FLOW_VERSION = 2
 ENTRY_NAME = "name"
 ENTRY_WEATHER_COORDINATOR = "weather_coordinator"
 ATTR_API_PRECIPITATION = "precipitation"
