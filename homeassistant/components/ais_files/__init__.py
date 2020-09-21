@@ -109,10 +109,17 @@ async def _async_remove_file(hass, path):
         path = path.replace("/512x512", "")
         import shutil
 
-        shutil.rmtree(hass.config.config_dir + "/image/" + path)
+        try:
+            shutil.rmtree(hass.config.config_dir + "/image/" + path)
+        except Exception as e:
+            pass
+
     else:
         # remove file from ais folder
         path = path.replace("/local/", "/data/data/pl.sviete.dom/files/home/AIS/www/")
+        path = path.replace(
+            "/media/galeria/", "/data/data/pl.sviete.dom/files/home/AIS/www/img/"
+        ).split("?authSig")[0]
         os.remove(path)
         await _async_refresh_files(hass)
         await _async_pick_file(hass, 0)
