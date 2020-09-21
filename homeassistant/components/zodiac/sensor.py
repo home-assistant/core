@@ -32,14 +32,12 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-STATE_ATTR = ATTR_SIGN
-
 ZODIAC_BY_DATE = (
     (
         (21, 3),
         (20, 4),
+        SIGN_ARIES,
         {
-            ATTR_SIGN: SIGN_ARIES,
             ATTR_ELEMENT: ELEMENT_FIRE,
             ATTR_MODALITY: MODALITY_CARDINAL,
         },
@@ -47,8 +45,8 @@ ZODIAC_BY_DATE = (
     (
         (21, 4),
         (20, 5),
+        SIGN_TAURUS,
         {
-            ATTR_SIGN: SIGN_TAURUS,
             ATTR_ELEMENT: ELEMENT_EARTH,
             ATTR_MODALITY: MODALITY_FIXED,
         },
@@ -56,8 +54,8 @@ ZODIAC_BY_DATE = (
     (
         (21, 5),
         (21, 6),
+        SIGN_GEMINI,
         {
-            ATTR_SIGN: SIGN_GEMINI,
             ATTR_ELEMENT: ELEMENT_AIR,
             ATTR_MODALITY: MODALITY_MUTABLE,
         },
@@ -65,8 +63,8 @@ ZODIAC_BY_DATE = (
     (
         (22, 6),
         (22, 7),
+        SIGN_CANCER,
         {
-            ATTR_SIGN: SIGN_CANCER,
             ATTR_ELEMENT: ELEMENT_WATER,
             ATTR_MODALITY: MODALITY_CARDINAL,
         },
@@ -74,8 +72,8 @@ ZODIAC_BY_DATE = (
     (
         (23, 7),
         (22, 8),
+        SIGN_LEO,
         {
-            ATTR_SIGN: SIGN_LEO,
             ATTR_ELEMENT: ELEMENT_FIRE,
             ATTR_MODALITY: MODALITY_FIXED,
         },
@@ -83,8 +81,8 @@ ZODIAC_BY_DATE = (
     (
         (23, 8),
         (21, 9),
+        SIGN_VIRGO,
         {
-            ATTR_SIGN: SIGN_VIRGO,
             ATTR_ELEMENT: ELEMENT_EARTH,
             ATTR_MODALITY: MODALITY_MUTABLE,
         },
@@ -92,8 +90,8 @@ ZODIAC_BY_DATE = (
     (
         (22, 9),
         (22, 10),
+        SIGN_LIBRA,
         {
-            ATTR_SIGN: SIGN_LIBRA,
             ATTR_ELEMENT: ELEMENT_AIR,
             ATTR_MODALITY: MODALITY_CARDINAL,
         },
@@ -101,8 +99,8 @@ ZODIAC_BY_DATE = (
     (
         (23, 10),
         (22, 11),
+        SIGN_SCORPIO,
         {
-            ATTR_SIGN: SIGN_SCORPIO,
             ATTR_ELEMENT: ELEMENT_WATER,
             ATTR_MODALITY: MODALITY_FIXED,
         },
@@ -110,8 +108,8 @@ ZODIAC_BY_DATE = (
     (
         (23, 11),
         (21, 12),
+        SIGN_SAGITTARIUS,
         {
-            ATTR_SIGN: SIGN_SAGITTARIUS,
             ATTR_ELEMENT: ELEMENT_FIRE,
             ATTR_MODALITY: MODALITY_MUTABLE,
         },
@@ -119,8 +117,8 @@ ZODIAC_BY_DATE = (
     (
         (22, 12),
         (20, 1),
+        SIGN_CAPRICORN,
         {
-            ATTR_SIGN: SIGN_CAPRICORN,
             ATTR_ELEMENT: ELEMENT_EARTH,
             ATTR_MODALITY: MODALITY_CARDINAL,
         },
@@ -128,8 +126,8 @@ ZODIAC_BY_DATE = (
     (
         (21, 1),
         (19, 2),
+        SIGN_AQUARIUS,
         {
-            ATTR_SIGN: SIGN_AQUARIUS,
             ATTR_ELEMENT: ELEMENT_AIR,
             ATTR_MODALITY: MODALITY_FIXED,
         },
@@ -137,8 +135,8 @@ ZODIAC_BY_DATE = (
     (
         (20, 2),
         (20, 3),
+        SIGN_PISCES,
         {
-            ATTR_SIGN: SIGN_PISCES,
             ATTR_ELEMENT: ELEMENT_WATER,
             ATTR_MODALITY: MODALITY_MUTABLE,
         },
@@ -175,6 +173,7 @@ class ZodiacSensor(Entity):
     def __init__(self):
         """Initialize the zodiac sensor."""
         self._attrs = None
+        self._state = None
 
     @property
     def unique_id(self):
@@ -194,7 +193,7 @@ class ZodiacSensor(Entity):
     @property
     def state(self):
         """Return the state of the device."""
-        return self._attrs[STATE_ATTR]
+        return self._state
 
     @property
     def icon(self):
@@ -213,9 +212,10 @@ class ZodiacSensor(Entity):
         month = int(today.month)
         day = int(today.day)
 
-        for _, sign in enumerate(ZODIAC_BY_DATE):
+        for sign in ZODIAC_BY_DATE:
             if (month == sign[0][1] and day >= sign[0][0]) or (
                 month == sign[1][1] and day <= sign[1][0]
             ):
-                self._attrs = sign[2]
+                self._state = sign[2]
+                self._attrs = sign[3]
                 break
