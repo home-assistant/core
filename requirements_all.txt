@@ -2035,7 +2035,7 @@ solaredge-local==0.2.0
 solaredge==0.0.2
 
 # homeassistant.components.solax
-solax==0.2.3
+solax==0.2.4
 
 # homeassistant.components.honeywell
 somecomfort==0.5.2
