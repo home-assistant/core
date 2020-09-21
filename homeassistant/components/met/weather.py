@@ -214,8 +214,7 @@ class MetWeather(CoordinatorEntity, WeatherEntity):
         required_keys = {ATTR_FORECAST_TEMP, ATTR_FORECAST_TIME}
         ha_forecast = []
         for met_item in met_forecast:
-            if not set(met_item.keys()).issuperset(required_keys):
-                _LOGGER.info("Invalid forecast time entry, skipping: %s", met_item)
+            if not set(met_item).issuperset(required_keys):
                 continue
             ha_item = {
                 k: met_item[v] for k, v in FORECAST_MAP.items() if met_item.get(v)
