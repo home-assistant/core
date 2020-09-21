@@ -260,6 +260,18 @@ class ShellyRestAttributeEntity(entity.Entity):
         return False
 
     @property
+    def device_info(self):
+        """Device info."""
+        return {
+            "connections": {(device_registry.CONNECTION_NETWORK_MAC, self.wrapper.mac)}
+        }
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if it should be enabled by default."""
+        return self.description.default_enabled
+
+    @property
     def available(self):
         """Available."""
         return self.wrapper.last_update_success

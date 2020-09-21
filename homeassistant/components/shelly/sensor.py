@@ -151,6 +151,7 @@ REST_SENSORS = {
         name="Rssi",
         unit="dB",
         device_class=sensor.DEVICE_CLASS_SIGNAL_STRENGTH,
+        default_enabled=False,
         path="wifi_sta/rssi",
     ),
     ("uptime"): RestAttributeDescription(
