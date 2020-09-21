@@ -2006,7 +2006,7 @@ sleepyq==0.7
 slixmpp==1.5.2
 
 # homeassistant.components.smart_meter_texas
-smart-meter-texas==0.4.0
+smart-meter-texas==0.4.3
 
 # homeassistant.components.smarthab
 smarthab==0.21
