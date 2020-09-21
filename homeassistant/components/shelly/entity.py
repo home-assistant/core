@@ -1,9 +1,12 @@
 """Shelly entity helper."""
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from typing import Any, Callable, Optional, Union
 
 import aioshelly
 
+from homeassistant.components.sensor import DEVICE_CLASS_TIMESTAMP
+from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry, entity
 
@@ -44,6 +47,23 @@ async def async_setup_entry_attribute_entities(
     )
 
 
+async def async_setup_entry_rest(
+    hass, config_entry, async_add_entities, sensors, sensor_class
+):
+    """Set up entities for REST sensors."""
+    wrapper: ShellyDeviceWrapper = hass.data[DOMAIN][config_entry.entry_id]
+
+    blocks = []
+    for sensor_id in sensors:
+        _desc = sensors.get(sensor_id)
+        blocks.append(_desc)
+
+    if not blocks:
+        return
+
+    async_add_entities([sensor_class(wrapper, description) for description in blocks])
+
+
 @dataclass
 class BlockAttributeDescription:
     """Class to describe a sensor."""
@@ -58,6 +78,19 @@ class BlockAttributeDescription:
     device_state_attributes: Optional[
         Callable[[aioshelly.Block], Optional[dict]]
     ] = None
+
+
+@dataclass
+class RestAttributeDescription:
+    """Class to describe a REST sensor."""
+
+    path: str
+    name: str
+    # Callable = lambda attr_info: unit
+    unit: Union[None, str, Callable[[dict], str]] = None
+    value: Callable[[Any], Any] = lambda val: val
+    device_class: Optional[str] = None
+    default_enabled: bool = True
 
 
 class ShellyBlockEntity(entity.Entity):
@@ -187,3 +220,84 @@ class ShellyBlockAttributeEntity(ShellyBlockEntity, entity.Entity):
             return None
 
         return self.description.device_state_attributes(self.block)
+
+
+class ShellyRestAttributeEntity(entity.Entity):
+    """Class to load info from REST."""
+
+    def __init__(
+        self, wrapper: ShellyDeviceWrapper, description: RestAttributeDescription
+    ) -> None:
+        """Initialize sensor."""
+        self.wrapper = wrapper
+        self.description = description
+
+        self._unit = self.description.unit
+        self._name = f"{self.wrapper.name} {self.description.name}"
+        self.path = self.description.path
+        self._state = None
+
+    @property
+    def state(self):
+        """State of sensor."""
+        if "/" not in self.path:
+            _attribute_value = self.wrapper.device.status[self.path]
+        else:
+            _attribute_value = self.wrapper.device.status[self.path.split("/")[0]][
+                self.path.split("/")[1]
+            ]
+        return _attribute_value
+
+    @property
+    def name(self):
+        """Name of sensor."""
+        return self._name
+
+    @property
+    def should_poll(self):
+        """Poll mode for sensor."""
+        return False
+
+    @property
+    def available(self):
+        """Available."""
+        return self.wrapper.last_update_success
+
+    @property
+    def attribute_value(self):
+        """Attribute."""
+
+        if "/" not in self.path:
+            _attribute_value = self.wrapper.device.status[self.path]
+        else:
+            _attribute_value = self.wrapper.device.status[self.path.split("/")[0]][
+                self.path.split("/")[1]
+            ]
+        if self.description.device_class == DEVICE_CLASS_TIMESTAMP:
+            last_boot = datetime.utcnow() - timedelta(seconds=_attribute_value)
+            _attribute_value = last_boot.replace(microsecond=0).isoformat()
+        return _attribute_value
+
+    @property
+    def unit_of_measurement(self):
+        """Return unit of sensor."""
+        return self.description.unit
+
+    @property
+    def device_class(self):
+        """Device class of sensor."""
+        return self.description.device_class
+
+    @property
+    def unique_id(self):
+        """Return unique ID of entity."""
+        return f"{self.wrapper.mac}-{self._name}"
+
+    async def async_added_to_hass(self):
+        """When entity is added to HASS."""
+        self.async_on_remove(self.wrapper.async_add_listener(self._update_callback))
+
+    @callback
+    def _update_callback(self):
+        """When device updates, clear control result that overrides state."""
+        self.wrapper.device.update_status()
