@@ -18,8 +18,27 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DOMAIN
+from .errors import CannotLoginException
 
 SCAN_INTERVAL = timedelta(seconds=30)
+
+
+async def async_get_api(
+    hass: HomeAssistantType,
+    password: str,
+    host: str = None,
+    username: str = None,
+    port: int = None,
+    ssl: bool = False,
+    url: str = None,
+) -> Netgear:
+    """Get the Netgear API and login to it."""
+    api: Netgear = Netgear(password, host, username, port, ssl, url)
+
+    if not api.login():
+        raise CannotLoginException
+
+    return api
 
 
 class NetgearRouter:
@@ -46,7 +65,7 @@ class NetgearRouter:
     async def async_setup(self) -> None:
         """Set up a Netgear router."""
         self._api = await self.hass.async_add_executor_job(
-            Netgear,
+            async_get_api,
             self._password,
             self._host,
             self._username,
@@ -54,8 +73,6 @@ class NetgearRouter:
             self._ssl,
             self._url,
         )
-
-        await self.hass.async_add_executor_job(self._api.login)
 
         await self.async_update_devices()
         self._unsub_dispatcher = async_track_time_interval(

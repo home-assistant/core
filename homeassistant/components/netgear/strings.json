@@ -19,10 +19,6 @@
           "username": "Username (Optional)",
           "password": "Password"
         }
-      },
-      "discover": {
-        "title": "Netgear: discovery",
-        "description": "Submit to try to discover your router host, port and SSL"
       }
     },
     "error": {

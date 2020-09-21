@@ -55,26 +55,6 @@ USERNAME = "Home_Assistant"
 PASSWORD = "password"
 
 
-@pytest.fixture(name="autodetect_url")
-def mock_controller_autodetect_url():
-    """Mock a successful autodetect."""
-    with patch(
-        "homeassistant.components.netgear.config_flow.autodetect_url"
-    ) as service_mock:
-        service_mock.return_value = URL
-        yield service_mock
-
-
-@pytest.fixture(name="autodetect_url_not_found")
-def mock_controller_autodetect_url_not_found():
-    """Mock a non successful autodetect."""
-    with patch(
-        "homeassistant.components.netgear.config_flow.autodetect_url"
-    ) as service_mock:
-        service_mock.return_value = None
-        yield service_mock
-
-
 @pytest.fixture(name="service")
 def mock_controller_service():
     """Mock a successful service."""
@@ -103,36 +83,8 @@ async def _discover_step_user(hass):
     return result
 
 
-async def test_discover(hass, autodetect_url, service):
-    """Test discover step."""
-    result = await _discover_step_user(hass)
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "link"
-
-
-async def test_user_required(hass, autodetect_url, service):
+async def test_user(hass, service):
     """Test user step."""
-    result = await _discover_step_user(hass)
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "link"
-
-    # test with required only
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_PASSWORD: PASSWORD}
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["result"].unique_id == SERIAL
-    assert result["title"] == TITLE
-    assert result["data"].get(CONF_URL) == URL
-    assert result["data"].get(CONF_HOST) is None
-    assert result["data"].get(CONF_PORT) is None
-    assert result["data"].get(CONF_SSL) is None
-    assert result["data"].get(CONF_USERNAME) is None
-    assert result["data"][CONF_PASSWORD] == PASSWORD
-
-
-async def test_user_url_not_found(hass, autodetect_url_not_found, service):
-    """Test user step while autodetect_url did not find url."""
     result = await _discover_step_user(hass)
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"

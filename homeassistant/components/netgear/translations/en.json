@@ -7,10 +7,6 @@
             "config": "Connection or login error: please check your configuration"
         },
         "step": {
-            "discover": {
-                "description": "Submit to try to discover your router host, port and SSL",
-                "title": "Netgear: discovery"
-            },
             "link": {
                 "data": {
                     "password": "Password",

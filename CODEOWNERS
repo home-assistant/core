@@ -306,7 +306,7 @@ homeassistant/components/nest/* @allenporter
 homeassistant/components/netatmo/* @cgtobi
 homeassistant/components/netdata/* @fabaff
 homeassistant/components/netgear/* @hacf-fr @Quentame
-homeassistant/components/nexia/* @ryannazaretian @bdraco
+homeassistant/components/nexia/* @bdraco
 homeassistant/components/nextbus/* @vividboarder
 homeassistant/components/nextcloud/* @meichthys
 homeassistant/components/nightscout/* @marciogranzotto
