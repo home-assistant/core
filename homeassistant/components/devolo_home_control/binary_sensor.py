@@ -84,7 +84,6 @@ class DevoloBinaryDeviceEntity(DevoloDeviceEntity, BinarySensorEntity):
             device_instance=device_instance,
             element_uid=element_uid,
             name=name,
-            sync=self._sync,
         )
 
         self._value = self._binary_sensor_property.state
