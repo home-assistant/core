@@ -489,6 +489,10 @@ class AllStates:
 
         return DomainStates(self._hass, name)
 
+    # Jinja will try __getitem__ first and it avoids the need
+    # to call is_safe_attribute
+    __getitem__ = __getattr__
+
     def _collect_all(self) -> None:
         render_info = self._hass.data.get(_RENDER_INFO)
         if render_info is not None:
@@ -534,6 +538,10 @@ class DomainStates:
             raise TemplateError(f"Invalid entity ID '{entity_id}'")
         return _get_state(self._hass, entity_id)
 
+    # Jinja will try __getitem__ first and it avoids the need
+    # to call is_safe_attribute
+    __getitem__ = __getattr__
+
     def _collect_domain(self) -> None:
         entity_collect = self._hass.data.get(_RENDER_INFO)
         if entity_collect is not None:
@@ -562,7 +570,7 @@ class DomainStates:
 class TemplateState(State):
     """Class to represent a state object in a template."""
 
-    __slots__ = ("_hass", "_state", "_collected_state")
+    __slots__ = ("_hass", "_state")
 
     # Inheritance is done so functions that check against State keep working
     # pylint: disable=super-init-not-called
@@ -570,18 +578,41 @@ class TemplateState(State):
         """Initialize template state."""
         self._hass = hass
         self._state = state
-        self._collected_state = False
 
     def _collect_state(self):
-        if self._collected_state:
-            return True
         if _RENDER_INFO in self._hass.data:
             self._hass.data[_RENDER_INFO].entities.add(self._state.entity_id)
-        self._collected_state = True
+
+    # Jinja will try __getitem__ first and it avoids the need
+    # to call is_safe_attribute
+    def __getitem__(self, item):
+        """Return a property as an attribute for jinja."""
+        if item in [
+            "state",
+            "attributes",
+            "last_changed",
+            "last_updated",
+            "context",
+            "domain",
+            "object_id",
+            "name",
+        ]:
+            # _collect_state inlined here for performance
+            if _RENDER_INFO in self._hass.data:
+                self._hass.data[_RENDER_INFO].entities.add(self._state.entity_id)
+            return getattr(self._state, item)
+        if item == "entity_id":
+            return self._state.entity_id
+        if item == "state_with_unit":
+            return self.state_with_unit
+        raise KeyError
 
     @property
     def entity_id(self):
-        """Wrap State.entity_id without collecting."""
+        """Wrap State.entity_id.
+
+        Intentionally does not collect state
+        """
         return self._state.entity_id
 
     @property
@@ -636,9 +667,8 @@ class TemplateState(State):
     def state_with_unit(self) -> str:
         """Return the state concatenated with the unit if available."""
         self._collect_state()
-        state = self._state
-        unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        return f"{state.state} {unit}" if unit else state.state
+        unit = self._state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        return f"{self._state.state} {unit}" if unit else self._state.state
 
     def __eq__(self, other: Any) -> bool:
         """Ensure we collect on equality check."""
@@ -647,7 +677,7 @@ class TemplateState(State):
 
     def __repr__(self) -> str:
         """Representation of Template State."""
-        return f"<template TemplateState({self._state.__repr__()})>" 
+        return f"<template TemplateState({self._state.__repr__()})>"
 
 
 def _collect_state(hass: HomeAssistantType, entity_id: str) -> None:
@@ -1245,11 +1275,11 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
     def is_safe_attribute(self, obj, attr, value):
         """Test if attribute is safe."""
+        if isinstance(obj, (AllStates, DomainStates, TemplateState)):
+            return not attr[0] == "_"
+
         if isinstance(obj, Namespace):
             return True
-
-        if isinstance(obj, (AllStates, DomainStates, TemplateState)):
-            return not attr.startswith("_")
 
         return super().is_safe_attribute(obj, attr, value)
 
