@@ -434,6 +434,8 @@ def _get_events(
         for row in query.yield_per(1000):
             event = LazyEventPartialState(row)
             context_lookup.setdefault(event.context_id, event)
+            if event.event_type == EVENT_CALL_SERVICE:
+                continue
             if event.event_type == EVENT_STATE_CHANGED or _keep_event(
                 hass, event, entities_filter
             ):
@@ -591,9 +593,6 @@ def _apply_event_entity_id_matchers(events_query, entity_ids):
 
 
 def _keep_event(hass, event, entities_filter):
-    if event.event_type == EVENT_CALL_SERVICE:
-        return False
-
     if event.event_type in HOMEASSISTANT_EVENTS:
         return entities_filter is None or entities_filter(HA_DOMAIN_ENTITY_ID)
 
