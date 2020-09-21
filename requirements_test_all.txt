@@ -737,7 +737,7 @@ pymyq==2.0.5
 pynut2==2.1.2
 
 # homeassistant.components.nws
-pynws==1.2.1
+pynws==1.3.0
 
 # homeassistant.components.nx584
 pynx584==0.5
