@@ -1,4 +1,19 @@
 {
+    "device_automation": {
+        "action_type": {
+            "arm_away": "Valvesta {entity_name}",
+            "arm_home": "Valvesta {entity_name} kodus re\u017eiimis",
+            "arm_night": "Valvesta {entity_name} \u00f6\u00f6re\u017eiimis",
+            "disarm": "V\u00f5ta {entity_name} valvest maha",
+            "trigger": "K\u00e4ivita {entity_name}"
+        },
+        "trigger_type": {
+            "armed_away": "{entity_name} on valvestatud",
+            "armed_home": "{entity_name} on valvestatud kodure\u017eiimis",
+            "armed_night": "{entity_name} on valvestatud \u00f6\u00f6re\u017eiimis",
+            "disarmed": "{entity_name} v\u00f5eti valvest maha"
+        }
+    },
     "state": {
         "_": {
             "armed": "Valves",
