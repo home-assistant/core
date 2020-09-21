@@ -231,20 +231,7 @@ class ShellyBlockAttributeEntity(ShellyBlockEntity, entity.Entity):
 
         self._unit = unit
         self._unique_id = f"{super().unique_id}-{self.attribute}"
-<<<<<<< HEAD
-        self._name = get_entity_name(wrapper, block, self.description.name)
-=======
-<<<<<<< HEAD
         self._name = shelly_naming(self, block, "sensor")
-=======
-        name_parts = [self.wrapper.name]
-        if same_type_count > 1:
-            name_parts.append(str(block.channel))
-        name_parts.append(self.description.name)
-
-        self._name = " ".join(name_parts)
->>>>>>> Added support for REST sensors
->>>>>>> Added support for REST sensors
 
     @property
     def unique_id(self):
@@ -314,7 +301,7 @@ class ShellyRestAttributeEntity(entity.Entity):
         self._name = shelly_naming(self, None, "sensor")
         self.path = self.description.path
         self._attributes = self.description.attributes
-    
+
     @property
     def name(self):
         """Name of sensor."""
