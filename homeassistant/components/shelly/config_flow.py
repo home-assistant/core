@@ -1,10 +1,12 @@
 """Config flow for Shelly integration."""
 import asyncio
 import logging
+import re
 
 import aiohttp
 import aioshelly
 import async_timeout
+import semantic_version
 import voluptuous as vol
 
 from homeassistant import config_entries, core
@@ -23,6 +25,8 @@ _LOGGER = logging.getLogger(__name__)
 HOST_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 
 HTTP_CONNECT_ERRORS = (asyncio.TimeoutError, aiohttp.ClientError)
+
+MIN_FIRMWARE_VERSION = "1.8.0"
 
 
 async def validate_input(hass: core.HomeAssistant, host, data):
@@ -43,6 +47,18 @@ async def validate_input(hass: core.HomeAssistant, host, data):
 
     # Return info that you want to store in the config entry.
     return {"title": device.settings["name"], "mac": device.settings["device"]["mac"]}
+
+
+def supported_firmware(ver_str):
+    """Return True if firmware version is supported."""
+    ver_pattern = re.compile(r"(?:(\d+)\.)?(?:(\d+)\.)?(?:(\d+)\.\d+)")
+    try:
+        ver = ver_pattern.search(ver_str)[0]
+    except TypeError:
+        return False
+    return semantic_version.Version.coerce(ver) > semantic_version.Version.coerce(
+        MIN_FIRMWARE_VERSION
+    )
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -66,6 +82,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                if not supported_firmware(info["fw"]):
+                    return self.async_abort(reason="unsupported_firmware")
                 await self.async_set_unique_id(info["mac"])
                 self._abort_if_unique_id_configured({CONF_HOST: host})
                 self.host = host
@@ -133,6 +151,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.info = info = await self._async_get_info(zeroconf_info["host"])
         except HTTP_CONNECT_ERRORS:
             return self.async_abort(reason="cannot_connect")
+
+        if not supported_firmware(info["fw"]):
+            return self.async_abort(reason="unsupported_firmware")
 
         await self.async_set_unique_id(info["mac"])
         self._abort_if_unique_id_configured({CONF_HOST: zeroconf_info["host"]})

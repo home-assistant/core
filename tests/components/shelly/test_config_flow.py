@@ -22,7 +22,12 @@ async def test_form(hass):
 
     with patch(
         "aioshelly.get_info",
-        return_value={"mac": "test-mac", "type": "SHSW-1", "auth": False},
+        return_value={
+            "mac": "test-mac",
+            "type": "SHSW-1",
+            "auth": False,
+            "fw": "20200827-070306/v1.8.4@4a8bc427",
+        },
     ), patch(
         "aioshelly.Device.create",
         new=AsyncMock(
@@ -62,7 +67,12 @@ async def test_form_auth(hass):
 
     with patch(
         "aioshelly.get_info",
-        return_value={"mac": "test-mac", "type": "SHSW-1", "auth": True},
+        return_value={
+            "mac": "test-mac",
+            "type": "SHSW-1",
+            "auth": True,
+            "fw": "20200827-070306/v1.8.4@4a8bc427",
+        },
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -137,7 +147,12 @@ async def test_form_errors_test_connection(hass, error):
     )
 
     with patch(
-        "aioshelly.get_info", return_value={"mac": "test-mac", "auth": False}
+        "aioshelly.get_info",
+        return_value={
+            "mac": "test-mac",
+            "auth": False,
+            "fw": "20200827-070306/v1.8.4@4a8bc427",
+        },
     ), patch(
         "aioshelly.Device.create",
         new=AsyncMock(side_effect=exc),
@@ -165,7 +180,12 @@ async def test_form_already_configured(hass):
 
     with patch(
         "aioshelly.get_info",
-        return_value={"mac": "test-mac", "type": "SHSW-1", "auth": False},
+        return_value={
+            "mac": "test-mac",
+            "type": "SHSW-1",
+            "auth": False,
+            "fw": "20200827-070306/v1.8.4@4a8bc427",
+        },
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -177,6 +197,36 @@ async def test_form_already_configured(hass):
 
     # Test config entry got updated with latest IP
     assert entry.data["host"] == "1.1.1.1"
+
+
+async def test_form_firmware_unsupported(hass):
+    """Test we abort if device firmware is unsupported."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    entry = MockConfigEntry(
+        domain="shelly", unique_id="test-mac", data={"host": "0.0.0.0"}
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "aioshelly.get_info",
+        return_value={
+            "mac": "test-mac",
+            "type": "SHSW-1",
+            "auth": False,
+            "fw": "20200827-070306/test-build@4a8bc427",
+        },
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"host": "1.1.1.1"},
+        )
+
+        assert result2["type"] == "abort"
+        assert result2["reason"] == "unsupported_firmware"
 
 
 @pytest.mark.parametrize(
@@ -195,7 +245,14 @@ async def test_form_auth_errors_test_connection(hass, error):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch("aioshelly.get_info", return_value={"mac": "test-mac", "auth": True}):
+    with patch(
+        "aioshelly.get_info",
+        return_value={
+            "mac": "test-mac",
+            "auth": True,
+            "fw": "20200827-070306/v1.8.4@4a8bc427",
+        },
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"host": "1.1.1.1"},
@@ -219,7 +276,12 @@ async def test_zeroconf(hass):
 
     with patch(
         "aioshelly.get_info",
-        return_value={"mac": "test-mac", "type": "SHSW-1", "auth": False},
+        return_value={
+            "mac": "test-mac",
+            "type": "SHSW-1",
+            "auth": False,
+            "fw": "20200827-070306/v1.8.4@4a8bc427",
+        },
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -268,7 +330,12 @@ async def test_zeroconf_confirm_error(hass, error):
 
     with patch(
         "aioshelly.get_info",
-        return_value={"mac": "test-mac", "type": "SHSW-1", "auth": False},
+        return_value={
+            "mac": "test-mac",
+            "type": "SHSW-1",
+            "auth": False,
+            "fw": "20200827-070306/v1.8.4@4a8bc427",
+        },
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -301,7 +368,12 @@ async def test_zeroconf_already_configured(hass):
 
     with patch(
         "aioshelly.get_info",
-        return_value={"mac": "test-mac", "type": "SHSW-1", "auth": False},
+        return_value={
+            "mac": "test-mac",
+            "type": "SHSW-1",
+            "auth": False,
+            "fw": "20200827-070306/v1.8.4@4a8bc427",
+        },
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -313,6 +385,32 @@ async def test_zeroconf_already_configured(hass):
 
     # Test config entry got updated with latest IP
     assert entry.data["host"] == "1.1.1.1"
+
+
+async def test_zeroconf_firmware_unsupported(hass):
+    """Test we abort if device firmware is unsupported."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    entry = MockConfigEntry(
+        domain="shelly", unique_id="test-mac", data={"host": "0.0.0.0"}
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "aioshelly.get_info",
+        return_value={
+            "mac": "test-mac",
+            "type": "SHSW-1",
+            "auth": False,
+            "fw": "20200827-070306/v1.7.0@4a8bc427",
+        },
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data={"host": "1.1.1.1", "name": "shelly1pm-12345"},
+            context={"source": config_entries.SOURCE_ZEROCONF},
+        )
+        assert result["type"] == "abort"
+        assert result["reason"] == "unsupported_firmware"
 
 
 async def test_zeroconf_cannot_connect(hass):
@@ -336,7 +434,12 @@ async def test_zeroconf_require_auth(hass):
 
     with patch(
         "aioshelly.get_info",
-        return_value={"mac": "test-mac", "type": "SHSW-1", "auth": True},
+        return_value={
+            "mac": "test-mac",
+            "type": "SHSW-1",
+            "auth": True,
+            "fw": "20200827-070306/v1.8.4@4a8bc427",
+        },
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
