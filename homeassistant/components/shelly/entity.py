@@ -178,7 +178,6 @@ class ShellyBlockEntity(entity.Entity):
         return False
 
     @property
-<<<<<<< HEAD
     def device_info(self):
         """Device info."""
         return {
@@ -299,26 +298,9 @@ class ShellyRestAttributeEntity(entity.Entity):
         self.description = description
 
         self._unit = self.description.unit
-<<<<<<< HEAD
         self._name = shelly_naming(self, None, "sensor")
         self.path = self.description.path
         self._attributes = self.description.attributes
-=======
-        self._name = f"{self.wrapper.name} {self.description.name}"
-        self.path = self.description.path
-        self._state = None
-
-    @property
-    def state(self):
-        """State of sensor."""
-        if "/" not in self.path:
-            _attribute_value = self.wrapper.device.status[self.path]
-        else:
-            _attribute_value = self.wrapper.device.status[self.path.split("/")[0]][
-                self.path.split("/")[1]
-            ]
-        return _attribute_value
->>>>>>> Added support for REST sensors
 
     @property
     def name(self):
@@ -338,8 +320,6 @@ class ShellyRestAttributeEntity(entity.Entity):
         return self.description.default_enabled
 
     @property
-=======
->>>>>>> Added support for REST sensors
     def available(self):
         """Available."""
         return self.wrapper.last_update_success
@@ -347,21 +327,7 @@ class ShellyRestAttributeEntity(entity.Entity):
     @property
     def attribute_value(self):
         """Attribute."""
-<<<<<<< HEAD
         return shelly_rest_parser(self, self.path)
-=======
-
-        if "/" not in self.path:
-            _attribute_value = self.wrapper.device.status[self.path]
-        else:
-            _attribute_value = self.wrapper.device.status[self.path.split("/")[0]][
-                self.path.split("/")[1]
-            ]
-        if self.description.device_class == DEVICE_CLASS_TIMESTAMP:
-            last_boot = datetime.utcnow() - timedelta(seconds=_attribute_value)
-            _attribute_value = last_boot.replace(microsecond=0).isoformat()
-        return _attribute_value
->>>>>>> Added support for REST sensors
 
     @property
     def unit_of_measurement(self):
@@ -374,19 +340,15 @@ class ShellyRestAttributeEntity(entity.Entity):
         return self.description.device_class
 
     @property
-<<<<<<< HEAD
     def icon(self):
         """Icon of sensor."""
         return self.description.icon
 
     @property
-=======
->>>>>>> Added support for REST sensors
     def unique_id(self):
         """Return unique ID of entity."""
         return f"{self.wrapper.mac}-{self._name}"
 
-<<<<<<< HEAD
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
@@ -399,8 +361,6 @@ class ShellyRestAttributeEntity(entity.Entity):
 
         return {_description: _attribute_value}
 
-=======
->>>>>>> Added support for REST sensors
     async def async_added_to_hass(self):
         """When entity is added to HASS."""
         self.async_on_remove(self.wrapper.async_add_listener(self._update_callback))
@@ -408,8 +368,4 @@ class ShellyRestAttributeEntity(entity.Entity):
     @callback
     def _update_callback(self):
         """When device updates, clear control result that overrides state."""
-<<<<<<< HEAD
         self.async_write_ha_state()
-=======
-        self.wrapper.device.update_status()
->>>>>>> Added support for REST sensors
