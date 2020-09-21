@@ -303,6 +303,17 @@ class ShellyRestAttributeEntity(entity.Entity):
         self._attributes = self.description.attributes
 
     @property
+    def state(self):
+        """State of sensor."""
+        if "/" not in self.path:
+            _attribute_value = self.wrapper.device.status[self.path]
+        else:
+            _attribute_value = self.wrapper.device.status[self.path.split("/")[0]][
+                self.path.split("/")[1]
+            ]
+        return _attribute_value
+
+    @property
     def name(self):
         """Name of sensor."""
         return self._name
