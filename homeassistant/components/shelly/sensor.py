@@ -157,6 +157,7 @@ REST_SENSORS = {
     "uptime": RestAttributeDescription(
         name="Uptime",
         device_class=sensor.DEVICE_CLASS_TIMESTAMP,
+        icon="mdi:clock",
         path="uptime",
     ),
 }
