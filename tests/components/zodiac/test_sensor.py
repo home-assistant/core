@@ -39,9 +39,7 @@ async def test_zodiac_day(hass, now, sign, element, modality):
     """Test the zodiac sensor."""
     config = {DOMAIN: {}}
 
-    with patch(
-        "homeassistant.components.zodiac.sensor.dt_util.utcnow", return_value=now
-    ):
+    with patch("homeassistant.components.zodiac.sensor.utcnow", return_value=now):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
 

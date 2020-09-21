@@ -2,7 +2,7 @@
 import logging
 
 from homeassistant.helpers.entity import Entity
-import homeassistant.util.dt as dt_util
+from homeassistant.util.dt import as_local, utcnow
 
 from .const import (
     ATTR_ELEMENT,
@@ -208,7 +208,7 @@ class ZodiacSensor(Entity):
 
     async def async_update(self):
         """Get the time and updates the state."""
-        today = dt_util.as_local(dt_util.utcnow()).date()
+        today = as_local(utcnow()).date()
 
         month = int(today.month)
         day = int(today.day)
