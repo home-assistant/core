@@ -11,7 +11,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.const import ATTR_ATTRIBUTION
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import CoordinatorEntity, DataUpdateCoordinator, UpdateFailed
 
 from .const import ATTRIBUTION, CONF_STATION, DOMAIN, MANUFACTURER
 
@@ -107,7 +107,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     )
 
 
-class HvvDepartureBinarySensor(BinarySensorEntity):
+class HvvDepartureBinarySensor(CoordinatorEntity, BinarySensorEntity):
     """HVVDepartureBinarySensor class."""
 
     def __init__(self, coordinator, idx, config_entry):
