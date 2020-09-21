@@ -43,7 +43,6 @@ class DevoloSwitch(DevoloDeviceEntity, SwitchEntity):
             device_instance=device_instance,
             element_uid=element_uid,
             name=device_instance.item_name,
-            sync=self._sync,
         )
         self._binary_switch_property = self._device_instance.binary_switch_property.get(
             self._unique_id

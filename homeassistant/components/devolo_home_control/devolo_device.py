@@ -12,7 +12,7 @@ _LOGGER = logging.getLogger(__name__)
 class DevoloDeviceEntity(Entity):
     """Representation of a sensor within devolo Home Control."""
 
-    def __init__(self, homecontrol, device_instance, element_uid, name, sync):
+    def __init__(self, homecontrol, device_instance, element_uid, name):
         """Initialize a devolo device entity."""
         self._device_instance = device_instance
         self._name = name
@@ -27,7 +27,7 @@ class DevoloDeviceEntity(Entity):
         self._model = device_instance.name
 
         self.subscriber = None
-        self.sync_callback = sync
+        self.sync_callback = self._sync
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
