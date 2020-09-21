@@ -5,7 +5,6 @@ import logging
 
 from omnilogic import OmniLogicException
 
-from homeassistant.components.sensor import ENTITY_ID_FORMAT
 from homeassistant.const import ATTR_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import (
@@ -42,12 +41,12 @@ class OmniLogicUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         """Fetch data from OmniLogic."""
         try:
-            _LOGGER.debug("Updating the coordinator data.")
             data = await self.api.get_telemetry_data()
-            return data
 
         except OmniLogicException as error:
             raise UpdateFailed("Error updating from OmniLogic: %s" % error) from error
+
+        return data
 
 
 class OmniLogicEntity(CoordinatorEntity):
@@ -66,28 +65,24 @@ class OmniLogicEntity(CoordinatorEntity):
         """Initialize the OmniLogic Entity."""
         super().__init__(coordinator)
 
+        backyard_name = backyard["BackyardName"].replace(" ", "_")
         if bow != {}:
-            entityname = (
-                backyard["BackyardName"].replace(" ", "_")
-                + "_"
-                + bow["Name"].replace(" ", "_")
-                + "_"
-                + kind
-            )
+            bow_name = bow["Name"].replace(" ", "_")
+
+            entity_name = f"{backyard_name}_{bow_name}_{kind}"
         else:
-            entityname = backyard["BackyardName"].replace(" ", "_") + "_" + kind
+            entity_name = f"{backyard_name}_{kind}"
 
         self._kind = kind
-        self._name = None
-        self._unique_id = ENTITY_ID_FORMAT.format(entityname)
+        self._name = name
+        self._unique_id = entity_name
         self._backyard = backyard
         self._backyard_name = backyard["BackyardName"]
         self._state = None
         self._icon = icon
         self._bow = bow
-        self.bow = bow
-        self.entitydata = entitydata
-        self._attrs = {"MspSystemId": backyard["systemId"]}
+        self.entity_data = entitydata
+        self._attrs = {"msp_system_id": backyard["systemId"]}
         self.alarms = []
         self._unsub_dispatcher = None
 
@@ -116,12 +111,8 @@ class OmniLogicEntity(CoordinatorEntity):
         """Define the device as back yard/MSP System."""
 
         return {
-            ATTR_IDENTIFIERS: {(DOMAIN, self._attrs["MspSystemId"])},
+            ATTR_IDENTIFIERS: {(DOMAIN, self._attrs["msp_system_id"])},
             ATTR_NAME: self._backyard.get("BackyardName"),
             ATTR_MANUFACTURER: "Hayward",
             ATTR_MODEL: "OmniLogic",
         }
-
-    async def async_update(self):
-        """Update Omnilogic entity."""
-        await self.coordinator.async_request_refresh()
