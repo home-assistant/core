@@ -236,7 +236,6 @@ class ShellyRestAttributeEntity(entity.Entity):
         self._unit = self.description.unit
         self._name = f"{self.wrapper.name} {self.description.name}"
         self.path = self.description.path
-        self._state = None
 
     @property
     def name(self):
@@ -305,6 +304,6 @@ class ShellyRestAttributeEntity(entity.Entity):
         self.async_on_remove(self.wrapper.async_add_listener(self._update_callback))
 
     @callback
-    def _update_callback(self):
+    async def _update_callback(self):
         """When device updates, clear control result that overrides state."""
-        self.wrapper.device.update_status()
+        await self.async_write_ha_state()
