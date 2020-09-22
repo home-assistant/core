@@ -11,17 +11,11 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_call_later
-from homeassistant.util.json import (
-    find_paths_unserializable_data,
-    format_unserializable_data,
-)
 
 from .auth import AuthPhase, auth_required_message
 from .const import (
     CANCELLATION_ERRORS,
     DATA_CONNECTIONS,
-    ERR_UNKNOWN_ERROR,
-    JSON_DUMP,
     MAX_PENDING_MSG,
     PENDING_MSG_PEAK,
     PENDING_MSG_PEAK_TIME,
@@ -30,7 +24,7 @@ from .const import (
     URL,
 )
 from .error import Disconnect
-from .messages import error_message
+from .messages import message_to_json
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 
@@ -72,27 +66,10 @@ class WebSocketHandler:
 
                 self._logger.debug("Sending %s", message)
 
-                if isinstance(message, str):
-                    await self.wsock.send_str(message)
-                    continue
+                if not isinstance(message, str):
+                    message = message_to_json(message)
 
-                try:
-                    dumped = JSON_DUMP(message)
-                except (ValueError, TypeError):
-                    await self.wsock.send_json(
-                        error_message(
-                            message["id"], ERR_UNKNOWN_ERROR, "Invalid JSON in response"
-                        )
-                    )
-                    self._logger.error(
-                        "Unable to serialize to JSON. Bad data found at %s",
-                        format_unserializable_data(
-                            find_paths_unserializable_data(message, dump=JSON_DUMP)
-                        ),
-                    )
-                    continue
-
-                await self.wsock.send_str(dumped)
+                await self.wsock.send_str(message)
 
         # Clean up the peaker checker when we shut down the writer
         if self._peak_checker_unsub:
