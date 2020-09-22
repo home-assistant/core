@@ -119,12 +119,12 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 )
 
         if entity_data["type"] == "csad":
-            if entity_data.get("ph") != "":
+            if entity_data.get("orp") != "":
                 sensors.append(
-                    OmniLogicPHSensor(
+                    OmniLogicORPSensor(
                         coordinator,
-                        "csad_ph",
-                        "pH",
+                        "csad_orp",
+                        "ORP",
                         this_entity,
                         entity_data,
                         None,
@@ -133,12 +133,12 @@ async def async_setup_entry(hass, entry, async_add_entities):
                     )
                 )
 
-            if entity_data.get("orp") != "":
+            if entity_data.get("ph") != "":
                 sensors.append(
-                    OmniLogicORPSensor(
+                    OmniLogicPHSensor(
                         coordinator,
-                        "csad_orp",
-                        "ORP",
+                        "csad_ph",
+                        "pH",
                         this_entity,
                         entity_data,
                         None,
@@ -399,6 +399,7 @@ class OmniLogicChlorinatorSensor(OmnilogicSensor):
             self._state = sensor_data.get("Timed-Percent")
             self._unit = PERCENTAGE
         elif sensor_data.get("operatingMode") == "2":
+            self._unit = None
             if sensor_data.get("Timed-Percent") == "100":
                 self._state = "on"
             else:
