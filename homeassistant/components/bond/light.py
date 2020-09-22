@@ -122,7 +122,7 @@ class BondFireplace(BondEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the fireplace on."""
-        _LOGGER.debug("async_turn_on called with: %s", kwargs)
+        _LOGGER.debug("fireplace async_turn_on called with: %s", kwargs)
 
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         if brightness:
