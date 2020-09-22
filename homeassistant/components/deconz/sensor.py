@@ -87,7 +87,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         """Add sensors from deCONZ.
 
         Create DeconzBattery if sensor has a battery attribute.
-        Create DeconzEvent if part of ZHAType list.
         Create DeconzSensor if not a battery, switch or thermostat and not a binary sensor.
         """
         entities = []
@@ -109,7 +108,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 battery_handler.create_tracker(sensor)
 
             if (
-                sensor.BINARY is False
+                not sensor.BINARY
                 and sensor.type
                 not in Battery.ZHATYPE + Switch.ZHATYPE + Thermostat.ZHATYPE
                 and sensor.uniqueid not in gateway.entities[DOMAIN]
