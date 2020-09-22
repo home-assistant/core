@@ -148,7 +148,7 @@ SENSORS = {
 
 REST_SENSORS = {
     ("rssi"): RestAttributeDescription(
-        name="Rssi",
+        name="RSSI",
         unit="dB",
         device_class=sensor.DEVICE_CLASS_SIGNAL_STRENGTH,
         default_enabled=False,
