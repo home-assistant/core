@@ -35,7 +35,6 @@ from homeassistant.helpers.dispatcher import (
 
 from .const import ATTR_DARK, ATTR_ON, NEW_SENSOR
 from .deconz_device import DeconzDevice
-from .deconz_event import DeconzEvent
 from .gateway import get_gateway_from_config_entry
 
 ATTR_CURRENT = "current"
@@ -82,7 +81,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     def async_add_sensor(sensors, new=True):
         """Add sensors from deCONZ.
 
-        Create DeconzEvent if part of ZHAType list.
         Create DeconzSensor if not a ZHAType and not a binary sensor.
         Create DeconzBattery if sensor has a battery attribute.
         If new is false it means an existing sensor has got a battery state reported.
@@ -91,19 +89,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         for sensor in sensors:
 
-            if new and sensor.type in Switch.ZHATYPE:
-
-                if gateway.option_allow_clip_sensor or not sensor.type.startswith(
-                    "CLIP"
-                ):
-                    new_event = DeconzEvent(sensor, gateway)
-                    hass.async_create_task(new_event.async_update_device_registry())
-                    gateway.events.append(new_event)
-
-            elif (
+            if (
                 new
                 and sensor.BINARY is False
-                and sensor.type not in Battery.ZHATYPE + Thermostat.ZHATYPE
+                and sensor.type
+                not in Battery.ZHATYPE + Switch.ZHATYPE + Thermostat.ZHATYPE
                 and (
                     gateway.option_allow_clip_sensor
                     or not sensor.type.startswith("CLIP")
