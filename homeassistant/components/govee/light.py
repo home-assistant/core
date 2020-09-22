@@ -47,16 +47,6 @@ class GoveeLightEntity(LightEntity):
         self._hub = hub
         self._title = title
         self._device = device
-        # self._state = GoveeDeviceState(
-        #     device=device.device,
-        #     model=device.model,
-        #     online=False,
-        #     power_state=False,
-        #     brightness=0,
-        #     color=(0, 0, 0),
-        #     timestamp=0,
-        #     source="init",
-        # )
 
     @property
     def _state(self):
