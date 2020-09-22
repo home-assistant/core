@@ -60,7 +60,7 @@ class OmniLogicEntity(CoordinatorEntity):
         backyard: dict,
         bow: dict,
         icon: str,
-        entitydata: dict,
+        entity_data: dict,
     ):
         """Initialize the OmniLogic Entity."""
         super().__init__(coordinator)
@@ -81,7 +81,7 @@ class OmniLogicEntity(CoordinatorEntity):
         self._state = None
         self._icon = icon
         self._bow = bow
-        self.entity_data = entitydata
+        self.entity_data = entity_data
         self._attrs = {}
         self._msp_system_id = backyard["systemId"]
         self.alarms = []
