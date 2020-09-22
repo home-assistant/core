@@ -14,6 +14,7 @@ from sqlalchemy import (
     distinct,
 )
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
 from sqlalchemy.orm.session import Session
 
 from homeassistant.core import Context, Event, EventOrigin, State, split_entity_id
@@ -105,7 +106,9 @@ class States(Base):  # type: ignore
     last_changed = Column(DateTime(timezone=True), default=dt_util.utcnow)
     last_updated = Column(DateTime(timezone=True), default=dt_util.utcnow, index=True)
     created = Column(DateTime(timezone=True), default=dt_util.utcnow)
-    old_state_id = Column(Integer)
+    old_state_id = Column(Integer, ForeignKey("states.state_id"))
+    event = relationship("Events", uselist=False)
+    old_state = relationship("States", remote_side=[state_id])
 
     __table_args__ = (
         # Used for fetching the state of entities at a specific time
