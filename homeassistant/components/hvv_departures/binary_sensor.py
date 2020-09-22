@@ -57,25 +57,21 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
                 idx = f"{station_name}-{label}-{lines}"
 
-                elevators.update(
-                    {
-                        idx: {
-                            "state": state,
-                            "name": name,
-                            "available": available,
-                            "attributes": {
-                                "cabin_width": elevator.get("cabinWidth"),
-                                "cabin_length": elevator.get("cabinLength"),
-                                "door_width": elevator.get("doorWidth"),
-                                "elevator_type": elevator.get("elevatorType"),
-                                "button_type": elevator.get("buttonType"),
-                                "cause": elevator.get("cause"),
-                                "lines": lines,
-                                ATTR_ATTRIBUTION: ATTRIBUTION,
-                            },
-                        }
-                    }
-                )
+                elevators[idx] = {
+                    "state": state,
+                    "name": name,
+                    "available": available,
+                    "attributes": {
+                        "cabin_width": elevator.get("cabinWidth"),
+                        "cabin_length": elevator.get("cabinLength"),
+                        "door_width": elevator.get("doorWidth"),
+                        "elevator_type": elevator.get("elevatorType"),
+                        "button_type": elevator.get("buttonType"),
+                        "cause": elevator.get("cause"),
+                        "lines": lines,
+                        ATTR_ATTRIBUTION: ATTRIBUTION,
+                    },
+                }
         return elevators
 
     async def async_update_data():
