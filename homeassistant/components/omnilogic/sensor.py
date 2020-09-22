@@ -3,14 +3,21 @@
 import logging
 
 from homeassistant.components.sensor import DEVICE_CLASS_TEMPERATURE
-from homeassistant.const import PERCENTAGE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import (
+    CONCENTRATION_PARTS_PER_MILLION,
+    MASS_GRAMS,
+    PERCENTAGE,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+    VOLUME_LITERS,
+)
 
 from .common import OmniLogicEntity, OmniLogicUpdateCoordinator
 from .const import COORDINATOR, DOMAIN, PUMP_TYPES
 
 TEMP_UNITS = [TEMP_CELSIUS, TEMP_FAHRENHEIT]
 PERCENT_UNITS = [PERCENTAGE, PERCENTAGE]
-SALT_UNITS = ["g/L", "ppm"]
+SALT_UNITS = [f"{MASS_GRAMS}/{VOLUME_LITERS}", CONCENTRATION_PARTS_PER_MILLION]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -166,7 +173,6 @@ class OmnilogicSensor(OmniLogicEntity):
             backyard=backyard,
             bow=bow,
             icon=icon,
-            entity_data=sensor_data,
         )
         self._state = None
         self._unit_type = backyard["Unit-of-Measurement"]
@@ -341,7 +347,7 @@ class OmniLogicPumpSpeedSensor(OmnilogicSensor):
             for backyard in self.coordinator.data:
                 for bow in backyard.get("BOWS"):
                     for pump in bow.get("Pumps"):
-                        if pump["systemId"] == self.entity_data["systemId"]:
+                        if pump["systemId"] == self._system_id:
                             sensor_data = pump
                             break
 
@@ -349,7 +355,7 @@ class OmniLogicPumpSpeedSensor(OmnilogicSensor):
             pump_speed = sensor_data.get("pumpSpeed")
 
         if pump_type == "VARIABLE":
-            self._unit = "%"
+            self._unit = PERCENTAGE
             self._state = pump_speed
         elif pump_type == "DUAL":
             if pump_speed == 0:
@@ -364,7 +370,7 @@ class OmniLogicPumpSpeedSensor(OmnilogicSensor):
             elif pump_speed == sensor_data.get("Max-Pump-Speed"):
                 self._state = "on"
 
-        self._attrs["PumpType"] = pump_type
+        self._attrs["pump_type"] = pump_type
 
         return self._state
 
@@ -403,16 +409,14 @@ class OmniLogicSaltLevelSensor(OmnilogicSensor):
     @property
     def state(self):
         """Return the state for the salt level sensor."""
-        _LOGGER.debug("Updating state of sensor: %s", self._name)
-
         sensor_data = self.find_chlorinator(self._system_id)
 
-        salt_return = int(sensor_data.get("avgSaltLevel"))
-        unit_of_measurement = "ppm"
+        salt_return = sensor_data.get("avgSaltLevel")
+        unit_of_measurement = CONCENTRATION_PARTS_PER_MILLION
 
         if self._backyard["Unit-of-Measurement"] == "Metric":
             salt_return = round(salt_return / 1000, 2)
-            unit_of_measurement = "g/L"
+            unit_of_measurement = f"{MASS_GRAMS}/{VOLUME_LITERS}"
 
         self._state = salt_return
         self._unit = unit_of_measurement
@@ -454,13 +458,11 @@ class OmniLogicChlorinatorSensor(OmnilogicSensor):
     @property
     def state(self):
         """Return the state for the chlorinator sensor."""
-        _LOGGER.debug("Updating state of sensor: %s", self._name)
-
         sensor_data = self.find_chlorinator(self._system_id)
 
         if sensor_data.get("operatingMode") == "1":
             self._state = sensor_data.get("Timed-Percent")
-            self._unit = "%"
+            self._unit = PERCENTAGE
         elif sensor_data.get("operatingMode") == "2":
             if sensor_data.get("Timed-Percent") == "100":
                 self._state = "on"
@@ -504,15 +506,13 @@ class OmniLogicPHSensor(OmnilogicSensor):
     @property
     def state(self):
         """Return the state for the pH sensor."""
-        _LOGGER.debug("Updating state of sensor: %s", self._name)
-
         sensor_data = self.find_csad(self._system_id)
 
-        phstate = None
+        ph_state = None
         if sensor_data.get("ph") != 0:
-            phstate = sensor_data.get("ph")
+            ph_state = sensor_data["ph"]
 
-        self._state = phstate
+        self._state = ph_state
         self._unit = "pH"
 
         return self._state
@@ -552,15 +552,13 @@ class OmniLogicORPSensor(OmnilogicSensor):
     @property
     def state(self):
         """Return the state for the ORP sensor."""
-        _LOGGER.debug("Updating state of sensor: %s", self._name)
-
         sensor_data = self.find_csad(self._system_id)
 
-        orpstate = None
+        orp_state = None
         if sensor_data.get("orp") != -1:
-            orpstate = sensor_data.get("orp")
+            orp_state = sensor_data["orp"]
 
-        self._state = orpstate
+        self._state = orp_state
         self._unit = "mV"
 
         return self._state

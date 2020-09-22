@@ -51,6 +51,7 @@ async def test_already_configured(hass):
     )
 
     assert result["type"] == "abort"
+    assert result["reason"] == "single_instance_allowed"
 
 
 async def test_with_invalid_credentials(hass):
@@ -121,10 +122,13 @@ async def test_option_flow(hass):
 
     assert not entry.options
 
-    result = await hass.config_entries.options.async_init(
-        entry.entry_id,
-        data=None,
-    )
+    with patch(
+        "homeassistant.components.omnilogic.async_setup_entry", return_value=True
+    ):
+        result = await hass.config_entries.options.async_init(
+            entry.entry_id,
+            data=None,
+        )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "init"
