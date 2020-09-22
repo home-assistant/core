@@ -415,7 +415,7 @@ class OmniLogicSaltLevelSensor(OmnilogicSensor):
         """Return the state for the salt level sensor."""
         _LOGGER.debug("Updating state of sensor: %s", self._name)
 
-        sensor_data = super().find_chlorinator(self.coordinator, self._system_id)
+        sensor_data = self.find_chlorinator(self.coordinator, self._system_id)
 
         salt_return = int(sensor_data.get("avgSaltLevel"))
         unit_of_measurement = "ppm"
@@ -466,7 +466,7 @@ class OmniLogicChlorinatorSensor(OmnilogicSensor):
         """Return the state for the chlorinator sensor."""
         _LOGGER.debug("Updating state of sensor: %s", self._name)
 
-        sensor_data = super().find_chlorinator(self.coordinator, self._system_id)
+        sensor_data = self.find_chlorinator(self.coordinator, self._system_id)
 
         if sensor_data.get("operatingMode") == "1":
             self._state = sensor_data.get("Timed-Percent")
@@ -516,7 +516,7 @@ class OmniLogicPHSensor(OmnilogicSensor):
         """Return the state for the pH sensor."""
         _LOGGER.debug("Updating state of sensor: %s", self._name)
 
-        sensor_data = super().find_csad(self.coordinator, self._system_id)
+        sensor_data = self.find_csad(self.coordinator, self._system_id)
 
         phstate = None
         if sensor_data.get("ph") != 0:
@@ -564,7 +564,7 @@ class OmniLogicORPSensor(OmnilogicSensor):
         """Return the state for the ORP sensor."""
         _LOGGER.debug("Updating state of sensor: %s", self._name)
 
-        sensor_data = super().find_csad(self.coordinator, self._system_id)
+        sensor_data = self.find_csad(self.coordinator, self._system_id)
 
         orpstate = None
         if sensor_data.get("orp") != -1:
