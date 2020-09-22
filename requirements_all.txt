@@ -723,7 +723,7 @@ hangups==0.4.11
 hass-nabucasa==0.37.0
 
 # homeassistant.components.splunk
-hass_splunk==0.1.0
+hass_splunk==0.1.1
 
 # homeassistant.components.jewish_calendar
 hdate==0.9.5
