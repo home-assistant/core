@@ -1,7 +1,7 @@
 """  Govee LED strips platform """
 
 from govee_api_laggat import Govee, GoveeDevice, GoveeDeviceState
-from .const import DOMAIN, DATA_SCHEMA, CONF_API_KEY, CONF_DELAY
+from .const import DOMAIN, DATA_SCHEMA, CONF_DELAY
 
 import logging
 import voluptuous as vol
@@ -23,29 +23,19 @@ from homeassistant.util import color
 _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=10)
 
-# keep hub reference for disposing / switching / status update
-HUB = None
 
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Govee Light platform."""
     _LOGGER.debug("Setting up Govee lights")
-    config = config_entry.data
-    api_key = config[CONF_API_KEY]
+    config = entry.data
+    hub = hass.data[DOMAIN]["hub"]
+
+    # override the scan interval from config
     SCAN_INTERVAL = timedelta(seconds=config[CONF_DELAY])
-
-    # Setup connection with devices/cloud
-    HUB = await Govee.create(api_key)
-
-    # Verify that passed in configuration works
-    devices, err = await HUB.get_devices()
-    if err:
-        _LOGGER.error("Could not connect to Govee API: " + err)
-        return
 
     # Add devices
     async_add_entities(
-        [GoveeLightEntity(HUB, config_entry.title, device) for device in devices], True
+        [GoveeLightEntity(hub, entry.title, device) for device in hub.devices], True
     )
 
 
@@ -57,14 +47,20 @@ class GoveeLightEntity(LightEntity):
         self._hub = hub
         self._title = title
         self._device = device
-        self._state = GoveeDeviceState(
-            device=device.device,
-            model=device.model,
-            online=False,
-            power_state=False,
-            brightness=0,
-            color=(0, 0, 0),
-        )
+        # self._state = GoveeDeviceState(
+        #     device=device.device,
+        #     model=device.model,
+        #     online=False,
+        #     power_state=False,
+        #     brightness=0,
+        #     color=(0, 0, 0),
+        #     timestamp=0,
+        #     source="init",
+        # )
+
+    @property
+    def _state(self):
+        return self._hub.state(self._device)
 
     @property
     def supported_features(self):
@@ -74,9 +70,7 @@ class GoveeLightEntity(LightEntity):
     async def async_update(self):
         """ get state of the led strip """
         state, err = await self._hub.get_state(self._device)
-        if state:
-            self._state = state
-        else:
+        if not state:
             _LOGGER.warn(f"cannot get state for {self._device.device}: {err}")
 
     async def async_turn_on(self, **kwargs):
@@ -86,34 +80,21 @@ class GoveeLightEntity(LightEntity):
         )
         success = False
         err = None
-        if ATTR_RGB_COLOR in kwargs:
-            col = kwargs[ATTR_RGB_COLOR]
-            success, err = await self._hub.set_color(self._device, col)
-            if success:
-                self._state.power_state = True
-                self._state.color = col
-        elif ATTR_HS_COLOR in kwargs:
+
+        if ATTR_HS_COLOR in kwargs:
             hs_color = kwargs[ATTR_HS_COLOR]
             col = color.color_hs_to_RGB(hs_color[0], hs_color[1])
             success, err = await self._hub.set_color(self._device, col)
-            if success:
-                self._state.power_state = True
-                self._state.color = col
         elif ATTR_BRIGHTNESS in kwargs:
             brightness = kwargs[ATTR_BRIGHTNESS]
-            bright100 = brightness * 100 // 255
-            success, err = await self._hub.set_brightness_100(self._device, bright100)
-            if success:
-                self._state.power_state = bright100 > 0
-                self._state.brightness = brightness
+            bright_set = brightness - 1
+            success, err = await self._hub.set_brightness(self._device, bright_set)
         elif ATTR_COLOR_TEMP in kwargs:
             color_temp = kwargs[ATTR_COLOR_TEMP]
             success, err = await self._hub.set_color_temp(self._device, color_temp)
             # color_temp is not in state
         else:
             success, err = await self._hub.turn_on(self._device)
-            if success:
-                self._state.power_state = True
         # warn on any error
         if err:
             _LOGGER.warn(
@@ -124,8 +105,6 @@ class GoveeLightEntity(LightEntity):
         """Turn device off."""
         _LOGGER.debug(f"async_turn_off for Govee light {self._device.device}")
         success, err = await self._hub.turn_off(self._device)
-        if success:
-            self._state.power_state = False
 
     @property
     def unique_id(self):
