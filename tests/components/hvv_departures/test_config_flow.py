@@ -267,7 +267,7 @@ async def test_options_flow(hass):
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
+    with patch("homeassistant.components.hvv_departures.PLATFORMS", new=[]), patch(
         "homeassistant.components.hvv_departures.hub.GTI.init",
         return_value=True,
     ), patch(
@@ -318,7 +318,7 @@ async def test_options_flow_invalid_auth(hass):
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
+    with patch("homeassistant.components.hvv_departures.PLATFORMS", new=[]), patch(
         "homeassistant.components.hvv_departures.hub.GTI.init", return_value=True
     ), patch(
         "homeassistant.components.hvv_departures.hub.GTI.departureList",
@@ -359,7 +359,7 @@ async def test_options_flow_cannot_connect(hass):
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
+    with patch("homeassistant.components.hvv_departures.PLATFORMS", new=[]), patch(
         "homeassistant.components.hvv_departures.hub.GTI.init", return_value=True
     ), patch(
         "homeassistant.components.hvv_departures.hub.GTI.departureList",
