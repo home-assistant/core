@@ -166,7 +166,7 @@ class OmnilogicSensor(OmniLogicEntity):
             backyard=backyard,
             bow=bow,
             icon=icon,
-            entitydata=sensor_data,
+            entity_data=sensor_data,
         )
         self._state = None
         self._unit_type = backyard["Unit-of-Measurement"]
