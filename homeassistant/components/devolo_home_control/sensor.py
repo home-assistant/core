@@ -62,35 +62,27 @@ class DevoloMultiLevelDeviceEntity(DevoloDeviceEntity):
         homecontrol,
         device_instance,
         element_uid,
-        multi_level_sensor_property=None,
     ):
         """Initialize a devolo multi level sensor."""
-        if multi_level_sensor_property is None:
-            self._multi_level_sensor_property = (
-                device_instance.multi_level_sensor_property[element_uid]
-            )
-        else:
-            self._multi_level_sensor_property = multi_level_sensor_property
+        self._multi_level_sensor_property = device_instance.multi_level_sensor_property[
+            element_uid
+        ]
 
         self._value = self._multi_level_sensor_property.value
+        self._unit = self._multi_level_sensor_property.unit
 
         self._device_class = DEVICE_CLASS_MAPPING.get(
             self._multi_level_sensor_property.sensor_type
         )
 
-        name = device_instance.item_name
-
-        if self._device_class is None:
-            name += f" {self._multi_level_sensor_property.sensor_type}"
-
-        self._unit = self._multi_level_sensor_property.unit
-
         super().__init__(
             homecontrol=homecontrol,
             device_instance=device_instance,
             element_uid=element_uid,
-            name=name,
         )
+
+        if self._device_class is None:
+            self._name += f" {self._multi_level_sensor_property.sensor_type}"
 
     @property
     def device_class(self) -> str:
@@ -115,33 +107,35 @@ class DevoloConsumptionEntity(DevoloMultiLevelDeviceEntity):
         """Initialize a devolo consumption sensor."""
         self._device_instance = device_instance
 
-        self.value = getattr(
+        self._value = getattr(
             device_instance.consumption_property[element_uid], consumption
         )
-        self.sensor_type = consumption
-        self.unit = getattr(
+        self._device_class = DEVICE_CLASS_MAPPING.get(consumption)
+        self._sensor_type = consumption
+        self._unit = getattr(
             device_instance.consumption_property[element_uid], f"{consumption}_unit"
         )
-        self.element_uid = element_uid
+        self._element_uid = element_uid
 
-        super().__init__(
-            homecontrol,
-            device_instance,
-            element_uid,
-            multi_level_sensor_property=self,
-        )
+        super(DevoloMultiLevelDeviceEntity, self).__init__(
+            homecontrol=homecontrol,
+            device_instance=device_instance,
+            element_uid=element_uid,
+        )  # pylint: disable=bad-super-call
+
+        self._name += f" {consumption}"
 
     @property
     def unique_id(self):
         """Return the unique ID of the entity."""
-        return f"{self._unique_id}_{self.sensor_type}"
+        return f"{self._unique_id}_{self._sensor_type}"
 
     def _sync(self, message):
         """Update the consumption sensor state."""
-        if message[0] == self.element_uid:
+        if message[0] == self._element_uid:
             self._value = getattr(
-                self._device_instance.consumption_property[self.element_uid],
-                self.sensor_type,
+                self._device_instance.consumption_property[self._element_uid],
+                self._sensor_type,
             )
         elif message[0].startswith("hdm"):
             self._available = self._device_instance.is_online()
