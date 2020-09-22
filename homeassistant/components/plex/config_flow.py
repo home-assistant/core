@@ -231,7 +231,10 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         }
 
         await self.async_set_unique_id(server_id)
-        if self.context[CONF_SOURCE] == config_entries.SOURCE_REAUTH:
+        if (
+            self.context[CONF_SOURCE]  # pylint: disable=no-member
+            == config_entries.SOURCE_REAUTH
+        ):
             entry = self.hass.config_entries.async_get_entry(self._entry_id)
 
             if entry is None:
