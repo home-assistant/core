@@ -83,14 +83,17 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
         self, data: Optional[ConfigType] = None
     ) -> Dict[str, Any]:
         """Handle configuration by re-auth."""
-        entry_id = self.context.get("reauth_entry_id")
+        entry_data = dict(data)
+        entry_id = entry_data.get("config_entry_id")
 
-        if not entry_id:
-            self.async_abort(reason="reauth_failure")
+        entry = self.hass.config_entries.async_get_entry(entry_id)
+        if entry is None:
+            return self.async_abort(reason="reauth_failure")
 
+        del entry_data["config_entry_id"]
         self._reauth = True
         self._entry_id = entry_id
-        self._entry_data = dict(data)
+        self._entry_data = entry_data
 
         return await self.async_step_user()
 
@@ -101,7 +104,7 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            if self.reauth:
+            if self._reauth:
                 user_input = {**self._entry_data, **user_input}
 
             if CONF_VERIFY_SSL not in user_input:
@@ -118,25 +121,30 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="unknown")
             else:
                 if self._reauth:
-                    for entry in self._async_current_entries():
-                        if entry.entry_id == self._entry_id:
-                            self.hass.config_entries.async_update_entry(
-                                entry, data=user_input
-                            )
+                    return await self._async_update_entry(self._entry_id, user_input)
 
-                            await self.hass.config_entries.async_reload(self._entry_id)
-                            return self.async_abort(reason="reauth_successful")
+                return self.async_create_entry(
+                    title=user_input[CONF_HOST], data=user_input
+                )
 
-                    return self.async_abort(reason="reauth_failure")
-                    
-                return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
-        
         data_schema = self._get_user_data_schema()
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(data_schema),
             errors=errors,
         )
+
+    async def _async_update_entry(self, entry_id: str, data: dict) -> Dict[str, Any]:
+        """Update existing config entry."""
+        entry = self.hass.config_entries.async_get_entry(entry_id)
+
+        if entry is None:
+            return self.async_abort(reason="reauth_failure")
+
+        self.hass.config_entries.async_update_entry(entry, data=data)
+        await self.hass.config_entries.async_reload(entry.entry_id)
+
+        return self.async_abort(reason="reauth_successful")
 
     def _get_user_data_schema(self) -> Dict[str, Any]:
         """Get the data schema to display user form."""
