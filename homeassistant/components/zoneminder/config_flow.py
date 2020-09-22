@@ -4,6 +4,7 @@ from urllib.parse import urlparse
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -37,7 +38,7 @@ class ZoneminderFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, config: dict):
         """Handle a flow initialized by import."""
-        return await self.async_step_finish(
+        return await self.async_step_user(
             {**config, **{CONF_SOURCE: config_entries.SOURCE_IMPORT}}
         )
 
@@ -51,6 +52,9 @@ class ZoneminderFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             result = await async_test_client_availability(self.hass, zm_client)
             if result == ClientAvailabilityResult.AVAILABLE:
                 return await self.async_step_finish(user_input)
+
+            if self.source == SOURCE_IMPORT:
+                return self.async_abort(reason=str(result.value))
 
             errors["base"] = result.value
 
@@ -88,10 +92,6 @@ class ZoneminderFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Finish config flow."""
         zm_client = create_client_from_config(config)
         hostname = urlparse(zm_client.get_zms_url()).hostname
-        result = await async_test_client_availability(self.hass, zm_client)
-
-        if result != ClientAvailabilityResult.AVAILABLE:
-            return self.async_abort(reason=str(result.value))
 
         await self.async_set_unique_id(hostname)
         self._abort_if_unique_id_configured(config)

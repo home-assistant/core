@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 
-from .common import get_client_from_data
+from .common import get_config_data
 
 
 async def async_setup_entry(
@@ -20,8 +20,8 @@ async def async_setup_entry(
     async_add_entities: Callable[[List[Entity], Optional[bool]], None],
 ) -> None:
     """Set up the sensor config entry."""
-    zm_client = get_client_from_data(hass, config_entry.unique_id)
-    async_add_entities([ZMAvailabilitySensor(zm_client, config_entry)])
+    config_data = get_config_data(hass, config_entry)
+    async_add_entities([ZMAvailabilitySensor(config_data.client, config_entry)], True)
 
 
 class ZMAvailabilitySensor(BinarySensorEntity):
