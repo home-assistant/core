@@ -6,7 +6,6 @@ import re
 import aiohttp
 import aioshelly
 import async_timeout
-import semantic_version
 import voluptuous as vol
 
 from homeassistant import config_entries, core
@@ -26,7 +25,7 @@ HOST_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 
 HTTP_CONNECT_ERRORS = (asyncio.TimeoutError, aiohttp.ClientError)
 
-MIN_FIRMWARE_VERSION = "1.8.0"
+MIN_FIRMWARE_DATE = 20200812
 
 
 async def validate_input(hass: core.HomeAssistant, host, data):
@@ -51,14 +50,12 @@ async def validate_input(hass: core.HomeAssistant, host, data):
 
 def supported_firmware(ver_str):
     """Return True if firmware version is supported."""
-    ver_pattern = re.compile(r"(?:(\d+)\.)?(?:(\d+)\.)?(?:(\d+)\.\d+)")
+    data_pattern = re.compile(r"^(\d{8})")
     try:
-        ver = ver_pattern.search(ver_str)[0]
+        data = int(data_pattern.search(ver_str)[0])
     except TypeError:
         return False
-    return semantic_version.Version.coerce(ver) > semantic_version.Version.coerce(
-        MIN_FIRMWARE_VERSION
-    )
+    return data > MIN_FIRMWARE_DATE
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

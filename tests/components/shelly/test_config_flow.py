@@ -217,7 +217,7 @@ async def test_form_firmware_unsupported(hass):
             "mac": "test-mac",
             "type": "SHSW-1",
             "auth": False,
-            "fw": "20200827-070306/test-build@4a8bc427",
+            "fw": "070306/test-build@4a8bc427",
         },
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -401,7 +401,7 @@ async def test_zeroconf_firmware_unsupported(hass):
             "mac": "test-mac",
             "type": "SHSW-1",
             "auth": False,
-            "fw": "20200827-070306/v1.7.0@4a8bc427",
+            "fw": "20200421-070306/v1.7.0@4a8bc427",
         },
     ):
         result = await hass.config_entries.flow.async_init(
