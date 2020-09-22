@@ -88,7 +88,7 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
 
         entry = self.hass.config_entries.async_get_entry(entry_id)
         if entry is None:
-            return self.async_abort(reason="reauth_failure")
+            return self.async_abort(reason="unknown_entry")
 
         del entry_data["config_entry_id"]
         self._reauth = True
@@ -139,7 +139,7 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
         entry = self.hass.config_entries.async_get_entry(entry_id)
 
         if entry is None:
-            return self.async_abort(reason="reauth_failure")
+            return self.async_abort(reason="unknown_entry")
 
         self.hass.config_entries.async_update_entry(entry, data=data)
         await self.hass.config_entries.async_reload(entry.entry_id)
