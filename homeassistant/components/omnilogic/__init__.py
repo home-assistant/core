@@ -10,8 +10,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 
+from .common import OmniLogicUpdateCoordinator
 from .const import CONF_SCAN_INTERVAL, COORDINATOR, DOMAIN, OMNI_API
-from .omnilogic_common import OmniLogicUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
