@@ -37,6 +37,7 @@ class TimePattern:
                 number = int(value[1:])
             else:
                 number = int(value)
+                value = int(value)
 
             if not (0 <= number <= self.maximum):
                 raise vol.Invalid(f"must be a value between 0 and {self.maximum}")
