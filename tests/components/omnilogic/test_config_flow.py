@@ -1,7 +1,7 @@
 """Test the Omnilogic config flow."""
 from omnilogic import LoginException, OmniLogicException
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.omnilogic.const import DOMAIN
 
 from tests.async_mock import patch
@@ -112,3 +112,28 @@ async def test_with_unknown_error(hass):
     assert result["type"] == "form"
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "unknown"}
+
+
+async def test_option_flow(hass):
+    """Test option flow."""
+    entry = MockConfigEntry(domain=DOMAIN, data=DATA)
+    entry.add_to_hass(hass)
+
+    assert not entry.options
+
+    result = await hass.config_entries.options.async_init(
+        entry.entry_id,
+        data=None,
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"polling_interval": 9},
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == ""
+    assert result["data"]["polling_interval"] == 9
