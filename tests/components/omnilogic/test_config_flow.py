@@ -7,7 +7,7 @@ from homeassistant.components.omnilogic.const import DOMAIN
 from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
-DATA = {"username": "test-username", "password": "test-password", "polling_interval": 6}
+DATA = {"username": "test-username", "password": "test-password"}
 
 
 async def test_form(hass):
@@ -51,35 +51,6 @@ async def test_already_configured(hass):
     )
 
     assert result["type"] == "abort"
-
-
-async def test_without_config(hass):
-    """Test config flow with polling interval not entered."""
-
-    await setup.async_setup_component(hass, "persistent_notification", {})
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.omnilogic.config_flow.OmniLogic.connect",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.omnilogic.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.omnilogic.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"username": "test-username", "password": "test-password"},
-        )
-
-    assert result2["type"] == "create_entry"
-    assert result2["title"] == "Omnilogic"
-    assert result2["data"] == DATA
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_with_invalid_credentials(hass):
