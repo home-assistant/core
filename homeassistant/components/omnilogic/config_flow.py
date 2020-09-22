@@ -7,6 +7,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
+from homeassistant.helpers import aiohttp_client
 
 from .const import CONF_SCAN_INTERVAL, DOMAIN  # pylint:disable=unused-import
 
@@ -39,7 +40,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             username = user_input[CONF_USERNAME]
             password = user_input[CONF_PASSWORD]
 
-            omni = OmniLogic(username, password)
+            session = aiohttp_client.async_get_clientsession(self.hass)
+            omni = OmniLogic(username, password, session)
 
             try:
                 await omni.connect()

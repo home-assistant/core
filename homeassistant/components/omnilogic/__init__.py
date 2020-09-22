@@ -8,6 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import aiohttp_client
 
 from .const import CONF_SCAN_INTERVAL, COORDINATOR, DOMAIN, OMNI_API
 from .omnilogic_common import OmniLogicUpdateCoordinator
@@ -35,7 +36,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if CONF_SCAN_INTERVAL in conf:
         polling_interval = conf[CONF_SCAN_INTERVAL]
 
-    api = OmniLogic(username, password)
+    session = aiohttp_client.async_get_clientsession(hass)
+
+    api = OmniLogic(username, password, session)
 
     try:
         await api.connect()

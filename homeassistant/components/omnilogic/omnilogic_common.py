@@ -82,7 +82,8 @@ class OmniLogicEntity(CoordinatorEntity):
         self._icon = icon
         self._bow = bow
         self.entity_data = entitydata
-        self._attrs = {"msp_system_id": backyard["systemId"]}
+        self._attrs = {}
+        self._msp_system_id = backyard["systemId"]
         self.alarms = []
         self._unsub_dispatcher = None
 
@@ -111,7 +112,7 @@ class OmniLogicEntity(CoordinatorEntity):
         """Define the device as back yard/MSP System."""
 
         return {
-            ATTR_IDENTIFIERS: {(DOMAIN, self._attrs["msp_system_id"])},
+            ATTR_IDENTIFIERS: {(DOMAIN, self._msp_system_id)},
             ATTR_NAME: self._backyard.get("BackyardName"),
             ATTR_MANUFACTURER: "Hayward",
             ATTR_MODEL: "OmniLogic",
