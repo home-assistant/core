@@ -5,7 +5,9 @@ from homeassistant.config_entries import (
     ENTRY_STATE_NOT_LOADED,
     ENTRY_STATE_SETUP_ERROR,
     ENTRY_STATE_SETUP_RETRY,
+    SOURCE_REAUTH,
 )
+from homeassistant.const import CONF_SOURCE
 from homeassistant.core import HomeAssistant
 
 from tests.async_mock import patch
@@ -32,7 +34,7 @@ async def test_config_entry_reauth(
 
     mock_flow_init.assert_called_once_with(
         DOMAIN,
-        context={"source": "reauth"},
+        context={CONF_SOURCE: SOURCE_REAUTH},
         data={"config_entry_id": entry.entry_id, **entry.data},
     )
 
