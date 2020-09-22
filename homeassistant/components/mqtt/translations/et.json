@@ -1,0 +1,85 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Lubatud on ainult \u00fcks MQTT konfiguratsioon."
+        },
+        "error": {
+            "cannot_connect": "Vahendajaga ei saa \u00fchendust luua."
+        },
+        "step": {
+            "broker": {
+                "data": {
+                    "broker": "Vahendaja",
+                    "discovery": "Luba automaatne avastamine",
+                    "password": "Salas\u00f5na",
+                    "port": "Port",
+                    "username": "Kasutajanimi"
+                },
+                "description": "Sisestage oma MQTT vahendaja andmed."
+            },
+            "hassio_confirm": {
+                "data": {
+                    "discovery": "Luba automaatne avastamine"
+                },
+                "description": "Kas soovite seadistada Home Assistanti \u00fchenduse loomiseks Hass.io lisandmooduli {addon} pakutava MQTT vahendajaga?",
+                "title": "MQTT vahendaja Hass.io pistikprogrammi kaudu"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "Esimene nupp",
+            "button_2": "Teine nupp",
+            "button_3": "Kolmas nupp",
+            "button_4": "Neljas nupp",
+            "button_5": "Viies nupp",
+            "button_6": "Kuues nupp",
+            "turn_off": "L\u00fclita v\u00e4lja",
+            "turn_on": "L\u00fclita sisse"
+        },
+        "trigger_type": {
+            "button_double_press": "\" {subtype} \" on topeltkl\u00f5psatud",
+            "button_long_press": "\" {subtype} \" on pikalt alla vajutatud",
+            "button_long_release": "\"{alamt\u00fc\u00fcp}\" vabastatati p\u00e4rast pikka vajutust",
+            "button_quadruple_press": "\"{alamt\u00fc\u00fcp}\" on neljakordselt kl\u00f5psatud",
+            "button_quintuple_press": "\"{alamt\u00fc\u00fcp}\" on viiekordselt kl\u00f5psatud",
+            "button_short_press": "\u201e {subtype} \u201d on vajutatud",
+            "button_short_release": "\" {subtype} \" vabastati",
+            "button_triple_press": "\"{alamt\u00fc\u00fcp}\" on kolmekordselt kl\u00f5psatud"
+        }
+    },
+    "options": {
+        "error": {
+            "bad_birth": "Kehtetu loomise teavitus.",
+            "bad_will": "Kehtetu l\u00f5petamise teavitus.",
+            "cannot_connect": "Vahendajaga ei saa \u00fchendust luua."
+        },
+        "step": {
+            "broker": {
+                "data": {
+                    "broker": "Vahendaja",
+                    "password": "Salas\u00f5na",
+                    "port": "Port",
+                    "username": "Kasutajanimi"
+                },
+                "description": "Sisestage oma MQTT vahendaja \u00fchenduse teave."
+            },
+            "options": {
+                "data": {
+                    "birth_enable": "Luba loomisteavitus",
+                    "birth_payload": "S\u00fcnniteate v\u00e4\u00e4rtus",
+                    "birth_qos": "S\u00fcnniteate QoS",
+                    "birth_retain": "S\u00fcnniteate j\u00e4\u00e4dvustamine",
+                    "birth_topic": "S\u00fcnniteate teema",
+                    "discovery": "Luba avastamine",
+                    "will_enable": "Luba loomisteavitus",
+                    "will_payload": "L\u00f5petamisteate v\u00e4\u00e4rtus",
+                    "will_qos": "L\u00f5petamisteate QoS",
+                    "will_retain": "L\u00f5petamisteate j\u00e4\u00e4dvustamine",
+                    "will_topic": "L\u00f5petamisteade"
+                },
+                "description": "Valige MQTT s\u00e4tted."
+            }
+        }
+    }
+}

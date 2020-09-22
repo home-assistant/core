@@ -5,13 +5,13 @@ from xknx.devices import Notification as XknxNotification
 
 from homeassistant.components.notify import BaseNotificationService
 
-from . import DATA_KNX
+from .const import DOMAIN
 
 
 async def async_get_service(hass, config, discovery_info=None):
     """Get the KNX notification service."""
     notification_devices = []
-    for device in hass.data[DATA_KNX].xknx.devices:
+    for device in hass.data[DOMAIN].xknx.devices:
         if isinstance(device, XknxNotification):
             notification_devices.append(device)
     return (

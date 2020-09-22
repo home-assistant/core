@@ -22,6 +22,7 @@ from homeassistant.const import (
     LENGTH_KILOMETERS,
     LENGTH_METERS,
     PERCENTAGE,
+    PRESSURE_MBAR,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
 )
@@ -66,7 +67,7 @@ SENSOR_TYPES = {
     "gust_kt": ["Wind Gust kt", "kt"],
     "air_temp": ["Air Temp C", TEMP_CELSIUS],
     "dewpt": ["Dew Point C", TEMP_CELSIUS],
-    "press": ["Pressure mb", "mbar"],
+    "press": ["Pressure mb", PRESSURE_MBAR],
     "press_qnh": ["Pressure qnh", "qnh"],
     "press_msl": ["Pressure msl", "msl"],
     "press_tend": ["Pressure Tend", None],

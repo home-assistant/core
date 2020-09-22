@@ -46,6 +46,7 @@ from homeassistant.components.switch import DOMAIN as SWITCH
 from homeassistant.const import (
     AREA_SQUARE_METERS,
     CONCENTRATION_PARTS_PER_MILLION,
+    CURRENCY_CENT,
     CURRENCY_DOLLAR,
     DEGREE,
     ENERGY_KILO_WATT_HOUR,
@@ -60,7 +61,9 @@ from homeassistant.const import (
     MASS_POUNDS,
     PERCENTAGE,
     POWER_WATT,
+    PRESSURE_HPA,
     PRESSURE_INHG,
+    PRESSURE_MBAR,
     SERVICE_LOCK,
     SERVICE_UNLOCK,
     SPEED_KILOMETERS_PER_HOUR,
@@ -399,7 +402,7 @@ UOM_FRIENDLY_NAME = {
     UOM_DOUBLE_TEMP: UOM_DOUBLE_TEMP,
     "102": "kWs",
     "103": CURRENCY_DOLLAR,
-    "104": "¢",
+    "104": CURRENCY_CENT,
     "105": LENGTH_INCHES,
     "106": f"mm/{TIME_DAYS}",
     "107": "",  # raw 1-byte unsigned value
@@ -411,8 +414,8 @@ UOM_FRIENDLY_NAME = {
     "113": "",  # raw 3-byte signed value
     "114": "",  # raw 4-byte signed value
     "116": LENGTH_MILES,
-    "117": "mbar",
-    "118": "hPa",
+    "117": PRESSURE_MBAR,
+    "118": PRESSURE_HPA,
     "119": f"{POWER_WATT}{TIME_HOURS}",
     "120": f"{LENGTH_INCHES}/{TIME_DAYS}",
 }

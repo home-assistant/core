@@ -13,9 +13,10 @@
             "user": {
                 "data": {
                     "host": "Smile IP \u4f4d\u5740",
-                    "password": "Smile ID"
+                    "password": "Smile ID",
+                    "port": "Smile \u901a\u8a0a\u57e0"
                 },
-                "description": "\u8a73\u7d30\u8cc7\u8a0a",
+                "description": "\u8acb\u8f38\u5165\u8cc7\u8a0a\uff1a",
                 "title": "\u9023\u7dda\u81f3 Smile"
             }
         }

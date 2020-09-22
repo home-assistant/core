@@ -86,7 +86,7 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         try:
             async with async_timeout.timeout(5):
                 return await self.device.update()
-        except aiocoap_error.Error as err:
+        except (aiocoap_error.Error, OSError) as err:
             raise update_coordinator.UpdateFailed("Error fetching data") from err
 
     @property

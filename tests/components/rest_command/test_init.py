@@ -4,6 +4,7 @@ import asyncio
 import aiohttp
 
 import homeassistant.components.rest_command as rc
+from homeassistant.const import CONTENT_TYPE_TEXT_PLAIN
 from homeassistant.setup import setup_component
 
 from tests.common import assert_setup_component, get_test_home_assistant
@@ -218,7 +219,7 @@ class TestRestCommandComponent:
         header_config_variations = {
             rc.DOMAIN: {
                 "no_headers_test": {},
-                "content_type_test": {"content_type": "text/plain"},
+                "content_type_test": {"content_type": CONTENT_TYPE_TEXT_PLAIN},
                 "headers_test": {
                     "headers": {
                         "Accept": "application/json",
@@ -227,14 +228,14 @@ class TestRestCommandComponent:
                 },
                 "headers_and_content_type_test": {
                     "headers": {"Accept": "application/json"},
-                    "content_type": "text/plain",
+                    "content_type": CONTENT_TYPE_TEXT_PLAIN,
                 },
                 "headers_and_content_type_override_test": {
                     "headers": {
                         "Accept": "application/json",
                         aiohttp.hdrs.CONTENT_TYPE: "application/pdf",
                     },
-                    "content_type": "text/plain",
+                    "content_type": CONTENT_TYPE_TEXT_PLAIN,
                 },
                 "headers_template_test": {
                     "headers": {
@@ -285,7 +286,7 @@ class TestRestCommandComponent:
         assert len(aioclient_mock.mock_calls[1][3]) == 1
         assert (
             aioclient_mock.mock_calls[1][3].get(aiohttp.hdrs.CONTENT_TYPE)
-            == "text/plain"
+            == CONTENT_TYPE_TEXT_PLAIN
         )
 
         # headers_test
@@ -297,7 +298,7 @@ class TestRestCommandComponent:
         assert len(aioclient_mock.mock_calls[3][3]) == 2
         assert (
             aioclient_mock.mock_calls[3][3].get(aiohttp.hdrs.CONTENT_TYPE)
-            == "text/plain"
+            == CONTENT_TYPE_TEXT_PLAIN
         )
         assert aioclient_mock.mock_calls[3][3].get("Accept") == "application/json"
 
@@ -305,7 +306,7 @@ class TestRestCommandComponent:
         assert len(aioclient_mock.mock_calls[4][3]) == 2
         assert (
             aioclient_mock.mock_calls[4][3].get(aiohttp.hdrs.CONTENT_TYPE)
-            == "text/plain"
+            == CONTENT_TYPE_TEXT_PLAIN
         )
         assert aioclient_mock.mock_calls[4][3].get("Accept") == "application/json"
 

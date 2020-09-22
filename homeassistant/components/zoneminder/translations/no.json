@@ -15,7 +15,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Vert og port (ex 10.10.0.4:8010)",
+                    "host": "Vert og port (f.eks. 10.10.0.4:8010)",
                     "password": "Passord",
                     "path": "ZM-bane",
                     "path_zms": "ZMS-bane",
