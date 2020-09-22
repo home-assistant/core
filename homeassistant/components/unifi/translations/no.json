@@ -60,7 +60,8 @@
             },
             "statistics_sensors": {
                 "data": {
-                    "allow_bandwidth_sensors": "B\u00e5ndbreddebrukssensorer for nettverksklienter"
+                    "allow_bandwidth_sensors": "B\u00e5ndbreddebrukssensorer for nettverksklienter",
+                    "allow_uptime_sensors": "Oppetidssensorer for nettverksklienter"
                 },
                 "description": "Konfigurer statistikk sensorer",
                 "title": "UniFi-alternativ 3/3"

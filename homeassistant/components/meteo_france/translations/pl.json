@@ -5,6 +5,11 @@
             "unknown": "Nieznany b\u0142\u0105d: spr\u00f3buj ponownie p\u00f3\u017aniej."
         },
         "step": {
+            "cities": {
+                "data": {
+                    "city": "Miasto"
+                }
+            },
             "user": {
                 "data": {
                     "city": "Miasto"
