@@ -171,6 +171,9 @@ class ModbusCoilSwitch(ToggleEntity, RestoreEntity):
             return False
 
         self._available = True
+        # bits[0] select the lowest bit in result,
+        # is_on for a binary_sensor is true if the bit are 1
+        # The other bits are not considered.
         return bool(result.bits[0])
 
     def _write_coil(self, coil, value):
