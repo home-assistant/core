@@ -15,7 +15,6 @@ from homeassistant.components.automation import EVENT_AUTOMATION_TRIGGERED
 from homeassistant.components.recorder.models import process_timestamp_to_utc_isoformat
 from homeassistant.components.script import EVENT_SCRIPT_STARTED
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_STARTED,
     ATTR_DOMAIN,
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
@@ -27,6 +26,7 @@ from homeassistant.const import (
     CONF_INCLUDE,
     EVENT_CALL_SERVICE,
     EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     EVENT_STATE_CHANGED,
     STATE_NOT_HOME,
@@ -34,10 +34,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 import homeassistant.core as ha
-from homeassistant.helpers.entityfilter import (
-    CONF_ENTITY_GLOBS,
-    convert_include_exclude_filter,
-)
+from homeassistant.helpers.entityfilter import CONF_ENTITY_GLOBS
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component, setup_component
 import homeassistant.util.dt as dt_util
@@ -167,7 +164,6 @@ class TestComponentLogbook(unittest.TestCase):
         self.assert_entry(
             entries[1], pointC, "bla", domain="sensor", entity_id=entity_id
         )
-
 
     def test_home_assistant_start_stop_grouped(self):
         """Test if HA start and stop events are grouped.
@@ -870,9 +866,9 @@ class TestComponentLogbook(unittest.TestCase):
     # pylint: disable=no-self-use
     def assert_entry(
         self, entry, when=None, name=None, message=None, domain=None, entity_id=None
-    ):    
+    ):
+        """Assert an entry is what is expected."""
         return _assert_entry(entry, when, name, message, domain, entity_id)
-
 
     def create_state_changed_event(
         self,
@@ -1886,12 +1882,10 @@ async def test_icon_and_state(hass, hass_client):
     assert response_json[2]["state"] == STATE_OFF
 
 
-
 async def test_exclude_events_domain(hass, hass_client):
     """Test if events are filtered if domain is excluded in config."""
     entity_id = "switch.bla"
     entity_id2 = "sensor.blu"
-
 
     config = logbook.CONFIG_SCHEMA(
         {
@@ -1912,18 +1906,15 @@ async def test_exclude_events_domain(hass, hass_client):
 
     await _async_commit_and_wait(hass)
 
-
     client = await hass_client()
     entries = await _async_fetch_logbook(client)
-    
 
     assert len(entries) == 2
     _assert_entry(
         entries[0], name="Home Assistant", message="started", domain=ha.DOMAIN
     )
-    _assert_entry(
-        entries[1], name="blu", domain="sensor", entity_id=entity_id2
-    )
+    _assert_entry(entries[1], name="blu", domain="sensor", entity_id=entity_id2)
+
 
 async def test_exclude_events_domain_glob(hass, hass_client):
     """Test if events are filtered if domain or glob is excluded in config."""
@@ -1959,15 +1950,12 @@ async def test_exclude_events_domain_glob(hass, hass_client):
     client = await hass_client()
     entries = await _async_fetch_logbook(client)
 
-    import pprint
-    pprint.pprint(entries)
     assert len(entries) == 2
     _assert_entry(
         entries[0], name="Home Assistant", message="started", domain=ha.DOMAIN
     )
-    _assert_entry(
-        entries[1], name="blu", domain="sensor", entity_id=entity_id2
-    )
+    _assert_entry(entries[1], name="blu", domain="sensor", entity_id=entity_id2)
+
 
 async def test_include_events_entity(hass, hass_client):
     """Test if events are filtered if entity is included in config."""
@@ -2004,10 +1992,7 @@ async def test_include_events_entity(hass, hass_client):
     _assert_entry(
         entries[0], name="Home Assistant", message="started", domain=ha.DOMAIN
     )
-    _assert_entry(
-        entries[1], name="blu", domain="sensor", entity_id=entity_id2
-    )
-
+    _assert_entry(entries[1], name="blu", domain="sensor", entity_id=entity_id2)
 
 
 async def test_exclude_events_entity(hass, hass_client):
@@ -2037,11 +2022,9 @@ async def test_exclude_events_entity(hass, hass_client):
     entries = await _async_fetch_logbook(client)
     assert len(entries) == 2
     _assert_entry(
-        entries[0], name="Home Assistant", message="stopped", domain=ha.DOMAIN
+        entries[0], name="Home Assistant", message="started", domain=ha.DOMAIN
     )
-    _assert_entry(
-        entries[1], name="blu", domain="sensor", entity_id=entity_id2
-    )
+    _assert_entry(entries[1], name="blu", domain="sensor", entity_id=entity_id2)
 
 
 async def test_include_events_domain(hass, hass_client):
@@ -2081,9 +2064,8 @@ async def test_include_events_domain(hass, hass_client):
         entries[0], name="Home Assistant", message="started", domain=ha.DOMAIN
     )
     _assert_entry(entries[1], name="Amazon Alexa", domain="alexa")
-    _assert_entry(
-        entries[2], name="blu", domain="sensor", entity_id=entity_id2
-    )
+    _assert_entry(entries[2], name="blu", domain="sensor", entity_id=entity_id2)
+
 
 async def test_include_events_domain_glob(hass, hass_client):
     """Test if events are filtered if domain or glob is included in config."""
@@ -2128,27 +2110,16 @@ async def test_include_events_domain_glob(hass, hass_client):
         entries[0], name="Home Assistant", message="started", domain=ha.DOMAIN
     )
     _assert_entry(entries[1], name="Amazon Alexa", domain="alexa")
-    _assert_entry(
-        entries[2], name="blu", domain="sensor", entity_id=entity_id2
-    )
-    _assert_entry(
-        entries[3], name="included", domain="switch", entity_id=entity_id3
-    )
+    _assert_entry(entries[2], name="blu", domain="sensor", entity_id=entity_id2)
+    _assert_entry(entries[3], name="included", domain="switch", entity_id=entity_id3)
+
 
 async def test_include_exclude_events(hass, hass_client):
     """Test if events are filtered if include and exclude is configured."""
     entity_id = "switch.bla"
     entity_id2 = "sensor.blu"
     entity_id3 = "sensor.bli"
-    pointA = dt_util.utcnow()
-    pointB = pointA + timedelta(minutes=logbook.GROUP_BY_MINUTES)
-    entity_attr_cache = logbook.EntityAttributeCache(self.hass)
-
-    eventA1 = self.create_state_changed_event(pointA, entity_id, 10)
-    eventA2 = self.create_state_changed_event(pointA, entity_id2, 10)
-    eventA3 = self.create_state_changed_event(pointA, entity_id3, 10)
-    eventB1 = self.create_state_changed_event(pointB, entity_id, 20)
-    eventB2 = self.create_state_changed_event(pointB, entity_id2, 20)
+    entity_id4 = "sensor.keep"
 
     config = logbook.CONFIG_SCHEMA(
         {
@@ -2165,37 +2136,34 @@ async def test_include_exclude_events(hass, hass_client):
             },
         }
     )
-    entities_filter = convert_include_exclude_filter(config[logbook.DOMAIN])
-    events = [
-        e
-        for e in (
-            MockLazyEventPartialState(EVENT_HOMEASSISTANT_START),
-            eventA1,
-            eventA2,
-            eventA3,
-            eventB1,
-            eventB2,
-        )
-        if logbook._keep_event(self.hass, e, entities_filter)
-    ]
-    entries = list(logbook.humanify(self.hass, events, entity_attr_cache, {}))
+    await hass.async_add_executor_job(init_recorder_component, hass)
+    await async_setup_component(hass, "logbook", config)
+    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
 
-    assert len(entries) == 5
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    hass.states.async_set(entity_id, None)
+    hass.states.async_set(entity_id, 10)
+    hass.states.async_set(entity_id2, None)
+    hass.states.async_set(entity_id2, 10)
+    hass.states.async_set(entity_id3, None)
+    hass.states.async_set(entity_id3, 10)
+    hass.states.async_set(entity_id, 20)
+    hass.states.async_set(entity_id2, 20)
+    hass.states.async_set(entity_id4, None)
+    hass.states.async_set(entity_id4, 10)
+
+    await _async_commit_and_wait(hass)
+    client = await hass_client()
+    entries = await _async_fetch_logbook(client)
+
+    assert len(entries) == 3
     _assert_entry(
         entries[0], name="Home Assistant", message="started", domain=ha.DOMAIN
     )
-    _assert_entry(
-        entries[1], name="bla", domain="switch", entity_id=entity_id
-    )
-    _assert_entry(
-        entries[2], name="blu", domain="sensor", entity_id=entity_id2
-    )
-    _assert_entry(
-        entries[3], name="bla", domain="switch", entity_id=entity_id
-    )
-    _assert_entry(
-        entries[4], name="blu", domain="sensor", entity_id=entity_id2
-    )
+    _assert_entry(entries[1], name="blu", domain="sensor", entity_id=entity_id2)
+    _assert_entry(entries[2], name="keep", domain="sensor", entity_id=entity_id4)
+
 
 async def test_include_exclude_events_with_glob_filters(hass, hass_client):
     """Test if events are filtered if include and exclude is configured."""
@@ -2205,20 +2173,6 @@ async def test_include_exclude_events_with_glob_filters(hass, hass_client):
     entity_id4 = "light.included"
     entity_id5 = "switch.included"
     entity_id6 = "sensor.excluded"
-    pointA = dt_util.utcnow()
-    pointB = pointA + timedelta(minutes=logbook.GROUP_BY_MINUTES)
-    pointC = pointB + timedelta(minutes=logbook.GROUP_BY_MINUTES)
-    entity_attr_cache = logbook.EntityAttributeCache(self.hass)
-
-    eventA1 = self.create_state_changed_event(pointA, entity_id, 10)
-    eventA2 = self.create_state_changed_event(pointA, entity_id2, 10)
-    eventA3 = self.create_state_changed_event(pointA, entity_id3, 10)
-    eventB1 = self.create_state_changed_event(pointB, entity_id, 20)
-    eventB2 = self.create_state_changed_event(pointB, entity_id2, 20)
-    eventC1 = self.create_state_changed_event(pointC, entity_id4, 30)
-    eventC2 = self.create_state_changed_event(pointC, entity_id5, 30)
-    eventC3 = self.create_state_changed_event(pointC, entity_id6, 30)
-
     config = logbook.CONFIG_SCHEMA(
         {
             ha.DOMAIN: {},
@@ -2236,43 +2190,38 @@ async def test_include_exclude_events_with_glob_filters(hass, hass_client):
             },
         }
     )
-    entities_filter = convert_include_exclude_filter(config[logbook.DOMAIN])
-    events = [
-        e
-        for e in (
-            MockLazyEventPartialState(EVENT_HOMEASSISTANT_START),
-            eventA1,
-            eventA2,
-            eventA3,
-            eventB1,
-            eventB2,
-            eventC1,
-            eventC2,
-            eventC3,
-        )
-        if logbook._keep_event(self.hass, e, entities_filter)
-    ]
-    entries = list(logbook.humanify(self.hass, events, entity_attr_cache, {}))
+    await hass.async_add_executor_job(init_recorder_component, hass)
+    await async_setup_component(hass, "logbook", config)
+    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
 
-    assert len(entries) == 6
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    hass.states.async_set(entity_id, None)
+    hass.states.async_set(entity_id, 10)
+    hass.states.async_set(entity_id2, None)
+    hass.states.async_set(entity_id2, 10)
+    hass.states.async_set(entity_id3, None)
+    hass.states.async_set(entity_id3, 10)
+    hass.states.async_set(entity_id, 20)
+    hass.states.async_set(entity_id2, 20)
+    hass.states.async_set(entity_id4, None)
+    hass.states.async_set(entity_id4, 30)
+    hass.states.async_set(entity_id5, None)
+    hass.states.async_set(entity_id5, 30)
+    hass.states.async_set(entity_id6, None)
+    hass.states.async_set(entity_id6, 30)
+
+    await _async_commit_and_wait(hass)
+    client = await hass_client()
+    entries = await _async_fetch_logbook(client)
+
+    assert len(entries) == 3
     _assert_entry(
         entries[0], name="Home Assistant", message="started", domain=ha.DOMAIN
     )
-    _assert_entry(
-        entries[1], name="bla", domain="switch", entity_id=entity_id
-    )
-    _assert_entry(
-        entries[2], name="blu", domain="sensor", entity_id=entity_id2
-    )
-    _assert_entry(
-        entries[3], name="bla", domain="switch", entity_id=entity_id
-    )
-    _assert_entry(
-        entries[4], name="blu", domain="sensor", entity_id=entity_id2
-    )
-    _assert_entry(
-        entries[5], name="included", domain="light", entity_id=entity_id4
-    )
+    _assert_entry(entries[1], name="blu", domain="sensor", entity_id=entity_id2)
+    _assert_entry(entries[2], name="included", domain="light", entity_id=entity_id4)
+
 
 async def _async_fetch_logbook(client):
 
@@ -2282,9 +2231,12 @@ async def _async_fetch_logbook(client):
 
     # Test today entries without filters
     end_time = start + timedelta(hours=48)
-    response = await client.get(f"/api/logbook/{start_date.isoformat()}?end_time={end_time}")
+    response = await client.get(
+        f"/api/logbook/{start_date.isoformat()}?end_time={end_time}"
+    )
     assert response.status == 200
     return await response.json()
+
 
 async def _async_commit_and_wait(hass):
     await hass.async_block_till_done()
@@ -2292,6 +2244,7 @@ async def _async_commit_and_wait(hass):
     await hass.async_block_till_done()
     await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
     await hass.async_block_till_done()
+
 
 def _assert_entry(
     entry, when=None, name=None, message=None, domain=None, entity_id=None
@@ -2311,6 +2264,7 @@ def _assert_entry(
 
     if entity_id:
         assert entity_id == entry["entity_id"]
+
 
 class MockLazyEventPartialState(ha.Event):
     """Minimal mock of a Lazy event."""
