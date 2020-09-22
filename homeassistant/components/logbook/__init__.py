@@ -7,6 +7,7 @@ import re
 
 import sqlalchemy
 from sqlalchemy.orm import aliased
+from sqlalchemy.sql.expression import literal
 import voluptuous as vol
 
 from homeassistant.components import sun
@@ -39,12 +40,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import (
-    DOMAIN as HA_DOMAIN,
-    callback,
-    split_entity_id,
-    valid_entity_id,
-)
+from homeassistant.core import DOMAIN as HA_DOMAIN, callback, split_entity_id
 from homeassistant.exceptions import InvalidEntityFormatError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import (
@@ -78,6 +74,8 @@ GROUP_BY_MINUTES = 15
 EMPTY_JSON_OBJECT = "{}"
 UNIT_OF_MEASUREMENT_JSON = '"unit_of_measurement":'
 
+HA_DOMAIN_ENTITY_ID = f"{HA_DOMAIN}."
+
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA}, extra=vol.ALLOW_EXTRA
 )
@@ -87,11 +85,23 @@ HOMEASSISTANT_EVENTS = [
     EVENT_HOMEASSISTANT_STOP,
 ]
 
-ALL_EVENT_TYPES = [
-    EVENT_STATE_CHANGED,
+ALL_EVENT_TYPES_EXCEPT_STATE_CHANGED = [
     EVENT_LOGBOOK_ENTRY,
     EVENT_CALL_SERVICE,
     *HOMEASSISTANT_EVENTS,
+]
+
+ALL_EVENT_TYPES = [
+    EVENT_STATE_CHANGED,
+    *ALL_EVENT_TYPES_EXCEPT_STATE_CHANGED,
+]
+
+EVENT_COLUMNS = [
+    Events.event_type,
+    Events.event_data,
+    Events.time_fired,
+    Events.context_id,
+    Events.context_user_id,
 ]
 
 SCRIPT_AUTOMATION_EVENTS = [EVENT_AUTOMATION_TRIGGERED, EVENT_SCRIPT_STARTED]
@@ -208,7 +218,15 @@ class LogbookView(HomeAssistantView):
         else:
             period = int(period)
 
-        entity_id = request.query.get("entity")
+        entity_ids = request.query.get("entity")
+        if entity_ids:
+            try:
+                entity_ids = cv.entity_ids(entity_ids)
+            except vol.Invalid:
+                raise InvalidEntityFormatError(
+                    f"Invalid entity id(s) encountered: {entity_ids}. "
+                    "Format should be <domain>.<object_id>"
+                ) from vol.Invalid
 
         end_time = request.query.get("end_time")
         if end_time is None:
@@ -231,7 +249,7 @@ class LogbookView(HomeAssistantView):
                     hass,
                     start_day,
                     end_day,
-                    entity_id,
+                    entity_ids,
                     self.filters,
                     self.entities_filter,
                     entity_matches_only,
@@ -409,143 +427,188 @@ def _get_events(
     hass,
     start_day,
     end_day,
-    entity_id=None,
+    entity_ids=None,
     filters=None,
     entities_filter=None,
     entity_matches_only=False,
 ):
     """Get events for a period of time."""
+
     entity_attr_cache = EntityAttributeCache(hass)
     context_lookup = {None: None}
-    entity_id_lower = None
-    apply_sql_entities_filter = True
 
     def yield_events(query):
         """Yield Events that are not filtered away."""
         for row in query.yield_per(1000):
             event = LazyEventPartialState(row)
             context_lookup.setdefault(event.context_id, event)
-            if _keep_event(hass, event, entities_filter):
+            if event.event_type == EVENT_CALL_SERVICE:
+                continue
+            if event.event_type == EVENT_STATE_CHANGED or _keep_event(
+                hass, event, entities_filter
+            ):
                 yield event
 
-    if entity_id is not None:
-        entity_id_lower = entity_id.lower()
-        if not valid_entity_id(entity_id_lower):
-            raise InvalidEntityFormatError(
-                f"Invalid entity id encountered: {entity_id_lower}. "
-                "Format should be <domain>.<object_id>"
-            )
-        entities_filter = generate_filter([], [entity_id_lower], [], [])
-        apply_sql_entities_filter = False
+    if entity_ids is not None:
+        entities_filter = generate_filter([], entity_ids, [], [])
 
     with session_scope(hass=hass) as session:
         old_state = aliased(States, name="old_state")
 
-        query = (
-            session.query(
-                Events.event_type,
-                Events.event_data,
-                Events.time_fired,
-                Events.context_id,
-                Events.context_user_id,
-                States.state,
-                States.entity_id,
-                States.domain,
-                States.attributes,
+        if entity_ids is not None:
+            query = _generate_events_query_without_states(session)
+            query = _apply_event_time_filter(query, start_day, end_day)
+            query = _apply_event_types_filter(
+                hass, query, ALL_EVENT_TYPES_EXCEPT_STATE_CHANGED
             )
-            .order_by(Events.time_fired)
-            .outerjoin(States, (Events.event_id == States.event_id))
-            .outerjoin(old_state, (States.old_state_id == old_state.state_id))
-            # The below filter, removes state change events that do not have
-            # and old_state, new_state, or the old and
-            # new state.
-            #
-            .filter(
-                (Events.event_type != EVENT_STATE_CHANGED)
-                | (
-                    (States.state_id.isnot(None))
-                    & (old_state.state_id.isnot(None))
-                    & (States.state.isnot(None))
-                    & (States.state != old_state.state)
-                )
-            )
-            #
-            # Prefilter out continuous domains that have
-            # ATTR_UNIT_OF_MEASUREMENT as its much faster in sql.
-            #
-            .filter(
-                (Events.event_type != EVENT_STATE_CHANGED)
-                | sqlalchemy.not_(States.domain.in_(CONTINUOUS_DOMAINS))
-                | sqlalchemy.not_(States.attributes.contains(UNIT_OF_MEASUREMENT_JSON))
-            )
-            .filter(
-                Events.event_type.in_(ALL_EVENT_TYPES + list(hass.data.get(DOMAIN, {})))
-            )
-            .filter((Events.time_fired > start_day) & (Events.time_fired < end_day))
-        )
-
-        if entity_id_lower is not None:
             if entity_matches_only:
                 # When entity_matches_only is provided, contexts and events that do not
-                # contain the entity_id are not included in the logbook response.
-                entity_id_json = ENTITY_ID_JSON_TEMPLATE.format(entity_id_lower)
-                query = query.filter(
-                    (
-                        (States.last_updated == States.last_changed)
-                        & (States.entity_id == entity_id_lower)
-                    )
-                    | (
-                        States.state_id.is_(None)
-                        & Events.event_data.contains(entity_id_json)
-                    )
-                )
-            else:
-                query = query.filter(
-                    (
-                        (States.last_updated == States.last_changed)
-                        & (States.entity_id == entity_id_lower)
-                    )
-                    | (States.state_id.is_(None))
-                )
-        else:
-            query = query.filter(
-                (States.last_updated == States.last_changed)
-                | (States.state_id.is_(None))
-            )
+                # contain the entity_ids are not included in the logbook response.
+                query = _apply_event_entity_id_matchers(query, entity_ids)
 
-        if apply_sql_entities_filter and filters:
-            entity_filter = filters.entity_filter()
-            if entity_filter is not None:
-                query = query.filter(
-                    entity_filter | (Events.event_type != EVENT_STATE_CHANGED)
+            query = query.union_all(
+                _generate_states_query(
+                    session, start_day, end_day, old_state, entity_ids
                 )
+            )
+        else:
+            query = _generate_events_query(session)
+            query = _apply_event_time_filter(query, start_day, end_day)
+            query = _apply_events_types_and_states_filter(
+                hass, query, old_state
+            ).filter(
+                (States.last_updated == States.last_changed)
+                | (Events.event_type != EVENT_STATE_CHANGED)
+            )
+            if filters:
+                query = query.filter(
+                    filters.entity_filter() | (Events.event_type != EVENT_STATE_CHANGED)
+                )
+
+        query = query.order_by(Events.time_fired)
 
         return list(
             humanify(hass, yield_events(query), entity_attr_cache, context_lookup)
         )
 
 
-def _keep_event(hass, event, entities_filter):
-    if event.event_type == EVENT_STATE_CHANGED:
-        entity_id = event.entity_id
-    elif event.event_type in HOMEASSISTANT_EVENTS:
-        entity_id = f"{HA_DOMAIN}."
-    elif event.event_type == EVENT_CALL_SERVICE:
-        return False
-    else:
-        entity_id = event.data_entity_id
-        if not entity_id:
-            if event.event_type in hass.data[DOMAIN]:
-                # If the entity_id isn't described, use the domain that describes
-                # the event for filtering.
-                domain = hass.data[DOMAIN][event.event_type][0]
-            else:
-                domain = event.data_domain
-            if domain is None:
-                return False
-            entity_id = f"{domain}."
+def _generate_events_query(session):
+    return session.query(
+        *EVENT_COLUMNS,
+        States.state,
+        States.entity_id,
+        States.domain,
+        States.attributes,
+    )
 
-    return entities_filter is None or entities_filter(entity_id)
+
+def _generate_events_query_without_states(session):
+    return session.query(
+        *EVENT_COLUMNS,
+        literal(None).label("state"),
+        literal(None).label("entity_id"),
+        literal(None).label("domain"),
+        literal(None).label("attributes"),
+    )
+
+
+def _generate_states_query(session, start_day, end_day, old_state, entity_ids):
+    return (
+        _generate_events_query(session)
+        .outerjoin(Events, (States.event_id == Events.event_id))
+        .outerjoin(old_state, (States.old_state_id == old_state.state_id))
+        .filter(_missing_state_matcher(old_state))
+        .filter(_continuous_entity_matcher())
+        .filter((States.last_updated > start_day) & (States.last_updated < end_day))
+        .filter(
+            (States.last_updated == States.last_changed)
+            & States.entity_id.in_(entity_ids)
+        )
+    )
+
+
+def _apply_events_types_and_states_filter(hass, query, old_state):
+    events_query = (
+        query.outerjoin(States, (Events.event_id == States.event_id))
+        .outerjoin(old_state, (States.old_state_id == old_state.state_id))
+        .filter(
+            (Events.event_type != EVENT_STATE_CHANGED)
+            | _missing_state_matcher(old_state)
+        )
+        .filter(
+            (Events.event_type != EVENT_STATE_CHANGED) | _continuous_entity_matcher()
+        )
+    )
+    return _apply_event_types_filter(hass, events_query, ALL_EVENT_TYPES)
+
+
+def _missing_state_matcher(old_state):
+    # The below removes state change events that do not have
+    # and old_state or the old_state is missing (newly added entities)
+    # or the new_state is missing (removed entities)
+    return sqlalchemy.and_(
+        old_state.state_id.isnot(None),
+        (States.state != old_state.state),
+        States.state.isnot(None),
+    )
+
+
+def _continuous_entity_matcher():
+    #
+    # Prefilter out continuous domains that have
+    # ATTR_UNIT_OF_MEASUREMENT as its much faster in sql.
+    #
+    return sqlalchemy.or_(
+        sqlalchemy.not_(States.domain.in_(CONTINUOUS_DOMAINS)),
+        sqlalchemy.not_(States.attributes.contains(UNIT_OF_MEASUREMENT_JSON)),
+    )
+
+
+def _apply_event_time_filter(events_query, start_day, end_day):
+    return events_query.filter(
+        (Events.time_fired > start_day) & (Events.time_fired < end_day)
+    )
+
+
+def _apply_event_types_filter(hass, query, event_types):
+    return query.filter(
+        Events.event_type.in_(event_types + list(hass.data.get(DOMAIN, {})))
+    )
+
+
+def _apply_event_entity_id_matchers(events_query, entity_ids):
+    return events_query.filter(
+        sqlalchemy.or_(
+            *[
+                Events.event_data.contains(ENTITY_ID_JSON_TEMPLATE.format(entity_id))
+                for entity_id in entity_ids
+            ]
+        )
+    )
+
+
+def _keep_event(hass, event, entities_filter):
+    if event.event_type in HOMEASSISTANT_EVENTS:
+        return entities_filter is None or entities_filter(HA_DOMAIN_ENTITY_ID)
+
+    if event.event_type == EVENT_STATE_CHANGED:
+        return entities_filter is None or entities_filter(event.entity_id)
+
+    entity_id = event.data_entity_id
+    if entity_id:
+        return entities_filter is None or entities_filter(entity_id)
+
+    if event.event_type in hass.data[DOMAIN]:
+        # If the entity_id isn't described, use the domain that describes
+        # the event for filtering.
+        domain = hass.data[DOMAIN][event.event_type][0]
+    else:
+        domain = event.data_domain
+
+    if domain is None:
+        return False
+
+    return entities_filter is None or entities_filter(f"{domain}.")
 
 
 def _entry_message_from_event(entity_id, domain, event, entity_attr_cache):
