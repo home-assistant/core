@@ -1,4 +1,5 @@
 """Support for Bond lights."""
+import logging
 from typing import Any, Callable, List, Optional
 
 from bond_api import Action, DeviceType
@@ -16,6 +17,8 @@ from . import BondHub
 from .const import DOMAIN
 from .entity import BondEntity
 from .utils import BondDevice
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -96,7 +99,7 @@ class BondFireplace(BondEntity, LightEntity):
     """Representation of a Bond-controlled fireplace."""
 
     def __init__(self, hub: BondHub, device: BondDevice):
-        """Create HA entity representing Bond fan."""
+        """Create HA entity representing Bond fireplace."""
         super().__init__(hub, device)
 
         self._power: Optional[bool] = None
@@ -119,6 +122,8 @@ class BondFireplace(BondEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the fireplace on."""
+        _LOGGER.debug("fireplace async_turn_on called with: %s", kwargs)
+
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         if brightness:
             flame = round((brightness * 100) / 255)
@@ -128,6 +133,8 @@ class BondFireplace(BondEntity, LightEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fireplace off."""
+        _LOGGER.debug("fireplace async_turn_off called with: %s", kwargs)
+
         await self._hub.bond.action(self._device.device_id, Action.turn_off())
 
     @property
