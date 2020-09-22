@@ -5,6 +5,7 @@ from homeassistant.components.media_player import BrowseError, BrowseMedia
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_ALBUM,
     MEDIA_CLASS_ARTIST,
+    MEDIA_CLASS_CHANNEL,
     MEDIA_CLASS_DIRECTORY,
     MEDIA_CLASS_EPISODE,
     MEDIA_CLASS_MOVIE,
@@ -15,6 +16,7 @@ from homeassistant.components.media_player.const import (
     MEDIA_CLASS_TV_SHOW,
     MEDIA_TYPE_ALBUM,
     MEDIA_TYPE_ARTIST,
+    MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_EPISODE,
     MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_PLAYLIST,
@@ -45,6 +47,7 @@ CHILD_TYPE_MEDIA_CLASS = {
     MEDIA_TYPE_PLAYLIST: MEDIA_CLASS_PLAYLIST,
     MEDIA_TYPE_TRACK: MEDIA_CLASS_TRACK,
     MEDIA_TYPE_TVSHOW: MEDIA_CLASS_TV_SHOW,
+    MEDIA_TYPE_CHANNEL: MEDIA_CLASS_CHANNEL,
     MEDIA_TYPE_EPISODE: MEDIA_CLASS_EPISODE,
 }
 
@@ -147,6 +150,15 @@ async def build_item_response(media_library, payload):
                 season["seasondetails"].get("thumbnail")
             )
             title = season["seasondetails"]["label"]
+    elif search_type == MEDIA_TYPE_CHANNEL:
+        media = await media_library._server.PVR.GetChannels(
+            {
+                "channelgroupid": "alltv",
+                "properties": ["thumbnail", "channeltype", "channel", "broadcastnow"],
+            }
+        )
+        media = media.get("channels")
+        title = "Channels"
 
     if media is None:
         return None
@@ -227,9 +239,18 @@ def item_payload(item, media_library):
         media_content_id = f"{item['tvshowid']}"
         can_play = False
         can_expand = True
+    elif "channelid" in item:
+        media_content_type = MEDIA_TYPE_CHANNEL
+        media_content_id = f"{item['channelid']}"
+        broadcasting = item.get("broadcastnow")
+        if broadcasting:
+            show = broadcasting.get("title")
+            title = f"{title} - {show}"
+        can_play = True
+        can_expand = False
     else:
         # this case is for the top folder of each type
-        # possible content types: album, artist, movie, library_music, tvshow
+        # possible content types: album, artist, movie, library_music, tvshow, channel
         media_class = MEDIA_CLASS_DIRECTORY
         media_content_type = item["type"]
         media_content_id = ""
@@ -274,6 +295,7 @@ def library_payload(media_library):
         "library_music": "Music",
         MEDIA_TYPE_MOVIE: "Movies",
         MEDIA_TYPE_TVSHOW: "TV shows",
+        MEDIA_TYPE_CHANNEL: "Channels",
     }
     for item in [{"label": name, "type": type_} for type_, name in library.items()]:
         library_info.children.append(

@@ -20,7 +20,7 @@
             "unable_to_pair": "Impossible d'appairer, veuillez r\u00e9essayer.",
             "unknown_error": "L'appareil a signal\u00e9 une erreur inconnue. L'appairage a \u00e9chou\u00e9."
         },
-        "flow_title": "Accessoire HomeKit: {name}",
+        "flow_title": "{name} via le protocole accessoire HomeKit",
         "step": {
             "busy_error": {
                 "description": "Annulez l'association sur tous les contr\u00f4leurs ou essayez de red\u00e9marrer l'appareil, puis continuez \u00e0 reprendre l'association.",
@@ -34,8 +34,8 @@
                 "data": {
                     "pairing_code": "Code d\u2019appairage"
                 },
-                "description": "Entrez votre code de jumelage HomeKit (au format XXX-XX-XXX) pour utiliser cet accessoire.",
-                "title": "Appairer avec l'accessoire HomeKit"
+                "description": "Le contr\u00f4leur HomeKit communique avec {name} sur le r\u00e9seau local en utilisant une connexion crypt\u00e9e s\u00e9curis\u00e9e sans contr\u00f4leur HomeKit s\u00e9par\u00e9 ou iCloud. Entrez votre code d'appariement HomeKit (au format XXX-XX-XXX) pour utiliser cet accessoire. Ce code se trouve g\u00e9n\u00e9ralement sur l'appareil lui-m\u00eame ou dans l'emballage.",
+                "title": "Couplage avec un appareil via le protocole accessoire HomeKit"
             },
             "protocol_error": {
                 "description": "L\u2019appareil peut ne pas \u00eatre en mode appairement et peut n\u00e9cessiter une pression sur un bouton physique ou virtuel. Assurez-vous que l\u2019appareil est en mode appariement ou essayez de red\u00e9marrer l\u2019appareil, puis continuez \u00e0 reprendre l\u2019appariement.",
@@ -49,8 +49,8 @@
                 "data": {
                     "device": "Appareil"
                 },
-                "description": "S\u00e9lectionnez l'appareil avec lequel vous voulez appairer",
-                "title": "Appairer avec l'accessoire HomeKit"
+                "description": "Le contr\u00f4leur HomeKit communique sur le r\u00e9seau local \u00e0 l'aide d'une connexion crypt\u00e9e s\u00e9curis\u00e9e sans contr\u00f4leur HomeKit s\u00e9par\u00e9 ou iCloud. S\u00e9lectionnez l'appareil avec lequel vous souhaitez vous associer:",
+                "title": "S\u00e9lection de l'appareil"
             }
         }
     },

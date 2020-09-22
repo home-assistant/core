@@ -1,0 +1,18 @@
+{
+    "state": {
+        "zodiac__sign": {
+            "aquarius": "Aquari",
+            "aries": "\u00c0ries",
+            "cancer": "C\u00e0ncer",
+            "capricorn": "Capricorn",
+            "gemini": "Bessons",
+            "leo": "Lle\u00f3",
+            "libra": "Balan\u00e7a",
+            "pisces": "Peixos",
+            "sagittarius": "Sagitari",
+            "scorpio": "Escorp\u00ed",
+            "taurus": "Taure",
+            "virgo": "Verge"
+        }
+    }
+}

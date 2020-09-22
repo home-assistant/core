@@ -806,6 +806,7 @@ omit =
     homeassistant/components/spc/*
     homeassistant/components/speedtestdotnet/*
     homeassistant/components/spider/*
+    homeassistant/components/splunk/*
     homeassistant/components/spotcrime/sensor.py
     homeassistant/components/spotify/__init__.py
     homeassistant/components/spotify/media_player.py
