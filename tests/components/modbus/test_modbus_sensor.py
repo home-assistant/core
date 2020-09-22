@@ -32,15 +32,16 @@ async def run_sensor_test(
     """Run test for sensor."""
     sensor_name = "modbus_test_sensor"
     entity_domain = SENSOR_DOMAIN
-    data_array = [
-        dict(**{CONF_NAME: sensor_name, CONF_REGISTER: 1234}, **register_config)
-    ]
+    data_array = {
+        CONF_REGISTERS: [
+            dict(**{CONF_NAME: sensor_name, CONF_REGISTER: 1234}, **register_config)
+        ]
+    }
 
     await run_base_test(
         sensor_name,
         hass,
         use_mock_hub,
-        CONF_REGISTERS,
         data_array,
         register_config.get(CONF_REGISTER_TYPE),
         entity_domain,

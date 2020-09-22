@@ -44,7 +44,6 @@ async def run_base_test(
     sensor_name,
     hass,
     use_mock_hub,
-    data_name,
     data_array,
     register_type,
     entity_domain,
@@ -59,7 +58,7 @@ async def run_base_test(
         entity_domain: {
             CONF_PLATFORM: "modbus",
             CONF_SCAN_INTERVAL: scan_interval,
-            data_name: data_array,
+            **data_array,
         }
     }
 
