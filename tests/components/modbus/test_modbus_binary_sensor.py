@@ -9,7 +9,7 @@ from homeassistant.components.modbus.const import (
     CONF_INPUT_TYPE,
     CONF_INPUTS,
 )
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON
 
 from .conftest import run_base_test
 
@@ -52,7 +52,7 @@ async def test_coil_true(hass, mock_hub):
         mock_hub,
         register_config,
         [0xFF],
-        expected="on",
+        STATE_ON,
     )
 
 
@@ -66,7 +66,7 @@ async def test_coil_false(hass, mock_hub):
         mock_hub,
         register_config,
         [0x00],
-        expected="off",
+        STATE_OFF,
     )
 
 
