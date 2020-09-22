@@ -71,20 +71,18 @@ class DevoloBinaryDeviceEntity(DevoloDeviceEntity, BinarySensorEntity):
             self._binary_sensor_property.sub_type
             or self._binary_sensor_property.sensor_type
         )
-        name = device_instance.item_name
-
-        if self._device_class is None:
-            if device_instance.binary_sensor_property.get(element_uid).sub_type != "":
-                name += f" {device_instance.binary_sensor_property.get(element_uid).sub_type}"
-            else:
-                name += f" {device_instance.binary_sensor_property.get(element_uid).sensor_type}"
 
         super().__init__(
             homecontrol=homecontrol,
             device_instance=device_instance,
             element_uid=element_uid,
-            name=name,
         )
+
+        if self._device_class is None:
+            if device_instance.binary_sensor_property.get(element_uid).sub_type != "":
+                self._name += f" {device_instance.binary_sensor_property.get(element_uid).sub_type}"
+            else:
+                self._name += f" {device_instance.binary_sensor_property.get(element_uid).sensor_type}"
 
         self._value = self._binary_sensor_property.state
 
@@ -107,15 +105,14 @@ class DevoloRemoteControl(DevoloDeviceEntity, BinarySensorEntity):
         self._remote_control_property = device_instance.remote_control_property.get(
             element_uid
         )
+
         super().__init__(
             homecontrol=homecontrol,
             device_instance=device_instance,
             element_uid=f"{element_uid}_{key}",
-            name=device_instance.item_name,
         )
 
         self._key = key
-
         self._state = False
 
     @property
