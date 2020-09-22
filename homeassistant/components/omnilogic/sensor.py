@@ -5,8 +5,8 @@ import logging
 from homeassistant.components.sensor import DEVICE_CLASS_TEMPERATURE
 from homeassistant.const import PERCENTAGE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 
+from .common import OmniLogicEntity, OmniLogicUpdateCoordinator
 from .const import COORDINATOR, DOMAIN, PUMP_TYPES
-from .omnilogic_common import OmniLogicEntity, OmniLogicUpdateCoordinator
 
 TEMP_UNITS = [TEMP_CELSIUS, TEMP_FAHRENHEIT]
 PERCENT_UNITS = [PERCENTAGE, PERCENTAGE]
@@ -189,11 +189,10 @@ class OmnilogicSensor(OmniLogicEntity):
         """Force update."""
         return True
 
-    @staticmethod
-    def find_chlorinator(coordinator, systemid):
+    def find_chlorinator(self, systemid):
         """Find the correct chlorinator entity."""
 
-        for backyard in coordinator.data:
+        for backyard in self.coordinator.data:
             for bow in backyard.get("BOWS"):
                 if bow["Chlorinator"]["systemId"] == systemid:
                     sensor_data = bow.get("Chlorinator")
@@ -201,11 +200,10 @@ class OmnilogicSensor(OmniLogicEntity):
 
         return sensor_data
 
-    @staticmethod
-    def find_csad(coordinator, systemid):
+    def find_csad(self, systemid):
         """Find the correct CSAD entity."""
 
-        for backyard in coordinator.data:
+        for backyard in self.coordinator.data:
             for bow in backyard.get("BOWS"):
                 if bow["CSAD"]["systemId"] == systemid:
                     sensor_data = bow.get("CSAD")
@@ -255,8 +253,6 @@ class OmniLogicTemperatureSensor(OmnilogicSensor):
     @property
     def state(self):
         """Return the state for the temperature sensor."""
-        _LOGGER.debug("Updating state of sensor: %s", self._name)
-
         sensor_data = None
 
         if self._kind == "water_temperature":
@@ -349,13 +345,7 @@ class OmniLogicPumpSpeedSensor(OmnilogicSensor):
                             sensor_data = pump
                             break
 
-            if sensor_data.get("Filter-Type") == "PMP_VARIABLE_SPEED_PUMP":
-                pump_type = "VARIABLE"
-            elif sensor_data.get("Filter-Type") == "PMP_SINGLE_SPEED":
-                pump_type = "SINGLE"
-            elif sensor_data.get("Filter-Type") == "PMP_DUAL_SPEED":
-                pump_type = "DUAL"
-
+            pump_type = PUMP_TYPES.get(sensor_data.get("Filter-Type"))
             pump_speed = sensor_data.get("pumpSpeed")
 
         if pump_type == "VARIABLE":
@@ -415,7 +405,7 @@ class OmniLogicSaltLevelSensor(OmnilogicSensor):
         """Return the state for the salt level sensor."""
         _LOGGER.debug("Updating state of sensor: %s", self._name)
 
-        sensor_data = self.find_chlorinator(self.coordinator, self._system_id)
+        sensor_data = self.find_chlorinator(self._system_id)
 
         salt_return = int(sensor_data.get("avgSaltLevel"))
         unit_of_measurement = "ppm"
@@ -466,7 +456,7 @@ class OmniLogicChlorinatorSensor(OmnilogicSensor):
         """Return the state for the chlorinator sensor."""
         _LOGGER.debug("Updating state of sensor: %s", self._name)
 
-        sensor_data = self.find_chlorinator(self.coordinator, self._system_id)
+        sensor_data = self.find_chlorinator(self._system_id)
 
         if sensor_data.get("operatingMode") == "1":
             self._state = sensor_data.get("Timed-Percent")
@@ -516,7 +506,7 @@ class OmniLogicPHSensor(OmnilogicSensor):
         """Return the state for the pH sensor."""
         _LOGGER.debug("Updating state of sensor: %s", self._name)
 
-        sensor_data = self.find_csad(self.coordinator, self._system_id)
+        sensor_data = self.find_csad(self._system_id)
 
         phstate = None
         if sensor_data.get("ph") != 0:
@@ -564,7 +554,7 @@ class OmniLogicORPSensor(OmnilogicSensor):
         """Return the state for the ORP sensor."""
         _LOGGER.debug("Updating state of sensor: %s", self._name)
 
-        sensor_data = self.find_csad(self.coordinator, self._system_id)
+        sensor_data = self.find_csad(self._system_id)
 
         orpstate = None
         if sensor_data.get("orp") != -1:
