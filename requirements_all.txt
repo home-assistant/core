@@ -1470,7 +1470,7 @@ pylutron==0.2.5
 pymailgunner==1.4
 
 # homeassistant.components.firmata
-pymata-express==1.13
+pymata-express==1.19
 
 # homeassistant.components.mediaroom
 pymediaroom==0.6.4.1
