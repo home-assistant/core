@@ -300,7 +300,10 @@ class ShellyRestAttributeEntity(entity.Entity):
         self._unit = self.description.unit
         self._name = shelly_naming(self, None, "sensor")
         self.path = self.description.path
+<<<<<<< HEAD
         self._attributes = self.description.attributes
+=======
+>>>>>>> Fix for sensors not updating
 
     @property
     def name(self):
@@ -366,6 +369,6 @@ class ShellyRestAttributeEntity(entity.Entity):
         self.async_on_remove(self.wrapper.async_add_listener(self._update_callback))
 
     @callback
-    def _update_callback(self):
+    async def _update_callback(self):
         """When device updates, clear control result that overrides state."""
         self.async_write_ha_state()
