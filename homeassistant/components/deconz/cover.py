@@ -55,7 +55,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class DeconzCover(DeconzDevice, CoverEntity):
     """Representation of a deCONZ cover."""
 
-    DOMAIN = DOMAIN
     TYPE = DOMAIN
 
     def __init__(self, device, gateway):

@@ -16,16 +16,20 @@ EVENT = "Event"
 
 async def async_setup_events(gateway) -> None:
     """Set up the deCONZ events."""
+    gateway.entities[EVENT] = set()
 
     @callback
-    def async_add_sensor(sensors, new=True):
+    def async_add_sensor(sensors):
         """Create DeconzEvent."""
         for sensor in sensors:
 
             if not gateway.option_allow_clip_sensor and sensor.type.startswith("CLIP"):
                 continue
 
-            if not new or sensor.type not in Switch.ZHATYPE:
+            if (
+                sensor.type not in Switch.ZHATYPE
+                or sensor.uniqueid in gateway.entities[EVENT]
+            ):
                 continue
 
             new_event = DeconzEvent(sensor, gateway)
@@ -46,7 +50,7 @@ async def async_setup_events(gateway) -> None:
 async def async_unload_events(gateway) -> None:
     """Unload all deCONZ events."""
     for event in gateway.events:
-        event.async_will_remove_from_hass()
+        await event.async_will_remove_from_hass()
 
     gateway.events.clear()
 

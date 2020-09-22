@@ -79,7 +79,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     gateway = get_gateway_from_config_entry(hass, config_entry)
     gateway.entities[BATTERY] = set()
     gateway.entities[DOMAIN] = set()
-    gateway.entities[EVENT] = set()
 
     battery_handler = DeconzBatteryHandler(gateway)
 
