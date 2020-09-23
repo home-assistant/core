@@ -143,6 +143,16 @@ class OmniLogicEntity(CoordinatorEntity):
     @property
     def device_state_attributes(self):
         """Return the attributes."""
+        if "Alarms" in self.coordinator.data[self._item_id]:
+            alarms = self.coordinator.data[self._item_id]["Alarms"]
+
+            if len(alarms) != 0:
+                self._attrs["alarm_message"] = alarms[0].get("Message")
+                self._attrs["alarm_comment"] = alarms[0].get("Comment")
+            else:
+                self._attrs["alarm_message"] = None
+                self._attrs["alarm_comment"] = None
+
         return self._attrs
 
     @property
