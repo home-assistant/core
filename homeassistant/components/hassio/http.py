@@ -74,10 +74,10 @@ class HassIOView(HomeAssistantView):
         headers = _init_header(request)
         if path == "snapshots/new/upload":
             # We need to reuse the full content type that includes the boundary
-            headers["Content-Type"] = request._stored_content_type
+            headers["Content-Type"] = request._stored_content_type  # pylint: disable=protected-access
 
             # Snapshots are big, so we need to adjust the allowed size
-            request._client_max_size = MAX_UPLOAD_SIZE
+            request._client_max_size = MAX_UPLOAD_SIZE  # pylint: disable=protected-access
 
         try:
             with async_timeout.timeout(10):
