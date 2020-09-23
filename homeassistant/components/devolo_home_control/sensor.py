@@ -68,9 +68,6 @@ class DevoloMultiLevelDeviceEntity(DevoloDeviceEntity):
             element_uid
         ]
 
-        self._value = self._multi_level_sensor_property.value
-        self._unit = self._multi_level_sensor_property.unit
-
         self._device_class = DEVICE_CLASS_MAPPING.get(
             self._multi_level_sensor_property.sensor_type
         )
@@ -80,6 +77,9 @@ class DevoloMultiLevelDeviceEntity(DevoloDeviceEntity):
             device_instance=device_instance,
             element_uid=element_uid,
         )
+
+        self._value = self._multi_level_sensor_property.value
+        self._unit = self._multi_level_sensor_property.unit
 
         if self._device_class is None:
             self._name += f" {self._multi_level_sensor_property.sensor_type}"
@@ -107,21 +107,23 @@ class DevoloConsumptionEntity(DevoloMultiLevelDeviceEntity):
         """Initialize a devolo consumption sensor."""
         self._device_instance = device_instance
 
-        self._value = getattr(
-            device_instance.consumption_property[element_uid], consumption
-        )
         self._device_class = DEVICE_CLASS_MAPPING.get(consumption)
         self._sensor_type = consumption
-        self._unit = getattr(
-            device_instance.consumption_property[element_uid], f"{consumption}_unit"
-        )
-        self._element_uid = element_uid
 
-        super(DevoloMultiLevelDeviceEntity, self).__init__(
+        super(  # pylint: disable=bad-super-call
+            DevoloMultiLevelDeviceEntity, self
+        ).__init__(
             homecontrol=homecontrol,
             device_instance=device_instance,
             element_uid=element_uid,
-        )  # pylint: disable=bad-super-call
+        )
+
+        self._value = getattr(
+            device_instance.consumption_property[element_uid], consumption
+        )
+        self._unit = getattr(
+            device_instance.consumption_property[element_uid], f"{consumption}_unit"
+        )
 
         self._name += f" {consumption}"
 
@@ -132,9 +134,9 @@ class DevoloConsumptionEntity(DevoloMultiLevelDeviceEntity):
 
     def _sync(self, message):
         """Update the consumption sensor state."""
-        if message[0] == self._element_uid:
+        if message[0] == self._unique_id:
             self._value = getattr(
-                self._device_instance.consumption_property[self._element_uid],
+                self._device_instance.consumption_property[self._unique_id],
                 self._sensor_type,
             )
         elif message[0].startswith("hdm"):

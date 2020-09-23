@@ -18,6 +18,7 @@ class DevoloDeviceEntity(Entity):
         self._unique_id = element_uid
         self._homecontrol = homecontrol
         self._name = device_instance.item_name
+        self._value = None
 
         # This is not doing I/O. It fetches an internal state of the API
         self._available = device_instance.is_online()
