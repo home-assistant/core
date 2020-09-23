@@ -68,7 +68,7 @@
           "birth_payload": "Birth message payload",
           "birth_qos": "Birth message QoS",
           "birth_retain": "Birth message retain",
-          "will_enable": "Enable birth message",
+          "will_enable": "Enable will message",
           "will_topic": "Will message topic",
           "will_payload": "Will message payload",
           "will_qos": "Will message QoS",
