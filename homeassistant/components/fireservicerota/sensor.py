@@ -72,12 +72,8 @@ class IncidentsSensor(RestoreEntity):
 
         if data:
             for value in (
-                "id",
                 "trigger",
-                "state",
                 "created_at",
-                "start_time",
-                "location",
                 "message_to_speech_url",
                 "prio",
                 "type",
@@ -89,14 +85,6 @@ class IncidentsSensor(RestoreEntity):
 
             try:
                 for address_value in (
-                    "address_line1",
-                    "address_line2",
-                    "street_name",
-                    "house_number",
-                    "postcode",
-                    "city",
-                    "country",
-                    "state",
                     "latitude",
                     "longitude",
                     "address_type",
