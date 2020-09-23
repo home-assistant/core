@@ -3,7 +3,8 @@
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import dynalite
+from homeassistant.components.dynalite import const as dyn_const
+from homeassistant.const import CONF_HOST, CONF_PORT
 
 from tests.async_mock import AsyncMock, patch
 from tests.common import MockConfigEntry
@@ -27,9 +28,9 @@ async def test_import_flow(
         side_effect=[first_con, second_con],
     ):
         result = await hass.config_entries.flow.async_init(
-            dynalite.DOMAIN,
+            dyn_const.DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
-            data={dynalite.CONF_HOST: host},
+            data={CONF_HOST: host},
         )
         await hass.async_block_till_done()
     assert result["type"] == exp_type
@@ -42,17 +43,15 @@ async def test_import_flow(
 async def test_existing(hass):
     """Test when the entry exists with the same config."""
     host = "1.2.3.4"
-    MockConfigEntry(
-        domain=dynalite.DOMAIN, data={dynalite.CONF_HOST: host}
-    ).add_to_hass(hass)
+    MockConfigEntry(domain=dyn_const.DOMAIN, data={CONF_HOST: host}).add_to_hass(hass)
     with patch(
         "homeassistant.components.dynalite.bridge.DynaliteDevices.async_setup",
         return_value=True,
     ):
         result = await hass.config_entries.flow.async_init(
-            dynalite.DOMAIN,
+            dyn_const.DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
-            data={dynalite.CONF_HOST: host},
+            data={CONF_HOST: host},
         )
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
@@ -64,8 +63,8 @@ async def test_existing_update(hass):
     port1 = 7777
     port2 = 8888
     entry = MockConfigEntry(
-        domain=dynalite.DOMAIN,
-        data={dynalite.CONF_HOST: host, dynalite.CONF_PORT: port1},
+        domain=dyn_const.DOMAIN,
+        data={CONF_HOST: host, CONF_PORT: port1},
     )
     entry.add_to_hass(hass)
     with patch(
@@ -77,9 +76,9 @@ async def test_existing_update(hass):
         mock_dyn_dev().configure.assert_called_once()
         assert mock_dyn_dev().configure.mock_calls[0][1][0]["port"] == port1
         result = await hass.config_entries.flow.async_init(
-            dynalite.DOMAIN,
+            dyn_const.DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
-            data={dynalite.CONF_HOST: host, dynalite.CONF_PORT: port2},
+            data={CONF_HOST: host, CONF_PORT: port2},
         )
         await hass.async_block_till_done()
         assert mock_dyn_dev().configure.call_count == 2
@@ -92,17 +91,15 @@ async def test_two_entries(hass):
     """Test when two different entries exist with different hosts."""
     host1 = "1.2.3.4"
     host2 = "5.6.7.8"
-    MockConfigEntry(
-        domain=dynalite.DOMAIN, data={dynalite.CONF_HOST: host1}
-    ).add_to_hass(hass)
+    MockConfigEntry(domain=dyn_const.DOMAIN, data={CONF_HOST: host1}).add_to_hass(hass)
     with patch(
         "homeassistant.components.dynalite.bridge.DynaliteDevices.async_setup",
         return_value=True,
     ):
         result = await hass.config_entries.flow.async_init(
-            dynalite.DOMAIN,
+            dyn_const.DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
-            data={dynalite.CONF_HOST: host2},
+            data={CONF_HOST: host2},
         )
     assert result["type"] == "create_entry"
     assert result["result"].state == "loaded"

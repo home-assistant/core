@@ -1,174 +1,32 @@
 """Support for the Dynalite networks."""
 
 import asyncio
-from typing import Any, Dict, Union
+from typing import Any, Dict
 
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components import websocket_api
-from homeassistant.components.cover import DEVICE_CLASSES_SCHEMA
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 
 # Loading the config flow file will register the flow
 from .bridge import DynaliteBridge
+from .bridge_schema import BRIDGE_SCHEMA
 from .const import (
-    ACTIVE_INIT,
-    ACTIVE_OFF,
-    ACTIVE_ON,
     ATTR_AREA,
     ATTR_CHANNEL,
     ATTR_HOST,
-    CONF_ACTIVE,
-    CONF_AREA,
-    CONF_AUTO_DISCOVER,
     CONF_BRIDGES,
-    CONF_CHANNEL,
-    CONF_CHANNEL_COVER,
-    CONF_CLOSE_PRESET,
-    CONF_DEFAULT,
-    CONF_DEVICE_CLASS,
-    CONF_DURATION,
-    CONF_FADE,
-    CONF_LEVEL,
-    CONF_NO_DEFAULT,
-    CONF_OPEN_PRESET,
-    CONF_POLL_TIMER,
-    CONF_PRESET,
-    CONF_ROOM_OFF,
-    CONF_ROOM_ON,
-    CONF_STOP_PRESET,
-    CONF_TEMPLATE,
-    CONF_TILT_TIME,
-    DEFAULT_CHANNEL_TYPE,
-    DEFAULT_NAME,
-    DEFAULT_PORT,
-    DEFAULT_TEMPLATES,
     DOMAIN,
     ENTITY_PLATFORMS,
     LOGGER,
     SERVICE_REQUEST_AREA_PRESET,
     SERVICE_REQUEST_CHANNEL_LEVEL,
 )
-
-
-def num_string(value: Union[int, str]) -> str:
-    """Test if value is a string of digits, aka an integer."""
-    new_value = str(value)
-    if new_value.isdigit():
-        return new_value
-    raise vol.Invalid("Not a string with numbers")
-
-
-CHANNEL_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_FADE): vol.Coerce(float),
-        vol.Optional(CONF_TYPE, default=DEFAULT_CHANNEL_TYPE): vol.Any(
-            "light", "switch"
-        ),
-    }
-)
-
-CHANNEL_SCHEMA = vol.Schema({num_string: CHANNEL_DATA_SCHEMA})
-
-PRESET_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_FADE): vol.Coerce(float),
-        vol.Optional(CONF_LEVEL): vol.Coerce(float),
-    }
-)
-
-PRESET_SCHEMA = vol.Schema({num_string: vol.Any(PRESET_DATA_SCHEMA, None)})
-
-TEMPLATE_ROOM_SCHEMA = vol.Schema(
-    {vol.Optional(CONF_ROOM_ON): num_string, vol.Optional(CONF_ROOM_OFF): num_string}
-)
-
-TEMPLATE_TIMECOVER_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_CHANNEL_COVER): num_string,
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_OPEN_PRESET): num_string,
-        vol.Optional(CONF_CLOSE_PRESET): num_string,
-        vol.Optional(CONF_STOP_PRESET): num_string,
-        vol.Optional(CONF_DURATION): vol.Coerce(float),
-        vol.Optional(CONF_TILT_TIME): vol.Coerce(float),
-    }
-)
-
-TEMPLATE_DATA_SCHEMA = vol.Any(TEMPLATE_ROOM_SCHEMA, TEMPLATE_TIMECOVER_SCHEMA)
-
-TEMPLATE_SCHEMA = vol.Schema({str: TEMPLATE_DATA_SCHEMA})
-
-
-def validate_area(config: Dict[str, Any]) -> Dict[str, Any]:
-    """Validate that template parameters are only used if area is using the relevant template."""
-    conf_set = set()
-    for template in DEFAULT_TEMPLATES:
-        for conf in DEFAULT_TEMPLATES[template]:
-            conf_set.add(conf)
-    if config.get(CONF_TEMPLATE):
-        for conf in DEFAULT_TEMPLATES[config[CONF_TEMPLATE]]:
-            conf_set.remove(conf)
-    for conf in conf_set:
-        if config.get(conf):
-            raise vol.Invalid(
-                f"{conf} should not be part of area {config[CONF_NAME]} config"
-            )
-    return config
-
-
-AREA_DATA_SCHEMA = vol.Schema(
-    vol.All(
-        {
-            vol.Required(CONF_NAME): cv.string,
-            vol.Optional(CONF_TEMPLATE): vol.In(DEFAULT_TEMPLATES),
-            vol.Optional(CONF_FADE): vol.Coerce(float),
-            vol.Optional(CONF_NO_DEFAULT): cv.boolean,
-            vol.Optional(CONF_CHANNEL): CHANNEL_SCHEMA,
-            vol.Optional(CONF_PRESET): PRESET_SCHEMA,
-            # the next ones can be part of the templates
-            vol.Optional(CONF_ROOM_ON): num_string,
-            vol.Optional(CONF_ROOM_OFF): num_string,
-            vol.Optional(CONF_CHANNEL_COVER): num_string,
-            vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-            vol.Optional(CONF_OPEN_PRESET): num_string,
-            vol.Optional(CONF_CLOSE_PRESET): num_string,
-            vol.Optional(CONF_STOP_PRESET): num_string,
-            vol.Optional(CONF_DURATION): vol.Coerce(float),
-            vol.Optional(CONF_TILT_TIME): vol.Coerce(float),
-        },
-        validate_area,
-    )
-)
-
-AREA_SCHEMA = vol.Schema({num_string: vol.Any(AREA_DATA_SCHEMA, None)})
-
-PLATFORM_DEFAULTS_SCHEMA = vol.Schema({vol.Optional(CONF_FADE): vol.Coerce(float)})
-
-
-BRIDGE_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
-        vol.Optional(CONF_AUTO_DISCOVER, default=False): vol.Coerce(bool),
-        vol.Optional(CONF_POLL_TIMER, default=1.0): vol.Coerce(float),
-        vol.Optional(CONF_AREA): AREA_SCHEMA,
-        vol.Optional(CONF_DEFAULT): PLATFORM_DEFAULTS_SCHEMA,
-        vol.Optional(CONF_ACTIVE, default=False): vol.Any(
-            ACTIVE_ON, ACTIVE_OFF, ACTIVE_INIT, cv.boolean
-        ),
-        vol.Optional(CONF_PRESET): PRESET_SCHEMA,
-        vol.Optional(CONF_TEMPLATE): TEMPLATE_SCHEMA,
-    }
-)
+from .websocket_api import async_register_api
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -249,45 +107,7 @@ async def async_setup(hass: HomeAssistant, config: Dict[str, Any]) -> bool:
         ),
     )
 
-    def websocket_get_config_entry_data(hass, connection, msg):
-        """Get the data of a config entry."""
-        connection.send_result(
-            msg["id"],
-            {"data": dict(hass.config_entries.async_get_entry(msg["entry_id"]).data)},
-        )
-
-    ws_type_dynalite_get_entry = "dynalite/get_entry"
-    schema_websocket_get_entry = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-        {"type": ws_type_dynalite_get_entry, "entry_id": str}
-    )
-    hass.components.websocket_api.async_register_command(
-        ws_type_dynalite_get_entry,
-        websocket_get_config_entry_data,
-        schema_websocket_get_entry,
-    )
-
-    def websocket_update_config_entry_data(hass, connection, msg):
-        """Update the data for a config entry."""
-        entry_data = msg["entry_data"]
-        entry = hass.config_entries.async_get_entry(msg["entry_id"])
-        existing_data = entry.data
-        if existing_data != entry_data:
-            hass.config_entries.async_update_entry(entry, data=entry_data)
-        connection.send_result(msg["id"], {})
-
-    ws_type_dynalite_update_entry = "dynalite/update_entry"
-    schema_websocket_update_entry = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-        {
-            "type": ws_type_dynalite_update_entry,
-            "entry_id": str,
-            "entry_data": BRIDGE_SCHEMA,
-        }
-    )
-    hass.components.websocket_api.async_register_command(
-        ws_type_dynalite_update_entry,
-        websocket_update_config_entry_data,
-        schema_websocket_update_entry,
-    )
+    async_register_api(hass)
 
     return True
 
