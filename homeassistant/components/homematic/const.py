@@ -66,6 +66,7 @@ HM_DEVICE_TYPES = {
         "ColorEffectLight",
         "IPKeySwitchLevel",
         "ColdWarmDimmer",
+        "IPWDimmer",
     ],
     DISCOVER_SENSORS: [
         "SwitchPowermeter",
@@ -110,6 +111,7 @@ HM_DEVICE_TYPES = {
         "IPThermostatWall2",
         "IPRemoteMotionV2",
         "HBUNISenWEA",
+        "IPWMotionDection",
     ],
     DISCOVER_CLIMATE: [
         "Thermostat",
@@ -151,6 +153,7 @@ HM_DEVICE_TYPES = {
         "IPContact",
         "IPRemoteMotionV2",
         "IPWInputDevice",
+        "IPWMotionDection",
     ],
     DISCOVER_COVER: [
         "Blind",

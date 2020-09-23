@@ -1,6 +1,11 @@
 {
     "config": {
         "step": {
+            "user": {
+                "data": {
+                    "port": "Porta"
+                }
+            },
             "zeroconf_confirm": {
                 "description": "Deseja adicionar o Elgato Key Light n\u00famero de s\u00e9rie ` {serial_number} ` ao Home Assistant?",
                 "title": "Dispositivo Elgato Key Light descoberto"

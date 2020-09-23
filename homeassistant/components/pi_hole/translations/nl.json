@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Service al geconfigureerd",
-            "duplicated_name": "Naam bestond al"
+            "already_configured": "Service al geconfigureerd"
         },
         "error": {
             "cannot_connect": "Kon niet verbinden"

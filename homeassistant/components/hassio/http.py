@@ -12,6 +12,7 @@ from aiohttp.web_exceptions import HTTPBadGateway
 import async_timeout
 
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
+from homeassistant.const import HTTP_UNAUTHORIZED
 
 from .const import X_HASS_IS_ADMIN, X_HASS_USER_ID, X_HASSIO
 
@@ -53,7 +54,7 @@ class HassIOView(HomeAssistantView):
     ) -> Union[web.Response, web.StreamResponse]:
         """Route data to Hass.io."""
         if _need_auth(path) and not request[KEY_AUTHENTICATED]:
-            return web.Response(status=401)
+            return web.Response(status=HTTP_UNAUTHORIZED)
 
         return await self._command_proxy(path, request)
 

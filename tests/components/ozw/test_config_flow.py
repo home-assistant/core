@@ -20,7 +20,8 @@ async def test_user_create_entry(hass):
     with patch(
         "homeassistant.components.ozw.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.ozw.async_setup_entry", return_value=True,
+        "homeassistant.components.ozw.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 

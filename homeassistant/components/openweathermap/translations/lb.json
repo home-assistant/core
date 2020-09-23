@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "auth": "Api Schl\u00ebssel ass net korrekt."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "language": "Sproch",
+                    "latitude": "Breedegrad",
+                    "longitude": "L\u00e4ngegrad"
+                }
+            }
+        }
+    }
+}

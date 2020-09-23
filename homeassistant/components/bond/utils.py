@@ -78,6 +78,7 @@ class BondHub:
     async def setup(self):
         """Read hub version information."""
         self._version = await self.bond.version()
+        _LOGGER.debug("Bond reported the following version info: %s", self._version)
 
         # Fetch all available devices using Bond API.
         device_ids = await self.bond.devices()

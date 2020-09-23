@@ -235,12 +235,32 @@ async def test_ota_sw_version(hass, ota_zha_device):
     "device, last_seen_delta, is_available",
     (
         ("zigpy_device", 0, True),
-        ("zigpy_device", zha_core_device.CONSIDER_UNAVAILABLE_MAINS + 2, True,),
-        ("zigpy_device", zha_core_device.CONSIDER_UNAVAILABLE_BATTERY - 2, True,),
-        ("zigpy_device", zha_core_device.CONSIDER_UNAVAILABLE_BATTERY + 2, False,),
+        (
+            "zigpy_device",
+            zha_core_device.CONSIDER_UNAVAILABLE_MAINS + 2,
+            True,
+        ),
+        (
+            "zigpy_device",
+            zha_core_device.CONSIDER_UNAVAILABLE_BATTERY - 2,
+            True,
+        ),
+        (
+            "zigpy_device",
+            zha_core_device.CONSIDER_UNAVAILABLE_BATTERY + 2,
+            False,
+        ),
         ("zigpy_device_mains", 0, True),
-        ("zigpy_device_mains", zha_core_device.CONSIDER_UNAVAILABLE_MAINS - 2, True,),
-        ("zigpy_device_mains", zha_core_device.CONSIDER_UNAVAILABLE_MAINS + 2, False,),
+        (
+            "zigpy_device_mains",
+            zha_core_device.CONSIDER_UNAVAILABLE_MAINS - 2,
+            True,
+        ),
+        (
+            "zigpy_device_mains",
+            zha_core_device.CONSIDER_UNAVAILABLE_MAINS + 2,
+            False,
+        ),
         (
             "zigpy_device_mains",
             zha_core_device.CONSIDER_UNAVAILABLE_BATTERY - 2,

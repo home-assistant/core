@@ -354,7 +354,7 @@ def show_setup_message(hass, entry_id, bridge_name, pincode, uri):
 
     buffer = io.BytesIO()
     url = pyqrcode.create(uri)
-    url.svg(buffer, scale=5)
+    url.svg(buffer, scale=5, module_color="#000", background="#FFF")
     pairing_secret = secrets.token_hex(32)
 
     hass.data[DOMAIN][entry_id][HOMEKIT_PAIRING_QR] = buffer.getvalue()

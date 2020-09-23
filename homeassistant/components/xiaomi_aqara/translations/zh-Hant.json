@@ -7,8 +7,10 @@
         },
         "error": {
             "discovery_error": "\u63a2\u7d22\u5c0f\u7c73 Aqara \u7db2\u95dc\u5931\u6557\uff0c\u8acb\u5617\u8a66\u4f7f\u7528\u57f7\u884c Home Assistant \u8a2d\u5099\u7684 IP \u4f5c\u70ba\u4ecb\u9762",
+            "invalid_host": "\u7121\u6548\u7684 IP \u4f4d\u5740\uff0c\u8acb\u53c3\u95b1 https://www.home-assistant.io/integrations/xiaomi_aqara/#connection-problem",
             "invalid_interface": "\u7db2\u8def\u4ecb\u9762\u7121\u6548",
             "invalid_key": "\u7db2\u95dc\u5bc6\u9470\u7121\u6548",
+            "invalid_mac": "\u7121\u6548\u7684 Mac \u4f4d\u5740",
             "not_found_error": "Zeroconf \u6240\u63a2\u7d22\u7684\u7db2\u95dc\u7121\u6cd5\u53d6\u5f97\u5fc5\u8981\u7684\u8cc7\u8a0a\uff0c\u8acb\u5617\u8a66\u4f7f\u7528\u57f7\u884c Home Assistant \u7684\u8a2d\u5099 IP \u4f5c\u70ba\u4ecb\u9762"
         },
         "flow_title": "\u5c0f\u7c73 Aqara \u7db2\u95dc\uff1a{name}",
@@ -30,9 +32,11 @@
             },
             "user": {
                 "data": {
-                    "interface": "\u4f7f\u7528\u7684\u7db2\u8def\u4ecb\u9762"
+                    "host": "IP \u4f4d\u5740\uff08\u9078\u9805\uff09",
+                    "interface": "\u4f7f\u7528\u7684\u7db2\u8def\u4ecb\u9762",
+                    "mac": "Mac \u4f4d\u5740\uff08\u9078\u9805\uff09"
                 },
-                "description": "\u9023\u7dda\u81f3\u5c0f\u7c73 Aqara \u7db2\u95dc",
+                "description": "\u9023\u7dda\u81f3\u5c0f\u7c73 Aqara \u7db2\u95dc\uff0c\u5047\u5982 IP \u6216 Mac \u4f4d\u5740\u70ba\u7a7a\u767d\u3001\u5c07\u9032\u884c\u81ea\u52d5\u63a2\u7d22",
                 "title": "\u5c0f\u7c73 Aqara \u7db2\u95dc"
             }
         }

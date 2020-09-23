@@ -30,7 +30,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if not dev_ids:
             return
         entities = await hass.async_add_executor_job(
-            _setup_entities, hass, dev_ids, platform,
+            _setup_entities,
+            hass,
+            dev_ids,
+            platform,
         )
         async_add_entities(entities)
 

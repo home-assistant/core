@@ -24,14 +24,15 @@ from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_TEMPERATURE,
+    LIGHT_LUX,
+    PERCENTAGE,
     STATE_ON,
     STATE_UNAVAILABLE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    UNIT_PERCENTAGE,
     __version__,
 )
-from homeassistant.core import callback as ha_callback, split_entity_id
+from homeassistant.core import Context, callback as ha_callback, split_entity_id
 from homeassistant.helpers.event import (
     async_track_state_change_event,
     track_point_in_utc_time,
@@ -189,7 +190,7 @@ def get_accessory(hass, driver, state, aid, config):
             TEMP_FAHRENHEIT,
         ):
             a_type = "TemperatureSensor"
-        elif device_class == DEVICE_CLASS_HUMIDITY and unit == UNIT_PERCENTAGE:
+        elif device_class == DEVICE_CLASS_HUMIDITY and unit == PERCENTAGE:
             a_type = "HumiditySensor"
         elif device_class == DEVICE_CLASS_PM25 or DEVICE_CLASS_PM25 in state.entity_id:
             a_type = "AirQualitySensor"
@@ -197,7 +198,7 @@ def get_accessory(hass, driver, state, aid, config):
             a_type = "CarbonMonoxideSensor"
         elif device_class == DEVICE_CLASS_CO2 or DEVICE_CLASS_CO2 in state.entity_id:
             a_type = "CarbonDioxideSensor"
-        elif device_class == DEVICE_CLASS_ILLUMINANCE or unit in ("lm", "lx"):
+        elif device_class == DEVICE_CLASS_ILLUMINANCE or unit in ("lm", LIGHT_LUX):
             a_type = "LightSensor"
 
     elif state.domain == "switch":
@@ -490,9 +491,12 @@ class HomeAccessory(Accessory):
             ATTR_SERVICE: service,
             ATTR_VALUE: value,
         }
+        context = Context()
 
-        self.hass.bus.async_fire(EVENT_HOMEKIT_CHANGED, event_data)
-        await self.hass.services.async_call(domain, service, service_data)
+        self.hass.bus.async_fire(EVENT_HOMEKIT_CHANGED, event_data, context=context)
+        await self.hass.services.async_call(
+            domain, service, service_data, context=context
+        )
 
     @ha_callback
     def async_stop(self):

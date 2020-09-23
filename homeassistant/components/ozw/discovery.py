@@ -250,6 +250,16 @@ DISCOVERY_SCHEMAS = (
                 const.DISC_INDEX: ValueIndex.SWITCH_COLOR_CHANNELS,
                 const.DISC_OPTIONAL: True,
             },
+            "min_kelvin": {
+                const.DISC_COMMAND_CLASS: (CommandClass.CONFIGURATION,),
+                const.DISC_INDEX: 81,  # PR for upstream to add SWITCH_COLOR_CT_WARM
+                const.DISC_OPTIONAL: True,
+            },
+            "max_kelvin": {
+                const.DISC_COMMAND_CLASS: (CommandClass.CONFIGURATION,),
+                const.DISC_INDEX: 82,  # PR for upstream to add SWITCH_COLOR_CT_COLD
+                const.DISC_OPTIONAL: True,
+            },
         },
     },
     {  # All other text/numeric sensors
@@ -334,12 +344,6 @@ def check_value_schema(value, schema):
         value.instance, schema[const.DISC_INSTANCE]
     ):
         return False
-    if const.DISC_SCHEMAS in schema:
-        found = False
-        for schema_item in schema[const.DISC_SCHEMAS]:
-            found = found or check_value_schema(value, schema_item)
-        if not found:
-            return False
 
     return True
 

@@ -119,9 +119,12 @@ class IcloudAccount:
             api_devices = self.api.devices
             # Gets device owners infos
             user_info = api_devices.response["userInfo"]
-        except (PyiCloudServiceNotActivatedException, PyiCloudNoDevicesException):
+        except (
+            PyiCloudServiceNotActivatedException,
+            PyiCloudNoDevicesException,
+        ) as err:
             _LOGGER.error("No iCloud device found")
-            raise ConfigEntryNotReady
+            raise ConfigEntryNotReady from err
 
         self._owner_fullname = f"{user_info['firstName']} {user_info['lastName']}"
 

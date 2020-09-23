@@ -1,4 +1,5 @@
-"""Etekcity VeSync integration."""
+"""VeSync integration."""
+import asyncio
 import logging
 
 from pyvesync import VeSync
@@ -16,9 +17,12 @@ from .const import (
     SERVICE_UPDATE_DEVS,
     VS_DISCOVERY,
     VS_DISPATCHERS,
+    VS_FANS,
     VS_MANAGER,
     VS_SWITCHES,
 )
+
+PLATFORMS = ["switch", "fan"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,6 +84,7 @@ async def async_setup_entry(hass, config_entry):
     hass.data[DOMAIN][VS_MANAGER] = manager
 
     switches = hass.data[DOMAIN][VS_SWITCHES] = []
+    fans = hass.data[DOMAIN][VS_FANS] = []
 
     hass.data[DOMAIN][VS_DISPATCHERS] = []
 
@@ -87,13 +92,19 @@ async def async_setup_entry(hass, config_entry):
         switches.extend(device_dict[VS_SWITCHES])
         hass.async_create_task(forward_setup(config_entry, "switch"))
 
+    if device_dict[VS_FANS]:
+        fans.extend(device_dict[VS_FANS])
+        hass.async_create_task(forward_setup(config_entry, "fan"))
+
     async def async_new_device_discovery(service):
         """Discover if new devices should be added."""
         manager = hass.data[DOMAIN][VS_MANAGER]
         switches = hass.data[DOMAIN][VS_SWITCHES]
+        fans = hass.data[DOMAIN][VS_FANS]
 
         dev_dict = await async_process_devices(hass, manager)
         switch_devs = dev_dict.get(VS_SWITCHES, [])
+        fan_devs = dev_dict.get(VS_FANS, [])
 
         switch_set = set(switch_devs)
         new_switches = list(switch_set.difference(switches))
@@ -105,6 +116,16 @@ async def async_setup_entry(hass, config_entry):
             switches.extend(new_switches)
             hass.async_create_task(forward_setup(config_entry, "switch"))
 
+        fan_set = set(fan_devs)
+        new_fans = list(fan_set.difference(fans))
+        if new_fans and fans:
+            fans.extend(new_fans)
+            async_dispatcher_send(hass, VS_DISCOVERY.format(VS_FANS), new_fans)
+            return
+        if new_fans and not fans:
+            fans.extend(new_fans)
+            hass.async_create_task(forward_setup(config_entry, "fan"))
+
     hass.services.async_register(
         DOMAIN, SERVICE_UPDATE_DEVS, async_new_device_discovery
     )
@@ -114,14 +135,15 @@ async def async_setup_entry(hass, config_entry):
 
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
-    forward_unload = hass.config_entries.async_forward_entry_unload
-    remove_switches = False
-    if hass.data[DOMAIN][VS_SWITCHES]:
-        remove_switches = await forward_unload(entry, "switch")
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, component)
+                for component in PLATFORMS
+            ]
+        )
+    )
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id)
 
-    if remove_switches:
-        hass.services.async_remove(DOMAIN, SERVICE_UPDATE_DEVS)
-        del hass.data[DOMAIN]
-        return True
-
-    return False
+    return unload_ok

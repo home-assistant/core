@@ -25,8 +25,11 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.util.decorator import Registry
 import homeassistant.util.dt as dt_util
+
+from . import DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -150,6 +153,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the template sensors."""
+
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+
     name = config.get(CONF_NAME)
     entity_id = config.get(CONF_ENTITY_ID)
 
@@ -279,8 +285,10 @@ class SensorFilter(Entity):
             for state in history_list:
                 self._update_filter_sensor_state(state, False)
 
-        async_track_state_change_event(
-            self.hass, [self._entity], self._update_filter_sensor_state_event
+        self.async_on_remove(
+            async_track_state_change_event(
+                self.hass, [self._entity], self._update_filter_sensor_state_event
+            )
         )
 
     @property

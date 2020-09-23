@@ -101,7 +101,7 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
 
     async def async_turn_on(self):
         """Turn on the media player."""
-        await self._remote.async_turn_on()
+        await self._remote.async_turn_on(context=self._context)
 
     async def async_turn_off(self):
         """Turn off media player."""

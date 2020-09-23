@@ -437,7 +437,10 @@ async def test_window_basic_restore(hass, hk_driver, cls, events):
     registry = await entity_registry.async_get_registry(hass)
 
     registry.async_get_or_create(
-        "cover", "generic", "1234", suggested_object_id="simple",
+        "cover",
+        "generic",
+        "1234",
+        suggested_object_id="simple",
     )
     registry.async_get_or_create(
         "cover",
@@ -472,7 +475,10 @@ async def test_window_restore(hass, hk_driver, cls, events):
     registry = await entity_registry.async_get_registry(hass)
 
     registry.async_get_or_create(
-        "cover", "generic", "1234", suggested_object_id="simple",
+        "cover",
+        "generic",
+        "1234",
+        suggested_object_id="simple",
     )
     registry.async_get_or_create(
         "cover",

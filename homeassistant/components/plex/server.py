@@ -14,6 +14,7 @@ import requests.exceptions
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_EPISODE,
+    MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_PLAYLIST,
     MEDIA_TYPE_VIDEO,
@@ -31,7 +32,6 @@ from .const import (
     CONF_USE_EPISODE_ART,
     DEBOUNCE_TIMEOUT,
     DEFAULT_VERIFY_SSL,
-    DOMAIN,
     PLAYER_SOURCE,
     PLEX_NEW_MP_SIGNAL,
     PLEX_UPDATE_MEDIA_PLAYER_SIGNAL,
@@ -42,7 +42,13 @@ from .const import (
     X_PLEX_PRODUCT,
     X_PLEX_VERSION,
 )
-from .errors import NoServersFound, ServerNotSpecified, ShouldUpdateConfigEntry
+from .errors import (
+    MediaNotFound,
+    NoServersFound,
+    ServerNotSpecified,
+    ShouldUpdateConfigEntry,
+)
+from .media_search import lookup_movie, lookup_music, lookup_tv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -185,7 +191,7 @@ class PlexServer:
                         if _update_plexdirect_hostname():
                             config_entry_update_needed = True
                         else:
-                            raise Unauthorized(
+                            raise Unauthorized(  # pylint: disable=raise-missing-from
                                 "New certificate cannot be validated with provided token"
                             )
                     else:
@@ -449,6 +455,10 @@ class PlexServer:
         """Return playlist from server object."""
         return self._plex_server.playlist(title)
 
+    def playlists(self):
+        """Return available playlists from server object."""
+        return self._plex_server.playlists()
+
     def create_playqueue(self, media, **kwargs):
         """Create playqueue on Plex server."""
         return plexapi.playqueue.PlayQueue.create(self._plex_server, media, **kwargs)
@@ -461,7 +471,7 @@ class PlexServer:
         """Lookup a piece of media."""
         media_type = media_type.lower()
 
-        if media_type == DOMAIN:
+        if isinstance(kwargs.get("plex_key"), int):
             key = kwargs["plex_key"]
             try:
                 return self.fetch_item(key)
@@ -478,12 +488,13 @@ class PlexServer:
                 return None
             except NotFound:
                 _LOGGER.error(
-                    "Playlist '%s' not found", playlist_name,
+                    "Playlist '%s' not found",
+                    playlist_name,
                 )
                 return None
 
         try:
-            library_name = kwargs["library_name"]
+            library_name = kwargs.pop("library_name")
             library_section = self.library.section(library_name)
         except KeyError:
             _LOGGER.error("Must specify 'library_name' for this search")
@@ -492,121 +503,23 @@ class PlexServer:
             _LOGGER.error("Library '%s' not found", library_name)
             return None
 
-        def lookup_music():
-            """Search for music and return a Plex media object."""
-            album_name = kwargs.get("album_name")
-            track_name = kwargs.get("track_name")
-            track_number = kwargs.get("track_number")
-
-            try:
-                artist_name = kwargs["artist_name"]
-                artist = library_section.get(artist_name)
-            except KeyError:
-                _LOGGER.error("Must specify 'artist_name' for this search")
-                return None
-            except NotFound:
-                _LOGGER.error(
-                    "Artist '%s' not found in '%s'", artist_name, library_name
-                )
-                return None
-
-            if album_name:
+        try:
+            if media_type == MEDIA_TYPE_EPISODE:
+                return lookup_tv(library_section, **kwargs)
+            if media_type == MEDIA_TYPE_MOVIE:
+                return lookup_movie(library_section, **kwargs)
+            if media_type == MEDIA_TYPE_MUSIC:
+                return lookup_music(library_section, **kwargs)
+            if media_type == MEDIA_TYPE_VIDEO:
+                # Legacy method for compatibility
                 try:
-                    album = artist.album(album_name)
-                except NotFound:
-                    _LOGGER.error(
-                        "Album '%s' by '%s' not found", album_name, artist_name
-                    )
+                    video_name = kwargs["video_name"]
+                    return library_section.get(video_name)
+                except KeyError:
+                    _LOGGER.error("Must specify 'video_name' for this search")
                     return None
-
-                if track_name:
-                    try:
-                        return album.track(track_name)
-                    except NotFound:
-                        _LOGGER.error(
-                            "Track '%s' on '%s' by '%s' not found",
-                            track_name,
-                            album_name,
-                            artist_name,
-                        )
-                        return None
-
-                if track_number:
-                    for track in album.tracks():
-                        if int(track.index) == int(track_number):
-                            return track
-
-                    _LOGGER.error(
-                        "Track %d on '%s' by '%s' not found",
-                        track_number,
-                        album_name,
-                        artist_name,
-                    )
-                    return None
-                return album
-
-            if track_name:
-                try:
-                    return artist.get(track_name)
-                except NotFound:
-                    _LOGGER.error(
-                        "Track '%s' by '%s' not found", track_name, artist_name
-                    )
-                    return None
-
-            return artist
-
-        def lookup_tv():
-            """Find TV media and return a Plex media object."""
-            season_number = kwargs.get("season_number")
-            episode_number = kwargs.get("episode_number")
-
-            try:
-                show_name = kwargs["show_name"]
-                show = library_section.get(show_name)
-            except KeyError:
-                _LOGGER.error("Must specify 'show_name' for this search")
-                return None
-            except NotFound:
-                _LOGGER.error("Show '%s' not found in '%s'", show_name, library_name)
-                return None
-
-            if not season_number:
-                return show
-
-            try:
-                season = show.season(int(season_number))
-            except NotFound:
-                _LOGGER.error(
-                    "Season %d of '%s' not found", season_number, show_name,
-                )
-                return None
-
-            if not episode_number:
-                return season
-
-            try:
-                return season.episode(episode=int(episode_number))
-            except NotFound:
-                _LOGGER.error(
-                    "Episode not found: %s - S%sE%s",
-                    show_name,
-                    str(season_number).zfill(2),
-                    str(episode_number).zfill(2),
-                )
-                return None
-
-        if media_type == MEDIA_TYPE_MUSIC:
-            return lookup_music()
-        if media_type == MEDIA_TYPE_EPISODE:
-            return lookup_tv()
-        if media_type == MEDIA_TYPE_VIDEO:
-            try:
-                video_name = kwargs["video_name"]
-                return library_section.get(video_name)
-            except KeyError:
-                _LOGGER.error("Must specify 'video_name' for this search")
-            except NotFound:
-                _LOGGER.error(
-                    "Movie '%s' not found in '%s'", video_name, library_name,
-                )
+                except NotFound as err:
+                    raise MediaNotFound(f"Video {video_name}") from err
+        except MediaNotFound as failed_item:
+            _LOGGER.error("%s not found in %s", failed_item, library_name)
+            return None

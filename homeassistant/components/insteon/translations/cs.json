@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "hub2": {
+                "data": {
+                    "password": "Heslo"
+                }
+            }
+        }
+    }
+}

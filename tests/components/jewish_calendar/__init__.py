@@ -10,6 +10,7 @@ from tests.async_mock import patch
 
 _LatLng = namedtuple("_LatLng", ["lat", "lng"])
 
+HDATE_DEFAULT_ALTITUDE = 754
 NYC_LATLNG = _LatLng(40.7128, -74.0060)
 JERUSALEM_LATLNG = _LatLng(31.778, 35.235)
 

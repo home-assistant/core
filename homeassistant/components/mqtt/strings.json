@@ -63,10 +63,12 @@
         "description": "Please select MQTT options.",
         "data": {
           "discovery": "Enable discovery",
+          "birth_enable": "Enable birth message",
           "birth_topic": "Birth message topic",
           "birth_payload": "Birth message payload",
           "birth_qos": "Birth message QoS",
           "birth_retain": "Birth message retain",
+          "will_enable": "Enable birth message",
           "will_topic": "Will message topic",
           "will_payload": "Will message payload",
           "will_qos": "Will message QoS",

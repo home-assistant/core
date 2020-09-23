@@ -6,6 +6,7 @@ from contextlib import suppress
 from datetime import timedelta
 import hashlib
 import logging
+import os
 from random import SystemRandom
 
 from aiohttp import web
@@ -34,6 +35,7 @@ from homeassistant.components.stream.const import (
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_FILENAME,
+    CONTENT_TYPE_MULTIPART,
     EVENT_HOMEASSISTANT_START,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -183,7 +185,7 @@ async def async_get_still_stream(request, image_cb, content_type, interval):
     This method must be run in the event loop.
     """
     response = web.StreamResponse()
-    response.content_type = "multipart/x-mixed-replace; boundary=--frameboundary"
+    response.content_type = CONTENT_TYPE_MULTIPART.format("--frameboundary")
     await response.prepare(request)
 
     async def write_to_mjpeg_stream(img_bytes):
@@ -539,8 +541,8 @@ class CameraMjpegStream(CameraView):
             if interval < MIN_STREAM_INTERVAL:
                 raise ValueError(f"Stream interval must be be > {MIN_STREAM_INTERVAL}")
             return await camera.handle_async_still_stream(request, interval)
-        except ValueError:
-            raise web.HTTPBadRequest()
+        except ValueError as err:
+            raise web.HTTPBadRequest() from err
 
 
 @websocket_api.async_response
@@ -660,6 +662,8 @@ async def async_handle_snapshot_service(camera, service):
 
     def _write_image(to_file, image_data):
         """Executor helper to write image."""
+        if not os.path.exists(os.path.dirname(to_file)):
+            os.makedirs(os.path.dirname(to_file), exist_ok=True)
         with open(to_file, "wb") as img_file:
             img_file.write(image_data)
 

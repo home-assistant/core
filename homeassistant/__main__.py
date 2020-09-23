@@ -195,7 +195,7 @@ def closefds_osx(min_fd: int, max_fd: int) -> None:
     get rid of.
     """
     # pylint: disable=import-outside-toplevel
-    from fcntl import fcntl, F_GETFD, F_SETFD, FD_CLOEXEC
+    from fcntl import F_GETFD, F_SETFD, FD_CLOEXEC, fcntl
 
     for _fd in range(min_fd, max_fd):
         try:

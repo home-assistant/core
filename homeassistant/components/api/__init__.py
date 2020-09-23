@@ -375,8 +375,8 @@ class APIDomainServicesView(HomeAssistantView):
                 await hass.services.async_call(
                     domain, service, data, True, self.context(request)
                 )
-            except (vol.Invalid, ServiceNotFound):
-                raise HTTPBadRequest()
+            except (vol.Invalid, ServiceNotFound) as ex:
+                raise HTTPBadRequest() from ex
 
         return self.json(changed_states)
 

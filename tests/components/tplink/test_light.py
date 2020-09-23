@@ -237,7 +237,10 @@ def dimmer_switch_mock_data_fixture() -> None:
 async def update_entity(hass: HomeAssistant, entity_id: str) -> None:
     """Run an update action for an entity."""
     await hass.services.async_call(
-        HA_DOMAIN, SERVICE_UPDATE_ENTITY, {ATTR_ENTITY_ID: entity_id}, blocking=True,
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
     )
     await hass.async_block_till_done()
 
@@ -321,7 +324,10 @@ async def test_smartswitch(
     assert state.state == "off"
 
     await hass.services.async_call(
-        LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: "light.dimmer1"}, blocking=True,
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "light.dimmer1"},
+        blocking=True,
     )
     await hass.async_block_till_done()
     await update_entity(hass, "light.dimmer1")
@@ -355,7 +361,10 @@ async def test_light(hass: HomeAssistant, light_mock_data: LightMockData) -> Non
     assert hass.states.get("light.light1")
 
     await hass.services.async_call(
-        LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: "light.light1"}, blocking=True,
+        LIGHT_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "light.light1"},
+        blocking=True,
     )
     await hass.async_block_till_done()
     await update_entity(hass, "light.light1")
@@ -408,7 +417,10 @@ async def test_light(hass: HomeAssistant, light_mock_data: LightMockData) -> Non
     light_state["dft_on_state"]["saturation"] = 78
 
     await hass.services.async_call(
-        LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: "light.light1"}, blocking=True,
+        LIGHT_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "light.light1"},
+        blocking=True,
     )
     await hass.async_block_till_done()
     await update_entity(hass, "light.light1")
@@ -417,7 +429,10 @@ async def test_light(hass: HomeAssistant, light_mock_data: LightMockData) -> Non
     assert state.state == "off"
 
     await hass.services.async_call(
-        LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: "light.light1"}, blocking=True,
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "light.light1"},
+        blocking=True,
     )
     await hass.async_block_till_done()
     await update_entity(hass, "light.light1")
@@ -504,7 +519,10 @@ async def test_get_light_state_retry(
     await hass.async_block_till_done()
 
     await hass.services.async_call(
-        LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: "light.light1"}, blocking=True,
+        LIGHT_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "light.light1"},
+        blocking=True,
     )
     await hass.async_block_till_done()
     await update_entity(hass, "light.light1")

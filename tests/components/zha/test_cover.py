@@ -314,7 +314,10 @@ async def test_shade(hass, zha_device_joined_restored, zigpy_shade_device):
     # test cover stop
     with patch("zigpy.zcl.Cluster.request", side_effect=asyncio.TimeoutError):
         await hass.services.async_call(
-            DOMAIN, SERVICE_STOP_COVER, {"entity_id": entity_id}, blocking=True,
+            DOMAIN,
+            SERVICE_STOP_COVER,
+            {"entity_id": entity_id},
+            blocking=True,
         )
         assert cluster_level.request.call_count == 1
         assert cluster_level.request.call_args[0][0] is False

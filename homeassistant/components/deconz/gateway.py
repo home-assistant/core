@@ -25,6 +25,7 @@ from .const import (
     NEW_SENSOR,
     SUPPORTED_PLATFORMS,
 )
+from .deconz_event import async_setup_events, async_unload_events
 from .errors import AuthenticationRequired, CannotConnect
 
 
@@ -98,8 +99,8 @@ class DeconzGateway:
                 self.async_connection_status_callback,
             )
 
-        except CannotConnect:
-            raise ConfigEntryNotReady
+        except CannotConnect as err:
+            raise ConfigEntryNotReady from err
 
         except Exception as err:  # pylint: disable=broad-except
             LOGGER.error("Error connecting with deCONZ gateway: %s", err)
@@ -111,6 +112,8 @@ class DeconzGateway:
                     self.config_entry, component
                 )
             )
+
+        self.hass.async_create_task(async_setup_events(self))
 
         self.api.start()
 
@@ -164,15 +167,14 @@ class DeconzGateway:
             else:
                 deconz_ids += [group.deconz_id for group in groups]
 
-        if deconz_ids:
-            async_dispatcher_send(self.hass, self.signal_remove_entity, deconz_ids)
-
         entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
 
         for entity_id, deconz_id in self.deconz_ids.items():
             if deconz_id in deconz_ids and entity_registry.async_is_registered(
                 entity_id
             ):
+                # Removing an entity from the entity registry will also remove them
+                # from Home Assistant
                 entity_registry.async_remove(entity_id)
 
     @property
@@ -196,11 +198,6 @@ class DeconzGateway:
             NEW_SENSOR: f"deconz_new_sensor_{self.bridgeid}",
         }
         return new_device[device_type]
-
-    @property
-    def signal_remove_entity(self) -> str:
-        """Gateway specific event to signal removal of entity."""
-        return f"deconz-remove-{self.bridgeid}"
 
     @callback
     def async_add_device_callback(self, device_type, device) -> None:
@@ -233,9 +230,7 @@ class DeconzGateway:
             unsub_dispatcher()
         self.listeners = []
 
-        for event in self.events:
-            event.async_will_remove_from_hass()
-        self.events.clear()
+        await async_unload_events(self)
 
         self.deconz_ids = {}
         return True
@@ -260,10 +255,10 @@ async def get_gateway(
             await deconz.initialize()
         return deconz
 
-    except errors.Unauthorized:
+    except errors.Unauthorized as err:
         LOGGER.warning("Invalid key for deCONZ at %s", config[CONF_HOST])
-        raise AuthenticationRequired
+        raise AuthenticationRequired from err
 
-    except (asyncio.TimeoutError, errors.RequestError):
+    except (asyncio.TimeoutError, errors.RequestError) as err:
         LOGGER.error("Error connecting to deCONZ gateway at %s", config[CONF_HOST])
-        raise CannotConnect
+        raise CannotConnect from err

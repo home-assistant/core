@@ -29,7 +29,11 @@ from homeassistant.components.light import (
 from homeassistant.core import callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 from homeassistant.util import color
 
 from .const import DOMAIN as HUE_DOMAIN, REQUEST_REFRESH_DELAY
@@ -159,11 +163,11 @@ async def async_safe_fetch(bridge, fetch_method):
     try:
         with async_timeout.timeout(4):
             return await bridge.async_request_call(fetch_method)
-    except aiohue.Unauthorized:
+    except aiohue.Unauthorized as err:
         await bridge.handle_unauthorized_error()
-        raise UpdateFailed("Unauthorized")
+        raise UpdateFailed("Unauthorized") from err
     except (aiohue.AiohueException,) as err:
-        raise UpdateFailed(f"Hue error: {err}")
+        raise UpdateFailed(f"Hue error: {err}") from err
 
 
 @callback
@@ -194,13 +198,13 @@ def hass_to_hue_brightness(value):
     return max(1, round((value / 255) * 254))
 
 
-class HueLight(LightEntity):
+class HueLight(CoordinatorEntity, LightEntity):
     """Representation of a Hue light."""
 
     def __init__(self, coordinator, bridge, is_group, light, supported_features):
         """Initialize the light."""
+        super().__init__(coordinator)
         self.light = light
-        self.coordinator = coordinator
         self.bridge = bridge
         self.is_group = is_group
         self._supported_features = supported_features
@@ -235,11 +239,6 @@ class HueLight(LightEntity):
     def unique_id(self):
         """Return the unique ID of this Hue light."""
         return self.light.uniqueid
-
-    @property
-    def should_poll(self):
-        """No polling required."""
-        return False
 
     @property
     def device_id(self):
@@ -371,12 +370,6 @@ class HueLight(LightEntity):
             "via_device": (HUE_DOMAIN, self.bridge.api.config.bridgeid),
         }
 
-    async def async_added_to_hass(self):
-        """When entity is added to hass."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
-        )
-
     async def async_turn_on(self, **kwargs):
         """Turn the specified or all lights on."""
         command = {"on": True}
@@ -460,13 +453,6 @@ class HueLight(LightEntity):
                 partial(self.light.set_state, **command)
             )
 
-        await self.coordinator.async_request_refresh()
-
-    async def async_update(self):
-        """Update the entity.
-
-        Only used by the generic entity update service.
-        """
         await self.coordinator.async_request_refresh()
 
     @property

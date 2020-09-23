@@ -16,7 +16,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -54,8 +54,6 @@ TYPE_SAFE_EXPOSURE_TIME_6 = "safe_exposure_time_type_6"
 
 PLATFORMS = ["binary_sensor", "sensor"]
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN, invalidation_version="0.115")
-
 
 async def async_setup(hass, config):
     """Set up the OpenUV component."""
@@ -82,7 +80,7 @@ async def async_setup_entry(hass, config_entry):
         hass.data[DOMAIN][DATA_OPENUV_CLIENT][config_entry.entry_id] = openuv
     except OpenUvError as err:
         _LOGGER.error("Config entry failed: %s", err)
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from err
 
     for component in PLATFORMS:
         hass.async_create_task(

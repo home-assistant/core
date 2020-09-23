@@ -7,6 +7,7 @@
         "error": {
             "cannot_connect": "No se pudo conectar",
             "complete_pairing_failed": "No se pudo completar el emparejamiento. Aseg\u00farate de que el PIN que has proporcionado es correcto y que el televisor sigue encendido y conectado a la red antes de volver a enviarlo.",
+            "existing_config_entry_found": "Ya se ha configurado una entrada VIZIO SmartCast Device con el mismo n\u00famero de serie. Debes borrar la entrada existente para configurar \u00e9sta.",
             "host_exists": "Ya existe un VIZIO SmartCast Device configurado con ese host.",
             "name_exists": "Ya existe un VIZIO SmartCast Device configurado con ese nombre."
         },

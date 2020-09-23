@@ -58,6 +58,7 @@
             "broker": {
                 "data": {
                     "broker": "Megler",
+                    "password": "Passord",
                     "port": "",
                     "username": "Brukernavn"
                 },
@@ -65,11 +66,13 @@
             },
             "options": {
                 "data": {
+                    "birth_enable": "Aktiver f\u00f8dselsmelding",
                     "birth_payload": "F\u00f8dselsmelding nyttelast",
                     "birth_qos": "F\u00f8dselsmelding QoS",
                     "birth_retain": "F\u00f8dselsmelding behold",
                     "birth_topic": "F\u00f8dselsmelding emne",
                     "discovery": "Aktiver oppdagelse",
+                    "will_enable": "Aktiver f\u00f8dselsmelding",
                     "will_payload": "Testament melding nyttelast",
                     "will_qos": "Testament melding QoS",
                     "will_retain": "Testament melding behold",

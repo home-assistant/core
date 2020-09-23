@@ -16,7 +16,7 @@ DEFAULT_BRAND = "Agent DVR by ispyconnect.com"
 
 _LOGGER = logging.getLogger(__name__)
 
-FORWARDS = ["camera"]
+FORWARDS = ["alarm_control_panel", "camera"]
 
 
 async def async_setup(hass, config):
@@ -33,9 +33,9 @@ async def async_setup_entry(hass, config_entry):
     agent_client = Agent(server_origin, async_get_clientsession(hass))
     try:
         await agent_client.update()
-    except AgentError:
+    except AgentError as err:
         await agent_client.close()
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from err
 
     if not agent_client.is_available:
         raise ConfigEntryNotReady

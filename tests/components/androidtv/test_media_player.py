@@ -1,8 +1,10 @@
 """The tests for the androidtv platform."""
 import base64
+import copy
 import logging
 
 from androidtv.exceptions import LockNotAcquiredException
+import pytest
 
 from homeassistant.components.androidtv.media_player import (
     ANDROIDTV_DOMAIN,
@@ -294,7 +296,7 @@ async def test_adb_shell_returns_none_firetv_adb_server(hass):
 
 async def test_setup_with_adbkey(hass):
     """Test that setup succeeds when using an ADB key."""
-    config = CONFIG_ANDROIDTV_PYTHON_ADB.copy()
+    config = copy.deepcopy(CONFIG_ANDROIDTV_PYTHON_ADB)
     config[DOMAIN][CONF_ADBKEY] = hass.config.path("user_provided_adbkey")
     patch_key, entity_id = _setup(config)
 
@@ -313,7 +315,7 @@ async def test_setup_with_adbkey(hass):
 
 async def _test_sources(hass, config0):
     """Test that sources (i.e., apps) are handled correctly for Android TV and Fire TV devices."""
-    config = config0.copy()
+    config = copy.deepcopy(config0)
     config[DOMAIN][CONF_APPS] = {
         "com.app.test1": "TEST 1",
         "com.app.test3": None,
@@ -394,7 +396,7 @@ async def test_firetv_sources(hass):
 
 async def _test_exclude_sources(hass, config0, expected_sources):
     """Test that sources (i.e., apps) are handled correctly when the `exclude_unnamed_apps` config parameter is provided."""
-    config = config0.copy()
+    config = copy.deepcopy(config0)
     config[DOMAIN][CONF_APPS] = {
         "com.app.test1": "TEST 1",
         "com.app.test3": None,
@@ -453,21 +455,21 @@ async def _test_exclude_sources(hass, config0, expected_sources):
 
 async def test_androidtv_exclude_sources(hass):
     """Test that sources (i.e., apps) are handled correctly for Android TV devices when the `exclude_unnamed_apps` config parameter is provided as true."""
-    config = CONFIG_ANDROIDTV_ADB_SERVER.copy()
+    config = copy.deepcopy(CONFIG_ANDROIDTV_ADB_SERVER)
     config[DOMAIN][CONF_EXCLUDE_UNNAMED_APPS] = True
     assert await _test_exclude_sources(hass, config, ["TEST 1"])
 
 
 async def test_firetv_exclude_sources(hass):
     """Test that sources (i.e., apps) are handled correctly for Fire TV devices when the `exclude_unnamed_apps` config parameter is provided as true."""
-    config = CONFIG_FIRETV_ADB_SERVER.copy()
+    config = copy.deepcopy(CONFIG_FIRETV_ADB_SERVER)
     config[DOMAIN][CONF_EXCLUDE_UNNAMED_APPS] = True
     assert await _test_exclude_sources(hass, config, ["TEST 1"])
 
 
 async def _test_select_source(hass, config0, source, expected_arg, method_patch):
     """Test that the methods for launching and stopping apps are called correctly when selecting a source."""
-    config = config0.copy()
+    config = copy.deepcopy(config0)
     config[DOMAIN][CONF_APPS] = {"com.app.test1": "TEST 1", "com.app.test3": None}
     patch_key, entity_id = _setup(config)
 
@@ -702,7 +704,7 @@ async def test_setup_two_devices(hass):
     config = {
         DOMAIN: [
             CONFIG_ANDROIDTV_ADB_SERVER[DOMAIN],
-            CONFIG_FIRETV_ADB_SERVER[DOMAIN].copy(),
+            copy.deepcopy(CONFIG_FIRETV_ADB_SERVER[DOMAIN]),
         ]
     }
     config[DOMAIN][1][CONF_HOST] = "127.0.0.2"
@@ -1085,7 +1087,10 @@ async def _test_service(
         f"androidtv.{androidtv_patch}.{androidtv_method}", return_value=return_value
     ) as service_call:
         await hass.services.async_call(
-            DOMAIN, ha_service_name, service_data=service_data, blocking=True,
+            DOMAIN,
+            ha_service_name,
+            service_data=service_data,
+            blocking=True,
         )
         assert service_call.called
 
@@ -1142,7 +1147,7 @@ async def test_services_androidtv(hass):
 async def test_services_firetv(hass):
     """Test media player services for a Fire TV device."""
     patch_key, entity_id = _setup(CONFIG_FIRETV_ADB_SERVER)
-    config = CONFIG_FIRETV_ADB_SERVER.copy()
+    config = copy.deepcopy(CONFIG_FIRETV_ADB_SERVER)
     config[DOMAIN][CONF_TURN_OFF_COMMAND] = "test off"
     config[DOMAIN][CONF_TURN_ON_COMMAND] = "test on"
 
@@ -1174,3 +1179,37 @@ async def test_connection_closed_on_ha_stop(hass):
                 hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
                 await hass.async_block_till_done()
                 assert adb_close.called
+
+
+async def test_exception(hass):
+    """Test that the ADB connection gets closed when there is an unforeseen exception.
+
+    HA will attempt to reconnect on the next update.
+    """
+    patch_key, entity_id = _setup(CONFIG_ANDROIDTV_PYTHON_ADB)
+
+    with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
+        patch_key
+    ], patchers.patch_shell(SHELL_RESPONSE_OFF)[
+        patch_key
+    ], patchers.PATCH_KEYGEN, patchers.PATCH_ANDROIDTV_OPEN, patchers.PATCH_SIGNER:
+        assert await async_setup_component(hass, DOMAIN, CONFIG_ANDROIDTV_PYTHON_ADB)
+        await hass.async_block_till_done()
+
+        await hass.helpers.entity_component.async_update_entity(entity_id)
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == STATE_OFF
+
+        # When an unforessen exception occurs, we close the ADB connection and raise the exception
+        with patchers.PATCH_ANDROIDTV_UPDATE_EXCEPTION, pytest.raises(Exception):
+            await hass.helpers.entity_component.async_update_entity(entity_id)
+            state = hass.states.get(entity_id)
+            assert state is not None
+            assert state.state == STATE_UNAVAILABLE
+
+        # On the next update, HA will reconnect to the device
+        await hass.helpers.entity_component.async_update_entity(entity_id)
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == STATE_OFF

@@ -316,8 +316,8 @@ def cv_group_member(value: Any) -> GroupMember:
         group_member = GroupMember(
             ieee=EUI64.convert(value["ieee"]), endpoint_id=value["endpoint_id"]
         )
-    except KeyError:
-        raise vol.Invalid("Not a group member")
+    except KeyError as err:
+        raise vol.Invalid("Not a group member") from err
 
     return group_member
 
@@ -724,8 +724,8 @@ def is_cluster_binding(value: Any) -> ClusterBinding:
             id=value["id"],
             endpoint_id=value["endpoint_id"],
         )
-    except KeyError:
-        raise vol.Invalid("Not a cluster binding")
+    except KeyError as err:
+        raise vol.Invalid("Not a cluster binding") from err
 
     return cluster_binding
 

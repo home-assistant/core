@@ -34,7 +34,14 @@ from homeassistant.helpers.script import Script
 from homeassistant.util import dt as dt_util
 
 from .bridge import SamsungTVBridge
-from .const import CONF_MANUFACTURER, CONF_MODEL, CONF_ON_ACTION, DOMAIN, LOGGER
+from .const import (
+    CONF_MANUFACTURER,
+    CONF_MODEL,
+    CONF_ON_ACTION,
+    DEFAULT_NAME,
+    DOMAIN,
+    LOGGER,
+)
 
 KEY_PRESS_TIMEOUT = 1.2
 SOURCES = {"TV": "KEY_TV", "HDMI": "KEY_HDMI"}
@@ -63,19 +70,27 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         and hass.data[DOMAIN][ip_address][CONF_ON_ACTION]
     ):
         turn_on_action = hass.data[DOMAIN][ip_address][CONF_ON_ACTION]
-        on_script = Script(hass, turn_on_action)
+        on_script = Script(
+            hass, turn_on_action, config_entry.data.get(CONF_NAME, DEFAULT_NAME), DOMAIN
+        )
 
     # Initialize bridge
     data = config_entry.data.copy()
     bridge = SamsungTVBridge.get_bridge(
-        data[CONF_METHOD], data[CONF_HOST], data[CONF_PORT], data.get(CONF_TOKEN),
+        data[CONF_METHOD],
+        data[CONF_HOST],
+        data[CONF_PORT],
+        data.get(CONF_TOKEN),
     )
     if bridge.port is None and bridge.default_port is not None:
         # For backward compat, set default port for websocket tv
         data[CONF_PORT] = bridge.default_port
         hass.config_entries.async_update_entry(config_entry, data=data)
         bridge = SamsungTVBridge.get_bridge(
-            data[CONF_METHOD], data[CONF_HOST], data[CONF_PORT], data.get(CONF_TOKEN),
+            data[CONF_METHOD],
+            data[CONF_HOST],
+            data[CONF_PORT],
+            data.get(CONF_TOKEN),
         )
 
     async_add_entities([SamsungTVDevice(bridge, config_entry, on_script)])
@@ -104,11 +119,13 @@ class SamsungTVDevice(MediaPlayerEntity):
         self._bridge.register_reauth_callback(self.access_denied)
 
     def access_denied(self):
-        """Access denied callbck."""
+        """Access denied callback."""
         LOGGER.debug("Access denied in getting remote object")
         self.hass.add_job(
             self.hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": "reauth"}, data=self._config_entry.data,
+                DOMAIN,
+                context={"source": "reauth"},
+                data=self._config_entry.data,
             )
         )
 
@@ -245,7 +262,7 @@ class SamsungTVDevice(MediaPlayerEntity):
     async def async_turn_on(self):
         """Turn the media player on."""
         if self._on_script:
-            await self._on_script.async_run()
+            await self._on_script.async_run(context=self._context)
 
     def select_source(self, source):
         """Select input source."""

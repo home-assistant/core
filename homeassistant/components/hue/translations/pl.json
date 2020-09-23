@@ -1,18 +1,18 @@
 {
     "config": {
         "abort": {
-            "all_configured": "Wszystkie mostki Hue s\u0105 ju\u017c skonfigurowane.",
-            "already_configured": "Mostek jest ju\u017c skonfigurowany.",
+            "all_configured": "Wszystkie mostki Hue s\u0105 ju\u017c skonfigurowane",
+            "already_configured": "Mostek jest ju\u017c skonfigurowany",
             "already_in_progress": "Konfiguracja mostka jest ju\u017c w toku.",
             "cannot_connect": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z mostkiem",
             "discover_timeout": "Nie mo\u017cna wykry\u0107 \u017cadnych mostk\u00f3w Hue",
-            "no_bridges": "Nie wykryto mostk\u00f3w Hue.",
+            "no_bridges": "Nie wykryto mostk\u00f3w Hue",
             "not_hue_bridge": "To nie jest mostek Hue",
-            "unknown": "Nieoczekiwany b\u0142\u0105d."
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
         "error": {
             "linking": "Wyst\u0105pi\u0142 nieznany b\u0142\u0105d w trakcie \u0142\u0105czenia.",
-            "register_failed": "Nie uda\u0142o si\u0119 zarejestrowa\u0107. Spr\u00f3buj ponownie."
+            "register_failed": "Nie uda\u0142o si\u0119 zarejestrowa\u0107. Spr\u00f3buj ponownie"
         },
         "step": {
             "init": {
@@ -35,14 +35,14 @@
     },
     "device_automation": {
         "trigger_subtype": {
-            "button_1": "pierwszy przycisk",
-            "button_2": "drugi przycisk",
-            "button_3": "trzeci przycisk",
-            "button_4": "czwarty przycisk",
-            "dim_down": "nast\u0105pi zmniejszenie jasno\u015bci",
-            "dim_up": "nast\u0105pi zwi\u0119kszenie jasno\u015bci",
-            "double_buttons_1_3": "przyciski pierwszy i trzeci",
-            "double_buttons_2_4": "przyciski drugi i czwarty",
+            "button_1": "pierwszy",
+            "button_2": "drugi",
+            "button_3": "trzeci",
+            "button_4": "czwarty",
+            "dim_down": "zmniejszenie jasno\u015bci",
+            "dim_up": "zwi\u0119kszenie jasno\u015bci",
+            "double_buttons_1_3": "pierwszy i trzeci",
+            "double_buttons_2_4": "drugi i czwarty",
             "turn_off": "wy\u0142\u0105cznik",
             "turn_on": "w\u0142\u0105cznik"
         },
@@ -58,7 +58,6 @@
         "step": {
             "init": {
                 "data": {
-                    "allow_how_groups": "Zezwalaj na grupy Hue",
                     "allow_unreachable": "Zezwalaj nieosi\u0105galnym \u017car\u00f3wkom na poprawne raportowanie ich stanu"
                 }
             }

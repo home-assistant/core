@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "See WLED seade on juba konfigureeritud.",
+            "connection_error": "WLED-seadmega \u00fchenduse loomine nurjus."
+        },
+        "error": {
+            "connection_error": "WLED-seadmega \u00fchenduse loomine nurjus."
+        },
+        "flow_title": "WLED: {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Seadista WLED-i sidumine Home Assistantiga."
+            },
+            "zeroconf_confirm": {
+                "description": "Kas soovite lisada WLED {nimi} Home Assistanti?",
+                "title": "Leitud WLED seade"
+            }
+        }
+    }
+}

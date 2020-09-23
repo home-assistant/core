@@ -36,10 +36,10 @@ def valid_country(value: Any) -> str:
 
     try:
         raw_value = value.encode("utf-8")
-    except UnicodeError:
+    except UnicodeError as err:
         raise vol.Invalid(
             "The country name or the abbreviation must be a valid UTF-8 string."
-        )
+        ) from err
     if not raw_value:
         raise vol.Invalid("Country name or the abbreviation must not be empty.")
     if value not in all_supported_countries:

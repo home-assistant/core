@@ -6,10 +6,10 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
+    PERCENTAGE,
     POWER_WATT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -20,7 +20,7 @@ from . import DOMAIN, UPDATE_TOPIC
 _LOGGER = logging.getLogger(__name__)
 
 TEMP_UNITS = [TEMP_CELSIUS, TEMP_FAHRENHEIT]
-PERCENT_UNITS = [UNIT_PERCENTAGE, UNIT_PERCENTAGE]
+PERCENT_UNITS = [PERCENTAGE, PERCENTAGE]
 SALT_UNITS = ["g/L", "PPM"]
 WATT_UNITS = [POWER_WATT, POWER_WATT]
 NO_UNITS = [None, None]

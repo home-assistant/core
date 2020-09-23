@@ -4,7 +4,7 @@ import logging
 from august.activity import ActivityType
 
 from homeassistant.components.sensor import DEVICE_CLASS_BATTERY
-from homeassistant.const import ATTR_ENTITY_PICTURE, UNIT_PERCENTAGE
+from homeassistant.const import ATTR_ENTITY_PICTURE, PERCENTAGE
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_registry import async_get_registry
@@ -70,7 +70,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             )
             continue
         _LOGGER.debug(
-            "Adding battery sensor for %s", device.device_name,
+            "Adding battery sensor for %s",
+            device.device_name,
         )
         devices.append(AugustBatterySensor(data, "device_battery", device, device))
 
@@ -84,7 +85,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             )
             continue
         _LOGGER.debug(
-            "Adding keypad battery sensor for %s", device.device_name,
+            "Adding keypad battery sensor for %s",
+            device.device_name,
         )
         keypad_battery_sensor = AugustBatterySensor(
             data, "linked_keypad_battery", detail.keypad, device
@@ -242,7 +244,7 @@ class AugustBatterySensor(AugustEntityMixin, Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return UNIT_PERCENTAGE
+        return PERCENTAGE
 
     @property
     def device_class(self):

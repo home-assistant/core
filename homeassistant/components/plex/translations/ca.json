@@ -4,8 +4,6 @@
             "all_configured": "Tots els servidors enlla\u00e7ats ja estan configurats",
             "already_configured": "Aquest servidor Plex ja est\u00e0 configurat",
             "already_in_progress": "S'est\u00e0 configurant Plex",
-            "invalid_import": "La configuraci\u00f3 importada \u00e9s inv\u00e0lida",
-            "non-interactive": "Importaci\u00f3 no interactiva",
             "token_request_timeout": "S'ha acabat el temps d'espera durant l'obtenci\u00f3 del token.",
             "unknown": "Ha fallat per motiu desconegut"
         },

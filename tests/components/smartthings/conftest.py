@@ -78,7 +78,8 @@ async def setup_component(hass, config_file, hass_storage):
     """Load the SmartThing component."""
     hass_storage[STORAGE_KEY] = {"data": config_file, "version": STORAGE_VERSION}
     await async_process_ha_core_config(
-        hass, {"external_url": "https://test.local"},
+        hass,
+        {"external_url": "https://test.local"},
     )
     await async_setup_component(hass, "smartthings", {})
 

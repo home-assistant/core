@@ -8,7 +8,10 @@ from tests.components.nws.const import NWS_CONFIG
 
 async def test_unload_entry(hass, mock_simple_nws):
     """Test that nws setup with config yaml."""
-    entry = MockConfigEntry(domain=DOMAIN, data=NWS_CONFIG,)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=NWS_CONFIG,
+    )
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)

@@ -63,7 +63,9 @@ async def async_setup(hass: HomeAssistant, config: dict):
     for conf in config[DOMAIN]:
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=conf,
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data=conf,
             )
         )
 
@@ -89,18 +91,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     except RuntimeError as exc:
         _LOGGER.error("Failed to setup tado: %s", exc)
         return ConfigEntryNotReady
+    except requests.exceptions.Timeout as ex:
+        raise ConfigEntryNotReady from ex
     except requests.exceptions.HTTPError as ex:
         if ex.response.status_code > 400 and ex.response.status_code < 500:
             _LOGGER.error("Failed to login to tado: %s", ex)
             return False
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from ex
 
     # Do first update
     await hass.async_add_executor_job(tadoconnector.update)
 
     # Poll for updates in the background
     update_track = async_track_time_interval(
-        hass, lambda now: tadoconnector.update(), SCAN_INTERVAL,
+        hass,
+        lambda now: tadoconnector.update(),
+        SCAN_INTERVAL,
     )
 
     update_listener = entry.add_update_listener(_async_update_listener)
@@ -211,7 +217,9 @@ class TadoConnector:
                 return
         except RuntimeError:
             _LOGGER.error(
-                "Unable to connect to Tado while updating %s %s", sensor_type, sensor,
+                "Unable to connect to Tado while updating %s %s",
+                sensor_type,
+                sensor,
             )
             return
 
@@ -239,7 +247,8 @@ class TadoConnector:
         self.update_sensor("zone", zone_id)
 
     def set_presence(
-        self, presence=PRESET_HOME,
+        self,
+        presence=PRESET_HOME,
     ):
         """Set the presence to home or away."""
         if presence == PRESET_AWAY:

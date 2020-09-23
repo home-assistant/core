@@ -13,10 +13,21 @@
             "user": {
                 "data": {
                     "host": "Smile IP-adresse",
-                    "password": ""
+                    "password": "",
+                    "port": "Smil portnummer"
                 },
-                "description": "Detaljer",
+                "description": "Vennligst skriv inn:",
                 "title": "Koble til Smile"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Skanneintervall (sekunder)"
+                },
+                "description": "Juster Plugwise-alternativer"
             }
         }
     }

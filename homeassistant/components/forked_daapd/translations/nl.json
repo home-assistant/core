@@ -11,7 +11,7 @@
             "wrong_password": "Onjuist wachtwoord.",
             "wrong_server_type": "De forked-daapd-integratie vereist een forked-daapd-server met versie >= 27.0."
         },
-        "flow_title": "forked-daapd server: {naam} ({host})",
+        "flow_title": "forked-daapd server: {name} ({host})",
         "step": {
             "user": {
                 "data": {
