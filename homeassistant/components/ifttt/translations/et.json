@@ -1,0 +1,7 @@
+{
+    "config": {
+        "create_entry": {
+            "default": "S\u00fcndmuste saatmiseks Home Assistantile peate kasutama toimingut \"Make a web request\" [IFTTT Webhooki apletilt] ({applet_url}).\n\nSisestage j\u00e4rgmine teave:\n\n- URL: {webhook_url}.\n- Method: POST\n- Content Type: application/json\n\nVaadake [dokumentatsiooni]({docs_url}) kuidas seadistada sissetulevate andmete t\u00f6\u00f6tlemiseks automatiseerimisi."
+        }
+    }
+}

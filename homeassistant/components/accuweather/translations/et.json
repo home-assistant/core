@@ -6,7 +6,7 @@
         "error": {
             "cannot_connect": "\u00dchendus eba\u00f5nnestus",
             "invalid_api_key": "API v\u00f5ti on vale",
-            "requests_exceeded": "Accuweatheri API-le esitatud taotluste lubatud arv on \u00fcletatud. Peate ootama v\u00f5i muutma API v\u00f5tit."
+            "requests_exceeded": "Accuweatheri API-le esitatud p\u00e4ringute piirarv on \u00fcletatud. Peate ootama (v\u00f5i muutma API v\u00f5tit)."
         },
         "step": {
             "user": {

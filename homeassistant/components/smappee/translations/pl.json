@@ -6,6 +6,11 @@
             "missing_configuration": "Komponent nie jest skonfigurowany. Post\u0119puj zgodnie z dokumentacj\u0105."
         },
         "step": {
+            "environment": {
+                "data": {
+                    "environment": "\u015arodowisko"
+                }
+            },
             "local": {
                 "data": {
                     "host": "Nazwa hosta lub adres IP"

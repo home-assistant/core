@@ -1,15 +1,10 @@
 {
     "config": {
         "step": {
-            "geography": {
+            "user": {
                 "data": {
                     "latitude": "Laiuskraad",
                     "longitude": "Pikkuskraad"
-                }
-            },
-            "user": {
-                "data": {
-                    "cloud_api": "Geograafiline asukoht"
                 }
             }
         }

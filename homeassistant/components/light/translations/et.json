@@ -1,6 +1,9 @@
 {
     "device_automation": {
         "action_type": {
+            "brightness_decrease": "V\u00e4henda {entity_name} heledust",
+            "brightness_increase": "Suurenda{entity_name} heledust",
+            "flash": "Vilguta {entity_name}",
             "toggle": "Muuda {entity_name} olekut",
             "turn_off": "L\u00fclita {entity_name} v\u00e4lja",
             "turn_on": "L\u00fclita {entity_name} sisse"
