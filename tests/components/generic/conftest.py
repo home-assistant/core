@@ -1,6 +1,7 @@
 """Test fixtures for the generic component."""
 
 from io import BytesIO
+from unittest.mock import Mock
 
 from PIL import Image
 import pytest
@@ -29,3 +30,11 @@ def fakeimgbytes_svg():
         '<svg xmlns="http://www.w3.org/2000/svg"><circle r="50"/></svg>',
         encoding="utf-8",
     )
+
+
+@pytest.fixture(scope="package")
+def fakevidcontainer():
+    """Fake container object with .streams.video[0] != None."""
+    fake = Mock()
+    fake.streams.video = ["fakevid"]
+    return fake

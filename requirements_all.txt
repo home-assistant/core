@@ -343,6 +343,7 @@ auroranoaa==0.0.2
 # homeassistant.components.aurora_abb_powerone
 aurorapy==0.2.6
 
+# homeassistant.components.generic
 # homeassistant.components.stream
 av==9.0.0
 

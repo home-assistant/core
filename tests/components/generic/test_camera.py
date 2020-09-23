@@ -8,47 +8,47 @@ import httpx
 import pytest
 import respx
 
-from homeassistant import config as hass_config
 from homeassistant.components.camera import async_get_mjpeg_stream
-from homeassistant.components.generic import DOMAIN
 from homeassistant.components.websocket_api.const import TYPE_RESULT
-from homeassistant.const import SERVICE_RELOAD
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.setup import async_setup_component
 
-from tests.common import AsyncMock, Mock, get_fixture_path
+from tests.common import AsyncMock, Mock
 
 
 @respx.mock
-async def test_fetching_url(hass, hass_client, fakeimgbytes_png):
+async def test_fetching_url(hass, hass_client, fakeimgbytes_png, fakevidcontainer):
     """Test that it fetches the given url."""
     respx.get("http://example.com").respond(stream=fakeimgbytes_png)
 
-    await async_setup_component(
-        hass,
-        "camera",
-        {
-            "camera": {
-                "name": "config_test",
-                "platform": "generic",
-                "still_image_url": "http://example.com",
-                "username": "user",
-                "password": "pass",
-            }
-        },
-    )
-    await hass.async_block_till_done()
+    with patch("av.open", return_value=fakevidcontainer):
+        await async_setup_component(
+            hass,
+            "camera",
+            {
+                "camera": {
+                    "name": "config_test",
+                    "platform": "generic",
+                    "still_image_url": "http://example.com",
+                    "username": "user",
+                    "password": "pass",
+                    "authentication": "basic",
+                }
+            },
+        )
+        await hass.async_block_till_done()
 
     client = await hass_client()
 
     resp = await client.get("/api/camera_proxy/camera.config_test")
 
     assert resp.status == HTTPStatus.OK
-    assert respx.calls.call_count == 1
+    assert respx.calls.call_count == 2
     body = await resp.read()
     assert body == fakeimgbytes_png
 
     resp = await client.get("/api/camera_proxy/camera.config_test")
-    assert respx.calls.call_count == 2
+    assert respx.calls.call_count == 3
 
 
 @respx.mock
@@ -110,10 +110,13 @@ async def test_fetching_url_with_verify_ssl(hass, hass_client, fakeimgbytes_png)
 @respx.mock
 async def test_limit_refetch(hass, hass_client, fakeimgbytes_png, fakeimgbytes_jpg):
     """Test that it fetches the given url."""
+    respx.get("http://example.com/0a").respond(stream=fakeimgbytes_png)
     respx.get("http://example.com/5a").respond(stream=fakeimgbytes_png)
     respx.get("http://example.com/10a").respond(stream=fakeimgbytes_png)
     respx.get("http://example.com/15a").respond(stream=fakeimgbytes_jpg)
     respx.get("http://example.com/20a").respond(status_code=HTTPStatus.NOT_FOUND)
+
+    hass.states.async_set("sensor.temp", "0")
 
     await async_setup_component(
         hass,
@@ -140,19 +143,19 @@ async def test_limit_refetch(hass, hass_client, fakeimgbytes_png, fakeimgbytes_j
     ):
         resp = await client.get("/api/camera_proxy/camera.config_test")
 
-    assert respx.calls.call_count == 0
-    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert respx.calls.call_count == 2
+    assert resp.status == HTTPStatus.OK
 
     hass.states.async_set("sensor.temp", "10")
 
     resp = await client.get("/api/camera_proxy/camera.config_test")
-    assert respx.calls.call_count == 1
+    assert respx.calls.call_count == 3
     assert resp.status == HTTPStatus.OK
     body = await resp.read()
     assert body == fakeimgbytes_png
 
     resp = await client.get("/api/camera_proxy/camera.config_test")
-    assert respx.calls.call_count == 1
+    assert respx.calls.call_count == 3
     assert resp.status == HTTPStatus.OK
     body = await resp.read()
     assert body == fakeimgbytes_png
@@ -161,7 +164,7 @@ async def test_limit_refetch(hass, hass_client, fakeimgbytes_png, fakeimgbytes_j
 
     # Url change = fetch new image
     resp = await client.get("/api/camera_proxy/camera.config_test")
-    assert respx.calls.call_count == 2
+    assert respx.calls.call_count == 4
     assert resp.status == HTTPStatus.OK
     body = await resp.read()
     assert body == fakeimgbytes_jpg
@@ -169,31 +172,37 @@ async def test_limit_refetch(hass, hass_client, fakeimgbytes_png, fakeimgbytes_j
     # Cause a template render error
     hass.states.async_remove("sensor.temp")
     resp = await client.get("/api/camera_proxy/camera.config_test")
-    assert respx.calls.call_count == 2
+    assert respx.calls.call_count == 4
     assert resp.status == HTTPStatus.OK
     body = await resp.read()
     assert body == fakeimgbytes_jpg
 
 
-async def test_stream_source(hass, hass_client, hass_ws_client, fakeimgbytes_png):
+@respx.mock
+async def test_stream_source(
+    hass, hass_client, hass_ws_client, fakeimgbytes_png, fakevidcontainer
+):
     """Test that the stream source is rendered."""
     respx.get("http://example.com").respond(stream=fakeimgbytes_png)
+    respx.get("http://example.com/0a").respond(stream=fakeimgbytes_png)
 
-    assert await async_setup_component(
-        hass,
-        "camera",
-        {
-            "camera": {
-                "name": "config_test",
-                "platform": "generic",
-                "still_image_url": "https://example.com",
-                "stream_source": 'http://example.com/{{ states.sensor.temp.state + "a" }}',
-                "limit_refetch_to_url_change": True,
+    hass.states.async_set("sensor.temp", "0")
+    with patch("av.open", return_value=fakevidcontainer):
+        assert await async_setup_component(
+            hass,
+            "camera",
+            {
+                "camera": {
+                    "name": "config_test",
+                    "platform": "generic",
+                    "still_image_url": "http://example.com",
+                    "stream_source": 'http://example.com/{{ states.sensor.temp.state + "a" }}',
+                    "limit_refetch_to_url_change": True,
+                },
             },
-        },
-    )
-    assert await async_setup_component(hass, "stream", {})
-    await hass.async_block_till_done()
+        )
+        assert await async_setup_component(hass, "stream", {})
+        await hass.async_block_till_done()
 
     hass.states.async_set("sensor.temp", "5")
 
@@ -217,26 +226,30 @@ async def test_stream_source(hass, hass_client, hass_ws_client, fakeimgbytes_png
         assert msg["result"]["url"][-13:] == "playlist.m3u8"
 
 
-async def test_stream_source_error(hass, hass_client, hass_ws_client, fakeimgbytes_png):
+@respx.mock
+async def test_stream_source_error(
+    hass, hass_client, hass_ws_client, fakeimgbytes_png, fakevidcontainer
+):
     """Test that the stream source has an error."""
     respx.get("http://example.com").respond(stream=fakeimgbytes_png)
 
-    assert await async_setup_component(
-        hass,
-        "camera",
-        {
-            "camera": {
-                "name": "config_test",
-                "platform": "generic",
-                "still_image_url": "https://example.com",
-                # Does not exist
-                "stream_source": 'http://example.com/{{ states.sensor.temp.state + "a" }}',
-                "limit_refetch_to_url_change": True,
+    with patch("av.open", return_value=fakevidcontainer):
+        assert await async_setup_component(
+            hass,
+            "camera",
+            {
+                "camera": {
+                    "name": "config_test",
+                    "platform": "generic",
+                    "still_image_url": "http://example.com",
+                    # Does not exist
+                    "stream_source": 'http://example.com/{{ states.sensor.temp.state + "a" }}',
+                    "limit_refetch_to_url_change": True,
+                },
             },
-        },
-    )
-    assert await async_setup_component(hass, "stream", {})
-    await hass.async_block_till_done()
+        )
+        assert await async_setup_component(hass, "stream", {})
+        await hass.async_block_till_done()
 
     with patch(
         "homeassistant.components.camera.Stream.endpoint_url",
@@ -261,31 +274,40 @@ async def test_stream_source_error(hass, hass_client, hass_ws_client, fakeimgbyt
         }
 
 
-async def test_setup_alternative_options(hass, hass_ws_client):
+@respx.mock
+async def test_setup_alternative_options(
+    hass, hass_ws_client, fakeimgbytes_png, fakevidcontainer
+):
     """Test that the stream source is setup with different config options."""
-    assert await async_setup_component(
-        hass,
-        "camera",
-        {
-            "camera": {
-                "name": "config_test",
-                "platform": "generic",
-                "still_image_url": "https://example.com",
-                "authentication": "digest",
-                "username": "user",
-                "password": "pass",
-                "stream_source": "rtsp://example.com:554/rtsp/",
-                "rtsp_transport": "udp",
+    respx.get("https://example.com").respond(stream=fakeimgbytes_png)
+
+    with patch("av.open", return_value=fakevidcontainer):
+        assert await async_setup_component(
+            hass,
+            "camera",
+            {
+                "camera": {
+                    "name": "config_test",
+                    "platform": "generic",
+                    "still_image_url": "https://example.com",
+                    "authentication": "digest",
+                    "username": "user",
+                    "password": "pass",
+                    "stream_source": "rtsp://example.com:554/rtsp/",
+                    "rtsp_transport": "udp",
+                },
             },
-        },
-    )
-    await hass.async_block_till_done()
+        )
+        await hass.async_block_till_done()
     assert hass.data["camera"].get_entity("camera.config_test")
 
 
-async def test_no_stream_source(hass, hass_client, hass_ws_client, fakeimgbytes_png):
+@respx.mock
+async def test_no_stream_source(
+    hass, hass_client, hass_ws_client, fakeimgbytes_png, fakevidcontainer
+):
     """Test a stream request without stream source option set."""
-    respx.get("http://example.com").respond(stream=fakeimgbytes_png)
+    respx.get("https://example.com").respond(stream=fakeimgbytes_png)
 
     assert await async_setup_component(
         hass,
@@ -326,7 +348,7 @@ async def test_no_stream_source(hass, hass_client, hass_ws_client, fakeimgbytes_
 
 @respx.mock
 async def test_camera_content_type(
-    hass, hass_client, fakeimgbytes_svg, fakeimgbytes_jpg
+    hass, hass_client, fakeimgbytes_svg, fakeimgbytes_jpg, fakevidcontainer
 ):
     """Test generic camera with custom content_type."""
     urlsvg = "https://upload.wikimedia.org/wikipedia/commons/0/02/SVG_logo.svg"
@@ -338,30 +360,48 @@ async def test_camera_content_type(
         "platform": "generic",
         "still_image_url": urlsvg,
         "content_type": "image/svg+xml",
+        "limit_refetch_to_url_change": False,
+        "framerate": 2,
+        "verify_ssl": True,
     }
     cam_config_jpg = {
         "name": "config_test_jpg",
         "platform": "generic",
         "still_image_url": urljpg,
         "content_type": "image/jpeg",
+        "limit_refetch_to_url_change": False,
+        "framerate": 2,
+        "verify_ssl": True,
     }
 
-    await async_setup_component(
-        hass, "camera", {"camera": [cam_config_svg, cam_config_jpg]}
-    )
-    await hass.async_block_till_done()
+    with patch("av.open", return_value=fakevidcontainer):
+        result1 = await hass.config_entries.flow.async_init(
+            "generic",
+            data=cam_config_jpg,
+            context={"source": SOURCE_IMPORT, "unique_id": 12345},
+        )
+        await hass.async_block_till_done()
+    with patch("av.open", return_value=fakevidcontainer):
+        result2 = await hass.config_entries.flow.async_init(
+            "generic",
+            data=cam_config_svg,
+            context={"source": SOURCE_IMPORT, "unique_id": 54321},
+        )
+        await hass.async_block_till_done()
 
+    assert result1["type"] == "create_entry"
+    assert result2["type"] == "create_entry"
     client = await hass_client()
 
     resp_1 = await client.get("/api/camera_proxy/camera.config_test_svg")
-    assert respx.calls.call_count == 1
+    assert respx.calls.call_count == 3
     assert resp_1.status == HTTPStatus.OK
     assert resp_1.content_type == "image/svg+xml"
     body = await resp_1.read()
     assert body == fakeimgbytes_svg
 
     resp_2 = await client.get("/api/camera_proxy/camera.config_test_jpg")
-    assert respx.calls.call_count == 2
+    assert respx.calls.call_count == 4
     assert resp_2.status == HTTPStatus.OK
     assert resp_2.content_type == "image/jpeg"
     body = await resp_2.read()
@@ -369,61 +409,9 @@ async def test_camera_content_type(
 
 
 @respx.mock
-async def test_reloading(hass, hass_client):
-    """Test we can cleanly reload."""
-    respx.get("http://example.com").respond(text="hello world")
-
-    await async_setup_component(
-        hass,
-        "camera",
-        {
-            "camera": {
-                "name": "config_test",
-                "platform": "generic",
-                "still_image_url": "http://example.com",
-                "username": "user",
-                "password": "pass",
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
-    client = await hass_client()
-
-    resp = await client.get("/api/camera_proxy/camera.config_test")
-
-    assert resp.status == HTTPStatus.OK
-    assert respx.calls.call_count == 1
-    body = await resp.text()
-    assert body == "hello world"
-
-    yaml_path = get_fixture_path("configuration.yaml", "generic")
-
-    with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_RELOAD,
-            {},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-
-    assert len(hass.states.async_all()) == 1
-
-    resp = await client.get("/api/camera_proxy/camera.config_test")
-
-    assert resp.status == HTTPStatus.NOT_FOUND
-
-    resp = await client.get("/api/camera_proxy/camera.reload")
-
-    assert resp.status == HTTPStatus.OK
-    assert respx.calls.call_count == 2
-    body = await resp.text()
-    assert body == "hello world"
-
-
-@respx.mock
-async def test_timeout_cancelled(hass, hass_client, fakeimgbytes_png, fakeimgbytes_jpg):
+async def test_timeout_cancelled(
+    hass, hass_client, fakeimgbytes_png, fakeimgbytes_jpg, fakevidcontainer
+):
     """Test that timeouts and cancellations return last image."""
 
     respx.get("http://example.com").respond(stream=fakeimgbytes_png)
@@ -448,7 +436,7 @@ async def test_timeout_cancelled(hass, hass_client, fakeimgbytes_png, fakeimgbyt
     resp = await client.get("/api/camera_proxy/camera.config_test")
 
     assert resp.status == HTTPStatus.OK
-    assert respx.calls.call_count == 1
+    assert respx.calls.call_count == 2
     assert await resp.read() == fakeimgbytes_png
 
     respx.get("http://example.com").respond(stream=fakeimgbytes_jpg)
@@ -458,7 +446,7 @@ async def test_timeout_cancelled(hass, hass_client, fakeimgbytes_png, fakeimgbyt
         side_effect=asyncio.CancelledError(),
     ):
         resp = await client.get("/api/camera_proxy/camera.config_test")
-        assert respx.calls.call_count == 1
+        assert respx.calls.call_count == 2
         assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
 
     respx.get("http://example.com").side_effect = [
@@ -466,27 +454,30 @@ async def test_timeout_cancelled(hass, hass_client, fakeimgbytes_png, fakeimgbyt
         httpx.TimeoutException,
     ]
 
-    for total_calls in range(2, 3):
+    for total_calls in range(3, 5):
         resp = await client.get("/api/camera_proxy/camera.config_test")
         assert respx.calls.call_count == total_calls
         assert resp.status == HTTPStatus.OK
         assert await resp.read() == fakeimgbytes_png
 
 
-async def test_no_still_image_url(hass, hass_client):
+async def test_no_still_image_url(
+    hass, hass_client, fakeimgbytes_png, fakevidcontainer
+):
     """Test that the component can grab images from stream with no still_image_url."""
-    assert await async_setup_component(
-        hass,
-        "camera",
-        {
-            "camera": {
-                "name": "config_test",
-                "platform": "generic",
-                "stream_source": "rtsp://example.com:554/rtsp/",
+    with patch("av.open", return_value=fakevidcontainer):
+        assert await async_setup_component(
+            hass,
+            "camera",
+            {
+                "camera": {
+                    "name": "config_test",
+                    "platform": "generic",
+                    "stream_source": "rtsp://example.com:554/rtsp/",
+                },
             },
-        },
-    )
-    await hass.async_block_till_done()
+        )
+        await hass.async_block_till_done()
 
     client = await hass_client()
 
@@ -518,22 +509,23 @@ async def test_no_still_image_url(hass, hass_client):
         assert await resp.read() == b"stream_keyframe_image"
 
 
-async def test_frame_interval_property(hass):
+async def test_frame_interval_property(hass, fakevidcontainer):
     """Test that the frame interval is calculated and returned correctly."""
 
-    await async_setup_component(
-        hass,
-        "camera",
-        {
-            "camera": {
-                "name": "config_test",
-                "platform": "generic",
-                "stream_source": "rtsp://example.com:554/rtsp/",
-                "framerate": 5,
+    with patch("av.open", return_value=fakevidcontainer):
+        await async_setup_component(
+            hass,
+            "camera",
+            {
+                "camera": {
+                    "name": "config_test",
+                    "platform": "generic",
+                    "stream_source": "rtsp://example.com:554/rtsp/",
+                    "framerate": 5,
+                },
             },
-        },
-    )
-    await hass.async_block_till_done()
+        )
+        await hass.async_block_till_done()
 
     request = Mock()
     with patch(
