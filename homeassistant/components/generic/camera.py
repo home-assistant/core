@@ -12,6 +12,7 @@ from homeassistant.components.camera import (
     SUPPORT_STREAM,
     Camera,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_NAME,
@@ -23,13 +24,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, template as template_helper
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.httpx_client import get_async_client
-from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN, PLATFORMS
+from . import DOMAIN
 from .const import (
     ALLOWED_RTSP_TRANSPORT_PROTOCOLS,
     CONF_CONTENT_TYPE,
@@ -75,25 +75,62 @@ async def async_setup_platform(
 ) -> None:
     """Set up a generic IP Camera."""
 
-    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+    _LOGGER.warning(
+        "Loading generic IP camera via configuration.yaml is deprecated, "
+        "it will be automatically imported.  Once you have confirmed correct "
+        "operation, please remove 'generic' (IP camera) section(s) from "
+        "configuration.yaml"
+    )
+    imagesource = config.get(CONF_STILL_IMAGE_URL)
+    streamsource = config.get(CONF_STREAM_SOURCE)
+    config_new = {
+        CONF_NAME: config[CONF_NAME],
+        CONF_STILL_IMAGE_URL: imagesource.template if imagesource is not None else None,
+        CONF_STREAM_SOURCE: streamsource.template if streamsource is not None else None,
+        CONF_AUTHENTICATION: config.get(CONF_AUTHENTICATION),
+        CONF_USERNAME: config.get(CONF_USERNAME),
+        CONF_PASSWORD: config.get(CONF_PASSWORD),
+        CONF_LIMIT_REFETCH_TO_URL_CHANGE: config.get(CONF_LIMIT_REFETCH_TO_URL_CHANGE),
+        CONF_CONTENT_TYPE: config.get(CONF_CONTENT_TYPE),
+        CONF_FRAMERATE: config.get(CONF_FRAMERATE),
+        CONF_VERIFY_SSL: config.get(CONF_VERIFY_SSL),
+    }
 
-    async_add_entities([GenericCamera(hass, config)])
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config_new
+        )
+    )
+
+
+async def async_setup_entry(hass, config, async_add_entities):
+    """Set up a generic IP Camera."""
+
+    async_add_entities([GenericCamera(hass, config.data, config.unique_id)])
 
 
 class GenericCamera(Camera):
     """A generic implementation of an IP camera."""
 
-    def __init__(self, hass, device_info):
+    def __init__(self, hass, device_info, identifier):
         """Initialize a generic camera."""
         super().__init__()
         self.hass = hass
+        self._attr_unique_id = identifier
         self._authentication = device_info.get(CONF_AUTHENTICATION)
         self._name = device_info.get(CONF_NAME)
         self._still_image_url = device_info.get(CONF_STILL_IMAGE_URL)
-        if self._still_image_url:
+        if (
+            not isinstance(self._still_image_url, template_helper.Template)
+            and self._still_image_url
+        ):
+            self._still_image_url = cv.template(self._still_image_url)
+        if self._still_image_url not in [None, ""]:
             self._still_image_url.hass = hass
         self._stream_source = device_info.get(CONF_STREAM_SOURCE)
-        if self._stream_source is not None:
+        if self._stream_source not in (None, ""):
+            if not isinstance(self._stream_source, template_helper.Template):
+                self._stream_source = cv.template(self._stream_source)
             self._stream_source.hass = hass
         self._limit_refetch = device_info[CONF_LIMIT_REFETCH_TO_URL_CHANGE]
         self._attr_frame_interval = 1 / device_info[CONF_FRAMERATE]
