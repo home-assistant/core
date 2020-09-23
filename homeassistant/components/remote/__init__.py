@@ -30,7 +30,6 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_ACTIVITY = "activity"
 ATTR_COMMAND = "command"
-ATTR_COMMAND_TYPE = "command_type"
 ATTR_DEVICE = "device"
 ATTR_NUM_REPEATS = "num_repeats"
 ATTR_DELAY_SECS = "delay_secs"
@@ -104,7 +103,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         {
             vol.Optional(ATTR_DEVICE): cv.string,
             vol.Optional(ATTR_COMMAND): vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional(ATTR_COMMAND_TYPE): cv.string,
             vol.Optional(ATTR_ALTERNATIVE): cv.boolean,
             vol.Optional(ATTR_TIMEOUT): cv.positive_int,
         },
