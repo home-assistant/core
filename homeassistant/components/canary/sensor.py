@@ -3,6 +3,7 @@ from typing import Callable, List
 
 from canary.api import SensorType
 
+from homeassistant.components.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,

@@ -6,6 +6,7 @@ import voluptuous as vol
 from wirelesstagpy import NotificationConfig as NC, WirelessTags, WirelessTagsException
 
 from homeassistant import util
+from homeassistant.components.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_VOLTAGE,
