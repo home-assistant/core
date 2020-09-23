@@ -1,6 +1,7 @@
 """This component provides HA sensor support for Ring Door Bell/Chimes."""
 import logging
 
+from homeassistant.components.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
@@ -256,7 +257,7 @@ SENSOR_TYPES = {
     "wifi_signal_strength": [
         "WiFi Signal Strength",
         ["chimes", "doorbots", "authorized_doorbots", "stickup_cams"],
-        "dBm",
+        SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         "wifi",
         None,
         "signal_strength",

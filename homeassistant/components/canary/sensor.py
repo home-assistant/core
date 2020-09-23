@@ -3,6 +3,7 @@ from typing import Callable, List
 
 from canary.api import SensorType
 
+from homeassistant.components.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
@@ -34,7 +35,13 @@ SENSOR_TYPES = [
     ["temperature", TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE, [CANARY_PRO]],
     ["humidity", PERCENTAGE, None, DEVICE_CLASS_HUMIDITY, [CANARY_PRO]],
     ["air_quality", None, "mdi:weather-windy", None, [CANARY_PRO]],
-    ["wifi", "dBm", None, DEVICE_CLASS_SIGNAL_STRENGTH, [CANARY_FLEX]],
+    [
+        "wifi",
+        SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        None,
+        DEVICE_CLASS_SIGNAL_STRENGTH,
+        [CANARY_FLEX],
+    ],
     ["battery", PERCENTAGE, None, DEVICE_CLASS_BATTERY, [CANARY_FLEX]],
 ]
 

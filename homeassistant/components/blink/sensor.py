@@ -1,6 +1,7 @@
 """Support for Blink system camera sensors."""
 import logging
 
+from homeassistant.components.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT
 from homeassistant.const import (
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_TEMPERATURE,
@@ -14,7 +15,11 @@ _LOGGER = logging.getLogger(__name__)
 
 SENSORS = {
     TYPE_TEMPERATURE: ["Temperature", TEMP_FAHRENHEIT, DEVICE_CLASS_TEMPERATURE],
-    TYPE_WIFI_STRENGTH: ["Wifi Signal", "dBm", DEVICE_CLASS_SIGNAL_STRENGTH],
+    TYPE_WIFI_STRENGTH: [
+        "Wifi Signal",
+        SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        DEVICE_CLASS_SIGNAL_STRENGTH,
+    ],
 }
 
 
