@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the sensor platform."""
 
-    SENSOR_TYPES = {
+    sensor_types = {
         (2, "Backyard"): [
             {
                 "entity_classes": {"airTemp": OmniLogicTemperatureSensor},
@@ -120,7 +120,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     for item_id, item in coordinator.data.items():
         id_len = len(item_id)
         item_kind = item_id[-2]
-        entity_settings = SENSOR_TYPES.get((id_len, item_kind))
+        entity_settings = sensor_types.get((id_len, item_kind))
 
         if not entity_settings:
             continue
