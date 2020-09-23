@@ -201,12 +201,6 @@ async def test_form_already_configured(hass):
 
 async def test_form_firmware_unsupported(hass):
     """Test we abort if device firmware is unsupported."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-    entry = MockConfigEntry(
-        domain="shelly", unique_id="test-mac", data={"host": "0.0.0.0"}
-    )
-    entry.add_to_hass(hass)
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -389,19 +383,13 @@ async def test_zeroconf_already_configured(hass):
 
 async def test_zeroconf_firmware_unsupported(hass):
     """Test we abort if device firmware is unsupported."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-    entry = MockConfigEntry(
-        domain="shelly", unique_id="test-mac", data={"host": "0.0.0.0"}
-    )
-    entry.add_to_hass(hass)
-
     with patch(
         "aioshelly.get_info",
         return_value={
             "mac": "test-mac",
             "type": "SHSW-1",
             "auth": False,
-            "fw": "20200421-070306/v1.7.0@4a8bc427",
+            "fw": "070306/test-build@4a8bc427",
         },
     ):
         result = await hass.config_entries.flow.async_init(
@@ -409,8 +397,17 @@ async def test_zeroconf_firmware_unsupported(hass):
             data={"host": "1.1.1.1", "name": "shelly1pm-12345"},
             context={"source": config_entries.SOURCE_ZEROCONF},
         )
-        assert result["type"] == "abort"
-        assert result["reason"] == "unsupported_firmware"
+
+        assert result["type"] == "form"
+        assert result["errors"] == {}
+
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"host": "1.1.1.1"},
+        )
+
+        assert result2["type"] == "abort"
+        assert result2["reason"] == "unsupported_firmware"
 
 
 async def test_zeroconf_cannot_connect(hass):
@@ -485,6 +482,43 @@ async def test_zeroconf_require_auth(hass):
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_zeroconf_require_auth_firmware_unsupported(hass):
+    """Test we abort if device firmware is unsupported."""
+    with patch(
+        "aioshelly.get_info",
+        return_value={
+            "mac": "test-mac",
+            "type": "SHSW-1",
+            "auth": True,
+            "fw": "070306/test-build@4a8bc427",
+        },
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data={"host": "1.1.1.1", "name": "shelly1pm-12345"},
+            context={"source": config_entries.SOURCE_ZEROCONF},
+        )
+
+        assert result["type"] == "form"
+        assert result["errors"] == {}
+
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"host": "1.1.1.1"},
+        )
+
+        assert result2["type"] == "form"
+        assert result2["errors"] == {}
+
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {"username": "test username", "password": "test password"},
+        )
+
+        assert result3["type"] == "abort"
+        assert result3["reason"] == "unsupported_firmware"
 
 
 async def test_zeroconf_not_shelly(hass):
