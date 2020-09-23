@@ -1,10 +1,10 @@
 """Support for Blink system camera sensors."""
 import logging
 
-from homeassistant.components.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT
 from homeassistant.const import (
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_TEMPERATURE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     TEMP_FAHRENHEIT,
 )
 from homeassistant.helpers.entity import Entity
