@@ -15,6 +15,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_AUTHENTICATION,
     CONF_BINARY_SENSORS,
+    CONF_EVENT,
     CONF_HOST,
     CONF_NAME,
     CONF_PASSWORD,
@@ -103,6 +104,7 @@ AMCREST_SCHEMA = vol.Schema(
         vol.Optional(CONF_SENSORS): vol.All(
             cv.ensure_list, [vol.In(SENSORS)], vol.Unique()
         ),
+        vol.Optional(CONF_EVENT): cv.ensure_list,
         vol.Optional(CONF_CONTROL_LIGHT, default=True): cv.boolean,
     }
 )
@@ -198,14 +200,33 @@ class AmcrestChecker(Http):
 
 
 def _monitor_events(hass, name, api, event_codes):
-    event_codes = ",".join(event_codes)
+    if 'All' in event_codes['events']:
+        event_codes_list = 'All'
+    else:
+        event_codes_list = ",".join(list(dict.fromkeys(event_codes['binary_sensors']+event_codes['events'])))
+
     while True:
         api.available_flag.wait()
         try:
-            for code, start in api.event_actions(event_codes, retries=5):
-                signal = service_signal(SERVICE_EVENT, name, code)
-                _LOGGER.debug("Sending signal: '%s': %s", signal, start)
-                dispatcher_send(hass, signal, start)
+            for code, payload in api.event_actions(event_codes_list, retries=5):
+                _LOGGER.debug("Captured event: %s -- %s", code, payload)
+                if code in event_codes['binary_sensors'] :
+                    """Management of the different actions for binary sensors"""
+                    if payload['action'] == "Start" or payload['action'] == "Pulse":
+                        start = True
+                    else:
+                        start = False
+                    
+                    signal = service_signal(SERVICE_EVENT, name, code)
+                    _LOGGER.debug("Sending signal: '%s': %s", signal, start)
+                    dispatcher_send(hass, signal, start)
+
+                if code in event_codes['events'] or 'All' in event_codes['events']:
+                    _LOGGER.debug("Sending event to bus, event name: %s, payload: %s", code, payload)
+                    hass.bus.fire(
+                        DOMAIN+"."+code, payload
+                    )
+
         except AmcrestError as error:
             _LOGGER.warning(
                 "Error while processing events from %s camera: %r", name, error
@@ -241,6 +262,7 @@ def setup(hass, config):
         sensors = device.get(CONF_SENSORS)
         stream_source = device[CONF_STREAM_SOURCE]
         control_light = device.get(CONF_CONTROL_LIGHT)
+        events = device.get(CONF_EVENT)
 
         # currently aiohttp only works with basic authentication
         # only valid for mjpeg streaming
@@ -260,6 +282,7 @@ def setup(hass, config):
 
         discovery.load_platform(hass, CAMERA, DOMAIN, {CONF_NAME: name}, config)
 
+        event_codes = dict()
         if binary_sensors:
             discovery.load_platform(
                 hass,
@@ -268,13 +291,20 @@ def setup(hass, config):
                 {CONF_NAME: name, CONF_BINARY_SENSORS: binary_sensors},
                 config,
             )
-            event_codes = [
+            event_codes['binary_sensors'] = [
                 BINARY_SENSORS[sensor_type][SENSOR_EVENT_CODE]
                 for sensor_type in binary_sensors
                 if sensor_type not in BINARY_POLLED_SENSORS
             ]
-            if event_codes:
-                _start_event_monitor(hass, name, api, event_codes)
+
+        if events:
+            event_codes['events'] = [
+                event
+                for event in events
+            ]
+            
+        if event_codes:
+            _start_event_monitor(hass, name, api, event_codes)
 
         if sensors:
             discovery.load_platform(
