@@ -207,9 +207,9 @@ class OmniLogicEntity(CoordinatorEntity):
                 " ", "_"
             )
             entity_friendly_name = f"{entity_friendly_name}{coordinator.data[entity_data.get('parent_bow')].get('Name')} "
-            unique_id = f"{msp_system_id}_{coordinator.data[entity_data.get('parent_bow')]['systemId']}_{kind}"
+            unique_id = f"{msp_system_id}_{coordinator.data[entity_data.get('parent_bow')]['systemId']}_{entity_data.get('systemId')}_{kind}"
         elif entity_data.get("parent_backyard") is not None:
-            unique_id = f"{msp_system_id}_{entity_data.get('Name')}_{kind}"
+            unique_id = f"{msp_system_id}_{entity_data.get('systemId')}_{kind}"
 
         if entity_data.get("Name") is not None:
             entity_friendly_name = f"{entity_friendly_name}{entity_data.get('Name')} "
@@ -226,6 +226,7 @@ class OmniLogicEntity(CoordinatorEntity):
         self._backyard_name = backyard_name
         self._bow_name = bow_name
         self._msp_system_id = msp_system_id
+        self._attrs["unique_id"] = unique_id
 
     @property
     def unique_id(self) -> str:

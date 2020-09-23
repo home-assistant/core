@@ -475,6 +475,7 @@ class OmniLogicORPSensor(OmnilogicSensor):
             entity=entity,
         )
 
+    @property
     def state(self):
         """Return the state for the ORP sensor."""
         sensor_data = self.coordinator.data[self._entity]
