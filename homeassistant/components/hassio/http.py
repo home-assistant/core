@@ -18,7 +18,6 @@ from .const import X_HASS_IS_ADMIN, X_HASS_USER_ID, X_HASSIO
 
 _LOGGER = logging.getLogger(__name__)
 
-# The chunks recieved by the supervisor stored in memory, keep that in mind if you change this value
 MAX_UPLOAD_SIZE = 1024 * 1024 * 1024
 
 NO_TIMEOUT = re.compile(
