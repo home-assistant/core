@@ -101,6 +101,7 @@ class TestRemote(unittest.TestCase):
             entity_id="entity_id_val",
             device="test_device",
             command=["test_command"],
+            command_type="rf",
             alternative=True,
             timeout=20,
         )
