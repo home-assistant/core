@@ -449,6 +449,9 @@ MASS_POUNDS: str = "lb"
 # Conductivity units
 CONDUCTIVITY: str = f"µS/{LENGTH_CENTIMETERS}"
 
+# Light units
+LIGHT_LUX: str = "lx"
+
 # UV Index units
 UV_INDEX: str = "UV index"
 

@@ -5,6 +5,7 @@ from homeassistant.const import (
     DEGREE,
     ELECTRICAL_CURRENT_AMPERE,
     ENERGY_KILO_WATT_HOUR,
+    LIGHT_LUX,
     PERCENTAGE,
     POWER_WATT,
 )
@@ -116,7 +117,7 @@ SENSORS = {
     ),
     ("sensor", "luminosity"): BlockAttributeDescription(
         name="Luminosity",
-        unit="lx",
+        unit=LIGHT_LUX,
         device_class=sensor.DEVICE_CLASS_ILLUMINANCE,
     ),
     ("sensor", "tilt"): BlockAttributeDescription(name="tilt", unit=DEGREE),

@@ -25,6 +25,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     LENGTH_MILLIMETERS,
+    LIGHT_LUX,
     PERCENTAGE,
     POWER_WATT,
     SPEED_KILOMETERS_PER_HOUR,
@@ -248,7 +249,7 @@ async def test_hmip_illuminance_sensor1(hass, default_mock_hap_factory):
     )
 
     assert ha_state.state == "4890.0"
-    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "lx"
+    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == LIGHT_LUX
     await async_manipulate_test_data(hass, hmip_device, "illumination", 231)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == "231"
@@ -268,7 +269,7 @@ async def test_hmip_illuminance_sensor2(hass, default_mock_hap_factory):
     )
 
     assert ha_state.state == "807.3"
-    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "lx"
+    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == LIGHT_LUX
     await async_manipulate_test_data(hass, hmip_device, "averageIllumination", 231)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == "231"
