@@ -16,7 +16,7 @@ from homeassistant.components.icloud.const import (
     DEFAULT_WITH_FAMILY,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -419,7 +419,7 @@ async def test_password_update(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": "update_password"},
+        context={"source": SOURCE_REAUTH},
         data={**MOCK_CONFIG, "unique_id": USERNAME},
     )
 
@@ -443,7 +443,7 @@ async def test_password_update_wrong_password(hass: HomeAssistantType):
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": "update_password"},
+        context={"source": SOURCE_REAUTH},
         data={**MOCK_CONFIG, "unique_id": USERNAME},
     )
 

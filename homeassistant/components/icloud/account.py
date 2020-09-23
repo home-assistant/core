@@ -14,7 +14,7 @@ from pyicloud.exceptions import (
 from pyicloud.services.findmyiphone import AppleDevice
 
 from homeassistant.components.zone import async_active_zone
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_USERNAME
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import dispatcher_send
@@ -132,13 +132,13 @@ class IcloudAccount:
                 )
                 .result()
                 .manifest["name"],
-                f"{self._config_entry.entry_id}_update_password",
+                f"{self._config_entry.entry_id}_{SOURCE_REAUTH}",
             )
 
             self.hass.async_create_task(
                 self.hass.config_entries.flow.async_init(
                     DOMAIN,
-                    context={"source": "update_password"},
+                    context={"source": SOURCE_REAUTH},
                     data={
                         **self._config_entry.data,
                         "unique_id": self._config_entry.unique_id,

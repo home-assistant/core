@@ -158,7 +158,7 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if entry.unique_id == self.unique_id:
                 self.hass.config_entries.async_update_entry(entry, data=data)
                 self.hass.components.persistent_notification.async_dismiss(
-                    f"{entry.entry_id}_update_password"
+                    f"{entry.entry_id}_{config_entries.SOURCE_REAUTH}"
                 )
                 await self.hass.config_entries.async_reload(entry.entry_id)
                 return self.async_abort(reason="updated_password")
@@ -181,7 +181,7 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Import a config entry."""
         return await self.async_step_user(user_input)
 
-    async def async_step_update_password(self, user_input=None):
+    async def async_step_reauth(self, user_input=None):
         """Update password for a config entry that can't authenticate."""
         # Store existing entry data so it can be used later and set unique ID
         # so existing config entry can be updated
@@ -192,9 +192,11 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             user_input = None
 
         if user_input is None:
-            return self._show_setup_form(step_id="update_password")
+            return self._show_setup_form(step_id=config_entries.SOURCE_REAUTH)
 
-        return await self._validate_and_create_entry(user_input, "update_password")
+        return await self._validate_and_create_entry(
+            user_input, config_entries.SOURCE_REAUTH
+        )
 
     async def async_step_trusted_device(self, user_input=None, errors=None):
         """We need a trusted device."""
