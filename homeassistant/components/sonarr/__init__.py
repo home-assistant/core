@@ -123,7 +123,7 @@ def _async_start_reauth(hass: HomeAssistantType, entry: ConfigEntry):
     _LOGGER.error("API Key is no longer valid. Please reauthenticate")
 
 
-def _async_update_listener(hass: HomeAssistantType, entry: ConfigEntry) -> None:
+async def _async_update_listener(hass: HomeAssistantType, entry: ConfigEntry) -> None:
     """Handle options update."""
     async_dispatcher_send(
         hass, f"sonarr.{entry.entry_id}.entry_options_update", entry.options
