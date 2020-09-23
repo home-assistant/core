@@ -61,7 +61,7 @@ class GoveeLightEntity(LightEntity):
         """ get state of the led strip """
         state, err = await self._hub.get_state(self._device)
         if not state:
-            _LOGGER.warn(f"cannot get state for {self._device.device}: {err}")
+            _LOGGER.warning(f"cannot get state for {self._device.device}: {err}")
 
     async def async_turn_on(self, **kwargs):
         """Turn device on."""
@@ -87,7 +87,7 @@ class GoveeLightEntity(LightEntity):
             success, err = await self._hub.turn_on(self._device)
         # warn on any error
         if err:
-            _LOGGER.warn(
+            _LOGGER.warning(
                 f"async_turn_on failed with '{err}' for {self._device.device}, kwargs: {kwargs}"
             )
 
