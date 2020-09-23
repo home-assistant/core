@@ -1,6 +1,30 @@
 {
     "device_automation": {
+        "trigger_subtype": {
+            "both_buttons": "M\u00f5lemad nupud",
+            "bottom_buttons": "Alumised nupud",
+            "button_1": "Esimene nupp",
+            "button_2": "Teine nupp",
+            "button_3": "Kolmas nupp",
+            "button_4": "Neljas nupp",
+            "close": "Sulge",
+            "dim_down": "H\u00e4marda",
+            "dim_up": "Tee heledamaks",
+            "left": "Vasakpoolne",
+            "open": "Ava",
+            "right": "Parempoolne",
+            "side_1": "1. k\u00fclg",
+            "side_2": "2. k\u00fclg",
+            "side_3": "3. k\u00fclg",
+            "side_4": "4. k\u00fclg",
+            "side_5": "5. k\u00fclg",
+            "side_6": "6. k\u00fclg",
+            "top_buttons": "\u00dclemised nupud",
+            "turn_off": "L\u00fclita v\u00e4lja",
+            "turn_on": "L\u00fclita sisse"
+        },
         "trigger_type": {
+            "remote_awakened": "Seade \u00e4rkas",
             "remote_button_rotation_stopped": "Nupu \" {subtype} \"  p\u00f6\u00f6ramine peatus"
         }
     }

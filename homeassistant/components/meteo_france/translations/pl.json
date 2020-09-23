@@ -8,7 +8,8 @@
             "cities": {
                 "data": {
                     "city": "Miasto"
-                }
+                },
+                "description": "Wybierz swoje miasto z listy"
             },
             "user": {
                 "data": {
