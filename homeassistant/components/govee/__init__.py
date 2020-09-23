@@ -1,15 +1,15 @@
 """The Govee LED strips integration."""
 import asyncio
 import logging
+
+from govee_api_laggat import Govee
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-
-from govee_api_laggat import Govee
 from homeassistant.exceptions import PlatformNotReady
 
-from .const import DOMAIN, CONF_API_KEY
+from .const import CONF_API_KEY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
