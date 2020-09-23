@@ -432,7 +432,11 @@ class KodiEntity(MediaPlayerEntity):
             self._reset_state()
             return
 
-        self._players = await self._kodi.get_players()
+        try:
+            self._players = await self._kodi.get_players()
+        except jsonrpc_base.jsonrpc.TransportError:
+            self._reset_state()
+            return
 
         if self._kodi_is_off:
             self._reset_state()
