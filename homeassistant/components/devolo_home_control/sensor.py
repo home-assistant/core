@@ -109,7 +109,6 @@ class DevoloConsumptionEntity(DevoloMultiLevelDeviceEntity):
 
     def __init__(self, homecontrol, device_instance, element_uid, consumption):
         """Initialize a devolo consumption sensor."""
-        self._device_instance = device_instance
 
         super().__init__(
             homecontrol=homecontrol,
