@@ -364,3 +364,8 @@ class ShellyRestAttributeEntity(entity.Entity):
     async def async_added_to_hass(self):
         """When entity is added to HASS."""
         self.async_on_remove(self.wrapper.async_add_listener(self._update_callback))
+
+    @callback
+    def _update_callback(self):
+        """When device updates, clear control result that overrides state."""
+        self.async_write_ha_state()
