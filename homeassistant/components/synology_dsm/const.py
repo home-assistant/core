@@ -7,7 +7,6 @@ from synology_dsm.api.storage.storage import SynoStorage
 from synology_dsm.api.surveillance_station import SynoSurveillanceStation
 
 from homeassistant.components.binary_sensor import DEVICE_CLASS_SAFETY
-from homeassistant.components.switch import DEVICE_CLASS_SWITCH
 from homeassistant.const import (
     DATA_MEGABYTES,
     DATA_RATE_KILOBYTES_PER_SECOND,
@@ -277,7 +276,7 @@ SURVEILLANCE_SWITCH = {
         ENTITY_NAME: "home mode",
         ENTITY_UNIT: None,
         ENTITY_ICON: "mdi:home-account",
-        ENTITY_CLASS: DEVICE_CLASS_SWITCH,
+        ENTITY_CLASS: None,
         ENTITY_ENABLE: True,
     },
 }

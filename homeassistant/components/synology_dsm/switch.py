@@ -14,7 +14,7 @@ from .const import DOMAIN, SURVEILLANCE_SWITCH, SYNO_API
 async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ) -> None:
-    """Set up the Synology NAS binary sensor."""
+    """Set up the Synology NAS switch."""
 
     api = hass.data[DOMAIN][entry.unique_id][SYNO_API]
 
