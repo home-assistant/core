@@ -22,6 +22,7 @@ from homeassistant.const import (
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
     ENERGY_KILO_WATT_HOUR,
+    LIGHT_LUX,
     PERCENTAGE,
     POWER_WATT,
     PRESSURE_HPA,
@@ -59,7 +60,7 @@ ICON = {
 UNIT_OF_MEASUREMENT = {
     Consumption: ENERGY_KILO_WATT_HOUR,
     Humidity: PERCENTAGE,
-    LightLevel: "lx",
+    LightLevel: LIGHT_LUX,
     Power: POWER_WATT,
     Pressure: PRESSURE_HPA,
     Temperature: TEMP_CELSIUS,
