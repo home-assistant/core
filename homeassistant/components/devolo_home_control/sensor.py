@@ -111,14 +111,14 @@ class DevoloConsumptionEntity(DevoloMultiLevelDeviceEntity):
         """Initialize a devolo consumption sensor."""
         self._device_instance = device_instance
 
-        self._device_class = DEVICE_CLASS_MAPPING.get(consumption)
-        self._sensor_type = consumption
-
         super().__init__(
             homecontrol=homecontrol,
             device_instance=device_instance,
             element_uid=element_uid,
         )
+
+        self._sensor_type = consumption
+        self._device_class = DEVICE_CLASS_MAPPING.get(consumption)
 
         self._value = getattr(
             device_instance.consumption_property[element_uid], consumption
