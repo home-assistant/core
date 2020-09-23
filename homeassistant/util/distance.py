@@ -73,9 +73,9 @@ def convert(value: float, unit_1: str, unit_2: str) -> float:
     elif unit_2 == LENGTH_KILOMETERS:
         result = __meters_to_kilometers(meters)
     elif unit_2 == LENGTH_CENTIMETERS:
-        meters = __meters_to_centimeters(value)
+        result = __meters_to_centimeters(meters)
     elif unit_2 == LENGTH_MILLIMETERS:
-        meters = __meters_to_millimeters(value)
+        result = __meters_to_millimeters(meters)
 
     return result
 
