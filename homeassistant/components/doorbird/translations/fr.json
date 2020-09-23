@@ -28,7 +28,8 @@
             "init": {
                 "data": {
                     "events": "Liste d'\u00e9v\u00e9nements s\u00e9par\u00e9s par des virgules."
-                }
+                },
+                "description": "Ajoutez un nom d'\u00e9v\u00e9nement s\u00e9par\u00e9 par des virgules pour chaque \u00e9v\u00e9nement que vous souhaitez suivre. Apr\u00e8s les avoir saisis ici, utilisez l'application DoorBird pour les affecter \u00e0 un \u00e9v\u00e9nement sp\u00e9cifique. Consultez la documentation sur https://www.home-assistant.io/integrations/doorbird/#events. Exemple: somebody_pressed_the_button, motion"
             }
         }
     }

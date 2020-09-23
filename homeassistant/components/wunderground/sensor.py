@@ -25,6 +25,7 @@ from homeassistant.const import (
     LENGTH_MILES,
     LENGTH_MILLIMETERS,
     PERCENTAGE,
+    PRESSURE_INHG,
     SPEED_KILOMETERS_PER_HOUR,
     SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
@@ -407,7 +408,7 @@ SENSOR_TYPES = {
         "Precipitation Today", "precip_today_string", "mdi:umbrella"
     ),
     "pressure_in": WUCurrentConditionsSensorConfig(
-        "Pressure", "pressure_in", "mdi:gauge", "inHg", device_class="pressure"
+        "Pressure", "pressure_in", "mdi:gauge", PRESSURE_INHG, device_class="pressure"
     ),
     "pressure_mb": WUCurrentConditionsSensorConfig(
         "Pressure", "pressure_mb", "mdi:gauge", "mb", device_class="pressure"

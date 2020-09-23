@@ -8,6 +8,7 @@ from requests.exceptions import RequestException
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EXCLUDE, CONF_LIGHTS, CONF_SOURCE
 from homeassistant.core import callback
 from homeassistant.helpers.entity_registry import EntityRegistry
@@ -68,11 +69,11 @@ def options_data(user_input: dict) -> dict:
 class OptionsFlowHandler(config_entries.OptionsFlow):
     """Options for the component."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry):
+    def __init__(self, config_entry: ConfigEntry):
         """Init object."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(self, user_input: dict = None):
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(
@@ -91,7 +92,7 @@ class VeraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry) -> OptionsFlowHandler:
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowHandler:
         """Get the options flow."""
         return OptionsFlowHandler(config_entry)
 

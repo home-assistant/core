@@ -1,0 +1,28 @@
+{
+    "options": {
+        "step": {
+            "ha_to_risco": {
+                "data": {
+                    "armed_away": "\uacbd\ube44\uc911(\uc678\ucd9c)",
+                    "armed_custom_bypass": "\uacbd\ube44\uc911(\uc0ac\uc6a9\uc790 \uc6b0\ud68c)",
+                    "armed_home": "\uc9d1\uc548 \uacbd\ube44\uc911",
+                    "armed_night": "\uc57c\uac04 \uacbd\ube44\uc911"
+                },
+                "description": "Home Assistant \uc54c\ub78c\uc744 \ud65c\uc131\ud654 \ud560 \ub54c Risco \uc54c\ub78c\uc758 \uc0c1\ud0dc\ub97c \uc120\ud0dd\ud558\uc2ed\uc2dc\uc624.",
+                "title": "Home Assistant \uc0c1\ud0dc\ub97c Risco \uc0c1\ud0dc\ub85c \ub9e4\ud551"
+            },
+            "risco_to_ha": {
+                "data": {
+                    "A": "\uadf8\ub8f9 A",
+                    "B": "\uadf8\ub8f9 B",
+                    "C": "\uadf8\ub8f9 C",
+                    "D": "\uadf8\ub8f9 D",
+                    "arm": "\uacbd\ube44\uc911(\uc678\ucd9c)",
+                    "partial_arm": "\ubd80\ubd84 \uacbd\ube44 \uc124\uc815 (\uc7ac\uc2e4)"
+                },
+                "description": "Risco\uc5d0\uc11c\ubcf4\uace0\ud558\ub294 \ubaa8\ub4e0 \uc0c1\ud0dc\uc5d0 \ub300\ud574 Home Assistant \uc54c\ub78c\uc774 \ubcf4\uace0 \ud560 \uc0c1\ud0dc\ub97c \uc120\ud0dd\ud569\ub2c8\ub2e4.",
+                "title": "Risco \uc0c1\ud0dc\ub97c \ud648 \uc5b4\uc2dc\uc2a4\ud134\ud2b8 \uc0c1\ud0dc\uc5d0 \ub9e4\ud551"
+            }
+        }
+    }
+}

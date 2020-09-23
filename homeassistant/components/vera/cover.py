@@ -1,6 +1,8 @@
 """Support for Vera cover - curtains, rollershutters etc."""
 import logging
-from typing import Callable, List
+from typing import Any, Callable, List
+
+import pyvera as veraApi
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -33,16 +35,18 @@ async def async_setup_entry(
     )
 
 
-class VeraCover(VeraDevice, CoverEntity):
+class VeraCover(VeraDevice[veraApi.VeraCurtain], CoverEntity):
     """Representation a Vera Cover."""
 
-    def __init__(self, vera_device, controller_data: ControllerData):
+    def __init__(
+        self, vera_device: veraApi.VeraCurtain, controller_data: ControllerData
+    ):
         """Initialize the Vera device."""
         VeraDevice.__init__(self, vera_device, controller_data)
         self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
     @property
-    def current_cover_position(self):
+    def current_cover_position(self) -> int:
         """
         Return current position of cover.
 
@@ -55,28 +59,28 @@ class VeraCover(VeraDevice, CoverEntity):
             return 100
         return position
 
-    def set_cover_position(self, **kwargs):
+    def set_cover_position(self, **kwargs) -> None:
         """Move the cover to a specific position."""
         self.vera_device.set_level(kwargs.get(ATTR_POSITION))
         self.schedule_update_ha_state()
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool:
         """Return if the cover is closed."""
         if self.current_cover_position is not None:
             return self.current_cover_position == 0
 
-    def open_cover(self, **kwargs):
+    def open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         self.vera_device.open()
         self.schedule_update_ha_state()
 
-    def close_cover(self, **kwargs):
+    def close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         self.vera_device.close()
         self.schedule_update_ha_state()
 
-    def stop_cover(self, **kwargs):
+    def stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         self.vera_device.stop()
         self.schedule_update_ha_state()

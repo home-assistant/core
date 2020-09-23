@@ -25,9 +25,11 @@ async def test_form(hass):
         return_value={"mac": "test-mac", "type": "SHSW-1", "auth": False},
     ), patch(
         "aioshelly.Device.create",
-        return_value=Mock(
-            shutdown=AsyncMock(),
-            settings={"name": "Test name", "device": {"mac": "test-mac"}},
+        new=AsyncMock(
+            return_value=Mock(
+                shutdown=AsyncMock(),
+                settings={"name": "Test name", "device": {"mac": "test-mac"}},
+            )
         ),
     ), patch(
         "homeassistant.components.shelly.async_setup", return_value=True
@@ -72,9 +74,11 @@ async def test_form_auth(hass):
 
     with patch(
         "aioshelly.Device.create",
-        return_value=Mock(
-            shutdown=AsyncMock(),
-            settings={"name": "Test name", "device": {"mac": "test-mac"}},
+        new=AsyncMock(
+            return_value=Mock(
+                shutdown=AsyncMock(),
+                settings={"name": "Test name", "device": {"mac": "test-mac"}},
+            )
         ),
     ), patch(
         "homeassistant.components.shelly.async_setup", return_value=True
@@ -136,7 +140,7 @@ async def test_form_errors_test_connection(hass, error):
         "aioshelly.get_info", return_value={"mac": "test-mac", "auth": False}
     ), patch(
         "aioshelly.Device.create",
-        side_effect=exc,
+        new=AsyncMock(side_effect=exc),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -199,7 +203,7 @@ async def test_form_auth_errors_test_connection(hass, error):
 
     with patch(
         "aioshelly.Device.create",
-        side_effect=exc,
+        new=AsyncMock(side_effect=exc),
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
@@ -227,9 +231,11 @@ async def test_zeroconf(hass):
 
     with patch(
         "aioshelly.Device.create",
-        return_value=Mock(
-            shutdown=AsyncMock(),
-            settings={"name": "Test name", "device": {"mac": "test-mac"}},
+        new=AsyncMock(
+            return_value=Mock(
+                shutdown=AsyncMock(),
+                settings={"name": "Test name", "device": {"mac": "test-mac"}},
+            )
         ),
     ), patch(
         "homeassistant.components.shelly.async_setup", return_value=True
@@ -274,7 +280,7 @@ async def test_zeroconf_confirm_error(hass, error):
 
     with patch(
         "aioshelly.Device.create",
-        side_effect=exc,
+        new=AsyncMock(side_effect=exc),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -349,9 +355,11 @@ async def test_zeroconf_require_auth(hass):
 
     with patch(
         "aioshelly.Device.create",
-        return_value=Mock(
-            shutdown=AsyncMock(),
-            settings={"name": "Test name", "device": {"mac": "test-mac"}},
+        new=AsyncMock(
+            return_value=Mock(
+                shutdown=AsyncMock(),
+                settings={"name": "Test name", "device": {"mac": "test-mac"}},
+            )
         ),
     ), patch(
         "homeassistant.components.shelly.async_setup", return_value=True

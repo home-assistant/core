@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "\uc774\ubbf8 \uad6c\uc131\ub428. \ud558\ub098\uc758 \uad6c\uc131\ub9cc \uac00\ub2a5\ud569\ub2c8\ub2e4."
+        },
+        "step": {
+            "hubv1": {
+                "data": {
+                    "host": "IP \uc8fc\uc18c",
+                    "port": "\ud3ec\ud2b8"
+                },
+                "description": "Insteon Hub \ubc84\uc804 1 (2014 \ub144 \uc774\uc804)\uc744 \uad6c\uc131\ud569\ub2c8\ub2e4.",
+                "title": "Insteon Hub \ubc84\uc804 1"
+            },
+            "hubv2": {
+                "data": {
+                    "host": "IP \uc8fc\uc18c",
+                    "password": "\uc554\ud638",
+                    "port": "\ud3ec\ud2b8",
+                    "username": "\uc0ac\uc6a9\uc790\uba85"
+                },
+                "description": "Insteon Hub \ubc84\uc804 2\ub97c \uad6c\uc131\ud569\ub2c8\ub2e4.",
+                "title": "Insteon Hub \ubc84\uc804 2"
+            },
+            "user": {
+                "data": {
+                    "modem_type": "\ubaa8\ub380 \uc720\ud615."
+                },
+                "description": "Insteon \ubaa8\ub380 \uc720\ud615\uc744 \uc120\ud0dd\ud558\uc2ed\uc2dc\uc624.",
+                "title": "Insteon"
+            }
+        }
+    }
+}

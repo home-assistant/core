@@ -32,6 +32,7 @@ from homeassistant.const import (
     LENGTH_KILOMETERS,
     LENGTH_MILLIMETERS,
     PERCENTAGE,
+    PRESSURE_HPA,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
     TIME_HOURS,
@@ -79,7 +80,7 @@ SENSOR_TYPES = {
     "windforce": ["Wind force", "Bft", "mdi:weather-windy"],
     "winddirection": ["Wind direction", None, "mdi:compass-outline"],
     "windazimuth": ["Wind direction azimuth", DEGREE, "mdi:compass-outline"],
-    "pressure": ["Pressure", "hPa", "mdi:gauge"],
+    "pressure": ["Pressure", PRESSURE_HPA, "mdi:gauge"],
     "visibility": ["Visibility", LENGTH_KILOMETERS, None],
     "windgust": ["Wind gust", SPEED_KILOMETERS_PER_HOUR, "mdi:weather-windy"],
     "precipitation": [

@@ -116,6 +116,7 @@ CONF_LIGHTS = "lights"
 CONF_LONGITUDE = "longitude"
 CONF_MAC = "mac"
 CONF_MAXIMUM = "maximum"
+CONF_MEDIA_DIRS = "media_dirs"
 CONF_METHOD = "method"
 CONF_MINIMUM = "minimum"
 CONF_MODE = "mode"
@@ -379,6 +380,11 @@ ELECTRICAL_VOLT_AMPERE = f"{VOLT}{ELECTRICAL_CURRENT_AMPERE}"
 
 # Degree units
 DEGREE = "°"
+
+# Currency units
+CURRENCY_EURO = "€"
+CURRENCY_DOLLAR = "$"
+CURRENCY_CENT = "¢"
 
 # Temperature units
 TEMP_CELSIUS = f"{DEGREE}C"

@@ -113,7 +113,11 @@ def _stream_worker_internal(hass, stream, quit_event):
             # Get to first video keyframe
             while first_packet[video_stream] is None:
                 packet = next(container.demux())
-                if packet.stream == video_stream and packet.is_keyframe:
+                if (
+                    packet.stream == video_stream
+                    and packet.is_keyframe
+                    and packet.dts is not None
+                ):
                     first_packet[video_stream] = packet
                     initial_packets.append(packet)
             # Get first_pts from subsequent frame to first keyframe
@@ -121,6 +125,8 @@ def _stream_worker_internal(hass, stream, quit_event):
                 [pts is None for pts in {**first_packet, **first_pts}.values()]
             ) and (len(initial_packets) < PACKETS_TO_WAIT_FOR_AUDIO):
                 packet = next(container.demux((video_stream, audio_stream)))
+                if packet.dts is None:
+                    continue  # Discard packets with no dts
                 if (
                     first_packet[packet.stream] is None
                 ):  # actually video already found above so only for audio

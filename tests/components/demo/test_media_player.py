@@ -3,6 +3,7 @@ import pytest
 import voluptuous as vol
 
 import homeassistant.components.media_player as mp
+from homeassistant.const import ATTR_SUPPORTED_FEATURES
 from homeassistant.helpers.aiohttp_client import DATA_CLIENTSESSION
 from homeassistant.setup import async_setup_component
 
@@ -203,7 +204,7 @@ async def test_seek(hass, mock_media_seek):
     await hass.async_block_till_done()
     ent_id = "media_player.living_room"
     state = hass.states.get(ent_id)
-    assert state.attributes["supported_features"] & mp.SUPPORT_SEEK
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] & mp.SUPPORT_SEEK
     assert not mock_media_seek.called
     with pytest.raises(vol.Invalid):
         await common.async_media_seek(hass, None, ent_id)

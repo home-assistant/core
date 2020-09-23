@@ -1,7 +1,7 @@
 """Support for Vera sensors."""
 from datetime import timedelta
 import logging
-from typing import Callable, List
+from typing import Callable, List, Optional, cast
 
 import pyvera as veraApi
 
@@ -35,10 +35,12 @@ async def async_setup_entry(
     )
 
 
-class VeraSensor(VeraDevice, Entity):
+class VeraSensor(VeraDevice[veraApi.VeraSensor], Entity):
     """Representation of a Vera Sensor."""
 
-    def __init__(self, vera_device, controller_data: ControllerData):
+    def __init__(
+        self, vera_device: veraApi.VeraSensor, controller_data: ControllerData
+    ):
         """Initialize the sensor."""
         self.current_value = None
         self._temperature_units = None
@@ -47,12 +49,12 @@ class VeraSensor(VeraDevice, Entity):
         self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
     @property
-    def state(self):
+    def state(self) -> str:
         """Return the name of the sensor."""
         return self.current_value
 
     @property
-    def unit_of_measurement(self):
+    def unit_of_measurement(self) -> Optional[str]:
         """Return the unit of measurement of this entity, if any."""
 
         if self.vera_device.category == veraApi.CATEGORY_TEMPERATURE_SENSOR:
@@ -66,7 +68,7 @@ class VeraSensor(VeraDevice, Entity):
         if self.vera_device.category == veraApi.CATEGORY_POWER_METER:
             return "watts"
 
-    def update(self):
+    def update(self) -> None:
         """Update the state."""
 
         if self.vera_device.category == veraApi.CATEGORY_TEMPERATURE_SENSOR:
@@ -86,8 +88,9 @@ class VeraSensor(VeraDevice, Entity):
         elif self.vera_device.category == veraApi.CATEGORY_HUMIDITY_SENSOR:
             self.current_value = self.vera_device.humidity
         elif self.vera_device.category == veraApi.CATEGORY_SCENE_CONTROLLER:
-            value = self.vera_device.get_last_scene_id(True)
-            time = self.vera_device.get_last_scene_time(True)
+            controller = cast(veraApi.VeraSceneController, self.vera_device)
+            value = controller.get_last_scene_id(True)
+            time = controller.get_last_scene_time(True)
             if time == self.last_changed_time:
                 self.current_value = None
             else:

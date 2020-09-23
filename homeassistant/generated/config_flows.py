@@ -31,6 +31,7 @@ FLOWS = [
     "broadlink",
     "brother",
     "bsblan",
+    "canary",
     "cast",
     "cert_expiry",
     "control4",
@@ -214,5 +215,6 @@ FLOWS = [
     "yeelight",
     "zerproc",
     "zha",
+    "zoneminder",
     "zwave"
 ]

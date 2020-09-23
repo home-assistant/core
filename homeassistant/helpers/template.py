@@ -908,7 +908,7 @@ def strptime(string, fmt):
     """Parse a time string to datetime."""
     try:
         return datetime.strptime(string, fmt)
-    except (ValueError, AttributeError):
+    except (ValueError, AttributeError, TypeError):
         return string
 
 
