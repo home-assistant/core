@@ -43,8 +43,7 @@
       "already_in_progress": "Plex is being configured",
       "reauth_successful": "Successfully reauthenticated",
       "token_request_timeout": "Timed out obtaining token",
-      "unknown": "[%key:common::config_flow::error::unknown%]",
-      "unknown_entry": "Unknown config entry referenced"
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
   "options": {

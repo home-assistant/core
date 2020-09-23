@@ -225,7 +225,10 @@ async def async_unload_entry(hass, entry):
 async def async_options_updated(hass, entry):
     """Triggered by config entry options updates."""
     server_id = entry.data[CONF_SERVER_IDENTIFIER]
-    hass.data[PLEX_DOMAIN][SERVERS][server_id].options = entry.options
+
+    # Guard incomplete setup during reauth flows
+    if server_id in hass.data[PLEX_DOMAIN][SERVERS]:
+        hass.data[PLEX_DOMAIN][SERVERS][server_id].options = entry.options
 
 
 def play_on_sonos(hass, service_call):

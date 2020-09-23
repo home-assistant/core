@@ -236,10 +236,6 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             == config_entries.SOURCE_REAUTH
         ):
             entry = self.hass.config_entries.async_get_entry(self._entry_id)
-
-            if entry is None:
-                return self.async_abort(reason="unknown_entry")
-
             self.hass.config_entries.async_update_entry(entry, data=data)
             _LOGGER.debug("Updated config entry for %s", plex_server.friendly_name)
             await self.hass.config_entries.async_reload(entry.entry_id)
@@ -330,16 +326,10 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         server_config = {CONF_TOKEN: self.token}
         return await self.async_step_server_validate(server_config)
 
-    async def async_step_reauth(self, data=None):
+    async def async_step_reauth(self, data):
         """Handle a reauthorization flow request."""
-        entry_data = dict(data)
-        self.current_login = entry_data
-        self._entry_id = self.current_login.get("config_entry_id")
-
-        entry = self.hass.config_entries.async_get_entry(self._entry_id)
-        if entry is None:
-            return self.async_abort(reason="unknown_entry")
-
+        self.current_login = dict(data)
+        self._entry_id = self.current_login.pop("config_entry_id")
         return await self.async_step_user()
 
 
