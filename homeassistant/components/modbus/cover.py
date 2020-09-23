@@ -8,6 +8,7 @@ from pymodbus.pdu import ExceptionResponse
 
 from homeassistant.components.cover import SUPPORT_CLOSE, SUPPORT_OPEN, CoverEntity
 from homeassistant.const import (
+    CONF_COVERS,
     CONF_DEVICE_CLASS,
     CONF_NAME,
     CONF_SCAN_INTERVAL,
@@ -26,7 +27,6 @@ from .const import (
     CALL_TYPE_COIL,
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
-    CONF_HUB,
     CONF_REGISTER,
     CONF_STATE_CLOSED,
     CONF_STATE_CLOSING,
@@ -51,8 +51,8 @@ async def async_setup_platform(
         return
 
     covers = []
-    for cover in discovery_info:
-        hub: ModbusHub = hass.data[MODBUS_DOMAIN][cover[CONF_HUB]]
+    for cover in discovery_info[CONF_COVERS]:
+        hub: ModbusHub = hass.data[MODBUS_DOMAIN][discovery_info[CONF_NAME]]
         covers.append(ModbusCover(hub, cover))
 
     async_add_entities(covers)
@@ -62,7 +62,9 @@ class ModbusCover(CoverEntity, RestoreEntity):
     """Representation of a Modbus cover."""
 
     def __init__(
-        self, hub: ModbusHub, config: Dict[str, Any],
+        self,
+        hub: ModbusHub,
+        config: Dict[str, Any],
     ):
         """Initialize the modbus cover."""
         self._hub: ModbusHub = hub

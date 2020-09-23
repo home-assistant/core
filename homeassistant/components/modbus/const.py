@@ -44,7 +44,6 @@ ATTR_ADDRESS = "address"
 ATTR_HUB = "hub"
 ATTR_UNIT = "unit"
 ATTR_VALUE = "value"
-CONF_HUBS = "hubs"
 SERVICE_WRITE_COIL = "write_coil"
 SERVICE_WRITE_REGISTER = "write_register"
 DEFAULT_SCAN_INTERVAL = 15  # seconds

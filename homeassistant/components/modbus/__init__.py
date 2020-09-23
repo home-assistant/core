@@ -37,8 +37,6 @@ from .const import (
     CALL_TYPE_REGISTER_INPUT,
     CONF_BAUDRATE,
     CONF_BYTESIZE,
-    CONF_HUB,
-    CONF_HUBS,
     CONF_INPUT_TYPE,
     CONF_PARITY,
     CONF_REGISTER,
@@ -61,6 +59,31 @@ _LOGGER = logging.getLogger(__name__)
 
 BASE_SCHEMA = vol.Schema({vol.Optional(CONF_NAME, default=DEFAULT_HUB): cv.string})
 
+COVERS_SCHEMA = vol.All(
+    cv.has_at_least_one_key(CALL_TYPE_COIL, CONF_REGISTER),
+    vol.Schema(
+        {
+            vol.Required(CONF_NAME): cv.string,
+            vol.Optional(
+                CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
+            ): cv.positive_int,
+            vol.Optional(CONF_DEVICE_CLASS): COVER_DEVICE_CLASSES_SCHEMA,
+            vol.Optional(CONF_SLAVE, default=DEFAULT_SLAVE): cv.positive_int,
+            vol.Optional(CONF_STATE_CLOSED, default=0): cv.positive_int,
+            vol.Optional(CONF_STATE_CLOSING, default=3): cv.positive_int,
+            vol.Optional(CONF_STATE_OPEN, default=1): cv.positive_int,
+            vol.Optional(CONF_STATE_OPENING, default=2): cv.positive_int,
+            vol.Optional(CONF_STATUS_REGISTER): cv.positive_int,
+            vol.Optional(
+                CONF_STATUS_REGISTER_TYPE,
+                default=CALL_TYPE_REGISTER_HOLDING,
+            ): vol.In([CALL_TYPE_REGISTER_HOLDING, CALL_TYPE_REGISTER_INPUT]),
+            vol.Exclusive(CALL_TYPE_COIL, CONF_INPUT_TYPE): cv.positive_int,
+            vol.Exclusive(CONF_REGISTER, CONF_INPUT_TYPE): cv.positive_int,
+        }
+    ),
+)
+
 SERIAL_SCHEMA = BASE_SCHEMA.extend(
     {
         vol.Required(CONF_BAUDRATE): cv.positive_int,
@@ -71,6 +94,7 @@ SERIAL_SCHEMA = BASE_SCHEMA.extend(
         vol.Required(CONF_STOPBITS): vol.Any(1, 2),
         vol.Required(CONF_TYPE): "serial",
         vol.Optional(CONF_TIMEOUT, default=3): cv.socket_timeout,
+        vol.Optional(CONF_COVERS): vol.All(cv.ensure_list, [COVERS_SCHEMA]),
     }
 )
 
@@ -81,6 +105,7 @@ ETHERNET_SCHEMA = BASE_SCHEMA.extend(
         vol.Required(CONF_TYPE): vol.Any("tcp", "udp", "rtuovertcp"),
         vol.Optional(CONF_TIMEOUT, default=3): cv.socket_timeout,
         vol.Optional(CONF_DELAY, default=0): cv.positive_int,
+        vol.Optional(CONF_COVERS): vol.All(cv.ensure_list, [COVERS_SCHEMA]),
     }
 )
 
@@ -104,41 +129,14 @@ SERVICE_WRITE_COIL_SCHEMA = vol.Schema(
     }
 )
 
-COVERS_SCHEMA = vol.All(
-    cv.has_at_least_one_key(CALL_TYPE_COIL, CONF_REGISTER),
-    vol.Schema(
-        {
-            vol.Required(CONF_HUB): cv.string,
-            vol.Required(CONF_NAME): cv.string,
-            vol.Optional(
-                CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
-            ): cv.positive_int,
-            vol.Optional(CONF_DEVICE_CLASS): COVER_DEVICE_CLASSES_SCHEMA,
-            vol.Optional(CONF_SLAVE, default=DEFAULT_SLAVE): cv.positive_int,
-            vol.Optional(CONF_STATE_CLOSED, default=0): cv.positive_int,
-            vol.Optional(CONF_STATE_CLOSING, default=3): cv.positive_int,
-            vol.Optional(CONF_STATE_OPEN, default=1): cv.positive_int,
-            vol.Optional(CONF_STATE_OPENING, default=2): cv.positive_int,
-            vol.Optional(CONF_STATUS_REGISTER): cv.positive_int,
-            vol.Optional(
-                CONF_STATUS_REGISTER_TYPE, default=CALL_TYPE_REGISTER_HOLDING,
-            ): vol.In([CALL_TYPE_REGISTER_HOLDING, CALL_TYPE_REGISTER_INPUT]),
-            vol.Exclusive(CALL_TYPE_COIL, CONF_INPUT_TYPE): cv.positive_int,
-            vol.Exclusive(CONF_REGISTER, CONF_INPUT_TYPE): cv.positive_int,
-        }
-    ),
-)
-
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_HUBS): vol.All(
-                    cv.ensure_list, [vol.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA)]
-                ),
-                vol.Optional(CONF_COVERS): vol.All(cv.ensure_list, [COVERS_SCHEMA]),
-            }
-        )
+        DOMAIN: vol.All(
+            cv.ensure_list,
+            [
+                vol.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA),
+            ],
+        ),
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -148,8 +146,13 @@ def setup(hass, config):
     """Set up Modbus component."""
     hass.data[DOMAIN] = hub_collect = {}
 
-    for conf_hub in config[DOMAIN][CONF_HUBS]:
+    for conf_hub in config[DOMAIN]:
         hub_collect[conf_hub[CONF_NAME]] = ModbusHub(conf_hub)
+
+        # load platforms
+        for component, conf_key in (("cover", CONF_COVERS),):
+            if conf_key in conf_hub:
+                load_platform(hass, component, DOMAIN, conf_hub, config)
 
     def stop_modbus(event):
         """Stop Modbus service."""
@@ -183,11 +186,6 @@ def setup(hass, config):
 
     # register function to gracefully stop modbus
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_modbus)
-
-    # load platforms
-    for component, conf_key in (("cover", CONF_COVERS),):
-        if conf_key in config[DOMAIN]:
-            load_platform(hass, component, DOMAIN, config[DOMAIN][conf_key], config)
 
     # Register services for modbus
     hass.services.register(
