@@ -3,10 +3,14 @@
 import pytest
 
 from homeassistant.const import (
+    LENGTH_CENTIMETERS,
     LENGTH_FEET,
+    LENGTH_INCHES,
     LENGTH_KILOMETERS,
     LENGTH_METERS,
     LENGTH_MILES,
+    LENGTH_MILLIMETERS,
+    LENGTH_YARD,
 )
 import homeassistant.util.distance as distance_util
 
@@ -18,8 +22,12 @@ def test_convert_same_unit():
     """Test conversion from any unit to same unit."""
     assert distance_util.convert(5, LENGTH_KILOMETERS, LENGTH_KILOMETERS) == 5
     assert distance_util.convert(2, LENGTH_METERS, LENGTH_METERS) == 2
+    assert distance_util.convert(6, LENGTH_CENTIMETERS, LENGTH_CENTIMETERS) == 6
+    assert distance_util.convert(3, LENGTH_MILLIMETERS, LENGTH_MILLIMETERS) == 3
     assert distance_util.convert(10, LENGTH_MILES, LENGTH_MILES) == 10
-    assert distance_util.convert(9, LENGTH_FEET, LENGTH_FEET) == 9
+    assert distance_util.convert(9, LENGTH_YARD, LENGTH_YARD) == 9
+    assert distance_util.convert(8, LENGTH_FEET, LENGTH_FEET) == 8
+    assert distance_util.convert(7, LENGTH_INCHES, LENGTH_INCHES) == 7
 
 
 def test_convert_invalid_unit():
@@ -42,7 +50,11 @@ def test_convert_from_miles():
     miles = 5
     assert distance_util.convert(miles, LENGTH_MILES, LENGTH_KILOMETERS) == 8.04672
     assert distance_util.convert(miles, LENGTH_MILES, LENGTH_METERS) == 8046.72
+    assert distance_util.convert(miles, LENGTH_MILES, LENGTH_CENTIMETERS) == 804672.0
+    assert distance_util.convert(miles, LENGTH_MILES, LENGTH_MILLIMETERS) == 8046720.0
+    assert distance_util.convert(miles, LENGTH_MILES, LENGTH_YARD) == 8799.9734592
     assert distance_util.convert(miles, LENGTH_MILES, LENGTH_FEET) == 26400.0008448
+    assert distance_util.convert(miles, LENGTH_MILES, LENGTH_INCHES) == 316800.171072
 
 
 def test_convert_from_feet():
