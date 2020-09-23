@@ -737,6 +737,11 @@ async def test_reload_with_base_integration_platform_not_setup(hass):
         },
     )
     await hass.async_block_till_done()
+    hass.states.async_set("light.master_hall_lights", STATE_ON)
+    hass.states.async_set("light.master_hall_lights_2", STATE_OFF)
+
+    hass.states.async_set("light.outside_patio_lights", STATE_OFF)
+    hass.states.async_set("light.outside_patio_lights_2", STATE_OFF)
 
     yaml_path = path.join(
         _get_fixtures_base_path(),
@@ -755,6 +760,8 @@ async def test_reload_with_base_integration_platform_not_setup(hass):
     assert hass.states.get("light.light_group") is None
     assert hass.states.get("light.master_hall_lights_g") is not None
     assert hass.states.get("light.outside_patio_lights_g") is not None
+    assert hass.states.get("light.master_hall_lights_g").state == STATE_ON
+    assert hass.states.get("light.outside_patio_lights_g").state == STATE_OFF
 
 
 def _get_fixtures_base_path():
