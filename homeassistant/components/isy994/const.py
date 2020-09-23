@@ -57,6 +57,7 @@ from homeassistant.const import (
     LENGTH_KILOMETERS,
     LENGTH_METERS,
     LENGTH_MILES,
+    LENGTH_MILLIMETERS,
     MASS_KILOGRAMS,
     MASS_POUNDS,
     PERCENTAGE,
@@ -361,7 +362,7 @@ UOM_FRIENDLY_NAME = {
     "43": "mV",
     "44": TIME_MINUTES,
     "45": TIME_MINUTES,
-    "46": f"mm/{TIME_HOURS}",
+    "46": f"{LENGTH_MILLIMETERS}/{TIME_HOURS}",
     "47": TIME_MONTHS,
     "48": SPEED_MILES_PER_HOUR,
     "49": SPEED_METERS_PER_SECOND,
@@ -388,7 +389,7 @@ UOM_FRIENDLY_NAME = {
     "75": "weekday",
     "76": DEGREE,
     "77": TIME_YEARS,
-    "82": "mm",
+    "82": LENGTH_MILLIMETERS,
     "83": LENGTH_KILOMETERS,
     "85": "Ω",
     "86": "kΩ",
@@ -404,7 +405,7 @@ UOM_FRIENDLY_NAME = {
     "103": CURRENCY_DOLLAR,
     "104": CURRENCY_CENT,
     "105": LENGTH_INCHES,
-    "106": f"mm/{TIME_DAYS}",
+    "106": f"{LENGTH_MILLIMETERS}/{TIME_DAYS}",
     "107": "",  # raw 1-byte unsigned value
     "108": "",  # raw 2-byte unsigned value
     "109": "",  # raw 3-byte unsigned value
