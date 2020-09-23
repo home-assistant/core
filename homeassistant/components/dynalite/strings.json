@@ -1,0 +1,21 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Please enter the connection information of your Dynalite gateway.",
+        "data": {
+          "name": "Name",
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "abort": {
+      "already_configured": "This gateway is already configured in the system.", 
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    }
+  }
+}
