@@ -33,7 +33,7 @@ async def async_setup_entry(
     for device in hass.data[DOMAIN]["homecontrol"].multi_level_sensor_devices:
         for multi_level_sensor in device.multi_level_sensor_property:
             entities.append(
-                DevoloMultiLevelDeviceEntity(
+                DevoloGenericMultiLevelDeviceEntity(
                     homecontrol=hass.data[DOMAIN]["homecontrol"],
                     device_instance=device,
                     element_uid=multi_level_sensor,
@@ -55,34 +55,7 @@ async def async_setup_entry(
 
 
 class DevoloMultiLevelDeviceEntity(DevoloDeviceEntity):
-    """Representation of a multi level sensor within devolo Home Control."""
-
-    def __init__(
-        self,
-        homecontrol,
-        device_instance,
-        element_uid,
-    ):
-        """Initialize a devolo multi level sensor."""
-        self._multi_level_sensor_property = device_instance.multi_level_sensor_property[
-            element_uid
-        ]
-
-        self._device_class = DEVICE_CLASS_MAPPING.get(
-            self._multi_level_sensor_property.sensor_type
-        )
-
-        super().__init__(
-            homecontrol=homecontrol,
-            device_instance=device_instance,
-            element_uid=element_uid,
-        )
-
-        self._value = self._multi_level_sensor_property.value
-        self._unit = self._multi_level_sensor_property.unit
-
-        if self._device_class is None:
-            self._name += f" {self._multi_level_sensor_property.sensor_type}"
+    """Abstract representation of a multi level sensor within devolo Home Control."""
 
     @property
     def device_class(self) -> str:
@@ -100,6 +73,37 @@ class DevoloMultiLevelDeviceEntity(DevoloDeviceEntity):
         return self._unit
 
 
+class DevoloGenericMultiLevelDeviceEntity(DevoloMultiLevelDeviceEntity):
+    """Representation of a generic multi level sensor within devolo Home Control."""
+
+    def __init__(
+        self,
+        homecontrol,
+        device_instance,
+        element_uid,
+    ):
+        """Initialize a devolo multi level sensor."""
+        self._multi_level_sensor_property = device_instance.multi_level_sensor_property[
+            element_uid
+        ]
+
+        super().__init__(
+            homecontrol=homecontrol,
+            device_instance=device_instance,
+            element_uid=element_uid,
+        )
+
+        self._device_class = DEVICE_CLASS_MAPPING.get(
+            self._multi_level_sensor_property.sensor_type
+        )
+
+        self._value = self._multi_level_sensor_property.value
+        self._unit = self._multi_level_sensor_property.unit
+
+        if self._device_class is None:
+            self._name += f" {self._multi_level_sensor_property.sensor_type}"
+
+
 class DevoloConsumptionEntity(DevoloMultiLevelDeviceEntity):
     """Representation of a consumption entity within devolo Home Control."""
 
@@ -110,9 +114,7 @@ class DevoloConsumptionEntity(DevoloMultiLevelDeviceEntity):
         self._device_class = DEVICE_CLASS_MAPPING.get(consumption)
         self._sensor_type = consumption
 
-        super(  # pylint: disable=bad-super-call
-            DevoloMultiLevelDeviceEntity, self
-        ).__init__(
+        super().__init__(
             homecontrol=homecontrol,
             device_instance=device_instance,
             element_uid=element_uid,

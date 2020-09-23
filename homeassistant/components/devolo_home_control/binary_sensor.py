@@ -67,15 +67,15 @@ class DevoloBinaryDeviceEntity(DevoloDeviceEntity, BinarySensorEntity):
             element_uid
         )
 
-        self._device_class = DEVICE_CLASS_MAPPING.get(
-            self._binary_sensor_property.sub_type
-            or self._binary_sensor_property.sensor_type
-        )
-
         super().__init__(
             homecontrol=homecontrol,
             device_instance=device_instance,
             element_uid=element_uid,
+        )
+
+        self._device_class = DEVICE_CLASS_MAPPING.get(
+            self._binary_sensor_property.sub_type
+            or self._binary_sensor_property.sensor_type
         )
 
         if self._device_class is None:
