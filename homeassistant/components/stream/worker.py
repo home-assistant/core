@@ -78,6 +78,13 @@ def _stream_worker_internal(hass, stream, quit_event):
     if container.format.name in {"hls", "mpegts"}:
         audio_stream = None
 
+    # Store codec metadata on outputs
+    for stream_output in stream.outputs.values():
+        stream_output.video_codec = (video_stream.name, video_stream.profile)
+        stream_output.audio_codec = (
+            (audio_stream.name, audio_stream.profile) if audio_stream else None
+        )
+
     # The presentation timestamps of the first packet in each stream we receive
     # Use to adjust before muxing or outputting, but we don't adjust internally
     first_pts = {}

@@ -1,4 +1,5 @@
 """Provide functionality to stream HLS."""
+import io
 from typing import Callable
 
 from aiohttp import web
@@ -16,7 +17,87 @@ def async_setup_hls(hass):
     hass.http.register_view(HlsPlaylistView())
     hass.http.register_view(HlsSegmentView())
     hass.http.register_view(HlsInitView())
+    hass.http.register_view(HlsMasterPlaylistView())
     return "/api/hls/{}/playlist.m3u8"
+
+
+class HlsMasterPlaylistView(StreamView):
+    """Stream view used only for Chromecast compatibility."""
+
+    url = r"/api/hls/{token:[a-f0-9]+}/master_playlist.m3u8"
+    name = "api:stream:hls:master_playlist"
+    cors_allowed = True
+
+    @staticmethod
+    def codec_string(track) -> str:
+        """Return RFC 6381 codec string."""
+        v_name, v_profile = track.video_codec
+        if v_name == "hevc":
+            if v_profile == "main10":
+                codec_string = "hev1.2.6.L150.B0"
+            else:  # HEVC Main level 5
+                codec_string = "hev1.1.6.L150.B0"
+        else:  # AVC1 level 4.1
+            codec_string = "avc1"
+            if v_profile == "Constrained Baseline":
+                codec_string += ".424029"
+            elif v_profile == "Baseline":
+                codec_string += ".420029"
+            elif v_profile == "High":
+                codec_string += ".640029"
+            else:  # Main profile
+                codec_string += ".4d0029"
+        if track.audio_codec is not None:
+            a_name, a_profile = track.audio_codec
+            if a_name == "aac":
+                if a_profile == "LC":
+                    codec_string += ",mp4a.40.2"
+                else:  # aac HE
+                    codec_string += ",mp4a.40.5"
+            else:  # mp3
+                codec_string += ",mp4a.69"
+        return codec_string
+
+    # @staticmethod
+    # def codec_string(track) -> str:
+    #     """Return RFC 6381 codec string."""
+    #     v_name = track.video_codec[0]
+    #     if v_name == "hevc":
+    #         codec_string = "hev1"
+    #     else:  # AVC1 level 4.1
+    #         codec_string = "avc1"
+    #     if track.audio_codec is not None:
+    #         a_name = track.audio_codec[0]
+    #         if a_name == "aac":
+    #             codec_string += ",mp4a.40"
+    #         else:  # mp3
+    #             codec_string += ",mp4a.69"
+    #     return codec_string
+
+    def render(self, track):
+        """Render M3U8 file."""
+        # Need to calculate max bandwidth as input_container.bit_rate doesn't seem to work
+        # Calculate file size / duration and use a multiplier to account for variation
+        segment = track.get_segment(track.segments[-1])
+        bandwidth = round(
+            segment.segment.seek(0, io.SEEK_END) * 8 / segment.duration * 3
+        )
+        lines = [
+            "#EXTM3U",
+            f'#EXT-X-STREAM-INF:BANDWIDTH={bandwidth},CODECS="{self.codec_string(track)}"',
+            "playlist.m3u8",
+        ]
+        return "\n".join(lines) + "\n"
+
+    async def handle(self, request, stream, sequence):
+        """Return m3u8 playlist."""
+        track = stream.add_provider("hls")
+        stream.start()
+        # Wait for a segment to be ready
+        if not track.segments:
+            await track.recv()
+        headers = {"Content-Type": FORMAT_CONTENT_TYPE["hls"]}
+        return web.Response(body=self.render(track).encode("utf-8"), headers=headers)
 
 
 class HlsPlaylistView(StreamView):
@@ -26,18 +107,50 @@ class HlsPlaylistView(StreamView):
     name = "api:stream:hls:playlist"
     cors_allowed = True
 
+    @staticmethod
+    def render_preamble(track):
+        """Render preamble."""
+        return [
+            "#EXT-X-VERSION:7",
+            f"#EXT-X-TARGETDURATION:{track.target_duration}",
+            '#EXT-X-MAP:URI="init.mp4"',
+        ]
+
+    @staticmethod
+    def render_playlist(track):
+        """Render playlist."""
+        segments = track.segments
+
+        if not segments:
+            return []
+
+        playlist = ["#EXT-X-MEDIA-SEQUENCE:{}".format(segments[0])]
+
+        for sequence in segments:
+            segment = track.get_segment(sequence)
+            playlist.extend(
+                [
+                    "#EXTINF:{:.04f},".format(float(segment.duration)),
+                    f"./segment/{segment.sequence}.m4s",
+                ]
+            )
+
+        return playlist
+
+    def render(self, track):
+        """Render M3U8 file."""
+        lines = ["#EXTM3U"] + self.render_preamble(track) + self.render_playlist(track)
+        return "\n".join(lines) + "\n"
+
     async def handle(self, request, stream, sequence):
         """Return m3u8 playlist."""
-        renderer = M3U8Renderer(stream)
         track = stream.add_provider("hls")
         stream.start()
         # Wait for a segment to be ready
         if not track.segments:
             await track.recv()
         headers = {"Content-Type": FORMAT_CONTENT_TYPE["hls"]}
-        return web.Response(
-            body=renderer.render(track).encode("utf-8"), headers=headers
-        )
+        return web.Response(body=self.render(track).encode("utf-8"), headers=headers)
 
 
 class HlsInitView(StreamView):
@@ -77,49 +190,6 @@ class HlsSegmentView(StreamView):
         )
 
 
-class M3U8Renderer:
-    """M3U8 Render Helper."""
-
-    def __init__(self, stream):
-        """Initialize renderer."""
-        self.stream = stream
-
-    @staticmethod
-    def render_preamble(track):
-        """Render preamble."""
-        return [
-            "#EXT-X-VERSION:7",
-            f"#EXT-X-TARGETDURATION:{track.target_duration}",
-            '#EXT-X-MAP:URI="init.mp4"',
-        ]
-
-    @staticmethod
-    def render_playlist(track):
-        """Render playlist."""
-        segments = track.segments
-
-        if not segments:
-            return []
-
-        playlist = ["#EXT-X-MEDIA-SEQUENCE:{}".format(segments[0])]
-
-        for sequence in segments:
-            segment = track.get_segment(sequence)
-            playlist.extend(
-                [
-                    "#EXTINF:{:.04f},".format(float(segment.duration)),
-                    f"./segment/{segment.sequence}.m4s",
-                ]
-            )
-
-        return playlist
-
-    def render(self, track):
-        """Render M3U8 file."""
-        lines = ["#EXTM3U"] + self.render_preamble(track) + self.render_playlist(track)
-        return "\n".join(lines) + "\n"
-
-
 @PROVIDERS.register("hls")
 class HlsStreamOutput(StreamOutput):
     """Represents HLS Output formats."""
@@ -137,7 +207,7 @@ class HlsStreamOutput(StreamOutput):
     @property
     def audio_codecs(self) -> str:
         """Return desired audio codecs."""
-        return {"aac", "ac3", "mp3"}
+        return {"aac", "mp3"}
 
     @property
     def video_codecs(self) -> tuple:
