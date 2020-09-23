@@ -237,6 +237,7 @@ async def test_options_flow(hass, aioclient_mock: AiohttpClientMocker):
             result["flow_id"],
             user_input={CONF_UPCOMING_DAYS: 2, CONF_WANTED_MAX_ITEMS: 100},
         )
+        await hass.async_block_till_done()
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["data"][CONF_UPCOMING_DAYS] == 2
