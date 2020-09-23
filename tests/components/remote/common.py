@@ -7,6 +7,7 @@ from homeassistant.components.remote import (
     ATTR_ACTIVITY,
     ATTR_ALTERNATIVE,
     ATTR_COMMAND,
+    ATTR_COMMAND_TYPE,
     ATTR_DELAY_SECS,
     ATTR_DEVICE,
     ATTR_NUM_REPEATS,
@@ -81,6 +82,7 @@ def learn_command(
     device=None,
     command=None,
     alternative=None,
+    command_type=None,
     timeout=None,
 ):
     """Learn a command from a device."""
@@ -93,6 +95,9 @@ def learn_command(
 
     if command:
         data[ATTR_COMMAND] = command
+
+    if command_type:
+        data[ATTR_COMMAND_TYPE] = command_type
 
     if alternative:
         data[ATTR_ALTERNATIVE] = alternative
