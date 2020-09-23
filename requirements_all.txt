@@ -624,6 +624,9 @@ fritzconnection==1.2.0
 # homeassistant.components.google_translate
 gTTS-token==1.1.3
 
+# homeassistant.components.govee
+govee-api-laggat==0.1.11
+
 # homeassistant.components.garmin_connect
 garminconnect==0.1.13
 
