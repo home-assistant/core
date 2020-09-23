@@ -16,3 +16,14 @@ PUMP_TYPES = {
     "PMP_SINGLE_SPEED": "SINGLE",
     "PMP_DUAL_SPEED": "DUAL",
 }
+
+ALL_ITEM_KINDS = {
+    "BOWS",
+    "Filter",
+    "Heater",
+    "Chlorinator",
+    "CSAD",
+    "Lights",
+    "Relays",
+    "Pumps",
+}

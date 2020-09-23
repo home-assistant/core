@@ -13,7 +13,13 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import ATTR_IDENTIFIERS, ATTR_MANUFACTURER, ATTR_MODEL, DOMAIN
+from .const import (
+    ALL_ITEM_KINDS,
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,123 +54,24 @@ class OmniLogicUpdateCoordinator(DataUpdateCoordinator):
 
         parsed_data = {}
 
-        for backyard in data:
-            backyard_id = backyard.get("systemId")
-            parsed_data[backyard_id, None, None] = backyard
-            parsed_data[backyard_id, None, None]["type"] = "backyard"
+        def get_item_data(item, item_kind, current_id, data):
+            """Get data per kind of Omnilogic API item."""
+            if isinstance(item, list):
+                for single_item in item:
+                    data = get_item_data(single_item, item_kind, current_id, data)
 
-            for relay in backyard["Relays"]:
-                parsed_data[backyard_id, None, relay.get("systemId")] = relay
-                parsed_data[backyard_id, None, relay.get("systemId")]["type"] = "relay"
-                parsed_data[backyard_id, None, relay.get("systemId")][
-                    "parent_backyard"
-                ] = (backyard_id, None, None)
-                parsed_data[backyard_id, None, relay.get("systemId")][
-                    "parent_bow"
-                ] = None
+            if "systemId" in item:
+                system_id = item["systemId"]
+                current_id = current_id + (item_kind, system_id)
+                data[current_id] = item
 
-            for bow in backyard["BOWS"]:
-                bow_id = bow.get("systemId")
-                parsed_data[backyard_id, bow_id, None] = bow
-                parsed_data[backyard_id, bow_id, None]["type"] = "bow"
-                parsed_data[backyard_id, bow_id, None]["parent_backyard"] = (
-                    backyard_id,
-                    None,
-                    None,
-                )
-                parsed_data[backyard_id, bow_id, None]["parent_bow"] = None
+            for kind in ALL_ITEM_KINDS:
+                if kind in item:
+                    data = get_item_data(item[kind], kind, current_id, data)
 
-                if "Filter" in bow:
-                    parsed_data[
-                        backyard_id, bow_id, bow["Filter"].get("systemId")
-                    ] = bow["Filter"]
-                    parsed_data[backyard_id, bow_id, bow["Filter"].get("systemId")][
-                        "type"
-                    ] = "filter"
-                    parsed_data[backyard_id, bow_id, bow["Filter"].get("systemId")][
-                        "parent_backyard"
-                    ] = (backyard_id, None, None)
-                    parsed_data[backyard_id, bow_id, bow["Filter"].get("systemId")][
-                        "parent_bow"
-                    ] = (backyard_id, bow_id, None)
+            return data
 
-                if "Heater" in bow:
-                    parsed_data[
-                        backyard_id, bow_id, bow["Heater"].get("systemId")
-                    ] = bow["Heater"]
-                    parsed_data[backyard_id, bow_id, bow["Heater"].get("systemId")][
-                        "type"
-                    ] = "heater"
-                    parsed_data[backyard_id, bow_id, bow["Heater"].get("systemId")][
-                        "parent_backyard"
-                    ] = (backyard_id, None, None)
-                    parsed_data[backyard_id, bow_id, bow["Heater"].get("systemId")][
-                        "parent_bow"
-                    ] = (backyard_id, bow_id, None)
-
-                if "Chlorinator" in bow:
-                    parsed_data[
-                        backyard_id, bow_id, bow["Chlorinator"].get("systemId")
-                    ] = bow["Chlorinator"]
-                    parsed_data[
-                        backyard_id, bow_id, bow["Chlorinator"].get("systemId")
-                    ]["type"] = "chlorinator"
-                    parsed_data[
-                        backyard_id, bow_id, bow["Chlorinator"].get("systemId")
-                    ]["parent_backyard"] = (backyard_id, None, None)
-                    parsed_data[
-                        backyard_id, bow_id, bow["Chlorinator"].get("systemId")
-                    ]["parent_bow"] = (backyard_id, bow_id, None)
-
-                if "CSAD" in bow:
-                    parsed_data[backyard_id, bow_id, bow["CSAD"].get("systemId")] = bow[
-                        "CSAD"
-                    ]
-                    parsed_data[backyard_id, bow_id, bow["CSAD"].get("systemId")][
-                        "type"
-                    ] = "csad"
-                    parsed_data[backyard_id, bow_id, bow["CSAD"].get("systemId")][
-                        "parent_backyard"
-                    ] = (backyard_id, None, None)
-                    parsed_data[backyard_id, bow_id, bow["CSAD"].get("systemId")][
-                        "parent_bow"
-                    ] = (backyard_id, bow_id, None)
-
-                for light in bow["Lights"]:
-                    parsed_data[backyard_id, bow_id, light.get("systemId")] = light
-                    parsed_data[backyard_id, bow_id, light.get("systemId")][
-                        "type"
-                    ] = "light"
-                    parsed_data[backyard_id, bow_id, light.get("systemId")][
-                        "parent_backyard"
-                    ] = (backyard_id, None, None)
-                    parsed_data[backyard_id, bow_id, light.get("systemId")][
-                        "parent_bow"
-                    ] = (backyard_id, bow_id, None)
-
-                for relay in bow["Relays"]:
-                    parsed_data[backyard_id, bow_id, relay.get("systemId")] = relay
-                    parsed_data[backyard_id, bow_id, relay.get("systemId")][
-                        "type"
-                    ] = "relay"
-                    parsed_data[backyard_id, bow_id, relay.get("systemId")][
-                        "parent_backyard"
-                    ] = (backyard_id, None, None)
-                    parsed_data[backyard_id, bow_id, relay.get("systemId")][
-                        "parent_bow"
-                    ] = (backyard_id, bow_id, None)
-
-                for pump in bow["Pumps"]:
-                    parsed_data[backyard_id, bow_id, pump.get("systemId")] = pump
-                    parsed_data[backyard_id, bow_id, pump.get("systemId")][
-                        "type"
-                    ] = "pump"
-                    parsed_data[backyard_id, bow_id, pump.get("systemId")][
-                        "parent_backyard"
-                    ] = (backyard_id, None, None)
-                    parsed_data[backyard_id, bow_id, pump.get("systemId")][
-                        "parent_bow"
-                    ] = (backyard_id, bow_id, None)
+        parsed_data = get_item_data(data, "Backyard", (), parsed_data)
 
         return parsed_data
 
@@ -177,55 +84,46 @@ class OmniLogicEntity(CoordinatorEntity):
         coordinator: OmniLogicUpdateCoordinator,
         kind: str,
         name: str,
-        entity_data: dict,
-        entity: tuple,
+        item_id: tuple,
         icon: str,
     ):
         """Initialize the OmniLogic Entity."""
         super().__init__(coordinator)
 
-        bow_name = None
+        bow_id = None
+        entity_data = coordinator.data[item_id]
 
-        if entity_data.get("parent_backyard") is None:
-            backyard_name = entity_data.get("BackyardName")
-            msp_system_id = entity_data.get("systemId")
-            entity_friendly_name = f"{entity_data.get('BackyardName')} "
-            unique_id = f"{msp_system_id}_{kind}"
-        else:
-            backyard_name = coordinator.data[entity_data.get("parent_backyard")].get(
-                "BackyardName"
-            )
-            msp_system_id = coordinator.data[entity_data.get("parent_backyard")].get(
-                "systemId"
-            )
-            entity_friendly_name = f"{coordinator.data[entity_data.get('parent_backyard')]['BackyardName']} "
+        backyard_id = item_id[:2]
+        if len(item_id) == 6:
+            bow_id = item_id[:4]
 
-        backyard_name = backyard_name.replace(" ", "_")
+        msp_system_id = coordinator.data[backyard_id]["systemId"]
+        entity_friendly_name = f"{coordinator.data[backyard_id]['BackyardName']} "
+        unique_id = f"{msp_system_id}"
 
-        if entity_data.get("parent_bow") is not None:
-            bow_name = coordinator.data[entity_data.get("parent_bow")]["Name"].replace(
-                " ", "_"
+        if bow_id is not None:
+            unique_id = f"{unique_id}_{coordinator.data[bow_id]['systemId']}"
+            entity_friendly_name = (
+                f"{entity_friendly_name}{coordinator.data[bow_id]['Name']} "
             )
-            entity_friendly_name = f"{entity_friendly_name}{coordinator.data[entity_data.get('parent_bow')].get('Name')} "
-            unique_id = f"{msp_system_id}_{coordinator.data[entity_data.get('parent_bow')]['systemId']}_{entity_data.get('systemId')}_{kind}"
-        elif entity_data.get("parent_backyard") is not None:
-            unique_id = f"{msp_system_id}_{entity_data.get('systemId')}_{kind}"
+
+        unique_id = f"{unique_id}_{coordinator.data[item_id]['systemId']}_{kind}"
 
         if entity_data.get("Name") is not None:
-            entity_friendly_name = f"{entity_friendly_name}{entity_data.get('Name')} "
+            entity_friendly_name = f"{entity_friendly_name} {entity_data['Name']}"
 
-        entity_friendly_name = f"{entity_friendly_name}{name}"
+        entity_friendly_name = f"{entity_friendly_name} {name}"
+
+        unique_id = unique_id.replace(" ", "_")
 
         self._kind = kind
         self._name = entity_friendly_name
         self._unique_id = unique_id
-        self._entity_data = entity_data
-        self._entity = entity
+        self._item_id = item_id
         self._icon = icon
         self._attrs = {}
-        self._backyard_name = backyard_name
-        self._bow_name = bow_name
         self._msp_system_id = msp_system_id
+        self._backyard_name = coordinator.data[backyard_id]["BackyardName"]
 
     @property
     def unique_id(self) -> str:
