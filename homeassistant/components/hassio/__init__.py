@@ -158,6 +158,17 @@ async def async_uninstall_addon(hass: HomeAssistantType, slug: str) -> None:
     await hassio.send_command(command)
 
 
+@bind_hass
+async def async_start_addon(hass: HomeAssistantType, slug: str) -> None:
+    """Start add-on.
+
+    The caller of the function should handle HassioAPIError.
+    """
+    hassio = hass.data[DOMAIN]
+    command = f"/addons/{slug}/start"
+    await hassio.send_command(command)
+
+
 @callback
 @bind_hass
 def get_info(hass):
