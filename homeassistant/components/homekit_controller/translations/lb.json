@@ -53,5 +53,19 @@
             }
         }
     },
+    "device_automation": {
+        "trigger_subtype": {
+            "button1": "Kn\u00e4ppchen 1",
+            "button10": "Kn\u00e4ppchen 10",
+            "button2": "Kn\u00e4ppchen 2",
+            "button3": "Kn\u00e4ppchen 3",
+            "button4": "Kn\u00e4ppchen 4",
+            "button5": "Kn\u00e4ppchen 5",
+            "button6": "Kn\u00e4ppchen 6",
+            "button7": "Kn\u00e4ppchen 7",
+            "button8": "Kn\u00e4ppchen 8",
+            "button9": "Kn\u00e4ppchen 9"
+        }
+    },
     "title": "HomeKit Kontroller"
 }

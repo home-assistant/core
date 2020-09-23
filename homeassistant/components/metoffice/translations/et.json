@@ -1,16 +1,12 @@
 {
     "config": {
         "step": {
-            "geography": {
+            "user": {
                 "data": {
                     "latitude": "Laiuskraad",
                     "longitude": "Pikkuskraad"
-                }
-            },
-            "user": {
-                "data": {
-                    "cloud_api": "Geograafiline asukoht"
-                }
+                },
+                "description": "Laius- ja pikkuskraadi kasutatakse l\u00e4hima ilmajaama leidmiseks."
             }
         }
     }

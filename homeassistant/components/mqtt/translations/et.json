@@ -40,12 +40,12 @@
         "trigger_type": {
             "button_double_press": "\" {subtype} \" on topeltkl\u00f5psatud",
             "button_long_press": "\" {subtype} \" on pikalt alla vajutatud",
-            "button_long_release": "\"{alamt\u00fc\u00fcp}\" vabastatati p\u00e4rast pikka vajutust",
-            "button_quadruple_press": "\"{alamt\u00fc\u00fcp}\" on neljakordselt kl\u00f5psatud",
-            "button_quintuple_press": "\"{alamt\u00fc\u00fcp}\" on viiekordselt kl\u00f5psatud",
+            "button_long_release": "\"{subtype}\" vabastatati p\u00e4rast pikka vajutust",
+            "button_quadruple_press": "\"{subtype}\" on neljakordselt kl\u00f5psatud",
+            "button_quintuple_press": "\"{subtype}\" on viiekordselt kl\u00f5psatud",
             "button_short_press": "\u201e {subtype} \u201d on vajutatud",
             "button_short_release": "\" {subtype} \" vabastati",
-            "button_triple_press": "\"{alamt\u00fc\u00fcp}\" on kolmekordselt kl\u00f5psatud"
+            "button_triple_press": "\"{subtype}\" on kolmekordselt kl\u00f5psatud"
         }
     },
     "options": {
