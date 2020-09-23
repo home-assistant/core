@@ -2,7 +2,7 @@
 import logging
 
 from homeassistant.components.sensor import DOMAIN
-from homeassistant.const import VOLT
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, VOLT
 from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component
@@ -28,7 +28,7 @@ async def test_sma_config(hass):
 
     state = hass.states.get("sensor.current_consumption")
     assert state
-    assert "unit_of_measurement" in state.attributes
+    assert ATTR_UNIT_OF_MEASUREMENT in state.attributes
     assert "current_consumption" not in state.attributes
 
     state = hass.states.get("sensor.my_sensor")

@@ -6,6 +6,7 @@ import voluptuous as vol
 from homeassistant.components.device_automation import toggle_entity
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
     CONF_CONDITION,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
@@ -48,7 +49,7 @@ async def async_get_conditions(
 
         state = hass.states.get(entry.entity_id)
 
-        if state and state.attributes["supported_features"] & const.SUPPORT_MODES:
+        if state and state.attributes[ATTR_SUPPORTED_FEATURES] & const.SUPPORT_MODES:
             conditions.append(
                 {
                     CONF_CONDITION: "device",

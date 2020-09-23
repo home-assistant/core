@@ -1,7 +1,7 @@
 """Support for August sensors."""
 import logging
 
-from homeassistant.const import ENERGY_KILO_WATT_HOUR
+from homeassistant.const import CURRENCY_CENT, ENERGY_KILO_WATT_HOUR
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_LOADZONE, DOMAIN
@@ -29,7 +29,7 @@ class GriddyPriceSensor(CoordinatorEntity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return f"¢/{ENERGY_KILO_WATT_HOUR}"
+        return f"{CURRENCY_CENT}/{ENERGY_KILO_WATT_HOUR}"
 
     @property
     def name(self):

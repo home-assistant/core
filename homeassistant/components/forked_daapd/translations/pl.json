@@ -5,6 +5,7 @@
         },
         "error": {
             "unknown_error": "Nieznany b\u0142\u0105d.",
+            "wrong_host_or_port": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia. Sprawd\u017a adres hosta i port.",
             "wrong_password": "Nieprawid\u0142owe has\u0142o"
         },
         "step": {

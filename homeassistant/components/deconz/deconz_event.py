@@ -1,12 +1,52 @@
 """Representation of a deCONZ remote."""
+from pydeconz.sensor import Switch
+
 from homeassistant.const import CONF_EVENT, CONF_ID, CONF_UNIQUE_ID
 from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import slugify
 
-from .const import CONF_ANGLE, CONF_GESTURE, CONF_XY, LOGGER
+from .const import CONF_ANGLE, CONF_GESTURE, CONF_XY, LOGGER, NEW_SENSOR
 from .deconz_device import DeconzBase
 
 CONF_DECONZ_EVENT = "deconz_event"
+
+
+async def async_setup_events(gateway) -> None:
+    """Set up the deCONZ events."""
+
+    @callback
+    def async_add_sensor(sensors, new=True):
+        """Create DeconzEvent."""
+        for sensor in sensors:
+
+            if not gateway.option_allow_clip_sensor and sensor.type.startswith("CLIP"):
+                continue
+
+            if not new or sensor.type not in Switch.ZHATYPE:
+                continue
+
+            new_event = DeconzEvent(sensor, gateway)
+            gateway.hass.async_create_task(new_event.async_update_device_registry())
+            gateway.events.append(new_event)
+
+    gateway.listeners.append(
+        async_dispatcher_connect(
+            gateway.hass, gateway.async_signal_new_device(NEW_SENSOR), async_add_sensor
+        )
+    )
+
+    async_add_sensor(
+        [gateway.api.sensors[key] for key in sorted(gateway.api.sensors, key=int)]
+    )
+
+
+async def async_unload_events(gateway) -> None:
+    """Unload all deCONZ events."""
+    for event in gateway.events:
+        event.async_will_remove_from_hass()
+
+    gateway.events.clear()
 
 
 class DeconzEvent(DeconzBase):
