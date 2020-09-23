@@ -34,7 +34,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 
-from .const import DEFAULT_DATA, DEFAULT_OPTIONS, MOCK_SERVERS, MOCK_TOKEN
+from .const import DEFAULT_OPTIONS, MOCK_SERVERS, MOCK_TOKEN
 from .helpers import trigger_plex_update
 from .mock_classes import MockGDM, MockPlexAccount, MockPlexServer, MockResource
 
@@ -77,8 +77,6 @@ async def test_bad_credentials(hass):
 
 async def test_bad_hostname(hass):
     """Test when an invalid address is provided."""
-    mock_plex_account = MockPlexAccount()
-
     await async_process_ha_core_config(
         hass,
         {"internal_url": "http://example.local:8123"},
@@ -91,7 +89,7 @@ async def test_bad_hostname(hass):
     assert result["step_id"] == "user"
 
     with patch(
-        "plexapi.myplex.MyPlexAccount", return_value=mock_plex_account
+        "plexapi.myplex.MyPlexAccount", return_value=MockPlexAccount()
     ), patch.object(
         MockResource, "connect", side_effect=requests.exceptions.ConnectionError
     ), patch(
@@ -363,24 +361,8 @@ async def test_all_available_servers_configured(hass):
         assert result["reason"] == "all_configured"
 
 
-async def test_option_flow(hass):
+async def test_option_flow(hass, entry, mock_plex_server):
     """Test config options flow selection."""
-    mock_plex_server = MockPlexServer()
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=DEFAULT_DATA,
-        options=DEFAULT_OPTIONS,
-        unique_id=DEFAULT_DATA["server_id"],
-    )
-
-    with patch("plexapi.server.PlexServer", return_value=mock_plex_server), patch(
-        "plexapi.myplex.MyPlexAccount", return_value=MockPlexAccount()
-    ), patch("homeassistant.components.plex.PlexWebsocket", autospec=True):
-        entry.add_to_hass(hass)
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert entry.state == ENTRY_STATE_LOADED
 
@@ -411,24 +393,8 @@ async def test_option_flow(hass):
     }
 
 
-async def test_missing_option_flow(hass):
+async def test_missing_option_flow(hass, entry, mock_plex_server):
     """Test config options flow selection when no options stored."""
-    mock_plex_server = MockPlexServer()
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=DEFAULT_DATA,
-        options=None,
-        unique_id=DEFAULT_DATA["server_id"],
-    )
-
-    with patch("plexapi.server.PlexServer", return_value=mock_plex_server), patch(
-        "plexapi.myplex.MyPlexAccount", return_value=MockPlexAccount()
-    ), patch("homeassistant.components.plex.PlexWebsocket", autospec=True):
-        entry.add_to_hass(hass)
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert entry.state == ENTRY_STATE_LOADED
 
@@ -459,29 +425,15 @@ async def test_missing_option_flow(hass):
     }
 
 
-async def test_option_flow_new_users_available(hass, caplog):
+async def test_option_flow_new_users_available(
+    hass, caplog, entry, mock_websocket, setup_plex_server
+):
     """Test config options multiselect defaults when new Plex users are seen."""
-
     OPTIONS_OWNER_ONLY = copy.deepcopy(DEFAULT_OPTIONS)
     OPTIONS_OWNER_ONLY[MP_DOMAIN][CONF_MONITORED_USERS] = {"Owner": {"enabled": True}}
+    entry.options = OPTIONS_OWNER_ONLY
 
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=DEFAULT_DATA,
-        options=OPTIONS_OWNER_ONLY,
-        unique_id=DEFAULT_DATA["server_id"],
-    )
-
-    mock_plex_server = MockPlexServer(config_entry=entry)
-
-    with patch("plexapi.server.PlexServer", return_value=mock_plex_server), patch(
-        "plexapi.myplex.MyPlexAccount", return_value=MockPlexAccount()
-    ), patch(
-        "homeassistant.components.plex.PlexWebsocket", autospec=True
-    ) as mock_websocket:
-        entry.add_to_hass(hass)
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    mock_plex_server = await setup_plex_server(config_entry=entry)
 
     trigger_plex_update(mock_websocket)
     await hass.async_block_till_done()
@@ -734,29 +686,12 @@ async def test_manual_config_with_token(hass):
     assert result["data"][PLEX_SERVER_CONFIG][CONF_TOKEN] == MOCK_TOKEN
 
 
-async def test_setup_with_limited_credentials(hass):
+async def test_setup_with_limited_credentials(hass, entry, setup_plex_server):
     """Test setup with a user with limited permissions."""
-    mock_plex_server = MockPlexServer()
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=DEFAULT_DATA,
-        options=DEFAULT_OPTIONS,
-        unique_id=DEFAULT_DATA["server_id"],
-    )
-
-    with patch(
-        "plexapi.server.PlexServer", return_value=mock_plex_server
-    ), patch.object(
-        mock_plex_server, "systemAccounts", side_effect=plexapi.exceptions.Unauthorized
-    ) as mock_accounts, patch(
-        "plexapi.myplex.MyPlexAccount", return_value=MockPlexAccount()
-    ), patch(
-        "homeassistant.components.plex.PlexWebsocket", autospec=True
-    ):
-        entry.add_to_hass(hass)
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    with patch.object(
+        MockPlexServer, "systemAccounts", side_effect=plexapi.exceptions.Unauthorized
+    ) as mock_accounts:
+        mock_plex_server = await setup_plex_server()
 
     assert mock_accounts.called
 

@@ -8,6 +8,7 @@ import pytz
 
 from homeassistant.components import group
 from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
     LENGTH_METERS,
     MASS_GRAMS,
     MATCH_ALL,
@@ -2271,7 +2272,7 @@ def test_jinja_namespace(hass):
 
 def test_state_with_unit(hass):
     """Test the state_with_unit property helper."""
-    hass.states.async_set("sensor.test", "23", {"unit_of_measurement": "beers"})
+    hass.states.async_set("sensor.test", "23", {ATTR_UNIT_OF_MEASUREMENT: "beers"})
     hass.states.async_set("sensor.test2", "wow")
 
     tpl = template.Template("{{ states.sensor.test.state_with_unit }}", hass)

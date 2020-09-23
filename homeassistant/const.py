@@ -403,6 +403,7 @@ TIME_MONTHS = "m"
 TIME_YEARS = "y"
 
 # Length units
+LENGTH_MILLIMETERS: str = "mm"
 LENGTH_CENTIMETERS: str = "cm"
 LENGTH_METERS: str = "m"
 LENGTH_KILOMETERS: str = "km"

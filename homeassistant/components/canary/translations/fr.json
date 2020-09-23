@@ -1,0 +1,20 @@
+{
+    "config": {
+        "flow_title": "Canary : {name}",
+        "step": {
+            "user": {
+                "title": "Se connecter \u00e0 Canary"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "ffmpeg_arguments": "Arguments transmis \u00e0 ffmpeg pour les cam\u00e9ras",
+                    "timeout": "D\u00e9lai d'expiration de la demande (secondes)"
+                }
+            }
+        }
+    }
+}

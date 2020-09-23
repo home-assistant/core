@@ -1,0 +1,20 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "protocol": "Protokoll"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "edit_select": "\u00c4nneren"
+                }
+            }
+        }
+    }
+}

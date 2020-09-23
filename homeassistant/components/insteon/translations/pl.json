@@ -8,6 +8,12 @@
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
         },
         "step": {
+            "hub2": {
+                "data": {
+                    "password": "[%key_id:common::config_flow::data::password%]",
+                    "username": "[%key_id:common::config_flow::data::username%]"
+                }
+            },
             "hubv1": {
                 "data": {
                     "host": "Adres IP",

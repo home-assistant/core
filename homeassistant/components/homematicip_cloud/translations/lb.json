@@ -6,6 +6,7 @@
             "unknown": "Onbekannten Feeler opgetrueden"
         },
         "error": {
+            "invalid_pin": "Ong\u00ebltege Pin, prob\u00e9ier w.e.g. nach emol.",
             "invalid_sgtin_or_pin": "Ong\u00ebltege Pin, prob\u00e9iert w.e.g. nach emol.",
             "press_the_button": "Dr\u00e9ckt w.e.g. de bloe Kn\u00e4ppchen.",
             "register_failed": "Feeler beim registr\u00e9ieren, prob\u00e9iert w.e.g. nach emol.",

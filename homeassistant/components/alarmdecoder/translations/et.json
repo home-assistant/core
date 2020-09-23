@@ -28,20 +28,20 @@
             "zone_details": {
                 "data": {
                     "zone_loop": "RF silmus",
-                    "zone_name": "Tsooni nimi",
+                    "zone_name": "Ala nimi",
                     "zone_relayaddr": "Relee aadress",
                     "zone_relaychan": "Relee kanalinumber",
                     "zone_rfid": "RF jada\u00fchendus",
-                    "zone_type": "Tsooni t\u00fc\u00fcp"
+                    "zone_type": "Ala t\u00fc\u00fcp"
                 },
-                "description": "Sisestage tsooni {zone_number} \u00fcksikasjad. Tsooni {zone_number} kustutamiseks j\u00e4tke tsooni nimi t\u00fchjaks.",
+                "description": "Sisestage ala {zone_number} \u00fcksikasjad. Ala {zone_number} kustutamiseks j\u00e4tke ala nimi t\u00fchjaks.",
                 "title": "Seadista AlarmDecoder"
             },
             "zone_select": {
                 "data": {
-                    "zone_number": "Tsooni number"
+                    "zone_number": "Ala number"
                 },
-                "description": "Sisestage tsooni number mida soovite lisada, muuta v\u00f5i eemaldada.",
+                "description": "Sisestage ala number mida soovite lisada, muuta v\u00f5i eemaldada.",
                 "title": "Seadista AlarmDecoder"
             }
         }

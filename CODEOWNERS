@@ -238,7 +238,7 @@ homeassistant/components/logger/* @home-assistant/core
 homeassistant/components/logi_circle/* @evanjd
 homeassistant/components/loopenergy/* @pavoni
 homeassistant/components/lovelace/* @home-assistant/frontend
-homeassistant/components/luci/* @fbradyirl @mzdrale
+homeassistant/components/luci/* @mzdrale
 homeassistant/components/luftdaten/* @fabaff
 homeassistant/components/lupusec/* @majuss
 homeassistant/components/lutron/* @JonGilmore
@@ -404,6 +404,7 @@ homeassistant/components/sonos/* @cgtobi
 homeassistant/components/spaceapi/* @fabaff
 homeassistant/components/speedtestdotnet/* @rohankapoorcom @engrbm87
 homeassistant/components/spider/* @peternijssen
+homeassistant/components/splunk/* @Bre77
 homeassistant/components/spotify/* @frenck
 homeassistant/components/sql/* @dgomes
 homeassistant/components/squeezebox/* @rajlaud
@@ -504,6 +505,7 @@ homeassistant/components/yi/* @bachya
 homeassistant/components/zeroconf/* @Kane610
 homeassistant/components/zerproc/* @emlove
 homeassistant/components/zha/* @dmulcahey @adminiuga
+homeassistant/components/zodiac/* @JulienTant
 homeassistant/components/zone/* @home-assistant/core
 homeassistant/components/zoneminder/* @rohankapoorcom @vangorra
 homeassistant/components/zwave/* @home-assistant/z-wave
