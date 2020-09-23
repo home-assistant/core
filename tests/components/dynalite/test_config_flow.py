@@ -116,7 +116,7 @@ async def test_user_flow(hass):
         return_value=True,
     ):
         result = await hass.config_entries.flow.async_init(
-            dynalite.DOMAIN,
+            dyn_const.DOMAIN,
             context={"source": config_entries.SOURCE_USER},
         )
         assert result["type"] == "form"
@@ -133,8 +133,8 @@ async def test_user_flow_with_existing(hass):
     """Try to add an already configured bridge."""
     host = "1.2.3.4"
     entry = MockConfigEntry(
-        domain=dynalite.DOMAIN,
-        data={dynalite.CONF_HOST: host},
+        domain=dyn_const.DOMAIN,
+        data={CONF_HOST: host},
     )
     entry.add_to_hass(hass)
     with patch(
@@ -145,7 +145,7 @@ async def test_user_flow_with_existing(hass):
         return_value=True,
     ):
         result = await hass.config_entries.flow.async_init(
-            dynalite.DOMAIN,
+            dyn_const.DOMAIN,
             context={"source": config_entries.SOURCE_USER},
         )
         assert result["type"] == "form"
@@ -165,7 +165,7 @@ async def test_user_flow_bridge_unavailable(hass):
         return_value=False,
     ):
         result = await hass.config_entries.flow.async_init(
-            dynalite.DOMAIN,
+            dyn_const.DOMAIN,
             context={"source": config_entries.SOURCE_USER},
         )
         await hass.async_block_till_done()
