@@ -1,24 +1,26 @@
 """  Govee LED strips platform """
 
-from govee_api_laggat import Govee, GoveeDevice, GoveeDeviceState
-from .const import DOMAIN, DATA_SCHEMA, CONF_DELAY
-
-import logging
-import voluptuous as vol
 import asyncio
 from datetime import timedelta
+import logging
+
+from govee_api_laggat import Govee, GoveeDevice, GoveeDeviceState
+import voluptuous as vol
+
 from homeassistant import config_entries, core, exceptions
 from homeassistant.components.light import (
-    LightEntity,
+    ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP,
+    ATTR_HS_COLOR,
+    ATTR_RGB_COLOR,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
-    ATTR_BRIGHTNESS,
-    ATTR_RGB_COLOR,
-    ATTR_HS_COLOR,
-    ATTR_COLOR_TEMP,
+    LightEntity,
 )
 from homeassistant.util import color
+
+from .const import CONF_DELAY, DATA_SCHEMA, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=10)
