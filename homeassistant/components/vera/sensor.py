@@ -7,7 +7,7 @@ import pyvera as veraApi
 
 from homeassistant.components.sensor import DOMAIN as PLATFORM_DOMAIN, ENTITY_ID_FORMAT
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import LIGHT_LUX, PERCENTAGE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import convert
@@ -60,7 +60,7 @@ class VeraSensor(VeraDevice[veraApi.VeraSensor], Entity):
         if self.vera_device.category == veraApi.CATEGORY_TEMPERATURE_SENSOR:
             return self._temperature_units
         if self.vera_device.category == veraApi.CATEGORY_LIGHT_SENSOR:
-            return "lx"
+            return LIGHT_LUX
         if self.vera_device.category == veraApi.CATEGORY_UV_SENSOR:
             return "level"
         if self.vera_device.category == veraApi.CATEGORY_HUMIDITY_SENSOR:
