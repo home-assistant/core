@@ -305,7 +305,9 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
         """Flag media player features that are supported."""
         supported = SUPPORT_WEBOSTV
 
-        if self._client.sound_output == "external_arc":
+        if (self._client.sound_output == "external_arc") or (
+            self._client.sound_output == "external_speaker"
+        ):
             supported = supported | SUPPORT_WEBOSTV_VOLUME
         elif self._client.sound_output != "lineout":
             supported = supported | SUPPORT_WEBOSTV_VOLUME | SUPPORT_VOLUME_SET

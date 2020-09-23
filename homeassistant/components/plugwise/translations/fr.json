@@ -13,7 +13,8 @@
             "user": {
                 "data": {
                     "host": "Adresse IP de Smile",
-                    "password": "ID Smile"
+                    "password": "ID Smile",
+                    "port": "Num\u00e9ro de port Smile"
                 },
                 "description": "D\u00e9tails",
                 "title": "Se connecter \u00e0 Smile"

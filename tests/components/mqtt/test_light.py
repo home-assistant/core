@@ -153,6 +153,7 @@ light:
   payload_off: "off"
 
 """
+import json
 from os import path
 
 import pytest
@@ -1466,20 +1467,249 @@ async def test_discovery_deprecated(hass, mqtt_mock, caplog):
     assert state.name == "Beer"
 
 
-async def test_discovery_update_light(hass, mqtt_mock, caplog):
+async def test_discovery_update_light_topic_and_template(hass, mqtt_mock, caplog):
     """Test update of discovered light."""
-    data1 = (
-        '{ "name": "Beer",'
-        '  "state_topic": "test_topic",'
-        '  "command_topic": "test_topic",'
-        '  "state_value_template": "{{value_json.power1}}" }'
+    data1 = json.dumps(
+        {
+            "name": "Beer",
+            "state_topic": "test_light_rgb/state1",
+            "command_topic": "test_light_rgb/set",
+            "brightness_command_topic": "test_light_rgb/state1",
+            "rgb_command_topic": "test_light_rgb/rgb/set",
+            "color_temp_command_topic": "test_light_rgb/state1",
+            "effect_command_topic": "test_light_rgb/effect/set",
+            "hs_command_topic": "test_light_rgb/hs/set",
+            "white_value_command_topic": "test_light_rgb/white_value/set",
+            "xy_command_topic": "test_light_rgb/xy/set",
+            "brightness_state_topic": "test_light_rgb/state1",
+            "color_temp_state_topic": "test_light_rgb/state1",
+            "effect_state_topic": "test_light_rgb/state1",
+            "hs_state_topic": "test_light_rgb/state1",
+            "rgb_state_topic": "test_light_rgb/state1",
+            "white_value_state_topic": "test_light_rgb/state1",
+            "xy_state_topic": "test_light_rgb/state1",
+            "state_value_template": "{{ value_json.state1.state }}",
+            "brightness_value_template": "{{ value_json.state1.brightness }}",
+            "color_temp_value_template": "{{ value_json.state1.ct }}",
+            "effect_value_template": "{{ value_json.state1.fx }}",
+            "hs_value_template": "{{ value_json.state1.hs }}",
+            "rgb_value_template": "{{ value_json.state1.rgb }}",
+            "white_value_template": "{{ value_json.state1.white }}",
+            "xy_value_template": "{{ value_json.state1.xy }}",
+        }
     )
-    data2 = (
-        '{ "name": "Milk",'
-        '  "state_topic": "test_topic",'
-        '  "command_topic": "test_topic",'
-        '  "state_value_template": "{{value_json.power2}}" }'
+
+    data2 = json.dumps(
+        {
+            "name": "Milk",
+            "state_topic": "test_light_rgb/state2",
+            "command_topic": "test_light_rgb/set",
+            "brightness_command_topic": "test_light_rgb/state2",
+            "rgb_command_topic": "test_light_rgb/rgb/set",
+            "color_temp_command_topic": "test_light_rgb/state2",
+            "effect_command_topic": "test_light_rgb/effect/set",
+            "hs_command_topic": "test_light_rgb/hs/set",
+            "white_value_command_topic": "test_light_rgb/white_value/set",
+            "xy_command_topic": "test_light_rgb/xy/set",
+            "brightness_state_topic": "test_light_rgb/state2",
+            "color_temp_state_topic": "test_light_rgb/state2",
+            "effect_state_topic": "test_light_rgb/state2",
+            "hs_state_topic": "test_light_rgb/state2",
+            "rgb_state_topic": "test_light_rgb/state2",
+            "white_value_state_topic": "test_light_rgb/state2",
+            "xy_state_topic": "test_light_rgb/state2",
+            "state_value_template": "{{ value_json.state2.state }}",
+            "brightness_value_template": "{{ value_json.state2.brightness }}",
+            "color_temp_value_template": "{{ value_json.state2.ct }}",
+            "effect_value_template": "{{ value_json.state2.fx }}",
+            "hs_value_template": "{{ value_json.state2.hs }}",
+            "rgb_value_template": "{{ value_json.state2.rgb }}",
+            "white_value_template": "{{ value_json.state2.white }}",
+            "xy_value_template": "{{ value_json.state2.xy }}",
+        }
     )
+    state_data1 = [
+        (
+            [
+                (
+                    "test_light_rgb/state1",
+                    '{"state1":{"state":"ON", "brightness":100, "ct":123, "fx":"cycle"}}',
+                )
+            ],
+            "on",
+            [("brightness", 100), ("color_temp", 123), ("effect", "cycle")],
+        ),
+        (
+            [("test_light_rgb/state1", '{"state1":{"state":"OFF"}}')],
+            "off",
+            None,
+        ),
+        (
+            [
+                (
+                    "test_light_rgb/state1",
+                    '{"state1":{"state":"ON", "hs":"1,2"}}',
+                )
+            ],
+            "on",
+            [("hs_color", (1, 2))],
+        ),
+        (
+            [
+                (
+                    "test_light_rgb/state1",
+                    '{"state1":{"rgb":"255,127,63"}}',
+                )
+            ],
+            "on",
+            [("rgb_color", (255, 127, 63))],
+        ),
+        (
+            [
+                (
+                    "test_light_rgb/state1",
+                    '{"state1":{"white":50, "xy":"0.3, 0.4"}}',
+                )
+            ],
+            "on",
+            [("white_value", 50), ("xy_color", (0.3, 0.401))],
+        ),
+    ]
+    state_data2 = [
+        (
+            [
+                (
+                    "test_light_rgb/state2",
+                    '{"state2":{"state":"ON", "brightness":50, "ct":200, "fx":"loop"}}',
+                )
+            ],
+            "on",
+            [("brightness", 50), ("color_temp", 200), ("effect", "loop")],
+        ),
+        (
+            [
+                (
+                    "test_light_rgb/state1",
+                    '{"state1":{"state":"ON", "brightness":100, "ct":123, "fx":"cycle"}}',
+                ),
+                (
+                    "test_light_rgb/state1",
+                    '{"state2":{"state":"ON", "brightness":100, "ct":123, "fx":"cycle"}}',
+                ),
+                (
+                    "test_light_rgb/state2",
+                    '{"state1":{"state":"ON", "brightness":100, "ct":123, "fx":"cycle"}}',
+                ),
+            ],
+            "on",
+            [("brightness", 50), ("color_temp", 200), ("effect", "loop")],
+        ),
+        (
+            [("test_light_rgb/state1", '{"state1":{"state":"OFF"}}')],
+            "on",
+            None,
+        ),
+        (
+            [("test_light_rgb/state1", '{"state2":{"state":"OFF"}}')],
+            "on",
+            None,
+        ),
+        (
+            [("test_light_rgb/state2", '{"state1":{"state":"OFF"}}')],
+            "on",
+            None,
+        ),
+        (
+            [("test_light_rgb/state2", '{"state2":{"state":"OFF"}}')],
+            "off",
+            None,
+        ),
+        (
+            [
+                (
+                    "test_light_rgb/state2",
+                    '{"state2":{"state":"ON", "hs":"1.2,2.2"}}',
+                )
+            ],
+            "on",
+            [("hs_color", (1.2, 2.2))],
+        ),
+        (
+            [
+                (
+                    "test_light_rgb/state1",
+                    '{"state1":{"state":"ON", "hs":"1,2"}}',
+                ),
+                (
+                    "test_light_rgb/state1",
+                    '{"state2":{"state":"ON", "hs":"1,2"}}',
+                ),
+                (
+                    "test_light_rgb/state2",
+                    '{"state1":{"state":"ON", "hs":"1,2"}}',
+                ),
+            ],
+            "on",
+            [("hs_color", (1.2, 2.2))],
+        ),
+        (
+            [
+                (
+                    "test_light_rgb/state2",
+                    '{"state2":{"rgb":"63,127,255"}}',
+                )
+            ],
+            "on",
+            [("rgb_color", (63, 127, 255))],
+        ),
+        (
+            [
+                (
+                    "test_light_rgb/state1",
+                    '{"state1":{"rgb":"255,127,63"}}',
+                ),
+                (
+                    "test_light_rgb/state1",
+                    '{"state2":{"rgb":"255,127,63"}}',
+                ),
+                (
+                    "test_light_rgb/state2",
+                    '{"state1":{"rgb":"255,127,63"}}',
+                ),
+            ],
+            "on",
+            [("rgb_color", (63, 127, 255))],
+        ),
+        (
+            [
+                (
+                    "test_light_rgb/state2",
+                    '{"state2":{"white":75, "xy":"0.4, 0.3"}}',
+                )
+            ],
+            "on",
+            [("white_value", 75), ("xy_color", (0.4, 0.3))],
+        ),
+        (
+            [
+                (
+                    "test_light_rgb/state1",
+                    '{"state1":{"white":50, "xy":"0.3, 0.4"}}',
+                ),
+                (
+                    "test_light_rgb/state1",
+                    '{"state2":{"white":50, "xy":"0.3, 0.4"}}',
+                ),
+                (
+                    "test_light_rgb/state2",
+                    '{"state1":{"white":50, "xy":"0.3, 0.4"}}',
+                ),
+            ],
+            "on",
+            [("white_value", 75), ("xy_color", (0.4, 0.3))],
+        ),
+    ]
+
     await help_test_discovery_update(
         hass,
         mqtt_mock,
@@ -1487,10 +1717,221 @@ async def test_discovery_update_light(hass, mqtt_mock, caplog):
         light.DOMAIN,
         data1,
         data2,
-        state_data1=[("test_topic", '{"power1":"ON"}')],
-        state1="on",
-        state_data2=[("test_topic", '{"power2":"OFF"}')],
-        state2="off",
+        state_data1=state_data1,
+        state_data2=state_data2,
+    )
+
+
+async def test_discovery_update_light_template(hass, mqtt_mock, caplog):
+    """Test update of discovered light."""
+    data1 = json.dumps(
+        {
+            "name": "Beer",
+            "state_topic": "test_light_rgb/state1",
+            "command_topic": "test_light_rgb/set",
+            "brightness_command_topic": "test_light_rgb/state1",
+            "rgb_command_topic": "test_light_rgb/rgb/set",
+            "color_temp_command_topic": "test_light_rgb/state1",
+            "effect_command_topic": "test_light_rgb/effect/set",
+            "hs_command_topic": "test_light_rgb/hs/set",
+            "white_value_command_topic": "test_light_rgb/white_value/set",
+            "xy_command_topic": "test_light_rgb/xy/set",
+            "brightness_state_topic": "test_light_rgb/state1",
+            "color_temp_state_topic": "test_light_rgb/state1",
+            "effect_state_topic": "test_light_rgb/state1",
+            "hs_state_topic": "test_light_rgb/state1",
+            "rgb_state_topic": "test_light_rgb/state1",
+            "white_value_state_topic": "test_light_rgb/state1",
+            "xy_state_topic": "test_light_rgb/state1",
+            "state_value_template": "{{ value_json.state1.state }}",
+            "brightness_value_template": "{{ value_json.state1.brightness }}",
+            "color_temp_value_template": "{{ value_json.state1.ct }}",
+            "effect_value_template": "{{ value_json.state1.fx }}",
+            "hs_value_template": "{{ value_json.state1.hs }}",
+            "rgb_value_template": "{{ value_json.state1.rgb }}",
+            "white_value_template": "{{ value_json.state1.white }}",
+            "xy_value_template": "{{ value_json.state1.xy }}",
+        }
+    )
+
+    data2 = json.dumps(
+        {
+            "name": "Milk",
+            "state_topic": "test_light_rgb/state1",
+            "command_topic": "test_light_rgb/set",
+            "brightness_command_topic": "test_light_rgb/state1",
+            "rgb_command_topic": "test_light_rgb/rgb/set",
+            "color_temp_command_topic": "test_light_rgb/state1",
+            "effect_command_topic": "test_light_rgb/effect/set",
+            "hs_command_topic": "test_light_rgb/hs/set",
+            "white_value_command_topic": "test_light_rgb/white_value/set",
+            "xy_command_topic": "test_light_rgb/xy/set",
+            "brightness_state_topic": "test_light_rgb/state1",
+            "color_temp_state_topic": "test_light_rgb/state1",
+            "effect_state_topic": "test_light_rgb/state1",
+            "hs_state_topic": "test_light_rgb/state1",
+            "rgb_state_topic": "test_light_rgb/state1",
+            "white_value_state_topic": "test_light_rgb/state1",
+            "xy_state_topic": "test_light_rgb/state1",
+            "state_value_template": "{{ value_json.state2.state }}",
+            "brightness_value_template": "{{ value_json.state2.brightness }}",
+            "color_temp_value_template": "{{ value_json.state2.ct }}",
+            "effect_value_template": "{{ value_json.state2.fx }}",
+            "hs_value_template": "{{ value_json.state2.hs }}",
+            "rgb_value_template": "{{ value_json.state2.rgb }}",
+            "white_value_template": "{{ value_json.state2.white }}",
+            "xy_value_template": "{{ value_json.state2.xy }}",
+        }
+    )
+    state_data1 = [
+        (
+            [
+                (
+                    "test_light_rgb/state1",
+                    '{"state1":{"state":"ON", "brightness":100, "ct":123, "fx":"cycle"}}',
+                )
+            ],
+            "on",
+            [("brightness", 100), ("color_temp", 123), ("effect", "cycle")],
+        ),
+        (
+            [("test_light_rgb/state1", '{"state1":{"state":"OFF"}}')],
+            "off",
+            None,
+        ),
+        (
+            [
+                (
+                    "test_light_rgb/state1",
+                    '{"state1":{"state":"ON", "hs":"1,2"}}',
+                )
+            ],
+            "on",
+            [("hs_color", (1, 2))],
+        ),
+        (
+            [
+                (
+                    "test_light_rgb/state1",
+                    '{"state1":{"rgb":"255,127,63"}}',
+                )
+            ],
+            "on",
+            [("rgb_color", (255, 127, 63))],
+        ),
+        (
+            [
+                (
+                    "test_light_rgb/state1",
+                    '{"state1":{"white":50, "xy":"0.3, 0.4"}}',
+                )
+            ],
+            "on",
+            [("white_value", 50), ("xy_color", (0.3, 0.401))],
+        ),
+    ]
+    state_data2 = [
+        (
+            [
+                (
+                    "test_light_rgb/state1",
+                    '{"state2":{"state":"ON", "brightness":50, "ct":200, "fx":"loop"}}',
+                )
+            ],
+            "on",
+            [("brightness", 50), ("color_temp", 200), ("effect", "loop")],
+        ),
+        (
+            [
+                (
+                    "test_light_rgb/state1",
+                    '{"state1":{"state":"ON", "brightness":100, "ct":123, "fx":"cycle"}}',
+                ),
+            ],
+            "on",
+            [("brightness", 50), ("color_temp", 200), ("effect", "loop")],
+        ),
+        (
+            [("test_light_rgb/state1", '{"state1":{"state":"OFF"}}')],
+            "on",
+            None,
+        ),
+        (
+            [("test_light_rgb/state1", '{"state2":{"state":"OFF"}}')],
+            "off",
+            None,
+        ),
+        (
+            [
+                (
+                    "test_light_rgb/state1",
+                    '{"state2":{"state":"ON", "hs":"1.2,2.2"}}',
+                )
+            ],
+            "on",
+            [("hs_color", (1.2, 2.2))],
+        ),
+        (
+            [
+                (
+                    "test_light_rgb/state1",
+                    '{"state1":{"state":"ON", "hs":"1,2"}}',
+                )
+            ],
+            "on",
+            [("hs_color", (1.2, 2.2))],
+        ),
+        (
+            [
+                (
+                    "test_light_rgb/state1",
+                    '{"state2":{"rgb":"63,127,255"}}',
+                )
+            ],
+            "on",
+            [("rgb_color", (63, 127, 255))],
+        ),
+        (
+            [
+                (
+                    "test_light_rgb/state1",
+                    '{"state1":{"rgb":"255,127,63"}}',
+                )
+            ],
+            "on",
+            [("rgb_color", (63, 127, 255))],
+        ),
+        (
+            [
+                (
+                    "test_light_rgb/state1",
+                    '{"state2":{"white":75, "xy":"0.4, 0.3"}}',
+                )
+            ],
+            "on",
+            [("white_value", 75), ("xy_color", (0.4, 0.3))],
+        ),
+        (
+            [
+                (
+                    "test_light_rgb/state1",
+                    '{"state1":{"white":50, "xy":"0.3, 0.4"}}',
+                )
+            ],
+            "on",
+            [("white_value", 75), ("xy_color", (0.4, 0.3))],
+        ),
+    ]
+
+    await help_test_discovery_update(
+        hass,
+        mqtt_mock,
+        caplog,
+        light.DOMAIN,
+        data1,
+        data2,
+        state_data1=state_data1,
+        state_data2=state_data2,
     )
 
 

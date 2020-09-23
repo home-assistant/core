@@ -10,7 +10,7 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -21,7 +21,13 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import COORDINATOR, DEFAULT_SCAN_INTERVAL, DOMAIN, UNDO_UPDATE_LISTENER
+from .const import (
+    COORDINATOR,
+    DEFAULT_PORT,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    UNDO_UPDATE_LISTENER,
+)
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
@@ -39,9 +45,12 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Plugwise Smiles from a config entry."""
     websession = async_get_clientsession(hass, verify_ssl=False)
+
     api = Smile(
         host=entry.data[CONF_HOST],
         password=entry.data[CONF_PASSWORD],
+        port=entry.data.get(CONF_PORT, DEFAULT_PORT),
+        timeout=30,
         websession=websession,
     )
 
@@ -93,6 +102,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady
 
     api.get_all_devices()
+
+    if entry.unique_id is None:
+        if api.smile_version[0] != "1.8.0":
+            hass.config_entries.async_update_entry(entry, unique_id=api.smile_hostname)
 
     undo_listener = entry.add_update_listener(_update_listener)
 

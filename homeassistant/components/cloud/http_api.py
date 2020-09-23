@@ -19,7 +19,13 @@ from homeassistant.components.google_assistant import helpers as google_helpers
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.websocket_api import const as ws_const
-from homeassistant.const import HTTP_BAD_REQUEST, HTTP_INTERNAL_SERVER_ERROR, HTTP_OK
+from homeassistant.const import (
+    HTTP_BAD_GATEWAY,
+    HTTP_BAD_REQUEST,
+    HTTP_INTERNAL_SERVER_ERROR,
+    HTTP_OK,
+    HTTP_UNAUTHORIZED,
+)
 from homeassistant.core import callback
 
 from .const import (
@@ -73,7 +79,10 @@ _CLOUD_ERRORS = {
         HTTP_INTERNAL_SERVER_ERROR,
         "Remote UI not compatible with 127.0.0.1/::1 as trusted proxies.",
     ),
-    asyncio.TimeoutError: (502, "Unable to reach the Home Assistant cloud."),
+    asyncio.TimeoutError: (
+        HTTP_BAD_GATEWAY,
+        "Unable to reach the Home Assistant cloud.",
+    ),
     aiohttp.ClientError: (
         HTTP_INTERNAL_SERVER_ERROR,
         "Error making internal request",
@@ -122,7 +131,7 @@ async def async_setup(hass):
                 HTTP_BAD_REQUEST,
                 "An account with the given email already exists.",
             ),
-            auth.Unauthenticated: (401, "Authentication failed."),
+            auth.Unauthenticated: (HTTP_UNAUTHORIZED, "Authentication failed."),
             auth.PasswordChangeRequired: (
                 HTTP_BAD_REQUEST,
                 "Password change required.",
@@ -177,7 +186,7 @@ def _process_cloud_exception(exc, where):
 
     if err_info is None:
         _LOGGER.exception("Unexpected error processing request for %s", where)
-        err_info = (502, f"Unexpected error: {exc}")
+        err_info = (HTTP_BAD_GATEWAY, f"Unexpected error: {exc}")
 
     return err_info
 

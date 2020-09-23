@@ -91,7 +91,7 @@ class OpenWeatherMapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if CONF_LONGITUDE not in config:
             config[CONF_LONGITUDE] = self.hass.config.longitude
         if CONF_MODE not in config:
-            config[CONF_MODE] = DEFAULT_LANGUAGE
+            config[CONF_MODE] = DEFAULT_FORECAST_MODE
         if CONF_LANGUAGE not in config:
             config[CONF_LANGUAGE] = DEFAULT_LANGUAGE
         return await self.async_step_user(config)

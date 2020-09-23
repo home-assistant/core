@@ -226,7 +226,6 @@ class OmniLogicEntity(CoordinatorEntity):
         self._backyard_name = backyard_name
         self._bow_name = bow_name
         self._msp_system_id = msp_system_id
-        self._attrs["unique_id"] = unique_id
 
     @property
     def unique_id(self) -> str:

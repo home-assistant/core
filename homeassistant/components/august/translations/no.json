@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Kontoen er allerede konfigurert"
+            "already_configured": "Kontoen er allerede konfigurert",
+            "reauth_successful": "Reautentisering var vellykket"
         },
         "error": {
             "cannot_connect": "Klarte ikke \u00e5 koble til, vennligst pr\u00f8v igjen",

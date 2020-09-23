@@ -7,13 +7,6 @@ from tests.async_mock import patch
 
 
 @pytest.fixture(autouse=True)
-def mock_zeroconf():
-    """Mock zeroconf."""
-    with patch("homeassistant.components.zeroconf.HaZeroconf"):
-        yield
-
-
-@pytest.fixture(autouse=True)
 def mock_ssdp():
     """Mock ssdp."""
     with patch("homeassistant.components.ssdp.Scanner.async_scan"):
@@ -34,6 +27,6 @@ def recorder_url_mock():
         yield
 
 
-async def test_setup(hass):
+async def test_setup(hass, mock_zeroconf):
     """Test setup."""
     assert await async_setup_component(hass, "default_config", {"foo": "bar"})

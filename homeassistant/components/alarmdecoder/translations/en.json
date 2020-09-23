@@ -1,0 +1,74 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "create_entry": {
+            "default": "Successfully connected to AlarmDecoder."
+        },
+        "error": {
+            "service_unavailable": "Failed to connect"
+        },
+        "step": {
+            "protocol": {
+                "data": {
+                    "device_baudrate": "Device Baud Rate",
+                    "device_path": "Device Path",
+                    "host": "Host",
+                    "port": "Port"
+                },
+                "title": "Configure connection settings"
+            },
+            "user": {
+                "data": {
+                    "protocol": "Protocol"
+                },
+                "title": "Choose AlarmDecoder Protocol"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "int": "The field below must be an integer.",
+            "loop_range": "RF Loop must be an integer between 1 and 4.",
+            "loop_rfid": "RF Loop cannot be used without RF Serial.",
+            "relay_inclusive": "Relay Address and Relay Channel are codependent and must be included together."
+        },
+        "step": {
+            "arm_settings": {
+                "data": {
+                    "alt_night_mode": "Alternative Night Mode",
+                    "auto_bypass": "Auto Bypass on Arm",
+                    "code_arm_required": "Code Required for Arming"
+                },
+                "title": "Configure AlarmDecoder"
+            },
+            "init": {
+                "data": {
+                    "edit_select": "Edit"
+                },
+                "description": "What would you like to edit?",
+                "title": "Configure AlarmDecoder"
+            },
+            "zone_details": {
+                "data": {
+                    "zone_loop": "RF Loop",
+                    "zone_name": "Zone Name",
+                    "zone_relayaddr": "Relay Address",
+                    "zone_relaychan": "Relay Channel",
+                    "zone_rfid": "RF Serial",
+                    "zone_type": "Zone Type"
+                },
+                "description": "Enter details for zone {zone_number}. To delete zone {zone_number}, leave Zone Name blank.",
+                "title": "Configure AlarmDecoder"
+            },
+            "zone_select": {
+                "data": {
+                    "zone_number": "Zone Number"
+                },
+                "description": "Enter the zone number you'd like to to add, edit, or remove.",
+                "title": "Configure AlarmDecoder"
+            }
+        }
+    }
+}

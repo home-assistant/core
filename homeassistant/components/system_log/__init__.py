@@ -211,6 +211,8 @@ async def async_setup(hass, config):
 
     handler = LogErrorHandler(hass, conf[CONF_MAX_ENTRIES], conf[CONF_FIRE_EVENT])
 
+    hass.data[DOMAIN] = handler
+
     listener = logging.handlers.QueueListener(
         simple_queue, handler, respect_handler_level=True
     )
@@ -222,6 +224,7 @@ async def async_setup(hass, config):
         """Cleanup handler."""
         logging.root.removeHandler(queue_handler)
         listener.stop()
+        del hass.data[DOMAIN]
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, _async_stop_queue_handler)
 

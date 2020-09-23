@@ -1,0 +1,13 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "modem_type": "Modemtype."
+                },
+                "description": "Selecteer het Insteon-modemtype.",
+                "title": "Insteon"
+            }
+        }
+    }
+}

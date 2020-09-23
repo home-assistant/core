@@ -77,7 +77,7 @@ def handle_subscribe_events(hass, connection, msg):
             ):
                 return
 
-            connection.send_message(messages.event_message(msg["id"], event))
+            connection.send_message(messages.cached_event_message(msg["id"], event))
 
     else:
 
@@ -87,7 +87,7 @@ def handle_subscribe_events(hass, connection, msg):
             if event.event_type == EVENT_TIME_CHANGED:
                 return
 
-            connection.send_message(messages.event_message(msg["id"], event.as_dict()))
+            connection.send_message(messages.cached_event_message(msg["id"], event))
 
     connection.subscriptions[msg["id"]] = hass.bus.async_listen(
         event_type, forward_events
@@ -253,9 +253,11 @@ def handle_render_template(hass, connection, msg):
     template.hass = hass
 
     variables = msg.get("variables")
+    info = None
 
     @callback
     def _template_listener(event, updates):
+        nonlocal info
         track_template_result = updates.pop()
         result = track_template_result.result
         if isinstance(result, TemplateError):
@@ -267,7 +269,11 @@ def handle_render_template(hass, connection, msg):
 
             result = None
 
-        connection.send_message(messages.event_message(msg["id"], {"result": result}))
+        connection.send_message(
+            messages.event_message(
+                msg["id"], {"result": result, "listeners": info.listeners}  # type: ignore
+            )
+        )
 
     info = async_track_template_result(
         hass, [TrackTemplate(template, variables)], _template_listener

@@ -1112,6 +1112,42 @@ async def test_attribute_if_fires_on_entity_change_with_both_filters(hass, calls
     assert len(calls) == 1
 
 
+async def test_attribute_if_fires_on_entity_where_attr_stays_constant(hass, calls):
+    """Test for firing if attribute stays the same."""
+    hass.states.async_set("test.entity", "bla", {"name": "hello", "other": "old_value"})
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "state",
+                    "entity_id": "test.entity",
+                    "attribute": "name",
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    # Leave all attributes the same
+    hass.states.async_set("test.entity", "bla", {"name": "hello", "other": "old_value"})
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # Change the untracked attribute
+    hass.states.async_set("test.entity", "bla", {"name": "hello", "other": "new_value"})
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # Change the tracked attribute
+    hass.states.async_set("test.entity", "bla", {"name": "world", "other": "old_value"})
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+
 async def test_attribute_if_not_fires_on_entities_change_with_for_after_stop(
     hass, calls
 ):

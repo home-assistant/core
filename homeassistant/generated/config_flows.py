@@ -13,6 +13,7 @@ FLOWS = [
     "agent_dvr",
     "airly",
     "airvisual",
+    "alarmdecoder",
     "almond",
     "ambiclimate",
     "ambient_station",
@@ -30,6 +31,7 @@ FLOWS = [
     "broadlink",
     "brother",
     "bsblan",
+    "canary",
     "cast",
     "cert_expiry",
     "control4",
@@ -152,6 +154,7 @@ FLOWS = [
     "roku",
     "roomba",
     "roon",
+    "rpi_power",
     "samsungtv",
     "sense",
     "sentry",
@@ -213,5 +216,6 @@ FLOWS = [
     "yeelight",
     "zerproc",
     "zha",
+    "zoneminder",
     "zwave"
 ]

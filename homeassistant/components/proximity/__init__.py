@@ -4,6 +4,8 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import (
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
     CONF_DEVICES,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_ZONE,
@@ -149,8 +151,8 @@ class Proximity(Entity):
         devices_in_zone = ""
 
         zone_state = self.hass.states.get(self.proximity_zone)
-        proximity_latitude = zone_state.attributes.get("latitude")
-        proximity_longitude = zone_state.attributes.get("longitude")
+        proximity_latitude = zone_state.attributes.get(ATTR_LATITUDE)
+        proximity_longitude = zone_state.attributes.get(ATTR_LONGITUDE)
 
         # Check for devices in the monitored zone.
         for device in self.proximity_devices:
@@ -206,8 +208,8 @@ class Proximity(Entity):
             dist_to_zone = distance(
                 proximity_latitude,
                 proximity_longitude,
-                device_state.attributes["latitude"],
-                device_state.attributes["longitude"],
+                device_state.attributes[ATTR_LATITUDE],
+                device_state.attributes[ATTR_LONGITUDE],
             )
 
             # Add the device and distance to a dictionary.
@@ -250,14 +252,14 @@ class Proximity(Entity):
         old_distance = distance(
             proximity_latitude,
             proximity_longitude,
-            old_state.attributes["latitude"],
-            old_state.attributes["longitude"],
+            old_state.attributes[ATTR_LATITUDE],
+            old_state.attributes[ATTR_LONGITUDE],
         )
         new_distance = distance(
             proximity_latitude,
             proximity_longitude,
-            new_state.attributes["latitude"],
-            new_state.attributes["longitude"],
+            new_state.attributes[ATTR_LATITUDE],
+            new_state.attributes[ATTR_LONGITUDE],
         )
         distance_travelled = round(new_distance - old_distance, 1)
 

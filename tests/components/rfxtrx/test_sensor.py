@@ -2,7 +2,7 @@
 import pytest
 
 from homeassistant.components.rfxtrx.const import ATTR_EVENT
-from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, PERCENTAGE, TEMP_CELSIUS
 from homeassistant.core import State
 from homeassistant.setup import async_setup_component
 
@@ -35,7 +35,7 @@ async def test_one_sensor(hass, rfxtrx):
         state.attributes.get("friendly_name")
         == "WT260,WT260H,WT440H,WT450,WT450H 05:02 Temperature"
     )
-    assert state.attributes.get("unit_of_measurement") == TEMP_CELSIUS
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
 
 
 @pytest.mark.parametrize(
@@ -75,31 +75,31 @@ async def test_one_sensor_no_datatype(hass, rfxtrx):
     assert state
     assert state.state == "unknown"
     assert state.attributes.get("friendly_name") == f"{base_name} Temperature"
-    assert state.attributes.get("unit_of_measurement") == TEMP_CELSIUS
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
 
     state = hass.states.get(f"{base_id}_humidity")
     assert state
     assert state.state == "unknown"
     assert state.attributes.get("friendly_name") == f"{base_name} Humidity"
-    assert state.attributes.get("unit_of_measurement") == PERCENTAGE
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
 
     state = hass.states.get(f"{base_id}_humidity_status")
     assert state
     assert state.state == "unknown"
     assert state.attributes.get("friendly_name") == f"{base_name} Humidity status"
-    assert state.attributes.get("unit_of_measurement") == ""
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ""
 
     state = hass.states.get(f"{base_id}_rssi_numeric")
     assert state
     assert state.state == "unknown"
     assert state.attributes.get("friendly_name") == f"{base_name} Rssi numeric"
-    assert state.attributes.get("unit_of_measurement") == "dBm"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "dBm"
 
     state = hass.states.get(f"{base_id}_battery_numeric")
     assert state
     assert state.state == "unknown"
     assert state.attributes.get("friendly_name") == f"{base_name} Battery numeric"
-    assert state.attributes.get("unit_of_measurement") == PERCENTAGE
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
 
 
 async def test_several_sensors(hass, rfxtrx):
@@ -127,7 +127,7 @@ async def test_several_sensors(hass, rfxtrx):
         state.attributes.get("friendly_name")
         == "WT260,WT260H,WT440H,WT450,WT450H 05:02 Temperature"
     )
-    assert state.attributes.get("unit_of_measurement") == TEMP_CELSIUS
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
 
     state = hass.states.get("sensor.wt260_wt260h_wt440h_wt450_wt450h_06_01_temperature")
     assert state
@@ -136,7 +136,7 @@ async def test_several_sensors(hass, rfxtrx):
         state.attributes.get("friendly_name")
         == "WT260,WT260H,WT440H,WT450,WT450H 06:01 Temperature"
     )
-    assert state.attributes.get("unit_of_measurement") == TEMP_CELSIUS
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
 
     state = hass.states.get("sensor.wt260_wt260h_wt440h_wt450_wt450h_06_01_humidity")
     assert state
@@ -145,7 +145,7 @@ async def test_several_sensors(hass, rfxtrx):
         state.attributes.get("friendly_name")
         == "WT260,WT260H,WT440H,WT450,WT450H 06:01 Humidity"
     )
-    assert state.attributes.get("unit_of_measurement") == PERCENTAGE
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
 
 
 async def test_discover_sensor(hass, rfxtrx_automatic):
@@ -159,27 +159,27 @@ async def test_discover_sensor(hass, rfxtrx_automatic):
     state = hass.states.get(f"{base_id}_humidity")
     assert state
     assert state.state == "27"
-    assert state.attributes.get("unit_of_measurement") == PERCENTAGE
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
 
     state = hass.states.get(f"{base_id}_humidity_status")
     assert state
     assert state.state == "normal"
-    assert state.attributes.get("unit_of_measurement") == ""
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ""
 
     state = hass.states.get(f"{base_id}_rssi_numeric")
     assert state
     assert state.state == "-64"
-    assert state.attributes.get("unit_of_measurement") == "dBm"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "dBm"
 
     state = hass.states.get(f"{base_id}_temperature")
     assert state
     assert state.state == "18.4"
-    assert state.attributes.get("unit_of_measurement") == TEMP_CELSIUS
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
 
     state = hass.states.get(f"{base_id}_battery_numeric")
     assert state
     assert state.state == "90"
-    assert state.attributes.get("unit_of_measurement") == PERCENTAGE
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
 
     # 2
     await rfxtrx.signal("0a52080405020095240279")
@@ -188,27 +188,27 @@ async def test_discover_sensor(hass, rfxtrx_automatic):
 
     assert state
     assert state.state == "36"
-    assert state.attributes.get("unit_of_measurement") == PERCENTAGE
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
 
     state = hass.states.get(f"{base_id}_humidity_status")
     assert state
     assert state.state == "normal"
-    assert state.attributes.get("unit_of_measurement") == ""
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ""
 
     state = hass.states.get(f"{base_id}_rssi_numeric")
     assert state
     assert state.state == "-64"
-    assert state.attributes.get("unit_of_measurement") == "dBm"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "dBm"
 
     state = hass.states.get(f"{base_id}_temperature")
     assert state
     assert state.state == "14.9"
-    assert state.attributes.get("unit_of_measurement") == TEMP_CELSIUS
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
 
     state = hass.states.get(f"{base_id}_battery_numeric")
     assert state
     assert state.state == "90"
-    assert state.attributes.get("unit_of_measurement") == PERCENTAGE
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
 
     # 1 Update
     await rfxtrx.signal("0a52085e070100b31b0279")
@@ -217,27 +217,27 @@ async def test_discover_sensor(hass, rfxtrx_automatic):
     state = hass.states.get(f"{base_id}_humidity")
     assert state
     assert state.state == "27"
-    assert state.attributes.get("unit_of_measurement") == PERCENTAGE
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
 
     state = hass.states.get(f"{base_id}_humidity_status")
     assert state
     assert state.state == "normal"
-    assert state.attributes.get("unit_of_measurement") == ""
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ""
 
     state = hass.states.get(f"{base_id}_rssi_numeric")
     assert state
     assert state.state == "-64"
-    assert state.attributes.get("unit_of_measurement") == "dBm"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "dBm"
 
     state = hass.states.get(f"{base_id}_temperature")
     assert state
     assert state.state == "17.9"
-    assert state.attributes.get("unit_of_measurement") == TEMP_CELSIUS
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
 
     state = hass.states.get(f"{base_id}_battery_numeric")
     assert state
     assert state.state == "90"
-    assert state.attributes.get("unit_of_measurement") == PERCENTAGE
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
 
     assert len(hass.states.async_all()) == 10
 
@@ -314,13 +314,13 @@ async def test_rssi_sensor(hass, rfxtrx):
     assert state
     assert state.state == "unknown"
     assert state.attributes.get("friendly_name") == "PT2262 22670e Rssi numeric"
-    assert state.attributes.get("unit_of_measurement") == "dBm"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "dBm"
 
     state = hass.states.get("sensor.ac_213c7f2_48_rssi_numeric")
     assert state
     assert state.state == "unknown"
     assert state.attributes.get("friendly_name") == "AC 213c7f2:48 Rssi numeric"
-    assert state.attributes.get("unit_of_measurement") == "dBm"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "dBm"
 
     await rfxtrx.signal("0913000022670e013b70")
     await rfxtrx.signal("0b1100cd0213c7f230010f71")
