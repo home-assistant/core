@@ -223,6 +223,13 @@ async def test_migrate_zwave(hass, migration_data, hass_ws_client, zwave_integra
     assert power_entry.name_by_user == ZWAVE_POWER_DEVICE_NAME
     assert power_entry.area_id == ZWAVE_POWER_DEVICE_AREA
 
+    migration_device_map = {
+        ZWAVE_BATTERY_DEVICE_ID: battery_entry.id,
+        ZWAVE_POWER_DEVICE_ID: power_entry.id,
+    }
+
+    assert result["migration_device_map"] == migration_device_map
+
     # check the entity registry migration
 
     # these should have been migrated and no longer present under that id
