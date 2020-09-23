@@ -369,6 +369,6 @@ class ShellyRestAttributeEntity(entity.Entity):
         self.async_on_remove(self.wrapper.async_add_listener(self._update_callback))
 
     @callback
-    async def _update_callback(self):
+    def _update_callback(self):
         """When device updates, clear control result that overrides state."""
         self.async_write_ha_state()
