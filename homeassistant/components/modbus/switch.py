@@ -158,20 +158,23 @@ class ModbusCoilSwitch(ToggleEntity, RestoreEntity):
         """Update the state of the switch."""
         self._is_on = self._read_coil(self._coil)
 
-    def _read_coil(self, coil) -> Optional[bool]:
+    def _read_coil(self, coil) -> bool:
         """Read coil using the Modbus hub slave."""
         try:
             result = self._hub.read_coils(self._slave, coil, 1)
         except ConnectionException:
             self._available = False
-            return
+            return False
 
         if isinstance(result, (ModbusException, ExceptionResponse)):
             self._available = False
-            return
+            return False
 
         self._available = True
-        return bool(result.bits[coil])
+        # bits[0] select the lowest bit in result,
+        # is_on for a binary_sensor is true if the bit are 1
+        # The other bits are not considered.
+        return bool(result.bits[0])
 
     def _write_coil(self, coil, value):
         """Write coil using the Modbus hub slave."""
