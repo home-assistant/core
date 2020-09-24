@@ -155,7 +155,7 @@ class OmniLogicTemperatureSensor(OmnilogicSensor):
 
         self._unit = TEMP_FAHRENHEIT
 
-        return self._state
+        return state
 
 
 class OmniLogicPumpSpeedSensor(OmnilogicSensor):
