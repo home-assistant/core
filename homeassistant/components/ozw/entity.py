@@ -308,68 +308,78 @@ def create_value_id(value: OZWValue):
     return f"{value.node.parent.id}-{value.node.id}-{value.value_id_key}"
 
 
-class OZWConfigParameterResponse:
-    """Class to hold response for setting config parameter."""
+class OZWValidationResponse:
+    """Class to hold response for validating an action."""
 
-    def __init__(self, success, payload=None, err_type=None, err_msg=None):
-        """Initialize OZWConfigParameterResponse."""
+    def __init__(self, success, *args, **kwargs):
+        """Initialize OZWValidationResponse."""
         self.success = success
-        self.payload = payload
-        self.err_type = err_type
-        self.err_msg = err_msg
+        self.payload = kwargs.get("payload")
+        self.err_type = kwargs.get("err_type")
+        self.err_msg = kwargs.get("err_msg")
+        self.args = args
+
+    @staticmethod
+    def process_fail(err_type, err_msg, *args):
+        """Process an invalid request."""
+        return OZWValidationResponse(False, err_type=err_type, err_msg=err_msg, *args)
+
+    @staticmethod
+    def process_fail_on_type(value, new_value):
+        """Process an invalid request that fails type validation."""
+        return OZWValidationResponse.process_fail(
+            ERR_NOT_SUPPORTED,
+            "Configuration parameter type %s does not match the value type %s",
+            str(value.type),
+            str(type(new_value)),
+        )
+
+    @staticmethod
+    def process_success(value, payload):
+        """Process a valid request."""
+        return OZWValidationResponse(True, payload=payload)
 
 
 def set_config_parameter(
     manager, instance_id, node_id, parameter_index, new_value, node_instance_id=None
 ):
     """Set config parameter to a node."""
-
-    def fail(err_type, err_msg):
-        """Process an invalid request."""
-        return OZWConfigParameterResponse(False, err_type=err_type, err_msg=err_msg)
-
-    def success(value, payload):
-        """Process a valid request."""
-        value.send_value(payload)
-        return OZWConfigParameterResponse(True, payload=payload)
-
     instance = manager.get_instance(instance_id)
     if not instance:
-        return fail(ERR_NOT_FOUND, "OZW Instance not found")
+        return OZWValidationResponse.process_fail(
+            ERR_NOT_FOUND, "OZW Instance not found"
+        )
 
     node = instance.get_node(node_id)
     if not node:
-        return fail(ERR_NOT_FOUND, "OZW Node not found")
+        return OZWValidationResponse.process_fail(ERR_NOT_FOUND, "OZW Node not found")
 
     value = node.get_value(
         CommandClass.CONFIGURATION, parameter_index, node_instance_id
     )
     if not value:
-        return fail(
+        return OZWValidationResponse.process_fail(
             ERR_NOT_FOUND,
             "Configuration parameter for OZW Node Instance not found",
         )
 
-    # Error message if new_value is an unexpected type
-    type_err_msg = (
-        f"Configuration parameter type {str(value.type)} does not "
-        f"match the value type {str(type(new_value))}"
-    )
-
     # Bool can be passed in as string or bool
     if value.type == ValueType.BOOL:
         if isinstance(new_value, bool):
-            return success(value, new_value)
+            value.send_value(new_value)
+            return OZWValidationResponse.process_success(value, new_value)
         if isinstance(new_value, str):
             if new_value.lower() in ("true", "false"):
-                return success(value, new_value.lower() == "true")
+                payload = new_value.lower() == "true"
+                value.send_value(payload)
+                return OZWValidationResponse.process_success(value, payload)
 
-            return fail(
+            return OZWValidationResponse.process_fail(
                 ERR_NOT_SUPPORTED,
                 "Configuration parameter requires true of false",
             )
 
-        return fail(ERR_NOT_SUPPORTED, type_err_msg)
+        return OZWValidationResponse.process_fail_on_type(value, new_value)
 
     # List value can be passed in as string or int
     if value.type == ValueType.LIST:
@@ -378,39 +388,48 @@ def set_config_parameter(
         except ValueError:
             pass
         if not isinstance(new_value, str) and not isinstance(new_value, int):
-            return fail(ERR_NOT_SUPPORTED, type_err_msg)
+            return OZWValidationResponse.process_fail_on_type(value, new_value)
 
         for option in value.value["List"]:
             if new_value not in (option["Label"], option["Value"]):
                 continue
-            return success(value, int(option["Value"]))
+            payload = int(option["Value"])
+            value.send_value(payload)
+            return OZWValidationResponse.process_success(value, payload)
 
-        return fail(
+        return OZWValidationResponse.process_fail(
             ERR_NOT_SUPPORTED,
-            f"Invalid value {new_value} for parameter {parameter_index}",
+            "Invalid value %s for parameter %s",
+            new_value,
+            parameter_index,
         )
 
     if value.type == ValueType.STRING:
         if not isinstance(new_value, str):
-            return fail(ERR_NOT_SUPPORTED, type_err_msg)
-        return success(value, new_value)
+            return OZWValidationResponse.process_fail_on_type(value, new_value)
+        value.send_value(new_value)
+        return OZWValidationResponse.process_success(value, new_value)
 
     if value.type in (ValueType.INT, ValueType.BYTE, ValueType.SHORT):
         try:
             new_value = int(new_value)
         except ValueError:
-            return fail(ERR_NOT_SUPPORTED, type_err_msg)
+            return OZWValidationResponse.process_fail_on_type(value, new_value)
         if new_value > value.max or new_value < value.min:
-            return fail(
+            return OZWValidationResponse.process_fail(
                 ERR_NOT_SUPPORTED,
-                (
-                    f"Value {new_value} out of range for parameter "
-                    f"{parameter_index} (Min: {value.min} Max: {value.max})"
-                ),
+                "Value %s out of range for parameter %s (Min: %s Max: %s)",
+                new_value,
+                parameter_index,
+                value.min,
+                value.max,
             )
-        return success(value, new_value)
+        value.send_value(new_value)
+        return OZWValidationResponse.process_success(value, new_value)
 
-    return fail(
+    return OZWValidationResponse.process_fail(
         ERR_NOT_SUPPORTED,
-        f"Value type of {value.type} for parameter {parameter_index} not supported",
+        "Value type of %s for parameter %s not supported",
+        str(value.type),
+        parameter_index,
     )

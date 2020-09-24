@@ -79,7 +79,7 @@ class ZWaveServices:
                 resp.payload,
             )
         else:
-            _LOGGER.error(resp.err_msg)
+            _LOGGER.error(resp.err_msg, *resp.args)
 
     @callback
     def async_add_node(self, service):

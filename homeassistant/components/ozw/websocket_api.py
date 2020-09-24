@@ -208,7 +208,11 @@ def websocket_set_config_parameter(hass, connection, msg):
 
     if not resp.success:
         connection.send_result(
-            websocket_api.error_message(msg[ID], resp.err_type, resp.err_msg)
+            websocket_api.error_message(
+                msg[ID],
+                resp.err_type,
+                resp.err_msg.replace("%s", "{}").format(*resp.args),
+            )
         )
         return
 
