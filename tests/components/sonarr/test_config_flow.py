@@ -7,7 +7,7 @@ from homeassistant.components.sonarr.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH, SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_SOURCE, CONF_VERIFY_SSL
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_SOURCE, CONF_VERIFY_SSL
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
     RESULT_TYPE_CREATE_ENTRY,
@@ -161,6 +161,8 @@ async def test_full_reauth_flow_implementation(
 
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "reauth_successful"
+
+    assert entry.entry_data[CONF_API_KEY] = "test-api-key-reauth"
 
     mock_setup_entry.assert_called_once()
 
