@@ -131,7 +131,26 @@ def websocket_get_nodes(hass, connection, msg):
 def websocket_get_config_parameters(hass, connection, msg):
     """Get a list of configuration parameters for an OZW node instance."""
     manager = hass.data[DOMAIN][MANAGER]
-    node = manager.get_instance(msg[OZW_INSTANCE]).get_node(msg[NODE_ID])
+    instance = manager.get_instance(msg[OZW_INSTANCE])
+    if not instance:
+        connection.send_message(
+            websocket_api.error_message(
+                msg[ID],
+                websocket_api.const.ERR_NOT_FOUND,
+                "OZW Instance not found",
+            )
+        )
+
+    node = instance.get_node(msg[NODE_ID])
+    if not node:
+        connection.send_message(
+            websocket_api.error_message(
+                msg[ID],
+                websocket_api.const.ERR_NOT_FOUND,
+                "OZW Node not found",
+            )
+        )
+
     command_class = node.get_command_class(
         CommandClass.CONFIGURATION, msg.get(NODE_INSTANCE_ID)
     )
