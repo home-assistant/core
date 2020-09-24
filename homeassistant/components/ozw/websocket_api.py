@@ -59,23 +59,19 @@ def get_ozw_node(hass, connection, msg):
     manager = hass.data[DOMAIN][MANAGER]
     instance = manager.get_instance(msg[OZW_INSTANCE])
     if not instance:
-        connection.send_message(
-            websocket_api.error_message(
-                msg[ID],
-                websocket_api.const.ERR_NOT_FOUND,
-                "OZW Instance not found",
-            )
+        connection.send_error(
+            msg[ID],
+            websocket_api.const.ERR_NOT_FOUND,
+            "OZW Instance not found",
         )
         raise NotFoundError
 
     node = instance.get_node(msg[NODE_ID])
     if not node:
-        connection.send_message(
-            websocket_api.error_message(
-                msg[ID],
-                websocket_api.const.ERR_NOT_FOUND,
-                "OZW Node not found",
-            )
+        connection.send_error(
+            msg[ID],
+            websocket_api.const.ERR_NOT_FOUND,
+            "OZW Node not found",
         )
         raise NotFoundError
 
@@ -155,12 +151,10 @@ def websocket_get_config_parameters(hass, connection, msg):
     resp = get_config_parameters(node, msg.get(NODE_INSTANCE_ID))
 
     if not resp.success:
-        connection.send_result(
-            websocket_api.error_message(
-                msg[ID],
-                resp.err_type,
-                resp.err_msg.replace("%s", "{}").format(*resp.args),
-            )
+        connection.send_error(
+            msg[ID],
+            resp.err_type,
+            resp.err_msg.replace("%s", "{}").format(*resp.args),
         )
         return
 
@@ -192,12 +186,10 @@ def websocket_set_config_parameter(hass, connection, msg):
     )
 
     if not resp.success:
-        connection.send_result(
-            websocket_api.error_message(
-                msg[ID],
-                resp.err_type,
-                resp.err_msg.replace("%s", "{}").format(*resp.args),
-            )
+        connection.send_error(
+            msg[ID],
+            resp.err_type,
+            resp.err_msg.replace("%s", "{}").format(*resp.args),
         )
         return
 
