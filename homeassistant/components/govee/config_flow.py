@@ -2,12 +2,9 @@
 
 import logging
 
-from govee_api_laggat import Govee, GoveeDevice
-import voluptuous as vol
-
+from .const import CONF_API_KEY, DATA_SCHEMA, DOMAIN
+from govee_api_laggat import Govee
 from homeassistant import config_entries, core, exceptions
-
-from .const import CONF_API_KEY, CONF_DELAY, DATA_SCHEMA, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,8 +54,10 @@ class CannotConnect(exceptions.HomeAssistantError):
     """Error to indicate we cannot connect."""
 
     def __init__(self, message):
+        """Create cannot connect error."""
         self._message = message
 
     @property
     def message(self):
+        """Get the message why the connection failed."""
         return self._message
