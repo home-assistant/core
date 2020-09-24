@@ -2,6 +2,7 @@
 import logging
 
 from advantage_air import advantage_air
+from aiohttp import ClientError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -39,8 +40,8 @@ class AdvantageAirConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         api = advantage_air(ip_address, port, ADVANTAGE_AIR_RETRY)
 
         try:
-            data = await api.async_get()
-        except Exception:  # pylint: disable=broad-except
+            data = await api.async_get(1)
+        except ClientError:
             return self._show_form({"base": "connection_error"})
         if "aircons" not in data:
             return self._show_form({"base": "data_error"})
