@@ -198,7 +198,7 @@ class OmniLogicPumpSpeedSensor(OmnilogicSensor):
             state = pump_speed
         elif pump_type == "DUAL":
             if pump_speed == 0:
-                self._state = "off"
+                state = "off"
             elif pump_speed == self.coordinator.data[self._item_id].get(
                 "Min-Pump-Speed"
             ):
