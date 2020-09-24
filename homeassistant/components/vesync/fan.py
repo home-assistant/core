@@ -36,7 +36,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     hass.data[DOMAIN][VS_DISPATCHERS].append(disp)
 
     _async_setup_entities(hass.data[DOMAIN][VS_FANS], async_add_entities)
-    return True
 
 
 @callback
