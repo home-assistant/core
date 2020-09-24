@@ -1,4 +1,7 @@
 """Test OpenZWave Websocket API."""
+import logging
+
+from openzwavemqtt.const import ValueType
 
 from homeassistant.components.ozw.websocket_api import (
     ATTR_IS_AWAKE,
@@ -15,15 +18,19 @@ from homeassistant.components.ozw.websocket_api import (
     ATTR_NODE_QUERY_STAGE,
     ATTR_NODE_SPECIFIC_STRING,
     ID,
+    INDEX,
     NODE_ID,
     OZW_INSTANCE,
     TYPE,
+    VALUE,
 )
 from homeassistant.components.websocket_api.const import ERR_NOT_FOUND
 
 from .common import MQTTMessage, setup_ozw
 
 from tests.async_mock import patch
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def test_websocket_api(hass, generic_data, hass_ws_client):
@@ -118,6 +125,57 @@ async def test_websocket_api(hass, generic_data, hass_ws_client):
     assert len(result) == 5
     assert result[2][ATTR_IS_AWAKE]
     assert not result[1][ATTR_IS_FAILED]
+
+    # Test get config parameters
+    await client.send_json({ID: 13, TYPE: "ozw/get_config_parameters", NODE_ID: 39})
+    msg = await client.receive_json()
+    result = msg["result"]
+    assert len(result) == 8
+    for config_param in result:
+        assert config_param["type"] in (
+            ValueType.LIST.value,
+            ValueType.BOOL.value,
+            ValueType.STRING.value,
+            ValueType.INT.value,
+            ValueType.BYTE.value,
+            ValueType.SHORT.value,
+        )
+
+    # Test set config parameter
+    config_param = result[0]
+    current_val = config_param["value"]
+    new_val = next(
+        option["Value"]
+        for option in config_param["options"]
+        if option["Label"] != current_val
+    )
+    new_label = next(
+        option["Label"]
+        for option in config_param["options"]
+        if option["Label"] != current_val and option["Value"] != new_val
+    )
+    await client.send_json(
+        {
+            ID: 14,
+            TYPE: "ozw/set_config_parameter",
+            NODE_ID: 39,
+            INDEX: config_param["index"],
+            VALUE: new_val,
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    await client.send_json(
+        {
+            ID: 15,
+            TYPE: "ozw/set_config_parameter",
+            NODE_ID: 39,
+            INDEX: config_param["index"],
+            VALUE: new_label,
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
 
 
 async def test_refresh_node(hass, generic_data, sent_messages, hass_ws_client):

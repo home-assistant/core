@@ -23,6 +23,8 @@ ID = "id"
 OZW_INSTANCE = "ozw_instance"
 NODE_ID = "node_id"
 NODE_INSTANCE_ID = "node_instance_id"
+INDEX = "index"
+VALUE = "value"
 
 ATTR_NODE_QUERY_STAGE = "node_query_stage"
 ATTR_IS_ZWAVE_PLUS = "is_zwave_plus"
@@ -39,13 +41,13 @@ ATTR_NODE_SPECIFIC_STRING = "node_specific_string"
 ATTR_NODE_MANUFACTURER_NAME = "node_manufacturer_name"
 ATTR_NODE_PRODUCT_NAME = "node_product_name"
 ATTR_NEIGHBORS = "neighbors"
-ATTR_INDEX = "index"
+ATTR_INDEX = INDEX
 ATTR_LABEL = "label"
 ATTR_MAX = "max"
 ATTR_MIN = "min"
 ATTR_OPTIONS = "options"
 ATTR_TYPE = "type"
-ATTR_VALUE = "value"
+ATTR_VALUE = VALUE
 
 
 @callback
@@ -152,8 +154,8 @@ def websocket_get_config_parameters(hass, connection, msg):
 
         value_to_return = {
             ATTR_LABEL: value.label,
-            ATTR_TYPE: str(value.type),
-            ATTR_INDEX: value.index,
+            ATTR_TYPE: value.type.value,
+            ATTR_INDEX: value.index.value,
         }
 
         if value.type == ValueType.BOOL:
@@ -189,8 +191,8 @@ def websocket_get_config_parameters(hass, connection, msg):
         vol.Required(NODE_ID): vol.Coerce(int),
         vol.Optional(OZW_INSTANCE, default=1): vol.Coerce(int),
         vol.Optional(NODE_INSTANCE_ID): vol.Coerce(int),
-        vol.Required(ATTR_INDEX): vol.Coerce(int),
-        vol.Required(ATTR_VALUE): vol.Or(vol.Coerce(int), bool, str),
+        vol.Required(INDEX): vol.Coerce(int),
+        vol.Required(VALUE): vol.Or(vol.Coerce(int), bool, str),
     }
 )
 def websocket_set_config_parameter(hass, connection, msg):
@@ -199,8 +201,8 @@ def websocket_set_config_parameter(hass, connection, msg):
         hass.data[DOMAIN][MANAGER],
         msg[OZW_INSTANCE],
         msg[NODE_ID],
-        msg[ATTR_INDEX],
-        msg[ATTR_VALUE],
+        msg[INDEX],
+        msg[VALUE],
         msg.get(NODE_INSTANCE_ID),
     )
 
