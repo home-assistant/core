@@ -37,22 +37,26 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 if state_key not in item:
                     continue
 
-                guard_condition = entity_setting["guard_condition"]
-                if guard_condition and all(
-                    item.get(guard_key) == guard_value
-                    for guard_key, guard_value in guard_condition.items()
-                ):
+                guard = False
+                for guard_condition in entity_setting["guard_condition"]:
+                    if guard_condition and all(
+                        item.get(guard_key) == guard_value
+                        for guard_key, guard_value in guard_condition.items()
+                    ):
+                        guard = True
+
+                if guard:
                     continue
 
                 entity = entity_class(
-                    coordinator,
-                    state_key,
-                    entity_setting["name"],
-                    entity_setting["kind"],
-                    item_id,
-                    entity_setting["device_class"],
-                    entity_setting["icon"],
-                    entity_setting["unit"],
+                    coordinator=coordinator,
+                    state_key=state_key,
+                    name=entity_setting["name"],
+                    kind=entity_setting["kind"],
+                    item_id=item_id,
+                    device_class=entity_setting["device_class"],
+                    icon=entity_setting["icon"],
+                    unit=entity_setting["unit"],
                 )
 
                 entities.append(entity)
@@ -110,29 +114,6 @@ class OmnilogicSensor(OmniLogicEntity):
 class OmniLogicTemperatureSensor(OmnilogicSensor):
     """Define an OmniLogic Temperature (Air/Water) Sensor."""
 
-    def __init__(
-        self,
-        coordinator: OmniLogicUpdateCoordinator,
-        state_key: str,
-        name: str,
-        kind: str,
-        item_id: tuple,
-        device_class: str,
-        icon: str,
-        unit: str,
-    ):
-        """Initialize the sensor."""
-        super().__init__(
-            coordinator=coordinator,
-            kind=kind,
-            name=name,
-            device_class=device_class,
-            icon=icon,
-            unit=unit,
-            item_id=item_id,
-            state_key=state_key,
-        )
-
     @property
     def state(self):
         """Return the state for the temperature sensor."""
@@ -161,29 +142,6 @@ class OmniLogicTemperatureSensor(OmnilogicSensor):
 class OmniLogicPumpSpeedSensor(OmnilogicSensor):
     """Define an OmniLogic Pump Speed Sensor."""
 
-    def __init__(
-        self,
-        coordinator: OmniLogicUpdateCoordinator,
-        state_key: str,
-        name: str,
-        kind: str,
-        item_id: tuple,
-        device_class: str,
-        icon: str,
-        unit: str,
-    ):
-        """Initialize the sensor."""
-        super().__init__(
-            coordinator=coordinator,
-            kind=kind,
-            name=name,
-            device_class=device_class,
-            icon=icon,
-            unit=unit,
-            item_id=item_id,
-            state_key=state_key,
-        )
-
     @property
     def state(self):
         """Return the state for the pump speed sensor."""
@@ -207,13 +165,6 @@ class OmniLogicPumpSpeedSensor(OmnilogicSensor):
                 "Max-Pump-Speed"
             ):
                 state = "high"
-        elif pump_type == "SINGLE":
-            if pump_speed == 0:
-                self.state = "off"
-            elif pump_speed == self.coordinator.data[self._item_id].get(
-                "Max-Pump-Speed"
-            ):
-                state = "on"
 
         self._attrs["pump_type"] = pump_type
 
@@ -222,29 +173,6 @@ class OmniLogicPumpSpeedSensor(OmnilogicSensor):
 
 class OmniLogicSaltLevelSensor(OmnilogicSensor):
     """Define an OmniLogic Salt Level Sensor."""
-
-    def __init__(
-        self,
-        coordinator: OmniLogicUpdateCoordinator,
-        state_key: str,
-        name: str,
-        kind: str,
-        item_id: tuple,
-        device_class: str,
-        icon: str,
-        unit: str,
-    ):
-        """Initialize the sensor."""
-        super().__init__(
-            coordinator=coordinator,
-            kind=kind,
-            name=name,
-            device_class=device_class,
-            icon=icon,
-            unit=unit,
-            item_id=item_id,
-            state_key=state_key,
-        )
 
     @property
     def state(self):
@@ -265,72 +193,16 @@ class OmniLogicSaltLevelSensor(OmnilogicSensor):
 class OmniLogicChlorinatorSensor(OmnilogicSensor):
     """Define an OmniLogic Chlorinator Sensor."""
 
-    def __init__(
-        self,
-        coordinator: OmniLogicUpdateCoordinator,
-        state_key: str,
-        name: str,
-        kind: str,
-        item_id: tuple,
-        device_class: str,
-        icon: str,
-        unit: str,
-    ):
-        """Initialize the sensor."""
-        super().__init__(
-            coordinator=coordinator,
-            kind=kind,
-            name=name,
-            device_class=device_class,
-            icon=icon,
-            unit=unit,
-            item_id=item_id,
-            state_key=state_key,
-        )
-
     @property
     def state(self):
         """Return the state for the chlorinator sensor."""
         state = self.coordinator.data[self._item_id][self._state_key]
-        operating_mode = self.coordinator.data[self._item_id].get("operatingMode")
-
-        if operating_mode == "1":
-            self._unit = PERCENTAGE
-        elif operating_mode == "2":
-            self._unit = None
-            if state == "100":
-                state = "on"
-            else:
-                state = "off"
 
         return state
 
 
 class OmniLogicPHSensor(OmnilogicSensor):
     """Define an OmniLogic pH Sensor."""
-
-    def __init__(
-        self,
-        coordinator: OmniLogicUpdateCoordinator,
-        state_key: str,
-        name: str,
-        kind: str,
-        item_id: tuple,
-        device_class: str,
-        icon: str,
-        unit: str,
-    ):
-        """Initialize the sensor."""
-        super().__init__(
-            coordinator=coordinator,
-            kind=kind,
-            name=name,
-            device_class=device_class,
-            icon=icon,
-            unit=unit,
-            item_id=item_id,
-            state_key=state_key,
-        )
 
     @property
     def state(self):
@@ -391,7 +263,7 @@ SENSOR_TYPES = {
             "device_class": DEVICE_CLASS_TEMPERATURE,
             "icon": None,
             "unit": TEMP_FAHRENHEIT,
-            "guard_condition": {},
+            "guard_condition": [{}],
         },
     ],
     (4, "BOWS"): [
@@ -402,7 +274,7 @@ SENSOR_TYPES = {
             "device_class": DEVICE_CLASS_TEMPERATURE,
             "icon": None,
             "unit": TEMP_FAHRENHEIT,
-            "guard_condition": {},
+            "guard_condition": [{}],
         },
     ],
     (6, "Filter"): [
@@ -413,7 +285,9 @@ SENSOR_TYPES = {
             "device_class": None,
             "icon": "mdi:speedometer",
             "unit": PERCENTAGE,
-            "guard_condition": {},
+            "guard_condition": [
+                {"Type": "FMT_SINGLE_SPEED"},
+            ],
         },
     ],
     (6, "Pumps"): [
@@ -424,7 +298,9 @@ SENSOR_TYPES = {
             "device_class": None,
             "icon": "mdi:speedometer",
             "unit": PERCENTAGE,
-            "guard_condition": {},
+            "guard_condition": [
+                {"Type": "PMP_SINGLE_SPEED"},
+            ],
         },
     ],
     (6, "Chlorinator"): [
@@ -435,10 +311,15 @@ SENSOR_TYPES = {
             "device_class": None,
             "icon": "mdi:gauge",
             "unit": PERCENTAGE,
-            "guard_condition": {
-                "Shared-Type": "BOW_SHARED_EQUIPMENT",
-                "status": "0",
-            },
+            "guard_condition": [
+                {
+                    "Shared-Type": "BOW_SHARED_EQUIPMENT",
+                    "status": "0",
+                },
+                {
+                    "operatingMode": "2",
+                },
+            ],
         },
         {
             "entity_classes": {"avgSaltLevel": OmniLogicSaltLevelSensor},
@@ -447,10 +328,12 @@ SENSOR_TYPES = {
             "device_class": None,
             "icon": "mdi:gauge",
             "unit": CONCENTRATION_PARTS_PER_MILLION,
-            "guard_condition": {
-                "Shared-Type": "BOW_SHARED_EQUIPMENT",
-                "status": "0",
-            },
+            "guard_condition": [
+                {
+                    "Shared-Type": "BOW_SHARED_EQUIPMENT",
+                    "status": "0",
+                },
+            ],
         },
     ],
     (6, "CSAD"): [
@@ -461,7 +344,9 @@ SENSOR_TYPES = {
             "device_class": None,
             "icon": "mdi:gauge",
             "unit": "pH",
-            "guard_condition": {"ph": ""},
+            "guard_condition": [
+                {"ph": ""},
+            ],
         },
         {
             "entity_classes": {"orp": OmniLogicORPSensor},
@@ -470,7 +355,9 @@ SENSOR_TYPES = {
             "device_class": None,
             "icon": "mdi:gauge",
             "unit": "mV",
-            "guard_condition": {"orp": ""},
+            "guard_condition": [
+                {"orp": ""},
+            ],
         },
     ],
 }
