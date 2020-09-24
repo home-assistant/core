@@ -753,7 +753,7 @@ hole==0.5.1
 holidays==0.10.3
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200918.0
+home-assistant-frontend==20200918.2
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -776,6 +776,9 @@ huawei-lte-api==1.4.12
 
 # homeassistant.components.hydrawise
 hydrawiser==0.2
+
+# homeassistant.components.hyperion
+hyperion-py==0.3.0
 
 # homeassistant.components.bh1750
 # homeassistant.components.bme280
@@ -1229,7 +1232,7 @@ pyaehw4a1==0.3.9
 pyaftership==0.1.2
 
 # homeassistant.components.airvisual
-pyairvisual==4.4.0
+pyairvisual==5.0.2
 
 # homeassistant.components.almond
 pyalmond==0.0.2
@@ -1991,7 +1994,7 @@ simplehound==0.3
 simplepush==1.1.4
 
 # homeassistant.components.simplisafe
-simplisafe-python==9.3.0
+simplisafe-python==9.3.3
 
 # homeassistant.components.sisyphus
 sisyphus-control==2.2.1
