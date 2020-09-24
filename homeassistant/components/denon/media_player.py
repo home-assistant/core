@@ -120,7 +120,7 @@ class DenonDevice(MediaPlayerEntity):
             if len(ssfun) == 2 and ssfun[1]:
                 configured_name = ssfun[1]
             else:
-                # No name configured, re-using the source name
+                # No name configured, reusing the source name
                 configured_name = source
 
             self._source_list[configured_name] = source
