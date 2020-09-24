@@ -295,7 +295,6 @@ class OmniLogicChlorinatorSensor(OmnilogicSensor):
         operating_mode = self.coordinator.data[self._item_id].get("operatingMode")
 
         if operating_mode == "1":
-            self._state = state
             self._unit = PERCENTAGE
         elif operating_mode == "2":
             self._unit = None
