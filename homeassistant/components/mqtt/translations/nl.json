@@ -34,7 +34,8 @@
             "button_4": "Vierde knop",
             "button_5": "Vijfde knop",
             "button_6": "Zesde knop",
-            "turn_off": "Uitschakelen"
+            "turn_off": "Uitschakelen",
+            "turn_on": "Inschakelen"
         }
     }
 }

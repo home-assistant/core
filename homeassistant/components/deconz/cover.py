@@ -1,6 +1,7 @@
 """Support for deCONZ covers."""
 from homeassistant.components.cover import (
     ATTR_POSITION,
+    DEVICE_CLASS_WINDOW,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
@@ -74,7 +75,7 @@ class DeconzCover(DeconzDevice, CoverEntity):
         if self._device.type in DAMPERS:
             return "damper"
         if self._device.type in WINDOW_COVERS:
-            return "window"
+            return DEVICE_CLASS_WINDOW
 
     @property
     def supported_features(self):

@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Poort",
+                    "ssl": "Maak verbinding via SSL"
+                }
+            }
+        }
+    }
+}

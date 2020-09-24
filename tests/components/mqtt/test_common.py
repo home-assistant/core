@@ -512,10 +512,6 @@ async def help_test_discovery_update(
     discovery_data2,
     state_data1=None,
     state_data2=None,
-    state1=None,
-    state2=None,
-    attributes1=None,
-    attributes2=None,
 ):
     """Test update of discovered component.
 
@@ -527,32 +523,38 @@ async def help_test_discovery_update(
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", discovery_data1)
     await hass.async_block_till_done()
 
-    if state_data1:
-        for (topic, data) in state_data1:
-            async_fire_mqtt_message(hass, topic, data)
     state = hass.states.get(f"{domain}.beer")
     assert state is not None
     assert state.name == "Beer"
-    if state1:
-        assert state.state == state1
-    if attributes1:
-        for (attr, value) in attributes1:
-            assert state.attributes.get(attr) == value
+
+    if state_data1:
+        for (mqtt_messages, expected_state, attributes) in state_data1:
+            for (topic, data) in mqtt_messages:
+                async_fire_mqtt_message(hass, topic, data)
+            state = hass.states.get(f"{domain}.beer")
+            if expected_state:
+                assert state.state == expected_state
+            if attributes:
+                for (attr, value) in attributes:
+                    assert state.attributes.get(attr) == value
 
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", discovery_data2)
     await hass.async_block_till_done()
 
-    if state_data2:
-        for (topic, data) in state_data2:
-            async_fire_mqtt_message(hass, topic, data)
     state = hass.states.get(f"{domain}.beer")
     assert state is not None
     assert state.name == "Milk"
-    if state2:
-        assert state.state == state2
-    if attributes2:
-        for (attr, value) in attributes2:
-            assert state.attributes.get(attr) == value
+
+    if state_data2:
+        for (mqtt_messages, expected_state, attributes) in state_data2:
+            for (topic, data) in mqtt_messages:
+                async_fire_mqtt_message(hass, topic, data)
+            state = hass.states.get(f"{domain}.beer")
+            if expected_state:
+                assert state.state == expected_state
+            if attributes:
+                for (attr, value) in attributes:
+                    assert state.attributes.get(attr) == value
 
     state = hass.states.get(f"{domain}.milk")
     assert state is None

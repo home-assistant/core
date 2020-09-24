@@ -84,16 +84,26 @@ async def test_if_fires_on_event_with_data(hass, calls):
                 "trigger": {
                     "platform": "event",
                     "event_type": "test_event",
-                    "event_data": {"some_attr": "some_value"},
+                    "event_data": {
+                        "some_attr": "some_value",
+                        "second_attr": "second_value",
+                    },
                 },
                 "action": {"service": "test.automation"},
             }
         },
     )
 
-    hass.bus.async_fire("test_event", {"some_attr": "some_value", "another": "value"})
+    hass.bus.async_fire(
+        "test_event",
+        {"some_attr": "some_value", "another": "value", "second_attr": "second_value"},
+    )
     await hass.async_block_till_done()
     assert len(calls) == 1
+
+    hass.bus.async_fire("test_event", {"some_attr": "some_value", "another": "value"})
+    await hass.async_block_till_done()
+    assert len(calls) == 1  # No new call
 
 
 async def test_if_fires_on_event_with_empty_data_config(hass, calls):

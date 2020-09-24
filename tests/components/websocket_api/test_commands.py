@@ -420,14 +420,20 @@ async def test_render_template_renders_template(
     assert msg["id"] == 5
     assert msg["type"] == "event"
     event = msg["event"]
-    assert event == {"result": "State is: on"}
+    assert event == {
+        "result": "State is: on",
+        "listeners": {"all": False, "domains": [], "entities": ["light.test"]},
+    }
 
     hass.states.async_set("light.test", "off")
     msg = await websocket_client.receive_json()
     assert msg["id"] == 5
     assert msg["type"] == "event"
     event = msg["event"]
-    assert event == {"result": "State is: off"}
+    assert event == {
+        "result": "State is: off",
+        "listeners": {"all": False, "domains": [], "entities": ["light.test"]},
+    }
 
 
 async def test_render_template_manual_entity_ids_no_longer_needed(
@@ -453,14 +459,20 @@ async def test_render_template_manual_entity_ids_no_longer_needed(
     assert msg["id"] == 5
     assert msg["type"] == "event"
     event = msg["event"]
-    assert event == {"result": "State is: on"}
+    assert event == {
+        "result": "State is: on",
+        "listeners": {"all": False, "domains": [], "entities": ["light.test"]},
+    }
 
     hass.states.async_set("light.test", "off")
     msg = await websocket_client.receive_json()
     assert msg["id"] == 5
     assert msg["type"] == "event"
     event = msg["event"]
-    assert event == {"result": "State is: off"}
+    assert event == {
+        "result": "State is: off",
+        "listeners": {"all": False, "domains": [], "entities": ["light.test"]},
+    }
 
 
 async def test_render_template_with_error(
@@ -480,7 +492,10 @@ async def test_render_template_with_error(
     assert msg["id"] == 5
     assert msg["type"] == "event"
     event = msg["event"]
-    assert event == {"result": None}
+    assert event == {
+        "result": None,
+        "listeners": {"all": True, "domains": [], "entities": []},
+    }
 
     assert "my_unknown_var" in caplog.text
     assert "TemplateError" in caplog.text

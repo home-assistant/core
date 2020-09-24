@@ -25,19 +25,16 @@ CONF_ENTITY_ID = "entity_id"
 CONF_FROM = "from"
 CONF_TO = "to"
 
-TRIGGER_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            vol.Required(CONF_PLATFORM): "state",
-            vol.Required(CONF_ENTITY_ID): cv.entity_ids,
-            # These are str on purpose. Want to catch YAML conversions
-            vol.Optional(CONF_FROM): vol.Any(str, [str]),
-            vol.Optional(CONF_TO): vol.Any(str, [str]),
-            vol.Optional(CONF_FOR): cv.positive_time_period_template,
-            vol.Optional(CONF_ATTRIBUTE): cv.match_all,
-        }
-    ),
-    cv.key_dependency(CONF_FOR, CONF_TO),
+TRIGGER_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_PLATFORM): "state",
+        vol.Required(CONF_ENTITY_ID): cv.entity_ids,
+        # These are str on purpose. Want to catch YAML conversions
+        vol.Optional(CONF_FROM): vol.Any(str, [str]),
+        vol.Optional(CONF_TO): vol.Any(str, [str]),
+        vol.Optional(CONF_FOR): cv.positive_time_period_template,
+        vol.Optional(CONF_ATTRIBUTE): cv.match_all,
+    }
 )
 
 
@@ -82,6 +79,13 @@ async def async_attach_trigger(
             new_value = to_s.state
         else:
             new_value = to_s.attributes.get(attribute)
+
+        # When we listen for state changes with `match_all`, we
+        # will trigger even if just an attribute changes. When
+        # we listen to just an attribute, we should ignore all
+        # other attribute changes.
+        if attribute is not None and old_value == new_value:
+            return
 
         if (
             not match_from_state(old_value)
@@ -140,6 +144,9 @@ async def async_attach_trigger(
                 cur_value = new_st.state
             else:
                 cur_value = new_st.attributes.get(attribute)
+
+            if CONF_TO not in config:
+                return cur_value != old_value
 
             return cur_value == new_value
 

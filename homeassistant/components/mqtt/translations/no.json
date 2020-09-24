@@ -12,6 +12,7 @@
                     "broker": "Megler",
                     "discovery": "Aktiver oppdagelse",
                     "password": "Passord",
+                    "port": "",
                     "username": "Brukernavn"
                 },
                 "description": "Vennligst fyll ut tilkoblingsinformasjonen for din MQTT megler."
@@ -58,6 +59,7 @@
                 "data": {
                     "broker": "Megler",
                     "password": "Passord",
+                    "port": "",
                     "username": "Brukernavn"
                 },
                 "description": "Vennligst oppgi tilkoblingsinformasjonen for din MQTT megler."

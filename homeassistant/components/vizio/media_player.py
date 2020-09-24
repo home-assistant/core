@@ -143,7 +143,6 @@ class VizioDevice(MediaPlayerEntity):
     ) -> None:
         """Initialize Vizio device."""
         self._config_entry = config_entry
-        self._async_unsub_listeners = []
         self._apps_coordinator = apps_coordinator
 
         self._name = name
@@ -312,14 +311,14 @@ class VizioDevice(MediaPlayerEntity):
     async def async_added_to_hass(self) -> None:
         """Register callbacks when entity is added."""
         # Register callback for when config entry is updated.
-        self._async_unsub_listeners.append(
+        self.async_on_remove(
             self._config_entry.add_update_listener(
                 self._async_send_update_options_signal
             )
         )
 
         # Register callback for update event
-        self._async_unsub_listeners.append(
+        self.async_on_remove(
             async_dispatcher_connect(
                 self.hass, self._config_entry.entry_id, self._async_update_options
             )
@@ -333,16 +332,9 @@ class VizioDevice(MediaPlayerEntity):
             self.async_write_ha_state()
 
         if self._device_class == DEVICE_CLASS_TV:
-            self._async_unsub_listeners.append(
+            self.async_on_remove(
                 self._apps_coordinator.async_add_listener(apps_list_update)
             )
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect callbacks when entity is removed."""
-        for listener in self._async_unsub_listeners:
-            listener()
-
-        self._async_unsub_listeners.clear()
 
     @property
     def available(self) -> bool:

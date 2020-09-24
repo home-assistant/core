@@ -19,7 +19,8 @@
     "abort": {
       "authorize_url_timeout": "Timeout generating authorize url.",
       "missing_configuration": "The Withings integration is not configured. Please follow the documentation.",
-      "already_configured": "Configuration updated for profile."
+      "already_configured": "Configuration updated for profile.",
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]"
     },
     "create_entry": { "default": "Successfully authenticated with Withings." }
   }

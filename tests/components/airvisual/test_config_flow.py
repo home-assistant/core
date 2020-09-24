@@ -31,7 +31,6 @@ async def test_duplicate_error(hass):
         CONF_LATITUDE: 51.528308,
         CONF_LONGITUDE: -0.3817765,
     }
-    node_pro_conf = {CONF_IP_ADDRESS: "192.168.1.100", CONF_PASSWORD: "12345"}
 
     MockConfigEntry(
         domain=DOMAIN, unique_id="51.528308, -0.3817765", data=geography_conf
@@ -43,6 +42,8 @@ async def test_duplicate_error(hass):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
+
+    node_pro_conf = {CONF_IP_ADDRESS: "192.168.1.100", CONF_PASSWORD: "12345"}
 
     MockConfigEntry(
         domain=DOMAIN, unique_id="192.168.1.100", data=node_pro_conf
@@ -76,24 +77,6 @@ async def test_invalid_identifier(hass):
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["errors"] == {CONF_API_KEY: "invalid_api_key"}
-
-
-async def test_node_pro_error(hass):
-    """Test that an invalid Node/Pro ID shows an error."""
-    node_pro_conf = {CONF_IP_ADDRESS: "192.168.1.100", CONF_PASSWORD: "my_password"}
-
-    with patch(
-        "pyairvisual.node.Node.from_samba",
-        side_effect=NodeProError,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data={"type": "AirVisual Node/Pro"}
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=node_pro_conf
-        )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["errors"] == {CONF_IP_ADDRESS: "unable_to_connect"}
 
 
 async def test_migration(hass):
@@ -140,6 +123,24 @@ async def test_migration(hass):
         CONF_LONGITUDE: 137.5263065,
         CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_GEOGRAPHY,
     }
+
+
+async def test_node_pro_error(hass):
+    """Test that an invalid Node/Pro ID shows an error."""
+    node_pro_conf = {CONF_IP_ADDRESS: "192.168.1.100", CONF_PASSWORD: "my_password"}
+
+    with patch(
+        "pyairvisual.node.Node.from_samba",
+        side_effect=NodeProError,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data={"type": "AirVisual Node/Pro"}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=node_pro_conf
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["errors"] == {CONF_IP_ADDRESS: "unable_to_connect"}
 
 
 async def test_options_flow(hass):
@@ -198,28 +199,6 @@ async def test_step_geography(hass):
         }
 
 
-async def test_step_node_pro(hass):
-    """Test the Node/Pro step."""
-    conf = {CONF_IP_ADDRESS: "192.168.1.100", CONF_PASSWORD: "my_password"}
-
-    with patch(
-        "homeassistant.components.airvisual.async_setup_entry", return_value=True
-    ), patch("pyairvisual.node.Node.from_samba"):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data={"type": "AirVisual Node/Pro"}
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=conf
-        )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == "Node/Pro (192.168.1.100)"
-        assert result["data"] == {
-            CONF_IP_ADDRESS: "192.168.1.100",
-            CONF_PASSWORD: "my_password",
-            CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_NODE_PRO,
-        }
-
-
 async def test_step_import(hass):
     """Test the import step for both types of configuration."""
     geography_conf = {
@@ -243,6 +222,61 @@ async def test_step_import(hass):
             CONF_LONGITUDE: -0.3817765,
             CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_GEOGRAPHY,
         }
+
+
+async def test_step_node_pro(hass):
+    """Test the Node/Pro step."""
+    conf = {CONF_IP_ADDRESS: "192.168.1.100", CONF_PASSWORD: "my_password"}
+
+    with patch(
+        "homeassistant.components.airvisual.async_setup_entry", return_value=True
+    ), patch("pyairvisual.node.Node.from_samba"):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data={"type": "AirVisual Node/Pro"}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=conf
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["title"] == "Node/Pro (192.168.1.100)"
+        assert result["data"] == {
+            CONF_IP_ADDRESS: "192.168.1.100",
+            CONF_PASSWORD: "my_password",
+            CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_NODE_PRO,
+        }
+
+
+async def test_step_reauth(hass):
+    """Test that the reauth step works."""
+    geography_conf = {
+        CONF_API_KEY: "abcde12345",
+        CONF_LATITUDE: 51.528308,
+        CONF_LONGITUDE: -0.3817765,
+    }
+
+    MockConfigEntry(
+        domain=DOMAIN, unique_id="51.528308, -0.3817765", data=geography_conf
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "reauth"}, data=geography_conf
+    )
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    with patch(
+        "homeassistant.components.simplisafe.async_setup_entry", return_value=True
+    ), patch("pyairvisual.api.API.nearest_city"):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_API_KEY: "defgh67890"}
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "reauth_successful"
+
+    assert len(hass.config_entries.async_entries()) == 1
 
 
 async def test_step_user(hass):

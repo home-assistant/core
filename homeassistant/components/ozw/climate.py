@@ -5,6 +5,7 @@ from typing import Optional, Tuple
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN, ClimateEntity
 from homeassistant.components.climate.const import (
+    ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     CURRENT_HVAC_COOL,
@@ -252,6 +253,11 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
 
         Must know if single or double setpoint.
         """
+        hvac_mode = kwargs.get(ATTR_HVAC_MODE)
+
+        if hvac_mode is not None:
+            await self.async_set_hvac_mode(hvac_mode)
+
         if len(self._current_mode_setpoint_values) == 1:
             setpoint = self._current_mode_setpoint_values[0]
             target_temp = kwargs.get(ATTR_TEMPERATURE)

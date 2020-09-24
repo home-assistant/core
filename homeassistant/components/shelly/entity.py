@@ -42,11 +42,11 @@ async def async_setup_entry_attribute_entities(
     if not blocks:
         return
 
-    counts = Counter([item[0].type for item in blocks])
+    counts = Counter([item[1] for item in blocks])
 
     async_add_entities(
         [
-            sensor_class(wrapper, block, sensor_id, description, counts[block.type])
+            sensor_class(wrapper, block, sensor_id, description, counts[sensor_id])
             for block, sensor_id, description in blocks
         ]
     )
@@ -145,7 +145,7 @@ class ShellyBlockAttributeEntity(ShellyBlockEntity, entity.Entity):
 
         name_parts = [self.wrapper.name]
         if same_type_count > 1:
-            name_parts.append(str(block.index))
+            name_parts.append(str(block.channel))
         name_parts.append(self.description.name)
 
         self._name = " ".join(name_parts)
