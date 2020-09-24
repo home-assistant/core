@@ -259,7 +259,7 @@ class OmniLogicSaltLevelSensor(OmnilogicSensor):
 
         self._unit = unit_of_measurement
 
-        return self._state
+        return salt_return
 
 
 class OmniLogicChlorinatorSensor(OmnilogicSensor):
