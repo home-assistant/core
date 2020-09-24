@@ -9,10 +9,15 @@ from openzwavemqtt.const import (
     OZW_READY_STATES,
     CommandClass,
     ValueIndex,
+    ValueType,
 )
 from openzwavemqtt.models.node import OZWNode
 from openzwavemqtt.models.value import OZWValue
 
+from homeassistant.components.websocket_api.const import (
+    ERR_NOT_FOUND,
+    ERR_NOT_SUPPORTED,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -301,3 +306,94 @@ def create_value_id(value: OZWValue):
     """Generate unique value_id from an OZWValue."""
     # [OZW_INSTANCE_ID]-[NODE_ID]-[VALUE_ID_KEY]
     return f"{value.node.parent.id}-{value.node.id}-{value.value_id_key}"
+
+
+def set_config_parameter(
+    manager, instance_id, node_id, parameter_index, new_value, node_instance_id=None
+):
+    """Set config parameter to a node."""
+    instance = manager.get_instance(instance_id)
+    if not instance:
+        return False, ERR_NOT_FOUND, "OZW Instance not found"
+    node = instance.get_node(node_id)
+    if not node:
+        return False, ERR_NOT_FOUND, "OZW Node not found"
+    value = node.get_value(
+        CommandClass.CONFIGURATION, parameter_index, node_instance_id
+    )
+    if not value:
+        return (
+            False,
+            ERR_NOT_FOUND,
+            "Configuration parameter for OZW Node Instance not found",
+        )
+
+    type_err_msg = (
+        f"Configuration parameter type {str(value.type)} does not "
+        f"match the value type {str(type(new_value))}"
+    )
+
+    # Bool can be passed in as string or bool
+    if value.type == ValueType.BOOL:
+        if isinstance(new_value, bool):
+            value.send_value(new_value)
+            return True, None, None
+        if isinstance(new_value, str):
+            if new_value.lower() in ("true", "false"):
+                value.send_value(new_value.lower() == "true")
+                return True, None, None
+            return (
+                False,
+                ERR_NOT_SUPPORTED,
+                "Configuration parameter requires true of false",
+            )
+
+    # List value can be passed in as string or int
+    if value.type == ValueType.LIST:
+        try:
+            new_value = int(new_value)
+        except ValueError:
+            pass
+        if not isinstance(new_value, str) and not isinstance(new_value, int):
+            return False, ERR_NOT_SUPPORTED, type_err_msg
+
+        for option in value.value["List"]:
+            if new_value not in (option["Label"], option["Value"]):
+                continue
+            value.send_value(int(option["Value"]))
+            return True, None, None
+
+        return (
+            False,
+            ERR_NOT_SUPPORTED,
+            f"Value {new_value} not valid for parameter {parameter_index}",
+        )
+
+    if value.type == ValueType.STRING:
+        if not isinstance(new_value, str):
+            return False, ERR_NOT_SUPPORTED, type_err_msg
+        value.send_value(new_value)
+        return True, None, None
+
+    if value.type in (ValueType.INT, ValueType.BYTE, ValueType.SHORT):
+        try:
+            new_value = int(new_value)
+        except ValueError:
+            return False, ERR_NOT_SUPPORTED, type_err_msg
+        if new_value > value.max or new_value < value.min:
+            return (
+                False,
+                ERR_NOT_SUPPORTED,
+                (
+                    f"Value {new_value} out of range for parameter "
+                    f"{parameter_index} (Min: {value.min} Max: {value.max})"
+                ),
+            )
+        value.send_value(new_value)
+        return True, None, None
+
+    return (
+        False,
+        ERR_NOT_SUPPORTED,
+        f"Value type of {value.type} for parameter {parameter_index} not supported",
+    )

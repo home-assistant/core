@@ -1,13 +1,13 @@
 """Methods and classes related to executing Z-Wave commands and publishing these to hass."""
 import logging
 
-from openzwavemqtt.const import CommandClass, ValueType
 import voluptuous as vol
 
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 from . import const
+from .entity import set_config_parameter
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,63 +66,20 @@ class ZWaveServices:
         node_id = service.data[const.ATTR_NODE_ID]
         param = service.data[const.ATTR_CONFIG_PARAMETER]
         selection = service.data[const.ATTR_CONFIG_VALUE]
-        payload = None
 
-        value = (
-            self._manager.get_instance(instance_id)
-            .get_node(node_id)
-            .get_value(CommandClass.CONFIGURATION, param)
+        success, _, err_msg = set_config_parameter(
+            self._manager, instance_id, node_id, param, selection
         )
 
-        if value.type == ValueType.BOOL:
-            payload = selection == "True"
-
-        if value.type == ValueType.LIST:
-            # accept either string from the list value OR the int value
-            for selected in value.value["List"]:
-                if selection not in (selected["Label"], selected["Value"]):
-                    continue
-                payload = int(selected["Value"])
-
-            if payload is None:
-                _LOGGER.error(
-                    "Invalid value %s for parameter %s",
-                    selection,
-                    param,
-                )
-                return
-
-        if value.type == ValueType.BUTTON:
-            # Unsupported at this time
-            _LOGGER.info("Button type not supported yet")
-            return
-
-        if value.type == ValueType.STRING:
-            payload = selection
-
-        if (
-            value.type == ValueType.INT
-            or value.type == ValueType.BYTE
-            or value.type == ValueType.SHORT
-        ):
-            if selection > value.max or selection < value.min:
-                _LOGGER.error(
-                    "Value %s out of range for parameter %s (Min: %s Max: %s)",
-                    selection,
-                    param,
-                    value.min,
-                    value.max,
-                )
-                return
-            payload = int(selection)
-
-        value.send_value(payload)  # send the payload
-        _LOGGER.info(
-            "Setting configuration parameter %s on Node %s with value %s",
-            param,
-            node_id,
-            payload,
-        )
+        if success:
+            _LOGGER.info(
+                "Set configuration parameter %s on Node %s with value %s",
+                param,
+                node_id,
+                selection,
+            )
+        else:
+            _LOGGER.error(err_msg)
 
     @callback
     def async_add_node(self, service):

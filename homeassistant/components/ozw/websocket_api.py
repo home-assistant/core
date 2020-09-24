@@ -14,6 +14,7 @@ from homeassistant.components import websocket_api
 from homeassistant.core import callback
 
 from .const import DOMAIN, MANAGER, OPTIONS
+from .entity import set_config_parameter
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -194,84 +195,18 @@ def websocket_get_config_parameters(hass, connection, msg):
 )
 def websocket_set_config_parameter(hass, connection, msg):
     """Set a config parameter to a node."""
-    manager = hass.data[DOMAIN][MANAGER]
-    node = manager.get_instance(msg[OZW_INSTANCE]).get_node(msg[NODE_ID])
-    value = node.get_value(
-        CommandClass.CONFIGURATION, msg[ATTR_INDEX], msg.get(NODE_INSTANCE_ID)
+    success, err_type, err_msg = set_config_parameter(
+        hass.data[DOMAIN][MANAGER],
+        msg[OZW_INSTANCE],
+        msg[NODE_ID],
+        msg[ATTR_INDEX],
+        msg[ATTR_VALUE],
+        msg.get(NODE_INSTANCE_ID),
     )
-    if not value:
-        connection.send_message(
-            websocket_api.error_message(
-                msg[ID],
-                websocket_api.const.ERR_NOT_FOUND,
-                "Configuration parameter for OZW Node Instance not found",
-            )
-        )
+
+    if not success:
+        connection.send_result(websocket_api.error_message(msg[ID], err_type, err_msg))
         return
-
-    # List values can be sent as int for ID or string for label
-    if (
-        (
-            isinstance(msg[ATTR_VALUE], int)
-            and value.type
-            not in (ValueType.INT, ValueType.BYTE, ValueType.SHORT, ValueType.LIST)
-        )
-        or (isinstance(msg[ATTR_VALUE], bool) and value.type != ValueType.BOOL)
-        or (
-            isinstance(msg[ATTR_VALUE], str)
-            and value.type not in (ValueType.STRING, ValueType.LIST)
-        )
-    ):
-        connection.send_message(
-            websocket_api.error_message(
-                msg[ID],
-                websocket_api.const.ERR_NOT_SUPPORTED,
-                (
-                    f"Configuration parameter type {str(value.type)} does not "
-                    f"match the value type {str(type(msg[ATTR_VALUE]))}"
-                ),
-            )
-        )
-        return
-
-    if value.type == ValueType.BOOL:
-        value.send_value(msg[ATTR_VALUE])
-
-    if value.type == ValueType.LIST:
-        payload = None
-        for option in value.value["List"]:
-            if msg[ATTR_VALUE] not in (option["Label"], option["Value"]):
-                continue
-            payload = int(option["Value"])
-            value.send_value(payload)
-
-        if not payload:
-            connection.send_message(
-                websocket_api.error_message(
-                    msg[ID],
-                    websocket_api.const.ERR_NOT_SUPPORTED,
-                    f"Value {msg[ATTR_VALUE]} not valid for parameter {msg[ATTR_INDEX]}",
-                )
-            )
-            return
-
-    if value.type == ValueType.STRING:
-        value.send_value(msg[ATTR_VALUE])
-
-    if value.type in (ValueType.INT, ValueType.BYTE, ValueType.SHORT):
-        if msg[ATTR_VALUE] > value.max or msg[ATTR_VALUE] < value.min:
-            connection.send_message(
-                websocket_api.error_message(
-                    msg[ID],
-                    websocket_api.const.ERR_NOT_SUPPORTED,
-                    (
-                        f"Value {msg[ATTR_VALUE]} out of range for parameter "
-                        f"{msg[ATTR_INDEX]} (Min: {value.min} Max: {value.max})"
-                    ),
-                )
-            )
-            return
-        value.send_value(msg[ATTR_VALUE])
 
     connection.send_result(msg[ID])
 
