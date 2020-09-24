@@ -23,6 +23,7 @@ from .const import (
     DOMAIN,
     KEY_DEVICE_INFORMATION,
     KEY_DEVICE_SIGNAL,
+    KEY_MONITORING_CHECK_NOTIFICATIONS,
     KEY_MONITORING_MONTH_STATISTICS,
     KEY_MONITORING_STATUS,
     KEY_MONITORING_TRAFFIC_STATISTICS,
@@ -156,6 +157,15 @@ SENSOR_META = {
         or x < -6
         and "mdi:signal-cellular-2"
         or "mdi:signal-cellular-3",
+    ),
+    KEY_MONITORING_CHECK_NOTIFICATIONS: dict(
+        exclude=re.compile(
+            r"^(onlineupdatestatus|smsstoragefull)$",
+            re.IGNORECASE,
+        )
+    ),
+    (KEY_MONITORING_CHECK_NOTIFICATIONS, "UnreadMessage"): dict(
+        name="SMS unread", icon="mdi:email-receive"
     ),
     KEY_MONITORING_MONTH_STATISTICS: dict(
         exclude=re.compile(r"^month(duration|lastcleartime)$", re.IGNORECASE)
