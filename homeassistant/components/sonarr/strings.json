@@ -12,7 +12,7 @@
           "port": "[%key:common::config_flow::data::port%]",
           "ssl": "Sonarr uses a SSL certificate",
           "verify_ssl": "Sonarr uses a proper certificate"
-        },
+        }
       },
       "reauth_confirm": {
         "title": "Re-authenticate with Sonarr",
