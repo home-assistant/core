@@ -67,49 +67,34 @@ class DevoloBinaryDeviceEntity(DevoloDeviceEntity, BinarySensorEntity):
             element_uid
         )
 
-        self._device_class = DEVICE_CLASS_MAPPING.get(
-            self._binary_sensor_property.sub_type
-            or self._binary_sensor_property.sensor_type
-        )
-        name = device_instance.item_name
-
-        if self._device_class is None:
-            if device_instance.binary_sensor_property.get(element_uid).sub_type != "":
-                name += f" {device_instance.binary_sensor_property.get(element_uid).sub_type}"
-            else:
-                name += f" {device_instance.binary_sensor_property.get(element_uid).sensor_type}"
-
         super().__init__(
             homecontrol=homecontrol,
             device_instance=device_instance,
             element_uid=element_uid,
-            name=name,
-            sync=self._sync,
         )
 
-        self._state = self._binary_sensor_property.state
+        self._device_class = DEVICE_CLASS_MAPPING.get(
+            self._binary_sensor_property.sub_type
+            or self._binary_sensor_property.sensor_type
+        )
 
-        self._subscriber = None
+        if self._device_class is None:
+            if device_instance.binary_sensor_property.get(element_uid).sub_type != "":
+                self._name += f" {device_instance.binary_sensor_property.get(element_uid).sub_type}"
+            else:
+                self._name += f" {device_instance.binary_sensor_property.get(element_uid).sensor_type}"
+
+        self._value = self._binary_sensor_property.state
 
     @property
     def is_on(self):
         """Return the state."""
-        return self._state
+        return self._value
 
     @property
     def device_class(self):
         """Return device class."""
         return self._device_class
-
-    def _sync(self, message=None):
-        """Update the binary sensor state."""
-        if message[0].startswith("devolo.BinarySensor"):
-            self._state = self._device_instance.binary_sensor_property[message[0]].state
-        elif message[0].startswith("hdm"):
-            self._available = self._device_instance.is_online()
-        else:
-            _LOGGER.debug("No valid message received: %s", message)
-        self.schedule_update_ha_state()
 
 
 class DevoloRemoteControl(DevoloDeviceEntity, BinarySensorEntity):
@@ -120,26 +105,22 @@ class DevoloRemoteControl(DevoloDeviceEntity, BinarySensorEntity):
         self._remote_control_property = device_instance.remote_control_property.get(
             element_uid
         )
+
         super().__init__(
             homecontrol=homecontrol,
             device_instance=device_instance,
             element_uid=f"{element_uid}_{key}",
-            name=device_instance.item_name,
-            sync=self._sync,
         )
 
         self._key = key
-
         self._state = False
-
-        self._subscriber = None
 
     @property
     def is_on(self):
         """Return the state."""
         return self._state
 
-    def _sync(self, message=None):
+    def _sync(self, message):
         """Update the binary sensor state."""
         if (
             message[0] == self._remote_control_property.element_uid
