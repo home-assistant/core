@@ -466,11 +466,7 @@ def get_config_parameters(node, node_instance_id=None):
         if value.type == ValueType.STRING:
             value_to_return[const.ATTR_VALUE] = value.value
 
-        if (
-            value.type == ValueType.INT
-            or value.type == ValueType.BYTE
-            or value.type == ValueType.SHORT
-        ):
+        if value.type in (ValueType.INT, ValueType.BYTE, ValueType.SHORT):
             value_to_return[const.ATTR_VALUE] = int(value.value)
             value_to_return[const.ATTR_MAX] = value.max
             value_to_return[const.ATTR_MIN] = value.min
