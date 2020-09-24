@@ -225,22 +225,20 @@ class AirVisualNodeProSensor(AirVisualEntity):
     def device_info(self):
         """Return device registry information for this entity."""
         return {
-            "identifiers": {
-                (DOMAIN, self.coordinator.data["current"]["serial_number"])
-            },
-            "name": self.coordinator.data["current"]["settings"]["node_name"],
+            "identifiers": {(DOMAIN, self.coordinator.data["serial_number"])},
+            "name": self.coordinator.data["settings"]["node_name"],
             "manufacturer": "AirVisual",
-            "model": f'{self.coordinator.data["current"]["status"]["model"]}',
+            "model": f'{self.coordinator.data["status"]["model"]}',
             "sw_version": (
-                f'Version {self.coordinator.data["current"]["status"]["system_version"]}'
-                f'{self.coordinator.data["current"]["status"]["app_version"]}'
+                f'Version {self.coordinator.data["status"]["system_version"]}'
+                f'{self.coordinator.data["status"]["app_version"]}'
             ),
         }
 
     @property
     def name(self):
         """Return the name."""
-        node_name = self.coordinator.data["current"]["settings"]["node_name"]
+        node_name = self.coordinator.data["settings"]["node_name"]
         return f"{node_name} Node/Pro: {self._name}"
 
     @property
@@ -251,18 +249,14 @@ class AirVisualNodeProSensor(AirVisualEntity):
     @property
     def unique_id(self):
         """Return a unique, Home Assistant friendly identifier for this entity."""
-        return f"{self.coordinator.data['current']['serial_number']}_{self._kind}"
+        return f"{self.coordinator.data['serial_number']}_{self._kind}"
 
     @callback
     def update_from_latest_data(self):
         """Update the entity from the latest data."""
         if self._kind == SENSOR_KIND_BATTERY_LEVEL:
-            self._state = self.coordinator.data["current"]["status"]["battery"]
+            self._state = self.coordinator.data["status"]["battery"]
         elif self._kind == SENSOR_KIND_HUMIDITY:
-            self._state = self.coordinator.data["current"]["measurements"].get(
-                "humidity"
-            )
+            self._state = self.coordinator.data["measurements"].get("humidity")
         elif self._kind == SENSOR_KIND_TEMPERATURE:
-            self._state = self.coordinator.data["current"]["measurements"].get(
-                "temperature_C"
-            )
+            self._state = self.coordinator.data["measurements"].get("temperature_C")
