@@ -10,7 +10,7 @@ BINARY_SENSORS = ("mullvad_exit_ip",)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Defer sensor setup to the shared sensor module."""
-    coordinator = await get_coordinator(hass)
+    coordinator = hass.data[DOMAIN]
 
     async_add_entities(
         MullvadBinarySensor(coordinator, sensor_name) for sensor_name in BINARY_SENSORS
