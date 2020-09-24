@@ -371,7 +371,7 @@ async def ais_audio_books_library(hass, media_content_id) -> BrowseMedia:
         web_session = aiohttp_client.async_get_clientsession(hass)
         #  5 sec should be enough
         try:
-            with async_timeout.timeout(5):
+            with async_timeout.timeout(7):
                 ws_resp = await web_session.get(lookup_url + "?format=json")
                 data = await ws_resp.json()
                 ais_book_chapters = []
@@ -516,7 +516,7 @@ async def ais_podcast_library(hass, media_content_id) -> BrowseMedia:
             import feedparser
 
             #  5 sec should be enough
-            with async_timeout.timeout(5):
+            with async_timeout.timeout(7):
                 ws_resp = await web_session.get(lookup_url)
                 response_text = await ws_resp.text()
                 d = feedparser.parse(response_text)
@@ -985,17 +985,17 @@ async def get_media_content_id_form_ais(hass, media_content_id):
     if media_content_id.startswith("ais_tunein"):
         web_session = aiohttp_client.async_get_clientsession(hass)
         url_to_call = media_content_id.split("/", 3)[3]
-        with async_timeout.timeout(5):
+        with async_timeout.timeout(7):
             ws_resp = await web_session.get(url_to_call)
             response_text = await ws_resp.text()
             response_text = response_text.split("\n")[0]
             if response_text.endswith(".pls"):
-                with async_timeout.timeout(5):
+                with async_timeout.timeout(7):
                     ws_resp = await web_session.get(response_text)
                     response_text = await ws_resp.text()
                     response_text = response_text.split("\n")[1].replace("File1=", "")
             if response_text.startswith("mms:"):
-                with async_timeout.timeout(5):
+                with async_timeout.timeout(7):
                     ws_resp = await web_session.get(
                         response_text.replace("mms:", "http:")
                     )
@@ -1012,8 +1012,8 @@ async def ais_tunein_library(hass, media_content_id) -> BrowseMedia:
     web_session = aiohttp_client.async_get_clientsession(hass)
     if media_content_id == "ais_tunein":
         try:
-            #  5 sec should be enough
-            with async_timeout.timeout(5):
+            #  7 sec should be enough
+            with async_timeout.timeout(7):
                 # we need this only for demo
                 if ais_global.get_sercure_android_id_dom() == "dom-demo":
                     headers = {"accept-language": "pl"}
@@ -1059,8 +1059,8 @@ async def ais_tunein_library(hass, media_content_id) -> BrowseMedia:
             raise BrowseError("Can't connect tune in api: " + str(e))
     elif media_content_id.startswith("ais_tunein/2/"):
         try:
-            #  5 sec should be enough
-            with async_timeout.timeout(5):
+            #  7 sec should be enough
+            with async_timeout.timeout(7):
                 url_to_call = media_content_id.split("/", 3)[3]
                 # we need to set language only for demo
                 if ais_global.get_sercure_android_id_dom() == "dom-demo":

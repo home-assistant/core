@@ -178,13 +178,18 @@ class LocalSource(MediaSource):
 
         # Append first level children
         media.children = []
-        for child_path in path.iterdir():
+        # AIS sort by date
+        import os
+
+        for child_path in sorted(path.iterdir(), key=os.path.getmtime, reverse=True):
+            _LOGGER.error(str(child_path))
             child = self._build_item_response(source_dir_id, child_path, True)
             if child:
                 media.children.append(child)
 
         # Sort children showing directories first, then by name
-        media.children.sort(key=lambda child: (child.can_play, child.title))
+        # AIS do not sort!!!
+        # media.children.sort(key=lambda child: (child.can_play, child.title))
 
         return media
 
