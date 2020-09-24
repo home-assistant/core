@@ -1,18 +1,13 @@
-"""  Govee LED strips platform """
+"""Govee LED strips platform."""
 
-import asyncio
 from datetime import timedelta
 import logging
 
-from govee_api_laggat import Govee, GoveeDevice, GoveeDeviceState
-import voluptuous as vol
-
-from homeassistant import config_entries, core, exceptions
+from govee_api_laggat import Govee, GoveeDevice
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
-    ATTR_RGB_COLOR,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
@@ -20,7 +15,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.util import color
 
-from .const import CONF_DELAY, DATA_SCHEMA, DOMAIN
+from .const import CONF_DELAY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=10)
@@ -33,6 +28,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     hub = hass.data[DOMAIN]["hub"]
 
     # override the scan interval from config
+    global SCAN_INTERVAL
     SCAN_INTERVAL = timedelta(seconds=config[CONF_DELAY])
 
     # Add devices
@@ -42,16 +38,17 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
 
 class GoveeLightEntity(LightEntity):
-    """ representation of a stateful light entity """
+    """Representation of a stateful light entity."""
 
     def __init__(self, hub: Govee, title: str, device: GoveeDevice):
-        """ init a Govee light strip """
+        """Init a Govee light strip."""
         self._hub = hub
         self._title = title
         self._device = device
 
     @property
     def _state(self):
+        """Lights internal state."""
         return self._hub.state(self._device)
 
     @property
@@ -60,7 +57,7 @@ class GoveeLightEntity(LightEntity):
         return SUPPORT_BRIGHTNESS | SUPPORT_COLOR | SUPPORT_COLOR_TEMP
 
     async def async_update(self):
-        """ get state of the led strip """
+        """Get state of the led strip."""
         state, err = await self._hub.get_state(self._device)
         if not state:
             _LOGGER.warning(f"cannot get state for {self._device.device}: {err}")
@@ -100,22 +97,22 @@ class GoveeLightEntity(LightEntity):
 
     @property
     def unique_id(self):
-        """Return the unique ID """
+        """Return the unique ID."""
         return f"govee_{self._title}_{self._device.device}"
 
     @property
     def device_id(self):
-        """Return the ID """
+        """Return the ID."""
         return self.unique_id
 
     @property
     def name(self):
-        """Return the name """
+        """Return the name."""
         return self._device.device_name
 
     @property
     def device_info(self):
-        """Return the device info """
+        """Return the device info."""
         return {
             "identifiers": {(DOMAIN, self.device_id)},
             "name": self.name,
@@ -126,7 +123,7 @@ class GoveeLightEntity(LightEntity):
 
     @property
     def is_on(self):
-        """ return true if device is on """
+        """Return true if device is on."""
         return self._state.power_state
 
     @property
