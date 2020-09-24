@@ -125,7 +125,7 @@ def _async_start_reauth(hass: HomeAssistantType, entry: ConfigEntry):
 
     persistent_notification.async_create(
         hass,
-        f"Sonarr integration for server at {entry.entry_data[CONF_HOST]} needs to be re-authenticated. Please go to the integrations page to re-configure it.",
+        f"Sonarr integration for the Sonarr API hosted at {entry.entry_data[CONF_HOST]} needs to be re-authenticated. Please go to the integrations page to re-configure it.",
         "Sonarr re-authentication",
         "sonarr_reauth",
     )
