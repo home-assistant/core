@@ -930,7 +930,7 @@ sharkiqpy==0.1.8
 simplehound==0.3
 
 # homeassistant.components.simplisafe
-simplisafe-python==9.3.0
+simplisafe-python==9.3.3
 
 # homeassistant.components.sleepiq
 sleepyq==0.7
