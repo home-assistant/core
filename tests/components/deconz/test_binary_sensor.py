@@ -182,3 +182,24 @@ async def test_add_new_binary_sensor(hass):
 
     presence_sensor = hass.states.get("binary_sensor.presence_sensor")
     assert presence_sensor.state == "off"
+
+
+async def test_add_new_binary_sensor_ignored(hass):
+    """Test that adding a new binary sensor is not allowed."""
+    gateway = await setup_deconz_integration(
+        hass, options={deconz.gateway.CONF_ALLOW_NEW_DEVICES: False},
+    )
+    assert len(gateway.deconz_ids) == 0
+
+    state_added_event = {
+        "t": "event",
+        "e": "added",
+        "r": "sensors",
+        "id": "1",
+        "sensor": deepcopy(SENSORS["1"]),
+    }
+    gateway.api.event_handler(state_added_event)
+    await hass.async_block_till_done()
+
+    assert len(gateway.deconz_ids) == 0
+    assert "binary_sensor.presence_sensor" not in gateway.deconz_ids
