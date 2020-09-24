@@ -381,9 +381,7 @@ class OmniLogicORPSensor(OmnilogicSensor):
         if orp_state == -1:
             orp_state = None
 
-        self._state = orp_state
-
-        return self._state
+        return orp_state
 
 
 SENSOR_TYPES = {
