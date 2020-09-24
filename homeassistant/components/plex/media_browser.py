@@ -94,13 +94,13 @@ def browse_media(
     if special_folder:
         if media_content_type == "server":
             library_or_section = plex_server.library
-            media_class = children_media_class = MEDIA_CLASS_DIRECTORY
+            media_class = MEDIA_CLASS_DIRECTORY
             title = plex_server.friendly_name
         elif media_content_type == "library":
             library_or_section = plex_server.library.sectionByID(media_content_id)
             title = library_or_section.title
             try:
-                media_class = children_media_class = ITEM_TYPE_MEDIA_CLASS[library_or_section.TYPE]
+                media_class = ITEM_TYPE_MEDIA_CLASS[library_or_section.TYPE]
             except KeyError as err:
                 _LOGGER.debug("Unknown type received: %s", library_or_section.TYPE)
                 raise UnknownMediaType from err
@@ -117,7 +117,7 @@ def browse_media(
             "can_play": False,
             "can_expand": True,
             "children": [],
-            "children_media_class": children_media_class,
+            "children_media_class": media_class,
         }
 
         method = SPECIAL_METHODS[special_folder]
@@ -179,7 +179,7 @@ def item_payload(item):
 def library_section_payload(section):
     """Create response payload for a single library section."""
     try:
-        media_class = children_media_class = ITEM_TYPE_MEDIA_CLASS[section.TYPE]
+        media_class = ITEM_TYPE_MEDIA_CLASS[section.TYPE]
     except KeyError as err:
         _LOGGER.debug("Unknown type received: %s", section.TYPE)
         raise UnknownMediaType from err
@@ -191,7 +191,7 @@ def library_section_payload(section):
         media_content_type="library",
         can_play=False,
         can_expand=True,
-        children_media_class=children_media_class,
+        children_media_class=media_class,
     )
 
 
@@ -218,9 +218,9 @@ def server_payload(plex_server):
         media_content_type="server",
         can_play=False,
         can_expand=True,
+        children_media_class=MEDIA_CLASS_DIRECTORY,
     )
     server_info.children = []
-    server_info.children_media_class = MEDIA_CLASS_DIRECTORY
     server_info.children.append(special_library_payload(server_info, "On Deck"))
     server_info.children.append(special_library_payload(server_info, "Recently Added"))
     for library in plex_server.library.sections():

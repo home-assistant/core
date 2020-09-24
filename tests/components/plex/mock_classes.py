@@ -360,7 +360,6 @@ class MockPlexLibrarySection:
 
     def __init__(self, library):
         """Initialize the object."""
-        self.TYPE = library
         self.title = library
 
         if library == "Music":
