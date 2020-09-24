@@ -105,11 +105,6 @@ class OmnilogicSensor(OmniLogicEntity):
         """Return the right unit of measure."""
         return self._unit
 
-    @property
-    def force_update(self):
-        """Force update."""
-        return True
-
 
 class OmniLogicTemperatureSensor(OmnilogicSensor):
     """Define an OmniLogic Temperature (Air/Water) Sensor."""
@@ -146,9 +141,7 @@ class OmniLogicPumpSpeedSensor(OmnilogicSensor):
     def state(self):
         """Return the state for the pump speed sensor."""
 
-        pump_type = PUMP_TYPES.get(
-            self.coordinator.data[self._item_id].get("Filter-Type")
-        )
+        pump_type = PUMP_TYPES[self.coordinator.data[self._item_id].get("Filter-Type")]
         pump_speed = self.coordinator.data[self._item_id][self._state_key]
 
         if pump_type == "VARIABLE":
