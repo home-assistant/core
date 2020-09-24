@@ -125,17 +125,6 @@ async def test_full_reauth_flow_implementation(
     entry = await setup_integration(hass, aioclient_mock, skip_entry_setup=True)
     assert entry
 
-    # test failure
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={CONF_SOURCE: SOURCE_REAUTH},
-        data={"config_entry_id": "unknown-entry-id", **entry.data},
-    )
-
-    assert result["type"] == RESULT_TYPE_ABORT
-    assert result["reason"] == "unknown_entry"
-
-    # test success
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={CONF_SOURCE: SOURCE_REAUTH},
