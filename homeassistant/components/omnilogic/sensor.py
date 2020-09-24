@@ -303,7 +303,7 @@ class OmniLogicChlorinatorSensor(OmnilogicSensor):
             else:
                 state = "off"
 
-        return self._state
+        return state
 
 
 class OmniLogicPHSensor(OmnilogicSensor):
