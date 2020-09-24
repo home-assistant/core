@@ -86,7 +86,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     hyperion_client = client.HyperionClient(host, port)
 
-    if not await hyperion_client.async_connect():
+    if not await hyperion_client.async_client_connect():
         raise PlatformNotReady
 
     async_add_entities([Hyperion(name, priority, hyperion_client)])
@@ -159,7 +159,7 @@ class Hyperion(LightEntity):
     @property
     def available(self):
         """Return server availability."""
-        return self._client.is_connected
+        return self._client.has_loaded_state
 
     @property
     def unique_id(self):
@@ -356,10 +356,8 @@ class Hyperion(LightEntity):
             self._rgb_color,
         )
 
-    def _update_connection(self, json):
+    def _update_client(self, json):
         """Update client connection state."""
-        if json.get(const.KEY_CONNECTED):
-            self._update_full_state()
         self.async_write_ha_state()
 
     async def async_added_to_hass(self):
@@ -370,7 +368,7 @@ class Hyperion(LightEntity):
                 f"{const.KEY_COMPONENTS}-{const.KEY_UPDATE}": self._update_components,
                 f"{const.KEY_EFFECTS}-{const.KEY_UPDATE}": self._update_effect_list,
                 f"{const.KEY_PRIORITIES}-{const.KEY_UPDATE}": self._update_priorities,
-                f"{const.KEY_CONNECTION}-{const.KEY_UPDATE}": self._update_connection,
+                f"{const.KEY_CLIENT}-{const.KEY_UPDATE}": self._update_client,
             }
         )
 

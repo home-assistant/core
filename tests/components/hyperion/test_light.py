@@ -24,7 +24,7 @@ TEST_ENTITY_ID = f"{DOMAIN}.{TEST_NAME}"
 def create_mock_client():
     """Create a mock Hyperion client."""
     mock_client = Mock()
-    mock_client.async_connect = CoroutineMock(return_value=True)
+    mock_client.async_client_connect = CoroutineMock(return_value=True)
     mock_client.adjustment = None
     mock_client.effects = None
     mock_client.id = "%s:%i" % (TEST_HOST, TEST_PORT)
@@ -60,21 +60,15 @@ async def test_setup_platform(hass):
     """Test setting up the platform."""
     client = create_mock_client()
     await setup_entity(hass, client=client)
-
-    # Make sure the background task is initiated.
-    assert client.start_background_task.called
     assert hass.states.get(TEST_ENTITY_ID) is not None
 
 
 async def test_setup_platform_not_ready(hass):
     """Test the platform not being ready."""
     client = create_mock_client()
-    client.async_connect = CoroutineMock(return_value=False)
+    client.async_client_connect = CoroutineMock(return_value=False)
 
     await setup_entity(hass, client=client)
-
-    # Make sure the background task is initiated.
-    assert not client.start_background_task.called
     assert hass.states.get(TEST_ENTITY_ID) is None
 
 
@@ -247,8 +241,8 @@ async def test_light_async_turn_on(hass):
     assert entity.attributes["effect"] == effect
 
     # No calls if disconnected.
-    client.is_connected = False
-    call_registered_callback(client, "connection-update", {"connected": False})
+    client.has_loaded_state = False
+    call_registered_callback(client, "client-update", {"loaded-state": False})
     client.async_send_clear = CoroutineMock(return_value=True)
     client.async_send_set_effect = CoroutineMock(return_value=True)
 
@@ -273,10 +267,10 @@ async def test_light_async_turn_off(hass):
         }
     )
 
-    # No calls if disconnected.
-    client.is_connected = False
+    # No calls if no state loaded.
+    client.has_loaded_state = False
     client.async_send_set_component = CoroutineMock(return_value=True)
-    call_registered_callback(client, "connection-update", {"connected": False})
+    call_registered_callback(client, "client-update", {"loaded-state": False})
 
     await common.async_turn_off(hass, TEST_ENTITY_ID)
     assert not client.async_send_set_component.called
@@ -359,14 +353,14 @@ async def test_light_async_updates_from_hyperion_client(hass):
     # Update connection status (e.g. disconnection).
 
     # Turn on late, check state, disconnect, ensure it cannot be turned off.
-    client.is_connected = False
-    call_registered_callback(client, "connection-update", {"connected": False})
+    client.has_loaded_state = False
+    call_registered_callback(client, "client-update", {"loaded-state": False})
     entity = hass.states.get(TEST_ENTITY_ID)
     assert entity.state == "unavailable"
 
     # Update connection status (e.g. re-connection)
-    client.is_connected = True
-    call_registered_callback(client, "connection-update", {"connected": True})
+    client.has_loaded_state = True
+    call_registered_callback(client, "client-update", {"loaded-state": True})
     entity = hass.states.get(TEST_ENTITY_ID)
     assert entity.state == "on"
 
