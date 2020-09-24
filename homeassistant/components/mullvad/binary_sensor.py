@@ -1,5 +1,6 @@
 """Setup Mullvad VPN Binary Sensors."""
 from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import get_coordinator
 from .const import DOMAIN
