@@ -27,7 +27,6 @@ async def test_form(hass):
             "mac": "test-mac",
             "type": "SHSW-1",
             "auth": False,
-            "fw": "20200827-070306/v1.8.4@4a8bc427",
         },
     ), patch(
         "aioshelly.Device.create",
@@ -72,7 +71,6 @@ async def test_form_auth(hass):
             "mac": "test-mac",
             "type": "SHSW-1",
             "auth": True,
-            "fw": "20200827-070306/v1.8.4@4a8bc427",
         },
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -152,7 +150,6 @@ async def test_form_errors_test_connection(hass, error):
         return_value={
             "mac": "test-mac",
             "auth": False,
-            "fw": "20200827-070306/v1.8.4@4a8bc427",
         },
     ), patch(
         "aioshelly.Device.create",
@@ -185,7 +182,6 @@ async def test_form_already_configured(hass):
             "mac": "test-mac",
             "type": "SHSW-1",
             "auth": False,
-            "fw": "20200827-070306/v1.8.4@4a8bc427",
         },
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -240,7 +236,6 @@ async def test_form_auth_errors_test_connection(hass, error):
         return_value={
             "mac": "test-mac",
             "auth": True,
-            "fw": "20200827-070306/v1.8.4@4a8bc427",
         },
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -270,7 +265,6 @@ async def test_zeroconf(hass):
             "mac": "test-mac",
             "type": "SHSW-1",
             "auth": False,
-            "fw": "20200827-070306/v1.8.4@4a8bc427",
         },
     ):
         result = await hass.config_entries.flow.async_init(
@@ -324,7 +318,6 @@ async def test_zeroconf_confirm_error(hass, error):
             "mac": "test-mac",
             "type": "SHSW-1",
             "auth": False,
-            "fw": "20200827-070306/v1.8.4@4a8bc427",
         },
     ):
         result = await hass.config_entries.flow.async_init(
@@ -362,7 +355,6 @@ async def test_zeroconf_already_configured(hass):
             "mac": "test-mac",
             "type": "SHSW-1",
             "auth": False,
-            "fw": "20200827-070306/v1.8.4@4a8bc427",
         },
     ):
         result = await hass.config_entries.flow.async_init(
@@ -418,7 +410,6 @@ async def test_zeroconf_require_auth(hass):
             "mac": "test-mac",
             "type": "SHSW-1",
             "auth": True,
-            "fw": "20200827-070306/v1.8.4@4a8bc427",
         },
     ):
         result = await hass.config_entries.flow.async_init(
