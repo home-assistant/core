@@ -138,7 +138,7 @@ class RfxtrxSensor(RfxtrxEntity):
         """Initialize the sensor."""
         super().__init__(device, device_id, event=event)
         self.data_type = data_type
-        self._unit_of_measurement = DATA_TYPES.get(data_type, "")
+        self._unit_of_measurement = DATA_TYPES.get(data_type)
         self._name = f"{device.type_string} {device.id_string} {data_type}"
         self._unique_id = "_".join(x for x in (*self._device_id, data_type))
 
