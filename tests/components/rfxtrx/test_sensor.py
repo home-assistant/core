@@ -1,13 +1,12 @@
 """The tests for the Rfxtrx sensor platform."""
 import pytest
 
-from homeassistant.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT
 from homeassistant.components.rfxtrx.const import ATTR_EVENT
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
-    TEMP_CELSIUS,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    TEMP_CELSIUS,
 )
 from homeassistant.core import State
 from homeassistant.setup import async_setup_component
