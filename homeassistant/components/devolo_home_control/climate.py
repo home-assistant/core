@@ -51,6 +51,11 @@ class DevoloClimateDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, ClimateEntit
         return self._value
 
     @property
+    def target_temperature(self) -> Optional[float]:
+        """Return the current temperature."""
+        return self._value
+
+    @property
     def hvac_mode(self) -> str:
         """Return the supported HVAC mode."""
         return HVAC_MODE_HEAT
@@ -84,6 +89,9 @@ class DevoloClimateDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, ClimateEntit
     def temperature_unit(self) -> str:
         """Return the supported unit of temperature."""
         return TEMP_CELSIUS
+
+    def set_hvac_mode(self, hvac_mode: str) -> None:
+        """Do nothing as no devolo device supports changing the hvac mode."""
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
