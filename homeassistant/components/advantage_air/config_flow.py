@@ -43,8 +43,6 @@ class AdvantageAirConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data = await api.async_get(1)
         except ClientError:
             return self._show_form({"base": "connection_error"})
-        if "aircons" not in data:
-            return self._show_form({"base": "data_error"})
 
         return self.async_create_entry(
             title=data["system"]["name"],
