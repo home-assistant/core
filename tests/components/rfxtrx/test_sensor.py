@@ -178,7 +178,7 @@ async def test_discover_sensor(hass, rfxtrx_automatic):
 
     state = hass.states.get(f"{base_id}_battery_numeric")
     assert state
-    assert state.state == "90"
+    assert state.state == "100"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
 
     # 2
@@ -207,7 +207,7 @@ async def test_discover_sensor(hass, rfxtrx_automatic):
 
     state = hass.states.get(f"{base_id}_battery_numeric")
     assert state
-    assert state.state == "90"
+    assert state.state == "100"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
 
     # 1 Update
@@ -236,7 +236,7 @@ async def test_discover_sensor(hass, rfxtrx_automatic):
 
     state = hass.states.get(f"{base_id}_battery_numeric")
     assert state
-    assert state.state == "90"
+    assert state.state == "100"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
 
     assert len(hass.states.async_all()) == 10
