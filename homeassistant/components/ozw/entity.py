@@ -308,33 +308,43 @@ def create_value_id(value: OZWValue):
     return f"{value.node.parent.id}-{value.node.id}-{value.value_id_key}"
 
 
+class OZWConfigParameterResponse:
+    """Class to hold response for setting config parameter."""
+
+    def __init__(self, success, payload=None, err_type=None, err_msg=None):
+        """Initialize OZWConfigParameterResponse."""
+        self.success = success
+        self.payload = payload
+        self.err_type = err_type
+        self.err_msg = err_msg
+
+
 def set_config_parameter(
     manager, instance_id, node_id, parameter_index, new_value, node_instance_id=None
 ):
-    """
-    Set config parameter to a node.
+    """Set config parameter to a node."""
 
-    Returns success, payload, err_type, err_msg
-    success: Whether method was successful
-    payload: What was sent to the node
-    err_type: If method was not successful, what type of error occurred
-    err_msg: User friendly error message
-    """
+    def fail(err_type, err_msg):
+        """Return a failed operation status."""
+        return OZWConfigParameterResponse(False, err_type=err_type, err_msg=err_msg)
+
+    def success(payload):
+        """Return a successful operation status."""
+        return OZWConfigParameterResponse(True, payload=payload)
+
     instance = manager.get_instance(instance_id)
     if not instance:
-        return False, None, ERR_NOT_FOUND, "OZW Instance not found"
+        return fail(ERR_NOT_FOUND, "OZW Instance not found")
 
     node = instance.get_node(node_id)
     if not node:
-        return False, None, ERR_NOT_FOUND, "OZW Node not found"
+        return fail(ERR_NOT_FOUND, "OZW Node not found")
 
     value = node.get_value(
         CommandClass.CONFIGURATION, parameter_index, node_instance_id
     )
     if not value:
-        return (
-            False,
-            None,
+        return fail(
             ERR_NOT_FOUND,
             "Configuration parameter for OZW Node Instance not found",
         )
@@ -349,21 +359,19 @@ def set_config_parameter(
     if value.type == ValueType.BOOL:
         if isinstance(new_value, bool):
             value.send_value(new_value)
-            return True, new_value, None, None
+            return success(new_value)
         if isinstance(new_value, str):
             if new_value.lower() in ("true", "false"):
                 payload = new_value.lower() == "true"
                 value.send_value(payload)
-                return True, payload, None, None
+                return success(payload)
 
-            return (
-                False,
-                None,
+            return fail(
                 ERR_NOT_SUPPORTED,
                 "Configuration parameter requires true of false",
             )
 
-        return False, None, ERR_NOT_SUPPORTED, type_err_msg
+        return fail(ERR_NOT_SUPPORTED, type_err_msg)
 
     # List value can be passed in as string or int
     if value.type == ValueType.LIST:
@@ -372,37 +380,33 @@ def set_config_parameter(
         except ValueError:
             pass
         if not isinstance(new_value, str) and not isinstance(new_value, int):
-            return False, None, ERR_NOT_SUPPORTED, type_err_msg
+            return fail(ERR_NOT_SUPPORTED, type_err_msg)
 
         for option in value.value["List"]:
             if new_value not in (option["Label"], option["Value"]):
                 continue
             payload = int(option["Value"])
             value.send_value(payload)
-            return True, payload, None, None
+            return success(payload)
 
-        return (
-            False,
-            None,
+        return fail(
             ERR_NOT_SUPPORTED,
             f"Value {new_value} not valid for parameter {parameter_index}",
         )
 
     if value.type == ValueType.STRING:
         if not isinstance(new_value, str):
-            return False, None, ERR_NOT_SUPPORTED, type_err_msg
+            return fail(ERR_NOT_SUPPORTED, type_err_msg)
         value.send_value(new_value)
-        return True, new_value, None, None
+        return success(new_value)
 
     if value.type in (ValueType.INT, ValueType.BYTE, ValueType.SHORT):
         try:
             new_value = int(new_value)
         except ValueError:
-            return False, None, ERR_NOT_SUPPORTED, type_err_msg
+            return fail(ERR_NOT_SUPPORTED, type_err_msg)
         if new_value > value.max or new_value < value.min:
-            return (
-                False,
-                None,
+            return fail(
                 ERR_NOT_SUPPORTED,
                 (
                     f"Value {new_value} out of range for parameter "
@@ -410,11 +414,9 @@ def set_config_parameter(
                 ),
             )
         value.send_value(new_value)
-        return True, new_value, None, None
+        return success(new_value)
 
-    return (
-        False,
-        None,
+    return fail(
         ERR_NOT_SUPPORTED,
         f"Value type of {value.type} for parameter {parameter_index} not supported",
     )

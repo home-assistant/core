@@ -67,19 +67,19 @@ class ZWaveServices:
         param = service.data[const.ATTR_CONFIG_PARAMETER]
         selection = service.data[const.ATTR_CONFIG_VALUE]
 
-        success, payload, _, err_msg = set_config_parameter(
+        resp = set_config_parameter(
             self._manager, instance_id, node_id, param, selection
         )
 
-        if success:
+        if resp.success:
             _LOGGER.info(
                 "Set configuration parameter %s on Node %s with value %s",
                 param,
                 node_id,
-                payload,
+                resp.payload,
             )
         else:
-            _LOGGER.error(err_msg)
+            _LOGGER.error(resp.err_msg)
 
     @callback
     def async_add_node(self, service):
