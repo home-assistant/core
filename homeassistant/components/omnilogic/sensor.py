@@ -213,7 +213,7 @@ class OmniLogicPumpSpeedSensor(OmnilogicSensor):
             elif pump_speed == self.coordinator.data[self._item_id].get(
                 "Max-Pump-Speed"
             ):
-                self._state = "on"
+                state = "on"
 
         self._attrs["pump_type"] = pump_type
 
