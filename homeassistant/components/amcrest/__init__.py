@@ -200,32 +200,36 @@ class AmcrestChecker(Http):
 
 
 def _monitor_events(hass, name, api, event_codes):
-    if 'All' in event_codes['events']:
-        event_codes_list = 'All'
+    if "All" in event_codes["events"]:
+        event_codes_list = "All"
     else:
-        event_codes_list = ",".join(list(dict.fromkeys(event_codes['binary_sensors']+event_codes['events'])))
+        event_codes_list = ",".join(
+            list(dict.fromkeys(event_codes["binary_sensors"] + event_codes["events"]))
+        )
 
     while True:
         api.available_flag.wait()
         try:
             for code, payload in api.event_actions(event_codes_list, retries=5):
                 _LOGGER.debug("Captured event: %s -- %s", code, payload)
-                if code in event_codes['binary_sensors'] :
+                if code in event_codes["binary_sensors"]:
                     """Management of the different actions for binary sensors"""
-                    if payload['action'] == "Start" or payload['action'] == "Pulse":
+                    if payload["action"] == "Start" or payload["action"] == "Pulse":
                         start = True
                     else:
                         start = False
-                    
+
                     signal = service_signal(SERVICE_EVENT, name, code)
                     _LOGGER.debug("Sending signal: '%s': %s", signal, start)
                     dispatcher_send(hass, signal, start)
 
-                if code in event_codes['events'] or 'All' in event_codes['events']:
-                    _LOGGER.debug("Sending event to bus, event name: %s, payload: %s", code, payload)
-                    hass.bus.fire(
-                        DOMAIN+"."+code, payload
+                if code in event_codes["events"] or "All" in event_codes["events"]:
+                    _LOGGER.debug(
+                        "Sending event to bus, event name: %s, payload: %s",
+                        code,
+                        payload,
                     )
+                    hass.bus.fire(DOMAIN + "." + code, payload)
 
         except AmcrestError as error:
             _LOGGER.warning(
@@ -291,18 +295,15 @@ def setup(hass, config):
                 {CONF_NAME: name, CONF_BINARY_SENSORS: binary_sensors},
                 config,
             )
-            event_codes['binary_sensors'] = [
+            event_codes["binary_sensors"] = [
                 BINARY_SENSORS[sensor_type][SENSOR_EVENT_CODE]
                 for sensor_type in binary_sensors
                 if sensor_type not in BINARY_POLLED_SENSORS
             ]
 
         if events:
-            event_codes['events'] = [
-                event
-                for event in events
-            ]
-            
+            event_codes["events"] = [event for event in events]
+
         if event_codes:
             _start_event_monitor(hass, name, api, event_codes)
 
@@ -380,3 +381,4 @@ class AmcrestDevice:
         self.stream_source = stream_source
         self.resolution = resolution
         self.control_light = control_light
+
