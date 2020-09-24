@@ -536,7 +536,6 @@ omit =
     homeassistant/components/mjpeg/camera.py
     homeassistant/components/mobile_app/*
     homeassistant/components/mochad/*
-    homeassistant/components/modbus/*
 	homeassistant/components/modbus/binary_sensor.py
 	homeassistant/components/modbus/climate.py
 	homeassistant/components/modbus/sensor.py
