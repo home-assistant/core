@@ -150,7 +150,7 @@ async def test_full_reauth_flow_implementation(
     )
 
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["reason"] == "user"
+    assert result["step_id"] == "user"
 
     user_input = MOCK_REAUTH_INPUT.copy()
     with _patch_async_setup(), _patch_async_setup_entry() as mock_setup_entry:
