@@ -341,9 +341,7 @@ class OmniLogicPHSensor(OmnilogicSensor):
         if ph_state == 0:
             ph_state = None
 
-        self._state = ph_state
-
-        return self._state
+        return ph_state
 
 
 class OmniLogicORPSensor(OmnilogicSensor):
