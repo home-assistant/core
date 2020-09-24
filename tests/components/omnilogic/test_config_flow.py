@@ -71,6 +71,10 @@ async def test_with_invalid_credentials(hass):
             DATA,
         )
 
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "invalid_auth"}
+
 
 async def test_form_cannot_connect(hass):
     """Test if invalid response or no connection returned from Hayward."""
