@@ -303,7 +303,7 @@ class OmniLogicChlorinatorSensor(OmnilogicSensor):
             if state == "100":
                 self._state = "on"
             else:
-                self._state = "off"
+                state = "off"
 
         return self._state
 
