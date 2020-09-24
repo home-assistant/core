@@ -177,7 +177,7 @@ def websocket_get_config_parameters(hass, connection, msg):
         vol.Optional(OZW_INSTANCE, default=1): vol.Coerce(int),
         vol.Optional(NODE_INSTANCE_ID): vol.Coerce(int),
         vol.Required(PARAMETER): vol.Coerce(int),
-        vol.Required(VALUE): vol.Or(vol.Coerce(int), bool, str),
+        vol.Required(VALUE): vol.Any(bool, vol.Coerce(int), str),
     }
 )
 def websocket_set_config_parameter(hass, connection, msg):

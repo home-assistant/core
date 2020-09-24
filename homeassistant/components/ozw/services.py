@@ -53,7 +53,7 @@ class ZWaveServices:
                     vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
                     vol.Required(const.ATTR_CONFIG_PARAMETER): vol.Coerce(int),
                     vol.Required(const.ATTR_CONFIG_VALUE): vol.Any(
-                        vol.Coerce(int), cv.string
+                        bool, vol.Coerce(int), cv.string
                     ),
                 }
             ),
