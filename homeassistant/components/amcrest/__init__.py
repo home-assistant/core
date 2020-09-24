@@ -298,7 +298,7 @@ def setup(hass, config):
             ]
 
         if events:
-            event_codes["events"] = [event for event in events]
+            event_codes["events"] = events
 
         if event_codes:
             _start_event_monitor(hass, name, api, event_codes)
