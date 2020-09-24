@@ -67,7 +67,7 @@ class ZWaveServices:
         param = service.data[const.ATTR_CONFIG_PARAMETER]
         selection = service.data[const.ATTR_CONFIG_VALUE]
 
-        success, _, err_msg = set_config_parameter(
+        success, payload, _, err_msg = set_config_parameter(
             self._manager, instance_id, node_id, param, selection
         )
 
@@ -76,7 +76,7 @@ class ZWaveServices:
                 "Set configuration parameter %s on Node %s with value %s",
                 param,
                 node_id,
-                selection,
+                payload,
             )
         else:
             _LOGGER.error(err_msg)

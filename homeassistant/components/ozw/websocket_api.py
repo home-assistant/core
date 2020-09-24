@@ -195,7 +195,7 @@ def websocket_get_config_parameters(hass, connection, msg):
 )
 def websocket_set_config_parameter(hass, connection, msg):
     """Set a config parameter to a node."""
-    success, err_type, err_msg = set_config_parameter(
+    success, _, err_type, err_msg = set_config_parameter(
         hass.data[DOMAIN][MANAGER],
         msg[OZW_INSTANCE],
         msg[NODE_ID],
