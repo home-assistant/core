@@ -213,8 +213,10 @@ def _monitor_events(hass, name, api, event_codes):
             for code, payload in api.event_actions(event_codes_list, retries=5):
                 _LOGGER.debug("Captured event: %s -- %s", code, payload)
                 if code in event_codes["binary_sensors"]:
-                    #Management of the different actions for binary sensors
-                    start = bool(payload["action"] == "Start" or payload["action"] == "Pulse")
+                    # Management of the different actions for binary sensors
+                    start = bool(
+                        payload["action"] == "Start" or payload["action"] == "Pulse"
+                    )
                     signal = service_signal(SERVICE_EVENT, name, code)
                     _LOGGER.debug("Sending signal: '%s': %s", signal, start)
                     dispatcher_send(hass, signal, start)
@@ -377,4 +379,3 @@ class AmcrestDevice:
         self.stream_source = stream_source
         self.resolution = resolution
         self.control_light = control_light
-
