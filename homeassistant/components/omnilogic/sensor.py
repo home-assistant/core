@@ -299,7 +299,7 @@ class OmniLogicChlorinatorSensor(OmnilogicSensor):
         elif operating_mode == "2":
             self._unit = None
             if state == "100":
-                self._state = "on"
+                state = "on"
             else:
                 state = "off"
 
