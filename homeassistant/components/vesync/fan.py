@@ -101,14 +101,8 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
 
     def set_speed(self, speed):
         """Set the speed of the device."""
-        if not self.smartfan.is_on:
-            self.smartfan.turn_on()
-
-        if speed is None or speed == SPEED_AUTO:
-            self.smartfan.auto_mode()
-        else:
-            self.smartfan.manual_mode()
-            self.smartfan.change_fan_speed(FAN_SPEEDS.index(speed))
+        self.smartfan.manual_mode()
+        self.smartfan.change_fan_speed(FAN_SPEEDS.index(speed))
 
     def turn_on(self, speed: str = None, **kwargs) -> None:
         """Turn the device on."""
