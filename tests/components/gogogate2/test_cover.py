@@ -61,7 +61,7 @@ def _mocked_gogogate_open_door_response():
         apiversion="",
         remoteaccessenabled=False,
         remoteaccess="abc123.blah.blah",
-        firmwareversion="",
+        firmwareversion="222",
         apicode="",
         door1=GogoGate2Door(
             door_id=1,
@@ -259,7 +259,7 @@ async def test_import(
 
 
 @patch("homeassistant.components.gogogate2.common.GogoGate2Api")
-async def test_open_close_update(gogogat2api_mock, hass: HomeAssistant) -> None:
+async def test_open_close_update(gogogate2api_mock, hass: HomeAssistant) -> None:
     """Test open and close and data update."""
 
     def info_response(door_status: DoorStatus) -> GogoGate2InfoResponse:
@@ -322,7 +322,7 @@ async def test_open_close_update(gogogat2api_mock, hass: HomeAssistant) -> None:
     api = MagicMock(GogoGate2Api)
     api.activate.return_value = GogoGate2ActivateResponse(result=True)
     api.info.return_value = info_response(DoorStatus.OPENED)
-    gogogat2api_mock.return_value = api
+    gogogate2api_mock.return_value = api
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -419,7 +419,7 @@ async def test_availability(ismartgateapi_mock, hass: HomeAssistant) -> None:
 
 
 @patch("homeassistant.components.gogogate2.common.ISmartGateApi")
-async def test_device_info(ismartgateapi_mock, hass: HomeAssistant) -> None:
+async def test_device_info_ismartgate(ismartgateapi_mock, hass: HomeAssistant) -> None:
     """Test device info."""
     device_registry = mock_device_registry(hass)
 
@@ -451,3 +451,38 @@ async def test_device_info(ismartgateapi_mock, hass: HomeAssistant) -> None:
     assert device.name == "mycontroller"
     assert device.model == "ismartgatePRO"
     assert device.sw_version == "555"
+
+
+@patch("homeassistant.components.gogogate2.common.GogoGate2Api")
+async def test_device_info_gogogate2(gogogate2api_mock, hass: HomeAssistant) -> None:
+    """Test device info."""
+    device_registry = mock_device_registry(hass)
+
+    closed_door_response = _mocked_gogogate_open_door_response()
+
+    api = MagicMock(GogoGate2Api)
+    api.info.return_value = closed_door_response
+    gogogate2api_mock.return_value = api
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=SOURCE_USER,
+        title="mycontroller",
+        unique_id="xyz",
+        data={
+            CONF_DEVICE: DEVICE_TYPE_GOGOGATE2,
+            CONF_IP_ADDRESS: "127.0.0.1",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "password",
+        },
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device({(DOMAIN, "xyz")}, set())
+    assert device
+    assert device.manufacturer == MANUFACTURER
+    assert device.name == "mycontroller"
+    assert device.model == "gogogate2"
+    assert device.sw_version == "222"
