@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_MOUNT_DIR = "mount_dir"
 CONF_NAMES = "names"
 
-DEFAULT_MOUNT_DIR = "/sys/bus/w1/devices/"
+DEFAULT_SYSBUS_MOUNT_DIR = "/sys/bus/w1/devices/"
 DEVICE_SENSORS = {
     # Family : { SensorType: owfs path }
     "10": {"temperature": "temperature"},
@@ -91,7 +91,7 @@ SENSOR_TYPES = {
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAMES): {cv.string: cv.string},
-        vol.Optional(CONF_MOUNT_DIR, default=DEFAULT_MOUNT_DIR): cv.string,
+        vol.Optional(CONF_MOUNT_DIR, default=DEFAULT_SYSBUS_MOUNT_DIR): cv.string,
         vol.Optional(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=4304): cv.port,
     }
@@ -167,7 +167,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 )
 
     # We have a raw GPIO ow sensor on a Pi
-    elif base_dir == DEFAULT_MOUNT_DIR:
+    elif base_dir == DEFAULT_SYSBUS_MOUNT_DIR:
         for device_family in DEVICE_SENSORS:
             for device_folder in glob(os.path.join(base_dir, f"{device_family}[.-]*")):
                 sensor_id = os.path.split(device_folder)[1]
