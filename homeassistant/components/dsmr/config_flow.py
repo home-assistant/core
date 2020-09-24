@@ -48,7 +48,7 @@ class DSMRConnection:
         """Test if we can validate connection with the device."""
 
         def update_telegram(telegram):
-            if obis_ref.EQUIPMENT_IDENTIFIER in self._telegram:
+            if obis_ref.EQUIPMENT_IDENTIFIER in telegram:
                 self._telegram = telegram
                 transport.close()
 
