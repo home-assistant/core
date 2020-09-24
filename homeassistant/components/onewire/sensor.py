@@ -30,7 +30,7 @@ from .const import (
     DEFAULT_SYSBUS_MOUNT_DIR,
 )
 
-LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 DEVICE_SENSORS = {
     # Family : { SensorType: owfs path }
@@ -117,7 +117,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Old way of setting up 1-Wire platform."""
     devs = get_entities(config)
     if devs == []:
-        LOGGER.error(
+        _LOGGER.error(
             "No onewire sensor found. Check if dtoverlay=w1-gpio "
             "is in your /boot/config.txt. "
             "Check the mount_dir parameter if it's defined"
@@ -156,17 +156,17 @@ def get_entities(config):
 
     # We have an owserver on a remote(or local) host/port
     if conf_type == CONF_TYPE_OWSERVER:
-        LOGGER.debug("Initializing using %s:%s", owhost, owport)
+        _LOGGER.debug("Initializing using %s:%s", owhost, owport)
         try:
             owproxy = protocol.proxy(host=owhost, port=owport)
             devices = owproxy.dir()
         except protocol.Error as exc:
-            LOGGER.error(
+            _LOGGER.error(
                 "Cannot connect to owserver on %s:%d, got: %s", owhost, owport, exc
             )
             devices = []
         for device in devices:
-            LOGGER.debug("Found device: %s", device)
+            _LOGGER.debug("Found device: %s", device)
             family = owproxy.read(f"{device}family").decode()
             dev_type = "std"
             if "EF" in family:
@@ -174,7 +174,7 @@ def get_entities(config):
                 family = owproxy.read(f"{device}type").decode()
 
             if family not in hb_info_from_type(dev_type):
-                LOGGER.warning(
+                _LOGGER.warning(
                     "Ignoring unknown family (%s) of sensor found for device: %s",
                     family,
                     device,
@@ -201,7 +201,7 @@ def get_entities(config):
 
     # We have a raw GPIO ow sensor on a Pi
     elif conf_type == CONF_TYPE_SYSBUS:
-        LOGGER.debug("Initializing using SysBus %s", base_dir)
+        _LOGGER.debug("Initializing using SysBus %s", base_dir)
         for device_family in DEVICE_SENSORS:
             for device_folder in glob(os.path.join(base_dir, f"{device_family}[.-]*")):
                 sensor_id = os.path.split(device_folder)[1]
@@ -216,7 +216,7 @@ def get_entities(config):
 
     # We have an owfs mounted
     else:
-        LOGGER.debug("Initializing using OWFS %s", base_dir)
+        _LOGGER.debug("Initializing using OWFS %s", base_dir)
         for family_file_path in glob(os.path.join(base_dir, "*", "family")):
             with open(family_file_path) as family_file:
                 family = family_file.read()
@@ -304,7 +304,7 @@ class OneWireProxy(OneWire):
         try:
             value_read = self._read_value_ownet()
         except protocol.Error as exc:
-            LOGGER.error("Owserver failure in read(), got: %s", exc)
+            _LOGGER.error("Owserver failure in read(), got: %s", exc)
         if value_read:
             value = round(float(value_read), 1)
             self._value_raw = float(value_read)
@@ -342,8 +342,8 @@ class OneWireOWFS(OneWire):
                 value = round(float(value_read[0]), 1)
                 self._value_raw = float(value_read[0])
         except ValueError:
-            LOGGER.warning("Invalid value read from %s", self._device_file)
+            _LOGGER.warning("Invalid value read from %s", self._device_file)
         except FileNotFoundError:
-            LOGGER.warning("Cannot read from sensor: %s", self._device_file)
+            _LOGGER.warning("Cannot read from sensor: %s", self._device_file)
 
         self._state = value
