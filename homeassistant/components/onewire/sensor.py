@@ -24,6 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_MOUNT_DIR = "mount_dir"
 CONF_NAMES = "names"
 
+DEFAULT_OWSERVER_PORT = 4304
 DEFAULT_SYSBUS_MOUNT_DIR = "/sys/bus/w1/devices/"
 DEVICE_SENSORS = {
     # Family : { SensorType: owfs path }
@@ -93,7 +94,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAMES): {cv.string: cv.string},
         vol.Optional(CONF_MOUNT_DIR, default=DEFAULT_SYSBUS_MOUNT_DIR): cv.string,
         vol.Optional(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=4304): cv.port,
+        vol.Optional(CONF_PORT, default=DEFAULT_OWSERVER_PORT): cv.port,
     }
 )
 
