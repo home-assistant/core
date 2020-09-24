@@ -1,5 +1,9 @@
 """Test OpenZWave Websocket API."""
 from openzwavemqtt.const import (
+<<<<<<< HEAD
+=======
+    ATTR_CODE_SLOT,
+>>>>>>> 7c27f1869d... add WS API support for locks and simplify lock service calls
     ATTR_LABEL,
     ATTR_OPTIONS,
     ATTR_POSITION,
@@ -8,6 +12,10 @@ from openzwavemqtt.const import (
 )
 
 from homeassistant.components.ozw.const import ATTR_CONFIG_PARAMETER
+<<<<<<< HEAD
+=======
+from homeassistant.components.ozw.lock import ATTR_USERCODE
+>>>>>>> 7c27f1869d... add WS API support for locks and simplify lock service calls
 from homeassistant.components.ozw.websocket_api import (
     ATTR_IS_AWAKE,
     ATTR_IS_BEAMING,
@@ -276,6 +284,48 @@ async def test_websocket_api(hass, generic_data, hass_ws_client):
     result = msg["error"]
     assert result["code"] == ERR_NOT_FOUND
 
+<<<<<<< HEAD
+=======
+
+async def test_ws_locks(hass, lock_data, hass_ws_client):
+    """Test lock websocket apis."""
+    await setup_ozw(hass, fixture=lock_data)
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            ID: 1,
+            TYPE: "ozw/get_code_slots",
+            NODE_ID: 10,
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    await client.send_json(
+        {
+            ID: 2,
+            TYPE: "ozw/set_usercode",
+            NODE_ID: 10,
+            ATTR_CODE_SLOT: 1,
+            ATTR_USERCODE: "1234",
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    await client.send_json(
+        {
+            ID: 3,
+            TYPE: "ozw/clear_usercode",
+            NODE_ID: 10,
+            ATTR_CODE_SLOT: 1,
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+
+>>>>>>> 7c27f1869d... add WS API support for locks and simplify lock service calls
 
 async def test_refresh_node(hass, generic_data, sent_messages, hass_ws_client):
     """Test the ozw refresh node api."""
