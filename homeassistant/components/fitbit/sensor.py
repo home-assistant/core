@@ -185,9 +185,7 @@ def request_app_setup(hass, config, add_entities, config_path, discovery_info=No
         else:
             setup_platform(hass, config, add_entities, discovery_info)
 
-    start_url = (
-        f"{get_url(hass, prefer_external=True)}{FITBIT_AUTH_CALLBACK_PATH}"
-    )
+    start_url = f"{get_url(hass, prefer_external=True)}{FITBIT_AUTH_CALLBACK_PATH}"
 
     description = f"""Please create a Fitbit developer app at
                        https://dev.fitbit.com/apps/new.
