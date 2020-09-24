@@ -257,7 +257,6 @@ class OmniLogicSaltLevelSensor(OmnilogicSensor):
             salt_return = round(salt_return / 1000, 2)
             unit_of_measurement = f"{MASS_GRAMS}/{VOLUME_LITERS}"
 
-        self._state = salt_return
         self._unit = unit_of_measurement
 
         return self._state
