@@ -21,106 +21,13 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the sensor platform."""
 
-    sensor_types = {
-        (2, "Backyard"): [
-            {
-                "entity_classes": {"airTemp": OmniLogicTemperatureSensor},
-                "name": "Air Temperature",
-                "kind": "air_temperature",
-                "device_class": DEVICE_CLASS_TEMPERATURE,
-                "icon": None,
-                "unit": TEMP_FAHRENHEIT,
-                "guard_condition": {},
-            },
-        ],
-        (4, "BOWS"): [
-            {
-                "entity_classes": {"waterTemp": OmniLogicTemperatureSensor},
-                "name": "Water Temperature",
-                "kind": "water_temperature",
-                "device_class": DEVICE_CLASS_TEMPERATURE,
-                "icon": None,
-                "unit": TEMP_FAHRENHEIT,
-                "guard_condition": {},
-            },
-        ],
-        (6, "Filter"): [
-            {
-                "entity_classes": {"filterSpeed": OmniLogicPumpSpeedSensor},
-                "name": "Speed",
-                "kind": "filter_pump_speed",
-                "device_class": None,
-                "icon": "mdi:speedometer",
-                "unit": PERCENTAGE,
-                "guard_condition": {},
-            },
-        ],
-        (6, "Pumps"): [
-            {
-                "entity_classes": {"pumpSpeed": OmniLogicPumpSpeedSensor},
-                "name": "Pump Speed",
-                "kind": "pump_speed",
-                "device_class": None,
-                "icon": "mdi:speedometer",
-                "unit": PERCENTAGE,
-                "guard_condition": {},
-            },
-        ],
-        (6, "Chlorinator"): [
-            {
-                "entity_classes": {"Timed-Percent": OmniLogicChlorinatorSensor},
-                "name": "Setting",
-                "kind": "chlorinator",
-                "device_class": None,
-                "icon": "mdi:gauge",
-                "unit": PERCENTAGE,
-                "guard_condition": {
-                    "Shared-Type": "BOW_SHARED_EQUIPMENT",
-                    "status": "0",
-                },
-            },
-            {
-                "entity_classes": {"avgSaltLevel": OmniLogicSaltLevelSensor},
-                "name": "Salt Level",
-                "kind": "salt_level",
-                "device_class": None,
-                "icon": "mdi:gauge",
-                "unit": None,
-                "guard_condition": {
-                    "Shared-Type": "BOW_SHARED_EQUIPMENT",
-                    "status": "0",
-                },
-            },
-        ],
-        (6, "CSAD"): [
-            {
-                "entity_classes": {"ph": OmniLogicPHSensor},
-                "name": "pH",
-                "kind": "csad_ph",
-                "device_class": None,
-                "icon": "mdi:gauge",
-                "unit": None,
-                "guard_condition": {"ph": ""},
-            },
-            {
-                "entity_classes": {"orp": OmniLogicORPSensor},
-                "name": "ORP",
-                "kind": "csad_orp",
-                "device_class": None,
-                "icon": "mdi:gauge",
-                "unit": None,
-                "guard_condition": {"orp": ""},
-            },
-        ],
-    }
-
     coordinator = hass.data[DOMAIN][entry.entry_id][COORDINATOR]
     entities = []
 
     for item_id, item in coordinator.data.items():
         id_len = len(item_id)
         item_kind = item_id[-2]
-        entity_settings = sensor_types.get((id_len, item_kind))
+        entity_settings = SENSOR_TYPES.get((id_len, item_kind))
 
         if not entity_settings:
             continue
@@ -179,7 +86,6 @@ class OmnilogicSensor(OmniLogicEntity):
         backyard_id = item_id[:2]
         unit_type = coordinator.data[backyard_id].get("Unit-of-Measurement")
 
-        self._state = None
         self._unit_type = unit_type
         self._device_class = device_class
         self._unit = unit
@@ -230,24 +136,25 @@ class OmniLogicTemperatureSensor(OmnilogicSensor):
     @property
     def state(self):
         """Return the state for the temperature sensor."""
-        sensor_data = self.coordinator.data[self._item_id].get(self._state_key)
+        sensor_data = self.coordinator.data[self._item_id][self._state_key]
 
-        temp_return = int(sensor_data)
-        temp_state = int(sensor_data)
-        unit_of_measurement = TEMP_FAHRENHEIT
+        hayward_state = sensor_data
+        hayward_unit_of_measure = TEMP_FAHRENHEIT
+        state = sensor_data
+
         if self._unit_type == "Metric":
-            temp_return = round((temp_return - 32) * 5 / 9, 1)
-            unit_of_measurement = TEMP_CELSIUS
+            hayward_state = round((hayward_state - 32) * 5 / 9, 1)
+            hayward_unit_of_measure = TEMP_CELSIUS
 
         if int(sensor_data) == -1:
-            temp_return = None
-            temp_state = None
+            hayward_state = None
+            state = None
 
-        self._attrs["hayward_temperature"] = temp_return
-        self._attrs["hayward_unit_of_measure"] = unit_of_measurement
-        if temp_state is not None:
-            self._state = float(temp_state)
-            self._unit = TEMP_FAHRENHEIT
+        self._attrs["hayward_temperature"] = hayward_state
+        self._attrs["hayward_unit_of_measure"] = hayward_unit_of_measure
+
+        self._state = state
+        self._unit = TEMP_FAHRENHEIT
 
         return self._state
 
@@ -285,7 +192,7 @@ class OmniLogicPumpSpeedSensor(OmnilogicSensor):
         pump_type = PUMP_TYPES.get(
             self.coordinator.data[self._item_id].get("Filter-Type")
         )
-        pump_speed = self.coordinator.data[self._item_id].get(self._state_key)
+        pump_speed = self.coordinator.data[self._item_id][self._state_key]
 
         if pump_type == "VARIABLE":
             self._unit = PERCENTAGE
@@ -344,8 +251,8 @@ class OmniLogicSaltLevelSensor(OmnilogicSensor):
     def state(self):
         """Return the state for the salt level sensor."""
 
-        salt_return = self.coordinator.data[self._item_id].get(self._state_key)
-        unit_of_measurement = CONCENTRATION_PARTS_PER_MILLION
+        salt_return = self.coordinator.data[self._item_id][self._state_key]
+        unit_of_measurement = self._unit
 
         if self._unit_type == "Metric":
             salt_return = round(salt_return / 1000, 2)
@@ -386,7 +293,7 @@ class OmniLogicChlorinatorSensor(OmnilogicSensor):
     @property
     def state(self):
         """Return the state for the chlorinator sensor."""
-        state = self.coordinator.data[self._item_id].get(self._state_key)
+        state = self.coordinator.data[self._item_id][self._state_key]
         operating_mode = self.coordinator.data[self._item_id].get("operatingMode")
 
         if operating_mode == "1":
@@ -432,13 +339,12 @@ class OmniLogicPHSensor(OmnilogicSensor):
     def state(self):
         """Return the state for the pH sensor."""
 
-        ph_state = self.coordinator.data[self._item_id].get(self._state_key)
+        ph_state = self.coordinator.data[self._item_id][self._state_key]
 
         if ph_state == 0:
             ph_state = None
 
         self._state = ph_state
-        self._unit = "pH"
 
         return self._state
 
@@ -473,12 +379,105 @@ class OmniLogicORPSensor(OmnilogicSensor):
     def state(self):
         """Return the state for the ORP sensor."""
 
-        orp_state = self.coordinator.data[self._item_id].get(self._state_key)
+        orp_state = self.coordinator.data[self._item_id][self._state_key]
 
         if orp_state == -1:
             orp_state = None
 
         self._state = orp_state
-        self._unit = "mV"
 
         return self._state
+
+
+SENSOR_TYPES = {
+    (2, "Backyard"): [
+        {
+            "entity_classes": {"airTemp": OmniLogicTemperatureSensor},
+            "name": "Air Temperature",
+            "kind": "air_temperature",
+            "device_class": DEVICE_CLASS_TEMPERATURE,
+            "icon": None,
+            "unit": TEMP_FAHRENHEIT,
+            "guard_condition": {},
+        },
+    ],
+    (4, "BOWS"): [
+        {
+            "entity_classes": {"waterTemp": OmniLogicTemperatureSensor},
+            "name": "Water Temperature",
+            "kind": "water_temperature",
+            "device_class": DEVICE_CLASS_TEMPERATURE,
+            "icon": None,
+            "unit": TEMP_FAHRENHEIT,
+            "guard_condition": {},
+        },
+    ],
+    (6, "Filter"): [
+        {
+            "entity_classes": {"filterSpeed": OmniLogicPumpSpeedSensor},
+            "name": "Speed",
+            "kind": "filter_pump_speed",
+            "device_class": None,
+            "icon": "mdi:speedometer",
+            "unit": PERCENTAGE,
+            "guard_condition": {},
+        },
+    ],
+    (6, "Pumps"): [
+        {
+            "entity_classes": {"pumpSpeed": OmniLogicPumpSpeedSensor},
+            "name": "Pump Speed",
+            "kind": "pump_speed",
+            "device_class": None,
+            "icon": "mdi:speedometer",
+            "unit": PERCENTAGE,
+            "guard_condition": {},
+        },
+    ],
+    (6, "Chlorinator"): [
+        {
+            "entity_classes": {"Timed-Percent": OmniLogicChlorinatorSensor},
+            "name": "Setting",
+            "kind": "chlorinator",
+            "device_class": None,
+            "icon": "mdi:gauge",
+            "unit": PERCENTAGE,
+            "guard_condition": {
+                "Shared-Type": "BOW_SHARED_EQUIPMENT",
+                "status": "0",
+            },
+        },
+        {
+            "entity_classes": {"avgSaltLevel": OmniLogicSaltLevelSensor},
+            "name": "Salt Level",
+            "kind": "salt_level",
+            "device_class": None,
+            "icon": "mdi:gauge",
+            "unit": CONCENTRATION_PARTS_PER_MILLION,
+            "guard_condition": {
+                "Shared-Type": "BOW_SHARED_EQUIPMENT",
+                "status": "0",
+            },
+        },
+    ],
+    (6, "CSAD"): [
+        {
+            "entity_classes": {"ph": OmniLogicPHSensor},
+            "name": "pH",
+            "kind": "csad_ph",
+            "device_class": None,
+            "icon": "mdi:gauge",
+            "unit": "pH",
+            "guard_condition": {"ph": ""},
+        },
+        {
+            "entity_classes": {"orp": OmniLogicORPSensor},
+            "name": "ORP",
+            "kind": "csad_orp",
+            "device_class": None,
+            "icon": "mdi:gauge",
+            "unit": "mV",
+            "guard_condition": {"orp": ""},
+        },
+    ],
+}

@@ -146,12 +146,12 @@ class OmniLogicEntity(CoordinatorEntity):
         if "Alarms" in self.coordinator.data[self._item_id]:
             alarms = self.coordinator.data[self._item_id]["Alarms"]
 
-            if len(alarms) != 0:
+            if alarms:
                 self._attrs["alarm_message"] = alarms[0].get("Message")
                 self._attrs["alarm_comment"] = alarms[0].get("Comment")
             else:
-                self._attrs["alarm_message"] = None
-                self._attrs["alarm_comment"] = None
+                self._attrs["alarm_message"] = "Clear"
+                self._attrs["alarm_comment"] = "Clear"
 
         return self._attrs
 
