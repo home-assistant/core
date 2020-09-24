@@ -96,6 +96,23 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
         self._entry_id = entry_id
         self._entry_data = entry_data
 
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: Optional[ConfigType] = None
+    ) -> Dict[str, Any]:
+        """Confirm reauth dialog."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                description_placeholders={"host": self._entry_data[CONF_HOST]},
+                data_schema=vol.Schema({}),
+                errors={},
+            )
+
+        assert self.hass
+        persistent_notification.async_dismiss(self.hass, "sonarr_reauth")
+
         return await self.async_step_user()
 
     async def async_step_user(
@@ -143,7 +160,6 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="unknown_entry")
 
         self.hass.config_entries.async_update_entry(entry, data=data)
-        persistent_notification.async_dismiss(self.hass, "sonarr_reauth")
         await self.hass.config_entries.async_reload(entry.entry_id)
 
         return self.async_abort(reason="reauth_successful")
