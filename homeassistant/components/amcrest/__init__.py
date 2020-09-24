@@ -213,7 +213,7 @@ def _monitor_events(hass, name, api, event_codes):
             for code, payload in api.event_actions(event_codes_list, retries=5):
                 _LOGGER.debug("Captured event: %s -- %s", code, payload)
                 if code in event_codes["binary_sensors"]:
-                    """Management of the different actions for binary sensors"""
+                    #Management of the different actions for binary sensors
                     if payload["action"] == "Start" or payload["action"] == "Pulse":
                         start = True
                     else:
