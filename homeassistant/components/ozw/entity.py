@@ -325,11 +325,12 @@ def set_config_parameter(
     """Set config parameter to a node."""
 
     def fail(err_type, err_msg):
-        """Return a failed operation status."""
+        """Process an invalid request."""
         return OZWConfigParameterResponse(False, err_type=err_type, err_msg=err_msg)
 
-    def success(payload):
-        """Return a successful operation status."""
+    def success(value, payload):
+        """Process a valid request."""
+        value.send_value(payload)
         return OZWConfigParameterResponse(True, payload=payload)
 
     instance = manager.get_instance(instance_id)
@@ -358,13 +359,10 @@ def set_config_parameter(
     # Bool can be passed in as string or bool
     if value.type == ValueType.BOOL:
         if isinstance(new_value, bool):
-            value.send_value(new_value)
-            return success(new_value)
+            return success(value, new_value)
         if isinstance(new_value, str):
             if new_value.lower() in ("true", "false"):
-                payload = new_value.lower() == "true"
-                value.send_value(payload)
-                return success(payload)
+                return success(value, new_value.lower() == "true")
 
             return fail(
                 ERR_NOT_SUPPORTED,
@@ -385,9 +383,7 @@ def set_config_parameter(
         for option in value.value["List"]:
             if new_value not in (option["Label"], option["Value"]):
                 continue
-            payload = int(option["Value"])
-            value.send_value(payload)
-            return success(payload)
+            return success(value, int(option["Value"]))
 
         return fail(
             ERR_NOT_SUPPORTED,
@@ -397,8 +393,7 @@ def set_config_parameter(
     if value.type == ValueType.STRING:
         if not isinstance(new_value, str):
             return fail(ERR_NOT_SUPPORTED, type_err_msg)
-        value.send_value(new_value)
-        return success(new_value)
+        return success(value, new_value)
 
     if value.type in (ValueType.INT, ValueType.BYTE, ValueType.SHORT):
         try:
@@ -413,8 +408,7 @@ def set_config_parameter(
                     f"{parameter_index} (Min: {value.min} Max: {value.max})"
                 ),
             )
-        value.send_value(new_value)
-        return success(new_value)
+        return success(value, new_value)
 
     return fail(
         ERR_NOT_SUPPORTED,
