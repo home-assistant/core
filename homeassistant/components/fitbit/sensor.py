@@ -186,7 +186,7 @@ def request_app_setup(hass, config, add_entities, config_path, discovery_info=No
             setup_platform(hass, config, add_entities, discovery_info)
 
     start_url = (
-        f"{get_url(hass, require_current_request=True)}{FITBIT_AUTH_CALLBACK_PATH}"
+        f"{get_url(hass, prefer_external=True)}{FITBIT_AUTH_CALLBACK_PATH}"
     )
 
     description = f"""Please create a Fitbit developer app at
@@ -222,7 +222,7 @@ def request_oauth_completion(hass):
     def fitbit_configuration_callback(callback_data):
         """Handle configuration updates."""
 
-    start_url = f"{get_url(hass, require_current_request=True)}{FITBIT_AUTH_START}"
+    start_url = f"{get_url(hass, prefer_external=True)}{FITBIT_AUTH_START}"
 
     description = f"Please authorize Fitbit by visiting {start_url}"
 
@@ -315,7 +315,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         )
 
         redirect_uri = (
-            f"{get_url(hass, require_current_request=True)}{FITBIT_AUTH_CALLBACK_PATH}"
+            f"{get_url(hass, prefer_external=True)}{FITBIT_AUTH_CALLBACK_PATH}"
         )
 
         fitbit_auth_start_url, _ = oauth.authorize_token_url(
