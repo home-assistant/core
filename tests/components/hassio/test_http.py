@@ -132,7 +132,7 @@ async def test_forwarding_user_info(hassio_client, hass_admin_user, aioclient_mo
 
 
 async def test_snapshot_upload_headers(hassio_client, aioclient_mock):
-    """Test that we forward user info correctly."""
+    """Test that we forward the full header for snapshot upload."""
     content_type = "multipart/form-data; boundary='--webkit'"
     aioclient_mock.get("http://127.0.0.1/snapshots/new/upload")
 
