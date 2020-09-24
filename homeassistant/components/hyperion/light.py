@@ -48,9 +48,9 @@ DEFAULT_EFFECT_LIST = []
 SUPPORT_HYPERION = SUPPORT_COLOR | SUPPORT_BRIGHTNESS | SUPPORT_EFFECT
 
 PLATFORM_SCHEMA = vol.All(
-    cv.deprecated(CONF_HDMI_PRIORITY, invalidation_version="0.116"),
-    cv.deprecated(CONF_DEFAULT_COLOR, invalidation_version="0.116"),
-    cv.deprecated(CONF_EFFECT_LIST, invalidation_version="0.116"),
+    cv.deprecated(CONF_HDMI_PRIORITY, invalidation_version="0.118"),
+    cv.deprecated(CONF_DEFAULT_COLOR, invalidation_version="0.118"),
+    cv.deprecated(CONF_EFFECT_LIST, invalidation_version="0.118"),
     PLATFORM_SCHEMA.extend(
         {
             vol.Required(CONF_HOST): cv.string,
