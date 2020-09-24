@@ -374,7 +374,4 @@ class Hyperion(LightEntity):
 
         # Load initial state.
         self._update_full_state()
-
-        # Start "background" task.
-        self._client.start_background_task()
         return True
