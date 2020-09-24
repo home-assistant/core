@@ -8,6 +8,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
+
 from .const import CONF_API_KEY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)

@@ -12,10 +12,11 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def validate_input(hass: core.HomeAssistant, data):
-    """Validate the user input allows us to connect.
-
-    Data has the keys from DATA_SCHEMA with values provided by the user.
     """
+    # Validate the user input allows us to connect.
+    # Return info that you want to store in the config entry.y the user.
+    """
+
     hub = await Govee.create(data[CONF_API_KEY])
 
     _, error = await hub.get_devices()
