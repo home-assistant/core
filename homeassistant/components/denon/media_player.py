@@ -117,7 +117,7 @@ class DenonDevice(MediaPlayerEntity):
             ssfun = line[len("SSFUN") :].split(" ", 1)
 
             source = ssfun[0]
-            if len(ssfun) > 1:
+            if len(ssfun) == 2 and ssfun[1]:
                 configured_name = ssfun[1]
             else:
                 # No name configured, re-using the source name
