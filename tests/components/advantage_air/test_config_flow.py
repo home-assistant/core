@@ -6,11 +6,6 @@ from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
 
 API_DATA = b'{"aircons":{"ac1":{"info":{"climateControlModeIsRunning":false,"countDownToOff":0,"countDownToOn":0,"fan":"high","filterCleanStatus":0,"freshAirStatus":"none","mode":"vent","myZone":0,"name":"AC","setTemp":24,"state":"off"},"zones":{"z01":{"error":0,"maxDamper":100,"measuredTemp":0,"minDamper":0,"motion":0,"motionConfig":1,"name":"Zone 1","number":1,"rssi":0,"setTemp":24,"state":"open","type":0,"value":100}}}},"system":{"hasAircons":true,"hasLights":false,"hasSensors":false,"hasThings":false,"hasThingsBOG":false,"hasThingsLight":false,"name":"testname","rid":"uniqueid","sysType":"e-zone","tspModel":"tspnumbers"}}'
 
-USER_INPUT = {
-    CONF_IP_ADDRESS: "127.0.0.1",
-    CONF_PORT: 2025,
-}
-
 
 async def test_form(hass, httpserver):
     """Test that form shows up."""
