@@ -1,4 +1,5 @@
 """Support for performing TensorFlow classification on images."""
+import glob
 import io
 import logging
 import os
@@ -47,6 +48,9 @@ CONF_MODEL = "model"
 CONF_MODEL_DIR = "model_dir"
 CONF_RIGHT = "right"
 CONF_TOP = "top"
+CONF_USE_TENSORFLOW_LITE = "use_tensorflow_lite"
+CONF_TENSORFLOW_LITE_DELEGATE = "tensorflow_lite_delegate"
+CONF_TENSORFLOW_LITE_DELEGATE_OPTIONS = "tensorflow_lite_delegate_options"
 
 AREA_SCHEMA = vol.Schema(
     {
@@ -64,6 +68,9 @@ CATEGORY_SCHEMA = vol.Schema(
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_FILE_OUT, default=[]): vol.All(cv.ensure_list, [cv.template]),
+        vol.Optional(CONF_USE_TENSORFLOW_LITE): cv.boolean,
+        vol.Optional(CONF_TENSORFLOW_LITE_DELEGATE): cv.isfile,
+        vol.Optional(CONF_TENSORFLOW_LITE_DELEGATE_OPTIONS): cv.string,
         vol.Required(CONF_MODEL): vol.Schema(
             {
                 vol.Required(CONF_GRAPH): cv.isdir,
@@ -96,6 +103,43 @@ def get_model_detection_function(model):
     return detect_fn
 
 
+def lite_detect_objects(interpreter, image):
+    """Return a list of detection results, in a similar format as model()."""
+    input_details = interpreter.get_input_details()
+    _, input_height, input_width, _ = input_details[0]["shape"]
+
+    # start with a input type of float32, since that is what resize returns
+    input_tensor = tf.io.decode_image(
+        image,
+        channels=None,
+        dtype=tf.dtypes.float32,
+        name=None,
+        expand_animations=False,
+    )
+    input_tensor_resized = tf.image.resize(
+        input_tensor, [input_height, input_width], antialias=True
+    )
+    # convert to the uint8 required by the network
+    input_tensor_resized = tf.image.convert_image_dtype(
+        input_tensor_resized, tf.dtypes.uint8
+    )
+    # add an extra dimension to match expected 4D input
+    input_tensor_resized = tf.expand_dims(input_tensor_resized, axis=0)
+    interpreter.set_tensor(input_details[0]["index"], input_tensor_resized)
+    interpreter.invoke()
+
+    output_details = interpreter.get_output_details()
+    boxes = interpreter.get_tensor(output_details[0]["index"])
+    classes = interpreter.get_tensor(output_details[1]["index"])
+    scores = interpreter.get_tensor(output_details[2]["index"])
+
+    return {
+        "detection_boxes": boxes,
+        "detection_classes": classes,
+        "detection_scores": scores,
+    }
+
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the TensorFlow image processing platform."""
     model_config = config[CONF_MODEL]
@@ -107,15 +151,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     pipeline_config = os.path.join(model_config[CONF_GRAPH], "pipeline.config")
 
     # Make sure locations exist
-    if (
-        not os.path.isdir(model_dir)
-        or not os.path.isdir(checkpoint)
-        or not os.path.exists(pipeline_config)
-        or not os.path.exists(labels)
-    ):
-        _LOGGER.error("Unable to locate tensorflow model or label map")
+    if not os.path.isdir(model_dir) or not os.path.exists(labels):
+        _LOGGER.error("Unable to locate tensorflow model directory or labels")
         return
 
+    if (not config.get(CONF_USE_TENSORFLOW_LITE)) and (
+        not os.path.isdir(checkpoint) or not os.path.exists(pipeline_config)
+    ):
+        _LOGGER.error("Unable to locate tensorflow checkpoint or config")
+        return
     # append custom model path to sys.path
     sys.path.append(model_dir)
 
@@ -135,54 +179,92 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         )
         return
 
-    try:
-        # Display warning that PIL will be used if no OpenCV is found.
-        import cv2  # noqa: F401 pylint: disable=unused-import, import-outside-toplevel
-    except ImportError:
-        _LOGGER.warning(
-            "No OpenCV library found. TensorFlow will process image with "
-            "PIL at reduced resolution"
-        )
+    if not config.get(CONF_USE_TENSORFLOW_LITE):
+        try:
+            # Display warning that PIL will be used if no OpenCV is found.
+            import cv2  # noqa: F401 pylint: disable=unused-import, import-outside-toplevel
+        except ImportError:
+            _LOGGER.warning(
+                "No OpenCV library found. TensorFlow will process image with "
+                "PIL at reduced resolution"
+            )
 
     hass.data[DOMAIN] = {CONF_MODEL: None}
 
     def tensorflow_hass_start(_event):
         """Set up TensorFlow model on hass start."""
         start = time.perf_counter()
+        if config.get(CONF_USE_TENSORFLOW_LITE):
+            # In tensorflow lite, there should be a *.tflite file in the model directory
+            tf_models = glob.glob(
+                os.path.join(model_config.get(CONF_GRAPH), "*.tflite")
+            )
+            if len(tf_models) == 0:
+                _LOGGER.error(
+                    "No *.tflite models found in graph directory, aborting tensorflow lite startup"
+                )
+                _LOGGER.error(
+                    "Directory was %s",
+                    os.path.join(model_config.get(CONF_GRAPH), "*.tflite"),
+                )
+                return
+            if config.get(CONF_TENSORFLOW_LITE_DELEGATE):
+                _LOGGER.debug(
+                    "Using tensorflow delegate %s",
+                    config.get(CONF_TENSORFLOW_LITE_DELEGATE),
+                )
+                interpreter = tf.lite.Interpreter(
+                    model_path=tf_models[0],
+                    experimental_delegates=[
+                        tf.lite.load_delegate(
+                            [
+                                config.get(CONF_TENSORFLOW_LITE_DELEGATE),
+                                config.get(CONF_TENSORFLOW_LITE_DELEGATE_OPTIONS),
+                            ]
+                        )
+                    ],
+                )
+            else:
+                interpreter = tf.lite.Interpreter(model_path=tf_models[0])
+            interpreter.allocate_tensors()
 
-        # Load pipeline config and build a detection model
-        pipeline_configs = config_util.get_configs_from_pipeline_file(pipeline_config)
-        detection_model = model_builder.build(
-            model_config=pipeline_configs["model"], is_training=False
-        )
+            hass.data[DOMAIN][CONF_MODEL] = interpreter
+        else:
+            # Load pipeline config and build a detection model
+            pipeline_configs = config_util.get_configs_from_pipeline_file(
+                pipeline_config
+            )
+            detection_model = model_builder.build(
+                model_config=pipeline_configs["model"], is_training=False
+            )
 
-        # Restore checkpoint
-        ckpt = tf.compat.v2.train.Checkpoint(model=detection_model)
-        ckpt.restore(os.path.join(checkpoint, "ckpt-0")).expect_partial()
+            # Restore checkpoint
+            ckpt = tf.compat.v2.train.Checkpoint(model=detection_model)
+            ckpt.restore(os.path.join(checkpoint, "ckpt-0")).expect_partial()
 
-        _LOGGER.debug(
-            "Model checkpoint restore took %d seconds", time.perf_counter() - start
-        )
+            _LOGGER.debug(
+                "Model checkpoint restore took %d seconds", time.perf_counter() - start
+            )
 
-        model = get_model_detection_function(detection_model)
+            model = get_model_detection_function(detection_model)
 
-        # Preload model cache with empty image tensor
-        inp = np.zeros([2160, 3840, 3], dtype=np.uint8)
-        # The input needs to be a tensor, convert it using `tf.convert_to_tensor`.
-        input_tensor = tf.convert_to_tensor(inp, dtype=tf.float32)
-        # The model expects a batch of images, so add an axis with `tf.newaxis`.
-        input_tensor = input_tensor[tf.newaxis, ...]
-        # Run inference
-        model(input_tensor)
+            # Preload model cache with empty image tensor
+            inp = np.zeros([2160, 3840, 3], dtype=np.uint8)
+            # The input needs to be a tensor, convert it using `tf.convert_to_tensor`.
+            input_tensor = tf.convert_to_tensor(inp, dtype=tf.float32)
+            # The model expects a batch of images, so add an axis with `tf.newaxis`.
+            input_tensor = input_tensor[tf.newaxis, ...]
+            # Run inference
+            model(input_tensor)
 
-        _LOGGER.debug("Model load took %d seconds", time.perf_counter() - start)
-        hass.data[DOMAIN][CONF_MODEL] = model
-
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, tensorflow_hass_start)
+            _LOGGER.debug("Model load took %d seconds", time.perf_counter() - start)
+            hass.data[DOMAIN][CONF_MODEL] = model
 
     category_index = label_map_util.create_category_index_from_labelmap(
         labels, use_display_name=True
     )
+
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, tensorflow_hass_start)
 
     entities = []
 
@@ -222,6 +304,8 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
         self._category_index = category_index
         self._min_confidence = config.get(CONF_CONFIDENCE)
         self._file_out = config.get(CONF_FILE_OUT)
+        self._is_lite = config.get(CONF_USE_TENSORFLOW_LITE)
+        self._lite_delegate = config.get(CONF_TENSORFLOW_LITE_DELEGATE)
 
         # handle categories and specific detection areas
         self._label_id_offset = model_config.get(CONF_LABEL_OFFSET)
@@ -340,37 +424,44 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
             return
 
         start = time.perf_counter()
-        try:
-            import cv2  # pylint: disable=import-error, import-outside-toplevel
 
-            # pylint: disable=no-member
-            img = cv2.imdecode(np.asarray(bytearray(image)), cv2.IMREAD_UNCHANGED)
-            inp = img[:, :, [2, 1, 0]]  # BGR->RGB
-            inp_expanded = inp.reshape(1, inp.shape[0], inp.shape[1], 3)
-        except ImportError:
+        if self._is_lite:
+            detections = lite_detect_objects(model, image)
+            boxes = detections["detection_boxes"][0]
+            scores = detections["detection_scores"][0]
+            classes = (
+                detections["detection_classes"][0] + self._label_id_offset
+            ).astype(int)
+        else:
             try:
-                img = Image.open(io.BytesIO(bytearray(image))).convert("RGB")
-            except UnidentifiedImageError:
-                _LOGGER.warning("Unable to process image, bad data")
-                return
-            img.thumbnail((460, 460), Image.ANTIALIAS)
-            img_width, img_height = img.size
-            inp = (
-                np.array(img.getdata())
-                .reshape((img_height, img_width, 3))
-                .astype(np.uint8)
-            )
-            inp_expanded = np.expand_dims(inp, axis=0)
+                import cv2  # pylint: disable=import-error, import-outside-toplevel
 
-        # The input needs to be a tensor, convert it using `tf.convert_to_tensor`.
-        input_tensor = tf.convert_to_tensor(inp_expanded, dtype=tf.float32)
-
-        detections = model(input_tensor)
-        boxes = detections["detection_boxes"][0].numpy()
-        scores = detections["detection_scores"][0].numpy()
-        classes = (
-            detections["detection_classes"][0].numpy() + self._label_id_offset
-        ).astype(int)
+                # pylint: disable=no-member
+                img = cv2.imdecode(np.asarray(bytearray(image)), cv2.IMREAD_UNCHANGED)
+                inp = img[:, :, [2, 1, 0]]  # BGR->RGB
+                inp_expanded = inp.reshape(1, inp.shape[0], inp.shape[1], 3)
+            except ImportError:
+                try:
+                    img = Image.open(io.BytesIO(bytearray(image))).convert("RGB")
+                except UnidentifiedImageError:
+                    _LOGGER.warning("Unable to process image, bad data")
+                    return
+                img.thumbnail((460, 460), Image.ANTIALIAS)
+                img_width, img_height = img.size
+                inp = (
+                    np.array(img.getdata())
+                    .reshape((img_height, img_width, 3))
+                    .astype(np.uint8)
+                )
+                inp_expanded = np.expand_dims(inp, axis=0)
+            # The input needs to be a tensor, convert it using `tf.convert_to_tensor`.
+            input_tensor = tf.convert_to_tensor(inp_expanded, dtype=tf.float32)
+            detections = model(input_tensor)
+            boxes = detections["detection_boxes"][0].numpy()
+            scores = detections["detection_scores"][0].numpy()
+            classes = (
+                detections["detection_classes"][0].numpy() + self._label_id_offset
+            ).astype(int)
 
         matches = {}
         total_matches = 0
@@ -390,7 +481,6 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
                 or boxes[3] > self._area[3]
             ):
                 continue
-
             category = self._category_index[obj_class]["name"]
 
             # Exclude unlisted categories
