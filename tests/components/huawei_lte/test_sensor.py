@@ -2,7 +2,7 @@
 
 import pytest
 
-from homeassistant.components.const import (
+from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
 )
