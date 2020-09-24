@@ -12,6 +12,7 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN, MANAGER, OPTIONS
 from .entity import set_config_parameter
@@ -63,6 +64,38 @@ def async_register_api(hass):
     websocket_api.async_register_command(hass, websocket_refresh_node_info)
     websocket_api.async_register_command(hass, websocket_get_config_parameters)
     websocket_api.async_register_command(hass, websocket_set_config_parameter)
+
+
+class NotFoundError(HomeAssistantError):
+    """Exception for when object is not found."""
+
+
+def get_ozw_node(hass, connection, msg):
+    """Get a node and send an error if not found."""
+    manager = hass.data[DOMAIN][MANAGER]
+    instance = manager.get_instance(msg[OZW_INSTANCE])
+    if not instance:
+        connection.send_message(
+            websocket_api.error_message(
+                msg[ID],
+                websocket_api.const.ERR_NOT_FOUND,
+                "OZW Instance not found",
+            )
+        )
+        raise NotFoundError
+
+    node = instance.get_node(msg[NODE_ID])
+    if not node:
+        connection.send_message(
+            websocket_api.error_message(
+                msg[ID],
+                websocket_api.const.ERR_NOT_FOUND,
+                "OZW Node not found",
+            )
+        )
+        raise NotFoundError
+
+    return node
 
 
 @websocket_api.websocket_command({vol.Required(TYPE): "ozw/get_instances"})
@@ -130,26 +163,10 @@ def websocket_get_nodes(hass, connection, msg):
 )
 def websocket_get_config_parameters(hass, connection, msg):
     """Get a list of configuration parameters for an OZW node instance."""
-    manager = hass.data[DOMAIN][MANAGER]
-    instance = manager.get_instance(msg[OZW_INSTANCE])
-    if not instance:
-        connection.send_message(
-            websocket_api.error_message(
-                msg[ID],
-                websocket_api.const.ERR_NOT_FOUND,
-                "OZW Instance not found",
-            )
-        )
-
-    node = instance.get_node(msg[NODE_ID])
-    if not node:
-        connection.send_message(
-            websocket_api.error_message(
-                msg[ID],
-                websocket_api.const.ERR_NOT_FOUND,
-                "OZW Node not found",
-            )
-        )
+    try:
+        node = get_ozw_node(hass, connection, msg)
+    except NotFoundError:
+        return
 
     command_class = node.get_command_class(
         CommandClass.CONFIGURATION, msg.get(NODE_INSTANCE_ID)
@@ -284,15 +301,9 @@ def websocket_network_statistics(hass, connection, msg):
 )
 def websocket_node_status(hass, connection, msg):
     """Get the status for a Z-Wave node."""
-    manager = hass.data[DOMAIN][MANAGER]
-    node = manager.get_instance(msg[OZW_INSTANCE]).get_node(msg[NODE_ID])
-
-    if not node:
-        connection.send_message(
-            websocket_api.error_message(
-                msg[ID], websocket_api.const.ERR_NOT_FOUND, "OZW Node not found"
-            )
-        )
+    try:
+        node = get_ozw_node(hass, connection, msg)
+    except NotFoundError:
         return
 
     connection.send_result(
@@ -328,15 +339,9 @@ def websocket_node_status(hass, connection, msg):
 )
 def websocket_node_metadata(hass, connection, msg):
     """Get the metadata for a Z-Wave node."""
-    manager = hass.data[DOMAIN][MANAGER]
-    node = manager.get_instance(msg[OZW_INSTANCE]).get_node(msg[NODE_ID])
-
-    if not node:
-        connection.send_message(
-            websocket_api.error_message(
-                msg[ID], websocket_api.const.ERR_NOT_FOUND, "OZW Node not found"
-            )
-        )
+    try:
+        node = get_ozw_node(hass, connection, msg)
+    except NotFoundError:
         return
 
     connection.send_result(
