@@ -433,3 +433,48 @@ def set_config_parameter(
         str(value.type),
         parameter_index,
     )
+
+
+def get_config_parameters(node, node_instance_id=None):
+    """Get config parameter from a node."""
+    command_class = node.get_command_class(CommandClass.CONFIGURATION, node_instance_id)
+    if not command_class:
+        return OZWValidationResponse.process_fail(
+            ERR_NOT_FOUND, "Configuration parameters for OZW Node Instance not found"
+        )
+
+    values = []
+
+    for value in command_class.values():
+        value_to_return = {}
+        if value.read_only or value.type == ValueType.BUTTON:
+            continue
+
+        value_to_return = {
+            const.ATTR_LABEL: value.label,
+            const.ATTR_TYPE: value.type.value,
+            const.ATTR_INDEX: value.index.value,
+        }
+
+        if value.type == ValueType.BOOL:
+            value_to_return[const.ATTR_VALUE] = value.value["Value"]
+
+        if value.type == ValueType.LIST:
+            value_to_return[const.ATTR_VALUE] = value.value["Selected"]
+            value_to_return[const.ATTR_OPTIONS] = value.value["List"]
+
+        if value.type == ValueType.STRING:
+            value_to_return[const.ATTR_VALUE] = value.value
+
+        if (
+            value.type == ValueType.INT
+            or value.type == ValueType.BYTE
+            or value.type == ValueType.SHORT
+        ):
+            value_to_return[const.ATTR_VALUE] = int(value.value)
+            value_to_return[const.ATTR_MAX] = value.max
+            value_to_return[const.ATTR_MIN] = value.min
+
+        values.append(value_to_return)
+
+    return OZWValidationResponse.process_success(values)
