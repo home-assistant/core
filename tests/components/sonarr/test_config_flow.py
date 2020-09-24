@@ -151,7 +151,7 @@ async def test_full_reauth_flow_implementation(
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "reauth_successful"
 
-    assert entry.entry_data[CONF_API_KEY] == "test-api-key-reauth"
+    assert entry.data[CONF_API_KEY] == "test-api-key-reauth"
 
     mock_setup_entry.assert_called_once()
 
