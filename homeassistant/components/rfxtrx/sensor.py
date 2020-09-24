@@ -37,7 +37,7 @@ def _battery_convert(value):
     """Battery is given as a value between 0 and 9."""
     if value is None:
         return None
-    return value * 10
+    return (value + 1) * 10
 
 
 def _rssi_convert(value):
