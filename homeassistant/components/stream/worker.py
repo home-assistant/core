@@ -77,7 +77,7 @@ def _stream_worker_internal(hass, stream, quit_event):
     # compatible with empty_moov and manual bitstream filters not in PyAV
     if container.format.name in {"hls", "mpegts"}:
         audio_stream = None
-    # Some audio streams have no profile and throws errors when remuxing
+    # Some audio streams do not have a profile and throw errors when remuxing
     if audio_stream and audio_stream.profile is None:
         audio_stream = None
 
