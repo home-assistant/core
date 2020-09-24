@@ -18,9 +18,9 @@ from homeassistant.components.ozw.websocket_api import (
     ATTR_NODE_QUERY_STAGE,
     ATTR_NODE_SPECIFIC_STRING,
     ID,
-    INDEX,
     NODE_ID,
     OZW_INSTANCE,
+    PARAMETER,
     TYPE,
     VALUE,
 )
@@ -159,7 +159,7 @@ async def test_websocket_api(hass, generic_data, hass_ws_client):
             ID: 14,
             TYPE: "ozw/set_config_parameter",
             NODE_ID: 39,
-            INDEX: config_param["index"],
+            PARAMETER: config_param["index"],
             VALUE: new_val,
         }
     )
@@ -170,7 +170,7 @@ async def test_websocket_api(hass, generic_data, hass_ws_client):
             ID: 15,
             TYPE: "ozw/set_config_parameter",
             NODE_ID: 39,
-            INDEX: config_param["index"],
+            PARAMETER: config_param["index"],
             VALUE: new_label,
         }
     )
