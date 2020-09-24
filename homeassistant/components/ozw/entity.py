@@ -453,7 +453,7 @@ def get_config_parameters(node, node_instance_id=None):
         value_to_return = {
             const.ATTR_LABEL: value.label,
             const.ATTR_TYPE: value.type.value,
-            const.ATTR_INDEX: value.index.value,
+            const.ATTR_CONFIG_PARAMETER: value.index.value,
         }
 
         if value.type == ValueType.BOOL:

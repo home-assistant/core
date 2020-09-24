@@ -38,7 +38,6 @@ ATTR_SCENE_VALUE_ID = "scene_value_id"
 ATTR_SCENE_VALUE_LABEL = "scene_value_label"
 
 # Config parameter specific
-ATTR_INDEX = "index"
 ATTR_LABEL = "label"
 ATTR_MAX = "max"
 ATTR_MIN = "min"

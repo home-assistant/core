@@ -3,6 +3,11 @@ import logging
 
 from openzwavemqtt.const import ValueType
 
+from homeassistant.components.ozw.const import (
+    ATTR_CONFIG_PARAMETER,
+    ATTR_OPTIONS,
+    ATTR_VALUE,
+)
 from homeassistant.components.ozw.websocket_api import (
     ATTR_IS_AWAKE,
     ATTR_IS_BEAMING,
@@ -143,15 +148,15 @@ async def test_websocket_api(hass, generic_data, hass_ws_client):
 
     # Test set config parameter
     config_param = result[0]
-    current_val = config_param["value"]
+    current_val = config_param[ATTR_VALUE]
     new_val = next(
         option["Value"]
-        for option in config_param["options"]
+        for option in config_param[ATTR_OPTIONS]
         if option["Label"] != current_val
     )
     new_label = next(
         option["Label"]
-        for option in config_param["options"]
+        for option in config_param[ATTR_OPTIONS]
         if option["Label"] != current_val and option["Value"] != new_val
     )
     await client.send_json(
@@ -159,7 +164,7 @@ async def test_websocket_api(hass, generic_data, hass_ws_client):
             ID: 14,
             TYPE: "ozw/set_config_parameter",
             NODE_ID: 39,
-            PARAMETER: config_param["index"],
+            PARAMETER: config_param[ATTR_CONFIG_PARAMETER],
             VALUE: new_val,
         }
     )
@@ -170,7 +175,7 @@ async def test_websocket_api(hass, generic_data, hass_ws_client):
             ID: 15,
             TYPE: "ozw/set_config_parameter",
             NODE_ID: 39,
-            PARAMETER: config_param["index"],
+            PARAMETER: config_param[ATTR_CONFIG_PARAMETER],
             VALUE: new_label,
         }
     )
