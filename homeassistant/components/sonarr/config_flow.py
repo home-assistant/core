@@ -5,6 +5,7 @@ from typing import Any, Dict, Optional
 from sonarr import Sonarr, SonarrAccessRestricted, SonarrError
 import voluptuous as vol
 
+from homeassistant.components import persistent_notification
 from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL, ConfigFlow, OptionsFlow
 from homeassistant.const import (
     CONF_API_KEY,
@@ -121,7 +122,7 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="unknown")
             else:
                 if self._reauth:
-                    return await self._async_update_entry(self._entry_id, user_input)
+                    return await self._async_reauth_update_entry(self._entry_id, user_input)
 
                 return self.async_create_entry(
                     title=user_input[CONF_HOST], data=user_input
@@ -134,7 +135,7 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def _async_update_entry(self, entry_id: str, data: dict) -> Dict[str, Any]:
+    async def _async_reauth_update_entry(self, entry_id: str, data: dict) -> Dict[str, Any]:
         """Update existing config entry."""
         entry = self.hass.config_entries.async_get_entry(entry_id)
 
@@ -142,6 +143,7 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="unknown_entry")
 
         self.hass.config_entries.async_update_entry(entry, data=data)
+        persistent_notification.async_dismiss(self.hass, "sonarr_reauth")
         await self.hass.config_entries.async_reload(entry.entry_id)
 
         return self.async_abort(reason="reauth_successful")
