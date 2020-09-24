@@ -1,6 +1,4 @@
 """Test OpenZWave Websocket API."""
-import logging
-
 from openzwavemqtt.const import ValueType
 
 from homeassistant.components.ozw.const import (
@@ -34,8 +32,6 @@ from homeassistant.components.websocket_api.const import ERR_NOT_FOUND
 from .common import MQTTMessage, setup_ozw
 
 from tests.async_mock import patch
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def test_websocket_api(hass, generic_data, hass_ws_client):
