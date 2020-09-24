@@ -9,7 +9,14 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_TEMPERATURE,
 )
-from homeassistant.const import CONF_DEVICES
+from homeassistant.const import (
+    CONF_DEVICES,
+    DEVICE_CLASS_CURRENT,
+    DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_POWER,
+    DEVICE_CLASS_PRESSURE,
+    DEVICE_CLASS_VOLTAGE,
+)
 from homeassistant.core import callback
 
 from . import (
@@ -41,10 +48,17 @@ def _rssi_convert(value):
 
 
 DEVICE_CLASSES = {
+    "Barometer": DEVICE_CLASS_PRESSURE,
     "Battery numeric": DEVICE_CLASS_BATTERY,
-    "Rssi numeric": DEVICE_CLASS_SIGNAL_STRENGTH,
+    "Current Ch. 1": DEVICE_CLASS_CURRENT,
+    "Current Ch. 2": DEVICE_CLASS_CURRENT,
+    "Current Ch. 3": DEVICE_CLASS_CURRENT,
+    "Energy usage": DEVICE_CLASS_POWER,
     "Humidity": DEVICE_CLASS_HUMIDITY,
+    "Rssi numeric": DEVICE_CLASS_SIGNAL_STRENGTH,
     "Temperature": DEVICE_CLASS_TEMPERATURE,
+    "Total usage": DEVICE_CLASS_ENERGY,
+    "Voltage": DEVICE_CLASS_VOLTAGE,
 }
 
 
