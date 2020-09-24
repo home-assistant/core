@@ -335,7 +335,7 @@ class OZWValidationResponse:
         )
 
     @staticmethod
-    def process_success(value, payload):
+    def process_success(payload):
         """Process a valid request."""
         return OZWValidationResponse(True, payload=payload)
 
@@ -367,12 +367,12 @@ def set_config_parameter(
     if value.type == ValueType.BOOL:
         if isinstance(new_value, bool):
             value.send_value(new_value)
-            return OZWValidationResponse.process_success(value, new_value)
+            return OZWValidationResponse.process_success(new_value)
         if isinstance(new_value, str):
             if new_value.lower() in ("true", "false"):
                 payload = new_value.lower() == "true"
                 value.send_value(payload)
-                return OZWValidationResponse.process_success(value, payload)
+                return OZWValidationResponse.process_success(payload)
 
             return OZWValidationResponse.process_fail(
                 ERR_NOT_SUPPORTED,
@@ -395,7 +395,7 @@ def set_config_parameter(
                 continue
             payload = int(option["Value"])
             value.send_value(payload)
-            return OZWValidationResponse.process_success(value, payload)
+            return OZWValidationResponse.process_success(payload)
 
         return OZWValidationResponse.process_fail(
             ERR_NOT_SUPPORTED,
@@ -408,7 +408,7 @@ def set_config_parameter(
         if not isinstance(new_value, str):
             return OZWValidationResponse.process_fail_on_type(value, new_value)
         value.send_value(new_value)
-        return OZWValidationResponse.process_success(value, new_value)
+        return OZWValidationResponse.process_success(new_value)
 
     if value.type in (ValueType.INT, ValueType.BYTE, ValueType.SHORT):
         try:
@@ -425,7 +425,7 @@ def set_config_parameter(
                 value.max,
             )
         value.send_value(new_value)
-        return OZWValidationResponse.process_success(value, new_value)
+        return OZWValidationResponse.process_success(new_value)
 
     return OZWValidationResponse.process_fail(
         ERR_NOT_SUPPORTED,
