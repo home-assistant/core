@@ -217,7 +217,7 @@ class OmniLogicPumpSpeedSensor(OmnilogicSensor):
 
         self._attrs["pump_type"] = pump_type
 
-        return self._state
+        return state
 
 
 class OmniLogicSaltLevelSensor(OmnilogicSensor):
