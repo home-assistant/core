@@ -49,7 +49,8 @@
             },
             "statistics_sensors": {
                 "data": {
-                    "allow_bandwidth_sensors": "Vytvo\u0159it senzory vyu\u017eit\u00ed \u0161\u00ed\u0159ky p\u00e1sma pro p\u0159ipojen\u00e9 klienty"
+                    "allow_bandwidth_sensors": "Vytvo\u0159it senzory vyu\u017eit\u00ed \u0161\u00ed\u0159ky p\u00e1sma pro p\u0159ipojen\u00e9 klienty",
+                    "allow_uptime_sensors": "Vytvo\u0159it senzory doby provozuschopnosti pro s\u00ed\u0165ov\u00e9 klienty"
                 },
                 "description": "Konfigurovat statistick\u00e9 senzory",
                 "title": "Mo\u017enosti UniFi 3/3"
