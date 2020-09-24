@@ -153,7 +153,6 @@ class OmniLogicTemperatureSensor(OmnilogicSensor):
         self._attrs["hayward_temperature"] = hayward_state
         self._attrs["hayward_unit_of_measure"] = hayward_unit_of_measure
 
-        self._state = state
         self._unit = TEMP_FAHRENHEIT
 
         return self._state
