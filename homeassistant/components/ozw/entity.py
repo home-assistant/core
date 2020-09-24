@@ -391,7 +391,7 @@ def set_config_parameter(
 
         return fail(
             ERR_NOT_SUPPORTED,
-            f"Value {new_value} not valid for parameter {parameter_index}",
+            f"Invalid value {new_value} for parameter {parameter_index}",
         )
 
     if value.type == ValueType.STRING:
