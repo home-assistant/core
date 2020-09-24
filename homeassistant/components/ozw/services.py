@@ -76,7 +76,7 @@ class ZWaveServices:
             return
 
         _LOGGER.info(
-            "Set configuration parameter %s on Node %s with value %s",
+            "Setting configuration parameter %s on Node %s with value %s",
             param,
             node_id,
             resp.payload,
