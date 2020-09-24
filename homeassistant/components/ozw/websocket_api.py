@@ -2,7 +2,12 @@
 
 import logging
 
-from openzwavemqtt.const import EVENT_NODE_ADDED, EVENT_NODE_CHANGED
+from openzwavemqtt.const import (
+    EVENT_NODE_ADDED,
+    EVENT_NODE_CHANGED,
+    CommandClass,
+    ValueType,
+)
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
@@ -16,6 +21,7 @@ TYPE = "type"
 ID = "id"
 OZW_INSTANCE = "ozw_instance"
 NODE_ID = "node_id"
+NODE_INSTANCE_ID = "node_instance_id"
 
 ATTR_NODE_QUERY_STAGE = "node_query_stage"
 ATTR_IS_ZWAVE_PLUS = "is_zwave_plus"
@@ -32,6 +38,13 @@ ATTR_NODE_SPECIFIC_STRING = "node_specific_string"
 ATTR_NODE_MANUFACTURER_NAME = "node_manufacturer_name"
 ATTR_NODE_PRODUCT_NAME = "node_product_name"
 ATTR_NEIGHBORS = "neighbors"
+ATTR_INDEX = "index"
+ATTR_LABEL = "label"
+ATTR_MAX = "max"
+ATTR_MIN = "min"
+ATTR_OPTIONS = "options"
+ATTR_TYPE = "type"
+ATTR_VALUE = "value"
 
 
 @callback
@@ -45,6 +58,8 @@ def async_register_api(hass):
     websocket_api.async_register_command(hass, websocket_node_status)
     websocket_api.async_register_command(hass, websocket_node_statistics)
     websocket_api.async_register_command(hass, websocket_refresh_node_info)
+    websocket_api.async_register_command(hass, websocket_get_config_parameters)
+    websocket_api.async_register_command(hass, websocket_set_config_parameter)
 
 
 @websocket_api.websocket_command({vol.Required(TYPE): "ozw/get_instances"})
@@ -100,6 +115,165 @@ def websocket_get_nodes(hass, connection, msg):
         msg[ID],
         nodes,
     )
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "ozw/get_config_parameters",
+        vol.Required(NODE_ID): vol.Coerce(int),
+        vol.Optional(OZW_INSTANCE, default=1): vol.Coerce(int),
+        vol.Optional(NODE_INSTANCE_ID): vol.Coerce(int),
+    }
+)
+def websocket_get_config_parameters(hass, connection, msg):
+    """Get a list of configuration parameters for an OZW node instance."""
+    manager = hass.data[DOMAIN][MANAGER]
+    node = manager.get_instance(msg[OZW_INSTANCE]).get_node(msg[NODE_ID])
+    command_class = node.get_command_class(
+        CommandClass.CONFIGURATION, msg.get(NODE_INSTANCE_ID)
+    )
+    if not command_class:
+        connection.send_message(
+            websocket_api.error_message(
+                msg[ID],
+                websocket_api.const.ERR_NOT_FOUND,
+                "Configuration parameters for OZW Node Instance not found",
+            )
+        )
+        return
+
+    values = []
+
+    for value in command_class.values():
+        value_to_return = {}
+        if value.read_only or value.type == ValueType.BUTTON:
+            continue
+
+        value_to_return = {
+            ATTR_LABEL: value.label,
+            ATTR_TYPE: str(value.type),
+            ATTR_INDEX: value.index,
+        }
+
+        if value.type == ValueType.BOOL:
+            value_to_return[ATTR_VALUE] = value.value["Value"]
+
+        if value.type == ValueType.LIST:
+            value_to_return[ATTR_VALUE] = value.value["Selected"]
+            value_to_return[ATTR_OPTIONS] = value.value["List"]
+
+        if value.type == ValueType.STRING:
+            value_to_return[ATTR_VALUE] = value.value
+
+        if (
+            value.type == ValueType.INT
+            or value.type == ValueType.BYTE
+            or value.type == ValueType.SHORT
+        ):
+            value_to_return[ATTR_VALUE] = int(value.value)
+            value_to_return[ATTR_MAX] = value.max
+            value_to_return[ATTR_MIN] = value.min
+
+        values.append(value_to_return)
+
+    connection.send_result(
+        msg[ID],
+        values,
+    )
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "ozw/set_config_parameter",
+        vol.Required(NODE_ID): vol.Coerce(int),
+        vol.Optional(OZW_INSTANCE, default=1): vol.Coerce(int),
+        vol.Optional(NODE_INSTANCE_ID): vol.Coerce(int),
+        vol.Required(ATTR_INDEX): vol.Coerce(int),
+        vol.Required(ATTR_VALUE): vol.Or(vol.Coerce(int), bool, str),
+    }
+)
+def websocket_set_config_parameter(hass, connection, msg):
+    """Set a config parameter to a node."""
+    manager = hass.data[DOMAIN][MANAGER]
+    node = manager.get_instance(msg[OZW_INSTANCE]).get_node(msg[NODE_ID])
+    value = node.get_value(
+        CommandClass.CONFIGURATION, msg[ATTR_INDEX], msg.get(NODE_INSTANCE_ID)
+    )
+    if not value:
+        connection.send_message(
+            websocket_api.error_message(
+                msg[ID],
+                websocket_api.const.ERR_NOT_FOUND,
+                "Configuration parameter for OZW Node Instance not found",
+            )
+        )
+        return
+
+    # List values can be sent as int for ID or string for label
+    if (
+        (
+            isinstance(msg[ATTR_VALUE], int)
+            and value.type
+            not in (ValueType.INT, ValueType.BYTE, ValueType.SHORT, ValueType.LIST)
+        )
+        or (isinstance(msg[ATTR_VALUE], bool) and value.type != ValueType.BOOL)
+        or (
+            isinstance(msg[ATTR_VALUE], str)
+            and value.type not in (ValueType.STRING, ValueType.LIST)
+        )
+    ):
+        connection.send_message(
+            websocket_api.error_message(
+                msg[ID],
+                websocket_api.const.ERR_NOT_SUPPORTED,
+                (
+                    f"Configuration parameter type {str(value.type)} does not "
+                    f"match the value type {str(type(msg[ATTR_VALUE]))}"
+                ),
+            )
+        )
+        return
+
+    if value.type == ValueType.BOOL:
+        value.send_value(msg[ATTR_VALUE])
+
+    if value.type == ValueType.LIST:
+        payload = None
+        for option in value.value["List"]:
+            if msg[ATTR_VALUE] not in (option["Label"], option["Value"]):
+                continue
+            payload = int(option["Value"])
+            value.send_value(payload)
+
+        if not payload:
+            connection.send_message(
+                websocket_api.error_message(
+                    msg[ID],
+                    websocket_api.const.ERR_NOT_SUPPORTED,
+                    f"Value {msg[ATTR_VALUE]} not valid for parameter {msg[ATTR_INDEX]}",
+                )
+            )
+            return
+
+    if value.type == ValueType.STRING:
+        value.send_value(msg[ATTR_VALUE])
+
+    if value.type in (ValueType.INT, ValueType.BYTE, ValueType.SHORT):
+        if msg[ATTR_VALUE] > value.max or msg[ATTR_VALUE] < value.min:
+            connection.send_message(
+                websocket_api.error_message(
+                    msg[ID],
+                    websocket_api.const.ERR_NOT_SUPPORTED,
+                    (
+                        f"Value {msg[ATTR_VALUE]} out of range for parameter "
+                        f"{msg[ATTR_INDEX]} (Min: {value.min} Max: {value.max})"
+                    ),
+                )
+            )
+            return
+        value.send_value(msg[ATTR_VALUE])
+
+    connection.send_result(msg[ID])
 
 
 @websocket_api.websocket_command(
