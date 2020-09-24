@@ -186,12 +186,6 @@ async def test_websocket_api(hass, generic_data, hass_ws_client):
     result = msg["error"]
     assert result["code"] == ERR_NOT_FOUND
 
-    # Test OZW Node configuration class not found error
-    await client.send_json({ID: 17, TYPE: "ozw/get_config_parameters", NODE_ID: 6})
-    msg = await client.receive_json()
-    result = msg["error"]
-    assert result["code"] == ERR_NOT_FOUND
-
     # Test OZW Node configuration class not found when setting config parameter
     await client.send_json(
         {
@@ -202,6 +196,19 @@ async def test_websocket_api(hass, generic_data, hass_ws_client):
             VALUE: "test",
         }
     )
+    msg = await client.receive_json()
+    result = msg["error"]
+    assert result["code"] == ERR_NOT_FOUND
+
+
+async def test_websocket_api_config_class_not_found(
+    hass, cover_gdo_data, hass_ws_client
+):
+    """Test OZW Node configuration class not found error."""
+    await setup_ozw(hass, fixture=cover_gdo_data)
+    client = await hass_ws_client(hass)
+
+    await client.send_json({ID: 1, TYPE: "ozw/get_config_parameters", NODE_ID: 6})
     msg = await client.receive_json()
     result = msg["error"]
     assert result["code"] == ERR_NOT_FOUND
