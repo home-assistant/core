@@ -26,8 +26,7 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "reauth_successful": "Successfully re-authenticated",
-      "unknown": "[%key:common::config_flow::error::unknown%]",
-      "unknown_entry": "Invalid config entry"
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
   "options": {
