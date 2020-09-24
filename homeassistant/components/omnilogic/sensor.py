@@ -195,7 +195,7 @@ class OmniLogicPumpSpeedSensor(OmnilogicSensor):
 
         if pump_type == "VARIABLE":
             self._unit = PERCENTAGE
-            self._state = pump_speed
+            state = pump_speed
         elif pump_type == "DUAL":
             if pump_speed == 0:
                 self._state = "off"
