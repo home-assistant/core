@@ -84,17 +84,9 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
         self, data: Optional[ConfigType] = None
     ) -> Dict[str, Any]:
         """Handle configuration by re-auth."""
-        entry_data = dict(data)
-        entry_id = entry_data.get("config_entry_id")
-
-        entry = self.hass.config_entries.async_get_entry(entry_id)
-        if entry is None:
-            return self.async_abort(reason="unknown_entry")
-
-        del entry_data["config_entry_id"]
         self._reauth = True
-        self._entry_id = entry_id
-        self._entry_data = entry_data
+        self._entry_data = dict(data)
+        self._entry_id = entry_data.pop("config_entry_id")
 
         return await self.async_step_reauth_confirm()
 
@@ -159,10 +151,6 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> Dict[str, Any]:
         """Update existing config entry."""
         entry = self.hass.config_entries.async_get_entry(entry_id)
-
-        if entry is None:
-            return self.async_abort(reason="unknown_entry")
-
         self.hass.config_entries.async_update_entry(entry, data=data)
         await self.hass.config_entries.async_reload(entry.entry_id)
 
