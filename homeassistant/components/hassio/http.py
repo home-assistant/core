@@ -79,8 +79,8 @@ class HassIOView(HomeAssistantView):
             ] = request._stored_content_type  # pylint: disable=protected-access
 
             # Snapshots are big, so we need to adjust the allowed size
-            request._client_max_size = (
-                MAX_UPLOAD_SIZE  # pylint: disable=protected-access
+            request._client_max_size = (  # pylint: disable=protected-access
+                MAX_UPLOAD_SIZE
             )
 
         try:
