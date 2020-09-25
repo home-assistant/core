@@ -18,6 +18,7 @@ from .const import X_HASS_IS_ADMIN, X_HASS_USER_ID, X_HASSIO
 
 _LOGGER = logging.getLogger(__name__)
 
+MAX_UPLOAD_SIZE = 1024 * 1024 * 1024
 
 NO_TIMEOUT = re.compile(
     r"^(?:"
@@ -71,6 +72,16 @@ class HassIOView(HomeAssistantView):
         read_timeout = _get_timeout(path)
         data = None
         headers = _init_header(request)
+        if path == "snapshots/new/upload":
+            # We need to reuse the full content type that includes the boundary
+            headers[
+                "Content-Type"
+            ] = request._stored_content_type  # pylint: disable=protected-access
+
+            # Snapshots are big, so we need to adjust the allowed size
+            request._client_max_size = (  # pylint: disable=protected-access
+                MAX_UPLOAD_SIZE
+            )
 
         try:
             with async_timeout.timeout(10):
