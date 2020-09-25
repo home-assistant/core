@@ -38,9 +38,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.data[DOMAIN]["hub"] = hub
 
     # Verify that passed in configuration works
-    devices, err = await hub.get_devices()
+    _, err = await hub.get_devices()
     if err:
-        _LOGGER.warning("Could not connect to Govee API: " + err)
+        _LOGGER.warning("Could not connect to Govee API: %s", err)
         await hub.rate_limit_delay()
         await async_unload_entry(hass, entry)
         raise PlatformNotReady()

@@ -44,7 +44,7 @@ class GoveeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception as ex:  # pylint: disable=broad-except
-                _LOGGER.exception(f"Unexpected exception: {ex}")
+                _LOGGER.exception("Unexpected exception: %s", ex)
                 errors["base"] = "unknown"
 
         return self.async_show_form(
@@ -55,8 +55,9 @@ class GoveeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 class CannotConnect(exceptions.HomeAssistantError):
     """Error to indicate we cannot connect."""
 
-    def __init__(self, message):
+    def __init__(self, message, *args, **kwargs):
         """Create cannot connect error."""
+        super().__init__(*args, **kwargs)
         self._message = message
 
     @property

@@ -29,8 +29,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
     hub = hass.data[DOMAIN]["hub"]
 
     # override the scan interval from config
-    global SCAN_INTERVAL
-    SCAN_INTERVAL = timedelta(seconds=config[CONF_DELAY])
+    SCAN_INTERVAL = ( # pylint: disable=redefined-outer-name,invalid-name,unused-variable
+        timedelta(seconds=config[CONF_DELAY])
+    )
 
     # Add devices
     async_add_entities(
@@ -61,40 +62,38 @@ class GoveeLightEntity(LightEntity):
         """Get state of the led strip."""
         state, err = await self._hub.get_state(self._device)
         if not state:
-            _LOGGER.warning(f"cannot get state for {self._device.device}: {err}")
+            _LOGGER.warning("cannot get state for %s: %s", self._device.device, err)
 
     async def async_turn_on(self, **kwargs):
         """Turn device on."""
-        _LOGGER.debug(
-            f"async_turn_on for Govee light {self._device.device}, kwargs: {kwargs}"
-        )
-        success = False
+        _LOGGER.debug("async_turn_on for Govee light %s, kwargs: %s", self._device.device, kwargs)
         err = None
 
         if ATTR_HS_COLOR in kwargs:
             hs_color = kwargs[ATTR_HS_COLOR]
             col = color.color_hs_to_RGB(hs_color[0], hs_color[1])
-            success, err = await self._hub.set_color(self._device, col)
+            _, err = await self._hub.set_color(self._device, col)
         elif ATTR_BRIGHTNESS in kwargs:
             brightness = kwargs[ATTR_BRIGHTNESS]
             bright_set = brightness - 1
-            success, err = await self._hub.set_brightness(self._device, bright_set)
+            _, err = await self._hub.set_brightness(self._device, bright_set)
         elif ATTR_COLOR_TEMP in kwargs:
             color_temp = kwargs[ATTR_COLOR_TEMP]
-            success, err = await self._hub.set_color_temp(self._device, color_temp)
+            _, err = await self._hub.set_color_temp(self._device, color_temp)
             # color_temp is not in state
         else:
-            success, err = await self._hub.turn_on(self._device)
+            _, err = await self._hub.turn_on(self._device)
         # warn on any error
         if err:
             _LOGGER.warning(
-                f"async_turn_on failed with '{err}' for {self._device.device}, kwargs: {kwargs}"
+                "async_turn_on failed with '%s' for %s, kwargs: %s",
+                err, self._device.device, kwargs
             )
 
     async def async_turn_off(self, **kwargs):
         """Turn device off."""
-        _LOGGER.debug(f"async_turn_off for Govee light {self._device.device}")
-        success, err = await self._hub.turn_off(self._device)
+        _LOGGER.debug("async_turn_off for Govee light %s", self._device.device)
+        await self._hub.turn_off(self._device)
 
     @property
     def unique_id(self):
