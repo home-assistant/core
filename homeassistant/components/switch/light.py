@@ -47,7 +47,14 @@ async def async_setup_platform(
 ) -> None:
     """Initialize Light Switch platform."""
     async_add_entities(
-        [LightSwitch(cast(str, config.get(CONF_NAME)), config[CONF_ENTITY_ID], config.get(CONF_UNIQUE_ID))], True
+        [
+            LightSwitch(
+                cast(str, config.get(CONF_NAME)),
+                config[CONF_ENTITY_ID],
+                cast(str, config.get(CONF_UNIQUE_ID)),
+            )
+        ],
+        True,
     )
 
 
@@ -82,7 +89,7 @@ class LightSwitch(LightEntity):
     def should_poll(self) -> bool:
         """No polling needed for a light switch."""
         return False
-    
+
     @property
     def unique_id(self):
         """Return the unique id of the light switch."""
