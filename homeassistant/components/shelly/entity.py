@@ -300,10 +300,7 @@ class ShellyRestAttributeEntity(entity.Entity):
         self._unit = self.description.unit
         self._name = shelly_naming(self, None, "sensor")
         self.path = self.description.path
-<<<<<<< HEAD
         self._attributes = self.description.attributes
-=======
->>>>>>> Fix for sensors not updating
 
     @property
     def name(self):
