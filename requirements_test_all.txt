@@ -483,6 +483,9 @@ numpy==1.19.2
 # homeassistant.components.google
 oauth2client==4.0.0
 
+# homeassistant.components.omnilogic
+omnilogic==0.4.0
+
 # homeassistant.components.onvif
 onvif-zeep-async==0.5.0
 
