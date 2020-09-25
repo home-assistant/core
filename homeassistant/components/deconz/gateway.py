@@ -45,13 +45,14 @@ class DeconzGateway:
         self.hass = hass
         self.config_entry = config_entry
 
-        self.available = True
         self.api = None
+
+        self.available = True
+
         self.deconz_ids = {}
+        self.entities = {}
         self.events = []
         self.listeners = []
-
-        self.entities = {}
 
         self._current_option_allow_clip_sensor = self.option_allow_clip_sensor
         self._current_option_allow_deconz_groups = self.option_allow_deconz_groups

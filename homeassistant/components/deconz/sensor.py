@@ -133,12 +133,9 @@ class DeconzSensor(DeconzDevice):
     @callback
     def async_update_callback(self, force_update=False, ignore_update=False):
         """Update the sensor's state."""
-        if ignore_update:
-            return
-
         keys = {"on", "reachable", "state"}
         if force_update or self._device.changed_keys.intersection(keys):
-            self.async_write_ha_state()
+            super().async_update_callback(ignore_update=ignore_update)
 
     @property
     def state(self):
