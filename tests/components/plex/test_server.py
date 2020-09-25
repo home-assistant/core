@@ -131,8 +131,6 @@ async def test_network_error_during_refresh(
 async def test_gdm_client_failure(hass, mock_websocket, setup_plex_server):
     """Test connection failure to a GDM discovered client."""
     mock_plex_server = await setup_plex_server(disable_gdm=False)
-    server_id = mock_plex_server.machineIdentifier
-    loaded_server = hass.data[DOMAIN][SERVERS][server_id]
 
     # Multiple debouncers with cooldowns involved, easier to trigger manually
     async_dispatcher_send(hass, PLEX_GDM_CLIENT_SCAN_SIGNAL)
@@ -182,9 +180,7 @@ async def test_ignore_plex_web_client(hass, entry, mock_websocket):
 
     with patch("plexapi.server.PlexServer", return_value=mock_plex_server), patch(
         "plexapi.myplex.MyPlexAccount", return_value=MockPlexAccount(players=0)
-    ), patch(
-        "homeassistant.components.plex.GDM", return_value=MockGDM(disabled=True)
-    ):
+    ), patch("homeassistant.components.plex.GDM", return_value=MockGDM(disabled=True)):
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
