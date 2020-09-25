@@ -87,7 +87,7 @@ async def async_migrate_entry(hass, entry):
     data = entry.data
     version = entry.version
 
-    _LOGGER.debug("Migrating OpenWeatherMap entry from Version %s", version)
+    _LOGGER.debug("Migrating OpenWeatherMap entry from version %s", version)
 
     if version == 1:
         mode = data[CONF_MODE]
@@ -149,6 +149,7 @@ def _get_config_value(config_entry, key):
 
 
 def _get_owm_config(language):
+    """Get OpenWeatherMap configuration and add language to it."""
     config_dict = get_default_config()
     config_dict["language"] = language
     return config_dict

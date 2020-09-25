@@ -39,7 +39,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-WEATHER_UPDATE_INTERVAL = timedelta(minutes=5)
+WEATHER_UPDATE_INTERVAL = timedelta(minutes=10)
 
 
 class WeatherUpdateCoordinator(DataUpdateCoordinator):
@@ -70,7 +70,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         return data
 
     async def _get_owm_weather(self):
-        weather = None
+        """Poll weather data from OWM."""
         if (
             self._forecast_mode == FORECAST_MODE_ONECALL_HOURLY
             or self._forecast_mode == FORECAST_MODE_ONECALL_DAILY
@@ -95,12 +95,14 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         return weather
 
     def _get_forecast_interval(self):
+        """Get the correct forecast interval depending on the forecast mode."""
         interval = "daily"
         if self._forecast_mode == FORECAST_MODE_HOURLY:
             interval = "3h"
         return interval
 
     def _convert_weather_response(self, weather_response):
+        """Format the weather response correctly."""
         current_weather = weather_response.current
         forecast_weather = self._get_forecast_from_weather_response(weather_response)
 
@@ -151,6 +153,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
 
     @staticmethod
     def _get_rain(rain):
+        """Get rain data from weather data."""
         if "all" in rain:
             return round(rain["all"], 0)
         if "1h" in rain:
@@ -159,6 +162,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
 
     @staticmethod
     def _get_snow(snow):
+        """Get snow data from weather data."""
         if snow:
             if "all" in snow:
                 return round(snow["all"], 0)
@@ -186,6 +190,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
 
     @staticmethod
     def _get_condition(weather_code):
+        """Get weather condition from weather data."""
         return [k for k, v in CONDITION_CLASSES.items() if weather_code in v][0]
 
 
