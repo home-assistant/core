@@ -1,14 +1,11 @@
 """Support for deCONZ switches."""
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import DOMAIN, SwitchEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import NEW_LIGHT, POWER_PLUGS, SIRENS
 from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
-
-POWER_PLUG = "power_plug"
-SIREN = "siren"
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -21,8 +18,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     Switches are based on the same device class as lights in deCONZ.
     """
     gateway = get_gateway_from_config_entry(hass, config_entry)
-    gateway.entities[POWER_PLUG] = set()
-    gateway.entities[SIREN] = set()
+    gateway.entities[DOMAIN] = set()
 
     @callback
     def async_add_switch(lights):
@@ -33,11 +29,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
             if (
                 light.type in POWER_PLUGS
-                and light.uniqueid not in gateway.entities[POWER_PLUG]
+                and light.uniqueid not in gateway.entities[DOMAIN]
             ):
                 entities.append(DeconzPowerPlug(light, gateway))
 
-            elif light.type in SIRENS and light.uniqueid not in gateway.entities[SIREN]:
+            elif (
+                light.type in SIRENS and light.uniqueid not in gateway.entities[DOMAIN]
+            ):
                 entities.append(DeconzSiren(light, gateway))
 
         async_add_entities(entities, True)
@@ -54,7 +52,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class DeconzPowerPlug(DeconzDevice, SwitchEntity):
     """Representation of a deCONZ power plug."""
 
-    TYPE = POWER_PLUG
+    TYPE = DOMAIN
 
     @property
     def is_on(self):
@@ -75,7 +73,7 @@ class DeconzPowerPlug(DeconzDevice, SwitchEntity):
 class DeconzSiren(DeconzDevice, SwitchEntity):
     """Representation of a deCONZ siren."""
 
-    TYPE = SIREN
+    TYPE = DOMAIN
 
     @property
     def is_on(self):

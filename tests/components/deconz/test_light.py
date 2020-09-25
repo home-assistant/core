@@ -2,7 +2,6 @@
 from copy import deepcopy
 
 from homeassistant.components import deconz
-from homeassistant.components.deconz.light import GROUP
 import homeassistant.components.light as light
 from homeassistant.setup import async_setup_component
 
@@ -97,7 +96,6 @@ async def test_no_lights_or_groups(hass):
     assert len(gateway.deconz_ids) == 0
     assert len(hass.states.async_all()) == 0
     assert len(gateway.entities[light.DOMAIN]) == 0
-    assert len(gateway.entities[GROUP]) == 0
 
 
 async def test_lights_and_groups(hass):
@@ -114,8 +112,7 @@ async def test_lights_and_groups(hass):
     assert "light.on_off_light" in gateway.deconz_ids
 
     assert len(hass.states.async_all()) == 6
-    assert len(gateway.entities[light.DOMAIN]) == 4
-    assert len(gateway.entities[GROUP]) == 1
+    assert len(gateway.entities[light.DOMAIN]) == 5
 
     rgb_light = hass.states.get("light.rgb_light")
     assert rgb_light.state == "on"
@@ -262,7 +259,6 @@ async def test_lights_and_groups(hass):
 
     assert len(hass.states.async_all()) == 0
     assert len(gateway.entities[light.DOMAIN]) == 0
-    assert len(gateway.entities[GROUP]) == 0
 
 
 async def test_disable_light_groups(hass):
@@ -283,7 +279,6 @@ async def test_disable_light_groups(hass):
     # 3 entities
     assert len(hass.states.async_all()) == 5
     assert len(gateway.entities[light.DOMAIN]) == 4
-    assert len(gateway.entities[GROUP]) == 0
 
     rgb_light = hass.states.get("light.rgb_light")
     assert rgb_light is not None
@@ -309,8 +304,7 @@ async def test_disable_light_groups(hass):
     assert "light.on_off_switch" not in gateway.deconz_ids
     # 3 entities
     assert len(hass.states.async_all()) == 6
-    assert len(gateway.entities[light.DOMAIN]) == 4
-    assert len(gateway.entities[GROUP]) == 1
+    assert len(gateway.entities[light.DOMAIN]) == 5
 
     hass.config_entries.async_update_entry(
         gateway.config_entry, options={deconz.gateway.CONF_ALLOW_DECONZ_GROUPS: False}
@@ -325,4 +319,3 @@ async def test_disable_light_groups(hass):
     # 3 entities
     assert len(hass.states.async_all()) == 5
     assert len(gateway.entities[light.DOMAIN]) == 4
-    assert len(gateway.entities[GROUP]) == 0

@@ -33,8 +33,6 @@ from .const import (
 from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
 
-GROUP = "group"
-
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Old way of setting up deCONZ platforms."""
@@ -44,7 +42,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the deCONZ lights and groups from a config entry."""
     gateway = get_gateway_from_config_entry(hass, config_entry)
     gateway.entities[DOMAIN] = set()
-    gateway.entities[GROUP] = set()
 
     @callback
     def async_add_light(lights):
@@ -78,7 +75,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             if not group.lights:
                 continue
 
-            known_groups = list(gateway.entities[GROUP])
+            known_groups = list(gateway.entities[DOMAIN])
             new_group = DeconzGroup(group, gateway)
             if new_group.unique_id not in known_groups:
                 entities.append(new_group)
@@ -97,6 +94,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 class DeconzBaseLight(DeconzDevice, LightEntity):
     """Representation of a deCONZ light."""
+
+    TYPE = DOMAIN
 
     def __init__(self, device, gateway):
         """Set up light."""
@@ -220,8 +219,6 @@ class DeconzBaseLight(DeconzDevice, LightEntity):
 class DeconzLight(DeconzBaseLight):
     """Representation of a deCONZ light."""
 
-    TYPE = DOMAIN
-
     @property
     def max_mireds(self):
         """Return the warmest color_temp that this light supports."""
@@ -235,8 +232,6 @@ class DeconzLight(DeconzBaseLight):
 
 class DeconzGroup(DeconzBaseLight):
     """Representation of a deCONZ group."""
-
-    TYPE = GROUP
 
     def __init__(self, device, gateway):
         """Set up group and create an unique id."""
