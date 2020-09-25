@@ -7,7 +7,7 @@
 HAP-python==3.0.0
 
 # homeassistant.components.plugwise
-Plugwise_Smile==1.4.0
+Plugwise_Smile==1.5.1
 
 # homeassistant.components.flick_electric
 PyFlick==0.0.2
@@ -486,6 +486,9 @@ numpy==1.19.2
 # homeassistant.components.google
 oauth2client==4.0.0
 
+# homeassistant.components.omnilogic
+omnilogic==0.4.0
+
 # homeassistant.components.onvif
 onvif-zeep-async==0.5.0
 
@@ -592,7 +595,7 @@ pyMetno==0.8.1
 pyRFXtrx==0.25
 
 # homeassistant.components.tibber
-pyTibber==0.15.2
+pyTibber==0.15.3
 
 # homeassistant.components.nextbus
 py_nextbusnext==0.1.4

@@ -129,3 +129,21 @@ async def test_forwarding_user_info(hassio_client, hass_admin_user, aioclient_mo
     req_headers = aioclient_mock.mock_calls[0][-1]
     req_headers["X-Hass-User-ID"] == hass_admin_user.id
     req_headers["X-Hass-Is-Admin"] == "1"
+
+
+async def test_snapshot_upload_headers(hassio_client, aioclient_mock):
+    """Test that we forward the full header for snapshot upload."""
+    content_type = "multipart/form-data; boundary='--webkit'"
+    aioclient_mock.get("http://127.0.0.1/snapshots/new/upload")
+
+    resp = await hassio_client.get(
+        "/api/hassio/snapshots/new/upload", headers={"Content-Type": content_type}
+    )
+
+    # Check we got right response
+    assert resp.status == 200
+
+    assert len(aioclient_mock.mock_calls) == 1
+
+    req_headers = aioclient_mock.mock_calls[0][-1]
+    req_headers["Content-Type"] == content_type
