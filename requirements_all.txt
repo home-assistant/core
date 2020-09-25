@@ -102,7 +102,7 @@ YesssSMS==0.4.1
 abodepy==1.1.0
 
 # homeassistant.components.accuweather
-accuweather==0.0.10
+accuweather==0.0.11
 
 # homeassistant.components.mcp23017
 adafruit-blinka==3.9.0
@@ -309,7 +309,7 @@ av==8.0.2
 avri-api==0.1.7
 
 # homeassistant.components.axis
-axis==35
+axis==37
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.1.0
@@ -669,7 +669,7 @@ glances_api==0.2.0
 gntp==1.0.3
 
 # homeassistant.components.gogogate2
-gogogate2-api==2.0.2
+gogogate2-api==2.0.3
 
 # homeassistant.components.google
 google-api-python-client==1.6.4
@@ -747,7 +747,7 @@ hole==0.5.1
 holidays==0.10.3
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200918.0
+home-assistant-frontend==20200918.2
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -1401,7 +1401,7 @@ pyialarm==0.3
 pyicloud==0.9.7
 
 # homeassistant.components.insteon
-pyinsteon==1.0.7
+pyinsteon==1.0.8
 
 # homeassistant.components.intesishome
 pyintesishome==1.7.5
