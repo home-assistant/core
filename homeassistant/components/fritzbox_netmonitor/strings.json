@@ -1,0 +1,17 @@
+{
+  "config": {
+    "flow_title": "AVM FRITZ!Box Net Monitor: {name}",
+    "step": {
+      "user": {
+        "description": "Enter your AVM FRITZ!Box information.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "This AVM FRITZ!Box is already configured.",
+      "not_found": "No supported AVM FRITZ!Box found on the network."
+    }
+  }
+}

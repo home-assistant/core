@@ -1,16 +1,16 @@
-"""Config flow for fritzbox_netmonitor"""
+"""Config flow for fritzbox_netmonitor."""
 from fritzconnection.core.exceptions import FritzConnectionException
 from fritzconnection.lib.fritzstatus import FritzStatus
-from requests.exceptions import RequestException
+from requests.exceptions import ConnectionError
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST
 
 # pylint:disable=unused-import
-from .const import CONF_DEFAULT_IP, DOMAIN
+from .const import DEFAULT_HOST, DOMAIN
 
-DATA_SCHEMA_USER = vol.Schema({vol.Optional(CONF_HOST, default=CONF_DEFAULT_IP): str})
+DATA_SCHEMA_USER = vol.Schema({vol.Optional(CONF_HOST, default=DEFAULT_HOST): str})
 
 RESULT_SUCCESS = "success"
 RESULT_NOT_FOUND = "not_found"
@@ -25,16 +25,25 @@ class FritzboxNetMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize flow."""
         self._host = None
+        self._name = None
 
     def _get_entry(self):
         """Create and return an entry."""
-        return self.async_create_entry(title=self._name, data={CONF_HOST: self._host},)
+        return self.async_create_entry(
+            title=self._name,
+            data={CONF_HOST: self._host},
+        )
 
     def _try_connect(self):
-        """Try to connect"""
+        """Try to connect."""
         try:
-            fritzbox_status = FritzStatus(address=self._host)
-        except (ValueError, TypeError, FritzConnectionException):
+            FritzStatus(address=self._host)
+        except (
+            ValueError,
+            TypeError,
+            ConnectionError,
+            FritzConnectionException,
+        ):
             return RESULT_NOT_FOUND
         return RESULT_SUCCESS
 
@@ -49,6 +58,7 @@ class FritzboxNetMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     return self.async_abort(reason="already_configured")
 
             self._host = user_input[CONF_HOST]
+            self._name = user_input[CONF_HOST]
 
             result = await self.hass.async_add_executor_job(self._try_connect)
 
@@ -56,7 +66,6 @@ class FritzboxNetMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self._get_entry()
             elif result == RESULT_NOT_FOUND:
                 return self.async_abort(reason=result)
-            errors["base"] = result
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA_USER, errors=errors

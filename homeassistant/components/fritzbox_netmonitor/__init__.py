@@ -1,38 +1,42 @@
-"""The fritzbox_netmonitor component."""
+"""The fritzbox_netmonitor integration."""
 import asyncio
-import logging
+from functools import partial
 
 from fritzconnection.core.exceptions import FritzConnectionException
 from fritzconnection.lib.fritzstatus import FritzStatus
-from requests.exceptions import RequestException
+from requests.exceptions import ConnectionError
 
-from homeassistant.const import (
-    CONF_DEVICES,
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    EVENT_HOMEASSISTANT_STOP,
-)
+from homeassistant.const import CONF_HOST
 
-from .const import DOMAIN, PLATFORMS
+from .const import DOMAIN, LOGGER, PLATFORMS
 
-_LOGGER = logging.getLogger(__name__)
+
+async def async_setup(hass, config):
+    """Set up the fritzbox_netmonitor integration."""
+    return True
 
 
 async def async_setup_entry(hass, entry):
-    """Set up the AVM Fritz!Box platforms."""
-    try:
-        fritzbox_status = FritzStatus(address=entry.data[CONF_HOST])
-    except (ValueError, TypeError, FritzConnectionException):
-        fritzbox_status = None
+    """Set up the fritzbox_netmonitor platforms."""
+    host = entry.data[CONF_HOST]
 
-    if fritzbox_status is None:
-        _LOGGER.error(
-            "Failed to establish connection to FRITZ!Box: %s", entry.data[CONF_HOST]
+    try:
+        fritz_status = await hass.async_add_executor_job(
+            partial(FritzStatus, address=host)
+        )
+    except (
+        ValueError,
+        TypeError,
+        ConnectionError,
+        FritzConnectionException,
+    ) as error:
+        LOGGER.error(
+            "Failed to establish connection to FRITZ!Box (%s): %s", host, error
         )
         return False
 
-    hass.data[DOMAIN][entry.entry_id] = fritzbox_status
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = [fritz_status, host]
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -43,9 +47,7 @@ async def async_setup_entry(hass, entry):
 
 
 async def async_unload_entry(hass, entry):
-    """Unloading the AVM Fritz!Box platforms."""
-    fritz = hass.data[DOMAIN][entry.entry_id]
-    await hass.async_add_executor_job(fritz.logout)
+    """Unloading the fritzbox_netmonitor platforms."""
 
     unload_ok = all(
         await asyncio.gather(

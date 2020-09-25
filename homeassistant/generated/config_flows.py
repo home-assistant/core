@@ -61,6 +61,7 @@ FLOWS = [
     "forked_daapd",
     "freebox",
     "fritzbox",
+    "fritzbox_netmonitor",
     "garmin_connect",
     "gdacs",
     "geofency",

@@ -1,14 +1,9 @@
 """Support for monitoring an AVM Fritz!Box router."""
-import logging
 
-from fritzconnection.core.exceptions import FritzConnectionException
-from fritzconnection.lib.fritzstatus import FritzStatus
+
 from requests.exceptions import RequestException
-import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_HOST, CONF_NAME, STATE_UNAVAILABLE
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -23,61 +18,64 @@ from .const import (
     ATTR_TRANSMISSION_RATE_DOWN,
     ATTR_TRANSMISSION_RATE_UP,
     ATTR_UPTIME,
-    CONF_DEFAULT_IP,
-    CONF_DEFAULT_NAME,
+    DOMAIN,
     ICON,
+    LOGGER,
+    MANUFACTURER,
+    MIN_TIME_BETWEEN_UPDATES,
     STATE_OFFLINE,
     STATE_ONLINE,
 )
 
-_LOGGER = logging.getLogger(__name__)
 
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the fritzbox_netmonitor sensor from config_entry."""
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAME, default=CONF_DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_HOST, default=CONF_DEFAULT_IP): cv.string,
-    }
-)
+    fritz_status, host = hass.data[DOMAIN][config_entry.entry_id]
+    entities = [FritzboxMonitorSensor(fritz_status, host)]
 
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the FRITZ!Box monitor sensors."""
-    name = config.get(CONF_NAME)
-    host = config.get(CONF_HOST)
-
-    try:
-        fstatus = FritzStatus(address=host)
-    except (ValueError, TypeError, FritzConnectionException):
-        fstatus = None
-
-    if fstatus is None:
-        _LOGGER.error("Failed to establish connection to FRITZ!Box: %s", host)
-        return 1
-    _LOGGER.info("Successfully connected to FRITZ!Box")
-
-    add_entities([FritzboxMonitorSensor(name, fstatus)], True)
+    async_add_entities(entities, True)
 
 
 class FritzboxMonitorSensor(Entity):
-    """Implementation of a fritzbox monitor sensor."""
+    """Implementation of a fritzbox_netmonitor sensor."""
 
-    def __init__(self, name, fstatus):
+    def __init__(self, fritz_status, host):
         """Initialize the sensor."""
-        self._name = name
-        self._fstatus = fstatus
+        self._fritz_status = fritz_status
+        self._host = host
         self._state = STATE_UNAVAILABLE
-        self._is_linked = self._is_connected = None
-        self._external_ip = self._uptime = None
-        self._bytes_sent = self._bytes_received = None
+        self._is_linked = None
+        self._is_connected = None
+        self._external_ip = None
+        self._uptime = None
+        self._bytes_sent = None
+        self._bytes_received = None
         self._transmission_rate_up = None
         self._transmission_rate_down = None
-        self._max_byte_rate_up = self._max_byte_rate_down = None
+        self._max_byte_rate_up = None
+        self._max_byte_rate_down = None
+
+    @property
+    def device_info(self):
+        """Return device specific attributes."""
+        return {
+            "name": self.name,
+            "identifiers": {(DOMAIN, self._host)},
+            "manufacturer": MANUFACTURER,
+            "model": self._fritz_status.modelname,
+            "sw_version": self._fritz_status.fc.system_version,
+        }
+
+    @property
+    def unique_id(self):
+        """Return the unique ID of the device."""
+        return self._host
 
     @property
     def name(self):
-        """Return the name of the sensor."""
-        return self._name.rstrip()
+        """Return the name of the device."""
+        return self._fritz_status.modelname
 
     @property
     def icon(self):
@@ -112,18 +110,18 @@ class FritzboxMonitorSensor(Entity):
     def update(self):
         """Retrieve information from the FritzBox."""
         try:
-            self._is_linked = self._fstatus.is_linked
-            self._is_connected = self._fstatus.is_connected
-            self._external_ip = self._fstatus.external_ip
-            self._uptime = self._fstatus.uptime
-            self._bytes_sent = self._fstatus.bytes_sent
-            self._bytes_received = self._fstatus.bytes_received
-            transmission_rate = self._fstatus.transmission_rate
+            self._is_linked = self._fritz_status.is_linked
+            self._is_connected = self._fritz_status.is_connected
+            self._external_ip = self._fritz_status.external_ip
+            self._uptime = self._fritz_status.uptime
+            self._bytes_sent = self._fritz_status.bytes_sent
+            self._bytes_received = self._fritz_status.bytes_received
+            transmission_rate = self._fritz_status.transmission_rate
             self._transmission_rate_up = transmission_rate[0]
             self._transmission_rate_down = transmission_rate[1]
-            self._max_byte_rate_up = self._fstatus.max_byte_rate[0]
-            self._max_byte_rate_down = self._fstatus.max_byte_rate[1]
+            self._max_byte_rate_up = self._fritz_status.max_byte_rate[0]
+            self._max_byte_rate_down = self._fritz_status.max_byte_rate[1]
             self._state = STATE_ONLINE if self._is_connected else STATE_OFFLINE
-        except RequestException as err:
+        except RequestException as error:
             self._state = STATE_UNAVAILABLE
-            _LOGGER.warning("Could not reach FRITZ!Box: %s", err)
+            LOGGER.warning("Could not reach FRITZ!Box (%s): %s", self._host, error)
