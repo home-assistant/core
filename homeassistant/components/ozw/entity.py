@@ -328,7 +328,10 @@ class OZWValidationResponse:
         """Process an invalid request that fails type validation."""
         return OZWValidationResponse.process_fail(
             ERR_NOT_SUPPORTED,
-            f"Configuration parameter type {value.type} does not match the value type {type(new_value)}",
+            (
+                f"Configuration parameter type {value.type} does "
+                f"not match the value type {type(new_value)}"
+            ),
         )
 
     @staticmethod
