@@ -11,19 +11,25 @@ from .deconz_device import DeconzBase
 
 CONF_DECONZ_EVENT = "deconz_event"
 
+EVENT = "Event"
+
 
 async def async_setup_events(gateway) -> None:
     """Set up the deCONZ events."""
+    gateway.entities[EVENT] = set()
 
     @callback
-    def async_add_sensor(sensors, new=True):
+    def async_add_sensor(sensors):
         """Create DeconzEvent."""
         for sensor in sensors:
 
             if not gateway.option_allow_clip_sensor and sensor.type.startswith("CLIP"):
                 continue
 
-            if not new or sensor.type not in Switch.ZHATYPE:
+            if (
+                sensor.type not in Switch.ZHATYPE
+                or sensor.uniqueid in gateway.entities[EVENT]
+            ):
                 continue
 
             new_event = DeconzEvent(sensor, gateway)
@@ -44,7 +50,7 @@ async def async_setup_events(gateway) -> None:
 async def async_unload_events(gateway) -> None:
     """Unload all deCONZ events."""
     for event in gateway.events:
-        event.async_will_remove_from_hass()
+        await event.async_will_remove_from_hass()
 
     gateway.events.clear()
 
@@ -55,6 +61,8 @@ class DeconzEvent(DeconzBase):
     Stateless sensors such as remotes are expected to generate an event
     instead of a sensor entity in hass.
     """
+
+    TYPE = EVENT
 
     def __init__(self, device, gateway):
         """Register callback that will be used for signals."""
@@ -71,11 +79,10 @@ class DeconzEvent(DeconzBase):
         """Return Event device."""
         return self._device
 
-    @callback
-    def async_will_remove_from_hass(self) -> None:
+    async def async_will_remove_from_hass(self) -> None:
         """Disconnect event object when removed."""
         self._device.remove_callback(self.async_update_callback)
-        self._device = None
+        await super().async_will_remove_from_hass()
 
     @callback
     def async_update_callback(self, force_update=False, ignore_update=False):

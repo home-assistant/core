@@ -10,11 +10,17 @@ from .const import DOMAIN as DECONZ_DOMAIN
 class DeconzBase:
     """Common base for deconz entities and events."""
 
+    TYPE = ""
+
     def __init__(self, device, gateway):
         """Set up device and add update callback to get data from websocket."""
         self._device = device
         self.gateway = gateway
-        self.listeners = []
+        self.gateway.entities[self.TYPE].add(self.unique_id)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Remove unique id."""
+        self.gateway.entities[self.TYPE].remove(self.unique_id)
 
     @property
     def unique_id(self):
@@ -51,12 +57,6 @@ class DeconzBase:
 class DeconzDevice(DeconzBase, Entity):
     """Representation of a deCONZ device."""
 
-    def __init__(self, device, gateway):
-        """Set up device and add update callback to get data from websocket."""
-        super().__init__(device, gateway)
-
-        self.unsub_dispatcher = None
-
     @property
     def entity_registry_enabled_default(self):
         """Return if the entity should be enabled when first added to the entity registry.
@@ -72,7 +72,7 @@ class DeconzDevice(DeconzBase, Entity):
         """Subscribe to device events."""
         self._device.register_callback(self.async_update_callback)
         self.gateway.deconz_ids[self.entity_id] = self._device.deconz_id
-        self.listeners.append(
+        self.async_on_remove(
             async_dispatcher_connect(
                 self.hass, self.gateway.signal_reachable, self.async_update_callback
             )
@@ -83,8 +83,7 @@ class DeconzDevice(DeconzBase, Entity):
         self._device.remove_callback(self.async_update_callback)
         if self.entity_id in self.gateway.deconz_ids:
             del self.gateway.deconz_ids[self.entity_id]
-            for unsub_dispatcher in self.listeners:
-                unsub_dispatcher()
+        await super().async_will_remove_from_hass()
 
     @callback
     def async_update_callback(self, force_update=False, ignore_update=False):
