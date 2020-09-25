@@ -14,6 +14,24 @@ from . import ShellyDeviceWrapper
 from .const import DATA_CONFIG_ENTRY, DOMAIN
 from .utils import get_entity_name
 
+def shelly_rest_parser(self, path: str):
+    """Parser for REST path from device status."""
+
+    if "/" not in path:
+        _attribute_value = self.wrapper.device.status[path]
+    else:
+        _attribute_value = self.wrapper.device.status[path.split("/")[0]][
+            path.split("/")[1]
+        ]
+    if self.description.device_class == DEVICE_CLASS_TIMESTAMP:
+        last_boot = datetime.utcnow() - timedelta(seconds=_attribute_value)
+        _attribute_value = last_boot.replace(microsecond=0).isoformat()
+
+    if "new_version" in path:
+        _attribute_value = _attribute_value.split("/")[1].split("@")[0]
+
+    return _attribute_value
+
 
 async def async_setup_entry_attribute_entities(
     hass, config_entry, async_add_entities, sensors, sensor_class
@@ -269,17 +287,7 @@ class ShellyRestAttributeEntity(entity.Entity):
     @property
     def attribute_value(self):
         """Attribute."""
-
-        if "/" not in self.path:
-            _attribute_value = self.wrapper.device.status[self.path]
-        else:
-            _attribute_value = self.wrapper.device.status[self.path.split("/")[0]][
-                self.path.split("/")[1]
-            ]
-        if self.description.device_class == DEVICE_CLASS_TIMESTAMP:
-            last_boot = datetime.utcnow() - timedelta(seconds=_attribute_value)
-            _attribute_value = last_boot.replace(microsecond=0).isoformat()
-        return _attribute_value
+        return shelly_rest_parser(self, self.path)
 
     @property
     def unit_of_measurement(self):
@@ -308,21 +316,8 @@ class ShellyRestAttributeEntity(entity.Entity):
         if self._attributes is None:
             return None
 
-        _path = self._attributes.get("path")
         _description = self._attributes.get("description")
-
-        if "/" not in _path:
-            _attribute_value = self.wrapper.device.status[_path]
-        else:
-            _attribute_value = self.wrapper.device.status[_path.split("/")[0]][
-                _path.split("/")[1]
-            ]
-        if self.description.device_class == DEVICE_CLASS_TIMESTAMP:
-            last_boot = datetime.utcnow() - timedelta(seconds=_attribute_value)
-            _attribute_value = last_boot.replace(microsecond=0).isoformat()
-
-        if "new_version" in _path:
-            _attribute_value = _attribute_value.split("/")[1].split("@")[0]
+        _attribute_value = shelly_rest_parser(self, self._attributes.get("path"))
 
         return {_description: _attribute_value}
 
