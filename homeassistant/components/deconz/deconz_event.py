@@ -1,12 +1,58 @@
 """Representation of a deCONZ remote."""
+from pydeconz.sensor import Switch
+
 from homeassistant.const import CONF_EVENT, CONF_ID, CONF_UNIQUE_ID
 from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import slugify
 
-from .const import CONF_GESTURE, LOGGER
+from .const import CONF_ANGLE, CONF_GESTURE, CONF_XY, LOGGER, NEW_SENSOR
 from .deconz_device import DeconzBase
 
 CONF_DECONZ_EVENT = "deconz_event"
+
+EVENT = "Event"
+
+
+async def async_setup_events(gateway) -> None:
+    """Set up the deCONZ events."""
+    gateway.entities[EVENT] = set()
+
+    @callback
+    def async_add_sensor(sensors):
+        """Create DeconzEvent."""
+        for sensor in sensors:
+
+            if not gateway.option_allow_clip_sensor and sensor.type.startswith("CLIP"):
+                continue
+
+            if (
+                sensor.type not in Switch.ZHATYPE
+                or sensor.uniqueid in gateway.entities[EVENT]
+            ):
+                continue
+
+            new_event = DeconzEvent(sensor, gateway)
+            gateway.hass.async_create_task(new_event.async_update_device_registry())
+            gateway.events.append(new_event)
+
+    gateway.listeners.append(
+        async_dispatcher_connect(
+            gateway.hass, gateway.async_signal_new_device(NEW_SENSOR), async_add_sensor
+        )
+    )
+
+    async_add_sensor(
+        [gateway.api.sensors[key] for key in sorted(gateway.api.sensors, key=int)]
+    )
+
+
+async def async_unload_events(gateway) -> None:
+    """Unload all deCONZ events."""
+    for event in gateway.events:
+        await event.async_will_remove_from_hass()
+
+    gateway.events.clear()
 
 
 class DeconzEvent(DeconzBase):
@@ -15,6 +61,8 @@ class DeconzEvent(DeconzBase):
     Stateless sensors such as remotes are expected to generate an event
     instead of a sensor entity in hass.
     """
+
+    TYPE = EVENT
 
     def __init__(self, device, gateway):
         """Register callback that will be used for signals."""
@@ -31,11 +79,10 @@ class DeconzEvent(DeconzBase):
         """Return Event device."""
         return self._device
 
-    @callback
-    def async_will_remove_from_hass(self) -> None:
+    async def async_will_remove_from_hass(self) -> None:
         """Disconnect event object when removed."""
         self._device.remove_callback(self.async_update_callback)
-        self._device = None
+        await super().async_will_remove_from_hass()
 
     @callback
     def async_update_callback(self, force_update=False, ignore_update=False):
@@ -51,6 +98,12 @@ class DeconzEvent(DeconzBase):
 
         if self._device.gesture is not None:
             data[CONF_GESTURE] = self._device.gesture
+
+        if self._device.angle is not None:
+            data[CONF_ANGLE] = self._device.angle
+
+        if self._device.xy is not None:
+            data[CONF_XY] = self._device.xy
 
         self.gateway.hass.bus.async_fire(CONF_DECONZ_EVENT, data)
 

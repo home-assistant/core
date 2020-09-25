@@ -2,6 +2,7 @@
 from collections import deque
 import json
 import operator
+import os
 import re
 import subprocess
 import sys
@@ -31,6 +32,19 @@ SUPPORTED_PYTHON_VERSIONS = [
 STD_LIBS = {version: set(stdlib_list(version)) for version in SUPPORTED_PYTHON_VERSIONS}
 PIPDEPTREE_CACHE = None
 
+IGNORE_VIOLATIONS = {
+    # Still has standard library requirements.
+    "acmeda",
+    "blink",
+    "ezviz",
+    "hdmi_cec",
+    "juicenet",
+    "lupusec",
+    "rainbird",
+    "slide",
+    "suez_water",
+}
+
 
 def normalize_package_name(requirement: str) -> str:
     """Return a normalized package name from a requirement string."""
@@ -49,12 +63,10 @@ def validate(integrations: Dict[str, Integration], config: Config):
     ensure_cache()
 
     # check for incompatible requirements
-    items = integrations.values()
 
-    if not config.specific_integrations:
-        tqdm(items)
+    disable_tqdm = config.specific_integrations or os.environ.get("CI", False)
 
-    for integration in items:
+    for integration in tqdm(integrations.values(), disable=disable_tqdm):
         if not integration.manifest:
             continue
 
@@ -63,6 +75,10 @@ def validate(integrations: Dict[str, Integration], config: Config):
 
 def validate_requirements(integration: Integration):
     """Validate requirements."""
+    # Some integrations have not been fixed yet so are allowed to have violations.
+    if integration.domain in IGNORE_VIOLATIONS:
+        return
+
     integration_requirements = set()
     integration_packages = set()
     for req in integration.requirements:

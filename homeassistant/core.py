@@ -548,6 +548,11 @@ class Event:
         self.time_fired = time_fired or dt_util.utcnow()
         self.context: Context = context or Context()
 
+    def __hash__(self) -> int:
+        """Make hashable."""
+        # The only event type that shares context are the TIME_CHANGED
+        return hash((self.event_type, self.context.id, self.time_fired))
+
     def as_dict(self) -> Dict:
         """Create a dict representation of this Event.
 
@@ -1389,6 +1394,9 @@ class Config:
 
         # List of allowed external URLs that integrations may use
         self.allowlist_external_urls: Set[str] = set()
+
+        # Dictionary of Media folders that integrations may use
+        self.media_dirs: Dict[str, str] = {}
 
         # If Home Assistant is running in safe mode
         self.safe_mode: bool = False

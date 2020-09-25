@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
     ELECTRICAL_CURRENT_AMPERE,
+    LIGHT_LUX,
     PERCENTAGE,
     TEMP_CELSIUS,
     VOLT,
@@ -24,7 +25,8 @@ _LOGGER = logging.getLogger(__name__)
 CONF_MOUNT_DIR = "mount_dir"
 CONF_NAMES = "names"
 
-DEFAULT_MOUNT_DIR = "/sys/bus/w1/devices/"
+DEFAULT_OWSERVER_PORT = 4304
+DEFAULT_SYSBUS_MOUNT_DIR = "/sys/bus/w1/devices/"
 DEVICE_SENSORS = {
     # Family : { SensorType: owfs path }
     "10": {"temperature": "temperature"},
@@ -70,7 +72,7 @@ SENSOR_TYPES = {
     "humidity": ["humidity", PERCENTAGE],
     "humidity_raw": ["humidity", PERCENTAGE],
     "pressure": ["pressure", "mb"],
-    "illuminance": ["illuminance", "lux"],
+    "illuminance": ["illuminance", LIGHT_LUX],
     "wetness_0": ["wetness", PERCENTAGE],
     "wetness_1": ["wetness", PERCENTAGE],
     "wetness_2": ["wetness", PERCENTAGE],
@@ -91,9 +93,9 @@ SENSOR_TYPES = {
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAMES): {cv.string: cv.string},
-        vol.Optional(CONF_MOUNT_DIR, default=DEFAULT_MOUNT_DIR): cv.string,
+        vol.Optional(CONF_MOUNT_DIR, default=DEFAULT_SYSBUS_MOUNT_DIR): cv.string,
         vol.Optional(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=4304): cv.port,
+        vol.Optional(CONF_PORT, default=DEFAULT_OWSERVER_PORT): cv.port,
     }
 )
 
@@ -167,7 +169,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 )
 
     # We have a raw GPIO ow sensor on a Pi
-    elif base_dir == DEFAULT_MOUNT_DIR:
+    elif base_dir == DEFAULT_SYSBUS_MOUNT_DIR:
         for device_family in DEVICE_SENSORS:
             for device_folder in glob(os.path.join(base_dir, f"{device_family}[.-]*")):
                 sensor_id = os.path.split(device_folder)[1]

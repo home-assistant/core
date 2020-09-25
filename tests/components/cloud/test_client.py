@@ -5,6 +5,7 @@ import pytest
 from homeassistant.components.cloud import DOMAIN
 from homeassistant.components.cloud.client import CloudClient
 from homeassistant.components.cloud.const import PREF_ENABLE_ALEXA, PREF_ENABLE_GOOGLE
+from homeassistant.const import CONTENT_TYPE_JSON
 from homeassistant.core import State
 from homeassistant.setup import async_setup_component
 
@@ -175,7 +176,7 @@ async def test_webhook_msg(hass, caplog):
         {
             "cloudhook_id": "mock-cloud-id",
             "body": '{"hello": "world"}',
-            "headers": {"content-type": "application/json"},
+            "headers": {"content-type": CONTENT_TYPE_JSON},
             "method": "POST",
             "query": None,
         }
@@ -184,7 +185,7 @@ async def test_webhook_msg(hass, caplog):
     assert response == {
         "status": 200,
         "body": '{"from": "handler"}',
-        "headers": {"Content-Type": "application/json"},
+        "headers": {"Content-Type": CONTENT_TYPE_JSON},
     }
 
     assert len(received) == 1
@@ -197,7 +198,7 @@ async def test_webhook_msg(hass, caplog):
         {
             "cloudhook_id": "mock-nonexisting-id",
             "body": '{"nonexisting": "payload"}',
-            "headers": {"content-type": "application/json"},
+            "headers": {"content-type": CONTENT_TYPE_JSON},
             "method": "POST",
             "query": None,
         }

@@ -17,6 +17,7 @@ async def test_browse_media_as_dict():
         title="media/",
         can_play=False,
         can_expand=True,
+        children_media_class=MEDIA_CLASS_MUSIC,
     )
     base.children = [
         models.BrowseMediaSource(
@@ -37,6 +38,7 @@ async def test_browse_media_as_dict():
     assert item["media_content_id"] == f"{const.URI_SCHEME}{const.DOMAIN}/media"
     assert not item["can_play"]
     assert item["can_expand"]
+    assert item["children_media_class"] == MEDIA_CLASS_MUSIC
     assert len(item["children"]) == 1
     assert item["children"][0]["title"] == "test.mp3"
     assert item["children"][0]["media_class"] == MEDIA_CLASS_MUSIC
@@ -62,6 +64,7 @@ async def test_browse_media_parent_no_children():
     assert not item["can_play"]
     assert item["can_expand"]
     assert len(item["children"]) == 0
+    assert item["children_media_class"] is None
 
 
 async def test_media_source_default_name():

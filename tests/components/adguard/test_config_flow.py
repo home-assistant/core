@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    CONTENT_TYPE_JSON,
 )
 
 from tests.async_mock import patch
@@ -62,7 +63,7 @@ async def test_full_flow_implementation(hass, aioclient_mock):
         f"://{FIXTURE_USER_INPUT[CONF_HOST]}"
         f":{FIXTURE_USER_INPUT[CONF_PORT]}/control/status",
         json={"version": "v0.99.0"},
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
     flow = config_flow.AdGuardHomeFlowHandler()
@@ -134,12 +135,12 @@ async def test_hassio_update_instance_running(hass, aioclient_mock):
     aioclient_mock.get(
         "http://mock-adguard-updated:3000/control/status",
         json={"version": "v0.99.0"},
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": CONTENT_TYPE_JSON},
     )
     aioclient_mock.get(
         "http://mock-adguard:3000/control/status",
         json={"version": "v0.99.0"},
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
     entry = MockConfigEntry(
@@ -195,7 +196,7 @@ async def test_hassio_confirm(hass, aioclient_mock):
     aioclient_mock.get(
         "http://mock-adguard:3000/control/status",
         json={"version": "v0.99.0"},
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
     result = await hass.config_entries.flow.async_init(

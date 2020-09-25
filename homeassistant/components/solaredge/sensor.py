@@ -267,7 +267,8 @@ class SolarEdgeStorageLevelSensor(SolarEdgeSensor):
         """Get the latest inventory data and update state and attributes."""
         self.data_service.update()
         attr = self.data_service.attributes.get(self._json_key)
-        self._state = attr["soc"]
+        if attr and "soc" in attr:
+            self._state = attr["soc"]
 
 
 class SolarEdgeDataService:

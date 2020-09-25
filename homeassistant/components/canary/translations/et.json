@@ -1,0 +1,11 @@
+{
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "timeout": "P\u00e4ringu ajal\u00f5pp (sekundites)"
+                }
+            }
+        }
+    }
+}

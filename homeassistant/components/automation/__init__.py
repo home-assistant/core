@@ -45,6 +45,7 @@ from homeassistant.helpers.script import (
     Script,
     make_script_schema,
 )
+from homeassistant.helpers.script_variables import ScriptVariables
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.trigger import async_initialize_triggers
 from homeassistant.helpers.typing import TemplateVarsType
@@ -256,8 +257,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         self._referenced_entities: Optional[Set[str]] = None
         self._referenced_devices: Optional[Set[str]] = None
         self._logger = _LOGGER
-        self._variables = variables
-        self._variables_dynamic = template.is_complex(variables)
+        self._variables: ScriptVariables = variables
 
     @property
     def name(self):
@@ -334,9 +334,6 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         """Startup with initial state or previous state."""
         await super().async_added_to_hass()
 
-        if self._variables_dynamic:
-            template.attach(cast(HomeAssistant, self.hass), self._variables)
-
         self._logger = logging.getLogger(
             f"{__name__}.{split_entity_id(self.entity_id)[1]}"
         )
@@ -392,15 +389,13 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         This method is a coroutine.
         """
         if self._variables:
-            if self._variables_dynamic:
-                variables = template.render_complex(self._variables, run_variables)
-            else:
-                variables = dict(self._variables)
+            try:
+                variables = self._variables.async_render(self.hass, run_variables)
+            except template.TemplateError as err:
+                self._logger.error("Error rendering variables: %s", err)
+                return
         else:
-            variables = {}
-
-        if run_variables:
-            variables.update(run_variables)
+            variables = run_variables
 
         if (
             not skip_condition

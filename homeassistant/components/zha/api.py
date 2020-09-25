@@ -99,7 +99,7 @@ SERVICE_SCHEMAS = {
             vol.Required(ATTR_ENDPOINT_ID): cv.positive_int,
             vol.Required(ATTR_CLUSTER_ID): cv.positive_int,
             vol.Optional(ATTR_CLUSTER_TYPE, default=CLUSTER_TYPE_IN): cv.string,
-            vol.Required(ATTR_ATTRIBUTE): cv.positive_int,
+            vol.Required(ATTR_ATTRIBUTE): vol.Any(int, cv.boolean, cv.string),
             vol.Required(ATTR_VALUE): cv.string,
             vol.Optional(ATTR_MANUFACTURER): cv.positive_int,
         }

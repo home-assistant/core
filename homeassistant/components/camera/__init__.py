@@ -35,6 +35,7 @@ from homeassistant.components.stream.const import (
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_FILENAME,
+    CONTENT_TYPE_MULTIPART,
     EVENT_HOMEASSISTANT_START,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -184,7 +185,7 @@ async def async_get_still_stream(request, image_cb, content_type, interval):
     This method must be run in the event loop.
     """
     response = web.StreamResponse()
-    response.content_type = "multipart/x-mixed-replace; boundary=--frameboundary"
+    response.content_type = CONTENT_TYPE_MULTIPART.format("--frameboundary")
     await response.prepare(request)
 
     async def write_to_mjpeg_stream(img_bytes):

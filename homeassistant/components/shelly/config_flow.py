@@ -8,7 +8,12 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant import config_entries, core
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    HTTP_UNAUTHORIZED,
+)
 from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN  # pylint:disable=unused-import
@@ -91,7 +96,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 device_info = await validate_input(self.hass, self.host, user_input)
             except aiohttp.ClientResponseError as error:
-                if error.status == 401:
+                if error.status == HTTP_UNAUTHORIZED:
                     errors["base"] = "invalid_auth"
                 else:
                     errors["base"] = "cannot_connect"

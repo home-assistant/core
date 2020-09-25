@@ -3,6 +3,7 @@
         "abort": {
             "authorize_url_timeout": "[%key::common::config_flow::abort::oauth2_authorize_url_timeout%]",
             "missing_configuration": "[%key::common::config_flow::abort::oauth2_missing_configuration%]",
+            "no_url_available": "No hi ha cap URL disponible. Per a m\u00e9s informaci\u00f3 sobre aquest error, [consulta la secci\u00f3 d'ajuda]({docs_url})",
             "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
         },
         "create_entry": {

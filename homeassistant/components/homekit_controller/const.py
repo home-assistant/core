@@ -4,6 +4,7 @@ DOMAIN = "homekit_controller"
 KNOWN_DEVICES = f"{DOMAIN}-devices"
 CONTROLLER = f"{DOMAIN}-controller"
 ENTITY_MAP = f"{DOMAIN}-entity-map"
+TRIGGERS = f"{DOMAIN}-triggers"
 
 HOMEKIT_DIR = ".homekit"
 PAIRING_FILE = "pairing.json"

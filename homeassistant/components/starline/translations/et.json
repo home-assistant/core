@@ -1,0 +1,15 @@
+{
+    "config": {
+        "step": {
+            "auth_mfa": {
+                "title": "Kaheastmeline autoriseerimine"
+            },
+            "auth_user": {
+                "data": {
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
+                }
+            }
+        }
+    }
+}
