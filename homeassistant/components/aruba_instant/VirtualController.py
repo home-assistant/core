@@ -7,7 +7,7 @@ from instantpy import InstantVC
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import DOMAIN, TRACKED_DEVICES
+from .const import DOMAIN, TRACKED_CLIENTS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -16,7 +16,7 @@ class VirtualController:
     """
     Instantiate an InstantVC object.
     """
-    _LOGGER.debug("Initializing Aruba Instant Virtual Controller")
+    _LOGGER.debug("Intializing Aruba Instant Virtual Controller")
     def __init__(self, hass: HomeAssistantType, entry: ConfigEntry):
         self.hass = hass
         self.vc_name = ""
@@ -36,14 +36,13 @@ class VirtualController:
         selected_clients = entry.data.get('clients')
         try:
             for client in selected_clients:
-                hass.data[DOMAIN][TRACKED_DEVICES][self.entry_id].add(client)
-            # entry.data['clients'].clear()
+                hass.data[DOMAIN][TRACKED_CLIENTS][self.entry_id].add(client)
         except TypeError:
-            _LOGGER.debug("No clients selected to track.")
+            _LOGGER.debug("Client track list empty.  Will populate.")
 
     async def async_setup(self) -> [bool, ConnectionError]:
         """Set up an Aruba Instant Virtual Controller."""
-        _LOGGER.debug(f"Initial Virtual Controller login.")
+        _LOGGER.debug("Initial Virtual Controller login.")
         try:
             await self.hass.async_add_executor_job(self._virtual_controller.login)
         except ConnectionError:
@@ -53,7 +52,7 @@ class VirtualController:
 
     async def async_update_all(self) -> dict:
         """Update Instant VC clients and APs."""
-        _LOGGER.debug(f"Updating clients and APs.")
+        _LOGGER.debug("Updating clients and APs.")
         self._clients = await self.async_update_clients()
         self._aps = await self.async_update_aps()
         return self._clients

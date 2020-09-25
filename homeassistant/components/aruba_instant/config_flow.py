@@ -21,7 +21,9 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
-    DISCOVERED_DEVICES
+    AVAILABLE_CLIENTS,
+    TRACKED_CLIENTS,
+    SELECTED_CLIENTS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -112,7 +114,7 @@ class InstantConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         data = {}
         if user_input is not None:
-            self.config['options'] = list(user_input.get('clients'))
+            self.config[TRACKED_CLIENTS] = list(user_input.get(AVAILABLE_CLIENTS))
             data.update(self.config)
             data.update(user_input)
             return self.async_create_entry(title="Aruba Instant VC", data=data)
@@ -127,7 +129,9 @@ class InstantConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         macs = {client: f"{clients[client]['name']} ({client})" for client in clients}
         track_client_data_schema = vol.Schema(
             {
-                vol.Optional("clients", description="Clients",): cv.multi_select(macs),
+                vol.Optional(
+                    AVAILABLE_CLIENTS, description=AVAILABLE_CLIENTS,
+                ): cv.multi_select(macs),
                 vol.Optional(
                     "track_none", description="Stop tracking all devices."
                 ): bool,
@@ -145,36 +149,84 @@ class InstantOptionsFlowHandler(config_entries.OptionsFlow):
         """Initialize Aruba Instant options flow."""
         self.config_entry = config_entry
         self.options = dict(config_entry.options)
+        self.options.update({"removed_clients": []})
 
     async def async_step_init(self, user_input=None):
         """Handle client tracking."""
         errors = {}
         if user_input is not None:
-            selected_macs = {
-                mac: f"{self.hass.data[DOMAIN]['coordinator'][self.config_entry.entry_id].data.get(mac)['name']} ({mac})"
-                for mac in user_input.get("clients")
-            }
-            for mac in selected_macs.keys():
-                entity = self.hass.data[DOMAIN]["coordinator"][
-                    self.config_entry.entry_id
-                ].data.get(mac)
-                self.options.update({mac: entity.get('mac')})
-                if user_input.get("track_none"):
-                    return self.async_create_entry(title="", data={"track_none": True})
-            return self.async_create_entry(title="", data=selected_macs)
-        macs = {}
-        for mac in self.hass.data[DOMAIN][DISCOVERED_DEVICES][self.config_entry.entry_id]:
-            if mac in self.hass.data[DOMAIN]['coordinator'][self.config_entry.entry_id].data.keys():
-                macs.update({mac: f"{self.hass.data[DOMAIN]['coordinator'][self.config_entry.entry_id].data.get(mac)['name']} ({mac})"})
+            add_macs = user_input.get(AVAILABLE_CLIENTS, None)
+            tracked_macs = user_input.get(TRACKED_CLIENTS, None)
+            selected_macs = {}
+            if add_macs is not None:
+                selected_macs.update(
+                    {
+                        mac: f"{self.hass.data[DOMAIN]['coordinator'][self.config_entry.entry_id].data.get(mac)['name']} ({mac})"
+                        for mac in add_macs
+                    }
+                )
+            if tracked_macs is not None:
+                selected_macs.update(
+                    {
+                        mac: f"{self.hass.data[DOMAIN]['coordinator'][self.config_entry.entry_id].data.get(mac)['name']} ({mac})"
+                        for mac in tracked_macs
+                    }
+                )
 
-        macs = dict(sorted(macs.items(), key=lambda x: x[1].lower()))
+            if user_input.get("track_none"):
+                return self.async_create_entry(title="", data={"track_none": True})
+            return self.async_create_entry(title="", data=selected_macs)
+
+        # Create dicts for available and tracked macs data schema.
+        available_macs = {}
+        for mac in self.hass.data[DOMAIN][AVAILABLE_CLIENTS][
+            self.config_entry.entry_id
+        ]:
+            if (
+                (
+                    mac
+                    in self.hass.data[DOMAIN]["coordinator"][
+                        self.config_entry.entry_id
+                    ].data.keys()
+                )
+                and mac
+                not in self.hass.data[DOMAIN][TRACKED_CLIENTS][
+                    self.config_entry.entry_id
+                ]
+            ):
+                available_macs.update(
+                    {
+                        mac: f"{self.hass.data[DOMAIN]['coordinator'][self.config_entry.entry_id].data.get(mac)['name']} ({mac})"
+                    }
+                )
+        tracked_macs = {}
+        for mac in self.hass.data[DOMAIN][TRACKED_CLIENTS][self.config_entry.entry_id]:
+            if (
+                mac
+                in self.hass.data[DOMAIN]["coordinator"][
+                    self.config_entry.entry_id
+                ].data.keys()
+            ):
+                tracked_macs.update(
+                    {
+                        mac: f"{self.hass.data[DOMAIN]['coordinator'][self.config_entry.entry_id].data.get(mac)['name']} ({mac})"
+                    }
+                )
+
+        available_macs = dict(
+            sorted(available_macs.items(), key=lambda x: x[1].lower())
+        )
+        tracked_macs = dict(sorted(tracked_macs.items(), key=lambda x: x[1].lower()))
         track_client_data_schema = vol.Schema(
             {
+                vol.Optional(AVAILABLE_CLIENTS, description="Clients"): cv.multi_select(
+                    available_macs
+                ),
                 vol.Optional(
-                    "clients",
-                    description="Clients",
-                    default=set(self.hass.data[DOMAIN]['coordinator'][self.config_entry.entry_id].entities.keys()),
-                ): cv.multi_select(macs),
+                    TRACKED_CLIENTS,
+                    description="Tracked Clients",
+                    default=set(tracked_macs),
+                ): cv.multi_select(tracked_macs),
                 vol.Optional(
                     "track_none", description="Stop tracking all devices."
                 ): bool,

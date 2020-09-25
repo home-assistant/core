@@ -14,7 +14,7 @@
       },
       "track_clients": {
         "data": {
-          "clients": "Track Clients:",
+          "available_clients": "Select clients to track:",
           "track_none": "Stop tracking all clients."
         }
       }
@@ -24,7 +24,8 @@
     "step": {
       "init": {
         "data": {
-          "clients": "Track Clients:",
+          "available_clients": "Select clients to track:",
+          "tracked_clients": "Tracked Clients:",
           "track_none": "Stop tracking all clients."
         }
       }

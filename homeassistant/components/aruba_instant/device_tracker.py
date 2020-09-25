@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, DISCOVERED_DEVICES, TRACKED_DEVICES
+from .const import DOMAIN, AVAILABLE_CLIENTS, TRACKED_CLIENTS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,13 +20,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     device_registry = await dr.async_get_registry(hass)
     virtual_controller = hass.data[DOMAIN][config_entry.entry_id]
     await virtual_controller.async_setup()
-    add_devices(virtual_controller, config_entry, device_registry)
 
     coordinator = InstantCoordinator(hass, config_entry, async_add_entities)
     await coordinator.async_refresh()
+
+    add_devices(virtual_controller, config_entry, device_registry)
     async_add_entities(
         InstantClientEntity(coordinator, client)
-        for client in config_entry.data["clients"]
+        for client in hass.data[DOMAIN][TRACKED_CLIENTS][config_entry.entry_id]
     )
     hass.data[DOMAIN]["coordinator"] = {config_entry.entry_id: coordinator}
 
@@ -73,7 +74,7 @@ class InstantCoordinator(DataUpdateCoordinator):
         """Update data from Aruba Instant."""
         clients = await self.virtual_controller.async_update_clients()
         for client in clients:
-            self.hass.data[DOMAIN][DISCOVERED_DEVICES][self.config_entry.entry_id].add(
+            self.hass.data[DOMAIN][AVAILABLE_CLIENTS][self.config_entry.entry_id].add(
                 client
             )
         return clients
@@ -181,7 +182,7 @@ class InstantClientEntity(ScannerEntity):
         """Return if the entity should be enabled when first added to the entity registry."""
         if (
             self.unique_id
-            in self.hass.data[DOMAIN][TRACKED_DEVICES][
+            in self.hass.data[DOMAIN][TRACKED_CLIENTS][
                 self.coordinator.virtual_controller.entry_id
             ]
         ):
