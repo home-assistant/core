@@ -112,13 +112,9 @@ def set_config_parameter(manager, instance_id, node_id, parameter_index, new_val
         ValueType.INT,
         ValueType.BYTE,
         ValueType.SHORT,
-        ValueType.DECIMAL,
     ):
         try:
-            if value.type == ValueType.DECIMAL:
-                new_value = float(new_value)
-            else:
-                new_value = int(new_value)
+            new_value = int(new_value)
         except ValueError:
             return OZWValidationResponse.process_fail_on_type(value, new_value)
         if (value.max and new_value > value.max) or (
@@ -179,12 +175,8 @@ def get_config_parameters(node):
             ValueType.INT,
             ValueType.BYTE,
             ValueType.SHORT,
-            ValueType.DECIMAL,
         ):
-            if value.type == ValueType.DECIMAL:
-                value_to_return[ATTR_VALUE] = float(value.value)
-            else:
-                value_to_return[ATTR_VALUE] = int(value.value)
+            value_to_return[ATTR_VALUE] = int(value.value)
             value_to_return[ATTR_MAX] = value.max
             value_to_return[ATTR_MIN] = value.min
 

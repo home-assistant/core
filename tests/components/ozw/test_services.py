@@ -4,7 +4,7 @@ import pytest
 from .common import setup_ozw
 
 
-async def test_services(hass, light_data, sent_messages, light_msg, caplog):
+async def test_services(hass, light_data, sent_messages):
     """Test services on lock."""
     await setup_ozw(hass, fixture=light_data)
 
@@ -66,7 +66,7 @@ async def test_services(hass, light_data, sent_messages, light_msg, caplog):
 
     # Test set_config_parameter int out of range
     with pytest.raises(ValueError):
-        await hass.services.async_call(
+        assert await hass.services.async_call(
             "ozw",
             "set_config_parameter",
             {"node_id": 39, "parameter": 3, "value": 2147483657},
