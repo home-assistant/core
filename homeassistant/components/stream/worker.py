@@ -178,6 +178,9 @@ def _stream_worker_internal(hass, stream, quit_event):
             buffer = create_stream_buffer(
                 stream_output, video_stream, audio_stream, sequence
             )
+            # if the created buffer does not support audio, reset audio_codec to None
+            if buffer.astream is None:
+                stream_output.audio_codec = None
             outputs[stream_output.name] = (
                 buffer,
                 {video_stream: buffer.vstream, audio_stream: buffer.astream},
