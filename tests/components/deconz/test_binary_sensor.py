@@ -187,7 +187,8 @@ async def test_add_new_binary_sensor(hass):
 async def test_add_new_binary_sensor_ignored(hass):
     """Test that adding a new binary sensor is not allowed."""
     gateway = await setup_deconz_integration(
-        hass, options={deconz.gateway.CONF_ALLOW_NEW_DEVICES: False},
+        hass,
+        options={deconz.gateway.CONF_ALLOW_NEW_DEVICES: False},
     )
     assert len(gateway.deconz_ids) == 0
 
