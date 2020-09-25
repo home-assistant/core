@@ -151,6 +151,6 @@ def _need_auth(hass, path: str) -> bool:
     """Return if a path need authentication."""
     if not async_is_onboarded(hass) and path.startswith("snapshots"):
         return False
-    elif NO_AUTH.match(path):
+    if NO_AUTH.match(path):
         return False
     return True

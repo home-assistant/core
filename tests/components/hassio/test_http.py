@@ -4,6 +4,7 @@ import asyncio
 import pytest
 
 from homeassistant.components.hassio.http import _need_auth
+
 from tests.async_mock import patch
 
 
