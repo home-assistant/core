@@ -2,6 +2,8 @@
 from copy import deepcopy
 
 from homeassistant.components import deconz
+from homeassistant.components.deconz.deconz_event import EVENT
+from homeassistant.components.deconz.sensor import BATTERY
 import homeassistant.components.sensor as sensor
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
@@ -96,6 +98,8 @@ async def test_no_sensors(hass):
     gateway = await setup_deconz_integration(hass)
     assert len(gateway.deconz_ids) == 0
     assert len(hass.states.async_all()) == 0
+    assert len(gateway.entities[sensor.DOMAIN]) == 0
+    assert len(gateway.entities[BATTERY]) == 0
 
 
 async def test_sensors(hass):
@@ -114,6 +118,8 @@ async def test_sensors(hass):
     assert "sensor.consumption_sensor" in gateway.deconz_ids
     assert "sensor.clip_light_level_sensor" not in gateway.deconz_ids
     assert len(hass.states.async_all()) == 5
+    assert len(gateway.entities[sensor.DOMAIN]) == 4
+    assert len(gateway.entities[BATTERY]) == 1
 
     light_level_sensor = hass.states.get("sensor.light_level_sensor")
     assert light_level_sensor.state == "999.8"
@@ -174,6 +180,9 @@ async def test_sensors(hass):
     await gateway.async_reset()
 
     assert len(hass.states.async_all()) == 0
+    # Daylight sensor from deCONZ is added to set but is disabled by default
+    assert len(gateway.entities[sensor.DOMAIN]) == 1
+    assert len(gateway.entities[BATTERY]) == 0
 
 
 async def test_allow_clip_sensors(hass):
@@ -196,6 +205,8 @@ async def test_allow_clip_sensors(hass):
     assert "sensor.consumption_sensor" in gateway.deconz_ids
     assert "sensor.clip_light_level_sensor" in gateway.deconz_ids
     assert len(hass.states.async_all()) == 6
+    assert len(gateway.entities[sensor.DOMAIN]) == 5
+    assert len(gateway.entities[BATTERY]) == 1
 
     light_level_sensor = hass.states.get("sensor.light_level_sensor")
     assert light_level_sensor.state == "999.8"
@@ -243,6 +254,8 @@ async def test_allow_clip_sensors(hass):
     assert "sensor.consumption_sensor" in gateway.deconz_ids
     assert "sensor.clip_light_level_sensor" not in gateway.deconz_ids
     assert len(hass.states.async_all()) == 5
+    assert len(gateway.entities[sensor.DOMAIN]) == 4
+    assert len(gateway.entities[BATTERY]) == 1
 
     hass.config_entries.async_update_entry(
         gateway.config_entry, options={deconz.gateway.CONF_ALLOW_CLIP_SENSOR: True}
@@ -260,6 +273,8 @@ async def test_allow_clip_sensors(hass):
     assert "sensor.consumption_sensor" in gateway.deconz_ids
     assert "sensor.clip_light_level_sensor" in gateway.deconz_ids
     assert len(hass.states.async_all()) == 6
+    assert len(gateway.entities[sensor.DOMAIN]) == 5
+    assert len(gateway.entities[BATTERY]) == 1
 
 
 async def test_add_new_sensor(hass):
@@ -292,6 +307,9 @@ async def test_add_battery_later(hass):
     assert len(gateway.deconz_ids) == 0
     assert len(gateway.events) == 1
     assert len(remote._callbacks) == 2
+    assert len(gateway.entities[sensor.DOMAIN]) == 0
+    assert len(gateway.entities[BATTERY]) == 0
+    assert len(gateway.entities[EVENT]) == 1
 
     remote.update({"config": {"battery": 50}})
     await hass.async_block_till_done()
@@ -302,3 +320,6 @@ async def test_add_battery_later(hass):
 
     battery_sensor = hass.states.get("sensor.switch_1_battery_level")
     assert battery_sensor is not None
+    assert len(gateway.entities[sensor.DOMAIN]) == 0
+    assert len(gateway.entities[BATTERY]) == 1
+    assert len(gateway.entities[EVENT]) == 1

@@ -2,6 +2,7 @@
 from copy import deepcopy
 
 from homeassistant.components import deconz
+from homeassistant.components.deconz.switch import POWER_PLUG, SIREN
 import homeassistant.components.switch as switch
 from homeassistant.setup import async_setup_component
 
@@ -64,6 +65,8 @@ async def test_no_switches(hass):
     gateway = await setup_deconz_integration(hass)
     assert len(gateway.deconz_ids) == 0
     assert len(hass.states.async_all()) == 0
+    assert len(gateway.entities[POWER_PLUG]) == 0
+    assert len(gateway.entities[SIREN]) == 0
 
 
 async def test_switches(hass):
@@ -77,6 +80,8 @@ async def test_switches(hass):
     assert "switch.unsupported_switch" not in gateway.deconz_ids
     assert "switch.on_off_relay" in gateway.deconz_ids
     assert len(hass.states.async_all()) == 5
+    assert len(gateway.entities[POWER_PLUG]) == 3
+    assert len(gateway.entities[SIREN]) == 1
 
     on_off_switch = hass.states.get("switch.on_off_switch")
     assert on_off_switch.state == "on"
@@ -173,3 +178,5 @@ async def test_switches(hass):
     await gateway.async_reset()
 
     assert len(hass.states.async_all()) == 0
+    assert len(gateway.entities[POWER_PLUG]) == 0
+    assert len(gateway.entities[SIREN]) == 0
