@@ -72,7 +72,7 @@ DATA_TYPES = OrderedDict(
         ("Humidity status", None),
         ("Forecast", None),
         ("Forecast numeric", None),
-        ("Rain total", "mm"),
+        ("Rain total", LENGTH_MILLIMETERS),
         ("Wind average speed", SPEED_METERS_PER_SECOND),
         ("Wind gust", SPEED_METERS_PER_SECOND),
         ("Chill", TEMP_CELSIUS),
