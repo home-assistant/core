@@ -63,6 +63,7 @@ REST_SENSORS = {
         name="Firmware update (release)",
         device_class=DEVICE_CLASS_SAFETY,
         path="update/has_update",
+        attributes={"description": "Available version:", "path": "update/new_version"},
     ),
 }
 

@@ -92,6 +92,7 @@ class RestAttributeDescription:
     value: Callable[[Any], Any] = lambda val: val
     device_class: Optional[str] = None
     default_enabled: bool = True
+    attributes: Optional[dict] = None
 
 
 class ShellyBlockEntity(entity.Entity):
@@ -236,6 +237,7 @@ class ShellyRestAttributeEntity(entity.Entity):
         self._unit = self.description.unit
         self._name = f"{self.wrapper.name} {self.description.name}"
         self.path = self.description.path
+        self._attributes = self.description.attributes
 
     @property
     def name(self):
@@ -298,6 +300,31 @@ class ShellyRestAttributeEntity(entity.Entity):
     def unique_id(self):
         """Return unique ID of entity."""
         return f"{self.wrapper.mac}-{self._name}"
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+
+        if self._attributes is None:
+            return None
+
+        _path = self._attributes.get("path")
+        _description = self._attributes.get("description")
+
+        if "/" not in _path:
+            _attribute_value = self.wrapper.device.status[_path]
+        else:
+            _attribute_value = self.wrapper.device.status[_path.split("/")[0]][
+                _path.split("/")[1]
+            ]
+        if self.description.device_class == DEVICE_CLASS_TIMESTAMP:
+            last_boot = datetime.utcnow() - timedelta(seconds=_attribute_value)
+            _attribute_value = last_boot.replace(microsecond=0).isoformat()
+
+        if "new_version" in _path:
+            _attribute_value = _attribute_value.split("/")[1].split("@")[0]
+
+        return {_description: _attribute_value}
 
     async def async_added_to_hass(self):
         """When entity is added to HASS."""
