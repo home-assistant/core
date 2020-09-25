@@ -265,6 +265,7 @@ def humanify(hass, events, entity_attr_cache, context_lookup):
     - if 2+ sensor updates in GROUP_BY_MINUTES, show last
     - if Home Assistant stop and start happen in same minute call it restarted
     """
+    external_events = hass.data.get(DOMAIN, {})
 
     # Group events in batches of GROUP_BY_MINUTES
     for _, g_events in groupby(
@@ -299,27 +300,7 @@ def humanify(hass, events, entity_attr_cache, context_lookup):
                 start_stop_events[event.time_fired_minute] = 2
 
         # Yield entries
-        external_events = hass.data.get(DOMAIN, {})
         for event in events_batch:
-            if event.event_type in external_events:
-                domain, describe_event = external_events[event.event_type]
-                data = describe_event(event)
-                data["when"] = event.time_fired_isoformat
-                data["domain"] = domain
-                if event.context_user_id:
-                    data["context_user_id"] = event.context_user_id
-                context_event = context_lookup.get(event.context_id)
-                if context_event:
-                    _augment_data_with_context(
-                        data,
-                        data.get(ATTR_ENTITY_ID),
-                        event,
-                        context_event,
-                        entity_attr_cache,
-                        external_events,
-                    )
-                yield data
-
             if event.event_type == EVENT_STATE_CHANGED:
                 entity_id = event.entity_id
                 domain = event.domain
@@ -362,6 +343,25 @@ def humanify(hass, events, entity_attr_cache, context_lookup):
                         external_events,
                     )
 
+                yield data
+
+            elif event.event_type in external_events:
+                domain, describe_event = external_events[event.event_type]
+                data = describe_event(event)
+                data["when"] = event.time_fired_isoformat
+                data["domain"] = domain
+                if event.context_user_id:
+                    data["context_user_id"] = event.context_user_id
+                context_event = context_lookup.get(event.context_id)
+                if context_event:
+                    _augment_data_with_context(
+                        data,
+                        data.get(ATTR_ENTITY_ID),
+                        event,
+                        context_event,
+                        entity_attr_cache,
+                        external_events,
+                    )
                 yield data
 
             elif event.event_type == EVENT_HOMEASSISTANT_START:
