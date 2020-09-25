@@ -7,7 +7,7 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 from . import const
-from .entity import set_config_parameter
+from .node import set_config_parameter
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,7 +53,7 @@ class ZWaveServices:
                     vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
                     vol.Required(const.ATTR_CONFIG_PARAMETER): vol.Coerce(int),
                     vol.Required(const.ATTR_CONFIG_VALUE): vol.Any(
-                        bool, vol.Coerce(int), cv.string
+                        bool, vol.Coerce(float), cv.string
                     ),
                 }
             ),

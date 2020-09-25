@@ -8,13 +8,12 @@ from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import ATTR_CONFIG_PARAMETER, ATTR_CONFIG_VALUE, DOMAIN, MANAGER, OPTIONS
-from .entity import get_config_parameters, set_config_parameter
+from .node import get_config_parameters, set_config_parameter
 
 TYPE = "type"
 ID = "id"
 OZW_INSTANCE = "ozw_instance"
 NODE_ID = "node_id"
-NODE_INSTANCE_ID = "node_instance_id"
 PARAMETER = ATTR_CONFIG_PARAMETER
 VALUE = ATTR_CONFIG_VALUE
 
@@ -138,7 +137,6 @@ def websocket_get_nodes(hass, connection, msg):
         vol.Required(TYPE): "ozw/get_config_parameters",
         vol.Required(NODE_ID): vol.Coerce(int),
         vol.Optional(OZW_INSTANCE, default=1): vol.Coerce(int),
-        vol.Optional(NODE_INSTANCE_ID): vol.Coerce(int),
     }
 )
 def websocket_get_config_parameters(hass, connection, msg):
@@ -148,7 +146,7 @@ def websocket_get_config_parameters(hass, connection, msg):
     except NotFoundError:
         return
 
-    resp = get_config_parameters(node, msg.get(NODE_INSTANCE_ID))
+    resp = get_config_parameters(node)
 
     if not resp.success:
         connection.send_error(
@@ -169,9 +167,8 @@ def websocket_get_config_parameters(hass, connection, msg):
         vol.Required(TYPE): "ozw/set_config_parameter",
         vol.Required(NODE_ID): vol.Coerce(int),
         vol.Optional(OZW_INSTANCE, default=1): vol.Coerce(int),
-        vol.Optional(NODE_INSTANCE_ID): vol.Coerce(int),
         vol.Required(PARAMETER): vol.Coerce(int),
-        vol.Required(VALUE): vol.Any(bool, vol.Coerce(int), str),
+        vol.Required(VALUE): vol.Any(bool, vol.Coerce(float), str),
     }
 )
 def websocket_set_config_parameter(hass, connection, msg):
@@ -182,7 +179,6 @@ def websocket_set_config_parameter(hass, connection, msg):
         msg[NODE_ID],
         msg[PARAMETER],
         msg[VALUE],
-        msg.get(NODE_INSTANCE_ID),
     )
 
     if not resp.success:
