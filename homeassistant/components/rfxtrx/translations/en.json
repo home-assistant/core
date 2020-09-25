@@ -76,6 +76,13 @@
             "send_status": "Trigger status on device",
             "send_sound": "Trigger a sound on device",
             "send_command": "Trigger a command on device"
+        },
+        "trigger_type": {
+          "status": "Device received {subtype} status",
+          "command": "Device received {subtype} command"
+        },
+        "trigger_subtype": {
+          "Panic": "Panic"
         }
     },
     "title": "Rfxtrx"
