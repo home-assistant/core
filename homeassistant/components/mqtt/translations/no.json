@@ -72,7 +72,7 @@
                     "birth_retain": "F\u00f8dselsmelding behold",
                     "birth_topic": "F\u00f8dselsmelding emne",
                     "discovery": "Aktiver oppdagelse",
-                    "will_enable": "Aktiver f\u00f8dselsmelding",
+                    "will_enable": "Aktiver will melding",
                     "will_payload": "Testament melding nyttelast",
                     "will_qos": "Testament melding QoS",
                     "will_retain": "Testament melding behold",
