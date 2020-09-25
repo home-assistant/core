@@ -30,6 +30,7 @@ async def async_setup_entry(
             if device.device_model_uid in [
                 "devolo.model.Thermostat:Valve",
                 "devolo.model.Room:Thermostat",
+                "devolo.model.Eurotronic:Spirit:Device",
             ]:
                 entities.append(
                     DevoloClimateDeviceEntity(
