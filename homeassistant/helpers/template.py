@@ -1043,6 +1043,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         super().__init__()
         self.hass = hass
         self.template_cache = weakref.WeakValueDictionary()
+        self.filters["bool"] = result_as_boolean
         self.filters["round"] = forgiving_round
         self.filters["multiply"] = multiply
         self.filters["log"] = logarithm
