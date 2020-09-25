@@ -1,13 +1,17 @@
 """Component to manage the AIS Cloud."""
+import asyncio
 import json
 import logging
 import os
 
 import async_timeout
 import requests
+import voluptuous as vol
 
+from homeassistant.components import websocket_api
 from homeassistant.components.ais_dom import ais_global
 from homeassistant.components.http.view import HomeAssistantView
+from homeassistant.components.websocket_api.const import ERR_NOT_SUPPORTED
 from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_NAME,
@@ -155,6 +159,11 @@ async def async_setup(hass, config):
         DOMAIN, "enable_gate_pairing_by_pin", enable_gate_pairing_by_pin
     )
 
+    # register ws
+    hass.components.websocket_api.async_register_command(
+        websocket_check_ais_media_source
+    )
+
     def device_discovered(service):
         """ Called when a device has been discovered. """
         if ais_global.G_AIS_START_IS_DONE:
@@ -270,6 +279,30 @@ async def async_setup(hass, config):
 
     hass.bus.async_listen(EVENT_STATE_CHANGED, state_changed)
     return True
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "ais_cloud/check_ais_media_source",
+    }
+)
+@websocket_api.async_response
+async def websocket_check_ais_media_source(hass, connection, msg):
+    """
+    Check the media source in AIS
+    """
+    component = hass.data[DOMAIN]
+    # TODO check if this media are suported
+    # if not 1 == msg.get("xxx"):
+    #     connection.send_message(
+    #         websocket_api.error_message(
+    #             msg["id"], ERR_NOT_SUPPORTED, "Player does not support browsing media"
+    #         )
+    #     )
+    #     return
+    await asyncio.sleep(3)
+    payload = {"info": "Funkcjonalność w przygotowaniu..."}
+    connection.send_result(msg["id"], payload)
 
 
 class AisCloudWS:
@@ -679,8 +712,10 @@ class AisColudData:
             )
 
     def get_podcast_tracks(self, call):
-        import feedparser
         import io
+
+        import feedparser
+
         import homeassistant.components.ais_ai_service as ais_ai
 
         selected_by_remote = False
@@ -1312,8 +1347,9 @@ class AisColudData:
             )
 
     def get_rss_news_items(self, call):
-        import feedparser
         import io
+
+        import feedparser
 
         if "rss_news_channel" not in call.data:
             return
@@ -1452,8 +1488,8 @@ class AisColudData:
 
         if track["uri"] is not None:
             try:
-                import requests
                 from readability import Document
+                import requests
 
                 response = requests.get(check_url(track["uri"]), timeout=5)
                 response.encoding = "utf-8"
@@ -1495,8 +1531,8 @@ class AisColudData:
             + rss_help_topic.replace(" ", "-")
             + ".md"
         )
-        import requests
         from readability.readability import Document
+        import requests
 
         response = requests.get(_url, timeout=5)
         doc = Document(response.text)
