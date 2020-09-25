@@ -13,6 +13,7 @@
             "protocol": {
                 "data": {
                     "device_baudrate": "Baudrate van apparaat",
+                    "device_path": "Apparaatpad",
                     "host": "Host",
                     "port": "Poort"
                 },
@@ -21,7 +22,8 @@
             "user": {
                 "data": {
                     "protocol": "Protocol"
-                }
+                },
+                "title": "Kies AlarmDecoder Protocol"
             }
         }
     },
