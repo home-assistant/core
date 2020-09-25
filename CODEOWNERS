@@ -301,6 +301,7 @@ homeassistant/components/nzbget/* @chriscla
 homeassistant/components/obihai/* @dshokouhi
 homeassistant/components/ohmconnect/* @robbiet480
 homeassistant/components/ombi/* @larssont
+homeassistant/components/omnilogic/* @oliver84 @djtimca @gentoosu
 homeassistant/components/onboarding/* @home-assistant/core
 homeassistant/components/onewire/* @garbled1
 homeassistant/components/onvif/* @hunterjm
