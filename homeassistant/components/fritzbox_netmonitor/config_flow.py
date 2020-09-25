@@ -64,8 +64,7 @@ class FritzboxNetMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if result == RESULT_SUCCESS:
                 return self._get_entry()
-            else:
-                return self.async_abort(reason=result)
+            return self.async_abort(reason=result)
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA_USER, errors=errors
