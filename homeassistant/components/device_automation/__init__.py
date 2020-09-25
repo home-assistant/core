@@ -85,9 +85,11 @@ async def async_get_device_automation_platform(
             f"Integration '{domain}' not found"
         ) from err
     except ImportError as err:
-        raise InvalidDeviceAutomationConfig(
-            f"Integration '{domain}' does not support device automation {automation_type}s"
-        ) from err
+        if str(err.name).split(".")[-1] == platform_name:
+            raise InvalidDeviceAutomationConfig(
+                f"Integration '{domain}' does not support device automation {automation_type}s"
+            ) from err
+        raise err
 
     return platform
 
