@@ -135,7 +135,7 @@ class DeconzSensor(DeconzDevice):
         """Update the sensor's state."""
         keys = {"on", "reachable", "state"}
         if force_update or self._device.changed_keys.intersection(keys):
-            super().async_update_callback()
+            super().async_update_callback(force_update=force_update)
 
     @property
     def state(self):
@@ -199,7 +199,7 @@ class DeconzBattery(DeconzDevice):
         """Update the battery's state, if needed."""
         keys = {"battery", "reachable"}
         if force_update or self._device.changed_keys.intersection(keys):
-            super().async_update_callback()
+            super().async_update_callback(force_update=force_update)
 
     @property
     def unique_id(self):

@@ -88,7 +88,7 @@ class DeconzDevice(DeconzBase, Entity):
     @callback
     def async_update_callback(self, force_update=False):
         """Update the device's state."""
-        if self.gateway.ignore_state_updates:
+        if not force_update and self.gateway.ignore_state_updates:
             return
 
         self.async_write_ha_state()

@@ -82,7 +82,7 @@ class DeconzBinarySensor(DeconzDevice, BinarySensorEntity):
         """Update the sensor's state."""
         keys = {"on", "reachable", "state"}
         if force_update or self._device.changed_keys.intersection(keys):
-            super().async_update_callback()
+            super().async_update_callback(force_update=force_update)
 
     @property
     def is_on(self):
