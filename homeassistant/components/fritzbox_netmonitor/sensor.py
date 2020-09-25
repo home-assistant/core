@@ -1,5 +1,4 @@
 """Support for monitoring an AVM Fritz!Box router."""
-from datetime import timedelta
 import logging
 
 from fritzconnection.core.exceptions import FritzConnectionException
@@ -13,28 +12,26 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
+from .const import (
+    ATTR_BYTES_RECEIVED,
+    ATTR_BYTES_SENT,
+    ATTR_EXTERNAL_IP,
+    ATTR_IS_CONNECTED,
+    ATTR_IS_LINKED,
+    ATTR_MAX_BYTE_RATE_DOWN,
+    ATTR_MAX_BYTE_RATE_UP,
+    ATTR_TRANSMISSION_RATE_DOWN,
+    ATTR_TRANSMISSION_RATE_UP,
+    ATTR_UPTIME,
+    CONF_DEFAULT_IP,
+    CONF_DEFAULT_NAME,
+    ICON,
+    STATE_OFFLINE,
+    STATE_ONLINE,
+)
+
 _LOGGER = logging.getLogger(__name__)
 
-CONF_DEFAULT_NAME = "fritz_netmonitor"
-CONF_DEFAULT_IP = "169.254.1.1"  # This IP is valid for all FRITZ!Box routers.
-
-ATTR_BYTES_RECEIVED = "bytes_received"
-ATTR_BYTES_SENT = "bytes_sent"
-ATTR_TRANSMISSION_RATE_UP = "transmission_rate_up"
-ATTR_TRANSMISSION_RATE_DOWN = "transmission_rate_down"
-ATTR_EXTERNAL_IP = "external_ip"
-ATTR_IS_CONNECTED = "is_connected"
-ATTR_IS_LINKED = "is_linked"
-ATTR_MAX_BYTE_RATE_DOWN = "max_byte_rate_down"
-ATTR_MAX_BYTE_RATE_UP = "max_byte_rate_up"
-ATTR_UPTIME = "uptime"
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
-
-STATE_ONLINE = "online"
-STATE_OFFLINE = "offline"
-
-ICON = "mdi:web"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -98,7 +95,7 @@ class FritzboxMonitorSensor(Entity):
         # Don't return attributes if FritzBox is unreachable
         if self._state == STATE_UNAVAILABLE:
             return {}
-        attr = {
+        return {
             ATTR_IS_LINKED: self._is_linked,
             ATTR_IS_CONNECTED: self._is_connected,
             ATTR_EXTERNAL_IP: self._external_ip,
@@ -110,7 +107,6 @@ class FritzboxMonitorSensor(Entity):
             ATTR_MAX_BYTE_RATE_UP: self._max_byte_rate_up,
             ATTR_MAX_BYTE_RATE_DOWN: self._max_byte_rate_down,
         }
-        return attr
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
