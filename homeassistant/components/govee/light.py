@@ -29,8 +29,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
     hub = hass.data[DOMAIN]["hub"]
 
     # override the scan interval from config
-    SCAN_INTERVAL = ( # pylint: disable=redefined-outer-name,invalid-name,unused-variable
-        timedelta(seconds=config[CONF_DELAY])
+    SCAN_INTERVAL = timedelta(  # pylint: disable=redefined-outer-name,invalid-name,unused-variable
+        seconds=config[CONF_DELAY]
     )
 
     # Add devices
@@ -66,7 +66,9 @@ class GoveeLightEntity(LightEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn device on."""
-        _LOGGER.debug("async_turn_on for Govee light %s, kwargs: %s", self._device.device, kwargs)
+        _LOGGER.debug(
+            "async_turn_on for Govee light %s, kwargs: %s", self._device.device, kwargs
+        )
         err = None
 
         if ATTR_HS_COLOR in kwargs:
@@ -87,7 +89,9 @@ class GoveeLightEntity(LightEntity):
         if err:
             _LOGGER.warning(
                 "async_turn_on failed with '%s' for %s, kwargs: %s",
-                err, self._device.device, kwargs
+                err,
+                self._device.device,
+                kwargs,
             )
 
     async def async_turn_off(self, **kwargs):
