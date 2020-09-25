@@ -47,6 +47,7 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 SERVICE_SEND_COMMAND = "send_command"
 SERVICE_LEARN_COMMAND = "learn_command"
+SERVICE_DELETE_COMMAND = "delete_command"
 SERVICE_SYNC = "sync"
 
 DEFAULT_NUM_REPEATS = 1
@@ -54,6 +55,7 @@ DEFAULT_DELAY_SECS = 0.4
 DEFAULT_HOLD_SECS = 0
 
 SUPPORT_LEARN_COMMAND = 1
+SUPPORT_DELETE_COMMAND = 2
 
 REMOTE_SERVICE_ACTIVITY_SCHEMA = make_entity_service_schema(
     {vol.Optional(ATTR_ACTIVITY): cv.string}
@@ -111,6 +113,15 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         "async_learn_command",
     )
 
+    component.async_register_entity_service(
+        SERVICE_DELETE_COMMAND,
+        {
+            vol.Required(ATTR_COMMAND): vol.All(cv.ensure_list, [cv.string]),
+            vol.Optional(ATTR_DEVICE): cv.string,
+        },
+        "async_delete_command",
+    )
+
     return True
 
 
@@ -151,6 +162,17 @@ class RemoteEntity(ToggleEntity):
         """Learn a command from a device."""
         assert self.hass is not None
         await self.hass.async_add_executor_job(ft.partial(self.learn_command, **kwargs))
+
+    def delete_command(self, **kwargs: Any) -> None:
+        """Delete commands from the database."""
+        raise NotImplementedError()
+
+    async def async_delete_command(self, **kwargs: Any) -> None:
+        """Delete commands from the database."""
+        assert self.hass is not None
+        await self.hass.async_add_executor_job(
+            ft.partial(self.delete_command, **kwargs)
+        )
 
 
 class RemoteDevice(RemoteEntity):

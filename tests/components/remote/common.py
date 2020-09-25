@@ -13,6 +13,7 @@ from homeassistant.components.remote import (
     ATTR_NUM_REPEATS,
     ATTR_TIMEOUT,
     DOMAIN,
+    SERVICE_DELETE_COMMAND,
     SERVICE_LEARN_COMMAND,
     SERVICE_SEND_COMMAND,
 )
@@ -106,3 +107,24 @@ def learn_command(
         data[ATTR_TIMEOUT] = timeout
 
     hass.services.call(DOMAIN, SERVICE_LEARN_COMMAND, data)
+
+
+@bind_hass
+def delete_command(
+    hass,
+    entity_id=ENTITY_MATCH_ALL,
+    device=None,
+    command=None,
+):
+    """Delete commands from the database."""
+    data = {}
+    if entity_id:
+        data[ATTR_ENTITY_ID] = entity_id
+
+    if device:
+        data[ATTR_DEVICE] = device
+
+    if command:
+        data[ATTR_COMMAND] = command
+
+    hass.services.call(DOMAIN, SERVICE_DELETE_COMMAND, data)
