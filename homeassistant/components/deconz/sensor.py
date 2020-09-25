@@ -12,6 +12,7 @@ from pydeconz.sensor import (
     Thermostat,
 )
 
+from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     ATTR_VOLTAGE,
@@ -74,42 +75,42 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the deCONZ sensors."""
     gateway = get_gateway_from_config_entry(hass, config_entry)
+    gateway.entities[DOMAIN] = set()
 
-    batteries = set()
     battery_handler = DeconzBatteryHandler(gateway)
 
     @callback
-    def async_add_sensor(sensors, new=True):
+    def async_add_sensor(sensors):
         """Add sensors from deCONZ.
 
-        Create DeconzSensor if not a ZHAType and not a binary sensor.
         Create DeconzBattery if sensor has a battery attribute.
-        If new is false it means an existing sensor has got a battery state reported.
+        Create DeconzSensor if not a battery, switch or thermostat and not a binary sensor.
         """
         entities = []
 
         for sensor in sensors:
 
-            if (
-                new
-                and sensor.BINARY is False
-                and sensor.type
-                not in Battery.ZHATYPE + Switch.ZHATYPE + Thermostat.ZHATYPE
-                and (
-                    gateway.option_allow_clip_sensor
-                    or not sensor.type.startswith("CLIP")
-                )
-            ):
-                entities.append(DeconzSensor(sensor, gateway))
+            if not gateway.option_allow_clip_sensor and sensor.type.startswith("CLIP"):
+                continue
 
             if sensor.battery is not None:
+                battery_handler.remove_tracker(sensor)
+
+                known_batteries = list(gateway.entities[DOMAIN])
                 new_battery = DeconzBattery(sensor, gateway)
-                if new_battery.unique_id not in batteries:
-                    batteries.add(new_battery.unique_id)
+                if new_battery.unique_id not in known_batteries:
                     entities.append(new_battery)
-                    battery_handler.remove_tracker(sensor)
+
             else:
                 battery_handler.create_tracker(sensor)
+
+            if (
+                not sensor.BINARY
+                and sensor.type
+                not in Battery.ZHATYPE + Switch.ZHATYPE + Thermostat.ZHATYPE
+                and sensor.uniqueid not in gateway.entities[DOMAIN]
+            ):
+                entities.append(DeconzSensor(sensor, gateway))
 
         async_add_entities(entities, True)
 
@@ -126,6 +127,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 class DeconzSensor(DeconzDevice):
     """Representation of a deCONZ sensor."""
+
+    TYPE = DOMAIN
 
     @callback
     def async_update_callback(self, force_update=False, ignore_update=False):
@@ -191,6 +194,8 @@ class DeconzSensor(DeconzDevice):
 
 class DeconzBattery(DeconzDevice):
     """Battery class for when a device is only represented as an event."""
+
+    TYPE = DOMAIN
 
     @callback
     def async_update_callback(self, force_update=False, ignore_update=False):
@@ -264,7 +269,6 @@ class DeconzSensorStateTracker:
                 self.gateway.hass,
                 self.gateway.async_signal_new_device(NEW_SENSOR),
                 [self.sensor],
-                False,
             )
 
 
