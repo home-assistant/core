@@ -4,7 +4,7 @@ from functools import partial
 
 from fritzconnection.core.exceptions import FritzConnectionException
 from fritzconnection.lib.fritzstatus import FritzStatus
-from requests.exceptions import ConnectionError
+import requests
 
 from homeassistant.const import CONF_HOST
 
@@ -27,7 +27,7 @@ async def async_setup_entry(hass, entry):
     except (
         ValueError,
         TypeError,
-        ConnectionError,
+        requests.exceptions.ConnectionError,
         FritzConnectionException,
     ) as error:
         LOGGER.error(

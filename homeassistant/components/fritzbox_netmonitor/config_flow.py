@@ -1,7 +1,7 @@
 """Config flow for fritzbox_netmonitor."""
 from fritzconnection.core.exceptions import FritzConnectionException
 from fritzconnection.lib.fritzstatus import FritzStatus
-from requests.exceptions import ConnectionError
+import requests
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -41,7 +41,7 @@ class FritzboxNetMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except (
             ValueError,
             TypeError,
-            ConnectionError,
+            requests.exceptions.ConnectionError,
             FritzConnectionException,
         ):
             return RESULT_NOT_FOUND
@@ -64,7 +64,7 @@ class FritzboxNetMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if result == RESULT_SUCCESS:
                 return self._get_entry()
-            elif result == RESULT_NOT_FOUND:
+            else:
                 return self.async_abort(reason=result)
 
         return self.async_show_form(
