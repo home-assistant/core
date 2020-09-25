@@ -145,7 +145,7 @@ async def async_attach_trigger(
             else:
                 cur_value = new_st.attributes.get(attribute)
 
-            if CONF_TO not in config:
+            if CONF_FROM in config and CONF_TO not in config:
                 return cur_value != old_value
 
             return cur_value == new_value
