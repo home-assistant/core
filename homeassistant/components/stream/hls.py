@@ -58,22 +58,6 @@ class HlsMasterPlaylistView(StreamView):
                 codec_string += ",mp4a.69"
         return codec_string
 
-    # @staticmethod
-    # def codec_string(track) -> str:
-    #     """Return RFC 6381 codec string."""
-    #     v_name = track.video_codec[0]
-    #     if v_name == "hevc":
-    #         codec_string = "hev1"
-    #     else:  # AVC1 level 4.1
-    #         codec_string = "avc1"
-    #     if track.audio_codec is not None:
-    #         a_name = track.audio_codec[0]
-    #         if a_name == "aac":
-    #             codec_string += ",mp4a.40"
-    #         else:  # mp3
-    #             codec_string += ",mp4a.69"
-    #     return codec_string
-
     def render(self, track):
         """Render M3U8 file."""
         # Need to calculate max bandwidth as input_container.bit_rate doesn't seem to work
