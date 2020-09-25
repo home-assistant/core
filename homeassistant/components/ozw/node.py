@@ -181,7 +181,10 @@ def get_config_parameters(node):
             ValueType.SHORT,
             ValueType.DECIMAL,
         ):
-            value_to_return[ATTR_VALUE] = int(value.value)
+            if value.type == ValueType.DECIMAL:
+                value_to_return[ATTR_VALUE] = float(value.value)
+            else:
+                value_to_return[ATTR_VALUE] = int(value.value)
             value_to_return[ATTR_MAX] = value.max
             value_to_return[ATTR_MIN] = value.min
 
