@@ -48,6 +48,7 @@ class DeconzGateway:
         self.api = None
 
         self.available = True
+        self.ignore_state_updates = False
 
         self.deconz_ids = {}
         self.entities = {}
