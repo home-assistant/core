@@ -122,7 +122,7 @@ class IcloudAccount:
             message = (
                 f"Your password for '{username}' is no longer working. Go to the "
                 "Integrations menu and click on Configure on the discovered Apple "
-                "iCloud card to update it."
+                "iCloud card to login again."
             )
             _LOGGER.error(message)
             self.hass.components.persistent_notification.async_create(
