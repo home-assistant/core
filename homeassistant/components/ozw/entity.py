@@ -311,27 +311,24 @@ def create_value_id(value: OZWValue):
 class OZWValidationResponse:
     """Class to hold response for validating an action."""
 
-    def __init__(self, success, *args, **kwargs):
+    def __init__(self, success, payload=None, err_type=None, err_msg=None):
         """Initialize OZWValidationResponse."""
         self.success = success
-        self.payload = kwargs.get("payload")
-        self.err_type = kwargs.get("err_type")
-        self.err_msg = kwargs.get("err_msg")
-        self.args = args
+        self.payload = payload
+        self.err_type = err_type
+        self.err_msg = err_msg
 
     @staticmethod
-    def process_fail(err_type, err_msg, *args):
+    def process_fail(err_type, err_msg):
         """Process an invalid request."""
-        return OZWValidationResponse(False, err_type=err_type, err_msg=err_msg, *args)
+        return OZWValidationResponse(False, err_type=err_type, err_msg=err_msg)
 
     @staticmethod
     def process_fail_on_type(value, new_value):
         """Process an invalid request that fails type validation."""
         return OZWValidationResponse.process_fail(
             ERR_NOT_SUPPORTED,
-            "Configuration parameter type %s does not match the value type %s",
-            str(value.type),
-            str(type(new_value)),
+            f"Configuration parameter type {value.type} does not match the value type {type(new_value)}",
         )
 
     @staticmethod
@@ -399,17 +396,10 @@ def set_config_parameter(
 
         return OZWValidationResponse.process_fail(
             ERR_NOT_SUPPORTED,
-            "Invalid value %s for parameter %s",
-            new_value,
-            parameter_index,
+            f"Invalid value {new_value} for parameter {parameter_index}",
         )
 
-    if value.type == ValueType.STRING:
-        if not isinstance(new_value, str):
-            return OZWValidationResponse.process_fail_on_type(value, new_value)
-        value.send_value(new_value)
-        return OZWValidationResponse.process_success(new_value)
-
+    # Int, Byte, Short are always passed as int
     if value.type in (ValueType.INT, ValueType.BYTE, ValueType.SHORT):
         try:
             new_value = int(new_value)
@@ -418,20 +408,18 @@ def set_config_parameter(
         if new_value > value.max or new_value < value.min:
             return OZWValidationResponse.process_fail(
                 ERR_NOT_SUPPORTED,
-                "Value %s out of range for parameter %s (Min: %s Max: %s)",
-                new_value,
-                parameter_index,
-                value.min,
-                value.max,
+                (
+                    f"Value {new_value} out of range for parameter "
+                    f"{parameter_index} (Min: {value.min} Max: {value.max})"
+                ),
             )
         value.send_value(new_value)
         return OZWValidationResponse.process_success(new_value)
 
+    # This will catch BUTTON, STRING, and UNKNOWN ValueTypes
     return OZWValidationResponse.process_fail(
         ERR_NOT_SUPPORTED,
-        "Value type of %s for parameter %s not supported",
-        str(value.type),
-        parameter_index,
+        f"Value type of {value.type} for parameter {parameter_index} not supported",
     )
 
 
@@ -447,7 +435,13 @@ def get_config_parameters(node, node_instance_id=None):
 
     for value in command_class.values():
         value_to_return = {}
-        if value.read_only or value.type == ValueType.BUTTON:
+        # BUTTON types aren't supported yet, and STRING and UNKNOWN
+        # are not valid config parameter types
+        if value.read_only or value.type in (
+            ValueType.BUTTON,
+            ValueType.STRING,
+            ValueType.UNKNOWN,
+        ):
             continue
 
         value_to_return = {
@@ -457,16 +451,13 @@ def get_config_parameters(node, node_instance_id=None):
         }
 
         if value.type == ValueType.BOOL:
-            value_to_return[const.ATTR_VALUE] = value.value["Value"]
+            value_to_return[const.ATTR_VALUE] = value.value
 
-        if value.type == ValueType.LIST:
+        elif value.type == ValueType.LIST:
             value_to_return[const.ATTR_VALUE] = value.value["Selected"]
             value_to_return[const.ATTR_OPTIONS] = value.value["List"]
 
-        if value.type == ValueType.STRING:
-            value_to_return[const.ATTR_VALUE] = value.value
-
-        if value.type in (ValueType.INT, ValueType.BYTE, ValueType.SHORT):
+        elif value.type in (ValueType.INT, ValueType.BYTE, ValueType.SHORT):
             value_to_return[const.ATTR_VALUE] = int(value.value)
             value_to_return[const.ATTR_MAX] = value.max
             value_to_return[const.ATTR_MIN] = value.min

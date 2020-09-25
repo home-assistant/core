@@ -136,7 +136,6 @@ async def test_websocket_api(hass, generic_data, hass_ws_client):
         assert config_param["type"] in (
             ValueType.LIST.value,
             ValueType.BOOL.value,
-            ValueType.STRING.value,
             ValueType.INT.value,
             ValueType.BYTE.value,
             ValueType.SHORT.value,
@@ -186,7 +185,7 @@ async def test_websocket_api(hass, generic_data, hass_ws_client):
     result = msg["error"]
     assert result["code"] == ERR_NOT_FOUND
 
-    # Test OZW Node configuration class not found when setting config parameter
+    # Test OZW Node not found error
     await client.send_json(
         {
             ID: 18,
@@ -199,6 +198,7 @@ async def test_websocket_api(hass, generic_data, hass_ws_client):
     msg = await client.receive_json()
     result = msg["error"]
     assert result["code"] == ERR_NOT_FOUND
+    assert False
 
 
 async def test_websocket_api_config_class_not_found(

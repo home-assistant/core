@@ -1,4 +1,6 @@
 """Test Z-Wave Services."""
+import pytest
+
 from .common import setup_ozw
 
 
@@ -43,34 +45,34 @@ async def test_services(hass, light_data, sent_messages, light_msg, caplog):
     assert msg["payload"] == {"Value": 55, "ValueIDKey": 844425594667027}
 
     # Test set_config_parameter invalid list int
-    await hass.services.async_call(
-        "ozw",
-        "set_config_parameter",
-        {"node_id": 39, "parameter": 1, "value": 12},
-        blocking=True,
-    )
+    with pytest.raises(ValueError):
+        assert await hass.services.async_call(
+            "ozw",
+            "set_config_parameter",
+            {"node_id": 39, "parameter": 1, "value": 12},
+            blocking=True,
+        )
     assert len(sent_messages) == 3
-    assert "Invalid value 12 for parameter 1" in caplog.text
 
     # Test set_config_parameter invalid list string
-    await hass.services.async_call(
-        "ozw",
-        "set_config_parameter",
-        {"node_id": 39, "parameter": 1, "value": "Blah"},
-        blocking=True,
-    )
+    with pytest.raises(ValueError):
+        assert await hass.services.async_call(
+            "ozw",
+            "set_config_parameter",
+            {"node_id": 39, "parameter": 1, "value": "Blah"},
+            blocking=True,
+        )
     assert len(sent_messages) == 3
-    assert "Invalid value Blah for parameter 1" in caplog.text
 
     # Test set_config_parameter int out of range
-    await hass.services.async_call(
-        "ozw",
-        "set_config_parameter",
-        {"node_id": 39, "parameter": 3, "value": 2147483657},
-        blocking=True,
-    )
+    with pytest.raises(ValueError):
+        await hass.services.async_call(
+            "ozw",
+            "set_config_parameter",
+            {"node_id": 39, "parameter": 3, "value": 2147483657},
+            blocking=True,
+        )
     assert len(sent_messages) == 3
-    assert "Value 2147483657 out of range for parameter 3" in caplog.text
 
     # Test set_config_parameter short
     await hass.services.async_call(
