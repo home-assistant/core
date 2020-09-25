@@ -198,7 +198,6 @@ async def test_websocket_api(hass, generic_data, hass_ws_client):
     msg = await client.receive_json()
     result = msg["error"]
     assert result["code"] == ERR_NOT_FOUND
-    assert False
 
 
 async def test_websocket_api_config_class_not_found(
