@@ -565,7 +565,7 @@ class _TrackTemplateResultInfo:
         self._last_domains: Set = set()
         self._last_entities: Set = set()
 
-    def async_setup(self) -> None:
+    def async_setup(self, raise_on_template_error: bool) -> None:
         """Activation of template tracking."""
         for track_template_ in self._track_templates:
             template = track_template_.template
@@ -573,6 +573,8 @@ class _TrackTemplateResultInfo:
 
             self._info[template] = template.async_render_to_info(variables)
             if self._info[template].exception:
+                if raise_on_template_error:
+                    raise self._info[template].exception
                 _LOGGER.error(
                     "Error while processing template: %s",
                     track_template_.template,
@@ -812,6 +814,7 @@ def async_track_template_result(
     hass: HomeAssistant,
     track_templates: Iterable[TrackTemplate],
     action: TrackTemplateResultListener,
+    raise_on_template_error: bool = False,
 ) -> _TrackTemplateResultInfo:
     """Add a listener that fires when a the result of a template changes.
 
@@ -833,9 +836,13 @@ def async_track_template_result(
         Home assistant object.
     track_templates
         An iterable of TrackTemplate.
-
     action
         Callable to call with results.
+    raise_on_template_error
+        When set to True, if there is an exception
+        processing the template during setup, the system
+        will raise the exception instead of setting up
+        tracking.
 
     Returns
     -------
@@ -843,7 +850,7 @@ def async_track_template_result(
 
     """
     tracker = _TrackTemplateResultInfo(hass, track_templates, action)
-    tracker.async_setup()
+    tracker.async_setup(raise_on_template_error)
     return tracker
 
 
