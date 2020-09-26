@@ -27,6 +27,24 @@
                 "description": "Insteon Hub Versioun 2 konfigur\u00e9ieren.",
                 "title": "Insteon Hub Versioun 2"
             },
+            "hubv1": {
+                "data": {
+                    "host": "IP Adresse",
+                    "port": "Port"
+                },
+                "description": "Insteon Hub Versioun 1 (pre-2014) konfigur\u00e9ieren.",
+                "title": "Insteon Hub Versioun 1"
+            },
+            "hubv2": {
+                "data": {
+                    "host": "IP Adresse",
+                    "password": "Passwuert",
+                    "port": "Port",
+                    "username": "Benotzernumm"
+                },
+                "description": "Insteon Hub Versioun 2 konfigur\u00e9ieren.",
+                "title": "Insteon Hub Versioun 2"
+            },
             "init": {
                 "data": {
                     "hubv1": "Hub Versioun 1 (Pre-2014)",
@@ -42,6 +60,12 @@
                 },
                 "description": "Insteon PowerLink Modem (PLM) konfigur\u00e9ieren.",
                 "title": "Insteon PLM"
+            },
+            "user": {
+                "data": {
+                    "modem_type": "Typ vu Modem."
+                },
+                "title": "Insteon"
             }
         }
     },
