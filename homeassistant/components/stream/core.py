@@ -48,9 +48,6 @@ class StreamOutput:
         self._event = asyncio.Event()
         self._segments = deque(maxlen=MAX_SEGMENTS)
         self._unsub = None
-        self._video_codec = None
-        self._audio_codec = None
-        self._bit_rate = None
 
     @property
     def name(self) -> str:
@@ -155,26 +152,6 @@ class StreamOutput:
         """Handle cleanup."""
         self._segments = deque(maxlen=MAX_SEGMENTS)
         self._stream.remove_provider(self)
-
-    @property
-    def video_codec(self) -> tuple:
-        """Video codec getter."""
-        return self._video_codec
-
-    @video_codec.setter
-    def video_codec(self, value):
-        """Video codec setter."""
-        self._video_codec = value
-
-    @property
-    def audio_codec(self) -> tuple:
-        """Audio codec getter."""
-        return self._audio_codec
-
-    @audio_codec.setter
-    def audio_codec(self, value):
-        """Audio codec setter."""
-        self._audio_codec = value
 
 
 class StreamView(HomeAssistantView):
