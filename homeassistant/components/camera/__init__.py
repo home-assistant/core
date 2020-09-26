@@ -699,6 +699,10 @@ async def async_handle_play_stream_service(camera, service_call):
         ATTR_ENTITY_ID: entity_ids,
         ATTR_MEDIA_CONTENT_ID: f"{get_url(hass)}{url}",
         ATTR_MEDIA_CONTENT_TYPE: FORMAT_CONTENT_TYPE[fmt],
+        "stream_type": "LIVE",
+        "media_info": {
+            "hlsVideoSegmentFormat": "fmp4",
+        },
     }
 
     await hass.services.async_call(

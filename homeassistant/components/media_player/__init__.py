@@ -310,7 +310,9 @@ async def async_setup(hass, config):
     component.async_register_entity_service(
         SERVICE_PLAY_MEDIA,
         vol.All(
-            cv.make_entity_service_schema(MEDIA_PLAYER_PLAY_MEDIA_SCHEMA),
+            cv.make_entity_service_schema(
+                MEDIA_PLAYER_PLAY_MEDIA_SCHEMA, extra=vol.ALLOW_EXTRA
+            ),
             _rename_keys(
                 media_type=ATTR_MEDIA_CONTENT_TYPE,
                 media_id=ATTR_MEDIA_CONTENT_ID,
