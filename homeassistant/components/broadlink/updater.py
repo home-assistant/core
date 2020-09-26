@@ -9,7 +9,6 @@ from broadlink.exceptions import (
     AuthorizationError,
     BroadlinkException,
     CommandNotSupportedError,
-    NetworkTimeoutError,
     StorageError,
 )
 
@@ -190,14 +189,7 @@ class BroadlinkRMMini3UpdateManager(BroadlinkUpdateManager):
 
     async def async_fetch_data(self):
         """Fetch data from the device."""
-        hello = partial(
-            blk.discover,
-            discover_ip_address=self.device.api.host[0],
-            timeout=self.device.api.timeout,
-        )
-        devices = await self.device.hass.async_add_executor_job(hello)
-        if not devices:
-            raise NetworkTimeoutError("The device is offline")
+        await self.device.async_request(self.device.api.hello)
         return {}
 
 
