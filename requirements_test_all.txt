@@ -966,7 +966,7 @@ speedtest-cli==2.1.2
 spiderpy==1.3.1
 
 # homeassistant.components.spotify
-spotipy==2.14.0
+spotipy==2.16.0
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
