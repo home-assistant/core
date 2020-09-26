@@ -2,8 +2,12 @@
 import logging
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_BATTERY_CHARGING, DEVICE_CLASS_CONNECTIVITY,
-    DEVICE_CLASS_LOCK, DEVICE_CLASS_POWER, BinarySensorEntity)
+    DEVICE_CLASS_BATTERY_CHARGING,
+    DEVICE_CLASS_CONNECTIVITY,
+    DEVICE_CLASS_LOCK,
+    DEVICE_CLASS_POWER,
+    BinarySensorEntity,
+)
 
 from . import DOMAIN, NiuVehicle
 
@@ -23,11 +27,11 @@ async def async_setup_entry(hass, config, async_add_entities):
 
     entities = []
 
-    for vehicle in hass.data[DOMAIN][config.entry_id]["account"].get_vehicles():
+    for serial in hass.data[DOMAIN][config.entry_id]["account"].get_vehicles():
         for key, value in SENSORS.items():
             entities.append(
                 NiuBinarySensor(
-                    vehicle,
+                    serial,
                     hass.data[DOMAIN][config.entry_id]["coordinator"],
                     key,
                     value[0],
@@ -80,6 +84,8 @@ class NiuBinarySensor(NiuVehicle, BinarySensorEntity):
 
         if self._attribute == "lock":
             return not self._vehicle.is_locked
+
+        return None
 
     @property
     def icon(self):

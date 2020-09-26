@@ -6,17 +6,23 @@ from niu import NiuAPIException, NiuCloud
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (ATTR_BATTERY_CHARGING, ATTR_BATTERY_LEVEL,
-                                 CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_TOKEN,
-                                 CONF_USERNAME)
+from homeassistant.const import (
+    ATTR_BATTERY_CHARGING,
+    ATTR_BATTERY_LEVEL,
+    CONF_PASSWORD,
+    CONF_SCAN_INTERVAL,
+    CONF_TOKEN,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.update_coordinator import (CoordinatorEntity,
-                                                      DataUpdateCoordinator)
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
-from .const import (DEFAULT_SCAN_INTERVAL, DOMAIN, MIN_SCAN_INTERVAL,
-                    NIU_COMPONENTS)
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, MIN_SCAN_INTERVAL, NIU_COMPONENTS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -97,11 +103,11 @@ class NiuVehicle(CoordinatorEntity, Entity):
     def __init__(self, vehicle_id, coordinator):
         """Initialize the class."""
         super().__init__(coordinator)
-        self.id = vehicle_id
+        self._id = vehicle_id
 
     @property
     def _vehicle(self):
-        return self.coordinator.data[self.id]
+        return self.coordinator.data[self._id]
 
     @property
     def name(self):
@@ -112,7 +118,7 @@ class NiuVehicle(CoordinatorEntity, Entity):
     def unique_id(self):
         """Return the vehicle's unique id."""
 
-        return self.id
+        return self._id
 
     @property
     def device_info(self):

@@ -7,14 +7,17 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 
+from .const import DOMAIN
+
 _LOGGER = logging.getLogger(__name__)
+
 
 DATA_SCHEMA = vol.Schema(
     {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
 )
 
 
-class NiuConfigFlow(config_entries.ConfigFlow):
+class NiuConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Config Flow for NIU."""
 
     async def async_step_import(self, import_config):
