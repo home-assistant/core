@@ -7,11 +7,26 @@ from pysqueezebox import Server, async_discover
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
+from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA,
+    BrowseMedia,
+    MediaPlayerEntity,
+)
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_ENQUEUE,
+    MEDIA_CLASS_ALBUM,
+    MEDIA_CLASS_ARTIST,
+    MEDIA_CLASS_DIRECTORY,
+    MEDIA_CLASS_GENRE,
+    MEDIA_CLASS_PLAYLIST,
+    MEDIA_CLASS_TRACK,
+    MEDIA_TYPE_ALBUM,
+    MEDIA_TYPE_ARTIST,
+    MEDIA_TYPE_GENRE,
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_PLAYLIST,
+    MEDIA_TYPE_TRACK,
+    SUPPORT_BROWSE_MEDIA,
     SUPPORT_CLEAR_PLAYLIST,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -26,6 +41,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
 )
+from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.config_entries import SOURCE_DISCOVERY
 from homeassistant.const import (
     ATTR_COMMAND,
@@ -71,7 +87,8 @@ _LOGGER = logging.getLogger(__name__)
 DISCOVERY_INTERVAL = 60
 
 SUPPORT_SQUEEZEBOX = (
-    SUPPORT_PAUSE
+    SUPPORT_BROWSE_MEDIA
+    | SUPPORT_PAUSE
     | SUPPORT_VOLUME_SET
     | SUPPORT_VOLUME_MUTE
     | SUPPORT_PREVIOUS_TRACK
@@ -115,6 +132,59 @@ SQUEEZEBOX_MODE = {
     "play": STATE_PLAYING,
     "stop": STATE_IDLE,
 }
+
+LIBRARY = ["Artists", "Albums", "Tracks", "Playlists", "Genres"]
+
+MEDIA_TYPE_TO_SQUEEZEBOX = {
+    "Artists": "artists",
+    "Albums": "albums",
+    "Tracks": "titles",
+    "Playlists": "playlists",
+    "Genres": "genres",
+    MEDIA_TYPE_ALBUM: "album",
+    MEDIA_TYPE_ARTIST: "artist",
+    MEDIA_TYPE_TRACK: "title",
+    MEDIA_TYPE_PLAYLIST: "playlist",
+    MEDIA_TYPE_GENRE: "genre",
+}
+
+SQUEEZEBOX_ID_BY_TYPE = {
+    MEDIA_TYPE_ALBUM: "album_id",
+    MEDIA_TYPE_ARTIST: "artist_id",
+    MEDIA_TYPE_TRACK: "track_id",
+    MEDIA_TYPE_PLAYLIST: "playlist_id",
+    MEDIA_TYPE_GENRE: "genre_id",
+}
+
+CONTENT_TYPE_MEDIA_CLASS = {
+    "Artists": {"parent": MEDIA_CLASS_DIRECTORY, "children": MEDIA_CLASS_ARTIST},
+    "Albums": {"parent": MEDIA_CLASS_DIRECTORY, "children": MEDIA_CLASS_ALBUM},
+    "Tracks": {"parent": MEDIA_CLASS_DIRECTORY, "children": MEDIA_CLASS_TRACK},
+    "Playlists": {"parent": MEDIA_CLASS_DIRECTORY, "children": MEDIA_CLASS_PLAYLIST},
+    "Genres": {"parent": MEDIA_CLASS_DIRECTORY, "children": "genre"},
+    MEDIA_TYPE_ALBUM: {"parent": MEDIA_CLASS_ALBUM, "children": MEDIA_CLASS_TRACK},
+    MEDIA_TYPE_ARTIST: {"parent": MEDIA_CLASS_ARTIST, "children": MEDIA_CLASS_ALBUM},
+    MEDIA_TYPE_TRACK: {"parent": MEDIA_CLASS_TRACK, "children": None},
+    MEDIA_TYPE_GENRE: {"parent": MEDIA_CLASS_GENRE, "children": MEDIA_CLASS_ARTIST},
+    MEDIA_TYPE_PLAYLIST: {
+        "parent": MEDIA_CLASS_PLAYLIST,
+        "children": MEDIA_CLASS_TRACK,
+    },
+}
+
+CONTENT_TYPE_TO_CHILD_TYPE = {
+    MEDIA_TYPE_ALBUM: MEDIA_TYPE_TRACK,
+    MEDIA_TYPE_PLAYLIST: MEDIA_TYPE_PLAYLIST,
+    MEDIA_TYPE_ARTIST: MEDIA_TYPE_ALBUM,
+    MEDIA_TYPE_GENRE: MEDIA_TYPE_ARTIST,
+    "Artists": MEDIA_TYPE_ARTIST,
+    "Albums": MEDIA_TYPE_ALBUM,
+    "Tracks": MEDIA_TYPE_TRACK,
+    "Playlists": MEDIA_TYPE_PLAYLIST,
+    "Genres": MEDIA_TYPE_GENRE,
+}
+
+BROWSE_LIMIT = 500
 
 
 async def start_server_discovery(hass):
@@ -479,10 +549,26 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         if kwargs.get(ATTR_MEDIA_ENQUEUE):
             cmd = "add"
 
-        if media_type == MEDIA_TYPE_PLAYLIST:
-            content = json.loads(media_id)
-            await self._player.async_load_playlist(content["urls"], cmd)
-            await self._player.async_index(content["index"])
+        if media_type in SQUEEZEBOX_ID_BY_TYPE:
+            index = 0
+            if media_type == MEDIA_TYPE_PLAYLIST:
+                try:
+                    # a saved playlist by number
+                    media_id = int(media_id)
+                except ValueError:
+                    # a list of urls
+                    content = json.loads(media_id)
+                    playlist = content["urls"]
+                    index = content["index"]
+            result = await self._player.async_browse(
+                "titles",
+                limit=BROWSE_LIMIT,
+                browse_id=(SQUEEZEBOX_ID_BY_TYPE[media_type], media_id),
+            )
+            playlist = result["items"]
+            _LOGGER.debug("Generated playlist: %s", playlist)
+            await self._player.async_load_playlist(playlist, cmd)
+            await self._player.async_index(index)
         else:
             await self._player.async_load_url(media_id, cmd)
 
@@ -541,3 +627,93 @@ class SqueezeBoxEntity(MediaPlayerEntity):
     async def async_unsync(self):
         """Unsync this Squeezebox player."""
         await self._player.async_unsync()
+
+    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+        """Implement the websocket media browsing helper."""
+
+        _LOGGER.debug(
+            "Reached async_browse_media with content_type %s and content_id %s",
+            media_content_type,
+            media_content_id,
+        )
+
+        if media_content_type in [None, "library"]:
+            return library_payload()
+
+        media_class = CONTENT_TYPE_MEDIA_CLASS[media_content_type]
+
+        if media_content_id and media_content_id != media_content_type:
+            browse_id = (SQUEEZEBOX_ID_BY_TYPE[media_content_type], media_content_id)
+        else:
+            browse_id = None
+
+        result = await self._player.async_browse(
+            MEDIA_TYPE_TO_SQUEEZEBOX[media_content_type],
+            limit=BROWSE_LIMIT,
+            browse_id=browse_id,
+        )
+
+        media = None
+
+        if result is not None and result.get("items"):
+            item_type = CONTENT_TYPE_TO_CHILD_TYPE[media_content_type]
+            media = []
+            for item in result["items"]:
+                media.append(
+                    BrowseMedia(
+                        title=item["title"],
+                        media_class=media_class["parent"],
+                        media_content_id=str(item["id"]),
+                        media_content_type=item_type,
+                        can_play=True,
+                        can_expand=CONTENT_TYPE_MEDIA_CLASS[media_class["children"]]
+                        is not None,
+                        thumbnail=item.get("image_url"),
+                    )
+                )
+
+        if media is None:
+            raise BrowseError(
+                f"Media not found: {media_content_type} / {media_content_id}"
+            )
+
+        return BrowseMedia(
+            title=result.get("title"),
+            media_class=media_class["parent"],
+            children_media_class=media_class["children"],
+            media_content_id=media_content_id,
+            media_content_type=media_content_type,
+            can_play=True,
+            children=media,
+            can_expand=True,
+        )
+
+
+def library_payload():
+    """Create response payload to describe contents of library."""
+
+    library_info = {
+        "title": "Music Library",
+        "media_class": MEDIA_CLASS_DIRECTORY,
+        "media_content_id": "library",
+        "media_content_type": "library",
+        "can_play": False,
+        "can_expand": True,
+        "children": [],
+    }
+
+    for item in LIBRARY:
+        media_class = CONTENT_TYPE_MEDIA_CLASS[item]
+        library_info["children"].append(
+            BrowseMedia(
+                title=item,
+                media_class=media_class["parent"],
+                media_content_id=item,
+                media_content_type=item,
+                can_play=True,
+                can_expand=True,
+            )
+        )
+
+    response = BrowseMedia(**library_info)
+    return response
