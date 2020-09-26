@@ -1,6 +1,20 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert"
+        },
+        "error": {
+            "service_unavailable": "Feeler beim verbannen"
+        },
         "step": {
+            "protocol": {
+                "data": {
+                    "device_baudrate": "Apparat Baudrate",
+                    "device_path": "Pad vum Apparat",
+                    "host": "Host",
+                    "port": "Port"
+                }
+            },
             "user": {
                 "data": {
                     "protocol": "Protokoll"
@@ -9,10 +23,40 @@
         }
     },
     "options": {
+        "error": {
+            "int": "D'Feld hei \u00ebnnen muss eng ganz Zuel sinn.",
+            "relay_inclusive": "Relais Adress a Relais Kanal sin vuneneen ofh\u00e4ngeg a musse mat abegraff sinn."
+        },
         "step": {
+            "arm_settings": {
+                "data": {
+                    "alt_night_mode": "Alternative Nuecht Modus",
+                    "auto_bypass": "Auto Bypass beim aktiv\u00e9ieren",
+                    "code_arm_required": "Code erfuerderlech fir d'Aktiv\u00e9ierung"
+                },
+                "title": "AlarmDecoder konfigur\u00e9ieren"
+            },
             "init": {
                 "data": {
                     "edit_select": "\u00c4nneren"
+                },
+                "description": "Wat w\u00eblls du \u00e4nneren?",
+                "title": "AlarmDecoder konfigur\u00e9ieren"
+            },
+            "zone_details": {
+                "data": {
+                    "zone_loop": "RF Schleef",
+                    "zone_name": "Numm vun der Zone",
+                    "zone_relayaddr": "Relais Adresse",
+                    "zone_relaychan": "Relais Kanal",
+                    "zone_rfid": "RF Serielle",
+                    "zone_type": "Type vun der Zone"
+                },
+                "title": "AlarmDecoder konfigur\u00e9ieren"
+            },
+            "zone_select": {
+                "data": {
+                    "zone_number": "Zone Nummer"
                 }
             }
         }

@@ -64,7 +64,13 @@
             "button6": "Kn\u00e4ppchen 6",
             "button7": "Kn\u00e4ppchen 7",
             "button8": "Kn\u00e4ppchen 8",
-            "button9": "Kn\u00e4ppchen 9"
+            "button9": "Kn\u00e4ppchen 9",
+            "doorbell": "Schell"
+        },
+        "trigger_type": {
+            "double_press": "\"{subtype}\" zwee mol gedr\u00e9ckt",
+            "long_press": "\"{subtype}\" gedr\u00e9ckt an ugehal",
+            "single_press": "\"{subtype}\" gedr\u00e9ckt"
         }
     },
     "title": "HomeKit Kontroller"
