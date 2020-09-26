@@ -923,6 +923,24 @@ class StateMachine:
             if state.domain in domain_filter
         ]
 
+    @callback
+    def async_entity_ids_count(
+        self, domain_filter: Optional[Union[str, Iterable]] = None
+    ) -> int:
+        """Count the entity ids that are being tracked.
+
+        This method must be run in the event loop.
+        """
+        if domain_filter is None:
+            return len(self._states.keys())
+
+        if isinstance(domain_filter, str):
+            domain_filter = (domain_filter.lower(),)
+
+        return len(
+            [None for state in self._states.values() if state.domain in domain_filter]
+        )
+
     def all(self, domain_filter: Optional[Union[str, Iterable]] = None) -> List[State]:
         """Create a list of all states."""
         return run_callback_threadsafe(

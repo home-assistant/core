@@ -2420,3 +2420,14 @@ For loop example getting 3 entity values:
     assert "sensor0" in result
     assert "sensor1" in result
     assert "sun" in result
+
+
+async def test_slice_states(hass):
+    """Test iterating states with a slice."""
+    hass.states.async_set("sensor.test", "23")
+
+    tpl = template.Template(
+        "{% for states in states | slice(1) -%}{% set state = states | first %}{{ state.entity_id }}{%- endfor %}",
+        hass,
+    )
+    assert tpl.async_render() == "sensor.test"

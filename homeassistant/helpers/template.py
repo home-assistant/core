@@ -9,7 +9,7 @@ import math
 from operator import attrgetter
 import random
 import re
-from typing import Any, Iterable, List, Optional, Union
+from typing import Any, Generator, Iterable, List, Optional, Union
 from urllib.parse import urlencode as urllib_urlencode
 import weakref
 
@@ -425,12 +425,12 @@ class AllStates:
     def __iter__(self):
         """Return all states."""
         self._collect_all()
-        return _state_iterator(self._hass, None)
+        return _state_generator(self._hass, None)
 
     def __len__(self) -> int:
         """Return number of states."""
         self._collect_all()
-        return len(self._hass.states.async_entity_ids())
+        return self._hass.states.async_entity_ids_count()
 
     def __call__(self, entity_id):
         """Return the states."""
@@ -465,12 +465,12 @@ class DomainStates:
     def __iter__(self):
         """Return the iteration over all the states."""
         self._collect_domain()
-        return _state_iterator(self._hass, self._domain)
+        return _state_generator(self._hass, self._domain)
 
     def __len__(self) -> int:
         """Return number of states."""
         self._collect_domain()
-        return len(self._hass.states.async_entity_ids(self._domain))
+        return self._hass.states.async_entity_ids_count(self._domain)
 
     def __repr__(self) -> str:
         """Representation of Domain States."""
@@ -537,12 +537,10 @@ def _collect_state(hass: HomeAssistantType, entity_id: str) -> None:
         entity_collect.entities.add(entity_id)
 
 
-def _state_iterator(hass: HomeAssistantType, domain: Optional[str]) -> Iterable:
-    """Create an state iterator for a domain or all states."""
-    return iter(
-        TemplateState(hass, state)
-        for state in sorted(hass.states.async_all(domain), key=attrgetter("entity_id"))
-    )
+def _state_generator(hass: HomeAssistantType, domain: Optional[str]) -> Generator:
+    """State generator for a domain or all states."""
+    for state in sorted(hass.states.async_all(domain), key=attrgetter("entity_id")):
+        yield TemplateState(hass, state)
 
 
 def _get_state(hass: HomeAssistantType, entity_id: str) -> Optional[TemplateState]:
