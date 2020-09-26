@@ -98,7 +98,6 @@ class EbusdData:
             command_result = ebusdpy.read(
                 self._address, self._circuit, name, stype, CACHE_TTL
             )
-            _LOGGER.debug("Read result %s", command_result)
             if command_result is not None:
                 if "ERR:" in command_result:
                     _LOGGER.warning(command_result)
@@ -106,7 +105,7 @@ class EbusdData:
                     self.value[name] = command_result
         except RuntimeError as err:
             _LOGGER.error(err)
-            raise RuntimeError(err)
+            raise RuntimeError(err) from err
 
     def write(self, call):
         """Call write methon on ebusd."""
