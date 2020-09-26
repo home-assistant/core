@@ -1,4 +1,5 @@
 """Template helper methods for rendering strings with Home Assistant data."""
+import asyncio
 import base64
 import collections.abc
 from datetime import datetime, timedelta
@@ -13,6 +14,7 @@ from typing import Any, Generator, Iterable, List, Optional, Union
 from urllib.parse import urlencode as urllib_urlencode
 import weakref
 
+import async_timeout
 import jinja2
 from jinja2 import contextfilter, contextfunction
 from jinja2.sandbox import ImmutableSandboxedEnvironment
@@ -308,6 +310,42 @@ class Template:
             return compiled.render(kwargs).strip()
         except jinja2.TemplateError as err:
             raise TemplateError(err) from err
+
+    async def async_render_will_timeout(
+        self, timeout: float, variables: TemplateVarsType = None, **kwargs: Any
+    ) -> bool:
+        """Check to see if rendering a template will timeout during render.
+
+        This is intended to check for expensive templates
+        that will make the system unstable.  The template
+        is rendered in the executor to ensure it does not
+        tie up the event loop.
+
+        This function is not a security control and is only
+        intended to be used as a safety check when testing
+        templates.
+
+        This method must be run in the event loop.
+        """
+        assert self.hass
+
+        if self.is_static:
+            return False
+
+        compiled = self._compiled or self._ensure_compiled()
+
+        if variables is not None:
+            kwargs.update(variables)
+
+        try:
+            async with async_timeout.timeout(timeout):
+                await self.hass.async_add_executor_job(compiled.render, kwargs)
+        except asyncio.TimeoutError:
+            return True
+        except jinja2.TemplateError:
+            pass
+
+        return False
 
     @callback
     def async_render_to_info(

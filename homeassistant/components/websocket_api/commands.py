@@ -24,6 +24,8 @@ from . import const, decorators, messages
 
 _LOGGER = logging.getLogger(__name__)
 
+MAX_TEMPLATE_RENDER_TIME = 3
+
 # mypy: allow-untyped-calls, allow-untyped-defs
 
 
@@ -239,7 +241,6 @@ def handle_ping(hass, connection, msg):
     connection.send_message(pong_message(msg["id"]))
 
 
-@callback
 @decorators.websocket_command(
     {
         vol.Required("type"): "render_template",
@@ -248,12 +249,20 @@ def handle_ping(hass, connection, msg):
         vol.Optional("variables"): dict,
     }
 )
-def handle_render_template(hass, connection, msg):
+async def handle_render_template(hass, connection, msg):
     """Handle render_template command."""
     template_str = msg["template"]
     template = Template(template_str, hass)
     variables = msg.get("variables")
     info = None
+
+    if await template.async_render_will_timeout(MAX_TEMPLATE_RENDER_TIME):
+        connection.send_error(
+            msg["id"],
+            const.ERR_TEMPLATE_ERROR,
+            "Exceeded maximum execution time of {MAX_TEMPLATE_RENDER_TIME}s",
+        )
+        return
 
     @callback
     def _template_listener(event, updates):
