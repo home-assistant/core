@@ -272,6 +272,7 @@ def handle_render_template(hass, connection, msg):
             )
         )
 
+    error = None
     try:
         info = async_track_template_result(
             hass,
@@ -280,19 +281,17 @@ def handle_render_template(hass, connection, msg):
             raise_on_template_error=True,
         )
     except vol.Invalid as ex:
-        connection.send_message(
-            messages.error_message(
-                msg["id"],
-                const.ERR_TEMPLATE_ERROR,
-                vol.humanize.humanize_error(msg, ex),
-            )
-        )
-        return
+        error = vol.humanize.humanize_error(msg, ex)
     except TemplateError as ex:
+        error = str(ex)
+
+    if error:
         connection.send_message(
-            messages.error_message(msg["id"], const.ERR_TEMPLATE_ERROR, str(ex))
+            messages.error_message(msg["id"], const.ERR_TEMPLATE_ERROR, error)
         )
         return
+
+    assert info
 
     connection.subscriptions[msg["id"]] = info.async_remove
 
