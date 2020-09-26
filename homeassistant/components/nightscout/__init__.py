@@ -30,7 +30,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Nightscout from a config entry."""
     server_url = entry.data[CONF_URL]
-    api_key = entry.data.get(CONF_API_KEY, None)
+    api_key = entry.data.get(CONF_API_KEY)
     session = async_get_clientsession(hass)
     api = NightscoutAPI(server_url, session=session, api_secret=api_key)
     try:
