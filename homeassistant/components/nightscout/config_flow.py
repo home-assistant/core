@@ -20,11 +20,11 @@ DATA_SCHEMA = vol.Schema({vol.Required(CONF_URL): str, vol.Optional(CONF_API_KEY
 async def _validate_input(data):
     """Validate the user input allows us to connect."""
     url = data[CONF_URL]
-    api_key = data.get(CONF_API_KEY, None)
+    api_key = data.get(CONF_API_KEY)
     try:
         api = NightscoutAPI(url, api_secret=api_key)
         status = await api.get_server_status()
-        if status.settings.get("authDefaultRoles", None) == "status-only":
+        if status.settings.get("authDefaultRoles") == "status-only":
             await api.get_sgvs()
     except ClientResponseError as error:
         raise InputValidationError("invalid_auth") from error
