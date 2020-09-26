@@ -280,8 +280,8 @@ def handle_render_template(hass, connection, msg):
             raise_on_template_error=True,
         )
     except TemplateError as ex:
-        connection.send_message(
-            messages.error_message(msg["id"], const.ERR_TEMPLATE_ERROR, str(ex))
+        connection.send_error(
+            msg["id"], const.ERR_TEMPLATE_ERROR, str(ex)
         )
         return
 
