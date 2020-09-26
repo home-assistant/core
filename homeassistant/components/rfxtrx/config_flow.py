@@ -9,7 +9,6 @@ import serial.tools.list_ports
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_COMMAND_OFF,
@@ -28,6 +27,7 @@ from homeassistant.helpers.device_registry import (
     async_get_registry as async_get_device_registry,
 )
 from homeassistant.helpers.entity_registry import (
+    async_entries_for_device,
     async_get_registry as async_get_entity_registry,
 )
 
@@ -302,34 +302,33 @@ class OptionsFlow(config_entries.OptionsFlow):
     async def _async_replace_device(self, replace_device):
         """Migrate properties of a device into another."""
         device_registry = self._device_registry
-        old_device_id = self._selected_device_entry_id
-        old_entry = device_registry.async_get(old_device_id)
+        old_device = self._selected_device_entry_id
+        old_entry = device_registry.async_get(old_device)
         device_registry.async_update_device(
             replace_device,
             area_id=old_entry.area_id,
             name_by_user=old_entry.name_by_user,
         )
 
+        old_device_data = self._get_device_data(old_device)
+        new_device_data = self._get_device_data(replace_device)
+
+        old_device_id = "_".join(x for x in old_device_data[CONF_DEVICE_ID])
+        new_device_id = "_".join(x for x in new_device_data[CONF_DEVICE_ID])
+
         entity_registry = await async_get_entity_registry(self.hass)
+        entities = async_entries_for_device(entity_registry, old_device)
         entity_migration_map = {}
-        for entry in entity_registry.entities.values():
-            if entry.device_id == replace_device and entry.domain == SENSOR_DOMAIN:
-                data_type = entry.unique_id.split("_")[-1]
-                data_suffix = f"_{data_type}"
+        for entity in entities:
+            unique_id = entity.unique_id
+            new_unique_id = unique_id.replace(old_device_id, new_device_id)
 
-                old_entry = next(
-                    (
-                        entry
-                        for entry in entity_registry.entities.values()
-                        if entry.device_id == old_device_id
-                        and entry.domain == SENSOR_DOMAIN
-                        and data_suffix == entry.unique_id[-len(data_suffix) :]
-                    ),
-                    None,
-                )
+            new_entity_id = entity_registry.async_get_entity_id(
+                entity.domain, entity.platform, new_unique_id
+            )
 
-                if old_entry is not None:
-                    entity_migration_map[entry.entity_id] = old_entry
+            if new_entity_id is not None:
+                entity_migration_map[new_entity_id] = entity
 
         for entry in entity_migration_map.values():
             entity_registry.async_remove(entry.entity_id)
@@ -342,7 +341,7 @@ class OptionsFlow(config_entries.OptionsFlow):
                 icon=entry.icon,
             )
 
-        device_registry.async_remove_device(old_device_id)
+        device_registry.async_remove_device(old_device)
 
     def _can_replace_device(self, entry_id):
         """Check if device can be replaced with selected device."""
