@@ -3,8 +3,8 @@ import datetime
 import logging
 
 from homeassistant.helpers.entity import Entity
-import homeassistant.util.dt as dt_util
 from homeassistant.util import Throttle
+import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
 
