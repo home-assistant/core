@@ -486,19 +486,10 @@ async def test_render_template_with_error(
     msg = await websocket_client.receive_json()
     assert msg["id"] == 5
     assert msg["type"] == const.TYPE_RESULT
-    assert msg["success"]
+    assert not msg["success"]
+    assert msg["error"]["code"] == const.ERR_TEMPLATE_ERROR
 
-    msg = await websocket_client.receive_json()
-    assert msg["id"] == 5
-    assert msg["type"] == "event"
-    event = msg["event"]
-    assert event == {
-        "result": None,
-        "listeners": {"all": True, "domains": [], "entities": []},
-    }
-
-    assert "my_unknown_var" in caplog.text
-    assert "TemplateError" in caplog.text
+    assert "TemplateError" not in caplog.text
 
 
 async def test_render_template_returns_with_match_all(
