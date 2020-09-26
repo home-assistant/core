@@ -275,9 +275,15 @@ def handle_render_template(hass, connection, msg):
             )
         )
 
-    info = async_track_template_result(
-        hass, [TrackTemplate(template, variables)], _template_listener
-    )
+    try:
+        info = async_track_template_result(
+            hass,
+            [TrackTemplate(template, variables)],
+            _template_listener,
+            raise_on_template_error=True,
+        )
+    except TemplateError as ex:
+        raise vol.Invalid(f"invalid template ({ex})") from ex
 
     connection.subscriptions[msg["id"]] = info.async_remove
 
