@@ -1,7 +1,6 @@
 """Web socket API for Zigbee Home Automation devices."""
 
 import asyncio
-import binascii
 import collections
 from collections.abc import Mapping
 import logging
@@ -9,7 +8,6 @@ from typing import Any
 
 import voluptuous as vol
 from zigpy.types.named import EUI64
-import zigpy.util
 import zigpy.zdo.types as zdo_types
 
 from homeassistant.components import websocket_api
@@ -56,7 +54,11 @@ from .core.const import (
     WARNING_DEVICE_STROBE_YES,
 )
 from .core.group import GroupMember
-from .core.helpers import async_is_bindable_target, get_matched_clusters
+from .core.helpers import (
+    async_is_bindable_target,
+    convert_install_code,
+    get_matched_clusters,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -87,24 +89,6 @@ SERVICE_WARNING_DEVICE_WARN = "warning_device_warn"
 SERVICE_ZIGBEE_BIND = "service_zigbee_bind"
 IEEE_SERVICE = "ieee_based_service"
 
-
-def _convert_install_code(value: str) -> bytes:
-    """Convert string to install code bytes and validate length."""
-
-    try:
-        code = binascii.unhexlify(value.replace("-", "").lower())
-    except binascii.Error:
-        raise vol.Invalid(f"invalid hex string: {value}")
-
-    if len(code) != 18:  # 16 byte code + 2 crc bytes
-        raise vol.Invalid("invalid length of the install code")
-
-    if zigpy.util.convert_install_code(code) is None:
-        raise vol.Invalid("invalid install code")
-
-    return code
-
-
 SERVICE_SCHEMAS = {
     SERVICE_PERMIT: vol.Schema(
         {
@@ -113,7 +97,7 @@ SERVICE_SCHEMAS = {
                 vol.Coerce(int), vol.Range(0, 254)
             ),
             vol.Inclusive(ATTR_SOURCE_IEEE, "install_code"): EUI64.convert,
-            vol.Inclusive(ATTR_INSTALL_CODE, "install_code"): _convert_install_code,
+            vol.Inclusive(ATTR_INSTALL_CODE, "install_code"): convert_install_code,
             vol.Exclusive(ATTR_QR_CODE, "install_code"): str,
         }
     ),

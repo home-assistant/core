@@ -6,6 +6,7 @@ https://home-assistant.io/integrations/zha/
 """
 
 import asyncio
+import binascii
 import collections
 import functools
 import itertools
@@ -13,8 +14,10 @@ import logging
 from random import uniform
 from typing import Any, Callable, Iterator, List, Optional
 
+import voluptuous as vol
 import zigpy.exceptions
 import zigpy.types
+import zigpy.util
 
 from homeassistant.core import State, callback
 
@@ -205,3 +208,20 @@ def retryable_req(
         return wrapper
 
     return decorator
+
+
+def convert_install_code(value: str) -> bytes:
+    """Convert string to install code bytes and validate length."""
+
+    try:
+        code = binascii.unhexlify(value.replace("-", "").lower())
+    except binascii.Error:
+        raise vol.Invalid(f"invalid hex string: {value}")
+
+    if len(code) != 18:  # 16 byte code + 2 crc bytes
+        raise vol.Invalid("invalid length of the install code")
+
+    if zigpy.util.convert_install_code(code) is None:
+        raise vol.Invalid("invalid install code")
+
+    return code
