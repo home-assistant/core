@@ -55,7 +55,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up the eBusd component."""
-    _LOGGER.debug("Ebusd integration setup started")
+    _LOGGER.debug("Integration setup started")
     conf = config[DOMAIN]
     name = conf[CONF_NAME]
     circuit = conf[CONF_CIRCUIT]
