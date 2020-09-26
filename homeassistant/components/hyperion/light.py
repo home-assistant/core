@@ -2,6 +2,7 @@
 import logging
 
 from hyperion import client, const
+from hyperion.const import CONF_INSTANCE
 import voluptuous as vol
 
 from homeassistant.components.light import (
@@ -88,18 +89,26 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up a Hyperion platform from config entry."""
-    await async_setup_entry_from_data(hass, config_entry.data, async_add_entities)
+    data = dict(config_entry.data)
+
+    # TODO: Add support for varying the priority via an option flow, hardcode it for now.
+    data[CONF_PRIORITY] = 120
+    data[CONF_NAME] = config_entry.title
+
+    await async_setup_entry_from_data(hass, data, async_add_entities)
 
 
 async def async_setup_entry_from_data(hass, data, async_add_entities):
     """Set up a Hyperion light from a dict of data."""
 
-    hyperion_client = client.HyperionClient(data[CONF_HOST], data[CONF_PORT])
+    hyperion_client = client.HyperionClient(
+        data[CONF_HOST], data[CONF_PORT], instance=data[CONF_INSTANCE]
+    )
 
     if not await hyperion_client.async_client_connect():
         raise PlatformNotReady
 
-    # TODO: Add instance & token support.
+    # TODO: Add token support.
     async_add_entities(
         [Hyperion(data[CONF_NAME], data[CONF_PRIORITY], hyperion_client)]
     )
