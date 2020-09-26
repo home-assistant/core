@@ -933,7 +933,7 @@ class StateMachine:
             domain_filter = (domain_filter.lower(),)
 
         return len(
-            [state for state in self._states.values() if state.domain in domain_filter]
+            [None for state in self._states.values() if state.domain in domain_filter]
         )
 
     def all(self, domain_filter: Optional[Union[str, Iterable]] = None) -> List[State]:
