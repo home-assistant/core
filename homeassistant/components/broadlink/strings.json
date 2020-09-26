@@ -14,7 +14,7 @@
       },
       "reset": {
         "title": "Unlock the device",
-        "description": "Your device is locked for authentication. Follow the instructions to unlock it:\n1. Factory reset the device.\n2. Use the official app to add the device to your local network.\n3. Stop. Do not finish the setup. Close the app.\n4. Click Submit."
+        "description": "Your device is locked for authentication. Follow the instructions to unlock it:\nOption 1:\n1. In Broadlink app click on your device.\n2. Click on '• • •' \n3. Turn off 'Lock Device' option.\n\nOption 2:\n1. Factory reset the device.\n2. Use the official app to add the device to your local network.\n3. Stop. Do not finish the setup. Close the app.\n4. Click Submit."
       },
       "unlock": {
         "title": "Unlock the device (optional)",
