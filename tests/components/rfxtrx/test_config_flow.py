@@ -617,7 +617,7 @@ async def test_options_add_remove_device(hass):
 
 
 async def test_options_replace_sensor_device(hass):
-    """Test we can replace a device."""
+    """Test we can replace a sensor device."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     entry = MockConfigEntry(
@@ -731,31 +731,31 @@ async def test_options_replace_sensor_device(hass):
 
     entity_registry = await async_get_entity_registry(hass)
 
-    rssi_entity = entity_registry.async_get(
+    entry = entity_registry.async_get(
         "sensor.thgn122_123_thgn132_thgr122_228_238_268_f0_04_rssi_numeric"
     )
-    assert rssi_entity
-    assert rssi_entity.device_id == new_device
-    humidity_entity = entity_registry.async_get(
+    assert entry
+    assert entry.device_id == new_device
+    entry = entity_registry.async_get(
         "sensor.thgn122_123_thgn132_thgr122_228_238_268_f0_04_humidity"
     )
-    assert humidity_entity
-    assert humidity_entity.device_id == new_device
-    humidity_status_entity = entity_registry.async_get(
+    assert entry
+    assert entry.device_id == new_device
+    entry = entity_registry.async_get(
         "sensor.thgn122_123_thgn132_thgr122_228_238_268_f0_04_humidity_status"
     )
-    assert humidity_status_entity
-    assert humidity_status_entity.device_id == new_device
-    battery_numeric_entity = entity_registry.async_get(
+    assert entry
+    assert entry.device_id == new_device
+    entry = entity_registry.async_get(
         "sensor.thgn122_123_thgn132_thgr122_228_238_268_f0_04_battery_numeric"
     )
-    assert battery_numeric_entity
-    assert battery_numeric_entity.device_id == new_device
-    temperature_entity = entity_registry.async_get(
+    assert entry
+    assert entry.device_id == new_device
+    entry = entity_registry.async_get(
         "sensor.thgn122_123_thgn132_thgr122_228_238_268_f0_04_temperature"
     )
-    assert temperature_entity
-    assert temperature_entity.device_id == new_device
+    assert entry
+    assert entry.device_id == new_device
 
     state = hass.states.get(
         "sensor.thgn122_123_thgn132_thgr122_228_238_268_23_04_rssi_numeric"
@@ -872,15 +872,15 @@ async def test_options_replace_control_device(hass):
 
     entity_registry = await async_get_entity_registry(hass)
 
-    binary_entity = entity_registry.async_get("binary_sensor.ac_118cdea_2")
-    assert binary_entity
-    assert binary_entity.device_id == new_device
-    sensor_entity = entity_registry.async_get("sensor.ac_118cdea_2_rssi_numeric")
-    assert sensor_entity
-    assert sensor_entity.device_id == new_device
-    switch_entity = entity_registry.async_get("switch.ac_118cdea_2")
-    assert switch_entity
-    assert switch_entity.device_id == new_device
+    entry = entity_registry.async_get("binary_sensor.ac_118cdea_2")
+    assert entry
+    assert entry.device_id == new_device
+    entry = entity_registry.async_get("sensor.ac_118cdea_2_rssi_numeric")
+    assert entry
+    assert entry.device_id == new_device
+    entry = entity_registry.async_get("switch.ac_118cdea_2")
+    assert entry
+    assert entry.device_id == new_device
 
     state = hass.states.get("binary_sensor.ac_1118cdea_2")
     assert not state
