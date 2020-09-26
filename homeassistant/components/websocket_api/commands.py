@@ -261,13 +261,10 @@ def handle_render_template(hass, connection, msg):
         track_template_result = updates.pop()
         result = track_template_result.result
         if isinstance(result, TemplateError):
-            _LOGGER.error(
-                "TemplateError('%s') " "while processing template '%s'",
-                result,
-                track_template_result.template,
+            connection.send_message(
+                messages.error_message(msg["id"], const.ERR_TEMPLATE_ERROR, str(result))
             )
-
-            result = None
+            return
 
         connection.send_message(
             messages.event_message(
@@ -283,7 +280,10 @@ def handle_render_template(hass, connection, msg):
             raise_on_template_error=True,
         )
     except TemplateError as ex:
-        raise vol.Invalid(f"invalid template ({ex})") from ex
+        connection.send_message(
+            messages.error_message(msg["id"], const.ERR_TEMPLATE_ERROR, str(ex))
+        )
+        return
 
     connection.subscriptions[msg["id"]] = info.async_remove
 
