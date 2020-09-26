@@ -30,7 +30,7 @@
       },
       "setup_serial_manual_path": {
         "data": {
-          "device": "Select path"
+          "device": "[%key:common::config_flow::data::usb_path%]"
         },
         "title": "Path"
       }
@@ -56,7 +56,8 @@
           "data_bit": "Number of data bits",
           "command_on": "Data bits value for command on",
           "command_off": "Data bits value for command off",
-          "signal_repetitions": "Number of signal repetitions"
+          "signal_repetitions": "Number of signal repetitions",
+          "replace_device": "Select device to replace"
         },
         "title": "Configure device options"
       }
@@ -66,7 +67,7 @@
       "invalid_input_2262_on": "Invalid input for command on",
       "invalid_input_2262_off": "Invalid input for command off",
       "invalid_input_off_delay": "Invalid input for off delay",
-      "unknown": "Unexpected error"
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   }
 }
