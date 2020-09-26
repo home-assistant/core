@@ -8,6 +8,7 @@ CONF_DEBUG = "debug"
 CONF_OFF_DELAY = "off_delay"
 
 CONF_REMOVE_DEVICE = "remove_device"
+CONF_REPLACE_DEVICE = "replace_device"
 
 COMMAND_ON_LIST = [
     "On",

@@ -24,7 +24,11 @@ from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import (
     async_entries_for_config_entry,
-    async_get_registry,
+    async_get_registry as async_get_device_registry,
+)
+from homeassistant.helpers.entity_registry import (
+    async_entries_for_device,
+    async_get_registry as async_get_entity_registry,
 )
 
 from . import DOMAIN, get_device_id, get_rfx_object
@@ -36,6 +40,7 @@ from .const import (
     CONF_FIRE_EVENT,
     CONF_OFF_DELAY,
     CONF_REMOVE_DEVICE,
+    CONF_REPLACE_DEVICE,
     CONF_SIGNAL_REPETITIONS,
     DEVICE_PACKET_TYPE_LIGHTING4,
 )
@@ -64,6 +69,7 @@ class OptionsFlow(config_entries.OptionsFlow):
         self._config_entry = config_entry
         self._global_options = None
         self._selected_device = None
+        self._selected_device_entry_id = None
         self._selected_device_event_code = None
         self._selected_device_object = None
         self._device_entries = None
@@ -83,7 +89,9 @@ class OptionsFlow(config_entries.OptionsFlow):
                 CONF_AUTOMATIC_ADD: user_input[CONF_AUTOMATIC_ADD],
             }
             if CONF_DEVICE in user_input:
-                device_data = self._get_device_data(user_input[CONF_DEVICE])
+                entry_id = user_input[CONF_DEVICE]
+                device_data = self._get_device_data(entry_id)
+                self._selected_device_entry_id = entry_id
                 event_code = device_data[CONF_EVENT_CODE]
                 self._selected_device_event_code = event_code
                 self._selected_device = self._config_entry.data[CONF_DEVICES][
@@ -127,7 +135,7 @@ class OptionsFlow(config_entries.OptionsFlow):
 
                 return self.async_create_entry(title="", data={})
 
-        device_registry = await async_get_registry(self.hass)
+        device_registry = await async_get_device_registry(self.hass)
         device_entries = async_entries_for_config_entry(
             device_registry, self._config_entry.entry_id
         )
@@ -163,6 +171,16 @@ class OptionsFlow(config_entries.OptionsFlow):
                 self._selected_device_object.device,
                 data_bits=user_input.get(CONF_DATA_BITS),
             )
+
+            if CONF_REPLACE_DEVICE in user_input:
+                await self._async_replace_device(user_input[CONF_REPLACE_DEVICE])
+
+                devices = {self._selected_device_event_code: None}
+                self.update_config_data(
+                    global_options=self._global_options, devices=devices
+                )
+
+                return self.async_create_entry(title="", data={})
 
             try:
                 command_on = none_or_int(user_input.get(CONF_COMMAND_ON), 16)
@@ -261,11 +279,82 @@ class OptionsFlow(config_entries.OptionsFlow):
                 }
             )
 
+        devices = {
+            entry.id: entry.name_by_user if entry.name_by_user else entry.name
+            for entry in self._device_entries
+            if self._can_replace_device(entry.id)
+        }
+
+        if devices:
+            data_schema.update(
+                {
+                    vol.Optional(CONF_REPLACE_DEVICE): vol.In(devices),
+                }
+            )
+
         return self.async_show_form(
             step_id="set_device_options",
             data_schema=vol.Schema(data_schema),
             errors=errors,
         )
+
+    async def _async_replace_device(self, replace_device):
+        """Migrate properties of a device into another."""
+        device_registry = self._device_registry
+        old_device = self._selected_device_entry_id
+        old_entry = device_registry.async_get(old_device)
+        device_registry.async_update_device(
+            replace_device,
+            area_id=old_entry.area_id,
+            name_by_user=old_entry.name_by_user,
+        )
+
+        old_device_data = self._get_device_data(old_device)
+        new_device_data = self._get_device_data(replace_device)
+
+        old_device_id = "_".join(x for x in old_device_data[CONF_DEVICE_ID])
+        new_device_id = "_".join(x for x in new_device_data[CONF_DEVICE_ID])
+
+        entity_registry = await async_get_entity_registry(self.hass)
+        entity_entries = async_entries_for_device(entity_registry, old_device)
+        entity_migration_map = {}
+        for entry in entity_entries:
+            unique_id = entry.unique_id
+            new_unique_id = unique_id.replace(old_device_id, new_device_id)
+
+            new_entity_id = entity_registry.async_get_entity_id(
+                entry.domain, entry.platform, new_unique_id
+            )
+
+            if new_entity_id is not None:
+                entity_migration_map[new_entity_id] = entry
+
+        for entry in entity_migration_map.values():
+            entity_registry.async_remove(entry.entity_id)
+
+        for entity_id, entry in entity_migration_map.items():
+            entity_registry.async_update_entity(
+                entity_id,
+                new_entity_id=entry.entity_id,
+                name=entry.name,
+                icon=entry.icon,
+            )
+
+        device_registry.async_remove_device(old_device)
+
+    def _can_replace_device(self, entry_id):
+        """Check if device can be replaced with selected device."""
+        device_data = self._get_device_data(entry_id)
+        event_code = device_data[CONF_EVENT_CODE]
+        rfx_obj = get_rfx_object(event_code)
+        if (
+            rfx_obj.device.packettype == self._selected_device_object.device.packettype
+            and rfx_obj.device.subtype == self._selected_device_object.device.subtype
+            and self._selected_device_event_code != event_code
+        ):
+            return True
+
+        return False
 
     def _get_device_data(self, entry_id):
         """Get event code based on device identifier."""
