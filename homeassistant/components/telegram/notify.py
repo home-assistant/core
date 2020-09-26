@@ -12,6 +12,9 @@ from homeassistant.components.notify import (
     BaseNotificationService,
 )
 from homeassistant.const import ATTR_LOCATION
+from homeassistant.helpers.reload import setup_reload_service
+
+from . import DOMAIN as TELEGRAM_DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,6 +32,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_CHAT_ID): vol.Coerce
 
 def get_service(hass, config, discovery_info=None):
     """Get the Telegram notification service."""
+
+    setup_reload_service(hass, TELEGRAM_DOMAIN, PLATFORMS)
     chat_id = config.get(CONF_CHAT_ID)
     return TelegramNotificationService(hass, chat_id)
 

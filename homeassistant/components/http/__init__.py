@@ -345,7 +345,7 @@ class HomeAssistantHTTP:
 
         view.register(self.app, self.app.router)
 
-    def register_redirect(self, url, redirect_to):
+    def register_redirect(self, url, redirect_to, *, redirect_exc=HTTPMovedPermanently):
         """Register a redirect with the server.
 
         If given this must be either a string or callable. In case of a
@@ -357,7 +357,7 @@ class HomeAssistantHTTP:
 
         async def redirect(request):
             """Redirect to location."""
-            raise HTTPMovedPermanently(redirect_to)
+            raise redirect_exc(redirect_to)
 
         self.app.router.add_route("GET", url, redirect)
 

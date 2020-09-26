@@ -8,6 +8,7 @@ import pytz
 
 from homeassistant.components import group
 from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
     LENGTH_METERS,
     MASS_GRAMS,
     MATCH_ALL,
@@ -51,7 +52,7 @@ def extract_entities(hass, template_str, variables=None):
 
 def assert_result_info(info, result, entities=None, domains=None, all_states=False):
     """Check result info."""
-    assert info.result == result
+    assert info.result() == result
     assert info.all_states == all_states
     assert info.filter_lifecycle("invalid_entity_name.somewhere") == all_states
     if entities is not None:
@@ -96,7 +97,7 @@ def test_invalid_template(hass):
 
     info = tmpl.async_render_to_info()
     with pytest.raises(TemplateError):
-        assert info.result == "impossible"
+        assert info.result() == "impossible"
 
     tmpl = template.Template("{{states(keyword)}}", hass)
 
@@ -511,6 +512,19 @@ def test_timestamp_local(hass):
         )
 
 
+def test_as_local(hass):
+    """Test converting time to local."""
+
+    hass.states.async_set("test.object", "available")
+    last_updated = hass.states.get("test.object").last_updated
+    assert template.Template(
+        "{{ as_local(states.test.object.last_updated) }}", hass
+    ).async_render() == str(dt_util.as_local(last_updated))
+    assert template.Template(
+        "{{ states.test.object.last_updated | as_local }}", hass
+    ).async_render() == str(dt_util.as_local(last_updated))
+
+
 def test_to_json(hass):
     """Test the object to JSON string filter."""
 
@@ -874,6 +888,65 @@ def test_relative_time(mock_is_safe, hass):
             "string"
             == template.Template(
                 '{{relative_time("string")}}',
+                hass,
+            ).async_render()
+        )
+
+
+@patch(
+    "homeassistant.helpers.template.TemplateEnvironment.is_safe_callable",
+    return_value=True,
+)
+def test_timedelta(mock_is_safe, hass):
+    """Test relative_time method."""
+    now = datetime.strptime("2000-01-01 10:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z")
+    with patch("homeassistant.util.dt.now", return_value=now):
+        assert (
+            "0:02:00"
+            == template.Template(
+                "{{timedelta(seconds=120)}}",
+                hass,
+            ).async_render()
+        )
+        assert (
+            "1 day, 0:00:00"
+            == template.Template(
+                "{{timedelta(seconds=86400)}}",
+                hass,
+            ).async_render()
+        )
+        assert (
+            "1 day, 4:00:00"
+            == template.Template(
+                "{{timedelta(days=1, hours=4)}}",
+                hass,
+            ).async_render()
+        )
+        assert (
+            "1 hour"
+            == template.Template(
+                "{{relative_time(now() - timedelta(seconds=3600))}}",
+                hass,
+            ).async_render()
+        )
+        assert (
+            "1 day"
+            == template.Template(
+                "{{relative_time(now() - timedelta(seconds=86400))}}",
+                hass,
+            ).async_render()
+        )
+        assert (
+            "1 day"
+            == template.Template(
+                "{{relative_time(now() - timedelta(seconds=86401))}}",
+                hass,
+            ).async_render()
+        )
+        assert (
+            "15 days"
+            == template.Template(
+                "{{relative_time(now() - timedelta(weeks=2, days=1))}}",
                 hass,
             ).async_render()
         )
@@ -1586,26 +1659,31 @@ def test_nested_async_render_to_info_case(hass):
 def test_result_as_boolean(hass):
     """Test converting a template result to a boolean."""
 
-    template.result_as_boolean(True) is True
-    template.result_as_boolean(" 1 ") is True
-    template.result_as_boolean(" true ") is True
-    template.result_as_boolean(" TrUE ") is True
-    template.result_as_boolean(" YeS ") is True
-    template.result_as_boolean(" On ") is True
-    template.result_as_boolean(" Enable ") is True
-    template.result_as_boolean(1) is True
-    template.result_as_boolean(-1) is True
-    template.result_as_boolean(500) is True
+    assert template.result_as_boolean(True) is True
+    assert template.result_as_boolean(" 1 ") is True
+    assert template.result_as_boolean(" true ") is True
+    assert template.result_as_boolean(" TrUE ") is True
+    assert template.result_as_boolean(" YeS ") is True
+    assert template.result_as_boolean(" On ") is True
+    assert template.result_as_boolean(" Enable ") is True
+    assert template.result_as_boolean(1) is True
+    assert template.result_as_boolean(-1) is True
+    assert template.result_as_boolean(500) is True
+    assert template.result_as_boolean(0.5) is True
+    assert template.result_as_boolean(0.389) is True
+    assert template.result_as_boolean(35) is True
 
-    template.result_as_boolean(False) is False
-    template.result_as_boolean(" 0 ") is False
-    template.result_as_boolean(" false ") is False
-    template.result_as_boolean(" FaLsE ") is False
-    template.result_as_boolean(" no ") is False
-    template.result_as_boolean(" off ") is False
-    template.result_as_boolean(" disable ") is False
-    template.result_as_boolean(0) is False
-    template.result_as_boolean(None) is False
+    assert template.result_as_boolean(False) is False
+    assert template.result_as_boolean(" 0 ") is False
+    assert template.result_as_boolean(" false ") is False
+    assert template.result_as_boolean(" FaLsE ") is False
+    assert template.result_as_boolean(" no ") is False
+    assert template.result_as_boolean(" off ") is False
+    assert template.result_as_boolean(" disable ") is False
+    assert template.result_as_boolean(0) is False
+    assert template.result_as_boolean(0.0) is False
+    assert template.result_as_boolean("0.00") is False
+    assert template.result_as_boolean(None) is False
 
 
 def test_closest_function_to_entity_id(hass):
@@ -2194,7 +2272,7 @@ def test_jinja_namespace(hass):
 
 def test_state_with_unit(hass):
     """Test the state_with_unit property helper."""
-    hass.states.async_set("sensor.test", "23", {"unit_of_measurement": "beers"})
+    hass.states.async_set("sensor.test", "23", {ATTR_UNIT_OF_MEASUREMENT: "beers"})
     hass.states.async_set("sensor.test2", "wow")
 
     tpl = template.Template("{{ states.sensor.test.state_with_unit }}", hass)
@@ -2288,3 +2366,57 @@ def test_is_template_string():
     assert template.is_template_string("{# a comment #} Hey") is True
     assert template.is_template_string("1") is False
     assert template.is_template_string("Some Text") is False
+
+
+async def test_protected_blocked(hass):
+    """Test accessing __getattr__ produces a template error."""
+    tmp = template.Template('{{ states.__getattr__("any") }}', hass)
+    with pytest.raises(TemplateError):
+        tmp.async_render()
+
+    tmp = template.Template('{{ states.sensor.__getattr__("any") }}', hass)
+    with pytest.raises(TemplateError):
+        tmp.async_render()
+
+    tmp = template.Template('{{ states.sensor.any.__getattr__("any") }}', hass)
+    with pytest.raises(TemplateError):
+        tmp.async_render()
+
+
+async def test_demo_template(hass):
+    """Test the demo template works as expected."""
+    hass.states.async_set("sun.sun", "above", {"elevation": 50, "next_rising": "later"})
+    for i in range(2):
+        hass.states.async_set(f"sensor.sensor{i}", "on")
+
+    demo_template_str = """
+{## Imitate available variables: ##}
+{% set my_test_json = {
+  "temperature": 25,
+  "unit": "°C"
+} %}
+
+The temperature is {{ my_test_json.temperature }} {{ my_test_json.unit }}.
+
+{% if is_state("sun.sun", "above_horizon") -%}
+  The sun rose {{ relative_time(states.sun.sun.last_changed) }} ago.
+{%- else -%}
+  The sun will rise at {{ as_timestamp(strptime(state_attr("sun.sun", "next_rising"), "")) | timestamp_local }}.
+{%- endif %}
+
+For loop example getting 3 entity values:
+
+{% for states in states | slice(3) -%}
+  {% set state = states | first %}
+  {%- if loop.first %}The {% elif loop.last %} and the {% else %}, the {% endif -%}
+  {{ state.name | lower }} is {{state.state_with_unit}}
+{%- endfor %}.
+"""
+    tmp = template.Template(demo_template_str, hass)
+
+    result = tmp.async_render()
+    assert "The temperature is 25" in result
+    assert "is on" in result
+    assert "sensor0" in result
+    assert "sensor1" in result
+    assert "sun" in result

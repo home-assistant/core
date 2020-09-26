@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "unknown": "Onerwaarte Feeler"
+        },
+        "error": {
+            "cannot_connect": "Feeler beim verbannen",
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun"
+        },
+        "flow_title": "NZBGet: {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Numm",
+                    "password": "Passwuert",
+                    "port": "Port",
+                    "ssl": "NZBGet benotzt een SSL Zertifikat",
+                    "username": "Benotzernumm",
+                    "verify_ssl": "NZBGet benotzt ee g\u00ebltegen SSL Zertifikat"
+                },
+                "title": "Mat NZBGet verbannen"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Intervalle vun de Mise \u00e0 jour (sekonnen)"
+                }
+            }
+        }
+    }
+}

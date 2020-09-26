@@ -1,0 +1,20 @@
+{
+    "config": {
+        "step": {
+            "pick_device": {
+                "data": {
+                    "device": "Ger\u00e4te"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "use_music_mode": "Musik-Modus aktivieren"
+                }
+            }
+        }
+    }
+}

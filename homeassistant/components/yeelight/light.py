@@ -36,9 +36,9 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.service import extract_entity_ids
 import homeassistant.util.color as color_util
 from homeassistant.util.color import (
     color_temperature_kelvin_to_mired as kelvin_to_mired,
@@ -59,16 +59,12 @@ from . import (
     DATA_CUSTOM_EFFECTS,
     DATA_DEVICE,
     DATA_UPDATED,
-    DATA_YEELIGHT,
     DOMAIN,
     YEELIGHT_FLOW_TRANSITION_SCHEMA,
-    YEELIGHT_SERVICE_SCHEMA,
     YeelightEntity,
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-PLATFORM_DATA_KEY = f"{DATA_YEELIGHT}_lights"
 
 SUPPORT_YEELIGHT = (
     SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION | SUPPORT_FLASH | SUPPORT_EFFECT
@@ -148,59 +144,46 @@ EFFECTS_MAP = {
 
 VALID_BRIGHTNESS = vol.All(vol.Coerce(int), vol.Range(min=1, max=100))
 
-SERVICE_SCHEMA_SET_MODE = YEELIGHT_SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_MODE): vol.In([mode.name.lower() for mode in PowerMode])}
-)
+SERVICE_SCHEMA_SET_MODE = {
+    vol.Required(ATTR_MODE): vol.In([mode.name.lower() for mode in PowerMode])
+}
 
-SERVICE_SCHEMA_START_FLOW = YEELIGHT_SERVICE_SCHEMA.extend(
-    YEELIGHT_FLOW_TRANSITION_SCHEMA
-)
+SERVICE_SCHEMA_START_FLOW = YEELIGHT_FLOW_TRANSITION_SCHEMA
 
-SERVICE_SCHEMA_SET_COLOR_SCENE = YEELIGHT_SERVICE_SCHEMA.extend(
-    {
-        vol.Required(ATTR_RGB_COLOR): vol.All(
-            vol.ExactSequence((cv.byte, cv.byte, cv.byte)), vol.Coerce(tuple)
+SERVICE_SCHEMA_SET_COLOR_SCENE = {
+    vol.Required(ATTR_RGB_COLOR): vol.All(
+        vol.ExactSequence((cv.byte, cv.byte, cv.byte)), vol.Coerce(tuple)
+    ),
+    vol.Required(ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
+}
+
+SERVICE_SCHEMA_SET_HSV_SCENE = {
+    vol.Required(ATTR_HS_COLOR): vol.All(
+        vol.ExactSequence(
+            (
+                vol.All(vol.Coerce(float), vol.Range(min=0, max=359)),
+                vol.All(vol.Coerce(float), vol.Range(min=0, max=100)),
+            )
         ),
-        vol.Required(ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
-    }
-)
+        vol.Coerce(tuple),
+    ),
+    vol.Required(ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
+}
 
-SERVICE_SCHEMA_SET_HSV_SCENE = YEELIGHT_SERVICE_SCHEMA.extend(
-    {
-        vol.Required(ATTR_HS_COLOR): vol.All(
-            vol.ExactSequence(
-                (
-                    vol.All(vol.Coerce(float), vol.Range(min=0, max=359)),
-                    vol.All(vol.Coerce(float), vol.Range(min=0, max=100)),
-                )
-            ),
-            vol.Coerce(tuple),
-        ),
-        vol.Required(ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
-    }
-)
+SERVICE_SCHEMA_SET_COLOR_TEMP_SCENE = {
+    vol.Required(ATTR_KELVIN): vol.All(vol.Coerce(int), vol.Range(min=1700, max=6500)),
+    vol.Required(ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
+}
 
-SERVICE_SCHEMA_SET_COLOR_TEMP_SCENE = YEELIGHT_SERVICE_SCHEMA.extend(
-    {
-        vol.Required(ATTR_KELVIN): vol.All(
-            vol.Coerce(int), vol.Range(min=1700, max=6500)
-        ),
-        vol.Required(ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
-    }
-)
+SERVICE_SCHEMA_SET_COLOR_FLOW_SCENE = YEELIGHT_FLOW_TRANSITION_SCHEMA
 
-SERVICE_SCHEMA_SET_COLOR_FLOW_SCENE = YEELIGHT_SERVICE_SCHEMA.extend(
-    YEELIGHT_FLOW_TRANSITION_SCHEMA
-)
-
-SERVICE_SCHEMA_SET_AUTO_DELAY_OFF = YEELIGHT_SERVICE_SCHEMA.extend(
-    {
-        vol.Required(ATTR_MINUTES): vol.All(vol.Coerce(int), vol.Range(min=1, max=60)),
-        vol.Required(ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
-    }
-)
+SERVICE_SCHEMA_SET_AUTO_DELAY_OFF_SCENE = {
+    vol.Required(ATTR_MINUTES): vol.All(vol.Coerce(int), vol.Range(min=1, max=60)),
+    vol.Required(ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
+}
 
 
+@callback
 def _transitions_config_parser(transitions):
     """Parse transitions config into initialized objects."""
     transition_objects = []
@@ -211,6 +194,7 @@ def _transitions_config_parser(transitions):
     return transition_objects
 
 
+@callback
 def _parse_custom_effects(effects_config):
     effects = {}
     for config in effects_config:
@@ -244,9 +228,6 @@ async def async_setup_entry(
     hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up Yeelight from a config entry."""
-
-    if PLATFORM_DATA_KEY not in hass.data:
-        hass.data[PLATFORM_DATA_KEY] = []
 
     custom_effects = _parse_custom_effects(hass.data[DOMAIN][DATA_CUSTOM_EFFECTS])
 
@@ -287,124 +268,114 @@ async def async_setup_entry(
         _lights_setup_helper(YeelightGenericLight)
         _LOGGER.warning(
             "Cannot determine device type for %s, %s. Falling back to white only",
-            device.ipaddr,
+            device.host,
             device.name,
         )
 
-    hass.data[PLATFORM_DATA_KEY] += lights
     async_add_entities(lights, True)
-    await hass.async_add_executor_job(partial(setup_services, hass))
+    _async_setup_services(hass)
 
 
-def setup_services(hass):
-    """Set up the service listeners."""
+@callback
+def _async_setup_services(hass: HomeAssistant):
+    """Set up custom services."""
 
-    def service_call(func):
-        def service_to_entities(service):
-            """Return the known entities that a service call mentions."""
-
-            entity_ids = extract_entity_ids(hass, service)
-            target_devices = [
-                light
-                for light in hass.data[PLATFORM_DATA_KEY]
-                if light.entity_id in entity_ids
-            ]
-
-            return target_devices
-
-        def service_to_params(service):
-            """Return service call params, without entity_id."""
-            return {
-                key: value
-                for key, value in service.data.items()
-                if key != ATTR_ENTITY_ID
-            }
-
-        def wrapper(service):
-            params = service_to_params(service)
-            target_devices = service_to_entities(service)
-            for device in target_devices:
-                func(device, params)
-
-        return wrapper
-
-    @service_call
-    def service_set_mode(target_device, params):
-        target_device.set_mode(**params)
-
-    @service_call
-    def service_start_flow(target_devices, params):
+    async def _async_start_flow(entity, service_call):
+        params = {**service_call.data}
+        params.pop(ATTR_ENTITY_ID)
         params[ATTR_TRANSITIONS] = _transitions_config_parser(params[ATTR_TRANSITIONS])
-        target_devices.start_flow(**params)
+        await hass.async_add_executor_job(partial(entity.start_flow, **params))
 
-    @service_call
-    def service_set_color_scene(target_device, params):
-        target_device.set_scene(
-            SceneClass.COLOR, *[*params[ATTR_RGB_COLOR], params[ATTR_BRIGHTNESS]]
+    async def _async_set_color_scene(entity, service_call):
+        await hass.async_add_executor_job(
+            partial(
+                entity.set_scene,
+                SceneClass.COLOR,
+                *service_call.data[ATTR_RGB_COLOR],
+                service_call.data[ATTR_BRIGHTNESS],
+            )
         )
 
-    @service_call
-    def service_set_hsv_scene(target_device, params):
-        target_device.set_scene(
-            SceneClass.HSV, *[*params[ATTR_HS_COLOR], params[ATTR_BRIGHTNESS]]
+    async def _async_set_hsv_scene(entity, service_call):
+        await hass.async_add_executor_job(
+            partial(
+                entity.set_scene,
+                SceneClass.HSV,
+                *service_call.data[ATTR_HS_COLOR],
+                service_call.data[ATTR_BRIGHTNESS],
+            )
         )
 
-    @service_call
-    def service_set_color_temp_scene(target_device, params):
-        target_device.set_scene(
-            SceneClass.CT, params[ATTR_KELVIN], params[ATTR_BRIGHTNESS]
+    async def _async_set_color_temp_scene(entity, service_call):
+        await hass.async_add_executor_job(
+            partial(
+                entity.set_scene,
+                SceneClass.CT,
+                service_call.data[ATTR_KELVIN],
+                service_call.data[ATTR_BRIGHTNESS],
+            )
         )
 
-    @service_call
-    def service_set_color_flow_scene(target_device, params):
+    async def _async_set_color_flow_scene(entity, service_call):
         flow = Flow(
-            count=params[ATTR_COUNT],
-            action=Flow.actions[params[ATTR_ACTION]],
-            transitions=_transitions_config_parser(params[ATTR_TRANSITIONS]),
+            count=service_call.data[ATTR_COUNT],
+            action=Flow.actions[service_call.data[ATTR_ACTION]],
+            transitions=_transitions_config_parser(service_call.data[ATTR_TRANSITIONS]),
         )
-        target_device.set_scene(SceneClass.CF, flow)
-
-    @service_call
-    def service_set_auto_delay_off_scene(target_device, params):
-        target_device.set_scene(
-            SceneClass.AUTO_DELAY_OFF, params[ATTR_BRIGHTNESS], params[ATTR_MINUTES]
+        await hass.async_add_executor_job(
+            partial(
+                entity.set_scene,
+                SceneClass.CF,
+                flow,
+            )
         )
 
-    hass.services.register(
-        DOMAIN, SERVICE_SET_MODE, service_set_mode, schema=SERVICE_SCHEMA_SET_MODE
+    async def _async_set_auto_delay_off_scene(entity, service_call):
+        await hass.async_add_executor_job(
+            partial(
+                entity.set_scene,
+                SceneClass.AUTO_DELAY_OFF,
+                service_call.data[ATTR_BRIGHTNESS],
+                service_call.data[ATTR_MINUTES],
+            )
+        )
+
+    platform = entity_platform.current_platform.get()
+
+    platform.async_register_entity_service(
+        SERVICE_SET_MODE,
+        SERVICE_SCHEMA_SET_MODE,
+        "set_mode",
     )
-    hass.services.register(
-        DOMAIN, SERVICE_START_FLOW, service_start_flow, schema=SERVICE_SCHEMA_START_FLOW
+    platform.async_register_entity_service(
+        SERVICE_START_FLOW,
+        SERVICE_SCHEMA_START_FLOW,
+        _async_start_flow,
     )
-    hass.services.register(
-        DOMAIN,
+    platform.async_register_entity_service(
         SERVICE_SET_COLOR_SCENE,
-        service_set_color_scene,
-        schema=SERVICE_SCHEMA_SET_COLOR_SCENE,
+        SERVICE_SCHEMA_SET_COLOR_SCENE,
+        _async_set_color_scene,
     )
-    hass.services.register(
-        DOMAIN,
+    platform.async_register_entity_service(
         SERVICE_SET_HSV_SCENE,
-        service_set_hsv_scene,
-        schema=SERVICE_SCHEMA_SET_HSV_SCENE,
+        SERVICE_SCHEMA_SET_HSV_SCENE,
+        _async_set_hsv_scene,
     )
-    hass.services.register(
-        DOMAIN,
+    platform.async_register_entity_service(
         SERVICE_SET_COLOR_TEMP_SCENE,
-        service_set_color_temp_scene,
-        schema=SERVICE_SCHEMA_SET_COLOR_TEMP_SCENE,
+        SERVICE_SCHEMA_SET_COLOR_TEMP_SCENE,
+        _async_set_color_temp_scene,
     )
-    hass.services.register(
-        DOMAIN,
+    platform.async_register_entity_service(
         SERVICE_SET_COLOR_FLOW_SCENE,
-        service_set_color_flow_scene,
-        schema=SERVICE_SCHEMA_SET_COLOR_FLOW_SCENE,
+        SERVICE_SCHEMA_SET_COLOR_FLOW_SCENE,
+        _async_set_color_flow_scene,
     )
-    hass.services.register(
-        DOMAIN,
+    platform.async_register_entity_service(
         SERVICE_SET_AUTO_DELAY_OFF_SCENE,
-        service_set_auto_delay_off_scene,
-        schema=SERVICE_SCHEMA_SET_AUTO_DELAY_OFF,
+        SERVICE_SCHEMA_SET_AUTO_DELAY_OFF_SCENE,
+        _async_set_auto_delay_off_scene,
     )
 
 
@@ -442,7 +413,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                DATA_UPDATED.format(self._device.ipaddr),
+                DATA_UPDATED.format(self._device.host),
                 self._schedule_immediate_update,
             )
         )

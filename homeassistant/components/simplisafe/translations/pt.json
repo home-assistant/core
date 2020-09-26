@@ -2,9 +2,15 @@
     "config": {
         "error": {
             "identifier_exists": "Conta j\u00e1 registada",
-            "invalid_credentials": "Credenciais inv\u00e1lidas"
+            "invalid_credentials": "Credenciais inv\u00e1lidas",
+            "unknown": "Erro inesperado"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Palavra-passe"
+                }
+            },
             "user": {
                 "data": {
                     "password": "Palavra-passe",

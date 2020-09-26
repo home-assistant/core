@@ -1,0 +1,27 @@
+{
+    "config": {
+        "error": {
+            "auth": "Der API-Schl\u00fcssel ist nicht korrekt."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "language": "Sprache",
+                    "latitude": "Breitengrad",
+                    "longitude": "L\u00e4ngengrad",
+                    "mode": "Modus"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "language": "Sprache",
+                    "mode": "Modus"
+                }
+            }
+        }
+    }
+}

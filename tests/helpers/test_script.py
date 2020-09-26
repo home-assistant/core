@@ -982,7 +982,8 @@ async def test_repeat_count(hass):
 
 
 @pytest.mark.parametrize("condition", ["while", "until"])
-async def test_repeat_conditional(hass, condition):
+@pytest.mark.parametrize("direct_template", [False, True])
+async def test_repeat_conditional(hass, condition, direct_template):
     """Test repeat action w/ while option."""
     event = "test_event"
     events = async_capture_events(hass, event)
@@ -1004,15 +1005,23 @@ async def test_repeat_conditional(hass, condition):
         }
     }
     if condition == "while":
-        sequence["repeat"]["while"] = {
-            "condition": "template",
-            "value_template": "{{ not is_state('sensor.test', 'done') }}",
-        }
+        template = "{{ not is_state('sensor.test', 'done') }}"
+        if direct_template:
+            sequence["repeat"]["while"] = template
+        else:
+            sequence["repeat"]["while"] = {
+                "condition": "template",
+                "value_template": template,
+            }
     else:
-        sequence["repeat"]["until"] = {
-            "condition": "template",
-            "value_template": "{{ is_state('sensor.test', 'done') }}",
-        }
+        template = "{{ is_state('sensor.test', 'done') }}"
+        if direct_template:
+            sequence["repeat"]["until"] = template
+        else:
+            sequence["repeat"]["until"] = {
+                "condition": "template",
+                "value_template": template,
+            }
     script_obj = script.Script(
         hass, cv.SCRIPT_SCHEMA(sequence), "Test Name", "test_domain"
     )
@@ -1193,10 +1202,7 @@ async def test_choose(hass, var, result):
                     "sequence": {"event": event, "event_data": {"choice": "first"}},
                 },
                 {
-                    "conditions": {
-                        "condition": "template",
-                        "value_template": "{{ var == 2 }}",
-                    },
+                    "conditions": "{{ var == 2 }}",
                     "sequence": {"event": event, "event_data": {"choice": "second"}},
                 },
             ],
@@ -1417,6 +1423,60 @@ async def test_script_mode_single(hass, caplog):
         assert not script_obj.is_running
         assert len(events) == 2
         assert events[1].data["value"] == 2
+
+
+@pytest.mark.parametrize("max_exceeded", [None, "WARNING", "INFO", "ERROR", "SILENT"])
+@pytest.mark.parametrize(
+    "script_mode,max_runs", [("single", 1), ("parallel", 2), ("queued", 2)]
+)
+async def test_max_exceeded(hass, caplog, max_exceeded, script_mode, max_runs):
+    """Test max_exceeded option."""
+    sequence = cv.SCRIPT_SCHEMA(
+        {"wait_template": "{{ states.switch.test.state == 'off' }}"}
+    )
+    if max_exceeded is None:
+        script_obj = script.Script(
+            hass,
+            sequence,
+            "Test Name",
+            "test_domain",
+            script_mode=script_mode,
+            max_runs=max_runs,
+        )
+    else:
+        script_obj = script.Script(
+            hass,
+            sequence,
+            "Test Name",
+            "test_domain",
+            script_mode=script_mode,
+            max_runs=max_runs,
+            max_exceeded=max_exceeded,
+        )
+    hass.states.async_set("switch.test", "on")
+    for _ in range(max_runs + 1):
+        hass.async_create_task(script_obj.async_run(context=Context()))
+    hass.states.async_set("switch.test", "off")
+    await hass.async_block_till_done()
+    if max_exceeded is None:
+        max_exceeded = "WARNING"
+    if max_exceeded == "SILENT":
+        assert not any(
+            any(
+                message in rec.message
+                for message in ("Already running", "Maximum number of runs exceeded")
+            )
+            for rec in caplog.records
+        )
+    else:
+        assert any(
+            rec.levelname == max_exceeded
+            and any(
+                message in rec.message
+                for message in ("Already running", "Maximum number of runs exceeded")
+            )
+            for rec in caplog.records
+        )
 
 
 @pytest.mark.parametrize(
@@ -1725,3 +1785,42 @@ async def test_started_action(hass, caplog):
     await hass.async_block_till_done()
 
     assert log_message in caplog.text
+
+
+async def test_set_variable(hass, caplog):
+    """Test setting variables in scripts."""
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"variables": {"variable": "value"}},
+            {"service": "test.script", "data": {"value": "{{ variable }}"}},
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "test script", "test_domain")
+
+    mock_calls = async_mock_service(hass, "test", "script")
+
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert mock_calls[0].data["value"] == "value"
+
+
+async def test_set_redefines_variable(hass, caplog):
+    """Test setting variables based on their current value."""
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"variables": {"variable": "1"}},
+            {"service": "test.script", "data": {"value": "{{ variable }}"}},
+            {"variables": {"variable": "{{ variable | int + 1 }}"}},
+            {"service": "test.script", "data": {"value": "{{ variable }}"}},
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "test script", "test_domain")
+
+    mock_calls = async_mock_service(hass, "test", "script")
+
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert mock_calls[0].data["value"] == "1"
+    assert mock_calls[1].data["value"] == "2"

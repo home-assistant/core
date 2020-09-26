@@ -17,7 +17,8 @@
                 "data": {
                     "host": "Vert",
                     "name": "Vennlig navn",
-                    "password": "API-passord (la st\u00e5 tomt hvis ingen passord)"
+                    "password": "API-passord (la st\u00e5 tomt hvis ingen passord)",
+                    "port": ""
                 },
                 "title": "Konfigurere forked-daapd-enhet"
             }

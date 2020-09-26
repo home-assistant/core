@@ -1454,3 +1454,26 @@ async def test_chained_logging_misses_log_timeout(hass, caplog):
     await hass.async_block_till_done()
 
     assert "_task_chain_" not in caplog.text
+
+
+async def test_async_all(hass):
+    """Test async_all."""
+
+    hass.states.async_set("switch.link", "on")
+    hass.states.async_set("light.bowl", "on")
+    hass.states.async_set("light.frog", "on")
+    hass.states.async_set("vacuum.floor", "on")
+
+    assert {state.entity_id for state in hass.states.async_all()} == {
+        "switch.link",
+        "light.bowl",
+        "light.frog",
+        "vacuum.floor",
+    }
+    assert {state.entity_id for state in hass.states.async_all("light")} == {
+        "light.bowl",
+        "light.frog",
+    }
+    assert {
+        state.entity_id for state in hass.states.async_all(["light", "switch"])
+    } == {"light.bowl", "light.frog", "switch.link"}

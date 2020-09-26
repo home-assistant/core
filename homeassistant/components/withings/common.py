@@ -29,10 +29,11 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_WEBHOOK_ID,
+    HTTP_UNAUTHORIZED,
     MASS_KILOGRAMS,
+    PERCENTAGE,
     SPEED_METERS_PER_SECOND,
     TIME_SECONDS,
-    UNIT_PERCENTAGE,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -54,7 +55,7 @@ from .const import Measurement
 
 _LOGGER = logging.getLogger(const.LOG_NAMESPACE)
 NOT_AUTHENTICATED_ERROR = re.compile(
-    "^401,.*",
+    f"^{HTTP_UNAUTHORIZED},.*",
     re.IGNORECASE,
 )
 DATA_UPDATED_SIGNAL = "withings_entity_state_updated"
@@ -211,7 +212,7 @@ WITHINGS_ATTRIBUTES = [
         Measurement.FAT_RATIO_PCT,
         MeasureType.FAT_RATIO,
         "Fat Ratio",
-        UNIT_PERCENTAGE,
+        PERCENTAGE,
         None,
         SENSOR_DOMAIN,
         True,
@@ -251,7 +252,7 @@ WITHINGS_ATTRIBUTES = [
         Measurement.SPO2_PCT,
         MeasureType.SP02,
         "SP02",
-        UNIT_PERCENTAGE,
+        PERCENTAGE,
         None,
         SENSOR_DOMAIN,
         True,

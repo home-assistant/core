@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "missing_configuration": "The Home Connect component is not configured. Please follow the documentation."
+            "missing_configuration": "The Home Connect component is not configured. Please follow the documentation.",
+            "no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})"
         },
         "create_entry": {
             "default": "Successfully authenticated with Home Connect."

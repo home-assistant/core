@@ -1,11 +1,12 @@
 """Template helper methods for rendering strings with Home Assistant data."""
 import base64
 import collections.abc
-from datetime import datetime
+from datetime import datetime, timedelta
 from functools import wraps
 import json
 import logging
 import math
+from operator import attrgetter
 import random
 import re
 from typing import Any, Iterable, List, Optional, Union
@@ -65,7 +66,7 @@ def attach(hass: HomeAssistantType, obj: Any) -> None:
     if isinstance(obj, list):
         for child in obj:
             attach(hass, child)
-    elif isinstance(obj, dict):
+    elif isinstance(obj, collections.abc.Mapping):
         for child_key, child_value in obj.items():
             attach(hass, child_key)
             attach(hass, child_value)
@@ -77,7 +78,7 @@ def render_complex(value: Any, variables: TemplateVarsType = None) -> Any:
     """Recursive template creator helper function."""
     if isinstance(value, list):
         return [render_complex(item, variables) for item in value]
-    if isinstance(value, dict):
+    if isinstance(value, collections.abc.Mapping):
         return {
             render_complex(key, variables): render_complex(item, variables)
             for key, item in value.items()
@@ -86,6 +87,19 @@ def render_complex(value: Any, variables: TemplateVarsType = None) -> Any:
         return value.async_render(variables)
 
     return value
+
+
+def is_complex(value: Any) -> bool:
+    """Test if data structure is a complex template."""
+    if isinstance(value, Template):
+        return True
+    if isinstance(value, list):
+        return any(is_complex(val) for val in value)
+    if isinstance(value, collections.abc.Mapping):
+        return any(is_complex(val) for val in value.keys()) or any(
+            is_complex(val) for val in value.values()
+        )
+    return False
 
 
 def is_template_string(maybe_template: str) -> bool:
@@ -175,7 +189,6 @@ class RenderInfo:
             split_entity_id(entity_id)[0] in self.domains or entity_id in self.entities
         )
 
-    @property
     def result(self) -> str:
         """Results of the template computation."""
         if self.exception is not None:
@@ -246,7 +259,7 @@ class Template:
     def render(self, variables: TemplateVarsType = None, **kwargs: Any) -> str:
         """Render given template."""
         if self.is_static:
-            return self.template
+            return self.template.strip()
 
         if variables is not None:
             kwargs.update(variables)
@@ -262,7 +275,7 @@ class Template:
         This method must be run in the event loop.
         """
         if self.is_static:
-            return self.template
+            return self.template.strip()
 
         compiled = self._compiled or self._ensure_compiled()
 
@@ -285,6 +298,7 @@ class Template:
 
         # pylint: disable=protected-access
         if self.is_static:
+            render_info._result = self.template.strip()
             render_info._freeze_static()
             return render_info
 
@@ -411,12 +425,7 @@ class AllStates:
     def __iter__(self):
         """Return all states."""
         self._collect_all()
-        return iter(
-            _wrap_state(self._hass, state)
-            for state in sorted(
-                self._hass.states.async_all(), key=lambda state: state.entity_id
-            )
-        )
+        return _state_iterator(self._hass, None)
 
     def __len__(self) -> int:
         """Return number of states."""
@@ -456,16 +465,7 @@ class DomainStates:
     def __iter__(self):
         """Return the iteration over all the states."""
         self._collect_domain()
-        return iter(
-            sorted(
-                (
-                    _wrap_state(self._hass, state)
-                    for state in self._hass.states.async_all()
-                    if state.domain == self._domain
-                ),
-                key=lambda state: state.entity_id,
-            )
-        )
+        return _state_iterator(self._hass, self._domain)
 
     def __len__(self) -> int:
         """Return number of states."""
@@ -479,6 +479,8 @@ class DomainStates:
 
 class TemplateState(State):
     """Class to represent a state object in a template."""
+
+    __slots__ = ("_hass", "_state")
 
     # Inheritance is done so functions that check against State keep working
     # pylint: disable=super-init-not-called
@@ -535,11 +537,12 @@ def _collect_state(hass: HomeAssistantType, entity_id: str) -> None:
         entity_collect.entities.add(entity_id)
 
 
-def _wrap_state(
-    hass: HomeAssistantType, state: Optional[State]
-) -> Optional[TemplateState]:
-    """Wrap a state."""
-    return None if state is None else TemplateState(hass, state)
+def _state_iterator(hass: HomeAssistantType, domain: Optional[str]) -> Iterable:
+    """Create an state iterator for a domain or all states."""
+    return iter(
+        TemplateState(hass, state)
+        for state in sorted(hass.states.async_all(domain), key=attrgetter("entity_id"))
+    )
 
 
 def _get_state(hass: HomeAssistantType, entity_id: str) -> Optional[TemplateState]:
@@ -549,7 +552,7 @@ def _get_state(hass: HomeAssistantType, entity_id: str) -> Optional[TemplateStat
         # access to the state properties in the state wrapper.
         _collect_state(hass, entity_id)
         return None
-    return _wrap_state(hass, state)
+    return TemplateState(hass, state)
 
 
 def _resolve_state(
@@ -905,7 +908,7 @@ def strptime(string, fmt):
     """Parse a time string to datetime."""
     try:
         return datetime.strptime(string, fmt)
-    except (ValueError, AttributeError):
+    except (ValueError, AttributeError, TypeError):
         return string
 
 
@@ -1052,6 +1055,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["atan2"] = arc_tangent2
         self.filters["sqrt"] = square_root
         self.filters["as_timestamp"] = forgiving_as_timestamp
+        self.filters["as_local"] = dt_util.as_local
         self.filters["timestamp_custom"] = timestamp_custom
         self.filters["timestamp_local"] = timestamp_local
         self.filters["timestamp_utc"] = timestamp_utc
@@ -1085,9 +1089,11 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["atan2"] = arc_tangent2
         self.globals["float"] = forgiving_float
         self.globals["now"] = dt_util.now
+        self.globals["as_local"] = dt_util.as_local
         self.globals["utcnow"] = dt_util.utcnow
         self.globals["as_timestamp"] = forgiving_as_timestamp
         self.globals["relative_time"] = relative_time
+        self.globals["timedelta"] = timedelta
         self.globals["strptime"] = strptime
         self.globals["urlencode"] = urlencode
         if hass is None:
@@ -1122,7 +1128,13 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
     def is_safe_attribute(self, obj, attr, value):
         """Test if attribute is safe."""
-        return isinstance(obj, Namespace) or super().is_safe_attribute(obj, attr, value)
+        if isinstance(obj, Namespace):
+            return True
+
+        if isinstance(obj, (AllStates, DomainStates, TemplateState)):
+            return not attr.startswith("_")
+
+        return super().is_safe_attribute(obj, attr, value)
 
     def compile(self, source, name=None, filename=None, raw=False, defer_init=False):
         """Compile the template."""

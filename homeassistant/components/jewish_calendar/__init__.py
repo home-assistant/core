@@ -1,5 +1,6 @@
 """The jewish_calendar component."""
 import logging
+from typing import Optional
 
 import hdate
 import voluptuous as vol
@@ -77,6 +78,27 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
+def get_unique_prefix(
+    location: hdate.Location,
+    language: str,
+    candle_lighting_offset: Optional[int],
+    havdalah_offset: Optional[int],
+) -> str:
+    """Create a prefix for unique ids."""
+    config_properties = [
+        location.latitude,
+        location.longitude,
+        location.timezone,
+        location.altitude,
+        location.diaspora,
+        language,
+        candle_lighting_offset,
+        havdalah_offset,
+    ]
+    prefix = "_".join(map(str, config_properties))
+    return f"{prefix}"
+
+
 async def async_setup(hass, config):
     """Set up the Jewish Calendar component."""
     name = config[DOMAIN][CONF_NAME]
@@ -96,6 +118,9 @@ async def async_setup(hass, config):
         diaspora=diaspora,
     )
 
+    prefix = get_unique_prefix(
+        location, language, candle_lighting_offset, havdalah_offset
+    )
     hass.data[DOMAIN] = {
         "location": location,
         "name": name,
@@ -103,6 +128,7 @@ async def async_setup(hass, config):
         "candle_lighting_offset": candle_lighting_offset,
         "havdalah_offset": havdalah_offset,
         "diaspora": diaspora,
+        "prefix": prefix,
     }
 
     hass.async_create_task(async_load_platform(hass, "sensor", DOMAIN, {}, config))

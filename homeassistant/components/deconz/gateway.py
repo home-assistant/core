@@ -25,6 +25,7 @@ from .const import (
     NEW_SENSOR,
     SUPPORTED_PLATFORMS,
 )
+from .deconz_event import async_setup_events, async_unload_events
 from .errors import AuthenticationRequired, CannotConnect
 
 
@@ -47,6 +48,8 @@ class DeconzGateway:
         self.deconz_ids = {}
         self.events = []
         self.listeners = []
+
+        self.entities = {}
 
         self._current_option_allow_clip_sensor = self.option_allow_clip_sensor
         self._current_option_allow_deconz_groups = self.option_allow_deconz_groups
@@ -111,6 +114,8 @@ class DeconzGateway:
                     self.config_entry, component
                 )
             )
+
+        self.hass.async_create_task(async_setup_events(self))
 
         self.api.start()
 
@@ -227,9 +232,7 @@ class DeconzGateway:
             unsub_dispatcher()
         self.listeners = []
 
-        for event in self.events:
-            event.async_will_remove_from_hass()
-        self.events.clear()
+        await async_unload_events(self)
 
         self.deconz_ids = {}
         return True

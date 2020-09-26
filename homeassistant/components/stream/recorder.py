@@ -1,5 +1,5 @@
 """Provide functionality to record stream."""
-
+import os
 import threading
 from typing import List
 
@@ -17,6 +17,9 @@ def async_setup_recorder(hass):
 
 def recorder_save_worker(file_out: str, segments: List[Segment], container_format: str):
     """Handle saving stream."""
+    if not os.path.exists(os.path.dirname(file_out)):
+        os.makedirs(os.path.dirname(file_out), exist_ok=True)
+
     first_pts = {"video": None, "audio": None}
     output = av.open(file_out, "w", format=container_format)
     output_v = None

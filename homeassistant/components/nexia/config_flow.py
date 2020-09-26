@@ -6,14 +6,10 @@ from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import (
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    HTTP_BAD_REQUEST,
-    HTTP_INTERNAL_SERVER_ERROR,
-)
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from .const import DOMAIN  # pylint:disable=unused-import
+from .util import is_invalid_auth_code
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,10 +38,7 @@ async def validate_input(hass: core.HomeAssistant, data):
         raise CannotConnect from ex
     except HTTPError as http_ex:
         _LOGGER.error("HTTP error from Nexia service: %s", http_ex)
-        if (
-            http_ex.response.status_code >= HTTP_BAD_REQUEST
-            and http_ex.response.status_code < HTTP_INTERNAL_SERVER_ERROR
-        ):
+        if is_invalid_auth_code(http_ex.response.status_code):
             raise InvalidAuth from http_ex
         raise CannotConnect from http_ex
 

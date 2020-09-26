@@ -11,7 +11,7 @@ from broadlink.exceptions import (
 )
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_TIMEOUT, CONF_TYPE
 from homeassistant.helpers import config_validation as cv
 
@@ -20,6 +20,7 @@ from .const import (  # pylint: disable=unused-import
     DEFAULT_PORT,
     DEFAULT_TIMEOUT,
     DOMAIN,
+    DOMAINS_AND_TYPES,
 )
 from .helpers import format_mac
 
@@ -36,6 +37,19 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_set_device(self, device, raise_on_progress=True):
         """Define a device for the config flow."""
+        supported_types = {
+            device_type
+            for _, device_types in DOMAINS_AND_TYPES
+            for device_type in device_types
+        }
+        if device.type not in supported_types:
+            LOGGER.error(
+                "Unsupported device: %s. If it worked before, please open "
+                "an issue at https://github.com/home-assistant/core/issues",
+                hex(device.devtype),
+            )
+            raise data_entry_flow.AbortFlow("not_supported")
+
         await self.async_set_unique_id(
             device.mac.hex(), raise_on_progress=raise_on_progress
         )

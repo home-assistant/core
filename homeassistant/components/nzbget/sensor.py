@@ -61,7 +61,7 @@ async def async_setup_entry(
             )
         )
 
-    async_add_entities(sensors, True)
+    async_add_entities(sensors)
 
 
 class NZBGetSensor(NZBGetEntity, Entity):
@@ -108,7 +108,7 @@ class NZBGetSensor(NZBGetEntity, Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        value = self.coordinator.data.status.get(self._sensor_type)
+        value = self.coordinator.data["status"].get(self._sensor_type)
 
         if value is None:
             _LOGGER.warning("Unable to locate value for %s", self._sensor_type)
