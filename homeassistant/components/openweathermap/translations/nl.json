@@ -17,6 +17,7 @@
                     "mode": "Mode",
                     "name": "Naam van de integratie"
                 },
+                "description": "Stel OpenWeatherMap-integratie in. Ga naar https://openweathermap.org/appid om een API-sleutel te genereren",
                 "title": "OpenWeatherMap"
             }
         }

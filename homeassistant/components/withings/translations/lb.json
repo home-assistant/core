@@ -3,7 +3,8 @@
         "abort": {
             "already_configured": "Konfiguratioun aktualis\u00e9iert fir de Profil.",
             "authorize_url_timeout": "Z\u00e4it Iwwerschreidung beim gener\u00e9ieren vun der Autorisatiouns URL.",
-            "missing_configuration": "Withings Integratioun ass nach net konfigur\u00e9iert. Follegt w.e.g der Dokumentatioun."
+            "missing_configuration": "Withings Integratioun ass nach net konfigur\u00e9iert. Follegt w.e.g der Dokumentatioun.",
+            "no_url_available": "Keng URL disponibel. Fir Informatiounen iwwert d\u00ebse Feeler, [kuck H\u00ebllef Sektioun]({docs_url})"
         },
         "create_entry": {
             "default": "Erfollegr\u00e4ich mat Withings authentifiz\u00e9iert."

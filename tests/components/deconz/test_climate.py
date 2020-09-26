@@ -59,6 +59,7 @@ async def test_no_sensors(hass):
     gateway = await setup_deconz_integration(hass)
     assert len(gateway.deconz_ids) == 0
     assert len(hass.states.async_all()) == 0
+    assert len(gateway.entities[climate.DOMAIN]) == 0
 
 
 async def test_climate_devices(hass):
@@ -72,6 +73,7 @@ async def test_climate_devices(hass):
     assert "climate.presence_sensor" not in gateway.deconz_ids
     assert "climate.clip_thermostat" not in gateway.deconz_ids
     assert len(hass.states.async_all()) == 3
+    assert len(gateway.entities[climate.DOMAIN]) == 1
 
     thermostat = hass.states.get("climate.thermostat")
     assert thermostat.state == "auto"
@@ -181,6 +183,7 @@ async def test_climate_devices(hass):
     await gateway.async_reset()
 
     assert len(hass.states.async_all()) == 0
+    assert len(gateway.entities[climate.DOMAIN]) == 0
 
 
 async def test_clip_climate_device(hass):
@@ -198,6 +201,7 @@ async def test_clip_climate_device(hass):
     assert "climate.presence_sensor" not in gateway.deconz_ids
     assert "climate.clip_thermostat" in gateway.deconz_ids
     assert len(hass.states.async_all()) == 4
+    assert len(gateway.entities[climate.DOMAIN]) == 2
 
     thermostat = hass.states.get("climate.thermostat")
     assert thermostat.state == "auto"
@@ -225,6 +229,7 @@ async def test_clip_climate_device(hass):
     assert "climate.presence_sensor" not in gateway.deconz_ids
     assert "climate.clip_thermostat" not in gateway.deconz_ids
     assert len(hass.states.async_all()) == 3
+    assert len(gateway.entities[climate.DOMAIN]) == 1
 
     hass.config_entries.async_update_entry(
         gateway.config_entry, options={deconz.gateway.CONF_ALLOW_CLIP_SENSOR: True}
@@ -237,6 +242,7 @@ async def test_clip_climate_device(hass):
     assert "climate.presence_sensor" not in gateway.deconz_ids
     assert "climate.clip_thermostat" in gateway.deconz_ids
     assert len(hass.states.async_all()) == 4
+    assert len(gateway.entities[climate.DOMAIN]) == 2
 
 
 async def test_verify_state_update(hass):
@@ -268,6 +274,7 @@ async def test_add_new_climate_device(hass):
     """Test that adding a new climate device works."""
     gateway = await setup_deconz_integration(hass)
     assert len(gateway.deconz_ids) == 0
+    assert len(gateway.entities[climate.DOMAIN]) == 0
 
     state_added_event = {
         "t": "event",
@@ -283,3 +290,4 @@ async def test_add_new_climate_device(hass):
 
     thermostat = hass.states.get("climate.thermostat")
     assert thermostat.state == "auto"
+    assert len(gateway.entities[climate.DOMAIN]) == 1

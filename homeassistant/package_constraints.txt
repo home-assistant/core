@@ -13,7 +13,7 @@ defusedxml==0.6.0
 distro==1.5.0
 emoji==0.5.4
 hass-nabucasa==0.37.0
-home-assistant-frontend==20200918.0
+home-assistant-frontend==20200918.2
 importlib-metadata==1.6.0;python_version<'3.8'
 jinja2>=2.11.2
 netdisco==2.8.2
