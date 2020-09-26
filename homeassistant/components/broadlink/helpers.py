@@ -1,5 +1,6 @@
 """Helper functions for the Broadlink integration."""
 from base64 import b64decode
+import socket
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST
@@ -47,3 +48,11 @@ def import_device(hass, host):
             data={CONF_HOST: host},
         )
         hass.async_create_task(task)
+
+
+def get_ip_or_none(host):
+    """Return an IP address or None if socket.EAI_NONAME."""
+    try:
+        return socket.gethostbyname(host)
+    except OSError:
+        return None

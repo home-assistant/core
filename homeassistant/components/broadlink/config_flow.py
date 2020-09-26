@@ -13,7 +13,14 @@ from broadlink.exceptions import (
 import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_TIMEOUT, CONF_TYPE
+from homeassistant.const import (
+    ATTR_LOCKED,
+    CONF_HOST,
+    CONF_MAC,
+    CONF_NAME,
+    CONF_TIMEOUT,
+    CONF_TYPE,
+)
 from homeassistant.helpers import config_validation as cv
 
 from .const import (  # pylint: disable=unused-import
@@ -113,7 +120,10 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             _LOGGER.error("Failed to connect to the device at %s: %s", host, err_msg)
 
-            if self.source == config_entries.SOURCE_IMPORT:
+            if self.source in {
+                config_entries.SOURCE_IMPORT,
+                config_entries.SOURCE_INTEGRATION_DISCOVERY,
+            }:
                 return self.async_abort(reason=errors["base"])
 
         data_schema = {
@@ -157,7 +167,10 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         else:
             await self.async_set_unique_id(device.mac.hex())
-            if self.source == config_entries.SOURCE_IMPORT:
+            if self.source in {
+                config_entries.SOURCE_IMPORT,
+                config_entries.SOURCE_INTEGRATION_DISCOVERY,
+            }:
                 _LOGGER.warning(
                     "%s (%s at %s) is ready to be configured. Click "
                     "Configuration in the sidebar, click Integrations and "
@@ -259,10 +272,10 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         device = self.device
         errors = {}
 
-        # Abort reauthentication flow.
-        self._abort_if_unique_id_configured(
-            updates={CONF_HOST: device.host[0], CONF_TIMEOUT: device.timeout}
-        )
+        if self.source == "reauth":
+            self._abort_if_unique_id_configured(
+                updates={CONF_HOST: device.host[0], CONF_TIMEOUT: device.timeout}
+            )
 
         if user_input is not None:
             return self.async_create_entry(
@@ -288,6 +301,27 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         ):
             return self.async_abort(reason="already_configured")
         return await self.async_step_user(import_info)
+
+    async def async_step_integration_discovery(self, discovery_info):
+        """Handle a flow initiated by integration discovery."""
+        if any(
+            discovery_info[CONF_HOST] == entry.data[CONF_HOST]
+            for entry in self._async_current_entries()
+        ):
+            return self.async_abort(reason="already_configured")
+
+        device = blk.gendevice(
+            discovery_info[CONF_TYPE],
+            (discovery_info[CONF_HOST], DEFAULT_PORT),
+            bytes.fromhex(discovery_info[CONF_MAC]),
+            name=discovery_info[CONF_NAME],
+            is_locked=discovery_info[ATTR_LOCKED],
+        )
+        await self.async_set_device(device)
+        self._abort_if_unique_id_configured(
+            updates={CONF_HOST: device.host[0], CONF_TIMEOUT: device.timeout}
+        )
+        return await self.async_step_auth()
 
     async def async_step_reauth(self, data):
         """Reauthenticate to the device."""

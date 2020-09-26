@@ -3,19 +3,23 @@ from dataclasses import dataclass, field
 
 from .const import DOMAIN
 from .device import BroadlinkDevice
+from .updater import BroadlinkScout
 
 
 @dataclass
 class BroadlinkData:
     """Class for sharing data within the Broadlink integration."""
 
+    discovery: BroadlinkScout = None
     devices: dict = field(default_factory=dict)
     platforms: dict = field(default_factory=dict)
 
 
 async def async_setup(hass, config):
     """Set up the Broadlink integration."""
-    hass.data[DOMAIN] = BroadlinkData()
+    discovery = BroadlinkScout(hass)
+    hass.data[DOMAIN] = BroadlinkData(discovery)
+    await discovery.coordinator.async_refresh()
     return True
 
 
