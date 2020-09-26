@@ -1,4 +1,5 @@
 """Tests for the Hyperion integration."""
+from asynctest import CoroutineMock, call, patch
 from hyperion import const
 
 from homeassistant.components.hyperion import light as hyperion_light
@@ -11,23 +12,14 @@ from homeassistant.components.light import (
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import AsyncMock, Mock, call, patch
-
-TEST_HOST = "test-hyperion-host"
-TEST_PORT = const.DEFAULT_PORT
-TEST_NAME = "test_hyperion_name"
-TEST_PRIORITY = 128
-TEST_ENTITY_ID = f"{DOMAIN}.{TEST_NAME}"
-
-
-def create_mock_client():
-    """Create a mock Hyperion client."""
-    mock_client = Mock()
-    mock_client.async_client_connect = AsyncMock(return_value=True)
-    mock_client.adjustment = None
-    mock_client.effects = None
-    mock_client.id = "%s:%i" % (TEST_HOST, TEST_PORT)
-    return mock_client
+from . import (
+    TEST_ENTITY_ID,
+    TEST_HOST,
+    TEST_NAME,
+    TEST_PORT,
+    TEST_PRIORITY,
+    create_mock_client,
+)
 
 
 def call_registered_callback(client, key, *args, **kwargs):
@@ -47,7 +39,7 @@ async def setup_entity(hass, client=None):
                     "platform": "hyperion",
                     "name": TEST_NAME,
                     "host": TEST_HOST,
-                    "port": const.DEFAULT_PORT,
+                    "port": TEST_PORT,
                     "priority": TEST_PRIORITY,
                 }
             },

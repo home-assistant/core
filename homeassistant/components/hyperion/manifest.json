@@ -1,7 +1,10 @@
 {
+  "codeowners": ["@dermotduffy"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/hyperion",
   "domain": "hyperion",
   "name": "Hyperion",
   "documentation": "https://www.home-assistant.io/integrations/hyperion",
   "requirements": ["hyperion-py==0.3.0"],
-  "codeowners": ["@dermotduffy"]
+  "zeroconf": ["_hyperiond-json._tcp.local."]
 }

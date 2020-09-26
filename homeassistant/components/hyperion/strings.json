@@ -1,0 +1,35 @@
+{
+  "config": {
+    "flow_title": "Hyperion Ambilight: {serial_number}",
+    "step": {
+      "user": {
+        "description": "Set up your Hyperion Ambilight with Home Assistant.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "instance": "Hyperion instance #"
+        }
+      },
+      "auth": {
+        "description": "Configure authorization to your Hyperion Ambilight server.",
+        "data": {
+          "token": "Server token",
+          "create_token": "Create new token"
+        }
+      },
+      "zeroconf_confirm": {
+        "description": "Do you want to add the Hyperion Ambilight with unique id `{serial_number}` to Home Assistant?",
+        "title": "Discovered Hyperion Ambilight device"
+      }
+    },
+    "error": {
+      "connection_error": "Failed to connect to Hyperion Ambilight device.",
+      "auth_required_error": "Failed to determine if authorization is required.",
+      "here": "Checkpoint"
+    },
+    "abort": {
+      "already_configured": "This Hyperion Ambilight device is already configured.",
+      "connection_error": "Failed to connect to Hyperion Ambilight device."
+    }
+  }
+}

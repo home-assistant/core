@@ -89,6 +89,7 @@ FLOWS = [
     "hue",
     "hunterdouglas_powerview",
     "hvv_departures",
+    "hyperion",
     "iaqualink",
     "icloud",
     "ifttt",
