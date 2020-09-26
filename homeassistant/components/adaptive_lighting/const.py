@@ -42,6 +42,8 @@ SERVICE_APPLY = "apply"
 CONF_COLORS_ONLY = "colors_only"
 CONF_ON_LIGHTS_ONLY = "on_lights_only"
 
+TURNING_OFF_DELAY = 5
+
 
 def int_between(a, b):
     """Return an integer between 'a' and 'b'."""
