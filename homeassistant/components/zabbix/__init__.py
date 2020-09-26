@@ -5,6 +5,7 @@ import math
 import queue
 import threading
 import time
+from urllib.error import HTTPError
 from urllib.parse import urljoin
 
 from pyzabbix import ZabbixAPI, ZabbixAPIException, ZabbixMetric, ZabbixSender
@@ -106,6 +107,10 @@ def setup(hass, config):
     except ZabbixAPIException as login_exception:
         _LOGGER.error("Unable to login to the Zabbix API: %s", login_exception)
         return False
+    except HTTPError as http_error:
+        _LOGGER.error("HTTPError when connecting to Zabbix API: %s", http_error)
+        zapi = None
+        # Continue even though Zabbix API couldn't be initialized. Zabbix sender later may still work.
 
     hass.data[DOMAIN] = zapi
 
