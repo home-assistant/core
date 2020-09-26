@@ -283,6 +283,25 @@ async def async_setup(hass, config):
 
 @websocket_api.websocket_command(
     {
+        vol.Required("type"): "ais_cloud/report_ais_problem",
+    }
+)
+@websocket_api.async_response
+async def websocket_report_ais_problem(hass, connection, msg):
+    """
+    Report a problem to AIS
+    """
+    ws = AisCloudWS(hass)
+    ais_answer = ws.async_report_ais_problem(
+        problem_type=msg["problem_type"],
+        problem_desc=msg["problem_desc"],
+        problem_data=msg["problem_data"],
+    )
+    connection.send_result(msg["id"], ais_answer)
+
+
+@websocket_api.websocket_command(
+    {
         vol.Required("type"): "ais_cloud/check_ais_media_source",
     }
 )
@@ -291,17 +310,66 @@ async def websocket_check_ais_media_source(hass, connection, msg):
     """
     Check the media source in AIS
     """
-    component = hass.data[DOMAIN]
-    # TODO check if this media are suported
-    # if not 1 == msg.get("xxx"):
-    #     connection.send_message(
-    #         websocket_api.error_message(
-    #             msg["id"], ERR_NOT_SUPPORTED, "Player does not support browsing media"
-    #         )
-    #     )
-    #     return
+    # 0. get current stream url
+    player_state = hass.states.get("media_player.wbudowany_glosnik")
+    curr_stream_url = player_state.attributes.get("media_content_id")
+    if curr_stream_url is not None:
+        pass
+    else:
+        # no stream url - info to the user
+        payload = {
+            "error": True,
+            "info": "Obecnie na wbudowanym odtwarzaczu nie odtwarzasz żadnych mediów, dlatego sprawdzanie nie jest "
+            "dostępne.",
+        }
+        connection.send_result(msg["id"], payload)
+        return
+
+    # check the media source - currently we are checking only radio
+    media_source = player_state.attributes.get("source")
+    if media_source != "Radio":
+        payload = {
+            "error": True,
+            "info": "Te media pochodzą ze źródła "
+            + media_source
+            + ". Obecnie sprawdzamy tylko media Radio.",
+        }
+        connection.send_result(msg["id"], payload)
+        return
+
+    # 1. get ORIGIN_URL from AIS
+    ws = AisCloudWS(hass)
+    media_name = player_state.attributes.get("media_title")
+    ais_answer = ws.async_check_ais_media(
+        source=media_source, name=media_name, current_url=curr_stream_url
+    )
+    if "error" in ais_answer:
+        payload = {
+            "error": True,
+            "info": ais_answer.error,
+        }
+        connection.send_result(msg["id"], payload)
+        return
+
+    if "on_client_check" in ais_answer:
+        # TODO check from client
+        # 2. ask ORIGIN_URL for new STREAM_URL
+        new_stream_url = ""
+        pass
+    else:
+        new_stream_url = ais_answer.new_stream_url
+
+    # 3. check if the new STREAM_URL != current STREAM_URL
+    if curr_stream_url != new_stream_url:
+        # update stream and info to user
+        pass
+
+    # stream is the same - let user to send info to ais
     await asyncio.sleep(3)
-    payload = {"info": "Funkcjonalność w przygotowaniu..."}
+    payload = {
+        "info": "Nie udało się automatycznie ustali lepszego źródła dla mediów. Czy mam powiadomić człowieka w "
+        "AIS?"
+    }
     connection.send_result(msg["id"], payload)
 
 
@@ -418,6 +486,42 @@ class AisCloudWS:
                     + " "
                     + str(e)
                 )
+
+    async def async_check_ais_media(self, name, source, current_url):
+        web_session = aiohttp_client.async_get_clientsession(self.hass)
+        rest_url = self.url + "check_ais_media"
+        try:
+            with async_timeout.timeout(5):
+                payload = {"name": name, "source": source, "current_url": current_url}
+                with async_timeout.timeout(5):
+                    ws_resp = await web_session.post(
+                        rest_url, json=payload, headers=self.cloud_ws_header
+                    )
+                    return await ws_resp.json()
+        except Exception as e:
+            _LOGGER.warning("Couldn't fetch data for: " + source + " " + str(e))
+            return {"error": True, "message": str(e)}
+
+    async def async_report_ais_problem(self, problem_type, problem_desc, problem_data):
+        web_session = aiohttp_client.async_get_clientsession(self.hass)
+        rest_url = self.url + "report_ais_problem"
+        try:
+            with async_timeout.timeout(5):
+                payload = {
+                    "problem_type": problem_type,
+                    "problem_desc": problem_desc,
+                    "problem_data": problem_data,
+                }
+                with async_timeout.timeout(5):
+                    ws_resp = await web_session.post(
+                        rest_url, json=payload, headers=self.cloud_ws_header
+                    )
+                    return await ws_resp.json()
+        except Exception as e:
+            _LOGGER.warning(
+                "Couldn't report problem to AIS, for: " + problem_type + " " + str(e)
+            )
+            return {"error": True, "message": str(e)}
 
     async def async_key(self, service):
         web_session = aiohttp_client.async_get_clientsession(self.hass)
