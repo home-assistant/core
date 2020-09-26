@@ -1,0 +1,16 @@
+{
+  "domain": "google_sdm",
+  "name": "Google Smart Device Management (aka Nest Device Access)",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/google_sdm",
+  "requirements": [
+    "google-sdm==0.0.36"
+  ],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@USA-RedDragon"
+  ]
+}

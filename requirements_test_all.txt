@@ -345,6 +345,9 @@ google-api-python-client==1.6.4
 # homeassistant.components.google_pubsub
 google-cloud-pubsub==0.39.1
 
+# homeassistant.components.google_sdm
+google-sdm==0.0.36
+
 # homeassistant.components.griddy
 griddypower==0.1.0
 
