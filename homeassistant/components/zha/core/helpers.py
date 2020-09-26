@@ -12,7 +12,8 @@ import functools
 import itertools
 import logging
 from random import uniform
-from typing import Any, Callable, Iterator, List, Optional
+import re
+from typing import Any, Callable, Iterator, List, Optional, Tuple
 
 import voluptuous as vol
 import zigpy.exceptions
@@ -225,3 +226,35 @@ def convert_install_code(value: str) -> bytes:
         raise vol.Invalid("invalid install code")
 
     return code
+
+
+QR_CODES = (
+    # Enbrighten
+    r"""
+        ^Z:
+        ([0-9a-f]{16)  # IEEE address
+        I\$
+        ([0-9a-f]{36})  # install code
+        $
+    """,
+)
+
+
+def qr_to_install_code(qr_code: str) -> Tuple[zigpy.types.EUI64, str]:
+    """Try to parse the QR code.
+
+    if successful, return a tuple of a EUI64 address and install code.
+    """
+
+    for code_pattern in QR_CODES:
+        match = re.match(code_pattern, qr_code, re.VERBOSE)
+        if match is None:
+            continue
+
+        ieee = zigpy.types.EUI64.convert(match[1])
+        install_code = match[2]
+        # install_code sanity check
+        convert_install_code(install_code)
+        return ieee, install_code
+
+    raise vol.Invalid(f"couldn't convert qr code: {qr_code}")

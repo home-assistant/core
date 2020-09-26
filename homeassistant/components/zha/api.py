@@ -58,6 +58,7 @@ from .core.helpers import (
     async_is_bindable_target,
     convert_install_code,
     get_matched_clusters,
+    qr_to_install_code,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -98,7 +99,9 @@ SERVICE_SCHEMAS = {
             ),
             vol.Inclusive(ATTR_SOURCE_IEEE, "install_code"): EUI64.convert,
             vol.Inclusive(ATTR_INSTALL_CODE, "install_code"): convert_install_code,
-            vol.Exclusive(ATTR_QR_CODE, "install_code"): str,
+            vol.Exclusive(ATTR_QR_CODE, "install_code"): vol.All(
+                str, qr_to_install_code
+            ),
         }
     ),
     IEEE_SERVICE: vol.Schema({vol.Required(ATTR_IEEE_ADDRESS): EUI64.convert}),
@@ -178,10 +181,7 @@ ClusterBinding = collections.namedtuple("ClusterBinding", "id endpoint_id type n
 @websocket_api.require_admin
 @websocket_api.async_response
 @websocket_api.websocket_command(
-    {
-        vol.Required("type"): "zha/devices/permit",
-        **SERVICE_SCHEMAS[SERVICE_PERMIT],
-    }
+    {vol.Required("type"): "zha/devices/permit", **SERVICE_SCHEMAS[SERVICE_PERMIT]}
 )
 async def websocket_permit_devices(hass, connection, msg):
     """Permit ZHA zigbee devices."""
