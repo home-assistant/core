@@ -316,18 +316,18 @@ class OptionsFlow(config_entries.OptionsFlow):
         new_device_id = "_".join(x for x in new_device_data[CONF_DEVICE_ID])
 
         entity_registry = await async_get_entity_registry(self.hass)
-        entities = async_entries_for_device(entity_registry, old_device)
+        entity_entries = async_entries_for_device(entity_registry, old_device)
         entity_migration_map = {}
-        for entity in entities:
-            unique_id = entity.unique_id
+        for entry in entity_entries:
+            unique_id = entry.unique_id
             new_unique_id = unique_id.replace(old_device_id, new_device_id)
 
             new_entity_id = entity_registry.async_get_entity_id(
-                entity.domain, entity.platform, new_unique_id
+                entry.domain, entry.platform, new_unique_id
             )
 
             if new_entity_id is not None:
-                entity_migration_map[new_entity_id] = entity
+                entity_migration_map[new_entity_id] = entry
 
         for entry in entity_migration_map.values():
             entity_registry.async_remove(entry.entity_id)
