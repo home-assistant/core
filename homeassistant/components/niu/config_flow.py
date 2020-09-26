@@ -7,7 +7,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 
-from .const import DOMAIN
+from .const import DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +43,8 @@ class NiuConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         return self.async_create_entry(
-            title=user_input[CONF_USERNAME], data={CONF_TOKEN: token},
+            title=user_input[CONF_USERNAME],
+            data={CONF_TOKEN: token},
         )
 
 

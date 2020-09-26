@@ -980,7 +980,7 @@ niko-home-control==0.2.1
 niluclient==0.1.2
 
 # homeassistant.components.niu
-niu==0.2.5
+niu==0.2.7
 
 # homeassistant.components.noaa_tides
 noaa-coops==0.1.8

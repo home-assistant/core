@@ -1,13 +1,7 @@
 """Platform for sensor integration."""
 import logging
 
-from homeassistant.const import (
-    ATTR_BATTERY_CHARGING,
-    ATTR_BATTERY_LEVEL,
-    LENGTH_KILOMETERS,
-    PERCENTAGE,
-    TEMP_CELSIUS,
-)
+from homeassistant.const import LENGTH_KILOMETERS, PERCENTAGE, TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN, NiuVehicle
@@ -41,20 +35,20 @@ async def async_setup_entry(hass, config, add_entities, discovery_info=None):
 
     coord = hass.data[DOMAIN][config.entry_id]["coordinator"]
 
-    for sn, vehicle in (
+    for serial, vehicle in (
         hass.data[DOMAIN][config.entry_id]["account"].get_vehicles().items()
     ):
         entities = []
 
         for key, value in SENSORS.items():
-            entities.append(NiuSensor(sn, coord, key, value[0], value[1], value[2]))
+            entities.append(NiuSensor(serial, coord, key, value[0], value[1], value[2]))
 
         for key, value in (
             SENSORS_SINGLE.items()
             if vehicle.battery_count == 1
             else SENSORS_DUAL.items()
         ):
-            entities.append(NiuSensor(sn, coord, key, value[0], value[1], value[2]))
+            entities.append(NiuSensor(serial, coord, key, value[0], value[1], value[2]))
 
         add_entities(entities, True)
 
@@ -125,28 +119,28 @@ class NiuSensor(NiuVehicle, Entity):
         if "level" in self._attribute:
             if self.state < 5:
                 return "mdi:battery-outline"
-            elif 5 <= self.state < 15:
+            if 5 <= self.state < 15:
                 return "mdi:battery-10"
-            elif 15 <= self.state < 25:
+            if 15 <= self.state < 25:
                 return "mdi:battery-20"
-            elif 25 <= self.state < 35:
+            if 25 <= self.state < 35:
                 return "mdi:battery-30"
-            elif 35 <= self.state < 45:
+            if 35 <= self.state < 45:
                 return "mdi:battery-40"
-            elif 45 <= self.state < 55:
+            if 45 <= self.state < 55:
                 return "mdi:battery-50"
-            elif 55 <= self.state < 65:
+            if 55 <= self.state < 65:
                 return "mdi:battery-60"
-            elif 65 <= self.state < 75:
+            if 65 <= self.state < 75:
                 return "mdi:battery-70"
-            elif 75 <= self.state < 85:
+            if 75 <= self.state < 85:
                 return "mdi:battery-80"
-            elif 85 <= self.state < 95:
+            if 85 <= self.state < 95:
                 return "mdi:battery-90"
-            elif self.state >= 95:
+            if self.state >= 95:
                 return "mdi:battery"
-            else:
-                return "mdi:battery-alert"
+
+            return "mdi:battery-alert"
 
         if "temp" in self._attribute:
             if self._attribute == "temp b":
@@ -156,11 +150,11 @@ class NiuSensor(NiuVehicle, Entity):
 
             if desc == "low":
                 return "mdi:thermometer-low"
-            elif desc == "normal":
+            if desc == "normal":
                 return "mdi:thermometer"
-            elif desc == "high":
+            if desc == "high":
                 return "mdi:thermometer-high"
-            else:
-                return "mdi:thermometer-alert"
+
+            return "mdi:thermometer-alert"
 
         return self._icon
