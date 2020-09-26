@@ -75,36 +75,19 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     return True
 
 
-class AdvantageAirAC(ClimateEntity):
-    """AdvantageAir AC unit."""
+class AdvantageAirClimateEntity(ClimateEntity):
+    """AdvantageAir Climate class."""
 
-    def __init__(self, instance, ac_index):
-        """Initialize the Advantage Air AC climate entity."""
+    def __init__(self, instance):
+        """Initialize the base Advantage Air climate entity."""
         self.coordinator = instance["coordinator"]
         self.async_change = instance["async_change"]
         self.device = instance["device"]
-        self.ac_index = ac_index
-        self.aircon = self.coordinator.data["aircons"][self.ac_index]["info"]
-
-    @property
-    def name(self):
-        """Return the name."""
-        return self.aircon["name"]
-
-    @property
-    def unique_id(self):
-        """Return a unique id."""
-        return f'{self.coordinator.data["system"]["rid"]}-{self.ac_index}-climate'
 
     @property
     def temperature_unit(self):
         """Return the temperature unit."""
         return TEMP_CELSIUS
-
-    @property
-    def target_temperature(self):
-        """Return the current target temperature."""
-        return self.aircon["setTemp"]
 
     @property
     def target_temperature_step(self):
@@ -120,6 +103,56 @@ class AdvantageAirAC(ClimateEntity):
     def min_temp(self):
         """Return the minimum supported temperature."""
         return 16
+
+    @property
+    def should_poll(self):
+        """No polling needed."""
+        return False
+
+    @property
+    def available(self):
+        """Return if platform is available."""
+        return self.coordinator.last_update_success
+
+    @property
+    def device_info(self):
+        """Return parent device information."""
+        return self.device
+
+    async def async_added_to_hass(self):
+        """When entity is added to hass."""
+        self.async_on_remove(
+            self.coordinator.async_add_listener(self.async_write_ha_state)
+        )
+
+    async def async_update(self):
+        """Request update."""
+        await self.coordinator.async_request_refresh()
+
+
+class AdvantageAirAC(AdvantageAirClimateEntity):
+    """AdvantageAir AC unit."""
+
+    def __init__(self, instance, ac_index):
+        """Initialize the Advantage Air AC climate entity."""
+        super().__init__(instance)
+        self.ac_index = ac_index
+        self.aircon = self.coordinator.data["aircons"][self.ac_index]["info"]
+
+    @property
+    def name(self):
+        """Return the name."""
+        return self.aircon["name"]
+
+    @property
+    def unique_id(self):
+        """Return a unique id."""
+        return f'{self.coordinator.data["system"]["rid"]}-{self.ac_index}-climate'
+
+    @property
+    def target_temperature(self):
+        """Return the current target temperature."""
+        return self.aircon["setTemp"]
 
     @property
     def hvac_mode(self):
@@ -162,27 +195,6 @@ class AdvantageAirAC(ClimateEntity):
         """Return additional attributes about AC unit."""
         return self.aircon
 
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def available(self):
-        """Return if platform is available."""
-        return self.coordinator.last_update_success
-
-    @property
-    def device_info(self):
-        """Return parent device information."""
-        return self.device
-
-    async def async_added_to_hass(self):
-        """When entity is added to hass."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
-        )
-
     async def async_set_hvac_mode(self, hvac_mode):
         """Set the HVAC Mode and State."""
         if hvac_mode == HVAC_MODE_OFF:
@@ -210,19 +222,13 @@ class AdvantageAirAC(ClimateEntity):
         temp = kwargs.get(ATTR_TEMPERATURE)
         await self.async_change({self.ac_index: {"info": {"setTemp": temp}}})
 
-    async def async_update(self):
-        """Request update."""
-        await self.coordinator.async_request_refresh()
 
-
-class AdvantageAirZone(ClimateEntity):
+class AdvantageAirZone(AdvantageAirClimateEntity):
     """AdvantageAir Zone control."""
 
     def __init__(self, instance, ac_index, zone_index):
         """Initialize the Advantage Air Zone climate entity."""
-        self.coordinator = instance["coordinator"]
-        self.async_change = instance["async_change"]
-        self.device = instance["device"]
+        super().__init__(instance)
         self.ac_index = ac_index
         self.zone_index = zone_index
         self.zone = self.coordinator.data["aircons"][self.ac_index]["zones"][
@@ -242,11 +248,6 @@ class AdvantageAirZone(ClimateEntity):
         return f'{self.coordinator.data["system"]["rid"]}-{self.ac_index}-{self.zone_index}-climate'
 
     @property
-    def temperature_unit(self):
-        """Return the temperature unit."""
-        return TEMP_CELSIUS
-
-    @property
     def current_temperature(self):
         """Return the current temperature."""
         return self.coordinator.data["aircons"][self.ac_index]["zones"][
@@ -261,21 +262,6 @@ class AdvantageAirZone(ClimateEntity):
         ]["setTemp"]
 
     @property
-    def target_temperature_step(self):
-        """Return the supported temperature step."""
-        return 1
-
-    @property
-    def max_temp(self):
-        """Return the maximum supported temperature."""
-        return 32
-
-    @property
-    def min_temp(self):
-        """Return the minimum supported temperature."""
-        return 16
-
-    @property
     def hvac_mode(self):
         """Return the current HVAC modes."""
         if self.zone["state"] == STATE_OPEN:
@@ -288,22 +274,6 @@ class AdvantageAirZone(ClimateEntity):
         return [HVAC_MODE_OFF, HVAC_MODE_FAN_ONLY]
 
     @property
-    def fan_mode(self):
-        """Return current fan modes."""
-        if self.zone["state"] == STATE_CLOSE:
-            return FAN_OFF
-        if self.zone["value"] <= (FAN_SPEEDS[FAN_LOW] + 10):
-            return FAN_LOW
-        if self.zone["value"] <= (FAN_SPEEDS[FAN_MEDIUM] + 10):
-            return FAN_MEDIUM
-        return FAN_HIGH
-
-    @property
-    def fan_modes(self):
-        """Return supported fan modes."""
-        return [FAN_OFF, FAN_LOW, FAN_MEDIUM, FAN_HIGH]
-
-    @property
     def device_state_attributes(self):
         """Return additional attributes about Zone."""
         return self.zone
@@ -311,28 +281,7 @@ class AdvantageAirZone(ClimateEntity):
     @property
     def supported_features(self):
         """Return the supported features."""
-        return SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def available(self):
-        """Return if platform is available."""
-        return self.coordinator.last_update_success
-
-    @property
-    def device_info(self):
-        """Return parent device information."""
-        return self.device
-
-    async def async_added_to_hass(self):
-        """When entity is added to hass."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
-        )
+        return SUPPORT_TARGET_TEMPERATURE
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set the HVAC Mode and State."""
@@ -345,33 +294,9 @@ class AdvantageAirZone(ClimateEntity):
                 {self.ac_index: {"zones": {self.zone_index: {"state": STATE_OPEN}}}}
             )
 
-    async def async_set_fan_mode(self, fan_mode):
-        """Set the Fan Mode."""
-        if fan_mode == FAN_OFF:
-            await self.async_change(
-                {self.ac_index: {"zones": {self.zone_index: {"state": STATE_CLOSE}}}}
-            )
-        else:
-            await self.async_change(
-                {
-                    self.ac_index: {
-                        "zones": {
-                            self.zone_index: {
-                                "state": STATE_OPEN,
-                                "value": FAN_SPEEDS[fan_mode],
-                            }
-                        }
-                    }
-                }
-            )
-
     async def async_set_temperature(self, **kwargs):
         """Set the Temperature."""
         temp = kwargs.get(ATTR_TEMPERATURE)
         await self.async_change(
             {self.ac_index: {"zones": {self.zone_index: {"setTemp": temp}}}}
         )
-
-    async def async_update(self):
-        """Request update."""
-        await self.coordinator.async_request_refresh()
