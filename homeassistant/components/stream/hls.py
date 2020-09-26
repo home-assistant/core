@@ -18,7 +18,7 @@ def async_setup_hls(hass):
     hass.http.register_view(HlsSegmentView())
     hass.http.register_view(HlsInitView())
     hass.http.register_view(HlsMasterPlaylistView())
-    return "/api/hls/{}/playlist.m3u8"
+    return "/api/hls/{}/master_playlist.m3u8"
 
 
 class HlsMasterPlaylistView(StreamView):
@@ -28,36 +28,6 @@ class HlsMasterPlaylistView(StreamView):
     name = "api:stream:hls:master_playlist"
     cors_allowed = True
 
-    @staticmethod
-    def codec_string(track) -> str:
-        """Return RFC 6381 codec string."""
-        v_name, v_profile = track.video_codec
-        if v_name == "hevc":
-            if v_profile == "main10":
-                codec_string = "hev1.2.6.L150.B0"
-            else:  # HEVC Main level 5
-                codec_string = "hev1.1.6.L150.B0"
-        else:  # AVC1 level 4.1
-            codec_string = "avc1"
-            if v_profile == "Constrained Baseline":
-                codec_string += ".424029"
-            elif v_profile == "Baseline":
-                codec_string += ".420029"
-            elif v_profile == "High":
-                codec_string += ".640029"
-            else:  # Main profile
-                codec_string += ".4d0029"
-        if track.audio_codec is not None:
-            a_name, a_profile = track.audio_codec
-            if a_name == "aac":
-                if a_profile == "LC":
-                    codec_string += ",mp4a.40.2"
-                else:  # aac HE
-                    codec_string += ",mp4a.40.5"
-            else:  # mp3
-                codec_string += ",mp4a.69"
-        return codec_string
-
     def render(self, track):
         """Render M3U8 file."""
         # Need to calculate max bandwidth as input_container.bit_rate doesn't seem to work
@@ -66,9 +36,10 @@ class HlsMasterPlaylistView(StreamView):
         bandwidth = round(
             segment.segment.seek(0, io.SEEK_END) * 8 / segment.duration * 3
         )
+        codecs = get_codec_string(segment.segment)
         lines = [
             "#EXTM3U",
-            f'#EXT-X-STREAM-INF:BANDWIDTH={bandwidth},CODECS="{self.codec_string(track)}"',
+            f'#EXT-X-STREAM-INF:BANDWIDTH={bandwidth},CODECS="{codecs}"',
             "playlist.m3u8",
         ]
         return "\n".join(lines) + "\n"
