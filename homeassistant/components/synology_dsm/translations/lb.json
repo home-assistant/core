@@ -44,7 +44,8 @@
         "step": {
             "init": {
                 "data": {
-                    "scan_interval": "Minutte t\u00ebscht Scannen"
+                    "scan_interval": "Minutte t\u00ebscht Scannen",
+                    "timeout": "Z\u00e4itiwwerscheidung (sekonnen)"
                 }
             }
         }
