@@ -1,0 +1,50 @@
+{
+  "title": "Adaptive Lighting",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Choose a name for the Adaptive Lighting",
+        "description": "Every instance can contain multiple lights!",
+        "data": {
+          "name": "Name"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "This name is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Adaptive Lighting options",
+        "description": "All settings for a Adaptive Lighting component. The option names correspond with the YAML settings. No options are shown if you have this entry defined in YAML.",
+        "data": {
+          "lights": "lights",
+          "disable_brightness_adjust": "disable_brightness_adjust",
+          "disable_entity": "disable_entity",
+          "disable_state": "disable_state",
+          "initial_transition": "initial_transition, the transition of the lights when turning them on or when 'disable_state' or 'sleep_state' change",
+          "interval": "interval",
+          "max_brightness": "max_brightness",
+          "max_color_temp": "max_color_temp",
+          "min_brightness": "min_brightness",
+          "min_color_temp": "min_color_temp",
+          "only_once": "only_once",
+          "sleep_brightness": "sleep_brightness",
+          "sleep_color_temp": "sleep_color_temp",
+          "sleep_entity": "sleep_entity",
+          "sleep_state": "sleep_state",
+          "sunrise_offset": "sunrise_offset",
+          "sunrise_time": "sunrise_time",
+          "sunset_offset": "sunset_offset",
+          "sunset_time": "sunset_time",
+          "transition": "transition"
+        }
+      }
+    },
+    "error": {
+      "option_error": "Invalid option"
+    }
+  }
+}

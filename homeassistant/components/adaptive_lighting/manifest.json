@@ -1,0 +1,9 @@
+{
+  "domain": "adaptive_lighting",
+  "name": "Adaptive Lighting",
+  "documentation": "https://github.com/basnijholt/adaptive_lighting",
+  "config_flow": true,
+  "dependencies": [],
+  "codeowners": ["@claytonjn", "@basnijholt"],
+  "requirements": []
+}
