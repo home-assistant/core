@@ -77,7 +77,7 @@ class PushBulletNotificationSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format("Pushbullet", self._element)
+        return f"Pushbullet {self._element}"
 
     @property
     def state(self):

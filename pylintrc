@@ -2,11 +2,14 @@
 ignore=tests
 # Use a conservative default here; 2 should speed up most setups and not hurt
 # any too bad. Override on command line as appropriate.
-jobs=2
+# Disabled for now: https://github.com/PyCQA/pylint/issues/3584
+#jobs=2
+load-plugins=pylint_strict_informational
 persistent=no
+extension-pkg-whitelist=ciso8601,cv2
 
 [BASIC]
-good-names=id,i,j,k,ex,Run,_,fp
+good-names=id,i,j,k,ex,Run,_,fp,T,ev
 
 [MESSAGES CONTROL]
 # Reasons disabled:
@@ -16,14 +19,10 @@ good-names=id,i,j,k,ex,Run,_,fp
 # cyclic-import - doesn't test if both import on load
 # abstract-class-little-used - prevents from setting right foundation
 # unused-argument - generic callbacks and setup methods create a lot of warnings
-# global-statement - used for the on-demand requirement installation
-# redefined-variable-type - this is Python, we're duck typing!
 # too-many-* - are not enforced for the sake of readability
 # too-few-* - same as too-many-*
 # abstract-method - with intro of async there are always methods missing
 # inconsistent-return-statements - doesn't handle raise
-# unnecessary-pass - readability for functions which only contain pass
-# import-outside-toplevel - TODO
 # too-many-ancestors - it's too strict.
 # wrong-import-order - isort guards this
 disable=
@@ -32,12 +31,9 @@ disable=
   abstract-method,
   cyclic-import,
   duplicate-code,
-  global-statement,
-  import-outside-toplevel,
   inconsistent-return-statements,
   locally-disabled,
   not-context-manager,
-  redefined-variable-type,
   too-few-public-methods,
   too-many-ancestors,
   too-many-arguments,
@@ -49,9 +45,9 @@ disable=
   too-many-return-statements,
   too-many-statements,
   too-many-boolean-expressions,
-  unnecessary-pass,
   unused-argument,
   wrong-import-order
+# enable useless-suppression temporarily every now and then to clean them up
 enable=
   use-symbolic-message-instead
 

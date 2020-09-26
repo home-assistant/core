@@ -1,0 +1,22 @@
+{
+  "title": "Atag",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to the device",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "email": "Email (Optional)",
+          "port": "[%key:common::config_flow::data::port%]"
+        }
+      }
+    },
+    "error": {
+      "unauthorized": "Pairing denied, check device for auth request",
+      "connection_error": "Failed to connect, please try again"
+    },
+    "abort": {
+      "already_configured": "This device has already been added to HomeAssistant"
+    }
+  }
+}

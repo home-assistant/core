@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "missing_configuration": "Home Connecz Komponent ass nach net konfigur\u00e9iert. Folleg w.e.g der Dokumentatioun.",
+            "no_url_available": "Keng URL disponibel. Fir Informatiounen iwwert d\u00ebse Feeler, [kuck H\u00ebllef Sektioun]({docs_url})"
+        },
+        "create_entry": {
+            "default": "Erfollegr\u00e4ich mat Home Connect authentifiz\u00e9iert."
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Wiel Authentifikatiouns Method aus"
+            }
+        }
+    }
+}

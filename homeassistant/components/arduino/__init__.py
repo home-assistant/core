@@ -14,8 +14,6 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-BOARD = None
-
 DOMAIN = "arduino"
 
 CONFIG_SCHEMA = vol.Schema(
@@ -25,18 +23,23 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up the Arduino component."""
+    _LOGGER.warning(
+        "The %s integration has been deprecated. Please move your "
+        "configuration to the firmata integration. "
+        "https://www.home-assistant.io/integrations/firmata",
+        DOMAIN,
+    )
 
     port = config[DOMAIN][CONF_PORT]
 
-    global BOARD
     try:
-        BOARD = ArduinoBoard(port)
+        board = ArduinoBoard(port)
     except (serial.serialutil.SerialException, FileNotFoundError):
         _LOGGER.error("Your port %s is not accessible", port)
         return False
 
     try:
-        if BOARD.get_firmata()[1] <= 2:
+        if board.get_firmata()[1] <= 2:
             _LOGGER.error("The StandardFirmata sketch should be 2.2 or newer")
             return False
     except IndexError:
@@ -47,13 +50,14 @@ def setup(hass, config):
 
     def stop_arduino(event):
         """Stop the Arduino service."""
-        BOARD.disconnect()
+        board.disconnect()
 
     def start_arduino(event):
         """Start the Arduino service."""
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_arduino)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_arduino)
+    hass.data[DOMAIN] = board
 
     return True
 

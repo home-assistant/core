@@ -34,16 +34,25 @@ class HassAqualinkSensor(AqualinkEntity):
         return self.dev.label
 
     @property
-    def unit_of_measurement(self) -> str:
+    def unit_of_measurement(self) -> Optional[str]:
         """Return the measurement unit for the sensor."""
-        if self.dev.system.temp_unit == "F":
-            return TEMP_FAHRENHEIT
-        return TEMP_CELSIUS
+        if self.dev.name.endswith("_temp"):
+            if self.dev.system.temp_unit == "F":
+                return TEMP_FAHRENHEIT
+            return TEMP_CELSIUS
+        return None
 
     @property
-    def state(self) -> str:
+    def state(self) -> Optional[str]:
         """Return the state of the sensor."""
-        return int(self.dev.state) if self.dev.state != "" else None
+        if self.dev.state == "":
+            return None
+
+        try:
+            state = int(self.dev.state)
+        except ValueError:
+            state = float(self.dev.state)
+        return state
 
     @property
     def device_class(self) -> Optional[str]:

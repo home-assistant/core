@@ -5,16 +5,15 @@ from aiohttp import web
 import voluptuous as vol
 
 from homeassistant import util
-from homeassistant.components.http import real_ip
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.deprecation import get_deprecated
 from homeassistant.util.json import load_json, save_json
 
 from .hue_api import (
     HueAllGroupsStateView,
     HueAllLightsStateView,
+    HueConfigView,
     HueFullStateView,
     HueGroupView,
     HueOneLightChangeView,
@@ -22,7 +21,7 @@ from .hue_api import (
     HueUnauthorizedUser,
     HueUsernameView,
 )
-from .upnp import DescriptionXmlView, UPNPResponderThread
+from .upnp import DescriptionXmlView, create_upnp_datagram_endpoint
 
 DOMAIN = "emulated_hue"
 
@@ -38,6 +37,7 @@ CONF_ENTITY_NAME = "name"
 CONF_EXPOSE_BY_DEFAULT = "expose_by_default"
 CONF_EXPOSED_DOMAINS = "exposed_domains"
 CONF_HOST_IP = "host_ip"
+CONF_LIGHTS_ALL_DIMMABLE = "lights_all_dimmable"
 CONF_LISTEN_PORT = "listen_port"
 CONF_OFF_MAPS_TO_ON_DOMAINS = "off_maps_to_on_domains"
 CONF_TYPE = "type"
@@ -46,6 +46,7 @@ CONF_UPNP_BIND_MULTICAST = "upnp_bind_multicast"
 TYPE_ALEXA = "alexa"
 TYPE_GOOGLE = "google_home"
 
+DEFAULT_LIGHTS_ALL_DIMMABLE = False
 DEFAULT_LISTEN_PORT = 8300
 DEFAULT_UPNP_BIND_MULTICAST = True
 DEFAULT_OFF_MAPS_TO_ON_DOMAINS = ["script", "scene"]
@@ -85,15 +86,16 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_ENTITIES): vol.Schema(
                     {cv.entity_id: CONFIG_ENTITY_SCHEMA}
                 ),
+                vol.Optional(
+                    CONF_LIGHTS_ALL_DIMMABLE, default=DEFAULT_LIGHTS_ALL_DIMMABLE
+                ): cv.boolean,
             }
         )
     },
     extra=vol.ALLOW_EXTRA,
 )
 
-ATTR_EMULATED_HUE = "emulated_hue"
 ATTR_EMULATED_HUE_NAME = "emulated_hue_name"
-ATTR_EMULATED_HUE_HIDDEN = "emulated_hue_hidden"
 
 
 async def async_setup(hass, yaml_config):
@@ -103,7 +105,6 @@ async def async_setup(hass, yaml_config):
     app = web.Application()
     app["hass"] = hass
 
-    real_ip.setup_real_ip(app, False, [])
     # We misunderstood the startup signal. You're not allowed to change
     # anything during startup. Temp workaround.
     # pylint: disable=protected-access
@@ -115,6 +116,7 @@ async def async_setup(hass, yaml_config):
 
     DescriptionXmlView(config).register(app, app.router)
     HueUsernameView().register(app, app.router)
+    HueConfigView(config).register(app, app.router)
     HueUnauthorizedUser().register(app, app.router)
     HueAllLightsStateView(config).register(app, app.router)
     HueOneLightStateView(config).register(app, app.router)
@@ -123,17 +125,22 @@ async def async_setup(hass, yaml_config):
     HueGroupView(config).register(app, app.router)
     HueFullStateView(config).register(app, app.router)
 
-    upnp_listener = UPNPResponderThread(
+    listen = create_upnp_datagram_endpoint(
         config.host_ip_addr,
-        config.listen_port,
         config.upnp_bind_multicast,
         config.advertise_ip,
-        config.advertise_port,
+        config.advertise_port or config.listen_port,
     )
+    protocol = None
 
     async def stop_emulated_hue_bridge(event):
         """Stop the emulated hue bridge."""
-        upnp_listener.stop()
+        nonlocal protocol
+        nonlocal site
+        nonlocal runner
+
+        if protocol:
+            protocol.close()
         if site:
             await site.stop()
         if runner:
@@ -141,9 +148,11 @@ async def async_setup(hass, yaml_config):
 
     async def start_emulated_hue_bridge(event):
         """Start the emulated hue bridge."""
-        upnp_listener.start()
+        nonlocal protocol
         nonlocal site
         nonlocal runner
+
+        _, protocol = await listen
 
         runner = web.AppRunner(app)
         await runner.setup()
@@ -156,6 +165,8 @@ async def async_setup(hass, yaml_config):
             _LOGGER.error(
                 "Failed to create HTTP server at port %d: %s", config.listen_port, error
             )
+            if protocol:
+                protocol.close()
         else:
             hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_STOP, stop_emulated_hue_bridge
@@ -175,6 +186,7 @@ class Config:
         self.type = conf.get(CONF_TYPE)
         self.numbers = None
         self.cached_states = {}
+        self._exposed_cache = {}
 
         if self.type == TYPE_ALEXA:
             _LOGGER.warning(
@@ -220,7 +232,9 @@ class Config:
 
         # Get domains that are exposed by default when expose_by_default is
         # True
-        self.exposed_domains = conf.get(CONF_EXPOSED_DOMAINS, DEFAULT_EXPOSED_DOMAINS)
+        self.exposed_domains = set(
+            conf.get(CONF_EXPOSED_DOMAINS, DEFAULT_EXPOSED_DOMAINS)
+        )
 
         # Calculated effective advertised IP and port for network isolation
         self.advertise_ip = conf.get(CONF_ADVERTISE_IP) or self.host_ip_addr
@@ -228,6 +242,16 @@ class Config:
         self.advertise_port = conf.get(CONF_ADVERTISE_PORT) or self.listen_port
 
         self.entities = conf.get(CONF_ENTITIES, {})
+
+        self._entities_with_hidden_attr_in_config = {}
+        for entity_id in self.entities:
+            hidden_value = self.entities[entity_id].get(CONF_ENTITY_HIDDEN)
+            if hidden_value is not None:
+                self._entities_with_hidden_attr_in_config[entity_id] = hidden_value
+
+        # Get whether all non-dimmable lights should be reported as dimmable
+        # for compatibility with older installations.
+        self.lights_all_dimmable = conf.get(CONF_LIGHTS_ALL_DIMMABLE)
 
     def entity_id_to_number(self, entity_id):
         """Get a unique number for the entity id."""
@@ -272,6 +296,24 @@ class Config:
         return entity.attributes.get(ATTR_EMULATED_HUE_NAME, entity.name)
 
     def is_entity_exposed(self, entity):
+        """Cache determine if an entity should be exposed on the emulated bridge."""
+        entity_id = entity.entity_id
+        if entity_id not in self._exposed_cache:
+            self._exposed_cache[entity_id] = self._is_entity_exposed(entity)
+        return self._exposed_cache[entity_id]
+
+    def filter_exposed_entities(self, states):
+        """Filter a list of all states down to exposed entities."""
+        exposed = []
+        for entity in states:
+            entity_id = entity.entity_id
+            if entity_id not in self._exposed_cache:
+                self._exposed_cache[entity_id] = self._is_entity_exposed(entity)
+            if self._exposed_cache[entity_id]:
+                exposed.append(entity)
+        return exposed
+
+    def _is_entity_exposed(self, entity):
         """Determine if an entity should be exposed on the emulated bridge.
 
         Async friendly.
@@ -280,35 +322,18 @@ class Config:
             # Ignore entities that are views
             return False
 
-        domain = entity.domain.lower()
-        explicit_expose = entity.attributes.get(ATTR_EMULATED_HUE, None)
-        explicit_hidden = entity.attributes.get(ATTR_EMULATED_HUE_HIDDEN, None)
+        if entity.entity_id in self._entities_with_hidden_attr_in_config:
+            return not self._entities_with_hidden_attr_in_config[entity.entity_id]
 
-        if (
-            entity.entity_id in self.entities
-            and CONF_ENTITY_HIDDEN in self.entities[entity.entity_id]
-        ):
-            explicit_hidden = self.entities[entity.entity_id][CONF_ENTITY_HIDDEN]
-
-        if explicit_expose is True or explicit_hidden is False:
-            expose = True
-        elif explicit_expose is False or explicit_hidden is True:
-            expose = False
-        else:
-            expose = None
-        get_deprecated(
-            entity.attributes, ATTR_EMULATED_HUE_HIDDEN, ATTR_EMULATED_HUE, None
-        )
-        domain_exposed_by_default = (
-            self.expose_by_default and domain in self.exposed_domains
-        )
-
+        if not self.expose_by_default:
+            return False
         # Expose an entity if the entity's domain is exposed by default and
         # the configuration doesn't explicitly exclude it from being
         # exposed, or if the entity is explicitly exposed
-        is_default_exposed = domain_exposed_by_default and expose is not False
+        if entity.domain in self.exposed_domains:
+            return True
 
-        return is_default_exposed or expose
+        return False
 
 
 def _load_json(filename):

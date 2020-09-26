@@ -1,23 +1,41 @@
 """Support for Canary sensors."""
+from typing import Callable, List
+
 from canary.api import SensorType
 
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_SIGNAL_STRENGTH,
+    DEVICE_CLASS_TEMPERATURE,
+    PERCENTAGE,
+    TEMP_CELSIUS,
+)
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.icon import icon_for_battery_level
+from homeassistant.helpers.typing import HomeAssistantType
 
-from . import DATA_CANARY
+from . import CanaryData
+from .const import DATA_CANARY, DOMAIN, MANUFACTURER
 
 SENSOR_VALUE_PRECISION = 2
 ATTR_AIR_QUALITY = "air_quality"
 
+# Define variables to store the device names, as referred to by the Canary API.
+# Note: If Canary change the name of any of their devices (which they have done),
+# then these variables will need updating, otherwise the sensors will stop working
+# and disappear in Home Assistant.
+CANARY_PRO = "Canary Pro"
+CANARY_FLEX = "Canary Flex"
+
 # Sensor types are defined like so:
-# sensor type name, unit_of_measurement, icon
+# sensor type name, unit_of_measurement, icon, device class, products supported
 SENSOR_TYPES = [
-    ["temperature", TEMP_CELSIUS, "mdi:thermometer", ["Canary"]],
-    ["humidity", "%", "mdi:water-percent", ["Canary"]],
-    ["air_quality", None, "mdi:weather-windy", ["Canary"]],
-    ["wifi", "dBm", "mdi:wifi", ["Canary Flex"]],
-    ["battery", "%", "mdi:battery-50", ["Canary Flex"]],
+    ["temperature", TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE, [CANARY_PRO]],
+    ["humidity", PERCENTAGE, None, DEVICE_CLASS_HUMIDITY, [CANARY_PRO]],
+    ["air_quality", None, "mdi:weather-windy", None, [CANARY_PRO]],
+    ["wifi", "dBm", None, DEVICE_CLASS_SIGNAL_STRENGTH, [CANARY_FLEX]],
+    ["battery", PERCENTAGE, None, DEVICE_CLASS_BATTERY, [CANARY_FLEX]],
 ]
 
 STATE_AIR_QUALITY_NORMAL = "normal"
@@ -25,22 +43,26 @@ STATE_AIR_QUALITY_ABNORMAL = "abnormal"
 STATE_AIR_QUALITY_VERY_ABNORMAL = "very_abnormal"
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Canary sensors."""
-    data = hass.data[DATA_CANARY]
-    devices = []
+async def async_setup_entry(
+    hass: HomeAssistantType,
+    entry: ConfigEntry,
+    async_add_entities: Callable[[List[Entity], bool], None],
+) -> None:
+    """Set up Canary sensors based on a config entry."""
+    data: CanaryData = hass.data[DOMAIN][entry.entry_id][DATA_CANARY]
+    sensors = []
 
     for location in data.locations:
         for device in location.devices:
             if device.is_online:
                 device_type = device.device_type
                 for sensor_type in SENSOR_TYPES:
-                    if device_type.get("name") in sensor_type[3]:
-                        devices.append(
+                    if device_type.get("name") in sensor_type[4]:
+                        sensors.append(
                             CanarySensor(data, sensor_type, location, device)
                         )
 
-    add_entities(devices, True)
+    async_add_entities(sensors, True)
 
 
 class CanarySensor(Entity):
@@ -51,6 +73,8 @@ class CanarySensor(Entity):
         self._data = data
         self._sensor_type = sensor_type
         self._device_id = device.device_id
+        self._device_name = device.name
+        self._device_type_name = device.device_type["name"]
         self._sensor_value = None
 
         sensor_type_name = sensor_type[0].replace("_", " ").title()
@@ -69,7 +93,17 @@ class CanarySensor(Entity):
     @property
     def unique_id(self):
         """Return the unique ID of this sensor."""
-        return "{}_{}".format(self._device_id, self._sensor_type[0])
+        return f"{self._device_id}_{self._sensor_type[0]}"
+
+    @property
+    def device_info(self):
+        """Return the device_info of the device."""
+        return {
+            "identifiers": {(DOMAIN, str(self._device_id))},
+            "name": self._device_name,
+            "model": self._device_type_name,
+            "manufacturer": MANUFACTURER,
+        }
 
     @property
     def unit_of_measurement(self):
@@ -77,11 +111,13 @@ class CanarySensor(Entity):
         return self._sensor_type[1]
 
     @property
+    def device_class(self):
+        """Device class for the sensor."""
+        return self._sensor_type[3]
+
+    @property
     def icon(self):
         """Icon for the sensor."""
-        if self.state is not None and self._sensor_type[0] == "battery":
-            return icon_for_battery_level(battery_level=self.state)
-
         return self._sensor_type[2]
 
     @property

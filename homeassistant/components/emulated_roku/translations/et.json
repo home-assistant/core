@@ -1,0 +1,14 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "host_ip": "",
+                    "name": "Nimi",
+                    "upnp_bind_multicast": "Seo multicast (jah/ei)"
+                }
+            }
+        }
+    },
+    "title": ""
+}

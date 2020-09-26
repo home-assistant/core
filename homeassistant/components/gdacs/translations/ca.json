@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "La ubicaci\u00f3 ja est\u00e0 configurada."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "radius": "Radi"
+                },
+                "title": "Introducci\u00f3 dels detalls del filtre."
+            }
+        }
+    }
+}

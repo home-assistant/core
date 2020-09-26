@@ -1,0 +1,28 @@
+{
+   "id" : "5",
+   "mobileDevices" : [
+      {
+         "name" : "nick Android",
+         "deviceMetadata" : {
+            "platform" : "Android",
+            "locale" : "en",
+            "osVersion" : "10",
+            "model" : "OnePlus_GM1917"
+         },
+         "settings" : {
+            "geoTrackingEnabled" : false
+         },
+         "id" : 1
+      }
+   ],
+   "homes" : [
+      {
+         "name" : "home name",
+         "id" : 1
+      }
+   ],
+   "name" : "name",
+   "locale" : "en_US",
+   "email" : "user@domain.tld",
+   "username" : "user@domain.tld"
+}

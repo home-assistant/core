@@ -3,9 +3,6 @@ Support for the LIFX platform that implements lights.
 
 This is a legacy platform, included because the current lifx platform does
 not yet support Windows.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.lifx/
 """
 import logging
 
@@ -22,7 +19,7 @@ from homeassistant.components.light import (
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
     SUPPORT_TRANSITION,
-    Light,
+    LightEntity,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_time_change
@@ -140,7 +137,7 @@ class LIFX:
         self._liffylights.probe(address)
 
 
-class LIFXLight(Light):
+class LIFXLight(LightEntity):
     """Representation of a LIFX light."""
 
     def __init__(self, liffy, ipaddr, name, power, hue, saturation, brightness, kelvin):

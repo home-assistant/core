@@ -1,0 +1,7 @@
+{
+    "config": {
+        "abort": {
+            "address_exists": "Adres zaten kurulmu\u015f."
+        }
+    }
+}

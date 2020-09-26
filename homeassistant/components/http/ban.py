@@ -3,6 +3,7 @@ from collections import defaultdict
 from datetime import datetime
 from ipaddress import ip_address
 import logging
+from socket import gethostbyaddr, herror
 from typing import List, Optional
 
 from aiohttp.web import middleware
@@ -10,12 +11,11 @@ from aiohttp.web_exceptions import HTTPForbidden, HTTPUnauthorized
 import voluptuous as vol
 
 from homeassistant.config import load_yaml_config_file
+from homeassistant.const import HTTP_BAD_REQUEST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.yaml import dump
-
-from .const import KEY_REAL_IP
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -60,7 +60,7 @@ async def ban_middleware(request, handler):
         return await handler(request)
 
     # Verify if IP is not banned
-    ip_address_ = request[KEY_REAL_IP]
+    ip_address_ = ip_address(request.remote)
     is_banned = any(
         ip_ban.ip_address == ip_address_ for ip_ban in request.app[KEY_BANNED_IPS]
     )
@@ -81,7 +81,7 @@ def log_invalid_auth(func):
     async def handle_req(view, request, *args, **kwargs):
         """Try to log failed login attempts if response status >= 400."""
         resp = await func(view, request, *args, **kwargs)
-        if resp.status >= 400:
+        if resp.status >= HTTP_BAD_REQUEST:
             await process_wrong_login(request)
         return resp
 
@@ -94,14 +94,25 @@ async def process_wrong_login(request):
     Increase failed login attempts counter for remote IP address.
     Add ip ban entry if failed login attempts exceeds threshold.
     """
-    remote_addr = request[KEY_REAL_IP]
+    hass = request.app["hass"]
 
-    msg = "Login attempt or request with invalid authentication " "from {}".format(
-        remote_addr
-    )
+    remote_addr = ip_address(request.remote)
+    remote_host = request.remote
+    try:
+        remote_host, _, _ = await hass.async_add_executor_job(
+            gethostbyaddr, request.remote
+        )
+    except herror:
+        pass
+
+    msg = f"Login attempt or request with invalid authentication from {remote_host} ({remote_addr})"
+
+    user_agent = request.headers.get("user-agent")
+    if user_agent:
+        msg = f"{msg} ({user_agent})"
+
     _LOGGER.warning(msg)
 
-    hass = request.app["hass"]
     hass.components.persistent_notification.async_create(
         msg, "Login attempt failed", NOTIFICATION_ID_LOGIN
     )
@@ -111,6 +122,13 @@ async def process_wrong_login(request):
         return
 
     request.app[KEY_FAILED_LOGIN_ATTEMPTS][remote_addr] += 1
+
+    # Supervisor IP should never be banned
+    if (
+        "hassio" in hass.config.components
+        and hass.components.hassio.get_supervisor_ip() == str(remote_addr)
+    ):
+        return
 
     if (
         request.app[KEY_FAILED_LOGIN_ATTEMPTS][remote_addr]
@@ -139,7 +157,7 @@ async def process_success_login(request):
     No release IP address from banned list function, it can only be done by
     manual modify ip bans config file.
     """
-    remote_addr = request[KEY_REAL_IP]
+    remote_addr = ip_address(request.remote)
 
     # Check if ban middleware is loaded
     if KEY_BANNED_IPS not in request.app or request.app[KEY_LOGIN_THRESHOLD] < 1:
@@ -150,7 +168,7 @@ async def process_success_login(request):
         and request.app[KEY_FAILED_LOGIN_ATTEMPTS][remote_addr] > 0
     ):
         _LOGGER.debug(
-            "Login success, reset failed login attempts counter" " from %s", remote_addr
+            "Login success, reset failed login attempts counter from %s", remote_addr
         )
         request.app[KEY_FAILED_LOGIN_ATTEMPTS].pop(remote_addr)
 

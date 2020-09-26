@@ -2,7 +2,6 @@
 import asyncio
 import os
 import shutil
-from unittest.mock import patch
 
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_ID,
@@ -10,8 +9,10 @@ from homeassistant.components.media_player.const import (
     SERVICE_PLAY_MEDIA,
 )
 import homeassistant.components.tts as tts
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.setup import setup_component
 
+from tests.async_mock import patch
 from tests.common import assert_setup_component, get_test_home_assistant, mock_service
 from tests.components.tts.test_init import mutagen_mock  # noqa: F401
 
@@ -22,6 +23,13 @@ class TestTTSGooglePlatform:
     def setup_method(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+
+        asyncio.run_coroutine_threadsafe(
+            async_process_ha_core_config(
+                self.hass, {"internal_url": "http://example.local:8123"}
+            ),
+            self.hass.loop,
+        )
 
         self.url = "https://translate.google.com/translate_tts"
         self.url_param = {
@@ -65,7 +73,10 @@ class TestTTSGooglePlatform:
         self.hass.services.call(
             tts.DOMAIN,
             "google_translate_say",
-            {tts.ATTR_MESSAGE: "90% of I person is on front of your door."},
+            {
+                "entity_id": "media_player.something",
+                tts.ATTR_MESSAGE: "90% of I person is on front of your door.",
+            },
         )
         self.hass.block_till_done()
 
@@ -89,7 +100,10 @@ class TestTTSGooglePlatform:
         self.hass.services.call(
             tts.DOMAIN,
             "google_translate_say",
-            {tts.ATTR_MESSAGE: "90% of I person is on front of your door."},
+            {
+                "entity_id": "media_player.something",
+                tts.ATTR_MESSAGE: "90% of I person is on front of your door.",
+            },
         )
         self.hass.block_till_done()
 
@@ -115,6 +129,7 @@ class TestTTSGooglePlatform:
             tts.DOMAIN,
             "google_say",
             {
+                "entity_id": "media_player.something",
                 tts.ATTR_MESSAGE: "90% of I person is on front of your door.",
                 tts.ATTR_LANGUAGE: "de",
             },
@@ -139,7 +154,10 @@ class TestTTSGooglePlatform:
         self.hass.services.call(
             tts.DOMAIN,
             "google_translate_say",
-            {tts.ATTR_MESSAGE: "90% of I person is on front of your door."},
+            {
+                "entity_id": "media_player.something",
+                tts.ATTR_MESSAGE: "90% of I person is on front of your door.",
+            },
         )
         self.hass.block_till_done()
 
@@ -161,7 +179,10 @@ class TestTTSGooglePlatform:
         self.hass.services.call(
             tts.DOMAIN,
             "google_translate_say",
-            {tts.ATTR_MESSAGE: "90% of I person is on front of your door."},
+            {
+                "entity_id": "media_player.something",
+                tts.ATTR_MESSAGE: "90% of I person is on front of your door.",
+            },
         )
         self.hass.block_till_done()
 
@@ -176,7 +197,7 @@ class TestTTSGooglePlatform:
         self.url_param["total"] = 9
         self.url_param["q"] = "I%20person%20is%20on%20front%20of%20your%20door"
         self.url_param["textlen"] = 33
-        for idx in range(0, 9):
+        for idx in range(9):
             self.url_param["idx"] = idx
             aioclient_mock.get(
                 self.url, params=self.url_param, status=200, content=b"test"
@@ -193,6 +214,7 @@ class TestTTSGooglePlatform:
             tts.DOMAIN,
             "google_say",
             {
+                "entity_id": "media_player.something",
                 tts.ATTR_MESSAGE: (
                     "I person is on front of your door."
                     "I person is on front of your door."
@@ -203,7 +225,7 @@ class TestTTSGooglePlatform:
                     "I person is on front of your door."
                     "I person is on front of your door."
                     "I person is on front of your door."
-                )
+                ),
             },
         )
         self.hass.block_till_done()

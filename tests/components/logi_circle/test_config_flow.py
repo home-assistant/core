@@ -13,6 +13,7 @@ from homeassistant.components.logi_circle.config_flow import (
 )
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import AsyncMock
 from tests.common import mock_coro
 
 
@@ -51,8 +52,8 @@ def mock_logi_circle():
         "homeassistant.components.logi_circle.config_flow.LogiCircle"
     ) as logi_circle:
         LogiCircle = logi_circle()
-        LogiCircle.authorize = Mock(return_value=mock_coro(return_value=True))
-        LogiCircle.close = Mock(return_value=mock_coro(return_value=True))
+        LogiCircle.authorize = AsyncMock(return_value=True)
+        LogiCircle.close = AsyncMock(return_value=True)
         LogiCircle.account = mock_coro(return_value={"accountId": "testId"})
         LogiCircle.authorize_url = "http://authorize.url"
         yield LogiCircle

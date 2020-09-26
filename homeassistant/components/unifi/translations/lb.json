@@ -1,0 +1,64 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Kontroller Site ass scho konfigur\u00e9iert"
+        },
+        "error": {
+            "faulty_credentials": "Ong\u00eblteg Authentifikatioun",
+            "service_unavailable": "Feeler beim verbannen",
+            "unknown_client_mac": "Kee Cliwent mat der MAC Adress disponibel"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Passwuert",
+                    "port": "Port",
+                    "site": "Site ID",
+                    "username": "Benotzer",
+                    "verify_ssl": "Kontroller benotzt g\u00ebltegen Zertifikat"
+                },
+                "title": "Unifi Kontroller ariichten"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "client_control": {
+                "data": {
+                    "block_client": "Netzwierk Zougang kontroll\u00e9iert Clienten",
+                    "poe_clients": "POE Kontroll vun Clienten erlaben"
+                },
+                "description": "Client Kontroll konfigur\u00e9ieren\n\nErstell Schalter fir Serienummer d\u00e9i sollen fir Netzwierk Zougangs Kontroll kontroll\u00e9iert ginn.",
+                "title": "UniFi Optiounen 2/3"
+            },
+            "device_tracker": {
+                "data": {
+                    "detection_time": "Z\u00e4it a Sekonne vum leschten Z\u00e4itpunkt un bis den Apparat als \u00ebnnerwee consider\u00e9iert g\u00ebtt",
+                    "ignore_wired_bug": "UniFi wired bug log ausschalten",
+                    "ssid_filter": "SSIDs auswielen fir Clienten ze verfollegen",
+                    "track_clients": "Netzwierk Cliente verfollegen",
+                    "track_devices": "Netzwierk Apparater (Ubiquiti Apparater) verfollegen",
+                    "track_wired_clients": "Kabel Netzwierk Cliente abez\u00e9ien"
+                },
+                "description": "Apparate verfollegen ariichten",
+                "title": "UniFi Optiounen 1/3"
+            },
+            "simple_options": {
+                "data": {
+                    "track_clients": "Reseau Cliente verfollegen",
+                    "track_devices": "Reseau Apparater verfollege (Ubiquiti Apparater)"
+                },
+                "description": "UniFi Integratioun ariichten"
+            },
+            "statistics_sensors": {
+                "data": {
+                    "allow_bandwidth_sensors": "Bandbreet Benotzung Sensore fir Netzwierk Cliente",
+                    "allow_uptime_sensors": "Uptime Sensoren fir Netzwierkklienten"
+                },
+                "description": "Statistik Sensoren konfigur\u00e9ieren",
+                "title": "UniFi Optiounen 3/3"
+            }
+        }
+    }
+}

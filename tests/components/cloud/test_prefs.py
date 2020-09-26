@@ -1,8 +1,8 @@
 """Test Cloud preferences."""
-from unittest.mock import patch
-
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components.cloud.prefs import STORAGE_KEY, CloudPreferences
+
+from tests.async_mock import patch
 
 
 async def test_set_username(hass):

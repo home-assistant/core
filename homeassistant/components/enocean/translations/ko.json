@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "invalid_dongle_path": "\ub3d9\uae00 \uacbd\ub85c\uac00 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "single_instance_allowed": "\uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4. \ud558\ub098\uc758 \uad6c\uc131\ub9cc \uac00\ub2a5\ud569\ub2c8\ub2e4."
+        },
+        "error": {
+            "invalid_dongle_path": "\uc774 \uacbd\ub85c\uc5d0 \uc720\ud6a8\ud55c \ub3d9\uae00\uc774 \uc5c6\uc2b5\ub2c8\ub2e4"
+        },
+        "flow_title": "ENOcean \uc124\uc815\ud558\uae30",
+        "step": {
+            "detect": {
+                "data": {
+                    "path": "USB \ub3d9\uae00 \uacbd\ub85c"
+                },
+                "title": "ENOcean \ub3d9\uae00 \uacbd\ub85c \uc120\ud0dd\ud558\uae30"
+            },
+            "manual": {
+                "data": {
+                    "path": "USB \ub3d9\uae00 \uacbd\ub85c"
+                },
+                "title": "ENOcean \ub3d9\uae00 \uacbd\ub85c \uc785\ub825\ud558\uae30"
+            }
+        }
+    },
+    "title": "EnOcean"
+}

@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account already configured"
+        },
+        "error": {
+            "login": "Login error: please check your username & password"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "title": "Total Connect"
+            }
+        }
+    }
+}

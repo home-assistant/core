@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "port_exists": "\u6b64\u901a\u8a0a\u57e0\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
+        "error": {
+            "connection_failed": "Velbus \u9023\u7dda\u5931\u6557",
+            "port_exists": "\u6b64\u901a\u8a0a\u57e0\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Velbus \u9023\u7dda\u540d\u7a31",
+                    "port": "\u9023\u7dda\u5b57\u4e32"
+                },
+                "title": "\u5b9a\u7fa9 Velbus \u9023\u7dda\u985e\u578b"
+            }
+        }
+    }
+}

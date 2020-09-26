@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
+    HTTP_SERVICE_UNAVAILABLE,
 )
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
@@ -75,7 +76,7 @@ DEVICE_SERIAL_SCHEMA = vol.Schema({vol.Required(ATTR_DEVICE_SERIAL): cv.string})
 
 def setup(hass, config):
     """Set up the Verisure component."""
-    global HUB
+    global HUB  # pylint: disable=global-statement
     HUB = VerisureHub(config[DOMAIN])
     HUB.update_overview = Throttle(config[DOMAIN][CONF_SCAN_INTERVAL])(
         HUB.update_overview
@@ -189,7 +190,7 @@ class VerisureHub:
             self.overview = self.session.get_overview()
         except verisure.ResponseError as ex:
             _LOGGER.error("Could not read overview, %s", ex)
-            if ex.status_code == 503:  # Service unavailable
+            if ex.status_code == HTTP_SERVICE_UNAVAILABLE:  # Service unavailable
                 _LOGGER.info("Trying to log in again")
                 self.login()
             else:

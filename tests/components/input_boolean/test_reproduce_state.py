@@ -22,7 +22,6 @@ async def test_reproducing_states(hass):
             # Should not raise
             State("input_boolean.non_existing", "on"),
         ],
-        blocking=True,
     )
     assert hass.states.get("input_boolean.initial_off").state == "on"
     assert hass.states.get("input_boolean.initial_on").state == "off"
@@ -34,7 +33,6 @@ async def test_reproducing_states(hass):
             # Set to state it already is.
             State("input_boolean.initial_off", "on"),
         ],
-        blocking=True,
     )
 
     assert hass.states.get("input_boolean.initial_on").state == "off"

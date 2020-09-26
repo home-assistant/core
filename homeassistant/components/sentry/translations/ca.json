@@ -1,0 +1,37 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Sentry ja est\u00e0 configurat",
+            "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
+        },
+        "error": {
+            "bad_dsn": "DSN inv\u00e0lid",
+            "unknown": "Error inesperat"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "dsn": "DSN"
+                },
+                "description": "Introdueix el DSN de Sentry",
+                "title": "Sentry"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "environment": "Nom opcional de l'entorn.",
+                    "event_custom_components": "Envia esdeveniments de components personalitzats",
+                    "event_handled": "Envia esdeveniments gestionats",
+                    "event_third_party_packages": "Envia esdeveniments de tercers",
+                    "logging_event_level": "El nivell (log level) en que Sentry registrar\u00e0 un esdeveniment",
+                    "logging_level": "El nivell (log level) en que Sentry registrar\u00e0 en miques",
+                    "tracing": "Activa el seguiment de rendiment",
+                    "tracing_sample_rate": "Freq\u00fc\u00e8ncia de mostreig del rastreig; entre 0.0 i 1.0 (1.0 = 100%)"
+                }
+            }
+        }
+    }
+}

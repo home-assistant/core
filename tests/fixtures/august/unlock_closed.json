@@ -1,0 +1,26 @@
+{
+   "status" : "kAugLockState_Unlocked",
+   "resultsFromOperationCache" : false,
+   "retryCount" : 1,
+   "info" : {
+      "wlanRSSI" : -54,
+      "lockType" : "lock_version_1001",
+      "lockStatusChanged" : false,
+      "serialNumber" : "ABC",
+      "serial" : "123",
+      "action" : "lock",
+      "context" : {
+         "startDate" : "2020-02-19T01:59:39.516Z",
+         "retryCount" : 1,
+         "transactionID" : "mock"
+      },
+      "bridgeID" : "mock",
+      "wlanSNR" : 41,
+      "startTime" : "2020-02-19T01:59:39.517Z",
+      "duration" : 5149,
+      "lockID" : "ABC",
+      "rssi" : -77
+   },
+   "totalTime" : 5162,
+   "doorState" : "kAugDoorState_Closed"
+}

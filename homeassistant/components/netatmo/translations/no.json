@@ -1,0 +1,43 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_timeout": "Tidsavbrutt ved oppretting av godkjennings url.",
+            "missing_configuration": "Komponeneten er ikke konfigurert. Vennligst f\u00f8lg dokumentasjonen.",
+            "no_url_available": "Ingen URL tilgjengelig. For informasjon om denne feilen, [sjekk {docs_url} ] ( {docs_url} )",
+            "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
+        },
+        "create_entry": {
+            "default": "Vellykket godkjenning med Netatmo."
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Velg godkjenningsmetode"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "public_weather": {
+                "data": {
+                    "area_name": "Navn p\u00e5 omr\u00e5det",
+                    "lat_ne": "Breddegrad nord-\u00f8st",
+                    "lat_sw": "Breddegrad s\u00f8r-vest",
+                    "lon_ne": "Lengdegrad nord-\u00f8st",
+                    "lon_sw": "Lengdegrad s\u00f8r-vest",
+                    "mode": "Beregning",
+                    "show_on_map": "Vis p\u00e5 kart"
+                },
+                "description": "Konfigurer en offentlig v\u00e6rsensor for et omr\u00e5de.",
+                "title": "Netatmo offentlig v\u00e6rsensor"
+            },
+            "public_weather_areas": {
+                "data": {
+                    "new_area": "Omr\u00e5denavn",
+                    "weather_areas": "V\u00e6romr\u00e5der"
+                },
+                "description": "Konfigurer offentlige v\u00e6rsensorer.",
+                "title": "Netatmo offentlig v\u00e6rsensor"
+            }
+        }
+    }
+}

@@ -1,38 +1,44 @@
 """Support for Canary alarm."""
 import logging
+from typing import Callable, List
 
 from canary.api import LOCATION_MODE_AWAY, LOCATION_MODE_HOME, LOCATION_MODE_NIGHT
 
-from homeassistant.components.alarm_control_panel import AlarmControlPanel
+from homeassistant.components.alarm_control_panel import AlarmControlPanelEntity
 from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
     SUPPORT_ALARM_ARM_HOME,
     SUPPORT_ALARM_ARM_NIGHT,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_DISARMED,
 )
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import HomeAssistantType
 
-from . import DATA_CANARY
+from . import CanaryData
+from .const import DATA_CANARY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Canary alarms."""
-    data = hass.data[DATA_CANARY]
-    devices = []
+async def async_setup_entry(
+    hass: HomeAssistantType,
+    entry: ConfigEntry,
+    async_add_entities: Callable[[List[Entity], bool], None],
+) -> None:
+    """Set up Canary alarm control panels based on a config entry."""
+    data: CanaryData = hass.data[DOMAIN][entry.entry_id][DATA_CANARY]
+    alarms = [CanaryAlarm(data, location.location_id) for location in data.locations]
 
-    for location in data.locations:
-        devices.append(CanaryAlarm(data, location.location_id))
-
-    add_entities(devices, True)
+    async_add_entities(alarms, True)
 
 
-class CanaryAlarm(AlarmControlPanel):
+class CanaryAlarm(AlarmControlPanelEntity):
     """Representation of a Canary alarm control panel."""
 
     def __init__(self, data, location_id):
@@ -47,9 +53,13 @@ class CanaryAlarm(AlarmControlPanel):
         return location.name
 
     @property
+    def unique_id(self):
+        """Return the unique ID of the alarm."""
+        return str(self._location_id)
+
+    @property
     def state(self):
         """Return the state of the device."""
-
         location = self._data.get_location(self._location_id)
 
         if location.is_private:
@@ -82,15 +92,16 @@ class CanaryAlarm(AlarmControlPanel):
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
-
         self._data.set_location_mode(self._location_id, LOCATION_MODE_HOME)
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
-
         self._data.set_location_mode(self._location_id, LOCATION_MODE_AWAY)
 
     def alarm_arm_night(self, code=None):
         """Send arm night command."""
-
         self._data.set_location_mode(self._location_id, LOCATION_MODE_NIGHT)
+
+    def update(self):
+        """Get the latest state of the sensor."""
+        self._data.update()

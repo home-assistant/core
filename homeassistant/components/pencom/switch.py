@@ -1,14 +1,10 @@
-"""Pencom relay control.
-
-For more details about this component, please refer to the documentation at
-http://home-assistant.io/components/switch.pencom
-"""
+"""Pencom relay control."""
 import logging
 
 from pencompy.pencompy import Pencompy
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
@@ -51,7 +47,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         hub = Pencompy(host, port, boards=boards)
     except OSError as error:
         _LOGGER.error("Could not connect to pencompy: %s", error)
-        raise PlatformNotReady
+        raise PlatformNotReady from error
 
     # Add devices.
     devs = []
@@ -63,7 +59,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devs, True)
 
 
-class PencomRelay(SwitchDevice):
+class PencomRelay(SwitchEntity):
     """Representation of a pencom relay."""
 
     def __init__(self, hub, board, addr, name):

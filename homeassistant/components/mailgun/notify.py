@@ -25,7 +25,6 @@ _LOGGER = logging.getLogger(__name__)
 # Images to attach to notification
 ATTR_IMAGES = "images"
 
-DEFAULT_SENDER = "hass@{domain}"
 DEFAULT_SANDBOX = False
 
 # pylint: disable=no-value-for-parameter
@@ -69,7 +68,7 @@ class MailgunNotificationService(BaseNotificationService):
         _LOGGER.debug("Mailgun domain: %s", self._client.domain)
         self._domain = self._client.domain
         if not self._sender:
-            self._sender = DEFAULT_SENDER.format(domain=self._domain)
+            self._sender = f"hass@{self._domain}"
 
     def connection_is_valid(self):
         """Check whether the provided credentials are valid."""

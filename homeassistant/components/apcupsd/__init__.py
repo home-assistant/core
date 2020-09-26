@@ -11,18 +11,15 @@ from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_TYPE = "type"
-
-DATA = None
 DEFAULT_HOST = "localhost"
 DEFAULT_PORT = 3551
 DOMAIN = "apcupsd"
 
-KEY_STATUS = "STATUS"
+KEY_STATUS = "STATFLAG"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
-VALUE_ONLINE = "ONLINE"
+VALUE_ONLINE = 8
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -39,19 +36,19 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Use config values to set up a function enabling status retrieval."""
-    global DATA
     conf = config[DOMAIN]
-    host = conf.get(CONF_HOST)
-    port = conf.get(CONF_PORT)
+    host = conf[CONF_HOST]
+    port = conf[CONF_PORT]
 
-    DATA = APCUPSdData(host, port)
+    apcups_data = APCUPSdData(host, port)
+    hass.data[DOMAIN] = apcups_data
 
     # It doesn't really matter why we're not able to get the status, just that
     # we can't.
     try:
-        DATA.update(no_throttle=True)
+        apcups_data.update(no_throttle=True)
     except Exception:  # pylint: disable=broad-except
-        _LOGGER.exception("Failure while testing APCUPSd status retrieval.")
+        _LOGGER.exception("Failure while testing APCUPSd status retrieval")
         return False
     return True
 

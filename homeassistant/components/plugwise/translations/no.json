@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Denne Smile-enheten er allerede konfigurert"
+        },
+        "error": {
+            "cannot_connect": "Klarte ikke \u00e5 koble til, vennligst pr\u00f8v igjen",
+            "invalid_auth": "Ugyldig godkjenning, sjekk din 8-tegns Smile ID",
+            "unknown": "Uventet feil"
+        },
+        "flow_title": "",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Smile IP-adresse",
+                    "password": "",
+                    "port": "Smil portnummer"
+                },
+                "description": "Vennligst skriv inn:",
+                "title": "Koble til Smile"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Skanneintervall (sekunder)"
+                },
+                "description": "Juster Plugwise-alternativer"
+            }
+        }
+    }
+}

@@ -4,7 +4,7 @@ import logging
 from venstarcolortouch import VenstarColorTouch
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
@@ -31,10 +31,11 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_HOST,
     CONF_PASSWORD,
+    CONF_PIN,
     CONF_SSL,
     CONF_TIMEOUT,
     CONF_USERNAME,
-    PRECISION_WHOLE,
+    PRECISION_HALVES,
     STATE_ON,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
@@ -66,6 +67,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             vol.Coerce(int), vol.Range(min=1)
         ),
         vol.Optional(CONF_USERNAME): cv.string,
+        vol.Optional(CONF_PIN): cv.string,
     }
 )
 
@@ -75,23 +77,26 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
+    pin = config.get(CONF_PIN)
     host = config.get(CONF_HOST)
     timeout = config.get(CONF_TIMEOUT)
     humidifier = config.get(CONF_HUMIDIFIER)
 
-    if config.get(CONF_SSL):
-        proto = "https"
-    else:
-        proto = "http"
+    protocol = "https" if config[CONF_SSL] else "http"
 
     client = VenstarColorTouch(
-        addr=host, timeout=timeout, user=username, password=password, proto=proto
+        addr=host,
+        timeout=timeout,
+        user=username,
+        password=password,
+        pin=pin,
+        proto=protocol,
     )
 
     add_entities([VenstarThermostat(client, humidifier)], True)
 
 
-class VenstarThermostat(ClimateDevice):
+class VenstarThermostat(ClimateEntity):
     """Representation of a Venstar thermostat."""
 
     def __init__(self, client, humidifier):
@@ -134,9 +139,9 @@ class VenstarThermostat(ClimateDevice):
         """Return the precision of the system.
 
         Venstar temperature values are passed back and forth in the
-        API as whole degrees C or F.
+        API in C or F, with half-degree accuracy.
         """
-        return PRECISION_WHOLE
+        return PRECISION_HALVES
 
     @property
     def temperature_unit(self):

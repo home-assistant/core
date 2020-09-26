@@ -1,0 +1,17 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Tariff selection",
+        "description": "This sensor uses official API to get [hourly pricing of electricity (PVPC)](https://www.esios.ree.es/es/pvpc) in Spain.\nFor more precise explanation visit the [integration docs](https://www.home-assistant.io/integrations/pvpc_hourly_pricing/).\n\nSelect the contracted rate based on the number of billing periods per day:\n- 1 period: normal\n- 2 periods: discrimination (nightly rate)\n- 3 periods: electric car (nightly rate of 3 periods)",
+        "data": {
+          "name": "Sensor Name",
+          "tariff": "Contracted tariff (1, 2, or 3 periods)"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "Integration is already configured with an existing sensor with that tariff"
+    }
+  }
+}

@@ -4,7 +4,9 @@ from functools import wraps
 import logging
 import time
 
-from bluepy.btle import BTLEException  # pylint: disable=import-error, no-member
+from bluepy.btle import (  # pylint: disable=import-error, no-member, no-name-in-module
+    BTLEException,
+)
 import decora  # pylint: disable=import-error, no-member
 import voluptuous as vol
 
@@ -12,7 +14,7 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
-    Light,
+    LightEntity,
 )
 from homeassistant.const import CONF_API_KEY, CONF_DEVICES, CONF_NAME
 import homeassistant.helpers.config_validation as cv
@@ -62,7 +64,7 @@ def retry(method):
                 return method(device, *args, **kwargs)
             except (decora.decoraException, AttributeError, BTLEException):
                 _LOGGER.warning(
-                    "Decora connect error for device %s. " "Reconnecting...",
+                    "Decora connect error for device %s. Reconnecting...",
                     device.name,
                 )
                 # pylint: disable=protected-access
@@ -85,7 +87,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(lights)
 
 
-class DecoraLight(Light):
+class DecoraLight(LightEntity):
     """Representation of an Decora light."""
 
     def __init__(self, device):

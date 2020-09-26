@@ -1,0 +1,55 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_device": "Device is already configured",
+            "updated_entry": "This entry has already been setup but the name, apps, and/or options defined in the configuration do not match the previously imported configuration, so the configuration entry has been updated accordingly."
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "complete_pairing_failed": "Unable to complete pairing. Ensure the PIN you provided is correct and the TV is still powered and connected to the network before resubmitting.",
+            "existing_config_entry_found": "An existing VIZIO SmartCast Device config entry with the same serial number has already been configured. You must delete the existing entry in order to configure this one.",
+            "host_exists": "VIZIO SmartCast Device with specified host already configured.",
+            "name_exists": "VIZIO SmartCast Device with specified name already configured."
+        },
+        "step": {
+            "pair_tv": {
+                "data": {
+                    "pin": "PIN"
+                },
+                "description": "Your TV should be displaying a code. Enter that code into the form and then continue to the next step to complete the pairing.",
+                "title": "Complete Pairing Process"
+            },
+            "pairing_complete": {
+                "description": "Your VIZIO SmartCast Device is now connected to Home Assistant.",
+                "title": "Pairing Complete"
+            },
+            "pairing_complete_import": {
+                "description": "Your VIZIO SmartCast Device is now connected to Home Assistant.\n\nYour Access Token is '**{access_token}**'.",
+                "title": "Pairing Complete"
+            },
+            "user": {
+                "data": {
+                    "access_token": "Access Token",
+                    "device_class": "Device Type",
+                    "host": "Host",
+                    "name": "Name"
+                },
+                "description": "An Access Token is only needed for TVs. If you are configuring a TV and do not have an Access Token yet, leave it blank to go through a pairing process.",
+                "title": "VIZIO SmartCast Device"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "apps_to_include_or_exclude": "Apps to Include or Exclude",
+                    "include_or_exclude": "Include or Exclude Apps?",
+                    "volume_step": "Volume Step Size"
+                },
+                "description": "If you have a Smart TV, you can optionally filter your source list by choosing which apps to include or exclude in your source list.",
+                "title": "Update VIZIO SmartCast Device Options"
+            }
+        }
+    }
+}

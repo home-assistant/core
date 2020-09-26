@@ -2,9 +2,6 @@
 Flux for Home-Assistant.
 
 The idea was taken from https://github.com/KpaBap/hue-flux/
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/switch.flux/
 """
 import datetime
 import logging
@@ -22,7 +19,7 @@ from homeassistant.components.light import (
     VALID_TRANSITION,
     is_on,
 )
-from homeassistant.components.switch import DOMAIN, SwitchDevice
+from homeassistant.components.switch import DOMAIN, SwitchEntity
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_LIGHTS,
@@ -34,8 +31,7 @@ from homeassistant.const import (
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
 )
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers import config_validation as cv, event
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.sun import get_astral_event_date
 from homeassistant.util import slugify
@@ -167,11 +163,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         """Update lights."""
         await flux.async_flux_update()
 
-    service_name = slugify("{} {}".format(name, "update"))
+    service_name = slugify(f"{name} update")
     hass.services.async_register(DOMAIN, service_name, async_update)
 
 
-class FluxSwitch(SwitchDevice, RestoreEntity):
+class FluxSwitch(SwitchEntity, RestoreEntity):
     """Representation of a Flux switch."""
 
     def __init__(
@@ -227,7 +223,7 @@ class FluxSwitch(SwitchDevice, RestoreEntity):
         if self.is_on:
             return
 
-        self.unsub_tracker = async_track_time_interval(
+        self.unsub_tracker = event.async_track_time_interval(
             self.hass,
             self.async_flux_update,
             datetime.timedelta(seconds=self._interval),
@@ -236,7 +232,7 @@ class FluxSwitch(SwitchDevice, RestoreEntity):
         # Make initial update
         await self.async_flux_update()
 
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn off flux."""
@@ -244,7 +240,7 @@ class FluxSwitch(SwitchDevice, RestoreEntity):
             self.unsub_tracker()
             self.unsub_tracker = None
 
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_flux_update(self, utcnow=None):
         """Update all the lights using flux."""
@@ -323,7 +319,7 @@ class FluxSwitch(SwitchDevice, RestoreEntity):
         elif self._mode == MODE_RGB:
             await async_set_lights_rgb(self.hass, self._lights, rgb, self._transition)
             _LOGGER.debug(
-                "Lights updated to rgb:%s, %s%% " "of %s cycle complete at %s",
+                "Lights updated to rgb:%s, %s%% of %s cycle complete at %s",
                 rgb,
                 round(percentage_complete * 100),
                 time_state,

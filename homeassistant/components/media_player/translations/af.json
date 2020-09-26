@@ -1,0 +1,13 @@
+{
+    "state": {
+        "_": {
+            "idle": "Onaktief",
+            "off": "Af",
+            "on": "Aan",
+            "paused": "Onderbreek",
+            "playing": "Speel Tans",
+            "standby": "Gereed"
+        }
+    },
+    "title": "Media-speler"
+}

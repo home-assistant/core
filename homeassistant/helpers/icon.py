@@ -8,7 +8,7 @@ def icon_for_battery_level(
     """Return a battery icon valid identifier."""
     icon = "mdi:battery"
     if battery_level is None:
-        return icon + "-unknown"
+        return f"{icon}-unknown"
     if charging and battery_level > 10:
         icon += "-charging-{}".format(int(round(battery_level / 20 - 0.01)) * 20)
     elif charging:

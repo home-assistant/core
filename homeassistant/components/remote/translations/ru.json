@@ -1,0 +1,24 @@
+{
+    "device_automation": {
+        "action_type": {
+            "toggle": "\u041f\u0435\u0440\u0435\u043a\u043b\u044e\u0447\u0438\u0442\u044c {entity_name}",
+            "turn_off": "\u0412\u044b\u043a\u043b\u044e\u0447\u0438\u0442\u044c {entity_name}",
+            "turn_on": "\u0412\u043a\u043b\u044e\u0447\u0438\u0442\u044c {entity_name}"
+        },
+        "condition_type": {
+            "is_off": "{entity_name} \u0432 \u0432\u044b\u043a\u043b\u044e\u0447\u0435\u043d\u043d\u043e\u043c \u0441\u043e\u0441\u0442\u043e\u044f\u043d\u0438\u0438",
+            "is_on": "{entity_name} \u0432\u043e \u0432\u043a\u043b\u044e\u0447\u0435\u043d\u043d\u043e\u043c \u0441\u043e\u0441\u0442\u043e\u044f\u043d\u0438\u0438"
+        },
+        "trigger_type": {
+            "turned_off": "{entity_name} \u0432\u044b\u043a\u043b\u044e\u0447\u0430\u0435\u0442\u0441\u044f",
+            "turned_on": "{entity_name} \u0432\u043a\u043b\u044e\u0447\u0430\u0435\u0442\u0441\u044f"
+        }
+    },
+    "state": {
+        "_": {
+            "off": "\u0412\u044b\u043a\u043b",
+            "on": "\u0412\u043a\u043b"
+        }
+    },
+    "title": "\u041f\u0443\u043b\u044c\u0442 \u0414\u0423"
+}

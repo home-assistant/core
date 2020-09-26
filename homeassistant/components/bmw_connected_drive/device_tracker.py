@@ -31,7 +31,7 @@ class BMWDeviceTracker:
     def update(self) -> None:
         """Update the device info.
 
-        Only update the state in home assistant if tracking in
+        Only update the state in Home Assistant if tracking in
         the car is enabled.
         """
         dev_id = slugify(self.vehicle.name)

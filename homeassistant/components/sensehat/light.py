@@ -10,7 +10,7 @@ from homeassistant.components.light import (
     PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
-    Light,
+    LightEntity,
 )
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
@@ -37,7 +37,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([SenseHatLight(sensehat, name)])
 
 
-class SenseHatLight(Light):
+class SenseHatLight(LightEntity):
     """Representation of an Sense Hat Light."""
 
     def __init__(self, sensehat, name):

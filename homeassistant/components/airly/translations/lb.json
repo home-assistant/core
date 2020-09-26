@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Airly Integratioun fir d\u00ebs Koordinaten ass scho konfigur\u00e9iert."
+        },
+        "error": {
+            "auth": "Api Schl\u00ebssel ass net korrekt.",
+            "wrong_location": "Keng Airly Moos Statioun an d\u00ebsem Ber\u00e4ich"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API Schl\u00ebssel",
+                    "latitude": "Breedegrad",
+                    "longitude": "L\u00e4ngegrad",
+                    "name": "Numm vun der Installatioun"
+                },
+                "description": "Airly Loft Qualit\u00e9it Integratioun ariichten. Fir een API Schl\u00ebssel z'erstelle gitt op https://developer.airly.eu/register",
+                "title": "Airly"
+            }
+        }
+    }
+}

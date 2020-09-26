@@ -1,0 +1,22 @@
+{
+    "config": {
+        "error": {
+            "connection_error": "No s'ha pogut connectar amb la inst\u00e0ncia de CoolMasterNet. Comprova l'amfitri\u00f3.",
+            "no_units": "No s'ha pogut trobar cap unitat d'HVAC a l'amfitri\u00f3 de CoolMasterNet."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "cool": "Suporta mode refredar",
+                    "dry": "Suporta mode assecar",
+                    "fan_only": "Suporta nom\u00e9s mode ventiladoci\u00f3",
+                    "heat": "Suporta mode escalfar",
+                    "heat_cool": "Suporta mode escalfar/refredar autom\u00e0tic",
+                    "host": "Amfitri\u00f3",
+                    "off": "Es pot apagar"
+                },
+                "title": "Configuraci\u00f3 de la connexi\u00f3 amb CoolMasterNet."
+            }
+        }
+    }
+}

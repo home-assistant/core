@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Roku-apparaat is al geconfigureerd",
+            "unknown": "Onverwachte fout"
+        },
+        "error": {
+            "cannot_connect": "Verbinding mislukt, probeer het opnieuw"
+        },
+        "flow_title": "Roku: {name}",
+        "step": {
+            "ssdp_confirm": {
+                "description": "Wilt u {name} instellen?",
+                "title": "Roku"
+            },
+            "user": {
+                "data": {
+                    "host": "Host- of IP-adres"
+                },
+                "description": "Voer uw Roku-informatie in."
+            }
+        }
+    }
+}

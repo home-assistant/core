@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "D\u00ebse Benotzernumm g\u00ebtt scho benotzt."
+        },
+        "error": {
+            "invalid_credentials": "Ong\u00ebltege Benotzernumm oder Passwuert",
+            "no_devices": "Keng Apparater am Kont fonnt"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passwuert",
+                    "username": "Benotzernumm"
+                },
+                "title": "F\u00ebllt \u00e4r Informatiounen aus"
+            }
+        }
+    }
+}

@@ -1,0 +1,19 @@
+set_aircleaner_mode:
+  description: "The air cleaner mode."
+  fields:
+    entity_id:
+      description: "This setting will affect all zones connected to the thermostat."
+      example: climate.master_bedroom
+    aircleaner_mode:
+      description: 'The air cleaner mode to set. Options include "auto", "quick", or "allergy".'
+      example: allergy
+
+set_humidify_setpoint:
+  description: "The humidification set point."
+  fields:
+    entity_id:
+      description: "This setting will affect all zones connected to the thermostat."
+      example: climate.master_bedroom
+    humidity:
+      description: "The humidification setpoint as an int, range 35-65."
+      example: 45

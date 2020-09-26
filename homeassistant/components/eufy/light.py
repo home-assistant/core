@@ -10,7 +10,7 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
-    Light,
+    LightEntity,
 )
 import homeassistant.util.color as color_util
 from homeassistant.util.color import (
@@ -31,7 +31,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([EufyLight(discovery_info)], True)
 
 
-class EufyLight(Light):
+class EufyLight(LightEntity):
     """Representation of a Eufy light."""
 
     def __init__(self, device):

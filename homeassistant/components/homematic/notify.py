@@ -11,7 +11,7 @@ from homeassistant.components.notify import (
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.template as template_helper
 
-from . import (
+from .const import (
     ATTR_ADDRESS,
     ATTR_CHANNEL,
     ATTR_INTERFACE,
@@ -22,6 +22,7 @@ from . import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(ATTR_ADDRESS): vol.All(cv.string, vol.Upper),

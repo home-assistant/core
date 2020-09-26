@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Stad ass scho konfigur\u00e9iert",
+            "unknown": "Onbekannte Feeler: prob\u00e9iert sp\u00e9ider nach emol"
+        },
+        "error": {
+            "empty": "Kee Resultat an der Stad Sich: kuckt w.e.g. d'Stad feld"
+        },
+        "step": {
+            "cities": {
+                "data": {
+                    "city": "Stad"
+                },
+                "description": "Wiel deng Stad aus der L\u00ebscht aus",
+                "title": "M\u00e9t\u00e9o-France"
+            },
+            "user": {
+                "data": {
+                    "city": "Stad"
+                },
+                "description": "Gitt de Postcode an (n\u00ebmme fir Frankr\u00e4ich, recommand\u00e9iert) oder den Numm vun der Stad",
+                "title": "M\u00e9t\u00e9o-France"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "mode": "Previsiouns Modus"
+                }
+            }
+        }
+    }
+}

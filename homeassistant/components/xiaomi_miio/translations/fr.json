@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
+            "already_in_progress": "Le flux de configuration pour cet appareil Xiaomi Miio est d\u00e9j\u00e0 en cours."
+        },
+        "error": {
+            "connect_error": "\u00c9chec de connexion",
+            "no_device_selected": "Aucun appareil s\u00e9lectionn\u00e9, veuillez s\u00e9lectionner un appareil."
+        },
+        "flow_title": "Xiaomi Miio: {name}",
+        "step": {
+            "gateway": {
+                "data": {
+                    "host": "Adresse IP",
+                    "name": "Nom de la passerelle",
+                    "token": "Jeton d'API"
+                },
+                "description": "Vous aurez besoin du jeton API, voir https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token pour les instructions.",
+                "title": "Se connecter \u00e0 la passerelle Xiaomi"
+            },
+            "user": {
+                "data": {
+                    "gateway": "Se connecter \u00e0 la passerelle Xiaomi"
+                },
+                "description": "S\u00e9lectionnez \u00e0 quel appareil vous souhaitez vous connecter.",
+                "title": "Xiaomi Miio"
+            }
+        }
+    }
+}

@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "mqtt_required": "De [%%] integratie is niet ingesteld",
+            "one_instance_allowed": "De integratie ondersteunt, maar \u00e9\u00e9n Z-Wave-exemplaar"
+        },
+        "step": {
+            "user": {
+                "title": "Bevestig de instelling"
+            }
+        }
+    }
+}

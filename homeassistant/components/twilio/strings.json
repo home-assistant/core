@@ -1,6 +1,5 @@
 {
   "config": {
-    "title": "Twilio",
     "step": {
       "user": {
         "title": "Set up the Twilio Webhook",

@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Punkt dost\u0119pu jest ju\u017c skonfigurowany.",
+            "connection_aborted": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z serwerem HMIP",
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
+        },
+        "error": {
+            "invalid_pin": "Nieprawid\u0142owy kod PIN, spr\u00f3buj ponownie.",
+            "invalid_sgtin_or_pin": "Nieprawid\u0142owy kod PIN, spr\u00f3buj ponownie.",
+            "press_the_button": "Prosz\u0119 nacisn\u0105\u0107 niebieski przycisk.",
+            "register_failed": "Nie uda\u0142o si\u0119 zarejestrowa\u0107, spr\u00f3buj ponownie.",
+            "timeout_button": "Oczekiwania na naci\u015bni\u0119cie niebieskiego przycisku zako\u0144czone, spr\u00f3buj ponownie."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "hapid": "ID punktu dost\u0119pu (SGTIN)",
+                    "name": "Nazwa (opcjonalnie, u\u017cywana jako prefiks nazwy dla wszystkich urz\u0105dze\u0144)",
+                    "pin": "Kod PIN (opcjonalnie)"
+                },
+                "title": "Wybierz punkt dost\u0119pu HomematicIP"
+            },
+            "link": {
+                "description": "Naci\u015bnij niebieski przycisk na punkcie dost\u0119pu i przycisk przesy\u0142ania, aby zarejestrowa\u0107 HomematicIP w Home Assistant. \n\n![Location of button on bridge](/static/images/config_flows/config_homematicip_cloud.png)",
+                "title": "Po\u0142\u0105czenie z punktem dost\u0119pu"
+            }
+        }
+    }
+}

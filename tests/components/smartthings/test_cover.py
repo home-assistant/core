@@ -18,17 +18,11 @@ from homeassistant.components.cover import (
     STATE_OPEN,
     STATE_OPENING,
 )
-from homeassistant.components.smartthings import cover
 from homeassistant.components.smartthings.const import DOMAIN, SIGNAL_SMARTTHINGS_UPDATE
 from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_ENTITY_ID
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .conftest import setup_platform
-
-
-async def test_async_setup_platform():
-    """Test setup platform does nothing (it uses config entries)."""
-    await cover.async_setup_platform(None, None, None)
 
 
 async def test_entity_and_device_attributes(hass, device_factory):

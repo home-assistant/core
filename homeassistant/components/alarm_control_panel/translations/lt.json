@@ -1,0 +1,13 @@
+{
+    "state": {
+        "_": {
+            "armed": "U\u017erakinta",
+            "armed_home": "Nam\u0173 apsauga \u012fjungta",
+            "arming": "Saugojimo re\u017eimo \u012fjungimas",
+            "disarmed": "Atrakinta",
+            "disarming": "Saugojimo re\u017eimo i\u0161jungimas",
+            "pending": "Laukiama",
+            "triggered": "Aktyvinta"
+        }
+    }
+}

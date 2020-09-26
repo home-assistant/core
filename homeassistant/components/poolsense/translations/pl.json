@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
+        },
+        "error": {
+            "invalid_auth": "Niepoprawne uwierzytelnienie"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "Adres e-mail",
+                    "password": "[%key_id:common::config_flow::data::password%]"
+                }
+            }
+        }
+    }
+}

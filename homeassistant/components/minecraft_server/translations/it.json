@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'host \u00e8 gi\u00e0 configurato."
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi al server. Controllare l'host e la porta e riprovare. Assicurarsi inoltre che si esegue almeno Minecraft versione 1.7 sul server.",
+            "invalid_ip": "L'indirizzo IP non \u00e8 valido (non \u00e8 stato possibile determinare l'indirizzo MAC). Correggilo e riprova.",
+            "invalid_port": "La porta deve essere compresa tra 1024 e 65535. Correggila e riprova."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Nome"
+                },
+                "description": "Configurare l'istanza del Server Minecraft per consentire il monitoraggio.",
+                "title": "Collega il tuo Server Minecraft"
+            }
+        }
+    }
+}

@@ -1,0 +1,13 @@
+{
+    "state": {
+        "_": {
+            "initializing": "\u521d\u671f\u5316\u4e2d",
+            "ready": "\u6e96\u5099\u5b8c\u4e86",
+            "sleeping": "\u30b9\u30ea\u30fc\u30d7"
+        },
+        "query_stage": {
+            "dead": " ({query_stage})",
+            "initializing": "\u521d\u671f\u5316\u4e2d ( {query_stage} )"
+        }
+    }
+}

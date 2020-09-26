@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u8a2d\u5099\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "not_forked_daapd": "\u8a2d\u5099\u4e26\u975e forked-daapd \u4f3a\u670d\u5668\u3002"
+        },
+        "error": {
+            "unknown_error": "\u672a\u77e5\u932f\u8aa4\u3002",
+            "websocket_not_enabled": "forked-daapd \u4f3a\u670d\u5668 websocket \u672a\u958b\u555f\u3002",
+            "wrong_host_or_port": "\u7121\u6cd5\u9023\u7dda\uff0c\u8acb\u78ba\u8a8d\u4e3b\u6a5f\u8207\u901a\u8a0a\u57e0\u3002",
+            "wrong_password": "\u5bc6\u78bc\u932f\u8aa4\u3002",
+            "wrong_server_type": "forked-daapd \u6574\u5408\u9700\u8981\u7248\u6b21 >= 27.0 \u7248\u4e4b forked-daapd \u4f3a\u670d\u5668\u3002"
+        },
+        "flow_title": "forked-daapd \u4f3a\u670d\u5668\uff1a{name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\u4e3b\u6a5f\u7aef",
+                    "name": "\u6613\u8a18\u540d\u7a31",
+                    "password": "API \u5bc6\u78bc\uff08\u5047\u5982\u7121\u5bc6\u78bc\uff0c\u8acb\u7559\u7a7a\uff09",
+                    "port": "API \u901a\u8a0a\u57e0"
+                },
+                "title": "\u8a2d\u5b9a forked-daapd \u8a2d\u5099"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "librespot_java_port": "librespot-java pipe \u63a7\u5236\u6240\u4f7f\u7528\u901a\u8a0a\u57e0\uff08\u5047\u5982\u4f7f\u7528\uff09",
+                    "max_playlists": "\u4f5c\u70ba\u4f86\u6e90\u4e4b\u6700\u5927\u64ad\u653e\u5217\u8868\u6578",
+                    "tts_pause_time": "\u65bc TTS \u524d\u5f8c\u66ab\u505c\u79d2\u6578",
+                    "tts_volume": "TTS \u97f3\u91cf\uff08\u6d6e\u52d5\u7bc4\u570d [0,1]\uff09"
+                },
+                "description": "\u8a2d\u5b9a forked-daapd \u6574\u5408\u9078\u9805\u3002",
+                "title": "forked-daapd \u8a2d\u5b9a\u9078\u9805"
+            }
+        }
+    }
+}

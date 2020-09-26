@@ -3,16 +3,19 @@ from datetime import timedelta
 import logging
 import socket
 import unittest
-from unittest.mock import patch
 
 import pytest
 
-from homeassistant import core as ha
 from homeassistant.components import pilight
 from homeassistant.setup import setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import assert_setup_component, get_test_home_assistant
+from tests.async_mock import patch
+from tests.common import (
+    assert_setup_component,
+    async_fire_time_changed,
+    get_test_home_assistant,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,11 +40,10 @@ class PilightDaemonSim:
 
     def __init__(self, host, port):
         """Init pilight client, ignore parameters."""
-        pass
 
     def send_code(self, call):  # pylint: disable=no-self-use
         """Handle pilight.send service callback."""
-        _LOGGER.error("PilightDaemonSim payload: " + str(call))
+        _LOGGER.error("PilightDaemonSim payload: %s", call)
 
     def start(self):
         """Handle homeassistant.start callback.
@@ -61,7 +63,7 @@ class PilightDaemonSim:
     def set_callback(self, function):
         """Handle pilight.pilight_received event callback."""
         self.callback = function
-        _LOGGER.error("PilightDaemonSim callback: " + str(function))
+        _LOGGER.error("PilightDaemonSim callback: %s", function)
 
 
 @pytest.mark.skip("Flaky")
@@ -72,8 +74,9 @@ class TestPilight(unittest.TestCase):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.skip_teardown_stop = False
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):
+    def tear_down_cleanup(self):
         """Stop everything that was started."""
         if not self.skip_teardown_stop:
             self.hass.stop()
@@ -91,7 +94,7 @@ class TestPilight(unittest.TestCase):
                 mock_client.assert_called_once_with(
                     host=pilight.DEFAULT_HOST, port=pilight.DEFAULT_PORT
                 )
-                assert 1 == mock_error.call_count
+                assert mock_error.call_count == 1
 
     @patch("homeassistant.components.pilight._LOGGER.error")
     def test_connection_timeout_error(self, mock_error):
@@ -106,11 +109,11 @@ class TestPilight(unittest.TestCase):
                 mock_client.assert_called_once_with(
                     host=pilight.DEFAULT_HOST, port=pilight.DEFAULT_PORT
                 )
-                assert 1 == mock_error.call_count
+                assert mock_error.call_count == 1
 
     @patch("pilight.pilight.Client", PilightDaemonSim)
     @patch("homeassistant.core._LOGGER.error")
-    @patch("tests.components.test_pilight._LOGGER.error")
+    @patch("homeassistant.components.pilight._LOGGER.error")
     def test_send_code_no_protocol(self, mock_pilight_error, mock_error):
         """Try to send data without protocol information, should give error."""
         with assert_setup_component(4):
@@ -128,7 +131,7 @@ class TestPilight(unittest.TestCase):
             assert "required key not provided @ data['protocol']" in str(error_log_call)
 
     @patch("pilight.pilight.Client", PilightDaemonSim)
-    @patch("tests.components.test_pilight._LOGGER.error")
+    @patch("homeassistant.components.pilight._LOGGER.error")
     def test_send_code(self, mock_pilight_error):
         """Try to send proper data."""
         with assert_setup_component(4):
@@ -168,7 +171,7 @@ class TestPilight(unittest.TestCase):
                 assert "Pilight send failed" in str(error_log_call)
 
     @patch("pilight.pilight.Client", PilightDaemonSim)
-    @patch("tests.components.test_pilight._LOGGER.error")
+    @patch("homeassistant.components.pilight._LOGGER.error")
     def test_send_code_delay(self, mock_pilight_error):
         """Try to send proper data with delay afterwards."""
         with assert_setup_component(4):
@@ -196,19 +199,19 @@ class TestPilight(unittest.TestCase):
             service_data1["protocol"] = [service_data1["protocol"]]
             service_data2["protocol"] = [service_data2["protocol"]]
 
-            self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: dt_util.utcnow()})
+            async_fire_time_changed(self.hass, dt_util.utcnow())
             self.hass.block_till_done()
             error_log_call = mock_pilight_error.call_args_list[-1]
             assert str(service_data1) in str(error_log_call)
 
             new_time = dt_util.utcnow() + timedelta(seconds=5)
-            self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: new_time})
+            async_fire_time_changed(self.hass, new_time)
             self.hass.block_till_done()
             error_log_call = mock_pilight_error.call_args_list[-1]
             assert str(service_data2) in str(error_log_call)
 
     @patch("pilight.pilight.Client", PilightDaemonSim)
-    @patch("tests.components.test_pilight._LOGGER.error")
+    @patch("homeassistant.components.pilight._LOGGER.error")
     def test_start_stop(self, mock_pilight_error):
         """Check correct startup and stop of pilight daemon."""
         with assert_setup_component(4):
@@ -375,10 +378,7 @@ class TestPilightCallrateThrottler(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     def test_call_rate_delay_throttle_disabled(self):
         """Test that the limiter is a noop if no delay set."""
@@ -410,6 +410,6 @@ class TestPilightCallrateThrottler(unittest.TestCase):
         for i in range(3):
             exp.append(i)
             shifted_time = now + (timedelta(seconds=delay + 0.1) * i)
-            self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: shifted_time})
+            async_fire_time_changed(self.hass, shifted_time)
             self.hass.block_till_done()
             assert runs == exp

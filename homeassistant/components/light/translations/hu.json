@@ -1,0 +1,26 @@
+{
+    "device_automation": {
+        "action_type": {
+            "brightness_decrease": "{entity_name} f\u00e9nyerej\u00e9nek cs\u00f6kkent\u00e9se",
+            "brightness_increase": "{entity_name} f\u00e9nyerej\u00e9nek n\u00f6vel\u00e9se",
+            "toggle": "{entity_name} fel/lekapcsol\u00e1sa",
+            "turn_off": "{entity_name} lekapcsol\u00e1sa",
+            "turn_on": "{entity_name} felkapcsol\u00e1sa"
+        },
+        "condition_type": {
+            "is_off": "{entity_name} le van kapcsolva",
+            "is_on": "{entity_name} fel van kapcsolva"
+        },
+        "trigger_type": {
+            "turned_off": "{entity_name} le lett kapcsolva",
+            "turned_on": "{entity_name} fel lett kapcsolva"
+        }
+    },
+    "state": {
+        "_": {
+            "off": "Ki",
+            "on": "Be"
+        }
+    },
+    "title": "Vil\u00e1g\u00edt\u00e1s"
+}

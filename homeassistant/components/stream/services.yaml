@@ -5,7 +5,7 @@ record:
       description: The input source for the stream.
       example: "rtsp://my.stream.feed:554"
     filename:
-      description: The file name string. 
+      description: The file name string.
       example: "/tmp/my_stream.mp4"
     duration:
       description: "Target recording length (in seconds). Default: 30"

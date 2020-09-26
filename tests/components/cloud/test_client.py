@@ -1,18 +1,17 @@
 """Test the cloud.iot module."""
-from unittest.mock import MagicMock, patch
-
 from aiohttp import web
 import pytest
 
 from homeassistant.components.cloud import DOMAIN
 from homeassistant.components.cloud.client import CloudClient
 from homeassistant.components.cloud.const import PREF_ENABLE_ALEXA, PREF_ENABLE_GOOGLE
+from homeassistant.const import CONTENT_TYPE_JSON
 from homeassistant.core import State
 from homeassistant.setup import async_setup_component
 
 from . import mock_cloud, mock_cloud_prefs
 
-from tests.common import mock_coro
+from tests.async_mock import AsyncMock, MagicMock, patch
 from tests.components.alexa import test_smart_home as test_alexa
 
 
@@ -103,13 +102,17 @@ async def test_handler_google_actions(hass):
     reqid = "5711642932632160983"
     data = {"requestId": reqid, "inputs": [{"intent": "action.devices.SYNC"}]}
 
-    config = await cloud.client.get_google_config()
-    resp = await cloud.client.async_google_message(data)
+    with patch(
+        "hass_nabucasa.Cloud._decode_claims",
+        return_value={"cognito:username": "myUserName"},
+    ):
+        await cloud.client.get_google_config()
+        resp = await cloud.client.async_google_message(data)
 
     assert resp["requestId"] == reqid
     payload = resp["payload"]
 
-    assert payload["agentUserId"] == config.cloud_user
+    assert payload["agentUserId"] == "myUserName"
 
     devices = payload["devices"]
     assert len(devices) == 1
@@ -117,7 +120,7 @@ async def test_handler_google_actions(hass):
     device = devices[0]
     assert device["id"] == "switch.test"
     assert device["name"]["name"] == "Config name"
-    assert device["name"]["nicknames"] == ["Config alias"]
+    assert device["name"]["nicknames"] == ["Config name", "Config alias"]
     assert device["type"] == "action.devices.types.SWITCH"
     assert device["roomHint"] == "living room"
 
@@ -126,7 +129,7 @@ async def test_handler_google_actions_disabled(hass, mock_cloud_fixture):
     """Test handler Google Actions when user has disabled it."""
     mock_cloud_fixture._prefs[PREF_ENABLE_GOOGLE] = False
 
-    with patch("hass_nabucasa.Cloud.start", return_value=mock_coro()):
+    with patch("hass_nabucasa.Cloud.start"):
         assert await async_setup_component(hass, "cloud", {})
 
     reqid = "5711642932632160983"
@@ -139,9 +142,9 @@ async def test_handler_google_actions_disabled(hass, mock_cloud_fixture):
     assert resp["payload"]["errorCode"] == "deviceTurnedOff"
 
 
-async def test_webhook_msg(hass):
+async def test_webhook_msg(hass, caplog):
     """Test webhook msg."""
-    with patch("hass_nabucasa.Cloud.start", return_value=mock_coro()):
+    with patch("hass_nabucasa.Cloud.start"):
         setup = await async_setup_component(hass, "cloud", {"cloud": {}})
         assert setup
     cloud = hass.data["cloud"]
@@ -149,7 +152,14 @@ async def test_webhook_msg(hass):
     await cloud.client.prefs.async_initialize()
     await cloud.client.prefs.async_update(
         cloudhooks={
-            "hello": {"webhook_id": "mock-webhook-id", "cloudhook_id": "mock-cloud-id"}
+            "mock-webhook-id": {
+                "webhook_id": "mock-webhook-id",
+                "cloudhook_id": "mock-cloud-id",
+            },
+            "no-longere-existing": {
+                "webhook_id": "no-longere-existing",
+                "cloudhook_id": "mock-nonexisting-id",
+            },
         }
     )
 
@@ -166,7 +176,7 @@ async def test_webhook_msg(hass):
         {
             "cloudhook_id": "mock-cloud-id",
             "body": '{"hello": "world"}',
-            "headers": {"content-type": "application/json"},
+            "headers": {"content-type": CONTENT_TYPE_JSON},
             "method": "POST",
             "query": None,
         }
@@ -175,11 +185,36 @@ async def test_webhook_msg(hass):
     assert response == {
         "status": 200,
         "body": '{"from": "handler"}',
-        "headers": {"Content-Type": "application/json"},
+        "headers": {"Content-Type": CONTENT_TYPE_JSON},
     }
 
     assert len(received) == 1
     assert await received[0].json() == {"hello": "world"}
+
+    # Non existing webhook
+    caplog.clear()
+
+    response = await cloud.client.async_webhook_message(
+        {
+            "cloudhook_id": "mock-nonexisting-id",
+            "body": '{"nonexisting": "payload"}',
+            "headers": {"content-type": CONTENT_TYPE_JSON},
+            "method": "POST",
+            "query": None,
+        }
+    )
+
+    assert response == {
+        "status": 200,
+        "body": None,
+        "headers": {"Content-Type": "application/octet-stream"},
+    }
+
+    assert (
+        "Received message for unregistered webhook no-longere-existing from cloud"
+        in caplog.text
+    )
+    assert '{"nonexisting": "payload"}' in caplog.text
 
 
 async def test_google_config_expose_entity(hass, mock_cloud_setup, mock_cloud_login):
@@ -213,11 +248,11 @@ async def test_google_config_should_2fa(hass, mock_cloud_setup, mock_cloud_login
 
 
 async def test_set_username(hass):
-    """Test we set username during loggin."""
+    """Test we set username during login."""
     prefs = MagicMock(
         alexa_enabled=False,
         google_enabled=False,
-        async_set_username=MagicMock(return_value=mock_coro()),
+        async_set_username=AsyncMock(return_value=None),
     )
     client = CloudClient(hass, prefs, None, {}, {})
     client.cloud = MagicMock(is_logged_in=True, username="mock-username")

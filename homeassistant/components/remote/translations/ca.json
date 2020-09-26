@@ -1,0 +1,24 @@
+{
+    "device_automation": {
+        "action_type": {
+            "toggle": "Commuta {entity_name}",
+            "turn_off": "Apaga {entity_name}",
+            "turn_on": "Engega {entity_name}"
+        },
+        "condition_type": {
+            "is_off": "{entity_name} est\u00e0 apagat/ada",
+            "is_on": "{entity_name} est\u00e0 engegat/ada"
+        },
+        "trigger_type": {
+            "turned_off": "{entity_name} s'ha apagat",
+            "turned_on": "{entity_name} s'ha engegat"
+        }
+    },
+    "state": {
+        "_": {
+            "off": "OFF",
+            "on": "ON"
+        }
+    },
+    "title": "Comandament"
+}

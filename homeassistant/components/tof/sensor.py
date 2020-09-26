@@ -9,13 +9,11 @@ import voluptuous as vol
 
 from homeassistant.components import rpi_gpio
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, LENGTH_MILLIMETERS
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
-
-LENGTH_MILLIMETERS = "mm"
 
 CONF_I2C_ADDRESS = "i2c_address"
 CONF_I2C_BUS = "i2c_bus"

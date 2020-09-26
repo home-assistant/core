@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "You can only configure one Almond account.",
+            "cannot_connect": "Unable to connect to the Almond server.",
+            "missing_configuration": "Please check the documentation on how to set up Almond.",
+            "no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})"
+        },
+        "step": {
+            "hassio_confirm": {
+                "description": "Do you want to configure Home Assistant to connect to Almond provided by the Hass.io add-on: {addon}?",
+                "title": "Almond via Hass.io add-on"
+            },
+            "pick_implementation": {
+                "title": "Pick Authentication Method"
+            }
+        }
+    }
+}

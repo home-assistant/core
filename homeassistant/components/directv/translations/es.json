@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dispositivo ya configurado",
+            "unknown": "Error inesperado"
+        },
+        "error": {
+            "cannot_connect": "Error al conectar"
+        },
+        "flow_title": "DirecTV: {name}",
+        "step": {
+            "ssdp_confirm": {
+                "description": "\u00bfQuieres configurar {name}?"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                }
+            }
+        }
+    }
+}

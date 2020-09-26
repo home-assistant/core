@@ -1,0 +1,14 @@
+{
+    "state": {
+        "_": {
+            "dead": "Nereaguje",
+            "initializing": "Inicializ\u00e1cia",
+            "ready": "Pripraven\u00e9",
+            "sleeping": "\u00dasporn\u00fd re\u017eim"
+        },
+        "query_stage": {
+            "dead": "Nereaguje ({query_stage})",
+            "initializing": "Inicializ\u00e1cia ( {query_stage} )"
+        }
+    }
+}

@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "service": "Error while trying to reach SmartHab. Service might be down. Check your connection.",
+            "wrong_login": "[%key:common::config_flow::error::invalid_auth%]",
+            "unknown_error": "[%key:common::config_flow::error::unknown%]"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "[%key:common::config_flow::data::password%]",
+                    "email": "[%key:common::config_flow::data::email%]"
+                },
+                "description": "For technical reasons, be sure to use a secondary account specific to your Home Assistant setup. You can create one from the SmartHab application.",
+                "title": "Setup SmartHab"
+            }
+        }
+    }
+}

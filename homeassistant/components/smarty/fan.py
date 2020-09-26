@@ -76,6 +76,16 @@ class SmartyFan(FanEntity):
         """Return speed of the fan."""
         return self._speed
 
+    def set_speed(self, speed: str) -> None:
+        """Set the speed of the fan."""
+        _LOGGER.debug("Set the fan speed to %s", speed)
+        if speed == SPEED_OFF:
+            self.turn_off()
+        else:
+            self._smarty.set_fan_speed(SPEED_TO_MODE.get(speed))
+            self._speed = speed
+            self._state = True
+
     def turn_on(self, speed=None, **kwargs):
         """Turn on the fan."""
         _LOGGER.debug("Turning on fan. Speed is %s", speed)

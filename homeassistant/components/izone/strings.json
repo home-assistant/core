@@ -1,9 +1,7 @@
 {
   "config": {
-    "title": "iZone",
     "step": {
       "confirm": {
-        "title": "iZone",
         "description": "Do you want to set up iZone?"
       }
     },

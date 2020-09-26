@@ -11,7 +11,7 @@ from async_upnp_client.aiohttp import AiohttpNotifyServer, AiohttpSessionRequest
 from async_upnp_client.profiles.dlna import DeviceState, DmrDevice
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_EPISODE,
@@ -77,7 +77,7 @@ HOME_ASSISTANT_UPNP_CLASS_MAPPING = {
     MEDIA_TYPE_EPISODE: "object.item.videoItem",
     MEDIA_TYPE_CHANNEL: "object.item.videoItem",
     MEDIA_TYPE_IMAGE: "object.item.imageItem",
-    MEDIA_TYPE_PLAYLIST: "object.item.playlist",
+    MEDIA_TYPE_PLAYLIST: "object.item.playlistItem",
 }
 UPNP_CLASS_DEFAULT = "object.item"
 HOME_ASSISTANT_UPNP_MIME_TYPE_MAPPING = {
@@ -99,10 +99,10 @@ def catch_request_errors():
         """Call wrapper for decorator."""
 
         @functools.wraps(func)
-        def wrapper(self, *args, **kwargs):
+        async def wrapper(self, *args, **kwargs):
             """Catch asyncio.TimeoutError, aiohttp.ClientError errors."""
             try:
-                return func(self, *args, **kwargs)
+                return await func(self, *args, **kwargs)
             except (asyncio.TimeoutError, aiohttp.ClientError):
                 _LOGGER.error("Error during call %s", func.__name__)
 
@@ -182,8 +182,8 @@ async def async_setup_platform(
     factory = UpnpFactory(requester, disable_state_variable_validation=True)
     try:
         upnp_device = await factory.async_create_device(url)
-    except (asyncio.TimeoutError, aiohttp.ClientError):
-        raise PlatformNotReady()
+    except (asyncio.TimeoutError, aiohttp.ClientError) as err:
+        raise PlatformNotReady() from err
 
     # wrap with DmrDevice
     dlna_device = DmrDevice(upnp_device, event_handler)
@@ -194,7 +194,7 @@ async def async_setup_platform(
     async_add_entities([device], True)
 
 
-class DlnaDmrDevice(MediaPlayerDevice):
+class DlnaDmrDevice(MediaPlayerEntity):
     """Representation of a DLNA DMR device."""
 
     def __init__(self, dmr_device, name=None):
@@ -219,7 +219,7 @@ class DlnaDmrDevice(MediaPlayerDevice):
         return self._available
 
     async def _async_on_hass_stop(self, event):
-        """Event handler on HASS stop."""
+        """Event handler on Home Assistant stop."""
         with await self.hass.data[DLNA_DMR_DATA]["lock"]:
             await self._device.async_unsubscribe_services()
 

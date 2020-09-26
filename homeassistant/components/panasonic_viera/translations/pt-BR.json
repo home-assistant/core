@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Esta TV Panasonic Viera j\u00e1 est\u00e1 configurada.",
+            "not_connected": "A conex\u00e3o remota com a sua TV Panasonic Viera foi perdida. Verifique os logs para obter mais informa\u00e7\u00f5es."
+        },
+        "step": {
+            "user": {
+                "description": "Digite o endere\u00e7o IP da sua TV Panasonic Viera",
+                "title": "Configure sua TV"
+            }
+        }
+    },
+    "title": "Panasonic Viera"
+}

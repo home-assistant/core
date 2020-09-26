@@ -13,6 +13,8 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_ID,
     CONF_NAME,
+    HTTP_OK,
+    TIME_MINUTES,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -111,7 +113,7 @@ class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
         }
 
         response = requests.get(RESOURCE, params, timeout=10)
-        if response.status_code != 200:
+        if response.status_code != HTTP_OK:
             _LOGGER.warning("Invalid response from WSDOT API")
         else:
             self._data = response.json()
@@ -137,7 +139,7 @@ class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
     @property
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
-        return "min"
+        return TIME_MINUTES
 
 
 def _parse_wsdot_timestamp(timestamp):

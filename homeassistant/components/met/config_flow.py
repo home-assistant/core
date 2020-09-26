@@ -1,4 +1,6 @@
 """Config flow to configure Met component."""
+from typing import Any, Dict, Optional
+
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -12,15 +14,15 @@ from .const import CONF_TRACK_HOME, DOMAIN, HOME_LOCATION_NAME
 @callback
 def configured_instances(hass):
     """Return a set of configured SimpliSafe instances."""
-    entites = []
+    entries = []
     for entry in hass.config_entries.async_entries(DOMAIN):
         if entry.data.get("track_home"):
-            entites.append("home")
+            entries.append("home")
             continue
-        entites.append(
+        entries.append(
             f"{entry.data.get(CONF_LATITUDE)}-{entry.data.get(CONF_LONGITUDE)}"
         )
-    return set(entites)
+    return set(entries)
 
 
 class MetFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -70,6 +72,12 @@ class MetFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             errors=self._errors,
         )
+
+    async def async_step_import(
+        self, user_input: Optional[Dict] = None
+    ) -> Dict[str, Any]:
+        """Handle configuration by yaml file."""
+        return await self.async_step_user(user_input)
 
     async def async_step_onboarding(self, data=None):
         """Handle a flow initialized by onboarding."""

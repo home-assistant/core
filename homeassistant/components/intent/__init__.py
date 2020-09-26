@@ -5,7 +5,8 @@ import voluptuous as vol
 
 from homeassistant.components import http
 from homeassistant.components.http.data_validator import RequestDataValidator
-from homeassistant.core import HomeAssistant
+from homeassistant.const import SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant
 from homeassistant.helpers import config_validation as cv, integration_platform, intent
 
 from .const import DOMAIN
@@ -20,6 +21,22 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
     await integration_platform.async_process_integration_platforms(
         hass, DOMAIN, _async_process_intent
+    )
+
+    hass.helpers.intent.async_register(
+        intent.ServiceIntentHandler(
+            intent.INTENT_TURN_ON, HA_DOMAIN, SERVICE_TURN_ON, "Turned {} on"
+        )
+    )
+    hass.helpers.intent.async_register(
+        intent.ServiceIntentHandler(
+            intent.INTENT_TURN_OFF, HA_DOMAIN, SERVICE_TURN_OFF, "Turned {} off"
+        )
+    )
+    hass.helpers.intent.async_register(
+        intent.ServiceIntentHandler(
+            intent.INTENT_TOGGLE, HA_DOMAIN, SERVICE_TOGGLE, "Toggled {}"
+        )
     )
 
     return True

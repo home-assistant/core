@@ -6,7 +6,13 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_DISPLAY_OPTIONS, CONF_NAME, TEMP_CELSIUS
+from homeassistant.const import (
+    CONF_DISPLAY_OPTIONS,
+    CONF_NAME,
+    PRESSURE_HPA,
+    TEMP_CELSIUS,
+    VOLT,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -30,11 +36,11 @@ SENSOR_TYPES = {
     "magnetometer_y": ["magnetometer_y", " ", "mdi:magnet"],
     "magnetometer_z": ["magnetometer_z", " ", "mdi:magnet"],
     "temperature": ["temperature", TEMP_CELSIUS, "mdi:thermometer"],
-    "pressure": ["pressure", "hPa", "mdi:gauge"],
-    "voltage_0": ["voltage_0", "V", "mdi:flash"],
-    "voltage_1": ["voltage_1", "V", "mdi:flash"],
-    "voltage_2": ["voltage_2", "V", "mdi:flash"],
-    "voltage_3": ["voltage_3", "V", "mdi:flash"],
+    "pressure": ["pressure", PRESSURE_HPA, "mdi:gauge"],
+    "voltage_0": ["voltage_0", VOLT, "mdi:flash"],
+    "voltage_1": ["voltage_1", VOLT, "mdi:flash"],
+    "voltage_2": ["voltage_2", VOLT, "mdi:flash"],
+    "voltage_3": ["voltage_3", VOLT, "mdi:flash"],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -53,7 +59,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     try:
         envirophat = importlib.import_module("envirophat")
     except OSError:
-        _LOGGER.error("No Enviro pHAT was found.")
+        _LOGGER.error("No Enviro pHAT was found")
         return False
 
     data = EnvirophatData(envirophat, config.get(CONF_USE_LEDS))

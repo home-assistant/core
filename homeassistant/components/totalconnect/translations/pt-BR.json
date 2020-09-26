@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Conta j\u00e1 configurada"
+        },
+        "error": {
+            "login": "Erro de login: verifique seu nome de usu\u00e1rio e senha"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "username": "Usu\u00e1rio"
+                },
+                "title": "Total Connect"
+            }
+        }
+    }
+}

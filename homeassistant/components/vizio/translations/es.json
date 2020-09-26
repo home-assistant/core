@@ -1,0 +1,55 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_device": "El dispositivo ya est\u00e1 configurado",
+            "updated_entry": "Esta entrada ya ha sido configurada pero el nombre y/o las opciones definidas en la configuraci\u00f3n no coinciden con la configuraci\u00f3n previamente importada, por lo que la entrada de la configuraci\u00f3n ha sido actualizada en consecuencia."
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar",
+            "complete_pairing_failed": "No se pudo completar el emparejamiento. Aseg\u00farate de que el PIN que has proporcionado es correcto y que el televisor sigue encendido y conectado a la red antes de volver a enviarlo.",
+            "existing_config_entry_found": "Ya se ha configurado una entrada VIZIO SmartCast Device con el mismo n\u00famero de serie. Debes borrar la entrada existente para configurar \u00e9sta.",
+            "host_exists": "Ya existe un VIZIO SmartCast Device configurado con ese host.",
+            "name_exists": "Ya existe un VIZIO SmartCast Device configurado con ese nombre."
+        },
+        "step": {
+            "pair_tv": {
+                "data": {
+                    "pin": "PIN"
+                },
+                "description": "Tu TV debe estar mostrando un c\u00f3digo. Escribe ese c\u00f3digo en el formulario y contin\u00faa con el paso siguiente para completar el emparejamiento.",
+                "title": "Completar Proceso de Emparejamiento"
+            },
+            "pairing_complete": {
+                "description": "El dispositivo VIZIO SmartCast ahora est\u00e1 conectado a Home Assistant.",
+                "title": "Emparejamiento Completado"
+            },
+            "pairing_complete_import": {
+                "description": "El dispositivo VIZIO SmartCast TV ahora est\u00e1 conectado a Home Assistant.\n\nEl token de acceso es '**{access_token}**'.",
+                "title": "Emparejamiento Completado"
+            },
+            "user": {
+                "data": {
+                    "access_token": "Token de acceso",
+                    "device_class": "Tipo de dispositivo",
+                    "host": "Host",
+                    "name": "Nombre"
+                },
+                "description": "El token de acceso solo se necesita para las televisiones. Si est\u00e1s configurando una televisi\u00f3n y a\u00fan no tienes un token de acceso, d\u00e9jalo en blanco para iniciar el proceso de sincronizaci\u00f3n.",
+                "title": "VIZIO SmartCast Device"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "apps_to_include_or_exclude": "Aplicaciones para incluir o excluir",
+                    "include_or_exclude": "\u00bfIncluir o excluir aplicaciones?",
+                    "volume_step": "Tama\u00f1o del paso de volumen"
+                },
+                "description": "Si tienes un Smart TV, opcionalmente puedes filtrar su lista de fuentes eligiendo qu\u00e9 aplicaciones incluir o excluir en su lista de fuentes.",
+                "title": "Actualizar las opciones de SmartCast de Vizo"
+            }
+        }
+    }
+}

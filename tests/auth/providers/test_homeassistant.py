@@ -1,6 +1,5 @@
 """Test the Home Assistant local auth provider."""
 import asyncio
-from unittest.mock import Mock, patch
 
 import pytest
 import voluptuous as vol
@@ -12,7 +11,7 @@ from homeassistant.auth.providers import (
     homeassistant as hass_auth,
 )
 
-from tests.common import mock_coro
+from tests.async_mock import Mock, patch
 
 
 @pytest.fixture
@@ -156,9 +155,7 @@ async def test_get_or_create_credentials(hass, data):
     provider = manager.auth_providers[0]
     provider.data = data
     credentials1 = await provider.async_get_or_create_credentials({"username": "hello"})
-    with patch.object(
-        provider, "async_credentials", return_value=mock_coro([credentials1])
-    ):
+    with patch.object(provider, "async_credentials", return_value=[credentials1]):
         credentials2 = await provider.async_get_or_create_credentials(
             {"username": "hello "}
         )
@@ -264,17 +261,13 @@ async def test_legacy_get_or_create_credentials(hass, legacy_data):
     provider.data = legacy_data
     credentials1 = await provider.async_get_or_create_credentials({"username": "hello"})
 
-    with patch.object(
-        provider, "async_credentials", return_value=mock_coro([credentials1])
-    ):
+    with patch.object(provider, "async_credentials", return_value=[credentials1]):
         credentials2 = await provider.async_get_or_create_credentials(
             {"username": "hello"}
         )
     assert credentials1 is credentials2
 
-    with patch.object(
-        provider, "async_credentials", return_value=mock_coro([credentials1])
-    ):
+    with patch.object(provider, "async_credentials", return_value=[credentials1]):
         credentials3 = await provider.async_get_or_create_credentials(
             {"username": "hello "}
         )

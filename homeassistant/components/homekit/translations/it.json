@@ -1,0 +1,59 @@
+{
+    "config": {
+        "abort": {
+            "port_name_in_use": "Un bridge con lo stesso nome o porta \u00e8 gi\u00e0 configurato."
+        },
+        "step": {
+            "pairing": {
+                "description": "Non appena il bridge {name} \u00e8 pronto, l'associazione sar\u00e0 disponibile in \"Notifiche\" come \"HomeKit Bridge Setup\".",
+                "title": "Associa HomeKit Bridge"
+            },
+            "user": {
+                "data": {
+                    "auto_start": "Avvio automatico (disabilitare se si utilizza Z-Wave o un altro sistema di avvio ritardato)",
+                    "include_domains": "Domini da includere"
+                },
+                "description": "Un HomeKit Bridge ti permetter\u00e0 di accedere alle tue entit\u00e0 Home Assistant in HomeKit. Gli HomeKit Bridges sono limitati a 150 accessori per istanza, incluso il bridge stesso. Se si desidera collegare un numero di accessori superiore al massimo consentito, si consiglia di utilizzare pi\u00f9 HomeKit Bridge per domini diversi. La configurazione dettagliata delle entit\u00e0 \u00e8 disponibile solo tramite YAML per il bridge primario.",
+                "title": "Attiva HomeKit Bridge"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "advanced": {
+                "data": {
+                    "auto_start": "Avvio automatico (disabilitare se si utilizza Z-Wave o un altro sistema di avvio ritardato)",
+                    "safe_mode": "Modalit\u00e0 provvisoria (attivare solo in caso di errore di associazione)"
+                },
+                "description": "Queste impostazioni devono essere modificate solo se il bridge HomeKit non funziona.",
+                "title": "Configurazione Avanzata"
+            },
+            "cameras": {
+                "data": {
+                    "camera_copy": "Telecamere che supportano flussi H.264 nativi"
+                },
+                "description": "Controllare tutte le telecamere che supportano i flussi H.264 nativi. Se la videocamera non emette uno stream H.264, il sistema provveder\u00e0 a transcodificare il video in H.264 per HomeKit. La transcodifica richiede una CPU performante ed \u00e8 improbabile che funzioni su computer a scheda singola.",
+                "title": "Seleziona il codec video della videocamera."
+            },
+            "exclude": {
+                "data": {
+                    "exclude_entities": "Entit\u00e0 da escludere"
+                },
+                "description": "Scegliere le entit\u00e0 che NON si desidera collegare.",
+                "title": "Escludere le entit\u00e0 dal bridge nei domini selezionati "
+            },
+            "init": {
+                "data": {
+                    "include_domains": "Domini da includere"
+                },
+                "description": "Le entit\u00e0 nei \"Domini da includere\" saranno collegate a HomeKit. Sarai in grado di selezionare quali entit\u00e0 escludere da questo elenco nella schermata successiva.",
+                "title": "Selezionare i domini al bridge."
+            },
+            "yaml": {
+                "description": "Questa voce \u00e8 controllata tramite YAML",
+                "title": "Regolare le opzioni di HomeKit Bridge"
+            }
+        }
+    },
+    "title": "HomeKit Bridge"
+}

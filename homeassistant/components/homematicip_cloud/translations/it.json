@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il punto di accesso \u00e8 gi\u00e0 configurato",
+            "connection_aborted": "Impossibile connettersi al server HMIP",
+            "unknown": "Si \u00e8 verificato un errore sconosciuto."
+        },
+        "error": {
+            "invalid_pin": "PIN non valido, riprova.",
+            "invalid_sgtin_or_pin": "SGTIN o PIN non valido, riprovare.",
+            "press_the_button": "Si prega di premere il pulsante blu.",
+            "register_failed": "Registrazione fallita, si prega di riprovare.",
+            "timeout_button": "Timeout della pressione del pulsante blu, riprovare."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "hapid": "ID del punto di accesso (SGTIN)",
+                    "name": "Nome (opzionale, usato come prefisso del nome per tutti i dispositivi)",
+                    "pin": "Codice Pin (opzionale)"
+                },
+                "title": "Scegli punto di accesso HomematicIP"
+            },
+            "link": {
+                "description": "Premi il pulsante blu sull'access point ed il pulsante di invio per registrare HomematicIP con Home Assistant. \n\n ![Posizione del pulsante sul bridge](/static/images/config_flows/config_homematicip_cloud.png)",
+                "title": "Collegamento access point"
+            }
+        }
+    }
+}

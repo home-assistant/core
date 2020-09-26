@@ -24,6 +24,7 @@ ATTR_START = "start"
 ATTR_TARGET = "destination"
 ATTR_TRAIN_NUMBER = "train_number"
 ATTR_TRANSFERS = "transfers"
+ATTR_DELAY = "delay"
 
 ATTRIBUTION = "Data provided by transport.opendata.ch"
 
@@ -113,6 +114,7 @@ class SwissPublicTransportSensor(Entity):
             ATTR_TARGET: self._opendata.to_name,
             ATTR_REMAINING_TIME: f"{self._remaining_time}",
             ATTR_ATTRIBUTION: ATTRIBUTION,
+            ATTR_DELAY: self._opendata.connections[0]["delay"],
         }
         return attr
 

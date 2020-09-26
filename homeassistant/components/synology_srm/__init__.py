@@ -1,1 +1,1 @@
-"""The synology_srm component."""
+"""The Synology SRM component."""

@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "No s'ha trobat cap dispositiu AEH-W4A1 a la xarxa.",
+            "single_instance_allowed": "Nom\u00e9s \u00e9s possible una \u00fanica configuraci\u00f3 del AEH-W4A1 de Hisense."
+        },
+        "step": {
+            "confirm": {
+                "description": "Vols configurar AEH-W4A1 de Hisense?"
+            }
+        }
+    }
+}

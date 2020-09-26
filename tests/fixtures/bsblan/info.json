@@ -1,0 +1,23 @@
+{
+  "6224": {
+    "name": "Geräte-Identifikation",
+    "value": "RVS21.831F/127",
+    "unit": "",
+    "desc": "",
+    "dataType": 7
+  },
+  "6225": {
+    "name": "Device family",
+    "value": "211",
+    "unit": "",
+    "desc": "",
+    "dataType": 0
+  },
+  "6226": {
+    "name": "Device variant",
+    "value": "127",
+    "unit": "",
+    "desc": "",
+    "dataType": 0
+  }
+}

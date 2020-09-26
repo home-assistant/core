@@ -1,0 +1,59 @@
+{
+    "config": {
+        "abort": {
+            "port_name_in_use": "Ya est\u00e1 configurada una pasarela con el mismo nombre o puerto."
+        },
+        "step": {
+            "pairing": {
+                "description": "Tan pronto como la pasarela {name} est\u00e9 lista, la vinculaci\u00f3n estar\u00e1 disponible en \"Notificaciones\" como \"configuraci\u00f3n de pasarela Homekit\"",
+                "title": "Vincular pasarela Homekit"
+            },
+            "user": {
+                "data": {
+                    "auto_start": "Arranque autom\u00e1tico (desactivado si se utiliza Z-Wave u otro sistema de arranque retardado)",
+                    "include_domains": "Dominios para incluir"
+                },
+                "description": "Una pasarela Homekit permitir\u00e1 a Homekit acceder a sus entidades de Home Assistant. La pasarela Homekit est\u00e1 limitada a 150 accesorios por instancia incluyendo la propia pasarela. Si desea enlazar m\u00e1s del m\u00e1ximo n\u00famero de accesorios, se recomienda que use multiples pasarelas Homekit para diferentes dominios. Configuraci\u00f3n detallada de la entidad solo est\u00e1 disponible via YAML para la pasarela primaria.",
+                "title": "Activar pasarela Homekit"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "advanced": {
+                "data": {
+                    "auto_start": "Arranque autom\u00e1tico (desactivado si se utiliza Z-Wave u otro sistema de arranque retardado)",
+                    "safe_mode": "Modo seguro (habil\u00edtelo solo si falla el emparejamiento)"
+                },
+                "description": "Esta configuraci\u00f3n solo necesita ser ajustada si el puente HomeKit no es funcional.",
+                "title": "Configuraci\u00f3n avanzada"
+            },
+            "cameras": {
+                "data": {
+                    "camera_copy": "C\u00e1maras compatibles con transmisiones H.264 nativas"
+                },
+                "description": "Verifique todas las c\u00e1maras que admiten transmisiones H.264 nativas. Si la c\u00e1mara no emite una transmisi\u00f3n H.264, el sistema transcodificar\u00e1 el video a H.264 para HomeKit. La transcodificaci\u00f3n requiere una CPU de alto rendimiento y es poco probable que funcione en ordenadores de placa \u00fanica.",
+                "title": "Seleccione el c\u00f3dec de video de la c\u00e1mara."
+            },
+            "exclude": {
+                "data": {
+                    "exclude_entities": "Entidades a excluir"
+                },
+                "description": "Elija las entidades que NO desea puentear.",
+                "title": "Excluir entidades en dominios seleccionados de bridge"
+            },
+            "init": {
+                "data": {
+                    "include_domains": "Dominios para incluir"
+                },
+                "description": "Las entidades de los \"Dominios que se van a incluir\" se establecer\u00e1n en HomeKit. Podr\u00e1 seleccionar qu\u00e9 entidades excluir de esta lista en la siguiente pantalla.",
+                "title": "Seleccione los dominios que desea establecer un puente."
+            },
+            "yaml": {
+                "description": "Esta entrada se controla a trav\u00e9s de YAML",
+                "title": "Ajustar las opciones del puente HomeKit"
+            }
+        }
+    },
+    "title": "Pasarela Homekit"
+}

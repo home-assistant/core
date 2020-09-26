@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service ass scho konfigur\u00e9iert"
+        },
+        "error": {
+            "cannot_connect": "Feeler beim verbannen"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API Schl\u00ebssel (Optionell)",
+                    "host": "Host",
+                    "location": "Standuert",
+                    "name": "Numm",
+                    "port": "Port",
+                    "ssl": "SSL benotzen",
+                    "verify_ssl": "SSL Zertifikat iwwerpr\u00e9iwen"
+                }
+            }
+        }
+    }
+}

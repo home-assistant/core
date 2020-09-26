@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Yhteyden muodostaminen palvelimeen ei onnistu"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Nimi",
+                    "password": "Salasana",
+                    "port": "portti"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,15 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_home": "{entity_name} on kodus",
+            "is_not_home": "{entity_name} on eemal"
+        }
+    },
+    "state": {
+        "_": {
+            "home": "Kodus",
+            "not_home": "Eemal"
+        }
+    },
+    "title": "Seadme tr\u00e4kker"
+}

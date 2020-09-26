@@ -34,8 +34,10 @@ class QSSensor(QSEntity):
         sensor_type = sensor["type"]
 
         self._decode, self.unit = SENSORS[sensor_type]
-        if isinstance(self.unit, type):
-            self.unit = f"{sensor_type}:{self.channel}"
+        # this cannot happen because it only happens in bool and this should be redirected to binary_sensor
+        assert not isinstance(
+            self.unit, type
+        ), f"boolean sensor id={sensor['id']} name={sensor['name']}"
 
     @callback
     def update_packet(self, packet):
@@ -51,7 +53,7 @@ class QSSensor(QSEntity):
         )
         if val is not None:
             self._val = val
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     @property
     def state(self):

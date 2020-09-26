@@ -2,7 +2,7 @@
 from pymfy.api.devices.camera_protect import CameraProtect
 from pymfy.api.devices.category import Category
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 
 from . import API, DEVICES, DOMAIN, SomfyEntity
 
@@ -23,7 +23,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(await hass.async_add_executor_job(get_shutters), True)
 
 
-class SomfyCameraShutter(SomfyEntity, SwitchDevice):
+class SomfyCameraShutter(SomfyEntity, SwitchEntity):
     """Representation of a Somfy Camera Shutter device."""
 
     def __init__(self, device, api):

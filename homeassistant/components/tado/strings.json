@@ -1,0 +1,33 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Device is already configured"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "title": "Connect to your Tado account"
+      }
+    },
+    "error": {
+      "unknown": "Unexpected error",
+      "no_homes": "There are no homes linked to this tado account.",
+      "invalid_auth": "Invalid authentication",
+      "cannot_connect": "Failed to connect, please try again"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "Fallback mode will switch to Smart Schedule at next schedule switch after manually adjusting a zone.",
+        "data": {
+          "fallback": "Enable fallback mode."
+        },
+        "title": "Adjust Tado options."
+      }
+    }
+  }
+}

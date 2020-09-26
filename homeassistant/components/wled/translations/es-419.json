@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host o direcci\u00f3n IP"
+                }
+            }
+        }
+    }
+}

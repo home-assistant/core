@@ -1,0 +1,14 @@
+{
+    "config": {
+        "flow_title": "Roku: {name}",
+        "step": {
+            "ssdp_confirm": {
+                "description": "Voc\u00ea quer configurar o {name}?",
+                "title": "Roku"
+            },
+            "user": {
+                "description": "Digite suas informa\u00e7\u00f5es de Roku."
+            }
+        }
+    }
+}

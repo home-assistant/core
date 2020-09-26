@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_SENSORS,
     CONF_TYPE,
     EVENT_HOMEASSISTANT_STOP,
+    PERCENTAGE,
     TEMP_CELSIUS,
 )
 from homeassistant.core import callback
@@ -170,7 +171,7 @@ class LaCrosseSensor(Entity):
         """Triggered when value is expired."""
         self._expiration_trigger = None
         self._value = None
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
 
 class LaCrosseTemperature(LaCrosseSensor):
@@ -193,7 +194,7 @@ class LaCrosseHumidity(LaCrosseSensor):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return "%"
+        return PERCENTAGE
 
     @property
     def state(self):

@@ -1,0 +1,175 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_bat_low": "Baterie {entity_name} je skoro vybit\u00e1",
+            "is_cold": "{entity_name} je studen\u00fd",
+            "is_connected": "{entity_name} je p\u0159ipojen",
+            "is_gas": "{entity_name} detekuje plyn",
+            "is_hot": "{entity_name} je hork\u00fd",
+            "is_light": "{entity_name} detekuje sv\u011btlo",
+            "is_locked": "{entity_name} je zam\u010deno",
+            "is_moist": "{entity_name} je vlhk\u00fd",
+            "is_motion": "{entity_name} detekuje pohyb",
+            "is_moving": "{entity_name} se pohybuje",
+            "is_no_gas": "{entity_name} nedetekuje plyn",
+            "is_no_light": "{entity_name} nedetekuje sv\u011btlo",
+            "is_no_motion": "{entity_name} nedetekuje pohyb",
+            "is_no_problem": "{entity_name} nehl\u00e1s\u00ed probl\u00e9m",
+            "is_no_smoke": "{entity_name} nedetekuje kou\u0159",
+            "is_no_sound": "{entity_name} nedetekuje zvuk",
+            "is_no_vibration": "{entity_name} nedetekuje vibrace",
+            "is_not_bat_low": "{entity_name} baterie v norm\u00e1lu",
+            "is_not_cold": "{entity_name} nen\u00ed studen\u00fd",
+            "is_not_connected": "{entity_name} je odpojen",
+            "is_not_hot": "{entity_name} nen\u00ed hork\u00fd",
+            "is_not_locked": "{entity_name} je odem\u010den",
+            "is_not_moist": "{entity_name} je such\u00fd",
+            "is_not_moving": "{entity_name} se nepohybuje",
+            "is_not_occupied": "{entity_name} nen\u00ed obsazeno",
+            "is_not_open": "{entity_name} je zav\u0159eno",
+            "is_not_plugged_in": "{entity_name} je odpojeno",
+            "is_not_powered": "{entity_name} nen\u00ed nap\u00e1jeno",
+            "is_not_present": "{entity_name} nen\u00ed p\u0159\u00edtomno",
+            "is_not_unsafe": "{entity_name} je bezpe\u010dno",
+            "is_occupied": "{entity_name} je obsazeno",
+            "is_off": "{entity_name} je vypnuto",
+            "is_on": "{entity_name} je zapnuto",
+            "is_open": "{entity_name} je otev\u0159eno",
+            "is_plugged_in": "{entity_name} je p\u0159ipojeno",
+            "is_powered": "{entity_name} nap\u00e1jeno",
+            "is_present": "{entity_name} p\u0159\u00edtomno",
+            "is_problem": "{entity_name} detekuje probl\u00e9m",
+            "is_smoke": "{entity_name} detekuje kou\u0159",
+            "is_sound": "{entity_name} detekuje zvuk",
+            "is_unsafe": "{entity_name} nen\u00ed bezpe\u010dno",
+            "is_vibration": "{entity_name} detekuje vibrace"
+        },
+        "trigger_type": {
+            "bat_low": "{entity_name} vybit\u00e1 baterie",
+            "cold": "{entity_name} vychladlo",
+            "connected": "{entity_name} p\u0159ipojeno",
+            "gas": "{entity_name} za\u010dalo detekovat plyn",
+            "hot": "{entity_name} se zah\u0159\u00e1l",
+            "light": "{entity_name} za\u010dalo detekovat sv\u011btlo",
+            "locked": "{entity_name} zam\u010deno",
+            "moist": "{entity_name} se navlh\u010dil",
+            "motion": "{entity_name} za\u010dalo detekovat pohyb",
+            "moving": "{entity_name} se za\u010dal pohybovat",
+            "no_gas": "{entity_name} p\u0159estalo detekovat plyn",
+            "no_light": "{entity_name} p\u0159estalo detekovat sv\u011btlo",
+            "no_motion": "{entity_name} p\u0159estalo detekovat pohyb",
+            "no_problem": "{entity_name} p\u0159estalo detekovat probl\u00e9m",
+            "no_smoke": "{entity_name} p\u0159estalo detekovat kou\u0159",
+            "no_sound": "{entity_name} p\u0159estalo detekovat zvuk",
+            "no_vibration": "{entity_name} p\u0159estalo detekovat vibrace",
+            "not_bat_low": "{entity_name} baterie v norm\u00e1lu",
+            "not_cold": "{entity_name} p\u0159estal b\u00fdt studen\u00fd",
+            "not_connected": "{entity_name} odpojeno",
+            "not_hot": "{entity_name} p\u0159estal b\u00fdt hork\u00fd",
+            "not_locked": "{entity_name} odem\u010deno",
+            "not_moist": "{entity_name} vyschlo",
+            "not_moving": "{entity_name} se p\u0159estalo pohybovat",
+            "not_occupied": "{entity_name} volno",
+            "not_opened": "{entity_name} uzav\u0159eno",
+            "not_plugged_in": "{entity_name} odpojeno",
+            "not_powered": "{entity_name} nen\u00ed nap\u00e1jeno",
+            "not_present": "{entity_name} nep\u0159\u00edtomno",
+            "not_unsafe": "{entity_name} bezpe\u010dno",
+            "occupied": "{entity_name} obsazeno",
+            "opened": "{entity_name} otev\u0159eno",
+            "plugged_in": "{entity_name} p\u0159ipojeno",
+            "powered": "{entity_name} nap\u00e1jeno",
+            "present": "{entity_name} p\u0159\u00edtomno",
+            "problem": "{entity_name} za\u010dalo detekovat probl\u00e9m",
+            "smoke": "{entity_name} za\u010dalo detekovat kou\u0159",
+            "sound": "{entity_name} za\u010dalo detekovat zvuk",
+            "turned_off": "{entity_name} vypnuto",
+            "turned_on": "{entity_name} zapnuto",
+            "unsafe": "{entity_name} hl\u00e1s\u00ed ohro\u017een\u00ed",
+            "vibration": "{entity_name} za\u010dalo detekovat vibrace"
+        }
+    },
+    "state": {
+        "_": {
+            "off": "Neaktivn\u00ed",
+            "on": "Aktivn\u00ed"
+        },
+        "battery": {
+            "off": "Norm\u00e1ln\u00ed",
+            "on": "N\u00edzk\u00fd stav"
+        },
+        "cold": {
+            "off": "Norm\u00e1ln\u00ed",
+            "on": "Studen\u00e9"
+        },
+        "connectivity": {
+            "off": "Odpojeno",
+            "on": "P\u0159ipojeno"
+        },
+        "door": {
+            "off": "Zav\u0159eno",
+            "on": "Otev\u0159eno"
+        },
+        "garage_door": {
+            "off": "Zav\u0159eno",
+            "on": "Otev\u0159eno"
+        },
+        "gas": {
+            "off": "\u017d\u00e1dn\u00fd plyn",
+            "on": "Zji\u0161t\u011bn plyn"
+        },
+        "heat": {
+            "off": "Norm\u00e1ln\u00ed",
+            "on": "Hork\u00e9"
+        },
+        "lock": {
+            "off": "Zam\u010deno",
+            "on": "Odem\u010deno"
+        },
+        "moisture": {
+            "off": "Sucho",
+            "on": "Vlhko"
+        },
+        "motion": {
+            "off": "\u017d\u00e1dn\u00fd pohyb",
+            "on": "Zaznamen\u00e1n pohyb"
+        },
+        "occupancy": {
+            "off": "Volno",
+            "on": "Obsazeno"
+        },
+        "opening": {
+            "off": "Zav\u0159eno",
+            "on": "Otev\u0159eno"
+        },
+        "presence": {
+            "off": "Pry\u010d",
+            "on": "Doma"
+        },
+        "problem": {
+            "off": "V po\u0159\u00e1dku",
+            "on": "Probl\u00e9m"
+        },
+        "safety": {
+            "off": "Zaji\u0161t\u011bno",
+            "on": "Nezaji\u0161t\u011bno"
+        },
+        "smoke": {
+            "off": "\u017d\u00e1dn\u00fd d\u00fdm",
+            "on": "Zji\u0161t\u011bn d\u00fdm"
+        },
+        "sound": {
+            "off": "Ticho",
+            "on": "Zachycen zvuk"
+        },
+        "vibration": {
+            "off": "Klid",
+            "on": "Zji\u0161t\u011bny vibrace"
+        },
+        "window": {
+            "off": "Zav\u0159eno",
+            "on": "Otev\u0159eno"
+        }
+    },
+    "title": "Bin\u00e1rn\u00ed senzor"
+}

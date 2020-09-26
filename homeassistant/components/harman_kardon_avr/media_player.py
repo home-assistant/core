@@ -4,7 +4,7 @@ import logging
 import hkavr
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF,
@@ -49,7 +49,7 @@ def setup_platform(hass, config, add_entities, discover_info=None):
     add_entities([avr_device], True)
 
 
-class HkAvrDevice(MediaPlayerDevice):
+class HkAvrDevice(MediaPlayerEntity):
     """Representation of a Harman Kardon AVR / JBL AVR TV."""
 
     def __init__(self, avr):

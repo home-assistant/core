@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Questo account Tile \u00e8 gi\u00e0 registrato."
+        },
+        "error": {
+            "invalid_credentials": "Fornite credenziali di Tile non valide."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "E-mail"
+                },
+                "title": "Configura Tile"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_inactive": "Mostra Tile inattive"
+                },
+                "title": "Configura Tile"
+            }
+        }
+    }
+}

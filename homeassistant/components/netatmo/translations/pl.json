@@ -1,0 +1,38 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_timeout": "Przekroczono limit czasu generowania URL autoryzacji.",
+            "missing_configuration": "Komponent nie jest skonfigurowany. Post\u0119puj zgodnie z dokumentacj\u0105.",
+            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
+        },
+        "create_entry": {
+            "default": "Pomy\u015blnie uwierzytelniono"
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Wybierz metod\u0119 uwierzytelniania"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "public_weather": {
+                "data": {
+                    "area_name": "Nazwa obszaru",
+                    "mode": "Obliczenia",
+                    "show_on_map": "Poka\u017c na mapie"
+                },
+                "description": "Skonfiguruj publiczny czujnik pogody dla obszaru.",
+                "title": "Netatmo publiczny czujnik pogody"
+            },
+            "public_weather_areas": {
+                "data": {
+                    "new_area": "Nazwa obszaru",
+                    "weather_areas": "Obszary pogodowe"
+                },
+                "description": "Skonfiguruj publiczne czujniki pogody.",
+                "title": "Netatmo publiczny czujnik pogody"
+            }
+        }
+    }
+}

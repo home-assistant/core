@@ -1,6 +1,4 @@
 """Tests for the SolarEdge config flow."""
-from unittest.mock import Mock, patch
-
 import pytest
 from requests.exceptions import ConnectTimeout, HTTPError
 
@@ -9,6 +7,7 @@ from homeassistant.components.solaredge import config_flow
 from homeassistant.components.solaredge.const import CONF_SITE_ID, DEFAULT_NAME
 from homeassistant.const import CONF_API_KEY, CONF_NAME
 
+from tests.async_mock import Mock, patch
 from tests.common import MockConfigEntry
 
 NAME = "solaredge site 1 2 3"
@@ -18,7 +17,7 @@ API_KEY = "a1b2c3d4e5f6g7h8"
 
 @pytest.fixture(name="test_api")
 def mock_controller():
-    """Mock a successfull Solaredge API."""
+    """Mock a successful Solaredge API."""
     api = Mock()
     api.get_details.return_value = {"details": {"status": "active"}}
     with patch("solaredge.Solaredge", return_value=api):

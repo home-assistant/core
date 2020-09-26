@@ -1,8 +1,8 @@
 """Tests for the aws component config and setup."""
-from asynctest import CoroutineMock, MagicMock, patch as async_patch
-
 from homeassistant.components import aws
 from homeassistant.setup import async_setup_component
+
+from tests.async_mock import AsyncMock, MagicMock, patch as async_patch
 
 
 class MockAioSession:
@@ -10,23 +10,23 @@ class MockAioSession:
 
     def __init__(self, *args, **kwargs):
         """Init a mock session."""
-        self.get_user = CoroutineMock()
-        self.invoke = CoroutineMock()
-        self.publish = CoroutineMock()
-        self.send_message = CoroutineMock()
+        self.get_user = AsyncMock()
+        self.invoke = AsyncMock()
+        self.publish = AsyncMock()
+        self.send_message = AsyncMock()
 
     def create_client(self, *args, **kwargs):  # pylint: disable=no-self-use
         """Create a mocked client."""
         return MagicMock(
-            __aenter__=CoroutineMock(
-                return_value=CoroutineMock(
+            __aenter__=AsyncMock(
+                return_value=AsyncMock(
                     get_user=self.get_user,  # iam
                     invoke=self.invoke,  # lambda
                     publish=self.publish,  # sns
                     send_message=self.send_message,  # sqs
                 )
             ),
-            __aexit__=CoroutineMock(),
+            __aexit__=AsyncMock(),
         )
 
 

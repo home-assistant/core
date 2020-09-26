@@ -12,7 +12,7 @@ CURRENCY_ICONS = {
     "USD": "mdi:currency-usd",
 }
 
-DEFAULT_COIN_ICON = "mdi:coin"
+DEFAULT_COIN_ICON = "mdi:currency-usd-circle"
 
 ATTRIBUTION = "Data provided by coinbase.com"
 
@@ -75,16 +75,14 @@ class AccountSensor(Entity):
         """Return the state attributes of the sensor."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,
-            ATTR_NATIVE_BALANCE: "{} {}".format(
-                self._native_balance, self._native_currency
-            ),
+            ATTR_NATIVE_BALANCE: f"{self._native_balance} {self._native_currency}",
         }
 
     def update(self):
         """Get the latest state of the sensor."""
         self._coinbase_data.update()
         for account in self._coinbase_data.accounts["data"]:
-            if self._name == "Coinbase {}".format(account["name"]):
+            if self._name == f"Coinbase {account['name']}":
                 self._state = account["balance"]["amount"]
                 self._native_balance = account["native_balance"]["amount"]
                 self._native_currency = account["native_balance"]["currency"]

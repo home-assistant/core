@@ -58,7 +58,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         sock.connect((host, port))
         sock.shutdown(2)
         _LOGGER.debug("Connection to GPSD possible")
-    except socket.error:
+    except OSError:
         _LOGGER.error("Not able to connect to GPSD")
         return False
 

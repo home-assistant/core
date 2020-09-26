@@ -1,0 +1,37 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service ass scho konfigur\u00e9iert",
+            "unknown": "Onerwaarte Feeler"
+        },
+        "error": {
+            "cannot_connect": "Feeler beim verbannen",
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun"
+        },
+        "flow_title": "Sonarr: {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API Schl\u00ebssel",
+                    "base_path": "Pad zur API",
+                    "host": "Host",
+                    "port": "Port",
+                    "ssl": "Sonarr benotzt een SSL Zertifikat",
+                    "verify_ssl": "Sonarr benotzt ee g\u00ebltegen SSL Zertifikat"
+                },
+                "title": "Mat Sonarr verbannen"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "upcoming_days": "Unzuel vun kommenden Deeg d\u00e9i sollen ugewise ginn",
+                    "wanted_max_items": "Max Unzuel vun gew\u00ebnschten Artikelen d\u00e9i solle ugewise ginn"
+                }
+            }
+        }
+    },
+    "title": "Sonarr"
+}

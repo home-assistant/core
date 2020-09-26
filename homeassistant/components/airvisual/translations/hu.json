@@ -1,0 +1,21 @@
+{
+    "config": {
+        "error": {
+            "general_error": "Ismeretlen hiba t\u00f6rt\u00e9nt."
+        },
+        "step": {
+            "geography": {
+                "data": {
+                    "api_key": "API kulcs",
+                    "latitude": "Sz\u00e9less\u00e9g",
+                    "longitude": "Hossz\u00fas\u00e1g"
+                }
+            },
+            "node_pro": {
+                "data": {
+                    "password": "Jelsz\u00f3"
+                }
+            }
+        }
+    }
+}

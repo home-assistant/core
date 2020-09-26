@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "MELCloud integrasjon er allerede konfigurert p\u00e5 denne e-posten. Access token har blitt oppdatert."
+        },
+        "error": {
+            "cannot_connect": "Klarte ikke \u00e5 koble til, vennligst pr\u00f8v igjen",
+            "invalid_auth": "Ugyldig godkjenning",
+            "unknown": "Uventet feil"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passord",
+                    "username": "E-post"
+                },
+                "description": "Koble til ved hjelp av MELCloud-kontoen din.",
+                "title": "Koble til MELCloud"
+            }
+        }
+    }
+}

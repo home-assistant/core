@@ -1,6 +1,5 @@
 """Test cors for the HTTP component."""
 from pathlib import Path
-from unittest.mock import patch
 
 from aiohttp import web
 from aiohttp.hdrs import (
@@ -18,6 +17,8 @@ from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.setup import async_setup_component
 
 from . import HTTP_HEADER_HA_AUTH
+
+from tests.async_mock import patch
 
 TRUSTED_ORIGIN = "https://home-assistant.io"
 

@@ -1,0 +1,17 @@
+{
+    "state": {
+        "_": {
+            "armed": "Akt\u00edvny",
+            "armed_away": "Akt\u00edvny v nepr\u00edtomnosti",
+            "armed_custom_bypass": "Zak\u00f3dovan\u00e9 prisp\u00f4soben\u00e9 vyl\u00fa\u010denie",
+            "armed_home": "Akt\u00edvny doma",
+            "armed_night": "Akt\u00edvny v noci",
+            "arming": "Aktivuje sa",
+            "disarmed": "Neakt\u00edvny",
+            "disarming": "Deaktivuje sa",
+            "pending": "\u010cak\u00e1 sa",
+            "triggered": "Spusten\u00fd"
+        }
+    },
+    "title": "Ovl\u00e1dac\u00ed panel alarmu"
+}

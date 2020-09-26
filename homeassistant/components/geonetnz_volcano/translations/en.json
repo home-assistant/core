@@ -1,0 +1,15 @@
+{
+    "config": {
+        "error": {
+            "identifier_exists": "Location already registered"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "radius": "Radius"
+                },
+                "title": "Fill in your filter details."
+            }
+        }
+    }
+}

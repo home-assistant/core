@@ -71,7 +71,7 @@ class N26Account(Entity):
     @property
     def name(self) -> str:
         """Friendly name of the sensor."""
-        return "n26_{}".format(self._iban[-4:])
+        return f"n26_{self._iban[-4:]}"
 
     @property
     def state(self) -> float:
@@ -110,7 +110,7 @@ class N26Account(Entity):
         }
 
         for limit in self._data.limits:
-            limit_attr_name = "limit_{}".format(limit["limit"].lower())
+            limit_attr_name = f"limit_{limit['limit'].lower()}"
             attributes[limit_attr_name] = limit["amount"]
 
         return attributes
@@ -143,7 +143,7 @@ class N26Card(Entity):
     @property
     def name(self) -> str:
         """Friendly name of the sensor."""
-        return "{}_card_{}".format(self._account_name.lower(), self._card["id"])
+        return f"{self._account_name.lower()}_card_{self._card['id']}"
 
     @property
     def state(self) -> float:
@@ -206,9 +206,7 @@ class N26Space(Entity):
     @property
     def unique_id(self):
         """Return the unique ID of the entity."""
-        return "space_{}_{}".format(
-            self._data.balance["iban"][-4:], self._space["name"].lower()
-        )
+        return f"space_{self._data.balance['iban'][-4:]}_{self._space['name'].lower()}"
 
     @property
     def name(self) -> str:

@@ -5,10 +5,10 @@ alarm_keypress:
   fields:
     entity_id:
       description: Name of the alarm control panel to trigger.
-      example: 'alarm_control_panel.downstairs'
+      example: "alarm_control_panel.downstairs"
     keypress:
-      description: 'String to send to the alarm panel (1-6 characters).'
-      example: '*71'
+      description: "String to send to the alarm panel (1-6 characters)."
+      example: "*71"
 
 invoke_custom_function:
   description: >

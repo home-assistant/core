@@ -1,4 +1,5 @@
 """Support for Z-Wave."""
+# pylint: disable=import-outside-toplevel
 import asyncio
 import copy
 from importlib import import_module
@@ -126,8 +127,8 @@ SET_CONFIG_PARAMETER_SCHEMA = vol.Schema(
 SET_NODE_VALUE_SCHEMA = vol.Schema(
     {
         vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
-        vol.Required(const.ATTR_VALUE_ID): vol.Coerce(int),
-        vol.Required(const.ATTR_CONFIG_VALUE): vol.Coerce(int),
+        vol.Required(const.ATTR_VALUE_ID): vol.Any(vol.Coerce(int), cv.string),
+        vol.Required(const.ATTR_CONFIG_VALUE): vol.Any(vol.Coerce(int), cv.string),
     }
 )
 
@@ -260,7 +261,7 @@ def _obj_to_dict(obj):
 
 def _value_name(value):
     """Return the name of the value."""
-    return "{} {}".format(node_name(value.node), value.label).strip()
+    return f"{node_name(value.node)} {value.label}".strip()
 
 
 def nice_print_node(node):
@@ -270,7 +271,7 @@ def nice_print_node(node):
         value_id: _obj_to_dict(value) for value_id, value in node.values.items()
     }
 
-    _LOGGER.info("FOUND NODE %s \n" "%s", node.product_name, node_dict)
+    _LOGGER.info("FOUND NODE %s \n%s", node.product_name, node_dict)
 
 
 def get_config_value(node, value_index, tries=5):
@@ -296,7 +297,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if discovery_info is None or DATA_NETWORK not in hass.data:
         return False
 
-    device = hass.data[DATA_DEVICES].get(discovery_info[const.DISCOVERY_DEVICE], None)
+    device = hass.data[DATA_DEVICES].get(discovery_info[const.DISCOVERY_DEVICE])
     if device is None:
         return False
 
@@ -334,12 +335,13 @@ async def async_setup_entry(hass, config_entry):
 
     Will automatically load components to support devices found on the network.
     """
-    from pydispatch import dispatcher
-
     # pylint: disable=import-error
-    from openzwave.option import ZWaveOption
-    from openzwave.network import ZWaveNetwork
     from openzwave.group import ZWaveGroup
+    from openzwave.network import ZWaveNetwork
+    from openzwave.option import ZWaveOption
+
+    # pylint: enable=import-error
+    from pydispatch import dispatcher
 
     # Merge config entry and yaml config
     config = config_entry.data
@@ -435,7 +437,6 @@ async def async_setup_entry(hass, config_entry):
         platform=None,
         scan_interval=DEFAULT_SCAN_INTERVAL,
         entity_namespace=None,
-        async_entities_added_callback=lambda: None,
     )
     platform.config_entry = config_entry
 
@@ -471,7 +472,7 @@ async def async_setup_entry(hass, config_entry):
         @callback
         def _on_timeout(sec):
             _LOGGER.warning(
-                "Z-Wave node %d not ready after %d seconds, " "continuing anyway",
+                "Z-Wave node %d not ready after %d seconds, continuing anyway",
                 entity.node_id,
                 sec,
             )
@@ -514,14 +515,14 @@ async def async_setup_entry(hass, config_entry):
         _LOGGER.info(
             "Z-Wave network is ready for use. All awake nodes "
             "have been queried. Sleeping nodes will be "
-            "queried when they awake."
+            "queried when they awake"
         )
         hass.bus.fire(const.EVENT_NETWORK_READY)
 
     def network_complete():
         """Handle the querying of all nodes on network."""
         _LOGGER.info(
-            "Z-Wave network is complete. All nodes on the network " "have been queried"
+            "Z-Wave network is complete. All nodes on the network have been queried"
         )
         hass.bus.fire(const.EVENT_NETWORK_COMPLETE)
 
@@ -593,7 +594,7 @@ async def async_setup_entry(hass, config_entry):
     async def rename_node(service):
         """Rename a node."""
         node_id = service.data.get(const.ATTR_NODE_ID)
-        node = network.nodes[node_id]
+        node = network.nodes[node_id]  # pylint: disable=unsubscriptable-object
         name = service.data.get(const.ATTR_NAME)
         node.name = name
         _LOGGER.info("Renamed Z-Wave node %d to %s", node_id, name)
@@ -613,7 +614,7 @@ async def async_setup_entry(hass, config_entry):
         """Rename a node value."""
         node_id = service.data.get(const.ATTR_NODE_ID)
         value_id = service.data.get(const.ATTR_VALUE_ID)
-        node = network.nodes[node_id]
+        node = network.nodes[node_id]  # pylint: disable=unsubscriptable-object
         value = node.values[value_id]
         name = service.data.get(const.ATTR_NAME)
         value.label = name
@@ -629,7 +630,7 @@ async def async_setup_entry(hass, config_entry):
         """Set the polling intensity of a node value."""
         node_id = service.data.get(const.ATTR_NODE_ID)
         value_id = service.data.get(const.ATTR_VALUE_ID)
-        node = network.nodes[node_id]
+        node = network.nodes[node_id]  # pylint: disable=unsubscriptable-object
         value = node.values[value_id]
         intensity = service.data.get(const.ATTR_POLL_INTENSITY)
         if intensity == 0:
@@ -667,7 +668,7 @@ async def async_setup_entry(hass, config_entry):
     def set_config_parameter(service):
         """Set a config parameter to a node."""
         node_id = service.data.get(const.ATTR_NODE_ID)
-        node = network.nodes[node_id]
+        node = network.nodes[node_id]  # pylint: disable=unsubscriptable-object
         param = service.data.get(const.ATTR_CONFIG_PARAMETER)
         selection = service.data.get(const.ATTR_CONFIG_VALUE)
         size = service.data.get(const.ATTR_CONFIG_SIZE)
@@ -679,7 +680,7 @@ async def async_setup_entry(hass, config_entry):
             if value.type == const.TYPE_BOOL:
                 value.data = int(selection == "True")
                 _LOGGER.info(
-                    "Setting config parameter %s on Node %s " "with bool selection %s",
+                    "Setting configuration parameter %s on Node %s with bool selection %s",
                     param,
                     node_id,
                     str(selection),
@@ -688,7 +689,7 @@ async def async_setup_entry(hass, config_entry):
             if value.type == const.TYPE_LIST:
                 value.data = str(selection)
                 _LOGGER.info(
-                    "Setting config parameter %s on Node %s " "with list selection %s",
+                    "Setting configuration parameter %s on Node %s with list selection %s",
                     param,
                     node_id,
                     str(selection),
@@ -698,7 +699,7 @@ async def async_setup_entry(hass, config_entry):
                 network.manager.pressButton(value.value_id)
                 network.manager.releaseButton(value.value_id)
                 _LOGGER.info(
-                    "Setting config parameter %s on Node %s "
+                    "Setting configuration parameter %s on Node %s "
                     "with button selection %s",
                     param,
                     node_id,
@@ -707,7 +708,7 @@ async def async_setup_entry(hass, config_entry):
                 return
             value.data = int(selection)
             _LOGGER.info(
-                "Setting config parameter %s on Node %s " "with selection %s",
+                "Setting configuration parameter %s on Node %s with selection %s",
                 param,
                 node_id,
                 selection,
@@ -715,7 +716,7 @@ async def async_setup_entry(hass, config_entry):
             return
         node.set_config_param(param, selection, size)
         _LOGGER.info(
-            "Setting unknown config parameter %s on Node %s " "with selection %s",
+            "Setting unknown configuration parameter %s on Node %s with selection %s",
             param,
             node_id,
             selection,
@@ -725,7 +726,7 @@ async def async_setup_entry(hass, config_entry):
         """Refresh the specified value from a node."""
         node_id = service.data.get(const.ATTR_NODE_ID)
         value_id = service.data.get(const.ATTR_VALUE_ID)
-        node = network.nodes[node_id]
+        node = network.nodes[node_id]  # pylint: disable=unsubscriptable-object
         node.values[value_id].refresh()
         _LOGGER.info("Node %s value %s refreshed", node_id, value_id)
 
@@ -734,14 +735,14 @@ async def async_setup_entry(hass, config_entry):
         node_id = service.data.get(const.ATTR_NODE_ID)
         value_id = service.data.get(const.ATTR_VALUE_ID)
         value = service.data.get(const.ATTR_CONFIG_VALUE)
-        node = network.nodes[node_id]
+        node = network.nodes[node_id]  # pylint: disable=unsubscriptable-object
         node.values[value_id].data = value
         _LOGGER.info("Node %s value %s set to %s", node_id, value_id, value)
 
     def print_config_parameter(service):
         """Print a config parameter from a node."""
         node_id = service.data.get(const.ATTR_NODE_ID)
-        node = network.nodes[node_id]
+        node = network.nodes[node_id]  # pylint: disable=unsubscriptable-object
         param = service.data.get(const.ATTR_CONFIG_PARAMETER)
         _LOGGER.info(
             "Config parameter %s on Node %s: %s",
@@ -753,13 +754,13 @@ async def async_setup_entry(hass, config_entry):
     def print_node(service):
         """Print all information about z-wave node."""
         node_id = service.data.get(const.ATTR_NODE_ID)
-        node = network.nodes[node_id]
+        node = network.nodes[node_id]  # pylint: disable=unsubscriptable-object
         nice_print_node(node)
 
     def set_wakeup(service):
         """Set wake-up interval of a node."""
         node_id = service.data.get(const.ATTR_NODE_ID)
-        node = network.nodes[node_id]
+        node = network.nodes[node_id]  # pylint: disable=unsubscriptable-object
         value = service.data.get(const.ATTR_CONFIG_VALUE)
         if node.can_wake_up():
             for value_id in node.get_values(class_id=const.COMMAND_CLASS_WAKE_UP):
@@ -806,14 +807,14 @@ async def async_setup_entry(hass, config_entry):
     def refresh_node(service):
         """Refresh all node info."""
         node_id = service.data.get(const.ATTR_NODE_ID)
-        node = network.nodes[node_id]
+        node = network.nodes[node_id]  # pylint: disable=unsubscriptable-object
         node.refresh_info()
 
     def reset_node_meters(service):
         """Reset meter counters of a node."""
         node_id = service.data.get(const.ATTR_NODE_ID)
         instance = service.data.get(const.ATTR_INSTANCE)
-        node = network.nodes[node_id]
+        node = network.nodes[node_id]  # pylint: disable=unsubscriptable-object
         for value in node.get_values(class_id=const.COMMAND_CLASS_METER).values():
             if value.index != const.INDEX_METER_RESET:
                 continue
@@ -826,16 +827,14 @@ async def async_setup_entry(hass, config_entry):
             )
             return
         _LOGGER.info(
-            "Node %s on instance %s does not have resettable " "meters.",
-            node_id,
-            instance,
+            "Node %s on instance %s does not have resettable meters", node_id, instance
         )
 
     def heal_node(service):
         """Heal a node on the network."""
         node_id = service.data.get(const.ATTR_NODE_ID)
         update_return_routes = service.data.get(const.ATTR_RETURN_ROUTES)
-        node = network.nodes[node_id]
+        node = network.nodes[node_id]  # pylint: disable=unsubscriptable-object
         _LOGGER.info("Z-Wave node heal running for node %s", node_id)
         node.heal(update_return_routes)
 
@@ -843,8 +842,8 @@ async def async_setup_entry(hass, config_entry):
         """Send test messages to a node on the network."""
         node_id = service.data.get(const.ATTR_NODE_ID)
         messages = service.data.get(const.ATTR_MESSAGES)
-        node = network.nodes[node_id]
-        _LOGGER.info("Sending %s test-messages to node %s.", messages, node_id)
+        node = network.nodes[node_id]  # pylint: disable=unsubscriptable-object
+        _LOGGER.info("Sending %s test-messages to node %s", messages, node_id)
         node.test(messages)
 
     def start_zwave(_service_or_event):
@@ -1081,7 +1080,7 @@ class ZWaveDeviceEntityValues:
         if workaround_component and workaround_component != component:
             if workaround_component == workaround.WORKAROUND_IGNORE:
                 _LOGGER.info(
-                    "Ignoring Node %d Value %d due to workaround.",
+                    "Ignoring Node %d Value %d due to workaround",
                     self.primary.node.node_id,
                     self.primary.value_id,
                 )
@@ -1209,7 +1208,6 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
 
     def value_added(self):
         """Handle a new value of this entity."""
-        pass
 
     def value_changed(self):
         """Handle a changed value for this entity's node."""
@@ -1235,7 +1233,7 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
                 ent_reg.async_update_entity(self.entity_id, new_entity_id=new_entity_id)
                 return
         # else for the above two ifs, update if not using update_entity
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self):
         """Add device to dict."""
@@ -1263,7 +1261,6 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
 
     def update_properties(self):
         """Update on data changes for node values."""
-        pass
 
     @property
     def should_poll(self):

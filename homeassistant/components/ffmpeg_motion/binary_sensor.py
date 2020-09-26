@@ -4,7 +4,11 @@ import logging
 import haffmpeg.sensor as ffmpeg_sensor
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_MOTION,
+    PLATFORM_SCHEMA,
+    BinarySensorEntity,
+)
 from homeassistant.components.ffmpeg import (
     CONF_EXTRA_ARGUMENTS,
     CONF_INITIAL_STATE,
@@ -55,7 +59,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([entity])
 
 
-class FFmpegBinarySensor(FFmpegBase, BinarySensorDevice):
+class FFmpegBinarySensor(FFmpegBase, BinarySensorEntity):
     """A binary sensor which use FFmpeg for noise detection."""
 
     def __init__(self, config):
@@ -70,7 +74,7 @@ class FFmpegBinarySensor(FFmpegBase, BinarySensorDevice):
     def _async_callback(self, state):
         """HA-FFmpeg callback for noise detection."""
         self._state = state
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def is_on(self):
@@ -119,4 +123,4 @@ class FFmpegMotion(FFmpegBinarySensor):
     @property
     def device_class(self):
         """Return the class of this sensor, from DEVICE_CLASSES."""
-        return "motion"
+        return DEVICE_CLASS_MOTION

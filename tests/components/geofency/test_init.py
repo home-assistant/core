@@ -1,13 +1,13 @@
 """The tests for the Geofency device tracker platform."""
-# pylint: disable=redefined-outer-name
-from unittest.mock import Mock, patch
-
 import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components import zone
 from homeassistant.components.geofency import CONF_MOBILE_BEACONS, DOMAIN
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
     HTTP_OK,
     HTTP_UNPROCESSABLE_ENTITY,
     STATE_HOME,
@@ -15,6 +15,9 @@ from homeassistant.const import (
 )
 from homeassistant.setup import async_setup_component
 from homeassistant.util import slugify
+
+# pylint: disable=redefined-outer-name
+from tests.async_mock import patch
 
 HOME_LATITUDE = 37.239622
 HOME_LONGITUDE = -115.815811
@@ -148,7 +151,10 @@ async def setup_zones(loop, hass):
 @pytest.fixture
 async def webhook_id(hass, geofency_client):
     """Initialize the Geofency component and get the webhook_id."""
-    hass.config.api = Mock(base_url="http://example.com")
+    await async_process_ha_core_config(
+        hass,
+        {"internal_url": "http://example.local:8123"},
+    )
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}
     )
@@ -163,7 +169,7 @@ async def webhook_id(hass, geofency_client):
 
 async def test_data_validation(geofency_client, webhook_id):
     """Test data validation."""
-    url = "/api/webhook/{}".format(webhook_id)
+    url = f"/api/webhook/{webhook_id}"
 
     # No data
     req = await geofency_client.post(url)
@@ -181,14 +187,14 @@ async def test_data_validation(geofency_client, webhook_id):
 
 async def test_gps_enter_and_exit_home(hass, geofency_client, webhook_id):
     """Test GPS based zone enter and exit."""
-    url = "/api/webhook/{}".format(webhook_id)
+    url = f"/api/webhook/{webhook_id}"
 
     # Enter the Home zone
     req = await geofency_client.post(url, data=GPS_ENTER_HOME)
     await hass.async_block_till_done()
     assert req.status == HTTP_OK
     device_name = slugify(GPS_ENTER_HOME["device"])
-    state_name = hass.states.get("{}.{}".format("device_tracker", device_name)).state
+    state_name = hass.states.get(f"device_tracker.{device_name}").state
     assert STATE_HOME == state_name
 
     # Exit the Home zone
@@ -196,7 +202,7 @@ async def test_gps_enter_and_exit_home(hass, geofency_client, webhook_id):
     await hass.async_block_till_done()
     assert req.status == HTTP_OK
     device_name = slugify(GPS_EXIT_HOME["device"])
-    state_name = hass.states.get("{}.{}".format("device_tracker", device_name)).state
+    state_name = hass.states.get(f"device_tracker.{device_name}").state
     assert STATE_NOT_HOME == state_name
 
     # Exit the Home zone with "Send Current Position" enabled
@@ -208,13 +214,13 @@ async def test_gps_enter_and_exit_home(hass, geofency_client, webhook_id):
     await hass.async_block_till_done()
     assert req.status == HTTP_OK
     device_name = slugify(GPS_EXIT_HOME["device"])
-    current_latitude = hass.states.get(
-        "{}.{}".format("device_tracker", device_name)
-    ).attributes["latitude"]
+    current_latitude = hass.states.get(f"device_tracker.{device_name}").attributes[
+        "latitude"
+    ]
     assert NOT_HOME_LATITUDE == current_latitude
-    current_longitude = hass.states.get(
-        "{}.{}".format("device_tracker", device_name)
-    ).attributes["longitude"]
+    current_longitude = hass.states.get(f"device_tracker.{device_name}").attributes[
+        "longitude"
+    ]
     assert NOT_HOME_LONGITUDE == current_longitude
 
     dev_reg = await hass.helpers.device_registry.async_get_registry()
@@ -226,43 +232,43 @@ async def test_gps_enter_and_exit_home(hass, geofency_client, webhook_id):
 
 async def test_beacon_enter_and_exit_home(hass, geofency_client, webhook_id):
     """Test iBeacon based zone enter and exit - a.k.a stationary iBeacon."""
-    url = "/api/webhook/{}".format(webhook_id)
+    url = f"/api/webhook/{webhook_id}"
 
     # Enter the Home zone
     req = await geofency_client.post(url, data=BEACON_ENTER_HOME)
     await hass.async_block_till_done()
     assert req.status == HTTP_OK
-    device_name = slugify("beacon_{}".format(BEACON_ENTER_HOME["name"]))
-    state_name = hass.states.get("{}.{}".format("device_tracker", device_name)).state
+    device_name = slugify(f"beacon_{BEACON_ENTER_HOME['name']}")
+    state_name = hass.states.get(f"device_tracker.{device_name}").state
     assert STATE_HOME == state_name
 
     # Exit the Home zone
     req = await geofency_client.post(url, data=BEACON_EXIT_HOME)
     await hass.async_block_till_done()
     assert req.status == HTTP_OK
-    device_name = slugify("beacon_{}".format(BEACON_ENTER_HOME["name"]))
-    state_name = hass.states.get("{}.{}".format("device_tracker", device_name)).state
+    device_name = slugify(f"beacon_{BEACON_ENTER_HOME['name']}")
+    state_name = hass.states.get(f"device_tracker.{device_name}").state
     assert STATE_NOT_HOME == state_name
 
 
 async def test_beacon_enter_and_exit_car(hass, geofency_client, webhook_id):
     """Test use of mobile iBeacon."""
-    url = "/api/webhook/{}".format(webhook_id)
+    url = f"/api/webhook/{webhook_id}"
 
     # Enter the Car away from Home zone
     req = await geofency_client.post(url, data=BEACON_ENTER_CAR)
     await hass.async_block_till_done()
     assert req.status == HTTP_OK
-    device_name = slugify("beacon_{}".format(BEACON_ENTER_CAR["name"]))
-    state_name = hass.states.get("{}.{}".format("device_tracker", device_name)).state
+    device_name = slugify(f"beacon_{BEACON_ENTER_CAR['name']}")
+    state_name = hass.states.get(f"device_tracker.{device_name}").state
     assert STATE_NOT_HOME == state_name
 
     # Exit the Car away from Home zone
     req = await geofency_client.post(url, data=BEACON_EXIT_CAR)
     await hass.async_block_till_done()
     assert req.status == HTTP_OK
-    device_name = slugify("beacon_{}".format(BEACON_ENTER_CAR["name"]))
-    state_name = hass.states.get("{}.{}".format("device_tracker", device_name)).state
+    device_name = slugify(f"beacon_{BEACON_ENTER_CAR['name']}")
+    state_name = hass.states.get(f"device_tracker.{device_name}").state
     assert STATE_NOT_HOME == state_name
 
     # Enter the Car in the Home zone
@@ -272,29 +278,29 @@ async def test_beacon_enter_and_exit_car(hass, geofency_client, webhook_id):
     req = await geofency_client.post(url, data=data)
     await hass.async_block_till_done()
     assert req.status == HTTP_OK
-    device_name = slugify("beacon_{}".format(data["name"]))
-    state_name = hass.states.get("{}.{}".format("device_tracker", device_name)).state
+    device_name = slugify(f"beacon_{data['name']}")
+    state_name = hass.states.get(f"device_tracker.{device_name}").state
     assert STATE_HOME == state_name
 
     # Exit the Car in the Home zone
     req = await geofency_client.post(url, data=data)
     await hass.async_block_till_done()
     assert req.status == HTTP_OK
-    device_name = slugify("beacon_{}".format(data["name"]))
-    state_name = hass.states.get("{}.{}".format("device_tracker", device_name)).state
+    device_name = slugify(f"beacon_{data['name']}")
+    state_name = hass.states.get(f"device_tracker.{device_name}").state
     assert STATE_HOME == state_name
 
 
 async def test_load_unload_entry(hass, geofency_client, webhook_id):
     """Test that the appropriate dispatch signals are added and removed."""
-    url = "/api/webhook/{}".format(webhook_id)
+    url = f"/api/webhook/{webhook_id}"
 
     # Enter the Home zone
     req = await geofency_client.post(url, data=GPS_ENTER_HOME)
     await hass.async_block_till_done()
     assert req.status == HTTP_OK
     device_name = slugify(GPS_ENTER_HOME["device"])
-    state_1 = hass.states.get("{}.{}".format("device_tracker", device_name))
+    state_1 = hass.states.get(f"device_tracker.{device_name}")
     assert STATE_HOME == state_1.state
 
     assert len(hass.data[DOMAIN]["devices"]) == 1
@@ -307,10 +313,10 @@ async def test_load_unload_entry(hass, geofency_client, webhook_id):
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    state_2 = hass.states.get("{}.{}".format("device_tracker", device_name))
+    state_2 = hass.states.get(f"device_tracker.{device_name}")
     assert state_2 is not None
     assert state_1 is not state_2
 
     assert STATE_HOME == state_2.state
-    assert state_2.attributes["latitude"] == HOME_LATITUDE
-    assert state_2.attributes["longitude"] == HOME_LONGITUDE
+    assert state_2.attributes[ATTR_LATITUDE] == HOME_LATITUDE
+    assert state_2.attributes[ATTR_LONGITUDE] == HOME_LONGITUDE

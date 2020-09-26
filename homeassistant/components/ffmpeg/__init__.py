@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    CONTENT_TYPE_MULTIPART,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
@@ -122,9 +123,9 @@ class FFmpegManager:
     def ffmpeg_stream_content_type(self):
         """Return HTTP content type for ffmpeg stream."""
         if self._major_version is not None and self._major_version > 3:
-            return "multipart/x-mixed-replace;boundary=ffmpeg"
+            return CONTENT_TYPE_MULTIPART.format("ffmpeg")
 
-        return "multipart/x-mixed-replace;boundary=ffserver"
+        return CONTENT_TYPE_MULTIPART.format("ffserver")
 
 
 class FFmpegBase(Entity):
@@ -140,12 +141,20 @@ class FFmpegBase(Entity):
 
         This method is a coroutine.
         """
-        async_dispatcher_connect(
-            self.hass, SIGNAL_FFMPEG_START, self._async_start_ffmpeg
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_FFMPEG_START, self._async_start_ffmpeg
+            )
         )
-        async_dispatcher_connect(self.hass, SIGNAL_FFMPEG_STOP, self._async_stop_ffmpeg)
-        async_dispatcher_connect(
-            self.hass, SIGNAL_FFMPEG_RESTART, self._async_restart_ffmpeg
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_FFMPEG_STOP, self._async_stop_ffmpeg
+            )
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_FFMPEG_RESTART, self._async_restart_ffmpeg
+            )
         )
 
         # register start/stop
@@ -202,6 +211,6 @@ class FFmpegBase(Entity):
         async def async_start_handle(event):
             """Start FFmpeg process."""
             await self._async_start_ffmpeg(None)
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, async_start_handle)

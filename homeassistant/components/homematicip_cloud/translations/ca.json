@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El punt d'acc\u00e9s ja est\u00e0 configurat",
+            "connection_aborted": "No s'ha pogut connectar al servidor HMIP",
+            "unknown": "S'ha produ\u00eft un error desconegut."
+        },
+        "error": {
+            "invalid_pin": "Codi PIN inv\u00e0lid, torna-ho a provar.",
+            "invalid_sgtin_or_pin": "Codi PIN o SGTIN inv\u00e0lid, torna-ho a provar.",
+            "press_the_button": "Si us plau, prem el bot\u00f3 blau.",
+            "register_failed": "Error al registrar, torna-ho a provar.",
+            "timeout_button": "El temps d'espera m\u00e0xim per pr\u00e9mer el bot\u00f3 blau s'ha esgotat, torna-ho a provar."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "hapid": "Identificador del punt d'acc\u00e9s (SGTIN)",
+                    "name": "Nom (opcional, s'utilitza com a nom prefix per a tots els dispositius)",
+                    "pin": "Codi PIN (opcional)"
+                },
+                "title": "Tria el punt d'acc\u00e9s HomematicIP"
+            },
+            "link": {
+                "description": "Prem el bot\u00f3 blau del punt d'acc\u00e9s i el bot\u00f3 Envia per registrar HomematicIP amb Home Assistent. \n\n![Ubicaci\u00f3 del bot\u00f3 a l'element d'enlla\u00e7](/static/images/config_flows/config_homematicip_cloud.png)",
+                "title": "Enlla\u00e7 amb punt d'acc\u00e9s"
+            }
+        }
+    }
+}

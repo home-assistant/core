@@ -1,0 +1,15 @@
+{
+    "config": {
+        "error": {
+            "invalid_auth": "\uc798\ubabb\ub41c \uc778\uc99d"
+        },
+        "step": {
+            "credentials": {
+                "data": {
+                    "password": "\uc554\ud638",
+                    "username": "\uc0ac\uc6a9\uc790\uba85"
+                }
+            }
+        }
+    }
+}

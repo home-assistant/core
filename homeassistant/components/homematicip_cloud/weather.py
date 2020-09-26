@@ -13,7 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.typing import HomeAssistantType
 
-from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
+from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericEntity
 from .hap import HomematicipHAP
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,18 +37,11 @@ HOME_WEATHER_CONDITION = {
 }
 
 
-async def async_setup_platform(
-    hass, config, async_add_entities, discovery_info=None
-) -> None:
-    """Set up the HomematicIP Cloud weather sensor."""
-    pass
-
-
 async def async_setup_entry(
     hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the HomematicIP weather sensor from a config entry."""
-    hap = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]]
+    hap = hass.data[HMIPC_DOMAIN][config_entry.unique_id]
     entities = []
     for device in hap.home.devices:
         if isinstance(device, AsyncWeatherSensorPro):
@@ -62,8 +55,8 @@ async def async_setup_entry(
         async_add_entities(entities)
 
 
-class HomematicipWeatherSensor(HomematicipGenericDevice, WeatherEntity):
-    """representation of a HomematicIP Cloud weather sensor plus & basic."""
+class HomematicipWeatherSensor(HomematicipGenericEntity, WeatherEntity):
+    """Representation of the HomematicIP weather sensor plus & basic."""
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the weather sensor."""
@@ -112,7 +105,7 @@ class HomematicipWeatherSensor(HomematicipGenericDevice, WeatherEntity):
 
 
 class HomematicipWeatherSensorPro(HomematicipWeatherSensor):
-    """representation of a HomematicIP weather sensor pro."""
+    """Representation of the HomematicIP weather sensor pro."""
 
     @property
     def wind_bearing(self) -> float:
@@ -120,8 +113,8 @@ class HomematicipWeatherSensorPro(HomematicipWeatherSensor):
         return self._device.windDirection
 
 
-class HomematicipHomeWeather(HomematicipGenericDevice, WeatherEntity):
-    """representation of a HomematicIP Cloud home weather."""
+class HomematicipHomeWeather(HomematicipGenericEntity, WeatherEntity):
+    """Representation of the HomematicIP home weather."""
 
     def __init__(self, hap: HomematicipHAP) -> None:
         """Initialize the home weather."""
@@ -130,7 +123,7 @@ class HomematicipHomeWeather(HomematicipGenericDevice, WeatherEntity):
 
     @property
     def available(self) -> bool:
-        """Device available."""
+        """Return if weather entity is available."""
         return self._home.connected
 
     @property
@@ -140,7 +133,7 @@ class HomematicipHomeWeather(HomematicipGenericDevice, WeatherEntity):
 
     @property
     def temperature(self) -> float:
-        """Return the platform temperature."""
+        """Return the temperature."""
         return self._device.weather.temperature
 
     @property

@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3.",
+            "authorize_url_fail": "S'ha produ\u00eft un error desconegut al generar l'URL d'autoritzaci\u00f3.",
+            "authorize_url_timeout": "Temps d'espera durant la generaci\u00f3 de l'URL d'autoritzaci\u00f3 esgotat.",
+            "external_setup": "Point s'ha configurat correctament des d'un altre flux de dades.",
+            "no_flows": "El component no est\u00e0 configurat. Mira'n la documentaci\u00f3."
+        },
+        "create_entry": {
+            "default": "Autenticaci\u00f3 exitosa"
+        },
+        "error": {
+            "follow_link": "V\u00e9s a l'enlla\u00e7 i autentica't abans de pr\u00e9mer Envia",
+            "no_token": "Token d'acc\u00e9s no v\u00e0lid"
+        },
+        "step": {
+            "auth": {
+                "description": "V\u00e9s a l'enlla\u00e7 seg\u00fcent i **Accepta** l'acc\u00e9s al teu compte de Minut, despr\u00e9s torna i prem **Envia** (a sota). \n\n[Enlla\u00e7]({authorization_url})",
+                "title": "Autenticar Point"
+            },
+            "user": {
+                "data": {
+                    "flow_impl": "Prove\u00efdor"
+                },
+                "description": "Vols comen\u00e7ar la configuraci\u00f3?",
+                "title": "Selecci\u00f3 del m\u00e8tode d'autenticaci\u00f3"
+            }
+        }
+    }
+}

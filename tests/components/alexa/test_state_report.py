@@ -49,6 +49,7 @@ async def test_report_state_instance(hass, aioclient_mock):
             "friendly_name": "Test fan",
             "supported_features": 3,
             "speed": "off",
+            "speed_list": ["off", "low", "high"],
             "oscillating": False,
         },
     )
@@ -62,6 +63,7 @@ async def test_report_state_instance(hass, aioclient_mock):
             "friendly_name": "Test fan",
             "supported_features": 3,
             "speed": "high",
+            "speed_list": ["off", "low", "high"],
             "oscillating": True,
         },
     )

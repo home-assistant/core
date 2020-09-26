@@ -38,7 +38,7 @@ def entity_reg(hass):
 
 @pytest.fixture
 def calls(hass):
-    """Track calls to a mock serivce."""
+    """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
 
@@ -454,6 +454,7 @@ async def test_if_position(hass, calls):
     platform.init()
     ent = platform.ENTITIES[1]
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     assert await async_setup_component(
         hass,
@@ -557,6 +558,7 @@ async def test_if_tilt_position(hass, calls):
     platform.init()
     ent = platform.ENTITIES[2]
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     assert await async_setup_component(
         hass,

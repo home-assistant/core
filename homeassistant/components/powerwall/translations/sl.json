@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Powerwall je \u017ee nastavljen"
+        },
+        "error": {
+            "cannot_connect": "Povezava ni uspela, poskusite znova",
+            "unknown": "Nepri\u010dakovana napaka",
+            "wrong_version": "Va\u0161 powerwall uporablja razli\u010dico programske opreme, ki ni podprta. Razmislite o nadgradnji ali poro\u010danju o tej te\u017eavi, da jo boste lahko re\u0161ili."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "IP naslov"
+                },
+                "title": "Pove\u017eite se s powerwall-om"
+            }
+        }
+    }
+}

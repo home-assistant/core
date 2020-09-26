@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_MAC,
     CONF_NAME,
     EVENT_HOMEASSISTANT_STOP,
+    PERCENTAGE,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
 )
@@ -82,7 +83,7 @@ class SkybeaconHumid(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        return "%"
+        return PERCENTAGE
 
     @property
     def device_state_attributes(self):
@@ -175,7 +176,7 @@ class Monitor(threading.Thread):
             value[2],
             value[1],
         )
-        self.data["temp"] = float(("%d.%d" % (value[0], value[2])))
+        self.data["temp"] = float("%d.%d" % (value[0], value[2]))
         self.data["humid"] = value[1]
 
     def terminate(self):

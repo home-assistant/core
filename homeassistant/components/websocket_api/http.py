@@ -10,20 +10,21 @@ import async_timeout
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
+from homeassistant.helpers.event import async_call_later
 
 from .auth import AuthPhase, auth_required_message
 from .const import (
     CANCELLATION_ERRORS,
     DATA_CONNECTIONS,
-    ERR_UNKNOWN_ERROR,
-    JSON_DUMP,
     MAX_PENDING_MSG,
+    PENDING_MSG_PEAK,
+    PENDING_MSG_PEAK_TIME,
     SIGNAL_WEBSOCKET_CONNECTED,
     SIGNAL_WEBSOCKET_DISCONNECTED,
     URL,
 )
 from .error import Disconnect
-from .messages import error_message
+from .messages import message_to_json
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 
@@ -35,7 +36,7 @@ class WebsocketAPIView(HomeAssistantView):
     url = URL
     requires_auth = False
 
-    async def get(self, request):
+    async def get(self, request: web.Request) -> web.WebSocketResponse:
         """Handle an incoming websocket connection."""
         return await WebSocketHandler(request.app["hass"], request).async_handle()
 
@@ -52,6 +53,7 @@ class WebSocketHandler:
         self._handle_task = None
         self._writer_task = None
         self._logger = logging.getLogger("{}.connection.{}".format(__name__, id(self)))
+        self._peak_checker_unsub = None
 
     async def _writer(self):
         """Write outgoing messages."""
@@ -64,24 +66,15 @@ class WebSocketHandler:
 
                 self._logger.debug("Sending %s", message)
 
-                if isinstance(message, str):
-                    await self.wsock.send_str(message)
-                    continue
+                if not isinstance(message, str):
+                    message = message_to_json(message)
 
-                try:
-                    dumped = JSON_DUMP(message)
-                except (ValueError, TypeError) as err:
-                    self._logger.error(
-                        "Unable to serialize to JSON: %s\n%s", err, message
-                    )
-                    await self.wsock.send_json(
-                        error_message(
-                            message["id"], ERR_UNKNOWN_ERROR, "Invalid JSON in response"
-                        )
-                    )
-                    continue
+                await self.wsock.send_str(message)
 
-                await self.wsock.send_str(dumped)
+        # Clean up the peaker checker when we shut down the writer
+        if self._peak_checker_unsub:
+            self._peak_checker_unsub()
+            self._peak_checker_unsub = None
 
     @callback
     def _send_message(self, message):
@@ -97,7 +90,34 @@ class WebSocketHandler:
             self._logger.error(
                 "Client exceeded max pending messages [2]: %s", MAX_PENDING_MSG
             )
+
             self._cancel()
+
+        if self._to_write.qsize() < PENDING_MSG_PEAK:
+            if self._peak_checker_unsub:
+                self._peak_checker_unsub()
+                self._peak_checker_unsub = None
+            return
+
+        if self._peak_checker_unsub is None:
+            self._peak_checker_unsub = async_call_later(
+                self.hass, PENDING_MSG_PEAK_TIME, self._check_write_peak
+            )
+
+    @callback
+    def _check_write_peak(self, _):
+        """Check that we are no longer above the write peak."""
+        self._peak_checker_unsub = None
+
+        if self._to_write.qsize() < PENDING_MSG_PEAK:
+            return
+
+        self._logger.error(
+            "Client unable to keep up with pending messages. Stayed over %s for %s seconds",
+            PENDING_MSG_PEAK,
+            PENDING_MSG_PEAK_TIME,
+        )
+        self._cancel()
 
     @callback
     def _cancel(self):
@@ -105,19 +125,13 @@ class WebSocketHandler:
         self._handle_task.cancel()
         self._writer_task.cancel()
 
-    async def async_handle(self):
+    async def async_handle(self) -> web.WebSocketResponse:
         """Handle a websocket response."""
         request = self.request
         wsock = self.wsock = web.WebSocketResponse(heartbeat=55)
         await wsock.prepare(request)
-        self._logger.debug("Connected")
-
-        # Py3.7+
-        if hasattr(asyncio, "current_task"):
-            # pylint: disable=no-member
-            self._handle_task = asyncio.current_task()
-        else:
-            self._handle_task = asyncio.Task.current_task()
+        self._logger.debug("Connected from %s", request.remote)
+        self._handle_task = asyncio.current_task()
 
         @callback
         def handle_hass_stop(event):
@@ -128,7 +142,9 @@ class WebSocketHandler:
             EVENT_HOMEASSISTANT_STOP, handle_hass_stop
         )
 
-        self._writer_task = self.hass.async_create_task(self._writer())
+        # As the webserver is now started before the start
+        # event we do not want to block for websocket responses
+        self._writer_task = asyncio.create_task(self._writer())
 
         auth = AuthPhase(self._logger, self.hass, self._send_message, request)
         connection = None
@@ -141,9 +157,9 @@ class WebSocketHandler:
             try:
                 with async_timeout.timeout(10):
                     msg = await wsock.receive()
-            except asyncio.TimeoutError:
+            except asyncio.TimeoutError as err:
                 disconnect_warn = "Did not receive auth message within 10 seconds"
-                raise Disconnect
+                raise Disconnect from err
 
             if msg.type in (WSMsgType.CLOSE, WSMsgType.CLOSING):
                 raise Disconnect
@@ -154,9 +170,9 @@ class WebSocketHandler:
 
             try:
                 msg_data = msg.json()
-            except ValueError:
+            except ValueError as err:
                 disconnect_warn = "Received invalid JSON."
-                raise Disconnect
+                raise Disconnect from err
 
             self._logger.debug("Received %s", msg_data)
             connection = await auth.async_handle(msg_data)

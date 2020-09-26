@@ -1,5 +1,5 @@
 """Support for StarLine lock."""
-from homeassistant.components.lock import LockDevice
+from homeassistant.components.lock import LockEntity
 
 from .account import StarlineAccount, StarlineDevice
 from .const import DOMAIN
@@ -19,7 +19,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(entities)
 
 
-class StarlineLock(StarlineEntity, LockDevice):
+class StarlineLock(StarlineEntity, LockEntity):
     """Representation of a StarLine lock."""
 
     def __init__(self, account: StarlineAccount, device: StarlineDevice):

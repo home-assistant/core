@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "not_internet_accessible": "Votre instance Home Assistant doit \u00eatre accessible \u00e0 partir d'Internet pour recevoir les messages GPSLogger.",
+            "one_instance_allowed": "Une seule instance est n\u00e9cessaire."
+        },
+        "create_entry": {
+            "default": "Pour envoyer des \u00e9v\u00e9nements \u00e0 Home Assistant, vous devez configurer la fonction Webhook dans GPSLogger. \n\n Remplissez les informations suivantes: \n\n - URL: ` {webhook_url} ` \n - M\u00e9thode: POST \n\n Voir [la documentation] ( {docs_url} ) pour plus de d\u00e9tails."
+        },
+        "step": {
+            "user": {
+                "description": "\u00cates-vous s\u00fbr de vouloir configurer le Webhook GPSLogger ?",
+                "title": "Configurer le Webhook GPSLogger"
+            }
+        }
+    }
+}

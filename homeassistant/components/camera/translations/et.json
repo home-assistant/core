@@ -1,0 +1,10 @@
+{
+    "state": {
+        "_": {
+            "idle": "Ootel",
+            "recording": "Salvestab",
+            "streaming": "Voogedastab"
+        }
+    },
+    "title": "Kaamera"
+}

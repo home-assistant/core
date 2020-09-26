@@ -62,6 +62,11 @@ class OpenThermSensor(Entity):
         self._unsub_updates()
 
     @property
+    def available(self):
+        """Return availability of the sensor."""
+        return self._value is not None
+
+    @property
     def entity_registry_enabled_default(self):
         """Disable sensors by default."""
         return False
@@ -73,7 +78,7 @@ class OpenThermSensor(Entity):
         if isinstance(value, float):
             value = f"{value:2.1f}"
         self._value = value
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def name(self):

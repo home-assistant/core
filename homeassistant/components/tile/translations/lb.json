@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "D\u00ebse Tile Kont ass scho registr\u00e9iert."
+        },
+        "error": {
+            "invalid_credentials": "Ong\u00eblteg Tile Login Informatioune uginn."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passwuert",
+                    "username": "E-Mail"
+                },
+                "title": "Tile konfigur\u00e9ieren"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_inactive": "Inaktiv Tiles uweisen"
+                },
+                "title": "Tile konfigur\u00e9ieren"
+            }
+        }
+    }
+}

@@ -3,19 +3,19 @@ set_mode:
   fields:
     entity_id:
       description: Name of the light entity.
-      example: 'light.yeelight'
+      example: "light.yeelight"
     mode:
       description: Operation mode. Valid values are 'last', 'normal', 'rgb', 'hsv', 'color_flow', 'moonlight'.
-      example: 'moonlight'
+      example: "moonlight"
 set_color_scene:
   description: Changes the light to the specified RGB color and brightness. If the light is off, it will be turned on.
   fields:
     entity_id:
       description: Name of the light entity.
-      example: 'light.yeelight'
+      example: "light.yeelight"
     rgb_color:
       description: Color for the light in RGB-format.
-      example: '[255, 100, 100]'
+      example: "[255, 100, 100]"
     brightness:
       description: The brightness value to set (1-100).
       example: 50
@@ -24,10 +24,10 @@ set_hsv_scene:
   fields:
     entity_id:
       description: Name of the light entity.
-      example: 'light.yeelight'
+      example: "light.yeelight"
     hs_color:
       description: Color for the light in hue/sat format. Hue is 0-359 and Sat is 0-100.
-      example: '[300, 70]'
+      example: "[300, 70]"
     brightness:
       description: The brightness value to set (1-100).
       example: 50
@@ -36,7 +36,7 @@ set_color_temp_scene:
   fields:
     entity_id:
       description: Name of the light entity.
-      example: 'light.yeelight'
+      example: "light.yeelight"
     kelvin:
       description: Color temperature for the light in Kelvin.
       example: 4000
@@ -48,13 +48,13 @@ set_color_flow_scene:
   fields:
     entity_id:
       description: Name of the light entity.
-      example: 'light.yeelight'
+      example: "light.yeelight"
     count:
       description: The number of times to run this flow (0 to run forever).
       example: 0
     action:
       description: The action to take after the flow stops. Can be 'recover', 'stay', 'off'. (default 'recover')
-      example: 'stay'
+      example: "stay"
     transitions:
       description: Array of transitions, for desired effect. Examples https://yeelight.readthedocs.io/en/stable/flow.html
       example: '[{ "TemperatureTransition": [1900, 1000, 80] }, { "TemperatureTransition": [1900, 1000, 10] }]'
@@ -63,7 +63,7 @@ set_auto_delay_off_scene:
   fields:
     entity_id:
       description: Name of the light entity.
-      example: 'light.yeelight'
+      example: "light.yeelight"
     minutes:
       description: The minutes to wait before automatically turning the light off.
       example: 5
@@ -75,13 +75,13 @@ start_flow:
   fields:
     entity_id:
       description: Name of the light entity.
-      example: 'light.yeelight'
+      example: "light.yeelight"
     count:
       description: The number of times to run this flow (0 to run forever).
       example: 0
     action:
       description: The action to take after the flow stops. Can be 'recover', 'stay', 'off'. (default 'recover')
-      example: 'stay'
+      example: "stay"
     transitions:
       description: Array of transitions, for desired effect. Examples https://yeelight.readthedocs.io/en/stable/flow.html
       example: '[{ "TemperatureTransition": [1900, 1000, 80] }, { "TemperatureTransition": [1900, 1000, 10] }]'

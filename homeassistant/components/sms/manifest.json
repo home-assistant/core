@@ -1,0 +1,8 @@
+{
+  "domain": "sms",
+  "name": "SMS notifications via GSM-modem",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/sms",
+  "requirements": ["python-gammu==3.1"],
+  "codeowners": ["@ocalvo"]
+}

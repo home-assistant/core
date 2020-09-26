@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane."
+        },
+        "error": {
+            "unknown_error": "Nieznany b\u0142\u0105d.",
+            "wrong_host_or_port": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia. Sprawd\u017a adres hosta i port.",
+            "wrong_password": "Nieprawid\u0142owe has\u0142o"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP",
+                    "name": "Przyjazna nazwa",
+                    "password": "Has\u0142o API (pozostaw puste, je\u015bli nie ma has\u0142a)",
+                    "port": "Port API"
+                }
+            }
+        }
+    }
+}

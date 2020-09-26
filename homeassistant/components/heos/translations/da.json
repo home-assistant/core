@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Du kan kun konfigurere en enkelt Heos-forbindelse, da den underst\u00f8tter alle enheder p\u00e5 netv\u00e6rket."
+        },
+        "error": {
+            "connection_failure": "Kunne ikke oprette forbindelse til den angivne v\u00e6rt."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "V\u00e6rt"
+                },
+                "description": "Indtast v\u00e6rtsnavnet eller IP-adressen p\u00e5 en Heos-enhed (helst en tilsluttet via ledning til netv\u00e6rket).",
+                "title": "Opret forbindelse til HEOS"
+            }
+        }
+    }
+}

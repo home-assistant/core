@@ -1,5 +1,24 @@
 {
-  "config": {
-    "title": "Demo"
+  "title": "Demo",
+  "options": {
+    "step": {
+      "init": {
+        "data": {}
+      },
+      "options_1": {
+        "data": {
+          "constant": "Constant",
+          "bool": "Optional boolean",
+          "int": "Numeric input"
+        }
+      },
+      "options_2": {
+        "data": {
+          "string": "String value",
+          "select": "Select an option",
+          "multi": "Multiselect"
+        }
+      }
+    }
   }
 }

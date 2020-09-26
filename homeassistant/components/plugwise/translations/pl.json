@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "TenSmile jest ju\u017c skonfigurowany."
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia, spr\u00f3buj ponownie.",
+            "invalid_auth": "Nieudane uwierzytelnienie, sprawd\u017a Smile ID",
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
+        },
+        "flow_title": "Smile: {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Adres IP Smile",
+                    "password": "Smile ID"
+                },
+                "description": "Szczeg\u00f3\u0142y",
+                "title": "Po\u0142\u0105cz si\u0119 ze Smile"
+            }
+        }
+    }
+}

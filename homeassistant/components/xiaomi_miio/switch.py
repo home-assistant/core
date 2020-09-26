@@ -13,7 +13,7 @@ from miio import (  # pylint: disable=import-error
 from miio.powerstrip import PowerMode  # pylint: disable=import-error
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
@@ -57,6 +57,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                 "chuangmi.plug.v3",
                 "chuangmi.plug.hmi205",
                 "chuangmi.plug.hmi206",
+                "chuangmi.plug.hmi208",
                 "lumi.acpartner.v3",
             ]
         ),
@@ -139,10 +140,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 device_info.firmware_version,
                 device_info.hardware_version,
             )
-        except DeviceException:
-            raise PlatformNotReady
+        except DeviceException as ex:
+            raise PlatformNotReady from ex
 
-    if model in ["chuangmi.plug.v1", "chuangmi.plug.v3"]:
+    if model in ["chuangmi.plug.v1", "chuangmi.plug.v3", "chuangmi.plug.hmi208"]:
         plug = ChuangmiPlug(host, token, model=model)
 
         # The device has two switchable channels (mains and a USB port).
@@ -217,7 +218,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         )
 
 
-class XiaomiPlugGenericSwitch(SwitchDevice):
+class XiaomiPlugGenericSwitch(SwitchEntity):
     """Representation of a Xiaomi Plug Generic."""
 
     def __init__(self, name, plug, model, unique_id):
@@ -429,7 +430,7 @@ class ChuangMiPlugSwitch(XiaomiPlugGenericSwitch):
         name = f"{name} USB" if channel_usb else name
 
         if unique_id is not None and channel_usb:
-            unique_id = "{}-{}".format(unique_id, "usb")
+            unique_id = f"{unique_id}-usb"
 
         super().__init__(name, plug, model, unique_id)
         self._channel_usb = channel_usb

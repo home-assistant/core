@@ -52,11 +52,11 @@ def setup(hass, config):
     """Set up the ComfoConnect bridge."""
 
     conf = config[DOMAIN]
-    host = conf.get(CONF_HOST)
-    name = conf.get(CONF_NAME)
-    token = conf.get(CONF_TOKEN)
-    user_agent = conf.get(CONF_USER_AGENT)
-    pin = conf.get(CONF_PIN)
+    host = conf[CONF_HOST]
+    name = conf[CONF_NAME]
+    token = conf[CONF_TOKEN]
+    user_agent = conf[CONF_USER_AGENT]
+    pin = conf[CONF_PIN]
 
     # Run discovery on the configured ip
     bridges = Bridge.discover(host)

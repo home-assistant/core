@@ -1,0 +1,17 @@
+{
+    "config": {
+        "step": {
+            "init": {
+                "data": {
+                    "icon": "Ikoon",
+                    "latitude": "Laiuskraad",
+                    "longitude": "Pikkuskraad",
+                    "name": "Nimi",
+                    "radius": "Raadius"
+                },
+                "title": "M\u00e4\u00e4ra ala parameetrid"
+            }
+        },
+        "title": "Ala"
+    }
+}

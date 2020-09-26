@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Only a single configuration of Local IP is allowed."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Sensor Name"
+                },
+                "title": "Local IP Address"
+            }
+        }
+    },
+    "title": "Local IP Address"
+}

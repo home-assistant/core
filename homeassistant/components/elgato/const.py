@@ -3,7 +3,7 @@
 # Integration domain
 DOMAIN = "elgato"
 
-# Hass data keys
+# Home Assistant data keys
 DATA_ELGATO_CLIENT = "elgato_client"
 
 # Attributes

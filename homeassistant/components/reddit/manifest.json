@@ -2,9 +2,6 @@
   "domain": "reddit",
   "name": "Reddit",
   "documentation": "https://www.home-assistant.io/integrations/reddit",
-  "requirements": [
-    "praw==6.4.0"
-  ],
-  "dependencies": [],
+  "requirements": ["praw==7.1.0"],
   "codeowners": []
 }

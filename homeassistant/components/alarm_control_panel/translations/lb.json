@@ -1,0 +1,40 @@
+{
+    "device_automation": {
+        "action_type": {
+            "arm_away": "{entity_name} fir \u00ebnnerwee uschalten",
+            "arm_home": "{entity_name} fir doheem uschalten",
+            "arm_night": "{entity_name} fir Nuecht uschalten",
+            "disarm": "{entity_name} entsch\u00e4rfen",
+            "trigger": "{entity_name} ausl\u00e9isen"
+        },
+        "condition_type": {
+            "is_armed_away": "{entity_name} ass ugeschalt fir Ennerwee",
+            "is_armed_home": "{entity_name} ass ugeschalt fir Doheem",
+            "is_armed_night": "{entity_name} ass ugeschalt fir Nuecht",
+            "is_disarmed": "{entity_name} ass entsch\u00e4rft",
+            "is_triggered": "{entity_name} ass ausgel\u00e9ist"
+        },
+        "trigger_type": {
+            "armed_away": "{entity_name} ugeschalt fir Ennerwee",
+            "armed_home": "{entity_name} ugeschalt fir Doheem",
+            "armed_night": "{entity_name} ugeschalt fir Nuecht",
+            "disarmed": "{entity_name} entsch\u00e4rft",
+            "triggered": "{entity_name} ausgel\u00e9ist"
+        }
+    },
+    "state": {
+        "_": {
+            "armed": "Aktiv\u00e9iert",
+            "armed_away": "Aktiv\u00e9iert \u00cbnnerwee",
+            "armed_custom_bypass": "Aktiv, Benotzerdefin\u00e9iert",
+            "armed_home": "Aktiv\u00e9iert Doheem",
+            "armed_night": "Aktiv\u00e9iert Nuecht",
+            "arming": "Aktiv\u00e9ieren",
+            "disarmed": "Desaktiv\u00e9iert",
+            "disarming": "Desaktiv\u00e9ieren",
+            "pending": "Ustoend",
+            "triggered": "Ausgel\u00e9ist"
+        }
+    },
+    "title": "Kontroll Feld Alarm"
+}

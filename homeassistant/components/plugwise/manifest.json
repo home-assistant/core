@@ -2,7 +2,8 @@
   "domain": "plugwise",
   "name": "Plugwise",
   "documentation": "https://www.home-assistant.io/integrations/plugwise",
-  "dependencies": [],
-  "codeowners": ["@laetificat","@CoMPaTech","@bouwew"],
-  "requirements": ["haanna==0.13.5"]
+  "requirements": ["Plugwise_Smile==1.5.1"],
+  "codeowners": ["@CoMPaTech", "@bouwew"],
+  "zeroconf": ["_plugwise._tcp.local."],
+  "config_flow": true
 }

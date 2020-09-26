@@ -2,11 +2,11 @@
 import os
 import tempfile
 import unittest
-from unittest.mock import patch
 
 import homeassistant.components.notify as notify
-from homeassistant.setup import setup_component
+from homeassistant.setup import async_setup_component, setup_component
 
+from tests.async_mock import patch
 from tests.common import assert_setup_component, get_test_home_assistant
 
 
@@ -16,8 +16,9 @@ class TestCommandLine(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tear_down_cleanup(self):
         """Stop down everything that was started."""
         self.hass.stop()
 
@@ -57,7 +58,7 @@ class TestCommandLine(unittest.TestCase):
                         "notify": {
                             "name": "test",
                             "platform": "command_line",
-                            "command": "echo $(cat) > {}".format(filename),
+                            "command": f"echo $(cat) > {filename}",
                         }
                     },
                 )
@@ -69,7 +70,7 @@ class TestCommandLine(unittest.TestCase):
 
             with open(filename) as fil:
                 # the echo command adds a line break
-                assert fil.read() == "{}\n".format(message)
+                assert fil.read() == f"{message}\n"
 
     @patch("homeassistant.components.command_line.notify._LOGGER.error")
     def test_error_for_none_zero_exit_code(self, mock_error):
@@ -91,4 +92,26 @@ class TestCommandLine(unittest.TestCase):
         assert self.hass.services.call(
             "notify", "test", {"message": "error"}, blocking=True
         )
-        assert 1 == mock_error.call_count
+        assert mock_error.call_count == 1
+
+
+async def test_timeout(hass, caplog):
+    """Test we do not block forever."""
+    assert await async_setup_component(
+        hass,
+        notify.DOMAIN,
+        {
+            "notify": {
+                "name": "test",
+                "platform": "command_line",
+                "command": "sleep 10000",
+                "command_timeout": 0.0000001,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert await hass.services.async_call(
+        "notify", "test", {"message": "error"}, blocking=True
+    )
+    await hass.async_block_till_done()
+    assert "Timeout" in caplog.text

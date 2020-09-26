@@ -1,11 +1,11 @@
 """Tests for the CoinMarketCap sensor platform."""
 import json
 import unittest
-from unittest.mock import patch
 
 import homeassistant.components.sensor as sensor
 from homeassistant.setup import setup_component
 
+from tests.async_mock import patch
 from tests.common import assert_setup_component, get_test_home_assistant, load_fixture
 
 VALID_CONFIG = {
@@ -23,10 +23,7 @@ class TestCoinMarketCapSensor(unittest.TestCase):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.config = VALID_CONFIG
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     @patch(
         "coinmarketcap.Market.ticker",
@@ -36,6 +33,7 @@ class TestCoinMarketCapSensor(unittest.TestCase):
         """Test the setup with custom settings."""
         with assert_setup_component(1, sensor.DOMAIN):
             assert setup_component(self.hass, sensor.DOMAIN, {"sensor": VALID_CONFIG})
+            self.hass.block_till_done()
 
         state = self.hass.states.get("sensor.ethereum")
         assert state is not None

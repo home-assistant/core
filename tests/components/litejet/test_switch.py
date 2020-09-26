@@ -31,7 +31,7 @@ class TestLiteJetSwitch(unittest.TestCase):
         self.switch_released_callbacks = {}
 
         def get_switch_name(number):
-            return "Mock Switch #" + str(number)
+            return f"Mock Switch #{number}"
 
         def on_switch_pressed(number, callback):
             self.switch_pressed_callbacks[number] = callback
@@ -48,7 +48,7 @@ class TestLiteJetSwitch(unittest.TestCase):
         self.mock_lj.on_switch_pressed.side_effect = on_switch_pressed
         self.mock_lj.on_switch_released.side_effect = on_switch_released
 
-        config = {"litejet": {"port": "/tmp/this_will_be_mocked"}}
+        config = {"litejet": {"port": "/dev/serial/by-id/mock-litejet"}}
         if method == self.test_include_switches_False:
             config["litejet"]["include_switches"] = False
         elif method != self.test_include_switches_unspecified:

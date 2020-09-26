@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "one_instance_only": "Denna integration st\u00f6der f\u00f6r n\u00e4rvarande endast en ecobee-instans."
+        },
+        "error": {
+            "pin_request_failed": "Fel vid beg\u00e4ran av PIN-kod fr\u00e5n ecobee. kontrollera API-nyckeln \u00e4r korrekt.",
+            "token_request_failed": "Fel vid beg\u00e4ran av tokens fr\u00e5n ecobee; v\u00e4nligen f\u00f6rs\u00f6k igen."
+        },
+        "step": {
+            "authorize": {
+                "description": "V\u00e4nligen auktorisera denna app p\u00e5 https://www.ecobee.com/consumerportal/index.html med pin-kod:\n\n{pin}\n\nTryck sedan p\u00e5 Skicka.",
+                "title": "Auktorisera app p\u00e5 ecobee.com"
+            },
+            "user": {
+                "data": {
+                    "api_key": "API-nyckel"
+                },
+                "description": "V\u00e4nligen ange API-nyckeln som erh\u00e5llits fr\u00e5n ecobee.com.",
+                "title": "ecobee API-nyckel"
+            }
+        }
+    }
+}

@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Toto za\u0159\u00edzen\u00ed je ji\u017e nakonfigurov\u00e1no"
+        },
+        "error": {
+            "connection_failed": "P\u0159ipojen\u00ed se nezda\u0159ilo",
+            "incorrect_password": "Nespr\u00e1vn\u00e9 heslo",
+            "incorrect_username": "Nespr\u00e1vn\u00e9 u\u017eivatelsk\u00e9 jm\u00e9no",
+            "incorrect_username_or_password": "Nespr\u00e1vn\u00e9 u\u017eivatelsk\u00e9 jm\u00e9no \u010di heslo",
+            "invalid_url": "Neplatn\u00e1 adresa URL",
+            "login_attempts_exceeded": "Maxim\u00e1ln\u00ed pokus o p\u0159ihl\u00e1\u0161en\u00ed byl p\u0159ekro\u010den, zkuste to znovu pozd\u011bji",
+            "response_error": "Nezn\u00e1m\u00e1 chyba ze za\u0159\u00edzen\u00ed",
+            "unknown_connection_error": "Nezn\u00e1m\u00e1 chyba p\u0159i p\u0159ipojov\u00e1n\u00ed k za\u0159\u00edzen\u00ed"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Heslo",
+                    "username": "U\u017eivatelsk\u00e9 jm\u00e9no"
+                },
+                "title": "Konfigurovat Huawei LTE"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "recipient": "P\u0159\u00edjemci ozn\u00e1men\u00ed SMS",
+                    "track_new_devices": "Sledovat nov\u00e1 za\u0159\u00edzen\u00ed"
+                }
+            }
+        }
+    }
+}

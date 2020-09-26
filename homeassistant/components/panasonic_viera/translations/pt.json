@@ -1,0 +1,20 @@
+{
+    "config": {
+        "step": {
+            "pairing": {
+                "data": {
+                    "pin": "PIN"
+                },
+                "title": "Emparelhamento"
+            },
+            "user": {
+                "data": {
+                    "host": "Endere\u00e7o IP",
+                    "name": "Nome"
+                },
+                "title": "Configure a sua TV"
+            }
+        }
+    },
+    "title": "Panasonic Viera"
+}

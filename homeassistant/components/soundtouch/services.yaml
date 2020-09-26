@@ -3,34 +3,34 @@ play_everywhere:
   fields:
     master:
       description: Name of the master entity that will coordinate the grouping. Platform dependent. It is a shortcut for creating a multi-room zone with all devices
-      example: 'media_player.soundtouch_home'
+      example: "media_player.soundtouch_home"
 
 create_zone:
   description: Create a Sountouch multi-room zone.
   fields:
     master:
       description: Name of the master entity that will coordinate the multi-room zone. Platform dependent.
-      example: 'media_player.soundtouch_home'
+      example: "media_player.soundtouch_home"
     slaves:
       description: Name of slaves entities to add to the new zone.
-      example: 'media_player.soundtouch_bedroom'
+      example: "media_player.soundtouch_bedroom"
 
 add_zone_slave:
   description: Add a slave to a Sountouch multi-room zone.
   fields:
     master:
       description: Name of the master entity that is coordinating the multi-room zone. Platform dependent.
-      example: 'media_player.soundtouch_home'
+      example: "media_player.soundtouch_home"
     slaves:
       description: Name of slaves entities to add to the existing zone.
-      example: 'media_player.soundtouch_bedroom'
+      example: "media_player.soundtouch_bedroom"
 
 remove_zone_slave:
   description: Remove a slave from the Sounttouch multi-room zone.
   fields:
     master:
       description: Name of the master entity that is coordinating the multi-room zone. Platform dependent.
-      example: 'media_player.soundtouch_home'
+      example: "media_player.soundtouch_home"
     slaves:
       description: Name of slaves entities to remove from the existing zone.
-      example: 'media_player.soundtouch_bedroom'
+      example: "media_player.soundtouch_bedroom"

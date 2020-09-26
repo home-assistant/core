@@ -51,7 +51,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class TcpSensor(Entity):
     """Implementation of a TCP socket based sensor."""
 
-    required = tuple()
+    required = ()
 
     def __init__(self, hass, config):
         """Set all the config values if they exist and get initial state."""
@@ -99,7 +99,7 @@ class TcpSensor(Entity):
             sock.settimeout(self._config[CONF_TIMEOUT])
             try:
                 sock.connect((self._config[CONF_HOST], self._config[CONF_PORT]))
-            except socket.error as err:
+            except OSError as err:
                 _LOGGER.error(
                     "Unable to connect to %s on port %s: %s",
                     self._config[CONF_HOST],
@@ -110,7 +110,7 @@ class TcpSensor(Entity):
 
             try:
                 sock.send(self._config[CONF_PAYLOAD].encode())
-            except socket.error as err:
+            except OSError as err:
                 _LOGGER.error(
                     "Unable to send payload %r to %s on port %s: %s",
                     self._config[CONF_PAYLOAD],
@@ -124,7 +124,7 @@ class TcpSensor(Entity):
             if not readable:
                 _LOGGER.warning(
                     "Timeout (%s second(s)) waiting for a response after "
-                    "sending %r to %s on port %s.",
+                    "sending %r to %s on port %s",
                     self._config[CONF_TIMEOUT],
                     self._config[CONF_PAYLOAD],
                     self._config[CONF_HOST],

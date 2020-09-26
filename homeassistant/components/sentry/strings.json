@@ -1,0 +1,31 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Sentry",
+        "description": "Enter your Sentry DSN",
+        "data": { "dsn": "DSN" }
+      }
+    },
+    "error": { "unknown": "Unexpected error", "bad_dsn": "Invalid DSN" },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "environment": "Optional name of the environment.",
+          "event_custom_components": "Send events from custom components",
+          "event_handled": "Send handled events",
+          "event_third_party_packages": "Send events from third-party packages",
+          "logging_event_level": "The log level Sentry will register an event for",
+          "logging_level": "The log level Sentry will record logs as breadcrums for",
+          "tracing": "Enable performance tracing",
+          "tracing_sample_rate": "Tracing sample rate; between 0.0 and 1.0 (1.0 = 100%)"
+        }
+      }
+    }
+  }
+}

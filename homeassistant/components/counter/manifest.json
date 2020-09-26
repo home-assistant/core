@@ -2,9 +2,6 @@
   "domain": "counter",
   "name": "Counter",
   "documentation": "https://www.home-assistant.io/integrations/counter",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": [
-    "@fabaff"
-  ]
+  "codeowners": ["@fabaff"],
+  "quality_scale": "internal"
 }

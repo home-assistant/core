@@ -22,7 +22,7 @@ def setup(hass, config):
         PFIO.deinit()
 
     def prepare_pfio(event):
-        """Stuff to do when home assistant starts."""
+        """Stuff to do when Home Assistant starts."""
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, cleanup_pfio)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, prepare_pfio)

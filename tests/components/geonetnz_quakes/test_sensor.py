@@ -1,8 +1,6 @@
 """The tests for the GeoNet NZ Quakes Feed integration."""
 import datetime
 
-from asynctest import CoroutineMock, patch
-
 from homeassistant.components import geonetnz_quakes
 from homeassistant.components.geonetnz_quakes import DEFAULT_SCAN_INTERVAL
 from homeassistant.components.geonetnz_quakes.sensor import (
@@ -22,13 +20,14 @@ from homeassistant.const import (
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import patch
 from tests.common import async_fire_time_changed
 from tests.components.geonetnz_quakes import _generate_mock_feed_entry
 
 CONFIG = {geonetnz_quakes.DOMAIN: {CONF_RADIUS: 200}}
 
 
-async def test_setup(hass):
+async def test_setup(hass, legacy_patchable_time):
     """Test the general setup of the integration."""
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry(
@@ -55,7 +54,7 @@ async def test_setup(hass):
     # Patching 'utcnow' to gain more control over the timed update.
     utcnow = dt_util.utcnow()
     with patch("homeassistant.util.dt.utcnow", return_value=utcnow), patch(
-        "aio_geojson_client.feed.GeoJsonFeed.update", new_callable=CoroutineMock
+        "aio_geojson_client.feed.GeoJsonFeed.update"
     ) as mock_feed_update:
         mock_feed_update.return_value = "OK", [mock_entry_1, mock_entry_2, mock_entry_3]
         assert await async_setup_component(hass, geonetnz_quakes.DOMAIN, CONFIG)

@@ -1,7 +1,7 @@
 """Reproduce an input boolean state."""
 import asyncio
 import logging
-from typing import Iterable, Optional
+from typing import Any, Dict, Iterable, Optional
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -19,7 +19,11 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def _async_reproduce_states(
-    hass: HomeAssistantType, state: State, context: Optional[Context] = None
+    hass: HomeAssistantType,
+    state: State,
+    *,
+    context: Optional[Context] = None,
+    reproduce_options: Optional[Dict[str, Any]] = None,
 ) -> None:
     """Reproduce input boolean states."""
     cur_state = hass.states.get(state.entity_id)
@@ -49,9 +53,18 @@ async def _async_reproduce_states(
 
 
 async def async_reproduce_states(
-    hass: HomeAssistantType, states: Iterable[State], context: Optional[Context] = None
+    hass: HomeAssistantType,
+    states: Iterable[State],
+    *,
+    context: Optional[Context] = None,
+    reproduce_options: Optional[Dict[str, Any]] = None,
 ) -> None:
     """Reproduce component states."""
     await asyncio.gather(
-        *(_async_reproduce_states(hass, state, context) for state in states)
+        *(
+            _async_reproduce_states(
+                hass, state, context=context, reproduce_options=reproduce_options
+            )
+            for state in states
+        )
     )

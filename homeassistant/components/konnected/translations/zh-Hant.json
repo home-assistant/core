@@ -1,0 +1,108 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u8a2d\u5099\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "already_in_progress": "\u8a2d\u5099\u8a2d\u5b9a\u5df2\u7d93\u9032\u884c\u4e2d\u3002",
+            "not_konn_panel": "\u4e26\u975e\u53ef\u8b58\u5225 Konnected.io \u8a2d\u5099",
+            "unknown": "\u767c\u751f\u672a\u77e5\u932f\u8aa4\u3002"
+        },
+        "error": {
+            "cannot_connect": "\u7121\u6cd5\u9023\u7dda\u81f3 Konnected \u9762\u677f\uff1a{host}:{port}"
+        },
+        "step": {
+            "confirm": {
+                "description": "\u578b\u865f\uff1a{model}\nID\uff1a{id}\n\u4e3b\u6a5f\u7aef\uff1a{host}\n\u901a\u8a0a\u57e0\uff1a{port}\n\n\u53ef\u4ee5\u65bc Konncected \u8b66\u5831\u9762\u677f\u8a2d\u5b9a\u4e2d\u8a2d\u5b9a IO \u8207\u9762\u677f\u884c\u70ba\u3002",
+                "title": "Konnected \u8a2d\u5099\u5df2\u5099\u59a5"
+            },
+            "import_confirm": {
+                "description": "\u65bc configuration.yaml \u4e2d\u767c\u73fe Konnected \u8b66\u5831 ID {id}\u3002\u6b64\u6d41\u7a0b\u5c07\u5141\u8a31\u532f\u5165\u81f3\u8a2d\u5b9a\u4e2d\u3002",
+                "title": "\u532f\u5165 Konnected \u8a2d\u5099"
+            },
+            "user": {
+                "data": {
+                    "host": "IP \u4f4d\u5740",
+                    "port": "\u901a\u8a0a\u57e0"
+                },
+                "description": "\u8acb\u8f38\u5165 Konnected \u9762\u677f\u4e3b\u6a5f\u7aef\u8cc7\u8a0a\u3002"
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "not_konn_panel": "\u4e26\u975e\u53ef\u8b58\u5225 Konnected.io \u8a2d\u5099"
+        },
+        "error": {
+            "bad_host": "\u7121\u6548\u7684\u8986\u5beb API \u4e3b\u6a5f\u7aef URL"
+        },
+        "step": {
+            "options_binary": {
+                "data": {
+                    "inverse": "\u53cd\u8f49\u958b\u555f/\u95dc\u9589\u72c0\u614b",
+                    "name": "\u540d\u7a31\uff08\u9078\u9805\uff09",
+                    "type": "\u4e8c\u9032\u4f4d\u611f\u61c9\u5668\u985e\u578b"
+                },
+                "description": "{zone}\u9078\u9805",
+                "title": "\u8a2d\u5b9a\u4e8c\u9032\u4f4d\u611f\u61c9\u5668"
+            },
+            "options_digital": {
+                "data": {
+                    "name": "\u540d\u7a31\uff08\u9078\u9805\uff09",
+                    "poll_interval": "\u66f4\u65b0\u9593\u8ddd\uff08\u5206\u9418\uff09\uff08\u9078\u9805\uff09",
+                    "type": "\u611f\u61c9\u5668\u985e\u578b"
+                },
+                "description": "{zone}\u9078\u9805",
+                "title": "\u8a2d\u5b9a\u6578\u4f4d\u611f\u61c9\u5668"
+            },
+            "options_io": {
+                "data": {
+                    "1": "\u5340\u57df 1",
+                    "2": "\u5340\u57df 2",
+                    "3": "\u5340\u57df 3",
+                    "4": "\u5340\u57df 4",
+                    "5": "\u5340\u57df 5",
+                    "6": "\u5340\u57df 6",
+                    "7": "\u5340\u57df 7",
+                    "out": "OUT"
+                },
+                "description": "\u65bc {host} \u767c\u73fe {model}\u3002\u8acb\u65bc\u4e0b\u65b9\u6bcf\u4e00\u500b I/O \u9078\u64c7\u57fa\u672c\u8a2d\u5b9a - \u96a8\u8457 I/O \u4e0d\u540c\uff0c\u53ef\u5141\u8a31\u4e8c\u9032\u4f4d\u611f\u61c9\u5668\uff08\u958b\u555f/\u95dc\u9589\u72c0\u614b\uff09\u3001\u6578\u4f4d\u611f\u61c9\u5668\uff08DHT \u53ca ds18b20\uff09\uff0c\u6216\u8005\u53ef\u5207\u63db\u8f38\u51fa\u3002\u53ef\u4ee5\u65bc\u4e0b\u4e00\u6b65\u8a2d\u5b9a\u8a73\u7d30\u9078\u9805\u3002",
+                "title": "\u8a2d\u5b9a I/O"
+            },
+            "options_io_ext": {
+                "data": {
+                    "10": "\u5340\u57df 10",
+                    "11": "\u5340\u57df 11",
+                    "12": "\u5340\u57df 12",
+                    "8": "\u5340\u57df 8",
+                    "9": "\u5340\u57df 9",
+                    "alarm1": "ALARM1",
+                    "alarm2_out2": "OUT2/ALARM2",
+                    "out1": "OUT1"
+                },
+                "description": "\u9078\u64c7\u4e0b\u65b9\u5269\u9918 I/O \u8a2d\u5b9a\u3002\u53ef\u4ee5\u65bc\u4e0b\u4e00\u6b65\u8a2d\u5b9a\u8a73\u7d30\u9078\u9805\u3002",
+                "title": "\u8a2d\u5b9a\u5ef6\u4f38 I/O"
+            },
+            "options_misc": {
+                "data": {
+                    "api_host": "\u8986\u5beb API \u4e3b\u6a5f\u7aef URL\uff08\u9078\u9805\uff09",
+                    "blink": "\u7576\u50b3\u9001\u72c0\u614b\u8b8a\u66f4\u6642\u3001\u9583\u720d\u9762\u677f LED",
+                    "discovery": "\u56de\u61c9\u7db2\u8def\u4e0a\u7684\u63a2\u7d22\u8acb\u6c42",
+                    "override_api_host": "\u8986\u5beb\u9810\u8a2d Home Assistant API \u4e3b\u6a5f\u7aef\u9762\u677f URL"
+                },
+                "description": "\u8acb\u9078\u64c7\u9762\u677f\u671f\u671b\u884c\u70ba",
+                "title": "\u5176\u4ed6\u8a2d\u5b9a"
+            },
+            "options_switch": {
+                "data": {
+                    "activation": "\u958b\u555f\u6642\u8f38\u51fa",
+                    "momentary": "\u6301\u7e8c\u6642\u9593\uff08ms\uff09\uff08\u9078\u9805\uff09",
+                    "more_states": "\u8a2d\u5b9a\u6b64\u5340\u57df\u7684\u9644\u52a0\u72c0\u614b",
+                    "name": "\u540d\u7a31\uff08\u9078\u9805\uff09",
+                    "pause": "\u66ab\u505c\u9593\u8ddd\uff08ms\uff09\uff08\u9078\u9805\uff09",
+                    "repeat": "\u91cd\u8907\u6642\u9593\uff08-1=\u7121\u9650\uff09\uff08\u9078\u9805\uff09"
+                },
+                "description": "{zone}\u9078\u9805\uff1a\u72c0\u614b {state}",
+                "title": "\u8a2d\u5b9a Switchable \u8f38\u51fa"
+            }
+        }
+    }
+}

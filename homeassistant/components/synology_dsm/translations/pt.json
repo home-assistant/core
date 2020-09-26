@@ -1,0 +1,29 @@
+{
+    "config": {
+        "error": {
+            "login": "Erro de autentica\u00e7\u00e3o: verifique seu nome de utilizador e palavra-passe"
+        },
+        "step": {
+            "2sa": {
+                "data": {
+                    "otp_code": "C\u00f3digo"
+                }
+            },
+            "link": {
+                "data": {
+                    "password": "Palavra-passe",
+                    "port": "Porta",
+                    "username": "Nome de Utilizador"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Servidor",
+                    "password": "Palavra-passe",
+                    "port": "Porta (opcional)",
+                    "username": "Nome de Utilizador"
+                }
+            }
+        }
+    }
+}

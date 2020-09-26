@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "TelldusLive jest ju\u017c skonfigurowany",
+            "authorize_url_fail": "Nieznany b\u0142\u0105d podczas generowania url autoryzacji.",
+            "authorize_url_timeout": "Przekroczono limit czasu generowania URL autoryzacji.",
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
+        },
+        "error": {
+            "auth_error": "B\u0142\u0105d uwierzytelniania, spr\u00f3buj ponownie"
+        },
+        "step": {
+            "auth": {
+                "description": "Aby po\u0142\u0105czy\u0107 konto TelldusLive: \n 1. Kliknij poni\u017cszy link \n 2. Zaloguj si\u0119 do Telldus Live \n 3. Autoryzuj **{app_name}** (kliknij **Tak**). \n 4. Wr\u00f3\u0107 tutaj i kliknij **SUBMIT**. \n\n [Link do konta TelldusLive]({auth_url})",
+                "title": "Uwierzytelnienie  na TelldusLive"
+            },
+            "user": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP"
+                },
+                "description": "Puste",
+                "title": "Wybierz punkt ko\u0144cowy."
+            }
+        }
+    }
+}

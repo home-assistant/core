@@ -1,7 +1,6 @@
 """The tests for the Vultr sensor platform."""
 import json
 import unittest
-from unittest.mock import patch
 
 import pytest
 import requests_mock
@@ -10,8 +9,14 @@ import voluptuous as vol
 from homeassistant.components import vultr as base_vultr
 from homeassistant.components.vultr import CONF_SUBSCRIPTION
 import homeassistant.components.vultr.sensor as vultr
-from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME, CONF_PLATFORM
+from homeassistant.const import (
+    CONF_MONITORED_CONDITIONS,
+    CONF_NAME,
+    CONF_PLATFORM,
+    DATA_GIGABYTES,
+)
 
+from tests.async_mock import patch
 from tests.common import get_test_home_assistant, load_fixture
 from tests.components.vultr.test_init import VALID_CONFIG
 
@@ -46,10 +51,7 @@ class TestVultrSensorSetup(unittest.TestCase):
                 CONF_MONITORED_CONDITIONS: ["pending_charges"],
             },
         ]
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     @requests_mock.Mocker()
     def test_sensor(self, mock):
@@ -83,7 +85,7 @@ class TestVultrSensorSetup(unittest.TestCase):
 
             device.update()
 
-            if device.unit_of_measurement == "GB":  # Test Bandwidth Used
+            if device.unit_of_measurement == DATA_GIGABYTES:  # Test Bandwidth Used
                 if device.subscription == "576965":
                     assert "Vultr my new server Current Bandwidth Used" == device.name
                     assert "mdi:chart-histogram" == device.icon

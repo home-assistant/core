@@ -1,0 +1,85 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Kun en konfigurasjon av MQTT er tillatt."
+        },
+        "error": {
+            "cannot_connect": "Kan ikke koble til megleren."
+        },
+        "step": {
+            "broker": {
+                "data": {
+                    "broker": "Megler",
+                    "discovery": "Aktiver oppdagelse",
+                    "password": "Passord",
+                    "port": "",
+                    "username": "Brukernavn"
+                },
+                "description": "Vennligst fyll ut tilkoblingsinformasjonen for din MQTT megler."
+            },
+            "hassio_confirm": {
+                "data": {
+                    "discovery": "Aktiver oppdagelse"
+                },
+                "description": "Vil du konfigurere Home Assistant til \u00e5 koble til en MQTT megler som er levert av Hass.io-tillegget {addon}?",
+                "title": "MQTT megler via Hass.io tillegg"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "F\u00f8rste knapp",
+            "button_2": "Andre knapp",
+            "button_3": "Tredje knapp",
+            "button_4": "Fjerde knapp",
+            "button_5": "Femte knapp",
+            "button_6": "Sjette knapp",
+            "turn_off": "Skru av",
+            "turn_on": "Sl\u00e5 p\u00e5"
+        },
+        "trigger_type": {
+            "button_double_press": "\"{subtype}\" dobbeltklikket",
+            "button_long_press": "{subtype}\" trykket kontinuerlig",
+            "button_long_release": "\"{subtype}\" utgitt etter lang trykk",
+            "button_quadruple_press": "\"{subtype}\" firedoblet klikket",
+            "button_quintuple_press": "\"{subtype}\" quintuple klikket",
+            "button_short_press": "{subtype}\u00bb trykket",
+            "button_short_release": "\"{subtype}\" utgitt",
+            "button_triple_press": "\"{subtype}\" trippel klikket"
+        }
+    },
+    "options": {
+        "error": {
+            "bad_birth": "Ugyldig f\u00f8dselsemne.",
+            "bad_will": "Ugyldig emne.",
+            "cannot_connect": "Kan ikke koble til megleren."
+        },
+        "step": {
+            "broker": {
+                "data": {
+                    "broker": "Megler",
+                    "password": "Passord",
+                    "port": "",
+                    "username": "Brukernavn"
+                },
+                "description": "Vennligst oppgi tilkoblingsinformasjonen for din MQTT megler."
+            },
+            "options": {
+                "data": {
+                    "birth_enable": "Aktiver f\u00f8dselsmelding",
+                    "birth_payload": "F\u00f8dselsmelding nyttelast",
+                    "birth_qos": "F\u00f8dselsmelding QoS",
+                    "birth_retain": "F\u00f8dselsmelding behold",
+                    "birth_topic": "F\u00f8dselsmelding emne",
+                    "discovery": "Aktiver oppdagelse",
+                    "will_enable": "Aktiver will melding",
+                    "will_payload": "Testament melding nyttelast",
+                    "will_qos": "Testament melding QoS",
+                    "will_retain": "Testament melding behold",
+                    "will_topic": "Testament melding emne"
+                },
+                "description": "Vennligst velg MQTT-alternativer."
+            }
+        }
+    }
+}

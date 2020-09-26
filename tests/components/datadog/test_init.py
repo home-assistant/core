@@ -21,8 +21,9 @@ class TestDatadog(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tear_down_cleanup(self):
         """Stop everything that was started."""
         self.hass.stop()
 
@@ -133,7 +134,7 @@ class TestDatadog(unittest.TestCase):
 
         valid = {"1": 1, "1.0": 1.0, STATE_ON: 1, STATE_OFF: 0}
 
-        attributes = {"elevation": 3.2, "temperature": 5.0}
+        attributes = {"elevation": 3.2, "temperature": 5.0, "up": True, "down": False}
 
         for in_, out in valid.items():
             state = mock.MagicMock(
@@ -144,16 +145,17 @@ class TestDatadog(unittest.TestCase):
             )
             handler_method(mock.MagicMock(data={"new_state": state}))
 
-            assert mock_client.gauge.call_count == 3
+            assert mock_client.gauge.call_count == 5
 
             for attribute, value in attributes.items():
+                value = int(value) if isinstance(value, bool) else value
                 mock_client.gauge.assert_has_calls(
                     [
                         mock.call(
-                            "ha.sensor.{}".format(attribute),
+                            f"ha.sensor.{attribute}",
                             value,
                             sample_rate=1,
-                            tags=["entity:{}".format(state.entity_id)],
+                            tags=[f"entity:{state.entity_id}"],
                         )
                     ]
                 )
@@ -162,7 +164,7 @@ class TestDatadog(unittest.TestCase):
                 "ha.sensor",
                 out,
                 sample_rate=1,
-                tags=["entity:{}".format(state.entity_id)],
+                tags=[f"entity:{state.entity_id}"],
             )
 
             mock_client.gauge.reset_mock()

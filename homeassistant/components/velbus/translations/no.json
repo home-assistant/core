@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "port_exists": "Denne porten er allerede konfigurert"
+        },
+        "error": {
+            "connection_failed": "Velbus-tilkoblingen mislyktes",
+            "port_exists": "Denne porten er allerede konfigurert"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Navnet p\u00e5 denne velbus tilkoblingen",
+                    "port": "Tilkoblingsstreng"
+                },
+                "title": "Definer tilkoblingstype for velbus"
+            }
+        }
+    }
+}

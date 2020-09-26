@@ -1,0 +1,12 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Solo se necesita una \u00fanica configuraci\u00f3n de Home Assistant iOS."
+        },
+        "step": {
+            "confirm": {
+                "description": "\u00bfDesea configurar el componente iOS de Home Assistant?"
+            }
+        }
+    }
+}

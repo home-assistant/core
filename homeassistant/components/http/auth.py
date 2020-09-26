@@ -9,7 +9,7 @@ import jwt
 from homeassistant.core import callback
 from homeassistant.util import dt as dt_util
 
-from .const import KEY_AUTHENTICATED, KEY_HASS_USER, KEY_REAL_IP
+from .const import KEY_AUTHENTICATED, KEY_HASS_USER
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -29,20 +29,12 @@ def async_sign_path(hass, refresh_token_id, path, expiration):
         secret = hass.data[DATA_SIGN_SECRET] = secrets.token_hex()
 
     now = dt_util.utcnow()
-    return "{}?{}={}".format(
-        path,
-        SIGN_QUERY_PARAM,
-        jwt.encode(
-            {
-                "iss": refresh_token_id,
-                "path": path,
-                "iat": now,
-                "exp": now + expiration,
-            },
-            secret,
-            algorithm="HS256",
-        ).decode(),
+    encoded = jwt.encode(
+        {"iss": refresh_token_id, "path": path, "iat": now, "exp": now + expiration},
+        secret,
+        algorithm="HS256",
     )
+    return f"{path}?{SIGN_QUERY_PARAM}=" f"{encoded.decode()}"
 
 
 @callback
@@ -126,7 +118,7 @@ def setup_auth(hass, app):
         if authenticated:
             _LOGGER.debug(
                 "Authenticated %s for %s using %s",
-                request[KEY_REAL_IP],
+                request.remote,
                 request.path,
                 auth_type,
             )

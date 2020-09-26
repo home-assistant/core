@@ -6,7 +6,7 @@ from homeassistant.components.cover import (
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
-    CoverDevice,
+    CoverEntity,
 )
 
 from . import LUTRON_CONTROLLER, LUTRON_DEVICES, LutronDevice
@@ -25,7 +25,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     return True
 
 
-class LutronCover(LutronDevice, CoverDevice):
+class LutronCover(LutronDevice, CoverEntity):
     """Representation of a Lutron shade."""
 
     @property

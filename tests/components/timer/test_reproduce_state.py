@@ -36,7 +36,6 @@ async def test_reproducing_states(hass, caplog):
                 "timer.entity_active_attr", STATUS_ACTIVE, {ATTR_DURATION: "00:01:00"}
             ),
         ],
-        blocking=True,
     )
 
     assert len(start_calls) == 0
@@ -45,7 +44,7 @@ async def test_reproducing_states(hass, caplog):
 
     # Test invalid state is handled
     await hass.helpers.state.async_reproduce_state(
-        [State("timer.entity_idle", "not_supported")], blocking=True
+        [State("timer.entity_idle", "not_supported")]
     )
 
     assert "not_supported" in caplog.text
@@ -63,7 +62,6 @@ async def test_reproducing_states(hass, caplog):
             # Should not raise
             State("timer.non_existing", "on"),
         ],
-        blocking=True,
     )
 
     valid_start_calls = [

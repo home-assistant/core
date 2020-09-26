@@ -1,0 +1,8 @@
+{
+  "status": {
+    "code": 200,
+    "commandResult": 0,
+    "msg": "OK",
+    "query": "/tv/tune?major=508"
+  }
+}

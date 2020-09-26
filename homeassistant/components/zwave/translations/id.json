@@ -1,0 +1,14 @@
+{
+    "state": {
+        "_": {
+            "dead": "Mati",
+            "initializing": "Inisialisasi",
+            "ready": "Siap",
+            "sleeping": "Tidur"
+        },
+        "query_stage": {
+            "dead": "Mati ({query_stage})",
+            "initializing": "Inisialisasi ( {query_stage} )"
+        }
+    }
+}

@@ -1,7 +1,7 @@
 """Support for Genius Hub climate devices."""
 from typing import List, Optional
 
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
@@ -45,7 +45,7 @@ async def async_setup_platform(
     )
 
 
-class GeniusClimateZone(GeniusHeatingZone, ClimateDevice):
+class GeniusClimateZone(GeniusHeatingZone, ClimateEntity):
     """Representation of a Genius Hub climate device."""
 
     def __init__(self, broker, zone) -> None:

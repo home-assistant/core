@@ -1,0 +1,21 @@
+{
+    "config": {
+        "error": {
+            "name_exists": "Nimi on jo olemassa"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "icon": "Kuvake",
+                    "latitude": "Leveysaste",
+                    "longitude": "Pituusaste",
+                    "name": "Nimi",
+                    "passive": "Passiivinen",
+                    "radius": "S\u00e4de"
+                },
+                "title": "M\u00e4\u00e4rit\u00e4 vy\u00f6hykeparametrit"
+            }
+        },
+        "title": "Vy\u00f6hyke"
+    }
+}

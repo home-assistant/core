@@ -1,6 +1,5 @@
 """Support for Abode Security System cameras."""
 from datetime import timedelta
-import logging
 
 import abodepy.helpers.constants as CONST
 import abodepy.helpers.timeline as TIMELINE
@@ -11,16 +10,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import Throttle
 
 from . import AbodeDevice
-from .const import DOMAIN, SIGNAL_CAPTURE_IMAGE
+from .const import DOMAIN, LOGGER
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=90)
-
-_LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Platform uses config entry setup."""
-    pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -49,14 +41,14 @@ class AbodeCamera(AbodeDevice, Camera):
         """Subscribe Abode events."""
         await super().async_added_to_hass()
 
-        self.hass.async_add_job(
+        self.hass.async_add_executor_job(
             self._data.abode.events.add_timeline_callback,
             self._event,
             self._capture_callback,
         )
 
-        signal = SIGNAL_CAPTURE_IMAGE.format(self.entity_id)
-        async_dispatcher_connect(self.hass, signal, self.capture)
+        signal = f"abode_camera_capture_{self.entity_id}"
+        self.async_on_remove(async_dispatcher_connect(self.hass, signal, self.capture))
 
     def capture(self):
         """Request a new image capture."""
@@ -76,7 +68,7 @@ class AbodeCamera(AbodeDevice, Camera):
 
                 self._response.raise_for_status()
             except requests.HTTPError as err:
-                _LOGGER.warning("Failed to get camera image: %s", err)
+                LOGGER.warning("Failed to get camera image: %s", err)
                 self._response = None
         else:
             self._response = None
@@ -90,8 +82,21 @@ class AbodeCamera(AbodeDevice, Camera):
 
         return None
 
+    def turn_on(self):
+        """Turn on camera."""
+        self._device.privacy_mode(False)
+
+    def turn_off(self):
+        """Turn off camera."""
+        self._device.privacy_mode(True)
+
     def _capture_callback(self, capture):
         """Update the image with the device then refresh device."""
         self._device.update_image_location(capture)
         self.get_image()
         self.schedule_update_ha_state()
+
+    @property
+    def is_on(self):
+        """Return true if on."""
+        return self._device.is_on

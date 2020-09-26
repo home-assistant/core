@@ -1,0 +1,18 @@
+{
+  "version": "2.0.0.1121",
+  "buildTime": "2014-02-08T20:49:36.5560392Z",
+  "isDebug": false,
+  "isProduction": true,
+  "isAdmin": true,
+  "isUserInteractive": false,
+  "startupPath": "C:\\ProgramData\\NzbDrone\\bin",
+  "appData": "C:\\ProgramData\\NzbDrone",
+  "osVersion": "6.2.9200.0",
+  "isMono": false,
+  "isLinux": false,
+  "isWindows": true,
+  "branch": "develop",
+  "authentication": false,
+  "startOfWeek": 0,
+  "urlBase": ""
+}

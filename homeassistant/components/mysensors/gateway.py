@@ -42,7 +42,7 @@ MQTT_COMPONENT = "mqtt"
 def is_serial_port(value):
     """Validate that value is a windows serial port or a unix device."""
     if sys.platform.startswith("win"):
-        ports = ("COM{}".format(idx + 1) for idx in range(256))
+        ports = (f"COM{idx + 1}" for idx in range(256))
         if value in ports:
             return value
         raise vol.Invalid(f"{value} is not a serial port")
@@ -54,8 +54,8 @@ def is_socket_address(value):
     try:
         socket.getaddrinfo(value, None)
         return value
-    except OSError:
-        raise vol.Invalid("Device is not a valid domain name or ip address")
+    except OSError as err:
+        raise vol.Invalid("Device is not a valid domain name or ip address") from err
 
 
 def get_mysensors_gateway(hass, gateway_id):
@@ -74,7 +74,7 @@ async def setup_gateways(hass, config):
     for index, gateway_conf in enumerate(conf[CONF_GATEWAYS]):
         persistence_file = gateway_conf.get(
             CONF_PERSISTENCE_FILE,
-            hass.config.path("mysensors{}.pickle".format(index + 1)),
+            hass.config.path(f"mysensors{index + 1}.pickle"),
         )
         ready_gateway = await _get_gateway(hass, config, gateway_conf, persistence_file)
         if ready_gateway is not None:

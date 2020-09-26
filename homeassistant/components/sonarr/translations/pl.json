@@ -1,0 +1,37 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Us\u0142uga jest ju\u017c skonfigurowana.",
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_auth": "Niepoprawne uwierzytelnienie"
+        },
+        "flow_title": "Sonarr: {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Klucz API",
+                    "base_path": "\u015acie\u017cka do API",
+                    "host": "Nazwa hosta lub adres IP",
+                    "port": "Port",
+                    "ssl": "Sonarr u\u017cywa certyfikatu SSL",
+                    "verify_ssl": "Sonarr u\u017cywa prawid\u0142owego certyfikatu"
+                },
+                "title": "Po\u0142\u0105cz z Sonarr"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "upcoming_days": "Liczba nadchodz\u0105cych dni do wy\u015bwietlenia",
+                    "wanted_max_items": "Maksymalna liczba wy\u015bwietlanych element\u00f3w"
+                }
+            }
+        }
+    },
+    "title": "Sonarr"
+}

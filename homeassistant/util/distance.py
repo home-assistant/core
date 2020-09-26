@@ -27,11 +27,10 @@ def convert(value: float, unit_1: str, unit_2: str) -> float:
     if not isinstance(value, Number):
         raise TypeError(f"{value} is not of numeric type")
 
-    # type ignore: https://github.com/python/mypy/issues/7207
-    if unit_1 == unit_2 or unit_1 not in VALID_UNITS:  # type: ignore
+    if unit_1 == unit_2 or unit_1 not in VALID_UNITS:
         return value
 
-    meters = value
+    meters: float = value
 
     if unit_1 == LENGTH_MILES:
         meters = __miles_to_meters(value)

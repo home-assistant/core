@@ -6,11 +6,11 @@ import logging
 import aiohttp
 import async_timeout
 
-from homeassistant.const import MATCH_ALL, STATE_ON
+from homeassistant.const import HTTP_ACCEPTED, MATCH_ALL, STATE_ON
 import homeassistant.util.dt as dt_util
 
 from .const import API_CHANGE, Cause
-from .entities import ENTITY_ADAPTERS
+from .entities import ENTITY_ADAPTERS, generate_alexa_id
 from .messages import AlexaResponse
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,6 +26,9 @@ async def async_enable_proactive_mode(hass, smart_home_config):
     await smart_home_config.async_get_access_token()
 
     async def async_entity_state_listener(changed_entity, old_state, new_state):
+        if not hass.is_running:
+            return
+
         if not new_state:
             return
 
@@ -98,7 +101,7 @@ async def async_send_changereport_message(
             )
 
     except (asyncio.TimeoutError, aiohttp.ClientError):
-        _LOGGER.error("Timeout sending report to Alexa.")
+        _LOGGER.error("Timeout sending report to Alexa")
         return
 
     response_text = await response.text()
@@ -106,7 +109,7 @@ async def async_send_changereport_message(
     _LOGGER.debug("Sent: %s", json.dumps(message_serialized))
     _LOGGER.debug("Received (%s): %s", response.status, response_text)
 
-    if response.status == 202:
+    if response.status == HTTP_ACCEPTED:
         return
 
     response_json = json.loads(response_text)
@@ -178,8 +181,7 @@ async def async_send_delete_message(hass, config, entity_ids):
         if domain not in ENTITY_ADAPTERS:
             continue
 
-        alexa_entity = ENTITY_ADAPTERS[domain](hass, config, hass.states.get(entity_id))
-        endpoints.append({"endpointId": alexa_entity.alexa_id()})
+        endpoints.append({"endpointId": generate_alexa_id(entity_id)})
 
     payload = {"endpoints": endpoints, "scope": {"type": "BearerToken", "token": token}}
 
@@ -230,7 +232,7 @@ async def async_send_doorbell_event_message(hass, config, alexa_entity):
             )
 
     except (asyncio.TimeoutError, aiohttp.ClientError):
-        _LOGGER.error("Timeout sending report to Alexa.")
+        _LOGGER.error("Timeout sending report to Alexa")
         return
 
     response_text = await response.text()
@@ -238,7 +240,7 @@ async def async_send_doorbell_event_message(hass, config, alexa_entity):
     _LOGGER.debug("Sent: %s", json.dumps(message_serialized))
     _LOGGER.debug("Received (%s): %s", response.status, response_text)
 
-    if response.status == 202:
+    if response.status == HTTP_ACCEPTED:
         return
 
     response_json = json.loads(response_text)

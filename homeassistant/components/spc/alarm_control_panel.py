@@ -47,7 +47,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([SpcAlarm(area=area, api=api) for area in api.areas.values()])
 
 
-class SpcAlarm(alarm.AlarmControlPanel):
+class SpcAlarm(alarm.AlarmControlPanelEntity):
     """Representation of the SPC alarm panel."""
 
     def __init__(self, area, api):
@@ -57,8 +57,12 @@ class SpcAlarm(alarm.AlarmControlPanel):
 
     async def async_added_to_hass(self):
         """Call for adding new entities."""
-        async_dispatcher_connect(
-            self.hass, SIGNAL_UPDATE_ALARM.format(self._area.id), self._update_callback
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_UPDATE_ALARM.format(self._area.id),
+                self._update_callback,
+            )
         )
 
     @callback

@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 import homeassistant.helpers.config_validation as cv
 
 from . import CONF_SERVERS, DATA_UPCLOUD, UpCloudServerEntity
@@ -26,5 +26,5 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices, True)
 
 
-class UpCloudBinarySensor(UpCloudServerEntity, BinarySensorDevice):
+class UpCloudBinarySensor(UpCloudServerEntity, BinarySensorEntity):
     """Representation of an UpCloud server sensor."""

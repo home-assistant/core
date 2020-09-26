@@ -15,7 +15,7 @@ from homeassistant.components.light import (
     SUPPORT_COLOR,
     SUPPORT_EFFECT,
     SUPPORT_TRANSITION,
-    Light,
+    LightEntity,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 import homeassistant.helpers.config_validation as cv
@@ -47,7 +47,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([LW12WiFi(name, lw12_light)])
 
 
-class LW12WiFi(Light):
+class LW12WiFi(LightEntity):
     """LW-12 WiFi LED Controller."""
 
     def __init__(self, name, lw12_light):

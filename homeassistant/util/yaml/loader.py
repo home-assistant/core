@@ -41,7 +41,6 @@ def clear_secret_cache() -> None:
     __SECRET_CACHE.clear()
 
 
-# pylint: disable=too-many-ancestors
 class SafeLineLoader(yaml.SafeLoader):
     """Loader class that keeps track of line numbers."""
 
@@ -62,10 +61,10 @@ def load_yaml(fname: str) -> JSON_TYPE:
             return yaml.load(conf_file, Loader=SafeLineLoader) or OrderedDict()
     except yaml.YAMLError as exc:
         _LOGGER.error(str(exc))
-        raise HomeAssistantError(exc)
+        raise HomeAssistantError(exc) from exc
     except UnicodeDecodeError as exc:
         _LOGGER.error("Unable to read file %s: %s", fname, exc)
-        raise HomeAssistantError(exc)
+        raise HomeAssistantError(exc) from exc
 
 
 @overload
@@ -89,12 +88,7 @@ def _add_reference(
     ...
 
 
-# pylint: enable=pointless-statement
-
-
-def _add_reference(  # type: ignore
-    obj, loader: SafeLineLoader, node: yaml.nodes.Node
-):
+def _add_reference(obj, loader: SafeLineLoader, node: yaml.nodes.Node):  # type: ignore
     """Add file reference information to an object."""
     if isinstance(obj, list):
         obj = NodeListClass(obj)
@@ -115,8 +109,10 @@ def _include_yaml(loader: SafeLineLoader, node: yaml.nodes.Node) -> JSON_TYPE:
     fname = os.path.join(os.path.dirname(loader.name), node.value)
     try:
         return _add_reference(load_yaml(fname), loader, node)
-    except FileNotFoundError:
-        raise HomeAssistantError(f"{node.start_mark}: Unable to read file {fname}.")
+    except FileNotFoundError as exc:
+        raise HomeAssistantError(
+            f"{node.start_mark}: Unable to read file {fname}."
+        ) from exc
 
 
 def _is_file_valid(name: str) -> bool:
@@ -201,17 +197,17 @@ def _ordered_dict(loader: SafeLineLoader, node: yaml.nodes.MappingNode) -> Order
 
         try:
             hash(key)
-        except TypeError:
+        except TypeError as exc:
             fname = getattr(loader.stream, "name", "")
             raise yaml.MarkedYAMLError(
                 context=f'invalid key: "{key}"',
                 context_mark=yaml.Mark(fname, 0, line, -1, None, None),
-            )
+            ) from exc
 
         if key in seen:
             fname = getattr(loader.stream, "name", "")
             _LOGGER.warning(
-                'YAML file %s contains duplicate key "%s". ' "Check lines %d and %d.",
+                'YAML file %s contains duplicate key "%s". Check lines %d and %d',
                 fname,
                 key,
                 seen[key],
@@ -237,7 +233,7 @@ def _env_var_yaml(loader: SafeLineLoader, node: yaml.nodes.Node) -> str:
         return os.getenv(args[0], " ".join(args[1:]))
     if args[0] in os.environ:
         return os.environ[args[0]]
-    _LOGGER.error("Environment variable %s not defined.", node.value)
+    _LOGGER.error("Environment variable %s not defined", node.value)
     raise HomeAssistantError(node.value)
 
 
@@ -258,7 +254,7 @@ def _load_secret_yaml(secret_path: str) -> JSON_TYPE:
                 _LOGGER.setLevel(logging.DEBUG)
             else:
                 _LOGGER.error(
-                    "secrets.yaml: 'logger: debug' expected," " but 'logger: %s' found",
+                    "secrets.yaml: 'logger: debug' expected, but 'logger: %s' found",
                     logger,
                 )
             del secrets["logger"]
@@ -276,7 +272,7 @@ def secret_yaml(loader: SafeLineLoader, node: yaml.nodes.Node) -> JSON_TYPE:
 
         if node.value in secrets:
             _LOGGER.debug(
-                "Secret %s retrieved from secrets.yaml in " "folder %s",
+                "Secret %s retrieved from secrets.yaml in folder %s",
                 node.value,
                 secret_path,
             )
@@ -296,7 +292,7 @@ def secret_yaml(loader: SafeLineLoader, node: yaml.nodes.Node) -> JSON_TYPE:
             _LOGGER.debug("Secret %s retrieved from keyring", node.value)
             return pwd
 
-    global credstash  # pylint: disable=invalid-name
+    global credstash  # pylint: disable=invalid-name, global-statement
 
     if credstash:
         # pylint: disable=no-member

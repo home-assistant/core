@@ -1,0 +1,22 @@
+{
+    "config": {
+        "error": {
+            "auth_failed": "Nome de usu\u00e1rio e/ou senha est\u00e3o incorretos."
+        },
+        "step": {
+            "confirm": {
+                "data": {
+                    "password": "Senha",
+                    "username": "Usu\u00e1rio"
+                },
+                "description": "Voc\u00ea quer configurar o {name}?"
+            },
+            "user": {
+                "data": {
+                    "password": "Senha",
+                    "username": "Usu\u00e1rio"
+                }
+            }
+        }
+    }
+}

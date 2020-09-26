@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd"
+        },
+        "error": {
+            "cannot_connect": "Verbinding mislukt, probeer het opnieuw",
+            "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "link": {
+                "description": "Wil je {name} ({host}) instellen?",
+                "title": "Maak verbinding met de PowerView Hub"
+            },
+            "user": {
+                "data": {
+                    "host": "IP-adres"
+                },
+                "title": "Maak verbinding met de PowerView Hub"
+            }
+        }
+    },
+    "title": "Hunter Douglas PowerView"
+}

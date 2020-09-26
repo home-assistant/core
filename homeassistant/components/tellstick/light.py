@@ -1,5 +1,9 @@
 """Support for Tellstick lights."""
-from homeassistant.components.light import ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    SUPPORT_BRIGHTNESS,
+    LightEntity,
+)
 
 from . import (
     ATTR_DISCOVER_CONFIG,
@@ -30,7 +34,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class TellstickLight(TellstickDevice, Light):
+class TellstickLight(TellstickDevice, LightEntity):
     """Representation of a Tellstick light."""
 
     def __init__(self, tellcore_device, signal_repetitions):

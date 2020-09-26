@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "missing_configuration": "Die Komponente Home Connect ist nicht konfiguriert. Bitte folgen Sie der Dokumentation."
+        },
+        "create_entry": {
+            "default": "Erfolgreich mit Home Connect authentifiziert."
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Authentifizierungsmethode ausw\u00e4hlen"
+            }
+        }
+    }
+}

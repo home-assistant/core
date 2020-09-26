@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "invalid_credentials": "\u6191\u8b49\u7121\u6548",
+            "user_already_configured": "\u5e33\u865f\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
+        "create_entry": {
+            "default": "\u6b32\u8a2d\u5b9a\u9032\u968e\u9078\u9805\uff0c\u8acb\u53c3\u95b1 [Life360 \u6587\u4ef6]({docs_url})\u3002"
+        },
+        "error": {
+            "invalid_credentials": "\u6191\u8b49\u7121\u6548",
+            "invalid_username": "\u4f7f\u7528\u8005\u540d\u7a31\u7121\u6548",
+            "unexpected": "\u8207 Life360 \u4f3a\u670d\u5668\u901a\u8a0a\u767c\u751f\u672a\u77e5\u932f\u8aa4",
+            "user_already_configured": "\u5e33\u865f\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "\u5bc6\u78bc",
+                    "username": "\u4f7f\u7528\u8005\u540d\u7a31"
+                },
+                "description": "\u6b32\u8a2d\u5b9a\u9032\u968e\u9078\u9805\uff0c\u8acb\u53c3\u95b1 [Life360 \u6587\u4ef6]({docs_url})\u3002\n\u5efa\u8b70\u65bc\u65b0\u589e\u5e33\u865f\u524d\uff0c\u5148\u9032\u884c\u4e86\u89e3\u3002",
+                "title": "Life360 \u5e33\u865f\u8cc7\u8a0a"
+            }
+        }
+    }
+}

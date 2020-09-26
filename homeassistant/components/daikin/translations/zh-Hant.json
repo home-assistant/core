@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u8a2d\u5099\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "cannot_connect": "\u9023\u7dda\u5931\u6557"
+        },
+        "error": {
+            "device_fail": "\u672a\u9810\u671f\u932f\u8aa4",
+            "device_timeout": "\u9023\u7dda\u5931\u6557",
+            "forbidden": "\u9a57\u8b49\u78bc\u7121\u6548"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\u4e3b\u6a5f\u7aef",
+                    "key": "API \u5bc6\u9470",
+                    "password": "\u5bc6\u78bc"
+                },
+                "description": "\u8f38\u5165\u60a8\u7684\u5927\u91d1\u7a7a\u8abf IP \u4f4d\u5740\u3002\n\n\u8acb\u6ce8\u610f\uff1aBRP072Cxx \u8207 SKYFi \u8a2d\u5099\u4e4b API \u5bc6\u9470\u8207\u5bc6\u78bc\u70ba\u5206\u958b\u4f7f\u7528\u3002",
+                "title": "\u8a2d\u5b9a\u5927\u91d1\u7a7a\u8abf"
+            }
+        }
+    }
+}

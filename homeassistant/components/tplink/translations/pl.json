@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Nie znaleziono urz\u0105dze\u0144 TP-Link w sieci.",
+            "single_instance_allowed": "Wymagana jest tylko jedna konfiguracja."
+        },
+        "step": {
+            "confirm": {
+                "description": "Czy chcesz skonfigurowa\u0107 urz\u0105dzenia TP-Link smart?"
+            }
+        }
+    }
+}

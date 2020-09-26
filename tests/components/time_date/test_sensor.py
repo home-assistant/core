@@ -1,15 +1,15 @@
-"""The tests for Kira sensor platform."""
+"""The tests for time_date sensor platform."""
 import unittest
-from unittest.mock import patch
 
 import homeassistant.components.time_date.sensor as time_date
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import patch
 from tests.common import get_test_home_assistant
 
 
 class TestTimeDateSensor(unittest.TestCase):
-    """Tests the Kira Sensor platform."""
+    """Tests the time_date Sensor platform."""
 
     # pylint: disable=invalid-name
     DEVICES = []
@@ -23,8 +23,9 @@ class TestTimeDateSensor(unittest.TestCase):
         """Initialize values for this testcase class."""
         self.hass = get_test_home_assistant()
         self.DEFAULT_TIME_ZONE = dt_util.DEFAULT_TIME_ZONE
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):
+    def tear_down_cleanup(self):
         """Stop everything that was started."""
         dt_util.set_default_time_zone(self.DEFAULT_TIME_ZONE)
         self.hass.stop()
@@ -67,6 +68,14 @@ class TestTimeDateSensor(unittest.TestCase):
         device._update_internal_state(now)
         assert device.state == "00:54"
 
+        device = time_date.TimeDateSensor(self.hass, "date_time")
+        device._update_internal_state(now)
+        assert device.state == "2017-05-18, 00:54"
+
+        device = time_date.TimeDateSensor(self.hass, "date_time_utc")
+        device._update_internal_state(now)
+        assert device.state == "2017-05-18, 00:54"
+
         device = time_date.TimeDateSensor(self.hass, "beat")
         device._update_internal_state(now)
         assert device.state == "@079"
@@ -74,6 +83,41 @@ class TestTimeDateSensor(unittest.TestCase):
         device = time_date.TimeDateSensor(self.hass, "date_time_iso")
         device._update_internal_state(now)
         assert device.state == "2017-05-18T00:54:00"
+
+    def test_states_non_default_timezone(self):
+        """Test states of sensors in a timezone other than UTC."""
+        new_tz = dt_util.get_time_zone("America/New_York")
+        assert new_tz is not None
+        dt_util.set_default_time_zone(new_tz)
+
+        now = dt_util.utc_from_timestamp(1495068856)
+        device = time_date.TimeDateSensor(self.hass, "time")
+        device._update_internal_state(now)
+        assert device.state == "20:54"
+
+        device = time_date.TimeDateSensor(self.hass, "date")
+        device._update_internal_state(now)
+        assert device.state == "2017-05-17"
+
+        device = time_date.TimeDateSensor(self.hass, "time_utc")
+        device._update_internal_state(now)
+        assert device.state == "00:54"
+
+        device = time_date.TimeDateSensor(self.hass, "date_time")
+        device._update_internal_state(now)
+        assert device.state == "2017-05-17, 20:54"
+
+        device = time_date.TimeDateSensor(self.hass, "date_time_utc")
+        device._update_internal_state(now)
+        assert device.state == "2017-05-18, 00:54"
+
+        device = time_date.TimeDateSensor(self.hass, "beat")
+        device._update_internal_state(now)
+        assert device.state == "@079"
+
+        device = time_date.TimeDateSensor(self.hass, "date_time_iso")
+        device._update_internal_state(now)
+        assert device.state == "2017-05-17T20:54:00"
 
     # pylint: disable=no-member
     def test_timezone_intervals(self):
@@ -121,6 +165,8 @@ class TestTimeDateSensor(unittest.TestCase):
         device = time_date.TimeDateSensor(self.hass, "date")
         assert device.icon == "mdi:calendar"
         device = time_date.TimeDateSensor(self.hass, "date_time")
+        assert device.icon == "mdi:calendar-clock"
+        device = time_date.TimeDateSensor(self.hass, "date_time_utc")
         assert device.icon == "mdi:calendar-clock"
         device = time_date.TimeDateSensor(self.hass, "date_time_iso")
         assert device.icon == "mdi:calendar-clock"

@@ -9,7 +9,7 @@ from homeassistant.components.light import (
     DOMAIN,
     SUPPORT_BRIGHTNESS,
     SUPPORT_EFFECT,
-    Light,
+    LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
@@ -32,7 +32,7 @@ async def async_setup_entry(
     async_add_entities(devs, True)
 
 
-class HassAqualinkLight(AqualinkEntity, Light):
+class HassAqualinkLight(AqualinkEntity, LightEntity):
     """Representation of a light."""
 
     @property

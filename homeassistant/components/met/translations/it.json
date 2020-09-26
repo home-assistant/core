@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "name_exists": "La posizione esiste gi\u00e0"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "elevation": "Altitudine",
+                    "latitude": "Latitudine",
+                    "longitude": "Longitudine",
+                    "name": "Nome"
+                },
+                "description": "Meteorologisk institutt",
+                "title": "Posizione"
+            }
+        }
+    }
+}

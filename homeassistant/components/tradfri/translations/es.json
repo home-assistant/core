@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "La pasarela ya est\u00e1 configurada",
+            "already_in_progress": "La configuraci\u00f3n de la pasarela ya est\u00e1 en marcha."
+        },
+        "error": {
+            "cannot_connect": "No se puede conectar a la puerta de enlace.",
+            "invalid_key": "No se ha podido registrar con la clave proporcionada. Si esto sigue ocurriendo, intenta reiniciar el gateway.",
+            "timeout": "Tiempo de espera agotado validando el c\u00f3digo."
+        },
+        "step": {
+            "auth": {
+                "data": {
+                    "host": "Host",
+                    "security_code": "C\u00f3digo de seguridad"
+                },
+                "description": "Puedes encontrar el c\u00f3digo de seguridad en la parte posterior de tu gateway.",
+                "title": "Introduzca el c\u00f3digo de seguridad"
+            }
+        }
+    }
+}

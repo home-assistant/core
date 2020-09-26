@@ -8,6 +8,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_S
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "rpi_gpio"
+PLATFORMS = ["binary_sensor", "cover", "switch"]
 
 
 def setup(hass, config):
@@ -18,7 +19,7 @@ def setup(hass, config):
         GPIO.cleanup()
 
     def prepare_gpio(event):
-        """Stuff to do when home assistant starts."""
+        """Stuff to do when Home Assistant starts."""
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, cleanup_gpio)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, prepare_gpio)

@@ -4,7 +4,12 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_MOTION,
+    DEVICE_CLASS_OCCUPANCY,
+    PLATFORM_SCHEMA,
+    BinarySensorEntity,
+)
 from homeassistant.const import CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS
 import homeassistant.helpers.config_validation as cv
 
@@ -16,8 +21,8 @@ SCAN_INTERVAL = timedelta(seconds=5)
 
 # Sensor types: Name, device_class, event
 SENSOR_TYPES = {
-    "button": ["Button", "occupancy", "device:sensor:button"],
-    "motion": ["Motion", "motion", "device:sensor:motion"],
+    "button": ["Button", DEVICE_CLASS_OCCUPANCY, "device:sensor:button"],
+    "motion": ["Motion", DEVICE_CLASS_MOTION, "device:sensor:motion"],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -44,14 +49,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors, True)
 
 
-class SkybellBinarySensor(SkybellDevice, BinarySensorDevice):
+class SkybellBinarySensor(SkybellDevice, BinarySensorEntity):
     """A binary sensor implementation for Skybell devices."""
 
     def __init__(self, device, sensor_type):
         """Initialize a binary sensor for a Skybell device."""
         super().__init__(device)
         self._sensor_type = sensor_type
-        self._name = "{0} {1}".format(
+        self._name = "{} {}".format(
             self._device.name, SENSOR_TYPES[self._sensor_type][0]
         )
         self._device_class = SENSOR_TYPES[self._sensor_type][1]

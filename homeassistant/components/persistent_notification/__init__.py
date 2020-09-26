@@ -158,7 +158,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
         if entity_id not in persistent_notifications:
             return
 
-        hass.states.async_remove(entity_id)
+        hass.states.async_remove(entity_id, call.context)
 
         del persistent_notifications[entity_id]
         hass.bus.async_fire(EVENT_PERSISTENT_NOTIFICATIONS_UPDATED)
@@ -172,7 +172,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
         if entity_id not in persistent_notifications:
             _LOGGER.error(
                 "Marking persistent_notification read failed: "
-                "Notification ID %s not found.",
+                "Notification ID %s not found",
                 notification_id,
             )
             return

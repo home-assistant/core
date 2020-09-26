@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Diese Home Control Zentral wird bereits verwendet."
+        },
+        "error": {
+            "invalid_credentials": "Falscher Benutzername und/oder Passwort."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "home_control_url": "Home Control URL",
+                    "mydevolo_url": "mydevolo URL",
+                    "password": "Passwort",
+                    "username": "E-Mail-Adresse / devolo ID"
+                },
+                "title": "devolo Home Control"
+            }
+        }
+    },
+    "title": "devolo Home Control"
+}

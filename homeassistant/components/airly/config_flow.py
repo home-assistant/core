@@ -6,19 +6,14 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
-from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
-from .const import DEFAULT_NAME, DOMAIN, NO_AIRLY_SENSORS
-
-
-@callback
-def configured_instances(hass):
-    """Return a set of configured Airly instances."""
-    return set(
-        entry.data[CONF_NAME] for entry in hass.config_entries.async_entries(DOMAIN)
-    )
+from .const import (  # pylint:disable=unused-import
+    DEFAULT_NAME,
+    DOMAIN,
+    NO_AIRLY_SENSORS,
+)
 
 
 class AirlyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -38,8 +33,10 @@ class AirlyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         websession = async_get_clientsession(self.hass)
 
         if user_input is not None:
-            if user_input[CONF_NAME] in configured_instances(self.hass):
-                self._errors[CONF_NAME] = "name_exists"
+            await self.async_set_unique_id(
+                f"{user_input[CONF_LATITUDE]}-{user_input[CONF_LONGITUDE]}"
+            )
+            self._abort_if_unique_id_configured()
             api_key_valid = await self._test_api_key(websession, user_input["api_key"])
             if not api_key_valid:
                 self._errors["base"] = "auth"

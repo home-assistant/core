@@ -7,6 +7,7 @@ import voluptuous as vol
 from homeassistant import core
 from homeassistant.components import http, websocket_api
 from homeassistant.components.http.data_validator import RequestDataValidator
+from homeassistant.const import HTTP_INTERNAL_SERVER_ERROR
 from homeassistant.helpers import config_validation as cv, intent
 from homeassistant.loader import bind_hass
 
@@ -40,7 +41,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-async_register = bind_hass(async_register)  # pylint: disable=invalid-name
+async_register = bind_hass(async_register)
 
 
 @core.callback
@@ -131,9 +132,22 @@ class ConversationProcessView(http.HomeAssistantView):
         """Send a request for processing."""
         hass = request.app["hass"]
 
-        intent_result = await _async_converse(
-            hass, data["text"], data.get("conversation_id"), self.context(request)
-        )
+        try:
+            intent_result = await _async_converse(
+                hass, data["text"], data.get("conversation_id"), self.context(request)
+            )
+        except intent.IntentError as err:
+            _LOGGER.error("Error handling intent: %s", err)
+            return self.json(
+                {
+                    "success": False,
+                    "error": {
+                        "code": str(err.__class__.__name__).lower(),
+                        "message": str(err),
+                    },
+                },
+                status_code=HTTP_INTERNAL_SERVER_ERROR,
+            )
 
         return self.json(intent_result)
 

@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "address_already_configured": "Ja hi ha un dispositiu BleBox configurat a {address}.",
+            "already_configured": "Aquest dispositiu BleBox ja est\u00e0 configurat"
+        },
+        "error": {
+            "cannot_connect": "No s'ha pogut connectar al dispositiu BleBox. (Consulta els registres per veure-hi els errors).",
+            "unknown": "S'ha produ\u00eft un error desconegut en connectar-se al dispositiu BleBox. (Consulta els registres per veure-hi els errors).",
+            "unsupported_version": "El dispositiu BleBox t\u00e9 un firmware obsolet. Primer actualitza'l."
+        },
+        "flow_title": "Dispositiu BleBox: {name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Adre\u00e7a IP",
+                    "port": "Port"
+                },
+                "description": "Configura el teu dispositiu BleBox per a integrar-lo a Home Assistant.",
+                "title": "Configuraci\u00f3 del dispositiu BleBox"
+            }
+        }
+    }
+}

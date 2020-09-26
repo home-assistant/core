@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'acord seleccionat ja est\u00e0 configurat.",
+            "authorize_url_fail": "S'ha produ\u00eft un error desconegut al generar l'URL d'autoritzaci\u00f3.",
+            "authorize_url_timeout": "Temps d'espera durant la generaci\u00f3 de l'URL d'autoritzaci\u00f3 esgotat.",
+            "missing_configuration": "El component no est\u00e0 configurat. Mira'n la documentaci\u00f3.",
+            "no_agreements": "Aquest compte no t\u00e9 pantalles Toon.",
+            "no_url_available": "No hi ha cap URL disponible. Per a m\u00e9s informaci\u00f3 sobre aquest error, [consulta la secci\u00f3 d'ajuda]({docs_url})"
+        },
+        "step": {
+            "agreement": {
+                "data": {
+                    "agreement": "Acord"
+                },
+                "description": "Selecciona l'adre\u00e7a de l'acord a afegir.",
+                "title": "Selecciona acord"
+            },
+            "pick_implementation": {
+                "title": "Tria amb quin vols autenticar-te"
+            }
+        }
+    }
+}

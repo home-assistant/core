@@ -14,7 +14,7 @@ from homeassistant.components.cover import (
     SUPPORT_SET_POSITION,
     SUPPORT_SET_TILT_POSITION,
     SUPPORT_STOP,
-    CoverDevice,
+    CoverEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
@@ -39,7 +39,7 @@ async def async_setup_entry(
     )
 
 
-class EsphomeCover(EsphomeEntity, CoverDevice):
+class EsphomeCover(EsphomeEntity, CoverEntity):
     """A cover implementation for ESPHome."""
 
     @property

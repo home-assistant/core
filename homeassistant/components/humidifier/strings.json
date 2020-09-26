@@ -1,0 +1,28 @@
+{
+  "title": "Humidifier",
+  "device_automation": {
+    "trigger_type": {
+      "target_humidity_changed": "{entity_name} target humidity changed",
+      "turned_on": "{entity_name} turned on",
+      "turned_off": "{entity_name} turned off"
+    },
+    "condition_type": {
+      "is_mode": "{entity_name} is set to a specific mode",
+      "is_on": "{entity_name} is on",
+      "is_off": "{entity_name} is off"
+    },
+    "action_type": {
+      "set_humidity": "Set humidity for {entity_name}",
+      "set_mode": "Change mode on {entity_name}",
+      "toggle": "Toggle {entity_name}",
+      "turn_on": "Turn on {entity_name}",
+      "turn_off": "Turn off {entity_name}"
+    }
+  },
+  "state": {
+    "_": {
+      "off": "[%key:common::state::off%]",
+      "on": "[%key:common::state::on%]"
+    }
+  }
+}

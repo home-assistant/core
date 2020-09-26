@@ -39,7 +39,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     for idx, dev in enumerate(temper_devices):
         if idx != 0:
-            name = name + "_" + str(idx)
+            name = f"{name}_{idx!s}"
         TEMPER_SENSORS.append(TemperSensor(dev, temp_unit, name, scaling))
     add_entities(TEMPER_SENSORS)
 

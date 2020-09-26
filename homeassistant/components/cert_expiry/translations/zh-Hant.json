@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u6b64\u4e3b\u6a5f\u7aef\u8207\u901a\u8a0a\u57e0\u7d44\u5408\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "import_failed": "\u532f\u5165\u8a2d\u5b9a\u5931\u6557"
+        },
+        "error": {
+            "connection_refused": "\u9023\u7dda\u81f3\u4e3b\u6a5f\u6642\u906d\u62d2\u7d55",
+            "connection_timeout": "\u9023\u7dda\u81f3\u4e3b\u6a5f\u7aef\u903e\u6642",
+            "resolve_failed": "\u4e3b\u6a5f\u7aef\u7121\u6cd5\u89e3\u6790"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\u4e3b\u6a5f\u7aef",
+                    "name": "\u8a8d\u8b49\u540d\u7a31",
+                    "port": "\u901a\u8a0a\u57e0"
+                },
+                "title": "\u5b9a\u7fa9\u8a8d\u8b49\u9032\u884c\u6e2c\u8a66"
+            }
+        }
+    },
+    "title": "\u6191\u8b49\u671f\u9650"
+}

@@ -18,11 +18,6 @@ SWITCH_TYPE_SCHEDULE = "schedule"
 SWITCH_TYPES = {SWITCH_TYPE_SCHEDULE: ["Schedule"]}
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Neato switches."""
-    pass
-
-
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Neato switch with config entry."""
     dev = []
@@ -54,12 +49,14 @@ class NeatoConnectedSwitch(ToggleEntity):
 
     def update(self):
         """Update the states of Neato switches."""
-        _LOGGER.debug("Running switch update")
+        _LOGGER.debug("Running Neato switch update for '%s'", self.entity_id)
         try:
             self._state = self.robot.state
         except NeatoRobotException as ex:
             if self._available:  # Print only once when available
-                _LOGGER.error("Neato switch connection error: %s", ex)
+                _LOGGER.error(
+                    "Neato switch connection error for '%s': %s", self.entity_id, ex
+                )
             self._state = None
             self._available = False
             return
@@ -72,7 +69,9 @@ class NeatoConnectedSwitch(ToggleEntity):
                 self._schedule_state = STATE_ON
             else:
                 self._schedule_state = STATE_OFF
-            _LOGGER.debug("Schedule state: %s", self._schedule_state)
+            _LOGGER.debug(
+                "Schedule state for '%s': %s", self.entity_id, self._schedule_state
+            )
 
     @property
     def name(self):
@@ -108,7 +107,9 @@ class NeatoConnectedSwitch(ToggleEntity):
             try:
                 self.robot.enable_schedule()
             except NeatoRobotException as ex:
-                _LOGGER.error("Neato switch connection error: %s", ex)
+                _LOGGER.error(
+                    "Neato switch connection error '%s': %s", self.entity_id, ex
+                )
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
@@ -116,4 +117,6 @@ class NeatoConnectedSwitch(ToggleEntity):
             try:
                 self.robot.disable_schedule()
             except NeatoRobotException as ex:
-                _LOGGER.error("Neato switch connection error: %s", ex)
+                _LOGGER.error(
+                    "Neato switch connection error '%s': %s", self.entity_id, ex
+                )

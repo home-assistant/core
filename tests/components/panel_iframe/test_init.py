@@ -4,6 +4,7 @@ import unittest
 from homeassistant import setup
 from homeassistant.components import frontend
 
+from tests.async_mock import patch
 from tests.common import get_test_home_assistant
 
 
@@ -13,10 +14,7 @@ class TestPanelIframe(unittest.TestCase):
     def setUp(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     def test_wrong_config(self):
         """Test setup with wrong configuration."""
@@ -26,38 +24,42 @@ class TestPanelIframe(unittest.TestCase):
         ]
 
         for conf in to_try:
-            assert not setup.setup_component(
-                self.hass, "panel_iframe", {"panel_iframe": conf}
-            )
+            with patch(
+                "homeassistant.components.http.start_http_server_and_save_config"
+            ):
+                assert not setup.setup_component(
+                    self.hass, "panel_iframe", {"panel_iframe": conf}
+                )
 
     def test_correct_config(self):
         """Test correct config."""
-        assert setup.setup_component(
-            self.hass,
-            "panel_iframe",
-            {
-                "panel_iframe": {
-                    "router": {
-                        "icon": "mdi:network-wireless",
-                        "title": "Router",
-                        "url": "http://192.168.1.1",
-                        "require_admin": True,
-                    },
-                    "weather": {
-                        "icon": "mdi:weather",
-                        "title": "Weather",
-                        "url": "https://www.wunderground.com/us/ca/san-diego",
-                        "require_admin": True,
-                    },
-                    "api": {"icon": "mdi:weather", "title": "Api", "url": "/api"},
-                    "ftp": {
-                        "icon": "mdi:weather",
-                        "title": "FTP",
-                        "url": "ftp://some/ftp",
-                    },
-                }
-            },
-        )
+        with patch("homeassistant.components.http.start_http_server_and_save_config"):
+            assert setup.setup_component(
+                self.hass,
+                "panel_iframe",
+                {
+                    "panel_iframe": {
+                        "router": {
+                            "icon": "mdi:network-wireless",
+                            "title": "Router",
+                            "url": "http://192.168.1.1",
+                            "require_admin": True,
+                        },
+                        "weather": {
+                            "icon": "mdi:weather",
+                            "title": "Weather",
+                            "url": "https://www.wunderground.com/us/ca/san-diego",
+                            "require_admin": True,
+                        },
+                        "api": {"icon": "mdi:weather", "title": "Api", "url": "/api"},
+                        "ftp": {
+                            "icon": "mdi:weather",
+                            "title": "FTP",
+                            "url": "ftp://some/ftp",
+                        },
+                    }
+                },
+            )
 
         panels = self.hass.data[frontend.DATA_PANELS]
 

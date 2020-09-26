@@ -5,13 +5,14 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
     CONF_CONDITION,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
     CONF_TYPE,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import condition, config_validation as cv, entity_registry
 from homeassistant.helpers.config_validation import DEVICE_CONDITION_BASE_SCHEMA
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
@@ -63,7 +64,10 @@ async def async_get_conditions(
             }
         )
 
-        if state and state.attributes["supported_features"] & const.SUPPORT_PRESET_MODE:
+        if (
+            state
+            and state.attributes[ATTR_SUPPORTED_FEATURES] & const.SUPPORT_PRESET_MODE
+        ):
             conditions.append(
                 {
                     CONF_CONDITION: "device",
@@ -77,6 +81,7 @@ async def async_get_conditions(
     return conditions
 
 
+@callback
 def async_condition_from_config(
     config: ConfigType, config_validation: bool
 ) -> condition.ConditionCheckerType:

@@ -1,0 +1,22 @@
+[
+   {
+      "deviceType" : "WR02",
+      "currentFwVersion" : "59.4",
+      "accessPointWiFi" : {
+         "ssid" : "tado8480"
+      },
+      "characteristics" : {
+         "capabilities" : [
+            "INSIDE_TEMPERATURE_MEASUREMENT",
+            "IDENTIFY"
+         ]
+      },
+      "serialNo" : "WR1",
+      "commandTableUploadState" : "FINISHED",
+      "connectionState" : {
+         "timestamp" : "2020-03-23T18:30:07.377Z",
+         "value" : true
+      },
+      "shortSerialNo" : "WR1"
+   }
+]

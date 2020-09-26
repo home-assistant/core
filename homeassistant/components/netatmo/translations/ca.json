@@ -1,0 +1,43 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_timeout": "[%key::common::config_flow::abort::oauth2_authorize_url_timeout%]",
+            "missing_configuration": "[%key::common::config_flow::abort::oauth2_missing_configuration%]",
+            "no_url_available": "No hi ha cap URL disponible. Per a m\u00e9s informaci\u00f3 sobre aquest error, [consulta la secci\u00f3 d'ajuda]({docs_url})",
+            "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
+        },
+        "create_entry": {
+            "default": "[%key::common::config_flow::create_entry::authenticated%]"
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "[%key::common::config_flow::title::oauth2_pick_implementation%]"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "public_weather": {
+                "data": {
+                    "area_name": "Nom de l'\u00e0rea",
+                    "lat_ne": "Latitud cantonada nord-est",
+                    "lat_sw": "Latitud cantonada sud-oest",
+                    "lon_ne": "Longitud cantonada nord-est",
+                    "lon_sw": "Longitud cantonada sud-oest",
+                    "mode": "C\u00e0lcul",
+                    "show_on_map": "Mostra al mapa"
+                },
+                "description": "Configura un sensor meteorol\u00f2gic p\u00fablic per a una \u00e0rea.",
+                "title": "Sensor meteorol\u00f2gic p\u00fablic de Netatmo"
+            },
+            "public_weather_areas": {
+                "data": {
+                    "new_area": "Nom d'\u00e0rea",
+                    "weather_areas": "\u00c0rees meteorol\u00f2giques"
+                },
+                "description": "Configura sensors meteorol\u00f2gics p\u00fablics.",
+                "title": "Sensor meteorol\u00f2gic p\u00fablic de Netatmo"
+            }
+        }
+    }
+}

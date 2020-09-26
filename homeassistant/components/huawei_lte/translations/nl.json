@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dit apparaat is reeds geconfigureerd",
+            "already_in_progress": "Dit apparaat wordt al geconfigureerd",
+            "not_huawei_lte": "Geen Huawei LTE-apparaat"
+        },
+        "error": {
+            "connection_failed": "Verbinding mislukt",
+            "connection_timeout": "Time-out van de verbinding",
+            "incorrect_password": "Onjuist wachtwoord",
+            "incorrect_username": "Onjuiste gebruikersnaam",
+            "incorrect_username_or_password": "Onjuiste gebruikersnaam of wachtwoord",
+            "invalid_url": "Ongeldige URL",
+            "login_attempts_exceeded": "Maximale aanmeldingspogingen overschreden, probeer het later opnieuw.",
+            "response_error": "Onbekende fout van het apparaat",
+            "unknown_connection_error": "Onbekende fout bij verbinden met apparaat"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Wachtwoord",
+                    "username": "Gebruikersnaam"
+                },
+                "description": "Voer de toegangsgegevens van het apparaat in. Opgeven van gebruikersnaam en wachtwoord is optioneel, maar biedt ondersteuning voor meer integratiefuncties. Aan de andere kant kan het gebruik van een geautoriseerde verbinding problemen veroorzaken bij het openen van het webinterface van het apparaat buiten de Home Assitant, terwijl de integratie actief is en andersom.",
+                "title": "Configureer Huawei LTE"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "name": "Naam meldingsservice (wijziging vereist opnieuw opstarten)",
+                    "recipient": "Ontvangers van sms-berichten",
+                    "track_new_devices": "Volg nieuwe apparaten"
+                }
+            }
+        }
+    }
+}

@@ -5,16 +5,16 @@ say:
   fields:
     entity_id:
       description: Name(s) of media player entities.
-      example: 'media_player.floor'
+      example: "media_player.floor"
     message:
       description: Text to speak on devices.
-      example: 'My name is hanna'
+      example: "My name is hanna"
     cache:
       description: Control file cache of this message.
-      example: 'true'
+      example: "true"
     language:
       description: Language to use for speech generation.
-      example: 'ru'
+      example: "ru"
     options:
       description: A dictionary containing platform-specific options. Optional depending on the platform.
       example: platform specific

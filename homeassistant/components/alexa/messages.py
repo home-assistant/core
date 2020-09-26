@@ -43,7 +43,7 @@ class AlexaDirective:
         Behavior when self.has_endpoint is False is undefined.
 
         Will raise AlexaInvalidEndpointError if the endpoint in the request is
-        malformed or nonexistant.
+        malformed or nonexistent.
         """
         _endpoint_id = self._directive[API_ENDPOINT]["endpointId"]
         self.entity_id = _endpoint_id.replace("#", ".")

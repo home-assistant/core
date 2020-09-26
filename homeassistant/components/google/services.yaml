@@ -7,25 +7,25 @@ add_event:
   fields:
     calendar_id:
       description: The id of the calendar you want.
-      example: 'Your email'
+      example: "Your email"
     summary:
       description: Acts as the title of the event.
-      example: 'Bowling'
+      example: "Bowling"
     description:
       description: The description of the event. Optional.
-      example: 'Birthday bowling'
+      example: "Birthday bowling"
     start_date_time:
       description: The date and time the event should start.
-      example: '2019-03-22 20:00:00'
+      example: "2019-03-22 20:00:00"
     end_date_time:
       description: The date and time the event should end.
-      example: '2019-03-22 22:00:00'
+      example: "2019-03-22 22:00:00"
     start_date:
       description: The date the whole day event should start.
-      example: '2019-03-10'
+      example: "2019-03-10"
     end_date:
       description: The date the whole day event should end.
-      example: '2019-03-11'
+      example: "2019-03-11"
     in:
       description: Days or weeks that you want to create the event in.
       example: '"days": 2 or "weeks": 2'

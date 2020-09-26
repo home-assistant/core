@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "one": "uma",
+            "other": "mais"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Servidor",
+                    "port": "Porto"
+                },
+                "description": "Por favor, introduza o nome ou o endere\u00e7o IP do dispositivo."
+            }
+        }
+    }
+}

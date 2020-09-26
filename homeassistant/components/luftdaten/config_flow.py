@@ -22,10 +22,10 @@ from .const import CONF_SENSOR_ID, DEFAULT_SCAN_INTERVAL, DOMAIN
 @callback
 def configured_sensors(hass):
     """Return a set of configured Luftdaten sensors."""
-    return set(
+    return {
         entry.data[CONF_SENSOR_ID]
         for entry in hass.config_entries.async_entries(DOMAIN)
-    )
+    }
 
 
 @callback

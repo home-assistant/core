@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "communication_error": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z API Luftdaten",
+            "invalid_sensor": "Sensor niedost\u0119pny lub nieprawid\u0142owy",
+            "sensor_exists": "Sensor zosta\u0142 ju\u017c zarejestrowany."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "show_on_map": "Poka\u017c na mapie",
+                    "station_id": "ID sensora Luftdaten"
+                },
+                "title": "Konfiguracja Luftdaten"
+            }
+        }
+    }
+}

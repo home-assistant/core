@@ -1,7 +1,14 @@
 """Constants for the LCN component."""
 from itertools import product
 
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import (
+    DEGREE,
+    PERCENTAGE,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+    TEMP_KELVIN,
+    VOLT,
+)
 
 DOMAIN = "lcn"
 DATA_LCN = "lcn"
@@ -92,9 +99,7 @@ BINSENSOR_PORTS = [
     "BINSENSOR8",
 ]
 
-KEYS = [
-    "{:s}{:d}".format(t[0], t[1]) for t in product(["A", "B", "C", "D"], range(1, 9))
-]
+KEYS = [f"{t[0]:s}{t[1]:d}" for t in product(["A", "B", "C", "D"], range(1, 9))]
 
 VARIABLES = [
     "VAR1ORTVAR",
@@ -146,7 +151,7 @@ VAR_UNITS = [
     "LCN",
     "NATIVE",
     TEMP_CELSIUS,
-    "°K",
+    TEMP_KELVIN,
     TEMP_FAHRENHEIT,
     "LUX_T",
     "LX_T",
@@ -155,16 +160,16 @@ VAR_UNITS = [
     "LX",
     "M/S",
     "METERPERSECOND",
-    "%",
+    PERCENTAGE,
     "PERCENT",
     "PPM",
     "VOLT",
-    "V",
+    VOLT,
     "AMPERE",
     "AMP",
     "A",
     "DEGREE",
-    "°",
+    DEGREE,
 ]
 
 RELVARREF = ["CURRENT", "PROG"]

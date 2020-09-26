@@ -1,0 +1,29 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configure Tile",
+        "data": {
+          "username": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "error": {
+      "invalid_credentials": "Invalid Tile credentials provided."
+    },
+    "abort": {
+      "already_configured": "This Tile account is already registered."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure Tile",
+        "data": {
+          "show_inactive": "Show inactive Tiles"
+        }
+      }
+    }
+  }
+}

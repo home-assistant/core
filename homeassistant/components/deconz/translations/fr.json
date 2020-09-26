@@ -1,0 +1,103 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ce pont est d\u00e9j\u00e0 configur\u00e9",
+            "already_in_progress": "Le flux de configuration pour le pont est d\u00e9j\u00e0 en cours.",
+            "no_bridges": "Aucun pont deCONZ n'a \u00e9t\u00e9 d\u00e9couvert",
+            "not_deconz_bridge": "Pas un pont deCONZ",
+            "one_instance_only": "Le composant prend uniquement en charge une instance deCONZ",
+            "updated_instance": "Instance deCONZ mise \u00e0 jour avec la nouvelle adresse d'h\u00f4te"
+        },
+        "error": {
+            "no_key": "Impossible d'obtenir une cl\u00e9 d'API"
+        },
+        "flow_title": "Passerelle deCONZ Zigbee ({host})",
+        "step": {
+            "hassio_confirm": {
+                "description": "Voulez-vous configurer Home Assistant pour qu'il se connecte \u00e0 la passerelle deCONZ fournie par l'add-on hass.io {addon} ?",
+                "title": "Passerelle deCONZ Zigbee via l'add-on Hass.io"
+            },
+            "link": {
+                "description": "D\u00e9verrouillez votre passerelle deCONZ pour vous enregistrer avec Home Assistant. \n\n 1. Acc\u00e9dez aux param\u00e8tres avanc\u00e9s du syst\u00e8me deCONZ \n 2. Cliquez sur \"D\u00e9verrouiller la passerelle\"",
+                "title": "Lien vers deCONZ"
+            },
+            "manual_input": {
+                "data": {
+                    "host": "Nom d'h\u00f4te ou adresse IP",
+                    "port": "Port"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "S\u00e9lectionnez la passerelle deCONZ d\u00e9couverte"
+                }
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "both_buttons": "Les deux boutons",
+            "bottom_buttons": "Boutons du bas",
+            "button_1": "Premier bouton",
+            "button_2": "Deuxi\u00e8me bouton",
+            "button_3": "Troisi\u00e8me bouton",
+            "button_4": "Quatri\u00e8me bouton",
+            "close": "Ferm\u00e9",
+            "dim_down": "Assombrir",
+            "dim_up": "\u00c9claircir",
+            "left": "Gauche",
+            "open": "Ouvert",
+            "right": "Droite",
+            "side_1": "Face 1",
+            "side_2": "Face 2",
+            "side_3": "Face 3",
+            "side_4": "Face 4",
+            "side_5": "Face 5",
+            "side_6": "Face 6",
+            "top_buttons": "Boutons du haut",
+            "turn_off": "\u00c9teint",
+            "turn_on": "Allumer"
+        },
+        "trigger_type": {
+            "remote_awakened": "Appareil r\u00e9veill\u00e9",
+            "remote_button_double_press": "Double clic sur le bouton \" {subtype} \"",
+            "remote_button_long_press": "Appuyer en continu sur le bouton \" {subtype} \"",
+            "remote_button_long_release": "Bouton \"{subtype}\" rel\u00e2ch\u00e9 apr\u00e8s appui long",
+            "remote_button_quadruple_press": "Quadruple clic sur le bouton \" {subtype} \"",
+            "remote_button_quintuple_press": "Quintuple clic sur le bouton \" {subtype} \"",
+            "remote_button_rotated": "Bouton \"{subtype}\" tourn\u00e9",
+            "remote_button_rotation_stopped": "La rotation du bouton \" {subtype} \" s'est arr\u00eat\u00e9e",
+            "remote_button_short_press": "Bouton \"{subtype}\" appuy\u00e9",
+            "remote_button_short_release": "Bouton \"{subtype}\" rel\u00e2ch\u00e9",
+            "remote_button_triple_press": "Triple clic sur le bouton \" {subtype} \"",
+            "remote_double_tap": "Appareil \"{subtype}\" tapot\u00e9 deux fois",
+            "remote_double_tap_any_side": "Appareil double tap\u00e9 de n\u2019importe quel c\u00f4t\u00e9",
+            "remote_falling": "Appareil en chute libre",
+            "remote_flip_180_degrees": "Dispositif retourn\u00e9 \u00e0 180 degr\u00e9s",
+            "remote_flip_90_degrees": "Dispositif retourn\u00e9 \u00e0 90 degr\u00e9s",
+            "remote_gyro_activated": "Appareil secou\u00e9",
+            "remote_moved": "Appareil d\u00e9plac\u00e9 avec \"{subtype}\" vers le haut",
+            "remote_moved_any_side": "Dispositif d\u00e9plac\u00e9 avec un c\u00f4t\u00e9 quelconque vers le haut",
+            "remote_rotate_from_side_1": "Appareil tourn\u00e9 de \"c\u00f4t\u00e9 1\" \u00e0 \"{subtype}\"",
+            "remote_rotate_from_side_2": "Appareil tourn\u00e9 de \"c\u00f4t\u00e9 2\" \u00e0 \"{subtype}\"",
+            "remote_rotate_from_side_3": "Appareil tourn\u00e9 de \"c\u00f4t\u00e9 3\" \u00e0 \"{subtype}\"",
+            "remote_rotate_from_side_4": "Appareil tourn\u00e9 de \"c\u00f4t\u00e9 4\" \u00e0 \"{subtype}\"",
+            "remote_rotate_from_side_5": "Appareil tourn\u00e9 de \"c\u00f4t\u00e9 5\" \u00e0 \"{subtype}\"",
+            "remote_rotate_from_side_6": "Appareil tourn\u00e9 de \"c\u00f4t\u00e9 6\" \u00e0 \"{subtype}\"",
+            "remote_turned_clockwise": "Appareil tourn\u00e9 dans le sens horaire",
+            "remote_turned_counter_clockwise": "Appareil tourn\u00e9 dans le sens antihoraire"
+        }
+    },
+    "options": {
+        "step": {
+            "deconz_devices": {
+                "data": {
+                    "allow_clip_sensor": "Autoriser les capteurs deCONZ CLIP",
+                    "allow_deconz_groups": "Autoriser les groupes de lumi\u00e8res deCONZ"
+                },
+                "description": "Configurer la visibilit\u00e9 des appareils de type deCONZ",
+                "title": "Options deCONZ"
+            }
+        }
+    }
+}

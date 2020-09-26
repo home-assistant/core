@@ -1,0 +1,81 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Endast en enda konfiguration av ZHA \u00e4r till\u00e5ten."
+        },
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta till ZHA enhet."
+        },
+        "step": {
+            "pick_radio": {
+                "data": {
+                    "radio_type": "Radiotyp"
+                },
+                "description": "V\u00e4lj en typ av Zigbee radio",
+                "title": "Radiotyp"
+            },
+            "port_config": {
+                "data": {
+                    "baudrate": "port hastighet",
+                    "flow_control": "datafl\u00f6deskontroll",
+                    "path": "Seriell enhetsv\u00e4g"
+                },
+                "description": "Ange portspecifika inst\u00e4llningar",
+                "title": "Inst\u00e4llningar"
+            },
+            "user": {
+                "data": {
+                    "path": "Seriell enhetsv\u00e4g"
+                },
+                "title": "ZHA"
+            }
+        }
+    },
+    "device_automation": {
+        "action_type": {
+            "squawk": "Kraxa",
+            "warn": "Varna"
+        },
+        "trigger_subtype": {
+            "both_buttons": "B\u00e5da knapparna",
+            "button_1": "F\u00f6rsta knappen",
+            "button_2": "Andra knappen",
+            "button_3": "Tredje knappen",
+            "button_4": "Fj\u00e4rde knappen",
+            "button_5": "Femte knappen",
+            "button_6": "Sj\u00e4tte knappen",
+            "close": "St\u00e4ng",
+            "dim_down": "Dimma ned",
+            "dim_up": "Dimma upp",
+            "face_1": "med bildsida 1 aktiverat",
+            "face_2": "med bildsida 2 aktiverat",
+            "face_3": "med bildsida 3 aktiverat",
+            "face_4": "med bildsida 4 aktiverat",
+            "face_5": "med bildsida 5 aktiverat",
+            "face_6": "med bildsida 6 aktiverat",
+            "face_any": "Med valfri/specificerad bildsida(or) aktiverat",
+            "left": "V\u00e4nster",
+            "open": "\u00d6ppen",
+            "right": "H\u00f6ger",
+            "turn_off": "St\u00e4ng av",
+            "turn_on": "Starta"
+        },
+        "trigger_type": {
+            "device_dropped": "Enheten tappades",
+            "device_flipped": "Enheten v\u00e4nd \"{subtype}\"",
+            "device_knocked": "Enheten knackad \"{subtype}\"",
+            "device_rotated": "Enheten roterade \"{subtype}\"",
+            "device_shaken": "Enheten skakad",
+            "device_slid": "Enheten gled \"{subtype}\"",
+            "device_tilted": "Enheten lutad",
+            "remote_button_double_press": "\"{subtype}\"-knappen dubbelklickades",
+            "remote_button_long_press": "\"{subtype}\"-knappen kontinuerligt nedtryckt",
+            "remote_button_long_release": "\"{subtype}\"-knappen sl\u00e4pptes efter ett l\u00e5ngttryck",
+            "remote_button_quadruple_press": "\"{subtype}\"-knappen klickades \nfyrfaldigt",
+            "remote_button_quintuple_press": "\"{subtype}\"-knappen klickades \nfemfaldigt",
+            "remote_button_short_press": "\"{subtype}\"-knappen trycktes in",
+            "remote_button_short_release": "\"{subtype}\"-knappen sl\u00e4ppt",
+            "remote_button_triple_press": "\"{subtype}\"-knappen trippelklickades"
+        }
+    }
+}

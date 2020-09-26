@@ -4,7 +4,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components import rpi_pfio
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 from homeassistant.const import CONF_NAME, DEVICE_DEFAULT_NAME
 import homeassistant.helpers.config_validation as cv
 
@@ -47,7 +47,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     rpi_pfio.activate_listener(hass)
 
 
-class RPiPFIOBinarySensor(BinarySensorDevice):
+class RPiPFIOBinarySensor(BinarySensorEntity):
     """Represent a binary sensor that a PiFace Digital Input."""
 
     def __init__(self, hass, port, name, settle_time, invert_logic):

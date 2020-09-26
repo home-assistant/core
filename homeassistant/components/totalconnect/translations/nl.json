@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account al geconfigureerd"
+        },
+        "error": {
+            "login": "Aanmeldingsfout: controleer uw gebruikersnaam en wachtwoord"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Wachtwoord",
+                    "username": "Gebruikersnaam"
+                },
+                "title": "Total Connect"
+            }
+        }
+    }
+}

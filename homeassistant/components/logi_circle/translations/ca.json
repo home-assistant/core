@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Nom\u00e9s pots configurar un \u00fanic compte de Logi Circule.",
+            "external_error": "S'ha produ\u00eft una excepci\u00f3 d'un altre flux de dades.",
+            "external_setup": "Logi Circle s'ha configurat correctament des d'un altre flux de dades.",
+            "no_flows": "Necessites configurar Logi Circle abans de poder autenticar-t'hi. Llegeix les [instruccions](https://www.home-assistant.io/components/logi_circle/)."
+        },
+        "create_entry": {
+            "default": "Autenticaci\u00f3 exitosa amb Logi Circle."
+        },
+        "error": {
+            "auth_error": "Ha fallat l'autoritzaci\u00f3 de l'API.",
+            "auth_timeout": "L'autoritzaci\u00f3 ha expirat durant l'obtenci\u00f3 del token d'acc\u00e9s.",
+            "follow_link": "V\u00e9s a l'enlla\u00e7 i autentica't abans de pr\u00e9mer Envia"
+        },
+        "step": {
+            "auth": {
+                "description": "V\u00e9s a l'enlla\u00e7 de sota i **Accepta** l'acc\u00e9s al teu compte de Logi Circle, despr\u00e9s torna i prem **Envia** (tamb\u00e9 a sota).\n\n[Enlla\u00e7]({authorization_url})",
+                "title": "Autenticaci\u00f3 amb Logi Circle"
+            },
+            "user": {
+                "data": {
+                    "flow_impl": "Prove\u00efdor"
+                },
+                "description": "Tria quin prove\u00efdor d'autenticaci\u00f3 vols utilitzar per autenticar-te amb Logi Circle.",
+                "title": "Prove\u00efdor d'autenticaci\u00f3"
+            }
+        }
+    }
+}

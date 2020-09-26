@@ -6,7 +6,7 @@ from pyblackbird import get_blackbird
 from serial import SerialException
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF,
@@ -128,7 +128,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class BlackbirdZone(MediaPlayerDevice):
+class BlackbirdZone(MediaPlayerEntity):
     """Representation of a Blackbird matrix zone."""
 
     def __init__(self, blackbird, sources, zone_id, zone_name):

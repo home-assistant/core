@@ -93,9 +93,7 @@ async def handle_webhook(hass, webhook_id, request):
         # before the previous zone was exited. The enter message will
         # be sent first, then the exit message will be sent second.
         return web.Response(
-            text="Ignoring exit from {} (already in {})".format(
-                location_name, current_state
-            ),
+            text=f"Ignoring exit from {location_name} (already in {current_state})",
             status=HTTP_OK,
         )
 
@@ -130,5 +128,4 @@ async def async_unload_entry(hass, entry):
     return await hass.config_entries.async_forward_entry_unload(entry, DEVICE_TRACKER)
 
 
-# pylint: disable=invalid-name
 async_remove_entry = config_entry_flow.webhook_async_remove_entry

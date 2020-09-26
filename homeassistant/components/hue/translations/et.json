@@ -1,0 +1,46 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "K\u00f5ik Philips Hue sillad on juba konfigureeritud",
+            "discover_timeout": "Ei leia Philips Hue sildu",
+            "no_bridges": "Philips Hue sildu ei avastatud",
+            "unknown": "Ilmnes tundmatu viga"
+        },
+        "error": {
+            "linking": "Ilmnes tundmatu linkimist\u00f5rge.",
+            "register_failed": "Registreerimine nurjus. Proovige uuesti"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "host": ""
+                },
+                "title": "Valige Hue sild"
+            },
+            "link": {
+                "description": "Vajutage silla nuppu, et registreerida Philips Hue Home Assistant abil. \n\n ! [Nupu asukoht sillal] (/ static / images / config_philips_hue.jpg)"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "Esimene nupp",
+            "button_2": "Teine nupp",
+            "button_3": "Kolmas nupp",
+            "button_4": "Neljas nupp",
+            "dim_down": "H\u00e4marda",
+            "dim_up": "Tee heledamaks",
+            "double_buttons_1_3": "Esimene ja kolmas nupp",
+            "double_buttons_2_4": "Teine ja neljas nupp",
+            "turn_off": "L\u00fclita v\u00e4lja",
+            "turn_on": "L\u00fclita sisse"
+        },
+        "trigger_type": {
+            "remote_button_long_release": "\"{subtype}\" nupp vabastatati p\u00e4rast pikka vajutust",
+            "remote_button_short_press": "\"{subtype}\" nupp  on vajutatud",
+            "remote_button_short_release": "\"{subtype}\" nupp  vabastati",
+            "remote_double_button_long_press": "M\u00f5lemad \"{subtype}\" nupud vabastatati p\u00e4rast pikka vajutust",
+            "remote_double_button_short_press": "M\u00f5lemad \"{subtype}\" nupud vabastatati"
+        }
+    }
+}

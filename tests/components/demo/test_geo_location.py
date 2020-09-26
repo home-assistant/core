@@ -1,16 +1,23 @@
 """The tests for the demo platform."""
 import unittest
-from unittest.mock import patch
+
+import pytest
 
 from homeassistant.components import geo_location
 from homeassistant.components.demo.geo_location import (
-    DEFAULT_UNIT_OF_MEASUREMENT,
     DEFAULT_UPDATE_INTERVAL,
     NUMBER_OF_DEMO_DEVICES,
+)
+from homeassistant.const import (
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
+    ATTR_UNIT_OF_MEASUREMENT,
+    LENGTH_KILOMETERS,
 )
 from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import patch
 from tests.common import (
     assert_setup_component,
     fire_time_changed,
@@ -20,16 +27,19 @@ from tests.common import (
 CONFIG = {geo_location.DOMAIN: [{"platform": "demo"}]}
 
 
+@pytest.fixture(autouse=True)
+def mock_legacy_time(legacy_patchable_time):
+    """Make time patchable for all the tests."""
+    yield
+
+
 class TestDemoPlatform(unittest.TestCase):
     """Test the demo platform."""
 
     def setUp(self):
         """Initialize values for this testcase class."""
         self.hass = get_test_home_assistant()
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     def test_setup_platform(self):
         """Test setup of demo platform via configuration."""
@@ -54,16 +64,14 @@ class TestDemoPlatform(unittest.TestCase):
                     # ignore home zone state
                     continue
                 assert (
-                    abs(state.attributes["latitude"] - self.hass.config.latitude) < 1.0
-                )
-                assert (
-                    abs(state.attributes["longitude"] - self.hass.config.longitude)
+                    abs(state.attributes[ATTR_LATITUDE] - self.hass.config.latitude)
                     < 1.0
                 )
                 assert (
-                    state.attributes["unit_of_measurement"]
-                    == DEFAULT_UNIT_OF_MEASUREMENT
+                    abs(state.attributes[ATTR_LONGITUDE] - self.hass.config.longitude)
+                    < 1.0
                 )
+                assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == LENGTH_KILOMETERS
 
             # Update (replaces 1 device).
             fire_time_changed(self.hass, utcnow + DEFAULT_UPDATE_INTERVAL)

@@ -6,14 +6,17 @@ from ritassist import API
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import PLATFORM_SCHEMA
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_utc_time_change
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_CLIENT_ID = "client_id"
-CONF_CLIENT_SECRET = "client_secret"
 CONF_INCLUDE = "include"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(

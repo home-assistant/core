@@ -1,0 +1,21 @@
+{
+    "state": {
+        "_": {
+            "clear-night": "Helder, nacht",
+            "cloudy": "Bewolkt",
+            "exceptional": "Uitzonderlijk",
+            "fog": "Mist",
+            "hail": "Hagel",
+            "lightning": "Bliksem",
+            "lightning-rainy": "Bliksem, regenachtig",
+            "partlycloudy": "Gedeeltelijk bewolkt",
+            "pouring": "Regen",
+            "rainy": "Regenachtig",
+            "snowy": "Sneeuwachtig",
+            "snowy-rainy": "Sneeuw-, regenachtig",
+            "sunny": "Zonnig",
+            "windy": "Winderig",
+            "windy-variant": "Winderig"
+        }
+    }
+}

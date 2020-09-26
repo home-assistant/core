@@ -6,19 +6,19 @@ from epsonprinter_pkg.epsonprinterapi import EpsonPrinterAPI
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_HOST, CONF_MONITORED_CONDITIONS
+from homeassistant.const import CONF_HOST, CONF_MONITORED_CONDITIONS, PERCENTAGE
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 MONITORED_CONDITIONS = {
-    "black": ["Ink level Black", "%", "mdi:water"],
-    "photoblack": ["Ink level Photoblack", "%", "mdi:water"],
-    "magenta": ["Ink level Magenta", "%", "mdi:water"],
-    "cyan": ["Ink level Cyan", "%", "mdi:water"],
-    "yellow": ["Ink level Yellow", "%", "mdi:water"],
-    "clean": ["Cleaning level", "%", "mdi:water"],
+    "black": ["Ink level Black", PERCENTAGE, "mdi:water"],
+    "photoblack": ["Ink level Photoblack", PERCENTAGE, "mdi:water"],
+    "magenta": ["Ink level Magenta", PERCENTAGE, "mdi:water"],
+    "cyan": ["Ink level Cyan", PERCENTAGE, "mdi:water"],
+    "yellow": ["Ink level Yellow", PERCENTAGE, "mdi:water"],
+    "clean": ["Cleaning level", PERCENTAGE, "mdi:water"],
 }
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {

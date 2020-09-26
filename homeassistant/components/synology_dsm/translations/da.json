@@ -1,0 +1,18 @@
+{
+    "config": {
+        "step": {
+            "link": {
+                "data": {
+                    "password": "Adgangskode",
+                    "username": "Brugernavn"
+                }
+            },
+            "user": {
+                "data": {
+                    "password": "Adgangskode",
+                    "username": "Brugernavn"
+                }
+            }
+        }
+    }
+}

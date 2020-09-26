@@ -7,8 +7,8 @@ import voluptuous as vol
 
 from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL, ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.helpers import ConfigType
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_SERIAL_NUMBER, DOMAIN  # pylint: disable=unused-import
 
@@ -36,9 +36,8 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
             return self._show_setup_form({"base": "connection_error"})
 
         # Check if already configured
-        if await self._device_already_configured(info):
-            # This serial number is already configured
-            return self.async_abort(reason="already_configured")
+        await self.async_set_unique_id(info.serial_number)
+        self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
             title=info.serial_number,
@@ -56,22 +55,21 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_abort(reason="connection_error")
 
-        # Hostname is format: my-ke.local.
-        host = user_input["hostname"].rstrip(".")
         try:
-            info = await self._get_elgato_info(host, user_input[CONF_PORT])
+            info = await self._get_elgato_info(
+                user_input[CONF_HOST], user_input[CONF_PORT]
+            )
         except ElgatoError:
             return self.async_abort(reason="connection_error")
 
         # Check if already configured
-        if await self._device_already_configured(info):
-            # This serial number is already configured
-            return self.async_abort(reason="already_configured")
+        await self.async_set_unique_id(info.serial_number)
+        self._abort_if_unique_id_configured(updates={CONF_HOST: user_input[CONF_HOST]})
 
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context.update(
             {
-                CONF_HOST: host,
+                CONF_HOST: user_input[CONF_HOST],
                 CONF_PORT: user_input[CONF_PORT],
                 CONF_SERIAL_NUMBER: info.serial_number,
                 "title_placeholders": {"serial_number": info.serial_number},
@@ -97,9 +95,8 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="connection_error")
 
         # Check if already configured
-        if await self._device_already_configured(info):
-            # This serial number is already configured
-            return self.async_abort(reason="already_configured")
+        await self.async_set_unique_id(info.serial_number)
+        self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
             title=self.context.get(CONF_SERIAL_NUMBER),
@@ -135,12 +132,9 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
     async def _get_elgato_info(self, host: str, port: int) -> Info:
         """Get device information from an Elgato Key Light device."""
         session = async_get_clientsession(self.hass)
-        elgato = Elgato(host, port=port, session=session,)
+        elgato = Elgato(
+            host,
+            port=port,
+            session=session,
+        )
         return await elgato.info()
-
-    async def _device_already_configured(self, info: Info) -> bool:
-        """Return if a Elgato Key Light is already configured."""
-        for entry in self._async_current_entries():
-            if entry.data[CONF_SERIAL_NUMBER] == info.serial_number:
-                return True
-        return False

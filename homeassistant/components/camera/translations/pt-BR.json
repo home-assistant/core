@@ -1,0 +1,10 @@
+{
+    "state": {
+        "_": {
+            "idle": "Ocioso",
+            "recording": "Gravando",
+            "streaming": "Transmitindo"
+        }
+    },
+    "title": "C\u00e2mera"
+}

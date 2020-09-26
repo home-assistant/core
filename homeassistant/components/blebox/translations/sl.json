@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "address_already_configured": "Naprava BleBox je \u017ee konfigurirana na {address} .",
+            "already_configured": "Ta naprava BleBox je \u017ee nastavljena."
+        },
+        "error": {
+            "cannot_connect": "Ni mogo\u010de povezati z napravo BleBox. (Za napako preverite dnevnik)",
+            "unknown": "Neznana napaka med povezovanjem z napravo BleBox. (Za napako preverite dnevnik)",
+            "unsupported_version": "Naprava BleBox ima zastarelo programsko opremo. Najprej jo nadgradite."
+        },
+        "flow_title": "Naprava BleBox: {name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "port": "Vrata"
+                },
+                "description": "Nastavite svoj BleBox za integracijo s Home Assistant.",
+                "title": "Nastavite napravo BleBox"
+            }
+        }
+    }
+}

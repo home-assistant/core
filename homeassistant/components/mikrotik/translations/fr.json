@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Mikrotik est d\u00e9j\u00e0 configur\u00e9"
+        },
+        "error": {
+            "cannot_connect": "\u00c9chec de la connexion",
+            "name_exists": "Le nom existe",
+            "wrong_credentials": "Identifiants erron\u00e9s"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Nom d'h\u00f4te ou adresse IP",
+                    "name": "Nom",
+                    "password": "Mot de passe",
+                    "port": "Port",
+                    "username": "Nom d'utilisateur",
+                    "verify_ssl": "Utiliser SSL"
+                },
+                "title": "Configurer le routeur Mikrotik"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "device_tracker": {
+                "data": {
+                    "arp_ping": "Activer le ping ARP",
+                    "detection_time": "Intervalle de consid\u00e9ration de pr\u00e9sence",
+                    "force_dhcp": "Forcer l'analyse \u00e0 l'aide de DHCP"
+                }
+            }
+        }
+    }
+}

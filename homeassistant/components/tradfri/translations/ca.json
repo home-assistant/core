@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'enlla\u00e7 ja est\u00e0 configurat",
+            "already_in_progress": "La configuraci\u00f3 de l'enlla\u00e7 ja est\u00e0 en curs."
+        },
+        "error": {
+            "cannot_connect": "No s'ha pogut connectar a la passarel\u00b7la d'enlla\u00e7",
+            "invalid_key": "Ha fallat el registre amb la clau proporcionada. Si aix\u00f2 continua passant, intenta reiniciar la passarel\u00b7la d'enlla\u00e7.",
+            "timeout": "S'ha acabat el temps d'espera durant la validaci\u00f3 del codi."
+        },
+        "step": {
+            "auth": {
+                "data": {
+                    "host": "Amfitri\u00f3",
+                    "security_code": "Codi de seguretat"
+                },
+                "description": "Pots trobar el codi de seguretat a la part posterior de la teva passarel\u00b7la d'enlla\u00e7.",
+                "title": "Introdueix el codi de seguretat"
+            }
+        }
+    }
+}

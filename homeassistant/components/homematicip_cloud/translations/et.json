@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "invalid_pin": "Vale PIN-kood. Palun  proovige uuesti.",
+            "invalid_sgtin_or_pin": "Vale PIN, palun proovige uuesti"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "hapid": "P\u00e4\u00e4supunkti ID (SGTIN)",
+                    "pin": "PIN-kood (valikuline)"
+                }
+            }
+        }
+    }
+}

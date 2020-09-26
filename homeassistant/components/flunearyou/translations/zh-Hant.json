@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u6b64\u4e9b\u5ea7\u6a19\u5df2\u8a3b\u518a\u3002"
+        },
+        "error": {
+            "general_error": "\u767c\u751f\u672a\u77e5\u932f\u8aa4\u3002"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "\u7def\u5ea6",
+                    "longitude": "\u7d93\u5ea6"
+                },
+                "description": "\u76e3\u6e2c\u4f7f\u7528\u8005\u8207 CDC \u56de\u5831\u5ea7\u6a19\u3002",
+                "title": "\u8a2d\u5b9a Flu Near You"
+            }
+        }
+    }
+}

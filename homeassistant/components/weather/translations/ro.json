@@ -1,0 +1,21 @@
+{
+    "state": {
+        "_": {
+            "clear-night": "Noapte senin\u0103",
+            "cloudy": "Noros",
+            "exceptional": "Excep\u0163ional",
+            "fog": "Cea\u0163\u0103",
+            "hail": "Grindin\u0103",
+            "lightning": "Des\u0103rc\u0103ri electrice",
+            "lightning-rainy": "Ploaie cu desc\u0103rc\u0103ri electrice",
+            "partlycloudy": "Par\u021bial noros",
+            "pouring": "Avers\u0103",
+            "rainy": "Ploios",
+            "snowy": "Z\u0103pad\u0103",
+            "snowy-rainy": "Lapovi\u021b\u0103 \u0219i ninsoare",
+            "sunny": "\u00eensorit",
+            "windy": "Vant",
+            "windy-variant": "Vant"
+        }
+    }
+}

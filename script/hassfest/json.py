@@ -22,6 +22,9 @@ def validate_json_files(integration: Integration):
 
 def validate(integrations: Dict[str, Integration], config):
     """Handle JSON files inside integrations."""
+    if not config.specific_integrations:
+        return
+
     for integration in integrations.values():
         if not integration.manifest:
             continue

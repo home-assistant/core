@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "unexpected_error": "Ootamatu t\u00f5rge"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi",
+                    "vendor": "Tootja"
+                }
+            }
+        }
+    }
+}

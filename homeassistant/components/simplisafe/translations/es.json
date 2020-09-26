@@ -1,0 +1,45 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Esta cuenta SimpliSafe ya est\u00e1 en uso.",
+            "reauth_successful": "SimpliSafe se volvi\u00f3 a autenticar con \u00e9xito."
+        },
+        "error": {
+            "identifier_exists": "Cuenta ya registrada",
+            "invalid_credentials": "Credenciales no v\u00e1lidas",
+            "still_awaiting_mfa": "Esperando todav\u00eda el clic en el correo electr\u00f3nico de MFA",
+            "unknown": "Error inesperado"
+        },
+        "step": {
+            "mfa": {
+                "description": "Comprueba tu correo electr\u00f3nico para obtener un enlace desde SimpliSafe. Despu\u00e9s de verificar el enlace, vulve aqu\u00ed para completar la instalaci\u00f3n de la integraci\u00f3n.",
+                "title": "Autenticaci\u00f3n Multi-Factor SimpliSafe"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Contrase\u00f1a"
+                },
+                "description": "Tu token de acceso ha expirado o ha sido revocado. Introduce tu contrase\u00f1a para volver a vincular tu cuenta.",
+                "title": "Volver a vincular la Cuenta SimpliSafe"
+            },
+            "user": {
+                "data": {
+                    "code": "C\u00f3digo (utilizado en el interfaz de usuario de Home Assistant)",
+                    "password": "Contrase\u00f1a",
+                    "username": "Correo electr\u00f3nico"
+                },
+                "title": "Introduce tu informaci\u00f3n"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "code": "C\u00f3digo (utilizado en el interfaz de usuario de Home Assistant)"
+                },
+                "title": "Configurar SimpliSafe"
+            }
+        }
+    }
+}

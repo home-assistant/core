@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
+        },
+        "error": {
+            "already_in_progress": "Konfiguracja urz\u0105dzenia jest ju\u017c w toku.",
+            "device_unavailable": "Urz\u0105dzenie nie jest dost\u0119pne."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP",
+                    "port": "Port"
+                },
+                "title": "Konfiguracja Agent DVR"
+            }
+        }
+    },
+    "title": "Agent DVR"
+}

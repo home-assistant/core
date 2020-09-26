@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto jest ju\u017c skonfigurowane"
+        },
+        "error": {
+            "connection_error": "B\u0142\u0105d po\u0142\u0105czenia z Tibber.",
+            "invalid_access_token": "Niepoprawny token dost\u0119pu",
+            "timeout": "Przekroczono limit czasu \u0142\u0105czenia z Tibber."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "Token dost\u0119pu"
+                },
+                "description": "Wprowad\u017a token dost\u0119pu z https://developer.tibber.com/settings/accesstoken",
+                "title": "Tibber"
+            }
+        }
+    },
+    "title": "Tibber"
+}

@@ -59,7 +59,7 @@ class DlibFaceIdentifyEntity(ImageProcessingFaceEntity):
         if name:
             self._name = name
         else:
-            self._name = "Dlib Face {0}".format(split_entity_id(camera_entity)[1])
+            self._name = f"Dlib Face {split_entity_id(camera_entity)[1]}"
 
         self._faces = {}
         for face_name, face_file in faces.items():

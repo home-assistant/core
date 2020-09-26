@@ -1,5 +1,5 @@
 """Support for Genius Hub binary_sensor devices."""
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from . import DOMAIN, GeniusDevice
@@ -25,7 +25,7 @@ async def async_setup_platform(
     async_add_entities(switches, update_before_add=True)
 
 
-class GeniusBinarySensor(GeniusDevice, BinarySensorDevice):
+class GeniusBinarySensor(GeniusDevice, BinarySensorEntity):
     """Representation of a Genius Hub binary_sensor."""
 
     def __init__(self, broker, device, state_attr) -> None:

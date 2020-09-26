@@ -20,18 +20,15 @@ class TestCommandSwitch(unittest.TestCase):
     def setUp(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     def test_state_none(self):
         """Test with none state."""
         with tempfile.TemporaryDirectory() as tempdirname:
             path = os.path.join(tempdirname, "switch_status")
             test_switch = {
-                "command_on": "echo 1 > {}".format(path),
-                "command_off": "echo 0 > {}".format(path),
+                "command_on": f"echo 1 > {path}",
+                "command_off": f"echo 0 > {path}",
             }
             assert setup_component(
                 self.hass,
@@ -43,6 +40,7 @@ class TestCommandSwitch(unittest.TestCase):
                     }
                 },
             )
+            self.hass.block_till_done()
 
             state = self.hass.states.get("switch.test")
             assert STATE_OFF == state.state
@@ -64,9 +62,9 @@ class TestCommandSwitch(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tempdirname:
             path = os.path.join(tempdirname, "switch_status")
             test_switch = {
-                "command_state": "cat {}".format(path),
-                "command_on": "echo 1 > {}".format(path),
-                "command_off": "echo 0 > {}".format(path),
+                "command_state": f"cat {path}",
+                "command_on": f"echo 1 > {path}",
+                "command_off": f"echo 0 > {path}",
                 "value_template": '{{ value=="1" }}',
             }
             assert setup_component(
@@ -79,6 +77,7 @@ class TestCommandSwitch(unittest.TestCase):
                     }
                 },
             )
+            self.hass.block_till_done()
 
             state = self.hass.states.get("switch.test")
             assert STATE_OFF == state.state
@@ -102,9 +101,9 @@ class TestCommandSwitch(unittest.TestCase):
             oncmd = json.dumps({"status": "ok"})
             offcmd = json.dumps({"status": "nope"})
             test_switch = {
-                "command_state": "cat {}".format(path),
-                "command_on": "echo '{}' > {}".format(oncmd, path),
-                "command_off": "echo '{}' > {}".format(offcmd, path),
+                "command_state": f"cat {path}",
+                "command_on": f"echo '{oncmd}' > {path}",
+                "command_off": f"echo '{offcmd}' > {path}",
                 "value_template": '{{ value_json.status=="ok" }}',
             }
             assert setup_component(
@@ -117,6 +116,7 @@ class TestCommandSwitch(unittest.TestCase):
                     }
                 },
             )
+            self.hass.block_till_done()
 
             state = self.hass.states.get("switch.test")
             assert STATE_OFF == state.state
@@ -138,9 +138,9 @@ class TestCommandSwitch(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tempdirname:
             path = os.path.join(tempdirname, "switch_status")
             test_switch = {
-                "command_state": "cat {}".format(path),
-                "command_on": "echo 1 > {}".format(path),
-                "command_off": "echo 0 > {}".format(path),
+                "command_state": f"cat {path}",
+                "command_on": f"echo 1 > {path}",
+                "command_off": f"echo 0 > {path}",
             }
             assert setup_component(
                 self.hass,
@@ -152,7 +152,7 @@ class TestCommandSwitch(unittest.TestCase):
                     }
                 },
             )
-
+            self.hass.block_till_done()
             state = self.hass.states.get("switch.test")
             assert STATE_OFF == state.state
 
@@ -180,13 +180,14 @@ class TestCommandSwitch(unittest.TestCase):
             "echo 'off command'",
             None,
             None,
+            15,
         ]
 
         no_state_device = command_line.CommandSwitch(*init_args)
         assert no_state_device.assumed_state
 
         # Set state command
-        init_args[-2] = "cat {}"
+        init_args[-3] = "cat {}"
 
         state_device = command_line.CommandSwitch(*init_args)
         assert not state_device.assumed_state
@@ -201,6 +202,7 @@ class TestCommandSwitch(unittest.TestCase):
             "echo 'off command'",
             False,
             None,
+            15,
         ]
 
         test_switch = command_line.CommandSwitch(*init_args)

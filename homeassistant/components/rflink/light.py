@@ -7,33 +7,31 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
-    Light,
+    LightEntity,
 )
 from homeassistant.const import CONF_NAME, CONF_TYPE
 import homeassistant.helpers.config_validation as cv
 
 from . import (
     CONF_ALIASES,
-    CONF_ALIASSES,
     CONF_AUTOMATIC_ADD,
     CONF_DEVICE_DEFAULTS,
     CONF_DEVICES,
     CONF_FIRE_EVENT,
     CONF_GROUP,
     CONF_GROUP_ALIASES,
-    CONF_GROUP_ALIASSES,
     CONF_NOGROUP_ALIASES,
-    CONF_NOGROUP_ALIASSES,
     CONF_SIGNAL_REPETITIONS,
     DATA_DEVICE_REGISTER,
     DEVICE_DEFAULTS_SCHEMA,
     EVENT_KEY_COMMAND,
     EVENT_KEY_ID,
     SwitchableRflinkDevice,
-    remove_deprecated,
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 TYPE_DIMMABLE = "dimmable"
 TYPE_SWITCHABLE = "switchable"
@@ -65,14 +63,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                     vol.Optional(CONF_FIRE_EVENT): cv.boolean,
                     vol.Optional(CONF_SIGNAL_REPETITIONS): vol.Coerce(int),
                     vol.Optional(CONF_GROUP, default=True): cv.boolean,
-                    # deprecated config options
-                    vol.Optional(CONF_ALIASSES): vol.All(cv.ensure_list, [cv.string]),
-                    vol.Optional(CONF_GROUP_ALIASSES): vol.All(
-                        cv.ensure_list, [cv.string]
-                    ),
-                    vol.Optional(CONF_NOGROUP_ALIASSES): vol.All(
-                        cv.ensure_list, [cv.string]
-                    ),
                 }
             )
         },
@@ -92,7 +82,7 @@ def entity_type_for_device_id(device_id):
         "newkaku": TYPE_HYBRID
     }
     protocol = device_id.split("_")[0]
-    return entity_type_mapping.get(protocol, None)
+    return entity_type_mapping.get(protocol)
 
 
 def entity_class_for_type(entity_type):
@@ -131,7 +121,6 @@ def devices_from_config(domain_config):
         entity_class = entity_class_for_type(entity_type)
 
         device_config = dict(domain_config[CONF_DEVICE_DEFAULTS], **config)
-        remove_deprecated(device_config)
 
         is_hybrid = entity_class is HybridRflinkLight
 
@@ -170,15 +159,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         hass.data[DATA_DEVICE_REGISTER][EVENT_KEY_COMMAND] = add_new_device
 
 
-# pylint: disable=too-many-ancestors
-class RflinkLight(SwitchableRflinkDevice, Light):
+class RflinkLight(SwitchableRflinkDevice, LightEntity):
     """Representation of a Rflink light."""
 
-    pass
 
-
-# pylint: disable=too-many-ancestors
-class DimmableRflinkLight(SwitchableRflinkDevice, Light):
+class DimmableRflinkLight(SwitchableRflinkDevice, LightEntity):
     """Rflink light device that support dimming."""
 
     _brightness = 255
@@ -223,8 +208,7 @@ class DimmableRflinkLight(SwitchableRflinkDevice, Light):
         return SUPPORT_BRIGHTNESS
 
 
-# pylint: disable=too-many-ancestors
-class HybridRflinkLight(SwitchableRflinkDevice, Light):
+class HybridRflinkLight(SwitchableRflinkDevice, LightEntity):
     """Rflink light device that sends out both dim and on/off commands.
 
     Used for protocols which support lights that are not exclusively on/off
@@ -287,8 +271,7 @@ class HybridRflinkLight(SwitchableRflinkDevice, Light):
         return SUPPORT_BRIGHTNESS
 
 
-# pylint: disable=too-many-ancestors
-class ToggleRflinkLight(SwitchableRflinkDevice, Light):
+class ToggleRflinkLight(SwitchableRflinkDevice, LightEntity):
     """Rflink light device which sends out only 'on' commands.
 
     Some switches like for example Livolo light switches use the
@@ -296,11 +279,6 @@ class ToggleRflinkLight(SwitchableRflinkDevice, Light):
     If the light is on and 'on' gets sent, the light will turn off
     and if the light is off and 'on' gets sent, the light will turn on.
     """
-
-    @property
-    def entity_id(self):
-        """Return entity id."""
-        return f"light.{self.name}"
 
     def _handle_event(self, event):
         """Adjust state if Rflink picks up a remote command for this device."""

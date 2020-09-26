@@ -1,7 +1,7 @@
 """Support for Aqualink pool feature switches."""
 import logging
 
-from homeassistant.components.switch import DOMAIN, SwitchDevice
+from homeassistant.components.switch import DOMAIN, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -23,7 +23,7 @@ async def async_setup_entry(
     async_add_entities(devs, True)
 
 
-class HassAqualinkSwitch(AqualinkEntity, SwitchDevice):
+class HassAqualinkSwitch(AqualinkEntity, SwitchEntity):
     """Representation of a switch."""
 
     @property

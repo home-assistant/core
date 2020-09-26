@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9"
+        },
+        "error": {
+            "connection_error": "Impossible de se connecter \u00e0 l'appareil BSB-Lan."
+        },
+        "flow_title": "BSB-Lan: {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Nom d'h\u00f4te ou adresse IP",
+                    "passkey": "Cha\u00eene de cl\u00e9 d'acc\u00e8s",
+                    "port": "Port"
+                },
+                "description": "Configurez votre appareil BSB-Lan pour l'int\u00e9grer \u00e0 HomeAssistant.",
+                "title": "Connectez-vous \u00e0 l'appareil BSB-Lan"
+            }
+        }
+    },
+    "title": "BSB-Lan"
+}

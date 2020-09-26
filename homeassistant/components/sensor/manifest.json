@@ -2,7 +2,6 @@
   "domain": "sensor",
   "name": "Sensor",
   "documentation": "https://www.home-assistant.io/integrations/sensor",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": []
+  "codeowners": [],
+  "quality_scale": "internal"
 }

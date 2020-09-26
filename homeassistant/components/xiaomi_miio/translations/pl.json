@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "already_in_progress": "Konfiguracja tego urz\u0105dzenia Xiaomi Miio jest ju\u017c w toku."
+        },
+        "error": {
+            "connect_error": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "no_device_selected": "Nie wybrano \u017cadnego urz\u0105dzenia, wybierz jedno urz\u0105dzenie."
+        },
+        "flow_title": "Xiaomi Miio: {name}",
+        "step": {
+            "gateway": {
+                "data": {
+                    "host": "Adres IP",
+                    "name": "Nazwa bramki",
+                    "token": "Token API"
+                },
+                "description": "B\u0119dziesz potrzebowa\u0107 tokenu API (32 znaki), odwied\u017a https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token, aby uzyska\u0107 instrukcje. Zauwa\u017c i\u017c jest to inny token ni\u017c w integracji Xiaomi Aqara .",
+                "title": "Po\u0142\u0105cz si\u0119 z bramk\u0105 Xiaomi"
+            },
+            "user": {
+                "data": {
+                    "gateway": "Po\u0142\u0105cz si\u0119 z bramk\u0105 Xiaomi"
+                },
+                "description": "Wybierz urz\u0105dzenie, z kt\u00f3rym chcesz si\u0119 po\u0142\u0105czy\u0107.",
+                "title": "Xiaomi Miio"
+            }
+        }
+    }
+}

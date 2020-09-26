@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Aquesta impressora ja est\u00e0 configurada.",
+            "unsupported_model": "Aquest model d'impressora no \u00e9s compatible."
+        },
+        "error": {
+            "connection_error": "Error de connexi\u00f3.",
+            "snmp_error": "El servidor SNMP s'ha tancat o la impressora no \u00e9s compatible.",
+            "wrong_host": "Nom de l'amfitri\u00f3 o adre\u00e7a IP inv\u00e0lids."
+        },
+        "flow_title": "Impressora Brother: {model} {serial_number}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3",
+                    "type": "Tipus d'impressora"
+                },
+                "description": "Configura la integraci\u00f3 d'impressora Brother. Si tens problemes amb la configuraci\u00f3, visita: https://www.home-assistant.io/integrations/brother"
+            },
+            "zeroconf_confirm": {
+                "data": {
+                    "type": "Tipus d'impressora"
+                },
+                "description": "Vols afegir la impressora Brother {model} amb n\u00famero de s\u00e8rie `{serial_number}` a Home Assistant?",
+                "title": "Impressora Brother descoberta"
+            }
+        }
+    }
+}

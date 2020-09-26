@@ -161,7 +161,7 @@ class OpenAlprLocalEntity(ImageProcessingAlprEntity):
         if name:
             self._name = name
         else:
-            self._name = "OpenAlpr {0}".format(split_entity_id(camera_entity)[1])
+            self._name = f"OpenAlpr {split_entity_id(camera_entity)[1]}"
 
     @property
     def confidence(self):

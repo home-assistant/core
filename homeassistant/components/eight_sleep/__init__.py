@@ -43,12 +43,14 @@ SIGNAL_UPDATE_USER = "eight_user_update"
 
 NAME_MAP = {
     "left_current_sleep": "Left Sleep Session",
+    "left_current_sleep_fitness": "Left Sleep Fitness",
     "left_last_sleep": "Left Previous Sleep Session",
     "left_bed_state": "Left Bed State",
     "left_presence": "Left Bed Presence",
     "left_bed_temp": "Left Bed Temperature",
     "left_sleep_stage": "Left Sleep Stage",
     "right_current_sleep": "Right Sleep Session",
+    "right_current_sleep_fitness": "Right Sleep Fitness",
     "right_last_sleep": "Right Previous Sleep Session",
     "right_bed_state": "Right Bed State",
     "right_presence": "Right Bed Presence",
@@ -57,14 +59,21 @@ NAME_MAP = {
     "room_temp": "Room Temperature",
 }
 
-SENSORS = ["current_sleep", "last_sleep", "bed_state", "bed_temp", "sleep_stage"]
+SENSORS = [
+    "current_sleep",
+    "current_sleep_fitness",
+    "last_sleep",
+    "bed_state",
+    "bed_temp",
+    "sleep_stage",
+]
 
 SERVICE_HEAT_SET = "heat_set"
 
 ATTR_TARGET_HEAT = "target"
 ATTR_HEAT_DURATION = "duration"
 
-VALID_TARGET_HEAT = vol.All(vol.Coerce(int), vol.Clamp(min=0, max=100))
+VALID_TARGET_HEAT = vol.All(vol.Coerce(int), vol.Clamp(min=-100, max=100))
 VALID_DURATION = vol.All(vol.Coerce(int), vol.Clamp(min=0, max=28800))
 
 SERVICE_EIGHT_SCHEMA = vol.Schema(
@@ -98,10 +107,10 @@ async def async_setup(hass, config):
     partner = conf.get(CONF_PARTNER)
 
     if hass.config.time_zone is None:
-        _LOGGER.error("Timezone is not set in Home Assistant.")
+        _LOGGER.error("Timezone is not set in Home Assistant")
         return False
 
-    timezone = hass.config.time_zone
+    timezone = str(hass.config.time_zone)
 
     eight = EightSleep(user, password, timezone, partner, None, hass.loop)
 
@@ -205,7 +214,11 @@ class EightSleepUserEntity(Entity):
             """Update callback."""
             self.async_schedule_update_ha_state(True)
 
-        async_dispatcher_connect(self.hass, SIGNAL_UPDATE_USER, async_eight_user_update)
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_UPDATE_USER, async_eight_user_update
+            )
+        )
 
     @property
     def should_poll(self):
@@ -228,7 +241,11 @@ class EightSleepHeatEntity(Entity):
             """Update callback."""
             self.async_schedule_update_ha_state(True)
 
-        async_dispatcher_connect(self.hass, SIGNAL_UPDATE_HEAT, async_eight_heat_update)
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_UPDATE_HEAT, async_eight_heat_update
+            )
+        )
 
     @property
     def should_poll(self):

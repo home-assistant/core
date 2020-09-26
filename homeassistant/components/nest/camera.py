@@ -103,7 +103,7 @@ class NestCamera(Camera):
     def turn_on(self):
         """Turn on camera."""
         if not self._online:
-            _LOGGER.error("Camera %s is offline.", self._name)
+            _LOGGER.error("Camera %s is offline", self._name)
             return
 
         _LOGGER.debug("Turn on camera %s", self._name)

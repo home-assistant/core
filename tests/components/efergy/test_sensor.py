@@ -35,27 +35,27 @@ def mock_responses(mock):
     """Mock responses for Efergy."""
     base_url = "https://engage.efergy.com/mobile_proxy/"
     mock.get(
-        "{}getInstant?token={}".format(base_url, token),
+        f"{base_url}getInstant?token={token}",
         text=load_fixture("efergy_instant.json"),
     )
     mock.get(
-        "{}getEnergy?token={}&offset=300&period=day".format(base_url, token),
+        f"{base_url}getEnergy?token={token}&offset=300&period=day",
         text=load_fixture("efergy_energy.json"),
     )
     mock.get(
-        "{}getBudget?token={}".format(base_url, token),
+        f"{base_url}getBudget?token={token}",
         text=load_fixture("efergy_budget.json"),
     )
     mock.get(
-        "{}getCost?token={}&offset=300&period=day".format(base_url, token),
+        f"{base_url}getCost?token={token}&offset=300&period=day",
         text=load_fixture("efergy_cost.json"),
     )
     mock.get(
-        "{}getCurrentValuesSummary?token={}".format(base_url, token),
+        f"{base_url}getCurrentValuesSummary?token={token}",
         text=load_fixture("efergy_current_values_single.json"),
     )
     mock.get(
-        "{}getCurrentValuesSummary?token={}".format(base_url, multi_sensor_token),
+        f"{base_url}getCurrentValuesSummary?token={multi_sensor_token}",
         text=load_fixture("efergy_current_values_multi.json"),
     )
 
@@ -77,8 +77,9 @@ class TestEfergySensor(unittest.TestCase):
         """Initialize values for this test case class."""
         self.hass = get_test_home_assistant()
         self.config = ONE_SENSOR_CONFIG
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tear_down_cleanup(self):
         """Stop everything that was started."""
         self.hass.stop()
 
@@ -87,6 +88,7 @@ class TestEfergySensor(unittest.TestCase):
         """Test for successfully setting up the Efergy platform."""
         mock_responses(mock)
         assert setup_component(self.hass, "sensor", {"sensor": ONE_SENSOR_CONFIG})
+        self.hass.block_till_done()
 
         assert "38.21" == self.hass.states.get("sensor.energy_consumed").state
         assert "1580" == self.hass.states.get("sensor.energy_usage").state
@@ -99,6 +101,7 @@ class TestEfergySensor(unittest.TestCase):
         """Test for multiple sensors in one household."""
         mock_responses(mock)
         assert setup_component(self.hass, "sensor", {"sensor": MULTI_SENSOR_CONFIG})
+        self.hass.block_till_done()
 
         assert "218" == self.hass.states.get("sensor.efergy_728386").state
         assert "1808" == self.hass.states.get("sensor.efergy_0").state

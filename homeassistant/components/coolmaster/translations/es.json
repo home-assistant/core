@@ -1,0 +1,22 @@
+{
+    "config": {
+        "error": {
+            "connection_error": "Error al conectarse a la instancia de CoolMasterNet. Por favor revise su anfitri\u00f3n.",
+            "no_units": "No se ha encontrado ninguna unidad HVAC en el host CoolMasterNet."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "cool": "Soporta el modo de enfriamiento",
+                    "dry": "Soporta el modo seco",
+                    "fan_only": "Soporta modo solo ventilador",
+                    "heat": "Soporta modo calor",
+                    "heat_cool": "Soporta el modo autom\u00e1tico de calor/fr\u00edo",
+                    "host": "Host",
+                    "off": "Se puede apagar"
+                },
+                "title": "Configure los detalles de su conexi\u00f3n a CoolMasterNet."
+            }
+        }
+    }
+}

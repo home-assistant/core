@@ -16,8 +16,9 @@ class TestLogentries(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tear_down_cleanup(self):
         """Stop everything that was started."""
         self.hass.stop()
 
@@ -70,7 +71,7 @@ class TestLogentries(unittest.TestCase):
                 }
             ]
             payload = {
-                "host": "https://webhook.logentries.com/noformat/" "logs/token",
+                "host": "https://webhook.logentries.com/noformat/logs/token",
                 "event": body,
             }
             self.handler_method(event)

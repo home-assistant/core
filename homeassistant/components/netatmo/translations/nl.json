@@ -1,0 +1,14 @@
+{
+    "config": {
+        "create_entry": {
+            "default": "Succesvol geauthenticeerd met Netatmo."
+        }
+    },
+    "options": {
+        "step": {
+            "public_weather_areas": {
+                "description": "Configureer openbare weersensoren."
+            }
+        }
+    }
+}

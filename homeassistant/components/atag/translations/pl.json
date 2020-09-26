@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "To urz\u0105dzenie zosta\u0142o ju\u017c dodane do Home Assistant"
+        },
+        "error": {
+            "connection_error": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia, spr\u00f3buj ponownie."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "Adres e-mail (opcjonalnie)",
+                    "host": "Nazwa hosta lub adres IP",
+                    "port": "Port"
+                },
+                "title": "Po\u0142\u0105czenie z urz\u0105dzeniem"
+            }
+        }
+    },
+    "title": "Atag"
+}

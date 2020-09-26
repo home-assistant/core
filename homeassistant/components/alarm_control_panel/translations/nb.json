@@ -1,0 +1,17 @@
+{
+    "state": {
+        "_": {
+            "armed": "Armert",
+            "armed_away": "Armert borte",
+            "armed_custom_bypass": "Armert tilpasset unntak",
+            "armed_home": "Armert hjemme",
+            "armed_night": "Armert natt",
+            "arming": "Armerer",
+            "disarmed": "Avsl\u00e5tt",
+            "disarming": "Skrur av",
+            "pending": "Venter",
+            "triggered": "Utl\u00f8st"
+        }
+    },
+    "title": "Alarm kontrollpanel"
+}

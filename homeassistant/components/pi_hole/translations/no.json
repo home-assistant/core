@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Tjenesten er allerede konfigurert"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling feilet"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API-n\u00f8kkel",
+                    "host": "Vert",
+                    "location": "Beliggenhet",
+                    "name": "Navn",
+                    "port": "",
+                    "ssl": "Bruk SSL",
+                    "verify_ssl": "Verifisere SSL-sertifikat"
+                }
+            }
+        }
+    }
+}

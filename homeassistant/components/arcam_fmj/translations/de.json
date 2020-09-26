@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "unable_to_connect": "Es konnte keine Verbindung mit dem Ger\u00e4t hergestellt werden."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                },
+                "description": "Bitte gib den Hostnamen oder die IP-Adresse des Ger\u00e4ts ein."
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "turn_on": "{entity_name} wurde zum Einschalten aufgefordert"
+        }
+    }
+}

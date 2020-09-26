@@ -57,12 +57,12 @@ class AuthPhase:
         try:
             msg = AUTH_MESSAGE_SCHEMA(msg)
         except vol.Invalid as err:
-            error_msg = "Auth message incorrectly formatted: {}".format(
-                humanize_error(msg, err)
+            error_msg = (
+                f"Auth message incorrectly formatted: {humanize_error(msg, err)}"
             )
             self._logger.warning(error_msg)
             self._send_message(auth_invalid_message(error_msg))
-            raise Disconnect
+            raise Disconnect from err
 
         if "access_token" in msg:
             self._logger.debug("Received access_token")

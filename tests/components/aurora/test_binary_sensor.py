@@ -20,8 +20,9 @@ class TestAuroraSensorSetUp(unittest.TestCase):
         self.hass.config.latitude = self.lat
         self.hass.config.longitude = self.lon
         self.entities = []
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tear_down_cleanup(self):
         """Stop everything that was started."""
         self.hass.stop()
 
@@ -74,11 +75,11 @@ class TestAuroraSensorSetUp(unittest.TestCase):
                 entities.append(entity)
 
         config = {"name": "Test", "forecast_threshold": 1}
-        self.hass.config.longitude = 5
-        self.hass.config.latitude = 5
+        self.hass.config.longitude = 18.987
+        self.hass.config.latitude = 69.648
 
         aurora.setup_platform(self.hass, config, mock_add_entities)
 
         aurora_component = entities[0]
-        assert aurora_component.aurora_data.visibility_level == "5"
+        assert aurora_component.aurora_data.visibility_level == "16"
         assert aurora_component.is_on

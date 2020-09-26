@@ -1,0 +1,35 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_battery_level": "Aktu\u00e1ln\u00ed \u00farove\u0148 nabit\u00ed baterie {entity_name}",
+            "is_humidity": "Aktu\u00e1ln\u00ed vlhkost {entity_name}",
+            "is_illuminance": "Aktu\u00e1ln\u00ed osv\u011btlen\u00ed {entity_name}",
+            "is_power": "Aktu\u00e1ln\u00ed v\u00fdkon {entity_name}",
+            "is_pressure": "Aktu\u00e1ln\u00ed tlak {entity_name}",
+            "is_signal_strength": "Aktu\u00e1ln\u00ed s\u00edla sign\u00e1lu {entity_name}",
+            "is_temperature": "Aktu\u00e1ln\u00ed teplota {entity_name}",
+            "is_timestamp": "Aktu\u00e1ln\u00ed \u010dasov\u00e9 raz\u00edtko {entity_name}",
+            "is_value": "Aktu\u00e1ln\u00ed hodnota {entity_name}",
+            "is_voltage": "Aktu\u00e1ln\u00ed nap\u011bt\u00ed {entity_name}"
+        },
+        "trigger_type": {
+            "battery_level": "\u00farove\u0148 baterie {entity_name} se zm\u011bn\u00ed",
+            "humidity": "vlhkost {entity_name} se zm\u011bn\u00ed",
+            "illuminance": "osv\u011btlen\u00ed {entity_name} se zm\u011bn\u00ed",
+            "power": "el. v\u00fdkon {entity_name} se zm\u011bn\u00ed",
+            "pressure": "tlak {entity_name} se zm\u011bn\u00ed",
+            "signal_strength": "s\u00edla sign\u00e1lu {entity_name} se zm\u011bn\u00ed",
+            "temperature": "teplota {entity_name} se zm\u011bn\u00ed",
+            "timestamp": "\u010dasov\u00e9 raz\u00edtko {entity_name} se zm\u011bn\u00ed",
+            "value": "hodnota {entity_name} se zm\u011bn\u00ed",
+            "voltage": "P\u0159i zm\u011bn\u011b nap\u011bt\u00ed {entity_name}"
+        }
+    },
+    "state": {
+        "_": {
+            "off": "Neaktivn\u00ed",
+            "on": "Aktivn\u00ed"
+        }
+    },
+    "title": "Senzor"
+}

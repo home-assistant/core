@@ -5,7 +5,7 @@ import logging
 from pyrecswitch import RSNetwork, RSNetworkError
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
@@ -40,7 +40,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([RecSwitchSwitch(device, device_name, mac_address)])
 
 
-class RecSwitchSwitch(SwitchDevice):
+class RecSwitchSwitch(SwitchEntity):
     """Representation of a recswitch device."""
 
     def __init__(self, device, device_name, mac_address):

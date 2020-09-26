@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "auth_failed": "Ong\u00eblteg Authentifikatioun",
+            "conn_error": "Feeler beim verbannen",
+            "single_instance_allowed": "Scho konfigur\u00e9iert. N\u00ebmmen eng eenzeg Konfiguratioun ass m\u00e9iglech."
+        },
+        "error": {
+            "auth_failed": "Ong\u00eblteg Authentifikatioun"
+        },
+        "flow_title": "Tuya Konfiguratioun",
+        "step": {
+            "user": {
+                "data": {
+                    "country_code": "De L\u00e4nner Code fir d\u00e4i Kont (beispill 1 fir USA oder 86 fir China)",
+                    "password": "Passwuert",
+                    "platform": "d'App wou den Kont registr\u00e9iert ass",
+                    "username": "Benotzernumm"
+                },
+                "description": "F\u00ebll deng Tuya Umeldungs Informatiounen aus.",
+                "title": "Tuya"
+            }
+        }
+    }
+}

@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "\u50c5\u5141\u8a31\u8a2d\u5b9a\u4e00\u7d44 Abode\u3002"
+        },
+        "error": {
+            "connection_error": "\u7121\u6cd5\u9023\u7dda\u81f3 Abode\u3002",
+            "identifier_exists": "\u5e33\u865f\u5df2\u8a3b\u518a\u3002",
+            "invalid_credentials": "\u6191\u8b49\u7121\u6548\u3002"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "\u5bc6\u78bc",
+                    "username": "\u96fb\u5b50\u90f5\u4ef6"
+                },
+                "title": "\u586b\u5beb Abode \u767b\u5165\u8cc7\u8a0a"
+            }
+        }
+    }
+}

@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert",
+            "cannot_connect": "Tilkobling mislyktes."
+        },
+        "error": {
+            "device_fail": "Uventet feil",
+            "device_timeout": "Tilkobling mislyktes.",
+            "forbidden": "Ugyldig godkjenning"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Vert",
+                    "key": "API-n\u00f8kkel",
+                    "password": "Passord"
+                },
+                "description": "Angi IP-adressen til Daikin AC. \n\n Merk at API-n\u00f8kkel og Passord brukes av henholdsvis BRP072Cxx og SKYFi-enheter.",
+                "title": "Konfigurer Daikin AC"
+            }
+        }
+    }
+}

@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dispositiu ja est\u00e0 configurat"
+        },
+        "error": {
+            "already_in_progress": "El flux de dades de configuraci\u00f3 pel dispositiu ja est\u00e0 en curs.",
+            "device_unavailable": "Dispositiu no est\u00e0 disponible"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3",
+                    "port": "Port"
+                },
+                "title": "Configuraci\u00f3 de Agent DVR"
+            }
+        }
+    },
+    "title": "Agent DVR"
+}

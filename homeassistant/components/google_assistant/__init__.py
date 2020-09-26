@@ -39,7 +39,7 @@ _LOGGER = logging.getLogger(__name__)
 ENTITY_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_EXPOSE): cv.boolean,
+        vol.Optional(CONF_EXPOSE, default=True): cv.boolean,
         vol.Optional(CONF_ALIASES): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_ROOM_HINT): cv.string,
     }
@@ -55,16 +55,14 @@ GOOGLE_SERVICE_ACCOUNT = vol.Schema(
 
 
 def _check_report_state(data):
-    if data[CONF_REPORT_STATE]:
-        if CONF_SERVICE_ACCOUNT not in data:
-            raise vol.Invalid(
-                "If report state is enabled, a service account must exist"
-            )
+    if data[CONF_REPORT_STATE] and CONF_SERVICE_ACCOUNT not in data:
+        raise vol.Invalid("If report state is enabled, a service account must exist")
     return data
 
 
 GOOGLE_ASSISTANT_SCHEMA = vol.All(
     cv.deprecated(CONF_ALLOW_UNLOCK, invalidation_version="0.95"),
+    cv.deprecated(CONF_API_KEY, invalidation_version="0.105"),
     vol.Schema(
         {
             vol.Required(CONF_PROJECT_ID): cv.string,
@@ -108,7 +106,7 @@ async def async_setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
 
         if agent_user_id is None:
             _LOGGER.warning(
-                "No agent_user_id supplied for request_sync. Call as a user or pass in user id as agent_user_id."
+                "No agent_user_id supplied for request_sync. Call as a user or pass in user id as agent_user_id"
             )
             return
 

@@ -1,0 +1,12 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_timeout": "\u010casov\u00fd limit autoriza\u010dn\u00edho URL vypr\u0161el"
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Vyberte metodu ov\u011b\u0159en\u00ed"
+            }
+        }
+    }
+}

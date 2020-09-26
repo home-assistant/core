@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "id": "Host-ID"
+                },
+                "title": "W\u00e4hlen Sie einen Hub zum Hinzuf\u00fcgen aus"
+            }
+        }
+    }
+}

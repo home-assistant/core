@@ -1,5 +1,6 @@
 """Helper for aiohttp webclient stuff."""
 import asyncio
+import logging
 from ssl import SSLContext
 import sys
 from typing import Any, Awaitable, Optional, Union, cast
@@ -12,9 +13,12 @@ import async_timeout
 
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE, __version__
 from homeassistant.core import Event, callback
+from homeassistant.helpers.frame import warn_use
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import bind_hass
 from homeassistant.util import ssl as ssl_util
+
+_LOGGER = logging.getLogger(__name__)
 
 DATA_CONNECTOR = "aiohttp_connector"
 DATA_CONNECTOR_NOTVERIFY = "aiohttp_connector_notverify"
@@ -64,10 +68,13 @@ def async_create_clientsession(
     connector = _async_get_connector(hass, verify_ssl)
 
     clientsession = aiohttp.ClientSession(
-        loop=hass.loop,
         connector=connector,
         headers={USER_AGENT: SERVER_SOFTWARE},
         **kwargs,
+    )
+
+    clientsession.close = warn_use(  # type: ignore
+        clientsession.close, "closes the Home Assistant aiohttp session"
     )
 
     if auto_cleanup:
@@ -174,9 +181,7 @@ def _async_get_connector(
     else:
         ssl_context = False
 
-    connector = aiohttp.TCPConnector(
-        loop=hass.loop, enable_cleanup_closed=True, ssl=ssl_context
-    )
+    connector = aiohttp.TCPConnector(enable_cleanup_closed=True, ssl=ssl_context)
     hass.data[key] = connector
 
     async def _async_close_connector(event: Event) -> None:

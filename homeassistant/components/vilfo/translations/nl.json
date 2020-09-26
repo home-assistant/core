@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Deze Vilfo Router is al geconfigureerd."
+        },
+        "error": {
+            "cannot_connect": "Kon niet verbinden. Controleer de door u verstrekte informatie en probeer het opnieuw.",
+            "unknown": "Er is een onverwachte fout opgetreden tijdens het instellen van de integratie."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "Toegangstoken voor de Vilfo Router API",
+                    "host": "Router hostnaam of IP-adres"
+                },
+                "title": "Maak verbinding met de Vilfo Router"
+            }
+        }
+    }
+}

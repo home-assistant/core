@@ -48,10 +48,10 @@ def setup(hass, config):
     Will automatically setup sensors to support
     wallets discovered on the network.
     """
-    api_key = config[DOMAIN].get(CONF_API_KEY)
-    api_secret = config[DOMAIN].get(CONF_API_SECRET)
+    api_key = config[DOMAIN][CONF_API_KEY]
+    api_secret = config[DOMAIN][CONF_API_SECRET]
     account_currencies = config[DOMAIN].get(CONF_ACCOUNT_CURRENCIES)
-    exchange_currencies = config[DOMAIN].get(CONF_EXCHANGE_CURRENCIES)
+    exchange_currencies = config[DOMAIN][CONF_EXCHANGE_CURRENCIES]
 
     hass.data[DATA_COINBASE] = coinbase_data = CoinbaseData(api_key, api_secret)
 
@@ -94,5 +94,5 @@ class CoinbaseData:
             self.exchange_rates = self.client.get_exchange_rates()
         except AuthenticationError as coinbase_error:
             _LOGGER.error(
-                "Authentication error connecting" " to coinbase: %s", coinbase_error
+                "Authentication error connecting to coinbase: %s", coinbase_error
             )

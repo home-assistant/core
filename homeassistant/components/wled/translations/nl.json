@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dit WLED-apparaat is al geconfigureerd.",
+            "connection_error": "Kan geen verbinding maken met WLED-apparaat."
+        },
+        "error": {
+            "connection_error": "Kan geen verbinding maken met WLED-apparaat."
+        },
+        "flow_title": "WLED: {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Hostnaam of IP-adres"
+                },
+                "description": "Stel uw WLED-integratie in met Home Assistant."
+            },
+            "zeroconf_confirm": {
+                "description": "Wil je de WLED genaamd `{name}` toevoegen aan Home Assistant?",
+                "title": "Ontdekt WLED-apparaat"
+            }
+        }
+    }
+}

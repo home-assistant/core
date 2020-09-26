@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Z-Wave jest ju\u017c skonfigurowany.",
+            "one_instance_only": "Komponent obs\u0142uguje tylko jedn\u0105 instancj\u0119 Z-Wave"
+        },
+        "error": {
+            "option_error": "Walidacja Z-Wave si\u0119 nie powiod\u0142a. Czy \u015bcie\u017cka do kontrolera Z-Wave USB jest prawid\u0142owa?"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "network_key": "Klucz sieciowy (pozostaw pusty, by generowa\u0107 automatycznie)",
+                    "usb_path": "\u015acie\u017cka urz\u0105dzenia USB"
+                },
+                "description": "Przejd\u017a na https://www.home-assistant.io/docs/z-wave/installation/, aby uzyska\u0107 informacje na temat zmiennych konfiguracyjnych",
+                "title": "Konfiguracja Z-Wave"
+            }
+        }
+    },
+    "state": {
+        "_": {
+            "dead": "martwy",
+            "initializing": "Inicjowanie",
+            "ready": "Gotowe",
+            "sleeping": "U\u015bpiony"
+        },
+        "query_stage": {
+            "dead": "martwy",
+            "initializing": "inicjalizacja"
+        }
+    }
+}

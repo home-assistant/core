@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Hostitel je ji\u017e nakonfigurov\u00e1n."
+        },
+        "error": {
+            "name_exists": "Jm\u00e9no ji\u017e existuje"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Hostitel",
+                    "password": "Heslo",
+                    "port": "Port",
+                    "username": "U\u017eivatelsk\u00e9 jm\u00e9no"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Nakonfigurujte mo\u017enosti pro Transmission"
+            }
+        }
+    }
+}

@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Denne kontoen er allerede konfigurert"
+        },
+        "error": {
+            "cannot_connect": "Klarte ikke \u00e5 koble til, vennligst pr\u00f8v igjen",
+            "invalid_auth": "Ugyldig godkjenning",
+            "unknown": "Uventet feil"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "client_id": "klient-ID",
+                    "client_secret": "Klienthemmelighet",
+                    "password": "Passord",
+                    "username": "Brukernavn"
+                },
+                "description": "For \u00e5 f\u00e5 tilgang til Flume Personal API, m\u00e5 du be om en 'Client ID' og 'Client Secret' p\u00e5 https://portal.flumetech.com/settings#token",
+                "title": "Koble til Flume-kontoen din"
+            }
+        }
+    }
+}

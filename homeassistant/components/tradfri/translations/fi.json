@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Silta on jo m\u00e4\u00e4ritetty"
+        },
+        "step": {
+            "auth": {
+                "data": {
+                    "host": "Palvelin",
+                    "security_code": "Turvakoodi"
+                },
+                "title": "Kirjoita suojakoodi"
+            }
+        }
+    }
+}

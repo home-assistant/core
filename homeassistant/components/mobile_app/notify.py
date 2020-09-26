@@ -12,6 +12,12 @@ from homeassistant.components.notify import (
     ATTR_TITLE_DEFAULT,
     BaseNotificationService,
 )
+from homeassistant.const import (
+    HTTP_ACCEPTED,
+    HTTP_CREATED,
+    HTTP_OK,
+    HTTP_TOO_MANY_REQUESTS,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.util.dt as dt_util
 
@@ -134,16 +140,24 @@ class MobileAppNotificationService(BaseNotificationService):
                     response = await self._session.post(push_url, json=data)
                     result = await response.json()
 
-                if response.status == 201:
+                if response.status in [HTTP_OK, HTTP_CREATED, HTTP_ACCEPTED]:
                     log_rate_limits(self.hass, entry_data[ATTR_DEVICE_NAME], result)
-                    return
+                    continue
 
                 fallback_error = result.get("errorMessage", "Unknown error")
                 fallback_message = (
-                    "Internal server error, " "please try again later: " "{}"
-                ).format(fallback_error)
+                    f"Internal server error, please try again later: {fallback_error}"
+                )
                 message = result.get("message", fallback_message)
-                if response.status == 429:
+
+                if "message" in result:
+                    if message[-1] not in [".", "?", "!"]:
+                        message += "."
+                    message += (
+                        " This message is generated externally to Home Assistant."
+                    )
+
+                if response.status == HTTP_TOO_MANY_REQUESTS:
                     _LOGGER.warning(message)
                     log_rate_limits(
                         self.hass, entry_data[ATTR_DEVICE_NAME], result, logging.WARNING

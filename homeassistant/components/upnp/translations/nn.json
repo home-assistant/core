@@ -1,0 +1,8 @@
+{
+    "config": {
+        "error": {
+            "one": "Ein",
+            "other": "Andre"
+        }
+    }
+}

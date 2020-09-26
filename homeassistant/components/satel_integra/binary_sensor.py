@@ -1,7 +1,10 @@
 """Support for Satel Integra zone states- represented as binary sensors."""
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_SMOKE,
+    BinarySensorEntity,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -49,7 +52,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(devices)
 
 
-class SatelIntegraBinarySensor(BinarySensorDevice):
+class SatelIntegraBinarySensor(BinarySensorEntity):
     """Representation of an Satel Integra binary sensor."""
 
     def __init__(
@@ -75,8 +78,10 @@ class SatelIntegraBinarySensor(BinarySensorDevice):
                 self._state = 1
             else:
                 self._state = 0
-        async_dispatcher_connect(
-            self.hass, self._react_to_signal, self._devices_updated
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, self._react_to_signal, self._devices_updated
+            )
         )
 
     @property
@@ -87,7 +92,7 @@ class SatelIntegraBinarySensor(BinarySensorDevice):
     @property
     def icon(self):
         """Icon for device by its type."""
-        if self._zone_type == "smoke":
+        if self._zone_type == DEVICE_CLASS_SMOKE:
             return "mdi:fire"
 
     @property
@@ -110,4 +115,4 @@ class SatelIntegraBinarySensor(BinarySensorDevice):
         """Update the zone's state, if needed."""
         if self._device_number in zones and self._state != zones[self._device_number]:
             self._state = zones[self._device_number]
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()

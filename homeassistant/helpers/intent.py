@@ -39,7 +39,7 @@ def async_register(hass: HomeAssistantType, handler: "IntentHandler") -> None:
 
     if handler.intent_type in intents:
         _LOGGER.warning(
-            "Intent %s is being overwritten by %s.", handler.intent_type, handler
+            "Intent %s is being overwritten by %s", handler.intent_type, handler
         )
 
     intents[handler.intent_type] = handler
@@ -158,7 +158,7 @@ class IntentHandler:
 
     def __repr__(self) -> str:
         """Represent a string of an intent handler."""
-        return "<{} - {}>".format(self.__class__.__name__, self.intent_type)
+        return f"<{self.__class__.__name__} - {self.intent_type}>"
 
 
 def _fuzzymatch(name: str, items: Iterable[T], key: Callable[[T], str]) -> Optional[T]:

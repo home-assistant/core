@@ -34,7 +34,7 @@ class HomematicipAuth:
             self.auth = await self.get_auth(
                 self.hass, self.config.get(HMIPC_HAPID), self.config.get(HMIPC_PIN)
             )
-            return True
+            return self.auth is not None
         except HmipcConnectionError:
             return False
 
@@ -63,7 +63,7 @@ class HomematicipAuth:
                 auth.pin = pin
             await auth.connectionRequest("HomeAssistant")
         except HmipConnectionError:
-            return False
+            return None
         return auth
 
 
@@ -81,6 +81,7 @@ class HomematicipHAP:
         self._tries = 0
         self._accesspoint_connected = True
         self.hmip_device_by_entity_id = {}
+        self.reset_connection_listener = None
 
     async def async_setup(self, tries: int = 0) -> bool:
         """Initialize connection."""
@@ -91,12 +92,14 @@ class HomematicipHAP:
                 self.config_entry.data.get(HMIPC_AUTHTOKEN),
                 self.config_entry.data.get(HMIPC_NAME),
             )
-        except HmipcConnectionError:
-            raise ConfigEntryNotReady
+        except HmipcConnectionError as err:
+            raise ConfigEntryNotReady from err
+        except Exception as err:  # pylint: disable=broad-except
+            _LOGGER.error("Error connecting with HomematicIP Cloud: %s", err)
+            return False
 
         _LOGGER.info(
-            "Connected to HomematicIP with HAP %s",
-            self.config_entry.data.get(HMIPC_HAPID),
+            "Connected to HomematicIP with HAP %s", self.config_entry.unique_id
         )
 
         for component in COMPONENTS:
@@ -114,7 +117,7 @@ class HomematicipHAP:
         Triggered when the HMIP HOME_CHANGED event has fired.
         There are several occasions for this event to happen.
         1. We are interested to check whether the access point
-        is still connected. If not, device state changes cannot
+        is still connected. If not, entity state changes cannot
         be forwarded to hass. So if access point is disconnected all devices
         are set to unavailable.
         2. We need to update home including devices and groups after a reconnect.
@@ -128,21 +131,16 @@ class HomematicipHAP:
         elif not self._accesspoint_connected:
             # Now the HOME_CHANGED event has fired indicating the access
             # point has reconnected to the cloud again.
-            # Explicitly getting an update as device states might have
+            # Explicitly getting an update as entity states might have
             # changed during access point disconnect."""
 
             job = self.hass.async_create_task(self.get_state())
             job.add_done_callback(self.get_state_finished)
             self._accesspoint_connected = True
-        else:
-            # Update home with the given json from arg[0],
-            # without devices and groups.
-
-            self.home.update_home_only(args[0])
 
     @callback
     def async_create_entity(self, *args, **kwargs) -> None:
-        """Create a device or a group."""
+        """Create an entity or a group."""
         is_device = EventType(kwargs["event_type"]) == EventType.DEVICE_ADDED
         self.hass.async_create_task(self.async_create_entity_lazy(is_device))
 
@@ -193,7 +191,7 @@ class HomematicipHAP:
                 _LOGGER.error(
                     "Error connecting to HomematicIP with HAP %s. "
                     "Retrying in %d seconds",
-                    self.config_entry.data.get(HMIPC_HAPID),
+                    self.config_entry.unique_id,
                     retry_delay,
                 )
 
@@ -224,6 +222,17 @@ class HomematicipHAP:
         self.hmip_device_by_entity_id = {}
         return True
 
+    @callback
+    def shutdown(self, event) -> None:
+        """Wrap the call to async_reset.
+
+        Used as an argument to EventBus.async_listen_once.
+        """
+        self.hass.async_create_task(self.async_reset())
+        _LOGGER.debug(
+            "Reset connection to access point id %s", self.config_entry.unique_id
+        )
+
     async def get_hap(
         self, hass: HomeAssistantType, hapid: str, authtoken: str, name: str
     ) -> AsyncHome:
@@ -238,8 +247,8 @@ class HomematicipHAP:
         try:
             await home.init(hapid)
             await home.get_current_state()
-        except HmipConnectionError:
-            raise HmipcConnectionError
+        except HmipConnectionError as err:
+            raise HmipcConnectionError from err
         home.on_update(self.async_update)
         home.on_create(self.async_create_entity)
         hass.loop.create_task(self.async_connect())

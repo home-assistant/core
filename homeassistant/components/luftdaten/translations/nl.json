@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "communication_error": "Kan niet communiceren met de Luftdaten API",
+            "invalid_sensor": "Sensor niet beschikbaar of ongeldig",
+            "sensor_exists": "Sensor bestaat al"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "show_on_map": "Toon op kaart",
+                    "station_id": "Luftdaten Sensor ID"
+                },
+                "title": "Definieer Luftdaten"
+            }
+        }
+    }
+}

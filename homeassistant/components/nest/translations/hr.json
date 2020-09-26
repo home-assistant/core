@@ -1,0 +1,20 @@
+{
+    "config": {
+        "error": {
+            "invalid_code": "Neispravan kod"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "flow_impl": "Pru\u017eatelj usluge"
+                },
+                "title": "Pru\u017eatelj usluge autentifikacije"
+            },
+            "link": {
+                "data": {
+                    "code": "PIN kod"
+                }
+            }
+        }
+    }
+}

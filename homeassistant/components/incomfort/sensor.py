@@ -1,7 +1,7 @@
 """Support for an Intergas heater via an InComfort/InTouch Lan2RF gateway."""
 from typing import Any, Dict, Optional
 
-from homeassistant.components.sensor import ENTITY_ID_FORMAT
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
@@ -49,7 +49,7 @@ class IncomfortSensor(IncomfortChild):
         self._heater = heater
 
         self._unique_id = f"{heater.serial_no}_{slugify(name)}"
-        self.entity_id = ENTITY_ID_FORMAT.format(f"{DOMAIN}_{slugify(name)}")
+        self.entity_id = f"{SENSOR_DOMAIN}.{DOMAIN}_{slugify(name)}"
         self._name = f"Boiler {name}"
 
         self._device_class = None

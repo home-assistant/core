@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konfigurasjon oppdatert for profil.",
+            "authorize_url_timeout": "Tidsavbrudd ved oppretting av godkjenningsadresse.",
+            "missing_configuration": "Withings-integrasjonen er ikke konfigurert. Vennligst f\u00f8lg dokumentasjonen.",
+            "no_url_available": "Ingen URL tilgjengelig. For informasjon om denne feilen, sjekk {docs_url} ] ( {docs_url} )"
+        },
+        "create_entry": {
+            "default": "Vellykket godkjenning med Withings."
+        },
+        "error": {
+            "profile_exists": "Brukerprofilen er allerede konfigurert. Oppgi et unikt profilnavn."
+        },
+        "flow_title": "Withings: {profil}",
+        "step": {
+            "pick_implementation": {
+                "title": "Velg godkjenningsmetode"
+            },
+            "profile": {
+                "data": {
+                    "profile": "Profil navn"
+                },
+                "description": "Oppgi et unikt profilnavn for disse dataene. Dette er vanligvis navnet p\u00e5 profilen du valgte i forrige trinn.",
+                "title": "Brukerprofil."
+            },
+            "reauth": {
+                "description": "Profilen {profile} m\u00e5 godkjennes p\u00e5 nytt for \u00e5 kunne fortsette \u00e5 motta Withings-data.",
+                "title": "Autentiser profil p\u00e5 nytt"
+            }
+        }
+    }
+}

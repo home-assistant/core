@@ -78,8 +78,9 @@ class ZamgWeather(WeatherEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self.stationname or "ZAMG {}".format(
-            self.zamg_data.data.get("Name") or "(unknown station)"
+        return (
+            self.stationname
+            or f"ZAMG {self.zamg_data.data.get('Name') or '(unknown station)'}"
         )
 
     @property

@@ -1,0 +1,8 @@
+{
+  "domain": "safe_mode",
+  "name": "Safe Mode",
+  "config_flow": false,
+  "documentation": "https://www.home-assistant.io/integrations/safe_mode",
+  "dependencies": ["frontend", "persistent_notification", "cloud"],
+  "codeowners": ["@home-assistant/core"]
+}

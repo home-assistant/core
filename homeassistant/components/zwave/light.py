@@ -14,7 +14,7 @@ from homeassistant.components.light import (
     SUPPORT_COLOR_TEMP,
     SUPPORT_TRANSITION,
     SUPPORT_WHITE_VALUE,
-    Light,
+    LightEntity,
 )
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import callback
@@ -61,11 +61,6 @@ TEMP_WARM_HASS = (TEMP_COLOR_MAX - TEMP_COLOR_MIN) / 3 * 2 + TEMP_COLOR_MIN
 TEMP_COLD_HASS = (TEMP_COLOR_MAX - TEMP_COLOR_MIN) / 3 + TEMP_COLOR_MIN
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old method of setting up Z-Wave lights."""
-    pass
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Z-Wave Light from Config Entry."""
 
@@ -109,7 +104,7 @@ def byte_to_zwave_brightness(value):
     `value` -- (int) Brightness byte value from 0-255.
     """
     if value > 0:
-        return max(1, int((value / 255) * 99))
+        return max(1, round((value / 255) * 99))
     return 0
 
 
@@ -123,7 +118,7 @@ def ct_to_hs(temp):
     return [int(val) for val in colorlist]
 
 
-class ZwaveDimmer(ZWaveDeviceEntity, Light):
+class ZwaveDimmer(ZWaveDeviceEntity, LightEntity):
     """Representation of a Z-Wave dimmer."""
 
     def __init__(self, values, refresh, delay):
@@ -214,7 +209,7 @@ class ZwaveDimmer(ZWaveDeviceEntity, Light):
         """
         if self.values.dimming_duration is None:
             if ATTR_TRANSITION in kwargs:
-                _LOGGER.debug("Dimming not supported by %s.", self.entity_id)
+                _LOGGER.debug("Dimming not supported by %s", self.entity_id)
             return
 
         if ATTR_TRANSITION not in kwargs:
@@ -226,11 +221,11 @@ class ZwaveDimmer(ZWaveDeviceEntity, Light):
             self.values.dimming_duration.data = int(transition)
         elif transition > 7620:
             self.values.dimming_duration.data = 0xFE
-            _LOGGER.warning("Transition clipped to 127 minutes for %s.", self.entity_id)
+            _LOGGER.warning("Transition clipped to 127 minutes for %s", self.entity_id)
         else:
             minutes = int(transition / 60)
             _LOGGER.debug(
-                "Transition rounded to %d minutes for %s.", minutes, self.entity_id
+                "Transition rounded to %d minutes for %s", minutes, self.entity_id
             )
             self.values.dimming_duration.data = minutes + 0x7F
 
@@ -385,7 +380,9 @@ class ZwaveColorLight(ZwaveDimmer):
                 # white LED must be off in order for color to work
                 self._white = 0
 
-        if ATTR_WHITE_VALUE in kwargs or ATTR_HS_COLOR in kwargs:
+        if (
+            ATTR_WHITE_VALUE in kwargs or ATTR_HS_COLOR in kwargs
+        ) and self._hs is not None:
             rgbw = "#"
             for colorval in color_util.color_hs_to_RGB(*self._hs):
                 rgbw += format(colorval, "02x")

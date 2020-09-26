@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado"
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar, por favor, int\u00e9ntalo de nuevo",
+            "unknown": "Error inesperado"
+        },
+        "step": {
+            "link": {
+                "description": "\u00bfQuieres configurar {name} ({host})?",
+                "title": "Conectar con el PowerView Hub"
+            },
+            "user": {
+                "data": {
+                    "host": "Direcci\u00f3n IP"
+                },
+                "title": "Conectar con el PowerView Hub"
+            }
+        }
+    },
+    "title": "Hunter Douglas PowerView"
+}

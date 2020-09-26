@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Mo\u017cesz skonfigurowa\u0107 tylko jedno konto Nest.",
+            "authorize_url_fail": "Nieznany b\u0142\u0105d podczas generowania url autoryzacji.",
+            "authorize_url_timeout": "Przekroczono limit czasu generowania URL autoryzacji.",
+            "no_flows": "Musisz skonfigurowa\u0107 Nest, aby m\u00f3c si\u0119 z nim uwierzytelni\u0107. Zapoznaj si\u0119 z [instrukcj\u0105](https://www.home-assistant.io/components/nest/)."
+        },
+        "error": {
+            "internal_error": "Wewn\u0119trzny b\u0142\u0105d sprawdzania poprawno\u015bci kodu",
+            "invalid_code": "Nieprawid\u0142owy kod",
+            "timeout": "Przekroczono limit czasu sprawdzania poprawno\u015bci kodu.",
+            "unknown": "Nieznany b\u0142\u0105d sprawdzania poprawno\u015bci kodu"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "flow_impl": "Dostawca"
+                },
+                "description": "Wybierz, kt\u00f3rego dostawc\u0119 uwierzytelnienia chcesz u\u017cywa\u0107 z Nest.",
+                "title": "Dostawca uwierzytelnienia"
+            },
+            "link": {
+                "data": {
+                    "code": "Kod PIN"
+                },
+                "description": "Aby po\u0142\u0105czy\u0107 z kontem Nest, [wykonaj autoryzacj\u0119]({url}). \n\n Po autoryzacji skopiuj i wklej podany kod PIN poni\u017cej.",
+                "title": "Po\u0142\u0105czenie z kontem Nest"
+            }
+        }
+    }
+}

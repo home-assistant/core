@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "auth_failed": "Autenticaci\u00f3n no v\u00e1lida",
+            "conn_error": "No se pudo conectar",
+            "single_instance_allowed": "Ya est\u00e1 configurado. S\u00f3lo es posible una \u00fanica configuraci\u00f3n."
+        },
+        "error": {
+            "auth_failed": "Autenticaci\u00f3n no v\u00e1lida"
+        },
+        "flow_title": "Configuraci\u00f3n Tuya",
+        "step": {
+            "user": {
+                "data": {
+                    "country_code": "C\u00f3digo de pais de tu cuenta (por ejemplo, 1 para USA o 86 para China)",
+                    "password": "Contrase\u00f1a",
+                    "platform": "La aplicaci\u00f3n en la cual registraste tu cuenta",
+                    "username": "Usuario"
+                },
+                "description": "Introduce tu credencial Tuya.",
+                "title": "Tuya"
+            }
+        }
+    }
+}

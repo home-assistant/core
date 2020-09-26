@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Denne Guardian-enheten er allerede konfigurert.",
+            "already_in_progress": "Konfigurasjon av Guardian-enheter er allerede i gang.",
+            "connection_error": "Kan ikke koble til Guardian-enheten."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "IP adresse",
+                    "port": ""
+                },
+                "description": "Konfigurer en lokal Elexa Guardian-enhet."
+            },
+            "zeroconf_confirm": {
+                "description": "Vil du konfigurere denne Guardian-enheten?"
+            }
+        }
+    },
+    "title": "Elexa Guardian"
+}

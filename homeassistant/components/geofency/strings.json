@@ -1,6 +1,5 @@
 {
   "config": {
-    "title": "Geofency Webhook",
     "step": {
       "user": {
         "title": "Set up the Geofency Webhook",

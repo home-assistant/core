@@ -20,12 +20,13 @@ from homeassistant.components.light import (
     ATTR_TRANSITION,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
-    Light,
+    SUPPORT_TRANSITION,
+    LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 
-from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
+from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericEntity
 from .hap import HomematicipHAP
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,18 +35,11 @@ ATTR_TODAY_ENERGY_KWH = "today_energy_kwh"
 ATTR_CURRENT_POWER_W = "current_power_w"
 
 
-async def async_setup_platform(
-    hass, config, async_add_entities, discovery_info=None
-) -> None:
-    """Old way of setting up HomematicIP Cloud lights."""
-    pass
-
-
 async def async_setup_entry(
     hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the HomematicIP Cloud lights from a config entry."""
-    hap = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]]
+    hap = hass.data[HMIPC_DOMAIN][config_entry.unique_id]
     entities = []
     for device in hap.home.devices:
         if isinstance(device, AsyncBrandSwitchMeasuring):
@@ -70,33 +64,41 @@ async def async_setup_entry(
         async_add_entities(entities)
 
 
-class HomematicipLight(HomematicipGenericDevice, Light):
-    """Representation of a HomematicIP Cloud light device."""
+class HomematicipLight(HomematicipGenericEntity, LightEntity):
+    """Representation of the HomematicIP light."""
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
-        """Initialize the light device."""
+        """Initialize the light entity."""
         super().__init__(hap, device)
 
     @property
+    def name(self) -> str:
+        """Return the name of the multi switch channel."""
+        label = self._get_label_by_channel(1)
+        if label:
+            return label
+        return super().name
+
+    @property
     def is_on(self) -> bool:
-        """Return true if device is on."""
+        """Return true if light is on."""
         return self._device.on
 
     async def async_turn_on(self, **kwargs) -> None:
-        """Turn the device on."""
+        """Turn the light on."""
         await self._device.turn_on()
 
     async def async_turn_off(self, **kwargs) -> None:
-        """Turn the device off."""
+        """Turn the light off."""
         await self._device.turn_off()
 
 
 class HomematicipLightMeasuring(HomematicipLight):
-    """Representation of a HomematicIP Cloud measuring light device."""
+    """Representation of the HomematicIP measuring light."""
 
     @property
     def device_state_attributes(self) -> Dict[str, Any]:
-        """Return the state attributes of the generic device."""
+        """Return the state attributes of the light."""
         state_attr = super().device_state_attributes
 
         current_power_w = self._device.currentPowerConsumption
@@ -108,16 +110,16 @@ class HomematicipLightMeasuring(HomematicipLight):
         return state_attr
 
 
-class HomematicipDimmer(HomematicipGenericDevice, Light):
-    """Representation of HomematicIP Cloud dimmer light device."""
+class HomematicipDimmer(HomematicipGenericEntity, LightEntity):
+    """Representation of HomematicIP Cloud dimmer."""
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
-        """Initialize the dimmer light device."""
+        """Initialize the dimmer light entity."""
         super().__init__(hap, device)
 
     @property
     def is_on(self) -> bool:
-        """Return true if device is on."""
+        """Return true if dimmer is on."""
         return self._device.dimLevel is not None and self._device.dimLevel > 0.0
 
     @property
@@ -131,22 +133,22 @@ class HomematicipDimmer(HomematicipGenericDevice, Light):
         return SUPPORT_BRIGHTNESS
 
     async def async_turn_on(self, **kwargs) -> None:
-        """Turn the light on."""
+        """Turn the dimmer on."""
         if ATTR_BRIGHTNESS in kwargs:
             await self._device.set_dim_level(kwargs[ATTR_BRIGHTNESS] / 255.0)
         else:
             await self._device.set_dim_level(1)
 
     async def async_turn_off(self, **kwargs) -> None:
-        """Turn the light off."""
+        """Turn the dimmer off."""
         await self._device.set_dim_level(0)
 
 
-class HomematicipNotificationLight(HomematicipGenericDevice, Light):
-    """Representation of HomematicIP Cloud dimmer light device."""
+class HomematicipNotificationLight(HomematicipGenericEntity, LightEntity):
+    """Representation of HomematicIP Cloud notification light."""
 
     def __init__(self, hap: HomematicipHAP, device, channel: int) -> None:
-        """Initialize the dimmer light device."""
+        """Initialize the notification light entity."""
         self.channel = channel
         if self.channel == 2:
             super().__init__(hap, device, "Top")
@@ -169,7 +171,7 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
 
     @property
     def is_on(self) -> bool:
-        """Return true if device is on."""
+        """Return true if light is on."""
         return (
             self._func_channel.dimLevel is not None
             and self._func_channel.dimLevel > 0.0
@@ -188,7 +190,7 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
 
     @property
     def device_state_attributes(self) -> Dict[str, Any]:
-        """Return the state attributes of the generic device."""
+        """Return the state attributes of the notification light sensor."""
         state_attr = super().device_state_attributes
 
         if self.is_on:
@@ -198,13 +200,16 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
 
     @property
     def name(self) -> str:
-        """Return the name of the generic device."""
+        """Return the name of the notification light sensor."""
+        label = self._get_label_by_channel(self.channel)
+        if label:
+            return label
         return f"{super().name} Notification"
 
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
-        return SUPPORT_BRIGHTNESS | SUPPORT_COLOR
+        return SUPPORT_BRIGHTNESS | SUPPORT_COLOR | SUPPORT_TRANSITION
 
     @property
     def unique_id(self) -> str:

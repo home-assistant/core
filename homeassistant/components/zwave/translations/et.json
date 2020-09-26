@@ -1,0 +1,14 @@
+{
+    "state": {
+        "_": {
+            "dead": "Surnud",
+            "initializing": "L\u00e4htestan",
+            "ready": "Valmis",
+            "sleeping": "Ootel"
+        },
+        "query_stage": {
+            "dead": "Surnud",
+            "initializing": "L\u00e4htestan"
+        }
+    }
+}

@@ -1,0 +1,67 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "Ya se han configurado todas las pasarelas Philips Hue",
+            "already_configured": "La pasarela ya esta configurada",
+            "already_in_progress": "El flujo de configuraci\u00f3n para la pasarela ya est\u00e1 en marcha.",
+            "cannot_connect": "No se puede conectar a la pasarela",
+            "discover_timeout": "Imposible encontrar pasarelas Philips Hue",
+            "no_bridges": "No se han encontrado pasarelas Philips Hue.",
+            "not_hue_bridge": "No es una pasarela Hue",
+            "unknown": "Se produjo un error desconocido"
+        },
+        "error": {
+            "linking": "Se produjo un error de enlace desconocido.",
+            "register_failed": "No se pudo registrar, intente de nuevo"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "host": "Host"
+                },
+                "title": "Elige la pasarela Hue"
+            },
+            "link": {
+                "description": "Presione el bot\u00f3n en la pasarela para registrar Philips Hue con Home Assistant. \n\n![Ubicaci\u00f3n del bot\u00f3n en la pasarela](/static/images/config_philips_hue.jpg)",
+                "title": "Link Hub"
+            },
+            "manual": {
+                "data": {
+                    "host": "Host"
+                },
+                "title": "Configurar manualmente un puente Hue"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "Primer bot\u00f3n",
+            "button_2": "Segundo bot\u00f3n",
+            "button_3": "Tercer bot\u00f3n",
+            "button_4": "Cuarto bot\u00f3n",
+            "dim_down": "Bajar la intensidad",
+            "dim_up": "Subir la intensidad",
+            "double_buttons_1_3": "Botones Primero y Tercero",
+            "double_buttons_2_4": "Botones Segundo y Cuarto",
+            "turn_off": "Apagar",
+            "turn_on": "Encender"
+        },
+        "trigger_type": {
+            "remote_button_long_release": "Bot\u00f3n \"{subtype}\" soltado despu\u00e9s de una pulsaci\u00f3n larga",
+            "remote_button_short_press": "Bot\u00f3n \"{subtype}\" pulsado",
+            "remote_button_short_release": "Bot\u00f3n \"{subtype}\" soltado",
+            "remote_double_button_long_press": "Ambos \"{subtype}\" soltados despu\u00e9s de pulsaci\u00f3n larga",
+            "remote_double_button_short_press": "Ambos \"{subtype}\" soltados"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "allow_hue_groups": "Permitir grupos de Hue",
+                    "allow_unreachable": "Permitir que las bombillas inalcanzables informen su estado correctamente"
+                }
+            }
+        }
+    }
+}

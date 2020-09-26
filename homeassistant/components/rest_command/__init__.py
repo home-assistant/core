@@ -15,7 +15,9 @@ from homeassistant.const import (
     CONF_URL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    HTTP_BAD_REQUEST,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
@@ -55,6 +57,7 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass, config):
     """Set up the REST command component."""
 
+    @callback
     def async_register_rest_command(name, command_config):
         """Create service for rest command."""
         websession = async_get_clientsession(hass, command_config.get(CONF_VERIFY_SSL))
@@ -117,24 +120,26 @@ async def async_setup(hass, config):
                     timeout=timeout,
                 ) as response:
 
-                    if response.status < 400:
+                    if response.status < HTTP_BAD_REQUEST:
                         _LOGGER.debug(
-                            "Success. Url: %s. Status code: %d.",
+                            "Success. Url: %s. Status code: %d. Payload: %s",
                             response.url,
                             response.status,
+                            payload,
                         )
                     else:
                         _LOGGER.warning(
-                            "Error. Url: %s. Status code %d.",
+                            "Error. Url: %s. Status code %d. Payload: %s",
                             response.url,
                             response.status,
+                            payload,
                         )
 
             except asyncio.TimeoutError:
-                _LOGGER.warning("Timeout call %s.", response.url, exc_info=1)
+                _LOGGER.warning("Timeout call %s", request_url, exc_info=1)
 
             except aiohttp.ClientError:
-                _LOGGER.error("Client error %s.", request_url, exc_info=1)
+                _LOGGER.error("Client error %s", request_url, exc_info=1)
 
         # register services
         hass.services.async_register(DOMAIN, name, async_service_handler)

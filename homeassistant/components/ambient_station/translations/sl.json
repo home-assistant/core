@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ta klju\u010d za aplikacijo je \u017ee v uporabi."
+        },
+        "error": {
+            "invalid_key": "Neveljaven klju\u010d API in / ali klju\u010d aplikacije",
+            "no_devices": "V ra\u010dunu ni najdene nobene naprave"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API Klju\u010d",
+                    "app_key": "Klju\u010d aplikacije"
+                },
+                "title": "Izpolnite svoje podatke"
+            }
+        }
+    }
+}

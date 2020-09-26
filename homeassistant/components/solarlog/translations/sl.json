@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Naprava je \u017ee konfigurirana"
+        },
+        "error": {
+            "already_configured": "Naprava je \u017ee konfigurirana",
+            "cannot_connect": "Ni mogo\u010de vzpostaviti povezave, preverite naslov gostitelja"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Ime gostitelja ali ip naslov va\u0161e naprave Solar-Log",
+                    "name": "Predpona, ki jo \u017eelite uporabiti za senzorje Solar-log"
+                },
+                "title": "Dolo\u010dite povezavo Solar-Log"
+            }
+        }
+    }
+}
