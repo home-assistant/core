@@ -15,11 +15,11 @@
     },
     "error": {
       "register_failed": "Failed to register, please try again",
-      "connection_failed": "Failed to connect, please try again",
-      "unknown": "Unknown error: please retry later"
+      "connection_failed": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "Host already configured"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   }
 }
