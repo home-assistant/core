@@ -51,6 +51,7 @@ import homeassistant.util.dt as dt_util
 from .const import (
     CONF_COLORS_ONLY,
     CONF_DISABLE_BRIGHTNESS_ADJUST,
+    CONF_DISABLE_COLOR_ADJUST,
     CONF_DISABLE_ENTITY,
     CONF_DISABLE_STATE,
     CONF_INITIAL_TRANSITION,
@@ -165,6 +166,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         self._name = data[CONF_NAME]
         self._lights = data[CONF_LIGHTS]
         self._disable_brightness_adjust = data[CONF_DISABLE_BRIGHTNESS_ADJUST]
+        self._disable_color_adjust = data[CONF_DISABLE_COLOR_ADJUST]
         self._disable_entity = data[CONF_DISABLE_ENTITY]
         self._disable_state = data[CONF_DISABLE_STATE]
         self._initial_transition = data[CONF_INITIAL_TRANSITION]
@@ -442,7 +444,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         ):
             service_data[ATTR_BRIGHTNESS_PCT] = self._brightness
 
-        if "color" in features:
+        if "color" in features and not self._disable_color_adjust:
             service_data[ATTR_RGB_COLOR] = self._rgb_color
         elif "color_temp" in features:
             service_data[ATTR_COLOR_TEMP] = self._color_temp_mired
