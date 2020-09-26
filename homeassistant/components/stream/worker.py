@@ -81,13 +81,6 @@ def _stream_worker_internal(hass, stream, quit_event):
     if audio_stream and audio_stream.profile is None:
         audio_stream = None
 
-    # Store codec metadata on outputs
-    for stream_output in stream.outputs.values():
-        stream_output.video_codec = (video_stream.name, video_stream.profile)
-        stream_output.audio_codec = (
-            (audio_stream.name, audio_stream.profile) if audio_stream else None
-        )
-
     # The presentation timestamps of the first packet in each stream we receive
     # Use to adjust before muxing or outputting, but we don't adjust internally
     first_pts = {}
@@ -181,9 +174,6 @@ def _stream_worker_internal(hass, stream, quit_event):
             buffer = create_stream_buffer(
                 stream_output, video_stream, audio_stream, sequence
             )
-            # if the created buffer does not support audio, reset audio_codec to None
-            if buffer.astream is None:
-                stream_output.audio_codec = None
             outputs[stream_output.name] = (
                 buffer,
                 {video_stream: buffer.vstream, audio_stream: buffer.astream},
