@@ -1,8 +1,7 @@
 """Config Flow for Advantage Air integration."""
 import logging
 
-from advantage_air import advantage_air
-from aiohttp import ClientError
+from advantage_air import ApiError, advantage_air
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -35,14 +34,15 @@ class AdvantageAirConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input:
             ip_address = user_input.get(CONF_IP_ADDRESS)
             port = user_input.get(CONF_PORT)
-            api = advantage_air(ip_address, port, ADVANTAGE_AIR_RETRY)
             try:
-                data = await api.async_get(1)
+                data = await advantage_air(
+                    ip_address, port, ADVANTAGE_AIR_RETRY
+                ).async_get(1)
                 return self.async_create_entry(
                     title=data["system"]["name"],
                     data=user_input,
                 )
-            except ClientError:
+            except ApiError:
                 errors["base"] = "connection_error"
 
         return self.async_show_form(

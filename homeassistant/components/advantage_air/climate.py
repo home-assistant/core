@@ -19,6 +19,7 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_IP_ADDRESS,
+    PRECISION_WHOLE,
     STATE_OFF,
     STATE_ON,
     STATE_OPEN,
@@ -92,7 +93,7 @@ class AdvantageAirClimateEntity(ClimateEntity):
     @property
     def target_temperature_step(self):
         """Return the supported temperature step."""
-        return 1
+        return PRECISION_WHOLE
 
     @property
     def max_temp(self):
