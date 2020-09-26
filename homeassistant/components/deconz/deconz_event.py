@@ -11,12 +11,9 @@ from .deconz_device import DeconzBase
 
 CONF_DECONZ_EVENT = "deconz_event"
 
-EVENT = "Event"
-
 
 async def async_setup_events(gateway) -> None:
     """Set up the deCONZ events."""
-    gateway.entities[EVENT] = set()
 
     @callback
     def async_add_sensor(sensors):
@@ -26,10 +23,9 @@ async def async_setup_events(gateway) -> None:
             if not gateway.option_allow_clip_sensor and sensor.type.startswith("CLIP"):
                 continue
 
-            if (
-                sensor.type not in Switch.ZHATYPE
-                or sensor.uniqueid in gateway.entities[EVENT]
-            ):
+            if sensor.type not in Switch.ZHATYPE or sensor.uniqueid in [
+                event.unique_id for event in gateway.events
+            ]:
                 continue
 
             new_event = DeconzEvent(sensor, gateway)
@@ -62,8 +58,6 @@ class DeconzEvent(DeconzBase):
     instead of a sensor entity in hass.
     """
 
-    TYPE = EVENT
-
     def __init__(self, device, gateway):
         """Register callback that will be used for signals."""
         super().__init__(device, gateway)
@@ -82,7 +76,6 @@ class DeconzEvent(DeconzBase):
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect event object when removed."""
         self._device.remove_callback(self.async_update_callback)
-        await super().async_will_remove_from_hass()
 
     @callback
     def async_update_callback(self, force_update=False, ignore_update=False):
