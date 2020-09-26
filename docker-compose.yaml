@@ -1,0 +1,31 @@
+version: '3'
+services:
+  homeassistant:
+    container_name: ha
+    build:
+      context: .
+      dockerfile: Dockerfile.local
+    volumes:
+      - /home/ha/homeassistant:/config
+      - /home/ha/zwave-scene-dimmer/zwave_scene_dimmer:/config/custom_components/zwave_scene_dimmer
+      - /home/ha/HA-Component-mythtv-frontend/mythtv:/config/custom_components/mythtv
+      - /home/ha/home-assistant/homeassistant/components/hdmi_cec:/config/custom_components/hdmi_cec
+      - /home/ha/home-assistant/homeassistant/components/squeezebox:/config/custom_components/squeezebox
+      - /home/ha/frontend:/config/frontend
+    environment:
+      - TZ=America/Chicago
+      - WHEELS_LINKS=https://wheels.hass.io/alpine-3.12/amd64/
+    restart: always
+    network_mode: host
+    dns: 127.0.0.53
+    devices:
+      - "/dev/ttyUSB0:/dev/ttyUSB0"
+      - "/dev/ttyUSB1:/dev/ttyUSB1"
+        #  vouch-proxy:
+        #    container_name: vouch
+        #    image: voucher/vouch-proxy
+        #    restart: always
+        #    volumes:
+        #      - /etc/vouch-proxy:/config
+        #    ports: 
+        #      - "9090:9090"
