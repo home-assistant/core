@@ -75,7 +75,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             if not group.lights:
                 continue
 
-            known_groups = list(gateway.entities[DOMAIN])
+            known_groups = set(gateway.entities[DOMAIN])
             new_group = DeconzGroup(group, gateway)
             if new_group.unique_id not in known_groups:
                 entities.append(new_group)
