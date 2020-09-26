@@ -209,7 +209,7 @@ async def test_windowcovering_set_cover_position(hass, hk_driver, cls, events):
     assert events[-1].data[ATTR_VALUE] == 75
 
 
-async def test_window_instanciate(hass, hk_driver, cls, events):
+async def test_window_instantiate(hass, hk_driver, cls, events):
     """Test if Window accessory is instantiated correctly."""
     entity_id = "cover.window"
 
