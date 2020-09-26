@@ -616,7 +616,7 @@ async def test_options_add_remove_device(hass):
     assert not state
 
 
-async def test_options_replace_device(hass):
+async def test_options_replace_sensor_device(hass):
     """Test we can replace a device."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
@@ -776,6 +776,117 @@ async def test_options_replace_device(hass):
     state = hass.states.get(
         "sensor.thgn122_123_thgn132_thgr122_228_238_268_23_04_temperature"
     )
+    assert not state
+
+
+async def test_options_replace_control_device(hass):
+    """Test we can replace a control device."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "host": None,
+            "port": None,
+            "device": "/dev/tty123",
+            "debug": False,
+            "automatic_add": False,
+            "devices": {
+                "0b1100100118cdea02010f70": {
+                    "device_id": ["11", "0", "118cdea:2"],
+                    "signal_repetitions": 1,
+                },
+                "0b1100101118cdea02010f70": {
+                    "device_id": ["11", "0", "1118cdea:2"],
+                    "signal_repetitions": 1,
+                },
+            },
+        },
+        unique_id=DOMAIN,
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.ac_118cdea_2")
+    assert state
+    state = hass.states.get("sensor.ac_118cdea_2_rssi_numeric")
+    assert state
+    state = hass.states.get("switch.ac_118cdea_2")
+    assert state
+    state = hass.states.get("binary_sensor.ac_1118cdea_2")
+    assert state
+    state = hass.states.get("sensor.ac_1118cdea_2_rssi_numeric")
+    assert state
+    state = hass.states.get("switch.ac_1118cdea_2")
+    assert state
+
+    device_registry = await async_get_device_registry(hass)
+    device_entries = async_entries_for_config_entry(device_registry, entry.entry_id)
+
+    old_device = next(
+        (
+            elem.id
+            for elem in device_entries
+            if next(iter(elem.identifiers))[1:] == ("11", "0", "118cdea:2")
+        ),
+        None,
+    )
+    new_device = next(
+        (
+            elem.id
+            for elem in device_entries
+            if next(iter(elem.identifiers))[1:] == ("11", "0", "1118cdea:2")
+        ),
+        None,
+    )
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "prompt_options"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "debug": False,
+            "automatic_add": False,
+            "device": old_device,
+        },
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "set_device_options"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "replace_device": new_device,
+        },
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+    await hass.async_block_till_done()
+
+    entity_registry = await async_get_entity_registry(hass)
+
+    binary_entity = entity_registry.async_get("binary_sensor.ac_118cdea_2")
+    assert binary_entity
+    assert binary_entity.device_id == new_device
+    sensor_entity = entity_registry.async_get("sensor.ac_118cdea_2_rssi_numeric")
+    assert sensor_entity
+    assert sensor_entity.device_id == new_device
+    switch_entity = entity_registry.async_get("switch.ac_118cdea_2")
+    assert switch_entity
+    assert switch_entity.device_id == new_device
+
+    state = hass.states.get("binary_sensor.ac_1118cdea_2")
+    assert not state
+    state = hass.states.get("sensor.ac_1118cdea_2_rssi_numeric")
+    assert not state
+    state = hass.states.get("switch.ac_1118cdea_2")
     assert not state
 
 
