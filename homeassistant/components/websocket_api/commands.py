@@ -261,9 +261,7 @@ def handle_render_template(hass, connection, msg):
         track_template_result = updates.pop()
         result = track_template_result.result
         if isinstance(result, TemplateError):
-            connection.send_error(
-                msg["id"], const.ERR_TEMPLATE_ERROR, str(result)
-            )
+            connection.send_error(msg["id"], const.ERR_TEMPLATE_ERROR, str(result))
             return
 
         connection.send_message(
@@ -280,9 +278,7 @@ def handle_render_template(hass, connection, msg):
             raise_on_template_error=True,
         )
     except TemplateError as ex:
-        connection.send_error(
-            msg["id"], const.ERR_TEMPLATE_ERROR, str(ex)
-        )
+        connection.send_error(msg["id"], const.ERR_TEMPLATE_ERROR, str(ex))
         return
 
     connection.subscriptions[msg["id"]] = info.async_remove
