@@ -28,7 +28,8 @@ class HlsMasterPlaylistView(StreamView):
     name = "api:stream:hls:master_playlist"
     cors_allowed = True
 
-    def render(self, track):
+    @staticmethod
+    def render(track):
         """Render M3U8 file."""
         # Need to calculate max bandwidth as input_container.bit_rate doesn't seem to work
         # Calculate file size / duration and use a multiplier to account for variation
