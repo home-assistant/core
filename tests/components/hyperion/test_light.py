@@ -44,7 +44,7 @@ async def setup_entity(hass, client=None):
                 }
             },
         )
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
 
 async def test_setup_platform(hass):

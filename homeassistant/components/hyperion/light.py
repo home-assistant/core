@@ -82,18 +82,27 @@ ICON_EXTERNAL_SOURCE = "mdi:television-ambient-light"
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up a Hyperion server remote."""
-    name = config[CONF_NAME]
-    host = config[CONF_HOST]
-    port = config[CONF_PORT]
-    priority = config[CONF_PRIORITY]
+    """Set up Hyperion platform.."""
+    await async_setup_entry_from_data(hass, config, async_add_entities)
 
-    hyperion_client = client.HyperionClient(host, port)
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up a Hyperion platform from config entry."""
+    await async_setup_entry_from_data(hass, config_entry.data, async_add_entities)
+
+
+async def async_setup_entry_from_data(hass, data, async_add_entities):
+    """Set up a Hyperion light from a dict of data."""
+
+    hyperion_client = client.HyperionClient(data[CONF_HOST], data[CONF_PORT])
 
     if not await hyperion_client.async_client_connect():
         raise PlatformNotReady
 
-    async_add_entities([Hyperion(name, priority, hyperion_client)])
+    # TODO: Add instance & token support.
+    async_add_entities(
+        [Hyperion(data[CONF_NAME], data[CONF_PRIORITY], hyperion_client)]
+    )
 
 
 class Hyperion(LightEntity):
