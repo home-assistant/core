@@ -25,7 +25,6 @@ CACHE_TTL = 900
 SERVICE_EBUSD_WRITE = "ebusd_write"
 
 
-
 def verify_ebusd_config(config):
     """Verify eBusd config."""
     circuit = config[CONF_CIRCUIT]
