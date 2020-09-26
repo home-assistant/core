@@ -23,9 +23,9 @@ async def async_setup_events(gateway) -> None:
             if not gateway.option_allow_clip_sensor and sensor.type.startswith("CLIP"):
                 continue
 
-            if sensor.type not in Switch.ZHATYPE or sensor.uniqueid in [
+            if sensor.type not in Switch.ZHATYPE or sensor.uniqueid in (
                 event.unique_id for event in gateway.events
-            ]:
+            ):
                 continue
 
             new_event = DeconzEvent(sensor, gateway)
