@@ -486,19 +486,57 @@ async def test_render_template_with_error(
     msg = await websocket_client.receive_json()
     assert msg["id"] == 5
     assert msg["type"] == const.TYPE_RESULT
+    assert not msg["success"]
+    assert msg["error"]["code"] == const.ERR_TEMPLATE_ERROR
+
+    assert "TemplateError" not in caplog.text
+
+
+async def test_render_template_with_delayed_error(
+    hass, websocket_client, hass_admin_user, caplog
+):
+    """Test a template with an error that only happens after a state change."""
+    hass.states.async_set("sensor.test", "on")
+    await hass.async_block_till_done()
+
+    template_str = """
+{% if states.sensor.test.state %}
+   on
+{% else %}
+   {{ explode + 1 }}
+{% endif %}
+    """
+
+    await websocket_client.send_json(
+        {"id": 5, "type": "render_template", "template": template_str}
+    )
+    await hass.async_block_till_done()
+
+    msg = await websocket_client.receive_json()
+
+    assert msg["id"] == 5
+    assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
+
+    hass.states.async_remove("sensor.test")
+    await hass.async_block_till_done()
 
     msg = await websocket_client.receive_json()
     assert msg["id"] == 5
     assert msg["type"] == "event"
     event = msg["event"]
     assert event == {
-        "result": None,
-        "listeners": {"all": True, "domains": [], "entities": []},
+        "result": "on",
+        "listeners": {"all": False, "domains": [], "entities": ["sensor.test"]},
     }
 
-    assert "my_unknown_var" in caplog.text
-    assert "TemplateError" in caplog.text
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 5
+    assert msg["type"] == const.TYPE_RESULT
+    assert not msg["success"]
+    assert msg["error"]["code"] == const.ERR_TEMPLATE_ERROR
+
+    assert "TemplateError" not in caplog.text
 
 
 async def test_render_template_returns_with_match_all(

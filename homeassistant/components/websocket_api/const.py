@@ -29,6 +29,7 @@ ERR_UNKNOWN_COMMAND = "unknown_command"
 ERR_UNKNOWN_ERROR = "unknown_error"
 ERR_UNAUTHORIZED = "unauthorized"
 ERR_TIMEOUT = "timeout"
+ERR_TEMPLATE_ERROR = "template_error"
 
 TYPE_RESULT = "result"
 

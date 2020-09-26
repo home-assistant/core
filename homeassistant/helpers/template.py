@@ -266,7 +266,7 @@ class Template:
 
         try:
             self._compiled_code = self._env.compile(self.template)
-        except jinja2.exceptions.TemplateSyntaxError as err:
+        except jinja2.TemplateError as err:
             raise TemplateError(err) from err
 
     def extract_entities(
