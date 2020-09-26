@@ -95,6 +95,7 @@ async def async_unload_services(hass):
 
     hass.services.async_remove(DOMAIN, SERVICE_CONFIGURE_DEVICE)
     hass.services.async_remove(DOMAIN, SERVICE_DEVICE_REFRESH)
+    hass.services.async_remove(DOMAIN, SERVICE_REMOVE_ORPHANED_ENTRIES)
 
 
 async def async_configure_service(hass, data):

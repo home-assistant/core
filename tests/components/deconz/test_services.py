@@ -52,7 +52,7 @@ async def test_service_setup(hass):
     ) as async_register:
         await deconz.services.async_setup_services(hass)
         assert hass.data[deconz.services.DECONZ_SERVICES] is True
-        assert async_register.call_count == 2
+        assert async_register.call_count == 3
 
 
 async def test_service_setup_already_registered(hass):
@@ -73,7 +73,7 @@ async def test_service_unload(hass):
     ) as async_remove:
         await deconz.services.async_unload_services(hass)
         assert hass.data[deconz.services.DECONZ_SERVICES] is False
-        assert async_remove.call_count == 2
+        assert async_remove.call_count == 3
 
 
 async def test_service_unload_not_registered(hass):
