@@ -261,8 +261,8 @@ def handle_render_template(hass, connection, msg):
         track_template_result = updates.pop()
         result = track_template_result.result
         if isinstance(result, TemplateError):
-            connection.send_message(
-                messages.error_message(msg["id"], const.ERR_TEMPLATE_ERROR, str(result))
+            connection.send_error(
+                msg["id"], const.ERR_TEMPLATE_ERROR, str(result)
             )
             return
 
