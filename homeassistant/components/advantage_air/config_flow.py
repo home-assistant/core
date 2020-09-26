@@ -7,7 +7,6 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
-from homeassistant.core import callback
 
 from .const import ADVANTAGE_AIR_RETRY, DOMAIN
 
@@ -32,28 +31,22 @@ class AdvantageAirConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Get configuration from the user."""
-        if not user_input:
-            return self._show_form()
+        errors = {}
+        if user_input:
+            ip_address = user_input.get(CONF_IP_ADDRESS)
+            port = user_input.get(CONF_PORT)
+            api = advantage_air(ip_address, port, ADVANTAGE_AIR_RETRY)
+            try:
+                data = await api.async_get(1)
+                return self.async_create_entry(
+                    title=data["system"]["name"],
+                    data=user_input,
+                )
+            except ClientError:
+                errors["base"] = "connection_error"
 
-        ip_address = user_input.get(CONF_IP_ADDRESS)
-        port = user_input.get(CONF_PORT)
-        api = advantage_air(ip_address, port, ADVANTAGE_AIR_RETRY)
-
-        try:
-            data = await api.async_get(1)
-        except ClientError:
-            return self._show_form({"base": "connection_error"})
-
-        return self.async_create_entry(
-            title=data["system"]["name"],
-            data=user_input,
-        )
-
-    @callback
-    def _show_form(self, errors=None):
-        """Show the form to the user."""
         return self.async_show_form(
             step_id="user",
             data_schema=ADVANTAGE_AIR_SCHEMA,
-            errors=errors if errors else {},
+            errors=errors,
         )

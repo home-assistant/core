@@ -51,26 +51,20 @@ async def async_setup_entry(hass, config_entry):
         update_interval=timedelta(seconds=ADVANTAGE_AIR_SYNC_INTERVAL),
     )
 
-    # Fetch initial data so we have data when entities subscribe
-    while not coordinator.data:
-        await coordinator.async_refresh()
+    await coordinator.async_refresh()
 
-    if "system" in coordinator.data:
-        device = {
-            "identifiers": {(DOMAIN, coordinator.data["system"]["rid"])},
-            "name": coordinator.data["system"]["name"],
-            "manufacturer": "Advantage Air",
-            "model": coordinator.data["system"]["sysType"],
-            "sw_version": coordinator.data["system"]["myAppRev"],
-        }
-    else:
-        device = None
+    device = {
+        "identifiers": {(DOMAIN, coordinator.data["system"]["rid"])},
+        "name": coordinator.data["system"]["name"],
+        "manufacturer": "Advantage Air",
+        "model": coordinator.data["system"]["sysType"],
+        "sw_version": coordinator.data["system"]["myAppRev"],
+    }
 
     async def async_change(change):
         queued = await api.async_change(change)
         if not queued:
             await coordinator.async_refresh()
-        return
 
     hass.data[DOMAIN][ip_address] = {
         "coordinator": coordinator,
@@ -78,7 +72,6 @@ async def async_setup_entry(hass, config_entry):
         "device": device,
     }
 
-    # Setup Platforms
     for platform in ADVANTAGE_AIR_PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(config_entry, platform)
