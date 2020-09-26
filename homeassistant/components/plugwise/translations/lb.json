@@ -13,10 +13,20 @@
             "user": {
                 "data": {
                     "host": "Smile IP Adresse",
-                    "password": "Smile ID"
+                    "password": "Smile ID",
+                    "port": "Smile Port Nummer"
                 },
                 "description": "Detailler",
                 "title": "Mat Smile verbannen"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Scan Intervall (sekonnen)"
+                }
             }
         }
     }
