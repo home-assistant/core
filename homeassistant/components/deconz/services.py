@@ -3,6 +3,10 @@ from pydeconz.utils import normalize_bridge_id
 import voluptuous as vol
 
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_registry import (
+    async_entries_for_config_entry,
+    async_entries_for_device,
+)
 
 from .config_flow import get_master_gateway
 from .const import (
@@ -35,7 +39,8 @@ SERVICE_CONFIGURE_DEVICE_SCHEMA = vol.All(
 )
 
 SERVICE_DEVICE_REFRESH = "device_refresh"
-SERVICE_DEVICE_REFRESH_SCHEMA = vol.All(vol.Schema({vol.Optional(CONF_BRIDGE_ID): str}))
+SERVICE_REMOVE_ORPHANED_ENTRIES = "remove_orphaned_entries"
+SELECT_GATEWAY_SCHEMA = vol.All(vol.Schema({vol.Optional(CONF_BRIDGE_ID): str}))
 
 
 async def async_setup_services(hass):
@@ -56,6 +61,9 @@ async def async_setup_services(hass):
         elif service == SERVICE_DEVICE_REFRESH:
             await async_refresh_devices_service(hass, service_data)
 
+        elif service == SERVICE_REMOVE_ORPHANED_ENTRIES:
+            await async_remove_orphaned_entries_service(hass, service_data)
+
     hass.services.async_register(
         DOMAIN,
         SERVICE_CONFIGURE_DEVICE,
@@ -67,7 +75,14 @@ async def async_setup_services(hass):
         DOMAIN,
         SERVICE_DEVICE_REFRESH,
         async_call_deconz_service,
-        schema=SERVICE_DEVICE_REFRESH_SCHEMA,
+        schema=SELECT_GATEWAY_SCHEMA,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_REMOVE_ORPHANED_ENTRIES,
+        async_call_deconz_service,
+        schema=SELECT_GATEWAY_SCHEMA,
     )
 
 
@@ -166,3 +181,46 @@ async def async_refresh_devices_service(hass, data):
             if sensor_id not in sensors
         ],
     )
+
+
+async def async_remove_orphaned_entries_service(hass, data):
+    """Remove orphaned deCONZ entries from device and entity registries."""
+    gateway = get_master_gateway(hass)
+    if CONF_BRIDGE_ID in data:
+        gateway = hass.data[DOMAIN][normalize_bridge_id(data[CONF_BRIDGE_ID])]
+
+    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    device_registry = await hass.helpers.device_registry.async_get_registry()
+
+    entity_entries = async_entries_for_config_entry(
+        entity_registry, gateway.config_entry.entry_id
+    )
+
+    entities_to_be_removed = []
+    devices_to_be_removed = [
+        entry.id
+        for entry in device_registry.devices.values()
+        if gateway.config_entry.entry_id in entry.config_entries
+    ]
+
+    if gateway.device_id in devices_to_be_removed:
+        devices_to_be_removed.remove(gateway.device_id)
+
+    for event in gateway.events:
+        if event.device_id in devices_to_be_removed:
+            devices_to_be_removed.remove(event.device_id)
+
+    for entry in entity_entries:
+
+        if entry.unique_id in gateway.entities[entry.domain]:
+            if entry.device_id in devices_to_be_removed:
+                devices_to_be_removed.remove(entry.device_id)
+            continue
+        entities_to_be_removed.append(entry.entity_id)
+
+    for entity_id in entities_to_be_removed:
+        entity_registry.async_remove(entity_id)
+
+    for device_id in devices_to_be_removed:
+        if len(async_entries_for_device(entity_registry, device_id)) == 0:
+            device_registry.async_remove_device(device_id)

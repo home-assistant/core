@@ -51,6 +51,7 @@ class DeconzGateway:
         self.ignore_state_updates = False
 
         self.deconz_ids = {}
+        self.device_id = None
         self.entities = {}
         self.events = []
         self.listeners = []
@@ -139,7 +140,7 @@ class DeconzGateway:
     async def async_update_device_registry(self) -> None:
         """Update device registry."""
         device_registry = await self.hass.helpers.device_registry.async_get_registry()
-        device_registry.async_get_or_create(
+        entry = device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
             connections={(CONNECTION_NETWORK_MAC, self.api.config.mac)},
             identifiers={(DOMAIN, self.api.config.bridgeid)},
@@ -148,6 +149,7 @@ class DeconzGateway:
             name=self.api.config.name,
             sw_version=self.api.config.swversion,
         )
+        self.device_id = entry.id
 
     async def async_setup(self) -> bool:
         """Set up a deCONZ gateway."""
