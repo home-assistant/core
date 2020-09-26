@@ -204,7 +204,7 @@ bond-api==0.1.8
 bravia-tv==1.0.6
 
 # homeassistant.components.broadlink
-broadlink==0.14.1
+broadlink==0.15.0
 
 # homeassistant.components.brother
 brother==0.1.17
