@@ -279,6 +279,15 @@ def handle_render_template(hass, connection, msg):
             _template_listener,
             raise_on_template_error=True,
         )
+    except vol.Invalid as ex:
+        connection.send_message(
+            messages.error_message(
+                msg["id"],
+                const.ERR_TEMPLATE_ERROR,
+                vol.humanize.humanize_error(msg, ex),
+            )
+        )
+        return
     except TemplateError as ex:
         connection.send_message(
             messages.error_message(msg["id"], const.ERR_TEMPLATE_ERROR, str(ex))
