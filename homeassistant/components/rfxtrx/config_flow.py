@@ -279,19 +279,18 @@ class OptionsFlow(config_entries.OptionsFlow):
                 }
             )
 
-        if isinstance(self._selected_device_object, rfxtrxmod.SensorEvent):
-            devices = {
-                entry.id: entry.name_by_user if entry.name_by_user else entry.name
-                for entry in self._device_entries
-                if self._can_replace_device(entry.id)
-            }
+        devices = {
+            entry.id: entry.name_by_user if entry.name_by_user else entry.name
+            for entry in self._device_entries
+            if self._can_replace_device(entry.id)
+        }
 
-            if devices:
-                data_schema.update(
-                    {
-                        vol.Optional(CONF_REPLACE_DEVICE): vol.In(devices),
-                    }
-                )
+        if devices:
+            data_schema.update(
+                {
+                    vol.Optional(CONF_REPLACE_DEVICE): vol.In(devices),
+                }
+            )
 
         return self.async_show_form(
             step_id="set_device_options",
@@ -349,8 +348,8 @@ class OptionsFlow(config_entries.OptionsFlow):
         event_code = device_data[CONF_EVENT_CODE]
         rfx_obj = get_rfx_object(event_code)
         if (
-            rfx_obj.pkt.packettype == self._selected_device_object.pkt.packettype
-            and rfx_obj.pkt.subtype == self._selected_device_object.pkt.subtype
+            rfx_obj.device.packettype == self._selected_device_object.device.packettype
+            and rfx_obj.device.subtype == self._selected_device_object.device.subtype
             and self._selected_device_event_code != event_code
         ):
             return True
