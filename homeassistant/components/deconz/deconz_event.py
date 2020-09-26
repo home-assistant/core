@@ -43,10 +43,11 @@ async def async_setup_events(gateway) -> None:
     )
 
 
-async def async_unload_events(gateway) -> None:
+@callback
+def async_unload_events(gateway) -> None:
     """Unload all deCONZ events."""
     for event in gateway.events:
-        await event.async_will_remove_from_hass()
+        event.async_will_remove_from_hass()
 
     gateway.events.clear()
 
@@ -73,7 +74,8 @@ class DeconzEvent(DeconzBase):
         """Return Event device."""
         return self._device
 
-    async def async_will_remove_from_hass(self) -> None:
+    @callback
+    def async_will_remove_from_hass(self) -> None:
         """Disconnect event object when removed."""
         self._device.remove_callback(self.async_update_callback)
 
