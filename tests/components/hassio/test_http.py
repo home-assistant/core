@@ -3,6 +3,8 @@ import asyncio
 
 import pytest
 
+from homeassistant.components.hassio.http import _need_auth
+
 from tests.async_mock import patch
 
 
@@ -147,3 +149,12 @@ async def test_snapshot_upload_headers(hassio_client, aioclient_mock):
 
     req_headers = aioclient_mock.mock_calls[0][-1]
     req_headers["Content-Type"] == content_type
+
+
+def test_need_auth(hass):
+    """Test if the requested path needs authentication."""
+    assert not _need_auth(hass, "addons/test/logo")
+    assert _need_auth(hass, "snapshots/new/upload")
+
+    hass.data["onboarding"] = False
+    assert not _need_auth(hass, "snapshots/new/upload")
