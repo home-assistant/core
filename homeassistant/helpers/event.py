@@ -564,6 +564,7 @@ class _TrackTemplateResultInfo:
         self._last_result: Dict[Template, Union[str, TemplateError]] = {}
         self._last_info: Dict[Template, RenderInfo] = {}
         self._last_triggered: Dict[Template, datetime] = {}
+        self._deferred_timers: Dict[Template, asyncio.TimerHandle] = {}
         self._info: Dict[Template, RenderInfo] = {}
 
         self._last_domains: Set = set()
@@ -655,6 +656,13 @@ class _TrackTemplateResultInfo:
         self._listeners.pop(listener_name)()
 
     @callback
+    def _cancel_timer(self, template: Template) -> None:
+        if template not in self._deferred_timers:
+            return
+
+        self._deferred_timers.pop(template).cancel()
+
+    @callback
     def _update_listeners(self) -> None:
         had_all_listener = _TEMPLATE_ALL_LISTENER in self._listeners
 
@@ -721,6 +729,9 @@ class _TrackTemplateResultInfo:
         self._cancel_listener(_TEMPLATE_ALL_LISTENER)
         self._cancel_listener(_TEMPLATE_DOMAINS_LISTENER)
         self._cancel_listener(_TEMPLATE_ENTITIES_LISTENER)
+        for track_template_ in self._track_templates:
+            template = track_template_.template
+            self._cancel_timer(template)
 
     @callback
     def async_refresh(self) -> None:
@@ -728,14 +739,53 @@ class _TrackTemplateResultInfo:
         self._refresh(None, bypass_rate_limit=True)
 
     @callback
-    def _refresh(self, event: Optional[Event], bypass_rate_limit: bool = False) -> None:
+    def _handle_rate_limit(
+        self,
+        track_template_: TrackTemplate,
+        event: Optional[Event],
+        now: datetime,
+    ) -> bool:
+        template = track_template_.template
+        rate_limit = self._last_info[template].rate_limit or track_template_.rate_limit
+        if not rate_limit:
+            self._cancel_timer(template)
+            return False
+
+        next_allowed_fire_time = self._last_triggered[template] + rate_limit
+
+        if next_allowed_fire_time <= now:
+            self._cancel_timer(template)
+            return False
+
+        _LOGGER.debug(
+            "Template update %s deferred by rate_limit: %s to %s",
+            template.template,
+            rate_limit,
+            next_allowed_fire_time,
+        )
+
+        if template not in self._deferred_timers:
+            delay = (next_allowed_fire_time - now).total_seconds()
+            self._deferred_timers[template] = self.hass.loop.call_later(
+                delay,
+                lambda: self._refresh(event),
+            )
+
+        return True
+
+    @callback
+    def _refresh(
+        self,
+        event: Optional[Event],
+        bypass_rate_limit: bool = False,
+    ) -> None:
         entity_id = event and event.data.get(ATTR_ENTITY_ID)
         lifecycle_event = event and (
             event.data.get("new_state") is None or event.data.get("old_state") is None
         )
         updates = []
         info_changed = False
-        time_fired = (event and event.time_fired) or dt_util.utcnow()
+        now = dt_util.utcnow()
 
         for track_template_ in self._track_templates:
             template = track_template_.template
@@ -749,23 +799,19 @@ class _TrackTemplateResultInfo:
             ):
                 continue
 
-            _LOGGER.debug(
-                "Template update %s triggered by event: %s",
-                template.template,
-                event,
-            )
-            rate_limit = not bypass_rate_limit and (
-                self._last_info[template].rate_limit or track_template_.rate_limit
-            )
-            if rate_limit and self._last_triggered[template] + rate_limit > time_fired:
+            if event:
                 _LOGGER.debug(
-                    "Template update %s ratelimited by rate_limit: %s",
+                    "Template update %s triggered by event: %s",
                     template.template,
-                    rate_limit,
+                    event,
                 )
+
+            if not bypass_rate_limit and self._handle_rate_limit(
+                track_template_, event, now
+            ):
                 continue
 
-            self._last_triggered[template] = time_fired
+            self._last_triggered[template] = now
             self._info[template] = template.async_render_to_info(
                 track_template_.variables
             )
