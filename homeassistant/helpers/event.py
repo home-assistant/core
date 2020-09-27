@@ -750,13 +750,11 @@ class _TrackTemplateResultInfo:
         """
         template = track_template_.template
         rate_limit = self._last_info[template].rate_limit or track_template_.rate_limit
-        if not rate_limit:
+
+        if not rate_limit or template not in self._last_rendered:
             return False
 
-        if template not in self._last_rendered:
-            next_render_time = now
-        else:
-            next_render_time = self._last_rendered[template] + rate_limit
+        next_render_time = self._last_rendered[template] + rate_limit
 
         if next_render_time <= now:
             self._cancel_rate_limit_timer(template)
