@@ -14,6 +14,51 @@ from . import ShellyDeviceWrapper
 from .const import DATA_CONFIG_ENTRY, DOMAIN
 from .utils import get_entity_name
 
+
+def temperature_unit(block_info: dict) -> str:
+    """Detect temperature unit."""
+    if block_info[aioshelly.BLOCK_VALUE_UNIT] == "F":
+        return TEMP_FAHRENHEIT
+    return TEMP_CELSIUS
+
+
+def shelly_naming(self, block, entity_type: str):
+    """Naming for switch and sensors."""
+
+    entity_name = self.wrapper.name
+    if not block:
+        return f"{entity_name} {self.description.name}"
+
+    channels = 0
+    mode = block.type + "s"
+    if "num_outputs" in self.wrapper.device.shelly:
+        channels = self.wrapper.device.shelly["num_outputs"]
+        if (
+            self.wrapper.model in ["SHSW-21", "SHSW-25"]
+            and self.wrapper.device.settings["mode"] == "roller"
+        ):
+            channels = 1
+        if block.type == "emeter" and "num_emeters" in self.wrapper.device.shelly:
+            channels = self.wrapper.device.shelly["num_emeters"]
+    if channels > 1 and block.type != "device":
+        # Shelly EM (SHEM) with firmware v1.8.1 doesn't have "name" key; will be fixed in next firmware release
+        if "name" in self.wrapper.device.settings[mode][int(block.channel)]:
+            entity_name = self.wrapper.device.settings[mode][int(block.channel)]["name"]
+        else:
+            entity_name = None
+        if not entity_name:
+            if self.wrapper.model == "SHEM-3":
+                base = ord("A")
+            else:
+                base = ord("1")
+            entity_name = f"{self.wrapper.name} channel {chr(int(block.channel)+base)}"
+    if entity_type == "switch":
+        return entity_name
+    if entity_type == "sensor":
+        return f"{entity_name} {self.description.name}"
+    raise ValueError
+
+
 def shelly_rest_parser(self, path: str):
     """Parser for REST path from device status."""
 
@@ -253,7 +298,7 @@ class ShellyRestAttributeEntity(entity.Entity):
         self.description = description
 
         self._unit = self.description.unit
-        self._name = f"{self.wrapper.name} {self.description.name}"
+        self._name = shelly_naming(self, None, "sensor")
         self.path = self.description.path
         self._attributes = self.description.attributes
 
