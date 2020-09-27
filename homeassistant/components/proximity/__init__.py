@@ -9,13 +9,10 @@ from homeassistant.const import (
     CONF_DEVICES,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_ZONE,
-    LENGTH_CENTIMETERS,
     LENGTH_FEET,
-    LENGTH_INCHES,
     LENGTH_KILOMETERS,
     LENGTH_METERS,
     LENGTH_MILES,
-    LENGTH_MILLIMETERS,
     LENGTH_YARD,
 )
 import homeassistant.helpers.config_validation as cv
@@ -43,11 +40,8 @@ DEFAULT_TOLERANCE = 1
 DOMAIN = "proximity"
 
 UNITS = [
-    LENGTH_MILLIMETERS,
-    LENGTH_CENTIMETERS,
     LENGTH_METERS,
     LENGTH_KILOMETERS,
-    LENGTH_INCHES,
     LENGTH_FEET,
     LENGTH_YARD,
     LENGTH_MILES,
