@@ -66,7 +66,10 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data = {CONF_HOST: host, CONF_PORT: port}
                 if ca_cert != "":
                     data[CONF_CA_CERT] = ca_cert
-                return self.async_create_entry(title=title, data=data,)
+                return self.async_create_entry(
+                    title=title,
+                    data=data,
+                )
             if (  # pylint: disable=no-member
                 self.context["source"] == config_entries.SOURCE_IMPORT
             ):
