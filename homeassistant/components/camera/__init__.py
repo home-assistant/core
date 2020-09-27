@@ -19,6 +19,7 @@ from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
+    ATTR_MEDIA_EXTRA,
     DOMAIN as DOMAIN_MP,
     SERVICE_PLAY_MEDIA,
 )
@@ -715,9 +716,11 @@ async def async_handle_play_stream_service(camera, service_call):
             {
                 ATTR_ENTITY_ID: cast_entity_ids,
                 **data,
-                "stream_type": "LIVE",
-                "media_info": {
-                    "hlsVideoSegmentFormat": "fmp4",
+                ATTR_MEDIA_EXTRA: {
+                    "stream_type": "LIVE",
+                    "media_info": {
+                        "hlsVideoSegmentFormat": "fmp4",
+                    },
                 },
             },
             blocking=True,

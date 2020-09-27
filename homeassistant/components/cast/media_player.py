@@ -574,7 +574,9 @@ class CastDevice(MediaPlayerEntity):
             except NotImplementedError:
                 _LOGGER.error("App %s not supported", app_name)
         else:
-            self._chromecast.media_controller.play_media(media_id, media_type, **kwargs)
+            self._chromecast.media_controller.play_media(
+                media_id, media_type, **kwargs["extra"]
+            )
 
     # ========== Properties ==========
     @property
