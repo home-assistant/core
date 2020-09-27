@@ -566,7 +566,6 @@ class _TrackTemplateResultInfo:
         self._last_rendered: Dict[Template, datetime] = {}
         self._rate_limit_timers: Dict[Template, asyncio.TimerHandle] = {}
         self._info: Dict[Template, RenderInfo] = {}
-
         self._last_domains: Set = set()
         self._last_entities: Set = set()
 
