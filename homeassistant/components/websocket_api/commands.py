@@ -249,6 +249,7 @@ def handle_ping(hass, connection, msg):
         vol.Optional("variables"): dict,
     }
 )
+@decorators.async_response
 async def handle_render_template(hass, connection, msg):
     """Handle render_template command."""
     template_str = msg["template"]

@@ -344,7 +344,8 @@ class Template:
                 compiled.render(kwargs)
             except TimeoutError:
                 pass
-            run_callback_threadsafe(self.hass.loop, finish_event.set).result()
+            finally:
+                run_callback_threadsafe(self.hass.loop, finish_event.set)
 
         try:
             template_render_thread = ThreadWithException(target=_render_template)
