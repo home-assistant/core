@@ -123,13 +123,13 @@ async def async_setup(hass, config):
     return True
 
 
-class LcnDevice(Entity):
+class LcnEntity(Entity):
     """Parent class for all devices associated with the LCN component."""
 
-    def __init__(self, config, address_connection):
+    def __init__(self, config, device_connection):
         """Initialize the LCN device."""
         self.config = config
-        self.address_connection = address_connection
+        self.device_connection = device_connection
         self._name = config[CONF_NAME]
 
     @property
@@ -139,7 +139,7 @@ class LcnDevice(Entity):
 
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
-        self.address_connection.register_for_inputs(self.input_received)
+        self.device_connection.register_for_inputs(self.input_received)
 
     @property
     def name(self):
@@ -148,4 +148,3 @@ class LcnDevice(Entity):
 
     def input_received(self, input_obj):
         """Set state/value when LCN input object (command) is received."""
-        raise NotImplementedError("Pure virtual function.")
