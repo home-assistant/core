@@ -1259,6 +1259,109 @@ async def test_static_string(hass):
     assert refresh_runs == ["static"]
 
 
+async def test_track_template_rate_limit(hass):
+    """Test template rate limit."""
+    template_refresh = Template("{{ states | count }}", hass)
+
+    refresh_runs = []
+
+    @ha.callback
+    def refresh_listener(event, updates):
+        refresh_runs.append(updates.pop().result)
+
+    info = async_track_template_result(
+        hass,
+        [TrackTemplate(template_refresh, None, timedelta(seconds=0.25))],
+        refresh_listener,
+    )
+    await hass.async_block_till_done()
+    info.async_refresh()
+    await hass.async_block_till_done()
+
+    assert refresh_runs == ["0"]
+    hass.states.async_set("sensor.one", "any")
+    await hass.async_block_till_done()
+    assert refresh_runs == ["0"]
+    info.async_refresh()
+    assert refresh_runs == ["0", "1"]
+    hass.states.async_set("sensor.two", "any")
+    await hass.async_block_till_done()
+    assert refresh_runs == ["0", "1"]
+    await asyncio.sleep(0.5)
+    hass.states.async_set("sensor.three", "any")
+    await hass.async_block_till_done()
+    assert refresh_runs == ["0", "1", "3"]
+
+
+async def test_track_template_rate_limit_overridden(hass):
+    """Test template rate limit can be overridden from the template."""
+    template_refresh = Template(
+        "{% set x = rate_limit(seconds=0.25) %}{{ states | count }}", hass
+    )
+
+    refresh_runs = []
+
+    @ha.callback
+    def refresh_listener(event, updates):
+        refresh_runs.append(updates.pop().result)
+
+    info = async_track_template_result(
+        hass,
+        [TrackTemplate(template_refresh, None, timedelta(seconds=5))],
+        refresh_listener,
+    )
+    await hass.async_block_till_done()
+    info.async_refresh()
+    await hass.async_block_till_done()
+
+    assert refresh_runs == ["0"]
+    hass.states.async_set("sensor.one", "any")
+    await hass.async_block_till_done()
+    assert refresh_runs == ["0"]
+    info.async_refresh()
+    assert refresh_runs == ["0", "1"]
+    hass.states.async_set("sensor.two", "any")
+    await hass.async_block_till_done()
+    assert refresh_runs == ["0", "1"]
+    await asyncio.sleep(0.5)
+    hass.states.async_set("sensor.three", "any")
+    await hass.async_block_till_done()
+    assert refresh_runs == ["0", "1", "3"]
+
+
+async def test_track_template_rate_limit_five(hass):
+    """Test template rate limit of 5 seconds."""
+    template_refresh = Template("{{ states | count }}", hass)
+
+    refresh_runs = []
+
+    @ha.callback
+    def refresh_listener(event, updates):
+        refresh_runs.append(updates.pop().result)
+
+    info = async_track_template_result(
+        hass,
+        [TrackTemplate(template_refresh, None, timedelta(seconds=5))],
+        refresh_listener,
+    )
+    await hass.async_block_till_done()
+    info.async_refresh()
+    await hass.async_block_till_done()
+
+    assert refresh_runs == ["0"]
+    hass.states.async_set("sensor.one", "any")
+    await hass.async_block_till_done()
+    assert refresh_runs == ["0"]
+    info.async_refresh()
+    assert refresh_runs == ["0", "1"]
+    hass.states.async_set("sensor.two", "any")
+    await hass.async_block_till_done()
+    assert refresh_runs == ["0", "1"]
+    hass.states.async_set("sensor.three", "any")
+    await hass.async_block_till_done()
+    assert refresh_runs == ["0", "1"]
+
+
 async def test_string(hass):
     """Test a string."""
     template_refresh = Template("no_template", hass)
