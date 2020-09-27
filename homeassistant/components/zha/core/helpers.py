@@ -240,7 +240,7 @@ QR_CODES = (
 )
 
 
-def qr_to_install_code(qr_code: str) -> Tuple[zigpy.types.EUI64, str]:
+def qr_to_install_code(qr_code: str) -> Tuple[zigpy.types.EUI64, bytes]:
     """Try to parse the QR code.
 
     if successful, return a tuple of a EUI64 address and install code.
@@ -254,7 +254,7 @@ def qr_to_install_code(qr_code: str) -> Tuple[zigpy.types.EUI64, str]:
         ieee = zigpy.types.EUI64.convert(match[1])
         install_code = match[2]
         # install_code sanity check
-        convert_install_code(install_code)
+        install_code = convert_install_code(install_code)
         return ieee, install_code
 
     raise vol.Invalid(f"couldn't convert qr code: {qr_code}")

@@ -832,6 +832,15 @@ def async_load_api(hass):
         """Allow devices to join this network."""
         duration = service.data.get(ATTR_DURATION)
         ieee = service.data.get(ATTR_IEEE_ADDRESS)
+        if ATTR_SOURCE_IEEE in service.data:
+            src_ieee = service.data[ATTR_SOURCE_IEEE]
+            code = service.data[ATTR_INSTALL_CODE]
+            _LOGGER.info("Allowing join for %s device with install code", src_ieee)
+            await application_controller.permit_with_key(
+                time_s=duration, node=src_ieee, code=code
+            )
+            return
+
         if ieee:
             _LOGGER.info("Permitting joins for %ss on %s device", duration, ieee)
         else:

@@ -1,13 +1,24 @@
 """Test ZHA API."""
+from binascii import unhexlify
 
 import pytest
+import voluptuous as vol
 import zigpy.profiles.zha
 import zigpy.types
 import zigpy.zcl.clusters.general as general
 
 from homeassistant.components.websocket_api import const
 from homeassistant.components.zha import DOMAIN
-from homeassistant.components.zha.api import ID, SERVICE_PERMIT, TYPE, async_load_api
+from homeassistant.components.zha.api import (
+    ATTR_DURATION,
+    ATTR_IEEE_ADDRESS,
+    ATTR_INSTALL_CODE,
+    ATTR_SOURCE_IEEE,
+    ID,
+    SERVICE_PERMIT,
+    TYPE,
+    async_load_api,
+)
 from homeassistant.components.zha.core.const import (
     ATTR_CLUSTER_ID,
     ATTR_CLUSTER_TYPE,
@@ -28,7 +39,7 @@ from homeassistant.core import Context
 
 from .conftest import FIXTURE_GRP_ID, FIXTURE_GRP_NAME
 
-from tests.async_mock import patch
+from tests.async_mock import AsyncMock, patch
 
 IEEE_SWITCH_DEVICE = "01:2d:6f:00:0a:90:69:e7"
 IEEE_GROUPABLE_DEVICE = "01:2d:6f:00:0a:90:69:e8"
@@ -350,7 +361,7 @@ async def app_controller(hass, setup_zha):
     await setup_zha()
     controller = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY].application_controller
     p1 = patch.object(controller, "permit")
-    p2 = patch.object(controller, "permit_with_key")
+    p2 = patch.object(controller, "permit_with_key", new=AsyncMock())
     with p1, p2:
         yield controller
 
@@ -359,14 +370,14 @@ async def app_controller(hass, setup_zha):
     "params, duration, node",
     (
         ({}, 60, None),
-        ({"duration": 30}, 30, None),
+        ({ATTR_DURATION: 30}, 30, None),
         (
-            {"duration": 33, "ieee_address": "aa:bb:cc:dd:aa:bb:cc:dd"},
+            {ATTR_DURATION: 33, ATTR_IEEE_ADDRESS: "aa:bb:cc:dd:aa:bb:cc:dd"},
             33,
             zigpy.types.EUI64.convert("aa:bb:cc:dd:aa:bb:cc:dd"),
         ),
         (
-            {"ieee_address": "aa:bb:cc:dd:aa:bb:cc:d1"},
+            {ATTR_IEEE_ADDRESS: "aa:bb:cc:dd:aa:bb:cc:d1"},
             60,
             zigpy.types.EUI64.convert("aa:bb:cc:dd:aa:bb:cc:d1"),
         ),
@@ -383,4 +394,56 @@ async def test_permit_ha12(
     assert app_controller.permit.await_count == 1
     assert app_controller.permit.await_args[1]["time_s"] == duration
     assert app_controller.permit.await_args[1]["node"] == node
+    assert app_controller.permit_with_key.call_count == 0
+
+
+@pytest.mark.parametrize(
+    "params, src_ieee, code",
+    (
+        (
+            {
+                ATTR_SOURCE_IEEE: IEEE_SWITCH_DEVICE,
+                ATTR_INSTALL_CODE: "5279-7BF4-A508-4DAA-8E17-12B6-1741-CA02-4051",
+            },
+            zigpy.types.EUI64.convert(IEEE_SWITCH_DEVICE),
+            unhexlify("52797BF4A5084DAA8E1712B61741CA024051"),
+        ),
+    ),
+)
+async def test_permit_with_install_code(
+    hass, app_controller, hass_admin_user, params, src_ieee, code
+):
+    """Test permit service with install code."""
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_PERMIT, params, True, Context(user_id=hass_admin_user.id)
+    )
+    assert app_controller.permit.await_count == 0
+    assert app_controller.permit_with_key.call_count == 1
+    assert app_controller.permit_with_key.await_args[1]["time_s"] == 60
+    assert app_controller.permit_with_key.await_args[1]["node"] == src_ieee
+    assert app_controller.permit_with_key.await_args[1]["code"] == code
+
+
+@pytest.mark.parametrize(
+    "params",
+    (
+        {
+            ATTR_SOURCE_IEEE: IEEE_SWITCH_DEVICE,
+            ATTR_INSTALL_CODE: "5279-7BF4-A508-4DAA-8E17-12B6-1741-CA02-4052",
+        },
+        {ATTR_INSTALL_CODE: "5279-7BF4-A508-4DAA-8E17-12B6-1741-CA02-4051"},
+        {ATTR_SOURCE_IEEE: IEEE_SWITCH_DEVICE},
+    ),
+)
+async def test_permit_with_install_code_fail(
+    hass, app_controller, hass_admin_user, params
+):
+    """Test permit service with install code."""
+
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            DOMAIN, SERVICE_PERMIT, params, True, Context(user_id=hass_admin_user.id)
+        )
+    assert app_controller.permit.await_count == 0
     assert app_controller.permit_with_key.call_count == 0
