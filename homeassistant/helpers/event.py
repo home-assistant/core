@@ -562,7 +562,6 @@ class _TrackTemplateResultInfo:
         self._listeners: Dict[str, Callable] = {}
 
         self._last_result: Dict[Template, Union[str, TemplateError]] = {}
-        self._last_info: Dict[Template, RenderInfo] = {}
         self._last_rendered: Dict[Template, datetime] = {}
         self._rate_limit_timers: Dict[Template, asyncio.TimerHandle] = {}
         self._info: Dict[Template, RenderInfo] = {}
@@ -585,7 +584,6 @@ class _TrackTemplateResultInfo:
                     exc_info=self._info[template].exception,
                 )
 
-        self._last_info = self._info.copy()
         self._create_listeners()
         _LOGGER.debug(
             "Template group %s listens for %s",
@@ -749,7 +747,7 @@ class _TrackTemplateResultInfo:
         Returns True if the rate limit has been hit or False on miss.
         """
         template = track_template_.template
-        rate_limit = self._last_info[template].rate_limit or track_template_.rate_limit
+        rate_limit = self._info[template].rate_limit or track_template_.rate_limit
 
         if not rate_limit or template not in self._last_rendered:
             return False
@@ -782,10 +780,10 @@ class _TrackTemplateResultInfo:
         """Determine if a template should be re-rendered from an event."""
         entity_id = event.data.get(ATTR_ENTITY_ID)
         return (
-            self._last_info[template].filter(entity_id)
+            self._info[template].filter(entity_id)
             or event.data.get("new_state") is None
             or event.data.get("old_state") is None
-            and self._last_info[template].filter_lifecycle(entity_id)
+            and self._info[template].filter_lifecycle(entity_id)
         )
 
     @callback
@@ -845,7 +843,6 @@ class _TrackTemplateResultInfo:
                 self._track_templates,
                 self.listeners,
             )
-            self._last_info = self._info.copy()
 
         if not updates:
             return
