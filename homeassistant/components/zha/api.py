@@ -841,6 +841,14 @@ def async_load_api(hass):
             )
             return
 
+        if ATTR_QR_CODE in service.data:
+            src_ieee, code = service.data[ATTR_QR_CODE]
+            _LOGGER.info("Allowing join for %s device with install code", src_ieee)
+            await application_controller.permit_with_key(
+                time_s=duration, node=src_ieee, code=code
+            )
+            return
+
         if ieee:
             _LOGGER.info("Permitting joins for %ss on %s device", duration, ieee)
         else:

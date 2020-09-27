@@ -13,6 +13,7 @@ from homeassistant.components.zha.api import (
     ATTR_DURATION,
     ATTR_IEEE_ADDRESS,
     ATTR_INSTALL_CODE,
+    ATTR_QR_CODE,
     ATTR_SOURCE_IEEE,
     ID,
     SERVICE_PERMIT,
@@ -447,3 +448,28 @@ async def test_permit_with_install_code_fail(
         )
     assert app_controller.permit.await_count == 0
     assert app_controller.permit_with_key.call_count == 0
+
+
+@pytest.mark.parametrize(
+    "params, src_ieee, code",
+    (
+        (
+            {ATTR_QR_CODE: "Z:000D6FFFFED4163B$I:52797BF4A5084DAA8E1712B61741CA024051"},
+            zigpy.types.EUI64.convert("00:0D:6F:FF:FE:D4:16:3B"),
+            unhexlify("52797BF4A5084DAA8E1712B61741CA024051"),
+        ),
+    ),
+)
+async def test_permit_with_qr_code(
+    hass, app_controller, hass_admin_user, params, src_ieee, code
+):
+    """Test permit service with install code from qr code."""
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_PERMIT, params, True, Context(user_id=hass_admin_user.id)
+    )
+    assert app_controller.permit.await_count == 0
+    assert app_controller.permit_with_key.call_count == 1
+    assert app_controller.permit_with_key.await_args[1]["time_s"] == 60
+    assert app_controller.permit_with_key.await_args[1]["node"] == src_ieee
+    assert app_controller.permit_with_key.await_args[1]["code"] == code
