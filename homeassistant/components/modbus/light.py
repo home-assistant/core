@@ -1,81 +1,139 @@
 """Support for Modbus lights."""
+from datetime import timedelta
 import logging
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
-import voluptuous as vol
+from homeassistant.components.light import LightEntity
+from homeassistant.const import CONF_LIGHTS, CONF_NAME, CONF_SCAN_INTERVAL
+from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.typing import (
+    ConfigType,
+    DiscoveryInfoType,
+    HomeAssistantType,
+)
 
-from homeassistant.components.light import PLATFORM_SCHEMA, LightEntity
-from homeassistant.const import CONF_COMMAND_OFF, CONF_COMMAND_ON, CONF_NAME, CONF_SLAVE
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
-
+from . import ModbusHub
 from .const import (
     CALL_TYPE_COIL,
     CALL_TYPE_REGISTER_HOLDING,
-    CONF_COILS,
-    CONF_HUB,
     CONF_REGISTER,
     CONF_REGISTER_TYPE,
-    CONF_REGISTERS,
-    CONF_VERIFY_STATE,
-    DEFAULT_HUB,
+    MODBUS_DOMAIN,
 )
 from .switch import ModbusCoilSwitch, ModbusRegisterSwitch
 
 _LOGGER = logging.getLogger(__name__)
 
-REGISTERS_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_NAME): cv.string,
-        vol.Required(CONF_REGISTER): cv.positive_int,
-        vol.Optional(CONF_COMMAND_OFF, default=0): cv.positive_int,
-        vol.Optional(CONF_COMMAND_ON, default=1): cv.positive_int,
-        vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
-        vol.Optional(CONF_SLAVE): cv.positive_int,
-        vol.Optional(CONF_VERIFY_STATE, default=True): cv.boolean,
-    }
-)
-
-COILS_SCHEMA = vol.Schema(
-    {
-        vol.Required(CALL_TYPE_COIL): cv.positive_int,
-        vol.Required(CONF_NAME): cv.string,
-        vol.Required(CONF_SLAVE): cv.positive_int,
-        vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
-    }
-)
-
-PLATFORM_SCHEMA = vol.All(
-    cv.has_at_least_one_key(CONF_COILS, CONF_REGISTERS),
-    PLATFORM_SCHEMA.extend(
-        {
-            vol.Optional(CONF_COILS): [COILS_SCHEMA],
-            vol.Optional(CONF_REGISTERS): [REGISTERS_SCHEMA],
-        }
-    ),
-)
-
 
 async def async_setup_platform(
-    hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
+    hass: HomeAssistantType,
+    config: ConfigType,
+    async_add_entities,
+    discovery_info: Optional[DiscoveryInfoType] = None,
 ):
-    """Read configuration and create Modbus lights."""
-    if CONF_COILS in config:
-        for coil in config[CONF_COILS]:
-            async_add_entities([ModbusCoilLight(hass, coil)])
-    if CONF_REGISTERS in config:
-        for register in config[CONF_REGISTERS]:
-            async_add_entities([ModbusRegisterLight(hass, register)])
+    """Read configuration and create Modbus light."""
+    if discovery_info is None:
+        return
+
+    lights = []
+    for light in discovery_info[CONF_LIGHTS]:
+        hub: ModbusHub = hass.data[MODBUS_DOMAIN][discovery_info[CONF_NAME]]
+
+        if CALL_TYPE_COIL in light:
+            lights.append(ModbusCoilLight(hub, light))
+
+        if CONF_REGISTER in light:
+            lights.append(ModbusRegisterLight(hub, light))
+
+    async_add_entities(lights)
 
 
 class ModbusCoilLight(ModbusCoilSwitch, LightEntity):
     """Representation of a Modbus coil light."""
 
+    def __init__(self, hub: ModbusHub, config: Dict[str, Any]):
+        """Initialize the coil fan."""
+        super().__init__(hub, config)
+        self._scan_interval = timedelta(seconds=config[CONF_SCAN_INTERVAL])
+
+    async def async_added_to_hass(self):
+        """Handle entity which will be added."""
+        state = await self.async_get_last_state()
+        if not state:
+            return
+        self._is_on = state.state
+
+        async_track_time_interval(
+            self.hass, lambda arg: self._update(), self._scan_interval
+        )
+
+    @property
+    def should_poll(self):
+        """Return True if entity has to be polled for state.
+
+        False if entity pushes its state to HA.
+        """
+
+        # Handle polling directly in this entity
+        return False
+
+    def turn_on(self, **kwargs):
+        """Turn on the light."""
+        super().turn_on(**kwargs)
+        self.schedule_update_ha_state()
+
+    def turn_off(self, **kwargs):
+        """Turn off the light."""
+        super().turn_off(**kwargs)
+        self.schedule_update_ha_state()
+
+    def _update(self):
+        """Update the state of the light."""
+        super().update()
+        self.schedule_update_ha_state()
+
 
 class ModbusRegisterLight(ModbusRegisterSwitch, LightEntity):
     """Representation of a Modbus register light."""
 
-    def __init__(self, hass: HomeAssistantType, config: Dict[str, Any]):
+    def __init__(self, hub: ModbusHub, config: Dict[str, Any]):
         """Initialize the register fan."""
         config[CONF_REGISTER_TYPE] = CALL_TYPE_REGISTER_HOLDING
-        super().__init__(hass, config)
+        super().__init__(hub, config)
+        self._scan_interval = timedelta(seconds=config[CONF_SCAN_INTERVAL])
+
+    async def async_added_to_hass(self):
+        """Handle entity which will be added."""
+        state = await self.async_get_last_state()
+        if not state:
+            return
+        self._is_on = state.state
+
+        async_track_time_interval(
+            self.hass, lambda arg: self._update(), self._scan_interval
+        )
+
+    @property
+    def should_poll(self):
+        """Return True if entity has to be polled for state.
+
+        False if entity pushes its state to HA.
+        """
+
+        # Handle polling directly in this entity
+        return False
+
+    def turn_on(self, **kwargs):
+        """Turn on the light."""
+        super().turn_on(**kwargs)
+        self.schedule_update_ha_state()
+
+    def turn_off(self, **kwargs):
+        """Turn off the light."""
+        super().turn_off(**kwargs)
+        self.schedule_update_ha_state()
+
+    def _update(self):
+        """Update the state of the light."""
+        super().update()
+        self.schedule_update_ha_state()

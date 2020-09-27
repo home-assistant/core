@@ -85,18 +85,20 @@ async def async_setup_platform(
     """Read configuration and create Modbus switches."""
     if CONF_COILS in config:
         for coil in config[CONF_COILS]:
-            async_add_entities([ModbusCoilSwitch(hass, coil)])
+            hub: ModbusHub = hass.data[MODBUS_DOMAIN][config[CONF_HUB]]
+            async_add_entities([ModbusCoilSwitch(hub, coil)])
     if CONF_REGISTERS in config:
         for register in config[CONF_REGISTERS]:
-            async_add_entities([ModbusRegisterSwitch(hass, register)])
+            hub: ModbusHub = hass.data[MODBUS_DOMAIN][config[CONF_HUB]]
+            async_add_entities([ModbusRegisterSwitch(hub, register)])
 
 
 class ModbusBaseSwitch(ToggleEntity, RestoreEntity, ABC):
     """Base class representing a Modbus switch."""
 
-    def __init__(self, hass: HomeAssistantType, config: Dict[str, Any]):
+    def __init__(self, hub: ModbusHub, config: Dict[str, Any]):
         """Initialize the switch."""
-        self._hub: ModbusHub = hass.data[MODBUS_DOMAIN][config[CONF_HUB]]
+        self._hub: ModbusHub = hub
         self._name = config[CONF_NAME]
         self._slave = config.get(CONF_SLAVE)
         self._is_on = None
@@ -128,9 +130,9 @@ class ModbusBaseSwitch(ToggleEntity, RestoreEntity, ABC):
 class ModbusCoilSwitch(ModbusBaseSwitch):
     """Representation of a Modbus coil switch."""
 
-    def __init__(self, hass: HomeAssistantType, config: Dict[str, Any]):
+    def __init__(self, hub: ModbusHub, config: Dict[str, Any]):
         """Initialize the coil switch."""
-        super().__init__(hass, config)
+        super().__init__(hub, config)
         self._coil = config[CALL_TYPE_COIL]
 
     def turn_on(self, **kwargs):
@@ -177,9 +179,9 @@ class ModbusCoilSwitch(ModbusBaseSwitch):
 class ModbusRegisterSwitch(ModbusBaseSwitch):
     """Representation of a Modbus register switch."""
 
-    def __init__(self, hass: HomeAssistantType, config: Dict[str, Any]):
+    def __init__(self, hub: ModbusHub, config: Dict[str, Any]):
         """Initialize the register switch."""
-        super().__init__(hass, config)
+        super().__init__(hub, config)
         self._register = config[CONF_REGISTER]
         self._command_on = config[CONF_COMMAND_ON]
         self._command_off = config[CONF_COMMAND_OFF]
