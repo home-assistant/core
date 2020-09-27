@@ -546,9 +546,10 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         HA polls the light before the light is 100% off. This might trigger
         a rapid switch 'off' → 'on' → 'off'. To prevent this component
         from interfering on the 'on' state, we make sure to wait at least
-        TURNING_OFF_DELAY between a 'off' → 'on' event and then check
-        whether the light is still 'on'. Only if it is still 'on' we adjust
-        the lights.
+        TURNING_OFF_DELAY (or the 'turn_off' transition time) between a
+        'off' → 'on' event and then check whether the light is still 'on' or
+        if the brightness is still decreasing. Only if it is the case we
+        adjust the lights.
         """
         ts_on_to_off, id_on_to_off = self._on_to_off_event.get(entity_id, (0, None))
         id_turn_off, transition = self._turn_off_service_event.get(
@@ -610,6 +611,14 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
                 if not brightness_going_down:
                     break
                 delay = TURNING_OFF_DELAY
+
+            if transition is not None:
+                # Always ignore when there's a transition
+                # TODO: I am doing this because it seems like HA cannot detect
+                # whether a light is transitioning into 'off'. Because in my
+                # tests `brightness_going_down == False` even when it is actually
+                # still going down... Needs some discussion.
+                return True
 
             if not is_on(self.hass, entity_id):
                 return True
