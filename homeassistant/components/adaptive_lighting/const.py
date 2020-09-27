@@ -46,9 +46,9 @@ CONF_ON_LIGHTS_ONLY = "on_lights_only"
 TURNING_OFF_DELAY = 5
 
 
-def int_between(a, b):
-    """Return an integer between 'a' and 'b'."""
-    return vol.All(vol.Coerce(int), vol.Range(min=a, max=b))
+def int_between(min_int, max_int):
+    """Return an integer between 'min_int' and 'max_int'."""
+    return vol.All(vol.Coerce(int), vol.Range(min=min_int, max=max_int))
 
 
 VALIDATION_TUPLES = [

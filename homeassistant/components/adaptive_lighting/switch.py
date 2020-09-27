@@ -114,7 +114,7 @@ async def handle_apply(switch, service_call):
         raise ValueError("Apply can only be called for a AdaptiveSwitch.")
     data = service_call.data
     tasks = [
-        await switch._adjust_light(
+        await switch._adjust_light(  # pylint: disable=protected-access
             light,
             data[CONF_TRANSITION],
             data[CONF_COLORS_ONLY],
@@ -141,7 +141,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         {
             vol.Required(CONF_LIGHTS): cv.entity_ids,
             vol.Optional(
-                CONF_TRANSITION, default=switch._initial_transition
+                CONF_TRANSITION,
+                default=switch._initial_transition,  # pylint: disable=protected-access
             ): VALID_TRANSITION,
             vol.Optional(CONF_COLORS_ONLY, default=False): cv.boolean,
             vol.Optional(CONF_ON_LIGHTS_ONLY, default=False): cv.boolean,
@@ -158,10 +159,10 @@ def validate(config_entry):
     data.update(config_entry.options)  # come from options flow
     data.update(config_entry.data)  # all yaml settings come from data
     data = {key: replace_none_str(value) for key, value in data.items()}
-    for key, (validate, _) in EXTRA_VALIDATION.items():
+    for key, (validate_value, _) in EXTRA_VALIDATION.items():
         value = data.get(key)
         if value is not None:
-            data[key] = validate(value)  # Fix the types of the inputs
+            data[key] = validate_value(value)  # Fix the types of the inputs
     return data
 
 
@@ -258,7 +259,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
                 all_lights.append(light)
             elif "entity_id" in state.attributes:  # it's a light group
                 group = state.attributes["entity_id"]
-                self.debug("Unpacked %s to %s", group)
+                _LOGGER.debug("Unpacked %s to %s", lights, group)
                 all_lights.extend(group)
             else:
                 all_lights.append(light)
@@ -310,7 +311,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
             "hs_color": self._hs_color,
         }
         if not self.is_on:
-            return {key: None for key in attrs.keys()}
+            return {key: None for key in attrs}
         return attrs
 
     async def async_turn_on(self, **kwargs):
@@ -405,8 +406,8 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         now = dt_util.utcnow()
         now_ts = now.timestamp()
         today = self._relevant_events(now)
-        (prev_event, prev_ts), (next_event, next_ts) = today
-        h, x = (
+        (_, prev_ts), (next_event, next_ts) = today
+        h, x = (  # pylint: disable=invalid-name
             (prev_ts, next_ts)
             if next_event in (SUN_EVENT_SUNSET, SUN_EVENT_SUNRISE)
             else (next_ts, prev_ts)
@@ -558,10 +559,12 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
             # 'light.turn_off' event that is called with 'transition'.
             delay = TURNING_OFF_DELAY
 
-        dt = now_ts - ts_on_to_off
-        if dt < delay:
-            _LOGGER.debug("Waiting with adjusting '%s' for %s.", entity_id, delay - dt)
-            await asyncio.sleep(delay - dt)
+        delta_time = now_ts - ts_on_to_off
+        if delta_time < delay:
+            _LOGGER.debug(
+                "Waiting with adjusting '%s' for %s.", entity_id, delay - delta_time
+            )
+            await asyncio.sleep(delay - delta_time)
             await self.hass.services.async_call(
                 HA_DOMAIN,
                 SERVICE_UPDATE_ENTITY,

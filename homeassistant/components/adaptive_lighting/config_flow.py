@@ -7,7 +7,7 @@ from homeassistant import config_entries
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
-from .const import (
+from .const import (  # pylint: disable=unused-import
     CONF_DISABLE_ENTITY,
     CONF_LIGHTS,
     CONF_SLEEP_ENTITY,
