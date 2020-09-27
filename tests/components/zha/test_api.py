@@ -398,19 +398,27 @@ async def test_permit_ha12(
     assert app_controller.permit_with_key.call_count == 0
 
 
-@pytest.mark.parametrize(
-    "params, src_ieee, code",
+IC_TEST_PARAMS = (
     (
-        (
-            {
-                ATTR_SOURCE_IEEE: IEEE_SWITCH_DEVICE,
-                ATTR_INSTALL_CODE: "5279-7BF4-A508-4DAA-8E17-12B6-1741-CA02-4051",
-            },
-            zigpy.types.EUI64.convert(IEEE_SWITCH_DEVICE),
-            unhexlify("52797BF4A5084DAA8E1712B61741CA024051"),
-        ),
+        {
+            ATTR_SOURCE_IEEE: IEEE_SWITCH_DEVICE,
+            ATTR_INSTALL_CODE: "5279-7BF4-A508-4DAA-8E17-12B6-1741-CA02-4051",
+        },
+        zigpy.types.EUI64.convert(IEEE_SWITCH_DEVICE),
+        unhexlify("52797BF4A5084DAA8E1712B61741CA024051"),
+    ),
+    (
+        {
+            ATTR_SOURCE_IEEE: IEEE_SWITCH_DEVICE,
+            ATTR_INSTALL_CODE: "52797BF4A5084DAA8E1712B61741CA024051",
+        },
+        zigpy.types.EUI64.convert(IEEE_SWITCH_DEVICE),
+        unhexlify("52797BF4A5084DAA8E1712B61741CA024051"),
     ),
 )
+
+
+@pytest.mark.parametrize("params, src_ieee, code", IC_TEST_PARAMS)
 async def test_permit_with_install_code(
     hass, app_controller, hass_admin_user, params, src_ieee, code
 ):
@@ -426,8 +434,7 @@ async def test_permit_with_install_code(
     assert app_controller.permit_with_key.await_args[1]["code"] == code
 
 
-@pytest.mark.parametrize(
-    "params",
+IC_FAIL_PARAMS = (
     (
         {
             # wrong install code
@@ -462,6 +469,9 @@ async def test_permit_with_install_code(
         {ATTR_QR_CODE: "000D6FFFFED4163B|52797BF4A5084DAA8E1712B61741CA024052"},
     ),
 )
+
+
+@pytest.mark.parametrize("params", IC_FAIL_PARAMS)
 async def test_permit_with_install_code_fail(
     hass, app_controller, hass_admin_user, params
 ):
@@ -475,31 +485,31 @@ async def test_permit_with_install_code_fail(
     assert app_controller.permit_with_key.call_count == 0
 
 
-@pytest.mark.parametrize(
-    "params, src_ieee, code",
+IC_QR_CODE_TEST_PARAMS = (
     (
-        (
-            {ATTR_QR_CODE: "000D6FFFFED4163B|52797BF4A5084DAA8E1712B61741CA024051"},
-            zigpy.types.EUI64.convert("00:0D:6F:FF:FE:D4:16:3B"),
-            unhexlify("52797BF4A5084DAA8E1712B61741CA024051"),
-        ),
-        (
-            {ATTR_QR_CODE: "Z:000D6FFFFED4163B$I:52797BF4A5084DAA8E1712B61741CA024051"},
-            zigpy.types.EUI64.convert("00:0D:6F:FF:FE:D4:16:3B"),
-            unhexlify("52797BF4A5084DAA8E1712B61741CA024051"),
-        ),
-        (
-            {
-                ATTR_QR_CODE: (
-                    "G$M:751$S:357S00001579$D:000000000F350FFD%Z$A:04CF8CDF"
-                    "3C3C3C3C$I:52797BF4A5084DAA8E1712B61741CA024051"
-                )
-            },
-            zigpy.types.EUI64.convert("04:CF:8C:DF:3C:3C:3C:3C"),
-            unhexlify("52797BF4A5084DAA8E1712B61741CA024051"),
-        ),
+        {ATTR_QR_CODE: "000D6FFFFED4163B|52797BF4A5084DAA8E1712B61741CA024051"},
+        zigpy.types.EUI64.convert("00:0D:6F:FF:FE:D4:16:3B"),
+        unhexlify("52797BF4A5084DAA8E1712B61741CA024051"),
+    ),
+    (
+        {ATTR_QR_CODE: "Z:000D6FFFFED4163B$I:52797BF4A5084DAA8E1712B61741CA024051"},
+        zigpy.types.EUI64.convert("00:0D:6F:FF:FE:D4:16:3B"),
+        unhexlify("52797BF4A5084DAA8E1712B61741CA024051"),
+    ),
+    (
+        {
+            ATTR_QR_CODE: (
+                "G$M:751$S:357S00001579$D:000000000F350FFD%Z$A:04CF8CDF"
+                "3C3C3C3C$I:52797BF4A5084DAA8E1712B61741CA024051"
+            )
+        },
+        zigpy.types.EUI64.convert("04:CF:8C:DF:3C:3C:3C:3C"),
+        unhexlify("52797BF4A5084DAA8E1712B61741CA024051"),
     ),
 )
+
+
+@pytest.mark.parametrize("params, src_ieee, code", IC_QR_CODE_TEST_PARAMS)
 async def test_permit_with_qr_code(
     hass, app_controller, hass_admin_user, params, src_ieee, code
 ):
