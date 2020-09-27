@@ -568,6 +568,9 @@ class _TrackTemplateResultInfo:
         self._last_domains: Set = set()
         self._last_entities: Set = set()
 
+        self._scan_intervals: Dict[Template, timedelta] = {}
+        self._scan_interval_listeners: Dict[Template, Callable] = {}
+
     def async_setup(self, raise_on_template_error: bool) -> None:
         """Activation of template tracking."""
         for track_template_ in self._track_templates:
@@ -598,6 +601,7 @@ class _TrackTemplateResultInfo:
             "all": _TEMPLATE_ALL_LISTENER in self._listeners,
             "entities": self._last_entities,
             "domains": self._last_domains,
+            "scan_intervals": list(self._scan_intervals.values()),
         }
 
     @property
@@ -628,6 +632,10 @@ class _TrackTemplateResultInfo:
         if self._all_templates_are_static:
             return
 
+        for template, info in self._info.items():
+            if info.scan_interval:
+                self._setup_scan_interval_listener(template, info.scan_interval)
+
         if self._needs_all_listener:
             self._setup_all_listener()
             return
@@ -637,6 +645,14 @@ class _TrackTemplateResultInfo:
         )
         self._setup_domains_listener(self._last_domains)
         self._setup_entities_listener(self._last_domains, self._last_entities)
+
+    @callback
+    def _cancel_scan_interval_listener(self, template: Template) -> None:
+        if template not in self._scan_interval_listeners:
+            return
+
+        self._scan_intervals.pop(template)
+        self._scan_interval_listeners.pop(template)()
 
     @callback
     def _cancel_listener(self, listener_name: str) -> None:
@@ -654,6 +670,15 @@ class _TrackTemplateResultInfo:
 
     @callback
     def _update_listeners(self) -> None:
+
+        for template, info in self._info.items():
+            if (
+                info.scan_interval
+                and info.scan_interval != self._scan_intervals[template]
+            ):
+                self._cancel_scan_interval_listener(template)
+                self._setup_scan_interval_listener(template, info.scan_interval)
+
         had_all_listener = _TEMPLATE_ALL_LISTENER in self._listeners
 
         if self._needs_all_listener:
@@ -683,6 +708,24 @@ class _TrackTemplateResultInfo:
 
         self._last_domains = domains
         self._last_entities = entities
+
+    @callback
+    def _setup_scan_interval_listener(
+        self, template: Template, scan_interval: timedelta
+    ) -> None:
+        self._scan_intervals[template] = scan_interval
+
+        # Set to None
+        if not scan_interval:
+            return
+
+        @callback
+        def _refresh_from_interval(event: Event) -> None:
+            self._refresh(event, template)
+
+        self._scan_interval_listeners[template] = async_track_time_interval(
+            self.hass, _refresh_from_interval, scan_interval
+        )
 
     @callback
     def _setup_entities_listener(self, domains: Set, entities: Set) -> None:
@@ -718,6 +761,8 @@ class _TrackTemplateResultInfo:
         """Cancel the listener."""
         for key in list(self._listeners):
             self._listeners.pop(key)()
+        for template in list(self._scan_interval_listeners):
+            self._scan_interval_listeners.pop(template)()
         for track_template_ in self._track_templates:
             self._cancel_rate_limit_timer(track_template_.template)
 
@@ -781,13 +826,18 @@ class _TrackTemplateResultInfo:
         )
 
     @callback
-    def _refresh(self, event: Optional[Event]) -> None:
+    def _refresh(
+        self, event: Optional[Event], template_filter: Optional[Template] = None
+    ) -> None:
         updates = []
         info_changed = False
         now = dt_util.utcnow()
 
         for track_template_ in self._track_templates:
             template = track_template_.template
+            if template_filter and template != template_filter:
+                continue
+
             if event:
                 if (
                     template not in self._rate_limit_timers
@@ -1301,6 +1351,8 @@ def _entities_domains_from_info(render_infos: Iterable[RenderInfo]) -> Tuple[Set
     domains = set()
 
     for render_info in render_infos:
+        if render_info.scan_interval:
+            continue
         if render_info.entities:
             entities.update(render_info.entities)
         if render_info.domains:

@@ -186,10 +186,11 @@ class RenderInfo:
         self.domains_lifecycle = set()
         self.entities = set()
         self.rate_limit = None
+        self.scan_interval = None
 
     def __repr__(self) -> str:
         """Representation of RenderInfo."""
-        return f"<RenderInfo {self.template} all_states={self.all_states} all_states_lifecycle={self.all_states_lifecycle} domains={self.domains} domains_lifecycle={self.domains_lifecycle} entities={self.entities} rate_limit={self.rate_limit}>"
+        return f"<RenderInfo {self.template} all_states={self.all_states} all_states_lifecycle={self.all_states_lifecycle} domains={self.domains} domains_lifecycle={self.domains_lifecycle} entities={self.entities} rate_limit={self.rate_limit} scan_interval={self.scan_interval}>"
 
     def _filter_domains_and_entities(self, entity_id: str) -> bool:
         """Template should re-render if the entity state changes when we match specific domains or entities."""
@@ -438,6 +439,32 @@ class RateLimit:
     def __repr__(self) -> str:
         """Representation of a RateLimit."""
         return "<template RateLimit>"
+
+
+class ScanInterval:
+    """Class to control update scan interval."""
+
+    def __init__(self, hass: HomeAssistantType):
+        """Initialize the scan interval."""
+        self._hass = hass
+
+    def __call__(self, *args: Any, **kwargs: Any) -> Optional[timedelta]:
+        """Handle a call to the class."""
+        render_info = self._hass.data.get(_RENDER_INFO)
+
+        if args and args[0] is None:
+            if render_info is not None:
+                render_info.scan_interval = False
+            return timedelta.max
+
+        delta = timedelta(*args, **kwargs)
+        if render_info is not None:
+            render_info.scan_interval = delta
+        return delta
+
+    def __repr__(self) -> str:
+        """Representation of a ScanInterval."""
+        return "<template ScanInterval>"
 
 
 class AllStates:
@@ -1175,10 +1202,13 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["state_attr"] = hassfunction(state_attr)
         self.globals["states"] = AllStates(hass)
         self.globals["rate_limit"] = RateLimit(hass)
+        self.globals["scan_interval"] = ScanInterval(hass)
 
     def is_safe_callable(self, obj):
         """Test if callback is safe."""
-        return isinstance(obj, (AllStates, RateLimit)) or super().is_safe_callable(obj)
+        return isinstance(
+            obj, (AllStates, RateLimit, ScanInterval)
+        ) or super().is_safe_callable(obj)
 
     def is_safe_attribute(self, obj, attr, value):
         """Test if attribute is safe."""
