@@ -245,6 +245,7 @@ def handle_ping(hass, connection, msg):
         vol.Required("template"): str,
         vol.Optional("entity_ids"): cv.entity_ids,
         vol.Optional("variables"): dict,
+        vol.Optional("timeout"): float,
     }
 )
 @decorators.async_response
