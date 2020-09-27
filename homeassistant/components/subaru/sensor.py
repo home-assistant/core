@@ -23,7 +23,8 @@ from homeassistant.util.unit_system import (
 )
 from homeassistant.util.volume import convert as vol_convert
 
-from . import DOMAIN as SUBARU_DOMAIN, SubaruEntity
+from . import SubaruEntity
+from .const import DOMAIN as SUBARU_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 L_PER_GAL = vol_convert(1, VOLUME_GALLONS, VOLUME_LITERS)

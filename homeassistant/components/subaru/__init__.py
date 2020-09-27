@@ -35,12 +35,12 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass, base_config):
     """Set up of Subaru component."""
+    hass.data.setdefault(DOMAIN, {})
     return True
 
 
 async def async_setup_entry(hass, entry):
     """Set up Subaru from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
     config = entry.data
     websession = aiohttp_client.async_get_clientsession(hass)
     date = datetime.now().strftime("%Y-%m-%d")
@@ -60,10 +60,10 @@ async def async_setup_entry(hass, entry):
         )
         if not await controller.connect():
             _LOGGER.error("Failed to connect")
-            return False
+            raise ConfigEntryNotReady
     except SubaruException as ex:
         _LOGGER.error("Unable to communicate with Subaru API: %s", ex.message)
-        return False
+        raise ConfigEntryNotReady from ex
 
     vehicle_info = {}
     for vin in controller.get_vehicles():
@@ -76,7 +76,7 @@ async def async_setup_entry(hass, entry):
                 data = await subaru_update(vehicle_info, controller)
             return data
         except SubaruException as err:
-            raise UpdateFailed(f"Error communicating with API: {err}")
+            raise ConfigEntryNotReady from err
 
     coordinator = DataUpdateCoordinator(
         hass,
@@ -136,8 +136,6 @@ class SubaruEntity(Entity):
         self.coordinator = coordinator
         self.car_name = vehicle_info["display_name"]
         self.vin = vehicle_info["vin"]
-        self._attributes = {}
-        self._should_poll = False
         self.title = "entity"
 
     @property
@@ -162,12 +160,8 @@ class SubaruEntity(Entity):
     @property
     def should_poll(self):
         """Return the polling state."""
-        return self._should_poll
+        return False
 
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes of the device."""
-        return self._attributes
 
     @property
     def device_info(self):
@@ -237,14 +231,15 @@ async def subaru_update(vehicle_info, controller):
 
 def get_vehicle_info(controller, vin):
     """Obtain vehicle identifiers and capabilities."""
-    info = {}
-    info["vin"] = vin
-    info["display_name"] = controller.vin_to_name(vin)
-    info["is_ev"] = controller.get_ev_status(vin)
-    info["api_gen"] = controller.get_api_gen(vin)
-    info["has_res"] = controller.get_res_status(vin)
-    info["has_remote"] = controller.get_remote_status(vin)
-    info["has_safety"] = controller.get_safety_status(vin)
-    info["last_update"] = 0
-    info["last_fetch"] = 0
+    info = {
+        "vin": vin,
+        "display_name": controller.vin_to_name(vin),
+        "is_ev": controller.get_ev_status(vin),
+        "api_gen": controller.get_api_gen(vin),
+        "has_res": controller.get_res_status(vin),
+        "has_remote": controller.get_remote_status(vin),
+        "has_safety": controller.get_safety_status(vin),
+        "last_update": 0,
+        "last_fetch": 0,
+    }
     return info

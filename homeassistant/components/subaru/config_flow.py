@@ -67,7 +67,7 @@ class SubaruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="user",
                 data_schema=DATA_SCHEMA,
-                errors={"base": "identifier_exists"},
+                errors={"base": "already_configured"},
                 description_placeholders={},
             )
 
@@ -77,14 +77,14 @@ class SubaruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="user",
                 data_schema=DATA_SCHEMA,
-                errors={"base": "connection_error"},
+                errors={"base": "cannot_connect"},
                 description_placeholders={},
             )
         except InvalidAuth:
             return self.async_show_form(
                 step_id="user",
                 data_schema=DATA_SCHEMA,
-                errors={"base": "invalid_credentials"},
+                errors={"base": "invalid_auth"},
                 description_placeholders={},
             )
         return self.async_create_entry(title=user_input[CONF_USERNAME], data=info)
@@ -155,9 +155,9 @@ async def validate_input(hass: core.HomeAssistant, data):
     except SubaruException as ex:
         if ex.message == "invalidAccount":
             _LOGGER.error("Invalid credentials: %s", ex)
-            raise InvalidAuth()
+            raise InvalidAuth
         _LOGGER.error("Unable to communicate with Subaru API: %s", ex)
-        raise CannotConnect()
+        raise CannotConnect
 
     return data
 
