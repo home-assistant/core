@@ -1,12 +1,34 @@
 {
     "config": {
         "step": {
+            "hub2": {
+                "data": {
+                    "username": "Gebruikersnaam"
+                }
+            },
+            "hubv2": {
+                "data": {
+                    "username": "Gebruikersnaam"
+                }
+            },
             "user": {
                 "data": {
                     "modem_type": "Modemtype."
                 },
                 "description": "Selecteer het Insteon-modemtype.",
                 "title": "Insteon"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "change_hub_config": {
+                "data": {
+                    "host": "IP-adres",
+                    "password": "Wachtwoord",
+                    "port": "Poort",
+                    "username": "Gebruikersnaam"
+                }
             }
         }
     }
