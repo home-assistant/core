@@ -796,6 +796,7 @@ class _TrackTemplateResultInfo:
     def _events_trigger_template(
         self, template: Template, events: Iterable[Event]
     ) -> Optional[Event]:
+        """If the template is triggered by one of the events, return the first triggering event."""
         for event in events:
             entity_id = event.data.get(ATTR_ENTITY_ID)
             lifecycle_event = (
