@@ -458,6 +458,8 @@ async def test_permit_with_install_code(
                 "3C3C3C3C$I:52797BF4A5084DAA8E1712B61741CA024052"
             )
         },
+        # good consciot regex match, but bad code
+        {ATTR_QR_CODE: "000D6FFFFED4163B|52797BF4A5084DAA8E1712B61741CA024052"},
     ),
 )
 async def test_permit_with_install_code_fail(
@@ -476,6 +478,11 @@ async def test_permit_with_install_code_fail(
 @pytest.mark.parametrize(
     "params, src_ieee, code",
     (
+        (
+            {ATTR_QR_CODE: "000D6FFFFED4163B|52797BF4A5084DAA8E1712B61741CA024051"},
+            zigpy.types.EUI64.convert("00:0D:6F:FF:FE:D4:16:3B"),
+            unhexlify("52797BF4A5084DAA8E1712B61741CA024051"),
+        ),
         (
             {ATTR_QR_CODE: "Z:000D6FFFFED4163B$I:52797BF4A5084DAA8E1712B61741CA024051"},
             zigpy.types.EUI64.convert("00:0D:6F:FF:FE:D4:16:3B"),

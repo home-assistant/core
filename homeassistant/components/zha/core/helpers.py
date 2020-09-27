@@ -229,6 +229,8 @@ def convert_install_code(value: str) -> bytes:
 
 
 QR_CODES = (
+    # Consciot
+    r"^([\da-fA-F]{16})\|([\da-fA-F]{36})$",
     # Enbrighten
     r"""
         ^Z:
