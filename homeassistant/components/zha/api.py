@@ -90,20 +90,18 @@ SERVICE_WARNING_DEVICE_WARN = "warning_device_warn"
 SERVICE_ZIGBEE_BIND = "service_zigbee_bind"
 IEEE_SERVICE = "ieee_based_service"
 
-SERVICE_SCHEMAS = {
-    SERVICE_PERMIT: vol.Schema(
-        {
-            vol.Optional(ATTR_IEEE_ADDRESS, default=None): EUI64.convert,
-            vol.Optional(ATTR_DURATION, default=60): vol.All(
-                vol.Coerce(int), vol.Range(0, 254)
-            ),
-            vol.Inclusive(ATTR_SOURCE_IEEE, "install_code"): EUI64.convert,
-            vol.Inclusive(ATTR_INSTALL_CODE, "install_code"): convert_install_code,
-            vol.Exclusive(ATTR_QR_CODE, "install_code"): vol.All(
-                str, qr_to_install_code
-            ),
-        }
+SERVICE_PERMIT_PARAMS = {
+    vol.Optional(ATTR_IEEE_ADDRESS, default=None): EUI64.convert,
+    vol.Optional(ATTR_DURATION, default=60): vol.All(
+        vol.Coerce(int), vol.Range(0, 254)
     ),
+    vol.Inclusive(ATTR_SOURCE_IEEE, "install_code"): EUI64.convert,
+    vol.Inclusive(ATTR_INSTALL_CODE, "install_code"): convert_install_code,
+    vol.Exclusive(ATTR_QR_CODE, "install_code"): vol.All(str, qr_to_install_code),
+}
+
+SERVICE_SCHEMAS = {
+    SERVICE_PERMIT: vol.Schema(SERVICE_PERMIT_PARAMS),
     IEEE_SERVICE: vol.Schema({vol.Required(ATTR_IEEE_ADDRESS): EUI64.convert}),
     SERVICE_SET_ZIGBEE_CLUSTER_ATTRIBUTE: vol.Schema(
         {
@@ -181,7 +179,7 @@ ClusterBinding = collections.namedtuple("ClusterBinding", "id endpoint_id type n
 @websocket_api.require_admin
 @websocket_api.async_response
 @websocket_api.websocket_command(
-    {vol.Required("type"): "zha/devices/permit", **SERVICE_SCHEMAS[SERVICE_PERMIT]}
+    {vol.Required("type"): "zha/devices/permit", **SERVICE_PERMIT_PARAMS}
 )
 async def websocket_permit_devices(hass, connection, msg):
     """Permit ZHA zigbee devices."""
