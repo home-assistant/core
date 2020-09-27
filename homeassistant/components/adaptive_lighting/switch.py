@@ -205,7 +205,9 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         # Tracks 'off' → 'on' state changes
         self._on_to_off_event: Dict[str, Tuple[float, str]] = {}
         # Tracks 'light.turn_off(..., transition=...)' service calls
-        self._turn_off_service_event: Dict[str, Tuple[str, float]] = {}
+        self._turn_off_event: Dict[str, Tuple[str, float]] = {}
+        # Tracks 'light.turn_on' service calls
+        self._turn_on_event: Dict[str, Tuple[str]] = {}
 
         # Initialize attributes that will be set in self._update_attrs
         self._percent = None
@@ -518,7 +520,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
             _LOGGER.debug(
                 "%s: Detected an 'off' → 'on' event for '%s'", self._name, entity_id
             )
-            if await self._maybe_cancel(entity_id, now_ts):
+            if await self._maybe_cancel_adjusting(entity_id, now_ts, event):
                 # Stop if a rapid 'off' → 'on' → 'off' happens.
                 _LOGGER.debug(
                     "%s: Cancelling adjusting lights for %s", self._name, entity_id
@@ -538,7 +540,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
             # Tracks 'off' → 'on' state changes
             self._on_to_off_event[entity_id] = (now_ts, event.context.id)
 
-    async def _maybe_cancel(self, entity_id, now_ts) -> bool:
+    async def _maybe_cancel_adjusting(self, entity_id, now_ts, off_to_on_event) -> bool:
         """Cancel the adjusting of a light if it has just been turned off.
 
         Possibly the lights just got a 'turn_off' call, however, the light
@@ -552,23 +554,23 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         adjust the lights.
         """
         ts_on_to_off, id_on_to_off = self._on_to_off_event.get(entity_id, (0, None))
-        id_turn_off, transition = self._turn_off_service_event.get(
-            entity_id, (None, None)
-        )
-        if (
-            id_on_to_off is not None
-            and id_turn_off is not None
-            and id_on_to_off == id_turn_off
-        ):
-            # State change 'off' → 'on' and 'light.turn_off(..., transition=...)' are
-            # from the same event, so wait at least the 'turn_off' transition time.
-            delay = transition
+        id_turn_off, transition = self._turn_off_event.get(entity_id, (None, None))
+        id_turn_on = self._turn_on_event.get(entity_id)
+        id_off_to_on = off_to_on_event.context.id
+
+        if id_off_to_on == id_turn_on and id_off_to_on is not None:
+            # State change 'off' → 'on' triggered by 'light.turn_on'.
+            return False
         elif ts_on_to_off == 0:
             # No state change has been registered before.
             return False
+        elif id_on_to_off == id_turn_off and id_on_to_off is not None:
+            # State change 'off' → 'on' and 'light.turn_off(..., transition=...)' come
+            # from the same event, so wait at least the 'turn_off' transition time.
+            delay = transition
         else:
-            # State change 'off' → 'on' happened but **not** because a
-            # 'light.turn_off' event that is called with 'transition'.
+            # State change 'off' → 'on' happened because the light state was set.
+            # Possibly because of polling.
             delay = TURNING_OFF_DELAY
 
         delta_time = now_ts - ts_on_to_off
@@ -618,28 +620,38 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
             # TODO: I am doing this because it seems like HA cannot detect
             # whether a light is transitioning into 'off'. Because in my
             # tests `brightness_going_down == False` even when it is actually
-            # still going down... Needs some discussion.
+            # still going down... Maybe needs some discussion.
             return True
 
         return current_state.state == "off"
 
     async def _turn_off_event_listener(self, event):
-        """Track 'light.turn_off(..., transition=...)' service calls."""
-        if event.data.get(ATTR_DOMAIN) != LIGHT_DOMAIN:
+        """Track 'light.turn_off(..., transition=...)' and 'light.turn_on' service calls."""
+        domain = event.data.get(ATTR_DOMAIN)
+        if domain != LIGHT_DOMAIN:
             return
-        if event.data.get(ATTR_SERVICE) != SERVICE_TURN_OFF:
-            return
+        service = event.data.get(ATTR_SERVICE)
         service_data = event.data.get(ATTR_SERVICE_DATA, {})
-        transition = service_data.get(ATTR_TRANSITION)
-        if transition is not None and transition > 0:
-            entity_id = service_data[ATTR_ENTITY_ID]
+        entity_id = service_data.get(ATTR_ENTITY_ID)
+        if isinstance(entity_id, str):
+            entity_id = [entity_id]
+
+        if service == SERVICE_TURN_OFF:
+            transition = service_data.get(ATTR_TRANSITION)
+            if transition is not None and transition > 0:
+                _LOGGER.debug(
+                    "%s: Detected an 'light.turn_off('%s', transition=%s)' event",
+                    self._name,
+                    entity_id,
+                    transition,
+                )
+                for eid in entity_id:
+                    self._turn_off_event[eid] = (event.context.id, transition)
+        elif service == SERVICE_TURN_ON:
             _LOGGER.debug(
-                "%s: Detected an 'light.turn_off('%s', transition=%s)' event",
+                "%s: Detected an 'light.turn_on('%s')' event",
                 self._name,
                 entity_id,
-                transition,
             )
-            if isinstance(entity_id, str):
-                entity_id = [entity_id]
             for eid in entity_id:
-                self._turn_off_service_event[eid] = (event.context.id, transition)
+                self._turn_on_event[eid] = event.context.id
