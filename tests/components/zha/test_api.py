@@ -449,7 +449,14 @@ async def test_permit_with_install_code(
         },
         {
             # good regex match, but bad code
-            ATTR_QR_CODE: "Z:000D6FFFFED4163B$I:52797BF4A5084DAA8E1712B61741CA024052",
+            ATTR_QR_CODE: "Z:000D6FFFFED4163B$I:52797BF4A5084DAA8E1712B61741CA024052"
+        },
+        {
+            # good aqara regex match, but bad code
+            ATTR_QR_CODE: (
+                "G$M:751$S:357S00001579$D:000000000F350FFD%Z$A:04CF8CDF"
+                "3C3C3C3C$I:52797BF4A5084DAA8E1712B61741CA024052"
+            )
         },
     ),
 )
@@ -472,6 +479,16 @@ async def test_permit_with_install_code_fail(
         (
             {ATTR_QR_CODE: "Z:000D6FFFFED4163B$I:52797BF4A5084DAA8E1712B61741CA024051"},
             zigpy.types.EUI64.convert("00:0D:6F:FF:FE:D4:16:3B"),
+            unhexlify("52797BF4A5084DAA8E1712B61741CA024051"),
+        ),
+        (
+            {
+                ATTR_QR_CODE: (
+                    "G$M:751$S:357S00001579$D:000000000F350FFD%Z$A:04CF8CDF"
+                    "3C3C3C3C$I:52797BF4A5084DAA8E1712B61741CA024051"
+                )
+            },
+            zigpy.types.EUI64.convert("04:CF:8C:DF:3C:3C:3C:3C"),
             unhexlify("52797BF4A5084DAA8E1712B61741CA024051"),
         ),
     ),

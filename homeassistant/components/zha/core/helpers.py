@@ -237,6 +237,14 @@ QR_CODES = (
         ([0-9a-fA-F]{36})  # install code
         $
     """,
+    # Aqara
+    r"""
+        \$A:
+        ([0-9a-fA-F]{16})  # IEEE address
+        \$I:
+        ([0-9a-fA-F]{36})  # install code
+        $
+    """,
 )
 
 
@@ -247,7 +255,7 @@ def qr_to_install_code(qr_code: str) -> Tuple[zigpy.types.EUI64, bytes]:
     """
 
     for code_pattern in QR_CODES:
-        match = re.match(code_pattern, qr_code, re.VERBOSE)
+        match = re.search(code_pattern, qr_code, re.VERBOSE)
         if match is None:
             continue
 
