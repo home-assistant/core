@@ -54,12 +54,13 @@ SENSORS = {
 }
 
 REST_SENSORS = {
-    ("cloud"): RestAttributeDescription(
+    "cloud": RestAttributeDescription(
         name="Cloud",
         device_class=DEVICE_CLASS_CONNECTIVITY,
+        default_enabled=False,
         path="cloud/connected",
     ),
-    ("fwupdate"): RestAttributeDescription(
+    "fwupdate": RestAttributeDescription(
         name="Firmware update (release)",
         device_class=DEVICE_CLASS_SAFETY,
         path="update/has_update",

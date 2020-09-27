@@ -147,14 +147,14 @@ SENSORS = {
 }
 
 REST_SENSORS = {
-    ("rssi"): RestAttributeDescription(
+    "rssi": RestAttributeDescription(
         name="RSSI",
         unit="dB",
         device_class=sensor.DEVICE_CLASS_SIGNAL_STRENGTH,
         default_enabled=False,
         path="wifi_sta/rssi",
     ),
-    ("uptime"): RestAttributeDescription(
+    "uptime": RestAttributeDescription(
         name="Uptime",
         device_class=sensor.DEVICE_CLASS_TIMESTAMP,
         path="uptime",

@@ -150,7 +150,6 @@ class RestAttributeDescription:
     path: str
     name: str
     # Callable = lambda attr_info: unit
-    icon: Optional[str] = None
     unit: Union[None, str, Callable[[dict], str]] = None
     value: Callable[[Any], Any] = lambda val: val
     device_class: Optional[str] = None
@@ -343,11 +342,6 @@ class ShellyRestAttributeEntity(entity.Entity):
     def device_class(self):
         """Device class of sensor."""
         return self.description.device_class
-
-    @property
-    def icon(self):
-        """Icon of sensor."""
-        return self.description.icon
 
     @property
     def unique_id(self):
