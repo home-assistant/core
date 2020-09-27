@@ -102,4 +102,4 @@ async def fetch_parameters(client: WolfClient, gateway_id: int, device_id: int):
     except (ConnectError, ConnectTimeout) as exception:
         raise UpdateFailed(f"Error communicating with API: {exception}") from exception
     except InvalidAuth as exception:
-        raise UpdateFailed("Invalid authentication during update.") from exception
+        raise UpdateFailed("Invalid authentication during update") from exception
