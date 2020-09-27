@@ -58,6 +58,7 @@ def shelly_naming(self, block, entity_type: str):
         return f"{entity_name} {self.description.name}"
     raise ValueError
 
+
 def shelly_rest_parser(self, path: str):
     """Parser for REST path from device status."""
 
