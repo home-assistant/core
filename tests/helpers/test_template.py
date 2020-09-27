@@ -2,6 +2,7 @@
 from datetime import datetime
 import math
 import random
+import time
 
 import pytest
 import pytz
@@ -2455,3 +2456,18 @@ async def test_lifecycle(hass):
     assert info.filter("sensor.sensor1") is False
     assert info.filter_lifecycle("sensor.new") is True
     assert info.filter_lifecycle("sensor.removed") is True
+
+
+async def test_template_timeout(hass):
+    """Test to see if a template will timeout."""
+    for i in range(2):
+        hass.states.async_set(f"sensor.sensor{i}", "on")
+
+    tmp = template.Template("{{ states | count }}", hass)
+    assert await tmp.async_render_will_timeout(3) is False
+
+    def _sleep():
+        time.sleep(0.000002)
+
+    with patch("jinja2.environment.Template.render", side_effect=_sleep):
+        assert await tmp.async_render_will_timeout(0.000001) is True

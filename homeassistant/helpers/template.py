@@ -344,7 +344,7 @@ class Template:
                 compiled.render(kwargs)
             except TimeoutError:
                 pass
-            run_callback_threadsafe(self.hass.loop, finish_event.set)
+            run_callback_threadsafe(self.hass.loop, finish_event.set).result()
 
         try:
             template_render_thread = ThreadWithException(target=_render_template)
@@ -353,6 +353,8 @@ class Template:
         except asyncio.TimeoutError:
             template_render_thread.raise_exc(TimeoutError)
             return True
+        finally:
+            template_render_thread.join()
 
         return False
 
