@@ -68,6 +68,7 @@ FLOWS = [
     "geonetnz_volcano",
     "gios",
     "glances",
+    "goalzero",
     "gogogate2",
     "gpslogger",
     "griddy",

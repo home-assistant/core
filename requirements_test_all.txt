@@ -336,6 +336,9 @@ gios==0.1.4
 # homeassistant.components.glances
 glances_api==0.2.0
 
+# homeassistant.components.goalzero
+goalzero==0.1.4
+
 # homeassistant.components.gogogate2
 gogogate2-api==2.0.3
 

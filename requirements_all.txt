@@ -668,6 +668,9 @@ glances_api==0.2.0
 # homeassistant.components.gntp
 gntp==1.0.3
 
+# homeassistant.components.goalzero
+goalzero==0.1.4
+
 # homeassistant.components.gogogate2
 gogogate2-api==2.0.3
 
