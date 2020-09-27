@@ -203,7 +203,21 @@ async def websocket_permit_devices(hass, connection, msg):
 
     connection.subscriptions[msg["id"]] = async_cleanup
     zha_gateway.async_enable_debug_mode()
-    await zha_gateway.application_controller.permit(time_s=duration, node=ieee)
+    if ATTR_SOURCE_IEEE in msg:
+        src_ieee = msg[ATTR_SOURCE_IEEE]
+        code = msg[ATTR_INSTALL_CODE]
+        _LOGGER.debug("Allowing join for %s device with install code", src_ieee)
+        await zha_gateway.application_controller.permit_with_key(
+            time_s=duration, node=src_ieee, code=code
+        )
+    elif ATTR_QR_CODE in msg:
+        src_ieee, code = msg[ATTR_QR_CODE]
+        _LOGGER.debug("Allowing join for %s device with install code", src_ieee)
+        await zha_gateway.application_controller.permit_with_key(
+            time_s=duration, node=src_ieee, code=code
+        )
+    else:
+        await zha_gateway.application_controller.permit(time_s=duration, node=ieee)
     connection.send_result(msg["id"])
 
 
