@@ -31,7 +31,7 @@ from homeassistant.const import (
     STATE_CLOSED,
     STATE_CLOSING,
     STATE_OPEN,
-    STATE_OPENING
+    STATE_OPENING,
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
