@@ -602,28 +602,23 @@ class _TrackTemplateResultInfo:
 
     @property
     def _needs_all_listener(self) -> bool:
-        for track_template_ in self._track_templates:
-            template = track_template_.template
-
+        for info in self._info.values():
             # Tracking all states
-            if (
-                self._info[template].all_states
-                or self._info[template].all_states_lifecycle
-            ):
+            if info.all_states or info.all_states_lifecycle:
                 return True
 
             # Previous call had an exception
             # so we do not know which states
             # to track
-            if self._info[template].exception:
+            if info.exception:
                 return True
 
         return False
 
     @property
     def _all_templates_are_static(self) -> bool:
-        for track_template_ in self._track_templates:
-            if not self._info[track_template_.template].is_static:
+        for info in self._info.values():
+            if not info.is_static:
                 return False
 
         return True
@@ -721,9 +716,8 @@ class _TrackTemplateResultInfo:
     @callback
     def async_remove(self) -> None:
         """Cancel the listener."""
-        self._cancel_listener(_TEMPLATE_ALL_LISTENER)
-        self._cancel_listener(_TEMPLATE_DOMAINS_LISTENER)
-        self._cancel_listener(_TEMPLATE_ENTITIES_LISTENER)
+        for key in list(self._listeners):
+            self._listeners.pop(key)()
         for track_template_ in self._track_templates:
             self._cancel_rate_limit_timer(track_template_.template)
 
