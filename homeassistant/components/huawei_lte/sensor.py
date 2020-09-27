@@ -420,11 +420,3 @@ class HuaweiLteSensor(HuaweiLteBaseEntity):
             formatter = format_default
 
         self._state, self._unit = formatter(value)
-
-
-async def async_setup_platform(*args, **kwargs):
-    """Old no longer used way to set up Huawei LTE sensors."""
-    _LOGGER.warning(
-        "Loading and configuring as a platform is no longer supported or "
-        "required, convert to enabling/disabling available entities"
-    )
