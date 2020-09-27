@@ -527,6 +527,44 @@ async def test_options_add_device(hass):
     assert state.attributes.get("friendly_name") == "AC 213c7f2:48"
 
 
+async def test_options_add_duplicate_device(hass):
+    """Test we can add a device."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "host": None,
+            "port": None,
+            "device": "/dev/tty123",
+            "debug": False,
+            "automatic_add": False,
+            "devices": {"0b1100cd0213c7f230010f71": {"signal_repetitions": 1}},
+        },
+        unique_id=DOMAIN,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "prompt_options"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "debug": True,
+            "automatic_add": True,
+            "event_code": "0b1100cd0213c7f230010f71",
+        },
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "prompt_options"
+    assert result["errors"]
+    assert result["errors"]["event_code"] == "already_configured_device"
+
+
 async def test_options_add_remove_device(hass):
     """Test we can add a device."""
     await setup.async_setup_component(hass, "persistent_notification", {})
