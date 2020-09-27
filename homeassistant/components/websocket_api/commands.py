@@ -24,8 +24,6 @@ from . import const, decorators, messages
 
 _LOGGER = logging.getLogger(__name__)
 
-MAX_TEMPLATE_RENDER_TIME = 3
-
 # mypy: allow-untyped-calls, allow-untyped-defs
 
 
@@ -255,13 +253,14 @@ async def handle_render_template(hass, connection, msg):
     template_str = msg["template"]
     template = Template(template_str, hass)
     variables = msg.get("variables")
+    timeout = msg.get("timeout")
     info = None
 
-    if await template.async_render_will_timeout(MAX_TEMPLATE_RENDER_TIME):
+    if timeout and await template.async_render_will_timeout(timeout):
         connection.send_error(
             msg["id"],
             const.ERR_TEMPLATE_ERROR,
-            "Exceeded maximum execution time of {MAX_TEMPLATE_RENDER_TIME}s",
+            "Exceeded maximum execution time of {timeout}s",
         )
         return
 
