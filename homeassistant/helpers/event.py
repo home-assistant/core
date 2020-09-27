@@ -74,10 +74,12 @@ class TrackTemplate:
 
     The template is template to calculate.
     The variables are variables to pass to the template.
+    The rate_limit is the update rate_limit
     """
 
     template: Template
     variables: TemplateVarsType
+    rate_limit: Optional[timedelta] = None
 
 
 @dataclass
@@ -561,16 +563,19 @@ class _TrackTemplateResultInfo:
 
         self._last_result: Dict[Template, Union[str, TemplateError]] = {}
         self._last_info: Dict[Template, RenderInfo] = {}
+        self._last_triggered: Dict[Template, datetime] = {}
         self._info: Dict[Template, RenderInfo] = {}
+
         self._last_domains: Set = set()
         self._last_entities: Set = set()
 
     def async_setup(self, raise_on_template_error: bool) -> None:
         """Activation of template tracking."""
+        now = dt_util.utcnow()
+
         for track_template_ in self._track_templates:
             template = track_template_.template
             variables = track_template_.variables
-
             self._info[template] = template.async_render_to_info(variables)
             if self._info[template].exception:
                 if raise_on_template_error:
@@ -580,6 +585,7 @@ class _TrackTemplateResultInfo:
                     track_template_.template,
                     exc_info=self._info[template].exception,
                 )
+            self._last_triggered[template] = now
 
         self._last_info = self._info.copy()
         self._create_listeners()
@@ -719,16 +725,17 @@ class _TrackTemplateResultInfo:
     @callback
     def async_refresh(self) -> None:
         """Force recalculate the template."""
-        self._refresh(None)
+        self._refresh(None, bypass_rate_limit=True)
 
     @callback
-    def _refresh(self, event: Optional[Event]) -> None:
+    def _refresh(self, event: Optional[Event], bypass_rate_limit: bool = False) -> None:
         entity_id = event and event.data.get(ATTR_ENTITY_ID)
         lifecycle_event = event and (
             event.data.get("new_state") is None or event.data.get("old_state") is None
         )
         updates = []
         info_changed = False
+        time_fired = (event and event.time_fired) or dt_util.utcnow()
 
         for track_template_ in self._track_templates:
             template = track_template_.template
@@ -747,7 +754,20 @@ class _TrackTemplateResultInfo:
                 template.template,
                 event,
             )
+            rate_limit = (
+                not bypass_rate_limit
+                and self._last_info[template].rate_limit
+                or track_template_.rate_limit
+            )
+            if rate_limit and self._last_triggered[template] + rate_limit < time_fired:
+                _LOGGER.debug(
+                    "Template update %s ratelimited by rate_limit: %s",
+                    template.template,
+                    rate_limit,
+                )
+                continue
 
+            self._last_triggered[template] = time_fired
             self._info[template] = template.async_render_to_info(
                 track_template_.variables
             )

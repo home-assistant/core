@@ -187,6 +187,7 @@ class RenderInfo:
         self.domains = set()
         self.domains_lifecycle = set()
         self.entities = set()
+        self.rate_limit = None
 
     def __repr__(self) -> str:
         """Representation of RenderInfo."""
@@ -465,6 +466,25 @@ class Template:
     def __repr__(self) -> str:
         """Representation of Template."""
         return 'Template("' + self.template + '")'
+
+
+class RateLimit:
+    """Class to control update rate limits."""
+
+    def __init__(self, hass: HomeAssistantType):
+        """Initialize rate limit."""
+        self._hass = hass
+
+    def __call__(self, *args: Any, **kwargs: Any) -> bool:
+        """Handle a call to the class."""
+        render_info = self._hass.data.get(_RENDER_INFO)
+        if render_info is not None:
+            render_info.ratelimit = timedelta(*args, **kwargs)
+        return True
+
+    def __repr__(self) -> str:
+        """Representation of a RateLimit."""
+        return "<template RateLimit>"
 
 
 class AllStates:
@@ -1201,6 +1221,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["is_state_attr"] = hassfunction(is_state_attr)
         self.globals["state_attr"] = hassfunction(state_attr)
         self.globals["states"] = AllStates(hass)
+        self.globals["rate_limit"] = RateLimit(hass)
 
     def is_safe_callable(self, obj):
         """Test if callback is safe."""
