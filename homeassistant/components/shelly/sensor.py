@@ -90,6 +90,12 @@ SENSORS = {
         value=lambda value: round(value / 1000, 2),
         device_class=sensor.DEVICE_CLASS_ENERGY,
     ),
+    ("emeter", "energyReturned"): BlockAttributeDescription(
+        name="Energy Returned",
+        unit=ENERGY_KILO_WATT_HOUR,
+        value=lambda value: round(value / 1000, 2),
+        device_class=sensor.DEVICE_CLASS_ENERGY,
+    ),
     ("light", "energy"): BlockAttributeDescription(
         name="Energy",
         unit=ENERGY_KILO_WATT_HOUR,
