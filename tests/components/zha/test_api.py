@@ -244,7 +244,7 @@ async def test_get_group(zha_client):
 
 async def test_get_group_not_found(zha_client):
     """Test not found response from get group API."""
-    await zha_client.send_json({ID: 9, TYPE: "zha/group", GROUP_ID: 1234567})
+    await zha_client.send_json({ID: 9, TYPE: "zha/group", GROUP_ID: 1_234_567})
 
     msg = await zha_client.receive_json()
 
@@ -435,39 +435,37 @@ async def test_permit_with_install_code(
 
 
 IC_FAIL_PARAMS = (
-    (
-        {
-            # wrong install code
-            ATTR_SOURCE_IEEE: IEEE_SWITCH_DEVICE,
-            ATTR_INSTALL_CODE: "5279-7BF4-A508-4DAA-8E17-12B6-1741-CA02-4052",
-        },
+    {
+        # wrong install code
+        ATTR_SOURCE_IEEE: IEEE_SWITCH_DEVICE,
+        ATTR_INSTALL_CODE: "5279-7BF4-A508-4DAA-8E17-12B6-1741-CA02-4052",
+    },
+    # incorrect service params
+    {ATTR_INSTALL_CODE: "5279-7BF4-A508-4DAA-8E17-12B6-1741-CA02-4051"},
+    {ATTR_SOURCE_IEEE: IEEE_SWITCH_DEVICE},
+    {
         # incorrect service params
-        {ATTR_INSTALL_CODE: "5279-7BF4-A508-4DAA-8E17-12B6-1741-CA02-4051"},
-        {ATTR_SOURCE_IEEE: IEEE_SWITCH_DEVICE},
-        {
-            # incorrect service params
-            ATTR_INSTALL_CODE: "5279-7BF4-A508-4DAA-8E17-12B6-1741-CA02-4051",
-            ATTR_QR_CODE: "Z:000D6FFFFED4163B$I:52797BF4A5084DAA8E1712B61741CA024051",
-        },
-        {
-            # incorrect service params
-            ATTR_SOURCE_IEEE: IEEE_SWITCH_DEVICE,
-            ATTR_QR_CODE: "Z:000D6FFFFED4163B$I:52797BF4A5084DAA8E1712B61741CA024051",
-        },
-        {
-            # good regex match, but bad code
-            ATTR_QR_CODE: "Z:000D6FFFFED4163B$I:52797BF4A5084DAA8E1712B61741CA024052"
-        },
-        {
-            # good aqara regex match, but bad code
-            ATTR_QR_CODE: (
-                "G$M:751$S:357S00001579$D:000000000F350FFD%Z$A:04CF8CDF"
-                "3C3C3C3C$I:52797BF4A5084DAA8E1712B61741CA024052"
-            )
-        },
-        # good consciot regex match, but bad code
-        {ATTR_QR_CODE: "000D6FFFFED4163B|52797BF4A5084DAA8E1712B61741CA024052"},
-    ),
+        ATTR_INSTALL_CODE: "5279-7BF4-A508-4DAA-8E17-12B6-1741-CA02-4051",
+        ATTR_QR_CODE: "Z:000D6FFFFED4163B$I:52797BF4A5084DAA8E1712B61741CA024051",
+    },
+    {
+        # incorrect service params
+        ATTR_SOURCE_IEEE: IEEE_SWITCH_DEVICE,
+        ATTR_QR_CODE: "Z:000D6FFFFED4163B$I:52797BF4A5084DAA8E1712B61741CA024051",
+    },
+    {
+        # good regex match, but bad code
+        ATTR_QR_CODE: "Z:000D6FFFFED4163B$I:52797BF4A5084DAA8E1712B61741CA024052"
+    },
+    {
+        # good aqara regex match, but bad code
+        ATTR_QR_CODE: (
+            "G$M:751$S:357S00001579$D:000000000F350FFD%Z$A:04CF8CDF"
+            "3C3C3C3C$I:52797BF4A5084DAA8E1712B61741CA024052"
+        )
+    },
+    # good consciot regex match, but bad code
+    {ATTR_QR_CODE: "000D6FFFFED4163B|52797BF4A5084DAA8E1712B61741CA024052"},
 )
 
 
@@ -523,3 +521,77 @@ async def test_permit_with_qr_code(
     assert app_controller.permit_with_key.await_args[1]["time_s"] == 60
     assert app_controller.permit_with_key.await_args[1]["node"] == src_ieee
     assert app_controller.permit_with_key.await_args[1]["code"] == code
+
+
+@pytest.mark.parametrize("params, src_ieee, code", IC_QR_CODE_TEST_PARAMS)
+async def test_ws_permit_with_qr_code(
+    app_controller, zha_client, params, src_ieee, code
+):
+    """Test permit service with install code from qr code."""
+
+    await zha_client.send_json(
+        {ID: 14, TYPE: f"{DOMAIN}/devices/{SERVICE_PERMIT}", **params}
+    )
+
+    msg = await zha_client.receive_json()
+    assert msg["id"] == 14
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    assert app_controller.permit.await_count == 0
+    assert app_controller.permit_with_key.call_count == 1
+    assert app_controller.permit_with_key.await_args[1]["time_s"] == 60
+    assert app_controller.permit_with_key.await_args[1]["node"] == src_ieee
+    assert app_controller.permit_with_key.await_args[1]["code"] == code
+
+
+@pytest.mark.parametrize("params", IC_FAIL_PARAMS)
+async def test_ws_permit_with_install_code_fail(app_controller, zha_client, params):
+    """Test permit ws service with install code."""
+
+    await zha_client.send_json(
+        {ID: 14, TYPE: f"{DOMAIN}/devices/{SERVICE_PERMIT}", **params}
+    )
+
+    msg = await zha_client.receive_json()
+    assert msg["id"] == 14
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"] is False
+
+    assert app_controller.permit.await_count == 0
+    assert app_controller.permit_with_key.call_count == 0
+
+
+@pytest.mark.parametrize(
+    "params, duration, node",
+    (
+        ({}, 60, None),
+        ({ATTR_DURATION: 30}, 30, None),
+        (
+            {ATTR_DURATION: 33, ATTR_IEEE: "aa:bb:cc:dd:aa:bb:cc:dd"},
+            33,
+            zigpy.types.EUI64.convert("aa:bb:cc:dd:aa:bb:cc:dd"),
+        ),
+        (
+            {ATTR_IEEE: "aa:bb:cc:dd:aa:bb:cc:d1"},
+            60,
+            zigpy.types.EUI64.convert("aa:bb:cc:dd:aa:bb:cc:d1"),
+        ),
+    ),
+)
+async def test_ws_permit_ha12(app_controller, zha_client, params, duration, node):
+    """Test permit ws service."""
+
+    await zha_client.send_json(
+        {ID: 14, TYPE: f"{DOMAIN}/devices/{SERVICE_PERMIT}", **params}
+    )
+
+    msg = await zha_client.receive_json()
+    assert msg["id"] == 14
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    assert app_controller.permit.await_count == 1
+    assert app_controller.permit.await_args[1]["time_s"] == duration
+    assert app_controller.permit.await_args[1]["node"] == node
+    assert app_controller.permit_with_key.call_count == 0
