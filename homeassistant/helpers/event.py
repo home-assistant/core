@@ -563,7 +563,7 @@ class _TrackTemplateResultInfo:
 
         self._last_result: Dict[Template, Union[str, TemplateError]] = {}
         self._last_info: Dict[Template, RenderInfo] = {}
-        self._last_triggered: Dict[Template, datetime] = {}
+        self._last_rendered: Dict[Template, datetime] = {}
         self._rate_limit_timers: Dict[Template, asyncio.TimerHandle] = {}
         self._info: Dict[Template, RenderInfo] = {}
 
@@ -572,8 +572,6 @@ class _TrackTemplateResultInfo:
 
     def async_setup(self, raise_on_template_error: bool) -> None:
         """Activation of template tracking."""
-        now = dt_util.utcnow()
-
         for track_template_ in self._track_templates:
             template = track_template_.template
             variables = track_template_.variables
@@ -586,7 +584,6 @@ class _TrackTemplateResultInfo:
                     track_template_.template,
                     exc_info=self._info[template].exception,
                 )
-            self._last_triggered[template] = now
 
         self._last_info = self._info.copy()
         self._create_listeners()
@@ -748,27 +745,28 @@ class _TrackTemplateResultInfo:
         template = track_template_.template
         rate_limit = self._last_info[template].rate_limit or track_template_.rate_limit
         if not rate_limit:
-            self._cancel_timer(template)
             return False
 
-        next_allowed_fire_time = self._last_triggered[template] + rate_limit
+        if template not in self._last_rendered:
+            next_allowed_fire_time = now
+        else:
+            next_allowed_fire_time = self._last_rendered[template] + rate_limit
 
         if next_allowed_fire_time <= now:
             self._cancel_timer(template)
             return False
 
         _LOGGER.debug(
-            "Template update %s deferred by rate_limit: %s to %s",
+            "Template rate_limit %s triggered by event %s deferred by rate_limit %s to %s",
             template.template,
+            event,
             rate_limit,
             next_allowed_fire_time,
         )
 
         if template not in self._rate_limit_timers:
-            delay = (next_allowed_fire_time - now).total_seconds()
             self._rate_limit_timers[template] = self.hass.loop.call_later(
-                delay,
-                lambda: self._refresh(event),
+                (next_allowed_fire_time - now).total_seconds(), self._refresh, event
             )
 
         return True
@@ -811,7 +809,7 @@ class _TrackTemplateResultInfo:
             ):
                 continue
 
-            self._last_triggered[template] = now
+            self._last_rendered[template] = now
             self._info[template] = template.async_render_to_info(
                 track_template_.variables
             )
