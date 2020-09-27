@@ -1,4 +1,5 @@
 """Constants for Hyperion integration."""
 DOMAIN = "hyperion"
 CONF_INSTANCE = "instance"
+CONF_CREATE_TOKEN = "create_token"
 DEFAULT_NAME = "Hyperion"

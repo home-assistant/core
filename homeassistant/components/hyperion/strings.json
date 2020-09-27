@@ -25,7 +25,7 @@
     "error": {
       "connection_error": "Failed to connect to Hyperion Ambilight device.",
       "auth_required_error": "Failed to determine if authorization is required.",
-      "here": "Checkpoint"
+      "auth_error": "Failed to authenticate using token"
     },
     "abort": {
       "already_configured": "This Hyperion Ambilight device is already configured.",

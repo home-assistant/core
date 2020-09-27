@@ -2,7 +2,6 @@
 import logging
 
 from hyperion import client, const
-from hyperion.const import CONF_INSTANCE
 import voluptuous as vol
 
 from homeassistant.components.light import (
@@ -15,10 +14,12 @@ from homeassistant.components.light import (
     SUPPORT_EFFECT,
     LightEntity,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TOKEN
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
+
+from .const import CONF_INSTANCE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -101,14 +102,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 async def async_setup_entry_from_data(hass, data, async_add_entities):
     """Set up a Hyperion light from a dict of data."""
 
-    hyperion_client = client.HyperionClient(
-        data[CONF_HOST], data[CONF_PORT], instance=data[CONF_INSTANCE]
-    )
+    kwargs = {}
+    if CONF_INSTANCE in data:
+        kwargs[CONF_INSTANCE] = data[CONF_INSTANCE]
+    if CONF_TOKEN in data:
+        kwargs[CONF_TOKEN] = data[CONF_TOKEN]
+
+    hyperion_client = client.HyperionClient(data[CONF_HOST], data[CONF_PORT], **kwargs)
 
     if not await hyperion_client.async_client_connect():
         raise PlatformNotReady
 
-    # TODO: Add token support.
     async_add_entities(
         [Hyperion(data[CONF_NAME], data[CONF_PRIORITY], hyperion_client)]
     )
