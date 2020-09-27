@@ -2,10 +2,12 @@
 
 import pytest
 import zigpy.profiles.zha
+import zigpy.types
 import zigpy.zcl.clusters.general as general
 
 from homeassistant.components.websocket_api import const
-from homeassistant.components.zha.api import ID, TYPE, async_load_api
+from homeassistant.components.zha import DOMAIN
+from homeassistant.components.zha.api import ID, SERVICE_PERMIT, TYPE, async_load_api
 from homeassistant.components.zha.core.const import (
     ATTR_CLUSTER_ID,
     ATTR_CLUSTER_TYPE,
@@ -16,12 +18,17 @@ from homeassistant.components.zha.core.const import (
     ATTR_NAME,
     ATTR_QUIRK_APPLIED,
     CLUSTER_TYPE_IN,
+    DATA_ZHA,
+    DATA_ZHA_GATEWAY,
     GROUP_ID,
     GROUP_IDS,
     GROUP_NAME,
 )
+from homeassistant.core import Context
 
 from .conftest import FIXTURE_GRP_ID, FIXTURE_GRP_NAME
+
+from tests.async_mock import patch
 
 IEEE_SWITCH_DEVICE = "01:2d:6f:00:0a:90:69:e7"
 IEEE_GROUPABLE_DEVICE = "01:2d:6f:00:0a:90:69:e8"
@@ -335,3 +342,45 @@ async def test_remove_group(zha_client):
 
     groups = msg["result"]
     assert len(groups) == 0
+
+
+@pytest.fixture
+async def app_controller(hass, setup_zha):
+    """Fixture for zigpy Application Controller."""
+    await setup_zha()
+    controller = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY].application_controller
+    p1 = patch.object(controller, "permit")
+    p2 = patch.object(controller, "permit_with_key")
+    with p1, p2:
+        yield controller
+
+
+@pytest.mark.parametrize(
+    "params, duration, node",
+    (
+        ({}, 60, None),
+        ({"duration": 30}, 30, None),
+        (
+            {"duration": 33, "ieee_address": "aa:bb:cc:dd:aa:bb:cc:dd"},
+            33,
+            zigpy.types.EUI64.convert("aa:bb:cc:dd:aa:bb:cc:dd"),
+        ),
+        (
+            {"ieee_address": "aa:bb:cc:dd:aa:bb:cc:d1"},
+            60,
+            zigpy.types.EUI64.convert("aa:bb:cc:dd:aa:bb:cc:d1"),
+        ),
+    ),
+)
+async def test_permit_ha12(
+    hass, app_controller, hass_admin_user, params, duration, node
+):
+    """Test permit service."""
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_PERMIT, params, True, Context(user_id=hass_admin_user.id)
+    )
+    assert app_controller.permit.await_count == 1
+    assert app_controller.permit.await_args[1]["time_s"] == duration
+    assert app_controller.permit.await_args[1]["node"] == node
+    assert app_controller.permit_with_key.call_count == 0
