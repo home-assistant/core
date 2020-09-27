@@ -799,13 +799,10 @@ class _TrackTemplateResultInfo:
         """If the template is triggered by one of the events, return the first triggering event."""
         for event in events:
             entity_id = event.data.get(ATTR_ENTITY_ID)
-            lifecycle_event = (
-                event.data.get("new_state") is None
-                or event.data.get("old_state") is None
-            )
             if (
                 self._last_info[template].filter(entity_id)
-                or lifecycle_event
+                or event.data.get("new_state") is None
+                or event.data.get("old_state") is None
                 and self._last_info[template].filter_lifecycle(entity_id)
             ):
                 return event
