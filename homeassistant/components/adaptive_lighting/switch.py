@@ -14,6 +14,7 @@ from homeassistant.components.homeassistant import (
     SERVICE_UPDATE_ENTITY,
 )
 from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
     ATTR_BRIGHTNESS_PCT,
     ATTR_COLOR_TEMP,
     ATTR_RGB_COLOR,
@@ -560,7 +561,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         ):
             # State change 'off' → 'on' and 'light.turn_off(..., transition=...)' are
             # from the same event, so wait at least the 'turn_off' transition time.
-            delay = transition + TURNING_OFF_DELAY
+            delay = transition
         elif ts_on_to_off == 0:
             # No state change has been registered before.
             return False
@@ -571,15 +572,45 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
 
         delta_time = now_ts - ts_on_to_off
         if delta_time < delay:
+            delay -= delta_time  # already been delta_time since the event
+            brightness_going_down = True  # this might not be the case
             _LOGGER.debug(
                 "%s: Waiting with adjusting '%s' for %s.", self._name, entity_id, delay
             )
-            await asyncio.sleep(delay)
-            await self.hass.services.async_call(
-                HA_DOMAIN,
-                SERVICE_UPDATE_ENTITY,
-                {ATTR_ENTITY_ID: entity_id},
+            current_state = self.hass.states.get(entity_id)
+            _LOGGER.debug(
+                "%s: '%s' state before sleep is '%s'",
+                self._name,
+                entity_id,
+                current_state,
             )
+            for _ in range(3):
+                # It can happen that the actual transition time is longer than
+                # the specified time in the 'turn_off' service, so we check
+                # whether the brightness is still going down, if so, we wait a
+                # little longer.
+                await asyncio.sleep(delay)
+                await self.hass.services.async_call(
+                    HA_DOMAIN,
+                    SERVICE_UPDATE_ENTITY,
+                    {ATTR_ENTITY_ID: entity_id},
+                    blocking=True,
+                )
+                old_state = current_state
+                current_state = self.hass.states.get(entity_id)
+                old_brightness = old_state.attributes.get(ATTR_BRIGHTNESS, 0)
+                current_brightness = current_state.attributes.get(ATTR_BRIGHTNESS, 0)
+                brightness_going_down = old_brightness > current_brightness
+                _LOGGER.debug(
+                    "%s: '%s' state after sleep is '%s'",
+                    self._name,
+                    entity_id,
+                    current_state,
+                )
+                if not brightness_going_down:
+                    break
+                delay = TURNING_OFF_DELAY
+
             if not is_on(self.hass, entity_id):
                 return True
         return False
@@ -594,6 +625,12 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         transition = service_data.get(ATTR_TRANSITION)
         if transition is not None and transition > 0:
             entity_id = service_data[ATTR_ENTITY_ID]
+            _LOGGER.debug(
+                "%s: Detected an 'light.turn_off('%s', transition=%s)' event",
+                self._name,
+                entity_id,
+                transition,
+            )
             if isinstance(entity_id, str):
                 entity_id = [entity_id]
             for eid in entity_id:
