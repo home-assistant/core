@@ -78,6 +78,7 @@ class ModbusCoilFan(ModbusCoilSwitch, FanEntity):
         # Handle polling directly in this entity
         return False
 
+    # pylint: disable=arguments-differ
     def turn_on(self, speed: Optional[str] = None, **kwargs) -> None:
         """Turn on the fan."""
         super().turn_on(**kwargs)
@@ -124,6 +125,7 @@ class ModbusRegisterFan(ModbusRegisterSwitch, FanEntity):
         # Handle polling directly in this entity
         return False
 
+    # pylint: disable=arguments-differ
     def turn_on(self, speed: Optional[str] = None, **kwargs) -> None:
         """Turn on the fan."""
         super().turn_on(**kwargs)
