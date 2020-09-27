@@ -6,6 +6,11 @@
                     "password": "Paswoord",
                     "username": "Gebruikersnaam"
                 }
+            },
+            "user": {
+                "data": {
+                    "username": "Gebruikersnaam"
+                }
             }
         }
     }

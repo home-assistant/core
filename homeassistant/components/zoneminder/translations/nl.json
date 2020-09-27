@@ -4,6 +4,7 @@
             "auth_fail": "Gebruikersnaam of wachtwoord is onjuist.",
             "connection_error": "Kan geen verbinding maken met een ZoneMinder-server."
         },
+        "flow_title": "ZoneMinder",
         "step": {
             "user": {
                 "data": {
