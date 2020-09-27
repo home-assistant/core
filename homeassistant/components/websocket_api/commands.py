@@ -261,7 +261,7 @@ async def handle_render_template(hass, connection, msg):
         connection.send_error(
             msg["id"],
             const.ERR_TEMPLATE_ERROR,
-            "Exceeded maximum execution time of {timeout}s",
+            f"Exceeded maximum execution time of {timeout}s",
         )
         return
 
