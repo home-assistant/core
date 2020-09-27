@@ -564,7 +564,7 @@ class _TrackTemplateResultInfo:
         self._last_result: Dict[Template, Union[str, TemplateError]] = {}
         self._last_info: Dict[Template, RenderInfo] = {}
         self._last_triggered: Dict[Template, datetime] = {}
-        self._deferred_timers: Dict[Template, asyncio.TimerHandle] = {}
+        self._rate_limit_timers: Dict[Template, asyncio.TimerHandle] = {}
         self._info: Dict[Template, RenderInfo] = {}
 
         self._last_domains: Set = set()
@@ -657,10 +657,10 @@ class _TrackTemplateResultInfo:
 
     @callback
     def _cancel_timer(self, template: Template) -> None:
-        if template not in self._deferred_timers:
+        if template not in self._rate_limit_timers:
             return
 
-        self._deferred_timers.pop(template).cancel()
+        self._rate_limit_timers.pop(template).cancel()
 
     @callback
     def _update_listeners(self) -> None:
@@ -764,9 +764,9 @@ class _TrackTemplateResultInfo:
             next_allowed_fire_time,
         )
 
-        if template not in self._deferred_timers:
+        if template not in self._rate_limit_timers:
             delay = (next_allowed_fire_time - now).total_seconds()
-            self._deferred_timers[template] = self.hass.loop.call_later(
+            self._rate_limit_timers[template] = self.hass.loop.call_later(
                 delay,
                 lambda: self._refresh(event),
             )
