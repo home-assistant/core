@@ -575,6 +575,7 @@ class _TrackTemplateResultInfo:
         for track_template_ in self._track_templates:
             template = track_template_.template
             variables = track_template_.variables
+
             self._info[template] = template.async_render_to_info(variables)
             if self._info[template].exception:
                 if raise_on_template_error:
