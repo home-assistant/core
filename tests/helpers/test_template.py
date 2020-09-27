@@ -2541,6 +2541,12 @@ async def test_state_attributes(hass):
     )
     assert tpl.async_render() == hass.states.get("sensor.test").context.id
 
+    tpl = template.Template(
+        "{{ states.sensor.test.state_with_unit }}",
+        hass,
+    )
+    assert tpl.async_render() == "23"
+
 
 async def test_unavailable_states(hass):
     """Test watching unavailable states."""
