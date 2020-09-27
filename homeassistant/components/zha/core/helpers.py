@@ -232,9 +232,9 @@ QR_CODES = (
     # Enbrighten
     r"""
         ^Z:
-        ([0-9a-f]{16)  # IEEE address
-        I\$
-        ([0-9a-f]{36})  # install code
+        ([0-9a-fA-F]{16})  # IEEE address
+        \$I:
+        ([0-9a-fA-F]{36})  # install code
         $
     """,
 )
@@ -251,7 +251,8 @@ def qr_to_install_code(qr_code: str) -> Tuple[zigpy.types.EUI64, bytes]:
         if match is None:
             continue
 
-        ieee = zigpy.types.EUI64.convert(match[1])
+        ieee_hex = binascii.unhexlify(match[1])
+        ieee = zigpy.types.EUI64(ieee_hex[::-1])
         install_code = match[2]
         # install_code sanity check
         install_code = convert_install_code(install_code)

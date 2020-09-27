@@ -430,11 +430,27 @@ async def test_permit_with_install_code(
     "params",
     (
         {
+            # wrong install code
             ATTR_SOURCE_IEEE: IEEE_SWITCH_DEVICE,
             ATTR_INSTALL_CODE: "5279-7BF4-A508-4DAA-8E17-12B6-1741-CA02-4052",
         },
+        # incorrect service params
         {ATTR_INSTALL_CODE: "5279-7BF4-A508-4DAA-8E17-12B6-1741-CA02-4051"},
         {ATTR_SOURCE_IEEE: IEEE_SWITCH_DEVICE},
+        {
+            # incorrect service params
+            ATTR_INSTALL_CODE: "5279-7BF4-A508-4DAA-8E17-12B6-1741-CA02-4051",
+            ATTR_QR_CODE: "Z:000D6FFFFED4163B$I:52797BF4A5084DAA8E1712B61741CA024051",
+        },
+        {
+            # incorrect service params
+            ATTR_SOURCE_IEEE: IEEE_SWITCH_DEVICE,
+            ATTR_QR_CODE: "Z:000D6FFFFED4163B$I:52797BF4A5084DAA8E1712B61741CA024051",
+        },
+        {
+            # good regex match, but bad code
+            ATTR_QR_CODE: "Z:000D6FFFFED4163B$I:52797BF4A5084DAA8E1712B61741CA024052",
+        },
     ),
 )
 async def test_permit_with_install_code_fail(
