@@ -1,7 +1,7 @@
 """Test deCONZ remote events."""
 from copy import deepcopy
 
-from homeassistant.components.deconz.deconz_event import CONF_DECONZ_EVENT, EVENT
+from homeassistant.components.deconz.deconz_event import CONF_DECONZ_EVENT
 
 from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
 
@@ -62,7 +62,6 @@ async def test_deconz_events(hass):
     assert "sensor.switch_2_battery_level" in gateway.deconz_ids
     assert len(hass.states.async_all()) == 3
     assert len(gateway.events) == 5
-    assert len(gateway.entities[EVENT]) == 5
 
     switch_1 = hass.states.get("sensor.switch_1")
     assert switch_1 is None
@@ -128,4 +127,3 @@ async def test_deconz_events(hass):
 
     assert len(hass.states.async_all()) == 0
     assert len(gateway.events) == 0
-    assert len(gateway.entities[EVENT]) == 0
