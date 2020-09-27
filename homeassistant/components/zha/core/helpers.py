@@ -216,8 +216,8 @@ def convert_install_code(value: str) -> bytes:
 
     try:
         code = binascii.unhexlify(value.replace("-", "").lower())
-    except binascii.Error:
-        raise vol.Invalid(f"invalid hex string: {value}")
+    except binascii.Error as exc:
+        raise vol.Invalid(f"invalid hex string: {value}") from exc
 
     if len(code) != 18:  # 16 byte code + 2 crc bytes
         raise vol.Invalid("invalid length of the install code")
