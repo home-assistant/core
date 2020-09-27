@@ -23,6 +23,7 @@ from .core.const import (
     ATTR_COMMAND,
     ATTR_COMMAND_TYPE,
     ATTR_ENDPOINT_ID,
+    ATTR_IEEE,
     ATTR_LEVEL,
     ATTR_MANUFACTURER,
     ATTR_MEMBERS,
@@ -71,8 +72,6 @@ DEVICE_INFO = "device_info"
 
 ATTR_DURATION = "duration"
 ATTR_GROUP = "group"
-ATTR_IEEE_ADDRESS = "ieee_address"
-ATTR_IEEE = "ieee"
 ATTR_INSTALL_CODE = "install_code"
 ATTR_SOURCE_IEEE = "source_ieee"
 ATTR_TARGET_IEEE = "target_ieee"
@@ -91,7 +90,7 @@ SERVICE_ZIGBEE_BIND = "service_zigbee_bind"
 IEEE_SERVICE = "ieee_based_service"
 
 SERVICE_PERMIT_PARAMS = {
-    vol.Optional(ATTR_IEEE_ADDRESS, default=None): EUI64.convert,
+    vol.Optional(ATTR_IEEE, default=None): EUI64.convert,
     vol.Optional(ATTR_DURATION, default=60): vol.All(
         vol.Coerce(int), vol.Range(0, 254)
     ),
@@ -102,7 +101,7 @@ SERVICE_PERMIT_PARAMS = {
 
 SERVICE_SCHEMAS = {
     SERVICE_PERMIT: vol.Schema(SERVICE_PERMIT_PARAMS),
-    IEEE_SERVICE: vol.Schema({vol.Required(ATTR_IEEE_ADDRESS): EUI64.convert}),
+    IEEE_SERVICE: vol.Schema({vol.Required(ATTR_IEEE): EUI64.convert}),
     SERVICE_SET_ZIGBEE_CLUSTER_ATTRIBUTE: vol.Schema(
         {
             vol.Required(ATTR_IEEE): EUI64.convert,
@@ -844,8 +843,8 @@ def async_load_api(hass):
 
     async def permit(service):
         """Allow devices to join this network."""
-        duration = service.data.get(ATTR_DURATION)
-        ieee = service.data.get(ATTR_IEEE_ADDRESS)
+        duration = service.data[ATTR_DURATION]
+        ieee = service.data.get(ATTR_IEEE)
         if ATTR_SOURCE_IEEE in service.data:
             src_ieee = service.data[ATTR_SOURCE_IEEE]
             code = service.data[ATTR_INSTALL_CODE]
@@ -875,7 +874,7 @@ def async_load_api(hass):
 
     async def remove(service):
         """Remove a node from the network."""
-        ieee = service.data[ATTR_IEEE_ADDRESS]
+        ieee = service.data[ATTR_IEEE]
         zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
         zha_device = zha_gateway.get_device(ieee)
         if zha_device is not None and zha_device.is_coordinator:

@@ -11,7 +11,6 @@ from homeassistant.components.websocket_api import const
 from homeassistant.components.zha import DOMAIN
 from homeassistant.components.zha.api import (
     ATTR_DURATION,
-    ATTR_IEEE_ADDRESS,
     ATTR_INSTALL_CODE,
     ATTR_QR_CODE,
     ATTR_SOURCE_IEEE,
@@ -373,12 +372,12 @@ async def app_controller(hass, setup_zha):
         ({}, 60, None),
         ({ATTR_DURATION: 30}, 30, None),
         (
-            {ATTR_DURATION: 33, ATTR_IEEE_ADDRESS: "aa:bb:cc:dd:aa:bb:cc:dd"},
+            {ATTR_DURATION: 33, ATTR_IEEE: "aa:bb:cc:dd:aa:bb:cc:dd"},
             33,
             zigpy.types.EUI64.convert("aa:bb:cc:dd:aa:bb:cc:dd"),
         ),
         (
-            {ATTR_IEEE_ADDRESS: "aa:bb:cc:dd:aa:bb:cc:d1"},
+            {ATTR_IEEE: "aa:bb:cc:dd:aa:bb:cc:d1"},
             60,
             zigpy.types.EUI64.convert("aa:bb:cc:dd:aa:bb:cc:d1"),
         ),
