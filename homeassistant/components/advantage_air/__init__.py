@@ -7,6 +7,7 @@ import logging
 from advantage_air import ApiError, advantage_air
 
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import ADVANTAGE_AIR_RETRY, DOMAIN
@@ -52,7 +53,7 @@ async def async_setup_entry(hass, config_entry):
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
-        name="AdvantageAir",
+        name="Advantage Air",
         update_method=async_get,
         update_interval=timedelta(seconds=ADVANTAGE_AIR_SYNC_INTERVAL),
     )
@@ -65,6 +66,9 @@ async def async_setup_entry(hass, config_entry):
             _LOGGER.warning(err)
 
     await coordinator.async_refresh()
+
+    if not coordinator.data:
+        raise ConfigEntryNotReady
 
     device = {
         "identifiers": {(DOMAIN, coordinator.data["system"]["rid"])},
