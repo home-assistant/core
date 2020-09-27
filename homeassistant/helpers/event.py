@@ -653,7 +653,7 @@ class _TrackTemplateResultInfo:
         self._listeners.pop(listener_name)()
 
     @callback
-    def _cancel_timer(self, template: Template) -> None:
+    def _cancel_rate_limit_timer(self, template: Template) -> None:
         if template not in self._rate_limit_timers:
             return
 
@@ -728,7 +728,7 @@ class _TrackTemplateResultInfo:
         self._cancel_listener(_TEMPLATE_ENTITIES_LISTENER)
         for track_template_ in self._track_templates:
             template = track_template_.template
-            self._cancel_timer(template)
+            self._cancel_rate_limit_timer(template)
 
     @callback
     def async_refresh(self) -> None:
@@ -753,7 +753,7 @@ class _TrackTemplateResultInfo:
             next_allowed_fire_time = self._last_rendered[template] + rate_limit
 
         if next_allowed_fire_time <= now:
-            self._cancel_timer(template)
+            self._cancel_rate_limit_timer(template)
             return False
 
         _LOGGER.debug(
