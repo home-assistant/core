@@ -141,10 +141,12 @@ class ModbusCoilSwitch(ModbusBaseSwitch):
     def turn_on(self, **kwargs):
         """Set switch on."""
         self._write_coil(self._coil, True)
+        self._is_on = True
 
     def turn_off(self, **kwargs):
         """Set switch off."""
         self._write_coil(self._coil, False)
+        self._is_on = False
 
     def update(self):
         """Update the state of the switch."""
