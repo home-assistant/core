@@ -811,6 +811,8 @@ class _TrackTemplateResultInfo:
                     template.template,
                     event,
                 )
+            else:
+                self._cancel_rate_limit_timer(template)
 
             self._last_rendered[template] = now
             self._info[template] = template.async_render_to_info(
