@@ -25,6 +25,7 @@ from homeassistant.const import (
     STATE_OPEN,
     TEMP_CELSIUS,
 )
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, STATE_CLOSE
 
@@ -76,12 +77,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     return True
 
 
-class AdvantageAirClimateEntity(ClimateEntity):
+class AdvantageAirClimateEntity(CoordinatorEntity, ClimateEntity):
     """AdvantageAir Climate class."""
 
     def __init__(self, instance):
         """Initialize the base Advantage Air climate entity."""
-        self.coordinator = instance["coordinator"]
+        super().__init__(instance["coordinator"])
         self.async_change = instance["async_change"]
         self.device = instance["device"]
 
@@ -106,29 +107,9 @@ class AdvantageAirClimateEntity(ClimateEntity):
         return 16
 
     @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def available(self):
-        """Return if platform is available."""
-        return self.coordinator.last_update_success
-
-    @property
     def device_info(self):
         """Return parent device information."""
         return self.device
-
-    async def async_added_to_hass(self):
-        """When entity is added to hass."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
-        )
-
-    async def async_update(self):
-        """Request update."""
-        await self.coordinator.async_request_refresh()
 
 
 class AdvantageAirAC(AdvantageAirClimateEntity):
