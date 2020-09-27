@@ -218,9 +218,10 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         # Set and unset tracker in async_turn_on and async_turn_off
         self.unsub_tracker = None
         _LOGGER.debug(
-            "Setting up with '%s',"
+            "%s: Setting up with '%s',"
             " config_entry.data: '%s',"
             " config_entry.options: '%s', converted to '%s'.",
+            self._name,
             self._lights,
             config_entry.data,
             config_entry.options,
@@ -254,12 +255,12 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         for light in lights:
             state = self.hass.states.get(light)
             if state is None:
-                _LOGGER.debug("State of %s is None", light)
+                _LOGGER.debug("%s: State of %s is None", self._name, light)
                 # TODO: make sure that the lights are loaded when doing this
                 all_lights.append(light)
             elif "entity_id" in state.attributes:  # it's a light group
                 group = state.attributes["entity_id"]
-                _LOGGER.debug("Unpacked %s to %s", lights, group)
+                _LOGGER.debug("%s: Unpacked %s to %s", self._name, lights, group)
                 all_lights.extend(group)
             else:
                 all_lights.append(light)
@@ -340,7 +341,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         self._xy_color = color_RGB_to_xy(*self._rgb_color)
         self._hs_color = color_xy_to_hs(*self._xy_color)
         self.async_write_ha_state()
-        _LOGGER.debug("'_update_attrs' called for %s", self._name)
+        _LOGGER.debug("%s: '_update_attrs' called", self._name)
 
     async def _async_update_at_interval(self, now=None):
         await self._update_lights(force=False)
@@ -469,7 +470,8 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
             service_data[ATTR_COLOR_TEMP] = self._color_temp_mired
 
         _LOGGER.debug(
-            "Scheduling 'light.turn_on' with the following 'service_data': %s",
+            "%s: Scheduling 'light.turn_on' with the following 'service_data': %s",
+            self._name,
             service_data,
         )
         return self.hass.services.async_call(
@@ -494,7 +496,10 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
 
     async def _state_changed(self, entity_id, from_state, to_state):
         _LOGGER.debug(
-            "_state_changed, from_state: '%s', to_state: '%s'", from_state, to_state
+            "%s: _state_changed, from_state: '%s', to_state: '%s'",
+            self._name,
+            from_state,
+            to_state,
         )
         await self._update_lights(transition=self._initial_transition, force=True)
 
@@ -509,9 +514,14 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
             and new_state is not None
             and new_state.state == "on"
         ):
+            _LOGGER.debug(
+                "%s: Detected an 'off' → 'on' event for '%s'", self._name, entity_id
+            )
             if await self._maybe_cancel(entity_id, now_ts):
                 # Stop if a rapid 'off' → 'on' → 'off' happens.
-                _LOGGER.debug("Cancelling adjusting lights for %s", entity_id)
+                _LOGGER.debug(
+                    "%s: Cancelling adjusting lights for %s", self._name, entity_id
+                )
                 return
             await self._update_lights(
                 lights=[entity_id],
@@ -562,9 +572,9 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         delta_time = now_ts - ts_on_to_off
         if delta_time < delay:
             _LOGGER.debug(
-                "Waiting with adjusting '%s' for %s.", entity_id, delay - delta_time
+                "%s: Waiting with adjusting '%s' for %s.", self._name, entity_id, delay
             )
-            await asyncio.sleep(delay - delta_time)
+            await asyncio.sleep(delay)
             await self.hass.services.async_call(
                 HA_DOMAIN,
                 SERVICE_UPDATE_ENTITY,
