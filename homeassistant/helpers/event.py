@@ -74,7 +74,7 @@ class TrackTemplate:
 
     The template is template to calculate.
     The variables are variables to pass to the template.
-    The rate_limit is the update rate_limit
+    The rate_limit is a rate limit on how often the template is re-rendered.
     """
 
     template: Template
