@@ -553,7 +553,6 @@ async def test_options_add_duplicate_device(hass):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "debug": True,
             "automatic_add": True,
             "event_code": "0b1100cd0213c7f230010f71",
         },
