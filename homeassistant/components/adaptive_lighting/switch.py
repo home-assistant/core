@@ -5,9 +5,14 @@ import bisect
 from copy import deepcopy
 from datetime import timedelta
 import logging
+from typing import Dict, Tuple
 
 import voluptuous as vol
 
+from homeassistant.components.homeassistant import (
+    DOMAIN as HA_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS_PCT,
     ATTR_COLOR_TEMP,
@@ -23,8 +28,13 @@ from homeassistant.components.light import (
 )
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import (
+    ATTR_DOMAIN,
     ATTR_ENTITY_ID,
+    ATTR_SERVICE,
+    ATTR_SERVICE_DATA,
     CONF_NAME,
+    EVENT_CALL_SERVICE,
+    SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_ON,
     SUN_EVENT_SUNRISE,
@@ -189,7 +199,11 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         # Set other attributes
         self._icon = ICON
         self._entity_id = f"switch.{DOMAIN}_{slugify(self._name)}"
-        self._turned_off = {}
+
+        # Tracks 'off' → 'on' state changes
+        self._on_to_off_event: Dict[str, Tuple[float, str]] = {}
+        # Tracks 'light.turn_off(..., transition=...)' service calls
+        self._turn_off_service_event: Dict[str, Tuple[str, float]] = {}
 
         # Initialize attributes that will be set in self._update_attrs
         self._percent = None
@@ -256,6 +270,10 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
             unpacked_lights = self._unpack_light_groups(self._lights)
             async_track_state_change_event(
                 self.hass, unpacked_lights, self._light_event
+            )
+            # Tracks 'light.turn_off(..., transition=...)' service calls
+            self.hass.bus.async_listen(
+                EVENT_CALL_SERVICE, self._turn_off_event_listener
             )
             track_kwargs = dict(hass=self.hass, action=self._state_changed)
             if self._sleep_entity is not None:
@@ -482,44 +500,88 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
     async def _light_event(self, event):
         old_state = event.data.get("old_state")
         new_state = event.data.get("new_state")
-
-        _LOGGER.debug(
-            "lights event, old_state: '%s', new_state: '%s'",
-            old_state,
-            new_state,
-        )
         entity_id = event.data.get("entity_id")
-        now = dt_util.now().timestamp()
+        now_ts = dt_util.now().timestamp()
         if (
             old_state is not None
             and old_state.state == "off"
             and new_state is not None
             and new_state.state == "on"
         ):
-            last_turned_off = self._turned_off.get(entity_id, 0)
-            dt = now - last_turned_off
-            # TODO: make TURNING_OFF_DELAY depend on the 'transition' time
-            # passed to 'turn_off' IF transition was passed.
-            if dt < TURNING_OFF_DELAY:
-                # Possibly the lights just got a turn_off call, however, the light
-                # is actually still turning off and HA polls the light before the
-                # light is 100% off. This might trigger a rapid switch
-                # 'off' -> 'on' -> 'off'. To prevent this component from interfering
-                # on the 'on' state, we make sure to wait at least TURNING_OFF_DELAY
-                # between a 'off' -> 'on' event and then check whether the light is
-                # still 'on'. Only if it is still 'on' we adjust the lights.
-                await asyncio.sleep(TURNING_OFF_DELAY - dt)
-                if not is_on(self.hass, entity_id):
-                    return
+            if await self._maybe_cancel(entity_id, now_ts):
+                # Stop if a rapid 'off' → 'on' → 'off' happens.
+                _LOGGER.debug("Cancelling adjusting lights for %s", entity_id)
+                return
             await self._update_lights(
                 lights=[entity_id],
                 transition=self._initial_transition,
                 force=True,
             )
-        if (
+        elif (
             old_state is not None
             and old_state.state == "on"
             and new_state is not None
             and new_state.state == "off"
         ):
-            self._turned_off[entity_id] = now
+            # Tracks 'off' → 'on' state changes
+            self._on_to_off_event[entity_id] = (now_ts, event.context.id)
+
+    async def _maybe_cancel(self, entity_id, now_ts) -> bool:
+        """Cancel the adjusting of a light if it has just been turned off.
+
+        Possibly the lights just got a 'turn_off' call, however, the light
+        is actually still turning off (e.g., because of a 'transition') and
+        HA polls the light before the light is 100% off. This might trigger
+        a rapid switch 'off' → 'on' → 'off'. To prevent this component
+        from interfering on the 'on' state, we make sure to wait at least
+        TURNING_OFF_DELAY between a 'off' → 'on' event and then check
+        whether the light is still 'on'. Only if it is still 'on' we adjust
+        the lights.
+        """
+        ts_on_to_off, id_on_to_off = self._on_to_off_event.get(entity_id, (0, None))
+        id_turn_off, transition = self._turn_off_service_event.get(
+            entity_id, (None, None)
+        )
+        if (
+            id_on_to_off is not None
+            and id_turn_off is not None
+            and id_on_to_off == id_turn_off
+        ):
+            # State change 'off' → 'on' and 'light.turn_off(..., transition=...)' are
+            # from the same event, so wait at least the 'turn_off' transition time.
+            delay = transition + TURNING_OFF_DELAY
+        elif ts_on_to_off == 0:
+            # No state change has been registered before.
+            return False
+        else:
+            # State change 'off' → 'on' happened but **not** because a
+            # 'light.turn_off' event that is called with 'transition'.
+            delay = TURNING_OFF_DELAY
+
+        dt = now_ts - ts_on_to_off
+        if dt < delay:
+            _LOGGER.debug("Waiting with adjusting '%s' for %s.", entity_id, delay - dt)
+            await asyncio.sleep(delay - dt)
+            await self.hass.services.async_call(
+                HA_DOMAIN,
+                SERVICE_UPDATE_ENTITY,
+                {ATTR_ENTITY_ID: entity_id},
+            )
+            if not is_on(self.hass, entity_id):
+                return True
+        return False
+
+    async def _turn_off_event_listener(self, event):
+        """Track 'light.turn_off(..., transition=...)' service calls."""
+        if event.data.get(ATTR_DOMAIN) != LIGHT_DOMAIN:
+            return
+        if event.data.get(ATTR_SERVICE) != SERVICE_TURN_OFF:
+            return
+        service_data = event.data.get(ATTR_SERVICE_DATA, {})
+        transition = service_data.get(ATTR_TRANSITION)
+        if transition is not None and transition > 0:
+            entity_id = service_data[ATTR_ENTITY_ID]
+            if isinstance(entity_id, str):
+                entity_id = [entity_id]
+            for eid in entity_id:
+                self._turn_off_service_event[eid] = (event.context.id, transition)
