@@ -20,27 +20,27 @@ from .const import (
 class OZWValidationResponse:
     """Class to hold response for validating an action."""
 
-    def __init__(self, success, payload=None, err_type=None, err_msg=None):
+    def __init__(self, success, *args, payload=None, err_type=None, err_msg=None):
         """Initialize OZWValidationResponse."""
         self.success = success
         self.payload = payload
         self.err_type = err_type
         self.err_msg = err_msg
+        self.err_args = args
 
     @staticmethod
-    def process_fail(err_type, err_msg):
+    def process_fail(err_type, err_msg, *args):
         """Process an invalid request."""
-        return OZWValidationResponse(False, err_type=err_type, err_msg=err_msg)
+        return OZWValidationResponse(False, err_type=err_type, err_msg=err_msg, *args)
 
     @staticmethod
     def process_fail_on_type(value, new_value):
         """Process an invalid request that fails type validation."""
         return OZWValidationResponse.process_fail(
             ERR_NOT_SUPPORTED,
-            (
-                f"Configuration parameter type {value.type} does "
-                f"not match the value type {type(new_value)}"
-            ),
+            "Configuration parameter type {} does not match the value type {}",
+            value.type,
+            type(new_value),
         )
 
     @staticmethod
@@ -104,7 +104,9 @@ def set_config_parameter(manager, instance_id, node_id, parameter_index, new_val
 
         return OZWValidationResponse.process_fail(
             ERR_NOT_SUPPORTED,
-            f"Invalid value {new_value} for parameter {parameter_index}",
+            "Invalid value {} for parameter {}",
+            new_value,
+            parameter_index,
         )
 
     # Int, Byte, Short are always passed as int, Decimal should be float
@@ -122,10 +124,11 @@ def set_config_parameter(manager, instance_id, node_id, parameter_index, new_val
         ):
             return OZWValidationResponse.process_fail(
                 ERR_NOT_SUPPORTED,
-                (
-                    f"Value {new_value} out of range for parameter "
-                    f"{parameter_index} (Min: {value.min} Max: {value.max})"
-                ),
+                "Value {} out of range for parameter {} (Min: {} Max: {})",
+                new_value,
+                parameter_index,
+                value.min,
+                value.max,
             )
         value.send_value(new_value)
         return OZWValidationResponse.process_success(new_value)
@@ -133,7 +136,9 @@ def set_config_parameter(manager, instance_id, node_id, parameter_index, new_val
     # This will catch BUTTON, STRING, and UNKNOWN ValueTypes
     return OZWValidationResponse.process_fail(
         ERR_NOT_SUPPORTED,
-        f"Value type of {value.type} for parameter {parameter_index} not supported",
+        "Value type of {} for parameter {} not supported",
+        value.type,
+        parameter_index,
     )
 
 

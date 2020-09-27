@@ -152,7 +152,7 @@ def websocket_get_config_parameters(hass, connection, msg):
         connection.send_error(
             msg[ID],
             resp.err_type,
-            resp.err_msg,
+            resp.err_msg.format(*resp.err_args),
         )
         return
 
@@ -185,7 +185,7 @@ def websocket_set_config_parameter(hass, connection, msg):
         connection.send_error(
             msg[ID],
             resp.err_type,
-            resp.err_msg,
+            resp.err_msg.format(*resp.err_args),
         )
         return
 

@@ -72,7 +72,7 @@ class ZWaveServices:
         )
 
         if not resp.success:
-            raise ValueError(resp.err_msg)
+            raise ValueError(resp.err_msg.format(*resp.err_args))
 
         _LOGGER.info(
             "Setting configuration parameter %s on Node %s with value %s",
