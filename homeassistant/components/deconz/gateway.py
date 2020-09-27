@@ -232,7 +232,7 @@ class DeconzGateway:
             unsub_dispatcher()
         self.listeners = []
 
-        await async_unload_events(self)
+        async_unload_events(self)
 
         self.deconz_ids = {}
         return True
