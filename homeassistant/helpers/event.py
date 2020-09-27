@@ -754,30 +754,27 @@ class _TrackTemplateResultInfo:
             return False
 
         if template not in self._last_rendered:
-            next_allowed_fire_time = now
+            next_render_time = now
         else:
-            next_allowed_fire_time = self._last_rendered[template] + rate_limit
+            next_render_time = self._last_rendered[template] + rate_limit
 
-        if next_allowed_fire_time <= now:
+        if next_render_time <= now:
             self._cancel_rate_limit_timer(template)
             return False
 
-        if template in self._rate_limit_timers:
-            _LOGGER.debug(
-                "Template rate_limit %s hit again by event %s",
-                template.template,
-                event,
-            )
-        else:
-            _LOGGER.debug(
-                "Template rate_limit %s hit by event %s deferred by rate_limit %s to %s",
-                template.template,
-                event,
-                rate_limit,
-                next_allowed_fire_time,
-            )
+        _LOGGER.debug(
+            "Template rate_limit %s hit by event %s deferred by rate_limit %s to %s",
+            template.template,
+            event,
+            rate_limit,
+            next_render_time,
+        )
+
+        if template not in self._rate_limit_timers:
             self._rate_limit_timers[template] = self.hass.loop.call_later(
-                (next_allowed_fire_time - now).total_seconds(), self._refresh, event
+                (next_render_time - now).total_seconds() + MAX_TIME_TRACKING_ERROR,
+                self._refresh,
+                event,
             )
 
         return True
