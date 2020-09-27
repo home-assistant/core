@@ -83,14 +83,17 @@ async def async_setup_platform(
     hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
 ):
     """Read configuration and create Modbus switches."""
+    switches = []
     if CONF_COILS in config:
         for coil in config[CONF_COILS]:
             hub: ModbusHub = hass.data[MODBUS_DOMAIN][config[CONF_HUB]]
-            async_add_entities([ModbusCoilSwitch(hub, coil)])
+            switches.append(ModbusCoilSwitch(hub, coil))
     if CONF_REGISTERS in config:
         for register in config[CONF_REGISTERS]:
             hub: ModbusHub = hass.data[MODBUS_DOMAIN][config[CONF_HUB]]
-            async_add_entities([ModbusRegisterSwitch(hub, register)])
+            switches.append(ModbusRegisterSwitch(hub, register))
+
+    async_add_entities(switches)
 
 
 class ModbusBaseSwitch(ToggleEntity, RestoreEntity, ABC):
