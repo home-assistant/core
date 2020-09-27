@@ -29,6 +29,7 @@
             "user": {
                 "data": {
                     "cloud_api": "Geografisk plassering",
+                    "node_pro": "",
                     "type": "Integrasjonstype"
                 },
                 "description": "Velg hvilken type AirVisual-data du vil overv\u00e5ke.",

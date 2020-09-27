@@ -20,7 +20,7 @@ from homeassistant.helpers import aiohttp_client, device_registry, update_coordi
 
 from .const import DOMAIN
 
-PLATFORMS = ["binary_sensor", "light", "sensor", "switch"]
+PLATFORMS = ["binary_sensor", "cover", "light", "sensor", "switch"]
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -86,7 +86,7 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         try:
             async with async_timeout.timeout(5):
                 return await self.device.update()
-        except aiocoap_error.Error as err:
+        except (aiocoap_error.Error, OSError) as err:
             raise update_coordinator.UpdateFailed("Error fetching data") from err
 
     @property

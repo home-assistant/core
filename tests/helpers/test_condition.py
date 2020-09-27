@@ -5,6 +5,7 @@ import pytest
 
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import condition
+from homeassistant.helpers.template import Template
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
 
@@ -807,6 +808,7 @@ async def test_extract_entities():
                     "entity_id": ["sensor.temperature_9", "sensor.temperature_10"],
                     "below": 110,
                 },
+                Template("{{ is_state('light.example', 'on') }}"),
             ],
         }
     ) == {
@@ -867,6 +869,7 @@ async def test_extract_devices():
                             },
                         ],
                     },
+                    Template("{{ is_state('light.example', 'on') }}"),
                 ],
             }
         )

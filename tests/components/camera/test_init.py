@@ -14,7 +14,7 @@ from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_START
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import PropertyMock, mock_open, patch
+from tests.async_mock import Mock, PropertyMock, mock_open, patch
 from tests.components.camera import common
 
 
@@ -114,8 +114,9 @@ async def test_snapshot_service(hass, mock_camera):
     """Test snapshot service."""
     mopen = mock_open()
 
-    with patch(
-        "homeassistant.components.camera.open", mopen, create=True
+    with patch("homeassistant.components.camera.open", mopen, create=True), patch(
+        "homeassistant.components.camera.os.path.exists",
+        Mock(spec="os.path.exists", return_value=True),
     ), patch.object(hass.config, "is_allowed_path", return_value=True):
         await hass.services.async_call(
             camera.DOMAIN,

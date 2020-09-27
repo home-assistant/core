@@ -12,6 +12,7 @@
             "user": {
                 "data": {
                     "password": "Palavra-passe",
+                    "pin": "C\u00f3digo PIN",
                     "username": "Nome de Utilizador"
                 }
             }

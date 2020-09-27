@@ -1,0 +1,30 @@
+{
+    "config": {
+        "error": {
+            "auth": "Api Schl\u00ebssel ass net korrekt."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "OpenWeatherMap API Schl\u00ebssel",
+                    "language": "Sproch",
+                    "latitude": "Breedegrad",
+                    "longitude": "L\u00e4ngegrad",
+                    "mode": "Modus",
+                    "name": "Numm vun der Integratioun"
+                },
+                "title": "OpenWeatherMap API Schl\u00ebssel"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "language": "Sproch",
+                    "mode": "Modus"
+                }
+            }
+        }
+    }
+}

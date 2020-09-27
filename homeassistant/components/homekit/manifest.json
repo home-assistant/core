@@ -20,5 +20,6 @@
   "codeowners": [
     "@bdraco"
   ],
+  "zeroconf": ["_homekit._tcp.local."],
   "config_flow": true
 }

@@ -9,9 +9,9 @@ button:
     button:
       description: >-
         Name of the button to press.  Known possible values are
-        LEFT, RIGHT, DOWN, UP, HOME, BACK, ENTER, DASH, INFO, ASTERISK, CC, EXIT,
+        LEFT, RIGHT, DOWN, UP, HOME, MENU, BACK, ENTER, DASH, INFO, ASTERISK, CC, EXIT,
         MUTE, RED, GREEN, BLUE, VOLUMEUP, VOLUMEDOWN, CHANNELUP, CHANNELDOWN,
-        0, 1, 2, 3, 4, 5, 6, 7, 8, 9
+        PLAY, PAUSE, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
       example: "LEFT"
 
 command:

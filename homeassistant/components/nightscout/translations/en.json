@@ -1,18 +1,22 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device is already configured"
+            "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
         },
         "error": {
-            "cannot_connect": "Failed to connect",
-            "unknown": "Unexpected error"
+            "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+            "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+            "unknown": "[%key:common::config_flow::error::unknown%]"
         },
         "flow_title": "Nightscout",
         "step": {
             "user": {
                 "data": {
-                    "url": "URL"
-                }
+                    "api_key": "[%key:common::config_flow::data::api_key%]",
+                    "url": "[%key:common::config_flow::data::url%]"
+                },
+                "description": "- URL: the address of your nightscout instance. I.e.: https://myhomeassistant.duckdns.org:5423\n- API Key (Optional): Only use if your instance is protected (auth_default_roles != readable).",
+                "title": "Enter your Nightscout server information."
             }
         }
     }

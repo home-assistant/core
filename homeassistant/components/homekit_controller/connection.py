@@ -16,6 +16,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import CONTROLLER, DOMAIN, ENTITY_MAP, HOMEKIT_ACCESSORY_DISPATCH
+from .device_trigger import async_fire_triggers, async_setup_triggers_for_entry
 
 DEFAULT_SCAN_INTERVAL = datetime.timedelta(seconds=60)
 RETRY_INTERVAL = 60  # seconds
@@ -237,6 +238,9 @@ class HKDevice:
 
         await self.async_create_devices()
 
+        # Load any triggers for this config entry
+        await async_setup_triggers_for_entry(self.hass, self.config_entry)
+
         self.add_entities()
 
         if self.watchable_characteristics:
@@ -376,6 +380,9 @@ class HKDevice:
     def process_new_events(self, new_values_dict):
         """Process events from accessory into HA state."""
         self.available = True
+
+        # Process any stateless events (via device_triggers)
+        async_fire_triggers(self, new_values_dict)
 
         for (aid, cid), value in new_values_dict.items():
             accessory = self.current_state.setdefault(aid, {})

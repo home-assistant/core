@@ -13,7 +13,8 @@
                 "data": {
                     "dsn": "DSN"
                 },
-                "description": "Fyll inn din Sentry DNS"
+                "description": "Fyll inn din Sentry DNS",
+                "title": ""
             }
         }
     },

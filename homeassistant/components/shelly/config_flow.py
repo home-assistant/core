@@ -8,7 +8,12 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant import config_entries, core
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    HTTP_UNAUTHORIZED,
+)
 from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN  # pylint:disable=unused-import
@@ -57,6 +62,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 info = await self._async_get_info(host)
             except HTTP_CONNECT_ERRORS:
                 errors["base"] = "cannot_connect"
+            except aioshelly.FirmwareUnsupported:
+                return self.async_abort(reason="unsupported_firmware")
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -91,7 +98,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 device_info = await validate_input(self.hass, self.host, user_input)
             except aiohttp.ClientResponseError as error:
-                if error.status == 401:
+                if error.status == HTTP_UNAUTHORIZED:
                     errors["base"] = "invalid_auth"
                 else:
                     errors["base"] = "cannot_connect"
@@ -128,6 +135,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.info = info = await self._async_get_info(zeroconf_info["host"])
         except HTTP_CONNECT_ERRORS:
             return self.async_abort(reason="cannot_connect")
+        except aioshelly.FirmwareUnsupported:
+            return self.async_abort(reason="unsupported_firmware")
 
         await self.async_set_unique_id(info["mac"])
         self._abort_if_unique_id_configured({CONF_HOST: zeroconf_info["host"]})

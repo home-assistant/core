@@ -20,7 +20,8 @@
             },
             "user": {
                 "data": {
-                    "host": "IP adresse"
+                    "host": "IP adresse",
+                    "port": ""
                 },
                 "description": "Vennligst skriv inn verten informasjon for din Konnected Panel."
             }
