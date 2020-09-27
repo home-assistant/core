@@ -798,12 +798,11 @@ class _TrackTemplateResultInfo:
             ):
                 continue
 
-            if event:
-                _LOGGER.debug(
-                    "Template update %s triggered by event: %s",
-                    template.template,
-                    event,
-                )
+            _LOGGER.debug(
+                "Template update %s triggered by event: %s",
+                template.template,
+                event,
+            )
 
             if not bypass_rate_limit and self._handle_rate_limit(
                 track_template_, event, now
