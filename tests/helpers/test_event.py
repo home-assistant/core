@@ -1520,9 +1520,6 @@ async def test_track_two_templates_with_different_rate_limits(hass):
     info.async_refresh()
     await hass.async_block_till_done()
 
-    import pprint
-
-    pprint.pprint(refresh_runs)
     assert refresh_runs[template_one] == ["0"]
     assert refresh_runs[template_five] == ["0"]
     hass.states.async_set("sensor.one", "any")
