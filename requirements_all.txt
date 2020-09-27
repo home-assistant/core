@@ -2262,7 +2262,7 @@ withings-api==2.1.6
 wled==0.4.4
 
 # homeassistant.components.wolflink
-wolf_smartset==0.1.4
+wolf_smartset==0.1.6
 
 # homeassistant.components.xbee
 xbee-helper==0.0.7
