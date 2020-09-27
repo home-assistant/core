@@ -346,7 +346,7 @@ class OptionsFlow(config_entries.OptionsFlow):
 
     def _can_add_device(self, new_rfx_obj):
         """Check if device does not already exist."""
-        new_device_id = get_device_id(new_rfx_obj)
+        new_device_id = get_device_id(new_rfx_obj.device)
         for packet_id, entity_info in self._config_entry.data[CONF_DEVICES].items():
             rfx_obj = get_rfx_object(packet_id)
             device_id = get_device_id(rfx_obj.device, entity_info.get(CONF_DATA_BITS))
