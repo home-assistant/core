@@ -58,7 +58,6 @@ CONF_KNX_MCAST_GRP = "multicast_group"
 CONF_KNX_MCAST_PORT = "multicast_port"
 CONF_KNX_STATE_UPDATER = "state_updater"
 CONF_KNX_RATE_LIMIT = "rate_limit"
-CONF_KNX_LOG_DIRECTORY = "log_directory"
 CONF_KNX_EXPOSE = "expose"
 
 SERVICE_KNX_SEND = "send"
@@ -90,7 +89,6 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_KNX_RATE_LIMIT, default=20): vol.All(
                     vol.Coerce(int), vol.Range(min=1, max=100)
                 ),
-                vol.Optional(CONF_KNX_LOG_DIRECTORY): cv.string,
                 vol.Optional(CONF_KNX_EXPOSE): vol.All(
                     cv.ensure_list, [ExposeSchema.SCHEMA]
                 ),
@@ -199,7 +197,6 @@ class KNXModule:
             multicast_port=self.config[DOMAIN][CONF_KNX_MCAST_PORT],
             connection_config=self.connection_config(),
             state_updater=self.config[DOMAIN][CONF_KNX_STATE_UPDATER],
-            log_directory=self.config[DOMAIN].get(CONF_KNX_LOG_DIRECTORY),
         )
 
     async def start(self):
