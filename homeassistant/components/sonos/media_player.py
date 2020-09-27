@@ -521,6 +521,7 @@ class SonosEntity(MediaPlayerEntity):
         self._speech_enhance = None
         self._source_name = None
         self._favorites = []
+        self._sonos_playlists = []
         self._soco_snapshot = None
         self._snapshot_group = None
 
@@ -670,12 +671,24 @@ class SonosEntity(MediaPlayerEntity):
                 # Skip unknown types
                 _LOGGER.error("Unhandled favorite '%s': %s", fav.title, ex)
 
+    def _set_sonos_playlists(self):
+        """Set Sonos playlists."""
+        self._sonos_playlists = []
+
+        for playlist in self.soco.get_sonos_playlists():
+            try:
+                self._sonos_playlists.append(playlist)
+            except SoCoException as ex:
+                # Skip unknown types
+                _LOGGER.error("Unhandled Sonos playlist '%s': %s", playlist.title, ex)
+
     def _attach_player(self):
         """Get basic information and add event subscriptions."""
         try:
             self._shuffle = self.soco.shuffle
             self.update_volume()
             self._set_favorites()
+            self._set_sonos_playlists()
 
             player = self.soco
 
@@ -934,6 +947,7 @@ class SonosEntity(MediaPlayerEntity):
     def update_content(self, event=None):
         """Update information about available content."""
         self._set_favorites()
+        self._set_sonos_playlists()
         self.schedule_update_ha_state()
 
     @property
@@ -1070,6 +1084,11 @@ class SonosEntity(MediaPlayerEntity):
             self.soco.switch_to_tv()
         else:
             fav = [fav for fav in self._favorites if fav.title == source]
+            playlist = [
+                playlist
+                for playlist in self._sonos_playlists
+                if playlist.title == source
+            ]
             if len(fav) == 1:
                 src = fav.pop()
                 uri = src.reference.get_uri()
@@ -1079,12 +1098,18 @@ class SonosEntity(MediaPlayerEntity):
                     self.soco.clear_queue()
                     self.soco.add_to_queue(src.reference)
                     self.soco.play_from_queue(0)
+            elif len(playlist) == 1:
+                src = playlist.pop()
+                self.soco.clear_queue()
+                self.soco.add_to_queue(src)
+                self.soco.play_from_queue(0)
 
     @property
     @soco_coordinator
     def source_list(self):
         """List of available input sources."""
         sources = [fav.title for fav in self._favorites]
+        sources += [playlist.title for playlist in self._sonos_playlists]
 
         model = self._model.upper()
         if "PLAY:5" in model or "CONNECT" in model:
