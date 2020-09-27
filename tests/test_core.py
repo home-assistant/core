@@ -268,49 +268,47 @@ async def test_add_job_with_none(hass):
         hass.async_add_job(None, "test_arg")
 
 
-class TestEvent(unittest.TestCase):
-    """A Test Event class."""
+def test_event_eq():
+    """Test events."""
+    now = dt_util.utcnow()
+    data = {"some": "attr"}
+    context = ha.Context()
+    event1, event2 = [
+        ha.Event("some_type", data, time_fired=now, context=context) for _ in range(2)
+    ]
 
-    def test_eq(self):
-        """Test events."""
-        now = dt_util.utcnow()
-        data = {"some": "attr"}
-        context = ha.Context()
-        event1, event2 = [
-            ha.Event("some_type", data, time_fired=now, context=context)
-            for _ in range(2)
-        ]
+    assert event1 == event2
 
-        assert event1 == event2
 
-    def test_repr(self):
-        """Test that repr method works."""
-        assert str(ha.Event("TestEvent")) == "<Event TestEvent[L]>"
+def test_event_repr():
+    """Test that Event repr method works."""
+    assert str(ha.Event("TestEvent")) == "<Event TestEvent[L]>"
 
-        assert (
-            str(ha.Event("TestEvent", {"beer": "nice"}, ha.EventOrigin.remote))
-            == "<Event TestEvent[R]: beer=nice>"
-        )
+    assert (
+        str(ha.Event("TestEvent", {"beer": "nice"}, ha.EventOrigin.remote))
+        == "<Event TestEvent[R]: beer=nice>"
+    )
 
-    def test_as_dict(self):
-        """Test as dictionary."""
-        event_type = "some_type"
-        now = dt_util.utcnow()
-        data = {"some": "attr"}
 
-        event = ha.Event(event_type, data, ha.EventOrigin.local, now)
-        expected = {
-            "event_type": event_type,
-            "data": data,
-            "origin": "LOCAL",
-            "time_fired": now,
-            "context": {
-                "id": event.context.id,
-                "parent_id": None,
-                "user_id": event.context.user_id,
-            },
-        }
-        assert expected == event.as_dict()
+def test_event_as_dict():
+    """Test as Event as dictionary."""
+    event_type = "some_type"
+    now = dt_util.utcnow()
+    data = {"some": "attr"}
+
+    event = ha.Event(event_type, data, ha.EventOrigin.local, now)
+    expected = {
+        "event_type": event_type,
+        "data": data,
+        "origin": "LOCAL",
+        "time_fired": now,
+        "context": {
+            "id": event.context.id,
+            "parent_id": None,
+            "user_id": event.context.user_id,
+        },
+    }
+    assert event.as_dict() == expected
 
 
 class TestEventBus(unittest.TestCase):
