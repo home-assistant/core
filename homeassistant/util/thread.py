@@ -33,9 +33,8 @@ def _async_raise(tid: int, exctype: Any) -> None:
     if not inspect.isclass(exctype):
         raise TypeError("Only types can be raised (not instances)")
 
-    res = ctypes.pythonapi.PyThreadState_SetAsyncExc(
-        ctypes.c_long(tid), ctypes.py_object(exctype)
-    )
+    c_tid = ctypes.c_long(tid)
+    res = ctypes.pythonapi.PyThreadState_SetAsyncExc(c_tid, ctypes.py_object(exctype))
 
     if res == 1:
         return
@@ -44,7 +43,7 @@ def _async_raise(tid: int, exctype: Any) -> None:
 
     # "if it returns a number greater than one, you're in trouble,
     # and you should call it again with exc=NULL to revert the effect"
-    ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_long(tid), None)
+    ctypes.pythonapi.PyThreadState_SetAsyncExc(c_tid, None)
     raise SystemError("PyThreadState_SetAsyncExc failed")
 
 
