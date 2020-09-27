@@ -21,6 +21,7 @@ from homeassistant.components import media_source, zeroconf
 from homeassistant.components.http.auth import async_sign_path
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
+    ATTR_MEDIA_EXTRA,
     MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_TVSHOW,
@@ -575,7 +576,7 @@ class CastDevice(MediaPlayerEntity):
                 _LOGGER.error("App %s not supported", app_name)
         else:
             self._chromecast.media_controller.play_media(
-                media_id, media_type, **kwargs["extra"]
+                media_id, media_type, **kwargs.get(ATTR_MEDIA_EXTRA, {})
             )
 
     # ========== Properties ==========
