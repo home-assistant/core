@@ -568,7 +568,6 @@ class _TrackTemplateResultInfo:
         self._info: Dict[Template, RenderInfo] = {}
         self._last_domains: Set = set()
         self._last_entities: Set = set()
-        self._rate_limited_events: Set = set()
 
     def async_setup(self, raise_on_template_error: bool) -> None:
         """Activation of template tracking."""
@@ -703,7 +702,7 @@ class _TrackTemplateResultInfo:
             return
 
         self._listeners[_TEMPLATE_ENTITIES_LISTENER] = async_track_state_change_event(
-            self.hass, entities, self._refresh_listener
+            self.hass, entities, self._refresh
         )
 
     @callback
@@ -712,13 +711,13 @@ class _TrackTemplateResultInfo:
             return
 
         self._listeners[_TEMPLATE_DOMAINS_LISTENER] = async_track_state_added_domain(
-            self.hass, domains, self._refresh_listener
+            self.hass, domains, self._refresh
         )
 
     @callback
     def _setup_all_listener(self) -> None:
         self._listeners[_TEMPLATE_ALL_LISTENER] = self.hass.bus.async_listen(
-            EVENT_STATE_CHANGED, self._refresh_listener
+            EVENT_STATE_CHANGED, self._refresh
         )
 
     @callback
@@ -763,76 +762,60 @@ class _TrackTemplateResultInfo:
             self._cancel_rate_limit_timer(template)
             return False
 
-        _LOGGER.debug(
-            "Template rate_limit %s triggered by event %s deferred by rate_limit %s to %s",
-            template.template,
-            event,
-            rate_limit,
-            next_allowed_fire_time,
-        )
-
-        if event:
-            self._rate_limited_events.add(event)
-
-        if template not in self._rate_limit_timers:
+        if template in self._rate_limit_timers:
+            _LOGGER.debug(
+                "Template rate_limit %s hit again by event %s",
+                template.template,
+                event,
+            )
+        else:
+            _LOGGER.debug(
+                "Template rate_limit %s hit by event %s deferred by rate_limit %s to %s",
+                template.template,
+                event,
+                rate_limit,
+                next_allowed_fire_time,
+            )
             self._rate_limit_timers[template] = self.hass.loop.call_later(
-                (next_allowed_fire_time - now).total_seconds(),
-                self._refresh_rate_limit_expired,
+                (next_allowed_fire_time - now).total_seconds(), self._refresh, event
             )
 
         return True
 
     @callback
-    def _refresh_rate_limit_expired(self) -> None:
-        limited_events = list(self._rate_limited_events)
-        self._rate_limited_events.clear()
-        self._refresh(limited_events)
+    def _event_triggers_template(self, template: Template, event: Event) -> bool:
+        """Determine if a template should be re-rendered from an event."""
+        entity_id = event.data.get(ATTR_ENTITY_ID)
+        return (
+            self._last_info[template].filter(entity_id)
+            or event.data.get("new_state") is None
+            or event.data.get("old_state") is None
+            and self._last_info[template].filter_lifecycle(entity_id)
+        )
 
     @callback
-    def _refresh_listener(self, event: Event) -> None:
-        self._refresh([event])
-
-    @callback
-    def _events_trigger_template(
-        self, template: Template, events: Iterable[Event]
-    ) -> Optional[Event]:
-        """If the template is triggered by one of the events, return the first triggering event."""
-        for event in events:
-            entity_id = event.data.get(ATTR_ENTITY_ID)
-            if (
-                self._last_info[template].filter(entity_id)
-                or event.data.get("new_state") is None
-                or event.data.get("old_state") is None
-                and self._last_info[template].filter_lifecycle(entity_id)
-            ):
-                return event
-
-        return None
-
-    @callback
-    def _refresh(self, events: Optional[Iterable[Event]]) -> None:
-        trigger_event = None
+    def _refresh(self, event: Optional[Event]) -> None:
         updates = []
         info_changed = False
         now = dt_util.utcnow()
 
         for track_template_ in self._track_templates:
             template = track_template_.template
-            if events:
-                event = self._events_trigger_template(template, events)
-                if not event:
+            if event:
+                if (
+                    template not in self._rate_limit_timers
+                    and not self._event_triggers_template(template, event)
+                ):
                     continue
-                if not trigger_event:
-                    trigger_event = event
+
+                if self._handle_rate_limit(track_template_, event, now):
+                    continue
 
                 _LOGGER.debug(
                     "Template update %s triggered by event: %s",
                     template.template,
                     event,
                 )
-
-                if self._handle_rate_limit(track_template_, event, now):
-                    continue
 
             self._last_rendered[template] = now
             self._info[template] = template.async_render_to_info(
@@ -873,7 +856,7 @@ class _TrackTemplateResultInfo:
         for track_result in updates:
             self._last_result[track_result.template] = track_result.result
 
-        self.hass.async_run_job(self._action, trigger_event, updates)
+        self.hass.async_run_job(self._action, event, updates)
 
 
 TrackTemplateResultListener = Callable[
