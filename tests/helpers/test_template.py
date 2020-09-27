@@ -2547,6 +2547,19 @@ async def test_state_attributes(hass):
     )
     assert tpl.async_render() == "23"
 
+    tpl = template.Template(
+        "{{ states.sensor.test.invalid_prop }}",
+        hass,
+    )
+    assert tpl.async_render() == ""
+
+    tpl = template.Template(
+        "{{ states.sensor.test.invalid_prop.xx }}",
+        hass,
+    )
+    with pytest.raises(TemplateError):
+        tpl.async_render()
+
 
 async def test_unavailable_states(hass):
     """Test watching unavailable states."""
