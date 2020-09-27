@@ -218,11 +218,10 @@ def _create_rfx(config):
         rfx = rfxtrxmod.Connect(
             (config[CONF_HOST], config[CONF_PORT]),
             None,
-            debug=config[CONF_DEBUG],
             transport_protocol=rfxtrxmod.PyNetworkTransport,
         )
     else:
-        rfx = rfxtrxmod.Connect(config[CONF_DEVICE], None, debug=config[CONF_DEBUG])
+        rfx = rfxtrxmod.Connect(config[CONF_DEVICE], None)
 
     return rfx
 
