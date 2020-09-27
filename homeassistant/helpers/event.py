@@ -754,12 +754,10 @@ class _TrackTemplateResultInfo:
                 template.template,
                 event,
             )
-            rate_limit = (
-                not bypass_rate_limit
-                and self._last_info[template].rate_limit
-                or track_template_.rate_limit
+            rate_limit = not bypass_rate_limit and (
+                self._last_info[template].rate_limit or track_template_.rate_limit
             )
-            if rate_limit and self._last_triggered[template] + rate_limit < time_fired:
+            if rate_limit and self._last_triggered[template] + rate_limit > time_fired:
                 _LOGGER.debug(
                     "Template update %s ratelimited by rate_limit: %s",
                     template.template,

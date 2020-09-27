@@ -191,7 +191,7 @@ class RenderInfo:
 
     def __repr__(self) -> str:
         """Representation of RenderInfo."""
-        return f"<RenderInfo {self.template} all_states={self.all_states} all_states_lifecycle={self.all_states_lifecycle} domains={self.domains} domains_lifecycle={self.domains_lifecycle} entities={self.entities}>"
+        return f"<RenderInfo {self.template} all_states={self.all_states} all_states_lifecycle={self.all_states_lifecycle} domains={self.domains} domains_lifecycle={self.domains_lifecycle} entities={self.entities} rate_limit={self.rate_limit}>"
 
     def _filter_domains_and_entities(self, entity_id: str) -> bool:
         """Template should re-render if the entity state changes when we match specific domains or entities."""
@@ -479,7 +479,8 @@ class RateLimit:
         """Handle a call to the class."""
         render_info = self._hass.data.get(_RENDER_INFO)
         if render_info is not None:
-            render_info.ratelimit = timedelta(*args, **kwargs)
+            render_info.rate_limit = timedelta(*args, **kwargs)
+
         return True
 
     def __repr__(self) -> str:
@@ -1225,7 +1226,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
     def is_safe_callable(self, obj):
         """Test if callback is safe."""
-        return isinstance(obj, AllStates) or super().is_safe_callable(obj)
+        return isinstance(obj, (AllStates, RateLimit)) or super().is_safe_callable(obj)
 
     def is_safe_attribute(self, obj, attr, value):
         """Test if attribute is safe."""
