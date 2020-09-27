@@ -14,7 +14,6 @@ from typing import Any, Generator, Iterable, List, Optional, Union
 from urllib.parse import urlencode as urllib_urlencode
 import weakref
 
-import async_timeout
 import jinja2
 from jinja2 import contextfilter, contextfunction
 from jinja2.sandbox import ImmutableSandboxedEnvironment
@@ -38,6 +37,7 @@ from homeassistant.helpers.typing import HomeAssistantType, TemplateVarsType
 from homeassistant.loader import bind_hass
 from homeassistant.util import convert, dt as dt_util, location as loc_util
 from homeassistant.util.async_ import run_callback_threadsafe
+from homeassistant.util.thread import ThreadWithException
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs, no-warn-return-any
@@ -337,13 +337,22 @@ class Template:
         if variables is not None:
             kwargs.update(variables)
 
+        finish_event = asyncio.Event()
+
+        def _render_template():
+            try:
+                compiled.render(kwargs)
+            except TimeoutError:
+                pass
+            run_callback_threadsafe(self.hass.loop, finish_event.set)
+
         try:
-            async with async_timeout.timeout(timeout):
-                await self.hass.async_add_executor_job(compiled.render, kwargs)
+            template_render_thread = ThreadWithException(target=_render_template)
+            template_render_thread.start()
+            await asyncio.wait_for(finish_event.wait(), timeout=timeout)
         except asyncio.TimeoutError:
+            template_render_thread.raise_exc(TimeoutError)
             return True
-        except jinja2.TemplateError:
-            pass
 
         return False
 
