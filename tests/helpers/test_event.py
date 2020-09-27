@@ -1491,6 +1491,69 @@ async def test_track_template_rate_limit_removed(hass):
     assert refresh_runs == ["0", "1", "2", "3", "4", "5"]
 
 
+async def test_track_two_templates_with_different_rate_limits(hass):
+    """Test two templates with different rate limits."""
+    template_one = Template(
+        "{% set x = rate_limit(seconds=1) %}{{ states | count }}", hass
+    )
+    template_five = Template(
+        "{% set x = rate_limit(seconds=5) %}{{ states | count }}", hass
+    )
+
+    refresh_runs = {
+        template_one: [],
+        template_five: [],
+    }
+
+    @ha.callback
+    def refresh_listener(event, updates):
+        for update in updates:
+            refresh_runs[update.template].append(update.result)
+
+    info = async_track_template_result(
+        hass,
+        [TrackTemplate(template_one, None), TrackTemplate(template_five, None)],
+        refresh_listener,
+    )
+
+    await hass.async_block_till_done()
+    info.async_refresh()
+    await hass.async_block_till_done()
+
+    import pprint
+
+    pprint.pprint(refresh_runs)
+    assert refresh_runs[template_one] == ["0"]
+    assert refresh_runs[template_five] == ["0"]
+    hass.states.async_set("sensor.one", "any")
+    await hass.async_block_till_done()
+    assert refresh_runs[template_one] == ["0"]
+    assert refresh_runs[template_five] == ["0"]
+    info.async_refresh()
+    assert refresh_runs[template_one] == ["0", "1"]
+    assert refresh_runs[template_five] == ["0", "1"]
+    hass.states.async_set("sensor.two", "any")
+    await hass.async_block_till_done()
+    assert refresh_runs[template_one] == ["0", "1"]
+    assert refresh_runs[template_five] == ["0", "1"]
+    await asyncio.sleep(1.2)
+    await hass.async_block_till_done()
+    assert refresh_runs[template_one] == ["0", "1", "2"]
+    assert refresh_runs[template_five] == ["0", "1"]
+    hass.states.async_set("sensor.three", "any")
+    await hass.async_block_till_done()
+    assert refresh_runs[template_one] == ["0", "1", "2"]
+    assert refresh_runs[template_five] == ["0", "1"]
+    hass.states.async_set("sensor.four", "any")
+    await hass.async_block_till_done()
+    assert refresh_runs[template_one] == ["0", "1", "2"]
+    assert refresh_runs[template_five] == ["0", "1"]
+    hass.states.async_set("sensor.five", "any")
+    await hass.async_block_till_done()
+    assert refresh_runs[template_one] == ["0", "1", "2"]
+    assert refresh_runs[template_five] == ["0", "1"]
+
+
 async def test_string(hass):
     """Test a string."""
     template_refresh = Template("no_template", hass)
