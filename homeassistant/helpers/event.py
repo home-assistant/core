@@ -720,8 +720,8 @@ class _TrackTemplateResultInfo:
             return
 
         @callback
-        def _refresh_from_interval(event: Event) -> None:
-            self._refresh(event, template)
+        def _refresh_from_interval(now: datetime) -> None:
+            self._refresh(None, template)
 
         self._scan_interval_listeners[template] = async_track_time_interval(
             self.hass, _refresh_from_interval, scan_interval
@@ -826,6 +826,55 @@ class _TrackTemplateResultInfo:
         )
 
     @callback
+    def _render_template_if_ready(
+        self,
+        track_template_: TrackTemplate,
+        event: Optional[Event],
+        now: datetime,
+        template_filter: Optional[Template],
+    ) -> Tuple[bool, Optional[TrackTemplateResult]]:
+        template = track_template_.template
+        if template_filter and template != template_filter:
+            return False, None
+
+        if event:
+            if (
+                template not in self._rate_limit_timers
+                and not self._event_triggers_template(template, event)
+            ):
+                return False, None
+
+            if self._handle_rate_limit(track_template_, event, now):
+                return False, None
+
+            _LOGGER.debug(
+                "Template update %s triggered by event: %s",
+                template.template,
+                event,
+            )
+        else:
+            self._cancel_rate_limit_timer(template)
+
+        self._last_rendered[template] = now
+        self._info[template] = template.async_render_to_info(track_template_.variables)
+
+        try:
+            result: Union[str, TemplateError] = self._info[template].result()
+        except TemplateError as ex:
+            result = ex
+
+        last_result = self._last_result.get(template)
+
+        # Check to see if the result has changed
+        if result == last_result:
+            return True, None
+
+        if isinstance(result, TemplateError) and isinstance(last_result, TemplateError):
+            return True, None
+
+        return True, TrackTemplateResult(template, last_result, result)
+
+    @callback
     def _refresh(
         self, event: Optional[Event], template_filter: Optional[Template] = None
     ) -> None:
@@ -834,51 +883,16 @@ class _TrackTemplateResultInfo:
         now = dt_util.utcnow()
 
         for track_template_ in self._track_templates:
-            template = track_template_.template
-            if template_filter and template != template_filter:
-                continue
-
-            if event:
-                if (
-                    template not in self._rate_limit_timers
-                    and not self._event_triggers_template(template, event)
-                ):
-                    continue
-
-                if self._handle_rate_limit(track_template_, event, now):
-                    continue
-
-                _LOGGER.debug(
-                    "Template update %s triggered by event: %s",
-                    template.template,
-                    event,
-                )
-            else:
-                self._cancel_rate_limit_timer(template)
-
-            self._last_rendered[template] = now
-            self._info[template] = template.async_render_to_info(
-                track_template_.variables
+            rendered, update = self._render_template_if_ready(
+                track_template_,
+                event,
+                now,
+                template_filter,
             )
-            info_changed = True
-
-            try:
-                result: Union[str, TemplateError] = self._info[template].result()
-            except TemplateError as ex:
-                result = ex
-
-            last_result = self._last_result.get(template)
-
-            # Check to see if the result has changed
-            if result == last_result:
-                continue
-
-            if isinstance(result, TemplateError) and isinstance(
-                last_result, TemplateError
-            ):
-                continue
-
-            updates.append(TrackTemplateResult(template, last_result, result))
+            if rendered:
+                info_changed = True
+            if update:
+                updates.append(update)
 
         if info_changed:
             self._update_listeners()
