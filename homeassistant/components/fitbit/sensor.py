@@ -312,9 +312,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             config_file.get(CONF_CLIENT_ID), config_file.get(CONF_CLIENT_SECRET)
         )
 
-        redirect_uri = (
-            f"{get_url(hass)}{FITBIT_AUTH_CALLBACK_PATH}"
-        )
+        redirect_uri = f"{get_url(hass)}{FITBIT_AUTH_CALLBACK_PATH}"
 
         fitbit_auth_start_url, _ = oauth.authorize_token_url(
             redirect_uri=redirect_uri,
