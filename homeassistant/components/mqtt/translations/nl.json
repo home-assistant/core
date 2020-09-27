@@ -37,5 +37,14 @@
             "turn_off": "Uitschakelen",
             "turn_on": "Inschakelen"
         }
+    },
+    "options": {
+        "step": {
+            "broker": {
+                "data": {
+                    "username": "Gebruikersnaam"
+                }
+            }
+        }
     }
 }

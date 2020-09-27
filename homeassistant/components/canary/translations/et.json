@@ -1,4 +1,18 @@
 {
+    "config": {
+        "error": {
+            "cannot_connect": "\u00dchendus nurjus"
+        },
+        "flow_title": "Canary {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
             "init": {

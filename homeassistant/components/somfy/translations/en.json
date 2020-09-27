@@ -4,10 +4,11 @@
             "already_setup": "You can only configure one Somfy account.",
             "authorize_url_timeout": "Timeout generating authorize url.",
             "missing_configuration": "The Somfy component is not configured. Please follow the documentation.",
-            "no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})"
+            "no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})",
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
         "create_entry": {
-            "default": "Successfully authenticated with Somfy."
+            "default": "Successfully authenticated"
         },
         "step": {
             "pick_implementation": {

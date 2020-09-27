@@ -4,6 +4,12 @@
             "service_unavailable": "Verbindung konnte nicht hergestellt werden"
         },
         "step": {
+            "protocol": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                }
+            },
             "user": {
                 "data": {
                     "protocol": "Protokoll"
@@ -27,6 +33,7 @@
             "zone_details": {
                 "data": {
                     "zone_name": "Zonenname",
+                    "zone_relayaddr": "Relais-Adresse",
                     "zone_type": "Zonentyp"
                 }
             },
