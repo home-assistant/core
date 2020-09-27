@@ -573,7 +573,7 @@ py-canary==0.5.0
 py-melissa-climate==2.1.4
 
 # homeassistant.components.nightscout
-py-nightscout==1.2.1
+py-nightscout==1.2.2
 
 # homeassistant.components.seventeentrack
 py17track==2.2.2

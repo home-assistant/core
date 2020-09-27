@@ -7,7 +7,7 @@ from aiohttp import ClientError
 from py_nightscout import Api as NightscoutAPI
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_URL
+from homeassistant.const import CONF_API_KEY, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -30,8 +30,9 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Nightscout from a config entry."""
     server_url = entry.data[CONF_URL]
+    api_key = entry.data.get(CONF_API_KEY)
     session = async_get_clientsession(hass)
-    api = NightscoutAPI(server_url, session=session)
+    api = NightscoutAPI(server_url, session=session, api_secret=api_key)
     try:
         status = await api.get_server_status()
     except (ClientError, AsyncIOTimeoutError, OSError) as error:
