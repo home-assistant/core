@@ -132,7 +132,7 @@ async def test_user_form_single_instance_allowed(hass):
     assert result["reason"] == "single_instance_allowed"
 
 
-async def test_options_flow(hass):
+async def test_options_flow(hass, nzbget_api):
     """Test updating options."""
     entry = MockConfigEntry(
         domain=DOMAIN,
