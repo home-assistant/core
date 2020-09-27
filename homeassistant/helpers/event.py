@@ -742,6 +742,13 @@ class _TrackTemplateResultInfo:
         event: Optional[Event],
         now: datetime,
     ) -> bool:
+        """Check rate limits and call later if the rate limit is hit.
+
+        If there is already a call later scheduled for the template
+        we do not setup a second one.
+
+        Returns True if the rate limit has been hit or False on miss.
+        """
         template = track_template_.template
         rate_limit = self._last_info[template].rate_limit or track_template_.rate_limit
         if not rate_limit:
