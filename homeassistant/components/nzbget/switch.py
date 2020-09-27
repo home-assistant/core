@@ -1,6 +1,7 @@
 """Support for NZBGet switches."""
-from typing import Callable, List, Optional
+from typing import Callable, List
 
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers.entity import Entity
@@ -32,7 +33,7 @@ async def async_setup_entry(
     async_add_entities(switches)
 
 
-class NZBGetDownloadSwitch(NZBGetEntity, Entity):
+class NZBGetDownloadSwitch(NZBGetEntity, SwitchEntity):
     """Representation of a NZBGet download switch."""
 
     def __init__(
@@ -58,20 +59,14 @@ class NZBGetDownloadSwitch(NZBGetEntity, Entity):
     @property
     def is_on(self):
         """Return the state of the switch."""
-        value = self.coordinator.data["status"].get("DownloadPaused")
+        return not self.coordinator.data["status"].get("DownloadPaused", False)
 
-        if value is None:
-            v12_value = self.coordinator.data["status"].get("ServerPaused", False)
-            value = self.coordinator.data["status"].get("Download2Paused", v12_value)
-
-        return value
-
-    def turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs) -> None:
         """Set downloads to enabled."""
-        coordinator.nzbget.resumedownload()
-        self.update()
+        await self.hass.async_add_executor_job(self.coordinator.nzbget.resumedownload)
+        await self.coordinator.async_request_refresh()
 
-    def turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs) -> None:
         """Set downloads to paused."""
-        coordinator.nzbget.pausedownload()
-        self.update()
+        await self.hass.async_add_executor_job(self.coordinator.nzbget.pausedownload)
+        await self.coordinator.async_request_refresh()
