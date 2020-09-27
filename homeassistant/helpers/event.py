@@ -727,8 +727,7 @@ class _TrackTemplateResultInfo:
         self._cancel_listener(_TEMPLATE_DOMAINS_LISTENER)
         self._cancel_listener(_TEMPLATE_ENTITIES_LISTENER)
         for track_template_ in self._track_templates:
-            template = track_template_.template
-            self._cancel_rate_limit_timer(template)
+            self._cancel_rate_limit_timer(track_template_.template)
 
     @callback
     def async_refresh(self) -> None:
