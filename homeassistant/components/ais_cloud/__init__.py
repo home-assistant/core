@@ -1,5 +1,4 @@
 """Component to manage the AIS Cloud."""
-import asyncio
 import json
 import logging
 import os
@@ -11,7 +10,6 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.components.ais_dom import ais_global
 from homeassistant.components.http.view import HomeAssistantView
-from homeassistant.components.websocket_api.const import ERR_NOT_SUPPORTED
 from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_NAME,
@@ -311,6 +309,9 @@ async def websocket_report_ais_problem(hass, connection, msg):
             "info": "AIS Error: " + ais_answer["message"],
         }
         connection.send_result(msg["id"], payload)
+        await hass.services.async_call(
+            "ais_ai_service", "say_it", {"text": ais_answer["message"]}
+        )
         return
 
     # info to user that all is OK
@@ -320,6 +321,9 @@ async def websocket_report_ais_problem(hass, connection, msg):
         "email": ais_answer["email"],
     }
     connection.send_result(msg["id"], payload)
+    await hass.services.async_call(
+        "ais_ai_service", "say_it", {"text": ais_answer["message"]}
+    )
 
 
 @websocket_api.websocket_command(
@@ -346,11 +350,17 @@ async def websocket_confirm_ais_media_source(hass, connection, msg):
             "info": "AIS Error: " + ais_answer["message"],
         }
         connection.send_result(msg["id"], payload)
+        await hass.services.async_call(
+            "ais_ai_service", "say_it", {"text": ais_answer["message"]}
+        )
         return
 
     # info to user that all is OK
     payload = {"info": ais_answer["message"]}
     connection.send_result(msg["id"], payload)
+    await hass.services.async_call(
+        "ais_ai_service", "say_it", {"text": ais_answer["message"]}
+    )
 
 
 @websocket_api.websocket_command(
@@ -372,12 +382,13 @@ async def websocket_check_ais_media_source(hass, connection, msg):
         pass
     else:
         # no stream url - info to the user
+        info = "Obecnie na wbudowanym odtwarzaczu nie odtwarzasz żadnych mediów, dlatego sprawdzanie nie jest dostępne."
         payload = {
             "error": True,
-            "info": "Obecnie na wbudowanym odtwarzaczu nie odtwarzasz żadnych mediów, dlatego sprawdzanie nie jest "
-            "dostępne.",
+            "info": info,
         }
         connection.send_result(msg["id"], payload)
+        await hass.services.async_call("ais_ai_service", "say_it", {"text": info})
         return
 
     # 1. get ORIGIN_URL from AIS
@@ -386,11 +397,13 @@ async def websocket_check_ais_media_source(hass, connection, msg):
         source=media_source, name=media_name, current_url=curr_stream_url
     )
     if "error" in ais_answer:
+        info = ais_answer["message"]
         payload = {
             "error": True,
-            "info": "AIS Error: " + ais_answer["message"],
+            "info": "AIS Error: " + info,
         }
         connection.send_result(msg["id"], payload)
+        await hass.services.async_call("ais_ai_service", "say_it", {"text": info})
         return
 
     if "do_on_client_check" in ais_answer:
@@ -430,12 +443,23 @@ async def websocket_check_ais_media_source(hass, connection, msg):
             + " Czy odtwarzanie działa OK?",
         }
         connection.send_result(msg["id"], payload)
+        await hass.services.async_call(
+            "ais_ai_service",
+            "say_it",
+            {
+                "text": "Udało się automatycznie ustalić, nowy adres URL."
+                " Czy odtwarzanie działa OK?"
+            },
+        )
+        return
 
+    info = "Nie udało się automatycznie ustalić lepszego źródła dla mediów. Czy chcesz zgłosić problem do AIS?"
     payload = {
         "found": False,
-        "info": "Nie udało się automatycznie ustali lepszego źródła dla mediów. Czy chcesz zgłosić problem do AIS?",
+        "info": info,
     }
     connection.send_result(msg["id"], payload)
+    await hass.services.async_call("ais_ai_service", "say_it", {"text": info})
 
 
 class AisCloudWS:
