@@ -1460,6 +1460,25 @@ async def test_async_track_template_result_multiple_templates_mixing_domain(hass
     ]
 
 
+async def test_async_track_template_result_raise_on_template_error(hass):
+    """Test that we raise as soon as we encounter a failed template."""
+
+    with pytest.raises(TemplateError):
+        async_track_template_result(
+            hass,
+            [
+                TrackTemplate(
+                    Template(
+                        "{{ states.switch | function_that_does_not_exist | list }}"
+                    ),
+                    None,
+                ),
+            ],
+            ha.callback(lambda event, updates: None),
+            raise_on_template_error=True,
+        )
+
+
 async def test_track_same_state_simple_no_trigger(hass):
     """Test track_same_change with no trigger."""
     callback_runs = []

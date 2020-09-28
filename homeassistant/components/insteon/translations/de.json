@@ -1,0 +1,66 @@
+{
+    "config": {
+        "step": {
+            "hub2": {
+                "data": {
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                }
+            },
+            "hubv1": {
+                "data": {
+                    "host": "IP-Adresse",
+                    "port": "Port"
+                }
+            },
+            "hubv2": {
+                "data": {
+                    "host": "IP-Adresse",
+                    "password": "Passwort",
+                    "port": "Port",
+                    "username": "Benutzername"
+                }
+            },
+            "init": {
+                "title": "Insteon"
+            },
+            "plm": {
+                "title": "Insteon PLM"
+            },
+            "user": {
+                "title": "Insteon"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "add_override": {
+                "title": "Insteon"
+            },
+            "add_x10": {
+                "data": {
+                    "platform": "Plattform"
+                },
+                "title": "Insteon"
+            },
+            "change_hub_config": {
+                "data": {
+                    "host": "IP-Adresse",
+                    "password": "Passwort",
+                    "port": "Port",
+                    "username": "Benutzername"
+                },
+                "title": "Insteon"
+            },
+            "init": {
+                "title": "Insteon"
+            },
+            "remove_override": {
+                "title": "Insteon"
+            },
+            "remove_x10": {
+                "title": "Insteon"
+            }
+        }
+    }
+}

@@ -60,7 +60,8 @@
             },
             "statistics_sensors": {
                 "data": {
-                    "allow_bandwidth_sensors": "Cr\u00e9er des capteurs d'utilisation de la bande passante pour les clients r\u00e9seau"
+                    "allow_bandwidth_sensors": "Cr\u00e9er des capteurs d'utilisation de la bande passante pour les clients r\u00e9seau",
+                    "allow_uptime_sensors": "Capteurs de disponibilit\u00e9 pour les clients r\u00e9seau"
                 },
                 "description": "Configurer des capteurs de statistiques",
                 "title": "Options UniFi 3/3"

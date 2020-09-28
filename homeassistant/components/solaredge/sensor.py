@@ -149,7 +149,7 @@ class SolarEdgeOverviewSensor(SolarEdgeSensor):
     def update(self):
         """Get the latest data from the sensor and update the state."""
         self.data_service.update()
-        self._state = self.data_service.data[self._json_key]
+        self._state = self.data_service.data.get(self._json_key)
 
 
 class SolarEdgeDetailsSensor(SolarEdgeSensor):
@@ -192,8 +192,8 @@ class SolarEdgeInventorySensor(SolarEdgeSensor):
     def update(self):
         """Get the latest inventory data and update state and attributes."""
         self.data_service.update()
-        self._state = self.data_service.data[self._json_key]
-        self._attributes = self.data_service.attributes[self._json_key]
+        self._state = self.data_service.data.get(self._json_key)
+        self._attributes = self.data_service.attributes.get(self._json_key)
 
 
 class SolarEdgeEnergyDetailsSensor(SolarEdgeSensor):

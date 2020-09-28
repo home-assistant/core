@@ -13,6 +13,11 @@
             "confirm_discovery": {
                 "description": "Wilt u het {model} bij {host} opzetten?"
             },
+            "credentials": {
+                "data": {
+                    "username": "Benutzername"
+                }
+            },
             "user": {
                 "data": {
                     "host": "Host"

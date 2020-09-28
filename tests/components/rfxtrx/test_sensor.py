@@ -87,7 +87,7 @@ async def test_one_sensor_no_datatype(hass, rfxtrx):
     assert state
     assert state.state == "unknown"
     assert state.attributes.get("friendly_name") == f"{base_name} Humidity status"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ""
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
 
     state = hass.states.get(f"{base_id}_rssi_numeric")
     assert state
@@ -164,7 +164,7 @@ async def test_discover_sensor(hass, rfxtrx_automatic):
     state = hass.states.get(f"{base_id}_humidity_status")
     assert state
     assert state.state == "normal"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ""
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
 
     state = hass.states.get(f"{base_id}_rssi_numeric")
     assert state
@@ -178,7 +178,7 @@ async def test_discover_sensor(hass, rfxtrx_automatic):
 
     state = hass.states.get(f"{base_id}_battery_numeric")
     assert state
-    assert state.state == "90"
+    assert state.state == "100"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
 
     # 2
@@ -193,7 +193,7 @@ async def test_discover_sensor(hass, rfxtrx_automatic):
     state = hass.states.get(f"{base_id}_humidity_status")
     assert state
     assert state.state == "normal"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ""
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
 
     state = hass.states.get(f"{base_id}_rssi_numeric")
     assert state
@@ -207,7 +207,7 @@ async def test_discover_sensor(hass, rfxtrx_automatic):
 
     state = hass.states.get(f"{base_id}_battery_numeric")
     assert state
-    assert state.state == "90"
+    assert state.state == "100"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
 
     # 1 Update
@@ -222,7 +222,7 @@ async def test_discover_sensor(hass, rfxtrx_automatic):
     state = hass.states.get(f"{base_id}_humidity_status")
     assert state
     assert state.state == "normal"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ""
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
 
     state = hass.states.get(f"{base_id}_rssi_numeric")
     assert state
@@ -236,7 +236,7 @@ async def test_discover_sensor(hass, rfxtrx_automatic):
 
     state = hass.states.get(f"{base_id}_battery_numeric")
     assert state
-    assert state.state == "90"
+    assert state.state == "100"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
 
     assert len(hass.states.async_all()) == 10

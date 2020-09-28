@@ -13,6 +13,7 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
     ENERGY_KILO_WATT_HOUR,
+    LIGHT_LUX,
     MASS_KILOGRAMS,
     PERCENTAGE,
     POWER_WATT,
@@ -116,7 +117,7 @@ CAPABILITY_TO_SENSORS = {
         )
     ],
     Capability.illuminance_measurement: [
-        Map(Attribute.illuminance, "Illuminance", "lux", DEVICE_CLASS_ILLUMINANCE)
+        Map(Attribute.illuminance, "Illuminance", LIGHT_LUX, DEVICE_CLASS_ILLUMINANCE)
     ],
     Capability.infrared_level: [
         Map(Attribute.infrared_level, "Infrared Level", PERCENTAGE, None)

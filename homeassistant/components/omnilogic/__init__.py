@@ -17,7 +17,6 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["sensor", "binary_sensor"]
 
-
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Omnilogic component."""
     hass.data.setdefault(DOMAIN, {})

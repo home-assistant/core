@@ -54,16 +54,17 @@ def assert_result_info(info, result, entities=None, domains=None, all_states=Fal
     """Check result info."""
     assert info.result() == result
     assert info.all_states == all_states
-    assert info.filter_lifecycle("invalid_entity_name.somewhere") == all_states
+    assert info.filter("invalid_entity_name.somewhere") == all_states
     if entities is not None:
         assert info.entities == frozenset(entities)
         assert all([info.filter(entity) for entity in entities])
-        assert not info.filter("invalid_entity_name.somewhere")
+        if not all_states:
+            assert not info.filter("invalid_entity_name.somewhere")
     else:
         assert not info.entities
     if domains is not None:
         assert info.domains == frozenset(domains)
-        assert all([info.filter_lifecycle(domain + ".entity") for domain in domains])
+        assert all([info.filter(domain + ".entity") for domain in domains])
     else:
         assert not hasattr(info, "_domains")
 
@@ -1958,7 +1959,8 @@ def test_generate_select(hass):
 
     tmp = template.Template(template_str, hass)
     info = tmp.async_render_to_info()
-    assert_result_info(info, "", [], ["sensor"])
+    assert_result_info(info, "", [], [])
+    assert info.domains_lifecycle == {"sensor"}
 
     hass.states.async_set("sensor.test_sensor", "off", {"attr": "value"})
     hass.states.async_set("sensor.test_sensor_on", "on")
@@ -1970,6 +1972,7 @@ def test_generate_select(hass):
         ["sensor.test_sensor", "sensor.test_sensor_on"],
         ["sensor"],
     )
+    assert info.domains_lifecycle == {"sensor"}
 
 
 async def test_async_render_to_info_in_conditional(hass):
@@ -2420,3 +2423,162 @@ For loop example getting 3 entity values:
     assert "sensor0" in result
     assert "sensor1" in result
     assert "sun" in result
+
+
+async def test_slice_states(hass):
+    """Test iterating states with a slice."""
+    hass.states.async_set("sensor.test", "23")
+
+    tpl = template.Template(
+        "{% for states in states | slice(1) -%}{% set state = states | first %}{{ state.entity_id }}{%- endfor %}",
+        hass,
+    )
+    assert tpl.async_render() == "sensor.test"
+
+
+async def test_lifecycle(hass):
+    """Test that we limit template render info for lifecycle events."""
+    hass.states.async_set("sun.sun", "above", {"elevation": 50, "next_rising": "later"})
+    for i in range(2):
+        hass.states.async_set(f"sensor.sensor{i}", "on")
+
+    tmp = template.Template("{{ states | count }}", hass)
+
+    info = tmp.async_render_to_info()
+    assert info.all_states is False
+    assert info.all_states_lifecycle is True
+    assert info.entities == set()
+    assert info.domains == set()
+    assert info.domains_lifecycle == set()
+
+    assert info.filter("sun.sun") is False
+    assert info.filter("sensor.sensor1") is False
+    assert info.filter_lifecycle("sensor.new") is True
+    assert info.filter_lifecycle("sensor.removed") is True
+
+
+async def test_template_timeout(hass):
+    """Test to see if a template will timeout."""
+    for i in range(2):
+        hass.states.async_set(f"sensor.sensor{i}", "on")
+
+    tmp = template.Template("{{ states | count }}", hass)
+    assert await tmp.async_render_will_timeout(3) is False
+
+    tmp2 = template.Template("{{ error_invalid + 1 }}", hass)
+    assert await tmp2.async_render_will_timeout(3) is False
+
+    tmp3 = template.Template("static", hass)
+    assert await tmp3.async_render_will_timeout(3) is False
+
+    tmp4 = template.Template("{{ var1 }}", hass)
+    assert await tmp4.async_render_will_timeout(3, {"var1": "ok"}) is False
+
+    slow_template_str = """
+{% for var in range(1000) -%}
+  {% for var in range(1000) -%}
+    {{ var }}
+  {%- endfor %}
+{%- endfor %}
+"""
+    tmp5 = template.Template(slow_template_str, hass)
+    assert await tmp5.async_render_will_timeout(0.000001) is True
+
+
+async def test_lights(hass):
+    """Test we can sort lights."""
+
+    tmpl = """
+          {% set lights_on = states.light|selectattr('state','eq','on')|map(attribute='name')|list %}
+          {% if lights_on|length == 0 %}
+            No lights on. Sleep well..
+          {% elif lights_on|length == 1 %}
+            The {{lights_on[0]}} light is on.
+          {% elif lights_on|length == 2 %}
+            The {{lights_on[0]}} and {{lights_on[1]}} lights are on.
+          {% else %}
+            The {{lights_on[:-1]|join(', ')}}, and {{lights_on[-1]}} lights are on.
+          {% endif %}
+    """
+    states = []
+    for i in range(10):
+        states.append(f"light.sensor{i}")
+        hass.states.async_set(f"light.sensor{i}", "on")
+
+    tmp = template.Template(tmpl, hass)
+    info = tmp.async_render_to_info()
+    assert info.entities == set(states)
+    assert "lights are on" in info.result()
+    for i in range(10):
+        assert f"sensor{i}" in info.result()
+
+
+async def test_state_attributes(hass):
+    """Test state attributes."""
+    hass.states.async_set("sensor.test", "23")
+
+    tpl = template.Template(
+        "{{ states.sensor.test.last_changed }}",
+        hass,
+    )
+    assert tpl.async_render() == str(hass.states.get("sensor.test").last_changed)
+
+    tpl = template.Template(
+        "{{ states.sensor.test.object_id }}",
+        hass,
+    )
+    assert tpl.async_render() == hass.states.get("sensor.test").object_id
+
+    tpl = template.Template(
+        "{{ states.sensor.test.domain }}",
+        hass,
+    )
+    assert tpl.async_render() == hass.states.get("sensor.test").domain
+
+    tpl = template.Template(
+        "{{ states.sensor.test.context.id }}",
+        hass,
+    )
+    assert tpl.async_render() == hass.states.get("sensor.test").context.id
+
+    tpl = template.Template(
+        "{{ states.sensor.test.state_with_unit }}",
+        hass,
+    )
+    assert tpl.async_render() == "23"
+
+    tpl = template.Template(
+        "{{ states.sensor.test.invalid_prop }}",
+        hass,
+    )
+    assert tpl.async_render() == ""
+
+    tpl = template.Template(
+        "{{ states.sensor.test.invalid_prop.xx }}",
+        hass,
+    )
+    with pytest.raises(TemplateError):
+        tpl.async_render()
+
+
+async def test_unavailable_states(hass):
+    """Test watching unavailable states."""
+
+    for i in range(10):
+        hass.states.async_set(f"light.sensor{i}", "on")
+
+    hass.states.async_set("light.unavailable", "unavailable")
+    hass.states.async_set("light.unknown", "unknown")
+    hass.states.async_set("light.none", "none")
+
+    tpl = template.Template(
+        "{{ states | selectattr('state', 'in', ['unavailable','unknown','none']) | map(attribute='entity_id') | list | join(', ') }}",
+        hass,
+    )
+    assert tpl.async_render() == "light.none, light.unavailable, light.unknown"
+
+    tpl = template.Template(
+        "{{ states.light | selectattr('state', 'in', ['unavailable','unknown','none']) | map(attribute='entity_id') | list | join(', ') }}",
+        hass,
+    )
+    assert tpl.async_render() == "light.none, light.unavailable, light.unknown"

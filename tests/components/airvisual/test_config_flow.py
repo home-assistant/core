@@ -69,7 +69,7 @@ async def test_invalid_identifier(hass):
     }
 
     with patch(
-        "pyairvisual.api.API.nearest_city",
+        "pyairvisual.air_quality.AirQuality",
         side_effect=InvalidKeyError,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -96,7 +96,7 @@ async def test_migration(hass):
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
-    with patch("pyairvisual.api.API.nearest_city"), patch.object(
+    with patch("pyairvisual.air_quality.AirQuality.nearest_city"), patch.object(
         hass.config_entries, "async_forward_entry_setup"
     ):
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: conf})
@@ -130,7 +130,7 @@ async def test_node_pro_error(hass):
     node_pro_conf = {CONF_IP_ADDRESS: "192.168.1.100", CONF_PASSWORD: "my_password"}
 
     with patch(
-        "pyairvisual.node.Node.from_samba",
+        "pyairvisual.node.NodeSamba.async_connect",
         side_effect=NodeProError,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -185,7 +185,7 @@ async def test_step_geography(hass):
 
     with patch(
         "homeassistant.components.airvisual.async_setup_entry", return_value=True
-    ), patch("pyairvisual.api.API.nearest_city"):
+    ), patch("pyairvisual.air_quality.AirQuality.nearest_city"):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
         )
@@ -209,7 +209,7 @@ async def test_step_import(hass):
 
     with patch(
         "homeassistant.components.airvisual.async_setup_entry", return_value=True
-    ), patch("pyairvisual.api.API.nearest_city"):
+    ), patch("pyairvisual.air_quality.AirQuality.nearest_city"):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=geography_conf
         )
@@ -230,7 +230,11 @@ async def test_step_node_pro(hass):
 
     with patch(
         "homeassistant.components.airvisual.async_setup_entry", return_value=True
-    ), patch("pyairvisual.node.Node.from_samba"):
+    ), patch("pyairvisual.node.NodeSamba.async_connect"), patch(
+        "pyairvisual.node.NodeSamba.async_get_latest_measurements"
+    ), patch(
+        "pyairvisual.node.NodeSamba.async_disconnect"
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data={"type": "AirVisual Node/Pro"}
         )
@@ -268,8 +272,8 @@ async def test_step_reauth(hass):
     assert result["step_id"] == "reauth_confirm"
 
     with patch(
-        "homeassistant.components.simplisafe.async_setup_entry", return_value=True
-    ), patch("pyairvisual.api.API.nearest_city"):
+        "homeassistant.components.airvisual.async_setup_entry", return_value=True
+    ), patch("pyairvisual.air_quality.AirQuality"):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_API_KEY: "defgh67890"}
         )

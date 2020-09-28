@@ -565,7 +565,7 @@ class _TrackTemplateResultInfo:
         self._last_domains: Set = set()
         self._last_entities: Set = set()
 
-    def async_setup(self) -> None:
+    def async_setup(self, raise_on_template_error: bool) -> None:
         """Activation of template tracking."""
         for track_template_ in self._track_templates:
             template = track_template_.template
@@ -573,6 +573,8 @@ class _TrackTemplateResultInfo:
 
             self._info[template] = template.async_render_to_info(variables)
             if self._info[template].exception:
+                if raise_on_template_error:
+                    raise self._info[template].exception
                 _LOGGER.error(
                     "Error while processing template: %s",
                     track_template_.template,
@@ -602,7 +604,10 @@ class _TrackTemplateResultInfo:
             template = track_template_.template
 
             # Tracking all states
-            if self._info[template].all_states:
+            if (
+                self._info[template].all_states
+                or self._info[template].all_states_lifecycle
+            ):
                 return True
 
             # Previous call had an exception
@@ -719,6 +724,9 @@ class _TrackTemplateResultInfo:
     @callback
     def _refresh(self, event: Optional[Event]) -> None:
         entity_id = event and event.data.get(ATTR_ENTITY_ID)
+        lifecycle_event = event and (
+            event.data.get("new_state") is None or event.data.get("old_state") is None
+        )
         updates = []
         info_changed = False
 
@@ -726,13 +734,18 @@ class _TrackTemplateResultInfo:
             template = track_template_.template
             if (
                 entity_id
-                and len(self._last_info) > 1
-                and not self._last_info[template].filter_lifecycle(entity_id)
+                and not self._last_info[template].filter(entity_id)
+                and (
+                    not lifecycle_event
+                    or not self._last_info[template].filter_lifecycle(entity_id)
+                )
             ):
                 continue
 
             _LOGGER.debug(
-                "Template update %s triggered by event: %s", template.template, event
+                "Template update %s triggered by event: %s",
+                template.template,
+                event,
             )
 
             self._info[template] = template.async_render_to_info(
@@ -801,6 +814,7 @@ def async_track_template_result(
     hass: HomeAssistant,
     track_templates: Iterable[TrackTemplate],
     action: TrackTemplateResultListener,
+    raise_on_template_error: bool = False,
 ) -> _TrackTemplateResultInfo:
     """Add a listener that fires when a the result of a template changes.
 
@@ -822,9 +836,13 @@ def async_track_template_result(
         Home assistant object.
     track_templates
         An iterable of TrackTemplate.
-
     action
         Callable to call with results.
+    raise_on_template_error
+        When set to True, if there is an exception
+        processing the template during setup, the system
+        will raise the exception instead of setting up
+        tracking.
 
     Returns
     -------
@@ -832,7 +850,7 @@ def async_track_template_result(
 
     """
     tracker = _TrackTemplateResultInfo(hass, track_templates, action)
-    tracker.async_setup()
+    tracker.async_setup(raise_on_template_error)
     return tracker
 
 
@@ -1229,4 +1247,6 @@ def _entities_domains_from_info(render_infos: Iterable[RenderInfo]) -> Tuple[Set
             entities.update(render_info.entities)
         if render_info.domains:
             domains.update(render_info.domains)
+        if render_info.domains_lifecycle:
+            domains.update(render_info.domains_lifecycle)
     return entities, domains

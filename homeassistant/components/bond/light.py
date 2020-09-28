@@ -122,7 +122,7 @@ class BondFireplace(BondEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the fireplace on."""
-        _LOGGER.debug("fireplace async_turn_on called with: %s", kwargs)
+        _LOGGER.debug("Fireplace async_turn_on called with: %s", kwargs)
 
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         if brightness:
@@ -133,7 +133,7 @@ class BondFireplace(BondEntity, LightEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fireplace off."""
-        _LOGGER.debug("fireplace async_turn_off called with: %s", kwargs)
+        _LOGGER.debug("Fireplace async_turn_off called with: %s", kwargs)
 
         await self._hub.bond.action(self._device.device_id, Action.turn_off())
 
