@@ -759,6 +759,7 @@ class State:
     last_updated: last time this object was updated.
     context: Context in which it was created
     domain: Domain of this state.
+    object_id: Object id of this state.
     """
 
     __slots__ = [
@@ -769,6 +770,7 @@ class State:
         "last_updated",
         "context",
         "domain",
+        "object_id",
     ]
 
     def __init__(
@@ -802,12 +804,7 @@ class State:
         self.last_updated = last_updated or dt_util.utcnow()
         self.last_changed = last_changed or self.last_updated
         self.context = context or Context()
-        self.domain = split_entity_id(self.entity_id)[0]
-
-    @property
-    def object_id(self) -> str:
-        """Object id of this state."""
-        return split_entity_id(self.entity_id)[1]
+        self.domain, self.object_id = split_entity_id(self.entity_id)
 
     @property
     def name(self) -> str:
