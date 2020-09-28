@@ -83,7 +83,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     errors["base"] = "unknown"
                 else:
                     return self.async_create_entry(
-                        title=device_info["title"] or self.host,
+                        title=device_info["title"] or device_info["mac"],
                         data=user_input,
                     )
 
@@ -109,7 +109,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
-                    title=device_info["title"] or self.host,
+                    title=device_info["title"] or device_info["mac"],
                     data={**user_input, CONF_HOST: self.host},
                 )
         else:
@@ -142,7 +142,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured({CONF_HOST: zeroconf_info["host"]})
         self.host = zeroconf_info["host"]
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-        self.context["title_placeholders"] = {"name": zeroconf_info["host"]}
+        self.context["title_placeholders"] = {"name": info["mac"]}
         return await self.async_step_confirm_discovery()
 
     async def async_step_confirm_discovery(self, user_input=None):
@@ -161,7 +161,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
-                    title=device_info["title"] or self.host, data={"host": self.host}
+                    title=device_info["title"] or device_info["mac"],
+                    data={"host": self.host},
                 )
 
         return self.async_show_form(
