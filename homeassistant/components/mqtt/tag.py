@@ -168,8 +168,8 @@ class MQTTTagScanner:
         """Subscribe to MQTT topics."""
 
         async def tag_scanned(msg):
-            tag_id = self._value_template(msg.payload, error_value="")
-            if not tag_id.strip():  # No output from template, ignore
+            tag_id = self._value_template(msg.payload, error_value="").strip()
+            if not tag_id:  # No output from template, ignore
                 return
 
             await self.hass.components.tag.async_scan_tag(tag_id, self.device_id)

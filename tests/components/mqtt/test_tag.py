@@ -139,6 +139,22 @@ async def test_if_fires_on_mqtt_message_with_template(
     tag_mock.assert_called_once_with(ANY, DEFAULT_TAG_ID, device_entry.id)
 
 
+async def test_strip_tag_id(hass, device_reg, mqtt_mock, tag_mock):
+    """Test strip whitespace from tag_id."""
+    config = copy.deepcopy(DEFAULT_CONFIG)
+
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    await async_start(hass, "homeassistant", config_entry)
+
+    async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", json.dumps(config))
+    await hass.async_block_till_done()
+
+    # Fake tag scan.
+    async_fire_mqtt_message(hass, "foobar/tag_scanned", "123456   ")
+    await hass.async_block_till_done()
+    tag_mock.assert_called_once_with(ANY, "123456", None)
+
+
 async def test_if_fires_on_mqtt_message_after_update_with_device(
     hass, device_reg, mqtt_mock, tag_mock
 ):
