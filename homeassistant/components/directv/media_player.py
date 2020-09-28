@@ -1,10 +1,13 @@
 """Support for the DirecTV receivers."""
 import logging
-from typing import Callable, List
+from typing import Callable, List, Optional
 
 from directv import DIRECTV
 
-from homeassistant.components.media_player import MediaPlayerEntity
+from homeassistant.components.media_player import (
+    DEVICE_CLASS_RECEIVER,
+    MediaPlayerEntity,
+)
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_MOVIE,
@@ -136,6 +139,11 @@ class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerEntity):
     def name(self):
         """Return the name of the device."""
         return self._name
+
+    @property
+    def device_class(self) -> Optional[str]:
+        """Return the class of this device."""
+        return DEVICE_CLASS_RECEIVER
 
     @property
     def unique_id(self):

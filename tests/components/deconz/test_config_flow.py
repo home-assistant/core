@@ -1,7 +1,6 @@
 """Tests for deCONZ config flow."""
 import asyncio
 
-from asynctest.mock import patch
 import pydeconz
 
 from homeassistant import data_entry_flow
@@ -18,9 +17,11 @@ from homeassistant.components.deconz.const import (
     CONF_MASTER_GATEWAY,
     DOMAIN,
 )
-from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONTENT_TYPE_JSON
 
 from .test_gateway import API_KEY, BRIDGEID, setup_deconz_integration
+
+from tests.async_mock import patch
 
 
 async def test_flow_discovered_bridges(hass, aioclient_mock):
@@ -31,7 +32,7 @@ async def test_flow_discovered_bridges(hass, aioclient_mock):
             {"id": BRIDGEID, "internalipaddress": "1.2.3.4", "internalport": 80},
             {"id": "1234E567890A", "internalipaddress": "5.6.7.8", "internalport": 80},
         ],
-        headers={"content-type": "application/json"},
+        headers={"content-type": CONTENT_TYPE_JSON},
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -51,7 +52,7 @@ async def test_flow_discovered_bridges(hass, aioclient_mock):
     aioclient_mock.post(
         "http://1.2.3.4:80/api",
         json=[{"success": {"username": API_KEY}}],
-        headers={"content-type": "application/json"},
+        headers={"content-type": CONTENT_TYPE_JSON},
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -72,7 +73,7 @@ async def test_flow_manual_configuration_decision(hass, aioclient_mock):
     aioclient_mock.get(
         pydeconz.utils.URL_DISCOVER,
         json=[{"id": BRIDGEID, "internalipaddress": "1.2.3.4", "internalport": 80}],
-        headers={"content-type": "application/json"},
+        headers={"content-type": CONTENT_TYPE_JSON},
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -97,13 +98,13 @@ async def test_flow_manual_configuration_decision(hass, aioclient_mock):
     aioclient_mock.post(
         "http://1.2.3.4:80/api",
         json=[{"success": {"username": API_KEY}}],
-        headers={"content-type": "application/json"},
+        headers={"content-type": CONTENT_TYPE_JSON},
     )
 
     aioclient_mock.get(
         f"http://1.2.3.4:80/api/{API_KEY}/config",
         json={"bridgeid": BRIDGEID},
-        headers={"content-type": "application/json"},
+        headers={"content-type": CONTENT_TYPE_JSON},
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -124,7 +125,7 @@ async def test_flow_manual_configuration(hass, aioclient_mock):
     aioclient_mock.get(
         pydeconz.utils.URL_DISCOVER,
         json=[],
-        headers={"content-type": "application/json"},
+        headers={"content-type": CONTENT_TYPE_JSON},
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -145,13 +146,13 @@ async def test_flow_manual_configuration(hass, aioclient_mock):
     aioclient_mock.post(
         "http://1.2.3.4:80/api",
         json=[{"success": {"username": API_KEY}}],
-        headers={"content-type": "application/json"},
+        headers={"content-type": CONTENT_TYPE_JSON},
     )
 
     aioclient_mock.get(
         f"http://1.2.3.4:80/api/{API_KEY}/config",
         json={"bridgeid": BRIDGEID},
-        headers={"content-type": "application/json"},
+        headers={"content-type": CONTENT_TYPE_JSON},
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -200,7 +201,7 @@ async def test_manual_configuration_update_configuration(hass, aioclient_mock):
     aioclient_mock.get(
         pydeconz.utils.URL_DISCOVER,
         json=[],
-        headers={"content-type": "application/json"},
+        headers={"content-type": CONTENT_TYPE_JSON},
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -221,13 +222,13 @@ async def test_manual_configuration_update_configuration(hass, aioclient_mock):
     aioclient_mock.post(
         "http://2.3.4.5:80/api",
         json=[{"success": {"username": API_KEY}}],
-        headers={"content-type": "application/json"},
+        headers={"content-type": CONTENT_TYPE_JSON},
     )
 
     aioclient_mock.get(
         f"http://2.3.4.5:80/api/{API_KEY}/config",
         json={"bridgeid": BRIDGEID},
-        headers={"content-type": "application/json"},
+        headers={"content-type": CONTENT_TYPE_JSON},
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -246,7 +247,7 @@ async def test_manual_configuration_dont_update_configuration(hass, aioclient_mo
     aioclient_mock.get(
         pydeconz.utils.URL_DISCOVER,
         json=[],
-        headers={"content-type": "application/json"},
+        headers={"content-type": CONTENT_TYPE_JSON},
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -267,13 +268,13 @@ async def test_manual_configuration_dont_update_configuration(hass, aioclient_mo
     aioclient_mock.post(
         "http://1.2.3.4:80/api",
         json=[{"success": {"username": API_KEY}}],
-        headers={"content-type": "application/json"},
+        headers={"content-type": CONTENT_TYPE_JSON},
     )
 
     aioclient_mock.get(
         f"http://1.2.3.4:80/api/{API_KEY}/config",
         json={"bridgeid": BRIDGEID},
-        headers={"content-type": "application/json"},
+        headers={"content-type": CONTENT_TYPE_JSON},
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -289,7 +290,7 @@ async def test_manual_configuration_timeout_get_bridge(hass, aioclient_mock):
     aioclient_mock.get(
         pydeconz.utils.URL_DISCOVER,
         json=[],
-        headers={"content-type": "application/json"},
+        headers={"content-type": CONTENT_TYPE_JSON},
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -310,7 +311,7 @@ async def test_manual_configuration_timeout_get_bridge(hass, aioclient_mock):
     aioclient_mock.post(
         "http://1.2.3.4:80/api",
         json=[{"success": {"username": API_KEY}}],
-        headers={"content-type": "application/json"},
+        headers={"content-type": CONTENT_TYPE_JSON},
     )
 
     aioclient_mock.get(
@@ -330,7 +331,7 @@ async def test_link_get_api_key_ResponseError(hass, aioclient_mock):
     aioclient_mock.get(
         pydeconz.utils.URL_DISCOVER,
         json=[{"id": BRIDGEID, "internalipaddress": "1.2.3.4", "internalport": 80}],
-        headers={"content-type": "application/json"},
+        headers={"content-type": CONTENT_TYPE_JSON},
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -373,7 +374,7 @@ async def test_flow_ssdp_discovery(hass, aioclient_mock):
     aioclient_mock.post(
         "http://1.2.3.4:80/api",
         json=[{"success": {"username": API_KEY}}],
-        headers={"content-type": "application/json"},
+        headers={"content-type": CONTENT_TYPE_JSON},
     )
 
     result = await hass.config_entries.flow.async_configure(

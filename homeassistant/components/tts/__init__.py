@@ -11,6 +11,7 @@ from typing import Dict, Optional
 
 from aiohttp import web
 import mutagen
+from mutagen.id3 import TextFrame as ID3Text
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
@@ -467,9 +468,9 @@ class SpeechManager:
         try:
             tts_file = mutagen.File(data_bytes, easy=True)
             if tts_file is not None:
-                tts_file["artist"] = artist
-                tts_file["album"] = album
-                tts_file["title"] = message
+                tts_file["artist"] = ID3Text(encoding=3, text=artist)
+                tts_file["album"] = ID3Text(encoding=3, text=album)
+                tts_file["title"] = ID3Text(encoding=3, text=message)
                 tts_file.save(data_bytes)
         except mutagen.MutagenError as err:
             _LOGGER.error("ID3 tag error: %s", err)

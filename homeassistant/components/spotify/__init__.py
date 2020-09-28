@@ -80,7 +80,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         DATA_SPOTIFY_SESSION: session,
     }
 
-    if set(session.token["scope"].split(" ")) <= set(SPOTIFY_SCOPES):
+    if not set(session.token["scope"].split(" ")).issuperset(SPOTIFY_SCOPES):
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,

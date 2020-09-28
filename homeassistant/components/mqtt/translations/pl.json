@@ -28,12 +28,12 @@
     },
     "device_automation": {
         "trigger_subtype": {
-            "button_1": "pierwszy przycisk",
-            "button_2": "drugi przycisk",
-            "button_3": "trzeci przycisk",
-            "button_4": "czwarty przycisk",
-            "button_5": "pi\u0105ty przycisk",
-            "button_6": "sz\u00f3sty przycisk",
+            "button_1": "pierwszy",
+            "button_2": "drugi",
+            "button_3": "trzeci",
+            "button_4": "czwarty",
+            "button_5": "pi\u0105ty",
+            "button_6": "sz\u00f3sty",
             "turn_off": "nast\u0105pi wy\u0142\u0105czenie",
             "turn_on": "nast\u0105pi w\u0142\u0105czenie"
         },

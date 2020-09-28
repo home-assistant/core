@@ -9,3 +9,10 @@ light:
     entities:
       - light.outside_patio_lights
       - light.outside_patio_lights_2
+
+notify:
+  - platform: group
+    name: new_group_notify
+    services:
+      - service: demo1
+      - service: demo2

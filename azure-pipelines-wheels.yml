@@ -47,8 +47,9 @@ jobs:
 - template: templates/azp-job-wheels.yaml@azure
   parameters:
     builderVersion: '$(versionWheels)'
-    builderApk: 'build-base;cmake;git;linux-headers;bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;autoconf;automake;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev'
+    builderApk: 'build-base;cmake;git;linux-headers;libexecinfo-dev;bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;autoconf;automake;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev'
     builderPip: 'Cython;numpy;scikit-build'
+    builderEnvFile: true
     skipBinary: 'aiohttp'
     wheelsRequirement: 'requirements_wheels.txt'
     wheelsRequirementDiff: 'requirements_diff.txt'
@@ -90,4 +91,10 @@ jobs:
           sed -i "s|# bme680|bme680|g" ${requirement_file}
           sed -i "s|# python-gammu|python-gammu|g" ${requirement_file}
         done
+
+        # Write env for build settings
+        (
+          echo "GRPC_BUILD_WITH_BORING_SSL_ASM="
+          echo "GRPC_PYTHON_BUILD_SYSTEM_OPENSSL=1"
+        ) > .env_file
       displayName: 'Prepare requirements files for Home Assistant wheels'

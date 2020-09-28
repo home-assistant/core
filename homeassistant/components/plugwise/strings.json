@@ -1,12 +1,23 @@
 {
+  "options": {
+    "step": {
+      "init": {
+        "description": "Adjust Plugwise Options",
+        "data": {
+          "scan_interval": "Scan Interval (seconds)"
+        }
+      }
+    }
+  },
   "config": {
     "step": {
       "user": {
         "title": "Connect to the Smile",
-        "description": "Details",
+        "description": "Please enter:",
         "data": {
+          "password": "Smile ID",
           "host": "Smile IP address",
-          "password": "Smile ID"
+          "port": "Smile port number"
         }
       }
     },

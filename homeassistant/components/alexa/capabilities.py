@@ -866,7 +866,7 @@ class AlexaContactSensor(AlexaCapability):
     https://developer.amazon.com/docs/device-apis/alexa-contactsensor.html
     """
 
-    supported_locales = {"en-CA", "en-US"}
+    supported_locales = {"en-CA", "en-US", "it-IT"}
 
     def __init__(self, hass, entity):
         """Initialize the entity."""
@@ -905,7 +905,7 @@ class AlexaMotionSensor(AlexaCapability):
     https://developer.amazon.com/docs/device-apis/alexa-motionsensor.html
     """
 
-    supported_locales = {"en-CA", "en-US"}
+    supported_locales = {"en-CA", "en-US", "it-IT"}
 
     def __init__(self, hass, entity):
         """Initialize the entity."""
@@ -1113,7 +1113,22 @@ class AlexaSecurityPanelController(AlexaCapability):
     https://developer.amazon.com/docs/device-apis/alexa-securitypanelcontroller.html
     """
 
-    supported_locales = {"en-AU", "en-CA", "en-IN", "en-US"}
+    supported_locales = {
+        "de-DE",
+        "en-AU",
+        "en-CA",
+        "en-GB",
+        "en-IN",
+        "en-US",
+        "es-ES",
+        "es-MX",
+        "es-US",
+        "fr-CA",
+        "fr-FR",
+        "it-IT",
+        "ja-JP",
+        "pt_BR",
+    }
 
     def __init__(self, hass, entity):
         """Initialize the entity."""

@@ -13,7 +13,12 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import CONF_URL
 
 from . import HuaweiLteBaseEntity
-from .const import DOMAIN, KEY_MONITORING_STATUS, KEY_WLAN_WIFI_FEATURE_SWITCH
+from .const import (
+    DOMAIN,
+    KEY_MONITORING_CHECK_NOTIFICATIONS,
+    KEY_MONITORING_STATUS,
+    KEY_WLAN_WIFI_FEATURE_SWITCH,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,6 +33,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         entities.append(HuaweiLteWifiStatusBinarySensor(router))
         entities.append(HuaweiLteWifi24ghzStatusBinarySensor(router))
         entities.append(HuaweiLteWifi5ghzStatusBinarySensor(router))
+
+    if router.data.get(KEY_MONITORING_CHECK_NOTIFICATIONS):
+        entities.append(HuaweiLteSmsStorageFullBinarySensor(router))
 
     async_add_entities(entities, True)
 
@@ -194,3 +202,32 @@ class HuaweiLteWifi5ghzStatusBinarySensor(HuaweiLteBaseWifiStatusBinarySensor):
     @property
     def _entity_name(self) -> str:
         return "5GHz WiFi status"
+
+
+@attr.s
+class HuaweiLteSmsStorageFullBinarySensor(HuaweiLteBaseBinarySensor):
+    """Huawei LTE SMS storage full binary sensor."""
+
+    def __attrs_post_init__(self):
+        """Initialize identifiers."""
+        self.key = KEY_MONITORING_CHECK_NOTIFICATIONS
+        self.item = "SmsStorageFull"
+
+    @property
+    def _entity_name(self) -> str:
+        return "SMS storage full"
+
+    @property
+    def is_on(self) -> bool:
+        """Return whether the binary sensor is on."""
+        return self._raw_state is not None and int(self._raw_state) != 0
+
+    @property
+    def assumed_state(self) -> bool:
+        """Return True if real state is assumed, not known."""
+        return self._raw_state is None
+
+    @property
+    def icon(self):
+        """Return WiFi status sensor icon."""
+        return "mdi:email-alert" if self.is_on else "mdi:email-off"

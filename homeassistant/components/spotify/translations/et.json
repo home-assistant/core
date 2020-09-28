@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Saate konfigureerida ainult \u00fche Spotify konto.",
+            "authorize_url_timeout": "Kinnituse URLi ajal\u00f5pp",
+            "missing_configuration": "Spotify sidumine pole seadistatud. Palun j\u00e4rgige dokumentatsiooni."
+        },
+        "create_entry": {
+            "default": "Edukalt Spotifyga autenditud."
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Valige autentimismeetod"
+            }
+        }
+    }
+}

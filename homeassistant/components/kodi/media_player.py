@@ -5,16 +5,23 @@ import logging
 import re
 
 import jsonrpc_base
+from pykodi import CannotConnectError
 import voluptuous as vol
 
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
+    MEDIA_TYPE_ALBUM,
+    MEDIA_TYPE_ARTIST,
     MEDIA_TYPE_CHANNEL,
+    MEDIA_TYPE_EPISODE,
     MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_PLAYLIST,
+    MEDIA_TYPE_SEASON,
+    MEDIA_TYPE_TRACK,
     MEDIA_TYPE_TVSHOW,
     MEDIA_TYPE_VIDEO,
+    SUPPORT_BROWSE_MEDIA,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -29,6 +36,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
+from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -50,6 +58,7 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.util.dt as dt_util
 
+from .browse_media import build_item_response, library_payload
 from .const import (
     CONF_WS_PORT,
     DATA_CONNECTION,
@@ -103,20 +112,28 @@ MEDIA_TYPES = {
     "audio": MEDIA_TYPE_MUSIC,
 }
 
+MAP_KODI_MEDIA_TYPES = {
+    MEDIA_TYPE_MOVIE: "movieid",
+    MEDIA_TYPE_EPISODE: "episodeid",
+    MEDIA_TYPE_SEASON: "seasonid",
+    MEDIA_TYPE_TVSHOW: "tvshowid",
+}
+
 SUPPORT_KODI = (
-    SUPPORT_PAUSE
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_PREVIOUS_TRACK
+    SUPPORT_BROWSE_MEDIA
     | SUPPORT_NEXT_TRACK
-    | SUPPORT_SEEK
-    | SUPPORT_PLAY_MEDIA
-    | SUPPORT_STOP
-    | SUPPORT_SHUFFLE_SET
+    | SUPPORT_PAUSE
     | SUPPORT_PLAY
-    | SUPPORT_VOLUME_STEP
+    | SUPPORT_PLAY_MEDIA
+    | SUPPORT_PREVIOUS_TRACK
+    | SUPPORT_SEEK
+    | SUPPORT_SHUFFLE_SET
+    | SUPPORT_STOP
     | SUPPORT_TURN_OFF
     | SUPPORT_TURN_ON
+    | SUPPORT_VOLUME_MUTE
+    | SUPPORT_VOLUME_SET
+    | SUPPORT_VOLUME_STEP
 )
 
 
@@ -308,11 +325,15 @@ class KodiEntity(MediaPlayerEntity):
         self._app_properties["muted"] = data["muted"]
         self.async_write_ha_state()
 
-    @callback
-    def async_on_quit(self, sender, data):
+    async def async_on_quit(self, sender, data):
         """Reset the player state on quit action."""
+        await self._clear_connection()
+
+    async def _clear_connection(self, close=True):
         self._reset_state()
-        self.hass.async_create_task(self._connection.close())
+        self.async_write_ha_state()
+        if close:
+            await self._connection.close()
 
     @property
     def unique_id(self):
@@ -370,14 +391,23 @@ class KodiEntity(MediaPlayerEntity):
         try:
             await self._connection.connect()
             self._on_ws_connected()
-        except jsonrpc_base.jsonrpc.TransportError:
-            _LOGGER.info("Unable to connect to Kodi via websocket")
+        except (jsonrpc_base.jsonrpc.TransportError, CannotConnectError):
             _LOGGER.debug("Unable to connect to Kodi via websocket", exc_info=True)
+            await self._clear_connection(False)
+
+    async def _ping(self):
+        try:
+            await self._kodi.ping()
+        except (jsonrpc_base.jsonrpc.TransportError, CannotConnectError):
+            _LOGGER.debug("Unable to ping Kodi via websocket", exc_info=True)
+            await self._clear_connection()
 
     async def _async_connect_websocket_if_disconnected(self, *_):
         """Reconnect the websocket if it fails."""
         if not self._connection.connected:
             await self._async_ws_connect()
+        else:
+            await self._ping()
 
     @callback
     def _register_ws_callbacks(self):
@@ -448,7 +478,7 @@ class KodiEntity(MediaPlayerEntity):
     @property
     def should_poll(self):
         """Return True if entity has to be polled for state."""
-        return (not self._connection.can_subscribe) or (not self._connection.connected)
+        return not self._connection.can_subscribe
 
     @property
     def volume_level(self):
@@ -644,6 +674,31 @@ class KodiEntity(MediaPlayerEntity):
             await self._kodi.play_playlist(int(media_id))
         elif media_type_lower == "directory":
             await self._kodi.play_directory(str(media_id))
+        elif media_type_lower in [
+            MEDIA_TYPE_ARTIST,
+            MEDIA_TYPE_ALBUM,
+        ]:
+            await self.async_clear_playlist()
+            params = {"playlistid": 0, "item": {f"{media_type}id": int(media_id)}}
+            # pylint: disable=protected-access
+            await self._kodi._server.Playlist.Add(params)
+            await self._kodi.play_playlist(0)
+        elif media_type_lower == MEDIA_TYPE_TRACK:
+            await self._kodi.clear_playlist()
+            params = {"playlistid": 0, "item": {"songid": int(media_id)}}
+            # pylint: disable=protected-access
+            await self._kodi._server.Playlist.Add(params)
+            await self._kodi.play_playlist(0)
+        elif media_type_lower in [
+            MEDIA_TYPE_MOVIE,
+            MEDIA_TYPE_EPISODE,
+            MEDIA_TYPE_SEASON,
+            MEDIA_TYPE_TVSHOW,
+        ]:
+            # pylint: disable=protected-access
+            await self._kodi._play_item(
+                {MAP_KODI_MEDIA_TYPES[media_type_lower]: int(media_id)}
+            )
         else:
             await self._kodi.play_file(str(media_id))
 
@@ -659,7 +714,7 @@ class KodiEntity(MediaPlayerEntity):
         _LOGGER.debug("Run API method %s, kwargs=%s", method, kwargs)
         result_ok = False
         try:
-            result = self._kodi.call_method(method, **kwargs)
+            result = await self._kodi.call_method(method, **kwargs)
             result_ok = True
         except jsonrpc_base.jsonrpc.ProtocolError as exc:
             result = exc.args[2]["error"]
@@ -794,3 +849,19 @@ class KodiEntity(MediaPlayerEntity):
             out[i][1] = rate
 
         return sorted(out, key=lambda out: out[1], reverse=True)
+
+    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+        """Implement the websocket media browsing helper."""
+        if media_content_type in [None, "library"]:
+            return await self.hass.async_add_executor_job(library_payload, self._kodi)
+
+        payload = {
+            "search_type": media_content_type,
+            "search_id": media_content_id,
+        }
+        response = await build_item_response(self._kodi, payload)
+        if response is None:
+            raise BrowseError(
+                f"Media not found: {media_content_type} / {media_content_id}"
+            )
+        return response

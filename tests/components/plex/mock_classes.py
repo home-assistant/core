@@ -121,8 +121,6 @@ class MockPlexServer:
 
         self._systemAccounts = list(map(MockPlexSystemAccount, range(num_users)))
 
-        self._library = None
-
         self._clients = []
         self._sessions = []
         self.set_clients(num_users)
@@ -348,6 +346,14 @@ class MockPlexLibrary:
         """Mock the sectionByID lookup."""
         return [x for x in self.sections() if x.key == section_id][0]
 
+    def onDeck(self):
+        """Mock an empty On Deck folder."""
+        return []
+
+    def recentlyAdded(self):
+        """Mock an empty Recently Added folder."""
+        return []
+
 
 class MockPlexLibrarySection:
     """Mock a Plex LibrarySection instance."""
@@ -383,6 +389,14 @@ class MockPlexLibrarySection:
                     if child.ratingKey == ratingKey:
                         return child
 
+    def onDeck(self):
+        """Mock an empty On Deck folder."""
+        return []
+
+    def recentlyAdded(self):
+        """Mock an empty Recently Added folder."""
+        return self.all()
+
     @property
     def type(self):
         """Mock the library type."""
@@ -396,19 +410,34 @@ class MockPlexLibrarySection:
             return "photo"
 
     @property
+    def TYPE(self):
+        """Return the library type."""
+        return self.type
+
+    @property
     def key(self):
         """Mock the key identifier property."""
         return str(id(self.title))
+
+    def search(self, **kwargs):
+        """Mock the LibrarySection search method."""
+        if kwargs.get("libtype") == "movie":
+            return self.all()
+
+    def update(self):
+        """Mock the update call."""
+        pass
 
 
 class MockPlexMediaItem:
     """Mock a Plex Media instance."""
 
-    def __init__(self, title, mediatype="video"):
+    def __init__(self, title, mediatype="video", year=2020):
         """Initialize the object."""
         self.title = str(title)
         self.type = mediatype
         self.thumbUrl = "http://1.2.3.4/thumb.png"
+        self.year = year
         self._children = []
 
     def __iter__(self):

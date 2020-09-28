@@ -548,6 +548,11 @@ class Event:
         self.time_fired = time_fired or dt_util.utcnow()
         self.context: Context = context or Context()
 
+    def __hash__(self) -> int:
+        """Make hashable."""
+        # The only event type that shares context are the TIME_CHANGED
+        return hash((self.event_type, self.context.id, self.time_fired))
+
     def as_dict(self) -> Dict:
         """Create a dict representation of this Event.
 
@@ -907,7 +912,7 @@ class StateMachine:
         This method must be run in the event loop.
         """
         if domain_filter is None:
-            return list(self._states.keys())
+            return list(self._states)
 
         if isinstance(domain_filter, str):
             domain_filter = (domain_filter.lower(),)
@@ -918,17 +923,47 @@ class StateMachine:
             if state.domain in domain_filter
         ]
 
-    def all(self) -> List[State]:
-        """Create a list of all states."""
-        return run_callback_threadsafe(self._loop, self.async_all).result()
-
     @callback
-    def async_all(self) -> List[State]:
-        """Create a list of all states.
+    def async_entity_ids_count(
+        self, domain_filter: Optional[Union[str, Iterable]] = None
+    ) -> int:
+        """Count the entity ids that are being tracked.
 
         This method must be run in the event loop.
         """
-        return list(self._states.values())
+        if domain_filter is None:
+            return len(self._states)
+
+        if isinstance(domain_filter, str):
+            domain_filter = (domain_filter.lower(),)
+
+        return len(
+            [None for state in self._states.values() if state.domain in domain_filter]
+        )
+
+    def all(self, domain_filter: Optional[Union[str, Iterable]] = None) -> List[State]:
+        """Create a list of all states."""
+        return run_callback_threadsafe(
+            self._loop, self.async_all, domain_filter
+        ).result()
+
+    @callback
+    def async_all(
+        self, domain_filter: Optional[Union[str, Iterable]] = None
+    ) -> List[State]:
+        """Create a list of all states matching the filter.
+
+        This method must be run in the event loop.
+        """
+        if domain_filter is None:
+            return list(self._states.values())
+
+        if isinstance(domain_filter, str):
+            domain_filter = (domain_filter.lower(),)
+
+        return [
+            state for state in self._states.values() if state.domain in domain_filter
+        ]
 
     def get(self, entity_id: str) -> Optional[State]:
         """Retrieve state of entity_id or None if not found.
@@ -1377,6 +1412,9 @@ class Config:
 
         # List of allowed external URLs that integrations may use
         self.allowlist_external_urls: Set[str] = set()
+
+        # Dictionary of Media folders that integrations may use
+        self.media_dirs: Dict[str, str] = {}
 
         # If Home Assistant is running in safe mode
         self.safe_mode: bool = False

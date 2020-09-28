@@ -146,11 +146,12 @@ class FreeboxCallSensor(FreeboxSensor):
     def async_update_state(self) -> None:
         """Update the Freebox call sensor."""
         self._call_list_for_type = []
-        for call in self._router.call_list:
-            if not call["new"]:
-                continue
-            if call["type"] == self._sensor_type:
-                self._call_list_for_type.append(call)
+        if self._router.call_list:
+            for call in self._router.call_list:
+                if not call["new"]:
+                    continue
+                if call["type"] == self._sensor_type:
+                    self._call_list_for_type.append(call)
 
         self._state = len(self._call_list_for_type)
 

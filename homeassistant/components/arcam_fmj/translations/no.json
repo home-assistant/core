@@ -12,7 +12,8 @@
             },
             "user": {
                 "data": {
-                    "host": "Vert"
+                    "host": "Vert",
+                    "port": ""
                 },
                 "description": "Vennligst skriv inn vertsnavnet eller IP-adressen til enheten."
             }

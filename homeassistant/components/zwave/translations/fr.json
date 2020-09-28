@@ -11,7 +11,7 @@
             "user": {
                 "data": {
                     "network_key": "Cl\u00e9 r\u00e9seau (laisser vide pour g\u00e9n\u00e9rer automatiquement)",
-                    "usb_path": "Chemin USB"
+                    "usb_path": "Chemin du p\u00e9riph\u00e9rique USB"
                 },
                 "description": "Voir https://www.home-assistant.io/docs/z-wave/installation/ pour plus d'informations sur les variables de configuration.",
                 "title": "Configurer Z-Wave"

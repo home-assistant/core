@@ -38,7 +38,18 @@ MANIFEST_SCHEMA = vol.Schema(
         vol.Required("domain"): str,
         vol.Required("name"): str,
         vol.Optional("config_flow"): bool,
-        vol.Optional("zeroconf"): [str],
+        vol.Optional("zeroconf"): [
+            vol.Any(
+                str,
+                vol.Schema(
+                    {
+                        vol.Required("type"): str,
+                        vol.Optional("macaddress"): str,
+                        vol.Optional("name"): str,
+                    }
+                ),
+            )
+        ],
         vol.Optional("ssdp"): vol.Schema(
             vol.All([vol.All(vol.Schema({}, extra=vol.ALLOW_EXTRA), vol.Length(min=1))])
         ),

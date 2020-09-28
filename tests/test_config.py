@@ -364,7 +364,7 @@ async def test_loading_configuration_from_storage(hass, hass_storage):
     assert hass.config.time_zone.zone == "Europe/Copenhagen"
     assert hass.config.external_url == "https://www.example.com"
     assert hass.config.internal_url == "http://example.local"
-    assert len(hass.config.allowlist_external_dirs) == 2
+    assert len(hass.config.allowlist_external_dirs) == 3
     assert "/etc" in hass.config.allowlist_external_dirs
     assert hass.config.config_source == SOURCE_STORAGE
 
@@ -421,7 +421,7 @@ async def test_override_stored_configuration(hass, hass_storage):
     assert hass.config.location_name == "Home"
     assert hass.config.units.name == CONF_UNIT_SYSTEM_METRIC
     assert hass.config.time_zone.zone == "Europe/Copenhagen"
-    assert len(hass.config.allowlist_external_dirs) == 2
+    assert len(hass.config.allowlist_external_dirs) == 3
     assert "/etc" in hass.config.allowlist_external_dirs
     assert hass.config.config_source == config_util.SOURCE_YAML
 
@@ -440,6 +440,7 @@ async def test_loading_configuration(hass):
             "allowlist_external_dirs": "/etc",
             "external_url": "https://www.example.com",
             "internal_url": "http://example.local",
+            "media_dirs": {"mymedia": "/usr"},
         },
     )
 
@@ -451,8 +452,10 @@ async def test_loading_configuration(hass):
     assert hass.config.time_zone.zone == "America/New_York"
     assert hass.config.external_url == "https://www.example.com"
     assert hass.config.internal_url == "http://example.local"
-    assert len(hass.config.allowlist_external_dirs) == 2
+    assert len(hass.config.allowlist_external_dirs) == 3
     assert "/etc" in hass.config.allowlist_external_dirs
+    assert "/usr" in hass.config.allowlist_external_dirs
+    assert hass.config.media_dirs == {"mymedia": "/usr"}
     assert hass.config.config_source == config_util.SOURCE_YAML
 
 
@@ -481,6 +484,22 @@ async def test_loading_configuration_temperature_unit(hass):
     assert hass.config.external_url == "https://www.example.com"
     assert hass.config.internal_url == "http://example.local"
     assert hass.config.config_source == config_util.SOURCE_YAML
+
+
+async def test_loading_configuration_default_media_dirs_docker(hass):
+    """Test loading core config onto hass object."""
+    with patch("homeassistant.config.is_docker_env", return_value=True):
+        await config_util.async_process_ha_core_config(
+            hass,
+            {
+                "name": "Huis",
+            },
+        )
+
+    assert hass.config.location_name == "Huis"
+    assert len(hass.config.allowlist_external_dirs) == 2
+    assert "/media" in hass.config.allowlist_external_dirs
+    assert hass.config.media_dirs == {"local": "/media"}
 
 
 async def test_loading_configuration_from_packages(hass):

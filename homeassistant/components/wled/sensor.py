@@ -9,7 +9,7 @@ from homeassistant.const import (
     DATA_BYTES,
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_TIMESTAMP,
-    UNIT_PERCENTAGE,
+    PERCENTAGE,
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
@@ -171,7 +171,7 @@ class WLEDWifiSignalSensor(WLEDSensor):
             icon="mdi:wifi",
             key="wifi_signal",
             name=f"{coordinator.data.info.name} Wi-Fi Signal",
-            unit_of_measurement=UNIT_PERCENTAGE,
+            unit_of_measurement=PERCENTAGE,
         )
 
     @property

@@ -8,10 +8,11 @@ from aiohomekit.model.services import ServicesTypes
 import pytest
 
 from homeassistant.components.homekit_controller import config_flow
+from homeassistant.helpers import device_registry
 
 import tests.async_mock
 from tests.async_mock import patch
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, mock_device_registry
 
 PAIRING_START_FORM_ERRORS = [
     (KeyError, "pairing_failed"),
@@ -51,14 +52,17 @@ INVALID_PAIRING_CODES = [
     "111-11-111 ",
     "111-11-111a",
     "1111111",
+    "22222222",
 ]
 
 
 VALID_PAIRING_CODES = [
-    "111-11-111",
-    "123-45-678",
-    "11111111",
+    "114-11-111",
+    "123-45-679",
+    "123-45-679  ",
+    "11121111",
     "98765432",
+    "   98765432  ",
 ]
 
 
@@ -233,11 +237,45 @@ async def test_pair_already_paired_1(hass, controller):
     assert result["reason"] == "already_paired"
 
 
+async def test_id_missing(hass, controller):
+    """Test id is missing."""
+    device = setup_mock_accessory(controller)
+    discovery_info = get_device_discovery_info(device)
+
+    # Remove id from device
+    del discovery_info["properties"]["id"]
+
+    # Device is discovered
+    result = await hass.config_entries.flow.async_init(
+        "homekit_controller", context={"source": "zeroconf"}, data=discovery_info
+    )
+    assert result["type"] == "abort"
+    assert result["reason"] == "invalid_properties"
+
+
 async def test_discovery_ignored_model(hass, controller):
     """Already paired."""
     device = setup_mock_accessory(controller)
     discovery_info = get_device_discovery_info(device)
-    discovery_info["properties"]["md"] = config_flow.HOMEKIT_IGNORE[0]
+
+    config_entry = MockConfigEntry(domain=config_flow.HOMEKIT_BRIDGE_DOMAIN, data={})
+    formatted_mac = device_registry.format_mac("AA:BB:CC:DD:EE:FF")
+
+    dev_reg = mock_device_registry(hass)
+    dev_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={
+            (
+                config_flow.HOMEKIT_BRIDGE_DOMAIN,
+                config_entry.entry_id,
+                config_flow.HOMEKIT_BRIDGE_SERIAL_NUMBER,
+            )
+        },
+        connections={(device_registry.CONNECTION_NETWORK_MAC, formatted_mac)},
+        model=config_flow.HOMEKIT_BRIDGE_MODEL,
+    )
+
+    discovery_info["properties"]["id"] = "AA:BB:CC:DD:EE:FF"
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
@@ -513,6 +551,7 @@ async def test_user_works(hass, controller):
     assert get_flow_context(hass, result) == {
         "source": "user",
         "unique_id": "00:00:00:00:00:00",
+        "title_placeholders": {"name": "TestDevice"},
     }
 
     result = await hass.config_entries.flow.async_configure(

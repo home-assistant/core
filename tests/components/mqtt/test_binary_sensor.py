@@ -580,17 +580,75 @@ async def test_discovery_removal_binary_sensor(hass, mqtt_mock, caplog):
     )
 
 
-async def test_discovery_update_binary_sensor(hass, mqtt_mock, caplog):
+async def test_discovery_update_binary_sensor_topic_template(hass, mqtt_mock, caplog):
     """Test update of discovered binary_sensor."""
     config1 = copy.deepcopy(DEFAULT_CONFIG[binary_sensor.DOMAIN])
     config2 = copy.deepcopy(DEFAULT_CONFIG[binary_sensor.DOMAIN])
     config1["name"] = "Beer"
     config2["name"] = "Milk"
+    config1["state_topic"] = "sensor/state1"
+    config2["state_topic"] = "sensor/state2"
+    config1["value_template"] = "{{ value_json.state1.state }}"
+    config2["value_template"] = "{{ value_json.state2.state }}"
+
+    state_data1 = [
+        ([("sensor/state1", '{"state1":{"state":"ON"}}')], "on", None),
+    ]
+    state_data2 = [
+        ([("sensor/state2", '{"state2":{"state":"OFF"}}')], "off", None),
+        ([("sensor/state2", '{"state2":{"state":"ON"}}')], "on", None),
+        ([("sensor/state1", '{"state1":{"state":"OFF"}}')], "on", None),
+        ([("sensor/state1", '{"state2":{"state":"OFF"}}')], "on", None),
+        ([("sensor/state2", '{"state1":{"state":"OFF"}}')], "on", None),
+        ([("sensor/state2", '{"state2":{"state":"OFF"}}')], "off", None),
+    ]
 
     data1 = json.dumps(config1)
     data2 = json.dumps(config2)
     await help_test_discovery_update(
-        hass, mqtt_mock, caplog, binary_sensor.DOMAIN, data1, data2
+        hass,
+        mqtt_mock,
+        caplog,
+        binary_sensor.DOMAIN,
+        data1,
+        data2,
+        state_data1=state_data1,
+        state_data2=state_data2,
+    )
+
+
+async def test_discovery_update_binary_sensor_template(hass, mqtt_mock, caplog):
+    """Test update of discovered binary_sensor."""
+    config1 = copy.deepcopy(DEFAULT_CONFIG[binary_sensor.DOMAIN])
+    config2 = copy.deepcopy(DEFAULT_CONFIG[binary_sensor.DOMAIN])
+    config1["name"] = "Beer"
+    config2["name"] = "Milk"
+    config1["state_topic"] = "sensor/state1"
+    config2["state_topic"] = "sensor/state1"
+    config1["value_template"] = "{{ value_json.state1.state }}"
+    config2["value_template"] = "{{ value_json.state2.state }}"
+
+    state_data1 = [
+        ([("sensor/state1", '{"state1":{"state":"ON"}}')], "on", None),
+    ]
+    state_data2 = [
+        ([("sensor/state1", '{"state2":{"state":"OFF"}}')], "off", None),
+        ([("sensor/state1", '{"state2":{"state":"ON"}}')], "on", None),
+        ([("sensor/state1", '{"state1":{"state":"OFF"}}')], "on", None),
+        ([("sensor/state1", '{"state2":{"state":"OFF"}}')], "off", None),
+    ]
+
+    data1 = json.dumps(config1)
+    data2 = json.dumps(config2)
+    await help_test_discovery_update(
+        hass,
+        mqtt_mock,
+        caplog,
+        binary_sensor.DOMAIN,
+        data1,
+        data2,
+        state_data1=state_data1,
+        state_data2=state_data2,
     )
 
 

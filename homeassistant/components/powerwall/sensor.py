@@ -3,11 +3,7 @@ import logging
 
 from tesla_powerwall import MeterType, convert_to_kw
 
-from homeassistant.const import (
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_POWER,
-    UNIT_PERCENTAGE,
-)
+from homeassistant.const import DEVICE_CLASS_BATTERY, DEVICE_CLASS_POWER, PERCENTAGE
 
 from .const import (
     ATTR_ENERGY_EXPORTED,
@@ -69,7 +65,7 @@ class PowerWallChargeSensor(PowerWallEntity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return UNIT_PERCENTAGE
+        return PERCENTAGE
 
     @property
     def name(self):

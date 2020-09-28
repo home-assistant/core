@@ -82,6 +82,7 @@ async def async_setup(hass, config):
     """Set up stream."""
     # Set log level to error for libav
     logging.getLogger("libav").setLevel(logging.ERROR)
+    logging.getLogger("libav.mp4").setLevel(logging.ERROR)
 
     # Keep import here so that we can import stream integration without installing reqs
     # pylint: disable=import-outside-toplevel
@@ -171,6 +172,10 @@ class Stream:
         from .worker import stream_worker
 
         if self._thread is None or not self._thread.isAlive():
+            if self._thread is not None:
+                # The thread must have crashed/exited. Join to clean up the
+                # previous thread.
+                self._thread.join(timeout=0)
             self._thread_quit = threading.Event()
             self._thread = threading.Thread(
                 name="stream_worker",
