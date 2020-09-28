@@ -48,7 +48,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.hass.config_entries.async_update_entry(
                     entry, data=dict(entry.data, **user_input)
                 )
-                return
+                self._abort_if_unique_id_configured()
         return self.async_create_entry(title=user_input["name"], data=user_input)
 
     @staticmethod
