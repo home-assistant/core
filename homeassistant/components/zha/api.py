@@ -72,6 +72,7 @@ DEVICE_INFO = "device_info"
 
 ATTR_DURATION = "duration"
 ATTR_GROUP = "group"
+ATTR_IEEE_ADDRESS = "ieee_address"
 ATTR_INSTALL_CODE = "install_code"
 ATTR_SOURCE_IEEE = "source_ieee"
 ATTR_TARGET_IEEE = "target_ieee"
@@ -100,8 +101,18 @@ SERVICE_PERMIT_PARAMS = {
 }
 
 SERVICE_SCHEMAS = {
-    SERVICE_PERMIT: vol.Schema(SERVICE_PERMIT_PARAMS),
-    IEEE_SERVICE: vol.Schema({vol.Required(ATTR_IEEE): EUI64.convert}),
+    SERVICE_PERMIT: vol.Schema(
+        vol.All(
+            cv.deprecated(ATTR_IEEE_ADDRESS, replacement_key=ATTR_IEEE),
+            SERVICE_PERMIT_PARAMS,
+        )
+    ),
+    IEEE_SERVICE: vol.Schema(
+        vol.All(
+            cv.deprecated(ATTR_IEEE_ADDRESS, replacement_key=ATTR_IEEE),
+            {vol.Required(ATTR_IEEE): EUI64.convert},
+        )
+    ),
     SERVICE_SET_ZIGBEE_CLUSTER_ATTRIBUTE: vol.Schema(
         {
             vol.Required(ATTR_IEEE): EUI64.convert,
