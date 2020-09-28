@@ -108,15 +108,6 @@ class OmniLogicAlarmSensor(OmnilogicSensor, BinarySensorEntity):
         return alarms
 
 
-class OmniLogicChlorinatorSensor(OmnilogicSensor, BinarySensorEntity):
-    """Define an on/off Chlorinator Sensor."""
-
-    @property
-    def is_on(self):
-        """Return the state of the chlorinator sensor."""
-        return self.coordinator.data[self._item_id][self._state_key] == "100"
-
-
 BINARY_SENSOR_TYPES = {
     (6, "Filter"): [
         {
@@ -152,22 +143,6 @@ BINARY_SENSOR_TYPES = {
                 },
                 {
                     "operatingMode": "2",
-                },
-            ],
-        },
-        {
-            "entity_classes": {"Timed-Percent": OmniLogicChlorinatorSensor},
-            "name": "Setting",
-            "kind": "chlorinator",
-            "device_class": None,
-            "icon": "mdi:gauge",
-            "guard_condition": [
-                {
-                    "Shared-Type": "BOW_SHARED_EQUIPMENT",
-                    "status": "0",
-                },
-                {
-                    "operatingMode": "1",
                 },
             ],
         },

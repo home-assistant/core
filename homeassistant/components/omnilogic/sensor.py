@@ -309,9 +309,6 @@ SENSOR_TYPES = {
                     "Shared-Type": "BOW_SHARED_EQUIPMENT",
                     "status": "0",
                 },
-                {
-                    "operatingMode": "2",
-                },
             ],
         },
         {
