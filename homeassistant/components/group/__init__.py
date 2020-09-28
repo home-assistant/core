@@ -1,22 +1,11 @@
 """Provide the functionality to group entities."""
 import asyncio
-from itertools import chain
 import logging
 from typing import Any, Iterable, List, Optional, cast
 
 import voluptuous as vol
 
 from homeassistant import core as ha
-from homeassistant.components.climate.const import HVAC_MODE_OFF, HVAC_MODES
-from homeassistant.components.vacuum import STATE_CLEANING, STATE_ERROR, STATE_RETURNING
-from homeassistant.components.water_heater import (
-    STATE_ECO,
-    STATE_ELECTRIC,
-    STATE_GAS,
-    STATE_HEAT_PUMP,
-    STATE_HIGH_DEMAND,
-    STATE_PERFORMANCE,
-)
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
@@ -28,28 +17,18 @@ from homeassistant.const import (
     ENTITY_MATCH_NONE,
     EVENT_HOMEASSISTANT_START,
     SERVICE_RELOAD,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_TRIGGERED,
-    STATE_CLOSED,
-    STATE_HOME,
-    STATE_LOCKED,
-    STATE_NOT_HOME,
     STATE_OFF,
-    STATE_OK,
     STATE_ON,
-    STATE_OPEN,
-    STATE_PROBLEM,
     STATE_UNKNOWN,
-    STATE_UNLOCKED,
 )
 from homeassistant.core import CoreState, callback, split_entity_id
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.integration_platform import (
+    async_process_integration_platforms,
+)
 from homeassistant.helpers.reload import async_reload_integration_platforms
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import bind_hass
@@ -75,6 +54,8 @@ SERVICE_SET = "set"
 SERVICE_REMOVE = "remove"
 
 PLATFORMS = ["light", "cover", "notify"]
+
+DATA_KEY = f"{DOMAIN}_config"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -103,64 +84,9 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-# We will skip tracking these domains
-# since they will always result in STATE_UNKNOWN
-_EXCLUDE_DOMAINS = {"air_quality", "sensor", "weather"}
-
-_ALARM_CONTROL_PANEL_ON = {
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_TRIGGERED,
-}
-_CLIMATE_ON = set(HVAC_MODES) - {HVAC_MODE_OFF}
-_VACUUM_ON = {STATE_ON, STATE_CLEANING, STATE_RETURNING, STATE_ERROR}
-_WATER_HEATER_ON = {
-    STATE_ECO,
-    STATE_ELECTRIC,
-    STATE_PERFORMANCE,
-    STATE_HIGH_DEMAND,
-    STATE_HEAT_PUMP,
-    STATE_GAS,
-}
-
-# Maps an on state to an off state
-_ON_OFF_MAPPING = {
-    STATE_ON: STATE_OFF,
-    STATE_HOME: STATE_NOT_HOME,
-    STATE_OPEN: STATE_CLOSED,
-    STATE_LOCKED: STATE_UNLOCKED,
-    STATE_PROBLEM: STATE_OK,
-    STATE_CLEANING: STATE_OFF,
-    **{
-        k: STATE_OFF
-        for k in chain(
-            _ALARM_CONTROL_PANEL_ON, _CLIMATE_ON, _VACUUM_ON, _WATER_HEATER_ON
-        )
-    },
-}
-
-# The on states for known domains
-# an off state must be in the _ON_OFF_MAPPING
-# for every on state
-_ON_STATES_BY_DOMAIN = {
-    "alarm_control_panel": _ALARM_CONTROL_PANEL_ON,
-    "binary_sensor": {STATE_ON},
-    "climate": _CLIMATE_ON,
-    "cover": {STATE_OPEN},
-    "device_tracker": {STATE_HOME},
-    "fan": {STATE_ON},
-    "humidifier": {STATE_ON},
-    "light": {STATE_ON},
-    "lock": {STATE_LOCKED},
-    "media_player": {STATE_PROBLEM},
-    "person": {STATE_HOME},
-    "remote": {STATE_ON},
-    "switch": {STATE_ON},
-    "vacuum": _VACUUM_ON,
-    "water_heater": _WATER_HEATER_ON,
-}
+ON_OFF_MAPPING = "on_off_mapping"
+ON_STATES_BY_DOMAIN = "on_states_by_domain"
+EXCLUDE_DOMAINS = "exclude_domains"
 
 
 @bind_hass
@@ -169,7 +95,7 @@ def is_on(hass, entity_id):
     state = hass.states.get(entity_id)
 
     if state is not None:
-        return state.state in _ON_OFF_MAPPING
+        return state.state in hass.data[DATA_KEY][ON_OFF_MAPPING]
 
     return False
 
@@ -383,7 +309,33 @@ async def async_setup(hass, config):
         schema=vol.Schema({vol.Required(ATTR_OBJECT_ID): cv.slug}),
     )
 
+    hass.data[DATA_KEY] = {
+        ON_OFF_MAPPING: {STATE_ON: STATE_OFF},
+        ON_STATES_BY_DOMAIN: {},
+        EXCLUDE_DOMAINS: set(),
+    }
+
+    await async_process_integration_platforms(hass, DOMAIN, _process_group_platform)
+
     return True
+
+
+async def _process_group_platform(hass, domain, platform):
+    """Process a group platform."""
+
+    @callback
+    def _async_on_off_states(on_states, off_state):
+        """Teach group on and off states for a domain."""
+        if on_states is None:
+            hass.data[DATA_KEY][EXCLUDE_DOMAINS].add(domain)
+            return
+
+        for on_state in on_states:
+            if on_state not in hass.data[DATA_KEY][ON_OFF_MAPPING]:
+                hass.data[DATA_KEY][ON_OFF_MAPPING][on_state] = off_state
+        hass.data[DATA_KEY][ON_STATES_BY_DOMAIN][domain] = set(on_states)
+
+    platform.async_describe_on_off_states(hass, _async_on_off_states)
 
 
 async def _async_process_config(hass, config, component):
@@ -624,7 +576,7 @@ class Group(Entity):
             ent_id_lower = ent_id.lower()
             domain = split_entity_id(ent_id_lower)[0]
             tracking.append(ent_id_lower)
-            if domain not in _EXCLUDE_DOMAINS:
+            if domain not in self.hass.data[DATA_KEY][EXCLUDE_DOMAINS]:
                 trackable.append(ent_id_lower)
 
         self.trackable = tuple(trackable)
@@ -708,11 +660,13 @@ class Group(Entity):
         entity_id = state.entity_id
         domain = state.domain
 
-        domain_on_state = _ON_STATES_BY_DOMAIN.get(domain, {STATE_ON})
+        domain_on_state = self.hass.data[DATA_KEY][ON_STATES_BY_DOMAIN].get(
+            domain, {STATE_ON}
+        )
         self._on_off[entity_id] = state.state in domain_on_state
         self._assumed[entity_id] = state.attributes.get(ATTR_ASSUMED_STATE)
 
-        if domain in _ON_STATES_BY_DOMAIN:
+        if domain in self.hass.data[DATA_KEY][ON_STATES_BY_DOMAIN]:
             self._on_states.update(domain_on_state)
 
     @callback
@@ -744,7 +698,7 @@ class Group(Entity):
         num_on_states = len(self._on_states)
         # If all the entity domains we are tracking
         # have the same on state we use this state
-        # and its _ON_OFF_MAPPING to off
+        # and its hass.data[DATA_KEY][ON_OFF_MAPPING] to off
         if num_on_states == 1:
             on_state = list(self._on_states)[0]
         # If we do not have an on state for any domains
@@ -759,4 +713,8 @@ class Group(Entity):
 
         group_is_on = self.mode(self._on_off.values())
 
-        self._state = on_state if group_is_on else _ON_OFF_MAPPING[on_state]
+        self._state = (
+            on_state
+            if group_is_on
+            else self.hass.data[DATA_KEY][ON_OFF_MAPPING][on_state]
+        )
