@@ -571,6 +571,32 @@ def test_multi_select_in_serializer():
     }
 
 
+def test_single_select():
+    """Test single select validation.
+
+    Expected behavior:
+        - Will not accept any that is not part of it's keys
+    """
+    schema = vol.Schema(cv.single_select({"key1": "Data 1", "key2": "Data 2"}))
+
+    with pytest.raises(vol.Invalid):
+        schema("key3")
+        schema(["key1"])
+
+    schema("key1")
+    schema("key1")
+
+
+def test_single_select_in_serializer():
+    """Test single_select with custom_serializer."""
+    assert cv.custom_serializer(
+        cv.single_select({"key1": "Data 1", "key2": "Data 2"})
+    ) == {
+        "type": "select",
+        "options": [["key1", "Data 1"], ["key2", "Data 2"]],
+    }
+
+
 @pytest.fixture
 def schema():
     """Create a schema used for testing deprecation."""

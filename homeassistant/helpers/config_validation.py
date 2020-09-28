@@ -677,6 +677,20 @@ class multi_select:
         return selected
 
 
+class single_select:
+    """Single select validator returning list of selected values."""
+
+    def __init__(self, options: dict) -> None:
+        """Initialize multi select."""
+        self.options = options
+
+    def __call__(self, selected: Any) -> Any:
+        """Validate input."""
+        if selected not in self.options:
+            raise vol.Invalid(f"{selected} is not a valid option")
+        return selected
+
+
 def deprecated(
     key: str,
     replacement_key: Optional[str] = None,
@@ -830,6 +844,12 @@ def custom_serializer(schema: Any) -> Any:
 
     if isinstance(schema, multi_select):
         return {"type": "multi_select", "options": schema.options}
+
+    if isinstance(schema, single_select):
+        return {
+            "type": "select",
+            "options": [[key, value] for key, value in schema.options.items()],
+        }
 
     return voluptuous_serialize.UNSUPPORTED
 
