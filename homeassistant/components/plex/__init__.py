@@ -14,8 +14,10 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
 )
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    CONF_SOURCE,
     CONF_URL,
     CONF_VERIFY_SSL,
     EVENT_HOMEASSISTANT_STOP,
@@ -75,7 +77,11 @@ async def async_setup_entry(hass, entry):
         hass.config_entries.async_update_entry(entry, options=options)
 
     plex_server = PlexServer(
-        hass, server_config, entry.data[CONF_SERVER_IDENTIFIER], entry.options
+        hass,
+        server_config,
+        entry.data[CONF_SERVER_IDENTIFIER],
+        entry.options,
+        entry.entry_id,
     )
     try:
         await hass.async_add_executor_job(plex_server.connect)
@@ -95,9 +101,21 @@ async def async_setup_entry(hass, entry):
             error,
         )
         raise ConfigEntryNotReady from error
+    except plexapi.exceptions.Unauthorized:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                PLEX_DOMAIN,
+                context={CONF_SOURCE: SOURCE_REAUTH},
+                data={**entry.data, "config_entry_id": entry.entry_id},
+            )
+        )
+        _LOGGER.error(
+            "Token not accepted, please reauthenticate Plex server '%s'",
+            entry.data[CONF_SERVER],
+        )
+        return False
     except (
         plexapi.exceptions.BadRequest,
-        plexapi.exceptions.Unauthorized,
         plexapi.exceptions.NotFound,
     ) as error:
         _LOGGER.error(
@@ -207,7 +225,10 @@ async def async_unload_entry(hass, entry):
 async def async_options_updated(hass, entry):
     """Triggered by config entry options updates."""
     server_id = entry.data[CONF_SERVER_IDENTIFIER]
-    hass.data[PLEX_DOMAIN][SERVERS][server_id].options = entry.options
+
+    # Guard incomplete setup during reauth flows
+    if server_id in hass.data[PLEX_DOMAIN][SERVERS]:
+        hass.data[PLEX_DOMAIN][SERVERS][server_id].options = entry.options
 
 
 def play_on_sonos(hass, service_call):
