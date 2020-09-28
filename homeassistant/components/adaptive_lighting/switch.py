@@ -208,6 +208,8 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         self._turn_off_event: Dict[str, Tuple[str, float]] = {}
         # Tracks 'light.turn_on' service calls
         self._turn_on_event: Dict[str, Tuple[str]] = {}
+        # Locks that prevent light adjusting when waiting for a light to 'turn_off'
+        self._locks: Dict[str, asyncio.Lock] = {}
 
         # Initialize attributes that will be set in self._update_attrs
         self._percent = None
@@ -272,13 +274,11 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
     async def async_added_to_hass(self):
         """Call when entity about to be added to hass."""
         if self._lights:
-            unpacked_lights = self._unpack_light_groups(self._lights)
-            async_track_state_change_event(
-                self.hass, unpacked_lights, self._light_event
-            )
+            self._lights = self._unpack_light_groups(self._lights)
+            async_track_state_change_event(self.hass, self._lights, self._light_event)
             # Tracks 'light.turn_off(..., transition=...)' service calls
             self.hass.bus.async_listen(
-                EVENT_CALL_SERVICE, self._turn_off_event_listener
+                EVENT_CALL_SERVICE, self._turn_on_off_event_listener
             )
             track_kwargs = dict(hass=self.hass, action=self._state_changed)
             if self._sleep_entity is not None:
@@ -504,6 +504,9 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
             from_state,
             to_state,
         )
+        lock = self._locks.get(entity_id)
+        if lock is not None and lock.locked:
+            return
         await self._update_lights(transition=self._initial_transition, force=True)
 
     async def _light_event(self, event):
@@ -520,17 +523,19 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
             _LOGGER.debug(
                 "%s: Detected an 'off' → 'on' event for '%s'", self._name, entity_id
             )
-            if await self._maybe_cancel_adjusting(entity_id, now_ts, event):
-                # Stop if a rapid 'off' → 'on' → 'off' happens.
-                _LOGGER.debug(
-                    "%s: Cancelling adjusting lights for %s", self._name, entity_id
+            lock = self._locks.setdefault(entity_id, asyncio.Lock())
+            async with lock:
+                if await self._maybe_cancel_adjusting(entity_id, now_ts, event):
+                    # Stop if a rapid 'off' → 'on' → 'off' happens.
+                    _LOGGER.debug(
+                        "%s: Cancelling adjusting lights for %s", self._name, entity_id
+                    )
+                    return
+                await self._update_lights(
+                    lights=[entity_id],
+                    transition=self._initial_transition,
+                    force=True,
                 )
-                return
-            await self._update_lights(
-                lights=[entity_id],
-                transition=self._initial_transition,
-                force=True,
-            )
         elif (
             old_state is not None
             and old_state.state == "on"
@@ -561,10 +566,12 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         if id_off_to_on == id_turn_on and id_off_to_on is not None:
             # State change 'off' → 'on' triggered by 'light.turn_on'.
             return False
-        elif ts_on_to_off == 0:
+
+        if ts_on_to_off == 0:
             # No state change has been registered before.
             return False
-        elif id_on_to_off == id_turn_off and id_on_to_off is not None:
+
+        if id_on_to_off == id_turn_off and id_on_to_off is not None:
             # State change 'off' → 'on' and 'light.turn_off(..., transition=...)' come
             # from the same event, so wait at least the 'turn_off' transition time.
             delay = transition
@@ -576,6 +583,12 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         delta_time = now_ts - ts_on_to_off
         if delta_time > delay:
             return False
+
+        # Here we could just `return True` but because we want to prevent any updates
+        # from happening to this light (through async_track_time_interval or
+        # sleep_state or disable_state) for some time, we wait below until the light
+        # is 'off' or the time has passed.
+
         delay -= delta_time  # delta_time has passed since the 'off' → 'on' event
         _LOGGER.debug(
             "%s: Waiting with adjusting '%s' for %s.", self._name, entity_id, delay
@@ -620,12 +633,12 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
             # TODO: I am doing this because it seems like HA cannot detect
             # whether a light is transitioning into 'off'. Because in my
             # tests `brightness_going_down == False` even when it is actually
-            # still going down... Maybe needs some discussion.
+            # still going down... Maybe needs some discussion/input?
             return True
 
         return current_state.state == "off"
 
-    async def _turn_off_event_listener(self, event):
+    async def _turn_on_off_event_listener(self, event):
         """Track 'light.turn_off(..., transition=...)' and 'light.turn_on' service calls."""
         domain = event.data.get(ATTR_DOMAIN)
         if domain != LIGHT_DOMAIN:
