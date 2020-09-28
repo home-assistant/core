@@ -837,7 +837,7 @@ class _TrackTemplateResultInfo:
         if template_filter and template != template_filter:
             return False, None
 
-        if event:
+        if event and template not in self._scan_interval_listeners:
             if (
                 template not in self._rate_limit_timers
                 and not self._event_triggers_template(template, event)

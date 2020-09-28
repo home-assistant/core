@@ -422,7 +422,12 @@ async def test_render_template_renders_template(
     event = msg["event"]
     assert event == {
         "result": "State is: on",
-        "listeners": {"all": False, "domains": [], "entities": ["light.test"]},
+        "listeners": {
+            "all": False,
+            "domains": [],
+            "entities": ["light.test"],
+            "scan_intervals": [],
+        },
     }
 
     hass.states.async_set("light.test", "off")
@@ -432,7 +437,12 @@ async def test_render_template_renders_template(
     event = msg["event"]
     assert event == {
         "result": "State is: off",
-        "listeners": {"all": False, "domains": [], "entities": ["light.test"]},
+        "listeners": {
+            "all": False,
+            "domains": [],
+            "entities": ["light.test"],
+            "scan_intervals": [],
+        },
     }
 
 
@@ -461,7 +471,12 @@ async def test_render_template_manual_entity_ids_no_longer_needed(
     event = msg["event"]
     assert event == {
         "result": "State is: on",
-        "listeners": {"all": False, "domains": [], "entities": ["light.test"]},
+        "listeners": {
+            "all": False,
+            "domains": [],
+            "entities": ["light.test"],
+            "scan_intervals": [],
+        },
     }
 
     hass.states.async_set("light.test", "off")
@@ -471,7 +486,12 @@ async def test_render_template_manual_entity_ids_no_longer_needed(
     event = msg["event"]
     assert event == {
         "result": "State is: off",
-        "listeners": {"all": False, "domains": [], "entities": ["light.test"]},
+        "listeners": {
+            "all": False,
+            "domains": [],
+            "entities": ["light.test"],
+            "scan_intervals": [],
+        },
     }
 
 
@@ -527,7 +547,12 @@ async def test_render_template_with_delayed_error(
     event = msg["event"]
     assert event == {
         "result": "on",
-        "listeners": {"all": False, "domains": [], "entities": ["sensor.test"]},
+        "listeners": {
+            "all": False,
+            "domains": [],
+            "entities": ["sensor.test"],
+            "scan_intervals": [],
+        },
     }
 
     msg = await websocket_client.receive_json()
