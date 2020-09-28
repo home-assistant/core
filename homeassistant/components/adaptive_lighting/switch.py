@@ -271,7 +271,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
                 )
         last_state = await self.async_get_last_state()
         if last_state and last_state.state == STATE_ON:
-            await self.async_turn_on()
+            await self.async_turn_on(adjust_lights=False)
 
     def _unpack_light_groups(self) -> None:
         all_lights = []
@@ -325,12 +325,13 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
             return {key: None for key in attrs}
         return attrs
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, adjust_lights=True):
         """Turn on adaptive lighting."""
-        await self._update_lights(transition=self._initial_transition, force=True)
         self.unsub_tracker = async_track_time_interval(
             self.hass, self._async_update_at_interval, self._interval
         )
+        if adjust_lights:
+            await self._update_lights(transition=self._initial_transition, force=True)
 
     async def async_turn_off(self, **kwargs):
         """Turn off adaptive lighting."""
