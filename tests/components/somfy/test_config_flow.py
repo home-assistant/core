@@ -49,7 +49,7 @@ async def test_abort_if_existing_entry(hass):
 
     result = await flow.async_step_user()
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_setup"
+    assert result["reason"] == "single_instance_allowed"
 
 
 async def test_full_flow(hass, aiohttp_client, aioclient_mock, current_request):

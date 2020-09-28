@@ -32,12 +32,12 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
     DEVICE_CLASS_HUMIDITY,
+    PERCENTAGE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
-    UNIT_PERCENTAGE,
 )
 
 from tests.common import async_mock_service
@@ -314,7 +314,7 @@ async def test_humidifier_with_linked_humidity_sensor(hass, hk_driver):
         "42.0",
         {
             ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
-            ATTR_UNIT_OF_MEASUREMENT: UNIT_PERCENTAGE,
+            ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
         },
     )
     await hass.async_block_till_done()
@@ -342,7 +342,7 @@ async def test_humidifier_with_linked_humidity_sensor(hass, hk_driver):
         "43.0",
         {
             ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
-            ATTR_UNIT_OF_MEASUREMENT: UNIT_PERCENTAGE,
+            ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
         },
     )
     await hass.async_block_till_done()
@@ -354,7 +354,7 @@ async def test_humidifier_with_linked_humidity_sensor(hass, hk_driver):
         STATE_UNAVAILABLE,
         {
             ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
-            ATTR_UNIT_OF_MEASUREMENT: UNIT_PERCENTAGE,
+            ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
         },
     )
     await hass.async_block_till_done()

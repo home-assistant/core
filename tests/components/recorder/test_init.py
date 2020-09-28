@@ -304,6 +304,7 @@ def test_recorder_setup_failure():
             db_retry_wait=3,
             entity_filter=CONFIG_SCHEMA({DOMAIN: {}}),
             exclude_t=[],
+            db_integrity_check=False,
         )
         rec.start()
         rec.join()

@@ -125,7 +125,7 @@ PLATFORM_SCHEMA_JSON = (
 
 
 async def async_setup_entity_json(
-    config: ConfigType, async_add_entities, config_entry, discovery_data
+    hass, config: ConfigType, async_add_entities, config_entry, discovery_data
 ):
     """Set up a MQTT JSON Light."""
     async_add_entities([MqttLightJson(config, config_entry, discovery_data)])

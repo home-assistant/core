@@ -10,14 +10,17 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class DevoloDeviceEntity(Entity):
-    """Representation of a sensor within devolo Home Control."""
+    """Abstract representation of a device within devolo Home Control."""
 
-    def __init__(self, homecontrol, device_instance, element_uid, name, sync):
+    def __init__(self, homecontrol, device_instance, element_uid):
         """Initialize a devolo device entity."""
         self._device_instance = device_instance
-        self._name = name
         self._unique_id = element_uid
         self._homecontrol = homecontrol
+        self._name = device_instance.item_name
+        self._device_class = None
+        self._value = None
+        self._unit = None
 
         # This is not doing I/O. It fetches an internal state of the API
         self._available = device_instance.is_online()
@@ -27,7 +30,7 @@ class DevoloDeviceEntity(Entity):
         self._model = device_instance.name
 
         self.subscriber = None
-        self.sync_callback = sync
+        self.sync_callback = self._sync
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
@@ -73,3 +76,13 @@ class DevoloDeviceEntity(Entity):
     def available(self) -> bool:
         """Return the online state."""
         return self._available
+
+    def _sync(self, message):
+        """Update the binary sensor state."""
+        if message[0] == self._unique_id:
+            self._value = message[1]
+        elif message[0].startswith("hdm"):
+            self._available = self._device_instance.is_online()
+        else:
+            _LOGGER.debug("No valid message received: %s", message)
+        self.schedule_update_ha_state()

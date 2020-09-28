@@ -1,0 +1,35 @@
+{
+    "options": {
+        "step": {
+            "arm_settings": {
+                "title": "Konfigurovat AlarmDecoder"
+            },
+            "init": {
+                "data": {
+                    "edit_select": "Upravit"
+                },
+                "description": "Co chcete upravit?",
+                "title": "Konfigurovat AlarmDecoder"
+            },
+            "zone_details": {
+                "data": {
+                    "zone_loop": "RF Loop",
+                    "zone_name": "N\u00e1zev z\u00f3ny",
+                    "zone_relayaddr": "Relay adresa",
+                    "zone_relaychan": "Relay kan\u00e1l",
+                    "zone_rfid": "RF Serial",
+                    "zone_type": "Typ z\u00f3ny"
+                },
+                "description": "Zadejte podrobnosti pro z\u00f3nu {zone_number}. Chcete-li odstranit z\u00f3nu {zone_number}, ponechejte n\u00e1zev z\u00f3ny pr\u00e1zdn\u00fd.",
+                "title": "Konfigurovat AlarmDecoder"
+            },
+            "zone_select": {
+                "data": {
+                    "zone_number": "\u010c\u00edslo z\u00f3ny"
+                },
+                "description": "Zadejte \u010d\u00edslo z\u00f3ny, kterou chcete p\u0159idat, upravit nebo odstranit.",
+                "title": "Konfigurovat AlarmDecoder"
+            }
+        }
+    }
+}

@@ -1,10 +1,7 @@
 """Support for Synology DSM binary sensors."""
 from typing import Dict
 
-from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_SAFETY,
-    BinarySensorEntity,
-)
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DISKS
 from homeassistant.helpers.typing import HomeAssistantType
@@ -16,8 +13,6 @@ from .const import (
     STORAGE_DISK_BINARY_SENSORS,
     SYNO_API,
 )
-
-DEFAULT_DEVICE_CLASS = DEVICE_CLASS_SAFETY
 
 
 async def async_setup_entry(
@@ -76,8 +71,3 @@ class SynoDSMStorageBinarySensor(SynologyDSMDeviceEntity, BinarySensorEntity):
         if attr is None:
             return None
         return attr
-
-    @property
-    def device_class(self):
-        """Return the device class of this binary sensor."""
-        return DEFAULT_DEVICE_CLASS

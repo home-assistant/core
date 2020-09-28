@@ -1,6 +1,5 @@
 """Helpers to execute scripts."""
 import asyncio
-from copy import deepcopy
 from datetime import datetime, timedelta
 from functools import partial
 import itertools
@@ -24,6 +23,7 @@ import voluptuous as vol
 
 from homeassistant import exceptions
 import homeassistant.components.device_automation as device_automation
+from homeassistant.components.logger import LOGSEVERITY
 import homeassistant.components.scene as scene
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -46,6 +46,7 @@ from homeassistant.const import (
     CONF_SEQUENCE,
     CONF_TIMEOUT,
     CONF_UNTIL,
+    CONF_VARIABLES,
     CONF_WAIT_FOR_TRIGGER,
     CONF_WAIT_TEMPLATE,
     CONF_WHILE,
@@ -53,12 +54,9 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
 )
 from homeassistant.core import SERVICE_CALL_LIMIT, Context, HomeAssistant, callback
-from homeassistant.helpers import (
-    condition,
-    config_validation as cv,
-    template as template,
-)
+from homeassistant.helpers import condition, config_validation as cv, template
 from homeassistant.helpers.event import async_call_later, async_track_template
+from homeassistant.helpers.script_variables import ScriptVariables
 from homeassistant.helpers.service import (
     CONF_SERVICE_DATA,
     async_prepare_call_from_config,
@@ -88,6 +86,10 @@ DEFAULT_SCRIPT_MODE = SCRIPT_MODE_SINGLE
 CONF_MAX = "max"
 DEFAULT_MAX = 10
 
+CONF_MAX_EXCEEDED = "max_exceeded"
+_MAX_EXCEEDED_CHOICES = list(LOGSEVERITY) + ["SILENT"]
+DEFAULT_MAX_EXCEEDED = "WARNING"
+
 ATTR_CUR = "current"
 ATTR_MAX = "max"
 ATTR_MODE = "mode"
@@ -112,6 +114,9 @@ def make_script_schema(schema, default_script_mode, extra=vol.PREVENT_EXTRA):
             ),
             vol.Optional(CONF_MAX, default=DEFAULT_MAX): vol.All(
                 vol.Coerce(int), vol.Range(min=2)
+            ),
+            vol.Optional(CONF_MAX_EXCEEDED, default=DEFAULT_MAX_EXCEEDED): vol.All(
+                vol.Upper, vol.In(_MAX_EXCEEDED_CHOICES)
             ),
         },
         extra=extra,
@@ -564,7 +569,7 @@ class _ScriptRun:
             "" if delay is None else f" (timeout: {timedelta(seconds=delay)})",
         )
 
-        variables = deepcopy(self._variables)
+        variables = {**self._variables}
         self._variables["wait"] = {"remaining": delay, "trigger": None}
 
         async def async_done(variables, context=None):
@@ -607,6 +612,14 @@ class _ScriptRun:
             for task in tasks:
                 task.cancel()
             remove_triggers()
+
+    async def _async_variables_step(self):
+        """Set a variable value."""
+        self._script.last_action = self._action.get(CONF_ALIAS, "setting variables")
+        self._log("Executing step %s", self._script.last_action)
+        self._variables = self._action[CONF_VARIABLES].async_render(
+            self._hass, self._variables, render_as_defaults=False
+        )
 
     async def _async_run_script(self, script):
         """Execute a script."""
@@ -710,9 +723,11 @@ class Script:
         change_listener: Optional[Callable[..., Any]] = None,
         script_mode: str = DEFAULT_SCRIPT_MODE,
         max_runs: int = DEFAULT_MAX,
+        max_exceeded: str = DEFAULT_MAX_EXCEEDED,
         logger: Optional[logging.Logger] = None,
         log_exceptions: bool = True,
         top_level: bool = True,
+        variables: Optional[ScriptVariables] = None,
     ) -> None:
         """Initialize the script."""
         all_scripts = hass.data.get(DATA_SCRIPTS)
@@ -743,6 +758,7 @@ class Script:
 
         self._runs: List[_ScriptRun] = []
         self.max_runs = max_runs
+        self._max_exceeded = max_exceeded
         if script_mode == SCRIPT_MODE_QUEUED:
             self._queue_lck = asyncio.Lock()
         self._config_cache: Dict[Set[Tuple], Callable[..., bool]] = {}
@@ -750,6 +766,10 @@ class Script:
         self._choose_data: Dict[int, Dict[str, Any]] = {}
         self._referenced_entities: Optional[Set[str]] = None
         self._referenced_devices: Optional[Set[str]] = None
+        self.variables = variables
+        self._variables_dynamic = template.is_complex(variables)
+        if self._variables_dynamic:
+            template.attach(hass, variables)
 
     def _set_logger(self, logger: Optional[logging.Logger] = None) -> None:
         if logger:
@@ -858,7 +878,7 @@ class Script:
 
     async def async_run(
         self,
-        variables: Optional[_VarsType] = None,
+        run_variables: Optional[_VarsType] = None,
         context: Optional[Context] = None,
         started_action: Optional[Callable[..., Any]] = None,
     ) -> None:
@@ -871,21 +891,41 @@ class Script:
 
         if self.is_running:
             if self.script_mode == SCRIPT_MODE_SINGLE:
-                self._log("Already running", level=logging.WARNING)
+                if self._max_exceeded != "SILENT":
+                    self._log("Already running", level=LOGSEVERITY[self._max_exceeded])
                 return
             if self.script_mode == SCRIPT_MODE_RESTART:
                 self._log("Restarting")
                 await self.async_stop(update_state=False)
             elif len(self._runs) == self.max_runs:
-                self._log("Maximum number of runs exceeded", level=logging.WARNING)
+                if self._max_exceeded != "SILENT":
+                    self._log(
+                        "Maximum number of runs exceeded",
+                        level=LOGSEVERITY[self._max_exceeded],
+                    )
                 return
 
         # If this is a top level Script then make a copy of the variables in case they
         # are read-only, but more importantly, so as not to leak any variables created
         # during the run back to the caller.
         if self._top_level:
-            variables = dict(variables) if variables is not None else {}
+            if self.variables:
+                try:
+                    variables = self.variables.async_render(
+                        self._hass,
+                        run_variables,
+                    )
+                except template.TemplateError as err:
+                    self._log("Error rendering variables: %s", err, level=logging.ERROR)
+                    raise
+            elif run_variables:
+                variables = dict(run_variables)
+            else:
+                variables = {}
+
             variables["context"] = context
+        else:
+            variables = cast(dict, run_variables)
 
         if self.script_mode != SCRIPT_MODE_QUEUED:
             cls = _ScriptRun
@@ -920,7 +960,10 @@ class Script:
         await asyncio.shield(self._async_stop(update_state))
 
     async def _async_get_condition(self, config):
-        config_cache_key = frozenset((k, str(v)) for k, v in config.items())
+        if isinstance(config, template.Template):
+            config_cache_key = config.template
+        else:
+            config_cache_key = frozenset((k, str(v)) for k, v in config.items())
         cond = self._config_cache.get(config_cache_key)
         if not cond:
             cond = await condition.async_from_config(self._hass, config, False)

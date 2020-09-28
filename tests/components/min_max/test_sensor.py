@@ -3,21 +3,20 @@ from os import path
 import statistics
 import unittest
 
-from asynctest.mock import patch
-
 from homeassistant import config as hass_config
 from homeassistant.components.min_max import DOMAIN
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
+    PERCENTAGE,
     SERVICE_RELOAD,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    UNIT_PERCENTAGE,
 )
 from homeassistant.setup import async_setup_component, setup_component
 
+from tests.async_mock import patch
 from tests.common import get_test_home_assistant
 
 
@@ -302,7 +301,7 @@ class TestMinMaxSensor(unittest.TestCase):
         assert state.attributes.get("unit_of_measurement") == "ERR"
 
         self.hass.states.set(
-            entity_ids[2], self.values[2], {ATTR_UNIT_OF_MEASUREMENT: UNIT_PERCENTAGE}
+            entity_ids[2], self.values[2], {ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE}
         )
         self.hass.block_till_done()
 

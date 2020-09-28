@@ -1,7 +1,7 @@
 """Tests for the Atag integration."""
 
 from homeassistant.components.atag import DOMAIN
-from homeassistant.const import CONF_EMAIL, CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_EMAIL, CONF_HOST, CONF_PORT, CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -62,17 +62,17 @@ async def init_integration(
     aioclient_mock.get(
         "http://127.0.0.1:10000/retrieve",
         json=RECEIVE_REPLY,
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": CONTENT_TYPE_JSON},
     )
     aioclient_mock.post(
         "http://127.0.0.1:10000/update",
         json=UPDATE_REPLY,
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": CONTENT_TYPE_JSON},
     )
     aioclient_mock.post(
         "http://127.0.0.1:10000/pair",
         json=PAIR_REPLY,
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
     entry = MockConfigEntry(domain=DOMAIN, data=USER_INPUT)

@@ -1,11 +1,12 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
         "error": {
             "cannot_connect": "Failed to connect",
-            "unknown": "Unknown error"
-        },
-        "abort": {
-            "already_configured": "This board has already been set up."
+            "unknown": "Unexpected error",
+            "wrong_info_relay_modes": "Relay mode selection must be monostable or bistable."
         },
         "step": {
             "relay_modes": {

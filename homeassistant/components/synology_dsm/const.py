@@ -2,17 +2,21 @@
 
 from synology_dsm.api.core.security import SynoCoreSecurity
 from synology_dsm.api.core.utilization import SynoCoreUtilization
+from synology_dsm.api.dsm.information import SynoDSMInformation
 from synology_dsm.api.storage.storage import SynoStorage
 
+from homeassistant.components.binary_sensor import DEVICE_CLASS_SAFETY
 from homeassistant.const import (
     DATA_MEGABYTES,
     DATA_RATE_KILOBYTES_PER_SECOND,
     DATA_TERABYTES,
-    UNIT_PERCENTAGE,
+    DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_TIMESTAMP,
+    PERCENTAGE,
 )
 
 DOMAIN = "synology_dsm"
-PLATFORMS = ["binary_sensor", "sensor"]
+PLATFORMS = ["binary_sensor", "camera", "sensor"]
 
 # Entry keys
 SYNO_API = "syno_api"
@@ -26,6 +30,7 @@ DEFAULT_PORT = 5000
 DEFAULT_PORT_SSL = 5001
 # Options
 DEFAULT_SCAN_INTERVAL = 15  # min
+DEFAULT_TIMEOUT = 10  # sec
 
 
 ENTITY_NAME = "name"
@@ -41,15 +46,15 @@ STORAGE_DISK_BINARY_SENSORS = {
     f"{SynoStorage.API_KEY}:disk_exceed_bad_sector_thr": {
         ENTITY_NAME: "Exceeded Max Bad Sectors",
         ENTITY_UNIT: None,
-        ENTITY_ICON: "mdi:test-tube",
-        ENTITY_CLASS: None,
+        ENTITY_ICON: None,
+        ENTITY_CLASS: DEVICE_CLASS_SAFETY,
         ENTITY_ENABLE: True,
     },
     f"{SynoStorage.API_KEY}:disk_below_remain_life_thr": {
         ENTITY_NAME: "Below Min Remaining Life",
         ENTITY_UNIT: None,
-        ENTITY_ICON: "mdi:test-tube",
-        ENTITY_CLASS: None,
+        ENTITY_ICON: None,
+        ENTITY_CLASS: DEVICE_CLASS_SAFETY,
         ENTITY_ENABLE: True,
     },
 }
@@ -58,8 +63,8 @@ SECURITY_BINARY_SENSORS = {
     f"{SynoCoreSecurity.API_KEY}:status": {
         ENTITY_NAME: "Security status",
         ENTITY_UNIT: None,
-        ENTITY_ICON: "mdi:checkbox-marked-circle-outline",
-        ENTITY_CLASS: "safety",
+        ENTITY_ICON: None,
+        ENTITY_CLASS: DEVICE_CLASS_SAFETY,
         ENTITY_ENABLE: True,
     },
 }
@@ -68,56 +73,56 @@ SECURITY_BINARY_SENSORS = {
 UTILISATION_SENSORS = {
     f"{SynoCoreUtilization.API_KEY}:cpu_other_load": {
         ENTITY_NAME: "CPU Load (Other)",
-        ENTITY_UNIT: UNIT_PERCENTAGE,
+        ENTITY_UNIT: PERCENTAGE,
         ENTITY_ICON: "mdi:chip",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: False,
     },
     f"{SynoCoreUtilization.API_KEY}:cpu_user_load": {
         ENTITY_NAME: "CPU Load (User)",
-        ENTITY_UNIT: UNIT_PERCENTAGE,
+        ENTITY_UNIT: PERCENTAGE,
         ENTITY_ICON: "mdi:chip",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: True,
     },
     f"{SynoCoreUtilization.API_KEY}:cpu_system_load": {
         ENTITY_NAME: "CPU Load (System)",
-        ENTITY_UNIT: UNIT_PERCENTAGE,
+        ENTITY_UNIT: PERCENTAGE,
         ENTITY_ICON: "mdi:chip",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: False,
     },
     f"{SynoCoreUtilization.API_KEY}:cpu_total_load": {
         ENTITY_NAME: "CPU Load (Total)",
-        ENTITY_UNIT: UNIT_PERCENTAGE,
+        ENTITY_UNIT: PERCENTAGE,
         ENTITY_ICON: "mdi:chip",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: True,
     },
     f"{SynoCoreUtilization.API_KEY}:cpu_1min_load": {
         ENTITY_NAME: "CPU Load (1 min)",
-        ENTITY_UNIT: UNIT_PERCENTAGE,
+        ENTITY_UNIT: PERCENTAGE,
         ENTITY_ICON: "mdi:chip",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: False,
     },
     f"{SynoCoreUtilization.API_KEY}:cpu_5min_load": {
         ENTITY_NAME: "CPU Load (5 min)",
-        ENTITY_UNIT: UNIT_PERCENTAGE,
+        ENTITY_UNIT: PERCENTAGE,
         ENTITY_ICON: "mdi:chip",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: True,
     },
     f"{SynoCoreUtilization.API_KEY}:cpu_15min_load": {
         ENTITY_NAME: "CPU Load (15 min)",
-        ENTITY_UNIT: UNIT_PERCENTAGE,
+        ENTITY_UNIT: PERCENTAGE,
         ENTITY_ICON: "mdi:chip",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: True,
     },
     f"{SynoCoreUtilization.API_KEY}:memory_real_usage": {
         ENTITY_NAME: "Memory Usage (Real)",
-        ENTITY_UNIT: UNIT_PERCENTAGE,
+        ENTITY_UNIT: PERCENTAGE,
         ENTITY_ICON: "mdi:memory",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: True,
@@ -203,7 +208,7 @@ STORAGE_VOL_SENSORS = {
     },
     f"{SynoStorage.API_KEY}:volume_percentage_used": {
         ENTITY_NAME: "Volume Used",
-        ENTITY_UNIT: UNIT_PERCENTAGE,
+        ENTITY_UNIT: PERCENTAGE,
         ENTITY_ICON: "mdi:chart-pie",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: True,
@@ -211,15 +216,15 @@ STORAGE_VOL_SENSORS = {
     f"{SynoStorage.API_KEY}:volume_disk_temp_avg": {
         ENTITY_NAME: "Average Disk Temp",
         ENTITY_UNIT: None,
-        ENTITY_ICON: "mdi:thermometer",
-        ENTITY_CLASS: "temperature",
+        ENTITY_ICON: None,
+        ENTITY_CLASS: DEVICE_CLASS_TEMPERATURE,
         ENTITY_ENABLE: True,
     },
     f"{SynoStorage.API_KEY}:volume_disk_temp_max": {
         ENTITY_NAME: "Maximum Disk Temp",
         ENTITY_UNIT: None,
-        ENTITY_ICON: "mdi:thermometer",
-        ENTITY_CLASS: "temperature",
+        ENTITY_ICON: None,
+        ENTITY_CLASS: DEVICE_CLASS_TEMPERATURE,
         ENTITY_ENABLE: False,
     },
 }
@@ -241,11 +246,33 @@ STORAGE_DISK_SENSORS = {
     f"{SynoStorage.API_KEY}:disk_temp": {
         ENTITY_NAME: "Temperature",
         ENTITY_UNIT: None,
-        ENTITY_ICON: "mdi:thermometer",
-        ENTITY_CLASS: "temperature",
+        ENTITY_ICON: None,
+        ENTITY_CLASS: DEVICE_CLASS_TEMPERATURE,
         ENTITY_ENABLE: True,
     },
 }
 
+INFORMATION_SENSORS = {
+    f"{SynoDSMInformation.API_KEY}:temperature": {
+        ENTITY_NAME: "temperature",
+        ENTITY_UNIT: None,
+        ENTITY_ICON: None,
+        ENTITY_CLASS: DEVICE_CLASS_TEMPERATURE,
+        ENTITY_ENABLE: True,
+    },
+    f"{SynoDSMInformation.API_KEY}:uptime": {
+        ENTITY_NAME: "last boot",
+        ENTITY_UNIT: None,
+        ENTITY_ICON: None,
+        ENTITY_CLASS: DEVICE_CLASS_TIMESTAMP,
+        ENTITY_ENABLE: False,
+    },
+}
 
-TEMP_SENSORS_KEYS = ["volume_disk_temp_avg", "volume_disk_temp_max", "disk_temp"]
+
+TEMP_SENSORS_KEYS = [
+    "volume_disk_temp_avg",
+    "volume_disk_temp_max",
+    "disk_temp",
+    "temperature",
+]

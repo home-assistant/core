@@ -20,6 +20,16 @@
     },
     "options": {
         "step": {
+            "ha_to_risco": {
+                "data": {
+                    "armed_away": "Armada Ausente",
+                    "armed_custom_bypass": "Armada Personalizada",
+                    "armed_home": "Armada en Casa",
+                    "armed_night": "Armada Noche"
+                },
+                "description": "Selecciona en qu\u00e9 estado quieres configurar la alarma Risco cuando armes la alarma de Home Assistant",
+                "title": "Mapear estados de Home Assistant a estados Risco"
+            },
             "init": {
                 "data": {
                     "code_arm_required": "Requiere un c\u00f3digo PIN para armar",
@@ -33,8 +43,11 @@
                     "A": "Grupo A",
                     "B": "Grupo B",
                     "C": "Grupo C",
-                    "D": "Grupo D"
+                    "D": "Grupo D",
+                    "arm": "Armada (AUSENTE)",
+                    "partial_arm": "Parcialmente Armada (EN CASA)"
                 },
+                "description": "Selecciona qu\u00e9 estado reportar\u00e1 la alarma de tu Home Assistant para cada estado reportado por Risco",
                 "title": "Asignar estados de Risco a estados de Home Assistant"
             }
         }

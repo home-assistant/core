@@ -3,7 +3,8 @@
         "abort": {
             "already_setup": "\u00c8 possibile configurare un solo account Almond.",
             "cannot_connect": "Impossibile connettersi al server Almond.",
-            "missing_configuration": "Si prega di controllare la documentazione su come impostare Almond."
+            "missing_configuration": "Si prega di controllare la documentazione su come impostare Almond.",
+            "no_url_available": "Nessun URL disponibile. Per informazioni su questo errore, [controlla la sezione della guida]({docs_url})"
         },
         "step": {
             "hassio_confirm": {

@@ -11,10 +11,12 @@
             "user": {
                 "data": {
                     "email": "E-post (valgfritt)",
-                    "host": "Vert"
+                    "host": "Vert",
+                    "port": ""
                 },
                 "title": "Koble til enheten"
             }
         }
-    }
+    },
+    "title": ""
 }

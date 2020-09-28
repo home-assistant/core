@@ -174,9 +174,11 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def _async_authenticate_app(self, error=None):
         """Authenticate application."""
         try:
-            self._app_code = self._auth.get_app_code(self._app_id, self._app_secret)
-            self._app_token = self._auth.get_app_token(
-                self._app_id, self._app_secret, self._app_code
+            self._app_code = await self.hass.async_add_executor_job(
+                self._auth.get_app_code, self._app_id, self._app_secret
+            )
+            self._app_token = await self.hass.async_add_executor_job(
+                self._auth.get_app_token, self._app_id, self._app_secret, self._app_code
             )
             return self._async_form_auth_user(error)
         except Exception as err:  # pylint: disable=broad-except
@@ -186,7 +188,8 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def _async_authenticate_user(self, error=None):
         """Authenticate user."""
         try:
-            state, data = self._auth.get_slid_user_token(
+            state, data = await self.hass.async_add_executor_job(
+                self._auth.get_slid_user_token,
                 self._app_token,
                 self._username,
                 self._password,
@@ -221,7 +224,9 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self._slnet_token,
             self._slnet_token_expires,
             self._user_id,
-        ) = self._auth.get_user_id(self._user_slid)
+        ) = await self.hass.async_add_executor_job(
+            self._auth.get_user_id, self._user_slid
+        )
 
         return self.async_create_entry(
             title=f"Application {self._app_id}",

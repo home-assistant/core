@@ -48,16 +48,16 @@ YAML_CONFIG = {
 MOCK_VERSION = "21.0"
 
 MOCK_STATUS = {
-    "ArticleCacheMB": "64",
-    "AverageDownloadRate": "512",
-    "DownloadPaused": "4",
-    "DownloadRate": "1000",
-    "DownloadedSizeMB": "256",
-    "FreeDiskSpaceMB": "1024",
-    "PostJobCount": "2",
-    "PostPaused": "4",
-    "RemainingSizeMB": "512",
-    "UpTimeSec": "600",
+    "ArticleCacheMB": 64,
+    "AverageDownloadRate": 1250000,
+    "DownloadPaused": 4,
+    "DownloadRate": 2500000,
+    "DownloadedSizeMB": 256,
+    "FreeDiskSpaceMB": 1024,
+    "PostJobCount": 2,
+    "PostPaused": 4,
+    "RemainingSizeMB": 512,
+    "UpTimeSec": 600,
 }
 
 MOCK_HISTORY = [

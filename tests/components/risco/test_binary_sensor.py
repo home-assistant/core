@@ -3,25 +3,14 @@ import pytest
 
 from homeassistant.components.risco import CannotConnectError, UnauthorizedError
 from homeassistant.components.risco.const import DOMAIN
-from homeassistant.const import (
-    CONF_PASSWORD,
-    CONF_PIN,
-    CONF_USERNAME,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers.entity_component import async_update_entity
+
+from .util import TEST_CONFIG, TEST_SITE_UUID, setup_risco
 
 from tests.async_mock import MagicMock, PropertyMock, patch
 from tests.common import MockConfigEntry
 
-TEST_CONFIG = {
-    CONF_USERNAME: "test-username",
-    CONF_PASSWORD: "test-password",
-    CONF_PIN: "1234",
-}
-TEST_SITE_UUID = "test-site-uuid"
-TEST_SITE_NAME = "test-site-name"
 FIRST_ENTITY_ID = "binary_sensor.zone_0"
 SECOND_ENTITY_ID = "binary_sensor.zone_1"
 
@@ -55,28 +44,6 @@ def two_zone_alarm():
         return_value=alarm_mock,
     ):
         yield alarm_mock
-
-
-async def _setup_risco(hass):
-    config_entry = MockConfigEntry(domain=DOMAIN, data=TEST_CONFIG)
-    config_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.risco.RiscoAPI.login",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.risco.RiscoAPI.site_uuid",
-        new_callable=PropertyMock(return_value=TEST_SITE_UUID),
-    ), patch(
-        "homeassistant.components.risco.RiscoAPI.site_name",
-        new_callable=PropertyMock(return_value=TEST_SITE_NAME),
-    ), patch(
-        "homeassistant.components.risco.RiscoAPI.close"
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    return config_entry
 
 
 async def test_cannot_connect(hass):
@@ -118,7 +85,7 @@ async def test_setup(hass, two_zone_alarm):
     assert not registry.async_is_registered(FIRST_ENTITY_ID)
     assert not registry.async_is_registered(SECOND_ENTITY_ID)
 
-    await _setup_risco(hass)
+    await setup_risco(hass)
 
     assert registry.async_is_registered(FIRST_ENTITY_ID)
     assert registry.async_is_registered(SECOND_ENTITY_ID)
@@ -153,7 +120,7 @@ async def _check_state(hass, alarm, triggered, bypassed, entity_id, zone_id):
 
 async def test_states(hass, two_zone_alarm):
     """Test the various alarm states."""
-    await _setup_risco(hass)
+    await setup_risco(hass)
 
     await _check_state(hass, two_zone_alarm, True, True, FIRST_ENTITY_ID, 0)
     await _check_state(hass, two_zone_alarm, True, False, FIRST_ENTITY_ID, 0)
@@ -167,7 +134,7 @@ async def test_states(hass, two_zone_alarm):
 
 async def test_bypass(hass, two_zone_alarm):
     """Test bypassing a zone."""
-    await _setup_risco(hass)
+    await setup_risco(hass)
     with patch("homeassistant.components.risco.RiscoAPI.bypass_zone") as mock:
         data = {"entity_id": FIRST_ENTITY_ID}
 
@@ -180,7 +147,7 @@ async def test_bypass(hass, two_zone_alarm):
 
 async def test_unbypass(hass, two_zone_alarm):
     """Test unbypassing a zone."""
-    await _setup_risco(hass)
+    await setup_risco(hass)
     with patch("homeassistant.components.risco.RiscoAPI.bypass_zone") as mock:
         data = {"entity_id": FIRST_ENTITY_ID}
 

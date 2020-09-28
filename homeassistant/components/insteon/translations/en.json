@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "An Insteon modem connection is already configured",
             "cannot_connect": "Failed to connect",
-            "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed"
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
         "error": {
             "cannot_connect": "Failed to connect",

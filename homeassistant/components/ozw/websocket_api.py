@@ -150,6 +150,15 @@ def websocket_node_status(hass, connection, msg):
     """Get the status for a Z-Wave node."""
     manager = hass.data[DOMAIN][MANAGER]
     node = manager.get_instance(msg[OZW_INSTANCE]).get_node(msg[NODE_ID])
+
+    if not node:
+        connection.send_message(
+            websocket_api.error_message(
+                msg[ID], websocket_api.const.ERR_NOT_FOUND, "OZW Node not found"
+            )
+        )
+        return
+
     connection.send_result(
         msg[ID],
         {
@@ -185,6 +194,15 @@ def websocket_node_metadata(hass, connection, msg):
     """Get the metadata for a Z-Wave node."""
     manager = hass.data[DOMAIN][MANAGER]
     node = manager.get_instance(msg[OZW_INSTANCE]).get_node(msg[NODE_ID])
+
+    if not node:
+        connection.send_message(
+            websocket_api.error_message(
+                msg[ID], websocket_api.const.ERR_NOT_FOUND, "OZW Node not found"
+            )
+        )
+        return
+
     connection.send_result(
         msg[ID],
         {

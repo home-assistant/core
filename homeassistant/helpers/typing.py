@@ -1,5 +1,5 @@
 """Typing Helpers for Home Assistant."""
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any, Dict, Mapping, Optional, Tuple, Union
 
 import homeassistant.core
 
@@ -12,7 +12,7 @@ HomeAssistantType = homeassistant.core.HomeAssistant
 ServiceCallType = homeassistant.core.ServiceCall
 ServiceDataType = Dict[str, Any]
 StateType = Union[None, str, int, float]
-TemplateVarsType = Optional[Dict[str, Any]]
+TemplateVarsType = Optional[Mapping[str, Any]]
 
 # Custom type for recorder Queries
 QueryType = Any

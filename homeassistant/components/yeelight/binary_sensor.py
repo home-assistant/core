@@ -30,7 +30,7 @@ class YeelightNightlightModeSensor(YeelightEntity, BinarySensorEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                DATA_UPDATED.format(self._device.ipaddr),
+                DATA_UPDATED.format(self._device.host),
                 self.async_write_ha_state,
             )
         )

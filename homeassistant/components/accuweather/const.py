@@ -5,12 +5,13 @@ from homeassistant.const import (
     LENGTH_FEET,
     LENGTH_INCHES,
     LENGTH_METERS,
+    LENGTH_MILLIMETERS,
+    PERCENTAGE,
     SPEED_KILOMETERS_PER_HOUR,
     SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     TIME_HOURS,
-    UNIT_PERCENTAGE,
     UV_INDEX,
     VOLUME_CUBIC_METERS,
 )
@@ -24,7 +25,6 @@ ATTR_UNIT_METRIC = "Metric"
 CONCENTRATION_PARTS_PER_CUBIC_METER = f"p/{VOLUME_CUBIC_METERS}"
 COORDINATOR = "coordinator"
 DOMAIN = "accuweather"
-LENGTH_MILIMETERS = "mm"
 MANUFACTURER = "AccuWeather, Inc."
 NAME = "AccuWeather"
 UNDO_UPDATE_LISTENER = "undo_update_listener"
@@ -53,15 +53,15 @@ FORECAST_SENSOR_TYPES = {
         ATTR_DEVICE_CLASS: None,
         ATTR_ICON: "mdi:weather-cloudy",
         ATTR_LABEL: "Cloud Cover Day",
-        ATTR_UNIT_METRIC: UNIT_PERCENTAGE,
-        ATTR_UNIT_IMPERIAL: UNIT_PERCENTAGE,
+        ATTR_UNIT_METRIC: PERCENTAGE,
+        ATTR_UNIT_IMPERIAL: PERCENTAGE,
     },
     "CloudCoverNight": {
         ATTR_DEVICE_CLASS: None,
         ATTR_ICON: "mdi:weather-cloudy",
         ATTR_LABEL: "Cloud Cover Night",
-        ATTR_UNIT_METRIC: UNIT_PERCENTAGE,
-        ATTR_UNIT_IMPERIAL: UNIT_PERCENTAGE,
+        ATTR_UNIT_METRIC: PERCENTAGE,
+        ATTR_UNIT_IMPERIAL: PERCENTAGE,
     },
     "Grass": {
         ATTR_DEVICE_CLASS: None,
@@ -130,15 +130,15 @@ FORECAST_SENSOR_TYPES = {
         ATTR_DEVICE_CLASS: None,
         ATTR_ICON: "mdi:weather-lightning",
         ATTR_LABEL: "Thunderstorm Probability Day",
-        ATTR_UNIT_METRIC: UNIT_PERCENTAGE,
-        ATTR_UNIT_IMPERIAL: UNIT_PERCENTAGE,
+        ATTR_UNIT_METRIC: PERCENTAGE,
+        ATTR_UNIT_IMPERIAL: PERCENTAGE,
     },
     "ThunderstormProbabilityNight": {
         ATTR_DEVICE_CLASS: None,
         ATTR_ICON: "mdi:weather-lightning",
         ATTR_LABEL: "Thunderstorm Probability Night",
-        ATTR_UNIT_METRIC: UNIT_PERCENTAGE,
-        ATTR_UNIT_IMPERIAL: UNIT_PERCENTAGE,
+        ATTR_UNIT_METRIC: PERCENTAGE,
+        ATTR_UNIT_IMPERIAL: PERCENTAGE,
     },
     "Tree": {
         ATTR_DEVICE_CLASS: None,
@@ -210,8 +210,8 @@ SENSOR_TYPES = {
         ATTR_DEVICE_CLASS: None,
         ATTR_ICON: "mdi:weather-cloudy",
         ATTR_LABEL: "Cloud Cover",
-        ATTR_UNIT_METRIC: UNIT_PERCENTAGE,
-        ATTR_UNIT_IMPERIAL: UNIT_PERCENTAGE,
+        ATTR_UNIT_METRIC: PERCENTAGE,
+        ATTR_UNIT_IMPERIAL: PERCENTAGE,
     },
     "DewPoint": {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
@@ -238,7 +238,7 @@ SENSOR_TYPES = {
         ATTR_DEVICE_CLASS: None,
         ATTR_ICON: "mdi:weather-rainy",
         ATTR_LABEL: "Precipitation",
-        ATTR_UNIT_METRIC: LENGTH_MILIMETERS,
+        ATTR_UNIT_METRIC: LENGTH_MILLIMETERS,
         ATTR_UNIT_IMPERIAL: LENGTH_INCHES,
     },
     "PressureTendency": {

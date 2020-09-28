@@ -7,8 +7,8 @@ from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
+    PERCENTAGE,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
 )
 from homeassistant.helpers.entity import Entity
 
@@ -26,7 +26,7 @@ SENSORS = {
     },
     "pH": {"unit": None, "icon": "mdi:pool", "name": "pH", "device_class": None},
     "Battery": {
-        "unit": UNIT_PERCENTAGE,
+        "unit": PERCENTAGE,
         "icon": None,
         "name": "Battery",
         "device_class": DEVICE_CLASS_BATTERY,

@@ -5,7 +5,7 @@
         },
         "error": {
             "duplicate_entry": "Cet h\u00f4te a d\u00e9j\u00e0 \u00e9t\u00e9 ajout\u00e9.",
-            "invalid_auth": "Authentification non valide",
+            "invalid_auth": "Authentification invalide",
             "unknown": "Erreur inattendue"
         },
         "step": {

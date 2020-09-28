@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u6b64 OpenWeatherMap \u6574\u5408\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210\u3002"
+        },
+        "error": {
+            "auth": "API \u5bc6\u9470\u4e0d\u6b63\u78ba\u3002",
+            "connection": "\u7121\u6cd5\u9023\u7dda\u81f3 OWM API"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "OpenWeatherMap API \u5bc6\u9470",
+                    "language": "\u8a9e\u8a00",
+                    "latitude": "\u7def\u5ea6",
+                    "longitude": "\u7d93\u5ea6",
+                    "mode": "\u6a21\u5f0f",
+                    "name": "\u6574\u5408\u540d\u7a31"
+                },
+                "description": "\u6b32\u8a2d\u5b9a OpenWeatherMap \u6574\u5408\u3002\u8acb\u81f3 https://openweathermap.org/appid \u7522\u751f API \u5bc6\u9470",
+                "title": "OpenWeatherMap"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "language": "\u8a9e\u8a00",
+                    "mode": "\u6a21\u5f0f"
+                }
+            }
+        }
+    }
+}

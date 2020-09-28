@@ -7,7 +7,7 @@ import homeconnect
 from homeconnect.api import HomeConnectError
 
 from homeassistant import config_entries, core
-from homeassistant.const import DEVICE_CLASS_TIMESTAMP, TIME_SECONDS, UNIT_PERCENTAGE
+from homeassistant.const import DEVICE_CLASS_TIMESTAMP, PERCENTAGE, TIME_SECONDS
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.dispatcher import dispatcher_send
 
@@ -140,7 +140,7 @@ class DeviceWithPrograms(HomeConnectDevice):
         sensors = {
             "Remaining Program Time": (None, None, DEVICE_CLASS_TIMESTAMP, 1),
             "Duration": (TIME_SECONDS, "mdi:update", None, 1),
-            "Program Progress": (UNIT_PERCENTAGE, "mdi:progress-clock", None, 1),
+            "Program Progress": (PERCENTAGE, "mdi:progress-clock", None, 1),
         }
         return [
             {

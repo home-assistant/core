@@ -5,7 +5,7 @@ from homeassistant import data_entry_flow
 from homeassistant.components.bsblan import config_flow
 from homeassistant.components.bsblan.const import CONF_DEVICE_IDENT, CONF_PASSKEY
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT, CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
 
 from . import init_integration
@@ -67,7 +67,7 @@ async def test_full_user_flow_implementation(
     aioclient_mock.post(
         "http://example.local:80/1234/JQ?Parameter=6224,6225,6226",
         text=load_fixture("bsblan/info.json"),
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
     result = await hass.config_entries.flow.async_init(

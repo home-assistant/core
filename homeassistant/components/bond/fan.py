@@ -120,7 +120,7 @@ class BondFan(BondEntity, FanEntity):
 
     async def async_turn_on(self, speed: Optional[str] = None, **kwargs) -> None:
         """Turn on the fan."""
-        _LOGGER.debug("async_turn_on called with speed %s", speed)
+        _LOGGER.debug("Fan async_turn_on called with speed %s", speed)
 
         if speed is not None:
             if speed == SPEED_OFF:

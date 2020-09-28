@@ -10,6 +10,7 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -20,7 +21,13 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import DOMAIN
+from .const import (
+    COORDINATOR,
+    DEFAULT_PORT,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    UNDO_UPDATE_LISTENER,
+)
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
@@ -38,8 +45,13 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Plugwise Smiles from a config entry."""
     websession = async_get_clientsession(hass, verify_ssl=False)
+
     api = Smile(
-        host=entry.data["host"], password=entry.data["password"], websession=websession
+        host=entry.data[CONF_HOST],
+        password=entry.data[CONF_PASSWORD],
+        port=entry.data.get(CONF_PORT, DEFAULT_PORT),
+        timeout=30,
+        websession=websession,
     )
 
     try:
@@ -61,9 +73,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("Timeout while connecting to Smile")
         raise ConfigEntryNotReady from err
 
-    update_interval = timedelta(seconds=60)
-    if api.smile_type == "power":
-        update_interval = timedelta(seconds=10)
+    update_interval = timedelta(
+        seconds=entry.options.get(
+            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL[api.smile_type]
+        )
+    )
 
     async def async_update_data():
         """Update data via API endpoint."""
@@ -89,9 +103,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     api.get_all_devices()
 
+    if entry.unique_id is None:
+        if api.smile_version[0] != "1.8.0":
+            hass.config_entries.async_update_entry(entry, unique_id=api.smile_hostname)
+
+    undo_listener = entry.add_update_listener(_update_listener)
+
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         "api": api,
-        "coordinator": coordinator,
+        COORDINATOR: coordinator,
+        UNDO_UPDATE_LISTENER: undo_listener,
     }
 
     device_registry = await dr.async_get_registry(hass)
@@ -118,6 +139,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
+async def _update_listener(hass: HomeAssistant, entry: ConfigEntry):
+    """Handle options update."""
+    coordinator = hass.data[DOMAIN][entry.entry_id][COORDINATOR]
+    coordinator.update_interval = timedelta(
+        seconds=entry.options.get(CONF_SCAN_INTERVAL)
+    )
+
+
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
     unload_ok = all(
@@ -128,6 +157,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
             ]
         )
     )
+
+    hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
+
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
 

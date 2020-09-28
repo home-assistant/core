@@ -47,9 +47,9 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
+    PERCENTAGE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback
 
@@ -376,7 +376,7 @@ class Thermostat(HomeAccessory):
         _LOGGER.debug("%s: Set target humidity to %d", self.entity_id, value)
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_HUMIDITY: value}
         self.call_service(
-            DOMAIN_CLIMATE, SERVICE_SET_HUMIDITY, params, f"{value}{UNIT_PERCENTAGE}"
+            DOMAIN_CLIMATE, SERVICE_SET_HUMIDITY, params, f"{value}{PERCENTAGE}"
         )
 
     @callback

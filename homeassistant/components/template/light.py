@@ -412,7 +412,7 @@ class LightTemplate(TemplateEntity, LightEntity):
                 self._available = True
             return
 
-        state = str(result).lower()
+        state = result.lower()
         if state in _VALID_STATES:
             self._state = state in ("true", STATE_ON)
         else:

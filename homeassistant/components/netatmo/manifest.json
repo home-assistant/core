@@ -6,7 +6,8 @@
     "pyatmo==4.0.0"
   ],
   "after_dependencies": [
-    "cloud"
+    "cloud",
+    "media_source"
   ],
   "dependencies": [
     "webhook"

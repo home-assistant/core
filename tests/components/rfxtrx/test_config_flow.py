@@ -171,6 +171,122 @@ async def test_setup_serial_manual(com_mock, connect_mock, hass):
         "port": None,
         "device": "/dev/ttyUSB0",
         "automatic_add": False,
+        "debug": False,
+        "devices": {},
+    }
+
+
+@patch(
+    "homeassistant.components.rfxtrx.rfxtrxmod.PyNetworkTransport.connect",
+    side_effect=OSError,
+)
+async def test_setup_network_fail(connect_mock, hass):
+    """Test we can setup network."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"type": "Network"},
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "setup_network"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"host": "10.10.0.1", "port": 1234}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "setup_network"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+@patch("serial.tools.list_ports.comports", return_value=[com_port()])
+@patch(
+    "homeassistant.components.rfxtrx.rfxtrxmod.PySerialTransport.connect",
+    side_effect=serial.serialutil.SerialException,
+)
+async def test_setup_serial_fail(com_mock, connect_mock, hass):
+    """Test setup serial failed connection."""
+    port = com_port()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"type": "Serial"},
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "setup_serial"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"device": port.device}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "setup_serial"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+@patch("serial.tools.list_ports.comports", return_value=[com_port()])
+@patch(
+    "homeassistant.components.rfxtrx.rfxtrxmod.PySerialTransport.connect",
+    serial_connect_fail,
+)
+async def test_setup_serial_manual_fail(com_mock, hass):
+    """Test setup serial failed connection."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"type": "Serial"},
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "setup_serial"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"device": "Enter Manually"}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "setup_serial_manual_path"
+    assert result["errors"] == {}
+
+    with patch("homeassistant.components.rfxtrx.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"device": "/dev/ttyUSB0"}
+        )
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == "RFXTRX"
+    assert result["data"] == {
+        "host": None,
+        "port": None,
+        "device": "/dev/ttyUSB0",
+        "automatic_add": False,
         "devices": {},
     }
 

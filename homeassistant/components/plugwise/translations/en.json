@@ -13,10 +13,21 @@
             "user": {
                 "data": {
                     "host": "Smile IP address",
-                    "password": "Smile ID"
+                    "password": "Smile ID",
+                    "port": "Smile port number"
                 },
-                "description": "Details",
+                "description": "Please enter:",
                 "title": "Connect to the Smile"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Scan Interval (seconds)"
+                },
+                "description": "Adjust Plugwise Options"
             }
         }
     }

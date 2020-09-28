@@ -20,7 +20,7 @@ from homeassistant.const import (
     CONF_FOR,
     CONF_PLATFORM,
     CONF_TYPE,
-    UNIT_PERCENTAGE,
+    PERCENTAGE,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry
@@ -114,10 +114,10 @@ async def async_get_trigger_capabilities(hass: HomeAssistant, config):
             "extra_fields": vol.Schema(
                 {
                     vol.Optional(
-                        CONF_ABOVE, description={"suffix": UNIT_PERCENTAGE}
+                        CONF_ABOVE, description={"suffix": PERCENTAGE}
                     ): vol.Coerce(int),
                     vol.Optional(
-                        CONF_BELOW, description={"suffix": UNIT_PERCENTAGE}
+                        CONF_BELOW, description={"suffix": PERCENTAGE}
                     ): vol.Coerce(int),
                     vol.Optional(CONF_FOR): cv.positive_time_period_dict,
                 }
