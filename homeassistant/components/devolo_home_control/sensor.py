@@ -140,8 +140,6 @@ class DevoloConsumptionEntity(DevoloMultiLevelDeviceEntity):
                 self._device_instance.consumption_property[self._unique_id],
                 self._sensor_type,
             )
-        elif message[0].startswith("hdm"):
-            self._available = self._device_instance.is_online()
         else:
-            _LOGGER.debug("No valid message received: %s", message)
+            self._generic_message(message)
         self.schedule_update_ha_state()

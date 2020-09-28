@@ -1,8 +1,7 @@
 {
-  "disabled": "Dependency contains code that breaks Home Assistant.",
   "domain": "hdmi_cec",
   "name": "HDMI-CEC",
   "documentation": "https://www.home-assistant.io/integrations/hdmi_cec",
-  "requirements": ["pyCEC==0.4.13"],
-  "codeowners": []
+  "requirements": ["pyCEC==0.4.14"],
+  "codeowners": ["@newAM"]
 }

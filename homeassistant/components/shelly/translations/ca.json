@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El dispositiu ja est\u00e0 configurat"
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "unsupported_firmware": "El dispositiu utilitza una versi\u00f3 de programari no compatible."
         },
         "error": {
             "auth_not_supported": "Actualment els dispositius Shelly amb autenticaci\u00f3 no son compatibles.",

@@ -17,6 +17,7 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import config_validation as cv, entity
 from homeassistant.helpers.event import TrackTemplate, async_track_template_result
 from homeassistant.helpers.service import async_get_all_descriptions
+from homeassistant.helpers.template import Template
 from homeassistant.loader import IntegrationNotFound, async_get_integration
 
 from . import const, decorators, messages
@@ -238,22 +239,31 @@ def handle_ping(hass, connection, msg):
     connection.send_message(pong_message(msg["id"]))
 
 
-@callback
 @decorators.websocket_command(
     {
         vol.Required("type"): "render_template",
-        vol.Required("template"): cv.template,
+        vol.Required("template"): str,
         vol.Optional("entity_ids"): cv.entity_ids,
         vol.Optional("variables"): dict,
+        vol.Optional("timeout"): vol.Coerce(float),
     }
 )
-def handle_render_template(hass, connection, msg):
+@decorators.async_response
+async def handle_render_template(hass, connection, msg):
     """Handle render_template command."""
-    template = msg["template"]
-    template.hass = hass
-
+    template_str = msg["template"]
+    template = Template(template_str, hass)
     variables = msg.get("variables")
+    timeout = msg.get("timeout")
     info = None
+
+    if timeout and await template.async_render_will_timeout(timeout):
+        connection.send_error(
+            msg["id"],
+            const.ERR_TEMPLATE_ERROR,
+            f"Exceeded maximum execution time of {timeout}s",
+        )
+        return
 
     @callback
     def _template_listener(event, updates):
@@ -261,13 +271,8 @@ def handle_render_template(hass, connection, msg):
         track_template_result = updates.pop()
         result = track_template_result.result
         if isinstance(result, TemplateError):
-            _LOGGER.error(
-                "TemplateError('%s') " "while processing template '%s'",
-                result,
-                track_template_result.template,
-            )
-
-            result = None
+            connection.send_error(msg["id"], const.ERR_TEMPLATE_ERROR, str(result))
+            return
 
         connection.send_message(
             messages.event_message(
@@ -275,9 +280,16 @@ def handle_render_template(hass, connection, msg):
             )
         )
 
-    info = async_track_template_result(
-        hass, [TrackTemplate(template, variables)], _template_listener
-    )
+    try:
+        info = async_track_template_result(
+            hass,
+            [TrackTemplate(template, variables)],
+            _template_listener,
+            raise_on_template_error=True,
+        )
+    except TemplateError as ex:
+        connection.send_error(msg["id"], const.ERR_TEMPLATE_ERROR, str(ex))
+        return
 
     connection.subscriptions[msg["id"]] = info.async_remove
 

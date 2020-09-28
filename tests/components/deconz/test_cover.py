@@ -67,7 +67,6 @@ async def test_no_covers(hass):
     """Test that no cover entities are created."""
     gateway = await setup_deconz_integration(hass)
     assert len(gateway.deconz_ids) == 0
-    assert len(gateway.entities[cover.DOMAIN]) == 0
     assert len(hass.states.async_all()) == 0
 
 
@@ -82,7 +81,6 @@ async def test_cover(hass):
     assert "cover.deconz_old_brightness_cover" in gateway.deconz_ids
     assert "cover.window_covering_controller" in gateway.deconz_ids
     assert len(hass.states.async_all()) == 5
-    assert len(gateway.entities[cover.DOMAIN]) == 4
 
     level_controllable_cover = hass.states.get("cover.level_controllable_cover")
     assert level_controllable_cover.state == "open"
@@ -160,4 +158,3 @@ async def test_cover(hass):
     await gateway.async_reset()
 
     assert len(hass.states.async_all()) == 0
-    assert len(gateway.entities[cover.DOMAIN]) == 0

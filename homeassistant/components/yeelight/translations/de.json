@@ -5,6 +5,12 @@
                 "data": {
                     "device": "Ger\u00e4te"
                 }
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "ip_address": "IP-Addresse"
+                }
             }
         }
     },
@@ -16,5 +22,6 @@
                 }
             }
         }
-    }
+    },
+    "title": "Yeelight"
 }

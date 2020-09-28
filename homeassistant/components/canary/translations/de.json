@@ -1,4 +1,15 @@
 {
+    "config": {
+        "flow_title": "Canary: {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
             "init": {

@@ -8,7 +8,7 @@ import time
 from typing import Optional, cast
 
 from aiohttp import web
-from sqlalchemy import and_, bindparam, func
+from sqlalchemy import and_, bindparam, func, not_, or_
 from sqlalchemy.ext import baked
 import voluptuous as vol
 
@@ -29,6 +29,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, State, split_entity_id
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entityfilter import (
+    CONF_ENTITY_GLOBS,
+    INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
+)
 import homeassistant.util.dt as dt_util
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
@@ -41,26 +45,19 @@ CONF_ORDER = "use_include_order"
 STATE_KEY = "state"
 LAST_CHANGED_KEY = "last_changed"
 
-# Not reusing from entityfilter because history does not support glob filtering
-_FILTER_SCHEMA_INNER = vol.Schema(
-    {
-        vol.Optional(CONF_DOMAINS, default=[]): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
-    }
-)
-_FILTER_SCHEMA = vol.Schema(
-    {
-        vol.Optional(
-            CONF_INCLUDE, default=_FILTER_SCHEMA_INNER({})
-        ): _FILTER_SCHEMA_INNER,
-        vol.Optional(
-            CONF_EXCLUDE, default=_FILTER_SCHEMA_INNER({})
-        ): _FILTER_SCHEMA_INNER,
-        vol.Optional(CONF_ORDER, default=False): cv.boolean,
-    }
-)
+GLOB_TO_SQL_CHARS = {
+    42: "%",  # *
+    46: "_",  # .
+}
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: _FILTER_SCHEMA}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
+            {vol.Optional(CONF_ORDER, default=False): cv.boolean}
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 SIGNIFICANT_DOMAINS = (
     "climate",
@@ -563,10 +560,12 @@ def sqlalchemy_filter_from_include_exclude_conf(conf):
     if exclude:
         filters.excluded_entities = exclude.get(CONF_ENTITIES, [])
         filters.excluded_domains = exclude.get(CONF_DOMAINS, [])
+        filters.excluded_entity_globs = exclude.get(CONF_ENTITY_GLOBS, [])
     include = conf.get(CONF_INCLUDE)
     if include:
         filters.included_entities = include.get(CONF_ENTITIES, [])
         filters.included_domains = include.get(CONF_DOMAINS, [])
+        filters.included_entity_globs = include.get(CONF_ENTITY_GLOBS, [])
     return filters
 
 
@@ -577,8 +576,11 @@ class Filters:
         """Initialise the include and exclude filters."""
         self.excluded_entities = []
         self.excluded_domains = []
+        self.excluded_entity_globs = []
+
         self.included_entities = []
         self.included_domains = []
+        self.included_entity_globs = []
 
     def apply(self, query, entity_ids=None):
         """Apply the include/exclude filter on domains and entities on query.
@@ -619,52 +621,46 @@ class Filters:
         if (
             self.excluded_entities
             or self.excluded_domains
+            or self.excluded_entity_globs
             or self.included_entities
             or self.included_domains
+            or self.included_entity_globs
         ):
             baked_query += lambda q: q.filter(self.entity_filter())
 
     def entity_filter(self):
         """Generate the entity filter query."""
-        entity_filter = None
-        # filter if only excluded domain is configured
-        if self.excluded_domains and not self.included_domains:
-            entity_filter = ~States.domain.in_(self.excluded_domains)
-            if self.included_entities:
-                entity_filter &= States.entity_id.in_(self.included_entities)
-        # filter if only included domain is configured
-        elif not self.excluded_domains and self.included_domains:
-            entity_filter = States.domain.in_(self.included_domains)
-            if self.included_entities:
-                entity_filter |= States.entity_id.in_(self.included_entities)
-        # filter if included and excluded domain is configured
-        elif self.excluded_domains and self.included_domains:
-            entity_filter = ~States.domain.in_(self.excluded_domains)
-            if self.included_entities:
-                entity_filter &= States.domain.in_(
-                    self.included_domains
-                ) | States.entity_id.in_(self.included_entities)
-            else:
-                entity_filter &= States.domain.in_(
-                    self.included_domains
-                ) & ~States.domain.in_(self.excluded_domains)
-        # no domain filter just included entities
-        elif (
-            not self.excluded_domains
-            and not self.included_domains
-            and self.included_entities
-        ):
-            entity_filter = States.entity_id.in_(self.included_entities)
-        # finally apply excluded entities filter if configured
-        if self.excluded_entities:
-            if entity_filter is not None:
-                entity_filter = (entity_filter) & ~States.entity_id.in_(
-                    self.excluded_entities
-                )
-            else:
-                entity_filter = ~States.entity_id.in_(self.excluded_entities)
+        includes = []
+        if self.included_domains:
+            includes.append(States.domain.in_(self.included_domains))
+        if self.included_entities:
+            includes.append(States.entity_id.in_(self.included_entities))
+        for glob in self.included_entity_globs:
+            includes.append(_glob_to_like(glob))
 
-        return entity_filter
+        excludes = []
+        if self.excluded_domains:
+            excludes.append(States.domain.in_(self.excluded_domains))
+        if self.excluded_entities:
+            excludes.append(States.entity_id.in_(self.excluded_entities))
+        for glob in self.excluded_entity_globs:
+            excludes.append(_glob_to_like(glob))
+
+        if not includes and not excludes:
+            return None
+
+        if includes and not excludes:
+            return or_(*includes)
+
+        if not excludes and includes:
+            return not_(or_(*excludes))
+
+        return or_(*includes) & not_(or_(*excludes))
+
+
+def _glob_to_like(glob_str):
+    """Translate glob to sql."""
+    return States.entity_id.like(glob_str.translate(GLOB_TO_SQL_CHARS))
 
 
 class LazyState(State):
