@@ -1,12 +1,12 @@
 """Provides tag scanning for MQTT."""
-import json
 import logging
 
 import voluptuous as vol
 
 from homeassistant.components import mqtt
-from homeassistant.const import CONF_PLATFORM
+from homeassistant.const import CONF_PLATFORM, CONF_VALUE_TEMPLATE
 from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -35,6 +35,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
         vol.Optional(CONF_PLATFORM): "mqtt",
         vol.Required(CONF_TOPIC): valid_subscribe_topic,
+        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     },
     mqtt.validate_device_has_at_least_one_identifier,
 )
@@ -60,7 +61,6 @@ async def async_setup_entry(hass, config_entry):
 
 async def async_setup_tag(hass, config, config_entry, discovery_data):
     """Set up the MQTT tag scanner."""
-    config = PLATFORM_SCHEMA(config)
     discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
     discovery_id = discovery_hash[1]
 
@@ -117,6 +117,9 @@ class MQTTTagScanner:
         self._remove_discovery = None
         self._remove_device_updated = None
         self._sub_state = None
+        self._value_template = None
+
+        self._setup_from_config(config)
 
     async def discovery_update(self, payload):
         """Handle discovery update."""
@@ -137,7 +140,16 @@ class MQTTTagScanner:
             self._config = config
             if self.device_id:
                 await _update_device(self.hass, self._config_entry, config)
+            self._setup_from_config(config)
             await self.subscribe_topics()
+
+    def _setup_from_config(self, config):
+        self._value_template = lambda value, error_value: value
+        if CONF_VALUE_TEMPLATE in config:
+            value_template = config.get(CONF_VALUE_TEMPLATE)
+            value_template.hass = self.hass
+
+            self._value_template = value_template.async_render_with_possible_json_value
 
     async def setup(self):
         """Set up the MQTT tag scanner."""
@@ -158,8 +170,9 @@ class MQTTTagScanner:
 
         @callback
         def tag_scanned(msg):
-            payload = json.loads(msg.payload)
-            tag_id = payload["tag_id"]
+            tag_id = self._value_template(msg.payload, error_value="")
+            if not tag_id.strip():  # No output from template, ignore
+                return
 
             self.hass.async_create_task(
                 self.hass.components.tag.async_scan_tag(tag_id, self.device_id)

@@ -1,4 +1,5 @@
 """The tests for MQTT tag scanner."""
+import copy
 import json
 
 import pytest
@@ -12,6 +13,29 @@ from tests.common import (
     async_get_device_automations,
     mock_device_registry,
     mock_registry,
+)
+
+DEFAULT_CONFIG_DEVICE = {
+    "device": {"identifiers": ["0AFFD2"]},
+    "topic": "foobar/tag_scanned",
+}
+
+DEFAULT_CONFIG = {
+    "topic": "foobar/tag_scanned",
+}
+
+DEFAULT_CONFIG_JSON = {
+    "device": {"identifiers": ["0AFFD2"]},
+    "topic": "foobar/tag_scanned",
+    "value_template": "{{ value_json.PN532.UID }}",
+}
+
+DEFAULT_TAG_ID = "E9F35959"
+
+DEFAULT_TAG_SCAN = "E9F35959"
+
+DEFAULT_TAG_SCAN_JSON = (
+    '{"Time":"2020-09-28T17:02:10","PN532":{"UID":"E9F35959", "DATA":"ILOVETASMOTA"}}'
 )
 
 
@@ -37,167 +61,238 @@ def tag_mock():
 @pytest.mark.no_fail_on_log_exception
 async def test_discover_bad_tag(hass, device_reg, entity_reg, mqtt_mock, tag_mock):
     """Test bad discovery message."""
+    config1 = copy.deepcopy(DEFAULT_CONFIG_DEVICE)
+
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     await async_start(hass, "homeassistant", config_entry)
 
     # Test sending bad data
-    data0 = (
-        '{ "device":{"identifiers":["0AFFD2"]},' '  "topics": "foobar/tag_scanned" }'
-    )
+    data0 = '{ "device":{"identifiers":["0AFFD2"]}, "topics": "foobar/tag_scanned" }'
     async_fire_mqtt_message(hass, "homeassistant/tag/bla/config", data0)
     await hass.async_block_till_done()
     assert device_reg.async_get_device({("mqtt", "0AFFD2")}, set()) is None
 
     # Test sending correct data
-    data1 = '{ "device":{"identifiers":["0AFFD2"]},' '  "topic": "foobar/tag_scanned" }'
-    async_fire_mqtt_message(hass, "homeassistant/tag/bla/config", data1)
+    async_fire_mqtt_message(hass, "homeassistant/tag/bla/config", json.dumps(config1))
     await hass.async_block_till_done()
 
     device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")}, set())
     # Fake tag scan.
-    async_fire_mqtt_message(hass, "foobar/tag_scanned", '{"tag_id": "12345"}')
+    async_fire_mqtt_message(hass, "foobar/tag_scanned", DEFAULT_TAG_SCAN)
     await hass.async_block_till_done()
-    tag_mock.assert_called_once_with(ANY, "12345", device_entry.id)
+    tag_mock.assert_called_once_with(ANY, DEFAULT_TAG_ID, device_entry.id)
 
 
 async def test_if_fires_on_mqtt_message_with_device(
     hass, device_reg, mqtt_mock, tag_mock
 ):
     """Test tag scanning, with device."""
+    config = copy.deepcopy(DEFAULT_CONFIG_DEVICE)
+
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     await async_start(hass, "homeassistant", config_entry)
 
-    data1 = '{ "device":{"identifiers":["0AFFD2"]},' '  "topic": "foobar/tag_scanned" }'
-    async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", data1)
+    async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", json.dumps(config))
     await hass.async_block_till_done()
     device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")}, set())
 
     # Fake tag scan.
-    async_fire_mqtt_message(hass, "foobar/tag_scanned", '{"tag_id": "12345"}')
+    async_fire_mqtt_message(hass, "foobar/tag_scanned", DEFAULT_TAG_SCAN)
     await hass.async_block_till_done()
-    tag_mock.assert_called_once_with(ANY, "12345", device_entry.id)
+    tag_mock.assert_called_once_with(ANY, DEFAULT_TAG_ID, device_entry.id)
 
 
 async def test_if_fires_on_mqtt_message_without_device(
     hass, device_reg, mqtt_mock, tag_mock
 ):
     """Test tag scanning, without device."""
+    config = copy.deepcopy(DEFAULT_CONFIG)
+
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     await async_start(hass, "homeassistant", config_entry)
 
-    data1 = '{ "topic": "foobar/tag_scanned" }'
-    async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", data1)
+    async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", json.dumps(config))
     await hass.async_block_till_done()
 
     # Fake tag scan.
-    async_fire_mqtt_message(hass, "foobar/tag_scanned", '{"tag_id": "12345"}')
+    async_fire_mqtt_message(hass, "foobar/tag_scanned", DEFAULT_TAG_SCAN)
     await hass.async_block_till_done()
-    tag_mock.assert_called_once_with(ANY, "12345", None)
+    tag_mock.assert_called_once_with(ANY, DEFAULT_TAG_ID, None)
+
+
+async def test_if_fires_on_mqtt_message_with_template(
+    hass, device_reg, mqtt_mock, tag_mock
+):
+    """Test tag scanning, with device."""
+    config = copy.deepcopy(DEFAULT_CONFIG_JSON)
+
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    await async_start(hass, "homeassistant", config_entry)
+
+    async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", json.dumps(config))
+    await hass.async_block_till_done()
+    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")}, set())
+
+    # Fake tag scan.
+    async_fire_mqtt_message(hass, "foobar/tag_scanned", DEFAULT_TAG_SCAN_JSON)
+    await hass.async_block_till_done()
+    tag_mock.assert_called_once_with(ANY, DEFAULT_TAG_ID, device_entry.id)
 
 
 async def test_if_fires_on_mqtt_message_after_update_with_device(
     hass, device_reg, mqtt_mock, tag_mock
 ):
     """Test tag scanning after update."""
+    config1 = copy.deepcopy(DEFAULT_CONFIG_DEVICE)
+    config2 = copy.deepcopy(DEFAULT_CONFIG_DEVICE)
+    config2["topic"] = "foobar/tag_scanned2"
+
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     await async_start(hass, "homeassistant", config_entry)
 
-    data1 = '{ "device":{"identifiers":["0AFFD2"]},' '  "topic": "foobar/tag_scanned" }'
-    data2 = (
-        '{ "device":{"identifiers":["0AFFD2"]},' '  "topic": "foobar/tag_scanned2" }'
-    )
-    async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", data1)
+    async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", json.dumps(config1))
     await hass.async_block_till_done()
     device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")}, set())
 
     # Fake tag scan.
-    async_fire_mqtt_message(hass, "foobar/tag_scanned", '{"tag_id": "12345"}')
+    async_fire_mqtt_message(hass, "foobar/tag_scanned", DEFAULT_TAG_SCAN)
     await hass.async_block_till_done()
-    tag_mock.assert_called_once_with(ANY, "12345", device_entry.id)
+    tag_mock.assert_called_once_with(ANY, DEFAULT_TAG_ID, device_entry.id)
 
     # Update the tag scanner with different topic
-    async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", data2)
+    async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", json.dumps(config2))
     await hass.async_block_till_done()
     tag_mock.reset_mock()
 
-    async_fire_mqtt_message(hass, "foobar/tag_scanned", '{"tag_id": "12345"}')
+    async_fire_mqtt_message(hass, "foobar/tag_scanned", DEFAULT_TAG_SCAN)
     await hass.async_block_till_done()
     tag_mock.assert_not_called()
 
-    async_fire_mqtt_message(hass, "foobar/tag_scanned2", '{"tag_id": "12345"}')
+    async_fire_mqtt_message(hass, "foobar/tag_scanned2", DEFAULT_TAG_SCAN)
     await hass.async_block_till_done()
-    tag_mock.assert_called_once_with(ANY, "12345", device_entry.id)
+    tag_mock.assert_called_once_with(ANY, DEFAULT_TAG_ID, device_entry.id)
 
     # Update the tag scanner with same topic
-    async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", data2)
+    async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", json.dumps(config2))
     await hass.async_block_till_done()
     tag_mock.reset_mock()
 
-    async_fire_mqtt_message(hass, "foobar/tag_scanned", '{"tag_id": "12345"}')
+    async_fire_mqtt_message(hass, "foobar/tag_scanned", DEFAULT_TAG_SCAN)
     await hass.async_block_till_done()
     tag_mock.assert_not_called()
 
-    async_fire_mqtt_message(hass, "foobar/tag_scanned2", '{"tag_id": "12345"}')
+    async_fire_mqtt_message(hass, "foobar/tag_scanned2", DEFAULT_TAG_SCAN)
     await hass.async_block_till_done()
-    tag_mock.assert_called_once_with(ANY, "12345", device_entry.id)
+    tag_mock.assert_called_once_with(ANY, DEFAULT_TAG_ID, device_entry.id)
 
 
 async def test_if_fires_on_mqtt_message_after_update_without_device(
     hass, device_reg, mqtt_mock, tag_mock
 ):
     """Test tag scanning after update."""
+    config1 = copy.deepcopy(DEFAULT_CONFIG)
+    config2 = copy.deepcopy(DEFAULT_CONFIG)
+    config2["topic"] = "foobar/tag_scanned2"
+
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     await async_start(hass, "homeassistant", config_entry)
 
-    data1 = '{ "topic": "foobar/tag_scanned" }'
-    data2 = '{ "topic": "foobar/tag_scanned2" }'
-    async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", data1)
+    async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", json.dumps(config1))
     await hass.async_block_till_done()
 
     # Fake tag scan.
-    async_fire_mqtt_message(hass, "foobar/tag_scanned", '{"tag_id": "12345"}')
+    async_fire_mqtt_message(hass, "foobar/tag_scanned", DEFAULT_TAG_SCAN)
     await hass.async_block_till_done()
-    tag_mock.assert_called_once_with(ANY, "12345", None)
+    tag_mock.assert_called_once_with(ANY, DEFAULT_TAG_ID, None)
 
     # Update the tag scanner with different topic
-    async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", data2)
+    async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", json.dumps(config2))
     await hass.async_block_till_done()
     tag_mock.reset_mock()
 
-    async_fire_mqtt_message(hass, "foobar/tag_scanned", '{"tag_id": "12345"}')
+    async_fire_mqtt_message(hass, "foobar/tag_scanned", DEFAULT_TAG_SCAN)
     await hass.async_block_till_done()
     tag_mock.assert_not_called()
 
-    async_fire_mqtt_message(hass, "foobar/tag_scanned2", '{"tag_id": "12345"}')
+    async_fire_mqtt_message(hass, "foobar/tag_scanned2", DEFAULT_TAG_SCAN)
     await hass.async_block_till_done()
-    tag_mock.assert_called_once_with(ANY, "12345", None)
+    tag_mock.assert_called_once_with(ANY, DEFAULT_TAG_ID, None)
 
     # Update the tag scanner with same topic
-    async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", data2)
+    async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", json.dumps(config2))
     await hass.async_block_till_done()
     tag_mock.reset_mock()
 
-    async_fire_mqtt_message(hass, "foobar/tag_scanned", '{"tag_id": "12345"}')
+    async_fire_mqtt_message(hass, "foobar/tag_scanned", DEFAULT_TAG_SCAN)
     await hass.async_block_till_done()
     tag_mock.assert_not_called()
 
-    async_fire_mqtt_message(hass, "foobar/tag_scanned2", '{"tag_id": "12345"}')
+    async_fire_mqtt_message(hass, "foobar/tag_scanned2", DEFAULT_TAG_SCAN)
     await hass.async_block_till_done()
-    tag_mock.assert_called_once_with(ANY, "12345", None)
+    tag_mock.assert_called_once_with(ANY, DEFAULT_TAG_ID, None)
+
+
+async def test_if_fires_on_mqtt_message_after_update_with_template(
+    hass, device_reg, mqtt_mock, tag_mock
+):
+    """Test tag scanning after update."""
+    config1 = copy.deepcopy(DEFAULT_CONFIG_JSON)
+    config2 = copy.deepcopy(DEFAULT_CONFIG_JSON)
+    config2["value_template"] = "{{ value_json.RDM6300.UID }}"
+    tag_scan_2 = '{"Time":"2020-09-28T17:02:10","RDM6300":{"UID":"E9F35959", "DATA":"ILOVETASMOTA"}}'
+
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    await async_start(hass, "homeassistant", config_entry)
+
+    async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", json.dumps(config1))
+    await hass.async_block_till_done()
+    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")}, set())
+
+    # Fake tag scan.
+    async_fire_mqtt_message(hass, "foobar/tag_scanned", DEFAULT_TAG_SCAN_JSON)
+    await hass.async_block_till_done()
+    tag_mock.assert_called_once_with(ANY, DEFAULT_TAG_ID, device_entry.id)
+
+    # Update the tag scanner with different template
+    async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", json.dumps(config2))
+    await hass.async_block_till_done()
+    tag_mock.reset_mock()
+
+    async_fire_mqtt_message(hass, "foobar/tag_scanned", DEFAULT_TAG_SCAN_JSON)
+    await hass.async_block_till_done()
+    tag_mock.assert_not_called()
+
+    async_fire_mqtt_message(hass, "foobar/tag_scanned", tag_scan_2)
+    await hass.async_block_till_done()
+    tag_mock.assert_called_once_with(ANY, DEFAULT_TAG_ID, device_entry.id)
+
+    # Update the tag scanner with same template
+    async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", json.dumps(config2))
+    await hass.async_block_till_done()
+    tag_mock.reset_mock()
+
+    async_fire_mqtt_message(hass, "foobar/tag_scanned", DEFAULT_TAG_SCAN_JSON)
+    await hass.async_block_till_done()
+    tag_mock.assert_not_called()
+
+    async_fire_mqtt_message(hass, "foobar/tag_scanned", tag_scan_2)
+    await hass.async_block_till_done()
+    tag_mock.assert_called_once_with(ANY, DEFAULT_TAG_ID, device_entry.id)
 
 
 async def test_no_resubscribe_same_topic(hass, device_reg, mqtt_mock):
     """Test subscription to topics without change."""
+    config = copy.deepcopy(DEFAULT_CONFIG_DEVICE)
+
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     await async_start(hass, "homeassistant", config_entry)
 
-    data1 = '{ "device":{"identifiers":["0AFFD2"]},' '  "topic": "foobar/tag_scanned" }'
-    async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", data1)
+    async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", json.dumps(config))
     await hass.async_block_till_done()
     assert device_reg.async_get_device({("mqtt", "0AFFD2")}, set())
 
     call_count = mqtt_mock.async_subscribe.call_count
-    async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", data1)
+    async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", json.dumps(config))
     await hass.async_block_till_done()
     assert mqtt_mock.async_subscribe.call_count == call_count
 
@@ -206,69 +301,71 @@ async def test_not_fires_on_mqtt_message_after_remove_by_mqtt_with_device(
     hass, device_reg, mqtt_mock, tag_mock
 ):
     """Test tag scanning after removal."""
+    config = copy.deepcopy(DEFAULT_CONFIG_DEVICE)
+
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     await async_start(hass, "homeassistant", config_entry)
 
-    data1 = '{ "device":{"identifiers":["0AFFD2"]},' '  "topic": "foobar/tag_scanned" }'
-    async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", data1)
+    async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", json.dumps(config))
     await hass.async_block_till_done()
     device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")}, set())
 
     # Fake tag scan.
-    async_fire_mqtt_message(hass, "foobar/tag_scanned", '{"tag_id": "12345"}')
+    async_fire_mqtt_message(hass, "foobar/tag_scanned", DEFAULT_TAG_SCAN)
     await hass.async_block_till_done()
-    tag_mock.assert_called_once_with(ANY, "12345", device_entry.id)
+    tag_mock.assert_called_once_with(ANY, DEFAULT_TAG_ID, device_entry.id)
 
     # Remove the tag scanner
     async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", "")
     await hass.async_block_till_done()
     tag_mock.reset_mock()
 
-    async_fire_mqtt_message(hass, "foobar/tag_scanned", '{"tag_id": "12345"}')
+    async_fire_mqtt_message(hass, "foobar/tag_scanned", DEFAULT_TAG_SCAN)
     await hass.async_block_till_done()
     tag_mock.assert_not_called()
 
     # Rediscover the tag scanner
-    async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", data1)
+    async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", json.dumps(config))
     await hass.async_block_till_done()
 
-    async_fire_mqtt_message(hass, "foobar/tag_scanned", '{"tag_id": "12345"}')
+    async_fire_mqtt_message(hass, "foobar/tag_scanned", DEFAULT_TAG_SCAN)
     await hass.async_block_till_done()
-    tag_mock.assert_called_once_with(ANY, "12345", device_entry.id)
+    tag_mock.assert_called_once_with(ANY, DEFAULT_TAG_ID, device_entry.id)
 
 
 async def test_not_fires_on_mqtt_message_after_remove_by_mqtt_without_device(
     hass, device_reg, mqtt_mock, tag_mock
 ):
     """Test tag scanning not firing after removal."""
+    config = copy.deepcopy(DEFAULT_CONFIG)
+
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     await async_start(hass, "homeassistant", config_entry)
 
-    data1 = '{ "topic": "foobar/tag_scanned" }'
-    async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", data1)
+    async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", json.dumps(config))
     await hass.async_block_till_done()
 
     # Fake tag scan.
-    async_fire_mqtt_message(hass, "foobar/tag_scanned", '{"tag_id": "12345"}')
+    async_fire_mqtt_message(hass, "foobar/tag_scanned", DEFAULT_TAG_SCAN)
     await hass.async_block_till_done()
-    tag_mock.assert_called_once_with(ANY, "12345", None)
+    tag_mock.assert_called_once_with(ANY, DEFAULT_TAG_ID, None)
 
     # Remove the tag scanner
     async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", "")
     await hass.async_block_till_done()
     tag_mock.reset_mock()
 
-    async_fire_mqtt_message(hass, "foobar/tag_scanned", '{"tag_id": "12345"}')
+    async_fire_mqtt_message(hass, "foobar/tag_scanned", DEFAULT_TAG_SCAN)
     await hass.async_block_till_done()
     tag_mock.assert_not_called()
 
     # Rediscover the tag scanner
-    async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", data1)
+    async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", json.dumps(config))
     await hass.async_block_till_done()
 
-    async_fire_mqtt_message(hass, "foobar/tag_scanned", '{"tag_id": "12345"}')
+    async_fire_mqtt_message(hass, "foobar/tag_scanned", DEFAULT_TAG_SCAN)
     await hass.async_block_till_done()
-    tag_mock.assert_called_once_with(ANY, "12345", None)
+    tag_mock.assert_called_once_with(ANY, DEFAULT_TAG_ID, None)
 
 
 async def test_not_fires_on_mqtt_message_after_remove_from_registry(
@@ -278,25 +375,26 @@ async def test_not_fires_on_mqtt_message_after_remove_from_registry(
     tag_mock,
 ):
     """Test tag scanning after removal."""
+    config = copy.deepcopy(DEFAULT_CONFIG_DEVICE)
+
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     await async_start(hass, "homeassistant", config_entry)
 
-    data1 = '{ "device":{"identifiers":["0AFFD2"]},' '  "topic": "foobar/tag_scanned" }'
-    async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", data1)
+    async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", json.dumps(config))
     await hass.async_block_till_done()
     device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")}, set())
 
     # Fake tag scan.
-    async_fire_mqtt_message(hass, "foobar/tag_scanned", '{"tag_id": "12345"}')
+    async_fire_mqtt_message(hass, "foobar/tag_scanned", DEFAULT_TAG_SCAN)
     await hass.async_block_till_done()
-    tag_mock.assert_called_once_with(ANY, "12345", device_entry.id)
+    tag_mock.assert_called_once_with(ANY, DEFAULT_TAG_ID, device_entry.id)
 
     # Remove the device
     device_reg.async_remove_device(device_entry.id)
     await hass.async_block_till_done()
     tag_mock.reset_mock()
 
-    async_fire_mqtt_message(hass, "foobar/tag_scanned", '{"tag_id": "12345"}')
+    async_fire_mqtt_message(hass, "foobar/tag_scanned", DEFAULT_TAG_SCAN)
     await hass.async_block_till_done()
     tag_mock.assert_not_called()
 
@@ -472,11 +570,9 @@ async def test_cleanup_device_several_tags(
         "device": {"identifiers": ["helloworld"]},
     }
 
-    data1 = json.dumps(config1)
-    data2 = json.dumps(config2)
-    async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", data1)
+    async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", json.dumps(config1))
     await hass.async_block_till_done()
-    async_fire_mqtt_message(hass, "homeassistant/tag/bla2/config", data2)
+    async_fire_mqtt_message(hass, "homeassistant/tag/bla2/config", json.dumps(config2))
     await hass.async_block_till_done()
 
     # Verify device registry entry is created
@@ -491,8 +587,8 @@ async def test_cleanup_device_several_tags(
     assert device_entry is not None
 
     # Fake tag scan.
-    async_fire_mqtt_message(hass, "test-topic1", '{"tag_id": "12345"}')
-    async_fire_mqtt_message(hass, "test-topic2", '{"tag_id": "23456"}')
+    async_fire_mqtt_message(hass, "test-topic1", "12345")
+    async_fire_mqtt_message(hass, "test-topic2", "23456")
     await hass.async_block_till_done()
     tag_mock.assert_called_once_with(ANY, "23456", device_entry.id)
 
