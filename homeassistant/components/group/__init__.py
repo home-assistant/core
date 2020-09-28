@@ -321,14 +321,6 @@ async def async_setup(hass, config):
         schema=vol.Schema({vol.Required(ATTR_OBJECT_ID): cv.slug}),
     )
 
-    hass.data[DATA_KEY] = {
-        ON_OFF_MAPPING: {STATE_ON: STATE_OFF},
-        ON_STATES_BY_DOMAIN: {},
-        EXCLUDE_DOMAINS: set(),
-    }
-
-    await async_process_integration_platforms(hass, DOMAIN, _process_group_platform)
-
     return True
 
 
