@@ -28,13 +28,46 @@ from homeassistant.util import Throttle, dt
 
 _LOGGER = logging.getLogger(__name__)
 
+DOMAIN = "caldav"
+
 CONF_CALENDARS = "calendars"
 CONF_CUSTOM_CALENDARS = "custom_calendars"
 CONF_CALENDAR = "calendar"
 CONF_SEARCH = "search"
 CONF_DAYS = "days"
 
+SERVICE_ADD_EVENT = "add_event"
+
+EVENT_CALENDAR_ID = "calendar_id"
+EVENT_DESCRIPTION = "description"
+EVENT_END_CONF = "end"
+EVENT_END_DATE = "end_date"
+EVENT_END_DATETIME = "end_date_time"
+EVENT_IN = "in"
+EVENT_IN_DAYS = "days"
+EVENT_IN_WEEKS = "weeks"
+EVENT_START_CONF = "start"
+EVENT_START_DATE = "start_date"
+EVENT_START_DATETIME = "start_date_time"
+EVENT_SUMMARY = "summary"
+EVENT_TYPES_CONF = "event_types"
+
 OFFSET = "!!"
+
+ICAL_TEMPLATE_NEW_EVENT = """
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Example Corp.//CalDAV Client//EN
+BEGIN:VEVENT
+UID:{timestamp}-homeassistant
+DTSTAMP:{timestamp}
+DTSTART{start}
+DTEND{end}
+SUMMARY:{summary}
+DESCRIPTION:{description}
+END:VEVENT
+END:VCALENDAR
+"""
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -57,6 +90,26 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         ),
         vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
         vol.Optional(CONF_DAYS, default=1): cv.positive_int,
+    }
+)
+
+_EVENT_IN_TYPES = vol.Schema(
+    {
+        vol.Exclusive(EVENT_IN_DAYS, EVENT_TYPES_CONF): cv.positive_int,
+        vol.Exclusive(EVENT_IN_WEEKS, EVENT_TYPES_CONF): cv.positive_int,
+    }
+)
+
+ADD_EVENT_SERVICE_SCHEMA = vol.Schema(
+    {
+        vol.Required(EVENT_CALENDAR_ID): cv.string,
+        vol.Required(EVENT_SUMMARY): cv.string,
+        vol.Optional(EVENT_DESCRIPTION, default=""): cv.string,
+        vol.Exclusive(EVENT_START_DATE, EVENT_START_CONF): cv.date,
+        vol.Exclusive(EVENT_END_DATE, EVENT_END_CONF): cv.date,
+        vol.Exclusive(EVENT_START_DATETIME, EVENT_START_CONF): cv.datetime,
+        vol.Exclusive(EVENT_END_DATETIME, EVENT_END_CONF): cv.datetime,
+        vol.Exclusive(EVENT_IN, EVENT_START_CONF, EVENT_END_CONF): _EVENT_IN_TYPES,
     }
 )
 
@@ -108,7 +161,83 @@ def setup_platform(hass, config, add_entities, disc_info=None):
                 WebDavCalendarEventDevice(name, calendar, entity_id, days)
             )
 
+    setup_services(hass, config, client)
     add_entities(calendar_devices, True)
+
+
+def setup_services(hass, hass_config, client):
+    """Set up the service listeners."""
+
+    def _add_event(call):
+        """Add a new event to calendar."""
+        start_date = ""
+        end_date = ""
+        start_datetime = ""
+        end_datetime = ""
+
+        if EVENT_IN in call.data:
+            if EVENT_IN_DAYS in call.data[EVENT_IN]:
+                now = datetime.now()
+
+                start_in = now + timedelta(days=call.data[EVENT_IN][EVENT_IN_DAYS])
+                end_in = start_in + timedelta(days=1)
+                start_date = start_in.strftime("%Y%m%d")
+                end_date = end_in.strftime("%Y%m%d")
+
+            elif EVENT_IN_WEEKS in call.data[EVENT_IN]:
+                now = datetime.now()
+
+                start_in = now + timedelta(weeks=call.data[EVENT_IN][EVENT_IN_WEEKS])
+                end_in = start_in + timedelta(days=1)
+                start_date = start_in.strftime("%Y%m%d")
+                end_date = end_in.strftime("%Y%m%d")
+
+        elif EVENT_START_DATE in call.data:
+            start_date = call.data[EVENT_START_DATE].strftime("%Y%m%d")
+            end_date = call.data[EVENT_END_DATE].strftime("%Y%m%d")
+
+        elif EVENT_START_DATETIME in call.data:
+            start_datetime = call.data[EVENT_START_DATETIME].strftime("%Y%m%dT%H%M%S")
+            end_datetime = call.data[EVENT_END_DATETIME].strftime("%Y%m%dT%H%M%S")
+
+        principal = client.principal()
+        calendar = principal.calendar(cal_id=call.data[EVENT_CALENDAR_ID])
+        timestamp = datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
+        if start_date != "":
+            start = f";VALUE=DATE:{start_date}"
+            end = f";VALUE=DATE:{end_date}"
+        else:
+            if hass.config.time_zone != "":
+                start = f";TZID={hass.config.time_zone}:{start_datetime}"
+                end = f";TZID={hass.config.time_zone}:{end_datetime}"
+            else:
+                start = f":{start_datetime}"
+                end = f":{end_datetime}"
+
+        event_ical_text = ICAL_TEMPLATE_NEW_EVENT.format(
+            timestamp=timestamp,
+            start=start,
+            end=end,
+            summary=escape_text_for_ics(call.data[EVENT_SUMMARY]),
+            description=escape_text_for_ics(call.data[EVENT_DESCRIPTION]),
+        )
+
+        calendar.add_event(event_ical_text)
+
+    hass.services.register(
+        DOMAIN, SERVICE_ADD_EVENT, _add_event, schema=ADD_EVENT_SERVICE_SCHEMA
+    )
+    return True
+
+
+def escape_text_for_ics(text):
+    """Escape text for ICS according to https://icalendar.org/iCalendar-RFC-5545/3-3-11-text.html."""
+    text = text.replace("\\", "\\\\")
+    text = text.replace("\r\n", "\\n")
+    text = text.replace("\n", "\\n")
+    text = text.replace(";", "\\;")
+    text = text.replace(",", "\\,")
+    return text
 
 
 class WebDavCalendarEventDevice(CalendarEventDevice):
