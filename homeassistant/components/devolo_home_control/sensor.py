@@ -141,5 +141,5 @@ class DevoloConsumptionEntity(DevoloMultiLevelDeviceEntity):
                 self._sensor_type,
             )
         else:
-            self._unexpected_message(message)
+            self._generic_message(message)
         self.schedule_update_ha_state()

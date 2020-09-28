@@ -84,5 +84,5 @@ class DevoloSwitch(DevoloDeviceEntity, SwitchEntity):
                 message[0]
             ].current
         else:
-            self._unexpected_message(message)
+            self._generic_message(message)
         self.schedule_update_ha_state()

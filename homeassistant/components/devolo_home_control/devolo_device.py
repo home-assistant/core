@@ -82,10 +82,10 @@ class DevoloDeviceEntity(Entity):
         if message[0] == self._unique_id:
             self._value = message[1]
         else:
-            self._unexpected_message(message)
+            self._generic_message(message)
         self.schedule_update_ha_state()
 
-    def _unexpected_message(self, message):
+    def _generic_message(self, message):
         """Handle unexpected messages."""
         if message[0].startswith("hdm"):
             # Maybe the API wants to tell us, that the device went on- or offline.
