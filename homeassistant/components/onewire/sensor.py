@@ -20,13 +20,15 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
+from .const import (
+    CONF_MOUNT_DIR,
+    CONF_NAMES,
+    DEFAULT_OWSERVER_PORT,
+    DEFAULT_SYSBUS_MOUNT_DIR,
+)
+
 _LOGGER = logging.getLogger(__name__)
 
-CONF_MOUNT_DIR = "mount_dir"
-CONF_NAMES = "names"
-
-DEFAULT_OWSERVER_PORT = 4304
-DEFAULT_SYSBUS_MOUNT_DIR = "/sys/bus/w1/devices/"
 DEVICE_SENSORS = {
     # Family : { SensorType: owfs path }
     "10": {"temperature": "temperature"},
