@@ -185,9 +185,9 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         self._name = data[CONF_NAME]
         self._lights = data[CONF_LIGHTS]
         self._disable_brightness_adjust = data[CONF_DISABLE_BRIGHTNESS_ADJUST]
-        self._disable_rgb_color_adjust = data[CONF_DISABLE_RGB_COLOR_ADJUST]
         self._disable_color_temp_adjust = data[CONF_DISABLE_COLOR_TEMP_ADJUST]
         self._disable_entity = data[CONF_DISABLE_ENTITY]
+        self._disable_rgb_color_adjust = data[CONF_DISABLE_RGB_COLOR_ADJUST]
         self._disable_state = data[CONF_DISABLE_STATE]
         self._initial_transition = data[CONF_INITIAL_TRANSITION]
         self._interval = data[CONF_INTERVAL]
@@ -476,11 +476,10 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         ):
             service_data[ATTR_BRIGHTNESS_PCT] = self._brightness
 
-        prefer_rgb_color = self._prefer_rgb_color
         if (
             "color_temp" in features
             and not self._disable_color_temp_adjust
-            and not (prefer_rgb_color and "color" in features)
+            and not (self._prefer_rgb_color and "color" in features)
         ):
             attributes = self.hass.states.get(light).attributes
             min_mireds, max_mireds = attributes["min_mireds"], attributes["max_mireds"]
