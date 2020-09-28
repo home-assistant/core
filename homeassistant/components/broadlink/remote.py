@@ -243,7 +243,7 @@ class BroadlinkRemote(RemoteEntity, RestoreEntity):
         delay = kwargs[ATTR_DELAY_SECS]
 
         if not self._state:
-            return
+            raise Exception(f"Remote {self.entity_id} is turned off or unavailable")
 
         should_delay = False
 
