@@ -525,13 +525,12 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
             _LOGGER.debug(
                 "%s: Detected an 'off' → 'on' event for '%s'", self._name, entity_id
             )
-            on_to_off_event = self._on_to_off_event.get(entity_id)
             lock = self._locks.setdefault(entity_id, asyncio.Lock())
             async with lock:
                 if await self.turn_on_off_listener.maybe_cancel_adjusting(
                     entity_id,
                     off_to_on_event=event,
-                    on_to_off_event=on_to_off_event,
+                    on_to_off_event=self._on_to_off_event.get(entity_id),
                 ):
                     # Stop if a rapid 'off' → 'on' → 'off' happens.
                     _LOGGER.debug(
@@ -554,14 +553,14 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
 
 
 class TurnOnOffListener:
-    """Track 'light.turn_off(..., transition=...)' and 'light.turn_on' service calls."""
+    """Track 'light.turn_off' and 'light.turn_on' service calls."""
 
     def __init__(self, hass):
         """Initialize the TurnOnOffListener that is shared among all switches."""
         self.hass = hass
         self.lights = set()
 
-        # Tracks 'light.turn_off(..., transition=...)' service calls
+        # Tracks 'light.turn_off' service calls
         self.turn_off_event: Dict[str, Tuple[str, float]] = {}
         # Tracks 'light.turn_on' service calls
         self.turn_on_event: Dict[str, Tuple[str]] = {}
@@ -596,10 +595,14 @@ class TurnOnOffListener:
             # State change 'off' → 'on' triggered by 'light.turn_on'.
             return False
 
-        if id_on_to_off == id_turn_off and id_on_to_off is not None:
+        if (
+            id_on_to_off == id_turn_off
+            and id_on_to_off is not None
+            and transition is not None  # 'turn_off' is called with transition=...
+        ):
             # State change 'on' → 'off' and 'light.turn_off(..., transition=...)' come
             # from the same event, so wait at least the 'turn_off' transition time.
-            delay = transition
+            delay = max(transition, TURNING_OFF_DELAY)
         else:
             # State change 'off' → 'on' happened because the light state was set.
             # Possibly because of polling.
@@ -615,7 +618,7 @@ class TurnOnOffListener:
         # is 'off' or the time has passed.
 
         delay -= delta_time  # delta_time has passed since the 'off' → 'on' event
-        _LOGGER.debug("Waiting with adjusting '%s' for %s.", entity_id, delay)
+        _LOGGER.debug("Waiting with adjusting '%s' for %s", entity_id, delay)
 
         for _ in range(3):
             # It can happen that the actual transition time is longer than the
@@ -626,7 +629,7 @@ class TurnOnOffListener:
             delay = TURNING_OFF_DELAY  # next time only wait this long
 
         if transition is not None:
-            # Always ignore when there's a transition.
+            # Always ignore when there's a 'turn_off' transition.
             # Because it seems like HA cannot detect whether a light is
             # transitioning into 'off'. Maybe needs some discussion/input?
             return True
@@ -634,7 +637,7 @@ class TurnOnOffListener:
         return False
 
     async def turn_on_off_event_listener(self, event):
-        """Track 'light.turn_off(..., transition=...)' and 'light.turn_on' service calls."""
+        """Track 'light.turn_off' and 'light.turn_on' service calls."""
         domain = event.data.get(ATTR_DOMAIN)
         if domain != LIGHT_DOMAIN:
             return
@@ -651,14 +654,13 @@ class TurnOnOffListener:
 
         if service == SERVICE_TURN_OFF:
             transition = service_data.get(ATTR_TRANSITION)
-            if transition is not None and transition > 0:
-                _LOGGER.debug(
-                    "Detected an 'light.turn_off('%s', transition=%s)' event",
-                    entity_id,
-                    transition,
-                )
-                for eid in entity_id:
-                    self.turn_off_event[eid] = (event.context.id, transition)
+            _LOGGER.debug(
+                "Detected an 'light.turn_off('%s', transition=%s)' event",
+                entity_id,
+                transition,
+            )
+            for eid in entity_id:
+                self.turn_off_event[eid] = (event.context.id, transition)
 
         elif service == SERVICE_TURN_ON:
             _LOGGER.debug("Detected an 'light.turn_on('%s')' event", entity_id)
