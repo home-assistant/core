@@ -131,8 +131,6 @@ class DevoloRemoteControl(DevoloDeviceEntity, BinarySensorEntity):
             message[0] == self._remote_control_property.element_uid and message[1] == 0
         ):
             self._state = False
-        elif message[0].startswith("hdm"):
-            self._available = self._device_instance.is_online()
         else:
-            _LOGGER.debug("No valid message received: %s", message)
+            self._generic_message(message)
         self.schedule_update_ha_state()
