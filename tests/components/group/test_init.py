@@ -8,6 +8,7 @@ from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
+    SERVICE_RELOAD,
     STATE_HOME,
     STATE_NOT_HOME,
     STATE_OFF,
@@ -29,7 +30,7 @@ class TestComponentsGroup(unittest.TestCase):
     def setUp(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        for domain in ["device_tracker", "light", "group"]:
+        for domain in ["device_tracker", "light", "group", "sensor"]:
             setup_component(self.hass, domain, {})
         self.addCleanup(self.hass.stop)
 
@@ -274,42 +275,6 @@ class TestComponentsGroup(unittest.TestCase):
         group_state = self.hass.states.get(test_group.entity_id)
         assert STATE_OFF == group_state.state
 
-    def test_setup(self):
-        """Test setup method."""
-        self.hass.states.set("light.Bowl", STATE_ON)
-        self.hass.states.set("light.Ceiling", STATE_OFF)
-        test_group = group.Group.create_group(
-            self.hass, "init_group", ["light.Bowl", "light.Ceiling"], False
-        )
-
-        group_conf = OrderedDict()
-        group_conf["second_group"] = {
-            "entities": f"light.Bowl, {test_group.entity_id}",
-            "icon": "mdi:work",
-        }
-        group_conf["test_group"] = "hello.world,sensor.happy"
-        group_conf["empty_group"] = {"name": "Empty Group", "entities": None}
-
-        setup_component(self.hass, "group", {"group": group_conf})
-
-        group_state = self.hass.states.get(f"{group.DOMAIN}.second_group")
-        assert STATE_ON == group_state.state
-        assert {test_group.entity_id, "light.bowl"} == set(
-            group_state.attributes["entity_id"]
-        )
-        assert group_state.attributes.get(group.ATTR_AUTO) is None
-        assert "mdi:work" == group_state.attributes.get(ATTR_ICON)
-        assert 1 == group_state.attributes.get(group.ATTR_ORDER)
-
-        group_state = self.hass.states.get(f"{group.DOMAIN}.test_group")
-        assert STATE_UNKNOWN == group_state.state
-        assert {"sensor.happy", "hello.world"} == set(
-            group_state.attributes["entity_id"]
-        )
-        assert group_state.attributes.get(group.ATTR_AUTO) is None
-        assert group_state.attributes.get(ATTR_ICON) is None
-        assert 2 == group_state.attributes.get(group.ATTR_ORDER)
-
     def test_groups_get_unique_names(self):
         """Two groups with same name should both have a unique entity id."""
         grp1 = group.Group.create_group(self.hass, "Je suis Charlie")
@@ -369,71 +334,121 @@ class TestComponentsGroup(unittest.TestCase):
         self.hass.block_till_done()
         assert STATE_NOT_HOME == self.hass.states.get(f"{group.DOMAIN}.peeps").state
 
-    def test_reloading_groups(self):
-        """Test reloading the group config."""
-        assert setup_component(
-            self.hass,
-            "group",
-            {
-                "group": {
-                    "second_group": {"entities": "light.Bowl", "icon": "mdi:work"},
-                    "test_group": "hello.world,sensor.happy",
-                    "empty_group": {"name": "Empty Group", "entities": None},
-                }
-            },
-        )
 
-        group.Group.create_group(
-            self.hass, "all tests", ["test.one", "test.two"], user_defined=False
-        )
+async def test_reloading_groups(hass):
+    """Test reloading the group config."""
+    assert await async_setup_component(
+        hass,
+        "group",
+        {
+            "group": {
+                "second_group": {"entities": "light.Bowl", "icon": "mdi:work"},
+                "test_group": "hello.world,sensor.happy",
+                "empty_group": {"name": "Empty Group", "entities": None},
+            }
+        },
+    )
+    await hass.async_block_till_done()
 
-        assert sorted(self.hass.states.entity_ids()) == [
-            "group.all_tests",
-            "group.empty_group",
-            "group.second_group",
-            "group.test_group",
-        ]
-        assert self.hass.bus.listeners["state_changed"] == 1
-        assert len(self.hass.data[TRACK_STATE_CHANGE_CALLBACKS]["hello.world"]) == 1
-        assert len(self.hass.data[TRACK_STATE_CHANGE_CALLBACKS]["light.bowl"]) == 1
-        assert len(self.hass.data[TRACK_STATE_CHANGE_CALLBACKS]["test.one"]) == 1
-        assert len(self.hass.data[TRACK_STATE_CHANGE_CALLBACKS]["test.two"]) == 1
+    await group.Group.async_create_group(
+        hass, "all tests", ["test.one", "test.two"], user_defined=False
+    )
 
-        with patch(
-            "homeassistant.config.load_yaml_config_file",
-            return_value={
-                "group": {"hello": {"entities": "light.Bowl", "icon": "mdi:work"}}
-            },
-        ):
-            common.reload(self.hass)
-            self.hass.block_till_done()
+    await hass.async_block_till_done()
 
-        assert sorted(self.hass.states.entity_ids()) == [
-            "group.all_tests",
-            "group.hello",
-        ]
-        assert self.hass.bus.listeners["state_changed"] == 1
-        assert len(self.hass.data[TRACK_STATE_CHANGE_CALLBACKS]["light.bowl"]) == 1
-        assert len(self.hass.data[TRACK_STATE_CHANGE_CALLBACKS]["test.one"]) == 1
-        assert len(self.hass.data[TRACK_STATE_CHANGE_CALLBACKS]["test.two"]) == 1
+    assert sorted(hass.states.async_entity_ids()) == [
+        "group.all_tests",
+        "group.empty_group",
+        "group.second_group",
+        "group.test_group",
+    ]
+    assert hass.bus.async_listeners()["state_changed"] == 1
+    assert len(hass.data[TRACK_STATE_CHANGE_CALLBACKS]["hello.world"]) == 1
+    assert len(hass.data[TRACK_STATE_CHANGE_CALLBACKS]["light.bowl"]) == 1
+    assert len(hass.data[TRACK_STATE_CHANGE_CALLBACKS]["test.one"]) == 1
+    assert len(hass.data[TRACK_STATE_CHANGE_CALLBACKS]["test.two"]) == 1
 
-    def test_modify_group(self):
-        """Test modifying a group."""
-        group_conf = OrderedDict()
-        group_conf["modify_group"] = {"name": "friendly_name", "icon": "mdi:work"}
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        return_value={
+            "group": {"hello": {"entities": "light.Bowl", "icon": "mdi:work"}}
+        },
+    ):
+        await hass.services.async_call(group.DOMAIN, SERVICE_RELOAD)
+        await hass.async_block_till_done()
 
-        assert setup_component(self.hass, "group", {"group": group_conf})
+    assert sorted(hass.states.async_entity_ids()) == [
+        "group.all_tests",
+        "group.hello",
+    ]
+    assert hass.bus.async_listeners()["state_changed"] == 1
+    assert len(hass.data[TRACK_STATE_CHANGE_CALLBACKS]["light.bowl"]) == 1
+    assert len(hass.data[TRACK_STATE_CHANGE_CALLBACKS]["test.one"]) == 1
+    assert len(hass.data[TRACK_STATE_CHANGE_CALLBACKS]["test.two"]) == 1
 
-        # The old way would create a new group modify_group1 because
-        # internally it didn't know anything about those created in the config
-        common.set_group(self.hass, "modify_group", icon="mdi:play")
-        self.hass.block_till_done()
 
-        group_state = self.hass.states.get(f"{group.DOMAIN}.modify_group")
+async def test_modify_group(hass):
+    """Test modifying a group."""
+    group_conf = OrderedDict()
+    group_conf["modify_group"] = {
+        "name": "friendly_name",
+        "icon": "mdi:work",
+        "entities": None,
+    }
 
-        assert self.hass.states.entity_ids() == ["group.modify_group"]
-        assert group_state.attributes.get(ATTR_ICON) == "mdi:play"
-        assert group_state.attributes.get(ATTR_FRIENDLY_NAME) == "friendly_name"
+    assert await async_setup_component(hass, "group", {"group": group_conf})
+    await hass.async_block_till_done()
+    assert hass.states.get(f"{group.DOMAIN}.modify_group")
+
+    # The old way would create a new group modify_group1 because
+    # internally it didn't know anything about those created in the config
+    common.async_set_group(hass, "modify_group", icon="mdi:play")
+    await hass.async_block_till_done()
+
+    group_state = hass.states.get(f"{group.DOMAIN}.modify_group")
+    assert group_state
+
+    assert hass.states.async_entity_ids() == ["group.modify_group"]
+    assert group_state.attributes.get(ATTR_ICON) == "mdi:play"
+    assert group_state.attributes.get(ATTR_FRIENDLY_NAME) == "friendly_name"
+
+
+async def test_setup(hass):
+    """Test setup method."""
+    hass.states.async_set("light.Bowl", STATE_ON)
+    hass.states.async_set("light.Ceiling", STATE_OFF)
+    test_group = await group.Group.async_create_group(
+        hass, "init_group", ["light.Bowl", "light.Ceiling"], False
+    )
+
+    group_conf = OrderedDict()
+    group_conf["second_group"] = {
+        "entities": f"light.Bowl, {test_group.entity_id}",
+        "icon": "mdi:work",
+    }
+    group_conf["test_group"] = "hello.world,sensor.happy"
+    group_conf["empty_group"] = {"name": "Empty Group", "entities": None}
+    assert await async_setup_component(hass, "light", {})
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(hass, "group", {"group": group_conf})
+    await hass.async_block_till_done()
+
+    group_state = hass.states.get(f"{group.DOMAIN}.second_group")
+    assert STATE_ON == group_state.state
+    assert {test_group.entity_id, "light.bowl"} == set(
+        group_state.attributes["entity_id"]
+    )
+    assert group_state.attributes.get(group.ATTR_AUTO) is None
+    assert "mdi:work" == group_state.attributes.get(ATTR_ICON)
+    assert 1 == group_state.attributes.get(group.ATTR_ORDER)
+
+    group_state = hass.states.get(f"{group.DOMAIN}.test_group")
+    assert STATE_UNKNOWN == group_state.state
+    assert {"sensor.happy", "hello.world"} == set(group_state.attributes["entity_id"])
+    assert group_state.attributes.get(group.ATTR_AUTO) is None
+    assert group_state.attributes.get(ATTR_ICON) is None
+    assert 2 == group_state.attributes.get(group.ATTR_ORDER)
 
 
 async def test_service_group_services(hass):
