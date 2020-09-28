@@ -72,6 +72,7 @@ from .const import (
     ATTR_MEDIA_DURATION,
     ATTR_MEDIA_ENQUEUE,
     ATTR_MEDIA_EPISODE,
+    ATTR_MEDIA_EXTRA,
     ATTR_MEDIA_PLAYLIST,
     ATTR_MEDIA_POSITION,
     ATTR_MEDIA_POSITION_UPDATED_AT,
@@ -140,6 +141,7 @@ MEDIA_PLAYER_PLAY_MEDIA_SCHEMA = {
     vol.Required(ATTR_MEDIA_CONTENT_TYPE): cv.string,
     vol.Required(ATTR_MEDIA_CONTENT_ID): cv.string,
     vol.Optional(ATTR_MEDIA_ENQUEUE): cv.boolean,
+    vol.Optional(ATTR_MEDIA_EXTRA, default={}): dict,
 }
 
 ATTR_TO_PROPERTY = [
