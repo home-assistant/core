@@ -2,10 +2,13 @@
 
 import logging
 
+from homeassistant.components.binary_sensor import BinarySensorEntity
+
 from .common import OmniLogicEntity, OmniLogicUpdateCoordinator
-from .const import COORDINATOR, DOMAIN, PUMP_TYPES
+from .const import COORDINATOR, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the sensor platform."""
@@ -51,6 +54,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     async_add_entities(entities)
 
+
 class OmnilogicSensor(OmniLogicEntity):
     """Defines an Omnilogic sensor entity."""
 
@@ -73,8 +77,6 @@ class OmnilogicSensor(OmniLogicEntity):
             icon=icon,
         )
 
-        backyard_id = item_id[:2]
-
         self._device_class = device_class
         self._state_key = state_key
 
@@ -83,14 +85,36 @@ class OmnilogicSensor(OmniLogicEntity):
         """Return the device class of the entity."""
         return self._device_class
 
-class OmniLogicAlarmSensor(OmnilogicSensor):
+
+class OmniLogicAlarmSensor(OmnilogicSensor, BinarySensorEntity):
     """Define an OmniLogic Alarm Sensor."""
 
     @property
     def is_on(self):
         """Return the state for the alarm sensor."""
+        alarms = len(self.coordinator.data[self._item_id][self._state_key]) > 0
 
-        return len(self.coordinator.data[self._item_id][self._state_key]) > 0
+        if alarms:
+            self._attrs["alarm"] = self.coordinator.data[self._item_id][
+                self._state_key
+            ][0]["Message"]
+            self._attrs["alarm_comment"] = self.coordinator.data[self._item_id][
+                self._state_key
+            ][0].get("Comment")
+        else:
+            self._attrs["alarm"] = "None"
+            self._attrs["alarm_comment"] = ""
+
+        return alarms
+
+
+class OmniLogicChlorinatorSensor(OmnilogicSensor, BinarySensorEntity):
+    """Define an on/off Chlorinator Sensor."""
+
+    @property
+    def is_on(self):
+        """Return the state of the chlorinator sensor."""
+        return self.coordinator.data[self._item_id][self._state_key] == "100"
 
 
 BINARY_SENSOR_TYPES = {
@@ -131,11 +155,27 @@ BINARY_SENSOR_TYPES = {
                 },
             ],
         },
+        {
+            "entity_classes": {"Timed-Percent": OmniLogicChlorinatorSensor},
+            "name": "Setting",
+            "kind": "chlorinator",
+            "device_class": None,
+            "icon": "mdi:gauge",
+            "guard_condition": [
+                {
+                    "Shared-Type": "BOW_SHARED_EQUIPMENT",
+                    "status": "0",
+                },
+                {
+                    "operatingMode": "1",
+                },
+            ],
+        },
     ],
     (6, "CSAD"): [
         {
             "entity_classes": {"Alarms": OmniLogicAlarmSensor},
-            "name": "Alarm",
+            "name": "CSAD Alarm",
             "kind": "alarm",
             "device_class": None,
             "icon": "mdi:alarm-light",
@@ -147,7 +187,7 @@ BINARY_SENSOR_TYPES = {
     (6, "Heater"): [
         {
             "entity_classes": {"Alarms": OmniLogicAlarmSensor},
-            "name": "Alarm",
+            "name": "Heater Alarm",
             "kind": "alarm",
             "device_class": None,
             "icon": "mdi:alarm-light",
@@ -173,7 +213,7 @@ BINARY_SENSOR_TYPES = {
             "icon": "mdi:alarm-light",
             "guard_condition": [],
         },
-    ]
+    ],
     (4, "Relays"): [
         {
             "entity_classes": {"Alarms": OmniLogicAlarmSensor},
@@ -183,5 +223,5 @@ BINARY_SENSOR_TYPES = {
             "icon": "mdi:alarm-light",
             "guard_condition": [],
         },
-    ]
+    ],
 }
