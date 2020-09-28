@@ -68,7 +68,9 @@ async def test_flow_already_configured(hass):
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRY)
     entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}, data=MOCK_ENTRY,
+        DOMAIN,
+        context={"source": "user"},
+        data=MOCK_ENTRY,
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -80,7 +82,9 @@ async def test_flow_invalid_auth(hass):
 
     with patch("aiosyncthing.system.System.config", side_effect=UnauthorizedError):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}, data=MOCK_ENTRY,
+            DOMAIN,
+            context={"source": "user"},
+            data=MOCK_ENTRY,
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -92,7 +96,9 @@ async def test_flow_cannot_connect(hass):
 
     with patch("aiosyncthing.system.System.config", side_effect=Exception):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}, data=MOCK_ENTRY,
+            DOMAIN,
+            context={"source": "user"},
+            data=MOCK_ENTRY,
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
