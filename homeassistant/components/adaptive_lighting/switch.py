@@ -9,12 +9,7 @@ from typing import Dict, Tuple
 
 import voluptuous as vol
 
-from homeassistant.components.homeassistant import (
-    DOMAIN as HA_DOMAIN,
-    SERVICE_UPDATE_ENTITY,
-)
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
     ATTR_BRIGHTNESS_PCT,
     ATTR_COLOR_TEMP,
     ATTR_RGB_COLOR,
@@ -602,7 +597,7 @@ class TurnOnOffListener:
             return False
 
         if id_on_to_off == id_turn_off and id_on_to_off is not None:
-            # State change 'off' → 'on' and 'light.turn_off(..., transition=...)' come
+            # State change 'on' → 'off' and 'light.turn_off(..., transition=...)' come
             # from the same event, so wait at least the 'turn_off' transition time.
             delay = transition
         else:
@@ -621,40 +616,22 @@ class TurnOnOffListener:
 
         delay -= delta_time  # delta_time has passed since the 'off' → 'on' event
         _LOGGER.debug("Waiting with adjusting '%s' for %s.", entity_id, delay)
-        current_state = self.hass.states.get(entity_id)
-        _LOGGER.debug("'%s' state before sleep is '%s'", entity_id, current_state)
+
         for _ in range(3):
             # It can happen that the actual transition time is longer than the
-            # specified time in the 'turn_off' service, so we check whether the
-            # brightness is still going down, if so, we wait a little longer.
+            # specified time in the 'turn_off' service.
             await asyncio.sleep(delay)
-            await self.hass.services.async_call(
-                HA_DOMAIN,
-                SERVICE_UPDATE_ENTITY,
-                {ATTR_ENTITY_ID: entity_id},
-                blocking=True,
-            )
-            old_state = current_state
-            current_state = self.hass.states.get(entity_id)
-            if current_state.state == "off":
+            if not is_on(self.hass, entity_id):
                 return True
-            old_brightness = old_state.attributes.get(ATTR_BRIGHTNESS, 0)
-            current_brightness = current_state.attributes.get(ATTR_BRIGHTNESS, 0)
-            brightness_going_down = old_brightness > current_brightness
-            _LOGGER.debug("'%s' state after sleep is '%s'", entity_id, current_state)
-            if not brightness_going_down:
-                break
             delay = TURNING_OFF_DELAY  # next time only wait this long
 
         if transition is not None:
-            # Always ignore when there's a transition and light is still on.
-            # TODO: I am doing this because it seems like HA cannot detect
-            # whether a light is transitioning into 'off'. Because in my
-            # tests `brightness_going_down == False` even when it is actually
-            # still going down... Maybe needs some discussion/input?
+            # Always ignore when there's a transition.
+            # Because it seems like HA cannot detect whether a light is
+            # transitioning into 'off'. Maybe needs some discussion/input?
             return True
 
-        return current_state.state == "off"
+        return False
 
     async def turn_on_off_event_listener(self, event):
         """Track 'light.turn_off(..., transition=...)' and 'light.turn_on' service calls."""
