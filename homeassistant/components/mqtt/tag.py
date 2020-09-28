@@ -5,7 +5,6 @@ import voluptuous as vol
 
 from homeassistant.components import mqtt
 from homeassistant.const import CONF_PLATFORM, CONF_VALUE_TEMPLATE
-from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -168,15 +167,12 @@ class MQTTTagScanner:
     async def subscribe_topics(self):
         """Subscribe to MQTT topics."""
 
-        @callback
-        def tag_scanned(msg):
+        async def tag_scanned(msg):
             tag_id = self._value_template(msg.payload, error_value="")
             if not tag_id.strip():  # No output from template, ignore
                 return
 
-            self.hass.async_create_task(
-                self.hass.components.tag.async_scan_tag(tag_id, self.device_id)
-            )
+            await self.hass.components.tag.async_scan_tag(tag_id, self.device_id)
 
         self._sub_state = await subscription.async_subscribe_topics(
             self.hass,
