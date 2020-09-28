@@ -129,6 +129,7 @@ DEVICE_DATA_SCHEMA = vol.Schema(
 
 BASE_SCHEMA = vol.Schema(
     {
+        vol.Optional(CONF_DEBUG): cv.boolean,
         vol.Optional(CONF_AUTOMATIC_ADD, default=False): cv.boolean,
         vol.Optional(CONF_DEVICES, default={}): {cv.string: _ensure_device},
     },
