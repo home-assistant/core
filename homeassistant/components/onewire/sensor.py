@@ -136,7 +136,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up the 1-Wire sensors."""
+    """Set up 1-Wire platform."""
     devs = get_entities(config_entry.data)
     async_add_entities(devs, True)
 
@@ -248,7 +248,7 @@ def get_entities(config):
 
 
 class OneWire(Entity):
-    """Implementation of an One wire Sensor."""
+    """Implementation of a 1-Wire Sensor."""
 
     def __init__(self, name, device_file, sensor_type):
         """Initialize the sensor."""
@@ -293,10 +293,10 @@ class OneWire(Entity):
 
 
 class OneWireProxy(OneWire):
-    """Implementation of a One wire Sensor through owserver."""
+    """Implementation of a 1-Wire sensor through owserver."""
 
     def __init__(self, name, device_file, sensor_type, owproxy):
-        """Initialize the onewire sensor via owserver."""
+        """Initialize the sensor."""
         super().__init__(name, device_file, sensor_type)
         self._owproxy = owproxy
 
@@ -322,7 +322,7 @@ class OneWireProxy(OneWire):
 
 
 class OneWireDirect(OneWire):
-    """Implementation of an One wire Sensor directly connected to RPI GPIO."""
+    """Implementation of a 1-Wire sensor directly connected to RPI GPIO."""
 
     def update(self):
         """Get the latest data from the device."""
@@ -340,7 +340,7 @@ class OneWireDirect(OneWire):
 
 
 class OneWireOWFS(OneWire):
-    """Implementation of an One wire Sensor through owfs."""
+    """Implementation of a 1-Wire sensor through owfs."""
 
     def update(self):
         """Get the latest data from the device."""

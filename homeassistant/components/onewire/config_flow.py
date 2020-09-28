@@ -24,17 +24,17 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class OneWireFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a OneWire config flow."""
+    """Handle 1-Wire config flow."""
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
-        """Initialize the OneWire config flow."""
+        """Initialize 1-Wire config flow."""
         self.onewire_config = {}
 
     async def async_step_user(self, user_input=None):
-        """Handle a OneWire config flow start.
+        """Handle 1-Wire config flow start.
 
         Let user manually input configuration.
         """
