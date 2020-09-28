@@ -78,6 +78,7 @@ ATTR_CURRENT_POSITION = "current_position"
 ATTR_CURRENT_TILT_POSITION = "current_tilt_position"
 ATTR_POSITION = "position"
 ATTR_TILT_POSITION = "tilt_position"
+ATTR_TRANSITION = "transition"
 
 
 @bind_hass
@@ -107,7 +108,8 @@ async def async_setup(hass, config):
         {
             vol.Required(ATTR_POSITION): vol.All(
                 vol.Coerce(int), vol.Range(min=0, max=100)
-            )
+            ),
+            vol.Optional(ATTR_TRANSITION): vol.All(vol.Coerce(float), vol.Range(min=0)),
         },
         "async_set_cover_position",
         [SUPPORT_SET_POSITION],
@@ -138,7 +140,8 @@ async def async_setup(hass, config):
         {
             vol.Required(ATTR_TILT_POSITION): vol.All(
                 vol.Coerce(int), vol.Range(min=0, max=100)
-            )
+            ),
+            vol.Optional(ATTR_TRANSITION): vol.All(vol.Coerce(float), vol.Range(min=0)),
         },
         "async_set_cover_tilt_position",
         [SUPPORT_SET_TILT_POSITION],
