@@ -1,6 +1,8 @@
 """Tests for Broadlink remotes."""
 from base64 import b64decode
 
+from pytest import raises
+
 from homeassistant.components.broadlink.const import DOMAIN, REMOTE_DOMAIN
 from homeassistant.components.remote import (
     SERVICE_SEND_COMMAND,
@@ -93,12 +95,13 @@ async def test_remote_turn_off_turn_on(hass):
         )
         assert hass.states.get(remote.entity_id).state == STATE_OFF
 
-        await hass.services.async_call(
-            REMOTE_DOMAIN,
-            SERVICE_SEND_COMMAND,
-            {"entity_id": remote.entity_id, "command": "b64:" + IR_PACKET},
-            blocking=True,
-        )
+        with raises(Exception):
+            await hass.services.async_call(
+                REMOTE_DOMAIN,
+                SERVICE_SEND_COMMAND,
+                {"entity_id": remote.entity_id, "command": "b64:" + IR_PACKET},
+                blocking=True,
+            )
         assert mock_api.send_data.call_count == 0
 
         await hass.services.async_call(
