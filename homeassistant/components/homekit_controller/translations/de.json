@@ -36,5 +36,25 @@
             }
         }
     },
+    "device_automation": {
+        "trigger_subtype": {
+            "button1": "Knopf 1",
+            "button10": "Knopf 10",
+            "button2": "Knopf 2",
+            "button3": "Knopf 3",
+            "button4": "Knopf 4",
+            "button5": "Knopf 5",
+            "button6": "Knopf 6",
+            "button7": "Knopf 7",
+            "button8": "Knopf 8",
+            "button9": "Knopf 9",
+            "doorbell": "T\u00fcrklingel"
+        },
+        "trigger_type": {
+            "double_press": "\"{subtype}\" zweimal gedr\u00fcckt",
+            "long_press": "\"{subtype}\" gedr\u00fcckt und gehalten",
+            "single_press": "\"{subtype}\" gedr\u00fcckt"
+        }
+    },
     "title": "HomeKit-Controller"
 }

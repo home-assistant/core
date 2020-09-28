@@ -39,5 +39,20 @@
             }
         }
     },
+    "device_automation": {
+        "trigger_subtype": {
+            "button1": "Przycisk 1",
+            "button10": "Przycisk 10",
+            "button2": "Przycisk 2",
+            "button3": "Przycisk 3",
+            "button4": "Przycisk 4",
+            "button5": "Przycisk 5",
+            "button6": "Przycisk 6",
+            "button7": "Przycisk 7",
+            "button8": "Przycisk 8",
+            "button9": "Przycisk 9",
+            "doorbell": "Dzwonek do drzwi"
+        }
+    },
     "title": "Akcesorium HomeKit"
 }

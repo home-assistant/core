@@ -6,7 +6,8 @@
             "authorize_url_timeout": "Tempo scaduto nel generare l'URL di autorizzazione.",
             "connection_error": "Impossibile connettersi al dispositivo Smappee.",
             "invalid_mdns": "Dispositivo non supportato per l'integrazione Smappee.",
-            "missing_configuration": "Il componente non \u00e8 configurato. Si prega di seguire la documentazione."
+            "missing_configuration": "Il componente non \u00e8 configurato. Si prega di seguire la documentazione.",
+            "no_url_available": "Nessun URL disponibile. Per informazioni su questo errore, [controlla la sezione della guida]({docs_url})"
         },
         "flow_title": "Smappee: {name}",
         "step": {

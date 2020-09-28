@@ -2,7 +2,7 @@
 from datetime import timedelta
 import logging
 
-from homeassistant.const import ATTR_BATTERY_LEVEL, PERCENTAGE, TEMP_CELSIUS
+from homeassistant.const import ATTR_BATTERY_LEVEL, LIGHT_LUX, PERCENTAGE, TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN as TAHOMA_DOMAIN, TahomaDevice
@@ -49,7 +49,7 @@ class TahomaSensor(TahomaDevice, Entity):
         if self.tahoma_device.type == "io:SomfyBasicContactIOSystemSensor":
             return None
         if self.tahoma_device.type == "io:LightIOSystemSensor":
-            return "lx"
+            return LIGHT_LUX
         if self.tahoma_device.type == "Humidity Sensor":
             return PERCENTAGE
         if self.tahoma_device.type == "rtds:RTDSContactSensor":

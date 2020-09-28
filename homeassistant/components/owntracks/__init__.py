@@ -9,7 +9,12 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import mqtt
-from homeassistant.const import CONF_WEBHOOK_ID
+from homeassistant.const import (
+    ATTR_GPS_ACCURACY,
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
+    CONF_WEBHOOK_ID,
+)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.setup import async_when_setup
@@ -292,9 +297,9 @@ class OwnTracksContext:
         device_tracker_state = hass.states.get(f"device_tracker.{dev_id}")
 
         if device_tracker_state is not None:
-            acc = device_tracker_state.attributes.get("gps_accuracy")
-            lat = device_tracker_state.attributes.get("latitude")
-            lon = device_tracker_state.attributes.get("longitude")
+            acc = device_tracker_state.attributes.get(ATTR_GPS_ACCURACY)
+            lat = device_tracker_state.attributes.get(ATTR_LATITUDE)
+            lon = device_tracker_state.attributes.get(ATTR_LONGITUDE)
 
             if lat is not None and lon is not None:
                 kwargs["gps"] = (lat, lon)

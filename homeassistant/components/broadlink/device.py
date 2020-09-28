@@ -9,7 +9,7 @@ from broadlink.exceptions import (
     AuthorizationError,
     BroadlinkException,
     ConnectionClosedError,
-    DeviceOfflineError,
+    NetworkTimeoutError,
 )
 
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_TIMEOUT, CONF_TYPE
@@ -82,7 +82,7 @@ class BroadlinkDevice:
             await self._async_handle_auth_error()
             return False
 
-        except (DeviceOfflineError, OSError) as err:
+        except (NetworkTimeoutError, OSError) as err:
             raise ConfigEntryNotReady from err
 
         except BroadlinkException as err:

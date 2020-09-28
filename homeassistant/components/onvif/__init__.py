@@ -17,6 +17,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
+    HTTP_UNAUTHORIZED,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -138,7 +139,7 @@ async def _get_snapshot_auth(hass, device, entry):
     try:
         response = await hass.async_add_executor_job(_get)
 
-        if response.status_code == 401:
+        if response.status_code == HTTP_UNAUTHORIZED:
             return HTTP_BASIC_AUTHENTICATION
 
         return HTTP_DIGEST_AUTHENTICATION

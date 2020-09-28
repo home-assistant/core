@@ -1785,3 +1785,42 @@ async def test_started_action(hass, caplog):
     await hass.async_block_till_done()
 
     assert log_message in caplog.text
+
+
+async def test_set_variable(hass, caplog):
+    """Test setting variables in scripts."""
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"variables": {"variable": "value"}},
+            {"service": "test.script", "data": {"value": "{{ variable }}"}},
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "test script", "test_domain")
+
+    mock_calls = async_mock_service(hass, "test", "script")
+
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert mock_calls[0].data["value"] == "value"
+
+
+async def test_set_redefines_variable(hass, caplog):
+    """Test setting variables based on their current value."""
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"variables": {"variable": "1"}},
+            {"service": "test.script", "data": {"value": "{{ variable }}"}},
+            {"variables": {"variable": "{{ variable | int + 1 }}"}},
+            {"service": "test.script", "data": {"value": "{{ variable }}"}},
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "test script", "test_domain")
+
+    mock_calls = async_mock_service(hass, "test", "script")
+
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert mock_calls[0].data["value"] == "1"
+    assert mock_calls[1].data["value"] == "2"

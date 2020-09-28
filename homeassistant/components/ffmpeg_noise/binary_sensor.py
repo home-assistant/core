@@ -4,7 +4,7 @@ import logging
 import haffmpeg.sensor as ffmpeg_sensor
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA
+from homeassistant.components.binary_sensor import DEVICE_CLASS_SOUND, PLATFORM_SCHEMA
 from homeassistant.components.ffmpeg import (
     CONF_EXTRA_ARGUMENTS,
     CONF_INITIAL_STATE,
@@ -84,4 +84,4 @@ class FFmpegNoise(FFmpegBinarySensor):
     @property
     def device_class(self):
         """Return the class of this sensor, from DEVICE_CLASSES."""
-        return "sound"
+        return DEVICE_CLASS_SOUND

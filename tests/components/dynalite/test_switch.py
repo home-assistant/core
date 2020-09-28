@@ -3,6 +3,8 @@
 from dynalite_devices_lib.switch import DynalitePresetSwitchDevice
 import pytest
 
+from homeassistant.const import ATTR_FRIENDLY_NAME
+
 from .common import (
     ATTR_METHOD,
     ATTR_SERVICE,
@@ -22,7 +24,7 @@ async def test_switch_setup(hass, mock_device):
     """Test a successful setup."""
     await create_entity_from_device(hass, mock_device)
     entity_state = hass.states.get("switch.name")
-    assert entity_state.attributes["friendly_name"] == mock_device.name
+    assert entity_state.attributes[ATTR_FRIENDLY_NAME] == mock_device.name
     await run_service_tests(
         hass,
         mock_device,

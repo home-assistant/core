@@ -104,7 +104,7 @@ async def async_setup_platform(
 ):
     """Set up MQTT alarm control panel through configuration.yaml."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
-    await _async_setup_entity(config, async_add_entities)
+    await _async_setup_entity(hass, config, async_add_entities)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -116,7 +116,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         try:
             config = PLATFORM_SCHEMA(discovery_payload)
             await _async_setup_entity(
-                config, async_add_entities, config_entry, discovery_data
+                hass, config, async_add_entities, config_entry, discovery_data
             )
         except Exception:
             clear_discovery_hash(hass, discovery_data[ATTR_DISCOVERY_HASH])
@@ -128,10 +128,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 async def _async_setup_entity(
-    config, async_add_entities, config_entry=None, discovery_data=None
+    hass, config, async_add_entities, config_entry=None, discovery_data=None
 ):
     """Set up the MQTT Alarm Control Panel platform."""
-    async_add_entities([MqttAlarm(config, config_entry, discovery_data)])
+    async_add_entities([MqttAlarm(hass, config, config_entry, discovery_data)])
 
 
 class MqttAlarm(
@@ -143,12 +143,15 @@ class MqttAlarm(
 ):
     """Representation of a MQTT alarm status."""
 
-    def __init__(self, config, config_entry, discovery_data):
+    def __init__(self, hass, config, config_entry, discovery_data):
         """Init the MQTT Alarm Control Panel."""
+        self.hass = hass
         self._state = None
-        self._config = config
         self._unique_id = config.get(CONF_UNIQUE_ID)
         self._sub_state = None
+
+        # Load config
+        self._setup_from_config(config)
 
         device_config = config.get(CONF_DEVICE)
 
@@ -165,26 +168,30 @@ class MqttAlarm(
     async def discovery_update(self, discovery_payload):
         """Handle updated discovery message."""
         config = PLATFORM_SCHEMA(discovery_payload)
-        self._config = config
+        self._setup_from_config(config)
         await self.attributes_discovery_update(config)
         await self.availability_discovery_update(config)
         await self.device_info_discovery_update(config)
         await self._subscribe_topics()
         self.async_write_ha_state()
 
-    async def _subscribe_topics(self):
-        """(Re)Subscribe to topics."""
+    def _setup_from_config(self, config):
+        self._config = config
         value_template = self._config.get(CONF_VALUE_TEMPLATE)
         if value_template is not None:
             value_template.hass = self.hass
         command_template = self._config[CONF_COMMAND_TEMPLATE]
         command_template.hass = self.hass
 
+    async def _subscribe_topics(self):
+        """(Re)Subscribe to topics."""
+
         @callback
         @log_messages(self.hass, self.entity_id)
         def message_received(msg):
             """Run when new MQTT message has been received."""
             payload = msg.payload
+            value_template = self._config.get(CONF_VALUE_TEMPLATE)
             if value_template is not None:
                 payload = value_template.async_render_with_possible_json_value(
                     msg.payload, self._state

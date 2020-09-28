@@ -9,7 +9,7 @@ import requests_mock
 
 import homeassistant.components.binary_sensor as binary_sensor
 import homeassistant.components.rest.binary_sensor as rest
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import CONTENT_TYPE_JSON, STATE_OFF, STATE_ON
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import template
 from homeassistant.setup import setup_component
@@ -143,7 +143,7 @@ class TestRestBinarySensorSetup(unittest.TestCase):
                         "authentication": "basic",
                         "username": "my username",
                         "password": "my password",
-                        "headers": {"Accept": "application/json"},
+                        "headers": {"Accept": CONTENT_TYPE_JSON},
                     }
                 },
             )
@@ -170,7 +170,7 @@ class TestRestBinarySensorSetup(unittest.TestCase):
                         "authentication": "basic",
                         "username": "my username",
                         "password": "my password",
-                        "headers": {"Accept": "application/json"},
+                        "headers": {"Accept": CONTENT_TYPE_JSON},
                     }
                 },
             )

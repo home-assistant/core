@@ -115,7 +115,7 @@ async def async_setup_platform(
 ):
     """Set up MQTT fan through configuration.yaml."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
-    await _async_setup_entity(config, async_add_entities)
+    await _async_setup_entity(hass, config, async_add_entities)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -127,7 +127,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         try:
             config = PLATFORM_SCHEMA(discovery_payload)
             await _async_setup_entity(
-                config, async_add_entities, config_entry, discovery_data
+                hass, config, async_add_entities, config_entry, discovery_data
             )
         except Exception:
             clear_discovery_hash(hass, discovery_data[ATTR_DISCOVERY_HASH])
@@ -139,10 +139,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 async def _async_setup_entity(
-    config, async_add_entities, config_entry=None, discovery_data=None
+    hass, config, async_add_entities, config_entry=None, discovery_data=None
 ):
     """Set up the MQTT fan."""
-    async_add_entities([MqttFan(config, config_entry, discovery_data)])
+    async_add_entities([MqttFan(hass, config, config_entry, discovery_data)])
 
 
 class MqttFan(
@@ -154,8 +154,9 @@ class MqttFan(
 ):
     """A MQTT fan component."""
 
-    def __init__(self, config, config_entry, discovery_data):
+    def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the MQTT fan."""
+        self.hass = hass
         self._unique_id = config.get(CONF_UNIQUE_ID)
         self._state = False
         self._speed = None
@@ -242,22 +243,22 @@ class MqttFan(
             self._topic[CONF_SPEED_COMMAND_TOPIC] is not None and SUPPORT_SET_SPEED
         )
 
+        for key, tpl in list(self._templates.items()):
+            if tpl is None:
+                self._templates[key] = lambda value: value
+            else:
+                tpl.hass = self.hass
+                self._templates[key] = tpl.async_render_with_possible_json_value
+
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
         topics = {}
-        templates = {}
-        for key, tpl in list(self._templates.items()):
-            if tpl is None:
-                templates[key] = lambda value: value
-            else:
-                tpl.hass = self.hass
-                templates[key] = tpl.async_render_with_possible_json_value
 
         @callback
         @log_messages(self.hass, self.entity_id)
         def state_received(msg):
             """Handle new received MQTT message."""
-            payload = templates[CONF_STATE](msg.payload)
+            payload = self._templates[CONF_STATE](msg.payload)
             if payload == self._payload["STATE_ON"]:
                 self._state = True
             elif payload == self._payload["STATE_OFF"]:
@@ -275,7 +276,7 @@ class MqttFan(
         @log_messages(self.hass, self.entity_id)
         def speed_received(msg):
             """Handle new received MQTT message for the speed."""
-            payload = templates[ATTR_SPEED](msg.payload)
+            payload = self._templates[ATTR_SPEED](msg.payload)
             if payload == self._payload["SPEED_LOW"]:
                 self._speed = SPEED_LOW
             elif payload == self._payload["SPEED_MEDIUM"]:
@@ -298,7 +299,7 @@ class MqttFan(
         @log_messages(self.hass, self.entity_id)
         def oscillation_received(msg):
             """Handle new received MQTT message for the oscillation."""
-            payload = templates[OSCILLATION](msg.payload)
+            payload = self._templates[OSCILLATION](msg.payload)
             if payload == self._payload["OSCILLATE_ON_PAYLOAD"]:
                 self._oscillation = True
             elif payload == self._payload["OSCILLATE_OFF_PAYLOAD"]:

@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u8a2d\u5099\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+            "already_configured": "\u8a2d\u5099\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "unsupported_firmware": "\u8a2d\u5099\u4f7f\u7528\u7684\u97cc\u9ad4\u4e0d\u652f\u63f4\u3002"
         },
         "error": {
             "auth_not_supported": "\u76ee\u524d\u4e0d\u652f\u63f4 Shelly \u8a2d\u5099\u6240\u9700\u8a8d\u8b49\u3002",

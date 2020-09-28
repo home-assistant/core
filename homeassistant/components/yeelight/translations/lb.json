@@ -1,0 +1,22 @@
+{
+    "config": {
+        "step": {
+            "pick_device": {
+                "data": {
+                    "device": "Apparat"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "model": "Modell (Optionell)",
+                    "use_music_mode": "Musek Modus aktiv\u00e9ieren"
+                }
+            }
+        }
+    },
+    "title": "Yeelight"
+}

@@ -21,7 +21,7 @@ from yarl import URL
 from homeassistant import config_entries
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.network import get_url
+from homeassistant.helpers.network import NoURLAvailableError, get_url
 
 from .aiohttp_client import async_get_clientsession
 
@@ -251,6 +251,13 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
                 url = await self.flow_impl.async_generate_authorize_url(self.flow_id)
         except asyncio.TimeoutError:
             return self.async_abort(reason="authorize_url_timeout")
+        except NoURLAvailableError:
+            return self.async_abort(
+                reason="no_url_available",
+                description_placeholders={
+                    "docs_url": "https://www.home-assistant.io/more-info/no-url-available"
+                },
+            )
 
         url = str(URL(url).update_query(self.extra_authorize_data))
 
