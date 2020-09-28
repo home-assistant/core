@@ -17,12 +17,13 @@ from homeassistant.util import Throttle
 
 from .const import (
     CONF_FFMPEG_ARGUMENTS,
-    DATA_CANARY,
+    DATA_COORDINATOR,
     DATA_UNDO_UPDATE_LISTENER,
     DEFAULT_FFMPEG_ARGUMENTS,
     DEFAULT_TIMEOUT,
     DOMAIN,
 )
+from .coordinator import CanaryDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -89,17 +90,23 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         hass.config_entries.async_update_entry(entry, options=options)
 
     try:
-        canary_data = await hass.async_add_executor_job(
-            _get_canary_data_instance, entry
+        canary_api = await hass.async_add_executor_job(
+            _get_canary_api_instance, entry
         )
     except (ConnectTimeout, HTTPError) as error:
         _LOGGER.error("Unable to connect to Canary service: %s", str(error))
         raise ConfigEntryNotReady from error
 
+    coordinator = CanaryDataUpdateCoordinator(api=canary_api)
+    await coordinator.async_refresh()
+
+    if not coordinator.last_update_success:
+        raise ConfigEntryNotReady
+
     undo_listener = entry.add_update_listener(_async_update_listener)
 
     hass.data[DOMAIN][entry.entry_id] = {
-        DATA_CANARY: canary_data,
+        DATA_COORDINATOR: coordinator,
         DATA_UNDO_UPDATE_LISTENER: undo_listener,
     }
 
@@ -196,15 +203,12 @@ class CanaryData:
         return self._api.get_live_stream_session(device)
 
 
-def _get_canary_data_instance(entry: ConfigEntry) -> CanaryData:
-    """Initialize a new instance of CanaryData."""
+def _get_canary_api_instance(entry: ConfigEntry) -> CanaryData:
+    """Initialize a new instance of CanaryApi."""
     canary = Api(
         entry.data[CONF_USERNAME],
         entry.data[CONF_PASSWORD],
         entry.options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
     )
 
-    canary_data = CanaryData(canary)
-    canary_data.update()
-
-    return canary_data
+    return canary
