@@ -61,6 +61,17 @@ _RESERVED_NAMES = {"contextfunction", "evalcontextfunction", "environmentfunctio
 
 _GROUP_DOMAIN_PREFIX = "group."
 
+_COLLECTABLE_STATE_ATTRIBUTES = {
+    "state",
+    "attributes",
+    "last_changed",
+    "last_updated",
+    "context",
+    "domain",
+    "object_id",
+    "name",
+}
+
 
 @bind_hass
 def attach(hass: HomeAssistantType, obj: Any) -> None:
@@ -582,16 +593,7 @@ class TemplateState(State):
     # to call is_safe_attribute
     def __getitem__(self, item):
         """Return a property as an attribute for jinja."""
-        if item in (
-            "state",
-            "attributes",
-            "last_changed",
-            "last_updated",
-            "context",
-            "domain",
-            "object_id",
-            "name",
-        ):
+        if item in _COLLECTABLE_STATE_ATTRIBUTES:
             # _collect_state inlined here for performance
             if _RENDER_INFO in self._hass.data:
                 self._hass.data[_RENDER_INFO].entities.add(self._state.entity_id)
