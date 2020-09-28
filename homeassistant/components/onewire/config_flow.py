@@ -1,4 +1,5 @@
 """Config flow to configure OneWire component."""
+import logging
 import os
 
 from pyownet import protocol
@@ -12,13 +13,14 @@ from .const import (  # pylint: disable=unused-import
     CONF_TYPE_OWFS,
     CONF_TYPE_OWSERVER,
     CONF_TYPE_SYSBUS,
-    DEFAULT_HOST,
     DEFAULT_OWFS_MOUNT_DIR,
-    DEFAULT_PORT,
+    DEFAULT_OWSERVER_HOST,
+    DEFAULT_OWSERVER_PORT,
     DEFAULT_SYSBUS_MOUNT_DIR,
     DOMAIN,
-    LOGGER,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class OneWireFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -66,7 +68,7 @@ class OneWireFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 owproxy.dir()
                 return self.async_create_entry(title=owhost, data=self.onewire_config)
             except (protocol.Error, protocol.ConnError) as exc:
-                LOGGER.error(
+                _LOGGER.error(
                     "Cannot connect to owserver on %s:%d, got: %s", owhost, owport, exc
                 )
                 errors["base"] = "connection_error"
@@ -75,8 +77,8 @@ class OneWireFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="owserver",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_HOST, default=DEFAULT_HOST): str,
-                    vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+                    vol.Required(CONF_HOST, default=DEFAULT_OWSERVER_HOST): str,
+                    vol.Required(CONF_PORT, default=DEFAULT_OWSERVER_PORT): int,
                 }
             ),
             errors=errors,
