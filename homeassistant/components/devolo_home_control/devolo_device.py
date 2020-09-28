@@ -78,11 +78,17 @@ class DevoloDeviceEntity(Entity):
         return self._available
 
     def _sync(self, message):
-        """Update the binary sensor state."""
+        """Update the state."""
         if message[0] == self._unique_id:
             self._value = message[1]
-        elif message[0].startswith("hdm"):
+        else:
+            self._generic_message(message)
+        self.schedule_update_ha_state()
+
+    def _generic_message(self, message):
+        """Handle unexpected messages."""
+        if message[0].startswith("hdm"):
+            # Maybe the API wants to tell us, that the device went on- or offline.
             self._available = self._device_instance.is_online()
         else:
             _LOGGER.debug("No valid message received: %s", message)
-        self.schedule_update_ha_state()
