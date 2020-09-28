@@ -43,7 +43,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, user_input=None):
         """Handle configuration by yaml file."""
         await self.async_set_unique_id(user_input["name"])
-        self._abort_if_unique_id_configured()
+        for entry in self._async_current_entries():
+            if entry.unique_id == self.unique_id:
+                self.hass.config_entries.async_update_entry(
+                    entry, data=dict(entry.data, **user_input)
+                )
+                return
         return self.async_create_entry(title=user_input["name"], data=user_input)
 
     @staticmethod
