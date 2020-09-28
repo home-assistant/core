@@ -243,7 +243,10 @@ class BroadlinkRemote(RemoteEntity, RestoreEntity):
         delay = kwargs[ATTR_DELAY_SECS]
 
         if not self._state:
-            raise Exception(f"Remote {self.entity_id} is turned off or unavailable")
+            _LOGGER.warning(
+                "Unable to send to command to turned of entity %s", self.entity_id
+            )
+            return
 
         should_delay = False
 
@@ -285,6 +288,9 @@ class BroadlinkRemote(RemoteEntity, RestoreEntity):
         toggle = kwargs[ATTR_ALTERNATIVE]
 
         if not self._state:
+            _LOGGER.warning(
+                "Unable to learn command from turned of entity %s", self.entity_id
+            )
             return
 
         should_store = False
