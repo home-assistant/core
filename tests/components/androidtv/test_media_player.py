@@ -1064,6 +1064,21 @@ async def test_get_image(hass, hass_ws_client):
     assert msg["result"]["content_type"] == "image/png"
     assert msg["result"]["content"] == base64.b64encode(b"image").decode("utf-8")
 
+    with patch(
+        "androidtv.basetv.basetv_async.BaseTVAsync.adb_screencap",
+        side_effect=RuntimeError,
+    ):
+        await client.send_json(
+            {"id": 6, "type": "media_player_thumbnail", "entity_id": entity_id}
+        )
+
+        msg = await client.receive_json()
+
+        # The device is unavailable, but getting the media image did not cause an exception
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == STATE_UNAVAILABLE
+
 
 async def _test_service(
     hass,
