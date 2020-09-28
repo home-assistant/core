@@ -214,7 +214,9 @@ class FolderSensor(Entity):
 
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, f"{SERVER_AVAILABLE}-{self._name}", handle_server_available,
+                self.hass,
+                f"{SERVER_AVAILABLE}-{self._name}",
+                handle_server_available,
             )
         )
 

@@ -47,7 +47,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     name = data[CONF_NAME]
 
     client = aiosyncthing.Syncthing(
-        data[CONF_TOKEN], url=data[CONF_URL], verify_ssl=data[CONF_VERIFY_SSL],
+        data[CONF_TOKEN],
+        url=data[CONF_URL],
+        verify_ssl=data[CONF_VERIFY_SSL],
     )
 
     try:
@@ -152,7 +154,9 @@ class SyncthingClient:
                     else:  # A workaround, some events store folder id under `id` key
                         folder = event["data"]["id"]
                     async_dispatcher_send(
-                        self._hass, f"{signal_name}-{self._name}-{folder}", event,
+                        self._hass,
+                        f"{signal_name}-{self._name}-{folder}",
+                        event,
                     )
                 return
             except aiosyncthing.exceptions.SyncthingError:
