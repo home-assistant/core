@@ -26,7 +26,7 @@ Mastodon.py==1.5.1
 OPi.GPIO==0.4.0
 
 # homeassistant.components.plugwise
-Plugwise_Smile==1.4.0
+Plugwise_Smile==1.5.1
 
 # homeassistant.components.essent
 PyEssent==0.13
@@ -221,7 +221,7 @@ aiopvpc==2.0.2
 aiopylgtv==0.3.3
 
 # homeassistant.components.shelly
-aioshelly==0.3.2
+aioshelly==0.3.3
 
 # homeassistant.components.switcher_kis
 aioswitcher==1.2.1
@@ -233,7 +233,7 @@ aiounifi==23
 aioymaps==1.1.0
 
 # homeassistant.components.airly
-airly==0.0.2
+airly==1.0.0
 
 # homeassistant.components.aladdin_connect
 aladdin_connect==0.3
@@ -1265,7 +1265,7 @@ pycfdns==0.0.1
 pychannels==1.0.0
 
 # homeassistant.components.cast
-pychromecast==7.2.1
+pychromecast==7.5.0
 
 # homeassistant.components.cmus
 pycmus==0.1.1
