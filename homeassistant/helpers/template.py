@@ -582,7 +582,7 @@ class TemplateState(State):
     # to call is_safe_attribute
     def __getitem__(self, item):
         """Return a property as an attribute for jinja."""
-        if item in [
+        if item in (
             "state",
             "attributes",
             "last_changed",
@@ -591,7 +591,7 @@ class TemplateState(State):
             "domain",
             "object_id",
             "name",
-        ]:
+        ):
             # _collect_state inlined here for performance
             if _RENDER_INFO in self._hass.data:
                 self._hass.data[_RENDER_INFO].entities.add(self._state.entity_id)
