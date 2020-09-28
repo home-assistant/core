@@ -539,7 +539,7 @@ class HistoryPeriodView(HomeAssistantView):
 
         # Optionally reorder the result to respect the ordering given
         # by any entities explicitly included in the configuration.
-        if self.use_include_order:
+        if self.filters and self.use_include_order:
             sorted_result = []
             for order_entity in self.filters.included_entities:
                 for state_list in result:
@@ -566,7 +566,8 @@ def sqlalchemy_filter_from_include_exclude_conf(conf):
         filters.included_entities = include.get(CONF_ENTITIES, [])
         filters.included_domains = include.get(CONF_DOMAINS, [])
         filters.included_entity_globs = include.get(CONF_ENTITY_GLOBS, [])
-    return filters
+
+    return filters if filters.has_config else None
 
 
 class Filters:
@@ -605,6 +606,21 @@ class Filters:
 
         return query
 
+    @property
+    def has_config(self):
+        """Determine if there is any filter configuration."""
+        if (
+            self.excluded_entities
+            or self.excluded_domains
+            or self.excluded_entity_globs
+            or self.included_entities
+            or self.included_domains
+            or self.included_entity_globs
+        ):
+            return True
+
+        return False
+
     def bake(self, baked_query, entity_ids=None):
         """Update a baked query.
 
@@ -618,14 +634,7 @@ class Filters:
 
         baked_query += lambda q: q.filter(~States.domain.in_(IGNORE_DOMAINS))
 
-        if (
-            self.excluded_entities
-            or self.excluded_domains
-            or self.excluded_entity_globs
-            or self.included_entities
-            or self.included_domains
-            or self.included_entity_globs
-        ):
+        if self.has_config:
             baked_query += lambda q: q.filter(self.entity_filter())
 
     def entity_filter(self):

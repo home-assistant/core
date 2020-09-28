@@ -2223,6 +2223,36 @@ async def test_include_exclude_events_with_glob_filters(hass, hass_client):
     _assert_entry(entries[2], name="included", domain="light", entity_id=entity_id4)
 
 
+async def test_empty_config(hass, hass_client):
+    """Test we can handle an empty entity filter."""
+    entity_id = "sensor.blu"
+
+    config = logbook.CONFIG_SCHEMA(
+        {
+            ha.DOMAIN: {},
+            logbook.DOMAIN: {},
+        }
+    )
+    await hass.async_add_executor_job(init_recorder_component, hass)
+    await async_setup_component(hass, "logbook", config)
+    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    hass.states.async_set(entity_id, None)
+    hass.states.async_set(entity_id, 10)
+
+    await _async_commit_and_wait(hass)
+    client = await hass_client()
+    entries = await _async_fetch_logbook(client)
+
+    assert len(entries) == 2
+    _assert_entry(
+        entries[0], name="Home Assistant", message="started", domain=ha.DOMAIN
+    )
+    _assert_entry(entries[1], name="blu", domain="sensor", entity_id=entity_id)
+
+
 async def _async_fetch_logbook(client):
 
     # Today time 00:00:00
