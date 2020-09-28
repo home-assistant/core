@@ -146,22 +146,6 @@ class TestComponentsGroup(unittest.TestCase):
         group_state = self.hass.states.get(test_group.entity_id)
         assert STATE_ON == group_state.state
 
-    def test_is_on(self):
-        """Test is_on method."""
-        self.hass.states.set("light.Bowl", STATE_ON)
-        self.hass.states.set("light.Ceiling", STATE_OFF)
-        test_group = group.Group.create_group(
-            self.hass, "init_group", ["light.Bowl", "light.Ceiling"], False
-        )
-
-        assert group.is_on(self.hass, test_group.entity_id)
-        self.hass.states.set("light.Bowl", STATE_OFF)
-        self.hass.block_till_done()
-        assert not group.is_on(self.hass, test_group.entity_id)
-
-        # Try on non existing state
-        assert not group.is_on(self.hass, "non.existing")
-
     def test_expand_entity_ids(self):
         """Test expand_entity_ids method."""
         self.hass.states.set("light.Bowl", STATE_ON)
@@ -333,6 +317,30 @@ class TestComponentsGroup(unittest.TestCase):
         self.hass.states.set("device_tracker.Adam", "cool_state_not_home")
         self.hass.block_till_done()
         assert STATE_NOT_HOME == self.hass.states.get(f"{group.DOMAIN}.peeps").state
+
+
+async def test_is_on(hass):
+    """Test is_on method."""
+    hass.states.async_set("light.Bowl", STATE_ON)
+    hass.states.async_set("light.Ceiling", STATE_OFF)
+
+    assert group.is_on(hass, "group.none") is False
+    assert await async_setup_component(hass, "light", {})
+    assert await async_setup_component(hass, "group", {})
+    await hass.async_block_till_done()
+
+    test_group = await group.Group.async_create_group(
+        hass, "init_group", ["light.Bowl", "light.Ceiling"], False
+    )
+    await hass.async_block_till_done()
+
+    assert group.is_on(hass, test_group.entity_id) is True
+    hass.states.async_set("light.Bowl", STATE_OFF)
+    await hass.async_block_till_done()
+    assert group.is_on(hass, test_group.entity_id) is False
+
+    # Try on non existing state
+    assert not group.is_on(hass, "non.existing")
 
 
 async def test_reloading_groups(hass):
