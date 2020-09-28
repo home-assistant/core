@@ -570,13 +570,18 @@ class Group(Entity):
             self.trackable = ()
             return
 
+        excluded_domains = (
+            self.hass.data[DATA_KEY][EXCLUDE_DOMAINS]
+            if DATA_KEY in self.hass.data
+            else set()
+        )
         tracking = []
         trackable = []
         for ent_id in entity_ids:
             ent_id_lower = ent_id.lower()
             domain = split_entity_id(ent_id_lower)[0]
             tracking.append(ent_id_lower)
-            if domain not in self.hass.data[DATA_KEY][EXCLUDE_DOMAINS]:
+            if domain not in excluded_domains:
                 trackable.append(ent_id_lower)
 
         self.trackable = tuple(trackable)
@@ -660,13 +665,19 @@ class Group(Entity):
         entity_id = state.entity_id
         domain = state.domain
 
-        domain_on_state = self.hass.data[DATA_KEY][ON_STATES_BY_DOMAIN].get(
-            domain, {STATE_ON}
-        )
+        if DATA_KEY in self.hass.data:
+            domain_on_state = self.hass.data[DATA_KEY][ON_STATES_BY_DOMAIN].get(
+                domain, {STATE_ON}
+            )
+            known_domain = domain in self.hass.data[DATA_KEY][ON_STATES_BY_DOMAIN]
+        else:
+            domain_on_state = {STATE_ON}
+            known_domain = False
+
         self._on_off[entity_id] = state.state in domain_on_state
         self._assumed[entity_id] = state.attributes.get(ATTR_ASSUMED_STATE)
 
-        if domain in self.hass.data[DATA_KEY][ON_STATES_BY_DOMAIN]:
+        if known_domain:
             self._on_states.update(domain_on_state)
 
     @callback
