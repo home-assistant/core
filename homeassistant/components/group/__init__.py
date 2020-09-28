@@ -189,6 +189,14 @@ async def async_setup(hass, config):
     if component is None:
         component = hass.data[DOMAIN] = EntityComponent(_LOGGER, DOMAIN, hass)
 
+    hass.data[DATA_KEY] = {
+        ON_OFF_MAPPING: {STATE_ON: STATE_OFF},
+        ON_STATES_BY_DOMAIN: {},
+        EXCLUDE_DOMAINS: set(),
+    }
+
+    await async_process_integration_platforms(hass, DOMAIN, _process_group_platform)
+
     await _async_process_config(hass, config, component)
 
     async def reload_service_handler(service):
@@ -308,14 +316,6 @@ async def async_setup(hass, config):
         groups_service_handler,
         schema=vol.Schema({vol.Required(ATTR_OBJECT_ID): cv.slug}),
     )
-
-    hass.data[DATA_KEY] = {
-        ON_OFF_MAPPING: {STATE_ON: STATE_OFF},
-        ON_STATES_BY_DOMAIN: {},
-        EXCLUDE_DOMAINS: set(),
-    }
-
-    await async_process_integration_platforms(hass, DOMAIN, _process_group_platform)
 
     return True
 
