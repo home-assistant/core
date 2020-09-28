@@ -1,4 +1,4 @@
-"""Adaptive Lighting Component for Home-Assistant."""
+"""Switch for the Adaptive Lighting integration."""
 
 import asyncio
 import bisect

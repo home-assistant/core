@@ -1,4 +1,4 @@
-"""Config flow for Coronavirus integration."""
+"""Config flow for Adaptive Lighting integration."""
 import logging
 
 import voluptuous as vol

@@ -1,11 +1,11 @@
-"""Adaptive Lighting Component in Home-Assistant.
+"""Adaptive Lighting integration in Home-Assistant.
 
-This component calculates color temperature and brightness to synchronize
+This integration calculates color temperature and brightness to synchronize
 your color-changing lights with the perceived color temperature of the sky
 throughout the day. This gives your environment a more natural feel, with
 cooler whites during the midday and warmer tints near twilight and dawn.
 
-Additionally, the component sets your lights to a nice warm white at 1% in
+Additionally, the integration sets your lights to a nice warm white at 1% in
 "Sleep mode", which is far brighter than starlight but won't reset your
 circadian rhythm or break down too much rhodopsin in your eyes.
 
@@ -20,8 +20,8 @@ Resources:
 
 ## Notes
 * Only your location is taken into account to calculate the the sun's position.
-* Weather and altitude are not considered.
-* The component does not calculate a true "Blue Hour" -- it just sets the
+* Weather is not considered.
+* The integration does not calculate a true "Blue Hour" -- it just sets the
   lights to 2700K (warm white) until your hub goes into "Sleep mode".
 """
 import asyncio

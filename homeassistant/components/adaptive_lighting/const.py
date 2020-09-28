@@ -1,4 +1,4 @@
-"""Constants for the Adaptive Lighting Component in Home-Assistant."""
+"""Constants for the Adaptive Lighting integration."""
 import voluptuous as vol
 
 from homeassistant.components.light import VALID_TRANSITION
