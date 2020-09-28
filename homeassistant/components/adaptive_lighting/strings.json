@@ -22,7 +22,7 @@
         "data": {
           "lights": "lights",
           "disable_brightness_adjust": "disable_brightness_adjust",
-          "disable_color_adjust": "disable_color_adjust",
+          "disable_color_temp_adjust": "disable_color_temp_adjust",
           "disable_entity": "disable_entity",
           "disable_state": "disable_state",
           "initial_transition": "initial_transition, the transition of the lights when turning them on or when 'disable_state' or 'sleep_state' change",

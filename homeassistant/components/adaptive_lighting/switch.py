@@ -60,7 +60,7 @@ from .const import (
     ATTR_TURN_ON_OFF_LISTENER,
     CONF_COLORS_ONLY,
     CONF_DISABLE_BRIGHTNESS_ADJUST,
-    CONF_DISABLE_COLOR_ADJUST,
+    CONF_DISABLE_COLOR_TEMP_ADJUST,
     CONF_DISABLE_ENTITY,
     CONF_DISABLE_STATE,
     CONF_INITIAL_TRANSITION,
@@ -182,7 +182,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         self._name = data[CONF_NAME]
         self._lights = data[CONF_LIGHTS]
         self._disable_brightness_adjust = data[CONF_DISABLE_BRIGHTNESS_ADJUST]
-        self._disable_color_adjust = data[CONF_DISABLE_COLOR_ADJUST]
+        self._disable_color_temp_adjust = data[CONF_DISABLE_COLOR_TEMP_ADJUST]
         self._disable_entity = data[CONF_DISABLE_ENTITY]
         self._disable_state = data[CONF_DISABLE_STATE]
         self._initial_transition = data[CONF_INITIAL_TRANSITION]
@@ -469,10 +469,13 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         ):
             service_data[ATTR_BRIGHTNESS_PCT] = self._brightness
 
-        if "color" in features and not self._disable_color_adjust:
+        if "color_temp" in features and not self._disable_color_temp_adjust:
+            attributes = self.hass.states.get(light).attributes
+            min_mireds, max_mireds = attributes["min_mireds"], attributes["max_mireds"]
+            color_temp_mired = max(min(self._color_temp_mired, max_mireds), min_mireds)
+            service_data[ATTR_COLOR_TEMP] = color_temp_mired
+        elif "color" in features:
             service_data[ATTR_RGB_COLOR] = self._rgb_color
-        elif "color_temp" in features:
-            service_data[ATTR_COLOR_TEMP] = self._color_temp_mired
 
         _LOGGER.debug(
             "%s: Scheduling 'light.turn_on' with the following 'service_data': %s",
