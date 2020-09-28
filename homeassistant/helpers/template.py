@@ -1,4 +1,5 @@
 """Template helper methods for rendering strings with Home Assistant data."""
+import asyncio
 import base64
 import collections.abc
 from datetime import datetime, timedelta
@@ -36,6 +37,7 @@ from homeassistant.helpers.typing import HomeAssistantType, TemplateVarsType
 from homeassistant.loader import bind_hass
 from homeassistant.util import convert, dt as dt_util, location as loc_util
 from homeassistant.util.async_ import run_callback_threadsafe
+from homeassistant.util.thread import ThreadWithException
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs, no-warn-return-any
@@ -308,6 +310,54 @@ class Template:
             return compiled.render(kwargs).strip()
         except jinja2.TemplateError as err:
             raise TemplateError(err) from err
+
+    async def async_render_will_timeout(
+        self, timeout: float, variables: TemplateVarsType = None, **kwargs: Any
+    ) -> bool:
+        """Check to see if rendering a template will timeout during render.
+
+        This is intended to check for expensive templates
+        that will make the system unstable.  The template
+        is rendered in the executor to ensure it does not
+        tie up the event loop.
+
+        This function is not a security control and is only
+        intended to be used as a safety check when testing
+        templates.
+
+        This method must be run in the event loop.
+        """
+        assert self.hass
+
+        if self.is_static:
+            return False
+
+        compiled = self._compiled or self._ensure_compiled()
+
+        if variables is not None:
+            kwargs.update(variables)
+
+        finish_event = asyncio.Event()
+
+        def _render_template():
+            try:
+                compiled.render(kwargs)
+            except TimeoutError:
+                pass
+            finally:
+                run_callback_threadsafe(self.hass.loop, finish_event.set)
+
+        try:
+            template_render_thread = ThreadWithException(target=_render_template)
+            template_render_thread.start()
+            await asyncio.wait_for(finish_event.wait(), timeout=timeout)
+        except asyncio.TimeoutError:
+            template_render_thread.raise_exc(TimeoutError)
+            return True
+        finally:
+            template_render_thread.join()
+
+        return False
 
     @callback
     def async_render_to_info(

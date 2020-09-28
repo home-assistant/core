@@ -2455,3 +2455,31 @@ async def test_lifecycle(hass):
     assert info.filter("sensor.sensor1") is False
     assert info.filter_lifecycle("sensor.new") is True
     assert info.filter_lifecycle("sensor.removed") is True
+
+
+async def test_template_timeout(hass):
+    """Test to see if a template will timeout."""
+    for i in range(2):
+        hass.states.async_set(f"sensor.sensor{i}", "on")
+
+    tmp = template.Template("{{ states | count }}", hass)
+    assert await tmp.async_render_will_timeout(3) is False
+
+    tmp2 = template.Template("{{ error_invalid + 1 }}", hass)
+    assert await tmp2.async_render_will_timeout(3) is False
+
+    tmp3 = template.Template("static", hass)
+    assert await tmp3.async_render_will_timeout(3) is False
+
+    tmp4 = template.Template("{{ var1 }}", hass)
+    assert await tmp4.async_render_will_timeout(3, {"var1": "ok"}) is False
+
+    slow_template_str = """
+{% for var in range(1000) -%}
+  {% for var in range(1000) -%}
+    {{ var }}
+  {%- endfor %}
+{%- endfor %}
+"""
+    tmp5 = template.Template(slow_template_str, hass)
+    assert await tmp5.async_render_will_timeout(0.000001) is True
