@@ -13,9 +13,10 @@
             "user": {
                 "data": {
                     "host": "Indirizzo IP Smile",
-                    "password": "ID Smile"
+                    "password": "ID Smile",
+                    "port": "Numero porta Smile"
                 },
-                "description": "Dettagli",
+                "description": "Si prega di inserire:",
                 "title": "Connettersi al dispositivo"
             }
         }
