@@ -1,9 +1,8 @@
 """Tests for the Atag config flow."""
-from pyatag import errors
-
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.atag import DOMAIN
 from homeassistant.core import HomeAssistant
+from pyatag import errors
 
 from tests.async_mock import PropertyMock, patch
 from tests.components.atag import (
@@ -78,7 +77,7 @@ async def test_full_flow_implementation(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test registering an integration and finishing flow works."""
-    aioclient_mock.get(
+    aioclient_mock.post(
         "http://127.0.0.1:10000/retrieve",
         json=RECEIVE_REPLY,
     )
