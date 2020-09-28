@@ -936,7 +936,7 @@ async def test_logbook_view(hass, hass_client):
     """Test the logbook view."""
     await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(hass, "logbook", {})
-    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
     client = await hass_client()
     response = await client.get(f"/api/logbook/{dt_util.utcnow().isoformat()}")
     assert response.status == 200
@@ -946,7 +946,7 @@ async def test_logbook_view_period_entity(hass, hass_client):
     """Test the logbook view with period and entity."""
     await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(hass, "logbook", {})
-    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
 
     entity_id_test = "switch.test"
     hass.states.async_set(entity_id_test, STATE_OFF)
@@ -954,9 +954,9 @@ async def test_logbook_view_period_entity(hass, hass_client):
     entity_id_second = "switch.second"
     hass.states.async_set(entity_id_second, STATE_OFF)
     hass.states.async_set(entity_id_second, STATE_ON)
-    await hass.async_add_job(trigger_db_commit, hass)
+    await hass.async_add_executor_job(trigger_db_commit, hass)
     await hass.async_block_till_done()
-    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
 
     client = await hass_client()
 
@@ -1052,7 +1052,7 @@ async def test_logbook_describe_event(hass, hass_client):
     ):
         hass.bus.async_fire("some_event")
         await hass.async_block_till_done()
-        await hass.async_add_job(trigger_db_commit, hass)
+        await hass.async_add_executor_job(trigger_db_commit, hass)
         await hass.async_block_till_done()
         await hass.async_add_executor_job(
             hass.data[recorder.DATA_INSTANCE].block_till_done
@@ -1122,7 +1122,7 @@ async def test_exclude_described_event(hass, hass_client):
             "some_event", {logbook.ATTR_NAME: name, logbook.ATTR_ENTITY_ID: entity_id3}
         )
         await hass.async_block_till_done()
-        await hass.async_add_job(trigger_db_commit, hass)
+        await hass.async_add_executor_job(trigger_db_commit, hass)
         await hass.async_block_till_done()
         await hass.async_add_executor_job(
             hass.data[recorder.DATA_INSTANCE].block_till_done
@@ -1143,7 +1143,7 @@ async def test_logbook_view_end_time_entity(hass, hass_client):
     """Test the logbook view with end_time and entity."""
     await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(hass, "logbook", {})
-    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
 
     entity_id_test = "switch.test"
     hass.states.async_set(entity_id_test, STATE_OFF)
@@ -1151,9 +1151,9 @@ async def test_logbook_view_end_time_entity(hass, hass_client):
     entity_id_second = "switch.second"
     hass.states.async_set(entity_id_second, STATE_OFF)
     hass.states.async_set(entity_id_second, STATE_ON)
-    await hass.async_add_job(trigger_db_commit, hass)
+    await hass.async_add_executor_job(trigger_db_commit, hass)
     await hass.async_block_till_done()
-    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
 
     client = await hass_client()
 
@@ -1204,7 +1204,7 @@ async def test_logbook_entity_filter_with_automations(hass, hass_client):
     await async_setup_component(hass, "automation", {})
     await async_setup_component(hass, "script", {})
 
-    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
 
     entity_id_test = "alarm_control_panel.area_001"
     hass.states.async_set(entity_id_test, STATE_OFF)
@@ -1223,9 +1223,9 @@ async def test_logbook_entity_filter_with_automations(hass, hass_client):
     )
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
 
-    await hass.async_add_job(trigger_db_commit, hass)
+    await hass.async_add_executor_job(trigger_db_commit, hass)
     await hass.async_block_till_done()
-    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
 
     client = await hass_client()
 
@@ -1276,7 +1276,7 @@ async def test_filter_continuous_sensor_values(hass, hass_client):
     """Test remove continuous sensor events from logbook."""
     await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(hass, "logbook", {})
-    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
 
     entity_id_test = "switch.test"
     hass.states.async_set(entity_id_test, STATE_OFF)
@@ -1288,9 +1288,9 @@ async def test_filter_continuous_sensor_values(hass, hass_client):
     hass.states.async_set(entity_id_third, STATE_OFF, {"unit_of_measurement": "foo"})
     hass.states.async_set(entity_id_third, STATE_ON, {"unit_of_measurement": "foo"})
 
-    await hass.async_add_job(trigger_db_commit, hass)
+    await hass.async_add_executor_job(trigger_db_commit, hass)
     await hass.async_block_till_done()
-    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
 
     client = await hass_client()
 
@@ -1312,7 +1312,7 @@ async def test_exclude_new_entities(hass, hass_client):
     """Test if events are excluded on first update."""
     await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(hass, "logbook", {})
-    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
 
     entity_id = "climate.bla"
     entity_id2 = "climate.blu"
@@ -1322,9 +1322,9 @@ async def test_exclude_new_entities(hass, hass_client):
     hass.states.async_set(entity_id2, STATE_OFF)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
 
-    await hass.async_add_job(trigger_db_commit, hass)
+    await hass.async_add_executor_job(trigger_db_commit, hass)
     await hass.async_block_till_done()
-    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
 
     client = await hass_client()
 
@@ -1347,7 +1347,7 @@ async def test_exclude_removed_entities(hass, hass_client):
     """Test if events are excluded on last update."""
     await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(hass, "logbook", {})
-    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
 
     entity_id = "climate.bla"
     entity_id2 = "climate.blu"
@@ -1363,9 +1363,9 @@ async def test_exclude_removed_entities(hass, hass_client):
     hass.states.async_remove(entity_id)
     hass.states.async_remove(entity_id2)
 
-    await hass.async_add_job(trigger_db_commit, hass)
+    await hass.async_add_executor_job(trigger_db_commit, hass)
     await hass.async_block_till_done()
-    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
 
     client = await hass_client()
 
@@ -1389,7 +1389,7 @@ async def test_exclude_attribute_changes(hass, hass_client):
     """Test if events of attribute changes are filtered."""
     await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(hass, "logbook", {})
-    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
 
@@ -1402,9 +1402,9 @@ async def test_exclude_attribute_changes(hass, hass_client):
 
     await hass.async_block_till_done()
 
-    await hass.async_add_job(trigger_db_commit, hass)
+    await hass.async_add_executor_job(trigger_db_commit, hass)
     await hass.async_block_till_done()
-    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
 
     client = await hass_client()
 
@@ -1432,7 +1432,7 @@ async def test_logbook_entity_context_id(hass, hass_client):
     await async_setup_component(hass, "automation", {})
     await async_setup_component(hass, "script", {})
 
-    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
 
     context = ha.Context(
         id="ac5bd62de45711eaaeb351041eec8dd9",
@@ -1472,7 +1472,7 @@ async def test_logbook_entity_context_id(hass, hass_client):
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
 
-    await hass.async_add_job(
+    await hass.async_add_executor_job(
         logbook.log_entry,
         hass,
         "mock_name",
@@ -1483,7 +1483,7 @@ async def test_logbook_entity_context_id(hass, hass_client):
     )
     await hass.async_block_till_done()
 
-    await hass.async_add_job(
+    await hass.async_add_executor_job(
         logbook.log_entry,
         hass,
         "mock_name",
@@ -1518,9 +1518,9 @@ async def test_logbook_entity_context_id(hass, hass_client):
     )
     await hass.async_block_till_done()
 
-    await hass.async_add_job(trigger_db_commit, hass)
+    await hass.async_add_executor_job(trigger_db_commit, hass)
     await hass.async_block_till_done()
-    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
 
     client = await hass_client()
 
@@ -1851,7 +1851,7 @@ async def test_icon_and_state(hass, hass_client):
     """Test to ensure state and custom icons are returned."""
     await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(hass, "logbook", {})
-    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
 
@@ -1900,7 +1900,7 @@ async def test_exclude_events_domain(hass, hass_client):
     )
     await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(hass, "logbook", config)
-    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -1940,7 +1940,7 @@ async def test_exclude_events_domain_glob(hass, hass_client):
     )
     await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(hass, "logbook", config)
-    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -1980,7 +1980,7 @@ async def test_include_events_entity(hass, hass_client):
     )
     await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(hass, "logbook", config)
-    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -2013,7 +2013,7 @@ async def test_exclude_events_entity(hass, hass_client):
     )
     await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(hass, "logbook", config)
-    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -2047,7 +2047,7 @@ async def test_include_events_domain(hass, hass_client):
     )
     await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(hass, "logbook", config)
-    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -2091,7 +2091,7 @@ async def test_include_events_domain_glob(hass, hass_client):
     )
     await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(hass, "logbook", config)
-    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -2143,7 +2143,7 @@ async def test_include_exclude_events(hass, hass_client):
     )
     await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(hass, "logbook", config)
-    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -2197,7 +2197,7 @@ async def test_include_exclude_events_with_glob_filters(hass, hass_client):
     )
     await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(hass, "logbook", config)
-    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
