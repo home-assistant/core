@@ -340,13 +340,13 @@ async def websocket_check_ais_media_source(hass, connection, msg):
     # 1. get ORIGIN_URL from AIS
     ws = AisCloudWS(hass)
     media_name = player_state.attributes.get("media_title")
-    ais_answer = ws.async_check_ais_media(
+    ais_answer = await ws.async_check_ais_media(
         source=media_source, name=media_name, current_url=curr_stream_url
     )
     if "error" in ais_answer:
         payload = {
             "error": True,
-            "info": ais_answer.error,
+            "info": "AIS Error: " + ais_answer["message"],
         }
         connection.send_result(msg["id"], payload)
         return
@@ -357,12 +357,17 @@ async def websocket_check_ais_media_source(hass, connection, msg):
         new_stream_url = ""
         pass
     else:
-        new_stream_url = ais_answer.new_stream_url
+        new_stream_url = ais_answer["new_stream_url"]
 
     # 3. check if the new STREAM_URL != current STREAM_URL
     if curr_stream_url != new_stream_url:
         # update stream and info to user
-        pass
+        payload = {
+            "info": "Udało się automatycznie ustalić, nowy adres URL: "
+            + new_stream_url
+            + ". Czy odtwarzanie z tego zasobu działa OK?"
+        }
+        connection.send_result(msg["id"], payload)
 
     # stream is the same - let user to send info to ais
     await asyncio.sleep(3)
