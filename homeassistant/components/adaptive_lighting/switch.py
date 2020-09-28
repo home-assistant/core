@@ -366,9 +366,9 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
     def _get_sun_events(self, date):
         def _replace_time(date, key):
             time = getattr(self, f"_{key}_time")
-            dt = datetime.datetime.combine(datetime.date.today(), time)
-            tz = self.hass.config.time_zone
-            utc_time = tz.localize(dt).astimezone(dt_util.UTC)
+            date_time = datetime.datetime.combine(datetime.date.today(), time)
+            time_zone = self.hass.config.time_zone
+            utc_time = time_zone.localize(date_time).astimezone(dt_util.UTC)
             return date.replace(
                 hour=utc_time.hour,
                 minute=utc_time.minute,
