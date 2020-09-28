@@ -127,8 +127,14 @@ def _get_significant_states(
     else:
         baked_query += lambda q: q.filter(States.last_updated > bindparam("start_time"))
 
-    if filters:
-        filters.bake(baked_query, entity_ids)
+    if entity_ids is not None:
+        baked_query += lambda q: q.filter(
+            States.entity_id.in_(bindparam("entity_ids", expanding=True))
+        )
+    else:
+        baked_query += lambda q: q.filter(~States.domain.in_(IGNORE_DOMAINS))
+        if filters:
+            filters.bake(baked_query)
 
     if end_time is not None:
         baked_query += lambda q: q.filter(States.last_updated < bindparam("end_time"))
@@ -296,10 +302,14 @@ def _get_states_with_session(
     query = query.join(
         most_recent_state_ids,
         States.state_id == most_recent_state_ids.c.max_state_id,
-    ).filter(~States.domain.in_(IGNORE_DOMAINS))
+    )
 
-    if filters:
-        query = filters.apply(query, entity_ids)
+    if entity_ids is not None:
+        query = query.filter(States.entity_id.in_(entity_ids))
+    else:
+        query = query.filter(~States.domain.in_(IGNORE_DOMAINS))
+        if filters:
+            query = filters.apply(query)
 
     return [LazyState(row) for row in execute(query)]
 
@@ -583,28 +593,12 @@ class Filters:
         self.included_domains = []
         self.included_entity_globs = []
 
-    def apply(self, query, entity_ids=None):
-        """Apply the include/exclude filter on domains and entities on query.
+    def apply(self, query):
+        """Apply the entity filter."""
+        if not self.has_config:
+            return query
 
-        Following rules apply:
-        * only the include section is configured - just query the specified
-          entities or domains.
-        * only the exclude section is configured - filter the specified
-          entities and domains from all the entities in the system.
-        * if include and exclude is defined - select the entities specified in
-          the include and filter out the ones from the exclude list.
-        """
-        # specific entities requested - do not in/exclude anything
-        if entity_ids is not None:
-            return query.filter(States.entity_id.in_(entity_ids))
-
-        query = query.filter(~States.domain.in_(IGNORE_DOMAINS))
-
-        entity_filter = self.entity_filter()
-        if entity_filter is not None:
-            query = query.filter(entity_filter)
-
-        return query
+        return query.filter(self.entity_filter())
 
     @property
     def has_config(self):
@@ -621,21 +615,15 @@ class Filters:
 
         return False
 
-    def bake(self, baked_query, entity_ids=None):
+    def bake(self, baked_query):
         """Update a baked query.
 
         Works the same as apply on a baked_query.
         """
-        if entity_ids is not None:
-            baked_query += lambda q: q.filter(
-                States.entity_id.in_(bindparam("entity_ids", expanding=True))
-            )
+        if not self.has_config:
             return
 
-        baked_query += lambda q: q.filter(~States.domain.in_(IGNORE_DOMAINS))
-
-        if self.has_config:
-            baked_query += lambda q: q.filter(self.entity_filter())
+        baked_query += lambda q: q.filter(self.entity_filter())
 
     def entity_filter(self):
         """Generate the entity filter query."""
