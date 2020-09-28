@@ -3,6 +3,7 @@
 import asyncio
 import bisect
 from copy import deepcopy
+import datetime
 from datetime import timedelta
 import logging
 from typing import Dict, Tuple
@@ -359,12 +360,15 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
 
     def _get_sun_events(self, date):
         def _replace_time(date, key):
-            other_date = getattr(self, f"_{key}_time")
+            time = getattr(self, f"_{key}_time")
+            dt = datetime.datetime.combine(datetime.date.today(), time)
+            tz = self.hass.config.time_zone
+            utc_time = tz.localize(dt).astimezone(dt_util.UTC)
             return date.replace(
-                hour=other_date.hour,
-                minute=other_date.minute,
-                second=other_date.second,
-                microsecond=other_date.microsecond,
+                hour=utc_time.hour,
+                minute=utc_time.minute,
+                second=utc_time.second,
+                microsecond=utc_time.microsecond,
             )
 
         location = get_astral_location(self.hass)
