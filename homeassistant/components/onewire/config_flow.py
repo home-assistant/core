@@ -1,4 +1,4 @@
-"""Config flow to configure OneWire component."""
+"""Config flow for 1-Wire component."""
 import logging
 import os
 

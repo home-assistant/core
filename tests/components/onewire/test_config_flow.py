@@ -1,4 +1,4 @@
-"""Test the OneWire config flow."""
+"""Tests for 1-Wire config flow."""
 from pyownet import protocol
 
 from homeassistant import config_entries, data_entry_flow

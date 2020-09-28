@@ -1,1 +1,1 @@
-"""Tests for the OneWire integration."""
+"""Tests for 1-Wire integration."""
