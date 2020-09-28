@@ -244,7 +244,7 @@ class BroadlinkRemote(RemoteEntity, RestoreEntity):
 
         if not self._state:
             _LOGGER.warning(
-                "Unable to send to command to turned of entity %s", self.entity_id
+                "remote.send_command canceled: %s entity is turned off", self.entity_id
             )
             return
 
@@ -289,7 +289,7 @@ class BroadlinkRemote(RemoteEntity, RestoreEntity):
 
         if not self._state:
             _LOGGER.warning(
-                "Unable to learn command from turned of entity %s", self.entity_id
+                "remote.learn_command canceled: %s entity is turned off", self.entity_id
             )
             return
 
