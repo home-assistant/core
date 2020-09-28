@@ -5,7 +5,7 @@ from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import callback
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import STATE_CLEANING, STATE_ERROR, STATE_RETURNING
+from . import STATE_CLEANING, STATE_ERROR, STATE_RETURNING
 
 
 @callback
