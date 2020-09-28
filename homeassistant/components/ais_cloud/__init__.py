@@ -163,6 +163,10 @@ async def async_setup(hass, config):
     hass.components.websocket_api.async_register_command(
         websocket_check_ais_media_source
     )
+    hass.components.websocket_api.async_register_command(
+        websocket_confirm_ais_media_source
+    )
+    hass.components.websocket_api.async_register_command(websocket_report_ais_problem)
 
     def device_discovered(service):
         """ Called when a device has been discovered. """
@@ -284,6 +288,9 @@ async def async_setup(hass, config):
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "ais_cloud/report_ais_problem",
+        vol.Required("problem_type"): str,
+        vol.Optional("problem_desc"): str,
+        vol.Optional("problem_data"): str,
     }
 )
 @websocket_api.async_response
@@ -292,12 +299,58 @@ async def websocket_report_ais_problem(hass, connection, msg):
     Report a problem to AIS
     """
     ws = AisCloudWS(hass)
-    ais_answer = ws.async_report_ais_problem(
+    ais_answer = await ws.async_report_ais_problem(
         problem_type=msg["problem_type"],
         problem_desc=msg["problem_desc"],
         problem_data=msg["problem_data"],
     )
     connection.send_result(msg["id"], ais_answer)
+    if "error" in ais_answer:
+        payload = {
+            "error": True,
+            "info": "AIS Error: " + ais_answer["message"],
+        }
+        connection.send_result(msg["id"], payload)
+        return
+
+    # info to user that all is OK
+    payload = {
+        "info": ais_answer["message"],
+        "report_id": ais_answer["report_id"],
+        "email": ais_answer["email"],
+    }
+    connection.send_result(msg["id"], payload)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "ais_cloud/confirm_ais_media_source",
+    }
+)
+@websocket_api.async_response
+async def websocket_confirm_ais_media_source(hass, connection, msg):
+    """
+    Report a confirmation to AIS
+    """
+    ws = AisCloudWS(hass)
+    player_state = hass.states.get("media_player.wbudowany_glosnik")
+    curr_stream_url = player_state.attributes.get("media_content_id")
+    media_source = player_state.attributes.get("source")
+    media_name = player_state.attributes.get("media_title")
+    ais_answer = await ws.async_confirm_ais_media(
+        source=media_source, name=media_name, current_url=curr_stream_url
+    )
+    if "error" in ais_answer:
+        payload = {
+            "error": True,
+            "info": "AIS Error: " + ais_answer["message"],
+        }
+        connection.send_result(msg["id"], payload)
+        return
+
+    # info to user that all is OK
+    payload = {"info": ais_answer["message"]}
+    connection.send_result(msg["id"], payload)
 
 
 @websocket_api.websocket_command(
@@ -313,6 +366,8 @@ async def websocket_check_ais_media_source(hass, connection, msg):
     # 0. get current stream url
     player_state = hass.states.get("media_player.wbudowany_glosnik")
     curr_stream_url = player_state.attributes.get("media_content_id")
+    media_source = player_state.attributes.get("source")
+    media_name = player_state.attributes.get("media_title")
     if curr_stream_url is not None:
         pass
     else:
@@ -325,21 +380,8 @@ async def websocket_check_ais_media_source(hass, connection, msg):
         connection.send_result(msg["id"], payload)
         return
 
-    # check the media source - currently we are checking only radio
-    media_source = player_state.attributes.get("source")
-    if media_source != "Radio":
-        payload = {
-            "error": True,
-            "info": "Te media pochodzą ze źródła "
-            + media_source
-            + ". Obecnie sprawdzamy tylko media Radio.",
-        }
-        connection.send_result(msg["id"], payload)
-        return
-
     # 1. get ORIGIN_URL from AIS
     ws = AisCloudWS(hass)
-    media_name = player_state.attributes.get("media_title")
     ais_answer = await ws.async_check_ais_media(
         source=media_source, name=media_name, current_url=curr_stream_url
     )
@@ -351,7 +393,7 @@ async def websocket_check_ais_media_source(hass, connection, msg):
         connection.send_result(msg["id"], payload)
         return
 
-    if "on_client_check" in ais_answer:
+    if "do_on_client_check" in ais_answer:
         # TODO check from client
         # 2. ask ORIGIN_URL for new STREAM_URL
         new_stream_url = ""
@@ -361,19 +403,37 @@ async def websocket_check_ais_media_source(hass, connection, msg):
 
     # 3. check if the new STREAM_URL != current STREAM_URL
     if curr_stream_url != new_stream_url:
-        # update stream and info to user
+        # play media
+        _audio_info = json.dumps(
+            {
+                "IMAGE_URL": ais_answer["thumbnail"],
+                "NAME": media_name,
+                "MEDIA_SOURCE": media_source,
+                "media_content_id": ais_answer["new_stream_url"],
+            }
+        )
+        await hass.services.async_call(
+            "media_player",
+            "play_media",
+            {
+                "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
+                "media_content_type": "ais_content_info",
+                "media_content_id": _audio_info,
+            },
+        )
+
+        # info to user to confirm that new stream is OK
         payload = {
+            "found": True,
             "info": "Udało się automatycznie ustalić, nowy adres URL: "
             + new_stream_url
-            + ". Czy odtwarzanie z tego zasobu działa OK?"
+            + " Czy odtwarzanie działa OK?",
         }
         connection.send_result(msg["id"], payload)
 
-    # stream is the same - let user to send info to ais
-    await asyncio.sleep(3)
     payload = {
-        "info": "Nie udało się automatycznie ustali lepszego źródła dla mediów. Czy mam powiadomić człowieka w "
-        "AIS?"
+        "found": False,
+        "info": "Nie udało się automatycznie ustali lepszego źródła dla mediów. Czy chcesz zgłosić problem do AIS?",
     }
     connection.send_result(msg["id"], payload)
 
@@ -495,6 +555,21 @@ class AisCloudWS:
     async def async_check_ais_media(self, name, source, current_url):
         web_session = aiohttp_client.async_get_clientsession(self.hass)
         rest_url = self.url + "check_ais_media"
+        try:
+            with async_timeout.timeout(5):
+                payload = {"name": name, "source": source, "current_url": current_url}
+                with async_timeout.timeout(5):
+                    ws_resp = await web_session.post(
+                        rest_url, json=payload, headers=self.cloud_ws_header
+                    )
+                    return await ws_resp.json()
+        except Exception as e:
+            _LOGGER.warning("Couldn't fetch data for: " + source + " " + str(e))
+            return {"error": True, "message": str(e)}
+
+    async def async_confirm_ais_media(self, name, source, current_url):
+        web_session = aiohttp_client.async_get_clientsession(self.hass)
+        rest_url = self.url + "confirm_ais_media"
         try:
             with async_timeout.timeout(5):
                 payload = {"name": name, "source": source, "current_url": current_url}
