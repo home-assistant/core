@@ -505,6 +505,9 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
     async def _adjust_lights(self, lights, transition):
         if not self._should_adjust():
             return
+        _LOGGER.debug(
+            "%s: '_adjust_lights(%s, %s)' called", self.name, lights, transition
+        )
         tasks = [
             await self._adjust_light(light, transition)
             for light in lights
@@ -526,7 +529,6 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         await self._update_lights(transition=self._initial_transition, force=True)
 
     async def _light_event(self, event):
-
         old_state = event.data.get("old_state")
         new_state = event.data.get("new_state")
         entity_id = event.data.get("entity_id")
@@ -578,6 +580,8 @@ class TurnOnOffListener:
         self.turn_off_event: Dict[str, Tuple[str, float]] = {}
         # Tracks 'light.turn_on' service calls
         self.turn_on_event: Dict[str, Tuple[str]] = {}
+
+        self.sleep_tasks: Dict[str, asyncio.Task] = {}
 
         self.hass.bus.async_listen(EVENT_CALL_SERVICE, self.turn_on_off_event_listener)
 
@@ -637,7 +641,17 @@ class TurnOnOffListener:
         for _ in range(3):
             # It can happen that the actual transition time is longer than the
             # specified time in the 'turn_off' service.
-            await asyncio.sleep(delay)
+            coro = asyncio.sleep(delay)
+            task = self.sleep_tasks[entity_id] = asyncio.ensure_future(coro)
+            try:
+                await task
+            except asyncio.CancelledError:  # 'light.turn_on' has been called
+                _LOGGER.debug(
+                    "Sleep task is cancelled due to 'light.turn_on('%s')' call",
+                    entity_id,
+                )
+                return False
+
             if not is_on(self.hass, entity_id):
                 return True
             delay = TURNING_OFF_DELAY  # next time only wait this long
@@ -659,24 +673,27 @@ class TurnOnOffListener:
         service = event.data.get(ATTR_SERVICE)
         service_data = event.data.get(ATTR_SERVICE_DATA, {})
 
-        entity_id = service_data.get(ATTR_ENTITY_ID)
-        if isinstance(entity_id, str):
-            entity_id = [entity_id]
+        entity_ids = service_data.get(ATTR_ENTITY_ID)
+        if isinstance(entity_ids, str):
+            entity_ids = [entity_ids]
 
-        if not any(eid in self.lights for eid in entity_id):
+        if not any(eid in self.lights for eid in entity_ids):
             return
 
         if service == SERVICE_TURN_OFF:
             transition = service_data.get(ATTR_TRANSITION)
             _LOGGER.debug(
                 "Detected an 'light.turn_off('%s', transition=%s)' event",
-                entity_id,
+                entity_ids,
                 transition,
             )
-            for eid in entity_id:
+            for eid in entity_ids:
                 self.turn_off_event[eid] = (event.context.id, transition)
 
         elif service == SERVICE_TURN_ON:
-            _LOGGER.debug("Detected an 'light.turn_on('%s')' event", entity_id)
-            for eid in entity_id:
+            _LOGGER.debug("Detected an 'light.turn_on('%s')' event", entity_ids)
+            for eid in entity_ids:
+                task = self.sleep_tasks.get(eid)
+                if task is not None:
+                    task.cancel()
                 self.turn_on_event[eid] = event.context.id
