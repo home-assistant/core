@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Already Configured"
+            "already_configured": "Account is already configured"
         },
         "error": {
-            "cannot_connect": "Error connecting to host",
-            "invalid_host": "This is not a Yeti",
+            "cannot_connect": "Failed to connect",
+            "invalid_host": "This is not the Yeti you are looking for",
             "unknown": "Unknown Error"
         },
         "step": {
