@@ -37,6 +37,10 @@ DEVICE_SENSORS = {
     "26": {
         "temperature": "temperature",
         "humidity": "humidity",
+        "humidity_hih3600": "HIH3600/humidity",
+        "humidity_hih4000": "HIH4000/humidity",
+        "humidity_hih5030": "HIH5030/humidity",
+        "humidity_htm1735": "HTM1735/humidity",
         "pressure": "B1-R1-A/pressure",
         "illuminance": "S3-R1-A/illuminance",
         "voltage_VAD": "VAD",
@@ -72,6 +76,10 @@ SENSOR_TYPES = {
     # SensorType: [ Measured unit, Unit ]
     "temperature": ["temperature", TEMP_CELSIUS],
     "humidity": ["humidity", PERCENTAGE],
+    "humidity_hih3600": ["humidity", PERCENTAGE],
+    "humidity_hih4000": ["humidity", PERCENTAGE],
+    "humidity_hih5030": ["humidity", PERCENTAGE],
+    "humidity_htm1735": ["humidity", PERCENTAGE],
     "humidity_raw": ["humidity", PERCENTAGE],
     "pressure": ["pressure", "mb"],
     "illuminance": ["illuminance", LIGHT_LUX],
