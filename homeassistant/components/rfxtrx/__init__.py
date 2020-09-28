@@ -5,6 +5,7 @@ from collections import OrderedDict
 import logging
 
 import RFXtrx as rfxtrxmod
+import async_timeout
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -33,6 +34,7 @@ from homeassistant.const import (
     VOLT,
 )
 from homeassistant.core import callback
+from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -251,7 +253,11 @@ async def async_setup_internal(hass, entry: config_entries.ConfigEntry):
     config = entry.data
 
     # Initialize library
-    rfx_object = await hass.async_add_executor_job(_create_rfx, config)
+    try:
+        async with async_timeout.timeout(5):
+            rfx_object = await hass.async_add_executor_job(_create_rfx, config)
+    except asyncio.TimeoutError as err:
+        raise ConfigEntryNotReady from err
 
     # Setup some per device config
     devices = _get_device_lookup(config[CONF_DEVICES])
