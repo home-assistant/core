@@ -23,7 +23,7 @@ from homeassistant.components.light import (
     VALID_TRANSITION,
     is_on,
 )
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchEntity
 from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_ENTITY_ID,
@@ -130,16 +130,14 @@ async def handle_apply(switch, service_call):
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the AdaptiveLighting switch."""
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {}
+    data = hass.data[DOMAIN]
 
-    if ATTR_TURN_ON_OFF_LISTENER not in hass.data[DOMAIN]:
-        hass.data[DOMAIN][ATTR_TURN_ON_OFF_LISTENER] = TurnOnOffListener(hass)
+    if ATTR_TURN_ON_OFF_LISTENER not in data:
+        data[ATTR_TURN_ON_OFF_LISTENER] = TurnOnOffListener(hass)
+    turn_on_off_listener = data[ATTR_TURN_ON_OFF_LISTENER]
 
-    turn_on_off_listener = hass.data[DOMAIN][ATTR_TURN_ON_OFF_LISTENER]
     switch = AdaptiveSwitch(hass, config_entry, turn_on_off_listener)
-    name = config_entry.data[CONF_NAME]
-    hass.data[DOMAIN][name] = switch
+    data[config_entry.entry_id][SWITCH_DOMAIN] = switch
 
     # Register `apply` service
     platform = entity_platform.current_platform.get()
@@ -226,7 +224,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         self._hs_color = None
 
         # Set and unset tracker in async_turn_on and async_turn_off
-        self.unsub_tracker = None
+        self.unsub_trackers = []
         _LOGGER.debug(
             "%s: Setting up with '%s',"
             " config_entry.data: '%s',"
@@ -251,7 +249,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
     @property
     def is_on(self):
         """Return true if adaptive lighting is on."""
-        return self.unsub_tracker is not None
+        return bool(self.unsub_trackers)
 
     def _supported_features(self, light):
         state = self.hass.states.get(light)
@@ -271,7 +269,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
                 )
         last_state = await self.async_get_last_state()
         if last_state and last_state.state == STATE_ON:
-            await self.async_turn_on(adjust_lights=False)
+            await self.async_turn_on(adjust_lights=False, setup_listeners=False)
 
     def _unpack_light_groups(self) -> None:
         all_lights = []
@@ -292,17 +290,29 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         self._unpack_light_groups()
         for light in self._lights:
             self.turn_on_off_listener.lights.add(light)
-        async_track_state_change_event(self.hass, self._lights, self._light_event)
+        self.unsub_trackers.append(
+            async_track_state_change_event(self.hass, self._lights, self._light_event)
+        )
         track_kwargs = dict(hass=self.hass, action=self._state_changed)
         if self._sleep_entity is not None:
             sleep_kwargs = dict(track_kwargs, entity_ids=self._sleep_entity)
-            async_track_state_change(**sleep_kwargs, to_state=self._sleep_state)
-            async_track_state_change(**sleep_kwargs, from_state=self._sleep_state)
+            self.unsub_trackers.append(
+                async_track_state_change(**sleep_kwargs, to_state=self._sleep_state)
+            )
+            self.unsub_trackers.append(
+                async_track_state_change(**sleep_kwargs, from_state=self._sleep_state)
+            )
 
         if self._disable_entity is not None:
             disable_kwargs = dict(track_kwargs, entity_ids=self._disable_entity)
-            async_track_state_change(**disable_kwargs, from_state=self._disable_state)
-            async_track_state_change(**disable_kwargs, to_state=self._disable_state)
+            self.unsub_trackers.append(
+                async_track_state_change(
+                    **disable_kwargs, from_state=self._disable_state
+                )
+            )
+            self.unsub_trackers.append(
+                async_track_state_change(**disable_kwargs, to_state=self._disable_state)
+            )
 
     @property
     def icon(self):
@@ -325,19 +335,27 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
             return {key: None for key in attrs}
         return attrs
 
-    async def async_turn_on(self, adjust_lights=True):
+    async def async_turn_on(self, adjust_lights=True, setup_listeners=True):
         """Turn on adaptive lighting."""
-        self.unsub_tracker = async_track_time_interval(
-            self.hass, self._async_update_at_interval, self._interval
+        if self.is_on:
+            return
+        self.unsub_trackers.append(
+            async_track_time_interval(
+                self.hass, self._async_update_at_interval, self._interval
+            )
         )
+        if setup_listeners:
+            self._setup_listeners()
         if adjust_lights:
             await self._update_lights(transition=self._initial_transition, force=True)
 
     async def async_turn_off(self, **kwargs):
         """Turn off adaptive lighting."""
-        if self.is_on:
-            self.unsub_tracker()
-            self.unsub_tracker = None
+        if not self.is_on:
+            return
+        while self.unsub_trackers:
+            unsub = self.unsub_trackers.pop()
+            unsub()
 
     async def _update_attrs(self):
         """Update Adaptive Values."""

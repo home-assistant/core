@@ -29,6 +29,7 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 import homeassistant.helpers.config_validation as cv
 
@@ -68,10 +69,10 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry: ConfigEntry):
     """Set up the component."""
-    hass.data.setdefault(DOMAIN, {})
+    data = hass.data.setdefault(DOMAIN, {})
 
     undo_listener = config_entry.add_update_listener(async_update_options)
-    hass.data[DOMAIN][config_entry.entry_id] = {UNDO_UPDATE_LISTENER: undo_listener}
+    data[config_entry.entry_id] = {UNDO_UPDATE_LISTENER: undo_listener}
     for platform in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(config_entry, platform)
@@ -95,9 +96,14 @@ async def async_unload_entry(hass, config_entry: ConfigEntry) -> bool:
             ]
         )
     )
-    hass.data[DOMAIN][config_entry.entry_id][UNDO_UPDATE_LISTENER]()
+    data = hass.data[DOMAIN]
+    data[config_entry.entry_id][UNDO_UPDATE_LISTENER]()
+    switch = data[config_entry.entry_id][SWITCH_DOMAIN]
+    while switch.unsub_trackers:
+        unsub = switch.unsub_trackers.pop()
+        unsub()
 
     if unload_ok:
-        hass.data[DOMAIN].pop(config_entry.entry_id)
+        data.pop(config_entry.entry_id)
 
     return unload_ok
