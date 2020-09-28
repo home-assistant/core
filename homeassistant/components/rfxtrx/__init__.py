@@ -126,11 +126,11 @@ DEVICE_DATA_SCHEMA = vol.Schema(
 )
 
 BASE_SCHEMA = vol.Schema(
+    cv.deprecated(CONF_DEBUG),
     {
-        vol.Optional(CONF_DEBUG, default=False): cv.deprecated,
         vol.Optional(CONF_AUTOMATIC_ADD, default=False): cv.boolean,
         vol.Optional(CONF_DEVICES, default={}): {cv.string: _ensure_device},
-    }
+    },
 )
 
 DEVICE_SCHEMA = BASE_SCHEMA.extend({vol.Required(CONF_DEVICE): cv.string})
