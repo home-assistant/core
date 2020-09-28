@@ -92,6 +92,10 @@ EXCLUDE_DOMAINS = "exclude_domains"
 @bind_hass
 def is_on(hass, entity_id):
     """Test if the group state is in its ON-state."""
+    if DATA_KEY not in hass.data:
+        # Integration not setup yet, it cannot be on
+        return False
+
     state = hass.states.get(entity_id)
 
     if state is not None:
