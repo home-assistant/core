@@ -34,6 +34,10 @@ NO_TIMEOUT = re.compile(
     r")$"
 )
 
+NO_AUTH_ONBOARDING = re.compile(
+    r"^(?:" r"|supervisor/logs" r"|snapshots/[^/]+/.+" r")$"
+)
+
 NO_AUTH = re.compile(
     r"^(?:" r"|app/.*" r"|addons/[^/]+/logo" r"|addons/[^/]+/icon" r")$"
 )
@@ -149,7 +153,7 @@ def _get_timeout(path: str) -> int:
 
 def _need_auth(hass, path: str) -> bool:
     """Return if a path need authentication."""
-    if not async_is_onboarded(hass) and path.startswith("snapshots"):
+    if not async_is_onboarded(hass) and NO_AUTH_ONBOARDING.match(path):
         return False
     if NO_AUTH.match(path):
         return False
