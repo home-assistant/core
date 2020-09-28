@@ -128,7 +128,6 @@ DEVICE_DATA_SCHEMA = vol.Schema(
 )
 
 BASE_SCHEMA = vol.Schema(
-    cv.deprecated(CONF_DEBUG),
     {
         vol.Optional(CONF_AUTOMATIC_ADD, default=False): cv.boolean,
         vol.Optional(CONF_DEVICES, default={}): {cv.string: _ensure_device},
@@ -142,7 +141,8 @@ PORT_SCHEMA = BASE_SCHEMA.extend(
 )
 
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Any(DEVICE_SCHEMA, PORT_SCHEMA)}, extra=vol.ALLOW_EXTRA
+    {DOMAIN: vol.All(cv.deprecated(CONF_DEBUG), vol.Any(DEVICE_SCHEMA, PORT_SCHEMA))},
+    extra=vol.ALLOW_EXTRA,
 )
 
 DOMAINS = ["switch", "sensor", "light", "binary_sensor", "cover"]
@@ -157,7 +157,6 @@ async def async_setup(hass, config):
         CONF_HOST: config[DOMAIN].get(CONF_HOST),
         CONF_PORT: config[DOMAIN].get(CONF_PORT),
         CONF_DEVICE: config[DOMAIN].get(CONF_DEVICE),
-        CONF_DEBUG: config[DOMAIN].get(CONF_DEBUG),
         CONF_AUTOMATIC_ADD: config[DOMAIN].get(CONF_AUTOMATIC_ADD),
         CONF_DEVICES: config[DOMAIN][CONF_DEVICES],
     }
