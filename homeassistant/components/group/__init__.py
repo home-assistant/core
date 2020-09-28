@@ -317,6 +317,14 @@ async def async_setup(hass, config):
         schema=vol.Schema({vol.Required(ATTR_OBJECT_ID): cv.slug}),
     )
 
+    hass.data[DATA_KEY] = {
+        ON_OFF_MAPPING: {STATE_ON: STATE_OFF},
+        ON_STATES_BY_DOMAIN: {},
+        EXCLUDE_DOMAINS: set(),
+    }
+
+    await async_process_integration_platforms(hass, DOMAIN, _process_group_platform)
+
     return True
 
 
@@ -570,11 +578,7 @@ class Group(Entity):
             self.trackable = ()
             return
 
-        excluded_domains = (
-            self.hass.data[DATA_KEY][EXCLUDE_DOMAINS]
-            if DATA_KEY in self.hass.data
-            else set()
-        )
+        excluded_domains = self.hass.data[DATA_KEY][EXCLUDE_DOMAINS]
         tracking = []
         trackable = []
         for ent_id in entity_ids:
@@ -665,19 +669,13 @@ class Group(Entity):
         entity_id = state.entity_id
         domain = state.domain
 
-        if DATA_KEY in self.hass.data:
-            domain_on_state = self.hass.data[DATA_KEY][ON_STATES_BY_DOMAIN].get(
-                domain, {STATE_ON}
-            )
-            known_domain = domain in self.hass.data[DATA_KEY][ON_STATES_BY_DOMAIN]
-        else:
-            domain_on_state = {STATE_ON}
-            known_domain = False
-
+        domain_on_state = self.hass.data[DATA_KEY][ON_STATES_BY_DOMAIN].get(
+            domain, {STATE_ON}
+        )
         self._on_off[entity_id] = state.state in domain_on_state
         self._assumed[entity_id] = state.attributes.get(ATTR_ASSUMED_STATE)
 
-        if known_domain:
+        if domain in self.hass.data[DATA_KEY][ON_STATES_BY_DOMAIN]:
             self._on_states.update(domain_on_state)
 
     @callback
@@ -723,9 +721,7 @@ class Group(Entity):
             on_state = STATE_ON
 
         group_is_on = self.mode(self._on_off.values())
-
-        self._state = (
-            on_state
-            if group_is_on
-            else self.hass.data[DATA_KEY][ON_OFF_MAPPING][on_state]
-        )
+        if group_is_on:
+            self._state = on_state
+        else:
+            self._state = self.hass.data[DATA_KEY][ON_OFF_MAPPING][on_state]

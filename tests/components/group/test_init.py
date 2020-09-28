@@ -417,15 +417,8 @@ async def test_setup(hass):
     """Test setup method."""
     hass.states.async_set("light.Bowl", STATE_ON)
     hass.states.async_set("light.Ceiling", STATE_OFF)
-    test_group = await group.Group.async_create_group(
-        hass, "init_group", ["light.Bowl", "light.Ceiling"], False
-    )
 
     group_conf = OrderedDict()
-    group_conf["second_group"] = {
-        "entities": f"light.Bowl, {test_group.entity_id}",
-        "icon": "mdi:work",
-    }
     group_conf["test_group"] = "hello.world,sensor.happy"
     group_conf["empty_group"] = {"name": "Empty Group", "entities": None}
     assert await async_setup_component(hass, "light", {})
@@ -434,21 +427,33 @@ async def test_setup(hass):
     assert await async_setup_component(hass, "group", {"group": group_conf})
     await hass.async_block_till_done()
 
-    group_state = hass.states.get(f"{group.DOMAIN}.second_group")
+    test_group = await group.Group.async_create_group(
+        hass, "init_group", ["light.Bowl", "light.Ceiling"], False
+    )
+    await group.Group.async_create_group(
+        hass,
+        "created_group",
+        ["light.Bowl", f"{test_group.entity_id}"],
+        True,
+        "mdi:work",
+    )
+    await hass.async_block_till_done()
+
+    group_state = hass.states.get(f"{group.DOMAIN}.created_group")
     assert STATE_ON == group_state.state
     assert {test_group.entity_id, "light.bowl"} == set(
         group_state.attributes["entity_id"]
     )
     assert group_state.attributes.get(group.ATTR_AUTO) is None
     assert "mdi:work" == group_state.attributes.get(ATTR_ICON)
-    assert 1 == group_state.attributes.get(group.ATTR_ORDER)
+    assert 3 == group_state.attributes.get(group.ATTR_ORDER)
 
     group_state = hass.states.get(f"{group.DOMAIN}.test_group")
     assert STATE_UNKNOWN == group_state.state
     assert {"sensor.happy", "hello.world"} == set(group_state.attributes["entity_id"])
     assert group_state.attributes.get(group.ATTR_AUTO) is None
     assert group_state.attributes.get(ATTR_ICON) is None
-    assert 2 == group_state.attributes.get(group.ATTR_ORDER)
+    assert 0 == group_state.attributes.get(group.ATTR_ORDER)
 
 
 async def test_service_group_services(hass):
