@@ -28,5 +28,16 @@
             }
         }
     },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "brightness": "Support brightness dimming (Shelly Dimmer only)",
+                    "color_temp": "Support colors (Shelly Dimmer only)"
+                },
+                "title": "Configure Shelly device"
+            }
+        }
+    },
     "title": "Shelly"
 }

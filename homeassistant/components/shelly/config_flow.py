@@ -9,13 +9,17 @@ import voluptuous as vol
 
 from homeassistant import config_entries, core
 from homeassistant.const import (
+    CONF_BRIGHTNESS,
+    CONF_COLOR_TEMP,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_USERNAME,
     HTTP_UNAUTHORIZED,
 )
+from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 
+from .const import DEFAULT_CONF_BRIGHTNESS, DEFAULT_CONF_COLOR_TEMP
 from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
@@ -182,3 +186,42 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 aiohttp_client.async_get_clientsession(self.hass),
                 host,
             )
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Define the config flow to handle options."""
+        return OptionsFlow(config_entry)
+
+
+class OptionsFlow(config_entries.OptionsFlow):
+    """Handle options for Shelly."""
+
+    def __init__(self, config_entry):
+        """Initialize."""
+        self.config_entry = config_entry
+
+    async def async_step_init(self, user_input=None):
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_BRIGHTNESS,
+                        default=self.config_entry.options.get(
+                            CONF_BRIGHTNESS, DEFAULT_CONF_BRIGHTNESS
+                        ),
+                    ): bool,
+                    vol.Optional(
+                        CONF_COLOR_TEMP,
+                        default=self.config_entry.options.get(
+                            CONF_COLOR_TEMP, DEFAULT_CONF_COLOR_TEMP
+                        ),
+                    ): bool,
+                },
+            ),
+        )

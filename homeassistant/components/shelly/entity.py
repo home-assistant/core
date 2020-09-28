@@ -10,7 +10,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import device_registry, entity
 
 from . import ShellyDeviceWrapper
-from .const import DOMAIN
+from .const import COORDINATOR, DOMAIN
 
 
 def temperature_unit(block_info: dict) -> str:
@@ -51,7 +51,7 @@ async def async_setup_entry_attribute_entities(
     hass, config_entry, async_add_entities, sensors, sensor_class
 ):
     """Set up entities for block attributes."""
-    wrapper: ShellyDeviceWrapper = hass.data[DOMAIN][config_entry.entry_id]
+    wrapper: ShellyDeviceWrapper = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
     blocks = []
 
     for block in wrapper.device.blocks:

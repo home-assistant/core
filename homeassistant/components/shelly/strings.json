@@ -28,5 +28,16 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "unsupported_firmware": "The device is using an unsupported firmware version."
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure Shelly device",
+        "data": {
+          "brightness": "Support brightness dimming (Shelly Dimmer only)",
+          "color_temp": "Support colors (Shelly Dimmer only)"
+        }
+      }
+    }
   }
 }

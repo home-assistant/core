@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, device_registry, update_coordinator
 
-from .const import DOMAIN
+from .const import COORDINATOR, DOMAIN, UNDO_UPDATE_LISTENER
 
 PLATFORMS = ["binary_sensor", "cover", "light", "sensor", "switch"]
 _LOGGER = logging.getLogger(__name__)
@@ -28,6 +28,12 @@ async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Shelly component."""
     hass.data[DOMAIN] = {}
     return True
+
+
+async def update_listener(hass, config_entry):
+    """Update listener."""
+    _LOGGER.warning("UPDATE")
+    await hass.config_entries.async_reload(config_entry.entry_id)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
@@ -48,9 +54,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     except (asyncio.TimeoutError, OSError) as err:
         raise ConfigEntryNotReady from err
 
-    wrapper = hass.data[DOMAIN][entry.entry_id] = ShellyDeviceWrapper(
-        hass, entry, device
-    )
+    undo_listener = entry.add_update_listener(update_listener)
+    wrapper = ShellyDeviceWrapper(hass, entry, device)
+
+    hass.data[DOMAIN][entry.entry_id] = {
+        COORDINATOR: wrapper,
+        UNDO_UPDATE_LISTENER: undo_listener,
+    }
     await wrapper.async_setup()
 
     for component in PLATFORMS:
@@ -99,6 +109,11 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         """Mac address of the device."""
         return self.device.settings["device"]["mac"]
 
+    @property
+    def options(self):
+        """Config entry of the device."""
+        return self.entry.options
+
     async def async_setup(self):
         """Set up the wrapper."""
         self._unsub_stop = self.hass.bus.async_listen(
@@ -140,7 +155,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
             ]
         )
     )
+
+    hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
+
     if unload_ok:
-        await hass.data[DOMAIN].pop(entry.entry_id).shutdown()
+        await hass.data[DOMAIN].pop(entry.entry_id)[COORDINATOR].shutdown()
 
     return unload_ok

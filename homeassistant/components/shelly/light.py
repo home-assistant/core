@@ -10,6 +10,7 @@ from homeassistant.components.light import (
     SUPPORT_COLOR_TEMP,
     LightEntity,
 )
+from homeassistant.const import CONF_BRIGHTNESS, CONF_COLOR_TEMP
 from homeassistant.core import callback
 from homeassistant.util.color import (
     color_temperature_kelvin_to_mired,
@@ -17,13 +18,13 @@ from homeassistant.util.color import (
 )
 
 from . import ShellyDeviceWrapper
-from .const import DOMAIN
+from .const import COORDINATOR, DEFAULT_CONF_BRIGHTNESS, DEFAULT_CONF_COLOR_TEMP, DOMAIN
 from .entity import ShellyBlockEntity
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up lights for device."""
-    wrapper = hass.data[DOMAIN][config_entry.entry_id]
+    wrapper = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
     blocks = [block for block in wrapper.device.blocks if block.type == "light"]
 
     if not blocks:
@@ -40,9 +41,13 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         super().__init__(wrapper, block)
         self.control_result = None
         self._supported_features = 0
-        if hasattr(block, "brightness"):
+        if hasattr(block, "brightness") and wrapper.options.get(
+            CONF_BRIGHTNESS, DEFAULT_CONF_BRIGHTNESS
+        ):
             self._supported_features |= SUPPORT_BRIGHTNESS
-        if hasattr(block, "colorTemp"):
+        if hasattr(block, "colorTemp") and wrapper.options.get(
+            CONF_COLOR_TEMP, DEFAULT_CONF_COLOR_TEMP
+        ):
             self._supported_features |= SUPPORT_COLOR_TEMP
 
     @property
