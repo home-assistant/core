@@ -29,6 +29,8 @@ class TestComponentsGroup(unittest.TestCase):
     def setUp(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+        for domain in ["device_tracker", "light", "group"]:
+            setup_component(self.hass, domain, {})
         self.addCleanup(self.hass.stop)
 
     def test_setup_group_with_mixed_groupable_states(self):
@@ -495,6 +497,7 @@ async def test_group_order(hass):
     """Test that order gets incremented when creating a new group."""
     hass.states.async_set("light.bowl", STATE_ON)
 
+    assert await async_setup_component(hass, "light", {})
     assert await async_setup_component(
         hass,
         "group",
@@ -517,6 +520,7 @@ async def test_group_order_with_dynamic_creation(hass):
     """Test that order gets incremented when creating a new group."""
     hass.states.async_set("light.bowl", STATE_ON)
 
+    assert await async_setup_component(hass, "light", {})
     assert await async_setup_component(
         hass,
         "group",
@@ -570,6 +574,7 @@ async def test_group_persons(hass):
     hass.states.async_set("person.two", "Work")
     hass.states.async_set("person.three", "home")
 
+    assert await async_setup_component(hass, "person", {})
     assert await async_setup_component(
         hass,
         "group",
@@ -590,6 +595,8 @@ async def test_group_mixed_domains_on(hass):
     hass.states.async_set("binary_sensor.alexander_garage_side_door_open", "on")
     hass.states.async_set("cover.small_garage_door", "open")
 
+    for domain in ["lock", "binary_sensor", "cover"]:
+        assert await async_setup_component(hass, domain, {})
     assert await async_setup_component(
         hass,
         "group",
@@ -612,6 +619,8 @@ async def test_group_mixed_domains_off(hass):
     hass.states.async_set("binary_sensor.alexander_garage_side_door_open", "off")
     hass.states.async_set("cover.small_garage_door", "closed")
 
+    for domain in ["lock", "binary_sensor", "cover"]:
+        assert await async_setup_component(hass, domain, {})
     assert await async_setup_component(
         hass,
         "group",
@@ -634,6 +643,7 @@ async def test_group_sensors(hass):
     hass.states.async_set("sensor.two", "on")
     hass.states.async_set("sensor.three", "closed")
 
+    assert await async_setup_component(hass, "sensor", {})
     assert await async_setup_component(
         hass,
         "group",
@@ -654,6 +664,7 @@ async def test_group_climate_mixed(hass):
     hass.states.async_set("climate.two", "cool")
     hass.states.async_set("climate.three", "heat")
 
+    assert await async_setup_component(hass, "climate", {})
     assert await async_setup_component(
         hass,
         "group",
@@ -674,6 +685,7 @@ async def test_group_climate_all_cool(hass):
     hass.states.async_set("climate.two", "cool")
     hass.states.async_set("climate.three", "cool")
 
+    assert await async_setup_component(hass, "climate", {})
     assert await async_setup_component(
         hass,
         "group",
@@ -694,6 +706,7 @@ async def test_group_climate_all_off(hass):
     hass.states.async_set("climate.two", "off")
     hass.states.async_set("climate.three", "off")
 
+    assert await async_setup_component(hass, "climate", {})
     assert await async_setup_component(
         hass,
         "group",
@@ -714,6 +727,7 @@ async def test_group_alarm(hass):
     hass.states.async_set("alarm_control_panel.two", "armed_home")
     hass.states.async_set("alarm_control_panel.three", "armed_away")
 
+    assert await async_setup_component(hass, "alarm_control_panel", {})
     assert await async_setup_component(
         hass,
         "group",
@@ -736,6 +750,7 @@ async def test_group_alarm_disarmed(hass):
     hass.states.async_set("alarm_control_panel.two", "disarmed")
     hass.states.async_set("alarm_control_panel.three", "disarmed")
 
+    assert await async_setup_component(hass, "alarm_control_panel", {})
     assert await async_setup_component(
         hass,
         "group",
@@ -758,6 +773,7 @@ async def test_group_vacuum_off(hass):
     hass.states.async_set("vacuum.two", "off")
     hass.states.async_set("vacuum.three", "off")
 
+    assert await async_setup_component(hass, "vacuum", {})
     assert await async_setup_component(
         hass,
         "group",
@@ -778,6 +794,7 @@ async def test_group_vacuum_on(hass):
     hass.states.async_set("vacuum.two", "off")
     hass.states.async_set("vacuum.three", "off")
 
+    assert await async_setup_component(hass, "vacuum", {})
     assert await async_setup_component(
         hass,
         "group",
@@ -798,6 +815,7 @@ async def test_device_tracker_not_home(hass):
     hass.states.async_set("device_tracker.two", "not_home")
     hass.states.async_set("device_tracker.three", "not_home")
 
+    assert await async_setup_component(hass, "device_tracker", {})
     assert await async_setup_component(
         hass,
         "group",
@@ -820,6 +838,7 @@ async def test_light_removed(hass):
     hass.states.async_set("light.two", "off")
     hass.states.async_set("light.three", "on")
 
+    assert await async_setup_component(hass, "light", {})
     assert await async_setup_component(
         hass,
         "group",
