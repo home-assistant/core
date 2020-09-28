@@ -681,7 +681,7 @@ class single_select:
     """Single select validator returning list of selected values."""
 
     def __init__(self, options: dict) -> None:
-        """Initialize multi select."""
+        """Initialize single select."""
         self.options = options
 
     def __call__(self, selected: Any) -> Any:
