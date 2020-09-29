@@ -31,10 +31,6 @@ def update(original, updates):
 async def async_setup(hass, config):
     """Set up AdvantageAir."""
     hass.data[DOMAIN] = {}
-    for platform in ADVANTAGE_AIR_PLATFORMS:
-        hass.async_create_task(
-            hass.helpers.discovery.async_load_platform(platform, DOMAIN, {}, config)
-        )
     return True
 
 
