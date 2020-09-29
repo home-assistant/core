@@ -23,10 +23,12 @@ from homeassistant.components.zha.core.const import (
     ATTR_CLUSTER_ID,
     ATTR_CLUSTER_TYPE,
     ATTR_ENDPOINT_ID,
+    ATTR_ENDPOINT_NAMES,
     ATTR_IEEE,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_NAME,
+    ATTR_NEIGHBORS,
     ATTR_QUIRK_APPLIED,
     CLUSTER_TYPE_IN,
     DATA_ZHA,
@@ -184,6 +186,8 @@ async def test_list_devices(zha_client):
         assert device[ATTR_NAME] is not None
         assert device[ATTR_QUIRK_APPLIED] is not None
         assert device["entities"] is not None
+        assert device[ATTR_NEIGHBORS] is not None
+        assert device[ATTR_ENDPOINT_NAMES] is not None
 
         for entity_reference in device["entities"]:
             assert entity_reference[ATTR_NAME] is not None
