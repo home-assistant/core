@@ -6,13 +6,14 @@ from hyperion import const
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 
 TEST_HOST = "test"
-TEST_PORT = const.DEFAULT_PORT
+TEST_PORT = const.DEFAULT_PORT_JSON
 TEST_INSTANCE = 1
 TEST_ID = f"{TEST_HOST}:{TEST_PORT}-{TEST_INSTANCE}"
 TEST_NAME = f"{TEST_HOST}_{TEST_PORT}_{TEST_INSTANCE}"
 TEST_PRIORITY = 128
 TEST_ENTITY_ID = f"{LIGHT_DOMAIN}.{TEST_NAME}"
 TEST_TOKEN = "sekr1t"
+TEST_HYPERION_URL = f"http://{TEST_HOST}:{const.DEFAULT_PORT_UI}"
 
 
 def create_mock_client():

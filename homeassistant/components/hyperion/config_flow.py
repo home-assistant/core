@@ -1,5 +1,6 @@
 """Hyperion config flow."""
 
+import asyncio
 import logging
 from typing import Any, Dict, Optional
 
@@ -10,7 +11,14 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_BASE, CONF_HOST, CONF_PORT, CONF_TOKEN
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_CREATE_TOKEN, CONF_INSTANCE, DOMAIN
+from .const import (
+    CONF_AUTH_ID,
+    CONF_CREATE_TOKEN,
+    CONF_HYPERION_URL,
+    CONF_INSTANCE,
+    DEFAULT_ORIGIN,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 _LOGGER.setLevel(logging.DEBUG)
@@ -26,6 +34,8 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Instantiate config flow."""
         super().__init__()
         self._data: Optional[Dict[str, Any]] = None
+        self._request_token_task = None
+        self._auth_id = None
 
     async def _create_and_connect_hyperion_client(
         self, raw=False
@@ -60,6 +70,7 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         auth_resp = await hc.async_is_auth_required()
         await hc.async_client_disconnect()
 
+        # TODO: Test nicer message?
         await self.async_set_unique_id(hyperion_id)
         self._abort_if_unique_id_configured()
 
@@ -80,6 +91,35 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=self.context["unique_id"], data=self._data)
 
+    async def _cancel_request_token_task(self) -> None:
+        """Cancel the request token task if it exists."""
+        if self._request_token_task is not None:
+            if not self._request_token_task.done():
+                self._request_token_task.cancel()
+
+            # Process cancellation.
+            await asyncio.sleep(0)
+
+            try:
+                await self._request_token_task
+            except asyncio.CancelledError:
+                pass
+            self._request_token_task = None
+
+    async def _request_token_task_func(self, auth_id: str) -> Dict[str, Any]:
+        """Send an async_request_token request."""
+        hc = await self._create_and_connect_hyperion_client(raw=True)
+        if hc:
+            # The Hyperion-py client has a default timeout of 3 minutes on this request.
+            response = await hc.async_request_token(comment=DEFAULT_ORIGIN, id=auth_id)
+            await hc.async_client_disconnect()
+            return response
+        return None
+
+    def _get_hyperion_url(self):
+        """Return the URL of the Hyperion UI."""
+        return f"http://{self._data[CONF_HOST]}:{const.DEFAULT_PORT_UI}"
+
     async def async_step_auth(
         self, user_input: Optional[ConfigType] = None
     ) -> Dict[str, Any]:
@@ -87,18 +127,69 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not user_input:
             return self._show_auth_form()
 
-        _LOGGER.error("Auth called with %s", user_input)
-
         if user_input.get(CONF_CREATE_TOKEN):
-            # TODO
-            assert False
-            return
+            # TODO: See if the UI port can be taken from Zeroconf?
+            self._auth_id = client.generate_random_auth_id()
+            return self._show_create_token_form(
+                description_placeholders={
+                    CONF_AUTH_ID: self._auth_id,
+                    CONF_HYPERION_URL: self._get_hyperion_url(),
+                }
+            )
 
         self._data[CONF_TOKEN] = user_input.get(CONF_TOKEN)
         hc = await self._create_and_connect_hyperion_client()
         if not hc:
-            return self._show_setup_form({CONF_BASE: "auth_error"})
+            return self._show_auth_form({CONF_BASE: "auth_error"})
         return self.async_create_entry(title=self.context["unique_id"], data=self._data)
+
+    async def async_step_create_token(
+        self, user_input: Optional[ConfigType] = None
+    ) -> Dict[str, Any]:
+        """Send a request for a new token."""
+        # Cancel the request token task if it's already running, then re-create it.
+        await self._cancel_request_token_task()
+        # Start a task in the background requesting a new token. The next step will
+        # wait on the response (which includes the user needing to visit the Hyperion
+        # UI to approve the request for a new token).
+        self._request_token_task = self.hass.async_create_task(
+            self._request_token_task_func(self._auth_id)
+        )
+        return self.async_external_step(
+            step_id="create_token_external", url=self._get_hyperion_url()
+        )
+
+    async def async_step_create_token_external(
+        self, user_input: Optional[ConfigType] = None
+    ) -> Dict[str, Any]:
+        """Await completion of the request for a new token."""
+        if self._request_token_task:
+            auth_resp = await self._request_token_task
+            if client.ResponseOK(auth_resp):
+                token = auth_resp.get(const.KEY_INFO, {}).get(const.KEY_TOKEN)
+                if token:
+                    self._data[CONF_TOKEN] = token
+                    return self.async_external_step_done(
+                        next_step_id="create_token_success"
+                    )
+        return self.async_external_step_done(next_step_id="create_token_fail")
+
+    async def async_step_create_token_success(
+        self, user_input: Optional[ConfigType] = None
+    ) -> Dict[str, Any]:
+        """Create an entry after successful token creation."""
+        # Test the token.
+        hc = await self._create_and_connect_hyperion_client()
+        if not hc:
+            return self._show_auth_form({CONF_BASE: "auth_new_token_not_work_error"})
+        await hc.async_client_disconnect()
+        return self.async_create_entry(title=self.context["unique_id"], data=self._data)
+
+    async def async_step_create_token_fail(
+        self, user_input: Optional[ConfigType] = None
+    ) -> Dict[str, Any]:
+        """Show an error on the auth form."""
+        return self._show_auth_form({CONF_BASE: "auth_new_token_not_granted_error"})
 
     def _show_setup_form(self, errors: Optional[Dict] = None) -> Dict[str, Any]:
         """Show the setup form to the user."""
@@ -107,7 +198,7 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_HOST): str,
-                    vol.Optional(CONF_PORT, default=const.DEFAULT_PORT): int,
+                    vol.Optional(CONF_PORT, default=const.DEFAULT_PORT_JSON): int,
                     vol.Optional(CONF_INSTANCE, default=const.DEFAULT_INSTANCE): int,
                 }
             ),
@@ -125,4 +216,13 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors or {},
+        )
+
+    def _show_create_token_form(
+        self, description_placeholders: Dict[str, str]
+    ) -> Dict[str, Any]:
+        """Show a final confirmation form to the user before token creation."""
+        return self.async_show_form(
+            step_id="create_token",
+            description_placeholders=description_placeholders,
         )

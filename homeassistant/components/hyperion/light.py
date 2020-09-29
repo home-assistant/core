@@ -19,7 +19,7 @@ from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 
-from .const import CONF_INSTANCE
+from .const import CONF_INSTANCE, DEFAULT_ORIGIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,8 +41,7 @@ DEFAULT_COLOR = [255, 255, 255]
 DEFAULT_BRIGHTNESS = 255
 DEFAULT_EFFECT = KEY_EFFECT_SOLID
 DEFAULT_NAME = "Hyperion"
-DEFAULT_ORIGIN = "Home Assistant"
-DEFAULT_PORT = 19444
+DEFAULT_PORT = const.DEFAULT_PORT_JSON
 DEFAULT_PRIORITY = 128
 DEFAULT_HDMI_PRIORITY = 880
 DEFAULT_EFFECT_LIST = []
