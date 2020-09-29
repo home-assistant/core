@@ -317,7 +317,6 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
             self.unsub_trackers.extend([rm_from, rm_to])
 
     def _unsub_trackers(self):
-        assert self.unsub_trackers
         while self.unsub_trackers:
             unsub = self.unsub_trackers.pop()
             unsub()
