@@ -20,7 +20,6 @@ from homeassistant.components import (
     switch,
     vacuum,
 )
-from homeassistant.components.cast.const import APP_ID_HOMEASSISTANT
 from homeassistant.components.climate import const as climate
 from homeassistant.components.humidifier import const as humidifier
 from homeassistant.const import (
@@ -30,6 +29,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
+    CAST_APP_ID_HOMEASSISTANT,
     SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_CUSTOM_BYPASS,
     SERVICE_ALARM_ARM_HOME,
@@ -290,7 +290,7 @@ class CameraStreamTrait(_Trait):
         )
         self.stream_info = {
             "cameraStreamAccessUrl": f"{get_url(self.hass)}{url}",
-            "cameraStreamReceiverAppId": APP_ID_HOMEASSISTANT,
+            "cameraStreamReceiverAppId": CAST_APP_ID_HOMEASSISTANT,
         }
 
 
