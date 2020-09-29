@@ -59,11 +59,11 @@ import homeassistant.util.dt as dt_util
 
 from .const import (
     ATTR_TURN_ON_OFF_LISTENER,
+    CONF_ADJUST_BRIGHTNESS,
+    CONF_ADJUST_COLOR_TEMP,
+    CONF_ADJUST_RGB_COLOR,
     CONF_COLORS_ONLY,
-    CONF_DISABLE_BRIGHTNESS_ADJUST,
-    CONF_DISABLE_COLOR_TEMP_ADJUST,
     CONF_DISABLE_ENTITY,
-    CONF_DISABLE_RGB_COLOR_ADJUST,
     CONF_DISABLE_STATE,
     CONF_INITIAL_TRANSITION,
     CONF_INTERVAL,
@@ -182,10 +182,10 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         data = validate(config_entry)
         self._name = data[CONF_NAME]
         self._lights = data[CONF_LIGHTS]
-        self._disable_brightness_adjust = data[CONF_DISABLE_BRIGHTNESS_ADJUST]
-        self._disable_color_temp_adjust = data[CONF_DISABLE_COLOR_TEMP_ADJUST]
+        self._adjust_brightness = data[CONF_ADJUST_BRIGHTNESS]
+        self._adjust_color_temp = data[CONF_ADJUST_COLOR_TEMP]
+        self._adjust_rgb_color = data[CONF_ADJUST_RGB_COLOR]
         self._disable_entity = data[CONF_DISABLE_ENTITY]
-        self._disable_rgb_color_adjust = data[CONF_DISABLE_RGB_COLOR_ADJUST]
         self._disable_state = data[CONF_DISABLE_STATE]
         self._initial_transition = data[CONF_INITIAL_TRANSITION]
         self._interval = data[CONF_INTERVAL]
@@ -491,23 +491,19 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
                 transition = self._transition
             service_data[ATTR_TRANSITION] = transition
 
-        if (
-            "brightness" in features
-            and not self._disable_brightness_adjust
-            and not colors_only
-        ):
+        if "brightness" in features and self._adjust_brightness and not colors_only:
             service_data[ATTR_BRIGHTNESS_PCT] = self._brightness
 
         if (
             "color_temp" in features
-            and not self._disable_color_temp_adjust
+            and self._adjust_color_temp
             and not (self._prefer_rgb_color and "color" in features)
         ):
             attributes = self.hass.states.get(light).attributes
             min_mireds, max_mireds = attributes["min_mireds"], attributes["max_mireds"]
             color_temp_mired = max(min(self._color_temp_mired, max_mireds), min_mireds)
             service_data[ATTR_COLOR_TEMP] = color_temp_mired
-        elif "color" in features and not self._disable_rgb_color_adjust:
+        elif "color" in features and self._adjust_rgb_color:
             service_data[ATTR_RGB_COLOR] = self._rgb_color
 
         _LOGGER.debug(
