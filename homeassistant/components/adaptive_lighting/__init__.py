@@ -32,7 +32,13 @@ from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 import homeassistant.helpers.config_validation as cv
 
-from .const import _DOMAIN_SCHEMA, CONF_NAME, DOMAIN, UNDO_UPDATE_LISTENER
+from .const import (
+    _DOMAIN_SCHEMA,
+    ATTR_TURN_ON_OFF_LISTENER,
+    CONF_NAME,
+    DOMAIN,
+    UNDO_UPDATE_LISTENER,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -94,6 +100,8 @@ async def async_unload_entry(hass, config_entry: ConfigEntry) -> bool:
     data[config_entry.entry_id][UNDO_UPDATE_LISTENER]()
     switch = data[config_entry.entry_id][SWITCH_DOMAIN]
     switch._unsub_trackers()  # pylint: disable=protected-access
+    if len(data) == 1:  # no more config_entries
+        data.pop(ATTR_TURN_ON_OFF_LISTENER).remove_listener()
 
     if unload_ok:
         data.pop(config_entry.entry_id)

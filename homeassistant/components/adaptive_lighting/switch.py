@@ -543,13 +543,13 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
             context=Context(),
         )
 
-    def _should_adjust(self):
+    def _should_adapt(self):
         if not self._lights or not self.is_on or self._is_disabled():
             return False
         return True
 
     async def _adapt_lights(self, lights, transition):
-        if not self._should_adjust():
+        if not self._should_adapt():
             return
         _LOGGER.debug(
             "%s: '_adapt_lights(%s, %s)' called", self.name, lights, transition
@@ -631,7 +631,9 @@ class TurnOnOffListener:
 
         self.sleep_tasks: Dict[str, asyncio.Task] = {}
 
-        self.hass.bus.async_listen(EVENT_CALL_SERVICE, self.turn_on_off_event_listener)
+        self.remove_listener = self.hass.bus.async_listen(
+            EVENT_CALL_SERVICE, self.turn_on_off_event_listener
+        )
 
     async def maybe_cancel_adjusting(
         self, entity_id, off_to_on_event, on_to_off_event
