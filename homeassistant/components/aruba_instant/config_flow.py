@@ -154,6 +154,9 @@ class InstantOptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None):
         """Handle client tracking."""
         errors = {}
+        await self.hass.data[DOMAIN]["coordinator"][
+            self.config_entry.entry_id
+        ].async_refresh()
         if user_input is not None:
             add_macs = user_input.get(AVAILABLE_CLIENTS, None)
             tracked_macs = user_input.get(TRACKED_CLIENTS, None)
@@ -168,7 +171,7 @@ class InstantOptionsFlowHandler(config_entries.OptionsFlow):
             if tracked_macs is not None:
                 selected_macs.update(
                     {
-                        mac: f"{self.hass.data[DOMAIN]['coordinator'][self.config_entry.entry_id].data.get(mac)['name']} ({mac})"
+                        mac: f"{self.hass.data['entity_registry'].async_get(self.hass.data['entity_registry'].async_get_entity_id('device_tracker', DOMAIN, mac)).original_name} ({mac})"
                         for mac in tracked_macs
                     }
                 )
@@ -201,17 +204,11 @@ class InstantOptionsFlowHandler(config_entries.OptionsFlow):
                 )
         tracked_macs = {}
         for mac in self.hass.data[DOMAIN][TRACKED_CLIENTS][self.config_entry.entry_id]:
-            if (
-                mac
-                in self.hass.data[DOMAIN]["coordinator"][
-                    self.config_entry.entry_id
-                ].data.keys()
-            ):
-                tracked_macs.update(
-                    {
-                        mac: f"{self.hass.data[DOMAIN]['coordinator'][self.config_entry.entry_id].data.get(mac)['name']} ({mac})"
-                    }
-                )
+            tracked_macs.update(
+                {
+                    mac: f"{self.hass.data['entity_registry'].async_get(self.hass.data['entity_registry'].async_get_entity_id('device_tracker', DOMAIN, mac)).original_name} ({mac})"
+                }
+            )
 
         available_macs = dict(
             sorted(available_macs.items(), key=lambda x: x[1].lower())
