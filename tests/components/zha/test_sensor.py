@@ -2,6 +2,7 @@
 from unittest import mock
 
 import pytest
+import zigpy.profiles.zha
 import zigpy.zcl.clusters.general as general
 import zigpy.zcl.clusters.homeautomation as homeautomation
 import zigpy.zcl.clusters.measurement as measurement
@@ -122,7 +123,7 @@ async def test_sensor(
             1: {
                 "in_clusters": [cluster_id, general.Basic.cluster_id],
                 "out_cluster": [],
-                "device_type": 0x0000,
+                "device_type": zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
             }
         }
     )
@@ -242,7 +243,7 @@ async def test_temp_uom(
                     general.Basic.cluster_id,
                 ],
                 "out_cluster": [],
-                "device_type": 0x0000,
+                "device_type": zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
             }
         }
     )
@@ -282,7 +283,7 @@ async def test_electrical_measurement_init(
             1: {
                 "in_clusters": [cluster_id, general.Basic.cluster_id],
                 "out_cluster": [],
-                "device_type": 0x0000,
+                "device_type": zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
             }
         }
     )
