@@ -354,7 +354,7 @@ class OptionsFlow(config_entries.OptionsFlow):
                 return False
 
         return True
-    
+
     def _can_replace_device(self, entry_id):
         """Check if device can be replaced with selected device."""
         device_data = self._get_device_data(entry_id)
