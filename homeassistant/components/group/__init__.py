@@ -591,7 +591,7 @@ class Group(Entity):
         self.tracking = tuple(tracking)
 
     @callback
-    def _async_start(self):
+    def _async_start(self, *_):
         """Start tracking members and write state."""
         self._async_start_tracking()
         self.async_write_ha_state()

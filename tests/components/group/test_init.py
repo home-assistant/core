@@ -8,6 +8,7 @@ from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
+    EVENT_HOMEASSISTANT_START,
     SERVICE_RELOAD,
     STATE_HOME,
     STATE_NOT_HOME,
@@ -15,6 +16,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNKNOWN,
 )
+from homeassistant.core import CoreState
 from homeassistant.helpers.event import TRACK_STATE_CHANGE_CALLBACKS
 from homeassistant.setup import async_setup_component, setup_component
 
@@ -881,6 +883,37 @@ async def test_light_removed(hass):
     assert hass.states.get("group.group_zero").state == "on"
 
     hass.states.async_remove("light.three")
+    await hass.async_block_till_done()
+
+    assert hass.states.get("group.group_zero").state == "off"
+
+
+async def test_switch_removed(hass):
+    """Test group of switches when one is removed."""
+    hass.states.async_set("switch.one", "off")
+    hass.states.async_set("switch.two", "off")
+    hass.states.async_set("switch.three", "on")
+
+    hass.state = CoreState.stopped
+    assert await async_setup_component(hass, "switch", {})
+    assert await async_setup_component(
+        hass,
+        "group",
+        {
+            "group": {
+                "group_zero": {"entities": "switch.one, switch.two, switch.three"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("group.group_zero").state == "unknown"
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+    assert hass.states.get("group.group_zero").state == "on"
+
+    hass.states.async_remove("switch.three")
     await hass.async_block_till_done()
 
     assert hass.states.get("group.group_zero").state == "off"
