@@ -7,7 +7,7 @@
           "host": "[%key:common::config_flow::data::host%]",
           "name": "Name",
           "port": "[%key:common::config_flow::data::port%]",
-          "ssl": "Use SSL (not tested)"
+          "ssl": "Use SSL"
         }
       }
     },
