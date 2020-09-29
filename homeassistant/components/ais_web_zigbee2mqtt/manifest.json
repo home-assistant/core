@@ -1,0 +1,10 @@
+{
+  "domain": "ais_web_zigbee2mqtt",
+  "name": "AIS Ingress Proxy for Zigbee2Mqtt",
+  "config_flow": false,
+  "documentation": "https://www.ai-speaker.com",
+  "issue_tracker": "https://github.com/sviete/AIS-home-assistant",
+  "requirements": [],
+  "dependencies": ["http"],
+  "codeowners": []
+}
