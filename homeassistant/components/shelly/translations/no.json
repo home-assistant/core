@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Enheten er allerede konfigurert"
+            "already_configured": "Enheten er allerede konfigurert",
+            "unsupported_firmware": "Enheten bruker en ikke-st\u00f8ttet firmwareversjon."
         },
         "error": {
             "auth_not_supported": "Shelly-enheter som krever godkjenning st\u00f8ttes for \u00f8yeblikket ikke.",
