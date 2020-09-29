@@ -13,6 +13,6 @@ apply:
     colors_only:
       description: Only change the color of the lights and leave the brightness as is.
       example: false
-    on_lights_only:
-      description: Only adjust the lights that are already on, otherwise turn the lights on.
+    turn_on_lights:
+      description: Turn on the lights that are off.
       example: false

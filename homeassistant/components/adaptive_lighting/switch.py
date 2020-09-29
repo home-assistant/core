@@ -72,7 +72,6 @@ from .const import (
     CONF_MAX_COLOR_TEMP,
     CONF_MIN_BRIGHTNESS,
     CONF_MIN_COLOR_TEMP,
-    CONF_ON_LIGHTS_ONLY,
     CONF_ONLY_ONCE,
     CONF_PREFER_RGB_COLOR,
     CONF_SLEEP_BRIGHTNESS,
@@ -84,6 +83,7 @@ from .const import (
     CONF_SUNSET_OFFSET,
     CONF_SUNSET_TIME,
     CONF_TRANSITION,
+    CONF_TURN_ON_LIGHTS,
     DOMAIN,
     EXTRA_VALIDATION,
     ICON,
@@ -122,7 +122,7 @@ async def handle_apply(switch, service_call):
             data[CONF_COLORS_ONLY],
         )
         for light in data[CONF_LIGHTS]
-        if not data[CONF_ON_LIGHTS_ONLY] or is_on(switch.hass, light)
+        if data[CONF_TURN_ON_LIGHTS] or is_on(switch.hass, light)
     ]
     if tasks:
         await asyncio.wait(tasks)
@@ -150,7 +150,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 default=switch._initial_transition,  # pylint: disable=protected-access
             ): VALID_TRANSITION,
             vol.Optional(CONF_COLORS_ONLY, default=False): cv.boolean,
-            vol.Optional(CONF_ON_LIGHTS_ONLY, default=False): cv.boolean,
+            vol.Optional(CONF_TURN_ON_LIGHTS, default=False): cv.boolean,
         },
         handle_apply,
     )

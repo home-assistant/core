@@ -41,7 +41,7 @@ NONE_STR = "None"
 
 SERVICE_APPLY = "apply"
 CONF_COLORS_ONLY = "colors_only"
-CONF_ON_LIGHTS_ONLY = "on_lights_only"
+CONF_TURN_ON_LIGHTS = "turn_on_lights"
 
 TURNING_OFF_DELAY = 5
 
