@@ -99,7 +99,7 @@ async def _configure_flow(hass, init_result, user_input={}):
 
 
 async def test_user_if_no_configuration(hass):
-    """Check flow aborts when no configuration is present."""
+    """Check flow behavior when no configuration is present."""
     result = await _init_flow(hass)
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -117,6 +117,7 @@ async def test_user_existing_id_abort(hass):
     with patch("hyperion.client.HyperionClient", return_value=client):
         result = await _configure_flow(hass, result, user_input=TEST_USER_INPUT)
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "already_configured"
 
 
 async def test_user_client_errors(hass):

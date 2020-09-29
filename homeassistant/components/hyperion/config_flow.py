@@ -70,7 +70,6 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         auth_resp = await hc.async_is_auth_required()
         await hc.async_client_disconnect()
 
-        # TODO: Test nicer message?
         await self.async_set_unique_id(hyperion_id)
         self._abort_if_unique_id_configured()
 
