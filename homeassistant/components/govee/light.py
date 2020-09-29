@@ -14,12 +14,15 @@ from homeassistant.components.light import (
     SUPPORT_COLOR_TEMP,
     LightEntity,
 )
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 from homeassistant.util import color
 
 from .const import CONF_DELAY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-SCAN_INTERVAL = timedelta(seconds=10)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -28,41 +31,98 @@ async def async_setup_entry(hass, entry, async_add_entities):
     config = entry.data
     hub = hass.data[DOMAIN]["hub"]
 
-    # override the scan interval from config
-    SCAN_INTERVAL = timedelta(  # pylint: disable=redefined-outer-name,invalid-name,unused-variable
-        seconds=config[CONF_DELAY]
+    # refresh
+    update_interval = timedelta(seconds=config[CONF_DELAY])
+    coordinator = GoveeDataUpdateCoordinator(
+        hass, _LOGGER, update_interval=update_interval
     )
+    # Fetch initial data so we have data when entities subscribe
+    await coordinator.async_refresh()
 
     # Add devices
     async_add_entities(
-        [GoveeLightEntity(hub, entry.title, device) for device in hub.devices], True
+        [
+            GoveeLightEntity(hub, entry.title, coordinator, device)
+            for device in coordinator.data
+        ],
+        update_before_add=False,
     )
+
+
+class GoveeDataUpdateCoordinator(DataUpdateCoordinator):
+    """Device state update handler."""
+
+    def __init__(
+        self,
+        hass,
+        logger,
+        update_interval=None,
+    ):
+        """Initialize global data updater."""
+        super().__init__(
+            hass,
+            logger,
+            name=DOMAIN,
+            update_interval=update_interval,
+            update_method=self._async_update,
+        )
+
+    async def _async_update(self):
+        """Fetch data."""
+        self.logger.debug("_async_update")
+        if "govee" not in self.hass.data:
+            raise UpdateFailed("Govee instance not available")
+        try:
+            govee = self.hass.data[DOMAIN]["hub"]
+            device_states = await govee.get_states()
+            for device in device_states:
+                if device.error:
+                    self.logger.warning(
+                        "update failed for %s: %s", device.device, device.error
+                    )
+            return device_states
+        except Exception as ex:
+            raise UpdateFailed("Exception on getting states: {ex}") from ex
 
 
 class GoveeLightEntity(LightEntity):
     """Representation of a stateful light entity."""
 
-    def __init__(self, hub: Govee, title: str, device: GoveeDevice):
+    def __init__(
+        self,
+        hub: Govee,
+        title: str,
+        coordinator: GoveeDataUpdateCoordinator,
+        device: GoveeDevice,
+    ):
         """Init a Govee light strip."""
         self._hub = hub
         self._title = title
+        self._coordinator = coordinator
         self._device = device
+
+    @property
+    def entity_registry_enabled_default(self):
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return True
+
+    async def async_added_to_hass(self):
+        """Connect to dispatcher listening for entity data notifications."""
+        self._coordinator.async_add_listener(self.async_write_ha_state)
 
     @property
     def _state(self):
         """Lights internal state."""
-        return self._hub.state(self._device)
+        return self._device  # self._hub.state(self._device)
 
     @property
     def supported_features(self):
         """Flag supported features."""
         return SUPPORT_BRIGHTNESS | SUPPORT_COLOR | SUPPORT_COLOR_TEMP
 
-    async def async_update(self):
-        """Get state of the led strip."""
-        state, err = await self._hub.get_state(self._device)
-        if not state:
-            _LOGGER.warning("cannot get state for %s: %s", self._device.device, err)
+    # async def _async_update(self):
+    #     """Get state of the led strip."""
+    #     return await self._hub.get_state(self._device)
 
     async def async_turn_on(self, **kwargs):
         """Turn device on."""
@@ -128,36 +188,36 @@ class GoveeLightEntity(LightEntity):
     @property
     def is_on(self):
         """Return true if device is on."""
-        return self._state.power_state
+        return self._device.power_state
 
     @property
     def available(self):
         """Return if light is available."""
-        return self._state.online
+        return self._device.online
 
     @property
     def hs_color(self):
         """Return the hs color value."""
         return color.color_RGB_to_hs(
-            self._state.color[0],
-            self._state.color[1],
-            self._state.color[2],
+            self._device.color[0],
+            self._device.color[1],
+            self._device.color[2],
         )
 
     @property
     def rgb_color(self):
         """Return the rgb color value."""
         return [
-            self._state.color[0],
-            self._state.color[1],
-            self._state.color[2],
+            self._device.color[0],
+            self._device.color[1],
+            self._device.color[2],
         ]
 
     @property
     def brightness(self):
         """Return the brightness value."""
         # govee is reporting 0 to 254 - home assistant uses 1 to 255
-        return self._state.brightness + 1
+        return self._device.brightness + 1
 
     @property
     def min_mireds(self):
