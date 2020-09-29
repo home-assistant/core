@@ -90,7 +90,7 @@ def _list_payload(media_library, item, children=None):
     )
 
 
-def _item_payload(media_library, item, title=None, parent_item=None, info=None):
+def _raw_item_payload(media_library, item, parent_item=None, title=None, info=None):
     if "type" in item:
         thumbnail = item.get("albumart")
         if thumbnail:
@@ -109,6 +109,12 @@ def _item_payload(media_library, item, title=None, parent_item=None, info=None):
         "can_expand": item.get("type") not in NON_EXAPNDABLE_ITEM_TYPES,
         "thumbnail": thumbnail,
     }
+
+
+def _item_payload(media_library, item, parent_item):
+    return BrowseMedia(
+        **_raw_item_payload(media_library, item, parent_item=parent_item)
+    )
 
 
 async def browse_top_level(media_library):
@@ -136,7 +142,7 @@ async def browse_node(media_library, media_content_type, media_content_id):
     # we only use the first list since the second one could include all tracks
     first_list = navigation["lists"][0]
     children = [
-        BrowseMedia(**_item_payload(media_library, item, parent_item=json_item))
+        _item_payload(media_library, item, parent_item=json_item)
         for item in first_list["items"]
     ]
     info = navigation.get("info")
@@ -147,5 +153,5 @@ async def browse_node(media_library, media_content_type, media_content_id):
         else:
             title = "Media Library"
 
-    payload = _item_payload(media_library, json_item, title=title, info=info)
+    payload = _raw_item_payload(media_library, json_item, title=title, info=info)
     return BrowseMedia(**payload, children=children)
