@@ -18,7 +18,6 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
-    CONF_IP_ADDRESS,
     PRECISION_WHOLE,
     STATE_OFF,
     STATE_ON,
@@ -51,20 +50,17 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Platform setup isn't required."""
-    return True
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up AdvantageAir climate platform."""
 
-    instance = hass.data[DOMAIN][config_entry.data[CONF_IP_ADDRESS]]
+    instance = hass.data[DOMAIN][config_entry.entry_id]
 
     entities = []
-    for _, ac_index in enumerate(instance["coordinator"].data["aircons"]):
+    for ac_index in instance["coordinator"].data["aircons"]:
         entities.append(AdvantageAirAC(instance, ac_index))
-        for _, zone_index in enumerate(
-            instance["coordinator"].data["aircons"][ac_index]["zones"]
-        ):
+        for zone_index in instance["coordinator"].data["aircons"][ac_index]["zones"]:
             # Only add zone climate control when zone is in temperature control
             if (
                 instance["coordinator"].data["aircons"][ac_index]["zones"][zone_index][
