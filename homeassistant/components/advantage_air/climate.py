@@ -58,17 +58,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     instance = hass.data[DOMAIN][config_entry.entry_id]
 
     entities = []
-    for ac_index in instance["coordinator"].data["aircons"]:
-        entities.append(AdvantageAirAC(instance, ac_index))
-        for zone_index in instance["coordinator"].data["aircons"][ac_index]["zones"]:
+    for ac_key in instance["coordinator"].data["aircons"]:
+        entities.append(AdvantageAirAC(instance, ac_key))
+        for zone_key in instance["coordinator"].data["aircons"][ac_key]["zones"]:
             # Only add zone climate control when zone is in temperature control
             if (
-                instance["coordinator"].data["aircons"][ac_index]["zones"][zone_index][
+                instance["coordinator"].data["aircons"][ac_key]["zones"][zone_key][
                     "type"
                 ]
                 != 0
             ):
-                entities.append(AdvantageAirZone(instance, ac_index, zone_index))
+                entities.append(AdvantageAirZone(instance, ac_key, zone_key))
     async_add_entities(entities)
     return True
 
@@ -111,33 +111,33 @@ class AdvantageAirClimateEntity(CoordinatorEntity, ClimateEntity):
 class AdvantageAirAC(AdvantageAirClimateEntity):
     """AdvantageAir AC unit."""
 
-    def __init__(self, instance, ac_index):
+    def __init__(self, instance, ac_key):
         """Initialize the Advantage Air AC climate entity."""
         super().__init__(instance)
-        self.ac_index = ac_index
+        self.ac_key = ac_key
 
     @property
     def name(self):
         """Return the name."""
-        return self.coordinator.data["aircons"][self.ac_index]["info"]["name"]
+        return self.coordinator.data["aircons"][self.ac_key]["info"]["name"]
 
     @property
     def unique_id(self):
         """Return a unique id."""
-        return f'{self.coordinator.data["system"]["rid"]}-{self.ac_index}-climate'
+        return f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-climate'
 
     @property
     def target_temperature(self):
         """Return the current target temperature."""
-        return self.coordinator.data["aircons"][self.ac_index]["info"]["setTemp"]
+        return self.coordinator.data["aircons"][self.ac_key]["info"]["setTemp"]
 
     @property
     def hvac_mode(self):
         """Return the current HVAC modes."""
-        if self.coordinator.data["aircons"][self.ac_index]["info"]["state"] == STATE_ON:
+        if self.coordinator.data["aircons"][self.ac_key]["info"]["state"] == STATE_ON:
             return ADVANTAGE_AIR_HVAC_MODES.get(
-                self.coordinator.data["aircons"][self.ac_index]["info"]["mode"],
-                self.coordinator.data["aircons"][self.ac_index]["info"]["mode"],
+                self.coordinator.data["aircons"][self.ac_key]["info"]["mode"],
+                self.coordinator.data["aircons"][self.ac_key]["info"]["mode"],
             )
         return HVAC_MODE_OFF
 
@@ -156,7 +156,7 @@ class AdvantageAirAC(AdvantageAirClimateEntity):
     def fan_mode(self):
         """Return the current fan modes."""
         return ADVANTAGE_AIR_FAN_MODES.get(
-            self.coordinator.data["aircons"][self.ac_index]["info"]["fan"], FAN_OFF
+            self.coordinator.data["aircons"][self.ac_key]["info"]["fan"], FAN_OFF
         )
 
     @property
@@ -172,16 +172,16 @@ class AdvantageAirAC(AdvantageAirClimateEntity):
     @property
     def device_state_attributes(self):
         """Return additional attributes about AC unit."""
-        return self.coordinator.data["aircons"][self.ac_index]["info"]
+        return self.coordinator.data["aircons"][self.ac_key]["info"]
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set the HVAC Mode and State."""
         if hvac_mode == HVAC_MODE_OFF:
-            await self.async_change({self.ac_index: {"info": {"state": STATE_OFF}}})
+            await self.async_change({self.ac_key: {"info": {"state": STATE_OFF}}})
         else:
             await self.async_change(
                 {
-                    self.ac_index: {
+                    self.ac_key: {
                         "info": {
                             "state": STATE_ON,
                             "mode": HASS_HVAC_MODES.get(hvac_mode),
@@ -193,55 +193,55 @@ class AdvantageAirAC(AdvantageAirClimateEntity):
     async def async_set_fan_mode(self, fan_mode):
         """Set the Fan Mode."""
         await self.async_change(
-            {self.ac_index: {"info": {"fan": HASS_FAN_MODES.get(fan_mode)}}}
+            {self.ac_key: {"info": {"fan": HASS_FAN_MODES.get(fan_mode)}}}
         )
 
     async def async_set_temperature(self, **kwargs):
         """Set the Temperature."""
         temp = kwargs.get(ATTR_TEMPERATURE)
-        await self.async_change({self.ac_index: {"info": {"setTemp": temp}}})
+        await self.async_change({self.ac_key: {"info": {"setTemp": temp}}})
 
 
 class AdvantageAirZone(AdvantageAirClimateEntity):
     """AdvantageAir Zone control."""
 
-    def __init__(self, instance, ac_index, zone_index):
+    def __init__(self, instance, ac_key, zone_key):
         """Initialize the Advantage Air Zone climate entity."""
         super().__init__(instance)
-        self.ac_index = ac_index
-        self.zone_index = zone_index
+        self.ac_key = ac_key
+        self.zone_key = zone_key
 
     @property
     def name(self):
         """Return the name."""
-        return self.coordinator.data["aircons"][self.ac_index]["zones"][
-            self.zone_index
-        ]["name"]
+        return self.coordinator.data["aircons"][self.ac_key]["zones"][self.zone_key][
+            "name"
+        ]
 
     @property
     def unique_id(self):
         """Return a unique id."""
-        return f'{self.coordinator.data["system"]["rid"]}-{self.ac_index}-{self.zone_index}-climate'
+        return f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-{self.zone_key}-climate'
 
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        return self.coordinator.data["aircons"][self.ac_index]["zones"][
-            self.zone_index
-        ]["measuredTemp"]
+        return self.coordinator.data["aircons"][self.ac_key]["zones"][self.zone_key][
+            "measuredTemp"
+        ]
 
     @property
     def target_temperature(self):
         """Return the target temperature."""
-        return self.coordinator.data["aircons"][self.ac_index]["zones"][
-            self.zone_index
-        ]["setTemp"]
+        return self.coordinator.data["aircons"][self.ac_key]["zones"][self.zone_key][
+            "setTemp"
+        ]
 
     @property
     def hvac_mode(self):
         """Return the current HVAC modes."""
         if (
-            self.coordinator.data["aircons"][self.ac_index]["zones"][self.zone_index][
+            self.coordinator.data["aircons"][self.ac_key]["zones"][self.zone_key][
                 "state"
             ]
             == STATE_OPEN
@@ -257,7 +257,7 @@ class AdvantageAirZone(AdvantageAirClimateEntity):
     @property
     def device_state_attributes(self):
         """Return additional attributes about Zone."""
-        return self.coordinator.data["aircons"][self.ac_index]["zones"][self.zone_index]
+        return self.coordinator.data["aircons"][self.ac_key]["zones"][self.zone_key]
 
     @property
     def supported_features(self):
@@ -268,16 +268,16 @@ class AdvantageAirZone(AdvantageAirClimateEntity):
         """Set the HVAC Mode and State."""
         if hvac_mode == HVAC_MODE_OFF:
             await self.async_change(
-                {self.ac_index: {"zones": {self.zone_index: {"state": STATE_CLOSE}}}}
+                {self.ac_key: {"zones": {self.zone_key: {"state": STATE_CLOSE}}}}
             )
         else:
             await self.async_change(
-                {self.ac_index: {"zones": {self.zone_index: {"state": STATE_OPEN}}}}
+                {self.ac_key: {"zones": {self.zone_key: {"state": STATE_OPEN}}}}
             )
 
     async def async_set_temperature(self, **kwargs):
         """Set the Temperature."""
         temp = kwargs.get(ATTR_TEMPERATURE)
         await self.async_change(
-            {self.ac_index: {"zones": {self.zone_index: {"setTemp": temp}}}}
+            {self.ac_key: {"zones": {self.zone_key: {"setTemp": temp}}}}
         )

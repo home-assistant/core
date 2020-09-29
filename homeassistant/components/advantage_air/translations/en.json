@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "connection_error": "[%key:common::config_flow::error::cannot_connect%]"
+        },
+        "flow_title": "Advantage Air Setup",
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "[%key:common::config_flow::data::ip%]",
+                    "port": "[%key:common::config_flow::data::port%]"
+                },
+                "description": "Connect to the API of your Advantage Air wall mounted tablet.",
+                "title": "Connect"
+            }
+        }
+    },
+    "title": "Advantage Air"
+}
