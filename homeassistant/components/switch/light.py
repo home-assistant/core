@@ -10,7 +10,6 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_ENTITY_ID,
     CONF_NAME,
-    CONF_UNIQUE_ID,
     STATE_ON,
     STATE_UNAVAILABLE,
 )
@@ -33,7 +32,6 @@ DEFAULT_NAME = "Light Switch"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Required(CONF_ENTITY_ID): cv.entity_domain(switch.DOMAIN),
     }
 )
@@ -46,12 +44,17 @@ async def async_setup_platform(
     discovery_info: Optional[DiscoveryInfoType] = None,
 ) -> None:
     """Initialize Light Switch platform."""
+
+    registry = await hass.helpers.entity_registry.async_get_registry()
+    wrapped_switch = registry.entities.get(config[CONF_ENTITY_ID])
+    unique_id = wrapped_switch.unique_id if wrapped_switch else None
+
     async_add_entities(
         [
             LightSwitch(
                 cast(str, config.get(CONF_NAME)),
                 config[CONF_ENTITY_ID],
-                cast(str, config.get(CONF_UNIQUE_ID)),
+                unique_id,
             )
         ],
         True,
