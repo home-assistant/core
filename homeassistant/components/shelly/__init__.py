@@ -32,7 +32,6 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def update_listener(hass, config_entry):
     """Update listener."""
-    _LOGGER.warning("UPDATE")
     await hass.config_entries.async_reload(config_entry.entry_id)
 
 
