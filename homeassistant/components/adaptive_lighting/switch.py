@@ -569,7 +569,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
             )
             lock = self._locks.get(entity_id)
             if lock is None:
-                lock = asyncio.Lock()
+                lock = self._locks[entity_id] = asyncio.Lock()
             async with lock:
                 if await self.turn_on_off_listener.maybe_cancel_adjusting(
                     entity_id,
