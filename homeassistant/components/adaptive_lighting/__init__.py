@@ -99,9 +99,7 @@ async def async_unload_entry(hass, config_entry: ConfigEntry) -> bool:
     data = hass.data[DOMAIN]
     data[config_entry.entry_id][UNDO_UPDATE_LISTENER]()
     switch = data[config_entry.entry_id][SWITCH_DOMAIN]
-    while switch.unsub_trackers:
-        unsub = switch.unsub_trackers.pop()
-        unsub()
+    switch._unsub_trackers()  # pylint: disable=protected-access
 
     if unload_ok:
         data.pop(config_entry.entry_id)

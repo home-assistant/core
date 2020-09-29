@@ -263,10 +263,10 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         """Call when entity about to be added to hass."""
         if self._lights:
             if self.hass.is_running:
-                await self._setup_listeners()
+                await self._setup_trackers()
             else:
                 self.hass.bus.async_listen_once(
-                    EVENT_HOMEASSISTANT_START, self._setup_listeners
+                    EVENT_HOMEASSISTANT_START, self._setup_trackers
                 )
         last_state = await self.async_get_last_state()
         if last_state and last_state.state == STATE_ON:
@@ -294,13 +294,8 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         self.turn_on_off_listener.lights.update(all_lights)
         self._lights = list(all_lights)
 
-    async def _setup_listeners(self, _=None):
-        if self.unsub_trackers:
-            _LOGGER.error(
-                "%s: Calling '_setup_listeners' when they are already set up", self.name
-            )
-            return
-
+    async def _setup_trackers(self, _=None):
+        assert not self.unsub_trackers
         self._unpack_light_groups()
         rm_interval = async_track_time_interval(
             self.hass, self._async_update_at_interval, self._interval
@@ -320,6 +315,12 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
             rm_from = async_track_state_change(**kwgs, from_state=self._disable_state)
             rm_to = async_track_state_change(**kwgs, to_state=self._disable_state)
             self.unsub_trackers.extend([rm_from, rm_to])
+
+    def _unsub_trackers(self):
+        assert self.unsub_trackers
+        while self.unsub_trackers:
+            unsub = self.unsub_trackers.pop()
+            unsub()
 
     @property
     def icon(self):
@@ -350,7 +351,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
             return
         self._state = True
         if setup_listeners:
-            self._setup_listeners()
+            await self._setup_trackers()
         if adjust_lights:
             await self._update_lights(transition=self._initial_transition, force=True)
 
@@ -359,9 +360,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         if not self.is_on:
             return
         self._state = False
-        while self.unsub_trackers:
-            unsub = self.unsub_trackers.pop()
-            unsub()
+        self._unsub_trackers()
 
     async def _update_attrs(self):
         """Update Adaptive Values."""
