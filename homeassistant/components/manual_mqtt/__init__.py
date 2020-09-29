@@ -1,1 +1,1 @@
-"""The manual_mqtt component."""
+"""The manual_mqtt alarm component."""
