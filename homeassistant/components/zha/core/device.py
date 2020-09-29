@@ -33,7 +33,7 @@ from .const import (
     ATTR_DEVICE_IEEE,
     ATTR_DEVICE_TYPE,
     ATTR_ENDPOINT_ID,
-    ATTR_ENDPOINTNAMES,
+    ATTR_ENDPOINT_NAMES,
     ATTR_ENDPOINTS,
     ATTR_IEEE,
     ATTR_LAST_SEEN,
@@ -456,7 +456,7 @@ class ZHADevice(LogMixin):
         ]
 
         # Return endpoint device type Names
-        device_info[ATTR_ENDPOINTNAMES] = [
+        device_info[ATTR_ENDPOINT_NAMES] = [
             {
                 "name": endpoint.device_type.name,
             }
