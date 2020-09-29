@@ -32,8 +32,8 @@ class AdvantageAirConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Get configuration from the user."""
         errors = {}
         if user_input:
-            ip_address = user_input.get(CONF_IP_ADDRESS)
-            port = user_input.get(CONF_PORT)
+            ip_address = user_input[CONF_IP_ADDRESS]
+            port = user_input[CONF_PORT]
             try:
                 data = await advantage_air(
                     ip_address, port, ADVANTAGE_AIR_RETRY

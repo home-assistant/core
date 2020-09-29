@@ -78,7 +78,7 @@ async def async_setup_entry(hass, config_entry):
         "sw_version": coordinator.data["system"]["myAppRev"],
     }
 
-    hass.data[DOMAIN][ip_address] = {
+    hass.data[DOMAIN][config_entry.entry_id] = {
         "coordinator": coordinator,
         "async_change": async_change,
         "device": device,
