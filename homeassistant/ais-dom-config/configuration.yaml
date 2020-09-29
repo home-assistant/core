@@ -95,6 +95,5 @@ media_source:
 # TODO
 # check if user is authenticated and add this to polymer
 # /api/ingress/
-#ais_ingress:
-#  host: localhost
-#  port: 8888
+ais_web_zigbee2mqtt:
+  port: 8099
