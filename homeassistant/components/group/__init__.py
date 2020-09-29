@@ -562,11 +562,10 @@ class Group(Entity):
 
         This method must be run in the event loop.
         """
-        await self.async_stop()
+        self._async_stop()
         self._set_tracked(entity_ids)
         self._reset_tracked_state()
-        await self.async_update_ha_state(True)
-        self.async_start()
+        self._async_start()
 
     def _set_tracked(self, entity_ids):
         """Tuple of entities to be tracked."""
@@ -592,20 +591,26 @@ class Group(Entity):
         self.tracking = tuple(tracking)
 
     @callback
-    def async_start(self):
+    def _async_start(self):
+        """Start tracking members and write state."""
+        self._async_start_tracking()
+        self.async_write_ha_state()
+
+    @callback
+    def _async_start_tracking(self):
         """Start tracking members.
 
         This method must be run in the event loop.
         """
-        if not self.trackable:
-            return
-
-        if self._async_unsub_state_changed is None:
+        if self.trackable and self._async_unsub_state_changed is None:
             self._async_unsub_state_changed = async_track_state_change_event(
                 self.hass, self.trackable, self._async_state_changed_listener
             )
 
-    async def async_stop(self):
+        self._async_update_group_state()
+
+    @callback
+    def _async_stop(self):
         """Unregister the group from Home Assistant.
 
         This method must be run in the event loop.
@@ -624,14 +629,17 @@ class Group(Entity):
         if self.tracking:
             self._reset_tracked_state()
 
-        self._async_update_group_state()
-        self.async_start()
+        if self.hass.state != CoreState.running:
+            self.hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_START, self._async_start
+            )
+            return
+
+        self._async_start_tracking()
 
     async def async_will_remove_from_hass(self):
         """Handle removal from Home Assistant."""
-        if self._async_unsub_state_changed:
-            self._async_unsub_state_changed()
-            self._async_unsub_state_changed = None
+        self._async_stop()
 
     async def _async_state_changed_listener(self, event):
         """Respond to a member state changing.
