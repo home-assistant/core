@@ -346,7 +346,7 @@ google-api-python-client==1.6.4
 google-cloud-pubsub==0.39.1
 
 # homeassistant.components.govee
-govee-api-laggat==0.1.13
+govee-api-laggat==0.1.14
 
 # homeassistant.components.griddy
 griddypower==0.1.0

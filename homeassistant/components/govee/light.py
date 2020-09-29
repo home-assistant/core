@@ -14,10 +14,7 @@ from homeassistant.components.light import (
     SUPPORT_COLOR_TEMP,
     LightEntity,
 )
-from homeassistant.helpers.update_coordinator import (
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import color
 
 from .const import CONF_DELAY, DOMAIN
