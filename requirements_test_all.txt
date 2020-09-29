@@ -1071,7 +1071,7 @@ yeelight==0.5.3
 zeroconf==0.28.5
 
 # homeassistant.components.zha
-zha-quirks==0.0.44
+zha-quirks==0.0.45
 
 # homeassistant.components.zha
 zigpy-cc==0.5.2
