@@ -1,6 +1,7 @@
 """Consts for Cast integration."""
 
 DOMAIN = "cast"
+APP_ID_HOMEASSISTANT = "B12CE3CA"
 DEFAULT_PORT = 8009
 
 # Stores a threading.Lock that is held by the internal pychromecast discovery.
