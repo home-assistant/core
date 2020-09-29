@@ -5,6 +5,7 @@ from collections import OrderedDict
 import logging
 
 import RFXtrx as rfxtrxmod
+import async_timeout
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -33,6 +34,7 @@ from homeassistant.const import (
     VOLT,
 )
 from homeassistant.core import callback
+from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -127,10 +129,10 @@ DEVICE_DATA_SCHEMA = vol.Schema(
 
 BASE_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_DEBUG, default=False): cv.boolean,
+        vol.Optional(CONF_DEBUG): cv.boolean,
         vol.Optional(CONF_AUTOMATIC_ADD, default=False): cv.boolean,
         vol.Optional(CONF_DEVICES, default={}): {cv.string: _ensure_device},
-    }
+    },
 )
 
 DEVICE_SCHEMA = BASE_SCHEMA.extend({vol.Required(CONF_DEVICE): cv.string})
@@ -140,7 +142,8 @@ PORT_SCHEMA = BASE_SCHEMA.extend(
 )
 
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Any(DEVICE_SCHEMA, PORT_SCHEMA)}, extra=vol.ALLOW_EXTRA
+    {DOMAIN: vol.All(cv.deprecated(CONF_DEBUG), vol.Any(DEVICE_SCHEMA, PORT_SCHEMA))},
+    extra=vol.ALLOW_EXTRA,
 )
 
 DOMAINS = ["switch", "sensor", "light", "binary_sensor", "cover"]
@@ -155,7 +158,6 @@ async def async_setup(hass, config):
         CONF_HOST: config[DOMAIN].get(CONF_HOST),
         CONF_PORT: config[DOMAIN].get(CONF_PORT),
         CONF_DEVICE: config[DOMAIN].get(CONF_DEVICE),
-        CONF_DEBUG: config[DOMAIN].get(CONF_DEBUG),
         CONF_AUTOMATIC_ADD: config[DOMAIN].get(CONF_AUTOMATIC_ADD),
         CONF_DEVICES: config[DOMAIN][CONF_DEVICES],
     }
@@ -224,11 +226,10 @@ def _create_rfx(config):
         rfx = rfxtrxmod.Connect(
             (config[CONF_HOST], config[CONF_PORT]),
             None,
-            debug=config[CONF_DEBUG],
             transport_protocol=rfxtrxmod.PyNetworkTransport,
         )
     else:
-        rfx = rfxtrxmod.Connect(config[CONF_DEVICE], None, debug=config[CONF_DEBUG])
+        rfx = rfxtrxmod.Connect(config[CONF_DEVICE], None)
 
     return rfx
 
@@ -252,7 +253,11 @@ async def async_setup_internal(hass, entry: config_entries.ConfigEntry):
     config = entry.data
 
     # Initialize library
-    rfx_object = await hass.async_add_executor_job(_create_rfx, config)
+    try:
+        async with async_timeout.timeout(5):
+            rfx_object = await hass.async_add_executor_job(_create_rfx, config)
+    except asyncio.TimeoutError as err:
+        raise ConfigEntryNotReady from err
 
     # Setup some per device config
     devices = _get_device_lookup(config[CONF_DEVICES])

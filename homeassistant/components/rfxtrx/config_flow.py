@@ -36,7 +36,6 @@ from .binary_sensor import supported as binary_supported
 from .const import (
     CONF_AUTOMATIC_ADD,
     CONF_DATA_BITS,
-    CONF_DEBUG,
     CONF_FIRE_EVENT,
     CONF_OFF_DELAY,
     CONF_REMOVE_DEVICE,
@@ -85,7 +84,6 @@ class OptionsFlow(config_entries.OptionsFlow):
 
         if user_input is not None:
             self._global_options = {
-                CONF_DEBUG: user_input[CONF_DEBUG],
                 CONF_AUTOMATIC_ADD: user_input[CONF_AUTOMATIC_ADD],
             }
             if CONF_DEVICE in user_input:
@@ -148,7 +146,6 @@ class OptionsFlow(config_entries.OptionsFlow):
         }
 
         options = {
-            vol.Optional(CONF_DEBUG, default=self._config_entry.data[CONF_DEBUG]): bool,
             vol.Optional(
                 CONF_AUTOMATIC_ADD,
                 default=self._config_entry.data[CONF_AUTOMATIC_ADD],
@@ -535,7 +532,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_PORT: port,
             CONF_DEVICE: device,
             CONF_AUTOMATIC_ADD: False,
-            CONF_DEBUG: False,
             CONF_DEVICES: {},
         }
         return data
