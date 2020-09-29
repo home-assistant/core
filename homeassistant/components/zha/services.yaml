@@ -9,6 +9,15 @@ permit:
     ieee_address:
       description: IEEE address of the node permitting new joins
       example: "00:0d:6f:00:05:7d:2d:34"
+    source_ieee:
+      description: IEEE address of the joining device (must be used with install code)
+      example: "00:0a:bf:00:01:10:23:35"
+    install_code:
+      description: Install code of the joining device (must be used with source_ieee)
+      example: "1234-5678-1234-5678-AABB-CCDD-AABB-CCDD-EEFF"
+    qr_code:
+      description: value of the QR install code (different between vendors)
+      example: "Z:000D6FFFFED4163B$I:52797BF4A5084DAA8E1712B61741CA024051"
 
 remove:
   description: Remove a node from the Zigbee network.
