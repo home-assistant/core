@@ -466,7 +466,7 @@ class SpeechManager:
             artist = options.get("voice")
 
         try:
-            tts_file = mutagen.File(data_bytes, easy=True)
+            tts_file = mutagen.File(data_bytes)
             if tts_file is not None:
                 tts_file["artist"] = ID3Text(encoding=3, text=artist)
                 tts_file["album"] = ID3Text(encoding=3, text=album)
