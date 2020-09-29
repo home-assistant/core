@@ -456,13 +456,27 @@ class ZHADevice(LogMixin):
         ]
 
         # Return endpoint device type Names
-        device_info[ATTR_ENDPOINT_NAMES] = [
-            {
-                "name": endpoint.device_type.name,
-            }
-            for (ep_id, endpoint) in self._zigpy_device.endpoints.items()
-            if ep_id != 0 and endpoint.profile_id in (zha.PROFILE_ID, zll.PROFILE_ID)
-        ]
+        try:
+            device_info[ATTR_ENDPOINT_NAMES] = [
+                {
+                    "name": endpoint.device_type.name,
+                }
+                for (ep_id, endpoint) in self._zigpy_device.endpoints.items()
+                if ep_id != 0
+                and endpoint.profile_id in (zha.PROFILE_ID, zll.PROFILE_ID)
+            ]
+        except AttributeError as ex:
+            # Some device types are not using an enumeration
+            self.warning(
+                "Failed to identify endpoint name in '%s' with exception '%s'",
+                self._zigpy_device.endpoints.items(),
+                ex,
+            )
+            device_info[ATTR_ENDPOINT_NAMES] = [
+                {
+                    "name": "unknown",
+                }
+            ]
 
         reg_device = self.gateway.ha_device_registry.async_get(self.device_id)
         if reg_device is not None:
