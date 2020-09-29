@@ -10,9 +10,15 @@ apply:
     transition:
       description: Transition of the lights.
       example: 10
-    colors_only:
-      description: Only change the color of the lights and leave the brightness as is.
-      example: false
+    adapt_brightness:
+      description: "Adapt the 'brightness', default: true"
+      example: true
+    adapt_color_temp:
+      description: "Adapt the 'color_temp', default: true"
+      example: true
+    adapt_rgb_color:
+      description: "Adapt the 'rgb_color', default: true"
+      example: true
     turn_on_lights:
-      description: Turn on the lights that are off.
+      description: "Turn on the lights that are off, default: false"
       example: false

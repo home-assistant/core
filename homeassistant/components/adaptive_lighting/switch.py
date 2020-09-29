@@ -62,7 +62,6 @@ from .const import (
     CONF_ADAPT_BRIGHTNESS,
     CONF_ADAPT_COLOR_TEMP,
     CONF_ADAPT_RGB_COLOR,
-    CONF_COLORS_ONLY,
     CONF_DISABLE_ENTITY,
     CONF_DISABLE_STATE,
     CONF_INITIAL_TRANSITION,
@@ -119,7 +118,9 @@ async def handle_apply(switch, service_call):
         await switch._adapt_light(  # pylint: disable=protected-access
             light,
             data[CONF_TRANSITION],
-            data[CONF_COLORS_ONLY],
+            data[CONF_ADAPT_BRIGHTNESS],
+            data[CONF_ADAPT_COLOR_TEMP],
+            data[CONF_ADAPT_RGB_COLOR],
         )
         for light in data[CONF_LIGHTS]
         if data[CONF_TURN_ON_LIGHTS] or is_on(switch.hass, light)
@@ -149,7 +150,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 CONF_TRANSITION,
                 default=switch._initial_transition,  # pylint: disable=protected-access
             ): VALID_TRANSITION,
-            vol.Optional(CONF_COLORS_ONLY, default=False): cv.boolean,
+            vol.Optional(CONF_ADAPT_BRIGHTNESS, default=True): cv.boolean,
+            vol.Optional(CONF_ADAPT_COLOR_TEMP, default=True): cv.boolean,
+            vol.Optional(CONF_ADAPT_RGB_COLOR, default=True): cv.boolean,
             vol.Optional(CONF_TURN_ON_LIGHTS, default=False): cv.boolean,
         },
         handle_apply,
@@ -482,28 +485,42 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
             and self.hass.states.get(self._disable_entity).state in self._disable_state
         )
 
-    async def _adapt_light(self, light, transition, colors_only=False):
+    async def _adapt_light(
+        self,
+        light,
+        transition=None,
+        adapt_brightness=None,
+        adapt_color_temp=None,
+        adapt_rgb_color=None,
+    ):
         service_data = {ATTR_ENTITY_ID: light}
         features = self._supported_features(light)
 
+        if transition is None:
+            transition = self._transition
+        if adapt_brightness is None:
+            adapt_brightness = self._adapt_brightness
+        if adapt_color_temp is None:
+            adapt_color_temp = self._adapt_color_temp
+        if adapt_rgb_color is None:
+            adapt_rgb_color = self._adapt_rgb_color
+
         if "transition" in features:
-            if transition is None:
-                transition = self._transition
             service_data[ATTR_TRANSITION] = transition
 
-        if "brightness" in features and self._adapt_brightness and not colors_only:
+        if "brightness" in features and adapt_brightness:
             service_data[ATTR_BRIGHTNESS_PCT] = self._brightness
 
         if (
             "color_temp" in features
-            and self._adapt_color_temp
+            and adapt_color_temp
             and not (self._prefer_rgb_color and "color" in features)
         ):
             attributes = self.hass.states.get(light).attributes
             min_mireds, max_mireds = attributes["min_mireds"], attributes["max_mireds"]
             color_temp_mired = max(min(self._color_temp_mired, max_mireds), min_mireds)
             service_data[ATTR_COLOR_TEMP] = color_temp_mired
-        elif "color" in features and self._adapt_rgb_color:
+        elif "color" in features and adapt_rgb_color:
             service_data[ATTR_RGB_COLOR] = self._rgb_color
 
         _LOGGER.debug(
