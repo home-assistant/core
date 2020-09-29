@@ -78,12 +78,12 @@ async def test_full_flow_implementation(
 ) -> None:
     """Test registering an integration and finishing flow works."""
     aioclient_mock.post(
-        "http://127.0.0.1:10000/retrieve",
-        json=RECEIVE_REPLY,
-    )
-    aioclient_mock.post(
         "http://127.0.0.1:10000/pair",
         json=PAIR_REPLY,
+    )
+    aioclient_mock.post(
+        "http://127.0.0.1:10000/retrieve",
+        json=RECEIVE_REPLY,
     )
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
