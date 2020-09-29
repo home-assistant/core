@@ -13,7 +13,7 @@
         "flow_title": "Shelly: {name}",
         "step": {
             "confirm_discovery": {
-                "description": "Voleu configurar {model} a {host}?"
+                "description": "Vols configurar {model} a {host}? \n\nAbans de configurar-lo, el dispositiu amb bateria ha d'estar despert, prem el bot\u00f3 del dispositiu per despertar-lo."
             },
             "credentials": {
                 "data": {
@@ -24,7 +24,8 @@
             "user": {
                 "data": {
                     "host": "Amfitri\u00f3"
-                }
+                },
+                "description": "Abans de configurar-lo, el dispositiu amb bateria ha d'estar despert, prem el bot\u00f3 del dispositiu per despertar-lo."
             }
         }
     },
