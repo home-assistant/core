@@ -202,5 +202,4 @@ async def test_add_new_binary_sensor_ignored(hass):
     gateway.api.event_handler(state_added_event)
     await hass.async_block_till_done()
 
-    assert len(gateway.deconz_ids) == 0
-    assert "binary_sensor.presence_sensor" not in gateway.deconz_ids
+    assert len(hass.states.async_all()) == 0
