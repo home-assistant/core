@@ -1993,6 +1993,9 @@ sharp_aquos_rc==0.3.2
 # homeassistant.components.shodan
 shodan==1.23.0
 
+# homeassistant.components.enocean
+simple-pid==0.2.4
+
 # homeassistant.components.sighthound
 simplehound==0.3
 

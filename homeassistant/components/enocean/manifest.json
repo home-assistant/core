@@ -3,7 +3,8 @@
   "name": "EnOcean",
   "documentation": "https://www.home-assistant.io/integrations/enocean",
   "requirements": [
-    "enocean==0.50"
+    "enocean==0.50",
+    "simple-pid==0.2.4"
   ],
   "codeowners": [
     "@bdurrer"

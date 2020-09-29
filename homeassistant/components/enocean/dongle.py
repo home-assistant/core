@@ -24,6 +24,14 @@ class EnOceanDongle:
     def __init__(self, hass, serial_path):
         """Initialize the EnOcean dongle."""
 
+        # creating a SerialCommunicator without callback function
+        # for getting the module base id
+        communicator = SerialCommunicator(port=serial_path)
+        communicator.start()
+        _LOGGER.debug("communicatior baseID: %s", communicator.base_id)
+        self._base_id = communicator.base_id
+        communicator.stop()
+
         self._communicator = SerialCommunicator(
             port=serial_path, callback=self.callback
         )
@@ -47,6 +55,9 @@ class EnOceanDongle:
 
     def _send_message_callback(self, command):
         """Send a command through the EnOcean dongle."""
+        if isinstance(command, RadioPacket):
+            command.sender = self._base_id
+
         self._communicator.send(command)
 
     def callback(self, packet):
