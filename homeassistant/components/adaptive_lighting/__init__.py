@@ -24,7 +24,6 @@ Resources:
 * The integration does not calculate a true "Blue Hour" -- it just sets the
   lights to 2700K (warm white) until your hub goes into "Sleep mode".
 """
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -88,13 +87,8 @@ async def async_update_options(hass, config_entry: ConfigEntry):
 
 async def async_unload_entry(hass, config_entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(config_entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
+    unload_ok = await hass.config_entries.async_forward_entry_unload(
+        config_entry, "switch"
     )
     data = hass.data[DOMAIN]
     data[config_entry.entry_id][UNDO_UPDATE_LISTENER]()
