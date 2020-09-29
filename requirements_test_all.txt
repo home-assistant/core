@@ -500,7 +500,7 @@ ovoenergy==1.1.7
 
 # homeassistant.components.mqtt
 # homeassistant.components.shiftr
-paho-mqtt==1.5.0
+paho-mqtt==1.5.1
 
 # homeassistant.components.panasonic_viera
 panasonic_viera==0.3.6
