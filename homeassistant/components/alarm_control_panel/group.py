@@ -1,6 +1,7 @@
 """Describe group states."""
-from typing import Callable
 
+
+from homeassistant.components.group import GroupIntegrationRegistry
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_CUSTOM_BYPASS,
@@ -15,10 +16,10 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 @callback
 def async_describe_on_off_states(
-    hass: HomeAssistantType, async_on_off_states: Callable
+    hass: HomeAssistantType, registry: GroupIntegrationRegistry
 ) -> None:
     """Describe group on off states."""
-    async_on_off_states(
+    registry.on_off_states(
         [
             STATE_ALARM_ARMED_AWAY,
             STATE_ALARM_ARMED_CUSTOM_BYPASS,

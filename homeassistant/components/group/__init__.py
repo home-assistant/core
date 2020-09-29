@@ -1,7 +1,8 @@
 """Provide the functionality to group entities."""
 import asyncio
+from contextvars import ContextVar
 import logging
-from typing import Any, Iterable, List, Optional, cast
+from typing import Any, Dict, Iterable, List, Optional, Set, cast
 
 import voluptuous as vol
 
@@ -55,9 +56,11 @@ SERVICE_REMOVE = "remove"
 
 PLATFORMS = ["light", "cover", "notify"]
 
-DATA_KEY = f"{DOMAIN}_config"
+REG_KEY = f"{DOMAIN}_registry"
 
 _LOGGER = logging.getLogger(__name__)
+
+current_domain: ContextVar[str] = ContextVar("current_domain")
 
 
 def _conf_preprocess(value):
@@ -84,22 +87,38 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-ON_OFF_MAPPING = "on_off_mapping"
-ON_STATES_BY_DOMAIN = "on_states_by_domain"
-EXCLUDE_DOMAINS = "exclude_domains"
+
+class GroupIntegrationRegistry:
+    """Class to hold a registry of integrations."""
+
+    on_off_mapping: Dict[str, str] = {STATE_ON: STATE_OFF}
+    on_states_by_domain: Dict[str, Set] = {}
+    exclude_domains: Set = set()
+
+    def exclude_domain(self) -> None:
+        """Exclude the current domain."""
+        self.exclude_domains.add(current_domain.get())
+
+    def on_off_states(self, on_states: List, off_state: str) -> None:
+        """Registry on and off states for the current domain."""
+        for on_state in on_states:
+            if on_state not in self.on_off_mapping:
+                self.on_off_mapping[on_state] = off_state
+
+        self.on_states_by_domain[current_domain.get()] = set(on_states)
 
 
 @bind_hass
 def is_on(hass, entity_id):
     """Test if the group state is in its ON-state."""
-    if DATA_KEY not in hass.data:
+    if REG_KEY not in hass.data:
         # Integration not setup yet, it cannot be on
         return False
 
     state = hass.states.get(entity_id)
 
     if state is not None:
-        return state.state in hass.data[DATA_KEY][ON_OFF_MAPPING]
+        return state.state in hass.data[REG_KEY].on_off_mapping
 
     return False
 
@@ -193,11 +212,7 @@ async def async_setup(hass, config):
     if component is None:
         component = hass.data[DOMAIN] = EntityComponent(_LOGGER, DOMAIN, hass)
 
-    hass.data[DATA_KEY] = {
-        ON_OFF_MAPPING: {STATE_ON: STATE_OFF},
-        ON_STATES_BY_DOMAIN: {},
-        EXCLUDE_DOMAINS: set(),
-    }
+    hass.data[REG_KEY] = GroupIntegrationRegistry()
 
     await async_process_integration_platforms(hass, DOMAIN, _process_group_platform)
 
@@ -327,19 +342,8 @@ async def async_setup(hass, config):
 async def _process_group_platform(hass, domain, platform):
     """Process a group platform."""
 
-    @callback
-    def _async_on_off_states(on_states, off_state):
-        """Teach group on and off states for a domain."""
-        if on_states is None:
-            hass.data[DATA_KEY][EXCLUDE_DOMAINS].add(domain)
-            return
-
-        for on_state in on_states:
-            if on_state not in hass.data[DATA_KEY][ON_OFF_MAPPING]:
-                hass.data[DATA_KEY][ON_OFF_MAPPING][on_state] = off_state
-        hass.data[DATA_KEY][ON_STATES_BY_DOMAIN][domain] = set(on_states)
-
-    platform.async_describe_on_off_states(hass, _async_on_off_states)
+    current_domain.set(domain)
+    platform.async_describe_on_off_states(hass, hass.data[REG_KEY])
 
 
 async def _async_process_config(hass, config, component):
@@ -574,7 +578,7 @@ class Group(Entity):
             self.trackable = ()
             return
 
-        excluded_domains = self.hass.data[DATA_KEY][EXCLUDE_DOMAINS]
+        excluded_domains = self.hass.data[REG_KEY].exclude_domains
         tracking = []
         trackable = []
         for ent_id in entity_ids:
@@ -665,13 +669,13 @@ class Group(Entity):
         entity_id = state.entity_id
         domain = state.domain
 
-        domain_on_state = self.hass.data[DATA_KEY][ON_STATES_BY_DOMAIN].get(
+        domain_on_state = self.hass.data[REG_KEY].on_states_by_domain.get(
             domain, {STATE_ON}
         )
         self._on_off[entity_id] = state.state in domain_on_state
         self._assumed[entity_id] = state.attributes.get(ATTR_ASSUMED_STATE)
 
-        if domain in self.hass.data[DATA_KEY][ON_STATES_BY_DOMAIN]:
+        if domain in self.hass.data[REG_KEY].on_states_by_domain:
             self._on_states.update(domain_on_state)
 
     @callback
@@ -703,7 +707,7 @@ class Group(Entity):
         num_on_states = len(self._on_states)
         # If all the entity domains we are tracking
         # have the same on state we use this state
-        # and its hass.data[DATA_KEY][ON_OFF_MAPPING] to off
+        # and its hass.data[REG_KEY].on_off_mapping to off
         if num_on_states == 1:
             on_state = list(self._on_states)[0]
         # If we do not have an on state for any domains
@@ -720,4 +724,4 @@ class Group(Entity):
         if group_is_on:
             self._state = on_state
         else:
-            self._state = self.hass.data[DATA_KEY][ON_OFF_MAPPING][on_state]
+            self._state = self.hass.data[REG_KEY].on_off_mapping[on_state]
