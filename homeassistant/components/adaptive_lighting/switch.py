@@ -59,9 +59,9 @@ import homeassistant.util.dt as dt_util
 
 from .const import (
     ATTR_TURN_ON_OFF_LISTENER,
-    CONF_ADJUST_BRIGHTNESS,
-    CONF_ADJUST_COLOR_TEMP,
-    CONF_ADJUST_RGB_COLOR,
+    CONF_ADAPT_BRIGHTNESS,
+    CONF_ADAPT_COLOR_TEMP,
+    CONF_ADAPT_RGB_COLOR,
     CONF_COLORS_ONLY,
     CONF_DISABLE_ENTITY,
     CONF_DISABLE_STATE,
@@ -116,7 +116,7 @@ async def handle_apply(switch, service_call):
         raise ValueError("Apply can only be called for a AdaptiveSwitch.")
     data = service_call.data
     tasks = [
-        await switch._adjust_light(  # pylint: disable=protected-access
+        await switch._adapt_light(  # pylint: disable=protected-access
             light,
             data[CONF_TRANSITION],
             data[CONF_COLORS_ONLY],
@@ -182,9 +182,9 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         data = validate(config_entry)
         self._name = data[CONF_NAME]
         self._lights = data[CONF_LIGHTS]
-        self._adjust_brightness = data[CONF_ADJUST_BRIGHTNESS]
-        self._adjust_color_temp = data[CONF_ADJUST_COLOR_TEMP]
-        self._adjust_rgb_color = data[CONF_ADJUST_RGB_COLOR]
+        self._adapt_brightness = data[CONF_ADAPT_BRIGHTNESS]
+        self._adapt_color_temp = data[CONF_ADAPT_COLOR_TEMP]
+        self._adapt_rgb_color = data[CONF_ADAPT_RGB_COLOR]
         self._disable_entity = data[CONF_DISABLE_ENTITY]
         self._disable_state = data[CONF_DISABLE_STATE]
         self._initial_transition = data[CONF_INITIAL_TRANSITION]
@@ -272,7 +272,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         if last_state and last_state.state == STATE_ON:
             self._state = True
             await self.async_turn_on(
-                adjust_lights=not self._only_once,
+                adapt_lights=not self._only_once,
                 setup_listeners=False,
             )
         else:
@@ -343,7 +343,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         return attrs
 
     async def async_turn_on(
-        self, adjust_lights=True, setup_listeners=True
+        self, adapt_lights=True, setup_listeners=True
     ):  # pylint: disable=arguments-differ
         """Turn on adaptive lighting."""
         if self.is_on:
@@ -351,7 +351,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         self._state = True
         if setup_listeners:
             await self._setup_trackers()
-        if adjust_lights:
+        if adapt_lights:
             await self._update_lights(transition=self._initial_transition, force=True)
 
     async def async_turn_off(self, **kwargs):
@@ -383,7 +383,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         await self._update_attrs()
         if self._only_once and not force:
             return
-        await self._adjust_lights(lights or self._lights, transition)
+        await self._adapt_lights(lights or self._lights, transition)
 
     def _get_sun_events(self, date):
         def _replace_time(date, key):
@@ -482,7 +482,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
             and self.hass.states.get(self._disable_entity).state in self._disable_state
         )
 
-    async def _adjust_light(self, light, transition, colors_only=False):
+    async def _adapt_light(self, light, transition, colors_only=False):
         service_data = {ATTR_ENTITY_ID: light}
         features = self._supported_features(light)
 
@@ -491,19 +491,19 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
                 transition = self._transition
             service_data[ATTR_TRANSITION] = transition
 
-        if "brightness" in features and self._adjust_brightness and not colors_only:
+        if "brightness" in features and self._adapt_brightness and not colors_only:
             service_data[ATTR_BRIGHTNESS_PCT] = self._brightness
 
         if (
             "color_temp" in features
-            and self._adjust_color_temp
+            and self._adapt_color_temp
             and not (self._prefer_rgb_color and "color" in features)
         ):
             attributes = self.hass.states.get(light).attributes
             min_mireds, max_mireds = attributes["min_mireds"], attributes["max_mireds"]
             color_temp_mired = max(min(self._color_temp_mired, max_mireds), min_mireds)
             service_data[ATTR_COLOR_TEMP] = color_temp_mired
-        elif "color" in features and self._adjust_rgb_color:
+        elif "color" in features and self._adapt_rgb_color:
             service_data[ATTR_RGB_COLOR] = self._rgb_color
 
         _LOGGER.debug(
@@ -524,14 +524,14 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
             return False
         return True
 
-    async def _adjust_lights(self, lights, transition):
+    async def _adapt_lights(self, lights, transition):
         if not self._should_adjust():
             return
         _LOGGER.debug(
-            "%s: '_adjust_lights(%s, %s)' called", self.name, lights, transition
+            "%s: '_adapt_lights(%s, %s)' called", self.name, lights, transition
         )
         tasks = [
-            await self._adjust_light(light, transition)
+            await self._adapt_light(light, transition)
             for light in lights
             if is_on(self.hass, light)
         ]
