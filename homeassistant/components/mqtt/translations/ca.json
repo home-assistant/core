@@ -72,7 +72,7 @@
                     "birth_retain": "Retenci\u00f3 missatge de naixement",
                     "birth_topic": "Topic missatge de naixement",
                     "discovery": "Activar descobriment",
-                    "will_enable": "Activa el missatge de naixement",
+                    "will_enable": "Activa el missatge d'\u00faltima voluntat",
                     "will_payload": "Dades (payload) missatge d'\u00faltima voluntat",
                     "will_qos": "QoS missatge d'\u00faltima voluntat",
                     "will_retain": "Retenci\u00f3 missatge d'\u00faltima voluntat",

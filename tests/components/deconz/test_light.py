@@ -95,7 +95,6 @@ async def test_no_lights_or_groups(hass):
     gateway = await setup_deconz_integration(hass)
     assert len(gateway.deconz_ids) == 0
     assert len(hass.states.async_all()) == 0
-    assert len(gateway.entities[light.DOMAIN]) == 0
 
 
 async def test_lights_and_groups(hass):
@@ -112,7 +111,6 @@ async def test_lights_and_groups(hass):
     assert "light.on_off_light" in gateway.deconz_ids
 
     assert len(hass.states.async_all()) == 6
-    assert len(gateway.entities[light.DOMAIN]) == 5
 
     rgb_light = hass.states.get("light.rgb_light")
     assert rgb_light.state == "on"
@@ -258,7 +256,6 @@ async def test_lights_and_groups(hass):
     await gateway.async_reset()
 
     assert len(hass.states.async_all()) == 0
-    assert len(gateway.entities[light.DOMAIN]) == 0
 
 
 async def test_disable_light_groups(hass):
@@ -278,7 +275,6 @@ async def test_disable_light_groups(hass):
     assert "light.on_off_switch" not in gateway.deconz_ids
     # 3 entities
     assert len(hass.states.async_all()) == 5
-    assert len(gateway.entities[light.DOMAIN]) == 4
 
     rgb_light = hass.states.get("light.rgb_light")
     assert rgb_light is not None
@@ -304,7 +300,6 @@ async def test_disable_light_groups(hass):
     assert "light.on_off_switch" not in gateway.deconz_ids
     # 3 entities
     assert len(hass.states.async_all()) == 6
-    assert len(gateway.entities[light.DOMAIN]) == 5
 
     hass.config_entries.async_update_entry(
         gateway.config_entry, options={deconz.gateway.CONF_ALLOW_DECONZ_GROUPS: False}
@@ -318,4 +313,3 @@ async def test_disable_light_groups(hass):
     assert "light.on_off_switch" not in gateway.deconz_ids
     # 3 entities
     assert len(hass.states.async_all()) == 5
-    assert len(gateway.entities[light.DOMAIN]) == 4

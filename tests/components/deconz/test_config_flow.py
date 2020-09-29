@@ -14,6 +14,7 @@ from homeassistant.components.deconz.config_flow import (
 from homeassistant.components.deconz.const import (
     CONF_ALLOW_CLIP_SENSOR,
     CONF_ALLOW_DECONZ_GROUPS,
+    CONF_ALLOW_NEW_DEVICES,
     CONF_MASTER_GATEWAY,
     DOMAIN,
 )
@@ -561,12 +562,17 @@ async def test_option_flow(hass):
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={CONF_ALLOW_CLIP_SENSOR: False, CONF_ALLOW_DECONZ_GROUPS: False},
+        user_input={
+            CONF_ALLOW_CLIP_SENSOR: False,
+            CONF_ALLOW_DECONZ_GROUPS: False,
+            CONF_ALLOW_NEW_DEVICES: False,
+        },
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == {
         CONF_ALLOW_CLIP_SENSOR: False,
         CONF_ALLOW_DECONZ_GROUPS: False,
+        CONF_ALLOW_NEW_DEVICES: False,
         CONF_MASTER_GATEWAY: True,
     }

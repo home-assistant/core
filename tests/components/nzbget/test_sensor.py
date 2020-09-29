@@ -14,7 +14,7 @@ from . import init_integration
 from tests.async_mock import patch
 
 
-async def test_sensors(hass) -> None:
+async def test_sensors(hass, nzbget_api) -> None:
     """Test the creation and values of the sensors."""
     now = dt_util.utcnow().replace(microsecond=0)
     with patch("homeassistant.util.dt.utcnow", return_value=now):
@@ -32,12 +32,12 @@ async def test_sensors(hass) -> None:
             DATA_RATE_MEGABYTES_PER_SECOND,
             None,
         ),
-        "download_paused": ("DownloadPaused", "4", None, None),
+        "download_paused": ("DownloadPaused", "False", None, None),
         "speed": ("DownloadRate", "2.38", DATA_RATE_MEGABYTES_PER_SECOND, None),
         "size": ("DownloadedSizeMB", "256", DATA_MEGABYTES, None),
         "disk_free": ("FreeDiskSpaceMB", "1024", DATA_MEGABYTES, None),
         "post_processing_jobs": ("PostJobCount", "2", "Jobs", None),
-        "post_processing_paused": ("PostPaused", "4", None, None),
+        "post_processing_paused": ("PostPaused", "False", None, None),
         "queue_size": ("RemainingSizeMB", "512", DATA_MEGABYTES, None),
         "uptime": ("UpTimeSec", uptime.isoformat(), None, DEVICE_CLASS_TIMESTAMP),
     }

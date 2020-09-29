@@ -9,7 +9,7 @@ from broadlink.exceptions import (
     AuthorizationError,
     BroadlinkException,
     CommandNotSupportedError,
-    DeviceOfflineError,
+    NetworkTimeoutError,
     StorageError,
 )
 
@@ -113,7 +113,7 @@ class BroadlinkRMMini3UpdateManager(BroadlinkUpdateManager):
         )
         devices = await self.device.hass.async_add_executor_job(hello)
         if not devices:
-            raise DeviceOfflineError("The device is offline")
+            raise NetworkTimeoutError("The device is offline")
         return {}
 
 

@@ -20,13 +20,15 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
+from .const import (
+    CONF_MOUNT_DIR,
+    CONF_NAMES,
+    DEFAULT_OWSERVER_PORT,
+    DEFAULT_SYSBUS_MOUNT_DIR,
+)
+
 _LOGGER = logging.getLogger(__name__)
 
-CONF_MOUNT_DIR = "mount_dir"
-CONF_NAMES = "names"
-
-DEFAULT_OWSERVER_PORT = 4304
-DEFAULT_SYSBUS_MOUNT_DIR = "/sys/bus/w1/devices/"
 DEVICE_SENSORS = {
     # Family : { SensorType: owfs path }
     "10": {"temperature": "temperature"},
@@ -35,6 +37,10 @@ DEVICE_SENSORS = {
     "26": {
         "temperature": "temperature",
         "humidity": "humidity",
+        "humidity_hih3600": "HIH3600/humidity",
+        "humidity_hih4000": "HIH4000/humidity",
+        "humidity_hih5030": "HIH5030/humidity",
+        "humidity_htm1735": "HTM1735/humidity",
         "pressure": "B1-R1-A/pressure",
         "illuminance": "S3-R1-A/illuminance",
         "voltage_VAD": "VAD",
@@ -70,6 +76,10 @@ SENSOR_TYPES = {
     # SensorType: [ Measured unit, Unit ]
     "temperature": ["temperature", TEMP_CELSIUS],
     "humidity": ["humidity", PERCENTAGE],
+    "humidity_hih3600": ["humidity", PERCENTAGE],
+    "humidity_hih4000": ["humidity", PERCENTAGE],
+    "humidity_hih5030": ["humidity", PERCENTAGE],
+    "humidity_htm1735": ["humidity", PERCENTAGE],
     "humidity_raw": ["humidity", PERCENTAGE],
     "pressure": ["pressure", "mb"],
     "illuminance": ["illuminance", LIGHT_LUX],
@@ -156,7 +166,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                         owproxy.read(f"{device}moisture/is_leaf.{s_id}").decode()
                     )
                     if is_leaf:
-                        sensor_key = f"wetness_{id}"
+                        sensor_key = f"wetness_{s_id}"
                 sensor_id = os.path.split(os.path.split(device)[0])[1]
                 device_file = os.path.join(os.path.split(device)[0], sensor_value)
                 devs.append(

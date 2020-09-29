@@ -15,6 +15,7 @@
         "step": {
             "user": {
                 "data": {
+                    "host": "Host ja port (n\u00e4iteks 10.10.0.4:8010)",
                     "password": "Salas\u00f5na",
                     "path": "ZM aadress",
                     "path_zms": "ZMS-i aadress",
