@@ -38,7 +38,7 @@ from homeassistant.const import (
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
 )
-from homeassistant.core import Event
+from homeassistant.core import Context, Event
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import (
@@ -208,6 +208,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         # Set other attributes
         self._icon = ICON
         self._entity_id = f"switch.{DOMAIN}_{slugify(self._name)}"
+        self._state = None
 
         # Tracks 'off' → 'on' state changes
         self._on_to_off_event: Dict[str, Event] = {}
@@ -249,7 +250,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
     @property
     def is_on(self):
         """Return true if adaptive lighting is on."""
-        return bool(self.unsub_trackers)
+        return self._state
 
     def _supported_features(self, light):
         state = self.hass.states.get(light)
@@ -269,50 +270,56 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
                 )
         last_state = await self.async_get_last_state()
         if last_state and last_state.state == STATE_ON:
-            await self.async_turn_on(adjust_lights=False, setup_listeners=False)
+            self._state = True
+            await self.async_turn_on(
+                adjust_lights=not self._only_once,
+                setup_listeners=False,
+            )
+        else:
+            self._state = False
 
     def _unpack_light_groups(self) -> None:
-        all_lights = []
+        all_lights = set()
         for light in self._lights:
             state = self.hass.states.get(light)
             if state is None:
                 _LOGGER.debug("%s: State of %s is None", self._name, light)
-                all_lights.append(light)
+                all_lights.add(light)
             elif "entity_id" in state.attributes:  # it's a light group
                 group = state.attributes["entity_id"]
-                all_lights.extend(group)
+                all_lights.update(group)
                 _LOGGER.debug("%s: Unpacked %s to %s", self._name, light, group)
             else:
-                all_lights.append(light)
-        self._lights = all_lights
+                all_lights.add(light)
+        self.turn_on_off_listener.lights.update(all_lights)
+        self._lights = list(all_lights)
 
     async def _setup_listeners(self, _=None):
+        if self.unsub_trackers:
+            _LOGGER.error(
+                "%s: Calling '_setup_listeners' when they are already set up", self.name
+            )
+            return
+
         self._unpack_light_groups()
-        for light in self._lights:
-            self.turn_on_off_listener.lights.add(light)
-        self.unsub_trackers.append(
-            async_track_state_change_event(self.hass, self._lights, self._light_event)
+        rm_interval = async_track_time_interval(
+            self.hass, self._async_update_at_interval, self._interval
         )
+        rm_state = async_track_state_change_event(
+            self.hass, self._lights, self._light_event
+        )
+        self.unsub_trackers.extend([rm_interval, rm_state])
         track_kwargs = dict(hass=self.hass, action=self._state_changed)
         if self._sleep_entity is not None:
-            sleep_kwargs = dict(track_kwargs, entity_ids=self._sleep_entity)
-            self.unsub_trackers.append(
-                async_track_state_change(**sleep_kwargs, to_state=self._sleep_state)
-            )
-            self.unsub_trackers.append(
-                async_track_state_change(**sleep_kwargs, from_state=self._sleep_state)
-            )
-
+            kwgs = dict(track_kwargs, entity_ids=self._sleep_entity)
+            rm_from = async_track_state_change(**kwgs, from_state=self._sleep_state)
+            rm_to = async_track_state_change(**kwgs, to_state=self._sleep_state)
+            self.unsub_trackers.extend([rm_from, rm_to])
         if self._disable_entity is not None:
-            disable_kwargs = dict(track_kwargs, entity_ids=self._disable_entity)
-            self.unsub_trackers.append(
-                async_track_state_change(
-                    **disable_kwargs, from_state=self._disable_state
-                )
-            )
-            self.unsub_trackers.append(
-                async_track_state_change(**disable_kwargs, to_state=self._disable_state)
-            )
+            kwgs = dict(track_kwargs, entity_ids=self._disable_entity)
+            rm_from = async_track_state_change(**kwgs, from_state=self._disable_state)
+            rm_to = async_track_state_change(**kwgs, to_state=self._disable_state)
+            self.unsub_trackers.extend([rm_from, rm_to])
 
     @property
     def icon(self):
@@ -335,15 +342,13 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
             return {key: None for key in attrs}
         return attrs
 
-    async def async_turn_on(self, adjust_lights=True, setup_listeners=True):
+    async def async_turn_on(
+        self, adjust_lights=True, setup_listeners=True
+    ):  # pylint: disable=arguments-differ
         """Turn on adaptive lighting."""
         if self.is_on:
             return
-        self.unsub_trackers.append(
-            async_track_time_interval(
-                self.hass, self._async_update_at_interval, self._interval
-            )
-        )
+        self._state = True
         if setup_listeners:
             self._setup_listeners()
         if adjust_lights:
@@ -353,6 +358,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         """Turn off adaptive lighting."""
         if not self.is_on:
             return
+        self._state = False
         while self.unsub_trackers:
             unsub = self.unsub_trackers.pop()
             unsub()
@@ -511,8 +517,12 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
             self._name,
             service_data,
         )
+
         return self.hass.services.async_call(
-            LIGHT_DOMAIN, SERVICE_TURN_ON, service_data
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            service_data,
+            context=Context(),
         )
 
     def _should_adjust(self):
@@ -559,7 +569,9 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
             _LOGGER.debug(
                 "%s: Detected an 'off' → 'on' event for '%s'", self._name, entity_id
             )
-            lock = self._locks.setdefault(entity_id, asyncio.Lock())
+            lock = self._locks.get(entity_id)
+            if lock is None:
+                lock = asyncio.Lock()
             async with lock:
                 if await self.turn_on_off_listener.maybe_cancel_adjusting(
                     entity_id,
