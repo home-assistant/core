@@ -1581,6 +1581,126 @@ async def test_async_render_to_info_with_wildcard_matching_entity_id(hass):
     assert info.all_states is True
 
 
+async def test_override_tracking_with_track_states_domain(hass):
+    """Test tracking can be overridden."""
+    template_complex_str = r"""
+
+{% set x = track_states("cover") %}
+
+{% for state in states %}
+  {{ state.state }}
+{% endfor %}
+
+"""
+    hass.states.async_set("cover.office_drapes", "closed")
+    hass.states.async_set("cover.office_window", "closed")
+    hass.states.async_set("cover.office_skylight", "open")
+    hass.states.async_set("light.office", "on")
+
+    info = render_to_info(hass, template_complex_str)
+
+    assert info.domains == {"cover"}
+    assert info.entities == set()
+    assert info.all_states is False
+
+
+async def test_override_tracking_with_track_states_entities(hass):
+    """Test tracking can be overridden."""
+    template_complex_str = r"""
+
+{% set x = track_states("cover.office_drapes", "cover.office_window") %}
+
+{% for state in states %}
+  {{ state.state }}
+{% endfor %}
+
+"""
+    hass.states.async_set("cover.office_drapes", "closed")
+    hass.states.async_set("cover.office_window", "closed")
+    hass.states.async_set("cover.office_skylight", "open")
+    hass.states.async_set("light.office", "on")
+
+    info = render_to_info(hass, template_complex_str)
+
+    assert info.domains == set()
+    assert info.entities == {"cover.office_drapes", "cover.office_window"}
+    assert info.all_states is False
+
+
+async def test_override_tracking_with_track_states_entities_and_domain(hass):
+    """Test tracking can be overridden."""
+    template_complex_str = r"""
+
+{% set x = track_states("light", "cover.office_drapes") %}
+
+{% for state in states %}
+  {{ state.state }}
+{% endfor %}
+
+"""
+    hass.states.async_set("cover.office_drapes", "closed")
+    hass.states.async_set("cover.office_window", "closed")
+    hass.states.async_set("cover.office_skylight", "open")
+    hass.states.async_set("light.office", "on")
+
+    info = render_to_info(hass, template_complex_str)
+
+    assert info.entities == {"cover.office_drapes"}
+    assert info.domains == {"light"}
+    assert info.all_states is False
+
+
+async def test_override_tracking_with_track_states_with_invalid_entities(hass):
+    """Test we raise on invalid domains and entities in track_states."""
+    template_complex_str = r"""
+
+{% set x = track_states("i n v a l i d % d o m a i n") %}
+
+{% for state in states %}
+  {{ state.state }}
+{% endfor %}
+
+"""
+
+    assert isinstance(
+        render_to_info(hass, template_complex_str).exception, TemplateError
+    )
+
+    template_complex_str = r"""
+
+{% set x = track_states("i n v a l i d.e n t % i t y") %}
+
+{% for state in states %}
+  {{ state.state }}
+{% endfor %}
+
+"""
+
+    assert isinstance(
+        render_to_info(hass, template_complex_str).exception, TemplateError
+    )
+
+
+async def test_track_states_disables_updates(hass):
+    """Test we can disable updates with an empty track_states."""
+    template_complex_str = r"""
+
+{% set x = track_states() %}
+
+{% for state in states %}
+  {{ state.state }}
+{% endfor %}
+
+"""
+    hass.states.async_set("cover.office_drapes", "closed")
+
+    info = render_to_info(hass, template_complex_str)
+
+    assert info.entities == set()
+    assert info.domains == set()
+    assert info.all_states is False
+
+
 async def test_async_render_to_info_with_wildcard_matching_state(hass):
     """Test tracking template with a wildcard."""
     template_complex_str = """

@@ -198,6 +198,8 @@ class RenderInfo:
         self.domains = set()
         self.domains_lifecycle = set()
         self.entities = set()
+        self._manual_domains = None
+        self._manual_entities = None
 
     def __repr__(self) -> str:
         """Representation of RenderInfo."""
@@ -227,9 +229,15 @@ class RenderInfo:
         self.all_states = False
 
     def _freeze(self) -> None:
-        self.entities = frozenset(self.entities)
-        self.domains = frozenset(self.domains)
-        self.domains_lifecycle = frozenset(self.domains_lifecycle)
+        if self._manual_entities is not None:
+            self.entities = self._manual_entities
+            self.domains = self._manual_domains
+            self.domains_lifecycle = set()
+            self.all_states = False
+        else:
+            self.entities = frozenset(self.entities)
+            self.domains = frozenset(self.domains)
+            self.domains_lifecycle = frozenset(self.domains_lifecycle)
 
         if self.exception:
             return
@@ -493,7 +501,7 @@ class AllStates:
         if name in _RESERVED_NAMES:
             return None
 
-        if not valid_entity_id(f"{name}.entity"):
+        if not _valid_domain(name):
             raise TemplateError(f"Invalid domain name '{name}'")
 
         return DomainStates(self._hass, name)
@@ -675,6 +683,10 @@ class TemplateState(State):
     def __repr__(self) -> str:
         """Representation of Template State."""
         return f"<template TemplateState({self._state.__repr__()})>"
+
+
+def _valid_domain(domain: str) -> bool:
+    return valid_entity_id(f"{domain}.entity")
 
 
 def _collect_state(hass: HomeAssistantType, entity_id: str) -> None:
@@ -914,6 +926,30 @@ def state_attr(hass, entity_id, name):
     if state_obj is not None:
         return state_obj.attributes.get(name)
     return None
+
+
+def track_states(hass, *states_or_domains):
+    """Override state tracking."""
+    render_info = hass.data.get(_RENDER_INFO)
+    if render_info is None:
+        return
+
+    domains = set()
+    entities = set()
+
+    for state_or_domain in states_or_domains:
+        if "." in state_or_domain:
+            if not valid_entity_id(state_or_domain):
+                raise TemplateError(f"Invalid entity ID '{state_or_domain}'")
+            entities.add(state_or_domain)
+        else:
+            if not _valid_domain(state_or_domain):
+                raise TemplateError(f"Invalid domain name '{state_or_domain}'")
+            domains.add(state_or_domain)
+
+    # pylint: disable=protected-access
+    render_info._manual_domains = domains
+    render_info._manual_entities = entities
 
 
 def forgiving_round(value, precision=0, method="common"):
@@ -1279,6 +1315,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["is_state_attr"] = hassfunction(is_state_attr)
         self.globals["state_attr"] = hassfunction(state_attr)
         self.globals["states"] = AllStates(hass)
+        self.globals["track_states"] = hassfunction(track_states)
 
     def is_safe_callable(self, obj):
         """Test if callback is safe."""
