@@ -292,10 +292,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         last_state = await self.async_get_last_state()
         if last_state and last_state.state == STATE_ON:
             self._state = True
-            await self.async_turn_on(
-                adapt_lights=not self._only_once,
-                setup_listeners=False,
-            )
+            await self.async_turn_on(adapt_lights=not self._only_once)
         else:
             self._state = False
 
@@ -305,6 +302,8 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         self._lights = list(all_lights)
 
     async def _setup_listeners(self, _=None):
+        if not self.is_on:
+            return
         assert not self.remove_listeners
         self._expand_light_groups()
         rm_interval = async_track_time_interval(
@@ -353,14 +352,13 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         return attrs
 
     async def async_turn_on(
-        self, adapt_lights=True, setup_listeners=True
+        self, adapt_lights=True
     ):  # pylint: disable=arguments-differ
         """Turn on adaptive lighting."""
         if self.is_on:
             return
         self._state = True
-        if setup_listeners:
-            await self._setup_listeners()
+        await self._setup_listeners()
         if adapt_lights:
             await self._update_lights(transition=self._initial_transition, force=True)
 
