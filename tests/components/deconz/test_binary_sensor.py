@@ -190,7 +190,7 @@ async def test_add_new_binary_sensor_ignored(hass):
         hass,
         options={deconz.gateway.CONF_ALLOW_NEW_DEVICES: False},
     )
-    assert len(gateway.deconz_ids) == 0
+    assert len(hass.states.async_all()) == 0
 
     state_added_event = {
         "t": "event",
