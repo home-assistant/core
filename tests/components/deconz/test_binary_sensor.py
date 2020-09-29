@@ -7,6 +7,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_MOTION,
     DEVICE_CLASS_VIBRATION,
 )
+from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 from homeassistant.setup import async_setup_component
 
 from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
@@ -203,3 +204,13 @@ async def test_add_new_binary_sensor_ignored(hass):
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 0
+
+    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    assert (
+        len(
+            async_entries_for_config_entry(
+                entity_registry, gateway.config_entry.entry_id
+            )
+        )
+        == 0
+    )
