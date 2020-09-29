@@ -6,7 +6,7 @@ from copy import deepcopy
 import datetime
 from datetime import timedelta
 import logging
-from typing import Dict, Tuple
+from typing import Dict, List, Tuple
 
 import voluptuous as vol
 
@@ -113,7 +113,9 @@ async def handle_apply(switch, service_call):
     """Handle the entity service apply."""
     if not isinstance(switch, AdaptiveSwitch):
         raise ValueError("Apply can only be called for a AdaptiveSwitch.")
+    hass = switch.hass
     data = service_call.data
+    all_lights = _expand_light_groups(hass, data[CONF_LIGHTS])
     tasks = [
         await switch._adapt_light(  # pylint: disable=protected-access
             light,
@@ -122,8 +124,8 @@ async def handle_apply(switch, service_call):
             data[CONF_ADAPT_COLOR_TEMP],
             data[CONF_ADAPT_RGB_COLOR],
         )
-        for light in data[CONF_LIGHTS]
-        if data[CONF_TURN_ON_LIGHTS] or is_on(switch.hass, light)
+        for light in all_lights
+        if data[CONF_TURN_ON_LIGHTS] or is_on(hass, light)
     ]
     if tasks:
         await asyncio.wait(tasks)
@@ -172,6 +174,22 @@ def validate(config_entry):
         if value is not None:
             data[key] = validate_value(value)  # Fix the types of the inputs
     return data
+
+
+def _expand_light_groups(hass, lights) -> List[str]:
+    all_lights = set()
+    for light in lights:
+        state = hass.states.get(light)
+        if state is None:
+            _LOGGER.debug("State of %s is None", light)
+            all_lights.add(light)
+        elif "entity_id" in state.attributes:  # it's a light group
+            group = state.attributes["entity_id"]
+            all_lights.update(group)
+            _LOGGER.debug("Expanded %s to %s", light, group)
+        else:
+            all_lights.add(light)
+    return list(all_lights)
 
 
 class AdaptiveSwitch(SwitchEntity, RestoreEntity):
@@ -281,25 +299,14 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         else:
             self._state = False
 
-    def _unpack_light_groups(self) -> None:
-        all_lights = set()
-        for light in self._lights:
-            state = self.hass.states.get(light)
-            if state is None:
-                _LOGGER.debug("%s: State of %s is None", self._name, light)
-                all_lights.add(light)
-            elif "entity_id" in state.attributes:  # it's a light group
-                group = state.attributes["entity_id"]
-                all_lights.update(group)
-                _LOGGER.debug("%s: Unpacked %s to %s", self._name, light, group)
-            else:
-                all_lights.add(light)
+    def _expand_light_groups(self) -> None:
+        all_lights = _expand_light_groups(self.hass, self._lights)
         self.turn_on_off_listener.lights.update(all_lights)
         self._lights = list(all_lights)
 
     async def _setup_trackers(self, _=None):
         assert not self.unsub_trackers
-        self._unpack_light_groups()
+        self._expand_light_groups()
         rm_interval = async_track_time_interval(
             self.hass, self._async_update_at_interval, self._interval
         )
