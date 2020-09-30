@@ -40,16 +40,16 @@ def shelly_naming(self, block, entity_type: str):
             channels = self.wrapper.device.shelly["num_emeters"]
             mode = "emeters"
     if channels > 1 and block.type != "device":
-        # Shelly EM (SHEM) with firmware with firmware v1.8.1 doesn't have "name" key; will be fixed in next firmware release
+        # Shelly EM (SHEM) with firmware v1.8.1 doesn't have "name" key; will be fixed in next firmware release
         if "name" in self.wrapper.device.settings[mode][int(block.channel)]:
             entity_name = self.wrapper.device.settings[mode][int(block.channel)]["name"]
         else:
             entity_name = None
         if not entity_name:
             if self.wrapper.model == "SHEM-3":
-                base = 65  # 65 = 'A'
+                base = ord("A")
             else:
-                base = 49  # 49 = '1'
+                base = ord("1")
             entity_name = f"{self.wrapper.name} channel {chr(int(block.channel)+base)}"
 
     if entity_type == "switch":
