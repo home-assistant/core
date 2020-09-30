@@ -155,14 +155,18 @@ async def async_setup_entry(hass, entry):
         if signal == SIGNAL_CONNECTION_STATE:
 
             if data == STATE_CONNECTED:
-                _LOGGER.debug("Plex websocket connection successful")
+                _LOGGER.debug("Websocket to %s successful", entry.data[CONF_SERVER])
 
             if data == STATE_DISCONNECTED:
-                _LOGGER.debug("Connection to Plex websocket failed, retrying")
+                _LOGGER.debug(
+                    "Websocket to %s disconnected, retrying", entry.data[CONF_SERVER]
+                )
 
             if data == STATE_STOPPED and error:
                 _LOGGER.error(
-                    "Plex server connection failed, aborting [Error: %s]", error
+                    "Websocket to %s failed, aborting [Error: %s]",
+                    entry.data[CONF_SERVER],
+                    error,
                 )
                 asyncio.run_coroutine_threadsafe(
                     hass.config_entries.async_reload(entry.entry_id), hass.loop
