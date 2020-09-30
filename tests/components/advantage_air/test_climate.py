@@ -1,12 +1,8 @@
 """Test the Advantage Air Climate Platform."""
 
-from homeassistant.components.advantage_air import async_setup, async_setup_entry
-from homeassistant.components.advantage_air.const import DOMAIN
 from homeassistant.components.climate.const import HVAC_MODE_FAN_ONLY
-from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
 
-from tests.common import MockConfigEntry
-from tests.components.advantage_air import api_response_with_sensor
+from tests.components.advantage_air import add_mock_config, api_response_with_sensor
 
 
 async def test_climate_async_setup_entry(hass, aiohttp_raw_server, aiohttp_unused_port):
@@ -14,19 +10,7 @@ async def test_climate_async_setup_entry(hass, aiohttp_raw_server, aiohttp_unuse
 
     port = aiohttp_unused_port()
     await aiohttp_raw_server(api_response_with_sensor, port=port)
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="test entry",
-        unique_id="0123456",
-        data={
-            CONF_IP_ADDRESS: "127.0.0.1",
-            CONF_PORT: port,
-        },
-    )
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    await add_mock_config(hass, port)
 
     registry = await hass.helpers.entity_registry.async_get_registry()
     state = hass.states.get("climate.testac")
