@@ -1,6 +1,5 @@
 """Advantage Air climate integration."""
 
-import collections.abc
 from datetime import timedelta
 import logging
 
@@ -16,16 +15,6 @@ ADVANTAGE_AIR_SYNC_INTERVAL = 15
 ADVANTAGE_AIR_PLATFORMS = ["climate"]
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def update(original, updates):
-    """Deep update a dictionary."""
-    for key, val in updates.items():
-        if isinstance(val, collections.abc.Mapping):
-            original[key] = update(original.get(key, {}), val)
-        else:
-            original[key] = val
-    return original
 
 
 async def async_setup(hass, config):
