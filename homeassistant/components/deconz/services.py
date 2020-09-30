@@ -127,7 +127,9 @@ async def async_refresh_devices_service(hass, data):
     scenes = set(gateway.api.scenes.keys())
     sensors = set(gateway.api.sensors.keys())
 
-    await gateway.api.refresh_state(ignore_update=True)
+    gateway.ignore_state_updates = True
+    await gateway.api.refresh_state()
+    gateway.ignore_state_updates = False
 
     gateway.async_add_device_callback(
         NEW_GROUP,

@@ -80,9 +80,12 @@ class DeconzEvent(DeconzBase):
         self._device.remove_callback(self.async_update_callback)
 
     @callback
-    def async_update_callback(self, force_update=False, ignore_update=False):
+    def async_update_callback(self, force_update=False):
         """Fire the event if reason is that state is updated."""
-        if ignore_update or "state" not in self._device.changed_keys:
+        if (
+            self.gateway.ignore_state_updates
+            or "state" not in self._device.changed_keys
+        ):
             return
 
         data = {
