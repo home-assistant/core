@@ -5,7 +5,6 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_MOISTURE,
     DEVICE_CLASS_OPENING,
     DEVICE_CLASS_PROBLEM,
-    DEVICE_CLASS_SAFETY,
     DEVICE_CLASS_SMOKE,
     DEVICE_CLASS_VIBRATION,
     BinarySensorEntity,
@@ -61,10 +60,11 @@ REST_SENSORS = {
         path="cloud/connected",
     ),
     "fwupdate": RestAttributeDescription(
-        name="Firmware update (release)",
-        device_class=DEVICE_CLASS_SAFETY,
+        name="Firmware update",
+        icon="mdi:update",
+        default_enabled=False,
         path="update/has_update",
-        attributes={"description": "Available version:", "path": "update/new_version"},
+        attributes={"description": "available version:", "path": "update/new_version"},
     ),
 }
 
