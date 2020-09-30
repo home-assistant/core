@@ -10,9 +10,9 @@
                 "freshAirStatus": "none",
                 "mode": "vent",
                 "myZone": 1,
-                "name": "AC",
+                "name": "testac",
                 "setTemp": 24,
-                "state": "off"
+                "state": "on"
             },
             "zones": {
                 "z01": {
@@ -22,12 +22,12 @@
                     "minDamper": 0,
                     "motion": 1,
                     "motionConfig": 1,
-                    "name": "Zone 1",
+                    "name": "testzone",
                     "number": 1,
                     "rssi": -50,
                     "setTemp": 24,
                     "state": "open",
-                    "type": 0,
+                    "type": 1,
                     "value": 100
                 }
             }
