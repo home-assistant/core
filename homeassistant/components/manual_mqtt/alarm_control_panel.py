@@ -48,6 +48,7 @@ CONF_PAYLOAD_ARM_HOME = "payload_arm_home"
 CONF_PAYLOAD_ARM_AWAY = "payload_arm_away"
 CONF_PAYLOAD_ARM_NIGHT = "payload_arm_night"
 CONF_CONFIG_TOPIC = "config_topic"
+CONF_STATUS_TOPIC = "status_topic"
 
 DEFAULT_ALARM_NAME = "HA Alarm"
 DEFAULT_DELAY_TIME = datetime.timedelta(seconds=60)
@@ -150,6 +151,7 @@ PLATFORM_SCHEMA = vol.Schema(
                 ),
                 vol.Required(mqtt.CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
                 vol.Required(CONF_CONFIG_TOPIC): mqtt.valid_publish_topic,
+                vol.Required(CONF_STATUS_TOPIC): mqtt.valid_publish_topic,
                 vol.Required(mqtt.CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
                 vol.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
                 vol.Optional(
@@ -182,6 +184,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 config.get(mqtt.CONF_STATE_TOPIC),
                 config.get(mqtt.CONF_COMMAND_TOPIC),
                 config.get(CONF_CONFIG_TOPIC),
+                config.get(CONF_STATUS_TOPIC),
                 config.get(mqtt.CONF_QOS),
                 config.get(CONF_CODE_ARM_REQUIRED),
                 config.get(CONF_PAYLOAD_DISARM),
@@ -215,6 +218,7 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
         state_topic,
         command_topic,
         config_topic,
+        status_topic,
         qos,
         code_arm_required,
         payload_disarm,
@@ -253,6 +257,7 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
         self._state_topic = state_topic
         self._command_topic = command_topic
         self._config_topic = config_topic
+        self._status_topic = status_topic
         self._qos = qos
         self._payload_disarm = payload_disarm
         self._payload_arm_home = payload_arm_home
@@ -471,6 +476,9 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
             'version': 1,
             'code_arm_required': self._code_arm_required,
             'code_disarm_required': (self._code != None),
+            'state_topic': self._state_topic,
+            'status_topic': self._status_topic,
+            'comand_topic': self._command_topic,
             'delay_times': self._delay_time_by_state,
             'arming_times': self._arming_time_by_state,
             'trigger_times': self._trigger_time_by_state,
