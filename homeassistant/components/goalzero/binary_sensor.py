@@ -54,8 +54,6 @@ class YetiBinarySensor(YetiEntity, BinarySensorEntity):
         """Return if the service is on."""
         if self.api.data[self._condition] == 1:
             return True
-        else:
-            return False
 
     @property
     def icon(self):
