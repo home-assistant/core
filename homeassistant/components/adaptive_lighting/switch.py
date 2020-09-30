@@ -291,7 +291,6 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
                 )
         last_state = await self.async_get_last_state()
         if last_state and last_state.state == STATE_ON:
-            self._state = True
             await self.async_turn_on(adapt_lights=not self._only_once)
         else:
             self._state = False
