@@ -1,13 +1,13 @@
 """Support for Generic Modbus Thermostats."""
+from datetime import timedelta
 import logging
 import struct
-from typing import Optional
+from typing import Any, Dict, Optional
 
 from pymodbus.exceptions import ConnectionException, ModbusException
 from pymodbus.pdu import ExceptionResponse
-import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO,
     SUPPORT_TARGET_TEMPERATURE,
@@ -15,21 +15,28 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_NAME,
+    CONF_SCAN_INTERVAL,
     CONF_SLAVE,
     CONF_STRUCTURE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.typing import (
+    ConfigType,
+    DiscoveryInfoType,
+    HomeAssistantType,
+)
 
+from . import ModbusHub
 from .const import (
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
+    CONF_CLIMATES,
     CONF_CURRENT_TEMP,
     CONF_CURRENT_TEMP_REGISTER_TYPE,
     CONF_DATA_COUNT,
     CONF_DATA_TYPE,
-    CONF_HUB,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
     CONF_OFFSET,
@@ -39,111 +46,60 @@ from .const import (
     CONF_TARGET_TEMP,
     CONF_UNIT,
     DATA_TYPE_CUSTOM,
-    DATA_TYPE_FLOAT,
-    DATA_TYPE_INT,
-    DATA_TYPE_UINT,
-    DEFAULT_HUB,
     DEFAULT_STRUCT_FORMAT,
-    DEFAULT_STRUCTURE_PREFIX,
-    DEFAULT_TEMP_UNIT,
     MODBUS_DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_CURRENT_TEMP): cv.positive_int,
-        vol.Required(CONF_NAME): cv.string,
-        vol.Required(CONF_SLAVE): cv.positive_int,
-        vol.Required(CONF_TARGET_TEMP): cv.positive_int,
-        vol.Optional(CONF_DATA_COUNT, default=2): cv.positive_int,
-        vol.Optional(
-            CONF_CURRENT_TEMP_REGISTER_TYPE, default=CALL_TYPE_REGISTER_HOLDING
-        ): vol.In([CALL_TYPE_REGISTER_HOLDING, CALL_TYPE_REGISTER_INPUT]),
-        vol.Optional(CONF_DATA_TYPE, default=DATA_TYPE_FLOAT): vol.In(
-            [DATA_TYPE_INT, DATA_TYPE_UINT, DATA_TYPE_FLOAT, DATA_TYPE_CUSTOM]
-        ),
-        vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
-        vol.Optional(CONF_PRECISION, default=1): cv.positive_int,
-        vol.Optional(CONF_SCALE, default=1): vol.Coerce(float),
-        vol.Optional(CONF_OFFSET, default=0): vol.Coerce(float),
-        vol.Optional(CONF_MAX_TEMP, default=35): cv.positive_int,
-        vol.Optional(CONF_MIN_TEMP, default=5): cv.positive_int,
-        vol.Optional(CONF_STEP, default=0.5): vol.Coerce(float),
-        vol.Optional(CONF_STRUCTURE, default=DEFAULT_STRUCTURE_PREFIX): cv.string,
-        vol.Optional(CONF_UNIT, default=DEFAULT_TEMP_UNIT): cv.string,
-    }
-)
+async def async_setup_platform(
+    hass: HomeAssistantType,
+    config: ConfigType,
+    async_add_entities,
+    discovery_info: Optional[DiscoveryInfoType] = None,
+):
+    """Read configuration and create Modbus climate."""
+    if discovery_info is None:
+        return
 
+    climates = []
+    for climate in discovery_info[CONF_CLIMATES]:
+        hub: ModbusHub = hass.data[MODBUS_DOMAIN][discovery_info[CONF_NAME]]
+        count = climate[CONF_DATA_COUNT]
+        data_type = climate[CONF_DATA_TYPE]
+        name = climate[CONF_NAME]
+        structure = climate[CONF_STRUCTURE]
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Modbus Thermostat Platform."""
-    name = config[CONF_NAME]
-    modbus_slave = config[CONF_SLAVE]
-    target_temp_register = config[CONF_TARGET_TEMP]
-    current_temp_register = config[CONF_CURRENT_TEMP]
-    current_temp_register_type = config[CONF_CURRENT_TEMP_REGISTER_TYPE]
-    data_type = config[CONF_DATA_TYPE]
-    count = config[CONF_DATA_COUNT]
-    precision = config[CONF_PRECISION]
-    scale = config[CONF_SCALE]
-    offset = config[CONF_OFFSET]
-    unit = config[CONF_UNIT]
-    max_temp = config[CONF_MAX_TEMP]
-    min_temp = config[CONF_MIN_TEMP]
-    temp_step = config[CONF_STEP]
-    hub_name = config[CONF_HUB]
-    hub = hass.data[MODBUS_DOMAIN][hub_name]
-    structure = config[CONF_STRUCTURE]
+        if data_type != DATA_TYPE_CUSTOM:
+            try:
+                structure = f">{DEFAULT_STRUCT_FORMAT[data_type][count]}"
+            except KeyError:
+                _LOGGER.error(
+                    "Climate %s: Unable to find a data type matching count value %s, try a custom type",
+                    name,
+                    count,
+                )
+                continue
 
-    if data_type != DATA_TYPE_CUSTOM:
         try:
-            structure = f">{DEFAULT_STRUCT_FORMAT[data_type][count]}"
-        except KeyError:
+            size = struct.calcsize(structure)
+        except struct.error as err:
+            _LOGGER.error("Error in sensor %s structure: %s", name, err)
+            continue
+
+        if count * 2 != size:
             _LOGGER.error(
-                "Climate %s: Unable to find a data type matching count value %s, try a custom type",
-                name,
+                "Structure size (%d bytes) mismatch registers count (%d words)",
+                size,
                 count,
             )
-            return
+            continue
 
-    try:
-        size = struct.calcsize(structure)
-    except struct.error as err:
-        _LOGGER.error("Error in sensor %s structure: %s", name, err)
-        return
+        climate[CONF_STRUCTURE] = structure
+        climates.append(ModbusThermostat(hub, climate))
 
-    if count * 2 != size:
-        _LOGGER.error(
-            "Structure size (%d bytes) mismatch registers count (%d words)", size, count
-        )
-        return
-
-    add_entities(
-        [
-            ModbusThermostat(
-                hub,
-                name,
-                modbus_slave,
-                target_temp_register,
-                current_temp_register,
-                current_temp_register_type,
-                data_type,
-                structure,
-                count,
-                precision,
-                scale,
-                offset,
-                unit,
-                max_temp,
-                min_temp,
-                temp_step,
-            )
-        ],
-        True,
-    )
+    async_add_entities(climates)
 
 
 class ModbusThermostat(ClimateEntity):
@@ -151,57 +107,53 @@ class ModbusThermostat(ClimateEntity):
 
     def __init__(
         self,
-        hub,
-        name,
-        modbus_slave,
-        target_temp_register,
-        current_temp_register,
-        current_temp_register_type,
-        data_type,
-        structure,
-        count,
-        precision,
-        scale,
-        offset,
-        unit,
-        max_temp,
-        min_temp,
-        temp_step,
+        hub: ModbusHub,
+        config: Dict[str, Any],
     ):
-        """Initialize the unit."""
-        self._hub = hub
-        self._name = name
-        self._slave = modbus_slave
-        self._target_temperature_register = target_temp_register
-        self._current_temperature_register = current_temp_register
-        self._current_temperature_register_type = current_temp_register_type
+        """Initialize the modbus thermostat."""
+        self._hub: ModbusHub = hub
+        self._name = config[CONF_NAME]
+        self._slave = config[CONF_SLAVE]
+        self._target_temperature_register = config[CONF_TARGET_TEMP]
+        self._current_temperature_register = config[CONF_CURRENT_TEMP]
+        self._current_temperature_register_type = config[
+            CONF_CURRENT_TEMP_REGISTER_TYPE
+        ]
         self._target_temperature = None
         self._current_temperature = None
-        self._data_type = data_type
-        self._structure = structure
-        self._count = int(count)
-        self._precision = precision
-        self._scale = scale
-        self._offset = offset
-        self._unit = unit
-        self._max_temp = max_temp
-        self._min_temp = min_temp
-        self._temp_step = temp_step
+        self._data_type = config[CONF_DATA_TYPE]
+        self._structure = config[CONF_STRUCTURE]
+        self._count = config[CONF_DATA_COUNT]
+        self._precision = config[CONF_PRECISION]
+        self._scale = config[CONF_SCALE]
+        self._scan_interval = timedelta(seconds=config[CONF_SCAN_INTERVAL])
+        self._offset = config[CONF_OFFSET]
+        self._unit = config[CONF_UNIT]
+        self._max_temp = config[CONF_MAX_TEMP]
+        self._min_temp = config[CONF_MIN_TEMP]
+        self._temp_step = config[CONF_STEP]
         self._available = True
+
+    async def async_added_to_hass(self):
+        """Handle entity which will be added."""
+        async_track_time_interval(
+            self.hass, lambda arg: self._update(), self._scan_interval
+        )
+
+    @property
+    def should_poll(self):
+        """Return True if entity has to be polled for state.
+
+        False if entity pushes its state to HA.
+        """
+
+        # Handle polling directly in this entity
+        return False
 
     @property
     def supported_features(self):
         """Return the list of supported features."""
         return SUPPORT_TARGET_TEMPERATURE
-
-    def update(self):
-        """Update Target & Current Temperature."""
-        self._target_temperature = self._read_register(
-            CALL_TYPE_REGISTER_HOLDING, self._target_temperature_register
-        )
-        self._current_temperature = self._read_register(
-            self._current_temperature_register_type, self._current_temperature_register
-        )
 
     @property
     def hvac_mode(self):
@@ -258,11 +210,23 @@ class ModbusThermostat(ClimateEntity):
         byte_string = struct.pack(self._structure, target_temperature)
         register_value = struct.unpack(">h", byte_string[0:2])[0]
         self._write_register(self._target_temperature_register, register_value)
+        self._update()
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._available
+
+    def _update(self):
+        """Update Target & Current Temperature."""
+        self._target_temperature = self._read_register(
+            CALL_TYPE_REGISTER_HOLDING, self._target_temperature_register
+        )
+        self._current_temperature = self._read_register(
+            self._current_temperature_register_type, self._current_temperature_register
+        )
+
+        self.schedule_update_ha_state()
 
     def _read_register(self, register_type, register) -> Optional[float]:
         """Read register using the Modbus hub slave."""

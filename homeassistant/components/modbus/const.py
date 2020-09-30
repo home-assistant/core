@@ -68,6 +68,7 @@ CONF_VERIFY_REGISTER = "verify_register"
 CONF_VERIFY_STATE = "verify_state"
 
 # climate.py
+CONF_CLIMATES = "climates"
 CONF_TARGET_TEMP = "target_temp_register"
 CONF_CURRENT_TEMP = "current_temp_register"
 CONF_CURRENT_TEMP_REGISTER_TYPE = "current_temp_register_type"
