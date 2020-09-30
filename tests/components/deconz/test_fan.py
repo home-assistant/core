@@ -1,0 +1,164 @@
+"""deCONZ fan platform tests."""
+from copy import deepcopy
+
+from homeassistant.components import deconz
+import homeassistant.components.fan as fan
+from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.setup import async_setup_component
+
+from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
+
+from tests.async_mock import patch
+
+FANS = {
+    "1": {
+        "etag": "432f3de28965052961a99e3c5494daf4",
+        "hascolor": False,
+        "manufacturername": "King Of Fans,  Inc.",
+        "modelid": "HDC52EastwindFan",
+        "name": "Ceiling fan",
+        "state": {
+            "alert": "none",
+            "bri": 254,
+            "on": False,
+            "reachable": True,
+            "speed": 0,
+        },
+        "swversion": "0000000F",
+        "type": "Fan",
+        "uniqueid": "00:22:a3:00:00:27:8b:81-01",
+    }
+}
+
+
+async def test_platform_manually_configured(hass):
+    """Test that we do not discover anything or try to set up a gateway."""
+    assert (
+        await async_setup_component(
+            hass, fan.DOMAIN, {"fan": {"platform": deconz.DOMAIN}}
+        )
+        is True
+    )
+    assert deconz.DOMAIN not in hass.data
+
+
+async def test_no_fans(hass):
+    """Test that no fan entities are created."""
+    gateway = await setup_deconz_integration(hass)
+    assert len(gateway.deconz_ids) == 0
+    assert len(hass.states.async_all()) == 0
+
+
+async def test_fans(hass):
+    """Test that all supported fan entities are created."""
+    data = deepcopy(DECONZ_WEB_REQUEST)
+    data["lights"] = deepcopy(FANS)
+    gateway = await setup_deconz_integration(hass, get_state_response=data)
+    assert "fan.ceiling_fan" in gateway.deconz_ids
+    assert len(hass.states.async_all()) == 2  # Light and fan
+
+    # Test states
+
+    ceiling_fan = hass.states.get("fan.ceiling_fan")
+    assert ceiling_fan.state == STATE_OFF
+
+    state_changed_event = {
+        "t": "event",
+        "e": "changed",
+        "r": "lights",
+        "id": "1",
+        "state": {"speed": 1},
+    }
+    gateway.api.event_handler(state_changed_event)
+    await hass.async_block_till_done()
+
+    ceiling_fan = hass.states.get("fan.ceiling_fan")
+    assert ceiling_fan.state == STATE_ON
+
+    # Test service calls
+
+    ceiling_fan_device = gateway.api.lights["1"]
+
+    # Service turn on
+
+    with patch.object(
+        ceiling_fan_device, "_request", return_value=True
+    ) as set_callback:
+        await hass.services.async_call(
+            fan.DOMAIN,
+            fan.SERVICE_TURN_ON,
+            {"entity_id": "fan.ceiling_fan"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        set_callback.assert_called_with("put", "/lights/1/state", json={"speed": 2})
+
+    # Service turn off
+
+    with patch.object(
+        ceiling_fan_device, "_request", return_value=True
+    ) as set_callback:
+        await hass.services.async_call(
+            fan.DOMAIN,
+            fan.SERVICE_TURN_OFF,
+            {"entity_id": "fan.ceiling_fan"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        set_callback.assert_called_with("put", "/lights/1/state", json={"speed": 0})
+
+    # Service set speed to off
+
+    with patch.object(
+        ceiling_fan_device, "_request", return_value=True
+    ) as set_callback:
+        await hass.services.async_call(
+            fan.DOMAIN,
+            fan.SERVICE_SET_SPEED,
+            {"entity_id": "fan.ceiling_fan", fan.ATTR_SPEED: fan.SPEED_OFF},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        set_callback.assert_called_with("put", "/lights/1/state", json={"speed": 0})
+
+    # Service set speed to low
+
+    with patch.object(
+        ceiling_fan_device, "_request", return_value=True
+    ) as set_callback:
+        await hass.services.async_call(
+            fan.DOMAIN,
+            fan.SERVICE_SET_SPEED,
+            {"entity_id": "fan.ceiling_fan", fan.ATTR_SPEED: fan.SPEED_LOW},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        set_callback.assert_called_with("put", "/lights/1/state", json={"speed": 1})
+
+    # Service set speed to medium
+
+    with patch.object(
+        ceiling_fan_device, "_request", return_value=True
+    ) as set_callback:
+        await hass.services.async_call(
+            fan.DOMAIN,
+            fan.SERVICE_SET_SPEED,
+            {"entity_id": "fan.ceiling_fan", fan.ATTR_SPEED: fan.SPEED_MEDIUM},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        set_callback.assert_called_with("put", "/lights/1/state", json={"speed": 2})
+
+    # Service set speed to high
+
+    with patch.object(
+        ceiling_fan_device, "_request", return_value=True
+    ) as set_callback:
+        await hass.services.async_call(
+            fan.DOMAIN,
+            fan.SERVICE_SET_SPEED,
+            {"entity_id": "fan.ceiling_fan", fan.ATTR_SPEED: fan.SPEED_HIGH},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        set_callback.assert_called_with("put", "/lights/1/state", json={"speed": 4})
