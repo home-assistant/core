@@ -87,12 +87,10 @@ class DeconzFan(DeconzDevice, FanEntity):
         data = {"speed": SPEEDS[speed]}
         await self._device.async_set_state(data)
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, speed: str = SPEED_MEDIUM, **kwargs) -> None:
         """Turn on fan."""
-        data = {"speed": SPEEDS[SPEED_MEDIUM]}
-        await self._device.async_set_state(data)
+        await self.async_set_speed(speed)
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn off fan."""
-        data = {"speed": SPEEDS[SPEED_OFF]}
-        await self._device.async_set_state(data)
+        await self.async_set_speed(SPEED_OFF)
