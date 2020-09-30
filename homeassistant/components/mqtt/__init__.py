@@ -1053,12 +1053,12 @@ def _raise_on_error(result_code: int) -> None:
         )
 
 
-def _matcher_for_topic(topic: str) -> Any:
+def _matcher_for_topic(subscription: str) -> Any:
     # pylint: disable=import-outside-toplevel
     from paho.mqtt.matcher import MQTTMatcher
 
     matcher = MQTTMatcher()
-    matcher[topic] = True
+    matcher[subscription] = True
 
     return lambda topic: next(matcher.iter_match(topic), False)
 
