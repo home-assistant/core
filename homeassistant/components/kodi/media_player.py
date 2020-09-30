@@ -688,8 +688,7 @@ class KodiEntity(MediaPlayerEntity):
             MEDIA_TYPE_SEASON,
             MEDIA_TYPE_TVSHOW,
         ]:
-            # pylint: disable=protected-access
-            await self._kodi._play_item(
+            await self._kodi.play_item(
                 {MAP_KODI_MEDIA_TYPES[media_type_lower]: int(media_id)}
             )
         else:
