@@ -156,13 +156,12 @@ async def async_setup_entry(hass, entry):
 
             if data == STATE_CONNECTED:
                 _LOGGER.debug("Websocket to %s successful", entry.data[CONF_SERVER])
-
-            if data == STATE_DISCONNECTED:
+            elif data == STATE_DISCONNECTED:
                 _LOGGER.debug(
                     "Websocket to %s disconnected, retrying", entry.data[CONF_SERVER]
                 )
-
-            if data == STATE_STOPPED and error:
+            # Stopped websockets without errors are expected during shutdown and ignored
+            elif data == STATE_STOPPED and error:
                 _LOGGER.error(
                     "Websocket to %s failed, aborting [Error: %s]",
                     entry.data[CONF_SERVER],
