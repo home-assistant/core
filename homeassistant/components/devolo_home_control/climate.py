@@ -103,7 +103,7 @@ class DevoloClimateDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, ClimateEntit
         return TEMP_CELSIUS
 
     def set_hvac_mode(self, hvac_mode: str) -> None:
-        """Do nothing as no devolo device supports changing the hvac mode."""
+        """Do nothing as devolo devices do not support changing the hvac mode."""
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
