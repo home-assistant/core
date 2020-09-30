@@ -9,16 +9,27 @@ from tests.common import MockConfigEntry, load_fixture
 
 payload_without_sensor = load_fixture("advantage_air/payload_without_sensor.json")
 payload_with_sensor = load_fixture("advantage_air/payload_with_sensor.json")
+payload_ack = load_fixture("advantage_air/payload_ack.json")
+
+
+def _api_respond(request, systemdata):
+    """Advantage Air API response."""
+    if request.method == "GET":
+        if request.path == "/getSystemData":
+            return web.Response(body=systemdata)
+        if request.path == "/setAircon":
+            return web.Response(body=payload_ack)
+    raise web.HTTPException
 
 
 async def api_response_without_sensor(request):
-    """Advantage Air API response."""
-    return web.Response(body=payload_without_sensor)
+    """Response without zone sensor."""
+    return _api_respond(request, payload_without_sensor)
 
 
 async def api_response_with_sensor(request):
-    """Advantage Air API response."""
-    return web.Response(body=payload_with_sensor)
+    """Response without zone sensor."""
+    return _api_respond(request, payload_with_sensor)
 
 
 async def add_mock_config(hass, port):
