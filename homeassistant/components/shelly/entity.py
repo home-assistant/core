@@ -46,7 +46,11 @@ def shelly_naming(self, block, entity_type: str):
         else:
             entity_name = None
         if not entity_name:
-            entity_name = f"{self.wrapper.name} channel {int(block.channel)+1}"
+            if self.wrapper.model == "SHEM-3":
+                base = 65  # 65 = 'A'
+            else:
+                base = 49  # 49 = '1'
+            entity_name = f"{self.wrapper.name} channel {chr(int(block.channel)+base)}"
 
     if entity_type == "switch":
         return entity_name
