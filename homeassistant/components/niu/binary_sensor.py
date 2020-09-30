@@ -15,10 +15,10 @@ _LOGGER = logging.getLogger(__name__)
 
 
 SENSORS = {
-    "charging": ("Charging Status", DEVICE_CLASS_BATTERY_CHARGING, "mdi:ev-station"),
-    "connection": ("Connection Status", DEVICE_CLASS_CONNECTIVITY, "mdi:car-connected"),
-    "power": ("Power Status", DEVICE_CLASS_POWER, "mdi:power"),
-    "lock": ("Lock Status", DEVICE_CLASS_LOCK, "mdi:lock"),
+    "charging": ("Charging Status", DEVICE_CLASS_BATTERY_CHARGING),
+    "connection": ("Connection Status", DEVICE_CLASS_CONNECTIVITY),
+    "power": ("Power Status", DEVICE_CLASS_POWER),
+    "lock": ("Lock Status", DEVICE_CLASS_LOCK),
 }
 
 
@@ -36,7 +36,6 @@ async def async_setup_entry(hass, config, async_add_entities):
                     key,
                     value[0],
                     value[1],
-                    value[2],
                 )
             )
 
@@ -46,14 +45,13 @@ async def async_setup_entry(hass, config, async_add_entities):
 class NiuBinarySensor(NiuVehicle, BinarySensorEntity):
     """Representation of a Sensor."""
 
-    def __init__(self, vehicle_id, coordinator, attribute, name, device_class, icon):
+    def __init__(self, vehicle_id, coordinator, attribute, name, device_class):
         """Initialize the sensor."""
-        super().__init__(vehicle_id, coordinator)
+        super().__init__(vehicle_id, device_class, coordinator)
 
         self._attribute = attribute
         self._name = name
         self._device_class = device_class
-        self._icon = icon
 
     @property
     def unique_id(self) -> str:
@@ -86,8 +84,3 @@ class NiuBinarySensor(NiuVehicle, BinarySensorEntity):
             return not self._vehicle.is_locked
 
         return None
-
-    @property
-    def icon(self):
-        """Return the icon of the sensor."""
-        return self._icon

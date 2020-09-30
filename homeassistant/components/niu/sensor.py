@@ -1,6 +1,10 @@
 """Platform for sensor integration."""
 import logging
 
+from homeassistant.components.sensor import (
+    DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_TEMPERATURE,
+)
 from homeassistant.const import LENGTH_KILOMETERS, PERCENTAGE, TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 
@@ -10,23 +14,23 @@ _LOGGER = logging.getLogger(__name__)
 
 # Sensors present in all vehicles
 SENSORS = {
-    "level": ("Battery Level", PERCENTAGE, "mdi:battery"),
-    "odometer": ("Odometer", LENGTH_KILOMETERS, "mdi:counter"),
-    "range": ("Range", LENGTH_KILOMETERS, "mdi:road-variant"),
-    "charging time": ("Charging Time", None, "mdi:clock-outline"),
+    "level": ("Battery Level", PERCENTAGE, DEVICE_CLASS_BATTERY),
+    "odometer": ("Odometer", LENGTH_KILOMETERS, None),
+    "range": ("Range", LENGTH_KILOMETERS, None),
+    "charging time": ("Charging Time", None, None),
 }
 
 # Sensors present in single-battery vehicles
 SENSORS_SINGLE = {
-    "temp": ("Battery Temperature", TEMP_CELSIUS, "mdi:thermometer"),
+    "temp": ("Battery Temperature", TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE),
 }
 
 # Sensors present in dual-battery vehicles
 SENSORS_DUAL = {
-    "level a": ("Battery A Level", PERCENTAGE, "mdi:battery"),
-    "level b": ("Battery B Level", PERCENTAGE, "mdi:battery"),
-    "temp a": ("Battery A Temperature", TEMP_CELSIUS, "mdi:thermometer"),
-    "temp b": ("Battery B Temperature", TEMP_CELSIUS, "mdi:thermometer"),
+    "level a": ("Battery A Level", PERCENTAGE, DEVICE_CLASS_BATTERY),
+    "level b": ("Battery B Level", PERCENTAGE, DEVICE_CLASS_BATTERY),
+    "temp a": ("Battery A Temperature", TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE),
+    "temp b": ("Battery B Temperature", TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE),
 }
 
 
@@ -56,14 +60,13 @@ async def async_setup_entry(hass, config, add_entities, discovery_info=None):
 class NiuSensor(NiuVehicle, Entity):
     """Representation of a Sensor."""
 
-    def __init__(self, vehicle_id, coordinator, attribute, name, unit, icon):
+    def __init__(self, vehicle_id, coordinator, attribute, name, unit, device_class):
         """Initialize the sensor."""
-        super().__init__(vehicle_id, coordinator)
+        super().__init__(vehicle_id, device_class, coordinator)
 
         self._attribute = attribute
         self._name = name
         self._unit = unit
-        self._icon = icon
 
     @property
     def unique_id(self) -> str:
@@ -116,45 +119,12 @@ class NiuSensor(NiuVehicle, Entity):
     def icon(self):
         """Return the icon of the sensor."""
 
-        if "level" in self._attribute:
-            if self.state < 5:
-                return "mdi:battery-outline"
-            if 5 <= self.state < 15:
-                return "mdi:battery-10"
-            if 15 <= self.state < 25:
-                return "mdi:battery-20"
-            if 25 <= self.state < 35:
-                return "mdi:battery-30"
-            if 35 <= self.state < 45:
-                return "mdi:battery-40"
-            if 45 <= self.state < 55:
-                return "mdi:battery-50"
-            if 55 <= self.state < 65:
-                return "mdi:battery-60"
-            if 65 <= self.state < 75:
-                return "mdi:battery-70"
-            if 75 <= self.state < 85:
-                return "mdi:battery-80"
-            if 85 <= self.state < 95:
-                return "mdi:battery-90"
-            if self.state >= 95:
-                return "mdi:battery"
+        if not self.device_class:
+            if self._attribute == "range":
+                return "mdi:road-variant"
+            if self._attribute == "odometer":
+                return "mdi:counter"
+            if self._attribute == "charging time":
+                return "mdi:clock-outline"
 
-            return "mdi:battery-alert"
-
-        if "temp" in self._attribute:
-            if self._attribute == "temp b":
-                desc = self._vehicle.battery_temp_desc(1)
-            else:
-                desc = self._vehicle.battery_temp_desc(0)
-
-            if desc == "low":
-                return "mdi:thermometer-low"
-            if desc == "normal":
-                return "mdi:thermometer"
-            if desc == "high":
-                return "mdi:thermometer-high"
-
-            return "mdi:thermometer-alert"
-
-        return self._icon
+        return None

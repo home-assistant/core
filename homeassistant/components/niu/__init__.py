@@ -81,10 +81,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 class NiuVehicle(CoordinatorEntity, Entity):
     """Represents a NIU vehicle."""
 
-    def __init__(self, vehicle_id, coordinator):
+    def __init__(self, vehicle_id, device_class, coordinator):
         """Initialize the class."""
         super().__init__(coordinator)
         self._id = vehicle_id
+        self._device_class = device_class
 
     @property
     def _vehicle(self):
@@ -98,8 +99,12 @@ class NiuVehicle(CoordinatorEntity, Entity):
     @property
     def unique_id(self):
         """Return the vehicle's unique id."""
-
         return self._id
+
+    @property
+    def device_class(self):
+        """Return the sensor's class."""
+        return self._device_class
 
     @property
     def device_info(self):
