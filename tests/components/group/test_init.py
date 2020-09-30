@@ -620,7 +620,7 @@ async def test_group_persons(hass):
 
 
 async def test_group_persons_and_device_trackers(hass):
-    """Test group of persons."""
+    """Test group of persons and device_tracker."""
     hass.states.async_set("person.one", "Work")
     hass.states.async_set("person.two", "Work")
     hass.states.async_set("person.three", "Work")
