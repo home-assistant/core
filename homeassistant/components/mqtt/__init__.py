@@ -1060,7 +1060,7 @@ def _matcher_for_topic(topic: str) -> Any:
     matcher = MQTTMatcher()
     matcher[topic] = True
 
-    return lambda topic: next(subscription.matcher.iter_match(msg.topic), False)
+    return lambda topic: next(matcher.iter_match(topic), False)
 
 
 class MqttAttributes(Entity):
