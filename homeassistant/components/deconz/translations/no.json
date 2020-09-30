@@ -93,7 +93,8 @@
             "deconz_devices": {
                 "data": {
                     "allow_clip_sensor": "Tillat deCONZ CLIP-sensorer",
-                    "allow_deconz_groups": "Tillat deCONZ lys grupper"
+                    "allow_deconz_groups": "Tillat deCONZ lys grupper",
+                    "allow_new_devices": "Tillat automatisk tilsetning av nye enheter"
                 },
                 "description": "Konfigurere synlighet av deCONZ enhetstyper",
                 "title": "deCONZ alternativer"

@@ -560,7 +560,6 @@ class _TrackTemplateResultInfo:
         self._listeners: Dict[str, Callable] = {}
 
         self._last_result: Dict[Template, Union[str, TemplateError]] = {}
-        self._last_info: Dict[Template, RenderInfo] = {}
         self._info: Dict[Template, RenderInfo] = {}
         self._last_domains: Set = set()
         self._last_entities: Set = set()
@@ -581,7 +580,6 @@ class _TrackTemplateResultInfo:
                     exc_info=self._info[template].exception,
                 )
 
-        self._last_info = self._info.copy()
         self._create_listeners()
         _LOGGER.debug(
             "Template group %s listens for %s",
@@ -600,28 +598,23 @@ class _TrackTemplateResultInfo:
 
     @property
     def _needs_all_listener(self) -> bool:
-        for track_template_ in self._track_templates:
-            template = track_template_.template
-
+        for info in self._info.values():
             # Tracking all states
-            if (
-                self._info[template].all_states
-                or self._info[template].all_states_lifecycle
-            ):
+            if info.all_states or info.all_states_lifecycle:
                 return True
 
             # Previous call had an exception
             # so we do not know which states
             # to track
-            if self._info[template].exception:
+            if info.exception:
                 return True
 
         return False
 
     @property
     def _all_templates_are_static(self) -> bool:
-        for track_template_ in self._track_templates:
-            if not self._info[track_template_.template].is_static:
+        for info in self._info.values():
+            if not info.is_static:
                 return False
 
         return True
@@ -712,9 +705,8 @@ class _TrackTemplateResultInfo:
     @callback
     def async_remove(self) -> None:
         """Cancel the listener."""
-        self._cancel_listener(_TEMPLATE_ALL_LISTENER)
-        self._cancel_listener(_TEMPLATE_DOMAINS_LISTENER)
-        self._cancel_listener(_TEMPLATE_ENTITIES_LISTENER)
+        for key in list(self._listeners):
+            self._listeners.pop(key)()
 
     @callback
     def async_refresh(self) -> None:
@@ -722,31 +714,32 @@ class _TrackTemplateResultInfo:
         self._refresh(None)
 
     @callback
-    def _refresh(self, event: Optional[Event]) -> None:
-        entity_id = event and event.data.get(ATTR_ENTITY_ID)
-        lifecycle_event = event and (
-            event.data.get("new_state") is None or event.data.get("old_state") is None
+    def _event_triggers_template(self, template: Template, event: Event) -> bool:
+        """Determine if a template should be re-rendered from an event."""
+        entity_id = event.data.get(ATTR_ENTITY_ID)
+        return (
+            self._info[template].filter(entity_id)
+            or event.data.get("new_state") is None
+            or event.data.get("old_state") is None
+            and self._info[template].filter_lifecycle(entity_id)
         )
+
+    @callback
+    def _refresh(self, event: Optional[Event]) -> None:
         updates = []
         info_changed = False
 
         for track_template_ in self._track_templates:
             template = track_template_.template
-            if (
-                entity_id
-                and not self._last_info[template].filter(entity_id)
-                and (
-                    not lifecycle_event
-                    or not self._last_info[template].filter_lifecycle(entity_id)
-                )
-            ):
-                continue
+            if event:
+                if not self._event_triggers_template(template, event):
+                    continue
 
-            _LOGGER.debug(
-                "Template update %s triggered by event: %s",
-                template.template,
-                event,
-            )
+                _LOGGER.debug(
+                    "Template update %s triggered by event: %s",
+                    template.template,
+                    event,
+                )
 
             self._info[template] = template.async_render_to_info(
                 track_template_.variables
@@ -778,7 +771,6 @@ class _TrackTemplateResultInfo:
                 self._track_templates,
                 self.listeners,
             )
-            self._last_info = self._info.copy()
 
         if not updates:
             return

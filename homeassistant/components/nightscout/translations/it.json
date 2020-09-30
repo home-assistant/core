@@ -5,12 +5,14 @@
         },
         "error": {
             "cannot_connect": "Impossibile connettersi",
+            "invalid_auth": "Autenticazione non valida",
             "unknown": "Errore imprevisto"
         },
         "flow_title": "Nightscout",
         "step": {
             "user": {
                 "data": {
+                    "api_key": "Chiave API",
                     "url": "URL"
                 }
             }

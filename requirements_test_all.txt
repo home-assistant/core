@@ -30,7 +30,7 @@ PyTransportNSW==0.1.1
 PyTurboJPEG==1.4.0
 
 # homeassistant.components.xiaomi_aqara
-PyXiaomiGateway==0.13.2
+PyXiaomiGateway==0.13.3
 
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.2
@@ -146,7 +146,7 @@ aiounifi==23
 aioymaps==1.1.0
 
 # homeassistant.components.airly
-airly==0.0.2
+airly==1.0.0
 
 # homeassistant.components.ambiclimate
 ambiclimate==0.2.1
@@ -186,7 +186,7 @@ azure-eventhub==5.1.0
 base36==0.1.1
 
 # homeassistant.components.zha
-bellows==0.20.2
+bellows==0.20.3
 
 # homeassistant.components.blebox
 blebox_uniapi==1.3.2
@@ -254,7 +254,7 @@ defusedxml==0.6.0
 denonavr==0.9.4
 
 # homeassistant.components.devolo_home_control
-devolo-home-control-api==0.13.0
+devolo-home-control-api==0.15.0
 
 # homeassistant.components.directv
 directv==0.3.0
@@ -500,7 +500,7 @@ ovoenergy==1.1.7
 
 # homeassistant.components.mqtt
 # homeassistant.components.shiftr
-paho-mqtt==1.5.0
+paho-mqtt==1.5.1
 
 # homeassistant.components.panasonic_viera
 panasonic_viera==0.3.6
@@ -613,7 +613,7 @@ pyalmond==0.0.2
 pyarlo==0.2.3
 
 # homeassistant.components.atag
-pyatag==0.3.3.4
+pyatag==0.3.4.4
 
 # homeassistant.components.netatmo
 pyatmo==4.0.0
@@ -625,7 +625,7 @@ pyblackbird==0.5
 pybotvac==0.0.17
 
 # homeassistant.components.cast
-pychromecast==7.4.1
+pychromecast==7.5.0
 
 # homeassistant.components.coolmaster
 pycoolmasternet-async==0.1.2
@@ -930,7 +930,7 @@ samsungtvws==1.4.0
 sense_energy==0.8.0
 
 # homeassistant.components.sentry
-sentry-sdk==0.17.8
+sentry-sdk==0.18.0
 
 # homeassistant.components.sharkiq
 sharkiqpy==0.1.8
@@ -1074,7 +1074,7 @@ yeelight==0.5.3
 zeroconf==0.28.5
 
 # homeassistant.components.zha
-zha-quirks==0.0.44
+zha-quirks==0.0.45
 
 # homeassistant.components.zha
 zigpy-cc==0.5.2

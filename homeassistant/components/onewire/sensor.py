@@ -248,7 +248,7 @@ def get_entities(config):
 
 
 class OneWire(Entity):
-    """Implementation of a 1-Wire Sensor."""
+    """Implementation of a 1-Wire sensor."""
 
     def __init__(self, name, device_file, sensor_type):
         """Initialize the sensor."""

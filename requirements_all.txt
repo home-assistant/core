@@ -70,7 +70,7 @@ PyTurboJPEG==1.4.0
 PyViCare==0.2.0
 
 # homeassistant.components.xiaomi_aqara
-PyXiaomiGateway==0.13.2
+PyXiaomiGateway==0.13.3
 
 # homeassistant.components.bmp280
 # homeassistant.components.mcp23017
@@ -233,7 +233,7 @@ aiounifi==23
 aioymaps==1.1.0
 
 # homeassistant.components.airly
-airly==0.0.2
+airly==1.0.0
 
 # homeassistant.components.aladdin_connect
 aladdin_connect==0.3
@@ -339,7 +339,7 @@ beautifulsoup4==4.9.1
 # beewi_smartclim==0.0.7
 
 # homeassistant.components.zha
-bellows==0.20.2
+bellows==0.20.3
 
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.7.7
@@ -484,7 +484,7 @@ deluge-client==1.7.1
 denonavr==0.9.4
 
 # homeassistant.components.devolo_home_control
-devolo-home-control-api==0.13.0
+devolo-home-control-api==0.15.0
 
 # homeassistant.components.directv
 directv==0.3.0
@@ -1059,7 +1059,7 @@ ovoenergy==1.1.7
 
 # homeassistant.components.mqtt
 # homeassistant.components.shiftr
-paho-mqtt==1.5.0
+paho-mqtt==1.5.1
 
 # homeassistant.components.panasonic_bluray
 panacotta==0.1
@@ -1197,6 +1197,9 @@ py-synology==0.2.0
 # homeassistant.components.seventeentrack
 py17track==2.2.2
 
+# homeassistant.components.hdmi_cec
+pyCEC==0.4.14
+
 # homeassistant.components.control4
 pyControl4==0.0.6
 
@@ -1244,7 +1247,7 @@ pyalmond==0.0.2
 pyarlo==0.2.3
 
 # homeassistant.components.atag
-pyatag==0.3.3.4
+pyatag==0.3.4.4
 
 # homeassistant.components.netatmo
 pyatmo==4.0.0
@@ -1277,7 +1280,7 @@ pycfdns==0.0.1
 pychannels==1.0.0
 
 # homeassistant.components.cast
-pychromecast==7.4.1
+pychromecast==7.5.0
 
 # homeassistant.components.cmus
 pycmus==0.1.1
@@ -1577,7 +1580,7 @@ pyownet==0.10.0.post1
 pypca==0.0.7
 
 # homeassistant.components.lcn
-pypck==0.6.4
+pypck==0.7.2
 
 # homeassistant.components.pjlink
 pypjlink2==1.2.1
@@ -1979,7 +1982,7 @@ sense-hat==2.2.0
 sense_energy==0.8.0
 
 # homeassistant.components.sentry
-sentry-sdk==0.17.8
+sentry-sdk==0.18.0
 
 # homeassistant.components.sharkiq
 sharkiqpy==0.1.8
@@ -2032,7 +2035,7 @@ smarthab==0.21
 smhi-pkg==1.0.13
 
 # homeassistant.components.snapcast
-snapcast==2.0.10
+snapcast==2.1.1
 
 # homeassistant.components.socialblade
 socialbladeclient==0.5
@@ -2274,7 +2277,7 @@ xboxapi==2.0.1
 xfinity-gateway==0.0.4
 
 # homeassistant.components.knx
-xknx==0.14.4
+xknx==0.15.0
 
 # homeassistant.components.bluesound
 # homeassistant.components.rest
@@ -2305,7 +2308,7 @@ zengge==0.2
 zeroconf==0.28.5
 
 # homeassistant.components.zha
-zha-quirks==0.0.44
+zha-quirks==0.0.45
 
 # homeassistant.components.zhong_hong
 zhong_hong_hvac==1.0.9
