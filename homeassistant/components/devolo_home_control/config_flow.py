@@ -53,10 +53,10 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         mydevolo.password = password
         if self.show_advanced_options:
             mydevolo.url = user_input[CONF_MYDEVOLO]
-            mydevolo.mprm = user_input[CONF_HOMECONTROL]
+            mprm = user_input[CONF_HOMECONTROL]
         else:
             mydevolo.url = DEFAULT_MYDEVOLO
-            mydevolo.mprm = DEFAULT_MPRM
+            mprm = DEFAULT_MPRM
         credentials_valid = await self.hass.async_add_executor_job(
             mydevolo.credentials_valid
         )
@@ -73,7 +73,7 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_PASSWORD: password,
                 CONF_USERNAME: user,
                 CONF_MYDEVOLO: mydevolo.url,
-                CONF_HOMECONTROL: mydevolo.mprm,
+                CONF_HOMECONTROL: mprm,
             },
         )
 
