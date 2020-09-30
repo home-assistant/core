@@ -34,10 +34,6 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 await self._async_try_connect(host)
-                return self.async_create_entry(
-                    title=name,
-                    data={CONF_HOST: host, CONF_NAME: name},
-                )
             except exceptions.ConnectError:
                 errors["base"] = "cannot_connect"
                 _LOGGER.exception("Error connecting to device at %s", host)
@@ -47,6 +43,11 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
+            else:
+                return self.async_create_entry(
+                    title=name,
+                    data={CONF_HOST: host, CONF_NAME: name},
+                )
 
         user_input = user_input or {}
         return self.async_show_form(

@@ -39,11 +39,6 @@ GOALZERO_SCHEMA = vol.Schema(
     )
 )
 
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema(vol.All(cv.ensure_list, [GOALZERO_SCHEMA]))},
-    extra=vol.ALLOW_EXTRA,
-)
-
 
 PLATFORMS = ["binary_sensor"]
 
@@ -61,8 +56,6 @@ async def async_setup_entry(hass, entry):
     name = entry.data[CONF_NAME]
     host = entry.data[CONF_HOST]
 
-    _LOGGER.debug("Setting up %s integration with host %s", DOMAIN, host)
-
     session = async_get_clientsession(hass)
     api = Yeti(host, hass.loop, session)
     try:
@@ -76,7 +69,6 @@ async def async_setup_entry(hass, entry):
         try:
             await api.get_state()
         except exceptions.ConnectError as err:
-            _LOGGER.warning("Failed to update data from Yeti")
             raise UpdateFailed(f"Failed to communicating with API: {err}") from err
 
     coordinator = DataUpdateCoordinator(
@@ -117,10 +109,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 class YetiEntity(CoordinatorEntity):
     """Representation of a Goal Zero Yeti entity."""
 
-    def __init__(self, _api, coordinator, name, sensor_name, server_unique_id):
+    def __init__(self, api, coordinator, name, server_unique_id):
         """Initialize a Goal Zero Yeti entity."""
         super().__init__(coordinator)
-        self.api = _api
+        self.api = api
         self._name = name
         self._server_unique_id = server_unique_id
         self._device_class = None
