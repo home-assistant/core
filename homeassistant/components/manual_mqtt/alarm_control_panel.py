@@ -61,6 +61,10 @@ DEFAULT_ARM_HOME = "ARM_HOME"
 DEFAULT_ARM_NIGHT = "ARM_NIGHT"
 DEFAULT_DISARM = "DISARM"
 DEFAULT_INVALID = "INVALID"
+DEFAULT_COMMAND_TOPIC = "home/alarm/set"
+DEFAULT_CONFIG_TOPIC = "home/alarm/config"
+DEFAULT_STATE_TOPIC = "home/alarm"
+DEFAULT_STATUS_TOPIC = "home/alarm/status"
 
 SUPPORTED_STATES = [
     STATE_ALARM_DISARMED,
@@ -151,10 +155,10 @@ PLATFORM_SCHEMA = vol.Schema(
                 vol.Optional(STATE_ALARM_TRIGGERED, default={}): _state_schema(
                     STATE_ALARM_TRIGGERED
                 ),
-                vol.Required(mqtt.CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
-                vol.Required(CONF_CONFIG_TOPIC): mqtt.valid_publish_topic,
-                vol.Required(CONF_STATUS_TOPIC): mqtt.valid_publish_topic,
-                vol.Required(mqtt.CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
+                vol.Optional(mqtt.CONF_COMMAND_TOPIC, default=DEFAULT_COMMAND_TOPIC): mqtt.valid_publish_topic,
+                vol.Optional(CONF_CONFIG_TOPIC, default=DEFAULT_CONFIG_TOPIC): mqtt.valid_publish_topic,
+                vol.Optional(CONF_STATUS_TOPIC, default=DEFAULT_STATUS_TOPIC): mqtt.valid_publish_topic,
+                vol.Optional(mqtt.CONF_STATE_TOPIC, default=DEFAULT_STATE_TOPIC): mqtt.valid_subscribe_topic,
                 vol.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
                 vol.Optional(
                     CONF_PAYLOAD_ARM_AWAY, default=DEFAULT_ARM_AWAY
