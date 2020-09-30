@@ -55,6 +55,11 @@ CONF_ADDRESS = "address"
 
 # sensor.py
 # CONF_DATA_TYPE = "data_type"
+DEFAULT_STRUCT_FORMAT = {
+    DATA_TYPE_INT: {1: "h", 2: "i", 4: "q"},
+    DATA_TYPE_UINT: {1: "H", 2: "I", 4: "Q"},
+    DATA_TYPE_FLOAT: {1: "e", 2: "f", 4: "d"},
+}
 
 # switch.py
 CONF_STATE_OFF = "state_off"
@@ -72,6 +77,8 @@ CONF_UNIT = "temperature_unit"
 CONF_MAX_TEMP = "max_temp"
 CONF_MIN_TEMP = "min_temp"
 CONF_STEP = "temp_step"
+DEFAULT_STRUCTURE_PREFIX = ">f"
+DEFAULT_TEMP_UNIT = "C"
 
 # cover.py
 CONF_STATE_OPEN = "state_open"

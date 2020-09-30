@@ -16,6 +16,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_NAME,
     CONF_SLAVE,
+    CONF_STRUCTURE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
@@ -37,10 +38,14 @@ from .const import (
     CONF_STEP,
     CONF_TARGET_TEMP,
     CONF_UNIT,
+    DATA_TYPE_CUSTOM,
     DATA_TYPE_FLOAT,
     DATA_TYPE_INT,
     DATA_TYPE_UINT,
     DEFAULT_HUB,
+    DEFAULT_STRUCT_FORMAT,
+    DEFAULT_STRUCTURE_PREFIX,
+    DEFAULT_TEMP_UNIT,
     MODBUS_DOMAIN,
 )
 
@@ -58,7 +63,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             CONF_CURRENT_TEMP_REGISTER_TYPE, default=CALL_TYPE_REGISTER_HOLDING
         ): vol.In([CALL_TYPE_REGISTER_HOLDING, CALL_TYPE_REGISTER_INPUT]),
         vol.Optional(CONF_DATA_TYPE, default=DATA_TYPE_FLOAT): vol.In(
-            [DATA_TYPE_INT, DATA_TYPE_UINT, DATA_TYPE_FLOAT]
+            [DATA_TYPE_INT, DATA_TYPE_UINT, DATA_TYPE_FLOAT, DATA_TYPE_CUSTOM]
         ),
         vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
         vol.Optional(CONF_PRECISION, default=1): cv.positive_int,
@@ -67,7 +72,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_MAX_TEMP, default=35): cv.positive_int,
         vol.Optional(CONF_MIN_TEMP, default=5): cv.positive_int,
         vol.Optional(CONF_STEP, default=0.5): vol.Coerce(float),
-        vol.Optional(CONF_UNIT, default="C"): cv.string,
+        vol.Optional(CONF_STRUCTURE, default=DEFAULT_STRUCTURE_PREFIX): cv.string,
+        vol.Optional(CONF_UNIT, default=DEFAULT_TEMP_UNIT): cv.string,
     }
 )
 
@@ -90,6 +96,30 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     temp_step = config[CONF_STEP]
     hub_name = config[CONF_HUB]
     hub = hass.data[MODBUS_DOMAIN][hub_name]
+    structure = config[CONF_STRUCTURE]
+
+    if data_type != DATA_TYPE_CUSTOM:
+        try:
+            structure = f">{DEFAULT_STRUCT_FORMAT[data_type][count]}"
+        except KeyError:
+            _LOGGER.error(
+                "Climate %s: Unable to find a data type matching count value %s, try a custom type",
+                name,
+                count,
+            )
+            return
+
+    try:
+        size = struct.calcsize(structure)
+    except struct.error as err:
+        _LOGGER.error("Error in sensor %s structure: %s", name, err)
+        return
+
+    if count * 2 != size:
+        _LOGGER.error(
+            "Structure size (%d bytes) mismatch registers count (%d words)", size, count
+        )
+        return
 
     add_entities(
         [
@@ -101,6 +131,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 current_temp_register,
                 current_temp_register_type,
                 data_type,
+                structure,
                 count,
                 precision,
                 scale,
@@ -127,6 +158,7 @@ class ModbusThermostat(ClimateEntity):
         current_temp_register,
         current_temp_register_type,
         data_type,
+        structure,
         count,
         precision,
         scale,
@@ -146,6 +178,7 @@ class ModbusThermostat(ClimateEntity):
         self._target_temperature = None
         self._current_temperature = None
         self._data_type = data_type
+        self._structure = structure
         self._count = int(count)
         self._precision = precision
         self._scale = scale
@@ -154,16 +187,7 @@ class ModbusThermostat(ClimateEntity):
         self._max_temp = max_temp
         self._min_temp = min_temp
         self._temp_step = temp_step
-        self._structure = ">f"
         self._available = True
-
-        data_types = {
-            DATA_TYPE_INT: {1: "h", 2: "i", 4: "q"},
-            DATA_TYPE_UINT: {1: "H", 2: "I", 4: "Q"},
-            DATA_TYPE_FLOAT: {1: "e", 2: "f", 4: "d"},
-        }
-
-        self._structure = f">{data_types[self._data_type][self._count]}"
 
     @property
     def supported_features(self):
