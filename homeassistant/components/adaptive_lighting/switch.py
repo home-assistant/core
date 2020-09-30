@@ -625,7 +625,7 @@ class TurnOnOffListener:
         self.turn_off_event: Dict[str, Tuple[str, float]] = {}
         # Tracks 'light.turn_on' service calls
         self.turn_on_event: Dict[str, Tuple[str]] = {}
-
+        # Keeps 'asyncio.sleep` tasks that can be cancelled by 'light.turn_on' events
         self.sleep_tasks: Dict[str, asyncio.Task] = {}
 
         self.remove_listener = self.hass.bus.async_listen(
@@ -709,6 +709,11 @@ class TurnOnOffListener:
             # transitioning into 'off'. Maybe needs some discussion/input?
             return True
 
+        # Now we assume that the lights are still on and they were intended
+        # to be on. In case this still gives problems for some, we might
+        # choose to **only** adapt on 'light.turn_on' events and ignore
+        # other 'off' → 'on' state switches resulting from polling. That
+        # would mean we 'return True' here.
         return False
 
     async def turn_on_off_event_listener(self, event):
