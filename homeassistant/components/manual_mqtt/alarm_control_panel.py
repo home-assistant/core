@@ -470,6 +470,7 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
         config = {
             'version': 1,
             'code_arm_required': self._code_arm_required,
+            'code_disarm_required': (self._code != None),
             'delay_times': self._delay_time_by_state,
             'arming_times': self._arming_time_by_state,
             'trigger_times': self._trigger_time_by_state,
