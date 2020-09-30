@@ -633,7 +633,8 @@ async def test_group_mixed_domains_on(hass):
         {
             "group": {
                 "group_zero": {
-                    "entities": "lock.alexander_garage_exit_door, binary_sensor.alexander_garage_side_door_open, cover.small_garage_door"
+                    "all": "true",
+                    "entities": "lock.alexander_garage_exit_door, binary_sensor.alexander_garage_side_door_open, cover.small_garage_door",
                 },
             }
         },
@@ -657,7 +658,8 @@ async def test_group_mixed_domains_off(hass):
         {
             "group": {
                 "group_zero": {
-                    "entities": "lock.alexander_garage_exit_door, binary_sensor.alexander_garage_side_door_open, cover.small_garage_door"
+                    "all": "true",
+                    "entities": "lock.alexander_garage_exit_door, binary_sensor.alexander_garage_side_door_open, cover.small_garage_door",
                 },
             }
         },
@@ -665,6 +667,27 @@ async def test_group_mixed_domains_off(hass):
     await hass.async_block_till_done()
 
     assert hass.states.get("group.group_zero").state == "off"
+
+
+async def test_group_locks(hass):
+    """Test group of locks."""
+    hass.states.async_set("lock.one", "locked")
+    hass.states.async_set("lock.two", "locked")
+    hass.states.async_set("lock.three", "unlocked")
+
+    assert await async_setup_component(hass, "lock", {})
+    assert await async_setup_component(
+        hass,
+        "group",
+        {
+            "group": {
+                "group_zero": {"entities": "lock.one, lock.two, lock.three"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("group.group_zero").state == "locked"
 
 
 async def test_group_sensors(hass):

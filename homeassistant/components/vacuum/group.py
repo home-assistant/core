@@ -15,5 +15,5 @@ def async_describe_on_off_states(
 ) -> None:
     """Describe group on off states."""
     registry.on_off_states(
-        [STATE_CLEANING, STATE_ON, STATE_RETURNING, STATE_ERROR], STATE_OFF
+        {STATE_CLEANING, STATE_ON, STATE_RETURNING, STATE_ERROR}, STATE_OFF
     )

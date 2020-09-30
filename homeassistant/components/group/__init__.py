@@ -99,7 +99,7 @@ class GroupIntegrationRegistry:
         """Exclude the current domain."""
         self.exclude_domains.add(current_domain.get())
 
-    def on_off_states(self, on_states: List, off_state: str) -> None:
+    def on_off_states(self, on_states: Set, off_state: str) -> None:
         """Registry on and off states for the current domain."""
         for on_state in on_states:
             if on_state not in self.on_off_mapping:
