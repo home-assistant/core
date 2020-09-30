@@ -62,6 +62,7 @@
             }
         },
         "error": {
+            "already_configured_device": "Device is already configured",
             "invalid_event_code": "Invalid event code",
             "invalid_input_2262_on": "Invalid input for command on",
             "invalid_input_2262_off": "Invalid input for command off",
