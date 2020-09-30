@@ -60,9 +60,13 @@ class SynoDSMCamera(SynologyDSMEntity, Camera):
         """Return the device information."""
         return {
             "identifiers": {(DOMAIN, self._api.information.serial, self._camera.id)},
-            "name": self.name,
+            "name": self._camera.name,
             "model": self._camera.model,
-            "via_device": (DOMAIN, self._api.information.serial),
+            "via_device": (
+                DOMAIN,
+                self._api.information.serial,
+                SynoSurveillanceStation.INFO_API_KEY,
+            ),
         }
 
     @property
