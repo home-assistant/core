@@ -1,7 +1,7 @@
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
 MINOR_VERSION = 115
-PATCH_VERSION = "5"
+PATCH_VERSION = "6"
 __short_version__ = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__ = f"{__short_version__}.{PATCH_VERSION}"
 REQUIRED_PYTHON_VER = (3, 7, 1)
@@ -608,3 +608,6 @@ PRECISION_TENTHS = 0.1
 # Static list of entities that will never be exposed to
 # cloud, alexa, or google_home components
 CLOUD_NEVER_EXPOSED_ENTITIES = ["group.all_locks"]
+
+# The ID of the Home Assistant Cast App
+CAST_APP_ID_HOMEASSISTANT = "B12CE3CA"
