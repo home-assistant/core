@@ -619,6 +619,31 @@ async def test_group_persons(hass):
     assert hass.states.get("group.group_zero").state == "home"
 
 
+async def test_group_persons_and_device_trackers(hass):
+    """Test group of persons."""
+    hass.states.async_set("person.one", "Work")
+    hass.states.async_set("person.two", "Work")
+    hass.states.async_set("person.three", "Work")
+    hass.states.async_set("device_tracker.one", "home")
+
+    assert await async_setup_component(hass, "person", {})
+    assert await async_setup_component(hass, "device_tracker", {})
+    assert await async_setup_component(
+        hass,
+        "group",
+        {
+            "group": {
+                "group_zero": {
+                    "entities": "device_tracker.one, person.one, person.two, person.three"
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("group.group_zero").state == "home"
+
+
 async def test_group_mixed_domains_on(hass):
     """Test group of mixed domains that is on."""
     hass.states.async_set("lock.alexander_garage_exit_door", "locked")
