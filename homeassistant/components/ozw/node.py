@@ -28,25 +28,25 @@ class OZWValidationResponse:
         self.err_msg = err_msg
         self.err_args = args
 
-    @staticmethod
-    def process_fail(err_type, err_msg, *args):
+    @classmethod
+    def process_fail(cls, err_type, err_msg, *args):
         """Process an invalid request."""
-        return OZWValidationResponse(False, err_type=err_type, err_msg=err_msg, *args)
+        return cls(False, err_type=err_type, err_msg=err_msg, *args)
 
-    @staticmethod
-    def process_fail_on_type(value, new_value):
+    @classmethod
+    def process_fail_on_type(cls, value, new_value):
         """Process an invalid request that fails type validation."""
-        return OZWValidationResponse.process_fail(
+        return cls.process_fail(
             ERR_NOT_SUPPORTED,
             "Configuration parameter type {} does not match the value type {}",
             value.type,
             type(new_value),
         )
 
-    @staticmethod
-    def process_success(payload):
+    @classmethod
+    def process_success(cls, payload):
         """Process a valid request."""
-        return OZWValidationResponse(True, payload=payload)
+        return cls(True, payload=payload)
 
 
 def set_config_parameter(manager, instance_id, node_id, parameter_index, new_value):
@@ -98,7 +98,10 @@ def set_config_parameter(manager, instance_id, node_id, parameter_index, new_val
         for option in value.value["List"]:
             if new_value not in (option["Label"], option["Value"]):
                 continue
-            payload = int(option["Value"])
+            try:
+                payload = int(option["Value"])
+            except ValueError:
+                payload = option["Value"]
             value.send_value(payload)
             return OZWValidationResponse.process_success(payload)
 
