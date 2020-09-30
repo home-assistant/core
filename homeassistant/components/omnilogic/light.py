@@ -13,7 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up the sensor platform."""
+    """Set up the light platform."""
 
     coordinator = hass.data[DOMAIN][entry.entry_id][COORDINATOR]
     entities = []
