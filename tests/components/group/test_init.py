@@ -67,13 +67,13 @@ class TestComponentsGroup(unittest.TestCase):
             self.hass, "chromecasts", ["cast.living_room", "cast.bedroom"]
         )
 
-        assert STATE_UNKNOWN == grp.state
+        assert grp.state is None
 
     def test_setup_empty_group(self):
         """Try to set up an empty group."""
         grp = group.Group.create_group(self.hass, "nothing", [])
 
-        assert STATE_UNKNOWN == grp.state
+        assert grp.state is None
 
     def test_monitor_group(self):
         """Test if the group keeps track of states."""

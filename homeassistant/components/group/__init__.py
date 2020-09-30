@@ -20,7 +20,6 @@ from homeassistant.const import (
     SERVICE_RELOAD,
     STATE_OFF,
     STATE_ON,
-    STATE_UNKNOWN,
 )
 from homeassistant.core import CoreState, callback, split_entity_id
 import homeassistant.helpers.config_validation as cv
@@ -428,7 +427,7 @@ class Group(Entity):
         """
         self.hass = hass
         self._name = name
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._icon = icon
         self._set_tracked(entity_ids)
         self._on_off = None
@@ -621,7 +620,7 @@ class Group(Entity):
 
     async def async_update(self):
         """Query all members and determine current group state."""
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._async_update_group_state()
 
     async def async_added_to_hass(self):
@@ -719,9 +718,9 @@ class Group(Entity):
         if num_on_states == 1:
             on_state = list(self._on_states)[0]
         # If we do not have an on state for any domains
-        # we use STATE_UNKNOWN
+        # we use None (which will be STATE_UNKNOWN)
         elif num_on_states == 0:
-            self._state = STATE_UNKNOWN
+            self._state = None
             return
         # If the entity domains have more than one
         # on state, we use STATE_ON/STATE_OFF
