@@ -1,0 +1,29 @@
+{
+    "config": {
+        "error": {
+            "connection_error": "Errore durante la connessione; controllare la rete e riprovare",
+            "identifier_exists": "E-mail gi\u00e0 registrata",
+            "invalid_credentials": "Credenziali non valide",
+            "server_error": "Errore sui server NIU"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "E-mail"
+                },
+                "description": "Si prega di inserire le tue informazioni.",
+                "title": "NIU - Configurazione"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Secondi tra le scansioni"
+                }
+            }
+        }
+    }
+}
