@@ -131,14 +131,11 @@ class DeconzSensor(DeconzDevice):
     TYPE = DOMAIN
 
     @callback
-    def async_update_callback(self, force_update=False, ignore_update=False):
+    def async_update_callback(self, force_update=False):
         """Update the sensor's state."""
-        if ignore_update:
-            return
-
         keys = {"on", "reachable", "state"}
         if force_update or self._device.changed_keys.intersection(keys):
-            self.async_write_ha_state()
+            super().async_update_callback(force_update=force_update)
 
     @property
     def state(self):
@@ -198,14 +195,11 @@ class DeconzBattery(DeconzDevice):
     TYPE = DOMAIN
 
     @callback
-    def async_update_callback(self, force_update=False, ignore_update=False):
+    def async_update_callback(self, force_update=False):
         """Update the battery's state, if needed."""
-        if ignore_update:
-            return
-
         keys = {"battery", "reachable"}
         if force_update or self._device.changed_keys.intersection(keys):
-            self.async_write_ha_state()
+            super().async_update_callback(force_update=force_update)
 
     @property
     def unique_id(self):
