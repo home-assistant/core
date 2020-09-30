@@ -26,6 +26,7 @@ from .const import (
     CONF_GROUP_ID_BASE,
     COVER_TYPES,
     DOMAIN as DECONZ_DOMAIN,
+    LOCK_TYPES,
     NEW_GROUP,
     NEW_LIGHT,
     SWITCH_TYPES,
@@ -50,7 +51,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         for light in lights:
             if (
-                light.type not in COVER_TYPES + SWITCH_TYPES
+                light.type not in COVER_TYPES + LOCK_TYPES + SWITCH_TYPES
                 and light.uniqueid not in gateway.entities[DOMAIN]
             ):
                 entities.append(DeconzLight(light, gateway))

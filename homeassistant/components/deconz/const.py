@@ -23,6 +23,7 @@ SUPPORTED_PLATFORMS = [
     "climate",
     "cover",
     "light",
+    "lock",
     "scene",
     "sensor",
     "switch",
@@ -38,10 +39,16 @@ ATTR_OFFSET = "offset"
 ATTR_ON = "on"
 ATTR_VALVE = "valve"
 
+# Covers
 DAMPERS = ["Level controllable output"]
 WINDOW_COVERS = ["Window covering device", "Window covering controller"]
 COVER_TYPES = DAMPERS + WINDOW_COVERS
 
+# Locks
+LOCKS = ["Door Lock"]
+LOCK_TYPES = LOCKS
+
+# Switches
 POWER_PLUGS = ["On/Off light", "On/Off plug-in unit", "Smart plug"]
 SIRENS = ["Warning device"]
 SWITCH_TYPES = POWER_PLUGS + SIRENS
