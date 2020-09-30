@@ -538,7 +538,7 @@ class Event:
         event_type: str,
         data: Optional[Dict[str, Any]] = None,
         origin: EventOrigin = EventOrigin.local,
-        time_fired: Optional[int] = None,
+        time_fired: Optional[datetime.datetime] = None,
         context: Optional[Context] = None,
     ) -> None:
         """Initialize a new event."""

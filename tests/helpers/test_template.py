@@ -1,5 +1,5 @@
 """Test Home Assistant template helper methods."""
-from datetime import datetime
+from datetime import datetime, timedelta
 import math
 import random
 
@@ -2594,3 +2594,18 @@ async def test_unavailable_states(hass):
         hass,
     )
     assert tpl.async_render() == "light.none, light.unavailable, light.unknown"
+
+
+async def test_rate_limit(hass):
+    """Test we can pickup a rate limit directive."""
+    tmp = template.Template("{{ states | count }}", hass)
+
+    info = tmp.async_render_to_info()
+    assert info.rate_limit is None
+
+    tmp = template.Template(
+        "{% set x = rate_limit(minutes=1) %}{{ states | count }}", hass
+    )
+
+    info = tmp.async_render_to_info()
+    assert info.rate_limit == timedelta(minutes=1)
