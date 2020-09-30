@@ -76,7 +76,6 @@ async def build_item_response(media_library, payload):
             thumbnail = media_library.thumbnail_url(
                 album["albumdetails"].get("thumbnail")
             )
-            properties.extend()
             title = album["albumdetails"]["label"]
             media = await media_library.get_songs(
                 album_id=int(search_id),
@@ -131,7 +130,7 @@ async def build_item_response(media_library, payload):
             )
             media = media.get("seasons")
             tvshow = await media_library.get_tv_show_details(
-                tv_show_id=int(search_id), properties=["thumbnail"]
+                tv_show_id=int(search_id), properties=properties
             )
             thumbnail = media_library.thumbnail_url(
                 tvshow["tvshowdetails"].get("thumbnail")
@@ -152,7 +151,7 @@ async def build_item_response(media_library, payload):
         media = media.get("episodes")
         if media:
             season = await media_library.get_season_details(
-                season_id=int(media[0]["seasonid"]), properties=["thumbnail"]
+                season_id=int(media[0]["seasonid"]), properties=properties
             )
             thumbnail = media_library.thumbnail_url(
                 season["seasondetails"].get("thumbnail")
