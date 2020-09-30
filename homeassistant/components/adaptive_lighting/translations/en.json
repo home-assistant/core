@@ -26,7 +26,7 @@
           "adapt_rgb_color": "adapt_rgb_color, adapt color temperature using RGB/XY if supported",
           "disable_entity": "disable_entity, entity_id that stops the switch from adapting lights",
           "disable_state": "disable_state, state(s) of 'disable_entity', e.g., 'off' or 'total,half'",
-          "initial_transition": "initial_transition, when lights go 'off' → 'on' or when 'disable_state'/'sleep_state' changes",
+          "initial_transition": "initial_transition, when lights go 'off' to 'on' or when 'disable_state'/'sleep_state' changes",
           "interval": "interval, time between switch updates in seconds",
           "max_brightness": "max_brightness, in %",
           "max_color_temp": "max_color_temp, in Kelvin",
