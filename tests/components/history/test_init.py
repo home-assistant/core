@@ -940,3 +940,33 @@ async def test_fetch_period_api_with_entity_glob_include_and_exclude(hass, hass_
     assert response_json[0][0]["entity_id"] == "light.match"
     assert response_json[1][0]["entity_id"] == "media_player.test"
     assert response_json[2][0]["entity_id"] == "switch.match"
+
+
+async def test_entity_ids_limit_via_api(hass, hass_client):
+    """Test limiting history to entity_ids."""
+    await hass.async_add_executor_job(init_recorder_component, hass)
+    await async_setup_component(
+        hass,
+        "history",
+        {"history": {}},
+    )
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    hass.states.async_set("light.kitchen", "on")
+    hass.states.async_set("light.cow", "on")
+    hass.states.async_set("light.nomatch", "on")
+
+    await hass.async_block_till_done()
+
+    await hass.async_add_executor_job(trigger_db_commit, hass)
+    await hass.async_block_till_done()
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+
+    client = await hass_client()
+    response = await client.get(
+        f"/api/history/period/{dt_util.utcnow().isoformat()}?filter_entity_id=light.kitchen,light.cow",
+    )
+    assert response.status == 200
+    response_json = await response.json()
+    assert len(response_json) == 2
+    assert response_json[0][0]["entity_id"] == "light.kitchen"
+    assert response_json[1][0]["entity_id"] == "light.cow"
