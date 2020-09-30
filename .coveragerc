@@ -886,7 +886,7 @@ omit =
     homeassistant/components/thingspeak/*
     homeassistant/components/thinkingcleaner/*
     homeassistant/components/thomson/device_tracker.py
-    homeassistant/components/tibber/_init__.py
+    homeassistant/components/tibber/__init__.py
     homeassistant/components/tibber/notify.py
     homeassistant/components/tibber/sensor.py
     homeassistant/components/tikteck/light.py
