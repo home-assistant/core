@@ -40,7 +40,7 @@ from homeassistant.const import (
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
 )
-from homeassistant.core import Context, Event, ServiceCall
+from homeassistant.core import Context, Event, ServiceCall, callback
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import (
@@ -393,7 +393,8 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         self._state = False
         self._remove_listeners()
 
-    async def _update_attrs(self):
+    @callback
+    def _update_attrs(self):
         """Update Adaptive Values."""
         # Setting all values because this method takes <0.5ms to execute.
         self._percent = self._calc_percent()
@@ -418,7 +419,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         force: bool = False,
         context: Optional[Context] = None,
     ):
-        await self._update_attrs()
+        self._update_attrs()
         if self._only_once and not force:
             return
         await self._adapt_lights(lights or self._lights, transition, context)
