@@ -94,13 +94,13 @@ def browse_media(
     if special_folder:
         if media_content_type == "server":
             library_or_section = plex_server.library
-            media_class = MEDIA_CLASS_DIRECTORY
+            children_media_class = MEDIA_CLASS_DIRECTORY
             title = plex_server.friendly_name
         elif media_content_type == "library":
             library_or_section = plex_server.library.sectionByID(media_content_id)
             title = library_or_section.title
             try:
-                media_class = ITEM_TYPE_MEDIA_CLASS[library_or_section.TYPE]
+                children_media_class = ITEM_TYPE_MEDIA_CLASS[library_or_section.TYPE]
             except KeyError as err:
                 _LOGGER.debug("Unknown type received: %s", library_or_section.TYPE)
                 raise UnknownMediaType from err
@@ -111,13 +111,13 @@ def browse_media(
 
         payload = {
             "title": title,
-            "media_class": media_class,
+            "media_class": MEDIA_CLASS_DIRECTORY,
             "media_content_id": f"{media_content_id}:{special_folder}",
             "media_content_type": media_content_type,
             "can_play": False,
             "can_expand": True,
             "children": [],
-            "children_media_class": media_class,
+            "children_media_class": children_media_class,
         }
 
         method = SPECIAL_METHODS[special_folder]
