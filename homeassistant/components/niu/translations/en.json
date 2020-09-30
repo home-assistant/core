@@ -1,0 +1,29 @@
+{
+    "config": {
+        "error": {
+            "connection_error": "Error connecting; check network and retry",
+            "identifier_exists": "Email already registered",
+            "invalid_credentials": "Invalid credentials",
+            "server_error": "Error on NIU servers"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Email"
+                },
+                "description": "Please enter your information.",
+                "title": "NIU - Configuration"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Seconds between scans"
+                }
+            }
+        }
+    }
+}
