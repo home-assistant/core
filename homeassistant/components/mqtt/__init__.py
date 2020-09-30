@@ -956,9 +956,7 @@ class MQTT:
         timestamp = dt_util.utcnow()
 
         for subscription in self.subscriptions:
-            try:
-                next(subscription.matcher.iter_match(msg.topic))
-            except StopIteration:
+            if not subscription.matcher(msg.topic):
                 continue
 
             payload: SubscribePayloadType = msg.payload
