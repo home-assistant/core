@@ -101,8 +101,10 @@ def browse_media(
             title = library_or_section.title
             try:
                 children_media_class = ITEM_TYPE_MEDIA_CLASS[library_or_section.TYPE]
-            except KeyError:
-                raise BrowseError(f"Unknown type received: {library_or_section.TYPE}")
+            except KeyError as err:
+                raise BrowseError(
+                    f"Unknown type received: {library_or_section.TYPE}"
+                ) from err
         else:
             raise BrowseError(
                 f"Media not found: {media_content_type} / {media_content_id}"
@@ -182,7 +184,6 @@ def library_section_payload(section):
     except KeyError as err:
         _LOGGER.debug("Unknown type received: %s", section.TYPE)
         raise UnknownMediaType from err
-
     return BrowseMedia(
         title=section.title,
         media_class=MEDIA_CLASS_DIRECTORY,
