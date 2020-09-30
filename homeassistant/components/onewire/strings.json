@@ -2,7 +2,7 @@
   "config": {
     "abort": {},
     "error": {
-      "connection_error": "Unable to connect to OWServer.",
+      "connection_error": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_path": "Directory not found."
     },
     "step": {
@@ -14,8 +14,8 @@
       },
       "owserver": {
         "data": {
-          "host": "Host",
-          "port": "Port"
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
         },
         "title": "Set owserver details"
       },
