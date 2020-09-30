@@ -136,8 +136,7 @@ class AdvantageAirAC(AdvantageAirClimateEntity):
         """Return the current HVAC modes."""
         if self.coordinator.data["aircons"][self.ac_key]["info"]["state"] == STATE_ON:
             return ADVANTAGE_AIR_HVAC_MODES.get(
-                self.coordinator.data["aircons"][self.ac_key]["info"]["mode"],
-                self.coordinator.data["aircons"][self.ac_key]["info"]["mode"],
+                self.coordinator.data["aircons"][self.ac_key]["info"]["mode"]
             )
         return HVAC_MODE_OFF
 
