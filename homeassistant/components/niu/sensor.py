@@ -8,7 +8,8 @@ from homeassistant.components.sensor import (
 from homeassistant.const import LENGTH_KILOMETERS, PERCENTAGE, TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 
-from . import DOMAIN, NiuVehicle
+from . import NiuVehicle
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
