@@ -55,6 +55,9 @@ DAMPERS = ["Level controllable output"]
 WINDOW_COVERS = ["Window covering device", "Window covering controller"]
 COVER_TYPES = DAMPERS + WINDOW_COVERS
 
+# Fans
+FANS = ["Fan"]
+
 # Locks
 LOCKS = ["Door Lock"]
 LOCK_TYPES = LOCKS

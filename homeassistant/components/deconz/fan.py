@@ -11,11 +11,9 @@ from homeassistant.components.fan import (
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import NEW_LIGHT  # , FANS
+from .const import FANS, NEW_LIGHT
 from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
-
-FANS = ["Fan"]
 
 SPEEDS = {SPEED_OFF: 0, SPEED_LOW: 1, SPEED_MEDIUM: 2, SPEED_HIGH: 4}
 
