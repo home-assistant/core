@@ -1,8 +1,6 @@
 """Tests for 1-Wire device family 00 (Invalid device)."""
 from os import path
 
-from mock import mock_open, patch
-
 from homeassistant.components.onewire.const import (
     DEFAULT_OWSERVER_PORT,
     DEFAULT_SYSBUS_MOUNT_DIR,
@@ -11,6 +9,7 @@ import homeassistant.components.sensor as sensor
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_registry
+from unittest.mock import mock_open, patch
 
 OWFS_MOUNT_DIR = "/mnt/OneWireTest"
 

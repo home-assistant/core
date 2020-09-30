@@ -1,7 +1,5 @@
 """Tests for 1-Wire device family 28 (DS18B20)."""
 from os import path
-
-from mock import Mock, mock_open, patch
 from pyownet import protocol
 
 from homeassistant import util
@@ -19,6 +17,7 @@ from homeassistant.const import TEMP_CELSIUS
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_registry
+from unittest.mock import Mock, mock_open, patch
 
 OWFS_MOUNT_DIR = "/mnt/OneWireTest"
 
