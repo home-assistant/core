@@ -47,6 +47,7 @@ CONF_PAYLOAD_DISARM = "payload_disarm"
 CONF_PAYLOAD_ARM_HOME = "payload_arm_home"
 CONF_PAYLOAD_ARM_AWAY = "payload_arm_away"
 CONF_PAYLOAD_ARM_NIGHT = "payload_arm_night"
+CONF_PAYLOAD_INVALID = "payload_invalid"
 CONF_CONFIG_TOPIC = "config_topic"
 CONF_STATUS_TOPIC = "status_topic"
 
@@ -59,6 +60,7 @@ DEFAULT_ARM_AWAY = "ARM_AWAY"
 DEFAULT_ARM_HOME = "ARM_HOME"
 DEFAULT_ARM_NIGHT = "ARM_NIGHT"
 DEFAULT_DISARM = "DISARM"
+DEFAULT_INVALID = "INVALID"
 
 SUPPORTED_STATES = [
     STATE_ALARM_DISARMED,
@@ -164,6 +166,7 @@ PLATFORM_SCHEMA = vol.Schema(
                     CONF_PAYLOAD_ARM_NIGHT, default=DEFAULT_ARM_NIGHT
                 ): cv.string,
                 vol.Optional(CONF_PAYLOAD_DISARM, default=DEFAULT_DISARM): cv.string,
+                vol.Optional(CONF_PAYLOAD_INVALID, default=DEFAULT_INVALID): cv.string,
             }
         ),
         _state_validator,
@@ -191,6 +194,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 config.get(CONF_PAYLOAD_ARM_HOME),
                 config.get(CONF_PAYLOAD_ARM_AWAY),
                 config.get(CONF_PAYLOAD_ARM_NIGHT),
+                config.get(CONF_PAYLOAD_INVALID),
                 config,
             )
         ]
@@ -225,6 +229,7 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
         payload_arm_home,
         payload_arm_away,
         payload_arm_night,
+        payload_invalid,
         config,
     ):
         """Init the manual MQTT alarm panel."""
@@ -263,6 +268,7 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
         self._payload_arm_home = payload_arm_home
         self._payload_arm_away = payload_arm_away
         self._payload_arm_night = payload_arm_night
+        self._payload_invalid = payload_invalid
 
     @property
     def should_poll(self):
@@ -430,6 +436,10 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
         check = not alarm_code or code == alarm_code
         if not check:
             _LOGGER.warning("Invalid code given for %s", state)
+            mqtt.async_publish(self.hass, self._status_topic,
+                               self._payload_invalid, self._qos, False
+            )
+
         return check
 
     @property
