@@ -124,7 +124,7 @@ class AdvantageAirAC(AdvantageAirClimateEntity):
     @property
     def unique_id(self):
         """Return a unique id."""
-        return f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-climate'
+        return f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}'
 
     @property
     def target_temperature(self):
@@ -221,7 +221,7 @@ class AdvantageAirZone(AdvantageAirClimateEntity):
     @property
     def unique_id(self):
         """Return a unique id."""
-        return f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-{self.zone_key}-climate'
+        return f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-{self.zone_key}'
 
     @property
     def current_temperature(self):
