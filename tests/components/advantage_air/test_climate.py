@@ -22,7 +22,7 @@ async def test_climate_async_setup_entry(hass, aiohttp_raw_server, aiohttp_unuse
 
     entry = registry.async_get("climate.testac")
     assert entry
-    assert entry.unique_id == "uniqueid-ac1-climate"
+    assert entry.unique_id == "uniqueid-ac1"
 
     state = hass.states.get("climate.testzone")
     assert state
@@ -33,4 +33,4 @@ async def test_climate_async_setup_entry(hass, aiohttp_raw_server, aiohttp_unuse
 
     entry = registry.async_get("climate.testzone")
     assert entry
-    assert entry.unique_id == "uniqueid-ac1-z01-climate"
+    assert entry.unique_id == "uniqueid-ac1-z01"
