@@ -1,5 +1,7 @@
 """Tests for 1-Wire device family 28 (DS18B20)."""
 from os import path
+from unittest.mock import Mock, mock_open, patch
+
 from pyownet import protocol
 
 from homeassistant import util
@@ -17,7 +19,6 @@ from homeassistant.const import TEMP_CELSIUS
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_registry
-from unittest.mock import Mock, mock_open, patch
 
 OWFS_MOUNT_DIR = "/mnt/OneWireTest"
 
@@ -120,7 +121,7 @@ async def test_owserver_setup(hass):
         owproxy.return_value.dir.return_value = [f"/{DEVICE_ID}/"]
         owproxy.return_value.read.side_effect = [
             DEVICE_ID[0:2].encode(),  # read the family
-            "    25.123".encode(),  # read the value
+            b"    25.123",  # read the value
         ]
 
         assert await async_setup_component(hass, sensor.DOMAIN, config)
@@ -221,7 +222,7 @@ def test_onewireproxy_update(hass):
     ]
     test_sensor = OneWireProxy(*init_args)
 
-    owproxy.read.return_value = "    25.72".encode()
+    owproxy.read.return_value = b"    25.72"
     test_sensor.update()
     assert test_sensor.state == 25.7
 

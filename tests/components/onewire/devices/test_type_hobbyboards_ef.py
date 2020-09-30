@@ -1,5 +1,6 @@
 """Tests for 1-Wire device type HobbyBoards_EF (family EF)."""
 from os import path
+from unittest.mock import mock_open, patch
 
 from homeassistant import util
 from homeassistant.components.onewire.const import (
@@ -10,7 +11,6 @@ import homeassistant.components.sensor as sensor
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_registry
-from unittest.mock import mock_open, patch
 
 OWFS_MOUNT_DIR = "/mnt/OneWireTest"
 
@@ -90,9 +90,9 @@ async def test_setup_owserver(hass):
         owproxy.return_value.read.side_effect = [
             DEVICE_ID[0:2].encode(),
             DEVICE_TYPE.encode(),  # read the type
-            "    67.745".encode(),  # read the humidity
-            "    65.541".encode(),  # read the humidity_raw
-            "    25.123".encode(),  # read the temperature
+            b"    67.745",  # read the humidity
+            b"    65.541",  # read the humidity_raw
+            b"    25.123",  # read the temperature
         ]
         assert await async_setup_component(hass, sensor.DOMAIN, config)
         await hass.async_block_till_done()

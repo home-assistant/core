@@ -1,5 +1,6 @@
 """Tests for 1-Wire device type HB_MOISTURE_METER (family EF)."""
 from os import path
+from unittest.mock import mock_open, patch
 
 from homeassistant import util
 from homeassistant.components.onewire.const import (
@@ -10,7 +11,6 @@ import homeassistant.components.sensor as sensor
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_registry
-from unittest.mock import mock_open, patch
 
 OWFS_MOUNT_DIR = "/mnt/OneWireTest"
 
@@ -90,14 +90,14 @@ async def test_setup_owserver(hass):
         owproxy.return_value.read.side_effect = [
             DEVICE_ID[0:2].encode(),
             DEVICE_TYPE.encode(),  # read type
-            "         1".encode(),  # read is_leaf_0
-            "         1".encode(),  # read is_leaf_1
-            "         0".encode(),  # read is_leaf_2
-            "         0".encode(),  # read is_leaf_3
-            "    41.745".encode(),  # read moisture_0
-            "    42.541".encode(),  # read moisture_1
-            "    43.123".encode(),  # read moisture_2
-            "    44.123".encode(),  # read moisture_3
+            b"         1",  # read is_leaf_0
+            b"         1",  # read is_leaf_1
+            b"         0",  # read is_leaf_2
+            b"         0",  # read is_leaf_3
+            b"    41.745",  # read moisture_0
+            b"    42.541",  # read moisture_1
+            b"    43.123",  # read moisture_2
+            b"    44.123",  # read moisture_3
         ]
         assert await async_setup_component(hass, sensor.DOMAIN, config)
         await hass.async_block_till_done()
