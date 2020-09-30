@@ -39,6 +39,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
 )
 from homeassistant.const import (
+    CAST_APP_ID_HOMEASSISTANT,
     CONF_HOST,
     EVENT_HOMEASSISTANT_STOP,
     STATE_IDLE,
@@ -291,6 +292,7 @@ class CastDevice(MediaPlayerEntity):
             ),
             ChromeCastZeroconf.get_zeroconf(),
         )
+        chromecast.media_controller.app_id = CAST_APP_ID_HOMEASSISTANT
         self._chromecast = chromecast
 
         if CAST_MULTIZONE_MANAGER_KEY not in self.hass.data:
