@@ -470,14 +470,15 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
 
         async def message_received(msg):
             """Run when new MQTT message has been received."""
-            if msg.payload == self._payload_disarm:
-                await self.async_alarm_disarm(self._code)
-            elif msg.payload == self._payload_arm_home:
-                await self.async_alarm_arm_home(self._code)
-            elif msg.payload == self._payload_arm_away:
-                await self.async_alarm_arm_away(self._code)
-            elif msg.payload == self._payload_arm_night:
-                await self.async_alarm_arm_night(self._code)
+            payload = json.loads(msg.payload)
+            if payload['action'] == self._payload_disarm:
+                await self.async_alarm_disarm(payload['code'])
+            elif payload['action'] == self._payload_arm_home:
+                await self.async_alarm_arm_home(payload['code'])
+            elif payload['action'] == self._payload_arm_away:
+                await self.async_alarm_arm_away(payload['code'])
+            elif payload['action'] == self._payload_arm_night:
+                await self.async_alarm_arm_night(payload['code'])
             else:
                 _LOGGER.warning("Received unexpected payload: %s", msg.payload)
                 return
