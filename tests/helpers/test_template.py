@@ -18,6 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template
+from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import UnitSystem
 
@@ -1333,6 +1334,8 @@ async def test_closest_function_home_vs_group_entity_id(hass):
         {"latitude": hass.config.latitude, "longitude": hass.config.longitude},
     )
 
+    assert await async_setup_component(hass, "group", {})
+    await hass.async_block_till_done()
     await group.Group.async_create_group(hass, "location group", ["test_domain.object"])
 
     info = render_to_info(hass, '{{ closest("group.location_group").entity_id }}')
@@ -1358,6 +1361,8 @@ async def test_closest_function_home_vs_group_state(hass):
         {"latitude": hass.config.latitude, "longitude": hass.config.longitude},
     )
 
+    assert await async_setup_component(hass, "group", {})
+    await hass.async_block_till_done()
     await group.Group.async_create_group(hass, "location group", ["test_domain.object"])
 
     info = render_to_info(hass, '{{ closest("group.location_group").entity_id }}')
@@ -1397,6 +1402,8 @@ async def test_expand(hass):
     )
     assert_result_info(info, "", [], ["group"])
 
+    assert await async_setup_component(hass, "group", {})
+    await hass.async_block_till_done()
     await group.Group.async_create_group(hass, "new group", ["test.object"])
 
     info = render_to_info(
@@ -1429,6 +1436,9 @@ async def test_expand(hass):
     hass.states.async_set("sensor.power_1", 0)
     hass.states.async_set("sensor.power_2", 200.2)
     hass.states.async_set("sensor.power_3", 400.4)
+
+    assert await async_setup_component(hass, "group", {})
+    await hass.async_block_till_done()
     await group.Group.async_create_group(
         hass, "power sensors", ["sensor.power_1", "sensor.power_2", "sensor.power_3"]
     )
@@ -2095,6 +2105,8 @@ states.sensor.pick_humidity.state ~ " %"
         )
     )
 
+    assert await async_setup_component(hass, "group", {})
+    await hass.async_block_till_done()
     await group.Group.async_create_group(hass, "empty group", [])
 
     assert ["group.empty_group"] == template.extract_entities(
