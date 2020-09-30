@@ -17,7 +17,6 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.recorder.models import (
     Events,
     States,
-    process_timestamp,
     process_timestamp_to_utc_isoformat,
 )
 from homeassistant.components.recorder.util import session_scope
@@ -266,6 +265,7 @@ def humanify(hass, events, entity_attr_cache, context_lookup):
     - if 2+ sensor updates in GROUP_BY_MINUTES, show last
     - if Home Assistant stop and start happen in same minute call it restarted
     """
+    external_events = hass.data.get(DOMAIN, {})
 
     # Group events in batches of GROUP_BY_MINUTES
     for _, g_events in groupby(
@@ -300,27 +300,7 @@ def humanify(hass, events, entity_attr_cache, context_lookup):
                 start_stop_events[event.time_fired_minute] = 2
 
         # Yield entries
-        external_events = hass.data.get(DOMAIN, {})
         for event in events_batch:
-            if event.event_type in external_events:
-                domain, describe_event = external_events[event.event_type]
-                data = describe_event(event)
-                data["when"] = event.time_fired_isoformat
-                data["domain"] = domain
-                if event.context_user_id:
-                    data["context_user_id"] = event.context_user_id
-                context_event = context_lookup.get(event.context_id)
-                if context_event:
-                    _augment_data_with_context(
-                        data,
-                        data.get(ATTR_ENTITY_ID),
-                        event,
-                        context_event,
-                        entity_attr_cache,
-                        external_events,
-                    )
-                yield data
-
             if event.event_type == EVENT_STATE_CHANGED:
                 entity_id = event.entity_id
                 domain = event.domain
@@ -363,6 +343,25 @@ def humanify(hass, events, entity_attr_cache, context_lookup):
                         external_events,
                     )
 
+                yield data
+
+            elif event.event_type in external_events:
+                domain, describe_event = external_events[event.event_type]
+                data = describe_event(event)
+                data["when"] = event.time_fired_isoformat
+                data["domain"] = domain
+                if event.context_user_id:
+                    data["context_user_id"] = event.context_user_id
+                context_event = context_lookup.get(event.context_id)
+                if context_event:
+                    _augment_data_with_context(
+                        data,
+                        data.get(ATTR_ENTITY_ID),
+                        event,
+                        context_event,
+                        entity_attr_cache,
+                        external_events,
+                    )
                 yield data
 
             elif event.event_type == EVENT_HOMEASSISTANT_START:
@@ -764,7 +763,6 @@ class LazyEventPartialState:
     __slots__ = [
         "_row",
         "_event_data",
-        "_time_fired",
         "_time_fired_isoformat",
         "_attributes",
         "event_type",
@@ -780,7 +778,6 @@ class LazyEventPartialState:
         """Init the lazy event."""
         self._row = row
         self._event_data = None
-        self._time_fired = None
         self._time_fired_isoformat = None
         self._attributes = None
         self.event_type = self._row.event_type
@@ -842,24 +839,13 @@ class LazyEventPartialState:
         return self._event_data
 
     @property
-    def time_fired(self):
-        """Time event was fired in utc."""
-        if not self._time_fired:
-            self._time_fired = (
-                process_timestamp(self._row.time_fired) or dt_util.utcnow()
-            )
-        return self._time_fired
-
-    @property
     def time_fired_isoformat(self):
         """Time event was fired in utc isoformat."""
         if not self._time_fired_isoformat:
-            if self._time_fired:
-                self._time_fired_isoformat = self._time_fired.isoformat()
-            else:
-                self._time_fired_isoformat = process_timestamp_to_utc_isoformat(
-                    self._row.time_fired or dt_util.utcnow()
-                )
+            self._time_fired_isoformat = process_timestamp_to_utc_isoformat(
+                self._row.time_fired or dt_util.utcnow()
+            )
+
         return self._time_fired_isoformat
 
 
