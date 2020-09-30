@@ -13,7 +13,28 @@ from tests.common import MockConfigEntry
 MOCK_CONF = {
     CONF_USERNAME: "my@email.address",
     CONF_PASSWORD: "mypassw0rd",
-    CONF_URL: "brandweerrooster.nl",
+    CONF_URL: "www.brandweerrooster.nl",
+}
+
+
+MOCK_DATA = {
+    "auth_implementation": DOMAIN,
+    CONF_URL: MOCK_CONF[CONF_URL],
+    "token": {
+        "access_token": "test-access-token",
+        "token_type": "Bearer",
+        "expires_in": 1234,
+        "refresh_token": "test-refresh-token",
+        "created_at": 4321,
+    },
+}
+
+MOCK_TOKEN_INFO = {
+    "access_token": "test-access-token",
+    "token_type": "Bearer",
+    "expires_in": 1234,
+    "refresh_token": "test-refresh-token",
+    "created_at": 4321,
 }
 
 
@@ -50,3 +71,31 @@ async def test_invalid_credentials(hass):
             DOMAIN, context={"source": "user"}, data=MOCK_CONF
         )
         assert result["errors"] == {"base": "invalid_credentials"}
+
+
+async def test_step_user(hass):
+    """Test the start of the config flow."""
+
+    with patch(
+        "homeassistant.components.fireservicerota.config_flow.FireServiceRota"
+    ) as MockFireServiceRota:
+        mock_fireservicerota = MockFireServiceRota.return_value
+        mock_fireservicerota.request_tokens.return_value = MOCK_TOKEN_INFO
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "user"}, data=MOCK_CONF
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["title"] == MOCK_CONF[CONF_USERNAME]
+        assert result["data"] == {
+            "auth_implementation": "fireservicerota",
+            CONF_URL: "www.brandweerrooster.nl",
+            "token": {
+                "access_token": "test-access-token",
+                "token_type": "Bearer",
+                "expires_in": 1234,
+                "refresh_token": "test-refresh-token",
+                "created_at": 4321,
+            },
+        }
