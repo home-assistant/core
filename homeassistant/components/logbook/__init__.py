@@ -10,7 +10,6 @@ from sqlalchemy.orm import aliased
 from sqlalchemy.sql.expression import literal
 import voluptuous as vol
 
-from homeassistant.components import sun
 from homeassistant.components.automation import EVENT_AUTOMATION_TRIGGERED
 from homeassistant.components.history import sqlalchemy_filter_from_include_exclude_conf
 from homeassistant.components.http import HomeAssistantView
@@ -22,7 +21,6 @@ from homeassistant.components.recorder.models import (
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.components.script import EVENT_SCRIPT_STARTED
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
     ATTR_DOMAIN,
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
@@ -35,9 +33,6 @@ from homeassistant.const import (
     EVENT_LOGBOOK_ENTRY,
     EVENT_STATE_CHANGED,
     HTTP_BAD_REQUEST,
-    STATE_NOT_HOME,
-    STATE_OFF,
-    STATE_ON,
 )
 from homeassistant.core import DOMAIN as HA_DOMAIN, callback, split_entity_id
 from homeassistant.exceptions import InvalidEntityFormatError
@@ -317,10 +312,6 @@ def humanify(hass, events, entity_attr_cache, context_lookup):
                     "name": _entity_name_from_event(
                         entity_id, event, entity_attr_cache
                     ),
-                    "message": _entry_message_from_event(
-                        entity_id, domain, event, entity_attr_cache
-                    ),
-                    "domain": domain,
                     "state": event.state,
                     "entity_id": entity_id,
                 }
@@ -405,6 +396,7 @@ def humanify(hass, events, entity_attr_cache, context_lookup):
                     "domain": domain,
                     "entity_id": entity_id,
                 }
+
                 if event.context_user_id:
                     data["context_user_id"] = event.context_user_id
 
@@ -605,94 +597,6 @@ def _keep_event(hass, event, entities_filter):
         return False
 
     return entities_filter is None or entities_filter(f"{domain}.")
-
-
-def _entry_message_from_event(entity_id, domain, event, entity_attr_cache):
-    """Convert a state to a message for the logbook."""
-    # We pass domain in so we don't have to split entity_id again
-    state_state = event.state
-
-    if domain in ["device_tracker", "person"]:
-        if state_state == STATE_NOT_HOME:
-            return "is away"
-        return f"is at {state_state}"
-
-    if domain == "sun":
-        if state_state == sun.STATE_ABOVE_HORIZON:
-            return "has risen"
-        return "has set"
-
-    if domain == "binary_sensor":
-        device_class = entity_attr_cache.get(entity_id, ATTR_DEVICE_CLASS, event)
-        if device_class == "battery":
-            if state_state == STATE_ON:
-                return "is low"
-            if state_state == STATE_OFF:
-                return "is normal"
-
-        if device_class == "connectivity":
-            if state_state == STATE_ON:
-                return "is connected"
-            if state_state == STATE_OFF:
-                return "is disconnected"
-
-        if device_class in ["door", "garage_door", "opening", "window"]:
-            if state_state == STATE_ON:
-                return "is opened"
-            if state_state == STATE_OFF:
-                return "is closed"
-
-        if device_class == "lock":
-            if state_state == STATE_ON:
-                return "is unlocked"
-            if state_state == STATE_OFF:
-                return "is locked"
-
-        if device_class == "plug":
-            if state_state == STATE_ON:
-                return "is plugged in"
-            if state_state == STATE_OFF:
-                return "is unplugged"
-
-        if device_class == "presence":
-            if state_state == STATE_ON:
-                return "is at home"
-            if state_state == STATE_OFF:
-                return "is away"
-
-        if device_class == "safety":
-            if state_state == STATE_ON:
-                return "is unsafe"
-            if state_state == STATE_OFF:
-                return "is safe"
-
-        if device_class in [
-            "cold",
-            "gas",
-            "heat",
-            "light",
-            "moisture",
-            "motion",
-            "occupancy",
-            "power",
-            "problem",
-            "smoke",
-            "sound",
-            "vibration",
-        ]:
-            if state_state == STATE_ON:
-                return f"detected {device_class}"
-            if state_state == STATE_OFF:
-                return f"cleared (no {device_class} detected)"
-
-    if state_state == STATE_ON:
-        # Future: combine groups and its entity entries ?
-        return "turned on"
-
-    if state_state == STATE_OFF:
-        return "turned off"
-
-    return f"changed to {state_state}"
 
 
 def _augment_data_with_context(
