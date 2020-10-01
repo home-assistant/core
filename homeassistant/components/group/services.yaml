@@ -15,10 +15,13 @@ set:
       description: Name of icon for the group.
       example: "mdi:camera"
     entities:
-      description: List of all members in the group. Not compatible with 'delta'.
+      description: List of all members in the group. Not compatible with 'add_entities'.
       example: domain.entity_id1, domain.entity_id2
     add_entities:
-      description: List of members they will change on group listening.
+      description: List of members to add to a group.
+      example: domain.entity_id1, domain.entity_id2
+    remove_entities:
+      description: List of members to remove from an existing group.
       example: domain.entity_id1, domain.entity_id2
     all:
       description: Enable this option if the group should only turn on when all entities are on.
