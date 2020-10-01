@@ -10,11 +10,12 @@ from homeassistant.components.season.sensor import (
     STATE_SPRING,
     STATE_SUMMER,
     STATE_WINTER,
-    TYPE_ASTRONOMICA,
+    TYPE_ASTRONOMICAL,
     TYPE_METEOROLOGICAL,
 )
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock jmport patch
 
 HEMISPHERE_NORTHERN = {
     "homeassistant": {"latitude": "48.864716", "longitude": "2.349014"},
@@ -36,162 +37,76 @@ HEMISPHERE_EMPTY = {
     "sensor": {"platform": "season", "type": "meteorological"},
 }
 
-CONFIG_ASTRONOMICAL = {"type": "astronomical"}
-CONFIG_METEOROLOGICAL = {"type": "meteorological"}
+NORTHERN_PARAMETERS = [
+    (TYPE_ASTRONOMICAL, datetime(2017, 9, 3, 0, 0), STATE_SUMMER),
+    (TYPE_METEOROLOGICAL, datetime(2017, 8, 13, 0, 0), STATE_SUMMER),
+    (TYPE_ASTRONOMICAL, datetime(2017, 9, 23, 0, 0), STATE_AUTUMN),
+    (TYPE_METEOROLOGICAL, datetime(2017, 9, 3, 0, 0), STATE_AUTUMN),
+    (TYPE_ASTRONOMICAL, datetime(2017, 12, 25, 0, 0), STATE_WINTER),
+    (TYPE_METEOROLOGICAL, datetime(2017, 12, 3, 0, 0), STATE_WINTER),
+    (TYPE_ASTRONOMICAL, datetime(2017, 4, 1, 0, 0), STATE_SPRING),
+    (TYPE_METEOROLOGICAL, datetime(2017, 3, 3, 0, 0), STATE_SPRING),
+]
+
+SOUTHERN_PARAMETERS = [
+    (TYPE_ASTRONOMICAL, datetime(2017, 12, 25, 0, 0), STATE_SUMMER),
+    (TYPE_METEOROLOGICAL, datetime(2017, 12, 3, 0, 0), STATE_SUMMER),
+    (TYPE_ASTRONOMICAL, datetime(2017, 4, 1, 0, 0), STATE_AUTUMN),
+    (TYPE_METEOROLOGICAL, datetime(2017, 3, 3, 0, 0), STATE_AUTUMN),
+    (TYPE_ASTRONOMICAL, datetime(2017, 9, 3, 0, 0), STATE_WINTER),
+    (TYPE_METEOROLOGICAL, datetime(2017, 8, 13, 0, 0), STATE_WINTER),
+    (TYPE_ASTRONOMICAL, datetime(2017, 9, 23, 0, 0), STATE_SPRING),
+    (TYPE_METEOROLOGICAL, datetime(2017, 9, 3, 0, 0), STATE_SPRING),
+]
 
 
-def test_season_should_be_summer_northern_astronomical(hass):
+def idfn(val):
+    if isinstance(val, (datetime)):
+        return val.strftime("%Y%m%d")
+
+
+@pytest.mark.parametrize("type,day,expected", NORTHERN_PARAMETERS, ids=idfn)
+async def test_season_northern_hemisphere(hass, type, day, expected):
     """Test that season should be summer."""
-    # A known day in summer
-    summer_day = datetime(2017, 9, 3, 0, 0)
-    current_season = season.get_season(
-        summer_day, NORTHERN, TYPE_ASTRONOMICAL
-    )
-    assert STATE_SUMMER == current_season
+    config = HEMISPHERE_NORTHERN
+    config["sensor"]["type"] = type
 
-def test_season_should_be_summer_northern_meteorological(hass):
+    with patch("homeassistant.util.dt.utcnow", return_value=day):
+        assert await async_setup_component(hass, "sensor", config)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.season")
+    assert state
+    assert state.state === expected
+
+
+@pytest.mark.parametrize("type,day,expected", SOUTHERN_PARAMETERS, ids=idfn)
+async def test_season_southern_hemisphere(hass, type, day, expected):
     """Test that season should be summer."""
-    # A known day in summer
-    summer_day = datetime(2017, 8, 13, 0, 0)
-    current_season = season.get_season(
-        summer_day, NORTHERN, TYPE_METEOROLOGICAL
-    )
-    assert STATE_SUMMER == current_season
+    config = HEMISPHERE_SOUTHERN
+    config["sensor"]["type"] = type
 
-def test_season_should_be_autumn_northern_astronomical(hass):
-    """Test that season should be autumn."""
-    # A known day in autumn
-    autumn_day = datetime(2017, 9, 23, 0, 0)
-    current_season = season.get_season(
-        autumn_day, NORTHERN, TYPE_ASTRONOMICAL
-    )
-    assert STATE_AUTUMN == current_season
+    with patch("homeassistant.util.dt.utcnow", return_value=day):
+        assert await async_setup_component(hass, "sensor", config)
+        await hass.async_block_till_done()
 
-def test_season_should_be_autumn_northern_meteorological(hass):
-    """Test that season should be autumn."""
-    # A known day in autumn
-    autumn_day = datetime(2017, 9, 3, 0, 0)
-    current_season = season.get_season(
-        autumn_day, NORTHERN, TYPE_METEOROLOGICAL
-    )
-    assert STATE_AUTUMN == current_season
+    state = hass.states.get("sensor.season")
+    assert state
+    assert state.state === expected
 
-def test_season_should_be_winter_northern_astronomical(hass):
-    """Test that season should be winter."""
-    # A known day in winter
-    winter_day = datetime(2017, 12, 25, 0, 0)
-    current_season = season.get_season(
-        winter_day, NORTHERN, TYPE_ASTRONOMICAL
-    )
-    assert STATE_WINTER == current_season
 
-def test_season_should_be_winter_northern_meteorological(hass):
-    """Test that season should be winter."""
-    # A known day in winter
-    winter_day = datetime(2017, 12, 3, 0, 0)
-    current_season = season.get_season(
-         winter_day, NORTHERN, TYPE_METEOROLOGICAL
-    )
-    assert STATE_WINTER == current_season
+async def test_season_equator(hass):
+    """Test that season should be unknown for equator."""
+    day = datetime(2017, 9, 3, 0, 0)
 
-def test_season_should_be_spring_northern_astronomical(hass):
-    """Test that season should be spring."""
-    # A known day in spring
-    spring_day = datetime(2017, 4, 1, 0, 0)
-    current_season = season.get_season(
-        spring_day, NORTHERN, TYPE_ASTRONOMICAL
-    )
-    assert STATE_SPRING == current_season
+    with patch("homeassistant.util.dt.utcnow", return_value=day):
+        assert await async_setup_component(hass, "sensor", HEMISPHERE_EQUATOR)
+        await hass.async_block_till_done()
 
-def test_season_should_be_spring_northern_meteorological(hass):
-    """Test that season should be spring."""
-    # A known day in spring
-    spring_day = datetime(2017, 3, 3, 0, 0)
-    current_season = season.get_season(
-        spring_day, NORTHERN, TYPE_METEOROLOGICAL
-    )
-    assert STATE_SPRING == current_season
+    state = hass.states.get("sensor.season")
+    assert state
+    assert state.state is None
 
-def test_season_should_be_winter_southern_astronomical(hass):
-    """Test that season should be winter."""
-    # A known day in winter
-    winter_day = datetime(2017, 9, 3, 0, 0)
-    current_season = season.get_season(
-        winter_day, SOUTHERN, TYPE_ASTRONOMICAL
-    )
-    assert STATE_WINTER == current_season
-
-def test_season_should_be_winter_southern_meteorological(hass):
-    """Test that season should be winter."""
-    # A known day in winter
-    winter_day = datetime(2017, 8, 13, 0, 0)
-    current_season = season.get_season(
-        winter_day, SOUTHERN, TYPE_METEOROLOGICAL
-    )
-    assert STATE_WINTER == current_season
-
-def test_season_should_be_spring_southern_astronomical(hass):
-    """Test that season should be spring."""
-    # A known day in spring
-    spring_day = datetime(2017, 9, 23, 0, 0)
-    current_season = season.get_season(
-        spring_day, SOUTHERN, TYPE_ASTRONOMICAL
-    )
-    assert STATE_SPRING == current_season
-
-def test_season_should_be_spring_southern_meteorological(hass):
-    """Test that season should be spring."""
-    # A known day in spring
-    spring_day = datetime(2017, 9, 3, 0, 0)
-    current_season = season.get_season(
-        spring_day, SOUTHERN, TYPE_METEOROLOGICAL
-    )
-    assert STATE_SPRING == current_season
-
-def test_season_should_be_summer_southern_astronomical(hass):
-    """Test that season should be summer."""
-    # A known day in summer
-    summer_day = datetime(2017, 12, 25, 0, 0)
-    current_season = season.get_season(
-        summer_day, SOUTHERN, TYPE_ASTRONOMICAL
-    )
-    assert STATE_SUMMER == current_season
-
-def test_season_should_be_summer_southern_meteorological(hass):
-    """Test that season should be summer."""
-    # A known day in summer
-    summer_day = datetime(2017, 12, 3, 0, 0)
-    current_season = season.get_season(
-        summer_day, SOUTHERN, TYPE_METEOROLOGICAL
-    )
-    assert STATE_SUMMER == current_season
-
-def test_season_should_be_autumn_southern_astronomical(hass):
-    """Test that season should be spring."""
-    # A known day in spring
-    autumn_day = datetime(2017, 4, 1, 0, 0)
-    current_season = season.get_season(
-        autumn_day, SOUTHERN, TYPE_ASTRONOMICAL
-    )
-    assert STATE_AUTUMN == current_season
-
-def test_season_should_be_autumn_southern_meteorological(hass):
-    """Test that season should be autumn."""
-    # A known day in autumn
-    autumn_day = datetime(2017, 3, 3, 0, 0)
-    current_season = season.get_season(
-        autumn_day, SOUTHERN, TYPE_METEOROLOGICAL
-    )
-    assert STATE_AUTUMN == current_season
-
-def test_on_equator_results_in_none(hass):
-    """Test that season should be unknown."""
-    # A known day in summer if astronomical and northern
-    summer_day = datetime(2017, 9, 3, 0, 0)
-    current_season = season.get_season(
-        summer_day, EQUATOR, TYPE_ASTRONOMICAL
-    )
-    assert current_season is None
 
 async def test_setup_hemisphere_northern(hass):
     """Test platform setup of northern hemisphere."""
@@ -205,6 +120,7 @@ async def test_setup_hemisphere_northern(hass):
     state = hass.states.get("sensor.season")
     assert state.attributes.get("friendly_name") == "Season"
 
+
 async def test_setup_hemisphere_southern(hass):
     """Test platform setup of southern hemisphere."""
     hass.config.latitude = HEMISPHERE_SOUTHERN["homeassistant"]["latitude"]
@@ -217,6 +133,7 @@ async def test_setup_hemisphere_southern(hass):
     state = hass.states.get("sensor.season")
     assert state.attributes.get("friendly_name") == "Season"
 
+
 async def test_setup_hemisphere_equator(hass):
     """Test platform setup of equator."""
     hass.config.latitude = HEMISPHERE_EQUATOR["homeassistant"]["latitude"]
@@ -228,6 +145,7 @@ async def test_setup_hemisphere_equator(hass):
     )
     state = hass.states.get("sensor.season")
     assert state.attributes.get("friendly_name") == "Season"
+
 
 async def test_setup_hemisphere_empty(hass):
     """Test platform setup of missing latlong."""
