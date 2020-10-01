@@ -41,6 +41,7 @@ async def test_hit(hass):
         )
         is None
     )
+    rate_limiter.async_remove()
 
 
 async def test_miss(hass):
@@ -72,6 +73,7 @@ async def test_miss(hass):
     )
     assert not refresh_called
     assert not rate_limiter.async_has_timer("key1")
+    rate_limiter.async_remove()
 
 
 async def test_no_limit(hass):
@@ -103,3 +105,4 @@ async def test_no_limit(hass):
     )
     assert not refresh_called
     assert not rate_limiter.async_has_timer("key1")
+    rate_limiter.async_remove()

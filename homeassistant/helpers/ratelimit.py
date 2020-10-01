@@ -45,8 +45,9 @@ class KeyedRateLimit:
     @callback
     def async_remove(self) -> None:
         """Remove all timers."""
-        for key in self._rate_limit_timers:
-            self._rate_limit_timers.pop(key).cancel()
+        for timer in self._rate_limit_timers.values():
+            timer.cancel()
+        self._rate_limit_timers.clear()
 
     @callback
     def async_schedule_action(
