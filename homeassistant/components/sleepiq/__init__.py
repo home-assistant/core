@@ -23,6 +23,7 @@ from .const import (
 )
 
 
+
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
 _LOGGER = logging.getLogger(__name__)
@@ -162,6 +163,7 @@ class SleepIQData:
 =======
                     self._client.set_sleepnumber(bed_id, bed_side, num)
 >>>>>>> Add support to set sleep numer
+
 
 class SleepIQSensor(Entity):
     """Implementation of a SleepIQ sensor."""
