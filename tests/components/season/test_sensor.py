@@ -2,7 +2,7 @@
 # pylint: disable=protected-access
 from datetime import datetime
 
-Import pytest
+import pytest
 
 from homeassistant.components.season.sensor import (
     STATE_AUTUMN,
