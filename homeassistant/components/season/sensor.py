@@ -72,7 +72,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         hemisphere = EQUATOR
 
     _LOGGER.debug(_type)
-    add_entities([Season(hass, hemisphere, _type, name)])
+    add_entities([Season(hass, hemisphere, _type, name)], True)
 
     return True
 
@@ -117,9 +117,9 @@ class Season(Entity):
         self.hass = hass
         self._name = name
         self.hemisphere = hemisphere
-        self.datetime = utcnow().replace(tzinfo=None)
+        self.datetime = None
         self.type = season_tracking_type
-        self.season = get_season(self.datetime, self.hemisphere, self.type)
+        self.season = None
 
     @property
     def name(self):
