@@ -1,5 +1,4 @@
 """The tests for the Season sensor platform."""
-# pylint: disable=protected-access
 from datetime import datetime
 
 import pytest
@@ -60,6 +59,7 @@ SOUTHERN_PARAMETERS = [
 
 
 def idfn(val):
+    """Provide IDs for pytest parametrize."""
     if isinstance(val, (datetime)):
         return val.strftime("%Y%m%d")
 
@@ -76,7 +76,7 @@ async def test_season_northern_hemisphere(hass, type, day, expected):
 
     state = hass.states.get("sensor.season")
     assert state
-    assert state.state === expected
+    assert state.state == expected
 
 
 @pytest.mark.parametrize("type,day,expected", SOUTHERN_PARAMETERS, ids=idfn)
@@ -91,7 +91,7 @@ async def test_season_southern_hemisphere(hass, type, day, expected):
 
     state = hass.states.get("sensor.season")
     assert state
-    assert state.state === expected
+    assert state.state == expected
 
 
 async def test_season_equator(hass):
