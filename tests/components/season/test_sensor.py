@@ -3,9 +3,6 @@
 from datetime import datetime
 
 from homeassistant.components.season.sensor import (
-    EQUATOR,
-    NORTHERN,
-    SOUTHERN,
     STATE_AUTUMN,
     STATE_SPRING,
     STATE_SUMMER,
