@@ -102,11 +102,14 @@ class OmniLogicLightControl(OmniLogicEntity, LightEntity):
 
     async def async_set_effect(self, effect):
         """Set the light show effect."""
+        _LOGGER.error(
+            f"Setting effect: {self._item_id[1]}/{self._item_id[3]}/{self._item_id[-1]} to {effect}"
+        )
         success = await self.coordinator.api.set_lightshow(
             int(self._item_id[1]),
             int(self._item_id[3]),
-            int(self._item_id[6]),
-            effect,
+            int(self._item_id[-1]),
+            int(LightEffect[effect].value),
         )
 
         if success:
