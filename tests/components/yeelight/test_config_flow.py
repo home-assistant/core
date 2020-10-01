@@ -131,6 +131,7 @@ async def test_import(hass: HomeAssistant):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config
         )
+    type(mocked_bulb).get_capabilities.assert_called_once()
     type(mocked_bulb).get_properties.assert_called_once()
     assert result["type"] == "abort"
     assert result["reason"] == "cannot_connect"
@@ -146,7 +147,7 @@ async def test_import(hass: HomeAssistant):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config
         )
-    type(mocked_bulb).get_properties.assert_called_once()
+    type(mocked_bulb).get_capabilities.assert_called_once()
     assert result["type"] == "create_entry"
     assert result["title"] == DEFAULT_NAME
     assert result["data"] == {
@@ -215,7 +216,7 @@ async def test_manual(hass: HomeAssistant):
             result["flow_id"], {CONF_NAME: NAME}
         )
     assert result5["type"] == "create_entry"
-    assert result5["data"] == {CONF_ID: None, CONF_HOST: IP_ADDRESS, CONF_NAME: NAME}
+    assert result5["data"] == {CONF_ID: ID, CONF_HOST: IP_ADDRESS, CONF_NAME: NAME}
 
     # Duplicate
     result = await hass.config_entries.flow.async_init(
