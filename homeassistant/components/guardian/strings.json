@@ -5,7 +5,7 @@
       "user": {
         "description": "Configure a local Elexa Guardian device.",
         "data": {
-          "ip_address": "IP Address",
+          "ip_address": "[%key:common::config_flow::data::ip%]",
           "port": "Port"
         }
       },
