@@ -13,20 +13,20 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 
-from tests.components.advantage_air import add_mock_config, api_response_with_sensor
+from tests.components.advantage_air import add_mock_config, api_response
 
 
 async def test_climate_async_setup_entry(hass, aiohttp_raw_server, aiohttp_unused_port):
-    """Test climate setup without sensors."""
+    """Test climate setup."""
 
     port = aiohttp_unused_port()
-    await aiohttp_raw_server(api_response_with_sensor, port=port)
+    server = await aiohttp_raw_server(api_response, port=port)
     await add_mock_config(hass, port)
 
     registry = await hass.helpers.entity_registry.async_get_registry()
 
     # Test Main Climate Entity
-    entity_id = "climate.testac"
+    entity_id = "climate.ac_one"
     state = hass.states.get(entity_id)
     assert state
     assert state.state == HVAC_MODE_FAN_ONLY
@@ -64,7 +64,7 @@ async def test_climate_async_setup_entry(hass, aiohttp_raw_server, aiohttp_unuse
     )
 
     # Test Climate Zone Entity
-    entity_id = "climate.testzone"
+    entity_id = "climate.zone_open_with_sensor"
     state = hass.states.get(entity_id)
     assert state
     assert state.attributes.get("min_temp") == 16
@@ -88,6 +88,15 @@ async def test_climate_async_setup_entry(hass, aiohttp_raw_server, aiohttp_unuse
         {ATTR_ENTITY_ID: [entity_id], ATTR_HVAC_MODE: HVAC_MODE_OFF},
         blocking=True,
     )
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: [entity_id], ATTR_TEMPERATURE: 25},
+        blocking=True,
+    )
+
+    await server.close()
+
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
