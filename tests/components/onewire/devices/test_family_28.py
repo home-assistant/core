@@ -9,10 +9,7 @@ from homeassistant.components.onewire.const import (
     DEFAULT_OWSERVER_PORT,
     DEFAULT_SYSBUS_MOUNT_DIR,
 )
-from homeassistant.components.onewire.sensor import (
-    OneWireOWFS,
-    OneWireProxy,
-)
+from homeassistant.components.onewire.sensor import OneWireOWFS, OneWireProxy
 import homeassistant.components.sensor as sensor
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.setup import async_setup_component
