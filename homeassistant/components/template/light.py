@@ -1,4 +1,5 @@
 """Support for Template lights."""
+import ast
 import logging
 
 import voluptuous as vol
@@ -6,12 +7,15 @@ import voluptuous as vol
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
+    ATTR_EFFECT,
     ATTR_HS_COLOR,
+    ATTR_TRANSITION,
     ATTR_WHITE_VALUE,
     ENTITY_ID_FORMAT,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
+    SUPPORT_EFFECT,
     SUPPORT_WHITE_VALUE,
     LightEntity,
 )
@@ -50,6 +54,8 @@ CONF_COLOR_TEMPLATE = "color_template"
 CONF_COLOR_ACTION = "set_color"
 CONF_WHITE_VALUE_TEMPLATE = "white_value_template"
 CONF_WHITE_VALUE_ACTION = "set_white_value"
+CONF_EFFECT_ACTION = "set_effect"
+CONF_EFFECT_LIST_TEMPLATE = "effect_list_template"
 
 LIGHT_SCHEMA = vol.All(
     cv.deprecated(CONF_ENTITY_ID),
@@ -71,6 +77,8 @@ LIGHT_SCHEMA = vol.All(
             vol.Optional(CONF_COLOR_ACTION): cv.SCRIPT_SCHEMA,
             vol.Optional(CONF_WHITE_VALUE_TEMPLATE): cv.template,
             vol.Optional(CONF_WHITE_VALUE_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_EFFECT_LIST_TEMPLATE): cv.template,
+            vol.Optional(CONF_EFFECT_ACTION): cv.SCRIPT_SCHEMA,
             vol.Optional(CONF_UNIQUE_ID): cv.string,
         }
     ),
@@ -109,6 +117,9 @@ async def _async_create_entities(hass, config):
         white_value_action = device_config.get(CONF_WHITE_VALUE_ACTION)
         white_value_template = device_config.get(CONF_WHITE_VALUE_TEMPLATE)
 
+        effect_action = device_config.get(CONF_EFFECT_ACTION)
+        effect_list_template = device_config.get(CONF_EFFECT_LIST_TEMPLATE)
+
         lights.append(
             LightTemplate(
                 hass,
@@ -128,6 +139,8 @@ async def _async_create_entities(hass, config):
                 color_template,
                 white_value_action,
                 white_value_template,
+                effect_action,
+                effect_list_template,
                 unique_id,
             )
         )
@@ -164,6 +177,8 @@ class LightTemplate(TemplateEntity, LightEntity):
         color_template,
         white_value_action,
         white_value_template,
+        effect_action,
+        effect_list_template,
         unique_id,
     ):
         """Initialize the light."""
@@ -200,12 +215,18 @@ class LightTemplate(TemplateEntity, LightEntity):
                 hass, white_value_action, friendly_name, domain
             )
         self._white_value_template = white_value_template
+        self._effect_script = None
+        if effect_action is not None:
+            self._effect_script = Script(hass, effect_action, friendly_name, domain)
+        self._effect_list_template = effect_list_template
 
         self._state = False
         self._brightness = None
         self._temperature = None
         self._color = None
         self._white_value = None
+        self._effect = None
+        self._effect_list = None
         self._unique_id = unique_id
 
     @property
@@ -229,6 +250,16 @@ class LightTemplate(TemplateEntity, LightEntity):
         return self._color
 
     @property
+    def effect(self):
+        """Return the effect."""
+        return self._effect
+
+    @property
+    def effect_list(self):
+        """Return the effect list."""
+        return self._effect_list
+
+    @property
     def name(self):
         """Return the display name of this light."""
         return self._name
@@ -250,6 +281,8 @@ class LightTemplate(TemplateEntity, LightEntity):
             supported_features |= SUPPORT_COLOR
         if self._white_value_script is not None:
             supported_features |= SUPPORT_WHITE_VALUE
+        if self._effect_script is not None:
+            supported_features |= SUPPORT_EFFECT
         return supported_features
 
     @property
@@ -296,11 +329,20 @@ class LightTemplate(TemplateEntity, LightEntity):
                 self._update_white_value,
                 none_on_template_error=True,
             )
+        if self._effect_list_template:
+            self.add_template_attribute(
+                "_effect_list",
+                self._effect_list_template,
+                None,
+                self._update_effect_list,
+                none_on_template_error=True,
+            )
         await super().async_added_to_hass()
 
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
         optimistic_set = False
+
         # set optimistic states
         if self._template is None:
             self._state = True
@@ -320,6 +362,13 @@ class LightTemplate(TemplateEntity, LightEntity):
             self._white_value = kwargs[ATTR_WHITE_VALUE]
             optimistic_set = True
 
+        if self._effect_list_template is None and ATTR_EFFECT in kwargs:
+            _LOGGER.info(
+                "Optimistically setting white value to %s", kwargs[ATTR_EFFECT]
+            )
+            self._effect = kwargs[ATTR_EFFECT]
+            optimistic_set = True
+
         if self._temperature_template is None and ATTR_COLOR_TEMP in kwargs:
             _LOGGER.info(
                 "Optimistically setting color temperature to %s",
@@ -328,24 +377,42 @@ class LightTemplate(TemplateEntity, LightEntity):
             self._temperature = kwargs[ATTR_COLOR_TEMP]
             optimistic_set = True
 
-        if ATTR_BRIGHTNESS in kwargs and self._level_script:
-            await self._level_script.async_run(
-                {"brightness": kwargs[ATTR_BRIGHTNESS]}, context=self._context
-            )
-        elif ATTR_COLOR_TEMP in kwargs and self._temperature_script:
+        common_params = {}
+
+        if ATTR_BRIGHTNESS in kwargs:
+            common_params["brightness"] = kwargs[ATTR_BRIGHTNESS]
+
+        if ATTR_TRANSITION in kwargs:
+            common_params["transition"] = kwargs[ATTR_TRANSITION]
+
+        if ATTR_COLOR_TEMP in kwargs and self._temperature_script:
+            common_params["color_temp"] = kwargs[ATTR_COLOR_TEMP]
+
             await self._temperature_script.async_run(
-                {"color_temp": kwargs[ATTR_COLOR_TEMP]}, context=self._context
+                common_params, context=self._context
             )
         elif ATTR_WHITE_VALUE in kwargs and self._white_value_script:
+            common_params["white_value"] = kwargs[ATTR_WHITE_VALUE]
+
             await self._white_value_script.async_run(
-                {"white_value": kwargs[ATTR_WHITE_VALUE]}, context=self._context
+                common_params, context=self._context
             )
+        elif ATTR_EFFECT in kwargs and self._effect_script:
+            common_params["effect"] = kwargs[ATTR_EFFECT]
+
+            await self._effect_script.async_run(common_params, context=self._context)
         elif ATTR_HS_COLOR in kwargs and self._color_script:
             hs_value = kwargs[ATTR_HS_COLOR]
+            common_params["hs"] = hs_value
+            common_params["h"] = int(hs_value[0])
+            common_params["s"] = int(hs_value[1])
+
             await self._color_script.async_run(
-                {"hs": hs_value, "h": int(hs_value[0]), "s": int(hs_value[1])},
+                common_params,
                 context=self._context,
             )
+        elif ATTR_BRIGHTNESS in kwargs and self._level_script:
+            await self._level_script.async_run(common_params, context=self._context)
         else:
             await self._on_script.async_run(context=self._context)
 
@@ -400,6 +467,21 @@ class LightTemplate(TemplateEntity, LightEntity):
                 exc_info=True,
             )
             self._white_value = None
+
+    @callback
+    def _update_effect_list(self, effect_list):
+        """Update the effect list from the template."""
+        try:
+            if effect_list in ("None", ""):
+                self._effect_list = None
+                return
+            self._effect_list = ast.literal_eval(effect_list)
+        except ValueError:
+            _LOGGER.error(
+                "Template must supply a list of effects, or 'None'",
+                exc_info=True,
+            )
+            self._effect_list = None
 
     @callback
     def _update_state(self, result):
