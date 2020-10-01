@@ -15,7 +15,7 @@
     },
     "abort": {
       "already_configured": "This Guardian device has already been configured.",
-      "already_in_progress": "[%key:common::config_flow::abort::no_devices_found%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "connection_error": "Failed to connect to the Guardian device."
     }
   }

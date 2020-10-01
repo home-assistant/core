@@ -2,7 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "This device has already been configured",
-      "already_in_progress": "[%key:common::config_flow::abort::no_devices_found%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "not_huawei_lte": "Not a Huawei LTE device"
     },
     "error": {
