@@ -1,7 +1,7 @@
 """Methods and classes related to executing Z-Wave commands and publishing these to hass."""
 import logging
 
-from openzwavemqtt.util import get_node_from_manager, set_config_parameter
+from openzwavemqtt.util.node import get_node_from_manager, set_config_parameter
 import voluptuous as vol
 
 from homeassistant.core import callback

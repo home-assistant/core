@@ -1,7 +1,7 @@
 """Web socket API for OpenZWave."""
 from openzwavemqtt.const import EVENT_NODE_ADDED, EVENT_NODE_CHANGED
-from openzwavemqtt.exceptions import InvalidValueError, NotFoundError, WrongTypeError
-from openzwavemqtt.util import (
+from openzwavemqtt.exceptions import NotFoundError, NotSupportedError
+from openzwavemqtt.util.node import (
     get_config_parameters,
     get_node_from_manager,
     set_config_parameter,
@@ -177,7 +177,7 @@ def websocket_set_config_parameter(hass, connection, msg):
             err.args[0],
         )
         return
-    except (InvalidValueError, WrongTypeError) as err:
+    except NotSupportedError as err:
         connection.send_error(
             msg[ID],
             websocket_api.const.ERR_NOT_SUPPORTED,
