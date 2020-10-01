@@ -114,7 +114,7 @@ async def async_setup_entry(hass, entry):
             hass.config_entries.flow.async_init(
                 PLEX_DOMAIN,
                 context={CONF_SOURCE: SOURCE_REAUTH},
-                data={**entry.data, "config_entry_id": entry.entry_id},
+                data=entry.data,
             )
         )
         _LOGGER.error(
