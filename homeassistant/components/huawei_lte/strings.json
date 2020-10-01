@@ -6,7 +6,6 @@
       "not_huawei_lte": "Not a Huawei LTE device"
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error:cannot_connect%]",
       "connection_timeout": "Connection timeout",
       "incorrect_password": "Incorrect password",
       "incorrect_username": "Incorrect username",
