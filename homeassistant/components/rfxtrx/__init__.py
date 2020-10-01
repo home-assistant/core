@@ -27,6 +27,7 @@ from homeassistant.const import (
     PERCENTAGE,
     POWER_WATT,
     PRESSURE_HPA,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     SPEED_METERS_PER_SECOND,
     TEMP_CELSIUS,
     TIME_HOURS,
@@ -86,7 +87,7 @@ DATA_TYPES = OrderedDict(
         ("Voltage", VOLT),
         ("Current", ELECTRICAL_CURRENT_AMPERE),
         ("Battery numeric", PERCENTAGE),
-        ("Rssi numeric", "dBm"),
+        ("Rssi numeric", SIGNAL_STRENGTH_DECIBELS_MILLIWATT),
     ]
 )
 
