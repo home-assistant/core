@@ -927,7 +927,7 @@ async def test_track_template_result_complex(hass):
     """Test tracking template."""
     specific_runs = []
     template_complex_str = """
-
+{{ rate_limit(seconds=0) }}
 {% if states("sensor.domain") == "light" %}
   {{ states.light | map(attribute='entity_id') | list }}
 {% elif states("sensor.domain") == "lock" %}
@@ -1162,6 +1162,8 @@ async def test_track_template_result_with_group(hass):
         await hass.services.async_call("group", "reload")
         await hass.async_block_till_done()
 
+    info.async_refresh()
+    await hass.async_block_till_done()
     assert specific_runs[-1] == str(100.1 + 200.2 + 0 + 800.8)
 
 
@@ -1234,7 +1236,7 @@ async def test_track_template_result_iterator(hass):
         [
             TrackTemplate(
                 Template(
-                    """
+                    """{{ rate_limit(seconds=0) }}
             {% for state in states.sensor %}
                 {% if state.state == 'on' %}
                     {{ state.entity_id }},
@@ -1266,7 +1268,7 @@ async def test_track_template_result_iterator(hass):
         [
             TrackTemplate(
                 Template(
-                    """{{ states.sensor|selectattr("state","equalto","on")
+                    """{{ rate_limit(seconds=0) }}{{ states.sensor|selectattr("state","equalto","on")
                 |join(",", attribute="entity_id") }}""",
                     hass,
                 ),
@@ -1828,7 +1830,9 @@ async def test_async_track_template_result_multiple_templates_mixing_domain(hass
     template_1 = Template("{{ states.switch.test.state == 'on' }}")
     template_2 = Template("{{ states.switch.test.state == 'on' }}")
     template_3 = Template("{{ states.switch.test.state == 'off' }}")
-    template_4 = Template("{{ states.switch | map(attribute='entity_id') | list }}")
+    template_4 = Template(
+        "{{ rate_limit(seconds=0) }}{{ states.switch | map(attribute='entity_id') | list }}"
+    )
 
     refresh_runs = []
 

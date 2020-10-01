@@ -224,17 +224,18 @@ class RenderInfo:
 
     def _freeze_static(self) -> None:
         self.is_static = True
-        self.entities = frozenset(self.entities)
-        self.domains = frozenset(self.domains)
-        self.domains_lifecycle = frozenset(self.domains_lifecycle)
+        self._freeze_sets()
         self.all_states = False
 
-    def _freeze(self) -> None:
+    def _freeze_sets(self) -> None:
         self.entities = frozenset(self.entities)
         self.domains = frozenset(self.domains)
         self.domains_lifecycle = frozenset(self.domains_lifecycle)
 
-        if not self.rate_limit and (
+    def _freeze(self) -> None:
+        self._freeze_sets()
+
+        if self.rate_limit is None and (
             self.domains or self.domains_lifecycle or self.all_states or self.exception
         ):
             # If the template accesses all states or an entire
