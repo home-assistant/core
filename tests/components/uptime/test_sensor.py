@@ -4,10 +4,46 @@ from datetime import timedelta
 import unittest
 
 from homeassistant.components.uptime.sensor import UptimeSensor
-from homeassistant.setup import setup_component
+from homeassistant.setup import async_setup_component
 
 from tests.async_mock import patch
 from tests.common import get_test_home_assistant
+
+
+async def test_uptime_min_config(hass):
+    """Test minimum uptime configuration."""
+    config = {"sensor": {"platform": "uptime"}}
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.uptime")
+    assert state is not None
+
+
+async def test_uptime_sensor_name_change(hass):
+    """Test uptime sensor with different name."""
+    config = {"sensor": {"platform": "uptime", "name": "foobar"}}
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.foobar")
+    assert state is not None
+
+
+async def test_uptime_sensor_config_hours(hass):
+    """Test uptime sensor with hours defined in config."""
+    config = {"sensor": {"platform": "uptime", "unit_of_measurement": "hours"}}
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.uptime")
+    assert state is not None
+
+
+async def test_uptime_sensor_config_minutes(hass):
+    """Test uptime sensor with minutes defined in config."""
+    config = {"sensor": {"platform": "uptime", "unit_of_measurement": "minutes"}}
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.uptime")
+    assert state is not None
 
 
 class TestUptimeSensor(unittest.TestCase):
@@ -17,26 +53,6 @@ class TestUptimeSensor(unittest.TestCase):
         """Set up things to run when tests begin."""
         self.hass = get_test_home_assistant()
         self.addCleanup(self.hass.stop)
-
-    def test_uptime_min_config(self):
-        """Test minimum uptime configuration."""
-        config = {"sensor": {"platform": "uptime"}}
-        assert setup_component(self.hass, "sensor", config)
-
-    def test_uptime_sensor_name_change(self):
-        """Test uptime sensor with different name."""
-        config = {"sensor": {"platform": "uptime", "name": "foobar"}}
-        assert setup_component(self.hass, "sensor", config)
-
-    def test_uptime_sensor_config_hours(self):
-        """Test uptime sensor with hours defined in config."""
-        config = {"sensor": {"platform": "uptime", "unit_of_measurement": "hours"}}
-        assert setup_component(self.hass, "sensor", config)
-
-    def test_uptime_sensor_config_minutes(self):
-        """Test uptime sensor with minutes defined in config."""
-        config = {"sensor": {"platform": "uptime", "unit_of_measurement": "minutes"}}
-        assert setup_component(self.hass, "sensor", config)
 
     def test_uptime_sensor_days_output(self):
         """Test uptime sensor output data."""
