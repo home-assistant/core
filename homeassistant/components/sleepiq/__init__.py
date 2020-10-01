@@ -11,7 +11,17 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-from .const import DOMAIN, SENSOR_TYPES, SIDES, SIDE, BED, SLEEP_NUMBER, SERVICE_SET_SLEEP_NUMBER, SERVICE_SET_FAVORITE, PRESET_FAVORITE
+from .const import (
+    DOMAIN,
+    SENSOR_TYPES,
+    SIDES,
+    SIDE,
+    BED,
+    SLEEP_NUMBER,
+    SERVICE_SET_SLEEP_NUMBER,
+    SERVICE_SET_FAVORITE,
+    PRESET_FAVORITE,
+)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
@@ -138,6 +148,7 @@ class SleepIQData:
 
                     # Actually set the Sleep Number.
                     self._client.set_sleepnumber(bed_id, bed_side, num)
+
 
 class SleepIQSensor(Entity):
     """Implementation of a SleepIQ sensor."""
