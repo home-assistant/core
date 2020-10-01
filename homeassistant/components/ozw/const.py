@@ -37,14 +37,6 @@ ATTR_SCENE_LABEL = "scene_label"
 ATTR_SCENE_VALUE_ID = "scene_value_id"
 ATTR_SCENE_VALUE_LABEL = "scene_value_label"
 
-# Config parameter specific
-ATTR_LABEL = "label"
-ATTR_MAX = "max"
-ATTR_MIN = "min"
-ATTR_OPTIONS = "options"
-ATTR_TYPE = "type"
-ATTR_VALUE = "value"
-
 # Service specific
 SERVICE_ADD_NODE = "add_node"
 SERVICE_REMOVE_NODE = "remove_node"

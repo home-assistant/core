@@ -1,11 +1,7 @@
 """Test OpenZWave Websocket API."""
-from openzwavemqtt.const import ValueType
+from openzwavemqtt.const import ATTR_OPTIONS, ATTR_VALUE, ValueType
 
-from homeassistant.components.ozw.const import (
-    ATTR_CONFIG_PARAMETER,
-    ATTR_OPTIONS,
-    ATTR_VALUE,
-)
+from homeassistant.components.ozw.const import ATTR_CONFIG_PARAMETER
 from homeassistant.components.ozw.websocket_api import (
     ATTR_IS_AWAKE,
     ATTR_IS_BEAMING,
@@ -27,7 +23,10 @@ from homeassistant.components.ozw.websocket_api import (
     TYPE,
     VALUE,
 )
-from homeassistant.components.websocket_api.const import ERR_NOT_FOUND
+from homeassistant.components.websocket_api.const import (
+    ERR_NOT_FOUND,
+    ERR_NOT_SUPPORTED,
+)
 
 from .common import MQTTMessage, setup_ozw
 
@@ -139,6 +138,7 @@ async def test_websocket_api(hass, generic_data, hass_ws_client):
             ValueType.INT.value,
             ValueType.BYTE.value,
             ValueType.SHORT.value,
+            ValueType.BITSET.value,
         )
 
     # Test set config parameter
@@ -199,18 +199,33 @@ async def test_websocket_api(hass, generic_data, hass_ws_client):
     result = msg["error"]
     assert result["code"] == ERR_NOT_FOUND
 
-
-async def test_websocket_api_config_class_not_found(
-    hass, cover_gdo_data, hass_ws_client
-):
-    """Test OZW Node configuration class not found error."""
-    await setup_ozw(hass, fixture=cover_gdo_data)
-    client = await hass_ws_client(hass)
-
-    await client.send_json({ID: 1, TYPE: "ozw/get_config_parameters", NODE_ID: 6})
+    # Test parameter not found
+    await client.send_json(
+        {
+            ID: 19,
+            TYPE: "ozw/set_config_parameter",
+            NODE_ID: 39,
+            PARAMETER: 45,
+            VALUE: "test",
+        }
+    )
     msg = await client.receive_json()
     result = msg["error"]
     assert result["code"] == ERR_NOT_FOUND
+
+    # Test value type invalid
+    await client.send_json(
+        {
+            ID: 20,
+            TYPE: "ozw/set_config_parameter",
+            NODE_ID: 39,
+            PARAMETER: config_param[ATTR_CONFIG_PARAMETER],
+            VALUE: "test",
+        }
+    )
+    msg = await client.receive_json()
+    result = msg["error"]
+    assert result["code"] == ERR_NOT_SUPPORTED
 
 
 async def test_refresh_node(hass, generic_data, sent_messages, hass_ws_client):

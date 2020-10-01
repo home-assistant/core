@@ -1,13 +1,13 @@
 """Methods and classes related to executing Z-Wave commands and publishing these to hass."""
 import logging
 
+from openzwavemqtt.util import get_node_from_manager, set_config_parameter
 import voluptuous as vol
 
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 from . import const
-from .node import set_config_parameter
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,18 +67,14 @@ class ZWaveServices:
         param = service.data[const.ATTR_CONFIG_PARAMETER]
         selection = service.data[const.ATTR_CONFIG_VALUE]
 
-        resp = set_config_parameter(
-            self._manager, instance_id, node_id, param, selection
-        )
-
-        if not resp.success:
-            raise ValueError(resp.err_msg.format(*resp.err_args))
+        node = get_node_from_manager(self._manager, instance_id, node_id)
+        payload = set_config_parameter(node, param, selection)
 
         _LOGGER.info(
             "Setting configuration parameter %s on Node %s with value %s",
             param,
             node_id,
-            resp.payload,
+            payload,
         )
 
     @callback

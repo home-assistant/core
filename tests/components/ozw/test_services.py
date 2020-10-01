@@ -1,4 +1,5 @@
 """Test Z-Wave Services."""
+from openzwavemqtt.exceptions import InvalidValueError, WrongTypeError
 import pytest
 
 from .common import setup_ozw
@@ -45,7 +46,7 @@ async def test_services(hass, light_data, sent_messages):
     assert msg["payload"] == {"Value": 55, "ValueIDKey": 844425594667027}
 
     # Test set_config_parameter invalid list int
-    with pytest.raises(ValueError):
+    with pytest.raises(WrongTypeError):
         assert await hass.services.async_call(
             "ozw",
             "set_config_parameter",
@@ -55,7 +56,7 @@ async def test_services(hass, light_data, sent_messages):
     assert len(sent_messages) == 3
 
     # Test set_config_parameter invalid list string
-    with pytest.raises(ValueError):
+    with pytest.raises(WrongTypeError):
         assert await hass.services.async_call(
             "ozw",
             "set_config_parameter",
@@ -65,7 +66,7 @@ async def test_services(hass, light_data, sent_messages):
     assert len(sent_messages) == 3
 
     # Test set_config_parameter int out of range
-    with pytest.raises(ValueError):
+    with pytest.raises(InvalidValueError):
         assert await hass.services.async_call(
             "ozw",
             "set_config_parameter",
