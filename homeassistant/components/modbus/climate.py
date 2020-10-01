@@ -63,13 +63,13 @@ async def async_setup_platform(
     if discovery_info is None:
         return
 
-    climates = []
-    for climate in discovery_info[CONF_CLIMATES]:
+    entities = []
+    for entity in discovery_info[CONF_CLIMATES]:
         hub: ModbusHub = hass.data[MODBUS_DOMAIN][discovery_info[CONF_NAME]]
-        count = climate[CONF_DATA_COUNT]
-        data_type = climate[CONF_DATA_TYPE]
-        name = climate[CONF_NAME]
-        structure = climate[CONF_STRUCTURE]
+        count = entity[CONF_DATA_COUNT]
+        data_type = entity[CONF_DATA_TYPE]
+        name = entity[CONF_NAME]
+        structure = entity[CONF_STRUCTURE]
 
         if data_type != DATA_TYPE_CUSTOM:
             try:
@@ -96,10 +96,10 @@ async def async_setup_platform(
             )
             continue
 
-        climate[CONF_STRUCTURE] = structure
-        climates.append(ModbusThermostat(hub, climate))
+        entity[CONF_STRUCTURE] = structure
+        entities.append(ModbusThermostat(hub, entity))
 
-    async_add_entities(climates)
+    async_add_entities(entities)
 
 
 class ModbusThermostat(ClimateEntity):
