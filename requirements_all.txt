@@ -939,6 +939,9 @@ minio==4.0.9
 # homeassistant.components.mitemp_bt
 mitemp_bt==0.0.3
 
+# homeassistant.components.mobilevikings_pl
+mobile-vikings-scraper==1.0.2
+
 # homeassistant.components.tts
 mutagen==1.45.1
 
