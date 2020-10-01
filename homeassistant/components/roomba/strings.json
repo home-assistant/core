@@ -14,7 +14,7 @@
       }
     },
     "error": {
-      "cannot_connect": "Failed to connect, please try again"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
   },
   "options": {
