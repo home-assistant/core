@@ -14,9 +14,13 @@ from homeassistant.util import Throttle
 from .const import (
     BED,
     DOMAIN,
+<<<<<<< HEAD
     PRESET_FAVORITE,
     SERVICE_SET_FAVORITE,
     SERVICE_SET_SLEEP_NUMBER,
+=======
+    SIDES,
+>>>>>>> Update __init__.py
     SIDE,
     SIDES,
     SLEEP_NUMBER,
@@ -104,14 +108,9 @@ class SleepIQData:
 
     def set_new_sleep_number(self, bed_name: str, side: str, sleep_number):
         """Change the sleep number on a side to a new value."""
-<<<<<<< HEAD
-        # Sanity check: Sleep number has to be between 1-100.
-        if 0 < int(sleep_number) <= 100 and int(sleep_number) % 5 == 0:
-=======
 
         # Sanity check: Sleep number has to be between 1-100.
-        if 0 < sleep_number <= 100 and sleep_number % 5 == 0:
->>>>>>> Add support to set sleep numer
+        if 0 < int(sleep_number) <= 100 and int(sleep_number) % 5 == 0:
             self._set_sleep_number(bed_name, side, int(sleep_number))
         else:
             message = f"Invalid sleep number: {sleep_number}. The new sleep number, as a multiple of 5 between 5 and 100"
