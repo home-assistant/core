@@ -147,7 +147,7 @@ async def test_abort_on_unexpected_error(hass):
             }
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["errors"] == {"base": "unexpected_error"}
+        assert result["errors"] == {"base": "unknown"}
 
         result = await flow.async_step_import(
             {
@@ -157,4 +157,4 @@ async def test_abort_on_unexpected_error(hass):
             }
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-        assert result["reason"] == "unexpected_error"
+        assert result["reason"] == "unknown"

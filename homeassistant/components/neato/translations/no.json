@@ -9,7 +9,7 @@
         },
         "error": {
             "invalid_credentials": "Ugyldig legitimasjon",
-            "unexpected_error": "Uventet feil"
+            "unknown": "Uventet feil"
         },
         "step": {
             "user": {

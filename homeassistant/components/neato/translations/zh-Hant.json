@@ -9,7 +9,7 @@
         },
         "error": {
             "invalid_credentials": "\u6191\u8b49\u7121\u6548",
-            "unexpected_error": "\u672a\u9810\u671f\u932f\u8aa4"
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
         },
         "step": {
             "user": {

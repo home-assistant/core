@@ -9,7 +9,7 @@
         },
         "error": {
             "invalid_credentials": "Credenciales no v\u00e1lidas",
-            "unexpected_error": "Error inesperado"
+            "unknown": "Error inesperado"
         },
         "step": {
             "user": {

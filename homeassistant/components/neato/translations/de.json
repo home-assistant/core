@@ -9,7 +9,7 @@
         },
         "error": {
             "invalid_credentials": "Ung\u00fcltige Anmeldeinformationen",
-            "unexpected_error": "Unerwarteter Fehler"
+            "unknown": "Unerwarteter Fehler"
         },
         "step": {
             "user": {
