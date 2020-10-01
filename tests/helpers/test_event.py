@@ -1427,8 +1427,12 @@ async def test_track_template_rate_limit(hass):
     hass.states.async_set("sensor.two", "any")
     await hass.async_block_till_done()
     assert refresh_runs == ["0", "1"]
-    await asyncio.sleep(0.125)
-    await hass.async_block_till_done()
+    next_time = dt_util.utcnow() + timedelta(seconds=0.125)
+    with patch(
+        "homeassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
+    ):
+        async_fire_time_changed(hass, next_time)
+        await hass.async_block_till_done()
     assert refresh_runs == ["0", "1", "2"]
     hass.states.async_set("sensor.three", "any")
     await hass.async_block_till_done()
@@ -1436,8 +1440,12 @@ async def test_track_template_rate_limit(hass):
     hass.states.async_set("sensor.four", "any")
     await hass.async_block_till_done()
     assert refresh_runs == ["0", "1", "2"]
-    await asyncio.sleep(0.125)
-    await hass.async_block_till_done()
+    next_time = dt_util.utcnow() + timedelta(seconds=0.125 * 2)
+    with patch(
+        "homeassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
+    ):
+        async_fire_time_changed(hass, next_time)
+        await hass.async_block_till_done()
     assert refresh_runs == ["0", "1", "2", "4"]
     hass.states.async_set("sensor.five", "any")
     await hass.async_block_till_done()
@@ -1474,8 +1482,12 @@ async def test_track_template_rate_limit_overridden(hass):
     hass.states.async_set("sensor.two", "any")
     await hass.async_block_till_done()
     assert refresh_runs == ["0", "1"]
-    await asyncio.sleep(0.125)
-    await hass.async_block_till_done()
+    next_time = dt_util.utcnow() + timedelta(seconds=0.125)
+    with patch(
+        "homeassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
+    ):
+        async_fire_time_changed(hass, next_time)
+        await hass.async_block_till_done()
     assert refresh_runs == ["0", "1", "2"]
     hass.states.async_set("sensor.three", "any")
     await hass.async_block_till_done()
@@ -1483,7 +1495,12 @@ async def test_track_template_rate_limit_overridden(hass):
     hass.states.async_set("sensor.four", "any")
     await hass.async_block_till_done()
     assert refresh_runs == ["0", "1", "2"]
-    await asyncio.sleep(0.125)
+    next_time = dt_util.utcnow() + timedelta(seconds=0.125 * 2)
+    with patch(
+        "homeassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
+    ):
+        async_fire_time_changed(hass, next_time)
+        await hass.async_block_till_done()
     await hass.async_block_till_done()
     assert refresh_runs == ["0", "1", "2", "4"]
     hass.states.async_set("sensor.five", "any")
@@ -1562,7 +1579,12 @@ async def test_track_template_rate_limit_changes(hass):
     hass.states.async_set("sensor.two", "any")
     await hass.async_block_till_done()
     assert refresh_runs == ["0", "1"]
-    await asyncio.sleep(0.125)
+    next_time = dt_util.utcnow() + timedelta(seconds=0.125 * 1)
+    with patch(
+        "homeassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
+    ):
+        async_fire_time_changed(hass, next_time)
+        await hass.async_block_till_done()
     await hass.async_block_till_done()
     assert refresh_runs == ["0", "1", "2"]
     hass.states.async_set("sensor.three", "any")
@@ -1571,7 +1593,12 @@ async def test_track_template_rate_limit_changes(hass):
     hass.states.async_set("sensor.four", "any")
     await hass.async_block_till_done()
     assert refresh_runs == ["0", "1", "2"]
-    await asyncio.sleep(0.125)
+    next_time = dt_util.utcnow() + timedelta(seconds=0.125 * 2)
+    with patch(
+        "homeassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
+    ):
+        async_fire_time_changed(hass, next_time)
+        await hass.async_block_till_done()
     await hass.async_block_till_done()
     assert refresh_runs == ["0", "1", "2"]
     hass.states.async_set("sensor.five", "any")
@@ -1617,7 +1644,12 @@ async def test_track_template_rate_limit_removed(hass):
     hass.states.async_set("sensor.two", "any")
     await hass.async_block_till_done()
     assert refresh_runs == ["0", "1"]
-    await asyncio.sleep(0.125)
+    next_time = dt_util.utcnow() + timedelta(seconds=0.125 * 1)
+    with patch(
+        "homeassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
+    ):
+        async_fire_time_changed(hass, next_time)
+        await hass.async_block_till_done()
     await hass.async_block_till_done()
     assert refresh_runs == ["0", "1", "2"]
     hass.states.async_set("sensor.three", "any")
@@ -1673,7 +1705,12 @@ async def test_track_two_templates_with_different_rate_limits(hass):
     await hass.async_block_till_done()
     assert refresh_runs[template_one] == ["0", "1"]
     assert refresh_runs[template_five] == ["0", "1"]
-    await asyncio.sleep(0.125)
+    next_time = dt_util.utcnow() + timedelta(seconds=0.125 * 1)
+    with patch(
+        "homeassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
+    ):
+        async_fire_time_changed(hass, next_time)
+        await hass.async_block_till_done()
     await hass.async_block_till_done()
     assert refresh_runs[template_one] == ["0", "1", "2"]
     assert refresh_runs[template_five] == ["0", "1"]
