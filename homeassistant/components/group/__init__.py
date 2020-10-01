@@ -44,6 +44,7 @@ CONF_ENTITIES = "entities"
 CONF_ALL = "all"
 
 ATTR_ADD_ENTITIES = "add_entities"
+ATTR_REMOVE_ENTITIES = "remove_entities"
 ATTR_AUTO = "auto"
 ATTR_ENTITIES = "entities"
 ATTR_OBJECT_ID = "object_id"
@@ -255,6 +256,12 @@ async def async_setup(hass, config):
                 or None
             )
 
+            if service.data.get(ATTR_REMOVE_ENTITIES) is not None:
+                _LOGGER.warning(
+                    "%s: remove_entities ignored when creating a new group",
+                    service.service,
+                )
+
             extra_arg = {
                 attr: service.data[attr]
                 for attr in (ATTR_ICON,)
@@ -279,6 +286,11 @@ async def async_setup(hass, config):
         # update group
         if service.service == SERVICE_SET:
             need_update = False
+
+            if ATTR_REMOVE_ENTITIES in service.data:
+                delta = service.data[ATTR_REMOVE_ENTITIES]
+                entity_ids = set(group.tracking) - set(delta)
+                await group.async_update_tracked_entity_ids(entity_ids)
 
             if ATTR_ADD_ENTITIES in service.data:
                 delta = service.data[ATTR_ADD_ENTITIES]
@@ -323,6 +335,7 @@ async def async_setup(hass, config):
                     vol.Optional(ATTR_ALL): cv.boolean,
                     vol.Exclusive(ATTR_ENTITIES, "entities"): cv.entity_ids,
                     vol.Exclusive(ATTR_ADD_ENTITIES, "entities"): cv.entity_ids,
+                    vol.Exclusive(ATTR_REMOVE_ENTITIES, "entities"): cv.entity_ids,
                 }
             )
         ),
