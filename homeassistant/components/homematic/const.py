@@ -57,6 +57,8 @@ HM_DEVICE_TYPES = {
         "IPKeySwitchLevel",
         "IPMultiIO",
         "IPWSwitch",
+        "IOSwitchWireless",
+        "IPWIODevice",
     ],
     DISCOVER_LIGHTS: [
         "Dimmer",
@@ -111,7 +113,7 @@ HM_DEVICE_TYPES = {
         "IPThermostatWall2",
         "IPRemoteMotionV2",
         "HBUNISenWEA",
-        "IPWMotionDection",
+        "PresenceIPW",
     ],
     DISCOVER_CLIMATE: [
         "Thermostat",
@@ -154,6 +156,7 @@ HM_DEVICE_TYPES = {
         "IPRemoteMotionV2",
         "IPWInputDevice",
         "IPWMotionDection",
+        "IPAlarmSensor",
     ],
     DISCOVER_COVER: [
         "Blind",
