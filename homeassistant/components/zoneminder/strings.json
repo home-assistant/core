@@ -10,8 +10,8 @@
           "password": "[%key:common::config_flow::data::password%]",
           "path": "ZM Path",
           "path_zms": "ZMS Path",
-          "ssl": "Use SSL for connections to ZoneMinder",
-          "verify_ssl": "Verify SSL Certificate"
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         }
       }
     },

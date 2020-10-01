@@ -34,7 +34,9 @@
         "url": "URL",
         "usb_path": "USB Device Path",
         "access_token": "Access Token",
-        "api_key": "API Key"
+        "api_key": "API Key",
+        "ssl": "Uses a SSL certificate",
+        "verify_ssl": "Verify SSL certificate"
       },
       "create_entry": {
         "authenticated": "Successfully authenticated"
