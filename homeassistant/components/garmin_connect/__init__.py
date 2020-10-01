@@ -49,7 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         _LOGGER.error(
             "Connection error occurred during Garmin Connect login request: %s", err
         )
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from err
     except Exception:  # pylint: disable=broad-except
         _LOGGER.exception("Unknown error occurred during Garmin Connect login request")
         return False

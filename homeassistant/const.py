@@ -1,6 +1,6 @@
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 113
+MINOR_VERSION = 116
 PATCH_VERSION = "0.dev0"
 __short_version__ = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__ = f"{__short_version__}.{PATCH_VERSION}"
@@ -37,17 +37,18 @@ CONF_API_KEY = "api_key"
 CONF_API_VERSION = "api_version"
 CONF_ARMING_TIME = "arming_time"
 CONF_AT = "at"
-CONF_AUTHENTICATION = "authentication"
+CONF_ATTRIBUTE = "attribute"
 CONF_AUTH_MFA_MODULES = "auth_mfa_modules"
 CONF_AUTH_PROVIDERS = "auth_providers"
+CONF_AUTHENTICATION = "authentication"
 CONF_BASE = "base"
 CONF_BEFORE = "before"
 CONF_BELOW = "below"
 CONF_BINARY_SENSORS = "binary_sensors"
-CONF_BLACKLIST = "blacklist"
 CONF_BRIGHTNESS = "brightness"
 CONF_BROADCAST_ADDRESS = "broadcast_address"
 CONF_BROADCAST_PORT = "broadcast_port"
+CONF_CHOOSE = "choose"
 CONF_CLIENT_ID = "client_id"
 CONF_CLIENT_SECRET = "client_secret"
 CONF_CODE = "code"
@@ -60,12 +61,15 @@ CONF_COMMAND_OPEN = "command_open"
 CONF_COMMAND_STATE = "command_state"
 CONF_COMMAND_STOP = "command_stop"
 CONF_CONDITION = "condition"
+CONF_CONDITIONS = "conditions"
 CONF_CONTINUE_ON_TIMEOUT = "continue_on_timeout"
+CONF_COUNT = "count"
 CONF_COVERS = "covers"
 CONF_CURRENCY = "currency"
 CONF_CUSTOMIZE = "customize"
 CONF_CUSTOMIZE_DOMAIN = "customize_domain"
 CONF_CUSTOMIZE_GLOB = "customize_glob"
+CONF_DEFAULT = "default"
 CONF_DELAY = "delay"
 CONF_DELAY_TIME = "delay_time"
 CONF_DEVICE = "device"
@@ -112,6 +116,7 @@ CONF_LIGHTS = "lights"
 CONF_LONGITUDE = "longitude"
 CONF_MAC = "mac"
 CONF_MAXIMUM = "maximum"
+CONF_MEDIA_DIRS = "media_dirs"
 CONF_METHOD = "method"
 CONF_MINIMUM = "minimum"
 CONF_MODE = "mode"
@@ -134,11 +139,11 @@ CONF_PREFIX = "prefix"
 CONF_PROFILE_NAME = "profile_name"
 CONF_PROTOCOL = "protocol"
 CONF_PROXY_SSL = "proxy_ssl"
-CONF_QUEUE_SIZE = "queue_size"
 CONF_QUOTE = "quote"
 CONF_RADIUS = "radius"
 CONF_RECIPIENT = "recipient"
 CONF_REGION = "region"
+CONF_REPEAT = "repeat"
 CONF_RESOURCE = "resource"
 CONF_RESOURCES = "resources"
 CONF_RESOURCE_TEMPLATE = "resource_template"
@@ -149,6 +154,7 @@ CONF_SCENE = "scene"
 CONF_SENDER = "sender"
 CONF_SENSORS = "sensors"
 CONF_SENSOR_TYPE = "sensor_type"
+CONF_SEQUENCE = "sequence"
 CONF_SERVICE = "service"
 CONF_SERVICE_DATA = "data"
 CONF_SERVICE_TEMPLATE = "service_template"
@@ -167,17 +173,23 @@ CONF_TOKEN = "token"
 CONF_TRIGGER_TIME = "trigger_time"
 CONF_TTL = "ttl"
 CONF_TYPE = "type"
+CONF_UNIQUE_ID = "unique_id"
 CONF_UNIT_OF_MEASUREMENT = "unit_of_measurement"
 CONF_UNIT_SYSTEM = "unit_system"
+CONF_UNTIL = "until"
 CONF_URL = "url"
 CONF_USERNAME = "username"
 CONF_VALUE_TEMPLATE = "value_template"
+CONF_VARIABLES = "variables"
 CONF_VERIFY_SSL = "verify_ssl"
+CONF_WAIT_FOR_TRIGGER = "wait_for_trigger"
 CONF_WAIT_TEMPLATE = "wait_template"
 CONF_WEBHOOK_ID = "webhook_id"
 CONF_WEEKDAY = "weekday"
+CONF_WHILE = "while"
 CONF_WHITELIST = "whitelist"
-CONF_WHITELIST_EXTERNAL_DIRS = "whitelist_external_dirs"
+CONF_ALLOWLIST_EXTERNAL_DIRS = "allowlist_external_dirs"
+LEGACY_CONF_WHITELIST_EXTERNAL_DIRS = "whitelist_external_dirs"
 CONF_WHITE_VALUE = "white_value"
 CONF_XY = "xy"
 CONF_ZONE = "zone"
@@ -210,6 +222,10 @@ DEVICE_CLASS_TEMPERATURE = "temperature"
 DEVICE_CLASS_TIMESTAMP = "timestamp"
 DEVICE_CLASS_PRESSURE = "pressure"
 DEVICE_CLASS_POWER = "power"
+DEVICE_CLASS_CURRENT = "current"
+DEVICE_CLASS_ENERGY = "energy"
+DEVICE_CLASS_POWER_FACTOR = "power_factor"
+DEVICE_CLASS_VOLTAGE = "voltage"
 
 # #### STATES ####
 STATE_ON = "on"
@@ -365,10 +381,15 @@ ELECTRICAL_VOLT_AMPERE = f"{VOLT}{ELECTRICAL_CURRENT_AMPERE}"
 # Degree units
 DEGREE = "°"
 
+# Currency units
+CURRENCY_EURO = "€"
+CURRENCY_DOLLAR = "$"
+CURRENCY_CENT = "¢"
+
 # Temperature units
 TEMP_CELSIUS = f"{DEGREE}C"
 TEMP_FAHRENHEIT = f"{DEGREE}F"
-TEMP_KELVIN = f"{DEGREE}K"
+TEMP_KELVIN = "K"
 
 # Time units
 TIME_MICROSECONDS = "μs"
@@ -382,6 +403,7 @@ TIME_MONTHS = "m"
 TIME_YEARS = "y"
 
 # Length units
+LENGTH_MILLIMETERS: str = "mm"
 LENGTH_CENTIMETERS: str = "cm"
 LENGTH_METERS: str = "m"
 LENGTH_KILOMETERS: str = "km"
@@ -407,6 +429,7 @@ PRESSURE_PSI: str = "psi"
 VOLUME_LITERS: str = "L"
 VOLUME_MILLILITERS: str = "mL"
 VOLUME_CUBIC_METERS = f"{LENGTH_METERS}³"
+VOLUME_CUBIC_FEET = f"{LENGTH_FEET}³"
 
 VOLUME_GALLONS: str = "gal"
 VOLUME_FLUID_OUNCE: str = "fl. oz."
@@ -426,11 +449,14 @@ MASS_POUNDS: str = "lb"
 # Conductivity units
 CONDUCTIVITY: str = f"µS/{LENGTH_CENTIMETERS}"
 
+# Light units
+LIGHT_LUX: str = "lx"
+
 # UV Index units
 UV_INDEX: str = "UV index"
 
 # Percentage units
-UNIT_PERCENTAGE = "%"
+PERCENTAGE = "%"
 
 # Irradiation units
 IRRADIATION_WATTS_PER_SQUARE_METER = f"{POWER_WATT}/{AREA_SQUARE_METERS}"
@@ -549,6 +575,7 @@ URL_API_TEMPLATE = "/api/template"
 
 HTTP_OK = 200
 HTTP_CREATED = 201
+HTTP_ACCEPTED = 202
 HTTP_MOVED_PERMANENTLY = 301
 HTTP_BAD_REQUEST = 400
 HTTP_UNAUTHORIZED = 401
@@ -558,6 +585,7 @@ HTTP_METHOD_NOT_ALLOWED = 405
 HTTP_UNPROCESSABLE_ENTITY = 422
 HTTP_TOO_MANY_REQUESTS = 429
 HTTP_INTERNAL_SERVER_ERROR = 500
+HTTP_BAD_GATEWAY = 502
 HTTP_SERVICE_UNAVAILABLE = 503
 
 HTTP_BASIC_AUTHENTICATION = "basic"
@@ -592,3 +620,6 @@ PRECISION_TENTHS = 0.1
 # Static list of entities that will never be exposed to
 # cloud, alexa, or google_home components
 CLOUD_NEVER_EXPOSED_ENTITIES = ["group.all_locks"]
+
+# The ID of the Home Assistant Cast App
+CAST_APP_ID_HOMEASSISTANT = "B12CE3CA"

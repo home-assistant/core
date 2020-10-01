@@ -31,7 +31,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         await niko_data.async_update()
     except OSError as err:
         _LOGGER.error("Unable to access %s (%s)", host, err)
-        raise PlatformNotReady
+        raise PlatformNotReady from err
 
     async_add_entities(
         [NikoHomeControlLight(light, niko_data) for light in nhc.list_actions()], True

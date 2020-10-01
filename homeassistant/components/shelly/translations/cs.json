@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Za\u0159\u00edzen\u00ed je ji\u017e nakonfigurov\u00e1no"
+        },
+        "error": {
+            "auth_not_supported": "Za\u0159\u00edzen\u00ed Shelly vy\u017eaduj\u00edc\u00ed autentizaci nejsou aktu\u00e1ln\u011b podporov\u00e1na.",
+            "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
+        },
+        "flow_title": "Shelly: {name}",
+        "step": {
+            "confirm_discovery": {
+                "description": "Chcete nastavit {model} na adrese {host}?"
+            }
+        }
+    },
+    "title": "Shelly"
+}

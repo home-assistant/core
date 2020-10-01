@@ -19,7 +19,7 @@
                 "data": {
                     "base_path": "Relativ bane til skriveren",
                     "host": "Vert",
-                    "port": "Port",
+                    "port": "",
                     "ssl": "Skriveren st\u00f8tter kommunikasjon over SSL/TLS",
                     "verify_ssl": "Skriveren bruker et riktig SSL-sertifikat"
                 },

@@ -10,7 +10,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Host o direcci\u00f3n IP",
+                    "host": "Host",
                     "passkey": "Clave de acceso",
                     "port": "Puerto"
                 },

@@ -1,0 +1,40 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "no_devices_found": "Nie znaleziono urz\u0105dze\u0144 w sieci."
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
+        },
+        "step": {
+            "pick_device": {
+                "data": {
+                    "device": "Urz\u0105dzenie"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP",
+                    "ip_address": "Adres IP"
+                },
+                "description": "Je\u015bli nie podasz IP lub nazwy hosta, wykrywanie zostanie u\u017cyte do odnalezienia urz\u0105dze\u0144."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "model": "Model (opcjonalne)",
+                    "nightlight_switch": "U\u017cyj prze\u0142\u0105cznika Nocnego \u015bwiat\u0142a",
+                    "save_on_change": "Zachowaj status po zmianie",
+                    "transition": "Czas przej\u015bcia (ms)",
+                    "use_music_mode": "W\u0142\u0105cz tryb muzyczny"
+                },
+                "description": "Je\u015bli nie podasz modelu urz\u0105dzenia, zostanie on automatycznie wykryty."
+            }
+        }
+    },
+    "title": "Yeelight"
+}

@@ -11,7 +11,13 @@ from homeassistant.core import Context
 from homeassistant.helpers import entity, entity_registry
 
 from tests.async_mock import MagicMock, PropertyMock, patch
-from tests.common import get_test_home_assistant, mock_registry
+from tests.common import (
+    MockConfigEntry,
+    MockEntity,
+    MockEntityPlatform,
+    get_test_home_assistant,
+    mock_registry,
+)
 
 
 def test_generate_entity_id_requires_hass_or_ids():
@@ -603,7 +609,7 @@ async def test_disabled_in_entity_registry(hass):
         entity_id="hello.world",
         unique_id="test-unique-id",
         platform="test-platform",
-        disabled_by="user",
+        disabled_by=None,
     )
     registry = mock_registry(hass, {"hello.world": entry})
 
@@ -611,23 +617,24 @@ async def test_disabled_in_entity_registry(hass):
     ent.hass = hass
     ent.entity_id = "hello.world"
     ent.registry_entry = entry
-    ent.platform = MagicMock(platform_name="test-platform")
+    assert ent.enabled is True
 
-    await ent.async_internal_added_to_hass()
-    ent.async_write_ha_state()
-    assert hass.states.get("hello.world") is None
+    ent.add_to_platform_start(hass, MagicMock(platform_name="test-platform"), None)
+    await ent.add_to_platform_finish()
+    assert hass.states.get("hello.world") is not None
 
-    entry2 = registry.async_update_entity("hello.world", disabled_by=None)
+    entry2 = registry.async_update_entity("hello.world", disabled_by="user")
     await hass.async_block_till_done()
     assert entry2 != entry
     assert ent.registry_entry == entry2
-    assert ent.enabled is True
+    assert ent.enabled is False
+    assert hass.states.get("hello.world") is None
 
-    entry3 = registry.async_update_entity("hello.world", disabled_by="user")
+    entry3 = registry.async_update_entity("hello.world", disabled_by=None)
     await hass.async_block_till_done()
     assert entry3 != entry2
-    assert ent.registry_entry == entry3
-    assert ent.enabled is False
+    # Entry is no longer updated, entity is no longer tracking changes
+    assert ent.registry_entry == entry2
 
 
 async def test_capability_attrs(hass):
@@ -690,3 +697,31 @@ async def test_warn_slow_write_state_custom_component(hass, caplog):
         "(<class 'custom_components.bla.sensor.test_warn_slow_write_state_custom_component.<locals>.CustomComponentEntity'>) "
         "took 10.000 seconds. Please report it to the custom component author."
     ) in caplog.text
+
+
+async def test_setup_source(hass):
+    """Check that we register sources correctly."""
+    platform = MockEntityPlatform(hass)
+
+    entity_platform = MockEntity(name="Platform Config Source")
+    await platform.async_add_entities([entity_platform])
+
+    platform.config_entry = MockConfigEntry()
+    entity_entry = MockEntity(name="Config Entry Source")
+    await platform.async_add_entities([entity_entry])
+
+    assert entity.entity_sources(hass) == {
+        "test_domain.platform_config_source": {
+            "source": entity.SOURCE_PLATFORM_CONFIG,
+            "domain": "test_platform",
+        },
+        "test_domain.config_entry_source": {
+            "source": entity.SOURCE_CONFIG_ENTRY,
+            "config_entry": platform.config_entry.entry_id,
+            "domain": "test_platform",
+        },
+    }
+
+    await platform.async_reset()
+
+    assert entity.entity_sources(hass) == {}

@@ -1,0 +1,9 @@
+{
+    "options": {
+        "step": {
+            "deconz_devices": {
+                "title": "deCONZ se\u00e7enekleri"
+            }
+        }
+    }
+}

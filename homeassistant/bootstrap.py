@@ -6,11 +6,12 @@ import logging
 import logging.handlers
 import os
 import sys
+import threading
 from time import monotonic
-from typing import Any, Dict, Optional, Set
+from typing import TYPE_CHECKING, Any, Dict, Optional, Set
 
-from async_timeout import timeout
 import voluptuous as vol
+import yarl
 
 from homeassistant import config as conf_util, config_entries, core, loader
 from homeassistant.components import http
@@ -31,6 +32,9 @@ from homeassistant.util.logging import async_activate_log_queue_handler
 from homeassistant.util.package import async_get_user_site, is_virtual_env
 from homeassistant.util.yaml import clear_secret_cache
 
+if TYPE_CHECKING:
+    from .runner import RuntimeConfig
+
 _LOGGER = logging.getLogger(__name__)
 
 ERROR_LOG_FILENAME = "home-assistant.log"
@@ -39,6 +43,11 @@ ERROR_LOG_FILENAME = "home-assistant.log"
 DATA_LOGGING = "logging"
 
 LOG_SLOW_STARTUP_INTERVAL = 60
+
+STAGE_1_TIMEOUT = 120
+STAGE_2_TIMEOUT = 300
+WRAP_UP_TIMEOUT = 300
+COOLDOWN_TIME = 60
 
 DEBUGGER_INTEGRATIONS = {"debugpy", "ptvsd"}
 CORE_INTEGRATIONS = ("homeassistant", "persistent_notification")
@@ -66,23 +75,22 @@ STAGE_1_INTEGRATIONS = {
 
 
 async def async_setup_hass(
-    *,
-    config_dir: str,
-    verbose: bool,
-    log_rotate_days: int,
-    log_file: str,
-    log_no_color: bool,
-    skip_pip: bool,
-    safe_mode: bool,
+    runtime_config: "RuntimeConfig",
 ) -> Optional[core.HomeAssistant]:
     """Set up Home Assistant."""
     hass = core.HomeAssistant()
-    hass.config.config_dir = config_dir
+    hass.config.config_dir = runtime_config.config_dir
 
-    async_enable_logging(hass, verbose, log_rotate_days, log_file, log_no_color)
+    async_enable_logging(
+        hass,
+        runtime_config.verbose,
+        runtime_config.log_rotate_days,
+        runtime_config.log_file,
+        runtime_config.log_no_color,
+    )
 
-    hass.config.skip_pip = skip_pip
-    if skip_pip:
+    hass.config.skip_pip = runtime_config.skip_pip
+    if runtime_config.skip_pip:
         _LOGGER.warning(
             "Skipping pip installation of required modules. This may cause issues"
         )
@@ -91,10 +99,11 @@ async def async_setup_hass(
         _LOGGER.error("Error getting configuration path")
         return None
 
-    _LOGGER.info("Config directory: %s", config_dir)
+    _LOGGER.info("Config directory: %s", runtime_config.config_dir)
 
     config_dict = None
     basic_setup_success = False
+    safe_mode = runtime_config.safe_mode
 
     if not safe_mode:
         await hass.async_add_executor_job(conf_util.process_ha_config_upgrade, hass)
@@ -103,11 +112,12 @@ async def async_setup_hass(
             config_dict = await conf_util.async_hass_config_yaml(hass)
         except HomeAssistantError as err:
             _LOGGER.error(
-                "Failed to parse configuration.yaml: %s. Activating safe mode", err,
+                "Failed to parse configuration.yaml: %s. Activating safe mode",
+                err,
             )
         else:
             if not is_virtual_env():
-                await async_mount_local_lib_path(config_dir)
+                await async_mount_local_lib_path(runtime_config.config_dir)
 
             basic_setup_success = (
                 await async_from_config_dict(config_dict, hass) is not None
@@ -132,11 +142,12 @@ async def async_setup_hass(
         hass.async_track_tasks()
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP, {})
         with contextlib.suppress(asyncio.TimeoutError):
-            async with timeout(10):
+            async with hass.timeout.async_timeout(10):
                 await hass.async_block_till_done()
 
         safe_mode = True
         old_config = hass.config
+
         hass = core.HomeAssistant()
         hass.config.skip_pip = old_config.skip_pip
         hass.config.internal_url = old_config.internal_url
@@ -150,10 +161,34 @@ async def async_setup_hass(
         http_conf = (await http.async_get_last_config(hass)) or {}
 
         await async_from_config_dict(
-            {"safe_mode": {}, "http": http_conf}, hass,
+            {"safe_mode": {}, "http": http_conf},
+            hass,
         )
 
+    if runtime_config.open_ui:
+        hass.add_job(open_hass_ui, hass)
+
     return hass
+
+
+def open_hass_ui(hass: core.HomeAssistant) -> None:
+    """Open the UI."""
+    import webbrowser  # pylint: disable=import-outside-toplevel
+
+    if hass.config.api is None or "frontend" not in hass.config.components:
+        _LOGGER.warning("Cannot launch the UI because frontend not loaded")
+        return
+
+    scheme = "https" if hass.config.api.use_ssl else "http"
+    url = str(
+        yarl.URL.build(scheme=scheme, host="127.0.0.1", port=hass.config.api.port)
+    )
+
+    if not webbrowser.open(url):
+        _LOGGER.warning(
+            "Unable to open the Home Assistant UI in a browser. Open it yourself at %s",
+            url,
+        )
 
 
 async def async_from_config_dict(
@@ -276,6 +311,12 @@ def async_enable_logging(
         "Uncaught exception", exc_info=args  # type: ignore
     )
 
+    if sys.version_info[:2] >= (3, 8):
+        threading.excepthook = lambda args: logging.getLogger(None).exception(
+            "Uncaught thread exception",
+            exc_info=(args.exc_type, args.exc_value, args.exc_traceback),
+        )
+
     # Log errors to a file if we have write access to file or config dir
     if log_file is None:
         err_log_path = hass.config.path(ERROR_LOG_FILENAME)
@@ -292,8 +333,10 @@ def async_enable_logging(
     ):
 
         if log_rotate_days:
-            err_handler: logging.FileHandler = logging.handlers.TimedRotatingFileHandler(
-                err_log_path, when="midnight", backupCount=log_rotate_days
+            err_handler: logging.FileHandler = (
+                logging.handlers.TimedRotatingFileHandler(
+                    err_log_path, when="midnight", backupCount=log_rotate_days
+                )
             )
         else:
             err_handler = logging.FileHandler(err_log_path, mode="w", delay=True)
@@ -351,8 +394,9 @@ async def _async_log_pending_setups(
         remaining = [domain for domain in domains if domain in setup_started]
 
         if remaining:
-            _LOGGER.info(
-                "Waiting on integrations to complete setup: %s", ", ".join(remaining),
+            _LOGGER.warning(
+                "Waiting on integrations to complete setup: %s",
+                ", ".join(remaining),
             )
 
 
@@ -468,24 +512,42 @@ async def _async_set_up_integrations(
     stage_2_domains = domains_to_setup - logging_domains - debuggers - stage_1_domains
 
     # Kick off loading the registries. They don't need to be awaited.
-    asyncio.gather(
-        hass.helpers.device_registry.async_get_registry(),
-        hass.helpers.entity_registry.async_get_registry(),
-        hass.helpers.area_registry.async_get_registry(),
-    )
+    asyncio.create_task(hass.helpers.device_registry.async_get_registry())
+    asyncio.create_task(hass.helpers.entity_registry.async_get_registry())
+    asyncio.create_task(hass.helpers.area_registry.async_get_registry())
 
     # Start setup
     if stage_1_domains:
         _LOGGER.info("Setting up stage 1: %s", stage_1_domains)
-        await async_setup_multi_components(hass, stage_1_domains, config, setup_started)
+        try:
+            async with hass.timeout.async_timeout(
+                STAGE_1_TIMEOUT, cool_down=COOLDOWN_TIME
+            ):
+                await async_setup_multi_components(
+                    hass, stage_1_domains, config, setup_started
+                )
+        except asyncio.TimeoutError:
+            _LOGGER.warning("Setup timed out for stage 1 - moving forward")
 
     # Enables after dependencies
     async_set_domains_to_be_loaded(hass, stage_1_domains | stage_2_domains)
 
     if stage_2_domains:
         _LOGGER.info("Setting up stage 2: %s", stage_2_domains)
-        await async_setup_multi_components(hass, stage_2_domains, config, setup_started)
+        try:
+            async with hass.timeout.async_timeout(
+                STAGE_2_TIMEOUT, cool_down=COOLDOWN_TIME
+            ):
+                await async_setup_multi_components(
+                    hass, stage_2_domains, config, setup_started
+                )
+        except asyncio.TimeoutError:
+            _LOGGER.warning("Setup timed out for stage 2 - moving forward")
 
     # Wrap up startup
     _LOGGER.debug("Waiting for startup to wrap up")
-    await hass.async_block_till_done()
+    try:
+        async with hass.timeout.async_timeout(WRAP_UP_TIMEOUT, cool_down=COOLDOWN_TIME):
+            await hass.async_block_till_done()
+    except asyncio.TimeoutError:
+        _LOGGER.warning("Setup timed out for bootstrap - moving forward")

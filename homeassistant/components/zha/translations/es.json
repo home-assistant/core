@@ -65,6 +65,7 @@
             "device_dropped": "Dispositivo ca\u00eddo",
             "device_flipped": "Dispositivo volteado \" {subtype} \"",
             "device_knocked": "Dispositivo eliminado \" {subtype} \"",
+            "device_offline": "Dispositivo desconectado",
             "device_rotated": "Dispositivo girado \" {subtype} \"",
             "device_shaken": "Dispositivo agitado",
             "device_slid": "Dispositivo deslizado \" {subtype} \"",

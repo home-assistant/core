@@ -10,6 +10,7 @@ from homeassistant.components.input_datetime import (
     ATTR_DATETIME,
     ATTR_EDITABLE,
     ATTR_TIME,
+    ATTR_TIMESTAMP,
     CONF_HAS_DATE,
     CONF_HAS_TIME,
     CONF_ID,
@@ -25,6 +26,7 @@ from homeassistant.core import Context, CoreState, State
 from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import entity_registry
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from tests.async_mock import patch
 from tests.common import mock_restore_cache
@@ -88,6 +90,16 @@ async def async_set_datetime(hass, entity_id, dt_value):
         DOMAIN,
         SERVICE_SET_DATETIME,
         {ATTR_ENTITY_ID: entity_id, ATTR_DATETIME: dt_value},
+        blocking=True,
+    )
+
+
+async def async_set_timestamp(hass, entity_id, timestamp):
+    """Set date and / or time of input_datetime."""
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_DATETIME,
+        {ATTR_ENTITY_ID: entity_id, ATTR_TIMESTAMP: timestamp},
         blocking=True,
     )
 
@@ -156,6 +168,32 @@ async def test_set_datetime_2(hass):
     assert state.attributes["timestamp"] == dt_obj.timestamp()
 
 
+async def test_set_datetime_3(hass):
+    """Test set_datetime method using timestamp."""
+    await async_setup_component(
+        hass, DOMAIN, {DOMAIN: {"test_datetime": {"has_time": True, "has_date": True}}}
+    )
+
+    entity_id = "input_datetime.test_datetime"
+
+    dt_obj = datetime.datetime(2017, 9, 7, 19, 46, 30)
+
+    await async_set_timestamp(hass, entity_id, dt_util.as_utc(dt_obj).timestamp())
+
+    state = hass.states.get(entity_id)
+    assert state.state == str(dt_obj)
+    assert state.attributes["has_time"]
+    assert state.attributes["has_date"]
+
+    assert state.attributes["year"] == 2017
+    assert state.attributes["month"] == 9
+    assert state.attributes["day"] == 7
+    assert state.attributes["hour"] == 19
+    assert state.attributes["minute"] == 46
+    assert state.attributes["second"] == 30
+    assert state.attributes["timestamp"] == dt_obj.timestamp()
+
+
 async def test_set_datetime_time(hass):
     """Test set_datetime method with only time."""
     await async_setup_component(
@@ -199,7 +237,8 @@ async def test_set_invalid(hass):
         await hass.services.async_call(
             "input_datetime",
             "set_datetime",
-            {"entity_id": "test_date", "time": time_portion},
+            {"entity_id": entity_id, "time": time_portion},
+            blocking=True,
         )
     await hass.async_block_till_done()
 
@@ -229,7 +268,8 @@ async def test_set_invalid_2(hass):
         await hass.services.async_call(
             "input_datetime",
             "set_datetime",
-            {"entity_id": "test_date", "time": time_portion, "datetime": dt_obj},
+            {"entity_id": entity_id, "time": time_portion, "datetime": dt_obj},
+            blocking=True,
         )
     await hass.async_block_till_done()
 
@@ -358,8 +398,8 @@ async def test_input_datetime_context(hass, hass_admin_user):
         "input_datetime",
         "set_datetime",
         {"entity_id": state.entity_id, "date": "2018-01-02"},
-        True,
-        Context(user_id=hass_admin_user.id),
+        blocking=True,
+        context=Context(user_id=hass_admin_user.id),
     )
 
     state2 = hass.states.get("input_datetime.only_date")

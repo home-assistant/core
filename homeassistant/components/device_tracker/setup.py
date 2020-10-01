@@ -35,9 +35,9 @@ class DeviceTrackerPlatform:
         "setup_scanner",
     )
 
-    name = attr.ib(type=str)
-    platform = attr.ib(type=ModuleType)
-    config = attr.ib(type=Dict)
+    name: str = attr.ib()
+    platform: ModuleType = attr.ib()
+    config: Dict = attr.ib()
 
     @property
     def type(self):

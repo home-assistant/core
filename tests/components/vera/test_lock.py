@@ -15,6 +15,7 @@ async def test_lock(
     """Test function."""
     vera_device = MagicMock(spec=pv.VeraLock)  # type: pv.VeraLock
     vera_device.device_id = 1
+    vera_device.vera_device_id = vera_device.device_id
     vera_device.name = "dev1"
     vera_device.category = pv.CATEGORY_LOCK
     vera_device.is_locked = MagicMock(return_value=False)
@@ -24,12 +25,14 @@ async def test_lock(
         hass=hass,
         controller_config=new_simple_controller_config(devices=(vera_device,)),
     )
-    update_callback = component_data.controller_data.update_callback
+    update_callback = component_data.controller_data[0].update_callback
 
     assert hass.states.get(entity_id).state == STATE_UNLOCKED
 
     await hass.services.async_call(
-        "lock", "lock", {"entity_id": entity_id},
+        "lock",
+        "lock",
+        {"entity_id": entity_id},
     )
     await hass.async_block_till_done()
     vera_device.lock.assert_called()
@@ -39,7 +42,9 @@ async def test_lock(
     assert hass.states.get(entity_id).state == STATE_LOCKED
 
     await hass.services.async_call(
-        "lock", "unlock", {"entity_id": entity_id},
+        "lock",
+        "unlock",
+        {"entity_id": entity_id},
     )
     await hass.async_block_till_done()
     vera_device.unlock.assert_called()

@@ -145,5 +145,6 @@ class LockDevice(LockEntity):
         """Print deprecation warning."""
         super().__init_subclass__(**kwargs)
         _LOGGER.warning(
-            "LockDevice is deprecated, modify %s to extend LockEntity", cls.__name__,
+            "LockDevice is deprecated, modify %s to extend LockEntity",
+            cls.__name__,
         )

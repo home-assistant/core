@@ -80,7 +80,8 @@ async def test_setting_climate(
 
 
 async def test_incorrect_modes(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker,
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test incorrect values are handled correctly."""
     with patch(

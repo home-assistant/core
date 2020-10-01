@@ -3,5 +3,6 @@
   "name": "AlarmDecoder",
   "documentation": "https://www.home-assistant.io/integrations/alarmdecoder",
   "requirements": ["adext==0.3"],
-  "codeowners": ["@ajschmidt8"]
+  "codeowners": ["@ajschmidt8"],
+  "config_flow": true
 }

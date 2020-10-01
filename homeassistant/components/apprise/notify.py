@@ -29,8 +29,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def get_service(hass, config, discovery_info=None):
     """Get the Apprise notification service."""
 
-    # Create our object
-    a_obj = apprise.Apprise()
+    # Create our Apprise Asset Object
+    asset = apprise.AppriseAsset(async_mode=False)
+
+    # Create our Apprise Instance (reference our asset)
+    a_obj = apprise.Apprise(asset=asset)
 
     if config.get(CONF_FILE):
         # Sourced from a Configuration File

@@ -51,7 +51,7 @@ class HueBridge:
         # Jobs to be executed when API is reset.
         self.reset_jobs = []
         self.sensor_manager = None
-        self.unsub_config_entry_listner = None
+        self.unsub_config_entry_listener = None
 
     @property
     def host(self):
@@ -94,9 +94,9 @@ class HueBridge:
             create_config_flow(hass, host)
             return False
 
-        except CannotConnect:
+        except CannotConnect as err:
             LOGGER.error("Error connecting to the Hue bridge at %s", host)
-            raise ConfigEntryNotReady
+            raise ConfigEntryNotReady from err
 
         except Exception:  # pylint: disable=broad-except
             LOGGER.exception("Unknown error connecting with Hue bridge at %s", host)
@@ -125,7 +125,7 @@ class HueBridge:
             3 if self.api.config.modelid == "BSB001" else 10
         )
 
-        self.unsub_config_entry_listner = self.config_entry.add_update_listener(
+        self.unsub_config_entry_listener = self.config_entry.add_update_listener(
             _update_listener
         )
 
@@ -184,8 +184,8 @@ class HueBridge:
         while self.reset_jobs:
             self.reset_jobs.pop()()
 
-        if self.unsub_config_entry_listner is not None:
-            self.unsub_config_entry_listner()
+        if self.unsub_config_entry_listener is not None:
+            self.unsub_config_entry_listener()
 
         # If setup was successful, we set api variable, forwarded entry and
         # register service
@@ -269,18 +269,18 @@ async def authenticate_bridge(hass: core.HomeAssistant, bridge: aiohue.Bridge):
             # Initialize bridge (and validate our username)
             await bridge.initialize()
 
-    except (aiohue.LinkButtonNotPressed, aiohue.Unauthorized):
-        raise AuthenticationRequired
+    except (aiohue.LinkButtonNotPressed, aiohue.Unauthorized) as err:
+        raise AuthenticationRequired from err
     except (
         asyncio.TimeoutError,
         client_exceptions.ClientOSError,
         client_exceptions.ServerDisconnectedError,
         client_exceptions.ContentTypeError,
-    ):
-        raise CannotConnect
-    except aiohue.AiohueException:
+    ) as err:
+        raise CannotConnect from err
+    except aiohue.AiohueException as err:
         LOGGER.exception("Unknown Hue linking error occurred")
-        raise AuthenticationRequired
+        raise AuthenticationRequired from err
 
 
 async def _update_listener(hass, entry):

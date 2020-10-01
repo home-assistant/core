@@ -1,0 +1,56 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert",
+            "cannot_connect": "Feeler beim verbannen",
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun",
+            "unknown": "Onerwaarte Feeler"
+        },
+        "error": {
+            "cannot_connect": "Feeler beim verbannen",
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun",
+            "unknown": "Onerwaarte Feeler"
+        },
+        "flow_title": "Kodi: {name}",
+        "step": {
+            "credentials": {
+                "data": {
+                    "password": "Passwuert",
+                    "username": "Benotzernumm"
+                },
+                "description": "G\u00ebff d\u00e4in Kodi Benotzernumm a Passwuert an. D\u00e9i stinn am System/Settings/Network/Services."
+            },
+            "discovery_confirm": {
+                "description": "Soll Kodi (`{name}`) am Home Assistant dob\u00e4i gesaat ginn?",
+                "title": "Kodi entdeckt"
+            },
+            "host": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port",
+                    "ssl": "Iwwer SSL verbannen"
+                },
+                "description": "Kodi Verbindungs Informatiounen. Stell s\u00e9cher dass d'Optioun \"Allow control of Kodi via HTTP\" aktiv ass an System/Settings/Network/Services."
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port",
+                    "ssl": "Iwwer SSL verbannen"
+                },
+                "description": "Kodi Verbindungs Informatiounen. Stell s\u00e9cher dass d'Optioun \"Allow control of Kodi via HTTP\" aktiv ass an System/Settings/Network/Services."
+            },
+            "ws_port": {
+                "data": {
+                    "ws_port": "Port"
+                }
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "turn_off": "{entity_name} soll ugeschalt ginn",
+            "turn_on": "{entity_name} soll ugeschalt ginn"
+        }
+    }
+}

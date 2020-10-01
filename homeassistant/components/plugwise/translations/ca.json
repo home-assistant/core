@@ -13,10 +13,21 @@
             "user": {
                 "data": {
                     "host": "Adre\u00e7a IP de Smile",
-                    "password": "ID de Smile"
+                    "password": "ID de Smile",
+                    "port": "N\u00famero de port de Smile"
                 },
-                "description": "Detalls",
-                "title": "Connecta\u2019t amb el Smile"
+                "description": "Introdueix:",
+                "title": "Connecta't amb el Smile"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Interval d'escaneig (segons)"
+                },
+                "description": "Ajusta les opcions de Plugwise"
             }
         }
     }

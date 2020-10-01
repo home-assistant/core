@@ -1,0 +1,7 @@
+{
+    "config": {
+        "abort": {
+            "mqtt_required": "MQTT sidumine pole seadistatud"
+        }
+    }
+}

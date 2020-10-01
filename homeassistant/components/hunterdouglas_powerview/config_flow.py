@@ -33,8 +33,8 @@ async def validate_input(hass: core.HomeAssistant, data):
     try:
         async with async_timeout.timeout(10):
             device_info = await async_get_device_info(pv_request)
-    except HUB_EXCEPTIONS:
-        raise CannotConnect
+    except HUB_EXCEPTIONS as err:
+        raise CannotConnect from err
     if not device_info:
         raise CannotConnect
 

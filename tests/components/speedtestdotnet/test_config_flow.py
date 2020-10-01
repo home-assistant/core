@@ -25,7 +25,8 @@ from tests.common import MockConfigEntry
 def mock_setup():
     """Mock entry setup."""
     with patch(
-        "homeassistant.components.speedtestdotnet.async_setup_entry", return_value=True,
+        "homeassistant.components.speedtestdotnet.async_setup_entry",
+        return_value=True,
     ):
         yield
 
@@ -88,7 +89,12 @@ async def test_import_success(hass, mock_setup):
 
 async def test_options(hass):
     """Test updating options."""
-    entry = MockConfigEntry(domain=DOMAIN, title="SpeedTest", data={}, options={},)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="SpeedTest",
+        data={},
+        options={},
+    )
     entry.add_to_hass(hass)
 
     with patch("speedtest.Speedtest") as mock_api:
@@ -102,7 +108,7 @@ async def test_options(hass):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={
-                CONF_SERVER_NAME: "Country1 - Server1",
+                CONF_SERVER_NAME: "Country1 - Sponsor1 - Server1",
                 CONF_SCAN_INTERVAL: 30,
                 CONF_MANUAL: False,
             },
@@ -110,7 +116,7 @@ async def test_options(hass):
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["data"] == {
-            CONF_SERVER_NAME: "Country1 - Server1",
+            CONF_SERVER_NAME: "Country1 - Sponsor1 - Server1",
             CONF_SERVER_ID: "1",
             CONF_SCAN_INTERVAL: 30,
             CONF_MANUAL: False,
@@ -119,7 +125,11 @@ async def test_options(hass):
 
 async def test_integration_already_configured(hass):
     """Test integration is already configured."""
-    entry = MockConfigEntry(domain=DOMAIN, data={}, options={},)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        options={},
+    )
     entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
         speedtestdotnet.DOMAIN, context={"source": "user"}

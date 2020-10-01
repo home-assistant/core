@@ -18,7 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.restore_state import RestoreEntity
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
@@ -130,8 +130,10 @@ class DerivativeSensor(RestoreEntity):
                 _LOGGER.warning("Could not restore last state: %s", err)
 
         @callback
-        def calc_derivative(entity, old_state, new_state):
+        def calc_derivative(event):
             """Handle the sensor state changes."""
+            old_state = event.data.get("old_state")
+            new_state = event.data.get("new_state")
             if (
                 old_state is None
                 or old_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]
@@ -184,7 +186,9 @@ class DerivativeSensor(RestoreEntity):
                 self._state = derivative
                 self.async_write_ha_state()
 
-        async_track_state_change(self.hass, self._sensor_source_id, calc_derivative)
+        async_track_state_change_event(
+            self.hass, [self._sensor_source_id], calc_derivative
+        )
 
     @property
     def name(self):

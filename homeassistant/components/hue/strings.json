@@ -58,7 +58,7 @@
     "step": {
       "init": {
         "data": {
-          "allow_how_groups": "Allow Hue groups",
+          "allow_hue_groups": "Allow Hue groups",
           "allow_unreachable": "Allow unreachable bulbs to report their state correctly"
         }
       }

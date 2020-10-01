@@ -16,6 +16,7 @@
             "response_error": "Unbekannter Fehler vom Ger\u00e4t",
             "unknown_connection_error": "Unbekannter Fehler beim Herstellen der Verbindung zum Ger\u00e4t"
         },
+        "flow_title": "Huawei LTE: {name}",
         "step": {
             "user": {
                 "data": {

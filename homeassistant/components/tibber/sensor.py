@@ -32,10 +32,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
             await home.update_info()
         except asyncio.TimeoutError as err:
             _LOGGER.error("Timeout connecting to Tibber home: %s ", err)
-            raise PlatformNotReady()
+            raise PlatformNotReady() from err
         except aiohttp.ClientError as err:
             _LOGGER.error("Error connecting to Tibber home: %s ", err)
-            raise PlatformNotReady()
+            raise PlatformNotReady() from err
         if home.has_active_subscription:
             dev.append(TibberSensorElPrice(home))
         if home.has_real_time_consumption:
@@ -157,8 +157,7 @@ class TibberSensorElPrice(TibberSensor):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def _fetch_data(self):
         try:
-            await self._tibber_home.update_info()
-            await self._tibber_home.update_price_info()
+            await self._tibber_home.update_info_and_price_info()
         except (asyncio.TimeoutError, aiohttp.ClientError):
             return
         data = self._tibber_home.info["viewer"]["home"]

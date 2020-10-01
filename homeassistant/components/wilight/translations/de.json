@@ -1,0 +1,10 @@
+{
+    "config": {
+        "flow_title": "WiLight: {name}",
+        "step": {
+            "confirm": {
+                "title": "WiLight"
+            }
+        }
+    }
+}

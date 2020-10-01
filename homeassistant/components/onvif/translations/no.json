@@ -35,7 +35,7 @@
                 "data": {
                     "host": "Vert",
                     "name": "Navn",
-                    "port": "Port"
+                    "port": ""
                 },
                 "title": "Konfigurere ONVIF-enhet"
             },

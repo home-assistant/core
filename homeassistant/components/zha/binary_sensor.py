@@ -80,7 +80,7 @@ class BinarySensor(ZhaEntity, BinarySensorEntity):
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
         await self.get_device_class()
-        await self.async_accept_signal(
+        self.async_accept_signal(
             self._channel, SIGNAL_ATTR_UPDATED, self.async_set_state
         )
 

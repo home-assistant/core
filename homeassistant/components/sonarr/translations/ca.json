@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "El servei ja est\u00e0 configurat",
+            "reauth_successful": "Re-autenticaci\u00f3 exitosa",
             "unknown": "Error inesperat"
         },
         "error": {
@@ -10,6 +11,10 @@
         },
         "flow_title": "Sonarr: {name}",
         "step": {
+            "reauth_confirm": {
+                "description": "La integraci\u00f3 de Sonarr ha de tornar a autenticar-se manualment amb l'API de Sonarr allotjada a: {host}",
+                "title": "Re-autenticaci\u00f3 amb Sonarr"
+            },
             "user": {
                 "data": {
                     "api_key": "Clau API",

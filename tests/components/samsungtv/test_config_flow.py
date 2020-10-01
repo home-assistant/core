@@ -180,7 +180,8 @@ async def test_user_legacy_not_supported(hass):
 async def test_user_websocket_not_supported(hass):
     """Test starting a flow by user for not supported device."""
     with patch(
-        "homeassistant.components.samsungtv.bridge.Remote", side_effect=OSError("Boom"),
+        "homeassistant.components.samsungtv.bridge.Remote",
+        side_effect=OSError("Boom"),
     ), patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWS",
         side_effect=WebSocketProtocolException("Boom"),
@@ -198,7 +199,8 @@ async def test_user_websocket_not_supported(hass):
 async def test_user_not_successful(hass):
     """Test starting a flow by user but no connection found."""
     with patch(
-        "homeassistant.components.samsungtv.bridge.Remote", side_effect=OSError("Boom"),
+        "homeassistant.components.samsungtv.bridge.Remote",
+        side_effect=OSError("Boom"),
     ), patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWS",
         side_effect=OSError("Boom"),
@@ -215,7 +217,8 @@ async def test_user_not_successful(hass):
 async def test_user_not_successful_2(hass):
     """Test starting a flow by user but no connection found."""
     with patch(
-        "homeassistant.components.samsungtv.bridge.Remote", side_effect=OSError("Boom"),
+        "homeassistant.components.samsungtv.bridge.Remote",
+        side_effect=OSError("Boom"),
     ), patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWS",
         side_effect=ConnectionFailure("Boom"),
@@ -339,7 +342,8 @@ async def test_ssdp_legacy_not_supported(hass):
 async def test_ssdp_websocket_not_supported(hass):
     """Test starting a flow from discovery for not supported device."""
     with patch(
-        "homeassistant.components.samsungtv.bridge.Remote", side_effect=OSError("Boom"),
+        "homeassistant.components.samsungtv.bridge.Remote",
+        side_effect=OSError("Boom"),
     ), patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWS",
         side_effect=WebSocketProtocolException("Boom"),
@@ -364,7 +368,8 @@ async def test_ssdp_websocket_not_supported(hass):
 async def test_ssdp_not_successful(hass):
     """Test starting a flow from discovery but no device found."""
     with patch(
-        "homeassistant.components.samsungtv.bridge.Remote", side_effect=OSError("Boom"),
+        "homeassistant.components.samsungtv.bridge.Remote",
+        side_effect=OSError("Boom"),
     ), patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWS",
         side_effect=OSError("Boom"),
@@ -390,7 +395,8 @@ async def test_ssdp_not_successful(hass):
 async def test_ssdp_not_successful_2(hass):
     """Test starting a flow from discovery but no device found."""
     with patch(
-        "homeassistant.components.samsungtv.bridge.Remote", side_effect=OSError("Boom"),
+        "homeassistant.components.samsungtv.bridge.Remote",
+        side_effect=OSError("Boom"),
     ), patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWS",
         side_effect=ConnectionFailure("Boom"),
@@ -460,7 +466,8 @@ async def test_ssdp_already_configured(hass, remote):
 async def test_autodetect_websocket(hass, remote, remotews):
     """Test for send key with autodetection of protocol."""
     with patch(
-        "homeassistant.components.samsungtv.bridge.Remote", side_effect=OSError("Boom"),
+        "homeassistant.components.samsungtv.bridge.Remote",
+        side_effect=OSError("Boom"),
     ), patch("homeassistant.components.samsungtv.bridge.SamsungTVWS") as remotews:
         enter = Mock()
         type(enter).token = PropertyMock(return_value="123456789")
@@ -482,7 +489,8 @@ async def test_autodetect_websocket(hass, remote, remotews):
 async def test_autodetect_websocket_ssl(hass, remote, remotews):
     """Test for send key with autodetection of protocol."""
     with patch(
-        "homeassistant.components.samsungtv.bridge.Remote", side_effect=OSError("Boom"),
+        "homeassistant.components.samsungtv.bridge.Remote",
+        side_effect=OSError("Boom"),
     ), patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWS",
         side_effect=[WebSocketProtocolException("Boom"), DEFAULT_MOCK],
@@ -552,7 +560,8 @@ async def test_autodetect_legacy(hass, remote):
 async def test_autodetect_none(hass, remote, remotews):
     """Test for send key with autodetection of protocol."""
     with patch(
-        "homeassistant.components.samsungtv.bridge.Remote", side_effect=OSError("Boom"),
+        "homeassistant.components.samsungtv.bridge.Remote",
+        side_effect=OSError("Boom"),
     ) as remote, patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWS",
         side_effect=OSError("Boom"),

@@ -59,7 +59,7 @@
       },
       "options_binary": {
         "title": "Configure Binary Sensor",
-        "description": "Please select the options for the binary sensor attached to {zone}",
+        "description": "{zone} options",
         "data": {
           "type": "Binary Sensor Type",
           "name": "Name (optional)",
@@ -68,7 +68,7 @@
       },
       "options_digital": {
         "title": "Configure Digital Sensor",
-        "description": "Please select the options for the digital sensor attached to {zone}",
+        "description": "{zone} options",
         "data": {
           "type": "Sensor Type",
           "name": "Name (optional)",
@@ -77,7 +77,7 @@
       },
       "options_switch": {
         "title": "Configure Switchable Output",
-        "description": "Please select the output options for {zone}: state {state}",
+        "description": "{zone} options: state {state}",
         "data": {
           "name": "Name (optional)",
           "activation": "Output when on",
@@ -91,6 +91,7 @@
         "title": "Configure Misc",
         "description": "Please select the desired behavior for your panel",
         "data": {
+          "discovery": "Respond to discovery requests on your network",
           "blink": "Blink panel LED on when sending state change",
           "override_api_host": "Override default Home Assistant API host panel URL",
           "api_host": "Override API host URL (optional)"

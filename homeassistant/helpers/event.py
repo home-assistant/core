@@ -1,13 +1,27 @@
 """Helpers for listening to events."""
+import asyncio
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 import functools as ft
 import logging
 import time
-from typing import Any, Awaitable, Callable, Dict, Iterable, Optional, Union
+from typing import (
+    Any,
+    Awaitable,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    Union,
+)
 
 import attr
 
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     ATTR_NOW,
     EVENT_CORE_CONFIG_UPDATE,
     EVENT_STATE_CHANGED,
@@ -16,20 +30,87 @@ from homeassistant.const import (
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
 )
-from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, State, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    HomeAssistant,
+    State,
+    callback,
+    split_entity_id,
+)
+from homeassistant.exceptions import TemplateError
+from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
 from homeassistant.helpers.sun import get_astral_event_next
-from homeassistant.helpers.template import Template
+from homeassistant.helpers.template import RenderInfo, Template, result_as_boolean
+from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
 
+MAX_TIME_TRACKING_ERROR = 0.001
+
 TRACK_STATE_CHANGE_CALLBACKS = "track_state_change_callbacks"
 TRACK_STATE_CHANGE_LISTENER = "track_state_change_listener"
 
+TRACK_STATE_ADDED_DOMAIN_CALLBACKS = "track_state_added_domain_callbacks"
+TRACK_STATE_ADDED_DOMAIN_LISTENER = "track_state_added_domain_listener"
+
+TRACK_STATE_REMOVED_DOMAIN_CALLBACKS = "track_state_removed_domain_callbacks"
+TRACK_STATE_REMOVED_DOMAIN_LISTENER = "track_state_removed_domain_listener"
+
+TRACK_ENTITY_REGISTRY_UPDATED_CALLBACKS = "track_entity_registry_updated_callbacks"
+TRACK_ENTITY_REGISTRY_UPDATED_LISTENER = "track_entity_registry_updated_listener"
+
+_ALL_LISTENER = "all"
+_DOMAINS_LISTENER = "domains"
+_ENTITIES_LISTENER = "entities"
+
 _LOGGER = logging.getLogger(__name__)
 
-# PyLint does not like the use of threaded_listener_factory
-# pylint: disable=invalid-name
+
+@dataclass
+class TrackStates:
+    """Class for keeping track of states being tracked.
+
+    all_states: All states on the system are being tracked
+    entities: Entities to track
+    domains: Domains to track
+    """
+
+    all_states: bool
+    entities: Set
+    domains: Set
+
+
+@dataclass
+class TrackTemplate:
+    """Class for keeping track of a template with variables.
+
+    The template is template to calculate.
+    The variables are variables to pass to the template.
+    """
+
+    template: Template
+    variables: TemplateVarsType
+
+
+@dataclass
+class TrackTemplateResult:
+    """Class for result of template tracking.
+
+    template
+        The template that has changed.
+    last_result
+        The output from the template on the last successful run, or None
+        if no previous successful run.
+    result
+        Result from the template run. This will be a string or an
+        TemplateError if the template resulted in an error.
+    """
+
+    template: Template
+    last_result: Union[str, None, TemplateError]
+    result: Union[str, TemplateError]
 
 
 def threaded_listener_factory(async_factory: Callable[..., Any]) -> CALLBACK_TYPE:
@@ -135,7 +216,9 @@ track_state_change = threaded_listener_factory(async_track_state_change)
 
 @bind_hass
 def async_track_state_change_event(
-    hass: HomeAssistant, entity_ids: Iterable[str], action: Callable[[Event], None]
+    hass: HomeAssistant,
+    entity_ids: Union[str, Iterable[str]],
+    action: Callable[[Event], Any],
 ) -> Callable[[], None]:
     """Track specific state change events indexed by entity_id.
 
@@ -161,7 +244,7 @@ def async_track_state_change_event(
             if entity_id not in entity_callbacks:
                 return
 
-            for action in entity_callbacks[entity_id]:
+            for action in entity_callbacks[entity_id][:]:
                 try:
                     hass.async_run_job(action, event)
                 except Exception:  # pylint: disable=broad-except
@@ -173,37 +256,366 @@ def async_track_state_change_event(
             EVENT_STATE_CHANGED, _async_state_change_dispatcher
         )
 
-    entity_ids = [entity_id.lower() for entity_id in entity_ids]
+    entity_ids = _async_string_to_lower_list(entity_ids)
 
     for entity_id in entity_ids:
-        if entity_id not in entity_callbacks:
-            entity_callbacks[entity_id] = []
-
-        entity_callbacks[entity_id].append(action)
+        entity_callbacks.setdefault(entity_id, []).append(action)
 
     @callback
     def remove_listener() -> None:
         """Remove state change listener."""
-        _async_remove_state_change_listeners(hass, entity_ids, action)
+        _async_remove_indexed_listeners(
+            hass,
+            TRACK_STATE_CHANGE_CALLBACKS,
+            TRACK_STATE_CHANGE_LISTENER,
+            entity_ids,
+            action,
+        )
 
     return remove_listener
 
 
 @callback
-def _async_remove_state_change_listeners(
-    hass: HomeAssistant, entity_ids: Iterable[str], action: Callable[[Event], None]
+def _async_remove_indexed_listeners(
+    hass: HomeAssistant,
+    data_key: str,
+    listener_key: str,
+    storage_keys: Iterable[str],
+    action: Callable[[Event], Any],
 ) -> None:
     """Remove a listener."""
-    entity_callbacks = hass.data[TRACK_STATE_CHANGE_CALLBACKS]
+
+    callbacks = hass.data[data_key]
+
+    for storage_key in storage_keys:
+        callbacks[storage_key].remove(action)
+        if len(callbacks[storage_key]) == 0:
+            del callbacks[storage_key]
+
+    if not callbacks:
+        hass.data[listener_key]()
+        del hass.data[listener_key]
+
+
+@bind_hass
+def async_track_entity_registry_updated_event(
+    hass: HomeAssistant,
+    entity_ids: Union[str, Iterable[str]],
+    action: Callable[[Event], Any],
+) -> Callable[[], None]:
+    """Track specific entity registry updated events indexed by entity_id.
+
+    Similar to async_track_state_change_event.
+    """
+
+    entity_callbacks = hass.data.setdefault(TRACK_ENTITY_REGISTRY_UPDATED_CALLBACKS, {})
+
+    if TRACK_ENTITY_REGISTRY_UPDATED_LISTENER not in hass.data:
+
+        @callback
+        def _async_entity_registry_updated_dispatcher(event: Event) -> None:
+            """Dispatch entity registry updates by entity_id."""
+            entity_id = event.data.get("old_entity_id", event.data["entity_id"])
+
+            if entity_id not in entity_callbacks:
+                return
+
+            for action in entity_callbacks[entity_id][:]:
+                try:
+                    hass.async_run_job(action, event)
+                except Exception:  # pylint: disable=broad-except
+                    _LOGGER.exception(
+                        "Error while processing entity registry update for %s",
+                        entity_id,
+                    )
+
+        hass.data[TRACK_ENTITY_REGISTRY_UPDATED_LISTENER] = hass.bus.async_listen(
+            EVENT_ENTITY_REGISTRY_UPDATED, _async_entity_registry_updated_dispatcher
+        )
+
+    entity_ids = _async_string_to_lower_list(entity_ids)
 
     for entity_id in entity_ids:
-        entity_callbacks[entity_id].remove(action)
-        if len(entity_callbacks[entity_id]) == 0:
-            del entity_callbacks[entity_id]
+        entity_callbacks.setdefault(entity_id, []).append(action)
 
-    if not entity_callbacks:
-        hass.data[TRACK_STATE_CHANGE_LISTENER]()
-        del hass.data[TRACK_STATE_CHANGE_LISTENER]
+    @callback
+    def remove_listener() -> None:
+        """Remove state change listener."""
+        _async_remove_indexed_listeners(
+            hass,
+            TRACK_ENTITY_REGISTRY_UPDATED_CALLBACKS,
+            TRACK_ENTITY_REGISTRY_UPDATED_LISTENER,
+            entity_ids,
+            action,
+        )
+
+    return remove_listener
+
+
+@callback
+def _async_dispatch_domain_event(
+    hass: HomeAssistant, event: Event, callbacks: Dict[str, List]
+) -> None:
+    domain = split_entity_id(event.data["entity_id"])[0]
+
+    if domain not in callbacks and MATCH_ALL not in callbacks:
+        return
+
+    listeners = callbacks.get(domain, []) + callbacks.get(MATCH_ALL, [])
+
+    for action in listeners:
+        try:
+            hass.async_run_job(action, event)
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception(
+                "Error while processing event %s for domain %s", event, domain
+            )
+
+
+@bind_hass
+def async_track_state_added_domain(
+    hass: HomeAssistant,
+    domains: Union[str, Iterable[str]],
+    action: Callable[[Event], Any],
+) -> Callable[[], None]:
+    """Track state change events when an entity is added to domains."""
+
+    domain_callbacks = hass.data.setdefault(TRACK_STATE_ADDED_DOMAIN_CALLBACKS, {})
+
+    if TRACK_STATE_ADDED_DOMAIN_LISTENER not in hass.data:
+
+        @callback
+        def _async_state_change_dispatcher(event: Event) -> None:
+            """Dispatch state changes by entity_id."""
+            if event.data.get("old_state") is not None:
+                return
+
+            _async_dispatch_domain_event(hass, event, domain_callbacks)
+
+        hass.data[TRACK_STATE_ADDED_DOMAIN_LISTENER] = hass.bus.async_listen(
+            EVENT_STATE_CHANGED, _async_state_change_dispatcher
+        )
+
+    domains = _async_string_to_lower_list(domains)
+
+    for domain in domains:
+        domain_callbacks.setdefault(domain, []).append(action)
+
+    @callback
+    def remove_listener() -> None:
+        """Remove state change listener."""
+        _async_remove_indexed_listeners(
+            hass,
+            TRACK_STATE_ADDED_DOMAIN_CALLBACKS,
+            TRACK_STATE_ADDED_DOMAIN_LISTENER,
+            domains,
+            action,
+        )
+
+    return remove_listener
+
+
+@bind_hass
+def async_track_state_removed_domain(
+    hass: HomeAssistant,
+    domains: Union[str, Iterable[str]],
+    action: Callable[[Event], Any],
+) -> Callable[[], None]:
+    """Track state change events when an entity is removed from domains."""
+
+    domain_callbacks = hass.data.setdefault(TRACK_STATE_REMOVED_DOMAIN_CALLBACKS, {})
+
+    if TRACK_STATE_REMOVED_DOMAIN_LISTENER not in hass.data:
+
+        @callback
+        def _async_state_change_dispatcher(event: Event) -> None:
+            """Dispatch state changes by entity_id."""
+            if event.data.get("new_state") is not None:
+                return
+
+            _async_dispatch_domain_event(hass, event, domain_callbacks)
+
+        hass.data[TRACK_STATE_REMOVED_DOMAIN_LISTENER] = hass.bus.async_listen(
+            EVENT_STATE_CHANGED, _async_state_change_dispatcher
+        )
+
+    domains = _async_string_to_lower_list(domains)
+
+    for domain in domains:
+        domain_callbacks.setdefault(domain, []).append(action)
+
+    @callback
+    def remove_listener() -> None:
+        """Remove state change listener."""
+        _async_remove_indexed_listeners(
+            hass,
+            TRACK_STATE_REMOVED_DOMAIN_CALLBACKS,
+            TRACK_STATE_REMOVED_DOMAIN_LISTENER,
+            domains,
+            action,
+        )
+
+    return remove_listener
+
+
+@callback
+def _async_string_to_lower_list(instr: Union[str, Iterable[str]]) -> List[str]:
+    if isinstance(instr, str):
+        return [instr.lower()]
+
+    return [mstr.lower() for mstr in instr]
+
+
+class _TrackStateChangeFiltered:
+    """Handle removal / refresh of tracker."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        track_states: TrackStates,
+        action: Callable[[Event], Any],
+    ):
+        """Handle removal / refresh of tracker init."""
+        self.hass = hass
+        self._action = action
+        self._listeners: Dict[str, Callable] = {}
+        self._last_track_states: TrackStates = track_states
+
+    @callback
+    def async_setup(self) -> None:
+        """Create listeners to track states."""
+        track_states = self._last_track_states
+
+        if (
+            not track_states.all_states
+            and not track_states.domains
+            and not track_states.entities
+        ):
+            return
+
+        if track_states.all_states:
+            self._setup_all_listener()
+            return
+
+        self._setup_domains_listener(track_states.domains)
+        self._setup_entities_listener(track_states.domains, track_states.entities)
+
+    @property
+    def listeners(self) -> Dict:
+        """State changes that will cause a re-render."""
+        track_states = self._last_track_states
+        return {
+            _ALL_LISTENER: track_states.all_states,
+            _ENTITIES_LISTENER: track_states.entities,
+            _DOMAINS_LISTENER: track_states.domains,
+        }
+
+    @callback
+    def async_update_listeners(self, new_track_states: TrackStates) -> None:
+        """Update the listeners based on the new TrackStates."""
+        last_track_states = self._last_track_states
+        self._last_track_states = new_track_states
+
+        had_all_listener = last_track_states.all_states
+
+        if new_track_states.all_states:
+            if had_all_listener:
+                return
+            self._cancel_listener(_DOMAINS_LISTENER)
+            self._cancel_listener(_ENTITIES_LISTENER)
+            self._setup_all_listener()
+            return
+
+        if had_all_listener:
+            self._cancel_listener(_ALL_LISTENER)
+
+        domains_changed = new_track_states.domains != last_track_states.domains
+
+        if had_all_listener or domains_changed:
+            domains_changed = True
+            self._cancel_listener(_DOMAINS_LISTENER)
+            self._setup_domains_listener(new_track_states.domains)
+
+        if (
+            had_all_listener
+            or domains_changed
+            or new_track_states.entities != last_track_states.entities
+        ):
+            self._cancel_listener(_ENTITIES_LISTENER)
+            self._setup_entities_listener(
+                new_track_states.domains, new_track_states.entities
+            )
+
+    @callback
+    def async_remove(self) -> None:
+        """Cancel the listeners."""
+        for key in list(self._listeners):
+            self._listeners.pop(key)()
+
+    @callback
+    def _cancel_listener(self, listener_name: str) -> None:
+        if listener_name not in self._listeners:
+            return
+
+        self._listeners.pop(listener_name)()
+
+    @callback
+    def _setup_entities_listener(self, domains: Set, entities: Set) -> None:
+        if domains:
+            entities = entities.copy()
+            entities.update(self.hass.states.async_entity_ids(domains))
+
+        # Entities has changed to none
+        if not entities:
+            return
+
+        self._listeners[_ENTITIES_LISTENER] = async_track_state_change_event(
+            self.hass, entities, self._action
+        )
+
+    @callback
+    def _setup_domains_listener(self, domains: Set) -> None:
+        if not domains:
+            return
+
+        self._listeners[_DOMAINS_LISTENER] = async_track_state_added_domain(
+            self.hass, domains, self._action
+        )
+
+    @callback
+    def _setup_all_listener(self) -> None:
+        self._listeners[_ALL_LISTENER] = self.hass.bus.async_listen(
+            EVENT_STATE_CHANGED, self._action
+        )
+
+
+@callback
+@bind_hass
+def async_track_state_change_filtered(
+    hass: HomeAssistant,
+    track_states: TrackStates,
+    action: Callable[[Event], Any],
+) -> _TrackStateChangeFiltered:
+    """Track state changes with a TrackStates filter that can be updated.
+
+    Parameters
+    ----------
+    hass
+        Home assistant object.
+    track_states
+        A TrackStates data class.
+    action
+        Callable to call with results.
+
+    Returns
+    -------
+    Object used to update the listeners (async_update_listeners) with a new TrackStates or
+    cancel the tracking (async_remove).
+
+    """
+    tracker = _TrackStateChangeFiltered(hass, track_states, action)
+    tracker.async_setup()
+    return tracker
 
 
 @callback
@@ -211,34 +623,286 @@ def _async_remove_state_change_listeners(
 def async_track_template(
     hass: HomeAssistant,
     template: Template,
-    action: Callable[[str, State, State], None],
-    variables: Optional[Dict[str, Any]] = None,
-) -> CALLBACK_TYPE:
-    """Add a listener that track state changes with template condition."""
-    from . import condition  # pylint: disable=import-outside-toplevel
+    action: Callable[[str, Optional[State], Optional[State]], None],
+    variables: Optional[TemplateVarsType] = None,
+) -> Callable[[], None]:
+    """Add a listener that fires when a a template evaluates to 'true'.
 
-    # Local variable to keep track of if the action has already been triggered
-    already_triggered = False
+    Listen for the result of the template becoming true, or a true-like
+    string result, such as 'On', 'Open', or 'Yes'. If the template results
+    in an error state when the value changes, this will be logged and not
+    passed through.
+
+    If the initial check of the template is invalid and results in an
+    exception, the listener will still be registered but will only
+    fire if the template result becomes true without an exception.
+
+    Action arguments
+    ----------------
+    entity_id
+        ID of the entity that triggered the state change.
+    old_state
+        The old state of the entity that changed.
+    new_state
+        New state of the entity that changed.
+
+    Parameters
+    ----------
+    hass
+        Home assistant object.
+    template
+        The template to calculate.
+    action
+        Callable to call with results. See above for arguments.
+    variables
+        Variables to pass to the template.
+
+    Returns
+    -------
+    Callable to unregister the listener.
+
+    """
 
     @callback
-    def template_condition_listener(entity_id: str, from_s: State, to_s: State) -> None:
+    def _template_changed_listener(
+        event: Event, updates: List[TrackTemplateResult]
+    ) -> None:
         """Check if condition is correct and run action."""
-        nonlocal already_triggered
-        template_result = condition.async_template(hass, template, variables)
+        track_result = updates.pop()
 
-        # Check to see if template returns true
-        if template_result and not already_triggered:
-            already_triggered = True
-            hass.async_run_job(action, entity_id, from_s, to_s)
-        elif not template_result:
-            already_triggered = False
+        template = track_result.template
+        last_result = track_result.last_result
+        result = track_result.result
 
-    return async_track_state_change(
-        hass, template.extract_entities(variables), template_condition_listener
+        if isinstance(result, TemplateError):
+            _LOGGER.error(
+                "Error while processing template: %s",
+                template.template,
+                exc_info=result,
+            )
+            return
+
+        if (
+            not isinstance(last_result, TemplateError)
+            and result_as_boolean(last_result)
+            or not result_as_boolean(result)
+        ):
+            return
+
+        hass.async_run_job(
+            action,
+            event.data.get("entity_id"),
+            event.data.get("old_state"),
+            event.data.get("new_state"),
+        )
+
+    info = async_track_template_result(
+        hass, [TrackTemplate(template, variables)], _template_changed_listener
     )
+
+    return info.async_remove
 
 
 track_template = threaded_listener_factory(async_track_template)
+
+
+class _TrackTemplateResultInfo:
+    """Handle removal / refresh of tracker."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        track_templates: Iterable[TrackTemplate],
+        action: Callable,
+    ):
+        """Handle removal / refresh of tracker init."""
+        self.hass = hass
+        self._action = action
+
+        for track_template_ in track_templates:
+            track_template_.template.hass = hass
+        self._track_templates = track_templates
+
+        self._last_result: Dict[Template, Union[str, TemplateError]] = {}
+        self._info: Dict[Template, RenderInfo] = {}
+        self._track_state_changes: Optional[_TrackStateChangeFiltered] = None
+
+    def async_setup(self, raise_on_template_error: bool) -> None:
+        """Activation of template tracking."""
+        for track_template_ in self._track_templates:
+            template = track_template_.template
+            variables = track_template_.variables
+
+            self._info[template] = template.async_render_to_info(variables)
+            if self._info[template].exception:
+                if raise_on_template_error:
+                    raise self._info[template].exception
+                _LOGGER.error(
+                    "Error while processing template: %s",
+                    track_template_.template,
+                    exc_info=self._info[template].exception,
+                )
+
+        self._track_state_changes = async_track_state_change_filtered(
+            self.hass, _render_infos_to_track_states(self._info.values()), self._refresh
+        )
+        _LOGGER.debug(
+            "Template group %s listens for %s",
+            self._track_templates,
+            self.listeners,
+        )
+
+    @property
+    def listeners(self) -> Dict:
+        """State changes that will cause a re-render."""
+        assert self._track_state_changes
+        return self._track_state_changes.listeners
+
+    @callback
+    def async_remove(self) -> None:
+        """Cancel the listener."""
+        assert self._track_state_changes
+        self._track_state_changes.async_remove()
+
+    @callback
+    def async_refresh(self) -> None:
+        """Force recalculate the template."""
+        self._refresh(None)
+
+    @callback
+    def _event_triggers_template(self, template: Template, event: Event) -> bool:
+        """Determine if a template should be re-rendered from an event."""
+        entity_id = event.data.get(ATTR_ENTITY_ID)
+        return (
+            self._info[template].filter(entity_id)
+            or event.data.get("new_state") is None
+            or event.data.get("old_state") is None
+            and self._info[template].filter_lifecycle(entity_id)
+        )
+
+    @callback
+    def _refresh(self, event: Optional[Event]) -> None:
+        updates = []
+        info_changed = False
+
+        for track_template_ in self._track_templates:
+            template = track_template_.template
+            if event:
+                if not self._event_triggers_template(template, event):
+                    continue
+
+                _LOGGER.debug(
+                    "Template update %s triggered by event: %s",
+                    template.template,
+                    event,
+                )
+
+            self._info[template] = template.async_render_to_info(
+                track_template_.variables
+            )
+            info_changed = True
+
+            try:
+                result: Union[str, TemplateError] = self._info[template].result()
+            except TemplateError as ex:
+                result = ex
+
+            last_result = self._last_result.get(template)
+
+            # Check to see if the result has changed
+            if result == last_result:
+                continue
+
+            if isinstance(result, TemplateError) and isinstance(
+                last_result, TemplateError
+            ):
+                continue
+
+            updates.append(TrackTemplateResult(template, last_result, result))
+
+        if info_changed:
+            assert self._track_state_changes
+            self._track_state_changes.async_update_listeners(
+                _render_infos_to_track_states(self._info.values()),
+            )
+            _LOGGER.debug(
+                "Template group %s listens for %s",
+                self._track_templates,
+                self.listeners,
+            )
+
+        if not updates:
+            return
+
+        for track_result in updates:
+            self._last_result[track_result.template] = track_result.result
+
+        self.hass.async_run_job(self._action, event, updates)
+
+
+TrackTemplateResultListener = Callable[
+    [
+        Event,
+        List[TrackTemplateResult],
+    ],
+    None,
+]
+"""Type for the listener for template results.
+
+    Action arguments
+    ----------------
+    event
+        Event that caused the template to change output. None if not
+        triggered by an event.
+    updates
+        A list of TrackTemplateResult
+"""
+
+
+@callback
+@bind_hass
+def async_track_template_result(
+    hass: HomeAssistant,
+    track_templates: Iterable[TrackTemplate],
+    action: TrackTemplateResultListener,
+    raise_on_template_error: bool = False,
+) -> _TrackTemplateResultInfo:
+    """Add a listener that fires when a the result of a template changes.
+
+    The action will fire with the initial result from the template, and
+    then whenever the output from the template changes. The template will
+    be reevaluated if any states referenced in the last run of the
+    template change, or if manually triggered. If the result of the
+    evaluation is different from the previous run, the listener is passed
+    the result.
+
+    If the template results in an TemplateError, this will be returned to
+    the listener the first time this happens but not for subsequent errors.
+    Once the template returns to a non-error condition the result is sent
+    to the action as usual.
+
+    Parameters
+    ----------
+    hass
+        Home assistant object.
+    track_templates
+        An iterable of TrackTemplate.
+    action
+        Callable to call with results.
+    raise_on_template_error
+        When set to True, if there is an exception
+        processing the template during setup, the system
+        will raise the exception instead of setting up
+        tracking.
+
+    Returns
+    -------
+    Info object used to unregister the listener, and refresh the template.
+
+    """
+    tracker = _TrackTemplateResultInfo(hass, track_templates, action)
+    tracker.async_setup(raise_on_template_error)
+    return tracker
 
 
 @callback
@@ -247,7 +911,7 @@ def async_track_same_state(
     hass: HomeAssistant,
     period: timedelta,
     action: Callable[..., None],
-    async_check_same_func: Callable[[str, State, State], bool],
+    async_check_same_func: Callable[[str, Optional[State], Optional[State]], bool],
     entity_ids: Union[str, Iterable[str]] = MATCH_ALL,
 ) -> CALLBACK_TYPE:
     """Track the state of entities for a period and run an action.
@@ -279,10 +943,12 @@ def async_track_same_state(
         hass.async_run_job(action)
 
     @callback
-    def state_for_cancel_listener(
-        entity: str, from_state: State, to_state: State
-    ) -> None:
+    def state_for_cancel_listener(event: Event) -> None:
         """Fire on changes and cancel for listener if changed."""
+        entity: str = event.data["entity_id"]
+        from_state: Optional[State] = event.data.get("old_state")
+        to_state: Optional[State] = event.data.get("new_state")
+
         if not async_check_same_func(entity, from_state, to_state):
             clear_listener()
 
@@ -290,9 +956,16 @@ def async_track_same_state(
         hass, state_for_listener, dt_util.utcnow() + period
     )
 
-    async_remove_state_for_cancel = async_track_state_change(
-        hass, entity_ids, state_for_cancel_listener
-    )
+    if entity_ids == MATCH_ALL:
+        async_remove_state_for_cancel = hass.bus.async_listen(
+            EVENT_STATE_CHANGED, state_for_cancel_listener
+        )
+    else:
+        async_remove_state_for_cancel = async_track_state_change_event(
+            hass,
+            [entity_ids] if isinstance(entity_ids, str) else entity_ids,
+            state_for_cancel_listener,
+        )
 
     return clear_listener
 
@@ -306,14 +979,13 @@ def async_track_point_in_time(
     hass: HomeAssistant, action: Callable[..., None], point_in_time: datetime
 ) -> CALLBACK_TYPE:
     """Add a listener that fires once after a specific point in time."""
-    utc_point_in_time = dt_util.as_utc(point_in_time)
 
     @callback
     def utc_converter(utc_now: datetime) -> None:
         """Convert passed in UTC now to local now."""
         hass.async_run_job(action, dt_util.as_local(utc_now))
 
-    return async_track_point_in_utc_time(hass, utc_converter, utc_point_in_time)
+    return async_track_point_in_utc_time(hass, utc_converter, point_in_time)
 
 
 track_point_in_time = threaded_listener_factory(async_track_point_in_time)
@@ -326,16 +998,13 @@ def async_track_point_in_utc_time(
 ) -> CALLBACK_TYPE:
     """Add a listener that fires once after a specific point in UTC time."""
     # Ensure point_in_time is UTC
-    point_in_time = dt_util.as_utc(point_in_time)
-
-    @callback
-    def point_in_time_listener() -> None:
-        """Listen for matching time_changed events."""
-        hass.async_run_job(action, point_in_time)
+    utc_point_in_time = dt_util.as_utc(point_in_time)
 
     cancel_callback = hass.loop.call_at(
         hass.loop.time() + point_in_time.timestamp() - time.time(),
-        point_in_time_listener,
+        hass.async_run_job,
+        action,
+        utc_point_in_time,
     )
 
     @callback
@@ -400,7 +1069,7 @@ track_time_interval = threaded_listener_factory(async_track_time_interval)
 class SunListener:
     """Helper class to help listen to sun events."""
 
-    hass = attr.ib(type=HomeAssistant)
+    hass: HomeAssistant = attr.ib()
     action: Callable[..., None] = attr.ib()
     event: str = attr.ib()
     offset: Optional[timedelta] = attr.ib()
@@ -483,6 +1152,9 @@ def async_track_sunset(
 
 track_sunset = threaded_listener_factory(async_track_sunset)
 
+# For targeted patching in tests
+pattern_utc_now = dt_util.utcnow
+
 
 @callback
 @bind_hass
@@ -510,7 +1182,7 @@ def async_track_utc_time_change(
     matching_minutes = dt_util.parse_time_expression(minute, 0, 59)
     matching_hours = dt_util.parse_time_expression(hour, 0, 23)
 
-    next_time = None
+    next_time: datetime = dt_util.utcnow()
 
     def calculate_next(now: datetime) -> None:
         """Calculate and set the next time the trigger should fire."""
@@ -523,29 +1195,64 @@ def async_track_utc_time_change(
 
     # Make sure rolling back the clock doesn't prevent the timer from
     # triggering.
-    last_now: Optional[datetime] = None
+    cancel_callback: Optional[asyncio.TimerHandle] = None
+    calculate_next(next_time)
 
     @callback
-    def pattern_time_change_listener(event: Event) -> None:
+    def pattern_time_change_listener() -> None:
         """Listen for matching time_changed events."""
-        nonlocal next_time, last_now
+        nonlocal next_time, cancel_callback
 
-        now = event.data[ATTR_NOW]
+        now = pattern_utc_now()
+        hass.async_run_job(action, dt_util.as_local(now) if local else now)
 
-        if last_now is None or now < last_now:
-            # Time rolled back or next time not yet calculated
-            calculate_next(now)
+        calculate_next(now + timedelta(seconds=1))
 
-        last_now = now
+        cancel_callback = hass.loop.call_at(
+            -time.time()
+            + hass.loop.time()
+            + next_time.timestamp()
+            + MAX_TIME_TRACKING_ERROR,
+            pattern_time_change_listener,
+        )
 
-        if next_time <= now:
-            hass.async_run_job(action, dt_util.as_local(now) if local else now)
-            calculate_next(now + timedelta(seconds=1))
+    # We always get time.time() first to avoid time.time()
+    # ticking forward after fetching hass.loop.time()
+    # and callback being scheduled a few microseconds early.
+    #
+    # Since we loose additional time calling `hass.loop.time()`
+    # we add MAX_TIME_TRACKING_ERROR to ensure
+    # we always schedule the call within the time window between
+    # second and the next second.
+    #
+    # For example:
+    # If the clock ticks forward 30 microseconds when fectching
+    # `hass.loop.time()` and we want the event to fire at exactly
+    # 03:00:00.000000, the event would actually fire around
+    # 02:59:59.999970. To ensure we always fire sometime between
+    # 03:00:00.000000 and 03:00:00.999999 we add
+    # MAX_TIME_TRACKING_ERROR to make up for the time
+    # lost fetching the time. This ensures we do not fire the
+    # event before the next time pattern match which would result
+    # in the event being fired again since we would otherwise
+    # potentially fire early.
+    #
+    cancel_callback = hass.loop.call_at(
+        -time.time()
+        + hass.loop.time()
+        + next_time.timestamp()
+        + MAX_TIME_TRACKING_ERROR,
+        pattern_time_change_listener,
+    )
 
-    # We can't use async_track_point_in_utc_time here because it would
-    # break in the case that the system time abruptly jumps backwards.
-    # Our custom last_now logic takes care of resolving that scenario.
-    return hass.bus.async_listen(EVENT_TIME_CHANGED, pattern_time_change_listener)
+    @callback
+    def unsub_pattern_time_change_listener() -> None:
+        """Cancel the call_later."""
+        nonlocal cancel_callback
+        assert cancel_callback is not None
+        cancel_callback.cancel()
+
+    return unsub_pattern_time_change_listener
 
 
 track_utc_time_change = threaded_listener_factory(async_track_utc_time_change)
@@ -579,3 +1286,47 @@ def process_state_match(
 
     parameter_set = set(parameter)
     return lambda state: state in parameter_set
+
+
+@callback
+def _entities_domains_from_render_infos(
+    render_infos: Iterable[RenderInfo],
+) -> Tuple[Set, Set]:
+    """Combine from multiple RenderInfo."""
+    entities = set()
+    domains = set()
+
+    for render_info in render_infos:
+        if render_info.entities:
+            entities.update(render_info.entities)
+        if render_info.domains:
+            domains.update(render_info.domains)
+        if render_info.domains_lifecycle:
+            domains.update(render_info.domains_lifecycle)
+    return entities, domains
+
+
+@callback
+def _render_infos_needs_all_listener(render_infos: Iterable[RenderInfo]) -> bool:
+    """Determine if an all listener is needed from RenderInfo."""
+    for render_info in render_infos:
+        # Tracking all states
+        if render_info.all_states or render_info.all_states_lifecycle:
+            return True
+
+        # Previous call had an exception
+        # so we do not know which states
+        # to track
+        if render_info.exception:
+            return True
+
+    return False
+
+
+@callback
+def _render_infos_to_track_states(render_infos: Iterable[RenderInfo]) -> TrackStates:
+    """Create a TrackStates dataclass from the latest RenderInfo."""
+    if _render_infos_needs_all_listener(render_infos):
+        return TrackStates(True, set(), set())
+
+    return TrackStates(False, *_entities_domains_from_render_infos(render_infos))

@@ -3,7 +3,13 @@ import logging
 
 import zigpy.zcl.clusters.smartenergy as smartenergy
 
-from homeassistant.const import LENGTH_FEET, TIME_HOURS, TIME_SECONDS
+from homeassistant.const import (
+    POWER_WATT,
+    TIME_HOURS,
+    TIME_SECONDS,
+    VOLUME_CUBIC_FEET,
+    VOLUME_CUBIC_METERS,
+)
 from homeassistant.core import callback
 
 from .. import registries, typing as zha_typing
@@ -60,9 +66,9 @@ class Metering(ZigbeeChannel):
     REPORT_CONFIG = [{"attr": "instantaneous_demand", "config": REPORT_CONFIG_DEFAULT}]
 
     unit_of_measure_map = {
-        0x00: "kW",
-        0x01: f"m³/{TIME_HOURS}",
-        0x02: f"{LENGTH_FEET}³/{TIME_HOURS}",
+        0x00: POWER_WATT,
+        0x01: f"{VOLUME_CUBIC_METERS}/{TIME_HOURS}",
+        0x02: f"{VOLUME_CUBIC_FEET}/{TIME_HOURS}",
         0x03: f"ccf/{TIME_HOURS}",
         0x04: f"US gal/{TIME_HOURS}",
         0x05: f"IMP gal/{TIME_HOURS}",
@@ -135,6 +141,12 @@ class Metering(ZigbeeChannel):
 
     def formatter_function(self, value):
         """Return formatted value for display."""
+        if self.unit_of_measurement == POWER_WATT:
+            # Zigbee spec power unit is kW, but we show the value in W
+            value_watt = value * 1000
+            if value_watt < 100:
+                return round(value_watt, 1)
+            return round(value_watt)
         return self._format_spec.format(value).lstrip()
 
 

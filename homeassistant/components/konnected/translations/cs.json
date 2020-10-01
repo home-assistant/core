@@ -8,5 +8,15 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "options_io_ext": {
+                "data": {
+                    "alarm1": "ALARM1",
+                    "alarm2_out2": "OUT2/ALARM2"
+                }
+            }
+        }
     }
 }

@@ -37,8 +37,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     except InvalidCredentialsError as err:
         _LOGGER.error("There was an error while logging in: %s", err)
         return False
-    except MyQError:
-        raise ConfigEntryNotReady
+    except MyQError as err:
+        raise ConfigEntryNotReady from err
 
     coordinator = DataUpdateCoordinator(
         hass,

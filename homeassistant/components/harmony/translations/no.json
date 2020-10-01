@@ -27,7 +27,6 @@
             "init": {
                 "data": {
                     "activity": "Standardaktiviteten som skal utf\u00f8res n\u00e5r ingen er angitt.",
-                    "activity_notify": "Oppdater gjeldende aktivitet ved starten av aktivitetsbryteren.",
                     "delay_secs": "Forsinkelsen mellom sending av kommandoer."
                 },
                 "description": "Juster alternativene for harmonihub"

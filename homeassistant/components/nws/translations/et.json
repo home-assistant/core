@@ -1,0 +1,13 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Laiuskraad",
+                    "longitude": "Pikkuskraad"
+                },
+                "title": "\u00dchendu riikliku ilmateenistusega (USA)"
+            }
+        }
+    }
+}

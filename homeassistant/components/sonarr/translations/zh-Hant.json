@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "\u670d\u52d9\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "reauth_successful": "\u5df2\u6210\u529f\u91cd\u65b0\u8a8d\u8b49",
             "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
         },
         "error": {
@@ -10,6 +11,10 @@
         },
         "flow_title": "Sonarr\uff1a{name}",
         "step": {
+            "reauth_confirm": {
+                "description": "Sonarr \u6574\u5408\u9700\u8981\u624b\u52d5\u91cd\u65b0\u8a8d\u8b49 Sonarr API\uff1a{host}",
+                "title": "\u91cd\u65b0\u8a8d\u8b49 Sonarr"
+            },
             "user": {
                 "data": {
                     "api_key": "API \u5bc6\u9470",

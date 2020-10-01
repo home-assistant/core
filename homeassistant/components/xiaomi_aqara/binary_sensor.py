@@ -1,7 +1,11 @@
 """Support for Xiaomi aqara binary sensors."""
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_MOISTURE,
+    DEVICE_CLASS_OPENING,
+    BinarySensorEntity,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_call_later
 
@@ -57,6 +61,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             "sensor_86sw1",
             "sensor_86sw1.aq1",
             "remote.b186acn01",
+            "remote.b186acn02",
         ]:
             if "proto" not in entity or int(entity["proto"][0:1]) == 1:
                 data_key = "channel_0"
@@ -72,6 +77,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             "sensor_86sw2",
             "sensor_86sw2.aq1",
             "remote.b286acn01",
+            "remote.b286acn02",
         ]:
             if "proto" not in entity or int(entity["proto"][0:1]) == 1:
                 data_key_left = "channel_0"
@@ -293,7 +299,12 @@ class XiaomiDoorSensor(XiaomiBinarySensor):
         else:
             data_key = "window_status"
         super().__init__(
-            device, "Door Window Sensor", xiaomi_hub, data_key, "opening", config_entry,
+            device,
+            "Door Window Sensor",
+            xiaomi_hub,
+            data_key,
+            DEVICE_CLASS_OPENING,
+            config_entry,
         )
 
     @property
@@ -338,7 +349,12 @@ class XiaomiWaterLeakSensor(XiaomiBinarySensor):
         else:
             data_key = "wleak_status"
         super().__init__(
-            device, "Water Leak Sensor", xiaomi_hub, data_key, "moisture", config_entry,
+            device,
+            "Water Leak Sensor",
+            xiaomi_hub,
+            data_key,
+            DEVICE_CLASS_MOISTURE,
+            config_entry,
         )
 
     def parse_data(self, data, raw_data):

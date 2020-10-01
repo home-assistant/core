@@ -38,7 +38,9 @@ async def async_setup(hass, config) -> bool:
 
     hass.async_create_task(
         hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=sh_conf,
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=sh_conf,
         )
     )
 
@@ -57,9 +59,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
     try:
         await hub.async_login(username, password)
-    except pysmarthab.RequestFailedException:
+    except pysmarthab.RequestFailedException as err:
         _LOGGER.exception("Error while trying to reach SmartHab API")
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from err
 
     # Pass hub object to child platforms
     hass.data[DOMAIN][entry.entry_id] = {DATA_HUB: hub}

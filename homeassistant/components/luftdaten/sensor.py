@@ -30,7 +30,12 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     sensors = []
     for sensor_type in luftdaten.sensor_conditions:
-        name, icon, unit = SENSORS[sensor_type]
+        try:
+            name, icon, unit = SENSORS[sensor_type]
+        except KeyError:
+            _LOGGER.debug("Unknown sensor value type: %s", sensor_type)
+            continue
+
         sensors.append(
             LuftdatenSensor(
                 luftdaten, sensor_type, name, icon, unit, entry.data[CONF_SHOW_ON_MAP]
