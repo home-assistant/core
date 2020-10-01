@@ -1,9 +1,9 @@
 """Support for manual alarms controllable via MQTT."""
 import copy
 import datetime
+import json
 import logging
 import re
-import json
 
 import voluptuous as vol
 
@@ -155,10 +155,18 @@ PLATFORM_SCHEMA = vol.Schema(
                 vol.Optional(STATE_ALARM_TRIGGERED, default={}): _state_schema(
                     STATE_ALARM_TRIGGERED
                 ),
-                vol.Optional(mqtt.CONF_COMMAND_TOPIC, default=DEFAULT_COMMAND_TOPIC): mqtt.valid_publish_topic,
-                vol.Optional(CONF_CONFIG_TOPIC, default=DEFAULT_CONFIG_TOPIC): mqtt.valid_publish_topic,
-                vol.Optional(CONF_STATUS_TOPIC, default=DEFAULT_STATUS_TOPIC): mqtt.valid_publish_topic,
-                vol.Optional(mqtt.CONF_STATE_TOPIC, default=DEFAULT_STATE_TOPIC): mqtt.valid_subscribe_topic,
+                vol.Optional(
+                    mqtt.CONF_COMMAND_TOPIC, default=DEFAULT_COMMAND_TOPIC
+                ): mqtt.valid_publish_topic,
+                vol.Optional(
+                    CONF_CONFIG_TOPIC, default=DEFAULT_CONFIG_TOPIC
+                ): mqtt.valid_publish_topic,
+                vol.Optional(
+                    CONF_STATUS_TOPIC, default=DEFAULT_STATUS_TOPIC
+                ): mqtt.valid_publish_topic,
+                vol.Optional(
+                    mqtt.CONF_STATE_TOPIC, default=DEFAULT_STATE_TOPIC
+                ): mqtt.valid_subscribe_topic,
                 vol.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
                 vol.Optional(
                     CONF_PAYLOAD_ARM_AWAY, default=DEFAULT_ARM_AWAY
@@ -259,8 +267,7 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
             for state in SUPPORTED_PRETRIGGER_STATES
         }
         self._arming_time_by_state = {
-            state: config[state][CONF_ARMING_TIME]
-            for state in SUPPORTED_ARMING_STATES
+            state: config[state][CONF_ARMING_TIME] for state in SUPPORTED_ARMING_STATES
         }
 
         self._state_topic = state_topic
@@ -440,8 +447,8 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
         check = not alarm_code or code == alarm_code
         if not check:
             _LOGGER.warning("Invalid code given for %s", state)
-            mqtt.async_publish(self.hass, self._status_topic,
-                               self._payload_invalid, self._qos, False
+            mqtt.async_publish(
+                self.hass, self._status_topic, self._payload_invalid, self._qos, False
             )
 
         return check
@@ -458,10 +465,7 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
         return state_attr
 
     async def async_added_to_hass(self):
-        """
-        Run when entity about to be added to hass.
-        Subscribe to MQTT Events
-        """
+        """Run when entity about to be added to hass & subscribe to MQTT Events"""
         await super().async_added_to_hass()
 
         async_track_state_change_event(
@@ -470,15 +474,16 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
 
         async def message_received(msg):
             """Run when new MQTT message has been received."""
+            _LOGGER.info("Received MQTT Message %s", msg)
             payload = json.loads(msg.payload)
-            if payload['action'] == self._payload_disarm:
-                await self.async_alarm_disarm(payload['code'])
-            elif payload['action'] == self._payload_arm_home:
-                await self.async_alarm_arm_home(payload['code'])
-            elif payload['action'] == self._payload_arm_away:
-                await self.async_alarm_arm_away(payload['code'])
-            elif payload['action'] == self._payload_arm_night:
-                await self.async_alarm_arm_night(payload['code'])
+            if payload["action"] == self._payload_disarm:
+                await self.async_alarm_disarm(payload["code"])
+            elif payload["action"] == self._payload_arm_home:
+                await self.async_alarm_arm_home(payload["code"])
+            elif payload["action"] == self._payload_arm_away:
+                await self.async_alarm_arm_away(payload["code"])
+            elif payload["action"] == self._payload_arm_night:
+                await self.async_alarm_arm_night(payload["code"])
             else:
                 _LOGGER.warning("Received unexpected payload: %s", msg.payload)
                 return
@@ -488,25 +493,29 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
         )
 
         config = {
-            'version': 1,
-            'code_arm_required': self._code_arm_required,
-            'code_disarm_required': (self._code != None),
-            'state_topic': self._state_topic,
-            'status_topic': self._status_topic,
-            'comand_topic': self._command_topic,
-            'delay_times': self._delay_time_by_state,
-            'arming_times': self._arming_time_by_state,
-            'trigger_times': self._trigger_time_by_state,
+            "version": 1,
+            "code_arm_required": self._code_arm_required,
+            "code_disarm_required": (self._code is not None),
+            "state_topic": self._state_topic,
+            "status_topic": self._status_topic,
+            "comand_topic": self._command_topic,
+            "delay_times": self._delay_time_by_state,
+            "arming_times": self._arming_time_by_state,
+            "trigger_times": self._trigger_time_by_state,
         }
-        def default(o):
-            if isinstance(o, (datetime.timedelta)):
-                return int(o.total_seconds())
-            return str(o)
+
+        def default(obj):
+            if isinstance(obj, (datetime.timedelta)):
+                return int(obj.total_seconds())
+            return str(obj)
 
         mqtt.async_publish(
-            self.hass, self._config_topic, json.dumps(config, default=default), self._qos, True
+            self.hass,
+            self._config_topic,
+            json.dumps(config, default=default),
+            self._qos,
+            True
         )
-
 
     async def _async_state_changed_listener(self, event):
         """Publish state change to MQTT."""
@@ -515,14 +524,16 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
             return
         new_state_str = new_state.state
         if new_state_str == "arming":
-            if new_state.attributes['next_state'] == "armed_away":
+            if new_state.attributes["next_state"] == "armed_away":
                 new_state_str = "arming_away"
-            elif new_state.attributes['next_state'] == "armed_home":
+            elif new_state.attributes["next_state"] == "armed_home":
                 new_state_str = "arming_home"
-            elif new_state.attributes['next_state'] == "armed_night":
+            elif new_state.attributes["next_state"] == "armed_night":
                 new_state_str = "arming_night"
             else:
-                _LOGGER.warning("Unknown arming next state: %s", new_state.attributes['next_state'])
+                _LOGGER.warning(
+                    "Unknown arming next state: %s", new_state.attributes['next_state']
+                )
         mqtt.async_publish(
             self.hass, self._state_topic, new_state_str, self._qos, True
         )
