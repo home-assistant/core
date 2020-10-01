@@ -5,7 +5,7 @@
         "title": "Location",
         "description": "Meteorologisk institutt",
         "data": {
-          "name": "Name",
+          "name": "[%key:common::config_flow::data::name%]",
           "latitude": "Latitude",
           "longitude": "Longitude",
           "elevation": "Elevation"
