@@ -1,7 +1,7 @@
 {
   "config": {
     "error": {
-      "unknown": "Unexpected error",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
       "cannot_connect": "Failed to connect, please try again",
       "invalid_auth": "Invalid authentication",
       "invalid_thermostat": "The thermostat serial number is invalid."

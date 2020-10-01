@@ -17,7 +17,7 @@
     },
     "error": {
       "invalid_auth": "Invalid authentication",
-      "unknown": "Unexpected error"
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
       "already_configured": "Device is already configured"

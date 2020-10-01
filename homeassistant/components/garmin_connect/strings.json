@@ -7,7 +7,7 @@
       "cannot_connect": "Failed to connect, please try again.",
       "invalid_auth": "Invalid authentication.",
       "too_many_requests": "Too many requests, retry later.",
-      "unknown": "Unexpected error."
+      "unknown": ""[%key:common::config_flow::error::unknown%]"."
     },
     "step": {
       "user": {
