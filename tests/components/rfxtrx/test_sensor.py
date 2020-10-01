@@ -3,7 +3,12 @@ import pytest
 
 from homeassistant.components.rfxtrx import DOMAIN
 from homeassistant.components.rfxtrx.const import ATTR_EVENT
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, PERCENTAGE, TEMP_CELSIUS
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    TEMP_CELSIUS,
+)
 from homeassistant.core import State
 
 from tests.common import MockConfigEntry, mock_restore_cache
@@ -100,7 +105,10 @@ async def test_one_sensor_no_datatype(hass, rfxtrx):
     assert state
     assert state.state == "unknown"
     assert state.attributes.get("friendly_name") == f"{base_name} Rssi numeric"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "dBm"
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+    )
 
     state = hass.states.get(f"{base_id}_battery_numeric")
     assert state
@@ -174,7 +182,10 @@ async def test_discover_sensor(hass, rfxtrx_automatic):
     state = hass.states.get(f"{base_id}_rssi_numeric")
     assert state
     assert state.state == "-64"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "dBm"
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+    )
 
     state = hass.states.get(f"{base_id}_temperature")
     assert state
@@ -203,7 +214,10 @@ async def test_discover_sensor(hass, rfxtrx_automatic):
     state = hass.states.get(f"{base_id}_rssi_numeric")
     assert state
     assert state.state == "-64"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "dBm"
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+    )
 
     state = hass.states.get(f"{base_id}_temperature")
     assert state
@@ -232,7 +246,10 @@ async def test_discover_sensor(hass, rfxtrx_automatic):
     state = hass.states.get(f"{base_id}_rssi_numeric")
     assert state
     assert state.state == "-64"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "dBm"
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+    )
 
     state = hass.states.get(f"{base_id}_temperature")
     assert state
@@ -315,13 +332,19 @@ async def test_rssi_sensor(hass, rfxtrx):
     assert state
     assert state.state == "unknown"
     assert state.attributes.get("friendly_name") == "PT2262 22670e Rssi numeric"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "dBm"
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+    )
 
     state = hass.states.get("sensor.ac_213c7f2_48_rssi_numeric")
     assert state
     assert state.state == "unknown"
     assert state.attributes.get("friendly_name") == "AC 213c7f2:48 Rssi numeric"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "dBm"
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+    )
 
     await rfxtrx.signal("0913000022670e013b70")
     await rfxtrx.signal("0b1100cd0213c7f230010f71")

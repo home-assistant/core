@@ -12,7 +12,7 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_host": "This is not the Yeti you are looking for",
+      "invalid_host": "Invalid host provided",
       "unknown": "Unknown Error"
     },
     "abort": {
