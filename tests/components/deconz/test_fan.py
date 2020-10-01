@@ -44,8 +44,7 @@ async def test_platform_manually_configured(hass):
 
 async def test_no_fans(hass):
     """Test that no fan entities are created."""
-    gateway = await setup_deconz_integration(hass)
-    assert len(gateway.deconz_ids) == 0
+    await setup_deconz_integration(hass)
     assert len(hass.states.async_all()) == 0
 
 
@@ -54,13 +53,13 @@ async def test_fans(hass):
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["lights"] = deepcopy(FANS)
     gateway = await setup_deconz_integration(hass, get_state_response=data)
-    assert "fan.ceiling_fan" in gateway.deconz_ids
+
     assert len(hass.states.async_all()) == 2  # Light and fan
+    assert hass.states.get("fan.ceiling_fan")
 
     # Test states
 
-    ceiling_fan = hass.states.get("fan.ceiling_fan")
-    assert ceiling_fan.state == STATE_OFF
+    assert hass.states.get("fan.ceiling_fan").state == STATE_OFF
 
     state_changed_event = {
         "t": "event",
@@ -72,14 +71,13 @@ async def test_fans(hass):
     gateway.api.event_handler(state_changed_event)
     await hass.async_block_till_done()
 
-    ceiling_fan = hass.states.get("fan.ceiling_fan")
-    assert ceiling_fan.state == STATE_ON
+    assert hass.states.get("fan.ceiling_fan").state == STATE_ON
 
     # Test service calls
 
     ceiling_fan_device = gateway.api.lights["1"]
 
-    # Service turn on
+    # Service turn on fan
 
     with patch.object(
         ceiling_fan_device, "_request", return_value=True
@@ -93,7 +91,7 @@ async def test_fans(hass):
         await hass.async_block_till_done()
         set_callback.assert_called_with("put", "/lights/1/state", json={"speed": 2})
 
-    # Service turn off
+    # Service turn off fan
 
     with patch.object(
         ceiling_fan_device, "_request", return_value=True
@@ -107,7 +105,7 @@ async def test_fans(hass):
         await hass.async_block_till_done()
         set_callback.assert_called_with("put", "/lights/1/state", json={"speed": 0})
 
-    # Service set speed to off
+    # Service set fan speed to off
 
     with patch.object(
         ceiling_fan_device, "_request", return_value=True
@@ -121,7 +119,7 @@ async def test_fans(hass):
         await hass.async_block_till_done()
         set_callback.assert_called_with("put", "/lights/1/state", json={"speed": 0})
 
-    # Service set speed to low
+    # Service set fan speed to low
 
     with patch.object(
         ceiling_fan_device, "_request", return_value=True
@@ -135,7 +133,7 @@ async def test_fans(hass):
         await hass.async_block_till_done()
         set_callback.assert_called_with("put", "/lights/1/state", json={"speed": 1})
 
-    # Service set speed to medium
+    # Service set fan speed to medium
 
     with patch.object(
         ceiling_fan_device, "_request", return_value=True
@@ -149,7 +147,7 @@ async def test_fans(hass):
         await hass.async_block_till_done()
         set_callback.assert_called_with("put", "/lights/1/state", json={"speed": 2})
 
-    # Service set speed to high
+    # Service set fan speed to high
 
     with patch.object(
         ceiling_fan_device, "_request", return_value=True
