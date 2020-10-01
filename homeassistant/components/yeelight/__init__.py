@@ -7,7 +7,7 @@ from typing import Optional
 import voluptuous as vol
 from yeelight import Bulb, BulbException, discover_bulbs
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry, ConfigEntryNotReady
 from homeassistant.const import (
     CONF_DEVICES,
     CONF_HOST,
@@ -20,8 +20,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
-
-from .migrator import _async_migrate_name
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -269,14 +267,7 @@ async def _async_setup_device(
 
     # Migrate name
     if not entry.data.get(CONF_NAME):
-        # Disable update listener temporarily to avoid reload
-        hass.data[DOMAIN][DATA_CONFIG_ENTRIES][entry.entry_id][
-            DATA_UNSUB_UPDATE_LISTENER
-        ]()
         _async_migrate_name(hass, entry, capabilities)
-        hass.data[DOMAIN][DATA_CONFIG_ENTRIES][entry.entry_id][
-            DATA_UNSUB_UPDATE_LISTENER
-        ] = entry.add_update_listener(_async_update_listener)
 
     device = YeelightDevice(
         hass, host, entry.data[CONF_NAME], entry.options, bulb, capabilities
@@ -284,6 +275,33 @@ async def _async_setup_device(
     await hass.async_add_executor_job(device.update)
     await device.async_setup()
     return device
+
+
+@callback
+def _async_migrate_name(
+    hass: HomeAssistant, config_entry: ConfigEntry, capabilities: Optional[dict]
+):
+    """Move name from options to data."""
+    data = {**config_entry.data}
+    options = {**config_entry.options}
+    data[CONF_NAME] = options.pop(CONF_NAME)
+    if not data[CONF_NAME]:
+        # Name not set, generate name from capabilities
+        if capabilities is None:
+            # If the config entry existed and is in old structure
+            # we should be able to get capabilities
+            raise ConfigEntryNotReady
+        model = capabilities["model"]
+        unique_id = capabilities["id"]
+        data[CONF_NAME] = f"yeelight_{model}_{unique_id}"
+    # Disable update listener temporarily to avoid unnecessary reload
+    hass.data[DOMAIN][DATA_CONFIG_ENTRIES][config_entry.entry_id][
+        DATA_UNSUB_UPDATE_LISTENER
+    ]()
+    hass.config_entries.async_update_entry(config_entry, data=data, options=options)
+    hass.data[DOMAIN][DATA_CONFIG_ENTRIES][config_entry.entry_id][
+        DATA_UNSUB_UPDATE_LISTENER
+    ] = config_entry.add_update_listener(_async_update_listener)
 
 
 async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
