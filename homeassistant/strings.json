@@ -34,7 +34,9 @@
         "url": "URL",
         "usb_path": "USB Device Path",
         "access_token": "Access Token",
-        "api_key": "API Key"
+        "api_key": "API Key",
+        "longitude": "Longitude",
+        "latitude": "Latitude"
       },
       "create_entry": {
         "authenticated": "Successfully authenticated"
