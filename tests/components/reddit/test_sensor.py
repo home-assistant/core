@@ -180,4 +180,5 @@ async def test_setup_with_valid_config(hass):
 async def test_setup_with_invalid_config(hass):
     """Test the platform setup with invalid Reddit configuration."""
     assert await async_setup_component(hass, "sensor", INVALID_SORT_BY_CONFIG)
+    await hass.async_block_till_done()
     assert not hass.states.get("sensor.reddit_worldnews")
