@@ -86,14 +86,10 @@ logger:
 
 # set up Zeroconf and make AIS dom discoverable
 ais_mdns:
-#
-# ais_gm_service:
-#
 
+# serve local files
 media_source:
 
-# TODO
-# check if user is authenticated and add this to polymer
-# /api/ingress/
+# ais ingress
 ais_web_zigbee2mqtt:
   port: 8099
