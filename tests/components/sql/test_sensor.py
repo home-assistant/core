@@ -4,10 +4,10 @@ import voluptuous as vol
 
 from homeassistant.components.sql.sensor import validate_sql_select
 from homeassistant.const import STATE_UNKNOWN
-from homeassistant.setup import setup_component
+from homeassistant.setup import async_setup_component
 
 
-def test_query(hass):
+async def test_query(hass):
     """Test the SQL sensor."""
     config = {
         "sensor": {
@@ -23,15 +23,15 @@ def test_query(hass):
         }
     }
 
-    assert setup_component(hass, "sensor", config)
-    hass.block_till_done()
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
 
     state = hass.states.get("sensor.count_tables")
     assert state.state == "5"
     assert state.attributes["value"] == 5
 
 
-def test_invalid_query(hass):
+async def test_invalid_query(hass):
     """Test the SQL sensor for invalid queries."""
     with pytest.raises(vol.Invalid):
         validate_sql_select("DROP TABLE *")
@@ -50,8 +50,8 @@ def test_invalid_query(hass):
         }
     }
 
-    assert setup_component(hass, "sensor", config)
-    hass.block_till_done()
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
 
     state = hass.states.get("sensor.count_tables")
     assert state.state == STATE_UNKNOWN
