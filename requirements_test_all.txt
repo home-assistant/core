@@ -991,7 +991,7 @@ stringcase==1.2.0
 sunwatcher==0.2.1
 
 # homeassistant.components.surepetcare
-surepy==0.2.5
+surepy==0.2.6
 
 # homeassistant.components.tellduslive
 tellduslive==0.10.11
