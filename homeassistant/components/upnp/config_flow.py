@@ -127,8 +127,18 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.info("No UPnP devices discovered, aborting")
             return self.async_abort(reason="no_devices_found")
 
-        discovery = self._discoveries[0]
-        return await self._async_create_entry_from_discovery(discovery)
+        # Ensure complete discovery.
+        discovery_info = self._discoveries[0]
+        if DISCOVERY_USN not in discovery_info:
+            _LOGGER.debug("Incomplete discovery, ignoring")
+            return self.async_abort(reason="incomplete_discovery")
+
+        # Ensure not already configuring/configured.
+        usn = discovery_info[DISCOVERY_USN]
+        await self.async_set_unique_id(usn)
+        self._abort_if_unique_id_configured()
+
+        return await self._async_create_entry_from_discovery(discovery_info)
 
     async def async_step_ssdp(self, discovery_info: Mapping):
         """Handle a discovered UPnP/IGD device.
@@ -191,7 +201,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     ):
         """Create an entry from discovery."""
         _LOGGER.debug(
-            "_async_create_entry_from_data: discovery: %s",
+            "_async_create_entry_from_discovery: discovery: %s",
             discovery,
         )
         # Get name from device, if not found already.

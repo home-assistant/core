@@ -56,7 +56,9 @@ async def async_discover_and_construct(
             filtered = [di for di in discovery_infos if di[DISCOVERY_ST] == st]
         if not filtered:
             _LOGGER.warning(
-                'Wanted UPnP/IGD device with UDN "%s" not found, aborting', udn
+                'Wanted UPnP/IGD device with UDN/ST "%s"/"%s" not found, aborting',
+                udn,
+                st,
             )
             return None
 
@@ -118,13 +120,6 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
 
     # Save device
     hass.data[DOMAIN][DOMAIN_DEVICES][device.udn] = device
-
-    # Ensure entry has proper unique_id.
-    if config_entry.unique_id != device.unique_id:
-        hass.config_entries.async_update_entry(
-            entry=config_entry,
-            unique_id=device.unique_id,
-        )
 
     # Create device registry entry.
     device_registry = await dr.async_get_registry(hass)
