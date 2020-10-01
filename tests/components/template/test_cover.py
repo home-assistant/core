@@ -115,6 +115,7 @@ async def test_template_state_boolean(hass, calls):
 
 async def test_template_position(hass, calls):
     """Test the position_template attribute."""
+    hass.states.async_set("cover.test", STATE_OPEN)
     with assert_setup_component(1, "cover"):
         assert await setup.async_setup_component(
             hass,

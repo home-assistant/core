@@ -1,5 +1,6 @@
 """The test for the Template sensor platform."""
 from asyncio import Event
+from datetime import timedelta
 from unittest.mock import patch
 
 from homeassistant.bootstrap import async_from_config_dict
@@ -17,7 +18,11 @@ from homeassistant.helpers.template import Template
 from homeassistant.setup import ATTR_COMPONENT, async_setup_component, setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import assert_setup_component, get_test_home_assistant
+from tests.common import (
+    assert_setup_component,
+    async_fire_time_changed,
+    get_test_home_assistant,
+)
 
 
 class TestTemplateSensor:
@@ -900,8 +905,13 @@ async def test_self_referencing_entity_picture_loop(hass, caplog):
 
     assert len(hass.states.async_all()) == 1
 
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
+    next_time = dt_util.utcnow() + timedelta(seconds=1.2)
+    with patch(
+        "homeassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
+    ):
+        async_fire_time_changed(hass, next_time)
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
     assert "Template loop detected" in caplog.text
 
