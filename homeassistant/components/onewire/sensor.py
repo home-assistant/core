@@ -54,6 +54,8 @@ DEVICE_SENSORS = {
     "EF": {"HobbyBoard": "special"},
 }
 
+DEVICE_SUPPORT_SYSBUS = ["10", "22", "28", "3B", "42"]
+
 # EF sensors are usually hobbyboards specialized sensors.
 # These can only be read by OWFS.  Currently this driver only supports them
 # via owserver (network protocol)
@@ -178,7 +180,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     # We have a raw GPIO ow sensor on a Pi
     elif base_dir == DEFAULT_SYSBUS_MOUNT_DIR:
         _LOGGER.debug("Initializing using SysBus %s", base_dir)
-        for device_family in DEVICE_SENSORS:
+        for device_family in DEVICE_SUPPORT_SYSBUS:
             for device_folder in glob(os.path.join(base_dir, f"{device_family}[.-]*")):
                 sensor_id = os.path.split(device_folder)[1]
                 device_file = os.path.join(device_folder, "w1_slave")
@@ -300,18 +302,46 @@ class OneWireProxy(OneWire):
 class OneWireDirect(OneWire):
     """Implementation of a 1-Wire sensor directly connected to RPI GPIO."""
 
+    def _get_valid_data(self):
+        """Get the latest data from the device, with crc check."""
+        try:
+            current_attempt = 0
+            while current_attempt < 5:
+                current_attempt += 1
+
+                lines = self._read_value_raw()
+                if len(lines) == 0:
+                    _LOGGER.warning(
+                        "Sensor %s did not return any data.",
+                        self._device_file,
+                    )
+                elif lines[0].strip()[-3:] != "YES":
+                    _LOGGER.warning(
+                        "Sensor %s returned invalid data: %s",
+                        self._device_file,
+                        lines,
+                    )
+                else:
+                    # Return valid result
+                    return lines
+
+                # Wait before next attempt
+                time.sleep(0.2)
+
+        except FileNotFoundError:
+            _LOGGER.warning("Cannot read from sensor: %s", self._device_file)
+        return None
+
     def update(self):
         """Get the latest data from the device."""
         value = None
-        lines = self._read_value_raw()
-        while lines[0].strip()[-3:] != "YES":
-            time.sleep(0.2)
-            lines = self._read_value_raw()
-        equals_pos = lines[1].find("t=")
-        if equals_pos != -1:
-            value_string = lines[1][equals_pos + 2 :]
-            value = round(float(value_string) / 1000.0, 1)
-            self._value_raw = float(value_string)
+        lines = self._get_valid_data()
+        if lines is not None:
+            equals_pos = lines[1].find("t=")
+            if equals_pos != -1:
+                value_string = lines[1][equals_pos + 2 :]
+                value = round(float(value_string) / 1000.0, 1)
+                self._value_raw = float(value_string)
         self._state = value
 
 
