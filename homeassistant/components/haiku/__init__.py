@@ -23,12 +23,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     return False
 
 
-def show_setup_message(hass, entry_id):
-    """Display persistent notification with setup information."""
-    message = "To remove your Haiku devices, please go to your entity config and click remove on all the devices."
-    hass.components.persistent_notification.create(message, "Haiku", entry_id)
-
-
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
     unload_ok = all(
