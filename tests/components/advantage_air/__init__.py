@@ -7,29 +7,18 @@ from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
 
 from tests.common import MockConfigEntry, load_fixture
 
-payload_without_sensor = load_fixture("advantage_air/payload_without_sensor.json")
-payload_with_sensor = load_fixture("advantage_air/payload_with_sensor.json")
-payload_ack = load_fixture("advantage_air/payload_ack.json")
+getSystemData = load_fixture("advantage_air/getSystemData.json")
+setAircon = load_fixture("advantage_air/setAircon.json")
 
 
-def _api_respond(request, systemdata):
+async def api_response(request):
     """Advantage Air API response."""
     if request.method == "GET":
         if request.path == "/getSystemData":
-            return web.Response(body=systemdata)
+            return web.Response(body=getSystemData)
         if request.path == "/setAircon":
-            return web.Response(body=payload_ack)
+            return web.Response(body=setAircon)
     raise web.HTTPException
-
-
-async def api_response_without_sensor(request):
-    """Response without zone sensor."""
-    return _api_respond(request, payload_without_sensor)
-
-
-async def api_response_with_sensor(request):
-    """Response without zone sensor."""
-    return _api_respond(request, payload_with_sensor)
 
 
 async def add_mock_config(hass, port):

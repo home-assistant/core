@@ -4,7 +4,7 @@ from homeassistant import data_entry_flow
 from homeassistant.components.advantage_air import config_flow
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
 
-from tests.components.advantage_air import api_response_without_sensor
+from tests.components.advantage_air import api_response
 
 
 async def test_form(hass):
@@ -19,7 +19,7 @@ async def test_form_success(hass, aiohttp_raw_server, aiohttp_unused_port):
     """Test that the setup can fully complete."""
 
     port = aiohttp_unused_port()
-    await aiohttp_raw_server(api_response_without_sensor, port=port)
+    await aiohttp_raw_server(api_response, port=port)
 
     user_input = {
         CONF_IP_ADDRESS: "127.0.0.1",
