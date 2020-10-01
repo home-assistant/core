@@ -90,13 +90,23 @@ def gen_data_entry_schema(
 ):
     """Generate a data entry schema."""
     step_title_class = vol.Required if require_step_title else vol.Optional
+    subform_schema = vol.Schema(
+        {
+            vol.Optional("title"): cv.string_with_no_html,
+            vol.Optional("description"): cv.string_with_no_html,
+            vol.Optional("optional"): cv.string_with_no_html,
+            vol.Optional("data"): {str: vol.Any(cv.string_with_no_html, vol.Self)},
+        }
+    )
     schema = {
         vol.Optional("flow_title"): cv.string_with_no_html,
         vol.Required("step"): {
             str: {
                 step_title_class("title"): cv.string_with_no_html,
                 vol.Optional("description"): cv.string_with_no_html,
-                vol.Optional("data"): {str: cv.string_with_no_html},
+                vol.Optional("data"): {
+                    str: vol.Any(cv.string_with_no_html, subform_schema)
+                },
             }
         },
         vol.Optional("error"): {str: cv.string_with_no_html},

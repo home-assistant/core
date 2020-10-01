@@ -1,0 +1,43 @@
+{
+  "config": {
+    "step": {}
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Dynalite step",
+        "description": "Configure Dynalite",
+        "data": {
+          "name": "Dynalite System Name",
+          "server": {
+            "title": "Server Settings",
+            "description": "Override default server settings",
+            "optional": "Manually configure server",
+            "data": {
+              "ip": "Server IP",
+              "port": "Server port",
+              "advanced": {
+                "title": "Advanced Settings",
+                "description": "Leave alone if not sure",
+                "optional": "Override advanced server settings",
+                "data": {
+                  "timeout": "System timeout",
+                  "retries": "Number of retries"
+                }
+              }
+            }
+          },
+          "protocol": {
+            "title": "Configure protocol",
+            "data": {
+              "level": "Protocol level",
+              "version": "Protocol version"
+            }
+          },
+          "log": "Log file name"
+        }
+      }
+    }
+  }
+}
+ 
