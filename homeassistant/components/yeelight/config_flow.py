@@ -73,6 +73,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             unique_id = user_input[CONF_DEVICE]
             self._capabilities = self._discovered_devices[unique_id]
+            await self.async_set_unique_id(unique_id)
+            self._abort_if_unique_id_configured()
             return await self.async_step_name()
 
         configured_devices = {
@@ -148,6 +150,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 raise AlreadyConfigured
 
         bulb = yeelight.Bulb(host)
+        try:
+            capabilities = await self.hass.async_add_executor_job(bulb.get_capabilities)
+            if capabilities is None:  # timeout
+                _LOGGER.debug("Failed to get capabilities from %s: timeout", host)
+            else:
+                _LOGGER.debug("Get capabilities: %s", capabilities)
+                self._capabilities = capabilities
+                await self.async_set_unique_id(capabilities["id"])
+                self._abort_if_unique_id_configured()
+                return
+        except OSError as err:
+            _LOGGER.debug("Failed to get capabilities from %s: %s", host, err)
+            # Ignore the error since get_capabilities uses UDP discovery packet
+            # which does not work in all network environments
+
+        # Fallback to get properties
         try:
             await self.hass.async_add_executor_job(bulb.get_properties)
         except yeelight.BulbException as err:

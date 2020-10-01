@@ -18,9 +18,7 @@ async def async_setup_entry(
     device = hass.data[DOMAIN][DATA_CONFIG_ENTRIES][config_entry.entry_id][DATA_DEVICE]
     if device.is_nightlight_supported:
         _LOGGER.debug("Adding nightlight mode sensor for %s", device.name)
-        async_add_entities(
-            [YeelightNightlightModeSensor(device, config_entry.entry_id)]
-        )
+        async_add_entities([YeelightNightlightModeSensor(device, config_entry)])
 
 
 class YeelightNightlightModeSensor(YeelightEntity, BinarySensorEntity):

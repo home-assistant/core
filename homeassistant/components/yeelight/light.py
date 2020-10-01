@@ -240,9 +240,7 @@ async def async_setup_entry(
     device_type = device.type
 
     def _lights_setup_helper(klass):
-        lights.append(
-            klass(device, config_entry.entry_id, custom_effects=custom_effects)
-        )
+        lights.append(klass(device, config_entry, custom_effects=custom_effects))
 
     if device_type == BulbType.White:
         _lights_setup_helper(YeelightGenericLight)
@@ -383,9 +381,9 @@ def _async_setup_services(hass: HomeAssistant):
 class YeelightGenericLight(YeelightEntity, LightEntity):
     """Representation of a Yeelight generic light."""
 
-    def __init__(self, device, unique_id, custom_effects=None):
+    def __init__(self, device, entry, custom_effects=None):
         """Initialize the Yeelight light."""
-        super().__init__(device, unique_id)
+        super().__init__(device, entry)
 
         self.config = device.config
 

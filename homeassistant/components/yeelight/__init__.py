@@ -21,11 +21,7 @@ from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 
-from .migrator import (
-    _async_migrate_device_unique_id,
-    _async_migrate_entity_unique_id,
-    _async_migrate_name,
-)
+from .migrator import _async_migrate_name
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -185,10 +181,6 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Yeelight from a config entry."""
-
-    # Migrate from old structure
-    await _async_migrate_device_unique_id(hass, entry)
-    await _async_migrate_entity_unique_id(hass, entry)
 
     async def _initialize(host: str, capabilities: Optional[dict] = None) -> None:
         device = await _async_setup_device(hass, host, entry, capabilities)
@@ -555,10 +547,14 @@ class YeelightDevice:
 class YeelightEntity(Entity):
     """Represents single Yeelight entity."""
 
-    def __init__(self, device: YeelightDevice, unique_id: str):
+    def __init__(self, device: YeelightDevice, entry: ConfigEntry):
         """Initialize the entity."""
         self._device = device
-        self._unique_id = f"v2-{unique_id}"  # Prefix to make migration easier
+        if entry.unique_id is not None:
+            # Use entry unique id (device id) whenever possible
+            self._unique_id = entry.unique_id
+        else:
+            self._unique_id = entry.entry_id
 
     @property
     def unique_id(self) -> str:
