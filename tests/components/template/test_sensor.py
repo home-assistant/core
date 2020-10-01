@@ -797,9 +797,9 @@ async def test_self_referencing_sensor_loop(hass, caplog):
     assert "Template loop detected" in caplog.text
 
     state = hass.states.get("sensor.test")
-    assert int(state.state) == 1
+    assert int(state.state) == 2
     await hass.async_block_till_done()
-    assert int(state.state) == 1
+    assert int(state.state) == 2
 
 
 async def test_self_referencing_sensor_with_icon_loop(hass, caplog):
@@ -833,11 +833,11 @@ async def test_self_referencing_sensor_with_icon_loop(hass, caplog):
     assert "Template loop detected" in caplog.text
 
     state = hass.states.get("sensor.test")
-    assert int(state.state) == 2
+    assert int(state.state) == 3
     assert state.attributes[ATTR_ICON] == "mdi:greater"
 
     await hass.async_block_till_done()
-    assert int(state.state) == 2
+    assert int(state.state) == 3
 
 
 async def test_self_referencing_sensor_with_icon_and_picture_entity_loop(hass, caplog):
@@ -872,12 +872,12 @@ async def test_self_referencing_sensor_with_icon_and_picture_entity_loop(hass, c
     assert "Template loop detected" in caplog.text
 
     state = hass.states.get("sensor.test")
-    assert int(state.state) == 3
+    assert int(state.state) == 4
     assert state.attributes[ATTR_ICON] == "mdi:less"
     assert state.attributes[ATTR_ENTITY_PICTURE] == "bigpic"
 
     await hass.async_block_till_done()
-    assert int(state.state) == 3
+    assert int(state.state) == 4
 
 
 async def test_self_referencing_entity_picture_loop(hass, caplog):
@@ -917,7 +917,7 @@ async def test_self_referencing_entity_picture_loop(hass, caplog):
 
     state = hass.states.get("sensor.test")
     assert int(state.state) == 1
-    assert state.attributes[ATTR_ENTITY_PICTURE] == "1"
+    assert state.attributes[ATTR_ENTITY_PICTURE] == "2"
 
     await hass.async_block_till_done()
     assert int(state.state) == 1
