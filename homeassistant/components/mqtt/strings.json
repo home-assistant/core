@@ -20,10 +20,10 @@
       }
     },
     "abort": {
-      "single_instance_allowed": "Only a single configuration of MQTT is allowed."
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     },
     "error": {
-      "cannot_connect": "Unable to connect to the broker."
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
   },
   "device_automation": {
@@ -77,7 +77,7 @@
       }
     },
     "error": {
-      "cannot_connect": "Unable to connect to the broker.",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "bad_birth": "Invalid birth topic.",
       "bad_will": "Invalid will topic."
     }
