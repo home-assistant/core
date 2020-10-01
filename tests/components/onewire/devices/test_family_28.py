@@ -10,7 +10,6 @@ from homeassistant.components.onewire.const import (
     DEFAULT_SYSBUS_MOUNT_DIR,
 )
 from homeassistant.components.onewire.sensor import (
-    OneWireDirect,
     OneWireOWFS,
     OneWireProxy,
 )
