@@ -157,7 +157,7 @@ class HaikuFan(Entity):
 
     async def async_turn_on(self, speed: str = None) -> None:
         """Turn on the fan."""
-        if speed == "off":
+        if speed == SPEED_OFF:
             await self.async_turn_off()
         elif speed is not None:
             await self.async_set_speed(speed)
