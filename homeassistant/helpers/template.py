@@ -486,15 +486,13 @@ class RateLimit:
         """Initialize rate limit."""
         self._hass = hass
 
-    def __call__(self, *args: Any, **kwargs: Any) -> Optional[timedelta]:
+    def __call__(self, *args: Any, **kwargs: Any) -> str:
         """Handle a call to the class."""
-        delta = timedelta(*args, **kwargs)
-
         render_info = self._hass.data.get(_RENDER_INFO)
         if render_info is not None:
-            render_info.rate_limit = delta
+            render_info.rate_limit = timedelta(*args, **kwargs)
 
-        return delta
+        return ""
 
     def __repr__(self) -> str:
         """Representation of a RateLimit."""

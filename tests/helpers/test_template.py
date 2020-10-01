@@ -2603,9 +2603,13 @@ async def test_rate_limit(hass):
     info = tmp.async_render_to_info()
     assert info.rate_limit is None
 
-    tmp = template.Template(
-        "{% set x = rate_limit(minutes=1) %}{{ states | count }}", hass
-    )
+    tmp = template.Template("{{ rate_limit(minutes=1) }}{{ states | count }}", hass)
 
     info = tmp.async_render_to_info()
+    assert info.rate_limit == timedelta(minutes=1)
+
+    tmp = template.Template("{{ rate_limit(minutes=1) }}random", hass)
+
+    info = tmp.async_render_to_info()
+    assert info.result() == "random"
     assert info.rate_limit == timedelta(minutes=1)
