@@ -8,6 +8,7 @@ from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
     POWER_WATT,
+    SIGNAL_STRENGTH_DECIBELS,
     VOLT,
 )
 
@@ -149,7 +150,7 @@ SENSORS = {
 REST_SENSORS = {
     "rssi": RestAttributeDescription(
         name="RSSI",
-        unit="dB",
+        unit=SIGNAL_STRENGTH_DECIBELS,
         device_class=sensor.DEVICE_CLASS_SIGNAL_STRENGTH,
         default_enabled=False,
         path="wifi_sta/rssi",
