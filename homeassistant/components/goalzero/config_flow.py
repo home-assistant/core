@@ -68,7 +68,8 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def _async_endpoint_existed(self, endpoint):
         for entry in self._async_current_entries():
             if endpoint == entry.data.get(CONF_HOST):
-                return endpoint
+                return True
+        return None
 
     async def _async_try_connect(self, host):
         session = async_get_clientsession(self.hass)
