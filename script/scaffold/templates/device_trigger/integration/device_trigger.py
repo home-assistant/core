@@ -4,8 +4,8 @@ from typing import List
 import voluptuous as vol
 
 from homeassistant.components.automation import AutomationActionType
-from homeassistant.components.homeassistant.triggers import state
 from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
+from homeassistant.components.homeassistant.triggers import state
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
