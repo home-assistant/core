@@ -10,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.core import callback
+from homeassistant.helpers import config_validation as cv
 
 from .const import ATTR_CONFIG_PARAMETER, ATTR_CONFIG_VALUE, DOMAIN, MANAGER, OPTIONS
 
@@ -140,7 +141,12 @@ def websocket_get_config_parameters(hass, connection, msg):
         vol.Required(NODE_ID): vol.Coerce(int),
         vol.Optional(OZW_INSTANCE, default=1): vol.Coerce(int),
         vol.Required(PARAMETER): vol.Coerce(int),
-        vol.Required(VALUE): vol.Any(bool, vol.Coerce(int), str),
+        vol.Required(VALUE): vol.Any(
+            {vol.Any(vol.Coerce(int), cv.string): vol.Coerce(int)},
+            bool,
+            vol.Coerce(int),
+            cv.string,
+        ),
     }
 )
 def websocket_set_config_parameter(hass, connection, msg):
