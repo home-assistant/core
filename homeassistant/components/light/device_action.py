@@ -5,6 +5,7 @@ import voluptuous as vol
 
 from homeassistant.components.device_automation import toggle_entity
 from homeassistant.components.light import (
+    ATTR_EFFECT,
     ATTR_FLASH,
     FLASH_SHORT,
     SUPPORT_FLASH,
@@ -22,11 +23,20 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from . import ATTR_BRIGHTNESS_PCT, ATTR_BRIGHTNESS_STEP_PCT, DOMAIN, SUPPORT_BRIGHTNESS
+from . import (
+    ATTR_BRIGHTNESS_PCT,
+    ATTR_BRIGHTNESS_STEP_PCT,
+    DOMAIN,
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_EFFECT,
+)
 
 TYPE_BRIGHTNESS_INCREASE = "brightness_increase"
 TYPE_BRIGHTNESS_DECREASE = "brightness_decrease"
+TYPE_EFFECT = "effect"
 TYPE_FLASH = "flash"
+
+VALID_EFFECT = vol.Coerce(str)
 
 ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
@@ -37,6 +47,7 @@ ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
             + [TYPE_BRIGHTNESS_INCREASE, TYPE_BRIGHTNESS_DECREASE, TYPE_FLASH]
         ),
         vol.Optional(ATTR_BRIGHTNESS_PCT): VALID_BRIGHTNESS_PCT,
+        vol.Optional(ATTR_EFFECT): VALID_EFFECT,
         vol.Optional(ATTR_FLASH): VALID_FLASH,
     }
 )
@@ -66,6 +77,9 @@ async def async_call_action_from_config(
         data[ATTR_BRIGHTNESS_STEP_PCT] = -10
     elif ATTR_BRIGHTNESS_PCT in config:
         data[ATTR_BRIGHTNESS_PCT] = config[ATTR_BRIGHTNESS_PCT]
+
+    if ATTR_EFFECT in config:
+        data[ATTR_EFFECT] = config[ATTR_EFFECT]
 
     if config[CONF_TYPE] == TYPE_FLASH:
         if ATTR_FLASH in config:
@@ -113,6 +127,18 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> List[dict]:
                 )
             )
 
+        if supported_features & SUPPORT_EFFECT:
+            actions.extend(
+                (
+                    {
+                        CONF_TYPE: TYPE_EFFECT,
+                        "device_id": device_id,
+                        "entity_id": entry.entity_id,
+                        "domain": DOMAIN,
+                    },
+                )
+            )
+
         if supported_features & SUPPORT_FLASH:
             actions.extend(
                 (
@@ -148,6 +174,9 @@ async def async_get_action_capabilities(hass: HomeAssistant, config: dict) -> di
 
     if supported_features & SUPPORT_BRIGHTNESS:
         extra_fields[vol.Optional(ATTR_BRIGHTNESS_PCT)] = VALID_BRIGHTNESS_PCT
+
+    if supported_features & SUPPORT_EFFECT:
+        extra_fields[vol.Optional(ATTR_EFFECT)] = VALID_EFFECT
 
     if supported_features & SUPPORT_FLASH:
         extra_fields[vol.Optional(ATTR_FLASH)] = VALID_FLASH
