@@ -31,13 +31,13 @@ async def test_form(hass):
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"email": "test-username", "password": "test-password"},
+            {"username": "test-username", "password": "test-password"},
         )
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "devolo Home Control"
     assert result2["data"] == {
-        "email": "test-username",
+        "username": "test-username",
         "password": "test-password",
         "home_control_url": "https://homecontrol.mydevolo.com",
         "mydevolo_url": "https://www.mydevolo.com",
@@ -63,7 +63,7 @@ async def test_form_invalid_credentials(hass):
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"email": "test-username", "password": "test-password"},
+            {"username": "test-username", "password": "test-password"},
         )
 
         assert result["errors"] == {"base": "invalid_auth"}
@@ -82,7 +82,7 @@ async def test_form_already_configured(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
-            data={"email": "test-username", "password": "test-password"},
+            data={"username": "test-username", "password": "test-password"},
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
         assert result["reason"] == "already_configured"
@@ -112,7 +112,7 @@ async def test_form_advanced_options(hass):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "email": "test-username",
+                "username": "test-username",
                 "password": "test-password",
                 "home_control_url": "https://test_url.test",
                 "mydevolo_url": "https://test_mydevolo_url.test",
@@ -122,7 +122,7 @@ async def test_form_advanced_options(hass):
     assert result2["type"] == "create_entry"
     assert result2["title"] == "devolo Home Control"
     assert result2["data"] == {
-        "email": "test-username",
+        "username": "test-username",
         "password": "test-password",
         "home_control_url": "https://test_url.test",
         "mydevolo_url": "https://test_mydevolo_url.test",

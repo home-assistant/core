@@ -10,7 +10,7 @@
     "step": {
       "user": {
         "data": {
-          "email": "[%key:common::config_flow::data::email%] / devolo ID",
+          "username": "[%key:common::config_flow::data::email%] / devolo ID",
           "password": "[%key:common::config_flow::data::password%]",
           "mydevolo_url": "mydevolo [%key:common::config_flow::data::url%]",
           "home_control_url": "Home Control [%key:common::config_flow::data::url%]"

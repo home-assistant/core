@@ -5,7 +5,7 @@ from devolo_home_control_api.mydevolo import Mydevolo
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 
 from .const import (  # pylint:disable=unused-import
@@ -28,7 +28,7 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize devolo Home Control flow."""
         self.data_schema = {
-            vol.Required(CONF_EMAIL): str,
+            vol.Required(CONF_USERNAME): str,
             vol.Required(CONF_PASSWORD): str,
         }
 
@@ -36,14 +36,14 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initiated by the user."""
         if self.show_advanced_options:
             self.data_schema = {
-                vol.Required(CONF_EMAIL): str,
+                vol.Required(CONF_USERNAME): str,
                 vol.Required(CONF_PASSWORD): str,
                 vol.Required(CONF_MYDEVOLO, default=DEFAULT_MYDEVOLO): str,
                 vol.Required(CONF_HOMECONTROL, default=DEFAULT_MPRM): str,
             }
         if user_input is None:
             return self._show_form(user_input)
-        user = user_input[CONF_EMAIL]
+        user = user_input[CONF_USERNAME]
         password = user_input[CONF_PASSWORD]
         try:
             mydevolo = Mydevolo.get_instance()
@@ -71,7 +71,7 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             title="devolo Home Control",
             data={
                 CONF_PASSWORD: password,
-                CONF_EMAIL: user,
+                CONF_USERNAME: user,
                 CONF_MYDEVOLO: mydevolo.url,
                 CONF_HOMECONTROL: mydevolo.mprm,
             },
