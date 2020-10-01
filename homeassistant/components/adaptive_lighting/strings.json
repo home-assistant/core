@@ -42,6 +42,7 @@
           "sunrise_time": "sunrise_time, in 'HH:MM:SS' format",
           "sunset_offset": "sunset_offset, in +/- seconds",
           "sunset_time": "sunset_time, in 'HH:MM:SS' format",
+          "take_over_control": "take_over_control, if manually adjusting the lights when they are already on",
           "transition": "transition, in seconds"
         }
       }

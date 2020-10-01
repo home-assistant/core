@@ -82,6 +82,7 @@ from .const import (
     CONF_SUNRISE_TIME,
     CONF_SUNSET_OFFSET,
     CONF_SUNSET_TIME,
+    CONF_TAKE_OVER_CONTROL,
     CONF_TRANSITION,
     CONF_TURN_ON_LIGHTS,
     DOMAIN,
@@ -236,6 +237,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         self._sunrise_time = data[CONF_SUNRISE_TIME]
         self._sunset_offset = data[CONF_SUNSET_OFFSET]
         self._sunset_time = data[CONF_SUNSET_TIME]
+        self._take_over_control = data[CONF_TAKE_OVER_CONTROL]
         self._transition = data[CONF_TRANSITION]
 
         # Set other attributes
@@ -600,6 +602,12 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         for light in lights:
             if not is_on(self.hass, light):
                 continue
+            if self._take_over_control:
+                if await self.turn_on_off_listener.is_manually_adjusted(
+                    light,
+                    off_to_on_event=self._off_to_on_event.get(light),
+                ):
+                    continue
             await self._adapt_light(light, transition, context=context)
 
     async def _disable_state_event(self, event: Event):
@@ -716,6 +724,13 @@ class TurnOnOffListener:
                 if task is not None:
                     task.cancel()
                 self.turn_on_event[eid] = event
+
+    async def is_manually_adjusted(self, light: str, off_to_on_event: Optional[Event]):
+        """Check if the light has been 'on' and is now manually being adjusted."""
+        if off_to_on_event is None:
+            # No state change has been registered before, so we can't tell.
+            return False
+        return False
 
     async def maybe_cancel_adjusting(
         self, entity_id: str, off_to_on_event: Event, on_to_off_event: Optional[Event]
