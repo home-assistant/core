@@ -71,7 +71,7 @@ class KeyedRateLimit:
 
             Return None
         """
-        if not rate_limit or key not in self._last_triggered:
+        if rate_limit is None or key not in self._last_triggered:
             return None
 
         next_call_time = self._last_triggered[key] + rate_limit
