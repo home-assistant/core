@@ -11,6 +11,7 @@ from homeassistant.components.season.sensor import (
     TYPE_ASTRONOMICAL,
     TYPE_METEOROLOGICAL,
 )
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.setup import async_setup_component
 
 from tests.async_mock import patch
@@ -67,6 +68,8 @@ def idfn(val):
 @pytest.mark.parametrize("type,day,expected", NORTHERN_PARAMETERS, ids=idfn)
 async def test_season_northern_hemisphere(hass, type, day, expected):
     """Test that season should be summer."""
+    hass.config.latitude = HEMISPHERE_NORTHERN["homeassistant"]["latitude"]
+
     config = HEMISPHERE_NORTHERN
     config["sensor"]["type"] = type
 
@@ -82,6 +85,8 @@ async def test_season_northern_hemisphere(hass, type, day, expected):
 @pytest.mark.parametrize("type,day,expected", SOUTHERN_PARAMETERS, ids=idfn)
 async def test_season_southern_hemisphere(hass, type, day, expected):
     """Test that season should be summer."""
+    hass.config.latitude = HEMISPHERE_SOUTHERN["homeassistant"]["latitude"]
+
     config = HEMISPHERE_SOUTHERN
     config["sensor"]["type"] = type
 
@@ -96,6 +101,7 @@ async def test_season_southern_hemisphere(hass, type, day, expected):
 
 async def test_season_equator(hass):
     """Test that season should be unknown for equator."""
+    hass.config.latitude = HEMISPHERE_EQUATOR["homeassistant"]["latitude"]
     day = datetime(2017, 9, 3, 0, 0)
 
     with patch("homeassistant.components.season.sensor.utcnow", return_value=day):
@@ -104,46 +110,7 @@ async def test_season_equator(hass):
 
     state = hass.states.get("sensor.season")
     assert state
-    assert state.state is None
-
-
-async def test_setup_hemisphere_northern(hass):
-    """Test platform setup of northern hemisphere."""
-    hass.config.latitude = HEMISPHERE_NORTHERN["homeassistant"]["latitude"]
-    assert async_setup_component(hass, "sensor", HEMISPHERE_NORTHERN)
-    await hass.async_block_till_done()
-    assert (
-        hass.config.as_dict()["latitude"]
-        == HEMISPHERE_NORTHERN["homeassistant"]["latitude"]
-    )
-    state = hass.states.get("sensor.season")
-    assert state.attributes.get("friendly_name") == "Season"
-
-
-async def test_setup_hemisphere_southern(hass):
-    """Test platform setup of southern hemisphere."""
-    hass.config.latitude = HEMISPHERE_SOUTHERN["homeassistant"]["latitude"]
-    assert await async_setup_component(hass, "sensor", HEMISPHERE_SOUTHERN)
-    await hass.async_block_till_done()
-    assert (
-        hass.config.as_dict()["latitude"]
-        == HEMISPHERE_SOUTHERN["homeassistant"]["latitude"]
-    )
-    state = hass.states.get("sensor.season")
-    assert state.attributes.get("friendly_name") == "Season"
-
-
-async def test_setup_hemisphere_equator(hass):
-    """Test platform setup of equator."""
-    hass.config.latitude = HEMISPHERE_EQUATOR["homeassistant"]["latitude"]
-    assert await async_setup_component(hass, "sensor", HEMISPHERE_EQUATOR)
-    await hass.async_block_till_done()
-    assert (
-        hass.config.as_dict()["latitude"]
-        == HEMISPHERE_EQUATOR["homeassistant"]["latitude"]
-    )
-    state = hass.states.get("sensor.season")
-    assert state.attributes.get("friendly_name") == "Season"
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_setup_hemisphere_empty(hass):
