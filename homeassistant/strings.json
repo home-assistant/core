@@ -25,7 +25,7 @@
         "confirm_setup": "Do you want to start set up?"
       },
       "data": {
-        "name": "[%key:common::config_flow::data::name%]",
+        "name": "Name",
         "email": "Email",
         "username": "Username",
         "password": "Password",
