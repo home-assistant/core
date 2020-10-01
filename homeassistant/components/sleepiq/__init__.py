@@ -12,15 +12,15 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 from .const import (
-    BED,
     DOMAIN,
-    PRESET_FAVORITE,
-    SERVICE_SET_FAVORITE,
-    SERVICE_SET_SLEEP_NUMBER,
-    SIDE,
+    SENSOR_TYPES,
     SIDES,
+    SIDE,
+    BED,
     SLEEP_NUMBER,
-    SENSOR_TYPES
+    SERVICE_SET_SLEEP_NUMBER,
+    SERVICE_SET_FAVORITE,
+    PRESET_FAVORITE,
 )
 
 
@@ -163,6 +163,7 @@ class SleepIQData:
 =======
                     self._client.set_sleepnumber(bed_id, bed_side, num)
 >>>>>>> Add support to set sleep numer
+
 
 class SleepIQSensor(Entity):
     """Implementation of a SleepIQ sensor."""
