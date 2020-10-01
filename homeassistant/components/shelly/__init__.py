@@ -49,7 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         raise ConfigEntryNotReady from err
 
     wrapper = hass.data[DOMAIN][entry.entry_id] = ShellyDeviceWrapper(
-        hass, entry, device
+        hass, entry, device, options
     )
     await wrapper.async_setup()
 
@@ -64,7 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
     """Wrapper for a Shelly device with Home Assistant specific functions."""
 
-    def __init__(self, hass, entry, device: aioshelly.Device):
+    def __init__(self, hass, entry, device: aioshelly.Device, options):
         """Initialize the Shelly device wrapper."""
         super().__init__(
             hass,
@@ -74,6 +74,7 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         )
         self.hass = hass
         self.entry = entry
+        self.options = options
         self.device = device
         self._unsub_stop = None
 
@@ -82,6 +83,16 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         # Race condition on shutdown. Stop all the fetches.
         if self._unsub_stop is None:
             return None
+
+        if not self.last_update_success:
+            try:
+                async with async_timeout.timeout(10):
+                    self.device = await aioshelly.Device.create(
+                        aiohttp_client.async_get_clientsession(self.hass),
+                        self.options,
+                    )
+            except (asyncio.TimeoutError, OSError) as err:
+                raise update_coordinator.UpdateFailed("Error fetching data") from err
 
         try:
             async with async_timeout.timeout(5):
