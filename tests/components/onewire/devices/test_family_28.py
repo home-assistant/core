@@ -138,41 +138,6 @@ async def test_owserver_setup(hass):
     assert state.state == "25.1"
 
 
-def test_onewiredirect_update(hass):
-    """Test that onewiredirect updates correctly."""
-    device_id = DEVICE_ID.replace(".", "-")
-    init_args = [
-        DEVICE_NAME,
-        path.join(DEFAULT_SYSBUS_MOUNT_DIR, device_id, "w1_slave"),
-        "temperature",
-    ]
-
-    test_sensor = OneWireDirect(*init_args)
-
-    # test standard update
-    mo_main = mock_open(read_data=": crc=09 YES\nt=25123")
-    with patch(
-        "homeassistant.components.onewire.sensor.open",
-        mo_main,
-    ):
-        test_sensor.update()
-        assert test_sensor.state == 25.1
-
-    # test slow update
-    mo_main = mo_firstattempt = mock_open(read_data=": crc=09 ")
-    mo_secondattempt = mock_open(read_data=": crc=09 YES\nt=25723")
-    mo_main.side_effect = [
-        mo_firstattempt.return_value,
-        mo_secondattempt.return_value,
-    ]
-    with patch(
-        "homeassistant.components.onewire.sensor.open",
-        mo_main,
-    ):
-        test_sensor.update()
-        assert test_sensor.state == 25.7
-
-
 def test_onewireowfs_update(hass):
     """Test that onewireowfs updates correctly."""
     init_args = [
