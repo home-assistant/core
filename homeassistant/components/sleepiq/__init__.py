@@ -13,7 +13,6 @@ from homeassistant.util import Throttle
 
 from .const import (
     DOMAIN,
-    SENSOR_TYPES,
     SIDES,
     SIDE,
     BED,
