@@ -12,14 +12,14 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 from .const import (
-    DOMAIN,
-    SIDES,
-    SIDE,
     BED,
-    SLEEP_NUMBER,
-    SERVICE_SET_SLEEP_NUMBER,
-    SERVICE_SET_FAVORITE,
+    DOMAIN,
     PRESET_FAVORITE,
+    SERVICE_SET_FAVORITE,
+    SERVICE_SET_SLEEP_NUMBER,
+    SIDE,
+    SIDES,
+    SLEEP_NUMBER,
 )
 
 
