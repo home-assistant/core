@@ -2,10 +2,7 @@
 from os import path
 from unittest.mock import mock_open, patch
 
-from homeassistant.components.onewire.const import (
-    DEFAULT_OWSERVER_PORT,
-    DEFAULT_SYSBUS_MOUNT_DIR,
-)
+from homeassistant.components.onewire.const import DEFAULT_OWSERVER_PORT
 import homeassistant.components.sensor as sensor
 from homeassistant.setup import async_setup_component
 
@@ -15,28 +12,6 @@ OWFS_MOUNT_DIR = "/mnt/OneWireTest"
 
 DEVICE_ID = "00.111111111111"
 DEVICE_NAME = "My invalid device"
-
-
-async def test_setup_sysbus(hass):
-    """Test a device which is not recognised."""
-    entity_registry = mock_registry(hass)
-    device_id = DEVICE_ID.replace(".", "-")
-    config = {
-        "sensor": {
-            "platform": "onewire",
-            "names": {
-                device_id: DEVICE_NAME,
-            },
-        }
-    }
-    with patch(
-        "homeassistant.components.onewire.sensor.glob",
-        return_value=[path.join(DEFAULT_SYSBUS_MOUNT_DIR, device_id)],
-    ):
-        assert await async_setup_component(hass, sensor.DOMAIN, config)
-        await hass.async_block_till_done()
-
-    assert len(entity_registry.entities) == 0
 
 
 async def test_setup_owfs(hass):
