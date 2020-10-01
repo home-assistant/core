@@ -1,6 +1,6 @@
 {
   "domain": "sleepiq",
-  "name": "SleepNumber",
+  "name": "SleepIQ",
   "documentation": "https://www.home-assistant.io/integrations/sleepiq",
   "requirements": ["sleepyq==0.8.1"],
   "codeowners": ["@home-assistant", "@Jay2645", "@Jpeterson37"]
