@@ -7,7 +7,7 @@ from copy import deepcopy
 import datetime
 from datetime import timedelta
 import logging
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 import voluptuous as vol
 
@@ -245,6 +245,8 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
 
         # Tracks 'off' → 'on' state changes
         self._on_to_off_event: Dict[str, Event] = {}
+        # Tracks 'on' → 'off' state changes
+        self._off_to_on_event: Dict[str, Event] = {}
         # Locks that prevent light adjusting when waiting for a light to 'turn_off'
         self._locks: Dict[str, asyncio.Lock] = {}
 
@@ -382,7 +384,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         self._state = True
         await self._setup_listeners()
         if adapt_lights:
-            await self._maybe_adapt_lights(
+            await self._update_attrs_and_maybe_adapt_lights(
                 transition=self._initial_transition, force=True
             )
 
@@ -410,19 +412,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         _LOGGER.debug("%s: '_update_attrs' called", self._name)
 
     async def _async_update_at_interval(self, now=None):
-        await self._maybe_adapt_lights(force=False)
-
-    async def _maybe_adapt_lights(
-        self,
-        lights: Optional[List[str]] = None,
-        transition: Optional[int] = None,
-        force: bool = False,
-        context: Optional[Context] = None,
-    ):
-        self._update_attrs()
-        if self._only_once and not force:
-            return
-        await self._adapt_lights(lights or self._lights, transition, context)
+        await self._update_attrs_and_maybe_adapt_lights(force=False)
 
     def _get_sun_events(self, date: datetime.datetime):
         def _replace_time(date, key):
@@ -586,28 +576,37 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
             context=context,
         )
 
-    def _should_adapt(self):
-        if not self._lights or not self.is_on or self._is_disabled():
-            return False
-        return True
+    async def _update_attrs_and_maybe_adapt_lights(
+        self,
+        lights: Optional[List[str]] = None,
+        transition: Optional[int] = None,
+        force: bool = False,
+        context: Optional[Context] = None,
+    ):
+        assert self.is_on
+        self._update_attrs()
+        if self._only_once and not force:
+            return
+        await self._adapt_lights(lights or self._lights, transition, context)
 
     async def _adapt_lights(
         self, lights: List[str], transition: Optional[int], context=Optional[Context]
     ):
-        if not self._should_adapt():
+        if self._is_disabled() or not lights:
             return
         _LOGGER.debug(
             "%s: '_adapt_lights(%s, %s)' called", self.name, lights, transition
         )
         for light in lights:
-            if is_on(self.hass, light):
-                await self._adapt_light(light, transition, context=context)
+            if not is_on(self.hass, light):
+                continue
+            await self._adapt_light(light, transition, context=context)
 
     async def _disable_state_event(self, event: Event):
         if not match_state_event(event, self._disable_state):
             return
         _LOGGER.debug("%s: _disable_state_event, event: '%s'", self._name, event)
-        await self._maybe_adapt_lights(
+        await self._update_attrs_and_maybe_adapt_lights(
             transition=self._initial_transition, force=True, context=event.context
         )
 
@@ -615,7 +614,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         if not match_state_event(event, self._sleep_state):
             return
         _LOGGER.debug("%s: _sleep_state_event, event: '%s'", self._name, event)
-        await self._maybe_adapt_lights(
+        await self._update_attrs_and_maybe_adapt_lights(
             transition=self._initial_transition, force=True, context=event.context
         )
 
@@ -632,6 +631,8 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
             _LOGGER.debug(
                 "%s: Detected an 'off' → 'on' event for '%s'", self._name, entity_id
             )
+            # Tracks 'off' → 'on' state changes
+            self._off_to_on_event[entity_id] = event
             lock = self._locks.get(entity_id)
             if lock is None:
                 lock = self._locks[entity_id] = asyncio.Lock()
@@ -647,7 +648,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
                     )
                     return
 
-            await self._maybe_adapt_lights(
+            await self._update_attrs_and_maybe_adapt_lights(
                 lights=[entity_id],
                 transition=self._initial_transition,
                 force=True,
@@ -672,15 +673,49 @@ class TurnOnOffListener:
         self.lights = set()
 
         # Tracks 'light.turn_off' service calls
-        self.turn_off_event: Dict[str, Tuple[str, float]] = {}
+        self.turn_off_event: Dict[str, Event] = {}
         # Tracks 'light.turn_on' service calls
-        self.turn_on_event: Dict[str, Tuple[str]] = {}
+        self.turn_on_event: Dict[str, Event] = {}
         # Keeps 'asyncio.sleep` tasks that can be cancelled by 'light.turn_on' events
         self.sleep_tasks: Dict[str, asyncio.Task] = {}
 
         self.remove_listener = self.hass.bus.async_listen(
             EVENT_CALL_SERVICE, self.turn_on_off_event_listener
         )
+
+    async def turn_on_off_event_listener(self, event: Event):
+        """Track 'light.turn_off' and 'light.turn_on' service calls."""
+        domain = event.data.get(ATTR_DOMAIN)
+        if domain != LIGHT_DOMAIN:
+            return
+
+        service = event.data.get(ATTR_SERVICE)
+        service_data = event.data.get(ATTR_SERVICE_DATA, {})
+
+        entity_ids = service_data.get(ATTR_ENTITY_ID)
+        if isinstance(entity_ids, str):
+            entity_ids = [entity_ids]
+
+        if not any(eid in self.lights for eid in entity_ids):
+            return
+
+        if service == SERVICE_TURN_OFF:
+            transition = service_data.get(ATTR_TRANSITION)
+            _LOGGER.debug(
+                "Detected an 'light.turn_off('%s', transition=%s)' event",
+                entity_ids,
+                transition,
+            )
+            for eid in entity_ids:
+                self.turn_off_event[eid] = event
+
+        elif service == SERVICE_TURN_ON:
+            _LOGGER.debug("Detected an 'light.turn_on('%s')' event", entity_ids)
+            for eid in entity_ids:
+                task = self.sleep_tasks.get(eid)
+                if task is not None:
+                    task.cancel()
+                self.turn_on_event[eid] = event
 
     async def maybe_cancel_adjusting(
         self, entity_id: str, off_to_on_event: Event, on_to_off_event: Optional[Event]
@@ -702,8 +737,14 @@ class TurnOnOffListener:
             return False
 
         id_on_to_off = on_to_off_event.context.id
-        id_turn_off, transition = self.turn_off_event.get(entity_id, (None, None))
-        id_turn_on = self.turn_on_event.get(entity_id)
+
+        turn_off_event = self.turn_off_event.get(entity_id)
+        id_turn_off = turn_off_event.context.id
+        transition = turn_off_event.data[ATTR_SERVICE_DATA].get(ATTR_TRANSITION)
+
+        turn_on_event = self.turn_on_event.get(entity_id)
+        id_turn_on = turn_on_event.context.id
+
         id_off_to_on = off_to_on_event.context.id
 
         if id_off_to_on == id_turn_on and id_off_to_on is not None:
@@ -765,37 +806,3 @@ class TurnOnOffListener:
         # other 'off' → 'on' state switches resulting from polling. That
         # would mean we 'return True' here.
         return False
-
-    async def turn_on_off_event_listener(self, event: Event):
-        """Track 'light.turn_off' and 'light.turn_on' service calls."""
-        domain = event.data.get(ATTR_DOMAIN)
-        if domain != LIGHT_DOMAIN:
-            return
-
-        service = event.data.get(ATTR_SERVICE)
-        service_data = event.data.get(ATTR_SERVICE_DATA, {})
-
-        entity_ids = service_data.get(ATTR_ENTITY_ID)
-        if isinstance(entity_ids, str):
-            entity_ids = [entity_ids]
-
-        if not any(eid in self.lights for eid in entity_ids):
-            return
-
-        if service == SERVICE_TURN_OFF:
-            transition = service_data.get(ATTR_TRANSITION)
-            _LOGGER.debug(
-                "Detected an 'light.turn_off('%s', transition=%s)' event",
-                entity_ids,
-                transition,
-            )
-            for eid in entity_ids:
-                self.turn_off_event[eid] = (event.context.id, transition)
-
-        elif service == SERVICE_TURN_ON:
-            _LOGGER.debug("Detected an 'light.turn_on('%s')' event", entity_ids)
-            for eid in entity_ids:
-                task = self.sleep_tasks.get(eid)
-                if task is not None:
-                    task.cancel()
-                self.turn_on_event[eid] = event.context.id
