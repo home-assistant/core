@@ -54,6 +54,6 @@ class CanaryDataUpdateCoordinator(DataUpdateCoordinator):
 
         try:
             async with timeout(15):
-                return await self.hass.async_add_executor_job(_update_data)
+                return await self.hass.async_add_executor_job(self._update_data)
         except (ConnectTimeout, HTTPError) as error:
             raise UpdateFailed(f"Invalid response from API: {error}") from error
