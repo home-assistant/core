@@ -19,7 +19,7 @@ import voluptuous as vol
 from homeassistant.auth.models import RefreshToken
 from homeassistant.components import media_source, zeroconf
 from homeassistant.components.http.auth import async_sign_path
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
+from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_EXTRA,
     MEDIA_TYPE_MOVIE,
@@ -87,21 +87,8 @@ SUPPORT_CAST = (
 
 
 ENTITY_SCHEMA = vol.All(
-    cv.deprecated(CONF_HOST, invalidation_version="0.116"),
     vol.Schema(
         {
-            vol.Exclusive(CONF_HOST, "device_identifier"): cv.string,
-            vol.Exclusive(CONF_UUID, "device_identifier"): cv.string,
-            vol.Optional(CONF_IGNORE_CEC): vol.All(cv.ensure_list, [cv.string]),
-        }
-    ),
-)
-
-PLATFORM_SCHEMA = vol.All(
-    cv.deprecated(CONF_HOST, invalidation_version="0.116"),
-    PLATFORM_SCHEMA.extend(
-        {
-            vol.Exclusive(CONF_HOST, "device_identifier"): cv.string,
             vol.Exclusive(CONF_UUID, "device_identifier"): cv.string,
             vol.Optional(CONF_IGNORE_CEC): vol.All(cv.ensure_list, [cv.string]),
         }
@@ -131,21 +118,6 @@ def _async_create_cast_device(hass: HomeAssistantType, info: ChromecastInfo):
     return CastDevice(info)
 
 
-async def async_setup_platform(
-    hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
-):
-    """Set up the Cast platform.
-
-    Deprecated.
-    """
-    _LOGGER.warning(
-        "Setting configuration for Cast via platform is deprecated. "
-        "Configure via Cast integration instead."
-        "This option will become invalid in version 0.116"
-    )
-    await _async_setup_platform(hass, config, async_add_entities, discovery_info)
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Cast from a config entry."""
     config = hass.data[CAST_DOMAIN].get("media_player") or {}
@@ -159,7 +131,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             for cfg in config
         ]
     )
-    if any([task.exception() for task in done]):
+    if any(task.exception() for task in done):
         exceptions = [task.exception() for task in done]
         for exception in exceptions:
             _LOGGER.debug("Failed to setup chromecast", exc_info=exception)
