@@ -29,28 +29,28 @@ class CanaryDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=update_interval,
         )
 
+    def _update_data(self) -> dict:
+        """Fetch data from Canary via sync functions."""
+        locations_by_id = {}
+        readings_by_device_id = {}
+
+        for location in self.canary.get_locations():
+            location_id = location.location_id
+            locations_by_id[location_id] = location
+
+            for device in location.devices:
+                if device.is_online:
+                    readings_by_device_id[
+                        device.device_id
+                    ] = self.canary.get_latest_readings(device.device_id)
+
+        return {
+            "locations": locations_by_id,
+            "readings": readings_by_device_id,
+        }
+
     async def _async_update_data(self) -> dict:
         """Fetch data from Canary."""
-
-        def _update_data() -> dict:
-            """Fetch data from Canary via sync functions."""
-            locations_by_id = {}
-            readings_by_device_id = {}
-
-            for location in self.canary.get_locations():
-                location_id = location.location_id
-                locations_by_id[location_id] = location
-
-                for device in location.devices:
-                    if device.is_online:
-                        readings_by_device_id[
-                            device.device_id
-                        ] = self.canary.get_latest_readings(device.device_id)
-
-            return {
-                "locations": locations_by_id,
-                "readings": readings_by_device_id,
-            }
 
         try:
             async with timeout(15):
