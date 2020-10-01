@@ -9,7 +9,7 @@
         },
         "error": {
             "invalid_credentials": "Neveljavne poverilnice",
-            "unknown": "Nepri\u010dakovana napaka"
+            "unexpected_error": "Nepri\u010dakovana napaka"
         },
         "step": {
             "user": {

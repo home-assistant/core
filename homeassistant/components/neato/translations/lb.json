@@ -9,7 +9,7 @@
         },
         "error": {
             "invalid_credentials": "Ong\u00eblteg Login Informatioune",
-            "unknown": "Onerwaarte Feeler"
+            "unexpected_error": "Onerwaarte Feeler"
         },
         "step": {
             "user": {

@@ -9,7 +9,7 @@
         },
         "error": {
             "invalid_credentials": "\u00c9rv\u00e9nytelen hiteles\u00edt\u0151 adatok",
-            "unknown": "V\u00e1ratlan hiba"
+            "unexpected_error": "V\u00e1ratlan hiba"
         },
         "step": {
             "user": {

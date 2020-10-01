@@ -9,7 +9,7 @@
         },
         "error": {
             "invalid_credentials": "Informations d'identification invalides",
-            "unknown": "Erreur inattendue"
+            "unexpected_error": "Erreur inattendue"
         },
         "step": {
             "user": {

@@ -9,7 +9,7 @@
         },
         "error": {
             "invalid_credentials": "Ongeldige inloggegevens",
-            "unknown": "Onverwachte fout"
+            "unexpected_error": "Onverwachte fout"
         },
         "step": {
             "user": {

@@ -9,7 +9,7 @@
         },
         "error": {
             "invalid_credentials": "Credencials inv\u00e0lides",
-            "unknown": "Error inesperat"
+            "unexpected_error": "Error inesperat"
         },
         "step": {
             "user": {
