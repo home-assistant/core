@@ -72,6 +72,8 @@ _COLLECTABLE_STATE_ATTRIBUTES = {
     "name",
 }
 
+DEFAULT_RATE_LIMIT = timedelta(seconds=1)
+
 
 @bind_hass
 def attach(hass: HomeAssistantType, obj: Any) -> None:
@@ -231,6 +233,13 @@ class RenderInfo:
         self.entities = frozenset(self.entities)
         self.domains = frozenset(self.domains)
         self.domains_lifecycle = frozenset(self.domains_lifecycle)
+
+        if not self.rate_limit and (
+            self.domains or self.domains_lifecycle or self.all_states or self.exception
+        ):
+            # If the template accesses all states or an entire
+            # domain, and no rate limit is set, we use the default.
+            self.rate_limit = DEFAULT_RATE_LIMIT
 
         if self.exception:
             return
