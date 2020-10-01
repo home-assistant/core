@@ -66,6 +66,7 @@ async def test_climate_devices(hass):
     assert hass.states.get("climate.clip_thermostat") is None
 
     # Event signals thermostat configured off
+
     state_changed_event = {
         "t": "event",
         "e": "changed",
