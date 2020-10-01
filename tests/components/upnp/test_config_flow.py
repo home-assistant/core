@@ -132,7 +132,7 @@ async def test_flow_user(hass: HomeAssistantType):
         }
 
 
-async def test_flow_config(hass: HomeAssistantType):
+async def test_flow_import(hass: HomeAssistantType):
     """Test config flow: discovered + configured through configuration.yaml."""
     udn = "uuid:device_1"
     mock_device = MockDevice(udn)
@@ -160,6 +160,30 @@ async def test_flow_config(hass: HomeAssistantType):
             CONFIG_ENTRY_ST: mock_device.device_type,
             CONFIG_ENTRY_UDN: mock_device.udn,
         }
+
+
+async def test_flow_import_incomplete(hass: HomeAssistantType):
+    """Test config flow: incomplete discovery, configured through configuration.yaml."""
+    udn = "uuid:device_1"
+    mock_device = MockDevice(udn)
+    discovery_infos = [
+        {
+            DISCOVERY_ST: mock_device.device_type,
+            DISCOVERY_UDN: mock_device.udn,
+            DISCOVERY_LOCATION: "dummy",
+        }
+    ]
+
+    with patch.object(
+        Device, "async_create_device", AsyncMock(return_value=mock_device)
+    ), patch.object(Device, "async_discover", AsyncMock(return_value=discovery_infos)):
+        # Discovered via step import.
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "incomplete_discovery"
 
 
 async def test_options_flow(hass: HomeAssistantType):
