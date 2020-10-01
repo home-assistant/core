@@ -3,13 +3,11 @@ import asyncio
 import logging
 
 from goalzero import Yeti, exceptions
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -17,27 +15,9 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import (
-    DATA_KEY_API,
-    DATA_KEY_COORDINATOR,
-    DEFAULT_NAME,
-    DOMAIN,
-    MIN_TIME_BETWEEN_UPDATES,
-)
+from .const import DATA_KEY_API, DATA_KEY_COORDINATOR, DOMAIN, MIN_TIME_BETWEEN_UPDATES
 
 _LOGGER = logging.getLogger(__name__)
-
-GOALZERO_SCHEMA = vol.Schema(
-    vol.All(
-        {
-            vol.Required(CONF_HOST): cv.matches_regex(
-                r"\A(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2 \
-            [0-4][0-9]|[01]?[0-9][0-9]?)\Z"
-            ),
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        },
-    )
-)
 
 
 PLATFORMS = ["binary_sensor"]
