@@ -243,27 +243,6 @@ async def async_setup(hass, config):
     )
 
     hass.states.async_set(
-        "group.ais_pogoda",
-        "on",
-        {
-            "entity_id": [
-                "sensor.dark_sky_temperature",
-                "sensor.dark_sky_apparent_temperature",
-                "sensor.dark_sky_wind_speed",
-                "sensor.dark_sky_humidity",
-                "sensor.dark_sky_pressure",
-                "sensor.dark_sky_visibility",
-                "sensor.dark_sky_hourly_summary",
-                "sensor.dark_sky_daily_summary",
-            ],
-            "order": 5,
-            "control": "hidden",
-            "friendly_name": "Pogoda",
-            "remote_group_view": "Mój Dom",
-        },
-    )
-
-    hass.states.async_set(
         "group.day_info",
         "on",
         {

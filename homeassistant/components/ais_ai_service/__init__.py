@@ -4387,26 +4387,9 @@ class AisGetWeather(intent.IntentHandler):
     async def async_handle(self, intent_obj):
         """Handle the intent."""
         hass = intent_obj.hass
-        # weather = hass.states.get('sensor.pogoda_info').state
         weather = "Pogoda "
         attr = hass.states.get("group.ais_pogoda").attributes
-        for a in attr["entity_id"]:
-            w = hass.states.get(a)
-            if a == "sensor.dark_sky_hourly_summary":
-                weather += " " + w.state + " "
-            elif a == "sensor.dark_sky_daily_summary":
-                weather += " " + w.state + " "
-            else:
-                weather += w.attributes["friendly_name"] + " " + w.state + " "
-                if "unit_of_measurement" in w.attributes:
-                    if w.attributes["unit_of_measurement"] == "hPa":
-                        weather += "hektopascala; "
-                    elif w.attributes["unit_of_measurement"] == "km/h":
-                        weather += "kilometrów na godzinę; "
-                    elif w.attributes["unit_of_measurement"] == "km":
-                        weather += "kilometra; "
-                    else:
-                        weather += w.attributes["unit_of_measurement"] + "; "
+        weather = "pogoda jest bardzo..."
         return weather, True
 
 
@@ -4418,7 +4401,7 @@ class AisGetWeather48(intent.IntentHandler):
     async def async_handle(self, intent_obj):
         """Handle the intent."""
         hass = intent_obj.hass
-        weather = hass.states.get("sensor.dark_sky_daily_summary").state
+        weather = "prognoza pogody ..."
         return weather, True
 
 
