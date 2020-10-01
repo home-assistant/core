@@ -55,7 +55,7 @@ async def async_setup_entry(
     ]
     sensors = []
 
-    for location_id, location in coordinator.data["locations"].items():
+    for location in coordinator.data["locations"].values():
         for device in location.devices:
             if device.is_online:
                 device_type = device.device_type
