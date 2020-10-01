@@ -111,6 +111,14 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.debug("aborting, already configured")
                 return self.async_abort(reason="already_configured")
 
+        # Test if import_info isn't already configured.
+        if import_info is not None and any(
+            import_info["udn"] == entry.data[CONFIG_ENTRY_UDN]
+            and import_info["st"] == entry.data[CONFIG_ENTRY_ST]
+            for entry in self._async_current_entries()
+        ):
+            return self.async_abort(reason="already_configured")
+
         # Discover devices.
         self._discoveries = await Device.async_discover(self.hass)
 
