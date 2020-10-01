@@ -6,8 +6,8 @@
         "title": "Connect to the National Weather Service",
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
-          "latitude": "Latitude",
-          "longitude": "Longitude",
+          "latitude": "[%key:common::config_flow::data::latitude%]",
+          "longitude": "[%key:common::config_flow::data::longitude%]",
           "station": "METAR station code"
         }
       }
