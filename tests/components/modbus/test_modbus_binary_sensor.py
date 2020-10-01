@@ -1,4 +1,5 @@
 """The tests for the Modbus sensor component."""
+from datetime import timedelta
 import logging
 
 from homeassistant.components.binary_sensor import DOMAIN as SENSOR_DOMAIN
@@ -11,7 +12,7 @@ from homeassistant.components.modbus.const import (
 )
 from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON
 
-from .conftest import run_base_test
+from .conftest import run_base_read_test, setup_base_test
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,27 +20,28 @@ _LOGGER = logging.getLogger(__name__)
 async def run_sensor_test(hass, use_mock_hub, register_config, value, expected):
     """Run test for given config."""
     sensor_name = "modbus_test_binary_sensor"
-    entity_domain = SENSOR_DOMAIN
-    data_array = {
-        CONF_INPUTS: [
-            dict(**{CONF_NAME: sensor_name, CONF_ADDRESS: 1234}, **register_config)
-        ]
-    }
-    await run_base_test(
+    scan_interval = 5
+    entity_id, now, device = await setup_base_test(
         sensor_name,
         hass,
         use_mock_hub,
-        data_array,
+        {
+            CONF_INPUTS: [
+                dict(**{CONF_NAME: sensor_name, CONF_ADDRESS: 1234}, **register_config)
+            ]
+        },
+        SENSOR_DOMAIN,
+        scan_interval,
+    )
+    await run_base_read_test(
+        entity_id,
+        hass,
+        use_mock_hub,
         register_config.get(CONF_INPUT_TYPE),
-        entity_domain,
         value,
         expected,
+        now + timedelta(seconds=scan_interval + 1),
     )
-
-    # Check state
-    entity_id = f"{entity_domain}.{sensor_name}"
-    state = hass.states.get(entity_id).state
-    assert state == expected
 
 
 async def test_coil_true(hass, mock_hub):
