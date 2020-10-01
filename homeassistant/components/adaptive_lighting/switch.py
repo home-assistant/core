@@ -465,7 +465,15 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         # Check whether order is correct
         events = sorted(events, key=lambda x: x[1])
         events_names, _ = zip(*events)
-        assert events_names in _ALLOWED_ORDERS, events_names
+        if events_names not in _ALLOWED_ORDERS:
+            msg = (
+                f"{self._name}: The sun events {events_names} are not in the expected"
+                " order. The Adaptive Lighting integration will not work!"
+                " This might happen if your sunrise/sunset offset is too large or"
+                " your manually set sunrise/sunset time is past/before noon/midnight."
+            )
+            _LOGGER.error(msg)
+            raise ValueError(msg)
 
         return events
 
