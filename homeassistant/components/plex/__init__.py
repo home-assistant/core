@@ -169,7 +169,7 @@ async def async_setup_entry(hass, entry):
                     entry.data[CONF_SERVER],
                     error,
                 )
-                hass.add_job(hass.config_entries.async_reload, entry.entry_id)
+                hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
 
         elif signal == SIGNAL_DATA:
             async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
