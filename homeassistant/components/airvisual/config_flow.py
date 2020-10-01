@@ -166,7 +166,7 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="node_pro",
                 data_schema=self.node_pro_schema,
-                errors={CONF_IP_ADDRESS: "unable_to_connect"},
+                errors={CONF_IP_ADDRESS: "cannot_connect"},
             )
 
         await node.async_disconnect()
