@@ -92,9 +92,9 @@ async def test_climate_devices(hass):
     gateway.api.event_handler(state_changed_event)
     await hass.async_block_till_done()
 
-    # Event signals thermostat state off
-
     assert hass.states.get("climate.thermostat").state == "heat"
+
+    # Event signals thermostat state off
 
     state_changed_event = {
         "t": "event",
