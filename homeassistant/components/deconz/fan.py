@@ -18,10 +18,6 @@ from .gateway import get_gateway_from_config_entry
 SPEEDS = {SPEED_OFF: 0, SPEED_LOW: 1, SPEED_MEDIUM: 2, SPEED_HIGH: 4}
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up deCONZ platforms."""
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up fans for deCONZ component.
 
@@ -40,7 +36,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             if light.type in FANS and light.uniqueid not in gateway.entities[DOMAIN]:
                 entities.append(DeconzFan(light, gateway))
 
-        async_add_entities(entities, True)
+        if entities:
+            async_add_entities(entities, True)
 
     gateway.listeners.append(
         async_dispatcher_connect(
@@ -75,7 +72,7 @@ class DeconzFan(DeconzDevice, FanEntity):
     @property
     def speed_list(self) -> list:
         """Get the list of available speeds."""
-        return list(SPEEDS.keys())
+        return list(SPEEDS)
 
     @property
     def supported_features(self) -> int:
