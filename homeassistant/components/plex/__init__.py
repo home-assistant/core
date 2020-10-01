@@ -29,6 +29,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     EVENT_HOMEASSISTANT_STOP,
 )
+from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -150,6 +151,7 @@ async def async_setup_entry(hass, entry):
     hass.data[PLEX_DOMAIN][DISPATCHERS].setdefault(server_id, [])
     hass.data[PLEX_DOMAIN][DISPATCHERS][server_id].append(unsub)
 
+    @callback
     def plex_websocket_callback(signal, data, error):
         """Handle callbacks from plexwebsocket library."""
         if signal == SIGNAL_CONNECTION_STATE:
@@ -167,9 +169,7 @@ async def async_setup_entry(hass, entry):
                     entry.data[CONF_SERVER],
                     error,
                 )
-                asyncio.run_coroutine_threadsafe(
-                    hass.config_entries.async_reload(entry.entry_id), hass.loop
-                )
+                hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
 
         elif signal == SIGNAL_DATA:
             async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
