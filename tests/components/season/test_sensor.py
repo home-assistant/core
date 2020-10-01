@@ -150,6 +150,6 @@ async def test_setup_hemisphere_equator(hass):
 async def test_setup_hemisphere_empty(hass):
     """Test platform setup of missing latlong."""
     hass.config.latitude = None
-    assert await setup_component(hass, "sensor", HEMISPHERE_EMPTY)
+    assert await async_setup_component(hass, "sensor", HEMISPHERE_EMPTY)
     await hass.async_block_till_done()
     assert hass.config.as_dict()["latitude"] is None
