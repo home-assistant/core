@@ -119,7 +119,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         if self._already_configured(user_input):
-            return self.async_abort(reason="already_configured")
+            return self.async_abort(reason="already_configured_device")
 
         conn = None
 
@@ -189,7 +189,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         except LoginErrorPasswordWrongException:
             errors[CONF_PASSWORD] = "incorrect_password"
         except LoginErrorUsernamePasswordWrongException:
-            errors[CONF_USERNAME] = "incorrect_username_or_password"
+            errors[CONF_USERNAME] = "invalid_auth"
         except LoginErrorUsernamePasswordOverrunException:
             errors["base"] = "login_attempts_exceeded"
         except ResponseErrorException:
@@ -200,7 +200,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors[CONF_URL] = "connection_timeout"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.warning("Unknown error connecting to device", exc_info=True)
-            errors[CONF_URL] = "unknown_connection_error"
+            errors[CONF_URL] = "unknown"
         if errors:
             await self.hass.async_add_executor_job(logout)
             return await self._async_show_user_form(
@@ -240,7 +240,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         user_input = {CONF_URL: url}
         if self._already_configured(user_input):
-            return self.async_abort(reason="already_configured")
+            return self.async_abort(reason="already_configured_device")
 
         # pylint: disable=no-member
         self.context["title_placeholders"] = {
