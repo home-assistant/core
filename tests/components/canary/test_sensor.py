@@ -19,6 +19,7 @@ from homeassistant.const import (
 )
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
+
 from . import mock_device, mock_location, mock_reading
 
 from tests.async_mock import patch
