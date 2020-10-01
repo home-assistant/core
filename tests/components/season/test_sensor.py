@@ -70,7 +70,7 @@ async def test_season_northern_hemisphere(hass, type, day, expected):
     config = HEMISPHERE_NORTHERN
     config["sensor"]["type"] = type
 
-    with patch("homeassistant.util.dt.utcnow", return_value=day):
+    with patch("homeassistant.components.season.sensor.utcnow", return_value=day):
         assert await async_setup_component(hass, "sensor", config)
         await hass.async_block_till_done()
 
@@ -85,7 +85,7 @@ async def test_season_southern_hemisphere(hass, type, day, expected):
     config = HEMISPHERE_SOUTHERN
     config["sensor"]["type"] = type
 
-    with patch("homeassistant.util.dt.utcnow", return_value=day):
+    with patch("homeassistant.components.season.sensor.utcnow", return_value=day):
         assert await async_setup_component(hass, "sensor", config)
         await hass.async_block_till_done()
 
@@ -98,7 +98,7 @@ async def test_season_equator(hass):
     """Test that season should be unknown for equator."""
     day = datetime(2017, 9, 3, 0, 0)
 
-    with patch("homeassistant.util.dt.utcnow", return_value=day):
+    with patch("homeassistant.components.season.sensor.utcnow", return_value=day):
         assert await async_setup_component(hass, "sensor", HEMISPHERE_EQUATOR)
         await hass.async_block_till_done()
 
