@@ -43,9 +43,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         show_setup_message(hass, entry.entry_id)
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
-
-
-async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Remove a config entry."""
-    show_setup_message(hass, entry.entry_id)
-    return True
