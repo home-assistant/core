@@ -7,7 +7,10 @@
         "data": { "dsn": "DSN" }
       }
     },
-    "error": { "unknown": "[%key:common::config_flow::error::unknown%]", "bad_dsn": "Invalid DSN" },
+    "error": {
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "bad_dsn": "Invalid DSN"
+    },
     "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
