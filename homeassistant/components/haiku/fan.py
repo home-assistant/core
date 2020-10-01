@@ -56,7 +56,7 @@ class HaikuFan(Entity):
         self._unique_id = uid
         self._speed_list = []
         self._supported_features = 0
-        self._state = STATE_ON
+        self._state = True
         self._supported_features = SUPPORT_SET_SPEED
         self._speed_list = [
             SPEED_OFF,
