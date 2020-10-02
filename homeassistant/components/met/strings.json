@@ -12,6 +12,6 @@
         }
       }
     },
-    "error": { "name_exists": "Location already exists" }
+    "error": { "name_exists": "[%key:common::config_flow::data::already_configured%]" }
   }
 }
