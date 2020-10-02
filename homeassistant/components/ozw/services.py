@@ -70,6 +70,8 @@ class ZWaveServices:
         param = service.data[const.ATTR_CONFIG_PARAMETER]
         selection = service.data[const.ATTR_CONFIG_VALUE]
 
+        # These function calls may raise an exception but that's ok because
+        # the exception will show in the UI to the user
         node = get_node_from_manager(self._manager, instance_id, node_id)
         payload = set_config_parameter(node, param, selection)
 
