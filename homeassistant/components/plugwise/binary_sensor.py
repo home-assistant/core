@@ -36,8 +36,23 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     all_devices = api.get_all_devices()
     for dev_id, device_properties in all_devices.items():
-        if device_properties["class"] not in ["heater_central", "gateway"]:
-            continue
+
+        if device_properties["class"] == "heater_central":
+            data = api.get_device_data(dev_id)
+            for binary_sensor, dummy in BINARY_SENSOR_MAP.items():
+                if binary_sensor not in data:
+                    continue
+
+                entities.append(
+                    PwBinarySensor(
+                        api,
+                        coordinator,
+                        device_properties["name"],
+                        dev_id,
+                        binary_sensor,
+                        device_properties["class"],
+                    )
+                )
 
         if device_properties["class"] == "gateway" and is_thermostat is not None:
             entities.append(
@@ -48,24 +63,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     device_properties["name"],
                     dev_id,
                     "plugwise_notification",
-                    device_properties["class"],
-                )
-            )
-
-            continue
-
-        data = api.get_device_data(dev_id)
-        for binary_sensor, dummy in BINARY_SENSOR_MAP.items():
-            if binary_sensor not in data:
-                continue
-
-            entities.append(
-                PwBinarySensor(
-                    api,
-                    coordinator,
-                    device_properties["name"],
-                    dev_id,
-                    binary_sensor,
                     device_properties["class"],
                 )
             )
