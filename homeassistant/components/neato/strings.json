@@ -12,7 +12,7 @@
       }
     },
     "error": {
-      "invalid_credentials": "Invalid credentials",
+      "invalid_auth": "Invalid credentials",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "create_entry": {
