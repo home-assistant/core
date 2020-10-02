@@ -297,6 +297,11 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         return f"Adaptive Lighting: {self._name}"
 
     @property
+    def unique_id(self):
+        """Return the unique ID of entity."""
+        return self._name
+
+    @property
     def is_on(self) -> Optional[bool]:
         """Return true if adaptive lighting is on."""
         return self._state
@@ -561,6 +566,11 @@ class AdaptiveSleepModeSwitch(SwitchEntity, RestoreEntity):
         return f"Adaptive Lighting Sleep Mode: {self._name}"
 
     @property
+    def unique_id(self):
+        """Return the unique ID of entity."""
+        return f"{self._name}_sleep_mode"
+
+    @property
     def icon(self) -> str:
         """Icon to use in the frontend, if any."""
         return self._icon
@@ -578,11 +588,11 @@ class AdaptiveSleepModeSwitch(SwitchEntity, RestoreEntity):
         else:
             await self.async_turn_on()
 
-    async def async_turn_on(self) -> None:  # pylint: disable=arguments-differ
+    async def async_turn_on(self, **kwargs) -> None:
         """Turn on adaptive lighting sleep mode."""
         self._state = True
 
-    async def async_turn_off(self) -> None:  # pylint: disable=arguments-differ
+    async def async_turn_off(self, **kwargs) -> None:
         """Turn off adaptive lighting sleep mode."""
         self._state = False
 
