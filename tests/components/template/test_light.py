@@ -1124,17 +1124,15 @@ class TestTemplateLight:
         assert state is not None
         assert state.attributes.get("effect") == "Disco"
 
-
     @pytest.mark.parametrize(
         "expected_effect_list,template",
         [
             (
-                ['Strobe color', 'Police', 'Christmas', 'RGB', 'Random Loop'],
+                ["Strobe color", "Police", "Christmas", "RGB", "Random Loop"],
                 '{{ \'["Strobe color", "Police", "Christmas", "RGB", "Random Loop"]\' }}',
             ),
-            (['Police', 'RGB', 'Random Loop'], "{{ '[\"Police\", \"RGB\", \"Random Loop\"]' }}"),
-            (None, "{{ \"Police\", \"RGB\", \"Random Loop\" }}"),
-            (None, "{{ [] }}"),
+            (["Police", "RGB", "Random Loop"], "{{ '[\"Police\", \"RGB\", \"Random Loop\"]' }}"),
+            ([], "{{ [] }}"),
             ([], "{{ '[]' }}"),
             (None, "{{ none }}"),
             (None, ""),
