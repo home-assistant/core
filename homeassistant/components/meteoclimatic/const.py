@@ -9,10 +9,11 @@ from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
+    LENGTH_MILLIMETERS,
+    PERCENTAGE,
     PRESSURE_HPA,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
 )
 
 DOMAIN = "meteoclimatic"
@@ -55,19 +56,19 @@ SENSOR_TYPES = {
     },
     "humidity_current": {
         SENSOR_TYPE_NAME: "Humidity",
-        SENSOR_TYPE_UNIT: UNIT_PERCENTAGE,
+        SENSOR_TYPE_UNIT: PERCENTAGE,
         SENSOR_TYPE_ICON: "mdi:water-percent",
         SENSOR_TYPE_CLASS: DEVICE_CLASS_HUMIDITY,
     },
     "humidity_max": {
         SENSOR_TYPE_NAME: "Max Humidity",
-        SENSOR_TYPE_UNIT: UNIT_PERCENTAGE,
+        SENSOR_TYPE_UNIT: PERCENTAGE,
         SENSOR_TYPE_ICON: "mdi:water-percent",
         SENSOR_TYPE_CLASS: DEVICE_CLASS_HUMIDITY,
     },
     "humidity_min": {
         SENSOR_TYPE_NAME: "Min Humidity",
-        SENSOR_TYPE_UNIT: UNIT_PERCENTAGE,
+        SENSOR_TYPE_UNIT: PERCENTAGE,
         SENSOR_TYPE_ICON: "mdi:water-percent",
         SENSOR_TYPE_CLASS: DEVICE_CLASS_HUMIDITY,
     },
@@ -109,7 +110,7 @@ SENSOR_TYPES = {
     },
     "rain": {
         SENSOR_TYPE_NAME: "Rain",
-        SENSOR_TYPE_UNIT: "mm",
+        SENSOR_TYPE_UNIT: LENGTH_MILLIMETERS,
         SENSOR_TYPE_ICON: "mdi:weather-rainy",
         SENSOR_TYPE_CLASS: None,
     },
