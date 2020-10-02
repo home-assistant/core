@@ -95,15 +95,12 @@ class VikingSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
-        return {"number": self.viking_data.number}
+        return {"number": self.viking_data.data.get("number")}
 
     def update(self):
         """Fetch new state data for the sensor."""
         self.viking_data.update()
-        if self.type == "balance":
-            self._state = self.viking_data.balance
-        elif self.type == "data_available":
-            self._state = self.viking_data.data_available
+        self._state = self.viking_data.data.get(self.type)
 
 
 class VikingData:
@@ -115,20 +112,10 @@ class VikingData:
         self._password = password
         self._raw_data = None
         # Number
-        self.number = None
-        # Balance
-        self.balance = None
-        self.balance_type = None
-        self.balance_expiration = None
-        self.balance_expired = None
-        # Data
-        self.data_is_available = None
-        self.data_days_left = None
-        self.data_scale_full = None
-        self.data_available = None
-        self.data_expiration_date = None
+        self.data = {}
 
-    def _parse_data_str(self, data_str):
+    @staticmethod
+    def _parse_data_str(data_str):
         """Parse string with data available."""
         x = data_str.lower().split(" ")
         x[0] = float(x[0])
@@ -141,27 +128,27 @@ class VikingData:
         else:
             raise Exception("Error while parsing available data!")
 
-    @Throttle(timedelta(seconds=15))  # TODO: Change that to default
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Fetch data from site."""
         try:
             data = mobilevikings_scraper.scrape(self._username, self._password)
             self._raw_data = data
-            self.number = data["subscription"]["msisdn"]
-            self.balance = float(data["balance"]["credit"])
-            self.balance_type = data["balance"]["credit_type"]
-            self.balance_expiration = datetime.datetime.strptime(
+            self.data["number"] = data["subscription"]["msisdn"]
+            self.data["balance"] = float(data["balance"]["credit"])
+            self.data["balance_type"] = data["balance"]["credit_type"]
+            self.data["balance_expiration"] = datetime.datetime.strptime(
                 data["balance"]["expiration_date"], "%d-%m-%Y"
             ).date()
-            self.balance_expired = data["balance"]["is_expired"]
+            self.data["balance_expired"] = data["balance"]["is_expired"]
 
-            self.data_is_available = data["services"][0]["available"]
-            self.data_days_left = data["services"][0]["days_left"]
-            self.data_scale_full = data["services"][0]["scale_full"]
-            self.data_available = self._parse_data_str(
+            self.data["data_is_available"] = data["services"][0]["available"]
+            self.data["data_days_left"] = data["services"][0]["days_left"]
+            self.data["data_scale_full"] = data["services"][0]["scale_full"]
+            self.data["data_available"] = self._parse_data_str(
                 data["services"][0]["pointer_description"]
             )
-            self.data_expiration_date = datetime.datetime.strptime(
+            self.data["data_expiration_date"] = datetime.datetime.strptime(
                 data["services"][0]["expiration_date_text"], "%d-%m-%Y"
             ).date()
         except Exception as e:
