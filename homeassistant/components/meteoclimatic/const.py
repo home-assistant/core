@@ -4,6 +4,23 @@ from datetime import timedelta
 
 from meteoclimatic import Condition
 
+from homeassistant.components.weather import (
+    ATTR_CONDITION_CLEAR_NIGHT,
+    ATTR_CONDITION_CLOUDY,
+    ATTR_CONDITION_EXCEPTIONAL,
+    ATTR_CONDITION_FOG,
+    ATTR_CONDITION_HAIL,
+    ATTR_CONDITION_LIGHTNING,
+    ATTR_CONDITION_LIGHTNING_RAINY,
+    ATTR_CONDITION_PARTLYCLOUDY,
+    ATTR_CONDITION_POURING,
+    ATTR_CONDITION_RAINY,
+    ATTR_CONDITION_SNOWY,
+    ATTR_CONDITION_SNOWY_RAINY,
+    ATTR_CONDITION_SUNNY,
+    ATTR_CONDITION_WINDY,
+    ATTR_CONDITION_WINDY_VARIANT,
+)
 from homeassistant.const import (
     DEGREE,
     DEVICE_CLASS_HUMIDITY,
@@ -117,19 +134,19 @@ SENSOR_TYPES = {
 }
 
 CONDITION_CLASSES = {
-    "clear-night": [Condition.moon, Condition.hazemoon],
-    "cloudy": [Condition.mooncloud],
-    "fog": [Condition.fog, Condition.mist],
-    "hail": [],
-    "lightning": [Condition.storm],
-    "lightning-rainy": [],
-    "partlycloudy": [Condition.suncloud, Condition.hazesun],
-    "pouring": [],
-    "rainy": [Condition.rain],
-    "snowy": [],
-    "snowy-rainy": [],
-    "sunny": [Condition.sun],
-    "windy": [],
-    "windy-variant": [],
-    "exceptional": [],
+    ATTR_CONDITION_CLEAR_NIGHT: [Condition.moon, Condition.hazemoon],
+    ATTR_CONDITION_CLOUDY: [Condition.mooncloud],
+    ATTR_CONDITION_EXCEPTIONAL: [],
+    ATTR_CONDITION_FOG: [Condition.fog, Condition.mist],
+    ATTR_CONDITION_HAIL: [],
+    ATTR_CONDITION_LIGHTNING: [Condition.storm],
+    ATTR_CONDITION_LIGHTNING_RAINY: [],
+    ATTR_CONDITION_PARTLYCLOUDY: [Condition.suncloud, Condition.hazesun],
+    ATTR_CONDITION_POURING: [],
+    ATTR_CONDITION_RAINY: [Condition.rain],
+    ATTR_CONDITION_SNOWY: [],
+    ATTR_CONDITION_SNOWY_RAINY: [],
+    ATTR_CONDITION_SUNNY: [Condition.sun],
+    ATTR_CONDITION_WINDY: [],
+    ATTR_CONDITION_WINDY_VARIANT: [],
 }
