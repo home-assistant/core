@@ -25,12 +25,23 @@ TRIGGER_SCHEMA = vol.Schema(
 )
 
 
-def _populate_schema(config, config_parameter):
-    if config_parameter not in config:
+def _schema_value(value, exact_match):
+    if isinstance(value, list) and not exact_match:
+        return vol.In(value)
+    else:
+        return value
+
+
+def _populate_schema(config, config_parameter, exact_match=True):
+    schema_def = config.get(config_parameter)
+    if not schema_def:
         return None
 
     return vol.Schema(
-        {vol.Required(key): value for key, value in config[config_parameter].items()},
+        {
+            vol.Required(key): _schema_value(value, exact_match)
+            for key, value in schema_def.items()
+        },
         extra=vol.ALLOW_EXTRA,
     )
 
@@ -41,7 +52,7 @@ async def async_attach_trigger(
     """Listen for events based on configuration."""
     event_type = config.get(CONF_EVENT_TYPE)
     event_data_schema = _populate_schema(config, CONF_EVENT_DATA)
-    event_context_schema = _populate_schema(config, CONF_EVENT_CONTEXT)
+    event_context_schema = _populate_schema(config, CONF_EVENT_CONTEXT, False)
 
     @callback
     def handle_event(event):
