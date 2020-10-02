@@ -587,15 +587,15 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
     ):
         assert self.is_on
         self._update_attrs()
-        if self._only_once and not force:
+        if lights is None:
+            lights = self._lights
+        if (self._only_once and not force) or self._is_disabled() or not lights:
             return
-        await self._adapt_lights(lights or self._lights, transition, context)
+        await self._adapt_lights(lights, transition, context)
 
     async def _adapt_lights(
         self, lights: List[str], transition: Optional[int], context=Optional[Context]
     ):
-        if self._is_disabled() or not lights:
-            return
         _LOGGER.debug(
             "%s: '_adapt_lights(%s, %s)' called", self.name, lights, transition
         )
