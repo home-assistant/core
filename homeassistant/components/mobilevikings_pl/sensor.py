@@ -95,7 +95,21 @@ class VikingSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
-        return {"number": self.viking_data.data.get("number")}
+        stuff = {}
+        if self.type == "balance":
+            stuff["type"] = self.viking_data.data.get("balance_type")
+            stuff["expiration_date"] = self.viking_data.data.get(
+                "balance_expiration_date"
+            )
+            stuff["is_expired"] = self.viking_data.data.get("balance_is_expired")
+            stuff["days_left"] = self.viking_data.data.get("balance_days_left")
+        elif self.type == "data_available":
+            stuff["expiration_date"] = self.viking_data.data.get("data_expiration_date")
+            stuff["is_available"] = self.viking_data.data.get("data_is_available")
+            stuff["full_scale"] = self.viking_data.data.get("data_full_scale")
+            stuff["days_left"] = self.viking_data.data.get("data_days_left")
+        stuff["number"] = self.viking_data.data.get("number")
+        return stuff
 
     def update(self):
         """Fetch new state data for the sensor."""
@@ -111,7 +125,6 @@ class VikingData:
         self._username = username
         self._password = password
         self._raw_data = None
-        # Number
         self.data = {}
 
     @staticmethod
@@ -137,19 +150,30 @@ class VikingData:
             self.data["number"] = data["subscription"]["msisdn"]
             self.data["balance"] = float(data["balance"]["credit"])
             self.data["balance_type"] = data["balance"]["credit_type"]
-            self.data["balance_expiration"] = datetime.datetime.strptime(
-                data["balance"]["expiration_date"], "%d-%m-%Y"
-            ).date()
-            self.data["balance_expired"] = data["balance"]["is_expired"]
+            self.data["balance_expiration_date"] = (
+                datetime.datetime.strptime(
+                    data["balance"]["expiration_date"], "%d-%m-%Y"
+                )
+                .date()
+                .isoformat()
+            )
+            self.data["balance_is_expired"] = data["balance"]["is_expired"]
+            self.data["balance_days_left"] = data["balance"]["days_left"]
 
             self.data["data_is_available"] = data["services"][0]["available"]
             self.data["data_days_left"] = data["services"][0]["days_left"]
-            self.data["data_scale_full"] = data["services"][0]["scale_full"]
+            self.data["data_full_scale"] = self._parse_data_str(
+                data["services"][0]["scale_full"]
+            )
             self.data["data_available"] = self._parse_data_str(
                 data["services"][0]["pointer_description"]
             )
-            self.data["data_expiration_date"] = datetime.datetime.strptime(
-                data["services"][0]["expiration_date_text"], "%d-%m-%Y"
-            ).date()
+            self.data["data_expiration_date"] = (
+                datetime.datetime.strptime(
+                    data["services"][0]["expiration_date_text"], "%d-%m-%Y"
+                )
+                .date()
+                .isoformat()
+            )
         except Exception as e:
             _LOGGER.error("Error on receive last MobileVikings data: %", e)
