@@ -1834,7 +1834,7 @@ pyvera==0.3.10
 pyversasense==0.0.6
 
 # homeassistant.components.vesync
-pyvesync-api==1.2.0
+pyvesync==1.2.0
 
 # homeassistant.components.vizio
 pyvizio==0.1.56
