@@ -3,6 +3,7 @@ import asyncio
 import logging
 
 from pyowm import OWM
+from pyowm.utils.config import get_default_config
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
@@ -50,7 +51,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     forecast_mode = _get_config_value(config_entry, CONF_MODE)
     language = _get_config_value(config_entry, CONF_LANGUAGE)
 
-    owm = OWM(API_key=api_key, language=language)
+    config_dict = get_default_config()
+    config_dict["language"] = language
+    owm = OWM(api_key, config_dict)
     weather_coordinator = WeatherUpdateCoordinator(owm, latitude, longitude, hass)
     forecast_coordinator = ForecastUpdateCoordinator(
         owm, latitude, longitude, forecast_mode, hass

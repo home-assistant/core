@@ -3,8 +3,7 @@ from datetime import timedelta
 import logging
 
 import async_timeout
-from pyowm.exceptions.api_call_error import APICallError
-from pyowm.exceptions.api_response_error import UnauthorizedError
+from pyowm.commons.exceptions import APIRequestError, UnauthorizedError
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
@@ -34,7 +33,7 @@ class ForecastUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(self, owm, latitude, longitude, forecast_mode, hass):
         """Initialize coordinator."""
-        self._owm_client = owm
+        self._weather_manager = owm.weather_manager()
         self._forecast_mode = forecast_mode
         self._latitude = latitude
         self._longitude = longitude
@@ -50,7 +49,7 @@ class ForecastUpdateCoordinator(DataUpdateCoordinator):
             try:
                 forecast_response = await self._get_owm_forecast()
                 data = self._convert_forecast_response(forecast_response)
-            except (APICallError, UnauthorizedError) as error:
+            except (APIRequestError, UnauthorizedError) as error:
                 raise UpdateFailed(error) from error
 
         return data
@@ -58,18 +57,21 @@ class ForecastUpdateCoordinator(DataUpdateCoordinator):
     async def _get_owm_forecast(self):
         if self._forecast_mode == "daily":
             forecast_response = await self.hass.async_add_executor_job(
-                self._owm_client.daily_forecast_at_coords,
+                self._weather_manager.forecast_at_coords,
                 self._latitude,
                 self._longitude,
+                "daily",
                 self._forecast_limit,
             )
         else:
+            # "freedaily" gets data from 3h as well
             forecast_response = await self.hass.async_add_executor_job(
-                self._owm_client.three_hours_forecast_at_coords,
+                self._weather_manager.forecast_at_coords,
                 self._latitude,
                 self._longitude,
+                "3h",
             )
-        return forecast_response.get_forecast()
+        return forecast_response.forecast
 
     def _convert_forecast_response(self, forecast_response):
         weathers = self._get_weathers(forecast_response)
@@ -83,8 +85,8 @@ class ForecastUpdateCoordinator(DataUpdateCoordinator):
 
     def _get_weathers(self, forecast_response):
         if self._forecast_mode == "freedaily":
-            return forecast_response.get_weathers()[::8]
-        return forecast_response.get_weathers()
+            return forecast_response.weathers[::8]
+        return forecast_response.weathers
 
     def _convert_forecast_entries(self, entries):
         if self._forecast_mode == "daily":
@@ -93,25 +95,25 @@ class ForecastUpdateCoordinator(DataUpdateCoordinator):
 
     def _convert_daily_forecast(self, entry):
         return {
-            ATTR_FORECAST_TIME: entry.get_reference_time("unix") * 1000,
-            ATTR_FORECAST_TEMP: entry.get_temperature("celsius").get("day"),
-            ATTR_FORECAST_TEMP_LOW: entry.get_temperature("celsius").get("night"),
+            ATTR_FORECAST_TIME: entry.reference_time(timeformat="unix") * 1000,
+            ATTR_FORECAST_TEMP: entry.temperature(unit="celsius")["day"],
+            ATTR_FORECAST_TEMP_LOW: entry.temperature(unit="celsius")["night"],
             ATTR_FORECAST_PRECIPITATION: self._calc_daily_precipitation(
-                entry.get_rain().get("all"), entry.get_snow().get("all")
+                entry.rain["all"], entry.snow["all"]
             ),
-            ATTR_FORECAST_WIND_SPEED: entry.get_wind().get("speed"),
-            ATTR_FORECAST_WIND_BEARING: entry.get_wind().get("deg"),
-            ATTR_FORECAST_CONDITION: self._get_condition(entry.get_weather_code()),
+            ATTR_FORECAST_WIND_SPEED: entry.wind()["speed"],
+            ATTR_FORECAST_WIND_BEARING: entry.wind()["deg"],
+            ATTR_FORECAST_CONDITION: self._get_condition(entry.weather_code),
         }
 
     def _convert_forecast(self, entry):
         return {
-            ATTR_FORECAST_TIME: entry.get_reference_time("unix") * 1000,
-            ATTR_FORECAST_TEMP: entry.get_temperature("celsius").get("temp"),
+            ATTR_FORECAST_TIME: entry.reference_time(timeformat="unix") * 1000,
+            ATTR_FORECAST_TEMP: entry.temperature(unit="celsius")["temp"],
             ATTR_FORECAST_PRECIPITATION: self._calc_precipitation(entry),
-            ATTR_FORECAST_WIND_SPEED: entry.get_wind().get("speed"),
-            ATTR_FORECAST_WIND_BEARING: entry.get_wind().get("deg"),
-            ATTR_FORECAST_CONDITION: self._get_condition(entry.get_weather_code()),
+            ATTR_FORECAST_WIND_SPEED: entry.wind()["speed"],
+            ATTR_FORECAST_WIND_BEARING: entry.wind()["deg"],
+            ATTR_FORECAST_CONDITION: self._get_condition(entry.weather_code),
         }
 
     @staticmethod
@@ -126,9 +128,10 @@ class ForecastUpdateCoordinator(DataUpdateCoordinator):
     @staticmethod
     def _calc_precipitation(entry):
         return (
-            round(entry.get_rain().get("1h"), 1)
-            if entry.get_rain().get("1h") is not None
-            and (round(entry.get_rain().get("1h"), 1) > 0)
+            round(entry.rain["1h"], 1)
+            if "1h" in entry.rain
+            and entry.rain["1h"] is not None
+            and (round(entry.rain["1h"], 1) > 0)
             else None
         )
 
