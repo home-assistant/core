@@ -36,13 +36,11 @@
           "prefer_rgb_color": "prefer_rgb_color, use 'rgb_color' over 'color_temp' when possible",
           "sleep_brightness": "sleep_brightness, in %",
           "sleep_color_temp": "sleep_color_temp, in Kelvin",
-          "sleep_entity": "sleep_entity, 'entity_id' that manages the switch's sleep mode",
-          "sleep_state": "sleep_state, state(s) of 'sleep_entity', e.g., 'off' or 'total,half'",
           "sunrise_offset": "sunrise_offset, in +/- seconds",
           "sunrise_time": "sunrise_time, in 'HH:MM:SS' format",
           "sunset_offset": "sunset_offset, in +/- seconds",
           "sunset_time": "sunset_time, in 'HH:MM:SS' format",
-          "take_over_control": "take_over_control, if manually adjusting the lights when they are already on",
+          "take_over_control": "take_over_control, (NOT YET IMPLEMENTED!) if manually adjusting the lights when they are already on",
           "transition": "transition, in seconds"
         }
       }
