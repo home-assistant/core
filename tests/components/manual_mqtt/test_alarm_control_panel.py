@@ -16,7 +16,6 @@ import homeassistant.util.dt as dt_util
 
 from tests.async_mock import patch
 from tests.common import (
-    assert_setup_component,
     async_fire_mqtt_message,
     async_fire_time_changed,
 )
@@ -1612,12 +1611,14 @@ async def test_disarm_pending_with_code_via_command_topic(hass, mqtt_mock):
     assert STATE_ALARM_PENDING == hass.states.get(entity_id).state
 
     # Now that we're pending, receive a command to disarm
-    async_fire_mqtt_message(hass, "alarm/command", '{"action":"DISARM","code":"12345678"}')
+    async_fire_mqtt_message(
+        hass, "alarm/command", '{"action":"DISARM","code":"12345678"}'
+    )
     await hass.async_block_till_done()
 
     assert STATE_ALARM_DISARMED == hass.states.get(entity_id).state
 
-    
+
 async def test_state_changes_are_published_to_mqtt(hass, mqtt_mock):
     """Test publishing of MQTT messages when state changes."""
     assert await async_setup_component(
@@ -1638,7 +1639,7 @@ async def test_state_changes_are_published_to_mqtt(hass, mqtt_mock):
 
     # Component should send disarmed alarm state on startup
     await hass.async_block_till_done()
-    mqtt_mock.async_publish.assert_called_once_with(
+    mqtt_mock.async_publish.assert_called_with(
         "alarm/state", STATE_ALARM_DISARMED, 0, True
     )
     mqtt_mock.async_publish.reset_mock()
@@ -1710,6 +1711,7 @@ async def test_state_changes_are_published_to_mqtt(hass, mqtt_mock):
         "alarm/state", STATE_ALARM_DISARMED, 0, True
     )
 
+
 async def test_invalid_code_is_published_to_mqtt(hass, mqtt_mock):
     """Test publishing 'invalid' to MQTT when invalid code provided."""
     assert await async_setup_component(
@@ -1732,7 +1734,7 @@ async def test_invalid_code_is_published_to_mqtt(hass, mqtt_mock):
 
     # Component should send disarmed alarm state on startup
     await hass.async_block_till_done()
-    mqtt_mock.async_publish.assert_called_once_with(
+    mqtt_mock.async_publish.assert_called_with(
         "alarm/state", STATE_ALARM_DISARMED, 0, True
     )
     mqtt_mock.async_publish.reset_mock()
@@ -1752,8 +1754,8 @@ async def test_invalid_code_is_published_to_mqtt(hass, mqtt_mock):
     mqtt_mock.async_publish.reset_mock()
 
     # Disarm with invalid code
-    async_fire_mqtt_message(hass, "alarm/command", '{"action":"DISARM","code":"12345678"}')
-    await hass.async_block_till_done()
-    mqtt_mock.async_publish.assert_called_once_with(
-        "alarm/status", "INVALID", 0, True
+    async_fire_mqtt_message(
+        hass, "alarm/command", '{"action":"DISARM","code":"12345678"}'
     )
+    await hass.async_block_till_done()
+    mqtt_mock.async_publish.assert_called_once_with("alarm/status", "INVALID", 0, False)
