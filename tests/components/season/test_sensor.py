@@ -71,7 +71,7 @@ async def test_season_northern_hemisphere(hass, type, day, expected):
     hass.config.latitude = HEMISPHERE_NORTHERN["homeassistant"]["latitude"]
 
     config = {
-        ***HEMISPHERE_NORTHERN,
+        **HEMISPHERE_NORTHERN,
         "sensor": {"platform": "season", "type": type},
     }
 
@@ -90,7 +90,7 @@ async def test_season_southern_hemisphere(hass, type, day, expected):
     hass.config.latitude = HEMISPHERE_SOUTHERN["homeassistant"]["latitude"]
 
     config = {
-        ***HEMISPHERE_SOUTHERN,
+        **HEMISPHERE_SOUTHERN,
         "sensor": {"platform": "season", "type": type},
     }
 
