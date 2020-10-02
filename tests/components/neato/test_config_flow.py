@@ -128,7 +128,7 @@ async def test_abort_on_invalid_credentials(hass):
             }
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-        assert result["reason"] == "invalid_credentials"
+        assert result["reason"] == "invalid_auth"
 
 
 async def test_abort_on_unexpected_error(hass):
