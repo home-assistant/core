@@ -914,6 +914,7 @@ SERVICE_SCHEMA = vol.All(
 NUMERIC_STATE_CONDITION_SCHEMA = vol.All(
     vol.Schema(
         {
+            vol.Optional(CONF_ALIAS): string,
             vol.Required(CONF_CONDITION): "numeric_state",
             vol.Required(CONF_ENTITY_ID): entity_ids,
             vol.Optional(CONF_ATTRIBUTE): str,
@@ -932,6 +933,7 @@ NUMERIC_STATE_CONDITION_SCHEMA = vol.All(
 STATE_CONDITION_SCHEMA = vol.All(
     vol.Schema(
         {
+            vol.Optional(CONF_ALIAS): string,
             vol.Required(CONF_CONDITION): "state",
             vol.Required(CONF_ENTITY_ID): entity_ids,
             vol.Optional(CONF_ATTRIBUTE): str,
@@ -948,6 +950,7 @@ STATE_CONDITION_SCHEMA = vol.All(
 SUN_CONDITION_SCHEMA = vol.All(
     vol.Schema(
         {
+            vol.Optional(CONF_ALIAS): string,
             vol.Required(CONF_CONDITION): "sun",
             vol.Optional("before"): sun_event,
             vol.Optional("before_offset"): time_period,
@@ -962,6 +965,7 @@ SUN_CONDITION_SCHEMA = vol.All(
 
 TEMPLATE_CONDITION_SCHEMA = vol.Schema(
     {
+        vol.Optional(CONF_ALIAS): string,
         vol.Required(CONF_CONDITION): "template",
         vol.Required(CONF_VALUE_TEMPLATE): template,
     }
@@ -970,6 +974,7 @@ TEMPLATE_CONDITION_SCHEMA = vol.Schema(
 TIME_CONDITION_SCHEMA = vol.All(
     vol.Schema(
         {
+            vol.Optional(CONF_ALIAS): string,
             vol.Required(CONF_CONDITION): "time",
             "before": vol.Any(time, vol.All(str, entity_domain("input_datetime"))),
             "after": vol.Any(time, vol.All(str, entity_domain("input_datetime"))),
@@ -981,6 +986,7 @@ TIME_CONDITION_SCHEMA = vol.All(
 
 ZONE_CONDITION_SCHEMA = vol.Schema(
     {
+        vol.Optional(CONF_ALIAS): string,
         vol.Required(CONF_CONDITION): "zone",
         vol.Required(CONF_ENTITY_ID): entity_ids,
         "zone": entity_ids,
@@ -992,6 +998,7 @@ ZONE_CONDITION_SCHEMA = vol.Schema(
 
 AND_CONDITION_SCHEMA = vol.Schema(
     {
+        vol.Optional(CONF_ALIAS): string,
         vol.Required(CONF_CONDITION): "and",
         vol.Required(CONF_CONDITIONS): vol.All(
             ensure_list,
@@ -1003,6 +1010,7 @@ AND_CONDITION_SCHEMA = vol.Schema(
 
 OR_CONDITION_SCHEMA = vol.Schema(
     {
+        vol.Optional(CONF_ALIAS): string,
         vol.Required(CONF_CONDITION): "or",
         vol.Required(CONF_CONDITIONS): vol.All(
             ensure_list,
@@ -1014,6 +1022,7 @@ OR_CONDITION_SCHEMA = vol.Schema(
 
 NOT_CONDITION_SCHEMA = vol.Schema(
     {
+        vol.Optional(CONF_ALIAS): string,
         vol.Required(CONF_CONDITION): "not",
         vol.Required(CONF_CONDITIONS): vol.All(
             ensure_list,
@@ -1025,6 +1034,7 @@ NOT_CONDITION_SCHEMA = vol.Schema(
 
 DEVICE_CONDITION_BASE_SCHEMA = vol.Schema(
     {
+        vol.Optional(CONF_ALIAS): string,
         vol.Required(CONF_CONDITION): "device",
         vol.Required(CONF_DEVICE_ID): str,
         vol.Required(CONF_DOMAIN): str,
@@ -1075,12 +1085,18 @@ _SCRIPT_WAIT_TEMPLATE_SCHEMA = vol.Schema(
 )
 
 DEVICE_ACTION_BASE_SCHEMA = vol.Schema(
-    {vol.Required(CONF_DEVICE_ID): string, vol.Required(CONF_DOMAIN): str}
+    {
+        vol.Optional(CONF_ALIAS): string,
+        vol.Required(CONF_DEVICE_ID): string,
+        vol.Required(CONF_DOMAIN): str,
+    }
 )
 
 DEVICE_ACTION_SCHEMA = DEVICE_ACTION_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
 
-_SCRIPT_SCENE_SCHEMA = vol.Schema({vol.Required(CONF_SCENE): entity_domain("scene")})
+_SCRIPT_SCENE_SCHEMA = vol.Schema(
+    {vol.Optional(CONF_ALIAS): string, vol.Required(CONF_SCENE): entity_domain("scene")}
+)
 
 _SCRIPT_REPEAT_SCHEMA = vol.Schema(
     {

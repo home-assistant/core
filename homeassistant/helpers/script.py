@@ -186,6 +186,11 @@ class _ScriptRun:
     def _log(self, msg, *args, level=logging.INFO):
         self._script._log(msg, *args, level=level)  # pylint: disable=protected-access
 
+    def _step_log(self, default_message, delay=None):
+        self._script.last_action = self._action.get(CONF_ALIAS, default_message)
+        _timeout = "" if delay is None else f" (timeout: {timedelta(seconds=delay)})"
+        self._log("Executing step %s%s", self._script.last_action, _timeout)
+
     async def async_run(self) -> None:
         """Run script."""
         try:
@@ -275,8 +280,7 @@ class _ScriptRun:
         """Handle delay."""
         delay = self._get_pos_time_period_template(CONF_DELAY)
 
-        self._script.last_action = self._action.get(CONF_ALIAS, f"delay {delay}")
-        self._log("Executing step %s", self._script.last_action)
+        self._step_log(f"delay {delay}")
 
         delay = delay.total_seconds()
         self._changed()
@@ -293,12 +297,7 @@ class _ScriptRun:
         else:
             delay = None
 
-        self._script.last_action = self._action.get(CONF_ALIAS, "wait template")
-        self._log(
-            "Executing step %s%s",
-            self._script.last_action,
-            "" if delay is None else f" (timeout: {timedelta(seconds=delay)})",
-        )
+        self._step_log("wait template", delay)
 
         self._variables["wait"] = {"remaining": delay, "completed": False}
 
@@ -379,8 +378,7 @@ class _ScriptRun:
 
     async def _async_call_service_step(self):
         """Call the service specified in the action."""
-        self._script.last_action = self._action.get(CONF_ALIAS, "call service")
-        self._log("Executing step %s", self._script.last_action)
+        self._step_log("call service")
 
         domain, service, service_data = async_prepare_call_from_config(
             self._hass, self._action, self._variables
@@ -417,8 +415,7 @@ class _ScriptRun:
 
     async def _async_device_step(self):
         """Perform the device automation specified in the action."""
-        self._script.last_action = self._action.get(CONF_ALIAS, "device automation")
-        self._log("Executing step %s", self._script.last_action)
+        self._step_log("device automation")
         platform = await device_automation.async_get_device_automation_platform(
             self._hass, self._action[CONF_DOMAIN], "action"
         )
@@ -428,8 +425,7 @@ class _ScriptRun:
 
     async def _async_scene_step(self):
         """Activate the scene specified in the action."""
-        self._script.last_action = self._action.get(CONF_ALIAS, "activate scene")
-        self._log("Executing step %s", self._script.last_action)
+        self._step_log("activate scene")
         await self._hass.services.async_call(
             scene.DOMAIN,
             SERVICE_TURN_ON,
@@ -440,10 +436,7 @@ class _ScriptRun:
 
     async def _async_event_step(self):
         """Fire an event."""
-        self._script.last_action = self._action.get(
-            CONF_ALIAS, self._action[CONF_EVENT]
-        )
-        self._log("Executing step %s", self._script.last_action)
+        self._step_log(self._action.get(CONF_ALIAS, self._action[CONF_EVENT]))
         event_data = {}
         for conf in [CONF_EVENT_DATA, CONF_EVENT_DATA_TEMPLATE]:
             if conf not in self._action:
@@ -562,12 +555,7 @@ class _ScriptRun:
         else:
             delay = None
 
-        self._script.last_action = self._action.get(CONF_ALIAS, "wait for trigger")
-        self._log(
-            "Executing step %s%s",
-            self._script.last_action,
-            "" if delay is None else f" (timeout: {timedelta(seconds=delay)})",
-        )
+        self._step_log("wait for trigger", delay)
 
         variables = {**self._variables}
         self._variables["wait"] = {"remaining": delay, "trigger": None}
@@ -615,8 +603,7 @@ class _ScriptRun:
 
     async def _async_variables_step(self):
         """Set a variable value."""
-        self._script.last_action = self._action.get(CONF_ALIAS, "setting variables")
-        self._log("Executing step %s", self._script.last_action)
+        self._step_log("setting variables")
         self._variables = self._action[CONF_VARIABLES].async_render(
             self._hass, self._variables, render_as_defaults=False
         )
