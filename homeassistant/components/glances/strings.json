@@ -16,11 +16,11 @@
       }
     },
     "error": {
-      "cannot_connect": "Unable to connect to host",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "wrong_version": "Version not supported (2 or 3 only)"
     },
     "abort": {
-      "already_configured": "Host is already configured."
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
   "options": {
