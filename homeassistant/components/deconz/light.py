@@ -52,7 +52,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             ):
                 entities.append(DeconzLight(light, gateway))
 
-        async_add_entities(entities, True)
+        if entities:
+            async_add_entities(entities, True)
 
     gateway.listeners.append(
         async_dispatcher_connect(
@@ -77,7 +78,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             if new_group.unique_id not in known_groups:
                 entities.append(new_group)
 
-        async_add_entities(entities, True)
+        if entities:
+            async_add_entities(entities, True)
 
     gateway.listeners.append(
         async_dispatcher_connect(
