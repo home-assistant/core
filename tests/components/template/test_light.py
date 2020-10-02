@@ -1260,7 +1260,10 @@ async def test_unique_id(hass):
     @pytest.mark.parametrize(
         "expected_effect_list,template",
         [
-            ("[Strobe color, Police, Christmas, RGB, Random Loop]", "{{ '[Strobe color, Police, Christmas, RGB, Random Loop]' }}"),
+            (
+                "[Strobe color, Police, Christmas, RGB, Random Loop]",
+                "{{ '[Strobe color, Police, Christmas, RGB, Random Loop]' }}",
+            ),
             ("[Police, RGB, Random Loop]", "{{ '[Police, RGB, Random Loop]' }}"),
             (None, "{{ 'Police, RGB, Random Loop' }}"),
             (None, "{{ [] }}"),
