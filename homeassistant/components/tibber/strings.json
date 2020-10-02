@@ -2,7 +2,7 @@
   "title": "Tibber",
   "config": {
     "abort": {
-      "already_configured": "A Tibber account is already configured."
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     },
     "error": {
       "timeout": "Timeout connecting to Tibber",
