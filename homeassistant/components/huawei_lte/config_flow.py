@@ -119,7 +119,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         if self._already_configured(user_input):
-            return self.async_abort(reason="already_configured_device")
+            return self.async_abort(reason="already_configured")
 
         conn = None
 
@@ -240,7 +240,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         user_input = {CONF_URL: url}
         if self._already_configured(user_input):
-            return self.async_abort(reason="already_configured_device")
+            return self.async_abort(reason="already_configured")
 
         # pylint: disable=no-member
         self.context["title_placeholders"] = {
