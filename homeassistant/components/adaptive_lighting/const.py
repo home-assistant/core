@@ -15,8 +15,6 @@ CONF_LIGHTS, DEFAULT_LIGHTS = "lights", []
 CONF_ADAPT_BRIGHTNESS, DEFAULT_ADAPT_BRIGHTNESS = "adapt_brightness", True
 CONF_ADAPT_COLOR_TEMP, DEFAULT_ADAPT_COLOR_TEMP = "adapt_color_temp", True
 CONF_ADAPT_RGB_COLOR, DEFAULT_ADAPT_RGB_COLOR = "adapt_rgb_color", True
-CONF_DISABLE_ENTITY = "disable_entity"
-CONF_DISABLE_STATE = "disable_state"
 CONF_INITIAL_TRANSITION, DEFAULT_INITIAL_TRANSITION = "initial_transition", 1
 CONF_INTERVAL, DEFAULT_INTERVAL = "interval", 90
 CONF_MAX_BRIGHTNESS, DEFAULT_MAX_BRIGHTNESS = "max_brightness", 100
@@ -54,8 +52,6 @@ VALIDATION_TUPLES = [
     (CONF_ADAPT_BRIGHTNESS, DEFAULT_ADAPT_BRIGHTNESS, bool),
     (CONF_ADAPT_COLOR_TEMP, DEFAULT_ADAPT_COLOR_TEMP, bool),
     (CONF_ADAPT_RGB_COLOR, DEFAULT_ADAPT_RGB_COLOR, bool),
-    (CONF_DISABLE_ENTITY, NONE_STR, cv.entity_id),
-    (CONF_DISABLE_STATE, NONE_STR, str),
     (CONF_INITIAL_TRANSITION, DEFAULT_INITIAL_TRANSITION, VALID_TRANSITION),
     (CONF_INTERVAL, DEFAULT_INTERVAL, cv.positive_int),
     (CONF_MAX_BRIGHTNESS, DEFAULT_MAX_BRIGHTNESS, int_between(1, 100)),
@@ -91,8 +87,6 @@ def join_strings(lst):
 # conf_option: (validator, coerce) tuples
 # these validators cannot be serialized but can be serialized when coerced by coerce.
 EXTRA_VALIDATION = {
-    CONF_DISABLE_ENTITY: (cv.entity_id, str),
-    CONF_DISABLE_STATE: (vol.All(cv.ensure_list_csv, [cv.string]), join_strings),
     CONF_INTERVAL: (cv.time_period, timedelta_as_int),
     CONF_SUNRISE_OFFSET: (cv.time_period, timedelta_as_int),
     CONF_SUNRISE_TIME: (cv.time, str),

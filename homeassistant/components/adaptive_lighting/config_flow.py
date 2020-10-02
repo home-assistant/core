@@ -8,7 +8,6 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 from .const import (  # pylint: disable=unused-import
-    CONF_DISABLE_ENTITY,
     CONF_LIGHTS,
     DOMAIN,
     EXTRA_VALIDATION,
@@ -63,8 +62,8 @@ def validate_options(user_input, errors):
     """
     for key, (validate, _) in EXTRA_VALIDATION.items():
         # these are unserializable validators
+        value = user_input.get(key)
         try:
-            value = user_input.get(key)
             if value is not None and value != NONE_STR:
                 validate(value)
         except vol.Invalid:
@@ -91,10 +90,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 return self.async_create_entry(title="", data=user_input)
 
         all_lights = sorted(self.hass.states.async_entity_ids("light"))
-        all_entities = sorted(self.hass.states.async_entity_ids())
         to_replace = {
             CONF_LIGHTS: cv.multi_select(all_lights),
-            CONF_DISABLE_ENTITY: vol.In([NONE_STR] + all_entities),
         }
 
         options_schema = {}

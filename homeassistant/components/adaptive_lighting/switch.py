@@ -66,8 +66,6 @@ from .const import (
     CONF_ADAPT_BRIGHTNESS,
     CONF_ADAPT_COLOR_TEMP,
     CONF_ADAPT_RGB_COLOR,
-    CONF_DISABLE_ENTITY,
-    CONF_DISABLE_STATE,
     CONF_INITIAL_TRANSITION,
     CONF_INTERVAL,
     CONF_LIGHTS,
@@ -237,8 +235,6 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         self._adapt_brightness = data[CONF_ADAPT_BRIGHTNESS]
         self._adapt_color_temp = data[CONF_ADAPT_COLOR_TEMP]
         self._adapt_rgb_color = data[CONF_ADAPT_RGB_COLOR]
-        self._disable_entity = data[CONF_DISABLE_ENTITY]
-        self._disable_state = data[CONF_DISABLE_STATE]
         self._initial_transition = data[CONF_INITIAL_TRANSITION]
         self._interval = data[CONF_INTERVAL]
         self._only_once = data[CONF_ONLY_ONCE]
@@ -348,13 +344,6 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
                 self.hass, self._lights, self._light_event
             )
             self.remove_listeners.append(remove_state)
-        if self._disable_entity is not None:
-            remove_disable = async_track_state_change_event(
-                self.hass,
-                self._disable_entity,
-                self._disable_state_event,
-            )
-            self.remove_listeners.append(remove_disable)
 
     def _remove_listeners(self) -> None:
         while self.remove_listeners:
@@ -401,12 +390,6 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
 
     def _is_sleep(self) -> bool:
         return self.sleep_mode_switch.is_on
-
-    def _is_disabled(self) -> bool:
-        return (
-            self._disable_entity is not None
-            and self.hass.states.get(self._disable_entity).state in self._disable_state
-        )
 
     async def _adapt_light(
         self,
@@ -479,7 +462,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         self.async_write_ha_state()
         if lights is None:
             lights = self._lights
-        if (self._only_once and not force) or self._is_disabled() or not lights:
+        if (self._only_once and not force) or not lights:
             return
         await self._adapt_lights(lights, transition, context)
 
@@ -499,14 +482,6 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
                 ):
                     continue
             await self._adapt_light(light, transition, context=context)
-
-    async def _disable_state_event(self, event: Event):
-        if not match_state_event(event, self._disable_state):
-            return
-        _LOGGER.debug("%s: _disable_state_event, event: '%s'", self._name, event)
-        await self._update_attrs_and_maybe_adapt_lights(
-            transition=self._initial_transition, force=True, context=event.context
-        )
 
     async def _sleep_state_event(self, event: Event):
         if not match_state_event(event, ("on", "off")):
@@ -866,7 +841,7 @@ class TurnOnOffListener:
 
         # Here we could just `return True` but because we want to prevent any updates
         # from happening to this light (through async_track_time_interval or
-        # sleep_state or disable_state) for some time, we wait below until the light
+        # sleep_state) for some time, we wait below until the light
         # is 'off' or the time has passed.
 
         delay -= delta_time  # delta_time has passed since the 'off' → 'on' event
