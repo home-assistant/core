@@ -296,10 +296,10 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         """Return the name of the device if any."""
         return f"Adaptive Lighting: {self._name}"
 
-    @property
-    def unique_id(self):
-        """Return the unique ID of entity."""
-        return self._name
+    # @property
+    # def unique_id(self):
+    #     """Return the unique ID of entity."""
+    #     return self._name
 
     @property
     def is_on(self) -> Optional[bool]:
@@ -565,10 +565,10 @@ class AdaptiveSleepModeSwitch(SwitchEntity, RestoreEntity):
         """Return the name of the device if any."""
         return f"Adaptive Lighting Sleep Mode: {self._name}"
 
-    @property
-    def unique_id(self):
-        """Return the unique ID of entity."""
-        return f"{self._name}_sleep_mode"
+    # @property
+    # def unique_id(self):
+    #     """Return the unique ID of entity."""
+    #     return f"{self._name}_sleep_mode"
 
     @property
     def icon(self) -> str:
