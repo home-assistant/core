@@ -8,7 +8,7 @@
                 "data": {
                     "elevation": "Altitudine",
                     "latitude": "Latitudine",
-                    "longitude": "Longitudine",
+                    "longitude": "Logitudine",
                     "name": "Nome"
                 },
                 "description": "Meteorologisk institutt",

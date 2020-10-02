@@ -13,7 +13,7 @@
                     "api_key": "Chiave API",
                     "elevation": "Altitudine",
                     "latitude": "Latitudine",
-                    "longitude": "Longitudine"
+                    "longitude": "Logitudine"
                 },
                 "title": "Inserisci i tuoi dati"
             }
