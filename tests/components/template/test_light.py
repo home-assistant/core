@@ -1209,6 +1209,7 @@ async def test_unique_id(hass):
 
     assert len(hass.states.async_all()) == 1
 
+
 def test_effect_action_no_template(self):
     """Test setting effect with optimistic template."""
     assert setup.setup_component(
@@ -1256,6 +1257,7 @@ def test_effect_action_no_template(self):
     _LOGGER.info(str(state.attributes))
     assert state is not None
     assert state.attributes.get("effect") == "Disco"
+
 
 @pytest.mark.parametrize(
     "expected_effect_list,template",
