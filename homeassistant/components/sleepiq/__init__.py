@@ -104,7 +104,7 @@ class SleepIQData:
         """Change the sleep number on a side to a new value."""
 
         # Sanity check: Sleep number has to be between 1-100.
-        if 0 < sleep_number <= 100 and sleep_number % 5 == 0:
+        if 0 < int(sleep_number) <= 100 and int(sleep_number) % 5 == 0:
             self._set_sleep_number(bed_name, side, int(sleep_number))
         else:
             message = f"Invalid sleep number: {sleep_number}. The new sleep number, as a multiple of 5 between 5 and 100"
