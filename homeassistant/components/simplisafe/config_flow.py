@@ -8,12 +8,22 @@ from simplipy.errors import (
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_CODE, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
+from homeassistant.const import (
+    CONF_CODE,
+    CONF_PASSWORD,
+    CONF_SCAN_INTERVAL,
+    CONF_TOKEN,
+    CONF_USERNAME,
+)
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 
 from . import async_get_client_id
-from .const import DOMAIN, LOGGER  # pylint: disable=unused-import
+from .const import (  # pylint: disable=unused-import
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    LOGGER,
+)
 
 
 class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -173,10 +183,16 @@ class SimpliSafeOptionsFlowHandler(config_entries.OptionsFlow):
             step_id="init",
             data_schema=vol.Schema(
                 {
+                    vol.Required(
+                        CONF_SCAN_INTERVAL,
+                        default=self.config_entry.options.get(
+                            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+                        ),
+                    ): int,
                     vol.Optional(
                         CONF_CODE,
                         default=self.config_entry.options.get(CONF_CODE),
-                    ): str
+                    ): str,
                 }
             ),
         )

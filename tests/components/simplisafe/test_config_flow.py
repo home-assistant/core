@@ -8,7 +8,13 @@ from simplipy.errors import (
 from homeassistant import data_entry_flow
 from homeassistant.components.simplisafe import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import CONF_CODE, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
+from homeassistant.const import (
+    CONF_CODE,
+    CONF_PASSWORD,
+    CONF_SCAN_INTERVAL,
+    CONF_TOKEN,
+    CONF_USERNAME,
+)
 
 from tests.async_mock import AsyncMock, MagicMock, PropertyMock, patch
 from tests.common import MockConfigEntry
@@ -65,7 +71,7 @@ async def test_options_flow(hass):
         domain=DOMAIN,
         unique_id="abcde12345",
         data=conf,
-        options={CONF_CODE: "1234"},
+        options={CONF_CODE: "1234", CONF_SCAN_INTERVAL: 30},
     )
     config_entry.add_to_hass(hass)
 
@@ -78,11 +84,11 @@ async def test_options_flow(hass):
         assert result["step_id"] == "init"
 
         result = await hass.config_entries.options.async_configure(
-            result["flow_id"], user_input={CONF_CODE: "4321"}
+            result["flow_id"], user_input={CONF_CODE: "4321", CONF_SCAN_INTERVAL: 15}
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert config_entry.options == {CONF_CODE: "4321"}
+        assert config_entry.options == {CONF_CODE: "4321", CONF_SCAN_INTERVAL: 15}
 
 
 async def test_show_form(hass):

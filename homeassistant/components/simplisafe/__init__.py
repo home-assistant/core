@@ -1,5 +1,6 @@
 """Support for SimpliSafe alarm systems."""
 import asyncio
+from datetime import timedelta
 from uuid import UUID
 
 from simplipy import API
@@ -21,6 +22,7 @@ from homeassistant.const import (
     ATTR_CODE,
     CONF_CODE,
     CONF_PASSWORD,
+    CONF_SCAN_INTERVAL,
     CONF_TOKEN,
     CONF_USERNAME,
 )
@@ -511,9 +513,15 @@ class SimpliSafe:
             """Refresh data from the SimpliSafe account."""
             await self.async_update()
 
+        interval = timedelta(
+            seconds=self._config_entry.options.get(
+                CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+            )
+        )
+
         self._hass.data[DOMAIN][DATA_LISTENER][
             self._config_entry.entry_id
-        ] = async_track_time_interval(self._hass, refresh, DEFAULT_SCAN_INTERVAL)
+        ] = async_track_time_interval(self._hass, refresh, interval)
 
         await self.async_update()
 
