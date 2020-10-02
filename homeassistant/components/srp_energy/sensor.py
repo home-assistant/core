@@ -1,19 +1,20 @@
 """Support for SRP Energy Sensor."""
 from datetime import datetime, timedelta
 import logging
-from requests.exceptions import ConnectionError as ConnectError, HTTPError, Timeout
 
 import async_timeout
+from requests.exceptions import ConnectionError as ConnectError, HTTPError, Timeout
 
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.helpers import entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
 from .const import (
-    DOMAIN,
+    ATTRIBUTION,
     DEFAULT_NAME,
+    DOMAIN,
     ENERGY_KWH,
     ICON,
-    ATTRIBUTION,
     MIN_TIME_BETWEEN_UPDATES,
     SENSOR_NAME,
     SENSOR_TYPE,
