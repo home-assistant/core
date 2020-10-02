@@ -4,6 +4,7 @@ Support for Mobile Vikings (in Poland).
 Get data from "My account" page:
 https://mobilevikings.pl/en/mysims
 """
+import datetime
 from datetime import timedelta
 import logging
 
@@ -87,6 +88,17 @@ class VikingData:
         self.data_available = None
         self.data_expiration_date = None
 
+    def _parse_data_str(self, data_str):
+        x = data_str.lower().split(" ")
+        if x[1] == "gb":
+            return x[0]
+        elif x[1] == "mb":
+            return x[0] / 1024
+        elif x[1] == "kb":
+            return x[0] / 1024 / 1024
+        else:
+            raise Exception("Error while parsing available data!")
+
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Fetch data from site."""
@@ -95,19 +107,19 @@ class VikingData:
             self._raw_data = data
             self.balance = data["balance"]["credit"]
             self.balance_type = data["balance"]["credit_type"]
-            self.balance_expiration = data["balance"][
-                "expiration_date"
-            ]  # TODO: Parse this
+            self.balance_expiration = datetime.datetime.strptime(
+                data["balance"]["expiration_date"], "%d-%m-%Y"
+            ).date()
             self.balance_expired = data["balance"]["is_expired"]
 
             self.data_is_available = data["services"][0]["available"]
             self.data_days_left = data["services"][0]["days_left"]
             self.data_scale_full = data["services"][0]["scale_full"]
-            self.data_available = data["services"][0]["pointer_description"].split(" ")[
-                0
-            ]  # TODO: Parse this
-            self.data_expiration_date = data["services"][0][
-                "expiration_date_text"
-            ]  # TODO: Parse this
+            self.data_available = self._parse_data_str(
+                data["services"][0]["pointer_description"]
+            )
+            self.data_expiration_date = datetime.datetime.strptime(
+                data["services"][0]["expiration_date_text"], "%d-%m-%Y"
+            ).date()
         except Exception as e:
             _LOGGER.error("Error on receive last MobileVikings data: %", e)
