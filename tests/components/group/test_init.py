@@ -1064,3 +1064,71 @@ async def test_cover_added_after_group(hass):
 
     await hass.async_block_till_done()
     assert hass.states.get("group.shades").state == "closed"
+
+
+async def test_group_that_references_a_group_of_lights(hass):
+    """Group that references a group of lights."""
+
+    entity_ids = [
+        "light.living_front_ri",
+        "light.living_back_lef",
+    ]
+    hass.state = CoreState.stopped
+
+    for entity_id in entity_ids:
+        hass.states.async_set(entity_id, "off")
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        "group",
+        {
+            "group": {
+                "living_room_downlights": {"entities": entity_ids},
+                "grouped_group": {
+                    "entities": ["group.living_room_downlights", *entity_ids]
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("group.living_room_downlights").state == "off"
+    assert hass.states.get("group.grouped_group").state == "off"
+
+
+async def test_group_that_references_a_group_of_covers(hass):
+    """Group that references a group of covers."""
+
+    entity_ids = [
+        "cover.living_front_ri",
+        "cover.living_back_lef",
+    ]
+    hass.state = CoreState.stopped
+
+    for entity_id in entity_ids:
+        hass.states.async_set(entity_id, "closed")
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        "group",
+        {
+            "group": {
+                "living_room_downcover": {"entities": entity_ids},
+                "grouped_group": {
+                    "entities": ["group.living_room_downlights", *entity_ids]
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("group.living_room_downcover").state == "closed"
+    assert hass.states.get("group.grouped_group").state == "closed"
