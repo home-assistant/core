@@ -11,7 +11,6 @@ from .const import DOMAIN, DEFAULT_NAME  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
-# DATA_SCHEMA = vol.Schema({"username": str, "password": str, "id": str})
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_ID): str,
