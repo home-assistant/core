@@ -21,6 +21,7 @@ from typing import (
 import attr
 
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     ATTR_NOW,
     EVENT_CORE_CONFIG_UPDATE,
     EVENT_STATE_CHANGED,
@@ -790,15 +791,18 @@ class _TrackTemplateResultInfo:
         generates a new result.
         """
         template = track_template_.template
+
         if event:
-            if not self._rate_limit.async_has_timer(template) and not self._info[
+            info = self._info[template]
+
+            if not self._rate_limit.async_has_timer(
                 template
-            ].event_triggers(event):
+            ) and not _event_triggers_rerender(event, info):
                 return False
 
             if self._rate_limit.async_schedule_action(
                 template,
-                self._info[template].rate_limit or track_template_.rate_limit,
+                info.rate_limit or track_template_.rate_limit,
                 now,
                 self._refresh,
                 event,
@@ -1355,3 +1359,20 @@ def _render_infos_to_track_states(render_infos: Iterable[RenderInfo]) -> TrackSt
         return TrackStates(True, set(), set())
 
     return TrackStates(False, *_entities_domains_from_render_infos(render_infos))
+
+
+@callback
+def _event_triggers_rerender(event: Event, info: RenderInfo) -> bool:
+    """Determine if a template should be re-rendered from an event."""
+    entity_id = event.data.get(ATTR_ENTITY_ID)
+
+    if info.filter(entity_id):
+        return True
+
+    if (
+        event.data.get("new_state") is not None
+        and event.data.get("old_state") is not None
+    ):
+        return False
+
+    return bool(info.filter_lifecycle(entity_id))
