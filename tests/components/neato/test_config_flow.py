@@ -118,7 +118,7 @@ async def test_abort_on_invalid_credentials(hass):
             }
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["errors"] == {"base": "invalid_credentials"}
+        assert result["errors"] == {"base": "invalid_auth"}
 
         result = await flow.async_step_import(
             {
