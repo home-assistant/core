@@ -104,19 +104,10 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """
         _LOGGER.debug("async_step_import: import_info: %s", import_info)
 
-        if import_info is None:
-            # Landed here via configuration.yaml entry.
-            # Any device already added, then abort.
-            if self._async_current_entries():
-                _LOGGER.debug("aborting, already configured")
-                return self.async_abort(reason="already_configured")
-
-        # Test if import_info isn't already configured.
-        if import_info is not None and any(
-            import_info["udn"] == entry.data[CONFIG_ENTRY_UDN]
-            and import_info["st"] == entry.data[CONFIG_ENTRY_ST]
-            for entry in self._async_current_entries()
-        ):
+        # Landed here via configuration.yaml entry.
+        # Any device already added, then abort.
+        if self._async_current_entries():
+            _LOGGER.debug("Already configured, aborting")
             return self.async_abort(reason="already_configured")
 
         # Discover devices.
