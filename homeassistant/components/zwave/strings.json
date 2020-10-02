@@ -14,7 +14,7 @@
       "option_error": "Z-Wave validation failed. Is the path to the USB stick correct?"
     },
     "abort": {
-      "already_configured": "Z-Wave is already configured",
+      "already_configured": "[%key:common::abort::single_instance_allowed%]",
       "one_instance_only": "Component only supports one Z-Wave instance"
     }
   },
