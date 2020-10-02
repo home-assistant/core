@@ -205,6 +205,12 @@ def _expand_light_groups(hass, lights: List[str]) -> List[str]:
     return list(all_lights)
 
 
+def _supported_features(hass, light: str):
+    state = hass.states.get(light)
+    supported_features = state.attributes["supported_features"]
+    return {key for key, value in _SUPPORT_OPTS.items() if supported_features & value}
+
+
 class AdaptiveSwitch(SwitchEntity, RestoreEntity):
     """Representation of a Adaptive Lighting switch."""
 
@@ -288,13 +294,6 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
     def is_on(self) -> Optional[bool]:
         """Return true if adaptive lighting is on."""
         return self._state
-
-    def _supported_features(self, light: str):
-        state = self.hass.states.get(light)
-        supported_features = state.attributes["supported_features"]
-        return {
-            key for key, value in _SUPPORT_OPTS.items() if supported_features & value
-        }
 
     async def async_added_to_hass(self):
         """Call when entity about to be added to hass."""
@@ -401,6 +400,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
     def _update_attrs(self):
         """Update Adaptive Values."""
         # Setting all values because this method takes <0.5ms to execute.
+        _LOGGER.debug("%s: '_update_attrs' called", self._name)
         self._percent = self._calc_percent()
         self._brightness = self._calc_brightness()
         self._color_temp_kelvin = self._calc_color_temp_kelvin()
@@ -411,7 +411,6 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         self._xy_color = color_RGB_to_xy(*self._rgb_color)
         self._hs_color = color_xy_to_hs(*self._xy_color)
         self.async_write_ha_state()
-        _LOGGER.debug("%s: '_update_attrs' called", self._name)
 
     async def _async_update_at_interval(self, now=None):
         await self._update_attrs_and_maybe_adapt_lights(force=False)
@@ -536,7 +535,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
             return
 
         service_data = {ATTR_ENTITY_ID: light}
-        features = self._supported_features(light)
+        features = _supported_features(self.hass, light)
 
         if transition is None:
             transition = self._transition
