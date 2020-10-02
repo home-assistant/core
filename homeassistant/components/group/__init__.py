@@ -577,6 +577,7 @@ class Group(Entity):
             return
 
         excluded_domains = self.hass.data[REG_KEY].exclude_domains
+
         tracking = []
         trackable = []
         for ent_id in entity_ids:
@@ -592,6 +593,7 @@ class Group(Entity):
     @callback
     def _async_start(self, *_):
         """Start tracking members and write state."""
+        self._reset_tracked_state()
         self._async_start_tracking()
         self.async_write_ha_state()
 
@@ -625,15 +627,14 @@ class Group(Entity):
 
     async def async_added_to_hass(self):
         """Handle addition to Home Assistant."""
-        if self.tracking:
-            self._reset_tracked_state()
-
         if self.hass.state != CoreState.running:
             self.hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_START, self._async_start
             )
             return
 
+        if self.tracking:
+            self._reset_tracked_state()
         self._async_start_tracking()
 
     async def async_will_remove_from_hass(self):
