@@ -9,47 +9,73 @@ from datetime import timedelta
 import logging
 
 import mobilevikings_scraper
+import voluptuous as vol
 
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_MONITORED_VARIABLES,
+    CONF_NAME,
     CONF_PASSWORD,
     CONF_USERNAME,
     DATA_GIGABYTES,
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
+DEFAULT_NAME = "Mobile Vikings"
+
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
+
+SENSOR_TYPES = {
+    "balance": ["Balance", "PLN", "mdi:cash-usd"],
+    "data_available": ["Data available", DATA_GIGABYTES, "mdi:download"],
+}
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_MONITORED_VARIABLES): vol.All(
+            cv.ensure_list, [vol.In(SENSOR_TYPES)]
+        ),
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the sensor platform."""
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
+    name = config.get(CONF_NAME)
 
     viking_data = VikingData(username, password)
     entities = []
     for variable in config[CONF_MONITORED_VARIABLES]:
-        entities.append(VikingSensor(viking_data, variable))
+        entities.append(VikingSensor(viking_data, variable, name))
     add_entities(entities)
 
 
 class VikingSensor(Entity):
     """Representation of a Sensor."""
 
-    def __init__(self, viking_data, sensor_type):
+    def __init__(self, viking_data, sensor_type, name):
         """Initialize the sensor."""
-        self._icon = "mdi:cellphone"
-        self._state = None
+        self.client_name = name
         self.type = sensor_type
+        self._name = SENSOR_TYPES[sensor_type][0]
+        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+        self._icon = SENSOR_TYPES[sensor_type][2]
+        self._state = None
         self.viking_data = viking_data
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "Mobile Vikings"
+        return f"{self.client_name} {self._name}"
 
     @property
     def state(self):
@@ -59,18 +85,12 @@ class VikingSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        if self.type == "balance":
-            return "PLN"
-        elif self.type == "data":
-            return DATA_GIGABYTES
+        return self._unit_of_measurement
 
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        if self.type == "balance":
-            return "mdi:cash-usd"
-        elif self.type == "data":
-            return "mdi:download"
+        return self._icon
 
     @property
     def device_state_attributes(self):
@@ -82,7 +102,7 @@ class VikingSensor(Entity):
         self.viking_data.update()
         if self.type == "balance":
             self._state = self.viking_data.balance
-        elif self.type == "data":
+        elif self.type == "data_available":
             self._state = self.viking_data.data_available
 
 
@@ -109,7 +129,9 @@ class VikingData:
         self.data_expiration_date = None
 
     def _parse_data_str(self, data_str):
+        """Parse string with data available."""
         x = data_str.lower().split(" ")
+        x[0] = float(x[0])
         if x[1] == "gb":
             return x[0]
         elif x[1] == "mb":
@@ -119,14 +141,14 @@ class VikingData:
         else:
             raise Exception("Error while parsing available data!")
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    @Throttle(timedelta(seconds=15))  # TODO: Change that to default
     def update(self):
         """Fetch data from site."""
         try:
             data = mobilevikings_scraper.scrape(self._username, self._password)
             self._raw_data = data
             self.number = data["subscription"]["msisdn"]
-            self.balance = data["balance"]["credit"]
+            self.balance = float(data["balance"]["credit"])
             self.balance_type = data["balance"]["credit_type"]
             self.balance_expiration = datetime.datetime.strptime(
                 data["balance"]["expiration_date"], "%d-%m-%Y"
