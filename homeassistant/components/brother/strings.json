@@ -19,7 +19,7 @@
     },
     "error": {
       "wrong_host": "Invalid hostname or IP address.",
-      "connection_error": "[%key:common::config_flow::error::cannot_connect%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "snmp_error": "SNMP server turned off or printer not supported."
     },
     "abort": {
