@@ -10,7 +10,6 @@ import homeassistant.helpers.config_validation as cv
 from .const import (  # pylint: disable=unused-import
     CONF_DISABLE_ENTITY,
     CONF_LIGHTS,
-    CONF_SLEEP_ENTITY,
     DOMAIN,
     EXTRA_VALIDATION,
     NONE_STR,
@@ -96,7 +95,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         to_replace = {
             CONF_LIGHTS: cv.multi_select(all_lights),
             CONF_DISABLE_ENTITY: vol.In([NONE_STR] + all_entities),
-            CONF_SLEEP_ENTITY: vol.In([NONE_STR] + all_entities),
         }
 
         options_schema = {}
