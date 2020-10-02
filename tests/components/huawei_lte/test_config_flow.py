@@ -72,7 +72,7 @@ async def test_already_configured(hass):
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured_device"
+    assert result["reason"] == "already_configured"
 
 
 async def test_connection_error(hass, requests_mock):
