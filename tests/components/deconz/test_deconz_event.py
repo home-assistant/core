@@ -56,24 +56,13 @@ async def test_deconz_events(hass):
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["sensors"] = deepcopy(SENSORS)
     gateway = await setup_deconz_integration(hass, get_state_response=data)
-    assert "sensor.switch_1" not in gateway.deconz_ids
-    assert "sensor.switch_1_battery_level" not in gateway.deconz_ids
-    assert "sensor.switch_2" not in gateway.deconz_ids
-    assert "sensor.switch_2_battery_level" in gateway.deconz_ids
+
     assert len(hass.states.async_all()) == 3
     assert len(gateway.events) == 5
-
-    switch_1 = hass.states.get("sensor.switch_1")
-    assert switch_1 is None
-
-    switch_1_battery_level = hass.states.get("sensor.switch_1_battery_level")
-    assert switch_1_battery_level is None
-
-    switch_2 = hass.states.get("sensor.switch_2")
-    assert switch_2 is None
-
-    switch_2_battery_level = hass.states.get("sensor.switch_2_battery_level")
-    assert switch_2_battery_level.state == "100"
+    assert hass.states.get("sensor.switch_1") is None
+    assert hass.states.get("sensor.switch_1_battery_level") is None
+    assert hass.states.get("sensor.switch_2") is None
+    assert hass.states.get("sensor.switch_2_battery_level").state == "100"
 
     events = async_capture_events(hass, CONF_DECONZ_EVENT)
 
