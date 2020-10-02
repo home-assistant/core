@@ -1,10 +1,14 @@
 """The test for the Template sensor platform."""
+from datetime import timedelta
 from os import path
 from unittest.mock import patch
 
 from homeassistant import config
 from homeassistant.components.template import DOMAIN, SERVICE_RELOAD
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
+
+from tests.common import async_fire_time_changed
 
 
 async def test_reloadable(hass):
@@ -251,6 +255,51 @@ async def test_reloadable_multiple_platforms(hass):
     assert hass.states.get("sensor.state") is None
     assert hass.states.get("sensor.watching_tv_in_master_bedroom").state == "off"
     assert float(hass.states.get("sensor.combined_sensor_energy_usage").state) == 0
+
+
+async def test_reload_sensors_that_reference_other_template_sensors(hass):
+    """Test that we can reload sensor that reference other template sensors."""
+
+    await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": {
+                "platform": DOMAIN,
+                "sensors": {
+                    "state": {"value_template": "{{ 1 }}"},
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    yaml_path = path.join(
+        _get_fixtures_base_path(),
+        "fixtures",
+        "template/ref_configuration.yaml",
+    )
+    with patch.object(config, "YAML_CONFIG_FILE", yaml_path):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RELOAD,
+            {},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 3
+    await hass.async_block_till_done()
+
+    next_time = dt_util.utcnow() + timedelta(seconds=1.2)
+    with patch(
+        "homeassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
+    ):
+        async_fire_time_changed(hass, next_time)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.test1").state == "3"
+    assert hass.states.get("sensor.test2").state == "1"
+    assert hass.states.get("sensor.test3").state == "2"
 
 
 def _get_fixtures_base_path():
