@@ -126,9 +126,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN][DATA_CLIENT].pop(entry.entry_id)
         hass.data[DOMAIN][DATA_COORDINATOR].pop(entry.entry_id)
         hass.data[DOMAIN][DATA_LAST_SENSOR_PAIR_DUMP].pop(entry.entry_id)
-        for unsub in hass.data[DOMAIN][DATA_UNSUB_DISPATCHER_CONNECT].pop(
-            entry.entry_id
-        ):
+        for unsub in hass.data[DOMAIN][DATA_UNSUB_DISPATCHER_CONNECT][entry.entry_id]:
             unsub()
         hass.data[DOMAIN][DATA_UNSUB_DISPATCHER_CONNECT].pop(entry.entry_id)
 
@@ -169,7 +167,7 @@ class PairedSensorManager:
             api_lock=self._api_lock,
             valve_controller_uid=self._entry.data[CONF_UID],
         )
-        await coordinator.async_refresh()
+        await coordinator.async_request_refresh()
 
         async_dispatcher_send(
             self._hass,
