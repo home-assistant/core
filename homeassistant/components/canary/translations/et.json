@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "unknown": "Tundmatu viga"
+        },
         "error": {
             "cannot_connect": "\u00dchendus nurjus"
         },
@@ -9,7 +12,8 @@
                 "data": {
                     "password": "Salas\u00f5na",
                     "username": "Kasutajanimi"
-                }
+                },
+                "title": "Loo \u00fchendus Canary-iga"
             }
         }
     },

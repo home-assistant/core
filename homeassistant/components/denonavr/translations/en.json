@@ -25,7 +25,7 @@
             },
             "user": {
                 "data": {
-                    "host": "IP address"
+                    "host": "IP Address"
                 },
                 "description": "Connect to your receiver, if the IP address is not set, auto-discovery is used",
                 "title": "Denon AVR Network Receivers"

@@ -1,0 +1,14 @@
+{
+    "config": {
+        "error": {
+            "unknown": "Tundmatu viga"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Nimi"
+                }
+            }
+        }
+    }
+}
