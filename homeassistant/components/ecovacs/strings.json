@@ -1,0 +1,24 @@
+{
+  "config": {
+    "flow_title": "Ecovacs: {name}",
+    "step": {
+      "user": {
+        "description": "Enter your Ecovacs information.",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "country": "Country",
+          "continent": "Continent"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "no_devices": "[%key:common::config_flow::abort::no_devices_found%]",
+      "location_not_found": "Server in the specified country and/or continent could not be found."
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    }
+  }
+}

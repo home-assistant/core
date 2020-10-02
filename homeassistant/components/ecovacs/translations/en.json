@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ecovacs account is already configured",
+            "location_not_found": "Server in the specified country and/or continent could not be found.",
+            "no_devices": "No devices are attached to your Ecovacs account"
+        },
+        "error": {
+            "invalid_auth": "Invalid authentication"
+        },
+        "flow_title": "Ecovacs: {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "continent": "Continent",
+                    "country": "Country",
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "description": "Enter your Ecovacs information."
+            }
+        }
+    }
+}

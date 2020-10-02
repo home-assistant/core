@@ -1,5 +1,4 @@
-"""Support for Ecovacs Ecovacs Vaccums."""
-import logging
+"""Support for Ecovacs Vacuums."""
 
 import sucks
 
@@ -18,9 +17,16 @@ from homeassistant.components.vacuum import (
 )
 from homeassistant.helpers.icon import icon_for_battery_level
 
-from . import ECOVACS_DEVICES
-
-_LOGGER = logging.getLogger(__name__)
+from .const import (
+    ATTR_COMPONENT_PREFIX,
+    ATTR_ERROR,
+    DEVICES,
+    DOMAIN,
+    ECOVACS_ATTR_DEVICE_ID,
+    ECOVACS_ATTR_NAME,
+    LOGGER,
+    MANUFACTURER,
+)
 
 SUPPORT_ECOVACS = (
     SUPPORT_BATTERY
@@ -35,17 +41,17 @@ SUPPORT_ECOVACS = (
     | SUPPORT_FAN_SPEED
 )
 
-ATTR_ERROR = "error"
-ATTR_COMPONENT_PREFIX = "component_"
 
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Ecovacs vacuums."""
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Ecovacs vacuums from config_entry."""
     vacuums = []
-    for device in hass.data[ECOVACS_DEVICES]:
+    devices = hass.data[DOMAIN][config_entry.entry_id][DEVICES]
+
+    for device in devices:
         vacuums.append(EcovacsVacuum(device))
-    _LOGGER.debug("Adding Ecovacs Vacuums to Home Assistant: %s", vacuums)
-    add_entities(vacuums, True)
+    LOGGER.debug("Adding Ecovacs Vacuums to Home Assistant: %s", vacuums)
+
+    async_add_entities(vacuums, True)
 
 
 class EcovacsVacuum(VacuumEntity):
@@ -55,15 +61,15 @@ class EcovacsVacuum(VacuumEntity):
         """Initialize the Ecovacs Vacuum."""
         self.device = device
         self.device.connect_and_wait_until_ready()
-        if self.device.vacuum.get("nick") is not None:
-            self._name = str(self.device.vacuum["nick"])
+        if self.device.vacuum.get(ECOVACS_ATTR_NAME) is not None:
+            self._name = str(self.device.vacuum[ECOVACS_ATTR_NAME])
         else:
             # In case there is no nickname defined, use the device id
-            self._name = str(format(self.device.vacuum["did"]))
+            self._name = str(format(self.device.vacuum[ECOVACS_ATTR_DEVICE_ID]))
 
         self._fan_speed = None
         self._error = None
-        _LOGGER.debug("Vacuum initialized: %s", self.name)
+        LOGGER.debug("Vacuum initialized: %s", self.name)
 
     async def async_added_to_hass(self) -> None:
         """Set up the event listeners now that hass is ready."""
@@ -96,7 +102,7 @@ class EcovacsVacuum(VacuumEntity):
     @property
     def unique_id(self) -> str:
         """Return an unique ID."""
-        return self.device.vacuum.get("did")
+        return self.device.vacuum.get(ECOVACS_ATTR_DEVICE_ID)
 
     @property
     def is_on(self):
@@ -199,3 +205,12 @@ class EcovacsVacuum(VacuumEntity):
             data[attr_name] = int(val * 100)
 
         return data
+
+    @property
+    def device_info(self):
+        """Return device specific attributes."""
+        return {
+            "name": self._name,
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "manufacturer": MANUFACTURER,
+        }

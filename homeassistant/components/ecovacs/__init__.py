@@ -1,66 +1,70 @@
-"""Support for Ecovacs Deebot vacuums."""
-import logging
-import random
-import string
+"""Support for Ecovacs vacuums."""
+import asyncio
+from functools import partial
 
 from sucks import EcoVacsAPI, VacBot
-import voluptuous as vol
 
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
-from homeassistant.helpers import discovery
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import (
+    CONF_DEVICE_ID,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    EVENT_HOMEASSISTANT_STOP,
+)
 
-_LOGGER = logging.getLogger(__name__)
+from .const import (
+    CONF_CONTINENT,
+    CONF_COUNTRY,
+    DATA_REMOVE_LISTENER,
+    DEVICES,
+    DOMAIN,
+    ECOVACS_ATTR_DEVICE_ID,
+    ECOVACS_ATTR_NAME,
+    LOGGER,
+    PLATFORMS,
+)
 
-DOMAIN = "ecovacs"
 
-CONF_COUNTRY = "country"
-CONF_CONTINENT = "continent"
+async def async_setup(hass, config):
+    """Set up the Ecovacs integration."""
+    return True
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Required(CONF_COUNTRY): vol.All(vol.Lower, cv.string),
-                vol.Required(CONF_CONTINENT): vol.All(vol.Lower, cv.string),
-            }
+
+async def async_setup_entry(hass, entry):
+    """Set up the Ecovacs platforms."""
+
+    def stop_ecovacs(event):
+        """Shut down open connections to Ecovacs XMPP server."""
+        if not hass.data.get(DOMAIN):
+            return
+
+        devices = hass.data[DOMAIN][entry.entry_id][DEVICES]
+
+        for device in devices:
+            LOGGER.info(
+                "Shutting down connection to Ecovacs device %s",
+                device.vacuum[ECOVACS_ATTR_DEVICE_ID],
+            )
+            device.disconnect()
+
+    ecovacs_api = await hass.async_add_executor_job(
+        partial(
+            EcoVacsAPI,
+            entry.data[CONF_DEVICE_ID],
+            entry.data[CONF_USERNAME],
+            EcoVacsAPI.md5(entry.data[CONF_PASSWORD]),
+            entry.data[CONF_COUNTRY],
+            entry.data[CONF_CONTINENT],
         )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
-
-ECOVACS_DEVICES = "ecovacs_devices"
-
-# Generate a random device ID on each bootup
-ECOVACS_API_DEVICEID = "".join(
-    random.choice(string.ascii_uppercase + string.digits) for _ in range(8)
-)
-
-
-def setup(hass, config):
-    """Set up the Ecovacs component."""
-    _LOGGER.debug("Creating new Ecovacs component")
-
-    hass.data[ECOVACS_DEVICES] = []
-
-    ecovacs_api = EcoVacsAPI(
-        ECOVACS_API_DEVICEID,
-        config[DOMAIN].get(CONF_USERNAME),
-        EcoVacsAPI.md5(config[DOMAIN].get(CONF_PASSWORD)),
-        config[DOMAIN].get(CONF_COUNTRY),
-        config[DOMAIN].get(CONF_CONTINENT),
     )
 
-    devices = ecovacs_api.devices()
-    _LOGGER.debug("Ecobot devices: %s", devices)
+    vacuums = []
+    devices = await hass.async_add_executor_job(ecovacs_api.devices)
 
     for device in devices:
-        _LOGGER.info(
+        LOGGER.info(
             "Discovered Ecovacs device on account: %s with nickname %s",
-            device["did"],
-            device["nick"],
+            device[ECOVACS_ATTR_DEVICE_ID],
+            device[ECOVACS_ATTR_NAME],
         )
         vacbot = VacBot(
             ecovacs_api.uid,
@@ -68,24 +72,49 @@ def setup(hass, config):
             ecovacs_api.resource,
             ecovacs_api.user_access_token,
             device,
-            config[DOMAIN].get(CONF_CONTINENT).lower(),
+            entry.data[CONF_CONTINENT],
             monitor=True,
         )
-        hass.data[ECOVACS_DEVICES].append(vacbot)
+        vacuums.append(vacbot)
 
-    def stop(event: object) -> None:
-        """Shut down open connections to Ecovacs XMPP server."""
-        for device in hass.data[ECOVACS_DEVICES]:
-            _LOGGER.info(
-                "Shutting down connection to Ecovacs device %s", device.vacuum["did"]
-            )
-            device.disconnect()
+    remove_stop_listener = hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, stop_ecovacs
+    )
 
-    # Listen for HA stop to disconnect.
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop)
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = {
+        DEVICES: vacuums,
+        DATA_REMOVE_LISTENER: remove_stop_listener,
+    }
 
-    if hass.data[ECOVACS_DEVICES]:
-        _LOGGER.debug("Starting vacuum components")
-        discovery.load_platform(hass, "vacuum", DOMAIN, {}, config)
+    for component in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, component)
+        )
+
+    return True
+
+
+async def async_unload_entry(hass, entry):
+    """Unloading the Ecovacs platforms."""
+
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, component)
+                for component in PLATFORMS
+            ]
+        )
+    )
+
+    if not unload_ok:
+        return False
+
+    hass.data[DOMAIN][entry.entry_id][DATA_REMOVE_LISTENER]()
+
+    if hass.data[DOMAIN][entry.entry_id]:
+        hass.data[DOMAIN].pop(entry.entry_id)
+        if not hass.data[DOMAIN]:
+            hass.data.pop(DOMAIN)
 
     return True
