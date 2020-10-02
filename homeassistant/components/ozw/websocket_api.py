@@ -142,7 +142,7 @@ def websocket_get_config_parameters(hass, connection, msg):
         vol.Optional(OZW_INSTANCE, default=1): vol.Coerce(int),
         vol.Required(PARAMETER): vol.Coerce(int),
         vol.Required(VALUE): vol.Any(
-            {vol.Any(vol.Coerce(int), cv.string): vol.Coerce(int)},
+            {vol.Any(vol.Coerce(int), str): vol.All(vol.Coerce(int), vol.In((0, 1)))},
             bool,
             vol.Coerce(int),
             cv.string,
