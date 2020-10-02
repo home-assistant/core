@@ -38,6 +38,7 @@ class EcovacsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._continent = None
         self._device_id = None
 
+    @classmethod
     def _generate_random_device_id(self):
         """Generate a random device ID."""
         return "".join(
