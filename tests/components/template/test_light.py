@@ -1076,6 +1076,112 @@ class TestTemplateLight:
         assert state is not None
         assert state.attributes.get("hs_color") == expected_hs
 
+    def test_effect_action_no_template(self):
+        """Test setting effect with optimistic template."""
+        assert setup.setup_component(
+            self.hass,
+            "light",
+            {
+                "light": {
+                    "platform": "template",
+                    "lights": {
+                        "test_template_light": {
+                            "value_template": "{{1 == 1}}",
+                            "turn_on": {
+                                "service": "light.turn_on",
+                                "entity_id": "light.test_state",
+                            },
+                            "turn_off": {
+                                "service": "light.turn_off",
+                                "entity_id": "light.test_state",
+                            },
+                            "set_effect": {
+                                "service": "test.automation",
+                                "data_template": {
+                                    "entity_id": "test.test_state",
+                                    "effect": "{{effect}}",
+                                },
+                            },
+                        }
+                    },
+                }
+            },
+        )
+        self.hass.block_till_done()
+        self.hass.start()
+        self.hass.block_till_done()
+
+        state = self.hass.states.get("light.test_template_light")
+        assert state.attributes.get("effect") is None
+
+        common.turn_on(self.hass, "light.test_template_light", **{ATTR_EFFECT: "Disco"})
+        self.hass.block_till_done()
+        assert len(self.calls) == 1
+        assert self.calls[0].data["effect"] == "Disco"
+
+        state = self.hass.states.get("light.test_template_light")
+        _LOGGER.info(str(state.attributes))
+        assert state is not None
+        assert state.attributes.get("effect") == "Disco"
+
+
+    @pytest.mark.parametrize(
+        "expected_effect_list,template",
+        [
+            (
+                "[Strobe color, Police, Christmas, RGB, Random Loop]",
+                "{{ '[Strobe color, Police, Christmas, RGB, Random Loop]' }}",
+            ),
+            ("[Police, RGB, Random Loop]", "{{ '[Police, RGB, Random Loop]' }}"),
+            (None, "{{ 'Police, RGB, Random Loop' }}"),
+            (None, "{{ [] }}"),
+            (None, "{{ '[]' }}"),
+            (None, "{{ none }}"),
+            (None, ""),
+        ],
+    )
+    def test_effect_list_template(self, expected_effect_list, template):
+        """Test the template for the effect."""
+        with assert_setup_component(1, "light"):
+            assert setup.setup_component(
+                self.hass,
+                "light",
+                {
+                    "light": {
+                        "platform": "template",
+                        "lights": {
+                            "test_template_light": {
+                                "value_template": "{{ 1 == 1 }}",
+                                "turn_on": {
+                                    "service": "light.turn_on",
+                                    "entity_id": "light.test_state",
+                                },
+                                "turn_off": {
+                                    "service": "light.turn_off",
+                                    "entity_id": "light.test_state",
+                                },
+                                "set_effect": {
+                                    "service": "light.turn_on",
+                                    "data_template": {
+                                        "entity_id": "light.test_state",
+                                        "effect": "{{effect}}",
+                                    },
+                                },
+                                "effect_list_template": template,
+                            }
+                        },
+                    }
+                },
+            )
+
+        self.hass.block_till_done()
+        self.hass.start()
+        self.hass.block_till_done()
+
+        state = self.hass.states.get("light.test_template_light")
+        assert state is not None
+        assert state.attributes.get("effect_list") == expected_effect_list
+
 
 async def test_available_template_with_entities(hass):
     """Test availability templates with values from other entities."""
@@ -1208,110 +1314,3 @@ async def test_unique_id(hass):
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 1
-
-
-def test_effect_action_no_template(self):
-    """Test setting effect with optimistic template."""
-    assert setup.setup_component(
-        self.hass,
-        "light",
-        {
-            "light": {
-                "platform": "template",
-                "lights": {
-                    "test_template_light": {
-                        "value_template": "{{1 == 1}}",
-                        "turn_on": {
-                            "service": "light.turn_on",
-                            "entity_id": "light.test_state",
-                        },
-                        "turn_off": {
-                            "service": "light.turn_off",
-                            "entity_id": "light.test_state",
-                        },
-                        "set_effect": {
-                            "service": "test.automation",
-                            "data_template": {
-                                "entity_id": "test.test_state",
-                                "effect": "{{effect}}",
-                            },
-                        },
-                    }
-                },
-            }
-        },
-    )
-    self.hass.block_till_done()
-    self.hass.start()
-    self.hass.block_till_done()
-
-    state = self.hass.states.get("light.test_template_light")
-    assert state.attributes.get("effect") is None
-
-    common.turn_on(self.hass, "light.test_template_light", **{ATTR_EFFECT: "Disco"})
-    self.hass.block_till_done()
-    assert len(self.calls) == 1
-    assert self.calls[0].data["effect"] == "Disco"
-
-    state = self.hass.states.get("light.test_template_light")
-    _LOGGER.info(str(state.attributes))
-    assert state is not None
-    assert state.attributes.get("effect") == "Disco"
-
-
-@pytest.mark.parametrize(
-    "expected_effect_list,template",
-    [
-        (
-            "[Strobe color, Police, Christmas, RGB, Random Loop]",
-            "{{ '[Strobe color, Police, Christmas, RGB, Random Loop]' }}",
-        ),
-        ("[Police, RGB, Random Loop]", "{{ '[Police, RGB, Random Loop]' }}"),
-        (None, "{{ 'Police, RGB, Random Loop' }}"),
-        (None, "{{ [] }}"),
-        (None, "{{ '[]' }}"),
-        (None, "{{ none }}"),
-        (None, ""),
-    ],
-)
-def test_effect_list_template(self, expected_effect_list, template):
-    """Test the template for the effect."""
-    with assert_setup_component(1, "light"):
-        assert setup.setup_component(
-            self.hass,
-            "light",
-            {
-                "light": {
-                    "platform": "template",
-                    "lights": {
-                        "test_template_light": {
-                            "value_template": "{{ 1 == 1 }}",
-                            "turn_on": {
-                                "service": "light.turn_on",
-                                "entity_id": "light.test_state",
-                            },
-                            "turn_off": {
-                                "service": "light.turn_off",
-                                "entity_id": "light.test_state",
-                            },
-                            "set_effect": {
-                                "service": "light.turn_on",
-                                "data_template": {
-                                    "entity_id": "light.test_state",
-                                    "effect": "{{effect}}",
-                                },
-                            },
-                            "effect_list_template": template,
-                        }
-                    },
-                }
-            },
-        )
-
-    self.hass.block_till_done()
-    self.hass.start()
-    self.hass.block_till_done()
-
-    state = self.hass.states.get("light.test_template_light")
-    assert state is not None
-    assert state.attributes.get("effect_list") == expected_effect_list
