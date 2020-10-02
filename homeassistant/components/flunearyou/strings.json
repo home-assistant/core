@@ -4,7 +4,10 @@
       "user": {
         "title": "Configure Flu Near You",
         "description": "Monitor user-based and CDC repots for a pair of coordinates.",
-        "data": { "latitude": "Latitude", "longitude": "Longitude" }
+        "data": {
+          "latitude": "[%key:common::config_flow::data::latitude%]",
+          "longitude": "[%key:common::config_flow::data::longitude%]"
+	}
       }
     },
     "error": { "general_error": "There was an unknown error." },
