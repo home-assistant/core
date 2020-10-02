@@ -20,11 +20,10 @@ LOGGER = logging.getLogger(__name__)
 class PyzeProxy:
     """Handle account communication with Renault servers via PyZE."""
 
-    def __init__(self, hass, config_data):
+    def __init__(self, hass):
         """Initialise proxy."""
         LOGGER.debug("Creating PyzeProxy")
         self._hass = hass
-        self._config_data = config_data
         self._gigya = None
         self._kamereon = None
         self._vehicle_links = None
@@ -32,16 +31,15 @@ class PyzeProxy:
         self._vehicles_lock = asyncio.Lock()
         self.entities = []
 
-    async def setup(self, load_vehicles: bool):
-        """Set up proxy."""
+    def set_api_keys(self, config_data):
+        """Set up gigya."""
         credential_store = BasicCredentialStore()
         credential_store.store(
-            "gigya-api-key", self._config_data.get(CONF_GIGYA_APIKEY), None
+            "gigya-api-key", config_data.get(CONF_GIGYA_APIKEY), None
         )
         credential_store.store(
-            "kamereon-api-key", self._config_data.get(CONF_KAMEREON_APIKEY), None
+            "kamereon-api-key", config_data.get(CONF_KAMEREON_APIKEY), None
         )
-        locale = self._config_data[CONF_LOCALE]
 
         self._gigya = Gigya(
             credentials=credential_store,
@@ -49,31 +47,31 @@ class PyzeProxy:
         self._kamereon = Kamereon(
             gigya=self._gigya,
             credentials=credential_store,
-            country=locale[-2:],
+            country=config_data.get(CONF_LOCALE)[-2:],
         )
 
-        if not await self.attempt_login():
-            return False
-        self.set_kamereon_account_id(self._config_data[CONF_KAMEREON_ACCOUNT_ID])
-        if load_vehicles:
-            vehicles = await self._hass.async_add_executor_job(
-                self._kamereon.get_vehicles
-            )
-            self._vehicle_links = vehicles["vehicleLinks"]
-        return True
-
-    async def attempt_login(self) -> bool:
+    async def attempt_login(self, config_data) -> bool:
         """Attempt login to Renault servers."""
+        if self._gigya is None:
+            raise RuntimeError("Please ensure Gigya is initialised.")
         try:
             if await self._hass.async_add_executor_job(
                 self._gigya.login,
-                self._config_data[CONF_USERNAME],
-                self._config_data[CONF_PASSWORD],
+                config_data[CONF_USERNAME],
+                config_data[CONF_PASSWORD],
             ):
                 return True
         except RuntimeError as ex:
             LOGGER.error("Login to Gigya failed: %s", ex)
         return False
+
+    async def initialise(self, config_data):
+        """Set up proxy."""
+        if self._kamereon is None:
+            raise RuntimeError("Please ensure Kamereon is initialised.")
+        self._kamereon.set_account_id(config_data[CONF_KAMEREON_ACCOUNT_ID])
+        vehicles = await self._hass.async_add_executor_job(self._kamereon.get_vehicles)
+        self._vehicle_links = vehicles["vehicleLinks"]
 
     async def get_account_ids(self) -> list:
         """Get Kamereon account ids."""
@@ -85,10 +83,6 @@ class PyzeProxy:
         ):
             accounts.append(account_details["accountId"])
         return accounts
-
-    def set_kamereon_account_id(self, accountid):
-        """Set Kamereon account id."""
-        self._kamereon.set_account_id(accountid)
 
     def get_vehicle_links(self):
         """Get list of vehicles."""

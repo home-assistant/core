@@ -62,8 +62,9 @@ class RenaultFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Request credentials."""
         if user_input:
             self.renault_config.update(user_input)
-            self.pyzeproxy = PyzeProxy(self.hass, self.renault_config)
-            if not await self.pyzeproxy.attempt_login():
+            self.pyzeproxy = PyzeProxy(self.hass)
+            self.pyzeproxy.set_api_keys(self.renault_config)
+            if not await self.pyzeproxy.attempt_login(self.renault_config):
                 return self._show_credentials_form({"base": "invalid_credentials"})
             return await self.async_step_kamereon()
         return self._show_credentials_form()
