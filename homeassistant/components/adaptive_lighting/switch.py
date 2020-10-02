@@ -327,17 +327,19 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         if not self.is_on or not self.hass.is_running:
             _LOGGER.debug("%s: Cancelled '_setup_listeners'", self._name)
             return
+
         assert not self.remove_listeners
+
         remove_interval = async_track_time_interval(
             self.hass, self._async_update_at_interval, self._interval
         )
-        self.remove_listeners.append(remove_interval)
         remove_sleep = async_track_state_change_event(
             self.hass,
             self.sleep_mode_switch.entity_id,
             self._sleep_state_event,
         )
-        self.remove_listeners.append(remove_sleep)
+        self.remove_listeners.extend([remove_interval, remove_sleep])
+
         if self._lights:
             self._expand_light_groups()
             remove_state = async_track_state_change_event(
@@ -362,9 +364,9 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
             return {key: None for key in self._light_settings}
         return self._light_settings
 
-    async def async_turn_on(
+    async def async_turn_on(  # pylint: disable=arguments-differ
         self, adapt_lights: bool = True
-    ) -> None:  # pylint: disable=arguments-differ
+    ) -> None:
         """Turn on adaptive lighting."""
         _LOGGER.debug(
             "%s: Called 'async_turn_on', current state is '%s'", self._name, self._state
@@ -387,9 +389,6 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
 
     async def _async_update_at_interval(self, now=None) -> None:
         await self._update_attrs_and_maybe_adapt_lights(force=False)
-
-    def _is_sleep(self) -> bool:
-        return self.sleep_mode_switch.is_on
 
     async def _adapt_light(
         self,
@@ -458,7 +457,9 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
     ):
         _LOGGER.debug("%s: '_update_attrs_and_maybe_adapt_lights' called", self._name)
         assert self.is_on
-        self._light_settings = self._sun_light_settings.get_settings(self._is_sleep())
+        self._light_settings = self._sun_light_settings.get_settings(
+            self.sleep_mode_switch.is_on
+        )
         self.async_write_ha_state()
         if lights is None:
             lights = self._lights
@@ -577,11 +578,11 @@ class AdaptiveSleepModeSwitch(SwitchEntity, RestoreEntity):
         else:
             await self.async_turn_on()
 
-    async def async_turn_on(self) -> None:
+    async def async_turn_on(self) -> None:  # pylint: disable=arguments-differ
         """Turn on adaptive lighting sleep mode."""
         self._state = True
 
-    async def async_turn_off(self) -> None:
+    async def async_turn_off(self) -> None:  # pylint: disable=arguments-differ
         """Turn off adaptive lighting sleep mode."""
         self._state = False
 
