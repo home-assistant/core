@@ -18,7 +18,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         """Add scene from deCONZ."""
         entities = [DeconzScene(scene, gateway) for scene in scenes]
 
-        async_add_entities(entities)
+        if entities:
+            async_add_entities(entities)
 
     gateway.listeners.append(
         async_dispatcher_connect(
