@@ -4,8 +4,8 @@
             "already_configured": "Only a single instance is necessary."
         },
         "error": {
-            "cannot_connect": "Unable to connect to SRP",
-            "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+            "cannot_connect": "Unable to connect to SRP. Please check your account id.",
+            "invalid_auth": "Unable to authenticate. Please check your username and password.",
             "unknown": "Something went wrong configuring SRP."
         },
         "step": {

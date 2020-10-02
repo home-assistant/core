@@ -11,7 +11,7 @@ from .const import DOMAIN, DEFAULT_NAME  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema({"username": str, "password": str, "id": str})
+# DATA_SCHEMA = vol.Schema({"username": str, "password": str, "id": str})
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_ID): str,
@@ -33,14 +33,14 @@ async def validate_input(hass: core.HomeAssistant, data):
         )
 
         is_valid = await hass.async_add_executor_job(srp_client.validate)
-        if not is_valid:
+
+        if is_valid:
+            return True
+        else:
             raise InvalidAuth
 
     except ValueError:
         raise CannotConnect
-
-    # Return info that you want to store in the config entry.
-    return {CONF_NAME: data[CONF_NAME]}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -50,17 +50,24 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     async def async_step_user(self, user_input=None):
-        """Handle a flow initialized by the user."""
+        """
+        Handle a flow initialized by the user.
+
+        user_input is a dict with keys defined in DATA_SCHEMA
+        with values provided by the user.
+        """
+        errors = {}
+
         if self._async_current_entries():
             return self.async_abort(reason="one_instance_allowed")
 
-        errors = {}
         if user_input is not None:
             try:
 
-                info = await validate_input(self.hass, user_input)
-
-                return self.async_create_entry(title=info[CONF_NAME], data=user_input)
+                await validate_input(self.hass, user_input)
+                return self.async_create_entry(
+                    title=user_input[CONF_NAME], data=user_input
+                )
 
             except CannotConnect:
                 errors["base"] = "cannot_connect"
@@ -70,6 +77,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
+        # Show a form to capture config settings from user
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )

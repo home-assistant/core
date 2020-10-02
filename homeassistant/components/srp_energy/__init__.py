@@ -1,5 +1,4 @@
 """The SRP Energy integration."""
-import asyncio
 import logging
 from srpenergy.client import SrpEnergyClient
 
@@ -46,7 +45,10 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Set up the SRP Energy component."""
+    """Set up the SRP Energy component.
+
+    Called after setup.
+    """
     account_id = entry.data.get(CONF_ID)
     username = entry.data.get(CONF_USERNAME)
     password = entry.data.get(CONF_PASSWORD)
@@ -68,17 +70,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
-            ]
-        )
-    )
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
 
-    return unload_ok
+    # unload_ok = all(
+    #     await asyncio.gather(
+    #         *[
+    #             hass.config_entries.async_forward_entry_unload(entry, component)
+    #             for component in PLATFORMS
+    #         ]
+    #     )
+    # )
+
+    # unload srp client
+    hass.data[DOMAIN] = None
+
+    # Remove config entry
+    await hass.config_entries.async_forward_entry_unload(config_entry, "sensor")
+
+    hass.data.pop(DOMAIN)
+
+    return True
