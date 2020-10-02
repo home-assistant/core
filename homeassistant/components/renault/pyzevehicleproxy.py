@@ -30,14 +30,14 @@ class PyzeVehicleProxy:
         return self._device_info
 
     @property
-    def vin(self):
-        """Return the VIN of the vehicle."""
-        return self._vehicle_link["vin"]
-
-    @property
     def registration(self):
         """Return the registration of the vehicle."""
         return self._vehicle_link["vehicleDetails"]["registrationNumber"]
+
+    @property
+    def vin(self):
+        """Return the VIN of the vehicle."""
+        return self._vehicle_link["vin"]
 
     async def _async_initialise(self):
         """Load available sensors."""
