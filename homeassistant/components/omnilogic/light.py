@@ -1,6 +1,6 @@
 """Platform for light integration."""
+import asyncio
 import logging
-import time
 
 from omnilogic import LightEffect
 
@@ -125,7 +125,7 @@ class OmniLogicLightControl(OmniLogicEntity, LightEntity):
         )
 
         if success:
-            time.sleep(30)
+            await asyncio.sleep(30)
             self.async_schedule_update_ha_state()
 
     async def async_turn_off(self):
@@ -138,7 +138,7 @@ class OmniLogicLightControl(OmniLogicEntity, LightEntity):
         )
 
         if success:
-            time.sleep(60)
+            await asyncio.sleep(60)
             self.async_schedule_update_ha_state()
 
 
