@@ -22,7 +22,7 @@ FANS = {
             "bri": 254,
             "on": False,
             "reachable": True,
-            "speed": 0,
+            "speed": 4,
         },
         "swversion": "0000000F",
         "type": "Fan",
@@ -59,19 +59,21 @@ async def test_fans(hass):
 
     # Test states
 
-    assert hass.states.get("fan.ceiling_fan").state == STATE_OFF
+    assert hass.states.get("fan.ceiling_fan").state == STATE_ON
+    assert hass.states.get("fan.ceiling_fan").attributes["speed"] == fan.SPEED_HIGH
 
     state_changed_event = {
         "t": "event",
         "e": "changed",
         "r": "lights",
         "id": "1",
-        "state": {"speed": 1},
+        "state": {"speed": 0},
     }
     gateway.api.event_handler(state_changed_event)
     await hass.async_block_till_done()
 
-    assert hass.states.get("fan.ceiling_fan").state == STATE_ON
+    assert hass.states.get("fan.ceiling_fan").state == STATE_OFF
+    assert hass.states.get("fan.ceiling_fan").attributes["speed"] == fan.SPEED_OFF
 
     # Test service calls
 
@@ -89,7 +91,7 @@ async def test_fans(hass):
             blocking=True,
         )
         await hass.async_block_till_done()
-        set_callback.assert_called_with("put", "/lights/1/state", json={"speed": 2})
+        set_callback.assert_called_with("put", "/lights/1/state", json={"speed": 4})
 
     # Service turn off fan
 
@@ -100,20 +102,6 @@ async def test_fans(hass):
             fan.DOMAIN,
             fan.SERVICE_TURN_OFF,
             {"entity_id": "fan.ceiling_fan"},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-        set_callback.assert_called_with("put", "/lights/1/state", json={"speed": 0})
-
-    # Service set fan speed to off
-
-    with patch.object(
-        ceiling_fan_device, "_request", return_value=True
-    ) as set_callback:
-        await hass.services.async_call(
-            fan.DOMAIN,
-            fan.SERVICE_SET_SPEED,
-            {"entity_id": "fan.ceiling_fan", fan.ATTR_SPEED: fan.SPEED_OFF},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -160,3 +148,32 @@ async def test_fans(hass):
         )
         await hass.async_block_till_done()
         set_callback.assert_called_with("put", "/lights/1/state", json={"speed": 4})
+
+    # Service set fan speed to off
+
+    with patch.object(
+        ceiling_fan_device, "_request", return_value=True
+    ) as set_callback:
+        await hass.services.async_call(
+            fan.DOMAIN,
+            fan.SERVICE_SET_SPEED,
+            {"entity_id": "fan.ceiling_fan", fan.ATTR_SPEED: fan.SPEED_OFF},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        set_callback.assert_called_with("put", "/lights/1/state", json={"speed": 0})
+
+    # Verify that an unsupported speed gets converted to default speed "medium"
+
+    state_changed_event = {
+        "t": "event",
+        "e": "changed",
+        "r": "lights",
+        "id": "1",
+        "state": {"speed": 3},
+    }
+    gateway.api.event_handler(state_changed_event)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("fan.ceiling_fan").state == STATE_ON
+    assert hass.states.get("fan.ceiling_fan").attributes["speed"] == fan.SPEED_MEDIUM
