@@ -70,8 +70,10 @@ async def test_season_northern_hemisphere(hass, type, day, expected):
     """Test that season should be summer."""
     hass.config.latitude = HEMISPHERE_NORTHERN["homeassistant"]["latitude"]
 
-    config = HEMISPHERE_NORTHERN
-    config["sensor"]["type"] = type
+    config = {
+        ***HEMISPHERE_NORTHERN,
+        "sensor": {"platform": "season", type": type},
+    }
 
     with patch("homeassistant.components.season.sensor.utcnow", return_value=day):
         assert await async_setup_component(hass, "sensor", config)
@@ -87,8 +89,10 @@ async def test_season_southern_hemisphere(hass, type, day, expected):
     """Test that season should be summer."""
     hass.config.latitude = HEMISPHERE_SOUTHERN["homeassistant"]["latitude"]
 
-    config = HEMISPHERE_SOUTHERN
-    config["sensor"]["type"] = type
+    config = {
+        ***HEMISPHERE_SOUTHERN,
+        "sensor": {"platform": "season", "type": type},
+    }
 
     with patch("homeassistant.components.season.sensor.utcnow", return_value=day):
         assert await async_setup_component(hass, "sensor", config)
