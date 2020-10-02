@@ -12,7 +12,7 @@
     "error": {
       "identifier_exists": "[%key:common::config_flow::abort::already_configured_account%]",
       "invalid_credentials": "[%key:common::config_flow::error::invalid_auth%]",
-      "connection_error": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"

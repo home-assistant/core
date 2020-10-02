@@ -78,7 +78,7 @@ async def test_connection_error(hass):
         ),
     ):
         result = await flow.async_step_user(user_input=conf)
-        assert result["errors"] == {"base": "connection_error"}
+        assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_step_import(hass):
