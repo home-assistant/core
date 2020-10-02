@@ -18,11 +18,11 @@
     },
     "error": {
       "invalid_host": "Invalid hostname or IP address.",
-      "cannot_connect": "Failed to connect, invalid host or PIN code.",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "unsupported_model": "Your TV model is not supported."
     },
     "abort": {
-      "already_configured": "This TV is already configured.",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_ip_control": "IP Control is disabled on your TV or the TV is not supported."
     }
   },

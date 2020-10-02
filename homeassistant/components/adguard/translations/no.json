@@ -5,6 +5,7 @@
             "single_instance_allowed": "Kun en konfigurasjon av AdGuard Hjemer tillatt."
         },
         "error": {
+            "cannot_connect": "Tilkobling mislyktes.",
             "connection_error": "Tilkobling mislyktes."
         },
         "step": {

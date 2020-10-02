@@ -20,7 +20,7 @@
           "region": "Region",
           "name": "Name",
           "code": "PIN",
-          "ip_address": "IP Address"
+          "ip_address": "[%key:common::config_flow::data::ip%]"
         }
       }
     },

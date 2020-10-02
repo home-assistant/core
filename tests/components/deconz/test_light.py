@@ -92,8 +92,7 @@ async def test_platform_manually_configured(hass):
 
 async def test_no_lights_or_groups(hass):
     """Test that no lights or groups entities are created."""
-    gateway = await setup_deconz_integration(hass)
-    assert len(gateway.deconz_ids) == 0
+    await setup_deconz_integration(hass)
     assert len(hass.states.async_all()) == 0
 
 
@@ -103,12 +102,6 @@ async def test_lights_and_groups(hass):
     data["groups"] = deepcopy(GROUPS)
     data["lights"] = deepcopy(LIGHTS)
     gateway = await setup_deconz_integration(hass, get_state_response=data)
-    assert "light.rgb_light" in gateway.deconz_ids
-    assert "light.tunable_white_light" in gateway.deconz_ids
-    assert "light.light_group" in gateway.deconz_ids
-    assert "light.empty_group" not in gateway.deconz_ids
-    assert "light.on_off_switch" not in gateway.deconz_ids
-    assert "light.on_off_light" in gateway.deconz_ids
 
     assert len(hass.states.async_all()) == 6
 
@@ -159,7 +152,11 @@ async def test_lights_and_groups(hass):
     rgb_light = hass.states.get("light.rgb_light")
     assert rgb_light.state == "off"
 
+    # Verify service calls
+
     rgb_light_device = gateway.api.lights["1"]
+
+    # Service turn on light with short color loop
 
     with patch.object(rgb_light_device, "_request", return_value=True) as set_callback:
         await hass.services.async_call(
@@ -188,6 +185,8 @@ async def test_lights_and_groups(hass):
             },
         )
 
+    # Service turn on light disabling color loop with long flashing
+
     with patch.object(rgb_light_device, "_request", return_value=True) as set_callback:
         await hass.services.async_call(
             light.DOMAIN,
@@ -206,6 +205,8 @@ async def test_lights_and_groups(hass):
             "/lights/1/state",
             json={"xy": (0.411, 0.351), "alert": "lselect", "effect": "none"},
         )
+
+    # Service turn on light with short flashing
 
     with patch.object(rgb_light_device, "_request", return_value=True) as set_callback:
         await hass.services.async_call(
@@ -227,6 +228,8 @@ async def test_lights_and_groups(hass):
     gateway.api.event_handler(state_changed_event)
     await hass.async_block_till_done()
 
+    # Service turn off light with short flashing
+
     with patch.object(rgb_light_device, "_request", return_value=True) as set_callback:
         await hass.services.async_call(
             light.DOMAIN,
@@ -240,6 +243,8 @@ async def test_lights_and_groups(hass):
             "/lights/1/state",
             json={"bri": 0, "transitiontime": 50, "alert": "select"},
         )
+
+    # Service turn off light with long flashing
 
     with patch.object(rgb_light_device, "_request", return_value=True) as set_callback:
         await hass.services.async_call(
@@ -259,7 +264,7 @@ async def test_lights_and_groups(hass):
 
 
 async def test_disable_light_groups(hass):
-    """Test successful creation of sensor entities."""
+    """Test disallowing light groups work."""
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["groups"] = deepcopy(GROUPS)
     data["lights"] = deepcopy(LIGHTS)
@@ -268,48 +273,25 @@ async def test_disable_light_groups(hass):
         options={deconz.gateway.CONF_ALLOW_DECONZ_GROUPS: False},
         get_state_response=data,
     )
-    assert "light.rgb_light" in gateway.deconz_ids
-    assert "light.tunable_white_light" in gateway.deconz_ids
-    assert "light.light_group" not in gateway.deconz_ids
-    assert "light.empty_group" not in gateway.deconz_ids
-    assert "light.on_off_switch" not in gateway.deconz_ids
-    # 3 entities
+
     assert len(hass.states.async_all()) == 5
-
-    rgb_light = hass.states.get("light.rgb_light")
-    assert rgb_light is not None
-
-    tunable_white_light = hass.states.get("light.tunable_white_light")
-    assert tunable_white_light is not None
-
-    light_group = hass.states.get("light.light_group")
-    assert light_group is None
-
-    empty_group = hass.states.get("light.empty_group")
-    assert empty_group is None
+    assert hass.states.get("light.rgb_light")
+    assert hass.states.get("light.tunable_white_light")
+    assert hass.states.get("light.light_group") is None
+    assert hass.states.get("light.empty_group") is None
 
     hass.config_entries.async_update_entry(
         gateway.config_entry, options={deconz.gateway.CONF_ALLOW_DECONZ_GROUPS: True}
     )
     await hass.async_block_till_done()
 
-    assert "light.rgb_light" in gateway.deconz_ids
-    assert "light.tunable_white_light" in gateway.deconz_ids
-    assert "light.light_group" in gateway.deconz_ids
-    assert "light.empty_group" not in gateway.deconz_ids
-    assert "light.on_off_switch" not in gateway.deconz_ids
-    # 3 entities
     assert len(hass.states.async_all()) == 6
+    assert hass.states.get("light.light_group")
 
     hass.config_entries.async_update_entry(
         gateway.config_entry, options={deconz.gateway.CONF_ALLOW_DECONZ_GROUPS: False}
     )
     await hass.async_block_till_done()
 
-    assert "light.rgb_light" in gateway.deconz_ids
-    assert "light.tunable_white_light" in gateway.deconz_ids
-    assert "light.light_group" not in gateway.deconz_ids
-    assert "light.empty_group" not in gateway.deconz_ids
-    assert "light.on_off_switch" not in gateway.deconz_ids
-    # 3 entities
     assert len(hass.states.async_all()) == 5
+    assert hass.states.get("light.light_group") is None

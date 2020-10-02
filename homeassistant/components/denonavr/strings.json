@@ -6,7 +6,7 @@
         "title": "Denon AVR Network Receivers",
         "description": "Connect to your receiver, if the IP address is not set, auto-discovery is used",
         "data": {
-          "host": "IP address"
+          "host": "[%key:common::config_flow::data::ip%]"
         }
       },
       "confirm": {
