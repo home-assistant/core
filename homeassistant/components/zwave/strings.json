@@ -15,7 +15,7 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::single_instance_allowed%]",
-      "one_instance_only": "[%key:common::abort::already_configured_device%]"
+      "one_instance_only": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
   "state": {
