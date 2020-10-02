@@ -216,7 +216,7 @@ async def test_manual(hass: HomeAssistant):
             result["flow_id"], {CONF_NAME: NAME}
         )
     assert result5["type"] == "create_entry"
-    assert result5["data"] == {CONF_ID: ID, CONF_HOST: IP_ADDRESS, CONF_NAME: NAME}
+    assert result5["data"] == {CONF_ID: None, CONF_HOST: IP_ADDRESS, CONF_NAME: NAME}
 
     # Duplicate
     result = await hass.config_entries.flow.async_init(

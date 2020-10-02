@@ -41,7 +41,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._discovered_devices = {}
         self._host = None
-        self._capabilities = {}
+        self._capabilities = None
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
@@ -127,9 +127,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             data = {
                 CONF_NAME: user_input[CONF_NAME],
-                CONF_ID: self._capabilities.get("id"),
-                CONF_HOST: self._host,
             }
+            if self._host:
+                data[CONF_ID] = None
+                data[CONF_HOST] = self._host
+            else:
+                data[CONF_ID] = self._capabilities["id"]
+                data[CONF_HOST] = None
             return self.async_create_entry(title=user_input[CONF_NAME], data=data)
 
         if self._capabilities:
