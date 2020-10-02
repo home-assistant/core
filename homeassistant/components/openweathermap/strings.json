@@ -12,8 +12,8 @@
                 "data": {
                     "api_key": "OpenWeatherMap API key",
                     "language": "Language",
-                    "latitude": "Latitude",
-                    "longitude": "Longitude",
+                    "latitude": "[%key:common::config_flow::data::latitude%]",
+                    "longitude": "[%key:common::config_flow::data::longitude%]",
                     "mode": "Mode",
                     "name": "Name of the integration"
                 },

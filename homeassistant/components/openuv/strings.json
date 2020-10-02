@@ -6,8 +6,8 @@
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "elevation": "Elevation",
-          "latitude": "Latitude",
-          "longitude": "Longitude"
+          "latitude": "[%key:common::config_flow::data::latitude%]",
+          "longitude": "[%key:common::config_flow::data::longitude%]"
         }
       }
     },

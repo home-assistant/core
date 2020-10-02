@@ -1,5 +1,8 @@
 {
     "config": {
+        "error": {
+            "name_exists": "Nimi on juba kasutusel"
+        },
         "step": {
             "init": {
                 "data": {
@@ -7,6 +10,7 @@
                     "latitude": "Laiuskraad",
                     "longitude": "Pikkuskraad",
                     "name": "Nimi",
+                    "passive": "Passiivne",
                     "radius": "Raadius"
                 },
                 "title": "M\u00e4\u00e4ra ala parameetrid"
