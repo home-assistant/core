@@ -16,7 +16,7 @@
       }
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannnot_connect%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "wrong_version": "Version not supported (2 or 3 only)"
     },
     "abort": {
