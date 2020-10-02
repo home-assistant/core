@@ -12,6 +12,6 @@
         }
       }
     },
-    "error": { "name_exists": "[%key:common::config_flow::data::already_configured%]" }
+    "error": { "name_exists": "[%key:common::config_flow::abort::already_configured_device%]" }
   }
 }
