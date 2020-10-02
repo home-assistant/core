@@ -68,7 +68,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason=REASON_UNKNOWN)
 
             if "base" not in errors:
-                print(self._data)
                 await self.async_set_unique_id(self._data[ATTR_DEVICE_INFO][ATTR_UDN])
                 self._abort_if_unique_id_configured()
 
