@@ -753,7 +753,7 @@ hole==0.5.1
 holidays==0.10.3
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200930.0
+home-assistant-frontend==20201001.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -2108,7 +2108,7 @@ sucks==0.9.4
 sunwatcher==0.2.1
 
 # homeassistant.components.surepetcare
-surepy==0.2.5
+surepy==0.2.6
 
 # homeassistant.components.swiss_hydrological_data
 swisshydrodata==0.0.3

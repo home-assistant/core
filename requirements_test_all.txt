@@ -376,7 +376,7 @@ hole==0.5.1
 holidays==0.10.3
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200930.0
+home-assistant-frontend==20201001.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -991,7 +991,7 @@ stringcase==1.2.0
 sunwatcher==0.2.1
 
 # homeassistant.components.surepetcare
-surepy==0.2.5
+surepy==0.2.6
 
 # homeassistant.components.tellduslive
 tellduslive==0.10.11

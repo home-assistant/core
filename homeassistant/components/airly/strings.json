@@ -7,8 +7,8 @@
         "data": {
           "name": "Name of the integration",
           "api_key": "[%key:common::config_flow::data::api_key%]",
-          "latitude": "Latitude",
-          "longitude": "Longitude"
+          "latitude": "[%key:common::config_flow::data::latitude%]",
+          "longitude": "[%key:common::config_flow::data::longitude%]"
         }
       }
     },

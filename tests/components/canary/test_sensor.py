@@ -15,6 +15,7 @@ from homeassistant.const import (
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     TEMP_CELSIUS,
 )
 from homeassistant.setup import async_setup_component
@@ -187,7 +188,7 @@ async def test_sensors_flex(hass, canary) -> None:
         "home_dining_room_wifi": (
             "20_wifi",
             "-57.0",
-            "dBm",
+            SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
             DEVICE_CLASS_SIGNAL_STRENGTH,
             None,
         ),

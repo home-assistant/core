@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "See WLED seade on juba konfigureeritud.",
+            "already_configured": "See WLED seade on juba h\u00e4\u00e4lestatud.",
             "connection_error": "WLED-seadmega \u00fchenduse loomine nurjus."
         },
         "error": {
@@ -16,7 +16,7 @@
                 "description": "Seadista WLED-i sidumine Home Assistantiga."
             },
             "zeroconf_confirm": {
-                "description": "Kas soovite lisada WLED {nimi} Home Assistanti?",
+                "description": "Kas soovid lisada WLED {nimi} Home Assistanti?",
                 "title": "Leitud WLED seade"
             }
         }

@@ -1,4 +1,9 @@
 {
+    "config": {
+        "abort": {
+            "no_hardware_available": "DeCONZi raadio riistvara puudub"
+        }
+    },
     "device_automation": {
         "trigger_subtype": {
             "both_buttons": "M\u00f5lemad nupud",
@@ -26,6 +31,15 @@
         "trigger_type": {
             "remote_awakened": "Seade \u00e4rkas",
             "remote_button_rotation_stopped": "Nupu \" {subtype} \"  p\u00f6\u00f6ramine peatus"
+        }
+    },
+    "options": {
+        "step": {
+            "deconz_devices": {
+                "data": {
+                    "allow_new_devices": "Luba uute seadmete automaatne lisamine"
+                }
+            }
         }
     }
 }
