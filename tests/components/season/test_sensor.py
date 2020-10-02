@@ -72,7 +72,7 @@ async def test_season_northern_hemisphere(hass, type, day, expected):
 
     config = {
         ***HEMISPHERE_NORTHERN,
-        "sensor": {"platform": "season", type": type},
+        "sensor": {"platform": "season", "type": type},
     }
 
     with patch("homeassistant.components.season.sensor.utcnow", return_value=day):
