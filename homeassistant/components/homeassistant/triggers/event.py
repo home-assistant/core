@@ -28,8 +28,8 @@ TRIGGER_SCHEMA = vol.Schema(
 def _schema_value(value, exact_match):
     if isinstance(value, list) and not exact_match:
         return vol.In(value)
-    else:
-        return value
+
+    return value
 
 
 def _populate_schema(config, config_parameter, exact_match=True):
