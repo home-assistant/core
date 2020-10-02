@@ -2,9 +2,10 @@
     "config": {
         "abort": {
             "existing_instance_updated": "S'ha actualitzat la configuraci\u00f3 existent.",
-            "single_instance_allowed": "Nom\u00e9s es permet una \u00fanica configuraci\u00f3 d'AdGuard Home."
+            "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
         },
         "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
             "connection_error": "No s'ha pogut connectar."
         },
         "step": {

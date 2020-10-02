@@ -3,5 +3,17 @@
         "abort": {
             "already_configured": "Enheten er allerede konfigurert"
         }
-    }
+    },
+    "options": {
+        "step": {
+            "set_device_options": {
+                "data": {
+                    "replace_device": "Velg enheten du vil erstatte",
+                    "signal_repetitions": "Antall signalrepetisjoner"
+                },
+                "title": "Konfigurer enhetsalternativer"
+            }
+        }
+    },
+    "title": "Rfxtrx"
 }

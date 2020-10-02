@@ -1,0 +1,20 @@
+{
+    "config": {
+        "flow_title": "Xiaomi Miio: {name}",
+        "step": {
+            "gateway": {
+                "data": {
+                    "host": "IP aadress"
+                },
+                "title": "Loo \u00fchendus Xiaomi l\u00fc\u00fcsiga"
+            },
+            "user": {
+                "data": {
+                    "gateway": "Loo \u00fchendus Xiaomi l\u00fc\u00fcsiga"
+                },
+                "description": "Vali seade millega soovid \u00fchenduse luua.",
+                "title": "Xiaomi Miio"
+            }
+        }
+    }
+}
