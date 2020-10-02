@@ -671,7 +671,7 @@ async def test_warn_slow_write_state(hass, caplog):
         "Updating state for comp_test.test_entity "
         "(<class 'homeassistant.helpers.entity.Entity'>) "
         "took 10.000 seconds. Please create a bug report at "
-        "https://github.com/home-assistant/home-assistant/issues?"
+        "https://github.com/home-assistant/core/issues?"
         "q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+hue%22"
     ) in caplog.text
 
