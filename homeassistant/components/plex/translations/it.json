@@ -4,6 +4,7 @@
             "all_configured": "Tutti i server collegati sono gi\u00e0 configurati",
             "already_configured": "Questo server Plex \u00e8 gi\u00e0 configurato",
             "already_in_progress": "Plex \u00e8 in fase di configurazione",
+            "reauth_successful": "Ri-autenticato con successo",
             "token_request_timeout": "Timeout per l'ottenimento del token",
             "unknown": "Errore imprevisto"
         },

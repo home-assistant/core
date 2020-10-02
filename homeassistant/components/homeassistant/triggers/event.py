@@ -11,6 +11,7 @@ from homeassistant.helpers import config_validation as cv
 
 CONF_EVENT_TYPE = "event_type"
 CONF_EVENT_DATA = "event_data"
+CONF_EVENT_CONTEXT = "context"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,8 +20,19 @@ TRIGGER_SCHEMA = vol.Schema(
         vol.Required(CONF_PLATFORM): "event",
         vol.Required(CONF_EVENT_TYPE): cv.string,
         vol.Optional(CONF_EVENT_DATA): dict,
+        vol.Optional(CONF_EVENT_CONTEXT): dict,
     }
 )
+
+
+def _populate_schema(config, config_parameter):
+    if config_parameter not in config:
+        return None
+
+    return vol.Schema(
+        {vol.Required(key): value for key, value in config[config_parameter].items()},
+        extra=vol.ALLOW_EXTRA,
+    )
 
 
 async def async_attach_trigger(
@@ -28,27 +40,22 @@ async def async_attach_trigger(
 ):
     """Listen for events based on configuration."""
     event_type = config.get(CONF_EVENT_TYPE)
-    event_data_schema = None
-    if config.get(CONF_EVENT_DATA):
-        event_data_schema = vol.Schema(
-            {
-                vol.Required(key): value
-                for key, value in config.get(CONF_EVENT_DATA).items()
-            },
-            extra=vol.ALLOW_EXTRA,
-        )
+    event_data_schema = _populate_schema(config, CONF_EVENT_DATA)
+    event_context_schema = _populate_schema(config, CONF_EVENT_CONTEXT)
 
     @callback
     def handle_event(event):
         """Listen for events and calls the action when data matches."""
-        if event_data_schema:
-            # Check that the event data matches the configured
+        try:
+            # Check that the event data and context match the configured
             # schema if one was provided
-            try:
+            if event_data_schema:
                 event_data_schema(event.data)
-            except vol.Invalid:
-                # If event data doesn't match requested schema, skip event
-                return
+            if event_context_schema:
+                event_context_schema(event.context.as_dict())
+        except vol.Invalid:
+            # If event doesn't match, skip event
+            return
 
         hass.async_run_job(
             action,

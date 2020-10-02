@@ -6,8 +6,8 @@
         "description": "Use the AirVisual cloud API to monitor a geographical location.",
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
-          "latitude": "Latitude",
-          "longitude": "Longitude"
+          "latitude": "[%key:common::config_flow::data::latitude%]",
+          "longitude": "[%key:common::config_flow::data::longitude%]"
         }
       },
       "node_pro": {
@@ -29,9 +29,9 @@
       }
     },
     "error": {
-      "general_error": "There was an unknown error.",
-      "invalid_api_key": "Invalid API key provided.",
-      "unable_to_connect": "Unable to connect to Node/Pro unit."
+      "general_error": "[%key:common::config_flow::error::unknown%]",
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "abort": {
       "already_configured": "These coordinates or Node/Pro ID are already registered."

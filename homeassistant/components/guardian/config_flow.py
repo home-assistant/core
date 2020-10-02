@@ -83,7 +83,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_zeroconf(self, discovery_info):
         """Handle the configuration via zeroconf."""
         if discovery_info is None:
-            return self.async_abort(reason="connection_error")
+            return self.async_abort(reason="cannot_connect")
 
         pin = async_get_pin_from_discovery_hostname(discovery_info["hostname"])
         await self._async_set_unique_id(pin)

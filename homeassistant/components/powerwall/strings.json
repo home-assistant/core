@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Connect to the powerwall",
-        "data": { "ip_address": "IP Address" }
+        "data": { "ip_address": "[%key:common::config_flow::data::ip%]" }
       }
     },
     "error": {

@@ -3,6 +3,7 @@
         "step": {
             "relay_modes": {
                 "data": {
+                    "relay_5": "\u03a1\u03b5\u03bb\u03ad 5",
                     "relay_6": "\u03a1\u03b5\u03bb\u03ad 6",
                     "relay_7": "\u03a1\u03b5\u03bb\u03ad 7",
                     "relay_8": "\u03a1\u03b5\u03bb\u03ad 8",
