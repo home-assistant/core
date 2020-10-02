@@ -10,7 +10,12 @@ import logging
 
 import mobilevikings_scraper
 
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, DATA_GIGABYTES
+from homeassistant.const import (
+    CONF_MONITORED_VARIABLES,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    DATA_GIGABYTES,
+)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -24,17 +29,21 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
 
-    add_entities([VikingSensor(VikingData(username, password))])
+    viking_data = VikingData(username, password)
+    entities = []
+    for variable in config[CONF_MONITORED_VARIABLES]:
+        entities.append(VikingSensor(viking_data, variable))
+    add_entities(entities)
 
 
 class VikingSensor(Entity):
     """Representation of a Sensor."""
 
-    def __init__(self, viking_data):
+    def __init__(self, viking_data, sensor_type):
         """Initialize the sensor."""
         self._icon = "mdi:cellphone"
-        self._number = "666999666"
         self._state = None
+        self.type = sensor_type
         self.viking_data = viking_data
 
     @property
@@ -50,22 +59,31 @@ class VikingSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return DATA_GIGABYTES
+        if self.type == "balance":
+            return "PLN"
+        elif self.type == "data":
+            return DATA_GIGABYTES
 
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        return self._icon
+        if self.type == "balance":
+            return "mdi:cash-usd"
+        elif self.type == "data":
+            return "mdi:download"
 
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
-        return {"number": self._number}
+        return {"number": self.viking_data.number}
 
     def update(self):
         """Fetch new state data for the sensor."""
         self.viking_data.update()
-        self._state = self.viking_data.data_available
+        if self.type == "balance":
+            self._state = self.viking_data.balance
+        elif self.type == "data":
+            self._state = self.viking_data.data_available
 
 
 class VikingData:
@@ -76,6 +94,8 @@ class VikingData:
         self._username = username
         self._password = password
         self._raw_data = None
+        # Number
+        self.number = None
         # Balance
         self.balance = None
         self.balance_type = None
@@ -105,6 +125,7 @@ class VikingData:
         try:
             data = mobilevikings_scraper.scrape(self._username, self._password)
             self._raw_data = data
+            self.number = data["subscription"]["msisdn"]
             self.balance = data["balance"]["credit"]
             self.balance_type = data["balance"]["credit_type"]
             self.balance_expiration = datetime.datetime.strptime(
