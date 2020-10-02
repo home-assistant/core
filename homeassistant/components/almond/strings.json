@@ -8,7 +8,7 @@
       }
     },
     "abort": {
-      "already_setup": "You can only configure one Almond account.",
+      "already_setup": "[%key:common::config_flow::abort::single_instance_allowed%].",
       "cannot_connect": "Unable to connect to the Almond server.",
       "missing_configuration": "Please check the documentation on how to set up Almond.",
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]"
