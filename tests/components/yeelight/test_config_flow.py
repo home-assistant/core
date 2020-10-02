@@ -215,6 +215,7 @@ async def test_manual(hass: HomeAssistant):
         result5 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_NAME: NAME}
         )
+        await hass.async_block_till_done()
     assert result5["type"] == "create_entry"
     assert result5["data"] == {CONF_ID: None, CONF_HOST: IP_ADDRESS, CONF_NAME: NAME}
 
@@ -267,3 +268,34 @@ async def test_options(hass: HomeAssistant):
     assert result2["data"] == config
     assert result2["data"] == config_entry.options
     assert hass.states.get(f"light.{NAME}_nightlight") is not None
+
+
+async def test_manual_no_capabilities(hass: HomeAssistant):
+    """Test manually setup without successful get_capabilities."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+
+    mocked_bulb = _mocked_bulb()
+    type(mocked_bulb).get_capabilities = MagicMock(return_value=None)
+    with patch(f"{MODULE_CONFIG_FLOW}.yeelight.Bulb", return_value=mocked_bulb):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: IP_ADDRESS}
+        )
+    type(mocked_bulb).get_capabilities.assert_called_once()
+    type(mocked_bulb).get_properties.assert_called_once()
+    assert result["type"] == "form"
+    assert result["step_id"] == "name"
+    assert not result["errors"]
+    with patch(f"{MODULE}.async_setup", return_value=True), patch(
+        f"{MODULE}.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_NAME: NAME}
+        )
+    assert result["type"] == "create_entry"
+    assert result["data"] == {CONF_ID: None, CONF_HOST: IP_ADDRESS, CONF_NAME: NAME}

@@ -14,6 +14,7 @@ from homeassistant.setup import async_setup_component
 
 from . import (
     CONFIG_ENTRY_DATA,
+    ID,
     IP_ADDRESS,
     MODULE,
     MODULE_CONFIG_FLOW,
@@ -73,8 +74,33 @@ async def test_setup_import(hass: HomeAssistant):
     assert hass.states.get(f"light.{name}_nightlight") is not None
 
 
-async def test_unique_ids(hass: HomeAssistant):
-    """Test Yeelight new unique IDs."""
+async def test_unique_ids_device(hass: HomeAssistant):
+    """Test Yeelight unique IDs from yeelight device IDs."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            **CONFIG_ENTRY_DATA,
+            CONF_NIGHTLIGHT_SWITCH: True,
+        },
+        unique_id=ID,
+    )
+    config_entry.add_to_hass(hass)
+
+    mocked_bulb = _mocked_bulb()
+    mocked_bulb.bulb_type = BulbType.WhiteTempMood
+    with _patch_discovery(MODULE), patch(f"{MODULE}.Bulb", return_value=mocked_bulb):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    er = await entity_registry.async_get_registry(hass)
+    assert er.async_get(f"binary_sensor.{NAME}_nightlight").unique_id == ID
+    assert er.async_get(f"light.{NAME}").unique_id == ID
+    assert er.async_get(f"light.{NAME}_nightlight").unique_id == f"{ID}-nightlight"
+    assert er.async_get(f"light.{NAME}_ambilight").unique_id == f"{ID}-ambilight"
+
+
+async def test_unique_ids_entry(hass: HomeAssistant):
+    """Test Yeelight unique IDs from entry IDs."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
