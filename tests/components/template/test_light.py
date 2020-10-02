@@ -1133,7 +1133,7 @@ class TestTemplateLight:
                 "{{ '[\"Strobe color\", \"Police\", \"Christmas\", \"RGB\", \"Random Loop\"]' }}",
             ),
             ("['Police', 'RGB', 'Random Loop']", "{{ '[\"Police\", \"RGB\", \"Random Loop\"]' }}"),
-            (None, "{{ \"Police\", \"RGB\", \"Random Loop\"' }}"),
+            (None, "{{ \"Police\", \"RGB\", \"Random Loop\" }}"),
             (None, "{{ [] }}"),
             ([], "{{ '[]' }}"),
             (None, "{{ none }}"),
