@@ -10,7 +10,7 @@
       }
     },
     "abort": {
-      "all_configured": "No new Pulse hubs discovered."
+      "all_configured": "[%key:common::config_flow::abort::no_devices_found%]"
     }
   }
 }
