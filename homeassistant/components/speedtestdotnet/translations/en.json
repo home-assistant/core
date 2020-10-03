@@ -13,9 +13,6 @@
         }
     },
     "options": {
-        "error": {
-            "retrive_error": "Error retriving servers list"
-        },
         "step": {
             "init": {
                 "data": {

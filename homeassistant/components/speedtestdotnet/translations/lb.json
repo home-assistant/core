@@ -13,9 +13,6 @@
         }
     },
     "options": {
-        "error": {
-            "retrive_error": "Feeler beim ofruffen vun der Server L\u00ebscht"
-        },
         "step": {
             "init": {
                 "data": {
