@@ -5,7 +5,7 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "name": "Name",
+          "name": "[%key:common::config_flow::data::name%]",
           "location": "Location",
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "ssl": "Use SSL",
