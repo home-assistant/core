@@ -32,7 +32,7 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "already_in_progress": "There is already a configuration flow in progress for this device",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_host": "Invalid hostname or IP address",
       "not_supported": "Device not supported",

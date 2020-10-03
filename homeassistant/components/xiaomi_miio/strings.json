@@ -25,7 +25,7 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "already_in_progress": "Config flow for this Xiaomi Miio device is already in progress."
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]"
     }
   }
 }
