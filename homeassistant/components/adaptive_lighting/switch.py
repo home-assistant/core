@@ -809,7 +809,7 @@ class TurnOnOffListener:
         adaptive_lighting_context: Context,
     ):
         """Check if the light has been 'on' and is now manually being adjusted."""
-        manually_controlled = self.manually_controlled[light]
+        manually_controlled = self.manually_controlled.setdefault(light, False)
         if manually_controlled:
             # Manually controlled until light is turned on and off
             return True
