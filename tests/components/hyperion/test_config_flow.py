@@ -31,6 +31,7 @@ from tests.common import MockConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
+TEST_IP_ADDRESS = "192.168.0.1"
 TEST_HOST_PORT = {
     CONF_HOST: TEST_HOST,
     CONF_PORT: TEST_PORT,
@@ -59,7 +60,7 @@ TEST_REQUEST_TOKEN_FAIL = {
 }
 
 TEST_ZEROCONF_SERVICE_INFO = {
-    CONF_HOST: "192.168.0.1",
+    CONF_HOST: TEST_IP_ADDRESS,
     "hostname": TEST_HOST,
     CONF_PORT: TEST_PORT,
     "type": "_hyperiond-json._tcp.local.",
@@ -419,11 +420,13 @@ async def test_zeroconf_success(hass):
         result = await _init_flow(
             hass, source=SOURCE_ZEROCONF, data=TEST_ZEROCONF_SERVICE_INFO
         )
+        await hass.async_block_till_done()
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["handler"] == DOMAIN
     assert result["title"] == client.id
     assert result["data"] == {
-        **TEST_HOST_PORT,
-        **{CONF_INSTANCE: const.DEFAULT_INSTANCE},
+        CONF_HOST: TEST_IP_ADDRESS,
+        CONF_PORT: TEST_PORT,
+        CONF_INSTANCE: const.DEFAULT_INSTANCE,
     }

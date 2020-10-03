@@ -55,16 +55,16 @@ _LOGGER.setLevel(logging.DEBUG)
 #           |            +-----------------------------------+
 #           |                   |
 #           v                   |
-#   +---------------+           |
-#   |Form: Instance |           |
-#   |               |<----------+
-#   |Input: instance|
-#   +---------------+
+#     +----------------+        |
+#     |Form: Instance  |        |
+#     |                |<-------+
+#     |Input: instance |
+#     +----------------+
 #           |
 #           v
-#   +---------------+
-#   |Step: Final    |
-#   +---------------+
+#     +----------------+
+#     |Step: Final     |
+#     +----------------+
 
 
 class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -248,8 +248,26 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initiated by zeroconf."""
         _LOGGER.error("Zeroconf %s", user_input)
         # Hostname is format: hyperion.local.
+
+        # Sample data provided by Zeroconf: {
+        #   'host': '192.168.0.1',
+        #   'port': 19444,
+        #   'hostname': 'hyperion.local.',
+        #   'type': '_hyperiond-json._tcp.local.',
+        #   'name': 'hyperion:19444._hyperiond-json._tcp.local.',
+        #   'properties': {
+        #     '_raw': {
+        #       'id': b'f9aab089-f85a-55cf-b7c1-222a72faebe9',
+        #       'version': b'2.0.0-alpha.8'},
+        #     'id': 'f9aab089-f85a-55cf-b7c1-222a72faebe9',
+        #     'version': '2.0.0-alpha.8'}}
+
         data = {}
-        data[CONF_HOST] = user_input["hostname"].rstrip(".")
+
+        # Intentionally uses the IP address field, as ".local" cannot
+        # be resolved by Home Assistant Core in Docker.
+        # See related: https://github.com/home-assistant/core/issues/38537
+        data[CONF_HOST] = user_input["host"]
         data[CONF_PORT] = user_input["port"]
         # data[const.KEY_NAME] = data[CONF_HOST].rsplit(".")[0]
         # data[const.KEY_ID] = user_input["properties"]["id"]
