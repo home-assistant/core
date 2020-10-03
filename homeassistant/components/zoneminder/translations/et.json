@@ -1,15 +1,15 @@
 {
     "config": {
         "abort": {
-            "invalid_auth": "Kasutajanimi v\u00f5i salas\u00f5na on vale.",
-            "cannot_connect": "ZoneMinderi serveriga \u00fchenduse loomine nurjus."
+            "auth_fail": "Kasutajanimi v\u00f5i salas\u00f5na on vale.",
+            "connection_error": "ZoneMinderi serveriga \u00fchenduse loomine nurjus."
         },
         "create_entry": {
             "default": "ZoneMinderi server on lisatud."
         },
         "error": {
-            "invalid_auth": "Vale kasutajanimi v\u00f5i salas\u00f5na",
-            "cannot_connect": "ZoneMinderi serveriga \u00fchenduse loomine nurjus."
+            "auth_fail": "Vale kasutajanimi v\u00f5i salas\u00f5na",
+            "connection_error": "ZoneMinderi serveriga \u00fchenduse loomine nurjus."
         },
         "flow_title": "ZoneMinder",
         "step": {

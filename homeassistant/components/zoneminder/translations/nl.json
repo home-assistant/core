@@ -1,15 +1,8 @@
 {
     "config": {
         "abort": {
-            "invalid_auth": "Gebruikersnaam of wachtwoord is onjuist.",
-            "cannot_connect": "Kan geen verbinding maken met een ZoneMinder-server."
-        },
-        "create_entry": {
-            "default": "ZoneMinder server is toegevoegd."
-        },
-        "error": {
-            "invalid_auth": "Gebruikersnaam of wachtwoord is onjuist.",
-            "cannot_connect": "Kan geen verbinding maken met de ZoneMinder-server."
+            "auth_fail": "Gebruikersnaam of wachtwoord is onjuist.",
+            "connection_error": "Kan geen verbinding maken met een ZoneMinder-server."
         },
         "flow_title": "ZoneMinder",
         "step": {
@@ -21,7 +14,7 @@
                     "path_zms": "ZMS-pad",
                     "ssl": "Gebruik SSL voor verbindingen met ZoneMinder",
                     "username": "Gebruikersnaam",
-                    "verify_ssl": "Verifieer SSL-certificaat"
+                    "verify_ssl": "Verifieer SSLcertificaat"
                 },
                 "title": "Voeg ZoneMinder server toe."
             }

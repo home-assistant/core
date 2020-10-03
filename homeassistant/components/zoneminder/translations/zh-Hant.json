@@ -1,15 +1,15 @@
 {
     "config": {
         "abort": {
-            "invalid_auth": "\u4f7f\u7528\u8005\u540d\u7a31\u6216\u5bc6\u78bc\u932f\u8aa4\u3002",
-            "cannot_connect": "ZoneMinder \u4f3a\u670d\u5668\u9023\u7dda\u5931\u6557\u3002"
+            "auth_fail": "\u4f7f\u7528\u8005\u540d\u7a31\u6216\u5bc6\u78bc\u932f\u8aa4\u3002",
+            "connection_error": "ZoneMinder \u4f3a\u670d\u5668\u9023\u7dda\u5931\u6557\u3002"
         },
         "create_entry": {
             "default": "ZoneMinder \u4f3a\u670d\u5668\u5df2\u65b0\u589e\u3002"
         },
         "error": {
-            "invalid_auth": "\u4f7f\u7528\u8005\u540d\u7a31\u6216\u5bc6\u78bc\u932f\u8aa4\u3002",
-            "cannot_connect": "ZoneMinder \u4f3a\u670d\u5668\u9023\u7dda\u5931\u6557\u3002"
+            "auth_fail": "\u4f7f\u7528\u8005\u540d\u7a31\u6216\u5bc6\u78bc\u932f\u8aa4\u3002",
+            "connection_error": "ZoneMinder \u4f3a\u670d\u5668\u9023\u7dda\u5931\u6557\u3002"
         },
         "flow_title": "ZoneMinder",
         "step": {

@@ -1,15 +1,15 @@
 {
     "config": {
         "abort": {
-            "invalid_auth": "Nom d'usuari i/o contrasenya incorrectes.",
-            "cannot_connect": "No s'ha pogut connectar al servidor ZoneMinder."
+            "auth_fail": "Nom d'usuari i/o contrasenya incorrectes.",
+            "connection_error": "No s'ha pogut connectar al servidor ZoneMinder."
         },
         "create_entry": {
             "default": "S'ha afegit el servidor ZoneMinder."
         },
         "error": {
-            "invalid_auth": "Nom d'usuari i/o contrasenya incorrectes.",
-            "cannot_connect": "No s'ha pogut connectar al servidor ZoneMinder."
+            "auth_fail": "Nom d'usuari i/o contrasenya incorrectes.",
+            "connection_error": "No s'ha pogut connectar al servidor ZoneMinder."
         },
         "flow_title": "ZoneMinder",
         "step": {

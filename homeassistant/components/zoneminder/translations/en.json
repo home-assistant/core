@@ -1,15 +1,15 @@
 {
     "config": {
         "abort": {
-            "invalid_auth": "Username or password is incorrect.",
-            "cannot_connect": "Failed to connect to a ZoneMinder server."
+            "auth_fail": "Username or password is incorrect.",
+            "connection_error": "Failed to connect to a ZoneMinder server."
         },
         "create_entry": {
             "default": "ZoneMinder server added."
         },
         "error": {
-            "invalid_auth": "Username or password is incorrect.",
-            "cannot_connect": "Failed to connect to a ZoneMinder server."
+            "auth_fail": "Username or password is incorrect.",
+            "connection_error": "Failed to connect to a ZoneMinder server."
         },
         "flow_title": "ZoneMinder",
         "step": {
