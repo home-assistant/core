@@ -47,7 +47,7 @@ async def test_show_form_no_hubs(hass, mock_hub_discover):
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured_device"
+    assert result["reason"] == "already_configured_account"
 
     # Check we performed the discovery
     assert len(mock_hub_discover.mock_calls) == 1
@@ -140,4 +140,4 @@ async def test_already_configured(hass, mock_hub_discover):
     )
 
     assert result["type"] == "abort"
-    assert result["reason"] == "already_configured_device"
+    assert result["reason"] == "already_configured_account"
