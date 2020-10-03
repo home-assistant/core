@@ -87,7 +87,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         friendly_name = discovery_info[ssdp.ATTR_UPNP_FRIENDLY_NAME]
 
         if self._host_already_configured(parsed_url.hostname):
-            return self.async_abort(reason="already_configured")
+            return self.async_abort(reason="already_configured_device")
 
         # pylint: disable=no-member
         self.context["title_placeholders"] = {"name": friendly_name}
