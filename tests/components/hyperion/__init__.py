@@ -32,4 +32,8 @@ def create_mock_client():
     mock_client.adjustment = None
     mock_client.effects = None
     mock_client.id = "%s:%i-%i" % (TEST_HOST, TEST_PORT, TEST_INSTANCE)
+    mock_client.instances = [
+        {"friendly_name": "Test instance", "instance": 0, "running": True}
+    ]
+
     return mock_client

@@ -34,7 +34,6 @@ _LOGGER = logging.getLogger(__name__)
 TEST_USER_INPUT = {
     CONF_HOST: TEST_HOST,
     CONF_PORT: TEST_PORT,
-    CONF_INSTANCE: TEST_INSTANCE,
 }
 
 TEST_AUTH_REQUIRED_RESP = {
@@ -160,7 +159,10 @@ async def test_user_noauth_flow_success(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["handler"] == DOMAIN
     assert result["title"] == client.id
-    assert result["data"] == TEST_USER_INPUT
+    assert result["data"] == {
+        **TEST_USER_INPUT,
+        **{CONF_INSTANCE: const.DEFAULT_INSTANCE},
+    }
 
 
 async def test_user_auth_required(hass):
@@ -211,7 +213,11 @@ async def test_auth_static_token(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["handler"] == DOMAIN
     assert result["title"] == client.id
-    assert result["data"] == {**TEST_USER_INPUT, **{CONF_TOKEN: TEST_TOKEN}}
+    assert result["data"] == {
+        **TEST_USER_INPUT,
+        **{CONF_TOKEN: TEST_TOKEN},
+        **{CONF_INSTANCE: const.DEFAULT_INSTANCE},
+    }
 
 
 async def test_auth_create_token_approval_declined(hass):
@@ -339,4 +345,53 @@ async def test_auth_create_token_success(hass):
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["handler"] == DOMAIN
         assert result["title"] == client.id
-        assert result["data"] == {**TEST_USER_INPUT, **{CONF_TOKEN: TEST_TOKEN}}
+        assert result["data"] == {
+            **TEST_USER_INPUT,
+            **{CONF_TOKEN: TEST_TOKEN},
+            **{CONF_INSTANCE: const.DEFAULT_INSTANCE},
+        }
+
+
+async def test_noauth_multiple_instances_success(hass):
+    """Check a full flow without auth and with multiple instances."""
+    result = await _init_flow(hass)
+
+    client = create_mock_client()
+    client.instances = [
+        {"friendly_name": "Test instance 1", "instance": 0, "running": True},
+        {"friendly_name": "Test instance 2", "instance": 1, "running": False},
+        {"friendly_name": "Test instance 3", "instance": 2, "running": True},
+    ]
+
+    with patch("hyperion.client.HyperionClient", return_value=client):
+        result = await _configure_flow(hass, result, user_input=TEST_USER_INPUT)
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "final"
+    assert result["data_schema"].schema[CONF_INSTANCE].container == [
+        "Test instance 1",
+        "Test instance 3",
+    ]
+
+    with patch("hyperion.client.HyperionClient", return_value=client):
+        result = await _configure_flow(
+            hass, result, user_input={CONF_INSTANCE: "Test instance 3"}
+        )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["handler"] == DOMAIN
+    assert result["title"] == client.id
+    assert result["data"] == {**TEST_USER_INPUT, **{CONF_INSTANCE: 2}}
+
+
+async def test_noauth_no_instances_abort(hass):
+    """Check a flow with no running instances aborts."""
+    result = await _init_flow(hass)
+
+    client = create_mock_client()
+    client.instances = []
+
+    with patch("hyperion.client.HyperionClient", return_value=client):
+        result = await _configure_flow(hass, result, user_input=TEST_USER_INPUT)
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "no_running_instances"

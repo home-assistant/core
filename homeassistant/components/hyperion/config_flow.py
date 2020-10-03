@@ -47,7 +47,7 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._data[CONF_HOST],
             self._data[CONF_PORT],
             token=self._data.get(CONF_TOKEN),
-            instance=self._data[CONF_INSTANCE],
+            instance=self._data.get(CONF_INSTANCE, const.DEFAULT_INSTANCE),
         )
         if await hc.async_client_connect(raw=raw):
             return hc
@@ -65,13 +65,8 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         hc = await self._create_and_connect_hyperion_client(raw=True)
         if not hc:
             return self._show_setup_form({CONF_BASE: "connection_error"})
-
-        hyperion_id = hc.id
         auth_resp = await hc.async_is_auth_required()
         await hc.async_client_disconnect()
-
-        await self.async_set_unique_id(hyperion_id)
-        self._abort_if_unique_id_configured()
 
         # Could not determine if auth is required, show error.
         if not client.ResponseOK(auth_resp):
@@ -80,15 +75,7 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if auth_resp.get(const.KEY_INFO, {}).get(const.KEY_REQUIRED) is True:
             # Auth is required, show the form to get the token.
             return self._show_auth_form()
-
-        # Reconnect in non-raw mode (will attempt to load state). Verify
-        # everything is okay, and create the entry if so.
-        hc = await self._create_and_connect_hyperion_client()
-        if not hc:
-            return self._show_setup_form({CONF_BASE: "connection_error"})
-        await hc.async_client_disconnect()
-
-        return self.async_create_entry(title=self.context["unique_id"], data=self._data)
+        return await self._show_instance_form_if_necessary()
 
     async def _cancel_request_token_task(self) -> None:
         """Cancel the request token task if it exists."""
@@ -129,18 +116,20 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input.get(CONF_CREATE_TOKEN):
             # TODO: See if the UI port can be taken from Zeroconf?
             self._auth_id = client.generate_random_auth_id()
-            return self._show_create_token_form(
+            return self.async_show_form(
+                step_id="create_token",
                 description_placeholders={
                     CONF_AUTH_ID: self._auth_id,
                     CONF_HYPERION_URL: self._get_hyperion_url(),
-                }
+                },
             )
 
         self._data[CONF_TOKEN] = user_input.get(CONF_TOKEN)
         hc = await self._create_and_connect_hyperion_client()
         if not hc:
             return self._show_auth_form({CONF_BASE: "auth_error"})
-        return self.async_create_entry(title=self.context["unique_id"], data=self._data)
+        await hc.async_client_disconnect()
+        return await self._show_instance_form_if_necessary()
 
     async def async_step_create_token(
         self, user_input: Optional[ConfigType] = None
@@ -182,13 +171,33 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not hc:
             return self._show_auth_form({CONF_BASE: "auth_new_token_not_work_error"})
         await hc.async_client_disconnect()
-        return self.async_create_entry(title=self.context["unique_id"], data=self._data)
+        return await self._show_instance_form_if_necessary()
 
     async def async_step_create_token_fail(
         self, user_input: Optional[ConfigType] = None
     ) -> Dict[str, Any]:
         """Show an error on the auth form."""
         return self._show_auth_form({CONF_BASE: "auth_new_token_not_granted_error"})
+
+    async def async_step_final(
+        self, user_input: Optional[ConfigType] = None
+    ) -> Dict[str, Any]:
+        """Show the instance form if necessary."""
+        self._data[CONF_INSTANCE] = self._instances[user_input.get(CONF_INSTANCE)]
+
+        # Test a full connection.
+        hc = await self._create_and_connect_hyperion_client()
+        if not hc:
+            return await self._show_instance_form_if_necessary(
+                {CONF_BASE: "instance_error"}
+            )
+        hyperion_id = hc.id
+        await hc.async_client_disconnect()
+
+        await self.async_set_unique_id(hyperion_id)
+        self._abort_if_unique_id_configured()
+
+        return self.async_create_entry(title=self.context["unique_id"], data=self._data)
 
     def _show_setup_form(self, errors: Optional[Dict] = None) -> Dict[str, Any]:
         """Show the setup form to the user."""
@@ -198,7 +207,6 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(CONF_HOST): str,
                     vol.Optional(CONF_PORT, default=const.DEFAULT_PORT_JSON): int,
-                    vol.Optional(CONF_INSTANCE, default=const.DEFAULT_INSTANCE): int,
                 }
             ),
             errors=errors or {},
@@ -217,11 +225,38 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors or {},
         )
 
-    def _show_create_token_form(
-        self, description_placeholders: Dict[str, str]
+    async def _show_instance_form_if_necessary(
+        self, errors: Optional[Dict] = None
     ) -> Dict[str, Any]:
-        """Show a final confirmation form to the user before token creation."""
-        return self.async_show_form(
-            step_id="create_token",
-            description_placeholders=description_placeholders,
+        """Show the instance form to the user."""
+        hc = await self._create_and_connect_hyperion_client()
+        if not hc:
+            return self._show_setup_form({CONF_BASE: "connection_error"})
+        self._instances = {}
+        for instance in hc.instances:
+            if (
+                instance.get(const.KEY_RUNNING, False)
+                and const.KEY_FRIENDLY_NAME in instance
+                and const.KEY_INSTANCE in instance
+            ):
+                self._instances[instance.get(const.KEY_FRIENDLY_NAME)] = instance.get(
+                    const.KEY_INSTANCE
+                )
+        await hc.async_client_disconnect()
+
+        if not self._instances:
+            return self.async_abort(reason="no_running_instances")
+        elif len(self._instances) > 1:
+            return self.async_show_form(
+                step_id="final",
+                data_schema=vol.Schema(
+                    {
+                        vol.Required(CONF_INSTANCE): vol.In(
+                            list(self._instances.keys())
+                        ),
+                    }
+                ),
+            )
+        return await self.async_step_final(
+            user_input={CONF_INSTANCE: next(iter(self._instances.keys()))}
         )
