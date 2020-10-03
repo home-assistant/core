@@ -28,7 +28,6 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 import homeassistant.helpers.config_validation as cv
 
@@ -98,8 +97,6 @@ async def async_unload_entry(hass, config_entry: ConfigEntry) -> bool:
     )
     data = hass.data[DOMAIN]
     data[config_entry.entry_id][UNDO_UPDATE_LISTENER]()
-    switch = data[config_entry.entry_id][SWITCH_DOMAIN]
-    switch._remove_listeners()  # pylint: disable=protected-access
     if len(data) == 1:  # no more config_entries
         data.pop(ATTR_TURN_ON_OFF_LISTENER).remove_listener()
 

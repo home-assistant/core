@@ -323,6 +323,10 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
             self._state = False
             assert not self.remove_listeners
 
+    async def async_will_remove_from_hass(self):
+        """Remove the listeners upon removing the component."""
+        self._remove_listeners()
+
     def _expand_light_groups(self) -> None:
         all_lights = _expand_light_groups(self.hass, self._lights)
         self.turn_on_off_listener.lights.update(all_lights)
