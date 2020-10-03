@@ -137,14 +137,14 @@ class VikingData:
         if parts[0] == 0:
             return 0
         # Parse other units (don't know if it actually happens in practise)
-        elif parts[1] == "gb":
+        if parts[1] == "gb":
             return parts[0]
-        elif parts[1] == "mb":
+        if parts[1] == "mb":
             return parts[0] / 1024
-        elif parts[1] == "kb":
+        if parts[1] == "kb":
             return parts[0] / 1024 / 1024
-        else:
-            raise Exception("Error while parsing available data!")
+
+        raise KeyError("Error while parsing available data!")
 
     @Throttle(SCAN_INTERVAL)
     def update(self):
