@@ -1,6 +1,5 @@
 """Tests for 1-Wire device family 1d (DS2423)."""
-from os import path
-from unittest.mock import mock_open, patch
+from unittest.mock import patch
 
 from homeassistant import util
 from homeassistant.components.onewire.const import DEFAULT_OWSERVER_PORT
@@ -13,48 +12,6 @@ OWFS_MOUNT_DIR = "/mnt/OneWireTest"
 
 DEVICE_ID = "1D.111111111111"
 DEVICE_NAME = "My DS2406"
-
-
-async def test_setup_owfs(hass):
-    """Test setup with OWFS configuration."""
-    entity_registry = mock_registry(hass)
-    config = {
-        "sensor": {
-            "platform": "onewire",
-            "mount_dir": OWFS_MOUNT_DIR,
-            "names": {
-                DEVICE_ID: DEVICE_NAME,
-            },
-        }
-    }
-    mo_family = mock_open(read_data=DEVICE_ID[0:2])
-    mo_temperature = mock_open(read_data="    251123")
-    mo_pressure = mock_open(read_data="    248125")
-    mo_main = mock_open()
-    mo_main.side_effect = [
-        mo_family.return_value,
-        mo_temperature.return_value,
-        mo_pressure.return_value,
-    ]
-    with patch(
-        "homeassistant.components.onewire.sensor.glob",
-        return_value=[path.join(OWFS_MOUNT_DIR, DEVICE_ID, "family")],
-    ), patch(
-        "homeassistant.components.onewire.sensor.open",
-        mo_main,
-    ):
-        assert await async_setup_component(hass, sensor.DOMAIN, config)
-        await hass.async_block_till_done()
-
-    assert len(entity_registry.entities) == 2
-
-    sensor_id = "sensor." + util.slugify(DEVICE_NAME) + "_counter_a"
-    state = hass.states.get(sensor_id)
-    assert state.state == "251123"
-
-    sensor_id = "sensor." + util.slugify(DEVICE_NAME) + "_counter_b"
-    state = hass.states.get(sensor_id)
-    assert state.state == "248125"
 
 
 async def test_setup_owserver(hass):
