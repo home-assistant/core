@@ -14,7 +14,7 @@ from homeassistant.components.hyperion.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TOKEN
 
 from . import (
     TEST_HOST,
@@ -59,8 +59,15 @@ TEST_REQUEST_TOKEN_FAIL = {
 }
 
 TEST_ZEROCONF_SERVICE_INFO = {
+    CONF_HOST: "192.168.0.1",
     "hostname": TEST_HOST,
     CONF_PORT: TEST_PORT,
+    "type": "_hyperiond-json._tcp.local.",
+    CONF_NAME: "hyperion:19444._hyperiond-json._tcp.local.",
+    "properties": {
+        "id": "f9aab089-f85a-55cf-b7c1-222a72faebe9",
+        "version": "2.0.0-alpha.8",
+    },
 }
 
 

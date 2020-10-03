@@ -23,6 +23,49 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 _LOGGER.setLevel(logging.DEBUG)
 
+#     +----------------+
+#     |Step: user      |
+#     |                |
+#     |Input: host/port|
+#     +----------------+
+#           |
+#           |    Auth        +------------+
+#           |    required?   |Step: auth  |
+#           +--------------->|            |
+# Auth not  |                |Input: token|
+# required? |                +------------+
+#           |    Static         |
+#           v    token?         |
+#            <------------------+
+#           |                   |
+#           |                   |New token?
+#           |                   v
+#           |            +------------------+
+#           |            |Step: create_token|
+#           |            +------------------+
+#           |                   |
+#           |                   v
+#           |            +---------------------------+   +--------------------------------+
+#           |            |Step: create_token_external|-->|Step: create_token_external_fail|
+#           |            +---------------------------+   +--------------------------------+
+#           |                   |
+#           |                   v
+#           |            +-----------------------------------+
+#           |            |Step: create_token_external_success|
+#           |            +-----------------------------------+
+#           |                   |
+#           v                   |
+#   +---------------+           |
+#   |Form: Instance |           |
+#   |               |<----------+
+#   |Input: instance|
+#   +---------------+
+#           |
+#           v
+#   +---------------+
+#   |Step: Final    |
+#   +---------------+
+
 
 class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Hyperion config flow."""
