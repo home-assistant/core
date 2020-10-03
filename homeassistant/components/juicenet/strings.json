@@ -11,7 +11,7 @@
     "step": {
       "user": {
         "data": {
-          "api_token": "[%key:common::config_flow::data::api_key%]"
+          "api_token": "[%key:common::config_flow::data::api_token%]"
         },
         "description": "You will need the API Token from https://home.juice.net/Manage.",
         "title": "Connect to JuiceNet"
