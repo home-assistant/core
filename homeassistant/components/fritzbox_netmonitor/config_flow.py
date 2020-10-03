@@ -47,6 +47,10 @@ class FritzboxNetMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return RESULT_NOT_FOUND
         return RESULT_SUCCESS
 
+    async def async_step_import(self, user_input=None):
+        """Handle configuration by yaml file."""
+        return await self.async_step_user(user_input)
+
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
         errors = {}

@@ -1,9 +1,12 @@
 """Support for monitoring an AVM Fritz!Box router."""
 
-
 from requests.exceptions import RequestException
+import voluptuous as vol
 
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.const import CONF_HOST, STATE_UNAVAILABLE
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -18,6 +21,7 @@ from .const import (
     ATTR_TRANSMISSION_RATE_DOWN,
     ATTR_TRANSMISSION_RATE_UP,
     ATTR_UPTIME,
+    DEFAULT_HOST,
     DOMAIN,
     ICON,
     LOGGER,
@@ -26,6 +30,21 @@ from .const import (
     STATE_OFFLINE,
     STATE_ONLINE,
 )
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+    }
+)
+
+
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Import the platform into a config entry."""
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+    )
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
