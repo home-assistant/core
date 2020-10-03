@@ -6,10 +6,10 @@ import subarulink.const as sc
 from homeassistant.const import (
     LENGTH_KILOMETERS,
     LENGTH_MILES,
+    PERCENTAGE,
     PRESSURE_HPA,
     TEMP_CELSIUS,
     TIME_MINUTES,
-    UNIT_PERCENTAGE,
     VOLT,
     VOLUME_GALLONS,
     VOLUME_LITERS,
@@ -23,8 +23,16 @@ from homeassistant.util.unit_system import (
 )
 from homeassistant.util.volume import convert as vol_convert
 
-from . import SubaruEntity
-from .const import DOMAIN as SUBARU_DOMAIN
+from .const import (
+    API_GEN_2,
+    DOMAIN,
+    ENTRY_COORDINATOR,
+    ENTRY_VEHICLES,
+    VEHICLE_API_GEN,
+    VEHICLE_HAS_EV,
+    VEHICLE_HAS_SAFETY_SERVICE,
+)
+from .entity import SubaruEntity
 
 _LOGGER = logging.getLogger(__name__)
 L_PER_GAL = vol_convert(1, VOLUME_GALLONS, VOLUME_LITERS)
@@ -35,11 +43,87 @@ FUEL_CONSUMPTION_L_PER_100KM = "L/100km"
 FUEL_CONSUMPTION_MPG = "mi/gal"
 FUEL_CONSUMPTION_UNITS = [FUEL_CONSUMPTION_L_PER_100KM, FUEL_CONSUMPTION_MPG]
 
+SENSOR_NAME = "name"
+SENSOR_FIELD = "field"
+SENSOR_UNITS = "units"
+
+# Sensor data available to "Subaru Safety Plus" subscribers with Gen1 or Gen2 vehicles
+SAFETY_SENSORS = [
+    {
+        SENSOR_NAME: "Avg Fuel Consumption",
+        SENSOR_FIELD: sc.AVG_FUEL_CONSUMPTION,
+        SENSOR_UNITS: FUEL_CONSUMPTION_L_PER_100KM,
+    },
+    {
+        SENSOR_NAME: "Range",
+        SENSOR_FIELD: sc.DIST_TO_EMPTY,
+        SENSOR_UNITS: LENGTH_KILOMETERS,
+    },
+    {
+        SENSOR_NAME: "Odometer",
+        SENSOR_FIELD: sc.ODOMETER,
+        SENSOR_UNITS: LENGTH_KILOMETERS,
+    },
+    {
+        SENSOR_NAME: "Tire Pressure FL",
+        SENSOR_FIELD: sc.TIRE_PRESSURE_FL,
+        SENSOR_UNITS: PRESSURE_HPA,
+    },
+    {
+        SENSOR_NAME: "Tire Pressure FR",
+        SENSOR_FIELD: sc.TIRE_PRESSURE_FR,
+        SENSOR_UNITS: PRESSURE_HPA,
+    },
+    {
+        SENSOR_NAME: "Tire Pressure RL",
+        SENSOR_FIELD: sc.TIRE_PRESSURE_RL,
+        SENSOR_UNITS: PRESSURE_HPA,
+    },
+    {
+        SENSOR_NAME: "Tire Pressure RR",
+        SENSOR_FIELD: sc.TIRE_PRESSURE_RR,
+        SENSOR_UNITS: PRESSURE_HPA,
+    },
+]
+
+# Sensor data available to "Subaru Safety Plus" subscribers with Gen2 vehicles
+API_GEN_2_SENSORS = [
+    {
+        SENSOR_NAME: "External Temp",
+        SENSOR_FIELD: sc.EXTERNAL_TEMP,
+        SENSOR_UNITS: TEMP_CELSIUS,
+    },
+    {
+        SENSOR_NAME: "12V Battery Voltage",
+        SENSOR_FIELD: sc.BATTERY_VOLTAGE,
+        SENSOR_UNITS: VOLT,
+    },
+]
+
+# Sensor data available to "Subaru Safety Plus" subscribers with PHEV vehicles
+EV_SENSORS = [
+    {
+        SENSOR_NAME: "EV Range",
+        SENSOR_FIELD: sc.EV_DISTANCE_TO_EMPTY,
+        SENSOR_UNITS: LENGTH_MILES,
+    },
+    {
+        SENSOR_NAME: "EV Battery Level",
+        SENSOR_FIELD: sc.EV_STATE_OF_CHARGE_PERCENT,
+        SENSOR_UNITS: PERCENTAGE,
+    },
+    {
+        SENSOR_NAME: "EV Time to Full Charge",
+        SENSOR_FIELD: sc.EV_TIME_TO_FULLY_CHARGED,
+        SENSOR_UNITS: TIME_MINUTES,
+    },
+]
+
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Subaru sensors by config_entry."""
-    coordinator = hass.data[SUBARU_DOMAIN][config_entry.entry_id]["coordinator"]
-    vehicle_info = hass.data[SUBARU_DOMAIN][config_entry.entry_id]["vehicles"]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id][ENTRY_COORDINATOR]
+    vehicle_info = hass.data[DOMAIN][config_entry.entry_id][ENTRY_VEHICLES]
     entities = []
     for vin in vehicle_info.keys():
         _create_sensor_entities(entities, vehicle_info[vin], coordinator, hass)
@@ -47,129 +131,25 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 def _create_sensor_entities(entities, vehicle_info, coordinator, hass):
-    if vehicle_info["has_safety"]:
-        entities.append(
-            SubaruSensor(
-                vehicle_info,
-                coordinator,
-                hass,
-                "Avg Fuel Consumption",
-                sc.AVG_FUEL_CONSUMPTION,
-                FUEL_CONSUMPTION_L_PER_100KM,
-            )
-        )
-        entities.append(
-            SubaruSensor(
-                vehicle_info,
-                coordinator,
-                hass,
-                "Range",
-                sc.DIST_TO_EMPTY,
-                LENGTH_KILOMETERS,
-            )
-        )
-        entities.append(
-            SubaruSensor(
-                vehicle_info,
-                coordinator,
-                hass,
-                "Odometer",
-                sc.ODOMETER,
-                LENGTH_KILOMETERS,
-            )
-        )
-        entities.append(
-            SubaruSensor(
-                vehicle_info,
-                coordinator,
-                hass,
-                "Tire Pressure FL",
-                sc.TIRE_PRESSURE_FL,
-                PRESSURE_HPA,
-            )
-        )
-        entities.append(
-            SubaruSensor(
-                vehicle_info,
-                coordinator,
-                hass,
-                "Tire Pressure FR",
-                sc.TIRE_PRESSURE_FR,
-                PRESSURE_HPA,
-            )
-        )
-        entities.append(
-            SubaruSensor(
-                vehicle_info,
-                coordinator,
-                hass,
-                "Tire Pressure RL",
-                sc.TIRE_PRESSURE_RL,
-                PRESSURE_HPA,
-            )
-        )
-        entities.append(
-            SubaruSensor(
-                vehicle_info,
-                coordinator,
-                hass,
-                "Tire Pressure RR",
-                sc.TIRE_PRESSURE_RR,
-                PRESSURE_HPA,
-            )
-        )
+    sensors_to_add = []
+    if vehicle_info[VEHICLE_HAS_SAFETY_SERVICE]:
+        sensors_to_add.extend(SAFETY_SENSORS)
 
-    if vehicle_info["api_gen"] == "g2":
-        entities.append(
-            SubaruSensor(
-                vehicle_info,
-                coordinator,
-                hass,
-                "External Temp",
-                sc.EXTERNAL_TEMP,
-                TEMP_CELSIUS,
-            )
-        )
-        entities.append(
-            SubaruSensor(
-                vehicle_info,
-                coordinator,
-                hass,
-                "12V Battery Voltage",
-                sc.BATTERY_VOLTAGE,
-                VOLT,
-            )
-        )
+        if vehicle_info[VEHICLE_API_GEN] == API_GEN_2:
+            sensors_to_add.extend(API_GEN_2_SENSORS)
 
-    if vehicle_info["is_ev"]:
+        if vehicle_info[VEHICLE_HAS_EV]:
+            sensors_to_add.extend(EV_SENSORS)
+
+    for s in sensors_to_add:
         entities.append(
             SubaruSensor(
                 vehicle_info,
                 coordinator,
                 hass,
-                "EV Range",
-                sc.EV_DISTANCE_TO_EMPTY,
-                LENGTH_MILES,
-            )
-        )
-        entities.append(
-            SubaruSensor(
-                vehicle_info,
-                coordinator,
-                hass,
-                "EV Battery Level",
-                sc.EV_STATE_OF_CHARGE_PERCENT,
-                UNIT_PERCENTAGE,
-            )
-        )
-        entities.append(
-            SubaruSensor(
-                vehicle_info,
-                coordinator,
-                hass,
-                "EV Time to Full Charge",
-                sc.EV_TIME_TO_FULLY_CHARGED,
-                TIME_MINUTES,
+                s[SENSOR_NAME],
+                s[SENSOR_FIELD],
+                s[SENSOR_UNITS],
             )
         )
 

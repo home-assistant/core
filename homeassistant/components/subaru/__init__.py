@@ -4,8 +4,12 @@ from datetime import datetime, timedelta
 import logging
 import time
 
-import async_timeout
-from subarulink import Controller as SubaruAPI, SubaruException
+from subarulink import (
+    Controller as SubaruAPI,
+    InvalidPIN,
+    PINLockoutProtect,
+    SubaruException,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -16,18 +20,30 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util import slugify
 
 from .const import (
+    API_GEN_2,
     CONF_HARD_POLL_INTERVAL,
+    COORDINATOR_NAME,
     DEFAULT_HARD_POLL_INTERVAL,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
-    ICONS,
+    ENTRY_CONTROLLER,
+    ENTRY_COORDINATOR,
+    ENTRY_LISTENER,
+    ENTRY_VEHICLES,
     SUPPORTED_PLATFORMS,
+    VEHICLE_API_GEN,
+    VEHICLE_HAS_EV,
+    VEHICLE_HAS_REMOTE_SERVICE,
+    VEHICLE_HAS_REMOTE_START,
+    VEHICLE_HAS_SAFETY_SERVICE,
+    VEHICLE_LAST_UPDATE,
+    VEHICLE_NAME,
+    VEHICLE_VIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -56,7 +72,6 @@ async def async_setup_entry(hass, entry):
             update_interval=entry.options.get(
                 CONF_HARD_POLL_INTERVAL, DEFAULT_HARD_POLL_INTERVAL
             ),
-            fetch_interval=entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
         )
         if not await controller.connect():
             _LOGGER.error("Failed to connect")
@@ -72,27 +87,37 @@ async def async_setup_entry(hass, entry):
     async def async_update_data():
         """Fetch data from API endpoint."""
         try:
-            async with async_timeout.timeout(30):
-                data = await subaru_update(vehicle_info, controller)
-            return data
+            return await subaru_update(vehicle_info, controller)
+        except InvalidPIN as err:
+            _LOGGER.error(
+                "Invalid PIN entered. Reconfigure integration with correct PIN."
+            )
+            raise UpdateFailed from err
+        except PINLockoutProtect as err:
+            _LOGGER.error(
+                "Prior invalid PIN entered. Remote command aborted to prevent account lockout. Reconfigure integration with correct PIN."
+            )
+            raise UpdateFailed from err
         except SubaruException as err:
             raise ConfigEntryNotReady from err
 
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
-        name="subaru_data",
+        name=COORDINATOR_NAME,
         update_method=async_update_data,
-        update_interval=timedelta(seconds=60),
+        update_interval=timedelta(
+            seconds=entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+        ),
     )
 
     await coordinator.async_refresh()
 
-    hass.data[DOMAIN][entry.entry_id] = {
-        "controller": controller,
-        "coordinator": coordinator,
-        "vehicles": vehicle_info,
-        "listener": [entry.add_update_listener(update_listener)],
+    hass.data.get(DOMAIN)[entry.entry_id] = {
+        ENTRY_CONTROLLER: controller,
+        ENTRY_COORDINATOR: coordinator,
+        ENTRY_VEHICLES: vehicle_info,
+        ENTRY_LISTENER: entry.add_update_listener(update_listener),
     }
 
     for component in SUPPORTED_PLATFORMS:
@@ -114,6 +139,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
     )
     if unload_ok:
+        hass.data[DOMAIN][entry.entry_id][ENTRY_LISTENER]()
         hass.data[DOMAIN].pop(entry.entry_id)
     if len(hass.data[DOMAIN]) == 0:
         hass.data.pop(DOMAIN)
@@ -123,123 +149,84 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def update_listener(hass, config_entry):
     """Update when config_entry options update."""
-    controller = hass.data[DOMAIN][config_entry.entry_id]["controller"]
-    controller.set_update_interval(config_entry.options.get(CONF_HARD_POLL_INTERVAL))
-    controller.set_fetch_interval(config_entry.options.get(CONF_SCAN_INTERVAL))
+    controller = hass.data[DOMAIN][config_entry.entry_id][ENTRY_CONTROLLER]
 
+    old_update_interval = controller.get_update_interval()
+    old_fetch_interval = controller.get_fetch_interval()
 
-class SubaruEntity(Entity):
-    """Representation of a Subaru Device."""
+    new_update_interval = config_entry.options.get(
+        CONF_HARD_POLL_INTERVAL, DEFAULT_HARD_POLL_INTERVAL
+    )
+    new_fetch_interval = config_entry.options.get(
+        CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+    )
+    coordinator = hass.data[DOMAIN][config_entry.entry_id][ENTRY_COORDINATOR]
 
-    def __init__(self, vehicle_info, coordinator):
-        """Initialize the Subaru Device."""
-        self.coordinator = coordinator
-        self.car_name = vehicle_info["display_name"]
-        self.vin = vehicle_info["vin"]
-        self.title = "entity"
-
-    @property
-    def name(self):
-        """Return name."""
-        return f"{self.car_name} {self.title}"
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return slugify(
-            "Subaru Model {} {} {}".format(
-                str(self.vin[3]).upper(), self.vin[-6:], self.title
-            )
+    if old_update_interval != new_update_interval:
+        _LOGGER.debug(
+            "Changing update_interval from %s to %s",
+            old_update_interval,
+            new_update_interval,
         )
+        controller.set_update_interval(new_update_interval)
 
-    @property
-    def icon(self):
-        """Return the icon of the sensor."""
-        return ICONS.get(self.title)
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return False
-
-
-    @property
-    def device_info(self):
-        """Return the device_info of the device."""
-        return {
-            "identifiers": {(DOMAIN, self.vin)},
-            "name": self.car_name,
-            "manufacturer": "Subaru",
-        }
-
-    @property
-    def available(self):
-        """Return if entity is available."""
-        return self.coordinator.last_update_success
-
-    async def async_added_to_hass(self):
-        """Register state update callback."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
+    if old_fetch_interval != new_fetch_interval:
+        _LOGGER.debug(
+            "Changing fetch_interval from %s to %s",
+            old_fetch_interval,
+            new_fetch_interval,
         )
-
-    async def async_will_remove_from_hass(self):
-        """Prepare for unload."""
-
-    async def async_update(self):
-        """Update the state of the device."""
-        await self.coordinator.async_request_refresh()
+        coordinator.update_interval = timedelta(seconds=new_fetch_interval)
 
 
 async def subaru_update(vehicle_info, controller):
     """
-    Fetch or Update data, depending on how long it has been.
+    Update local data from Subaru API.
 
     Subaru API calls assume a server side vehicle context
     Data fetch/update must be done for each vehicle
     """
     data = {}
 
-    for vin in vehicle_info.keys():
+    for vehicle in vehicle_info.values():
         # Only g2 api vehicles have data updates
-        if vehicle_info[vin]["api_gen"] == "g2":
-            cur_time = time.time()
-            last_update = vehicle_info[vin]["last_update"]
-            last_fetch = vehicle_info[vin]["last_fetch"]
+        if vehicle[VEHICLE_API_GEN] != API_GEN_2:
+            continue
 
-            if cur_time - last_update > controller.get_update_interval():
-                if last_update == 0:
-                    # Don't do full update on first run so hass setup completes faster
-                    await controller.fetch(vin, force=True)
-                else:
-                    # Invokes Subaru API to perform remote vehicle update
-                    await controller.update(vin, force=True)
-                    await controller.fetch(vin, force=True)
-                vehicle_info[vin]["last_update"] = cur_time
-                vehicle_info[vin]["last_fetch"] = cur_time
+        # Refresh subarulink locally cached data with subaru API
+        await refresh_subaru_data(vehicle, controller)
 
-            elif cur_time - last_fetch > controller.get_fetch_interval():
-                # Invokes Subaru API to to fetch remote cached data to local cache
-                await controller.fetch(vin, force=True)
-                vehicle_info[vin]["last_fetch"] = cur_time
-
-            # Gets subarulink locally cached data
-            data[vin] = await controller.get_data(vin)
+        # Gets subarulink locally cached data
+        vin = vehicle[VEHICLE_VIN]
+        data[vin] = await controller.get_data(vin)
 
     return data
+
+
+async def refresh_subaru_data(vehicle, controller):
+    """Refresh locally stored cached data with data from subaru API."""
+    cur_time = time.time()
+    last_update = vehicle[VEHICLE_LAST_UPDATE]
+
+    if cur_time - last_update > controller.get_update_interval():
+        # Commands remote vehicle update (polls the vehicle to update subaru API cache)
+        await controller.update(vehicle[VEHICLE_VIN], force=True)
+        vehicle[VEHICLE_LAST_UPDATE] = cur_time
+    else:
+        # Performs fetch of subaru API cached data
+        await controller.fetch(vehicle[VEHICLE_VIN], force=True)
 
 
 def get_vehicle_info(controller, vin):
     """Obtain vehicle identifiers and capabilities."""
     info = {
-        "vin": vin,
-        "display_name": controller.vin_to_name(vin),
-        "is_ev": controller.get_ev_status(vin),
-        "api_gen": controller.get_api_gen(vin),
-        "has_res": controller.get_res_status(vin),
-        "has_remote": controller.get_remote_status(vin),
-        "has_safety": controller.get_safety_status(vin),
-        "last_update": 0,
-        "last_fetch": 0,
+        VEHICLE_VIN: vin,
+        VEHICLE_NAME: controller.vin_to_name(vin),
+        VEHICLE_HAS_EV: controller.get_ev_status(vin),
+        VEHICLE_API_GEN: controller.get_api_gen(vin),
+        VEHICLE_HAS_REMOTE_START: controller.get_res_status(vin),
+        VEHICLE_HAS_REMOTE_SERVICE: controller.get_remote_status(vin),
+        VEHICLE_HAS_SAFETY_SERVICE: controller.get_safety_status(vin),
+        VEHICLE_LAST_UPDATE: 0,
     }
     return info

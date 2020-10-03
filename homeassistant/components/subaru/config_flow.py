@@ -2,10 +2,15 @@
 from datetime import datetime
 import logging
 
-from subarulink import Controller as SubaruAPI, SubaruException
+from subarulink import (
+    Controller as SubaruAPI,
+    InvalidCredentials,
+    InvalidPIN,
+    SubaruException,
+)
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant import config_entries, core
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_PASSWORD,
@@ -27,14 +32,6 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
-        vol.Required(CONF_PIN): str,
-    }
-)
-
 
 @callback
 def configured_instances(hass):
@@ -48,45 +45,52 @@ class SubaruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
-    async def async_step_import(self, import_config):
-        """Import a config entry from configuration.yaml."""
-        return await self.async_step_user(import_config)
-
     async def async_step_user(self, user_input=None):
         """Handle the start of the config flow."""
+        error = None
 
         if not user_input:
             return self.async_show_form(
                 step_id="user",
-                data_schema=DATA_SCHEMA,
-                errors={},
-                description_placeholders={},
+                data_schema=vol.Schema(
+                    {
+                        vol.Required(CONF_USERNAME): str,
+                        vol.Required(CONF_PASSWORD): str,
+                        vol.Required(CONF_PIN): str,
+                    }
+                ),
             )
 
         if user_input[CONF_USERNAME] in configured_instances(self.hass):
-            return self.async_show_form(
-                step_id="user",
-                data_schema=DATA_SCHEMA,
-                errors={"base": "already_configured"},
-                description_placeholders={},
-            )
+            return self.async_abort(reason="already_configured")
 
         try:
             info = await validate_input(self.hass, user_input)
-        except CannotConnect:
+        except InvalidCredentials:
+            error = {"base": "invalid_auth"}
+        except InvalidPIN:
+            error = {"base": "invalid_pin"}
+        except SubaruException as ex:
+            _LOGGER.error("Unable to communicate with Subaru API: %s", ex.message)
+            return self.async_abort(reason="cannot_connect")
+
+        if error:
             return self.async_show_form(
                 step_id="user",
-                data_schema=DATA_SCHEMA,
-                errors={"base": "cannot_connect"},
-                description_placeholders={},
+                data_schema=vol.Schema(
+                    {
+                        vol.Required(
+                            CONF_USERNAME, default=user_input.get(CONF_USERNAME)
+                        ): str,
+                        vol.Required(
+                            CONF_PASSWORD, default=user_input.get(CONF_PASSWORD)
+                        ): str,
+                        vol.Required(CONF_PIN, default=user_input.get(CONF_PIN)): str,
+                    }
+                ),
+                errors=error,
             )
-        except InvalidAuth:
-            return self.async_show_form(
-                step_id="user",
-                data_schema=DATA_SCHEMA,
-                errors={"base": "invalid_auth"},
-                description_placeholders={},
-            )
+
         return self.async_create_entry(title=user_input[CONF_USERNAME], data=info)
 
     @staticmethod
@@ -130,7 +134,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect.
 
-    Data has the keys from DATA_SCHEMA with values provided by the user.
+    data: contains values provided by the user.
     """
     websession = aiohttp_client.async_get_clientsession(hass)
     now = datetime.now()
@@ -138,33 +142,27 @@ async def validate_input(hass: core.HomeAssistant, data):
         data[CONF_DEVICE_ID] = int(now.timestamp())
     date = now.strftime("%Y-%m-%d")
     device_name = "Home Assistant: Added " + date
-    try:
-        controller = SubaruAPI(
-            websession,
-            username=data[CONF_USERNAME],
-            password=data[CONF_PASSWORD],
-            device_id=data[CONF_DEVICE_ID],
-            pin=data[CONF_PIN],
-            device_name=device_name,
-        )
-        if await controller.connect(test_login=True):
-            _LOGGER.debug("Successfully authenticated and authorized with Subaru API")
-        else:
-            raise SubaruException("Unknown Error")
 
-    except SubaruException as ex:
-        if ex.message == "invalidAccount":
-            _LOGGER.error("Invalid credentials: %s", ex)
-            raise InvalidAuth
-        _LOGGER.error("Unable to communicate with Subaru API: %s", ex)
-        raise CannotConnect
+    controller = SubaruAPI(
+        websession,
+        username=data[CONF_USERNAME],
+        password=data[CONF_PASSWORD],
+        device_id=data[CONF_DEVICE_ID],
+        pin=data[CONF_PIN],
+        device_name=device_name,
+    )
+    _LOGGER.info(
+        "Setting up first time connection to Subuaru API.  This may take up to 20 seconds."
+    )
+    if await controller.connect():
+        _LOGGER.debug("Successfully authenticated and authorized with Subaru API")
+
+    _LOGGER.debug("Testing user provided PIN with Subaru remote service requests")
+    if await controller.test_pin():
+        _LOGGER.debug("User provided PIN is valid for Subaru remote service requests")
+    else:
+        _LOGGER.info(
+            "No active remote service subscription, PIN number will not be used"
+        )
 
     return data
-
-
-class CannotConnect(exceptions.HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(exceptions.HomeAssistantError):
-    """Error to indicate there is invalid auth."""

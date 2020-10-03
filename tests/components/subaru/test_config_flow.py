@@ -5,7 +5,7 @@ Borrowed heavily from Tesla tests (thanks @alandtse)
 """
 from datetime import datetime
 
-from subarulink.exceptions import SubaruException
+from subarulink.exceptions import InvalidCredentials, InvalidPIN, SubaruException
 
 from homeassistant import config_entries, setup
 from homeassistant.components.subaru.const import (
@@ -40,7 +40,7 @@ async def test_form(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == "form"
-    assert result["errors"] == {}
+    assert result["errors"] is None
 
     with patch(
         "homeassistant.components.subaru.config_flow.SubaruAPI.connect",
@@ -75,7 +75,7 @@ async def test_form_invalid_auth(hass):
 
     with patch(
         "homeassistant.components.subaru.config_flow.SubaruAPI.connect",
-        side_effect=SubaruException("invalidAccount"),
+        side_effect=InvalidCredentials("invalidAccount"),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -88,6 +88,29 @@ async def test_form_invalid_auth(hass):
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "invalid_auth"}
+
+
+async def test_form_invalid_pin(hass):
+    """Test we handle invalid pin."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.subaru.config_flow.SubaruAPI.connect",
+        side_effect=InvalidPIN("invalidPin"),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: TEST_USERNAME,
+                CONF_PASSWORD: TEST_PASSWORD,
+                CONF_PIN: TEST_PIN,
+            },
+        )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "invalid_pin"}
 
 
 async def test_form_cannot_connect(hass):
@@ -109,8 +132,8 @@ async def test_form_cannot_connect(hass):
             },
         )
 
-    assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result2["type"] == "abort"
+    assert result2["reason"] == "cannot_connect"
 
 
 async def test_form_repeat_identifier(hass):
@@ -135,8 +158,8 @@ async def test_form_repeat_identifier(hass):
             },
         )
 
-    assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "already_configured"}
+    assert result2["type"] == "abort"
+    assert result2["reason"] == "already_configured"
 
 
 async def test_option_flow(hass):
@@ -151,10 +174,16 @@ async def test_option_flow(hass):
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={CONF_SCAN_INTERVAL: 350, CONF_HARD_POLL_INTERVAL: 3600},
+        user_input={
+            CONF_SCAN_INTERVAL: 350,
+            CONF_HARD_POLL_INTERVAL: 3600,
+        },
     )
     assert result["type"] == "create_entry"
-    assert result["data"] == {CONF_SCAN_INTERVAL: 350, CONF_HARD_POLL_INTERVAL: 3600}
+    assert result["data"] == {
+        CONF_SCAN_INTERVAL: 350,
+        CONF_HARD_POLL_INTERVAL: 3600,
+    }
 
 
 async def test_option_flow_defaults(hass):
@@ -168,7 +197,11 @@ async def test_option_flow_defaults(hass):
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={}
+        result["flow_id"],
+        user_input={
+            CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
+            CONF_HARD_POLL_INTERVAL: DEFAULT_HARD_POLL_INTERVAL,
+        },
     )
     assert result["type"] == "create_entry"
     assert result["data"] == {
@@ -189,7 +222,10 @@ async def test_option_flow_input_floor(hass):
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={CONF_SCAN_INTERVAL: 1, CONF_HARD_POLL_INTERVAL: 1},
+        user_input={
+            CONF_SCAN_INTERVAL: 1,
+            CONF_HARD_POLL_INTERVAL: 1,
+        },
     )
     assert result["type"] == "create_entry"
     assert result["data"] == {
