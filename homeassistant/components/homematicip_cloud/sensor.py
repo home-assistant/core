@@ -127,7 +127,7 @@ class HomematicipAccesspointStatus(HomematicipGenericEntity):
 
     def __init__(self, hap: HomematicipHAP) -> None:
         """Initialize access point status entity."""
-        super().__init__(hap, hap.home, "Duty Cycle")
+        super().__init__(hap, device=hap.home, post="Duty Cycle")
 
     @property
     def device_info(self) -> Dict[str, Any]:
@@ -176,7 +176,7 @@ class HomematicipHeatingThermostat(HomematicipGenericEntity):
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize heating thermostat device."""
-        super().__init__(hap, device, "Heating")
+        super().__init__(hap, device, post="Heating")
 
     @property
     def icon(self) -> str:
@@ -205,7 +205,7 @@ class HomematicipHumiditySensor(HomematicipGenericEntity):
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the thermometer device."""
-        super().__init__(hap, device, "Humidity")
+        super().__init__(hap, device, post="Humidity")
 
     @property
     def device_class(self) -> str:
@@ -228,7 +228,7 @@ class HomematicipTemperatureSensor(HomematicipGenericEntity):
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the thermometer device."""
-        super().__init__(hap, device, "Temperature")
+        super().__init__(hap, device, post="Temperature")
 
     @property
     def device_class(self) -> str:
@@ -265,7 +265,7 @@ class HomematicipIlluminanceSensor(HomematicipGenericEntity):
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the  device."""
-        super().__init__(hap, device, "Illuminance")
+        super().__init__(hap, device, post="Illuminance")
 
     @property
     def device_class(self) -> str:
@@ -303,7 +303,7 @@ class HomematicipPowerSensor(HomematicipGenericEntity):
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the  device."""
-        super().__init__(hap, device, "Power")
+        super().__init__(hap, device, post="Power")
 
     @property
     def device_class(self) -> str:
@@ -326,7 +326,7 @@ class HomematicipWindspeedSensor(HomematicipGenericEntity):
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the windspeed sensor."""
-        super().__init__(hap, device, "Windspeed")
+        super().__init__(hap, device, post="Windspeed")
 
     @property
     def state(self) -> float:
@@ -359,7 +359,7 @@ class HomematicipTodayRainSensor(HomematicipGenericEntity):
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the  device."""
-        super().__init__(hap, device, "Today Rain")
+        super().__init__(hap, device, post="Today Rain")
 
     @property
     def state(self) -> float:
