@@ -56,7 +56,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     entities = []
     for variable in config[CONF_MONITORED_VARIABLES]:
         entities.append(VikingSensor(viking_data, variable, name))
-    add_entities(entities)
+    add_entities(entities, True)
 
 
 class VikingSensor(Entity):
@@ -132,6 +132,10 @@ class VikingData:
         """Parse string with data available."""
         x = data_str.lower().split(" ")
         x[0] = float(x[0])
+        # If it's 0 then there will be no x[1]
+        if x[0] == 0:
+            return 0
+        # Parse other units (don't know if it actually happens in practise)
         if x[1] == "gb":
             return x[0]
         elif x[1] == "mb":
