@@ -142,9 +142,9 @@ class HomematicipNotificationLight(HomematicipGenericEntity, LightEntity):
     def __init__(self, hap: HomematicipHAP, device, channel: int) -> None:
         """Initialize the notification light entity."""
         if channel == 2:
-            super().__init__(hap, device, post="Notification Top", channel=channel)
+            super().__init__(hap, device, post="Top", channel=channel)
         else:
-            super().__init__(hap, device, post="Notification Bottom", channel=channel)
+            super().__init__(hap, device, post="Bottom", channel=channel)
 
         self._color_switcher = {
             RGBColorState.WHITE: [0.0, 0.0],

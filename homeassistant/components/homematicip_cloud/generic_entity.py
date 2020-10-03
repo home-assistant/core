@@ -182,7 +182,8 @@ class HomematicipGenericEntity(Entity):
             if self._channel:
                 name = self._device.functionalChannels[self._channel].label
             else:
-                name = self._device.functionalChannels[1].label
+                if len(self._device.functionalChannels) > 1:
+                    name = self._device.functionalChannels[1].label
 
         # Use device label, if name is not defined by channel label.
         if not name:
