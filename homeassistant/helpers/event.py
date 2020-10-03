@@ -752,6 +752,9 @@ class _TrackTemplateResultInfo:
         self._rate_limit = KeyedRateLimit(hass)
         self._info: Dict[Template, RenderInfo] = {}
         self._track_state_changes: Optional[_TrackStateChangeFiltered] = None
+        self._has_time: Dict[Template, bool] = {}
+        self._time_listeners: Dict[Template, Callable] = {}
+        self._skip_next_time_update: Set[Template] = set()
 
     def async_setup(self, raise_on_template_error: bool) -> None:
         """Activation of template tracking."""
@@ -772,6 +775,7 @@ class _TrackTemplateResultInfo:
         self._track_state_changes = async_track_state_change_filtered(
             self.hass, _render_infos_to_track_states(self._info.values()), self._refresh
         )
+        self._update_time_listeners()
         _LOGGER.debug(
             "Template group %s listens for %s",
             self._track_templates,
@@ -782,7 +786,45 @@ class _TrackTemplateResultInfo:
     def listeners(self) -> Dict:
         """State changes that will cause a re-render."""
         assert self._track_state_changes
-        return self._track_state_changes.listeners
+        return {
+            **self._track_state_changes.listeners,
+            "time": any(self._has_time.values()),
+        }
+
+    @callback
+    def _setup_time_listener(self, template: Template, has_time: bool) -> None:
+        if template in self._time_listeners:
+            self._time_listeners.pop(template)()
+
+        self._has_time[template] = has_time
+
+        # now() or utcnow() has left the scope of the template
+        if not has_time:
+            return
+
+        track_templates = [
+            track_template_
+            for track_template_ in self._track_templates
+            if track_template_.template == template
+        ]
+
+        @callback
+        def _refresh_from_time(now: datetime) -> None:
+            if template in self._skip_next_time_update:
+                self._skip_next_time_update.remove(template)
+                return
+            self._refresh(None, track_templates=track_templates)
+
+        self._time_listeners[template] = async_track_time_interval(
+            self.hass, _refresh_from_time, timedelta(minutes=1)
+        )
+
+    @callback
+    def _update_time_listeners(self) -> None:
+        for template, info in self._info.items():
+            if info.has_time == self._has_time.get(template):
+                continue
+            self._setup_time_listener(template, info.has_time)
 
     @callback
     def async_remove(self) -> None:
@@ -790,6 +832,8 @@ class _TrackTemplateResultInfo:
         assert self._track_state_changes
         self._track_state_changes.async_remove()
         self._rate_limit.async_remove()
+        for template in list(self._time_listeners):
+            self._time_listeners.pop(template)()
 
     @callback
     def async_refresh(self) -> None:
@@ -886,12 +930,16 @@ class _TrackTemplateResultInfo:
             if not update:
                 continue
 
+            if event:
+                self._skip_next_time_update.add(track_template_.template)
+
             info_changed = True
             if isinstance(update, TrackTemplateResult):
                 updates.append(update)
 
         if info_changed:
             assert self._track_state_changes
+            self._update_time_listeners()
             self._track_state_changes.async_update_listeners(
                 _render_infos_to_track_states(self._info.values()),
             )
