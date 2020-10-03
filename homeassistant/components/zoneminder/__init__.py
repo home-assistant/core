@@ -3,14 +3,17 @@ import asyncio
 import logging
 
 import voluptuous as vol
+from zoneminder.monitor import MonitorState
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ID,
     ATTR_NAME,
+    ATTR_STATE,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PATH,
@@ -31,17 +34,19 @@ from .common import (
     set_config_data,
 )
 from .const import (
+    ATTR_MONITOR_ID,
     CONF_PATH_ZMS,
     DEFAULT_PATH,
     DEFAULT_PATH_ZMS,
     DEFAULT_SSL,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
+    SERVICE_SET_MONITOR_STATE,
     SERVICE_SET_RUN_STATE,
 )
 
 _LOGGER = logging.getLogger(__name__)
-PLATFORM_DOMAINS = (BINARY_SENSOR_DOMAIN, CAMERA_DOMAIN, SENSOR_DOMAIN)
+PLATFORM_DOMAINS = (BINARY_SENSOR_DOMAIN, CAMERA_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN)
 
 HOST_CONFIG_SCHEMA = vol.Schema(
     {
@@ -67,6 +72,16 @@ SET_RUN_STATE_SCHEMA = vol.Schema(
     {vol.Required(ATTR_ID): cv.string, vol.Required(ATTR_NAME): cv.string}
 )
 
+SET_MONITOR_STATE_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ID): cv.string,
+        vol.Required(ATTR_MONITOR_ID): cv.string,
+        vol.Required(ATTR_STATE): vol.In(
+            [monitor_state.value for monitor_state in MonitorState]
+        ),
+    }
+)
+
 
 async def async_setup(hass: HomeAssistant, base_config: dict):
     """Set up the ZoneMinder component."""
@@ -88,10 +103,56 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             hass.config_entries.async_forward_entry_setup(config_entry, platform_domain)
         )
 
+    if not hass.services.has_service(DOMAIN, SERVICE_SET_MONITOR_STATE):
+
+        @callback
+        def set_monitor_state(call) -> None:
+            zm_id = call.data[ATTR_ID]
+            monitor_id = call.data[ATTR_MONITOR_ID]
+            state = next(
+                iter(
+                    monitor_state
+                    for monitor_state in MonitorState
+                    if monitor_state.value == call.data[ATTR_STATE]
+                ),
+                MonitorState.NONE,
+            )
+
+            config_data = get_config_data_for_host(hass, zm_id)
+            if not config_data:
+                _LOGGER.error("Invalid ZoneMinder host provided: %s", zm_id)
+                return
+
+            monitor = next(
+                iter(
+                    monitor
+                    for monitor in zm_client.get_monitors()
+                    if str(monitor.id) == str(monitor_id)
+                ),
+                None,
+            )
+
+            if not monitor:
+                _LOGGER.error(
+                    "Unable to find monitor %s for host %s",
+                    monitor_id,
+                    zm_id,
+                )
+                return
+
+            monitor.function = state
+
+        hass.services.async_register(
+            DOMAIN,
+            SERVICE_SET_MONITOR_STATE,
+            set_monitor_state,
+            schema=SET_MONITOR_STATE_SCHEMA,
+        )
+
     if not hass.services.has_service(DOMAIN, SERVICE_SET_RUN_STATE):
 
         @callback
-        def set_active_state(call):
+        def set_active_state(call) -> None:
             """Set the ZoneMinder run state to the given state name."""
             zm_id = call.data[ATTR_ID]
             state_name = call.data[ATTR_NAME]
@@ -130,6 +191,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 
     # If this is the last config to exist, remove the service too.
     if len(hass.config_entries.async_entries(DOMAIN)) <= 1:
+        hass.services.async_remove(DOMAIN, SERVICE_SET_MONITOR_STATE)
         hass.services.async_remove(DOMAIN, SERVICE_SET_RUN_STATE)
 
     delete_config_data(hass, config_entry)

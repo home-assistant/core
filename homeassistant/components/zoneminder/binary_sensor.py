@@ -27,7 +27,7 @@ async def async_setup_entry(
 class ZMAvailabilitySensor(BinarySensorEntity):
     """Representation of the availability of ZoneMinder as a binary sensor."""
 
-    def __init__(self, client: ZoneMinder, config_entry: ConfigEntry):
+    def __init__(self, client: ZoneMinder, config_entry: ConfigEntry) -> None:
         """Initialize availability sensor."""
         self._state = None
         self._name = config_entry.unique_id
@@ -40,20 +40,23 @@ class ZMAvailabilitySensor(BinarySensorEntity):
         return f"{self._config_entry.unique_id}_availability"
 
     @property
-    def name(self):
+    def name(self) -> Optional[str]:
         """Return the name of this binary sensor."""
         return self._name
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return self._state
 
     @property
-    def device_class(self):
+    def device_class(self) -> str:
         """Return the class of this device, from component DEVICE_CLASSES."""
         return DEVICE_CLASS_CONNECTIVITY
 
-    def update(self):
+    def update(self) -> None:
         """Update the state of this sensor (availability of ZoneMinder)."""
-        self._state = self._client.is_available
+        try:
+            self._state = self._client.is_available
+        except Exception:  # pylint: disable=broad-except
+            self._state = False

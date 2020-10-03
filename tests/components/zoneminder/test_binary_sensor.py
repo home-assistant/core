@@ -1,6 +1,7 @@
 """Binary sensor tests."""
 from zoneminder.zm import ZoneMinder
 
+from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
 from homeassistant.components.zoneminder import async_setup_entry
 from homeassistant.components.zoneminder.const import CONF_PATH_ZMS, DOMAIN
 from homeassistant.const import (
@@ -11,21 +12,25 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    STATE_OFF,
+    STATE_ON,
 )
 from homeassistant.core import DOMAIN as HASS_DOMAIN, HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import MagicMock, patch
+from tests.async_mock import MagicMock, PropertyMock, patch
 from tests.common import MockConfigEntry
 
 
 @patch("homeassistant.components.zoneminder.common.ZoneMinder", autospec=ZoneMinder)
 async def test_async_setup_entry(zoneminder_mock, hass: HomeAssistant) -> None:
     """Test setup of binary sensor entities."""
+    is_available_property = PropertyMock(return_value=True)
+
     zm_client: ZoneMinder = MagicMock(spec=ZoneMinder)
     zm_client.get_zms_url.return_value = "http://host1/path_zms1"
     zm_client.login.return_value = True
-    zm_client.is_available = True
+    type(zm_client).is_available = is_available_property
 
     zoneminder_mock.return_value = zm_client
 
@@ -49,14 +54,35 @@ async def test_async_setup_entry(zoneminder_mock, hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     await hass.services.async_call(
-        HASS_DOMAIN, "update_entity", {ATTR_ENTITY_ID: "binary_sensor.host1"}
+        HASS_DOMAIN, SERVICE_UPDATE_ENTITY, {ATTR_ENTITY_ID: "binary_sensor.host1"}
     )
     await hass.async_block_till_done()
-    assert hass.states.get("binary_sensor.host1").state == "on"
+    assert hass.states.get("binary_sensor.host1").state == STATE_ON
 
-    zm_client.is_available = False
+    is_available_property.return_value = False
     await hass.services.async_call(
-        HASS_DOMAIN, "update_entity", {ATTR_ENTITY_ID: "binary_sensor.host1"}
+        HASS_DOMAIN, SERVICE_UPDATE_ENTITY, {ATTR_ENTITY_ID: "binary_sensor.host1"}
     )
     await hass.async_block_till_done()
-    assert hass.states.get("binary_sensor.host1").state == "off"
+    assert hass.states.get("binary_sensor.host1").state == STATE_OFF
+
+    is_available_property.return_value = True
+    await hass.services.async_call(
+        HASS_DOMAIN, SERVICE_UPDATE_ENTITY, {ATTR_ENTITY_ID: "binary_sensor.host1"}
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("binary_sensor.host1").state == STATE_ON
+
+    is_available_property.side_effect = Exception("Network error")
+    await hass.services.async_call(
+        HASS_DOMAIN, SERVICE_UPDATE_ENTITY, {ATTR_ENTITY_ID: "binary_sensor.host1"}
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("binary_sensor.host1").state == STATE_OFF
+
+    is_available_property.side_effect = None
+    await hass.services.async_call(
+        HASS_DOMAIN, SERVICE_UPDATE_ENTITY, {ATTR_ENTITY_ID: "binary_sensor.host1"}
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("binary_sensor.host1").state == STATE_ON

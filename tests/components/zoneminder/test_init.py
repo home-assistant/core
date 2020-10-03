@@ -1,19 +1,23 @@
 """Tests for init functions."""
 
 import pytest
+from zoneminder.monitor import Monitor, MonitorState
 from zoneminder.zm import ZoneMinder
 
 from homeassistant import config_entries
 from homeassistant.components.zoneminder import async_setup_entry
 from homeassistant.components.zoneminder.const import (
+    ATTR_MONITOR_ID,
     CONF_PATH_ZMS,
     DOMAIN,
+    SERVICE_SET_MONITOR_STATE,
     SERVICE_SET_RUN_STATE,
 )
 from homeassistant.config_entries import ENTRY_STATE_NOT_LOADED
 from homeassistant.const import (
     ATTR_ID,
     ATTR_NAME,
+    ATTR_STATE,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PATH,
@@ -62,10 +66,14 @@ async def test_load_call_service_and_unload(
     zoneminder_mock, hass: HomeAssistant
 ) -> None:
     """Test config entry load/unload and calling of service."""
+    monitor = MagicMock(spec=Monitor)
+    monitor.id = 1
+    monitor.function = MonitorState.NONE
+
     zm_client: ZoneMinder = MagicMock(spec=ZoneMinder)
     zm_client.get_zms_url.return_value = "http://host1/path_zms1"
     zm_client.login.return_value = True
-    zm_client.get_monitors.return_value = []
+    zm_client.get_monitors.return_value = [monitor]
     zm_client.is_available.return_value = True
 
     zoneminder_mock.return_value = zm_client
@@ -88,6 +96,7 @@ async def test_load_call_service_and_unload(
     await async_setup_entry(hass, config_entry)
 
     assert hass.services.has_service(DOMAIN, SERVICE_SET_RUN_STATE)
+    assert hass.services.has_service(DOMAIN, SERVICE_SET_MONITOR_STATE)
 
     await hass.services.async_call(
         DOMAIN,
@@ -97,7 +106,20 @@ async def test_load_call_service_and_unload(
     await hass.async_block_till_done()
     zm_client.set_active_state.assert_called_with("away")
 
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_MONITOR_STATE,
+        {
+            ATTR_ID: "host1",
+            ATTR_MONITOR_ID: monitor.id,
+            ATTR_STATE: MonitorState.MODECT.value,
+        },
+    )
+    await hass.async_block_till_done()
+    assert monitor.function == MonitorState.MODECT
+
     await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state == ENTRY_STATE_NOT_LOADED
     assert not hass.services.has_service(DOMAIN, SERVICE_SET_RUN_STATE)
+    assert not hass.services.has_service(DOMAIN, SERVICE_SET_MONITOR_STATE)

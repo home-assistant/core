@@ -7,3 +7,12 @@ set_run_state:
     name:
       description: "The string name of the ZoneMinder run state to set as active."
       example: "Home"
+set_monitor_state:
+  description: "Set the monitor function."
+  fields:
+    entity_id:
+      description: "The entity id of the zoneminder monitor."
+      example: "camera.my_zoneminder_monitor"
+    state:
+      description: "The function to set."
+      example: "None, Monitor, Modect, Record, Mocord, Nodect"

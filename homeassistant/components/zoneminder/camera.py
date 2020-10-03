@@ -1,8 +1,8 @@
 """Support for ZoneMinder camera streaming."""
 import logging
-from typing import Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
-from zoneminder.monitor import Monitor, MonitorState, TimePeriod
+from zoneminder.monitor import Monitor, MonitorState
 
 from homeassistant.components.mjpeg.camera import (
     CONF_MJPEG_URL,
@@ -51,7 +51,7 @@ class ZoneMinderCamera(MjpegCamera):
         monitor: Monitor,
         verify_ssl: bool,
         config_entry: ConfigEntry,
-    ):
+    ) -> None:
         """Initialize as a subclass of MjpegCamera."""
         device_info = {
             CONF_NAME: monitor.name,
@@ -64,7 +64,6 @@ class ZoneMinderCamera(MjpegCamera):
         self._is_recording = None
         self._is_available = None
         self._function: Optional[MonitorState] = None
-        self._events: Dict[str, int] = {}
         self._monitor = monitor
         self._config_entry = config_entry
 
@@ -74,70 +73,64 @@ class ZoneMinderCamera(MjpegCamera):
         return f"{self._config_entry.unique_id}_{self._monitor.id}_camera"
 
     @property
-    def should_poll(self):
+    def should_poll(self) -> bool:
         """Update the recording state periodically."""
         return True
 
-    def update(self):
+    def update(self) -> None:
         """Update our recording state from the ZM API."""
         _LOGGER.debug("Updating camera state for monitor %i", self._monitor.id)
         try:
             self._is_recording = self._monitor.is_recording
             self._is_available = self._monitor.is_available
             self._function = self._monitor.function
-
-            for time_period in TimePeriod:
-                for include_archived in (True, False):
-                    archived_name = (
-                        "with_archived" if include_archived else "without_archived"
-                    )
-                    name = f"events_{time_period.period}_{archived_name}"
-                    self._events[name] = self._monitor.get_events(
-                        time_period, include_archived
-                    )
         except Exception:  # pylint: disable=broad-except
             self._is_available = False
 
     @property
-    def is_recording(self):
+    def is_recording(self) -> bool:
         """Return whether the monitor is in alarm mode."""
         return self._is_recording
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available."""
         return self._is_available
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if on."""
         return self._function != MonitorState.NONE
 
     @property
-    def motion_detection_enabled(self):
+    def motion_detection_enabled(self) -> bool:
         """Return the camera motion detection status."""
         return self._function in (MonitorState.MODECT, MonitorState.MOCORD)
 
     @property
-    def state_attributes(self):
+    def state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return the camera state attributes."""
         attrs = super().state_attributes
+        attrs["monitor_id"] = self._monitor.id
         attrs["function"] = self._function.value if self._function else None
-        attrs.update(self._events)
         return attrs
 
-    def turn_off(self):
+    def turn_off(self) -> None:
         """Turn off camera."""
         self._monitor.function = MonitorState.NONE
+        self.is_streaming = False
 
-    def turn_on(self):
+    def turn_on(self) -> None:
         """Turn off camera."""
         self._monitor.function = MonitorState.MONITOR
+        self.is_streaming = True
 
-    def enable_motion_detection(self):
+    def enable_motion_detection(self) -> None:
         """Enable motion detection in the camera."""
         self._monitor.function = MonitorState.MODECT
+        self.is_streaming = True
 
-    def disable_motion_detection(self):
+    def disable_motion_detection(self) -> None:
         """Disable motion detection in camera."""
-        self._monitor.function = MonitorState.MONITOR
+        if self._function == MonitorState.MODECT:
+            self._monitor.function = MonitorState.MONITOR
