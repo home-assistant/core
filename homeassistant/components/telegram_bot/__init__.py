@@ -554,9 +554,10 @@ class TelegramNotificationService:
                     chat_id,
                 )
 
-                event_data = {}
-                event_data[ATTR_CHAT_ID] = chat_id
-                event_data[ATTR_MESSAGEID] = message_id
+                event_data = {
+                    ATTR_CHAT_ID = chat_id
+                    ATTR_MESSAGEID = message_id
+                }
                 result_code = kwargs_msg.get(ATTR_RESULT_CODE)
                 if result_code is not None:
                     event_data[ATTR_RESULT_CODE] = result_code
