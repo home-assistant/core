@@ -783,7 +783,7 @@ class _TrackTemplateResultInfo:
             self._time_patterns.pop(template)
             self._time_pattern_listeners.pop(template)()
 
-        # Time Pattern is specificlly disabling updates
+        # Time Pattern is specifically disabling updates
         if not time_pattern:
             return
 
