@@ -59,7 +59,7 @@ async def test_valid_state(hass):
         assert "Merton Road" == sites[0]["site_name"]
         assert "Low" == sites[0]["pollutants_status"]
 
-        pollutants = state.attributes["data"][0]["pollutants"]
+        pollutants = sites[0]["pollutants"]
         assert pollutants is not None
         assert 1 == len(pollutants)
         assert "PM10" == pollutants[0]["code"]
