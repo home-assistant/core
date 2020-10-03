@@ -4,15 +4,13 @@ from functools import partial
 from devolo_home_control_api.homecontrol import HomeControl
 from devolo_home_control_api.mydevolo import Mydevolo
 
-from homeassistant.components import switch as ha_switch
+from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import CONF_HOMECONTROL, CONF_MYDEVOLO, DOMAIN, PLATFORMS
-
-SUPPORTED_PLATFORMS = [ha_switch.DOMAIN]
 
 
 async def async_setup(hass, config):
@@ -32,7 +30,6 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     mydevolo.user = conf[CONF_USERNAME]
     mydevolo.password = conf[CONF_PASSWORD]
     mydevolo.url = conf[CONF_MYDEVOLO]
-    mydevolo.mprm = conf[CONF_HOMECONTROL]
 
     credentials_valid = await hass.async_add_executor_job(mydevolo.credentials_valid)
 
@@ -44,11 +41,16 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
     gateway_ids = await hass.async_add_executor_job(mydevolo.get_gateway_ids)
     gateway_id = gateway_ids[0]
-    mprm_url = mydevolo.mprm
 
     try:
+        zeroconf_instance = await zeroconf.async_get_instance(hass)
         hass.data[DOMAIN]["homecontrol"] = await hass.async_add_executor_job(
-            partial(HomeControl, gateway_id=gateway_id, url=mprm_url)
+            partial(
+                HomeControl,
+                gateway_id=gateway_id,
+                zeroconf_instance=zeroconf_instance,
+                url=conf[CONF_HOMECONTROL],
+            )
         )
     except ConnectionError as err:
         raise ConfigEntryNotReady from err
