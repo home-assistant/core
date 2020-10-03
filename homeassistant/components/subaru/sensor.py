@@ -141,15 +141,15 @@ def _create_sensor_entities(entities, vehicle_info, coordinator, hass):
         if vehicle_info[VEHICLE_HAS_EV]:
             sensors_to_add.extend(EV_SENSORS)
 
-    for s in sensors_to_add:
+    for subaru_sensor in sensors_to_add:
         entities.append(
             SubaruSensor(
                 vehicle_info,
                 coordinator,
                 hass,
-                s[SENSOR_NAME],
-                s[SENSOR_FIELD],
-                s[SENSOR_UNITS],
+                subaru_sensor[SENSOR_NAME],
+                subaru_sensor[SENSOR_FIELD],
+                subaru_sensor[SENSOR_UNITS],
             )
         )
 
