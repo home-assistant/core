@@ -52,7 +52,6 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.sun import get_astral_location
-from homeassistant.util import slugify
 from homeassistant.util.color import (
     color_RGB_to_xy,
     color_temperature_kelvin_to_mired,
@@ -259,7 +258,6 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
 
         # Set other attributes
         self._icon = ICON
-        self._entity_id = f"switch.{DOMAIN}_{slugify(self._name)}"
         self._state = None
 
         # Tracks 'off' → 'on' state changes
@@ -288,19 +286,14 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         )
 
     @property
-    def entity_id(self):
-        """Return the entity ID of the switch."""
-        return self._entity_id
-
-    @property
     def name(self):
         """Return the name of the device if any."""
         return f"Adaptive Lighting: {self._name}"
 
-    # @property
-    # def unique_id(self):
-    #     """Return the unique ID of entity."""
-    #     return self._name
+    @property
+    def unique_id(self):
+        """Return the unique ID of entity."""
+        return self._name
 
     @property
     def is_on(self) -> Optional[bool]:
@@ -572,23 +565,17 @@ class AdaptiveSleepModeSwitch(SwitchEntity, RestoreEntity):
         data = validate(config_entry)
         self._name = data[CONF_NAME]
         self._icon = ICON
-        self._entity_id = f"switch.{DOMAIN}_sleep_mode_{slugify(self._name)}"
         self._state = None
-
-    @property
-    def entity_id(self):
-        """Return the entity ID of the switch."""
-        return self._entity_id
 
     @property
     def name(self):
         """Return the name of the device if any."""
         return f"Adaptive Lighting Sleep Mode: {self._name}"
 
-    # @property
-    # def unique_id(self):
-    #     """Return the unique ID of entity."""
-    #     return f"{self._name}_sleep_mode"
+    @property
+    def unique_id(self):
+        """Return the unique ID of entity."""
+        return f"{self._name}_sleep_mode"
 
     @property
     def icon(self) -> str:
