@@ -219,13 +219,7 @@ async def test_broadcast_config_port(hass):
     assert await async_setup_component(
         hass,
         switch.DOMAIN,
-        {
-            "switch": {
-                "platform": "wake_on_lan",
-                "mac": mac,
-                "broadcast_port": port,
-            }
-        },
+        {"switch": {"platform": "wake_on_lan", "mac": mac, "broadcast_port": port}},
     )
     await hass.async_block_till_done()
 
