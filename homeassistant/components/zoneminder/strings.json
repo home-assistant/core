@@ -16,12 +16,12 @@
       }
     },
     "abort": {
-      "auth_fail": "Username or password is incorrect.",
-      "connection_error": "Failed to connect to a ZoneMinder server."
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "error": {
-      "auth_fail": "Username or password is incorrect.",
-      "connection_error": "Failed to connect to a ZoneMinder server."
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "create_entry": { "default": "ZoneMinder server added." }
   }
