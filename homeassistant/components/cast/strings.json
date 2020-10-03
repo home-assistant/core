@@ -7,7 +7,7 @@
     },
     "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
-      "no_devices_found": "No Google Cast devices found on the network."
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     }
   }
 }
