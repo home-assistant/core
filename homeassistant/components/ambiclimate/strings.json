@@ -15,7 +15,7 @@
     },
     "abort": {
       "already_configured_device": "[%key:common::config_flow::abort::already_configured_device%]",
-      "oauth2_missing_configuration": "oauth2_missing_configuration",
+      "oauth2_missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "access_token": "Unknown error generating an access token."
     }
   }
