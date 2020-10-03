@@ -199,6 +199,20 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=self.context["unique_id"], data=self._data)
 
+    async def async_step_zeroconf(
+        self, user_input: Optional[ConfigType] = None
+    ) -> Dict[str, Any]:
+        """Handle a flow initiated by zeroconf."""
+        _LOGGER.error("Zeroconf %s", user_input)
+        # Hostname is format: hyperion.local.
+        data = {}
+        data[CONF_HOST] = user_input["hostname"].rstrip(".")
+        data[CONF_PORT] = user_input["port"]
+        # data[const.KEY_NAME] = data[CONF_HOST].rsplit(".")[0]
+        # data[const.KEY_ID] = user_input["properties"]["id"]
+
+        return await self.async_step_user(user_input=data)
+
     def _show_setup_form(self, errors: Optional[Dict] = None) -> Dict[str, Any]:
         """Show the setup form to the user."""
         return self.async_show_form(

@@ -13,7 +13,7 @@ from homeassistant.components.hyperion.const import (
     CONF_INSTANCE,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
 
 from . import (
@@ -31,7 +31,7 @@ from tests.common import MockConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
-TEST_USER_INPUT = {
+TEST_HOST_PORT = {
     CONF_HOST: TEST_HOST,
     CONF_PORT: TEST_PORT,
 }
@@ -58,6 +58,11 @@ TEST_REQUEST_TOKEN_FAIL = {
     "error": "Token request timeout or denied",
 }
 
+TEST_ZEROCONF_SERVICE_INFO = {
+    "hostname": TEST_HOST,
+    CONF_PORT: TEST_PORT,
+}
+
 
 async def _create_mock_entry(hass):
     """Add a test Hyperion entity to hass."""
@@ -82,10 +87,12 @@ async def _create_mock_entry(hass):
     return entry
 
 
-async def _init_flow(hass, source=SOURCE_USER):
+async def _init_flow(hass, source=SOURCE_USER, data={}):
     """Initialize a flow."""
     await setup.async_setup_component(hass, "persistent_notification", {})
-    return await hass.config_entries.flow.async_init(DOMAIN, context={"source": source})
+    return await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": source}, data=data
+    )
 
 
 async def _configure_flow(hass, init_result, user_input={}):
@@ -114,7 +121,7 @@ async def test_user_existing_id_abort(hass):
 
     client = create_mock_client()
     with patch("hyperion.client.HyperionClient", return_value=client):
-        result = await _configure_flow(hass, result, user_input=TEST_USER_INPUT)
+        result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
         assert result["reason"] == "already_configured"
 
@@ -128,14 +135,14 @@ async def test_user_client_errors(hass):
     # Two connection attempts are made: fail the first one.
     client.async_client_connect = CoroutineMock(side_effect=lambda raw: not raw)
     with patch("hyperion.client.HyperionClient", return_value=client):
-        result = await _configure_flow(hass, result, user_input=TEST_USER_INPUT)
+        result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["errors"]["base"] == "connection_error"
 
     # Two connection attempts are made: fail the second one.
     client.async_client_connect = CoroutineMock(side_effect=lambda raw: raw)
     with patch("hyperion.client.HyperionClient", return_value=client):
-        result = await _configure_flow(hass, result, user_input=TEST_USER_INPUT)
+        result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["errors"]["base"] == "connection_error"
 
@@ -143,7 +150,7 @@ async def test_user_client_errors(hass):
     client.async_client_connect = CoroutineMock(return_value=True)
     client.async_is_auth_required = CoroutineMock(return_value={"success": False})
     with patch("hyperion.client.HyperionClient", return_value=client):
-        result = await _configure_flow(hass, result, user_input=TEST_USER_INPUT)
+        result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["errors"]["base"] == "auth_required_error"
 
@@ -154,13 +161,13 @@ async def test_user_noauth_flow_success(hass):
 
     client = create_mock_client()
     with patch("hyperion.client.HyperionClient", return_value=client):
-        result = await _configure_flow(hass, result, user_input=TEST_USER_INPUT)
+        result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["handler"] == DOMAIN
     assert result["title"] == client.id
     assert result["data"] == {
-        **TEST_USER_INPUT,
+        **TEST_HOST_PORT,
         **{CONF_INSTANCE: const.DEFAULT_INSTANCE},
     }
 
@@ -173,7 +180,7 @@ async def test_user_auth_required(hass):
     client.async_is_auth_required = CoroutineMock(return_value=TEST_AUTH_REQUIRED_RESP)
 
     with patch("hyperion.client.HyperionClient", return_value=client):
-        result = await _configure_flow(hass, result, user_input=TEST_USER_INPUT)
+        result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "auth"
 
@@ -186,7 +193,7 @@ async def test_auth_static_token(hass):
     client.async_is_auth_required = CoroutineMock(return_value=TEST_AUTH_REQUIRED_RESP)
 
     with patch("hyperion.client.HyperionClient", return_value=client):
-        result = await _configure_flow(hass, result, user_input=TEST_USER_INPUT)
+        result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "auth"
 
@@ -214,7 +221,7 @@ async def test_auth_static_token(hass):
     assert result["handler"] == DOMAIN
     assert result["title"] == client.id
     assert result["data"] == {
-        **TEST_USER_INPUT,
+        **TEST_HOST_PORT,
         **{CONF_TOKEN: TEST_TOKEN},
         **{CONF_INSTANCE: const.DEFAULT_INSTANCE},
     }
@@ -228,7 +235,7 @@ async def test_auth_create_token_approval_declined(hass):
     client.async_is_auth_required = CoroutineMock(return_value=TEST_AUTH_REQUIRED_RESP)
 
     with patch("hyperion.client.HyperionClient", return_value=client):
-        result = await _configure_flow(hass, result, user_input=TEST_USER_INPUT)
+        result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "auth"
 
@@ -270,7 +277,7 @@ async def test_auth_create_token_when_issued_token_fails(hass):
     client.async_is_auth_required = CoroutineMock(return_value=TEST_AUTH_REQUIRED_RESP)
 
     with patch("hyperion.client.HyperionClient", return_value=client):
-        result = await _configure_flow(hass, result, user_input=TEST_USER_INPUT)
+        result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "auth"
 
@@ -314,7 +321,7 @@ async def test_auth_create_token_success(hass):
     client.async_is_auth_required = CoroutineMock(return_value=TEST_AUTH_REQUIRED_RESP)
 
     with patch("hyperion.client.HyperionClient", return_value=client):
-        result = await _configure_flow(hass, result, user_input=TEST_USER_INPUT)
+        result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "auth"
 
@@ -346,7 +353,7 @@ async def test_auth_create_token_success(hass):
         assert result["handler"] == DOMAIN
         assert result["title"] == client.id
         assert result["data"] == {
-            **TEST_USER_INPUT,
+            **TEST_HOST_PORT,
             **{CONF_TOKEN: TEST_TOKEN},
             **{CONF_INSTANCE: const.DEFAULT_INSTANCE},
         }
@@ -364,7 +371,7 @@ async def test_noauth_multiple_instances_success(hass):
     ]
 
     with patch("hyperion.client.HyperionClient", return_value=client):
-        result = await _configure_flow(hass, result, user_input=TEST_USER_INPUT)
+        result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "final"
@@ -380,7 +387,7 @@ async def test_noauth_multiple_instances_success(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["handler"] == DOMAIN
     assert result["title"] == client.id
-    assert result["data"] == {**TEST_USER_INPUT, **{CONF_INSTANCE: 2}}
+    assert result["data"] == {**TEST_HOST_PORT, **{CONF_INSTANCE: 2}}
 
 
 async def test_noauth_no_instances_abort(hass):
@@ -391,7 +398,25 @@ async def test_noauth_no_instances_abort(hass):
     client.instances = []
 
     with patch("hyperion.client.HyperionClient", return_value=client):
-        result = await _configure_flow(hass, result, user_input=TEST_USER_INPUT)
+        result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "no_running_instances"
+
+
+async def test_zeroconf_success(hass):
+    """Check a full flow without auth."""
+
+    client = create_mock_client()
+    with patch("hyperion.client.HyperionClient", return_value=client):
+        result = await _init_flow(
+            hass, source=SOURCE_ZEROCONF, data=TEST_ZEROCONF_SERVICE_INFO
+        )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["handler"] == DOMAIN
+    assert result["title"] == client.id
+    assert result["data"] == {
+        **TEST_HOST_PORT,
+        **{CONF_INSTANCE: const.DEFAULT_INSTANCE},
+    }
