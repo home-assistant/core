@@ -35,6 +35,7 @@
         "usb_path": "USB Device Path",
         "access_token": "Access Token",
         "api_key": "API Key",
+        "api_token": "API Token",
         "longitude": "Longitude",
         "latitude": "Latitude"
       },
