@@ -35,11 +35,11 @@ async def validate_input(hass: core.HomeAssistant, data):
 
         if is_valid:
             return True
-        else:
-            raise InvalidAuth
 
-    except ValueError:
-        raise CannotConnect
+        raise InvalidAuth
+
+    except ValueError as err:
+        raise CannotConnect from err
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

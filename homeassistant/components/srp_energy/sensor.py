@@ -48,10 +48,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 for _, _, _, kwh, _ in hourly_usage:
                     previous_daily_usage += float(kwh)
                 return previous_daily_usage
-        except (TimeoutError):
-            raise UpdateFailed("Timeout communicating with API")
+        except (TimeoutError) as timeout_err:
+            raise UpdateFailed("Timeout communicating with API") from timeout_err
         except (ConnectError, HTTPError, Timeout, ValueError, TypeError) as err:
-            raise UpdateFailed(f"Error communicating with API: {err}")
+            raise UpdateFailed(f"Error communicating with API: {err}") from err
 
     coordinator = DataUpdateCoordinator(
         hass,

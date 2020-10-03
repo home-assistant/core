@@ -60,7 +60,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.data[DOMAIN] = srp_energy_client
     except (Exception) as ex:
         _LOGGER.error("Unable to connect to Srp Energy: %s", str(ex))
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from ex
 
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, "sensor")
