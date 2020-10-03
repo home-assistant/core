@@ -27,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Mobile Vikings"
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
+SCAN_INTERVAL = timedelta(minutes=30)
 
 SENSOR_TYPES = {
     "balance": ["Balance", "PLN", "mdi:cash-usd"],
@@ -145,7 +145,7 @@ class VikingData:
         else:
             raise Exception("Error while parsing available data!")
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    @Throttle(SCAN_INTERVAL)
     def update(self):
         """Fetch data from site."""
         try:
