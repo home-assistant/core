@@ -487,18 +487,20 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         for light in lights:
             if not is_on(self.hass, light):
                 continue
-            if self._take_over_control:
-                if self.turn_on_off_listener.is_manually_controlled(
+            if (
+                self._take_over_control
+                and self.turn_on_off_listener.is_manually_controlled(
                     light,
                     force,
                     adaptive_lighting_context=self.__context,
-                ):
-                    _LOGGER.debug(
-                        "%s: '%s' is being manually controlled, stop adapting.",
-                        self._name,
-                        light,
-                    )
-                    continue
+                )
+            ):
+                _LOGGER.debug(
+                    "%s: '%s' is being manually controlled, stop adapting.",
+                    self._name,
+                    light,
+                )
+                continue
             await self._adapt_light(light, transition)
 
     async def _sleep_state_event(self, event: Event):
