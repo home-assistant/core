@@ -1,5 +1,5 @@
 """Test the SRP Energy config flow."""
-import pytest 
+import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components.srp_energy.const import DOMAIN
