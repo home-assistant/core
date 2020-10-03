@@ -573,7 +573,12 @@ async def test_render_template_with_delayed_error(hass, websocket_client, caplog
     event = msg["event"]
     assert event == {
         "result": "on",
-        "listeners": {"all": False, "domains": [], "entities": ["sensor.test"]},
+        "listeners": {
+            "all": False,
+            "domains": [],
+            "entities": ["sensor.test"],
+            "time_patterns": [],
+        },
     }
 
     msg = await websocket_client.receive_json()
