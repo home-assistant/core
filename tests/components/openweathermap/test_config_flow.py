@@ -1,6 +1,6 @@
 """Define tests for the OpenWeatherMap config flow."""
 from asynctest import MagicMock, patch
-from pyowm.common.exceptions import APIRequestError, UnauthorizedError
+from pyowm.commons.exceptions import APIRequestError, UnauthorizedError
 
 from homeassistant import data_entry_flow
 from homeassistant.components.openweathermap.const import (
@@ -37,9 +37,9 @@ async def test_form(hass):
     mocked_owm = _create_mocked_owm()
 
     with patch(
-        "pyowm.owm.OWM",
+        "homeassistant.components.openweathermap.config_flow.OWM",
         return_value=mocked_owm,
-    ):
+    ), patch("homeassistant.components.openweathermap.OWM", return_value=mocked_owm):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
@@ -73,7 +73,12 @@ async def test_form_import(hass):
     """Test we can import yaml config."""
     mocked_owm = _create_mocked_owm()
 
-    with patch("pyowm.owm.OWM", return_value=mocked_owm), patch(
+    with patch(
+        "homeassistant.components.openweathermap.config_flow.OWM",
+        return_value=mocked_owm,
+    ), patch(
+        "homeassistant.components.openweathermap.OWM", return_value=mocked_owm
+    ), patch(
         "homeassistant.components.openweathermap.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.openweathermap.async_setup_entry",
@@ -100,9 +105,9 @@ async def test_form_options(hass):
     mocked_owm = _create_mocked_owm()
 
     with patch(
-        "pyowm.owm.OWM",
+        "homeassistant.components.openweathermap.config_flow.OWM",
         return_value=mocked_owm,
-    ):
+    ), patch("homeassistant.components.openweathermap.OWM", return_value=mocked_owm):
         config_entry = MockConfigEntry(
             domain=DOMAIN, unique_id="openweathermap_unique_id", data=CONFIG
         )
@@ -157,7 +162,11 @@ async def test_form_invalid_api_key(hass):
     mocked_owm = _create_mocked_owm()
 
     with patch(
-        "pyowm.owm.OWM",
+        "homeassistant.components.openweathermap.config_flow.OWM",
+        return_value=mocked_owm,
+        side_effect=UnauthorizedError(""),
+    ), patch(
+        "homeassistant.components.openweathermap.OWM",
         return_value=mocked_owm,
         side_effect=UnauthorizedError(""),
     ):
@@ -173,7 +182,11 @@ async def test_form_api_call_error(hass):
     mocked_owm = _create_mocked_owm()
 
     with patch(
-        "pyowm.owm.OWM",
+        "homeassistant.components.openweathermap.config_flow.OWM",
+        return_value=mocked_owm,
+        side_effect=APIRequestError(""),
+    ), patch(
+        "homeassistant.components.openweathermap.OWM",
         return_value=mocked_owm,
         side_effect=APIRequestError(""),
     ):
@@ -188,6 +201,7 @@ def _create_mocked_owm():
     mocked_owm = MagicMock()
 
     weather = MagicMock()
+    weather.reference_time.return_value = 10
     weather.temperature.return_value.__getitem__.return_value = 10
     weather.pressure.__getitem__.return_value = 10
     weather.humidity = 10
@@ -198,20 +212,11 @@ def _create_mocked_owm():
     weather.detailed_status = "status"
     weather.weather_code = 803
 
-    one_day_forecast = MagicMock()
-    one_day_forecast.get_reference_time.return_value = 10
-    one_day_forecast.get_temperature.return_value.get.return_value = 10
-    one_day_forecast.get_rain.return_value.get.return_value = 0
-    one_day_forecast.get_snow.return_value.get.return_value = 0
-    one_day_forecast.get_wind.return_value.get.return_value = 0
-    one_day_forecast.get_weather_code.return_value = 803
-
-    weather_manager = MagicMock()
-    weather_manager.weather_at_coords.return_value = weather
-    weather_manager.forecast_at_coords.return_value.forecast.weathers = [
-        one_day_forecast
+    mocked_owm.weather_manager.return_value.weather_at_coords.return_value.weather = (
+        weather
+    )
+    mocked_owm.weather_manager.return_value.forecast_at_coords.return_value.forecast.weathers = [
+        weather
     ]
-
-    mocked_owm.get_weather_manager.return_value = weather_manager
 
     return mocked_owm
