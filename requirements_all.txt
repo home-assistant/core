@@ -315,7 +315,7 @@ axis==37
 azure-eventhub==5.1.0
 
 # homeassistant.components.azure_service_bus
-azure-servicebus==0.50.1
+azure-servicebus==0.50.3
 
 # homeassistant.components.baidu
 baidu-aip==1.6.6
