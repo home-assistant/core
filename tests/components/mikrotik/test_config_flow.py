@@ -156,7 +156,7 @@ async def test_host_already_configured(hass, auth_error):
         result["flow_id"], user_input=DEMO_USER_INPUT
     )
     assert result["type"] == "abort"
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "already_configured_device"
 
 
 async def test_name_exists(hass, api):
