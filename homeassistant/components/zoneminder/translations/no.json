@@ -1,15 +1,15 @@
 {
     "config": {
         "abort": {
-            "auth_fail": "Brukernavn eller passord er feil.",
-            "connection_error": "Kunne ikke koble til en ZoneMinder-server."
+            "invalid_auth": "Brukernavn eller passord er feil.",
+            "cannot_connect": "Kunne ikke koble til en ZoneMinder-server."
         },
         "create_entry": {
             "default": "ZoneMinder-serveren er lagt til."
         },
         "error": {
-            "auth_fail": "Brukernavn eller passord er feil.",
-            "connection_error": "Kunne ikke koble til en ZoneMinder-server."
+            "invalid_auth": "Brukernavn eller passord er feil.",
+            "cannot_connect": "Kunne ikke koble til en ZoneMinder-server."
         },
         "flow_title": "ZoneMinder",
         "step": {

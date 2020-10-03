@@ -45,7 +45,7 @@ async def test_import(hass: HomeAssistant) -> None:
         )
         assert result
         assert result["type"] == "abort"
-        assert result["reason"] == "auth_fail"
+        assert result["reason"] == ClientAvailabilityResult.ERROR_AUTH_FAIL.value
 
         zm_client.login.return_value = True
         result = await hass.config_entries.flow.async_init(

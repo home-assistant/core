@@ -1,15 +1,15 @@
 {
     "config": {
         "abort": {
-            "auth_fail": "Nome utente o password non corretti.",
-            "connection_error": "Impossibile connettersi a un server ZoneMinder."
+            "invalid_auth": "Nome utente o password non corretti.",
+            "cannot_connect": "Impossibile connettersi a un server ZoneMinder."
         },
         "create_entry": {
             "default": "Server ZoneMinder aggiunto."
         },
         "error": {
-            "auth_fail": "Nome utente o password non corretti.",
-            "connection_error": "Impossibile connettersi a un server ZoneMinder."
+            "invalid_auth": "Nome utente o password non corretti.",
+            "cannot_connect": "Impossibile connettersi a un server ZoneMinder."
         },
         "flow_title": "ZoneMinder",
         "step": {

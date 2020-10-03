@@ -1,15 +1,15 @@
 {
     "config": {
         "abort": {
-            "auth_fail": "L'identifiant ou le mot de passe est incorrect.",
-            "connection_error": "\u00c9chec de la connexion \u00e0 un serveur ZoneMinder."
+            "invalid_auth": "L'identifiant ou le mot de passe est incorrect.",
+            "cannot_connect": "\u00c9chec de la connexion \u00e0 un serveur ZoneMinder."
         },
         "create_entry": {
             "default": "Serveur Zoneminder ajout\u00e9."
         },
         "error": {
-            "auth_fail": "L'identifiant ou le mot de passe est incorrect.",
-            "connection_error": "\u00c9chec de la connexion \u00e0 un serveur ZoneMinder."
+            "invalid_auth": "L'identifiant ou le mot de passe est incorrect.",
+            "cannot_connect": "\u00c9chec de la connexion \u00e0 un serveur ZoneMinder."
         },
         "flow_title": "ZoneMinder",
         "step": {

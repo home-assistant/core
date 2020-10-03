@@ -1,15 +1,15 @@
 {
     "config": {
         "abort": {
-            "auth_fail": "Nombre de usuario o contrase\u00f1a incorrectos.",
-            "connection_error": "No se pudo conectar con un servidor ZoneMinder."
+            "invalid_auth": "Nombre de usuario o contrase\u00f1a incorrectos.",
+            "cannot_connect": "No se pudo conectar con un servidor ZoneMinder."
         },
         "create_entry": {
             "default": "Servidor ZoneMinder a\u00f1adido."
         },
         "error": {
-            "auth_fail": "Nombre de usuario o contrase\u00f1a incorrectos.",
-            "connection_error": "No se pudo conectar con un servidor ZoneMinder."
+            "invalid_auth": "Nombre de usuario o contrase\u00f1a incorrectos.",
+            "cannot_connect": "No se pudo conectar con un servidor ZoneMinder."
         },
         "flow_title": "ZoneMinder",
         "step": {
