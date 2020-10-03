@@ -167,6 +167,7 @@ def _stream_worker_internal(hass, stream, quit_event):
             _LOGGER.error(
                 "Error demuxing stream while finding first packet: %s", str(ex)
             )
+            finalize_stream()
             return False
         return True
 
@@ -212,7 +213,7 @@ def _stream_worker_internal(hass, stream, quit_event):
     def finalize_stream():
         if not stream.keepalive:
             # End of stream, clear listeners and stop thread
-            for fmt, _ in outputs.items():
+            for fmt in stream.outputs.keys():
                 hass.loop.call_soon_threadsafe(stream.outputs[fmt].put, None)
 
     if not peek_first_pts():
