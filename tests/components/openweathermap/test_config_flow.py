@@ -159,15 +159,12 @@ async def test_form_options(hass):
 
 async def test_form_invalid_api_key(hass):
     """Test that the form is served with no input."""
-    mocked_owm = _create_mocked_owm()
 
     with patch(
         "homeassistant.components.openweathermap.config_flow.OWM",
-        return_value=mocked_owm,
         side_effect=UnauthorizedError(""),
     ), patch(
         "homeassistant.components.openweathermap.OWM",
-        return_value=mocked_owm,
         side_effect=UnauthorizedError(""),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -179,15 +176,12 @@ async def test_form_invalid_api_key(hass):
 
 async def test_form_api_call_error(hass):
     """Test setting up with api call error."""
-    mocked_owm = _create_mocked_owm()
 
     with patch(
         "homeassistant.components.openweathermap.config_flow.OWM",
-        return_value=mocked_owm,
         side_effect=APIRequestError(""),
     ), patch(
         "homeassistant.components.openweathermap.OWM",
-        return_value=mocked_owm,
         side_effect=APIRequestError(""),
     ):
         result = await hass.config_entries.flow.async_init(

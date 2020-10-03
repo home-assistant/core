@@ -137,6 +137,4 @@ async def _is_owm_api_online(hass, api_key, latitude, longitude):
     # given location to verify that we can.
     owm = OWM(api_key)
     mgr = owm.weather_manager()
-    return await hass.async_add_executor_job(
-        lambda: mgr.weather_at_coords(latitude, longitude)
-    )
+    return await hass.async_add_executor_job(mgr.weather_at_coords, latitude, longitude)
