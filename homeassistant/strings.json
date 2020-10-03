@@ -25,6 +25,7 @@
         "confirm_setup": "Do you want to start set up?"
       },
       "data": {
+        "name": "Name",
         "email": "Email",
         "username": "Username",
         "password": "Password",
