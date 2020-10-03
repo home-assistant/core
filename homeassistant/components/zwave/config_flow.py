@@ -31,7 +31,7 @@ class ZwaveFlowHandler(config_entries.ConfigFlow):
     async def async_step_user(self, user_input=None):
         """Handle a flow start."""
         if self._async_current_entries():
-            return self.async_abort(reason="one_instance_only")
+            return self.async_abort(reason="already_configured")
 
         errors = {}
 
@@ -57,7 +57,7 @@ class ZwaveFlowHandler(config_entries.ConfigFlow):
                     )
                 )
             except ZWaveException:
-                errors["base"] = "option_error"
+                errors["base"] = "cannot_connect"
                 return self.async_show_form(
                     step_id="user", data_schema=vol.Schema(fields), errors=errors
                 )
@@ -88,7 +88,7 @@ class ZwaveFlowHandler(config_entries.ConfigFlow):
     async def async_step_import(self, info):
         """Import existing configuration from Z-Wave."""
         if self._async_current_entries():
-            return self.async_abort(reason="already_setup")
+            return self.async_abort(reason="already_configured")
 
         return self.async_create_entry(
             title="Z-Wave (import from configuration.yaml)",
