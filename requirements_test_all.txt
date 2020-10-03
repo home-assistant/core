@@ -251,7 +251,7 @@ debugpy==1.0.0rc2
 defusedxml==0.6.0
 
 # homeassistant.components.denonavr
-denonavr==0.9.4
+denonavr==0.9.5
 
 # homeassistant.components.devolo_home_control
 devolo-home-control-api==0.15.0
@@ -680,7 +680,7 @@ pyhaversion==3.4.2
 pyheos==0.6.0
 
 # homeassistant.components.homematic
-pyhomematic==0.1.69
+pyhomematic==0.1.70
 
 # homeassistant.components.icloud
 pyicloud==0.9.7
@@ -1086,7 +1086,7 @@ zigpy-xbee==0.13.0
 zigpy-zigate==0.6.2
 
 # homeassistant.components.zha
-zigpy-znp==0.2.0
+zigpy-znp==0.2.1
 
 # homeassistant.components.zha
 zigpy==0.25.0
