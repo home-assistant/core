@@ -1387,7 +1387,7 @@ def _entities_domains_from_render_infos(
     domains = set()
 
     for render_info in render_infos:
-        if render_info.time_pattern is not None or render_info.time_pattern is False:
+        if _info_has_time_pattern(render_info):
             continue
         if render_info.entities:
             entities.update(render_info.entities)
@@ -1427,7 +1427,7 @@ def _render_infos_to_track_states(render_infos: Iterable[RenderInfo]) -> TrackSt
 @callback
 def _event_triggers_rerender(event: Event, info: RenderInfo) -> bool:
     """Determine if a template should be re-rendered from an event."""
-    if info.time_pattern is not None or info.time_pattern is False:
+    if _info_has_time_pattern(info):
         return False
 
     entity_id = event.data.get(ATTR_ENTITY_ID)
@@ -1442,3 +1442,14 @@ def _event_triggers_rerender(event: Event, info: RenderInfo) -> bool:
         return False
 
     return bool(info.filter_lifecycle(entity_id))
+
+
+@callback
+def _info_has_time_pattern(info: RenderInfo) -> bool:
+    """Check for a time pattern in the render info.
+
+    If time_pattern is False, updates are disabled.
+
+    If time_pattern is not None, we have a time_pattern.
+    """
+    return info.time_pattern is not None or info.time_pattern is False
