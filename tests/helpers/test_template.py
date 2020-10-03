@@ -8,7 +8,9 @@ import pytz
 
 from homeassistant.components import group
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
+    EVENT_STATE_CHANGED,
     LENGTH_METERS,
     MASS_GRAMS,
     MATCH_ALL,
@@ -16,6 +18,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     VOLUME_LITERS,
 )
+from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template
 from homeassistant.setup import async_setup_component
@@ -1611,6 +1614,15 @@ async def test_async_render_to_info_with_wildcard_matching_entity_id(hass):
 
 async def test_async_render_to_info_with_wildcard_matching_state(hass):
     """Test tracking template with a wildcard."""
+    state_change_events = {}
+    await hass.async_block_till_done()
+
+    @callback
+    def _state_changed(event):
+        state_change_events[event.data.get(ATTR_ENTITY_ID)] = event
+
+    hass.bus.async_listen(EVENT_STATE_CHANGED, _state_changed)
+
     template_complex_str = """
 
 {% for state in states %}
@@ -1625,6 +1637,7 @@ async def test_async_render_to_info_with_wildcard_matching_state(hass):
     hass.states.async_set("cover.office_skylight", "open")
     hass.states.async_set("cover.x_skylight", "open")
     hass.states.async_set("binary_sensor.door", "open")
+    await hass.async_block_till_done()
 
     info = render_to_info(hass, template_complex_str)
 
@@ -1674,6 +1687,7 @@ async def test_async_render_to_info_with_wildcard_matching_state(hass):
     }
     assert info.all_states is False
     assert info.rate_limit == template.DEFAULT_RATE_LIMIT
+    assert info.event_triggers(state_change_events["cover.office_window"]) is True
 
 
 def test_nested_async_render_to_info_case(hass):
@@ -2472,9 +2486,29 @@ async def test_slice_states(hass):
 
 async def test_lifecycle(hass):
     """Test that we limit template render info for lifecycle events."""
+    state_change_events = {}
+
     hass.states.async_set("sun.sun", "above", {"elevation": 50, "next_rising": "later"})
     for i in range(2):
         hass.states.async_set(f"sensor.sensor{i}", "on")
+    hass.states.async_set("sensor.removed", "off")
+
+    await hass.async_block_till_done()
+
+    @callback
+    def _state_changed(event):
+        state_change_events[event.data.get(ATTR_ENTITY_ID)] = event
+
+    hass.bus.async_listen(EVENT_STATE_CHANGED, _state_changed)
+
+    hass.states.async_set("sun.sun", "below", {"elevation": 60, "next_rising": "later"})
+    for i in range(2):
+        hass.states.async_set(f"sensor.sensor{i}", "off")
+
+    hass.states.async_set("sensor.new", "off")
+    hass.states.async_remove("sensor.removed")
+
+    await hass.async_block_till_done()
 
     tmp = template.Template("{{ states | count }}", hass)
 
@@ -2482,6 +2516,8 @@ async def test_lifecycle(hass):
     assert info.all_states is False
     assert info.all_states_lifecycle is True
     assert info.rate_limit is None
+    assert info.has_time is False
+
     assert info.entities == set()
     assert info.domains == set()
     assert info.domains_lifecycle == set()
@@ -2490,6 +2526,11 @@ async def test_lifecycle(hass):
     assert info.filter("sensor.sensor1") is False
     assert info.filter_lifecycle("sensor.new") is True
     assert info.filter_lifecycle("sensor.removed") is True
+
+    assert info.event_triggers(state_change_events["sun.sun"]) is False
+    assert info.event_triggers(state_change_events["sensor.sensor1"]) is False
+    assert info.event_triggers(state_change_events["sensor.new"]) is True
+    assert info.event_triggers(state_change_events["sensor.removed"]) is True
 
 
 async def test_template_timeout(hass):
@@ -2642,3 +2683,53 @@ async def test_rate_limit(hass):
     info = tmp.async_render_to_info()
     assert info.result() == "random"
     assert info.rate_limit == timedelta(seconds=0)
+
+
+async def test_template_with_no_entities_and_now_has_default_tracking(hass):
+    """Test that a template with no entities and now has a time pattern tracker."""
+
+    info = render_to_info(hass, "{{ now() }}")
+    assert info.rate_limit is None
+    assert info.time_pattern == template.DEFAULT_TIME_PATTERN
+
+    info = render_to_info(hass, "{{ utcnow() }}")
+    assert info.rate_limit is None
+    assert info.time_pattern == template.DEFAULT_TIME_PATTERN
+
+
+async def test_manual_track_time_pattern(hass):
+    """Test we can set a manual track time pattern."""
+
+    info = render_to_info(hass, "{{ track_time_pattern(None) }}{{ now() }}")
+    assert info.rate_limit is None
+    assert info.time_pattern is False
+
+    info = render_to_info(hass, '{{ track_time_pattern("off") }}{{ now() }}')
+    assert info.rate_limit is None
+    assert info.time_pattern is False
+
+    info = render_to_info(hass, "{{ track_time_pattern() }}{{ now() }}")
+    assert info.rate_limit is None
+    assert info.time_pattern == template.TrackTimePattern("*", "*", "*")
+
+    info = render_to_info(hass, "{{ track_time_pattern() }}{{ utcnow() }}")
+    assert info.rate_limit is None
+    assert info.time_pattern == template.TrackTimePattern("*", "*", "*")
+
+    info = render_to_info(hass, "{{ track_time_pattern(seconds=0) }}{{ now() }}")
+    assert info.rate_limit is None
+    assert info.time_pattern == template.TrackTimePattern("*", "*", 0)
+
+    info = render_to_info(hass, "{{ track_time_pattern(minutes=0) }}{{ now() }}")
+    assert info.rate_limit is None
+    assert info.time_pattern == template.TrackTimePattern("*", 0, "*")
+
+    info = render_to_info(hass, "{{ track_time_pattern(hours=0) }}{{ now() }}")
+    assert info.rate_limit is None
+    assert info.time_pattern == template.TrackTimePattern(0, "*", "*")
+
+    info = render_to_info(
+        hass, "{{ track_time_pattern(hours=0, minutes=0, seconds=0) }}{{ now() }}"
+    )
+    assert info.rate_limit is None
+    assert info.time_pattern == template.TrackTimePattern(0, 0, 0)

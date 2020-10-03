@@ -954,9 +954,10 @@ class MQTT:
             msg.payload,
         )
         timestamp = dt_util.utcnow()
+        topic = msg.topic
 
         for subscription in self.subscriptions:
-            if not subscription.matcher(msg.topic):
+            if not subscription.matcher(topic):
                 continue
 
             payload: SubscribePayloadType = msg.payload
@@ -967,7 +968,7 @@ class MQTT:
                     _LOGGER.warning(
                         "Can't decode payload %s on %s with encoding %s (for %s)",
                         msg.payload,
-                        msg.topic,
+                        topic,
                         subscription.encoding,
                         subscription.callback,
                     )
@@ -976,7 +977,7 @@ class MQTT:
             self.hass.async_run_job(
                 subscription.callback,
                 Message(
-                    msg.topic,
+                    topic,
                     payload,
                     msg.qos,
                     msg.retain,

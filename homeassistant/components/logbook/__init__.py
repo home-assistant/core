@@ -51,7 +51,8 @@ import homeassistant.util.dt as dt_util
 ENTITY_ID_JSON_TEMPLATE = '"entity_id": "{}"'
 ENTITY_ID_JSON_EXTRACT = re.compile('"entity_id": "([^"]+)"')
 DOMAIN_JSON_EXTRACT = re.compile('"domain": "([^"]+)"')
-ICON_JSON_EXTRACT = re.compile('"icon": "([^"]+)"')
+ICON_JSON = '"icon": "'
+ICON_JSON_EXTRACT = re.compile(f'{ICON_JSON}([^"]+)"')
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -424,7 +425,6 @@ def _get_events(
     entity_matches_only=False,
 ):
     """Get events for a period of time."""
-
     entity_attr_cache = EntityAttributeCache(hass)
     context_lookup = {None: None}
 

@@ -6,6 +6,7 @@ from smart_meter_texas import Account, Client
 from smart_meter_texas.exceptions import (
     SmartMeterTexasAPIError,
     SmartMeterTexasAuthError,
+    SmartMeterTexasRateLimitError,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -51,7 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     except SmartMeterTexasAuthError:
         _LOGGER.error("Username or password was not accepted")
         return False
-    except asyncio.TimeoutError as error:
+    except (SmartMeterTexasRateLimitError, asyncio.TimeoutError) as error:
         raise ConfigEntryNotReady from error
 
     await smart_meter_texas_data.setup()

@@ -115,6 +115,7 @@ class ActiveConnection:
         elif isinstance(err, vol.Invalid):
             code = const.ERR_INVALID_FORMAT
             err_message = vol.humanize.humanize_error(msg, err)
+            log_handler = self.logger.exception
         elif isinstance(err, asyncio.TimeoutError):
             code = const.ERR_TIMEOUT
             err_message = "Timeout"

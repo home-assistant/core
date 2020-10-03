@@ -1588,6 +1588,9 @@ pypjlink2==1.2.1
 # homeassistant.components.point
 pypoint==1.1.2
 
+# homeassistant.components.profiler
+pyprof2calltree==1.4.5
+
 # homeassistant.components.ps4
 pyps4-2ndscreen==1.1.1
 
@@ -2018,7 +2021,7 @@ sleepyq==0.7
 slixmpp==1.5.2
 
 # homeassistant.components.smart_meter_texas
-smart-meter-texas==0.4.0
+smart-meter-texas==0.4.3
 
 # homeassistant.components.smarthab
 smarthab==0.21

@@ -473,6 +473,43 @@ async def test_render_template_manual_entity_ids_no_longer_needed(
     }
 
 
+async def test_render_template_with_rate_limit(hass, websocket_client):
+    """Test that updates to specified entity ids cause a template rerender."""
+    hass.states.async_set("light.test", "on")
+
+    await websocket_client.send_json(
+        {
+            "id": 5,
+            "type": "render_template",
+            "template": "State is: {{ states('light.test') }}",
+            "rate_limit": 1,
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 5
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 5
+    assert msg["type"] == "event"
+    event = msg["event"]
+    assert event == {
+        "result": "State is: on",
+        "listeners": {"all": False, "domains": [], "entities": ["light.test"]},
+    }
+    hass.states.async_set("light.test", "off")
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 5
+    assert msg["type"] == "event"
+    event = msg["event"]
+    assert event == {
+        "result": "State is: off",
+        "listeners": {"all": False, "domains": [], "entities": ["light.test"]},
+    }
+
+
 async def test_render_template_with_error(hass, websocket_client, caplog):
     """Test a template with an error."""
     await websocket_client.send_json(

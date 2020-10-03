@@ -93,6 +93,9 @@ import homeassistant.util.dt as dt_util
 # pylint: disable=invalid-name
 
 TIME_PERIOD_ERROR = "offset {} should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F'"
+TIME_PATTERN_HOURS_MAX = 23
+TIME_PATTERN_MINUTES_MAX = 59
+TIME_PATTERN_SECONDS_MAX = 59
 
 # Home Assistant types
 byte = vol.All(vol.Coerce(int), vol.Range(min=0, max=255))
@@ -155,6 +158,10 @@ def boolean(value: Any) -> bool:
             return True
         if value in ("0", "false", "no", "off", "disable"):
             return False
+        try:
+            return float(value) != 0
+        except ValueError:
+            pass
     elif isinstance(value, Number):
         # type ignore: https://github.com/python/mypy/issues/3186
         return value != 0  # type: ignore
@@ -527,7 +534,7 @@ def template(value: Optional[Any]) -> template_helper.Template:
 
     try:
         template_value.ensure_valid()
-        return cast(template_helper.Template, template_value)
+        return template_value
     except TemplateError as ex:
         raise vol.Invalid(f"invalid template ({ex})") from ex
 
@@ -545,7 +552,7 @@ def dynamic_template(value: Optional[Any]) -> template_helper.Template:
     template_value = template_helper.Template(str(value))  # type: ignore
     try:
         template_value.ensure_valid()
-        return cast(template_helper.Template, template_value)
+        return template_value
     except TemplateError as ex:
         raise vol.Invalid(f"invalid template ({ex})") from ex
 
@@ -675,6 +682,35 @@ class multi_select:
                 raise vol.Invalid(f"{value} is not a valid option")
 
         return selected
+
+
+class TimePattern:
+    """Validate a time pattern value.
+
+    :raises Invalid: If the value has a wrong format or is outside the range.
+    """
+
+    def __init__(self, maximum: int) -> None:
+        """Initialize time pattern."""
+        self.maximum = maximum
+
+    def __call__(self, value: Any) -> Any:
+        """Validate input."""
+        try:
+            if value == "*":
+                return value
+
+            if isinstance(value, str) and value.startswith("/"):
+                number = int(value[1:])
+            else:
+                value = number = int(value)
+
+            if not (0 <= number <= self.maximum):
+                raise vol.Invalid(f"must be a value between 0 and {self.maximum}")
+        except ValueError as err:
+            raise vol.Invalid("invalid time_pattern value") from err
+
+        return value
 
 
 def deprecated(

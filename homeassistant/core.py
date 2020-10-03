@@ -531,7 +531,7 @@ class EventOrigin(enum.Enum):
 class Event:
     """Representation of an event within the bus."""
 
-    __slots__ = ["event_type", "data", "origin", "time_fired", "context"]
+    __slots__ = ["__weakref__", "event_type", "data", "origin", "time_fired", "context"]
 
     def __init__(
         self,
@@ -626,6 +626,7 @@ class EventBus:
         event_data: Optional[Dict] = None,
         origin: EventOrigin = EventOrigin.local,
         context: Optional[Context] = None,
+        time_fired: Optional[datetime.datetime] = None,
     ) -> None:
         """Fire an event.
 
@@ -638,7 +639,7 @@ class EventBus:
         if match_all_listeners is not None and event_type != EVENT_HOMEASSISTANT_CLOSE:
             listeners = match_all_listeners + listeners
 
-        event = Event(event_type, event_data, origin, None, context)
+        event = Event(event_type, event_data, origin, time_fired, context)
 
         if event_type != EVENT_TIME_CHANGED:
             _LOGGER.debug("Bus:Handling %s", event)
@@ -1643,13 +1644,18 @@ def _async_create_timer(hass: HomeAssistant) -> None:
         """Fire next time event."""
         now = dt_util.utcnow()
 
-        hass.bus.async_fire(EVENT_TIME_CHANGED, {ATTR_NOW: now}, context=timer_context)
+        hass.bus.async_fire(
+            EVENT_TIME_CHANGED, {ATTR_NOW: now}, time_fired=now, context=timer_context
+        )
 
         # If we are more than a second late, a tick was missed
         late = monotonic() - target
         if late > 1:
             hass.bus.async_fire(
-                EVENT_TIMER_OUT_OF_SYNC, {ATTR_SECONDS: late}, context=timer_context
+                EVENT_TIMER_OUT_OF_SYNC,
+                {ATTR_SECONDS: late},
+                time_fired=now,
+                context=timer_context,
             )
 
         schedule_tick(now)

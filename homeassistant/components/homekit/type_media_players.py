@@ -280,7 +280,9 @@ class TelevisionMediaPlayer(HomeAccessory):
 
         serv_tv = self.add_preload_service(SERV_TELEVISION, self.chars_tv)
         self.set_primary_service(serv_tv)
+        serv_tv.configure_char(CHAR_CONFIGURED_NAME, value=self.display_name)
         serv_tv.configure_char(CHAR_SLEEP_DISCOVER_MODE, value=True)
+
         self.char_active = serv_tv.configure_char(
             CHAR_ACTIVE, setter_callback=self.set_on_off
         )
@@ -333,7 +335,7 @@ class TelevisionMediaPlayer(HomeAccessory):
                 serv_input.configure_char(CHAR_IS_CONFIGURED, value=True)
                 input_type = 3 if "hdmi" in source.lower() else 0
                 serv_input.configure_char(CHAR_INPUT_SOURCE_TYPE, value=input_type)
-                serv_input.configure_char(CHAR_CURRENT_VISIBILITY_STATE, value=False)
+                serv_input.configure_char(CHAR_CURRENT_VISIBILITY_STATE, value=True)
                 _LOGGER.debug("%s: Added source %s", self.entity_id, source)
 
         self.async_update_state(state)

@@ -1,8 +1,11 @@
 """The tests for the EntityFilter component."""
+import re
+
 from homeassistant.helpers.entityfilter import (
     FILTER_SCHEMA,
     INCLUDE_EXCLUDE_FILTER_SCHEMA,
     generate_filter,
+    test_against_patterns as against_patterns,
 )
 
 
@@ -248,3 +251,11 @@ def test_filter_schema_include_exclude():
     }
     filt = INCLUDE_EXCLUDE_FILTER_SCHEMA(conf)
     assert filt.config == conf
+
+
+def test_test_against_patterns():
+    """Verify test_against_patterns checks all patterns."""
+    patterns = [re.compile(r"a\.a"), re.compile(r"b\..*")]
+    assert against_patterns(patterns, "a.a") is True
+    assert against_patterns(patterns, "a.b") is False
+    assert against_patterns(patterns, "b.a") is True

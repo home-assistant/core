@@ -390,6 +390,7 @@ class Integration:
         """Return the component."""
         cache = self.hass.data.setdefault(DATA_COMPONENTS, {})
         if self.domain not in cache:
+            _LOGGER.info("Imported %s from %s", self.domain, self.pkg_path)
             cache[self.domain] = importlib.import_module(self.pkg_path)
         return cache[self.domain]  # type: ignore
 

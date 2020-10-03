@@ -2,6 +2,7 @@
 import json
 import logging
 
+import pytz
 from sqlalchemy import (
     Boolean,
     Column,
@@ -37,6 +38,8 @@ TABLE_RECORDER_RUNS = "recorder_runs"
 TABLE_SCHEMA_CHANGES = "schema_changes"
 
 ALL_TABLES = [TABLE_EVENTS, TABLE_STATES, TABLE_RECORDER_RUNS, TABLE_SCHEMA_CHANGES]
+
+UTC = pytz.utc
 
 
 class Events(Base):  # type: ignore
@@ -212,7 +215,7 @@ def process_timestamp(ts):
     if ts is None:
         return None
     if ts.tzinfo is None:
-        return ts.replace(tzinfo=dt_util.UTC)
+        return ts.replace(tzinfo=UTC)
 
     return dt_util.as_utc(ts)
 

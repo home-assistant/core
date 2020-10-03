@@ -3,6 +3,6 @@
   "name": "Dyson",
   "documentation": "https://www.home-assistant.io/integrations/dyson",
   "requirements": ["libpurecool==0.6.3"],
-  "after_dependencies": ["zeroconf"],
+  "dependencies": ["zeroconf"],
   "codeowners": ["@etheralm"]
 }

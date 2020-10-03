@@ -1,14 +1,16 @@
 """Test Websocket API messages module."""
 
+import zlib
+
 from homeassistant.components.websocket_api.messages import (
-    cached_event_message,
+    cached_compressed_event_message,
     message_to_json,
 )
 from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.core import callback
 
 
-async def test_cached_event_message(hass):
+async def test_cached_compressed_event_message(hass):
     """Test that we cache event messages."""
 
     events = []
@@ -25,21 +27,23 @@ async def test_cached_event_message(hass):
 
     assert len(events) == 2
 
-    msg0 = cached_event_message(2, events[0])
-    assert msg0 == cached_event_message(2, events[0])
+    compressobj = zlib.compressobj()
 
-    msg1 = cached_event_message(2, events[1])
-    assert msg1 == cached_event_message(2, events[1])
+    msg0 = cached_compressed_event_message(compressobj, 2, events[0])
+    assert msg0 == cached_compressed_event_message(compressobj, 2, events[0])
+
+    msg1 = cached_compressed_event_message(compressobj, 2, events[1])
+    assert msg1 == cached_compressed_event_message(compressobj, 2, events[1])
 
     assert msg0 != msg1
 
-    cache_info = cached_event_message.cache_info()
+    cache_info = cached_compressed_event_message.cache_info()
     assert cache_info.hits == 2
     assert cache_info.misses == 2
     assert cache_info.currsize == 2
 
-    cached_event_message(2, events[1])
-    cache_info = cached_event_message.cache_info()
+    cached_compressed_event_message(compressobj, 2, events[1])
+    cache_info = cached_compressed_event_message.cache_info()
     assert cache_info.hits == 3
     assert cache_info.misses == 2
     assert cache_info.currsize == 2
