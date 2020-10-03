@@ -180,4 +180,4 @@ class VikingData:
                 .isoformat()
             )
         except Exception as e:
-            _LOGGER.error("Error on receive last MobileVikings data: %", e)
+            _LOGGER.error("Error on receive last MobileVikings data: %s", e)
