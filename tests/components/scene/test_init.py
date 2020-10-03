@@ -7,6 +7,7 @@ from homeassistant.components import light, scene
 from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, SERVICE_TURN_ON
 from homeassistant.setup import async_setup_component
 from homeassistant.util.yaml import loader as yaml_loader
+
 from tests.common import async_mock_service
 
 
