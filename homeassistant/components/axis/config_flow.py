@@ -94,7 +94,7 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
                 return await self._create_entry()
 
             except AuthenticationRequired:
-                errors["base"] = "faulty_credentials"
+                errors["base"] = "invalid_auth"
 
             except CannotConnect:
                 errors["base"] = "device_unavailable"

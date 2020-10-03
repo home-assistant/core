@@ -139,7 +139,7 @@ async def test_flow_fails_faulty_credentials(hass):
             },
         )
 
-    assert result["errors"] == {"base": "faulty_credentials"}
+    assert result["errors"] == {"base": "invalid_auth"}
 
 
 async def test_flow_fails_device_unavailable(hass):
