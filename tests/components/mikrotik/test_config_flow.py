@@ -156,7 +156,7 @@ async def test_host_already_configured(hass, auth_error):
         result["flow_id"], user_input=DEMO_USER_INPUT
     )
     assert result["type"] == "abort"
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "already_configured_device"
 
 
 async def test_name_exists(hass, api):
@@ -203,6 +203,6 @@ async def test_wrong_credentials(hass, auth_error):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {
-        CONF_USERNAME: "wrong_credentials",
-        CONF_PASSWORD: "wrong_credentials",
+        CONF_USERNAME: "invalid_auth",
+        CONF_PASSWORD: "invalid_auth",
     }
