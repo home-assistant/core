@@ -1,5 +1,11 @@
 """Web socket API for OpenZWave."""
-from openzwavemqtt.const import EVENT_NODE_ADDED, EVENT_NODE_CHANGED
+from openzwavemqtt.const import (
+    ATTR_LABEL,
+    ATTR_POSITION,
+    ATTR_VALUE,
+    EVENT_NODE_ADDED,
+    EVENT_NODE_CHANGED,
+)
 from openzwavemqtt.exceptions import NotFoundError, NotSupportedError
 from openzwavemqtt.util.node import (
     get_config_parameters,
@@ -142,8 +148,21 @@ def websocket_get_config_parameters(hass, connection, msg):
         vol.Optional(OZW_INSTANCE, default=1): vol.Coerce(int),
         vol.Required(PARAMETER): vol.Coerce(int),
         vol.Required(VALUE): vol.Any(
-            bool,
+            vol.All(
+                cv.ensure_list,
+                [
+                    vol.All(
+                        {
+                            vol.Exclusive(ATTR_LABEL, "bit"): cv.string,
+                            vol.Exclusive(ATTR_POSITION, "bit"): vol.Coerce(int),
+                            vol.Required(ATTR_VALUE): bool,
+                        },
+                        cv.has_at_least_one_key(ATTR_LABEL, ATTR_POSITION),
+                    )
+                ],
+            ),
             vol.Coerce(int),
+            bool,
             cv.string,
         ),
     }

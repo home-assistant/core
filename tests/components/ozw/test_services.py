@@ -1,5 +1,6 @@
 """Test Z-Wave Services."""
-from openzwavemqtt.exceptions import InvalidValueError, WrongTypeError
+from openzwavemqtt.const import ATTR_POSITION, ATTR_VALUE
+from openzwavemqtt.exceptions import InvalidValueError, NotFoundError, WrongTypeError
 import pytest
 
 from .common import setup_ozw
@@ -46,7 +47,7 @@ async def test_services(hass, light_data, sent_messages):
     assert msg["payload"] == {"Value": 55, "ValueIDKey": 844425594667027}
 
     # Test set_config_parameter invalid list int
-    with pytest.raises(WrongTypeError):
+    with pytest.raises(NotFoundError):
         assert await hass.services.async_call(
             "ozw",
             "set_config_parameter",
@@ -55,12 +56,26 @@ async def test_services(hass, light_data, sent_messages):
         )
     assert len(sent_messages) == 3
 
-    # Test set_config_parameter invalid list string
-    with pytest.raises(WrongTypeError):
+    # Test set_config_parameter invalid list value
+    with pytest.raises(NotFoundError):
         assert await hass.services.async_call(
             "ozw",
             "set_config_parameter",
             {"node_id": 39, "parameter": 1, "value": "Blah"},
+            blocking=True,
+        )
+    assert len(sent_messages) == 3
+
+    # Test set_config_parameter invalid list value type
+    with pytest.raises(WrongTypeError):
+        assert await hass.services.async_call(
+            "ozw",
+            "set_config_parameter",
+            {
+                "node_id": 39,
+                "parameter": 1,
+                "value": {ATTR_VALUE: True, ATTR_POSITION: 1},
+            },
             blocking=True,
         )
     assert len(sent_messages) == 3

@@ -1,6 +1,7 @@
 """Methods and classes related to executing Z-Wave commands and publishing these to hass."""
 import logging
 
+from openzwavemqtt.const import ATTR_LABEL, ATTR_POSITION, ATTR_VALUE
 from openzwavemqtt.util.node import get_node_from_manager, set_config_parameter
 import voluptuous as vol
 
@@ -53,8 +54,23 @@ class ZWaveServices:
                     vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
                     vol.Required(const.ATTR_CONFIG_PARAMETER): vol.Coerce(int),
                     vol.Required(const.ATTR_CONFIG_VALUE): vol.Any(
-                        bool,
+                        vol.All(
+                            cv.ensure_list,
+                            [
+                                vol.All(
+                                    {
+                                        vol.Exclusive(ATTR_LABEL, "bit"): cv.string,
+                                        vol.Exclusive(ATTR_POSITION, "bit"): vol.Coerce(
+                                            int
+                                        ),
+                                        vol.Required(ATTR_VALUE): bool,
+                                    },
+                                    cv.has_at_least_one_key(ATTR_LABEL, ATTR_POSITION),
+                                )
+                            ],
+                        ),
                         vol.Coerce(int),
+                        bool,
                         cv.string,
                     ),
                 }
