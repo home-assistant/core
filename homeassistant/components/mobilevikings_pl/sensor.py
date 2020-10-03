@@ -31,7 +31,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
 
 SENSOR_TYPES = {
     "balance": ["Balance", "PLN", "mdi:cash-usd"],
-    "data_available": ["Data available", DATA_GIGABYTES, "mdi:download"],
+    "data_available": ["Data available", DATA_GIGABYTES, "mdi:cellphone-arrow-down"],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
