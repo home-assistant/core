@@ -54,16 +54,16 @@ async def async_setup_entry(
             entities.append(HomematicipSwitch(hap, device))
         elif isinstance(device, AsyncOpenCollector8Module):
             for channel in range(1, 9):
-                entities.append(HomematicipMultiSwitch(hap, device, channel))
+                entities.append(HomematicipMultiSwitch(hap, device, channel=channel))
         elif isinstance(device, AsyncHeatingSwitch2):
             for channel in range(1, 3):
-                entities.append(HomematicipMultiSwitch(hap, device, channel))
+                entities.append(HomematicipMultiSwitch(hap, device, channel=channel))
         elif isinstance(device, AsyncMultiIOBox):
             for channel in range(1, 3):
-                entities.append(HomematicipMultiSwitch(hap, device, channel))
+                entities.append(HomematicipMultiSwitch(hap, device, channel=channel))
         elif isinstance(device, AsyncPrintedCircuitBoardSwitch2):
             for channel in range(1, 3):
-                entities.append(HomematicipMultiSwitch(hap, device, channel))
+                entities.append(HomematicipMultiSwitch(hap, device, channel=channel))
 
     for group in hap.home.groups:
         if isinstance(group, (AsyncExtendedLinkedSwitchingGroup, AsyncSwitchingGroup)):
@@ -156,31 +156,17 @@ class HomematicipMultiSwitch(HomematicipGenericEntity, SwitchEntity):
 
     def __init__(self, hap: HomematicipHAP, device, channel: int) -> None:
         """Initialize the multi switch device."""
-        self.channel = channel
-        super().__init__(hap, device, f"Channel{channel}")
-
-    @property
-    def name(self) -> str:
-        """Return the name of the multi switch channel."""
-        label = self._get_label_by_channel(self.channel)
-        if label:
-            return label
-        return super().name
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return f"{self.__class__.__name__}_{self.post}_{self._device.id}"
+        super().__init__(hap, device, channel=channel)
 
     @property
     def is_on(self) -> bool:
         """Return true if switch is on."""
-        return self._device.functionalChannels[self.channel].on
+        return self._device.functionalChannels[self._channel].on
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn the switch on."""
-        await self._device.turn_on(self.channel)
+        await self._device.turn_on(self._channel)
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the switch off."""
-        await self._device.turn_off(self.channel)
+        await self._device.turn_off(self._channel)
