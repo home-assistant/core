@@ -19,7 +19,7 @@
       "unknown_client_mac": "No client available on that MAC address"
     },
     "abort": {
-      "already_configured": "Controller site is already configured"
+      "already_configured": "[%key:common::config_flow::abort::already_configured%]"
     }
   },
   "options": {
