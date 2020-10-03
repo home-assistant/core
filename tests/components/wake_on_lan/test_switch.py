@@ -120,16 +120,6 @@ async def test_valid_hostname_windows(hass):
     assert STATE_ON == state.state
 
 
-async def test_minimal_config(hass):
-    """Test with minimal config."""
-
-    assert await async_setup_component(
-        hass,
-        switch.DOMAIN,
-        {"switch": {"platform": "wake_on_lan", "mac": "00-01-02-03-04-05"}},
-    )
-
-
 async def test_broadcast_config_ip_and_port(hass):
     """Test with broadcast address and broadcast port config."""
     global TEST_STATE
