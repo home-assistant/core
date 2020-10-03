@@ -1,7 +1,7 @@
 """Support for Canary sensors."""
 from canary.api import SensorType
 
-from homeassistant.const import TEMP_CELSIUS, UNIT_PERCENTAGE
+from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 
@@ -21,10 +21,10 @@ CANARY_FLEX = "Canary Flex"
 # sensor type name, unit_of_measurement, icon
 SENSOR_TYPES = [
     ["temperature", TEMP_CELSIUS, "mdi:thermometer", [CANARY_PRO]],
-    ["humidity", UNIT_PERCENTAGE, "mdi:water-percent", [CANARY_PRO]],
+    ["humidity", PERCENTAGE, "mdi:water-percent", [CANARY_PRO]],
     ["air_quality", None, "mdi:weather-windy", [CANARY_PRO]],
     ["wifi", "dBm", "mdi:wifi", [CANARY_FLEX]],
-    ["battery", UNIT_PERCENTAGE, "mdi:battery-50", [CANARY_FLEX]],
+    ["battery", PERCENTAGE, "mdi:battery-50", [CANARY_FLEX]],
 ]
 
 STATE_AIR_QUALITY_NORMAL = "normal"

@@ -6,7 +6,7 @@
             "unknown": "Se ha producido un error desconocido."
         },
         "error": {
-            "invalid_pin": "PIN no v\u00e1lido, por favor int\u00e9ntalo de nuevo.",
+            "invalid_sgtin_or_pin": "PIN no v\u00e1lido, por favor int\u00e9ntalo de nuevo.",
             "press_the_button": "Por favor, pulsa el bot\u00f3n azul",
             "register_failed": "No se pudo registrar, por favor intentelo de nuevo.",
             "timeout_button": "Tiempo de espera agotado desde que se apret\u00f3 el bot\u00f3n azul, por favor, int\u00e9ntalo de nuevo."

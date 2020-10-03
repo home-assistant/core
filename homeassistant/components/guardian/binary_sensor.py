@@ -90,7 +90,7 @@ class GuardianBinarySensor(GuardianEntity, BinarySensorEntity):
     def _async_update_from_latest_data(self) -> None:
         """Update the entity."""
         if self._kind == SENSOR_KIND_AP_INFO:
-            self._is_on = self._coordinators[API_WIFI_STATUS].data["ap_enabled"]
+            self._is_on = self._coordinators[API_WIFI_STATUS].data["station_connected"]
             self._attrs.update(
                 {
                     ATTR_CONNECTED_CLIENTS: self._coordinators[API_WIFI_STATUS].data[

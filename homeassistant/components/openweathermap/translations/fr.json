@@ -1,0 +1,29 @@
+{
+    "config": {
+        "error": {
+            "auth": "La cl\u00e9 API n'est pas correcte."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "language": "Langue",
+                    "latitude": "Latitude",
+                    "longitude": "Longitude",
+                    "mode": "Mode",
+                    "name": "Nom de l'int\u00e9gration"
+                },
+                "title": "OpenWeatherMap"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "language": "Langue",
+                    "mode": "Mode"
+                }
+            }
+        }
+    }
+}

@@ -21,7 +21,7 @@
             "link": {
                 "data": {
                     "password": "Contrase\u00f1a",
-                    "port": "Puerto (opcional)",
+                    "port": "Puerto",
                     "ssl": "Usar SSL/TLS para conectar con tu NAS",
                     "username": "Usuario"
                 },
@@ -32,7 +32,7 @@
                 "data": {
                     "host": "Host",
                     "password": "Contrase\u00f1a",
-                    "port": "Puerto (opcional)",
+                    "port": "Puerto",
                     "ssl": "Usar SSL/TLS para conectar con tu NAS",
                     "username": "Usuario"
                 },

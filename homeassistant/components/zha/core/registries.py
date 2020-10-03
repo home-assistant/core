@@ -240,12 +240,9 @@ class MatchRule:
         return matches
 
 
-RegistryDictType = Dict[
-    str, Dict[MatchRule, CALLABLE_T]
-]  # pylint: disable=invalid-name
+RegistryDictType = Dict[str, Dict[MatchRule, CALLABLE_T]]
 
-
-GroupRegistryDictType = Dict[str, CALLABLE_T]  # pylint: disable=invalid-name
+GroupRegistryDictType = Dict[str, CALLABLE_T]
 
 
 class ZHAEntityRegistry:

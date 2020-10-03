@@ -32,7 +32,9 @@ async def test_light(
     assert hass.states.get(entity_id).state == "off"
 
     await hass.services.async_call(
-        "light", "turn_on", {"entity_id": entity_id},
+        "light",
+        "turn_on",
+        {"entity_id": entity_id},
     )
     await hass.async_block_till_done()
     vera_device.switch_on.assert_called()
@@ -42,7 +44,9 @@ async def test_light(
     assert hass.states.get(entity_id).state == "on"
 
     await hass.services.async_call(
-        "light", "turn_on", {"entity_id": entity_id, ATTR_HS_COLOR: [300, 70]},
+        "light",
+        "turn_on",
+        {"entity_id": entity_id, ATTR_HS_COLOR: [300, 70]},
     )
     await hass.async_block_till_done()
     vera_device.set_color.assert_called_with((255, 76, 255))
@@ -54,7 +58,9 @@ async def test_light(
     assert hass.states.get(entity_id).attributes["hs_color"] == (300.0, 70.196)
 
     await hass.services.async_call(
-        "light", "turn_on", {"entity_id": entity_id, ATTR_BRIGHTNESS: 55},
+        "light",
+        "turn_on",
+        {"entity_id": entity_id, ATTR_BRIGHTNESS: 55},
     )
     await hass.async_block_till_done()
     vera_device.set_brightness.assert_called_with(55)
@@ -66,7 +72,9 @@ async def test_light(
     assert hass.states.get(entity_id).attributes["brightness"] == 55
 
     await hass.services.async_call(
-        "light", "turn_off", {"entity_id": entity_id},
+        "light",
+        "turn_off",
+        {"entity_id": entity_id},
     )
     await hass.async_block_till_done()
     vera_device.switch_off.assert_called()

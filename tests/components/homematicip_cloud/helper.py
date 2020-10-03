@@ -13,7 +13,7 @@ from homematicip.home import Home
 
 from homeassistant import config_entries
 from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
-from homeassistant.components.homematicip_cloud.device import (
+from homeassistant.components.homematicip_cloud.generic_entity import (
     ATTR_IS_GROUP,
     ATTR_MODEL_TYPE,
 )

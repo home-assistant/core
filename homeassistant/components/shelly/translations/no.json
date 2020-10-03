@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert"
+        },
+        "error": {
+            "auth_not_supported": "Shelly-enheter som krever godkjenning st\u00f8ttes for \u00f8yeblikket ikke.",
+            "cannot_connect": "Tilkobling mislyktes.",
+            "invalid_auth": "Ugyldig godkjenning",
+            "unknown": "Uventet feil"
+        },
+        "flow_title": "Shelly: {name}",
+        "step": {
+            "confirm_discovery": {
+                "description": "Vil du konfigurere {model} p\u00e5 {host}?"
+            },
+            "credentials": {
+                "data": {
+                    "password": "Passord",
+                    "username": "Brukernavn"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Vert"
+                }
+            }
+        }
+    },
+    "title": "Shelly"
+}

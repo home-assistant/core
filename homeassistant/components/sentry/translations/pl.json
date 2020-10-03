@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Sentry jest ju\u017c skonfigurowane."
+            "already_configured": "Sentry jest ju\u017c skonfigurowane.",
+            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
         },
         "error": {
             "bad_dsn": "Nieprawid\u0142owy DSN",

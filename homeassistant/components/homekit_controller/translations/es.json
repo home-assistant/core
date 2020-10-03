@@ -15,17 +15,34 @@
             "max_peers_error": "El dispositivo rechaz\u00f3 el emparejamiento ya que no tiene almacenamiento de emparejamientos libres.",
             "max_tries_error": "El dispositivo rechaz\u00f3 el emparejamiento ya que ha recibido m\u00e1s de 100 intentos de autenticaci\u00f3n fallidos.",
             "pairing_failed": "Se ha producido un error no controlado al intentar emparejarse con este dispositivo. Esto puede ser un fallo temporal o que tu dispositivo no est\u00e9 admitido en este momento.",
+            "protocol_error": "Error de comunicaci\u00f3n con el accesorio. El dispositivo puede no estar en modo de emparejamiento y puede requerir una pulsaci\u00f3n de bot\u00f3n f\u00edsica o virtual.",
             "unable_to_pair": "No se ha podido emparejar, por favor int\u00e9ntelo de nuevo.",
             "unknown_error": "El dispositivo report\u00f3 un error desconocido. La vinculaci\u00f3n ha fallado."
         },
         "flow_title": "Accesorio HomeKit: {name}",
         "step": {
+            "busy_error": {
+                "description": "Interrumpe el emparejamiento en todos los controladores o intenta reiniciar el dispositivo y luego contin\u00faa con el emparejamiento.",
+                "title": "El dispositivo ya est\u00e1 emparejando con otro controlador"
+            },
+            "max_tries_error": {
+                "description": "El dispositivo ha recibido m\u00e1s de 100 intentos de autenticaci\u00f3n fallidos. Intenta reiniciar el dispositivo, luego contin\u00faa para reanudar el emparejamiento.",
+                "title": "M\u00e1ximo n\u00famero de intentos de autenticaci\u00f3n superados"
+            },
             "pair": {
                 "data": {
                     "pairing_code": "C\u00f3digo de vinculaci\u00f3n"
                 },
                 "description": "Introduce tu c\u00f3digo de vinculaci\u00f3n de HomeKit (en este formato XXX-XX-XXX) para usar este accesorio",
                 "title": "Vincular con accesorio HomeKit"
+            },
+            "protocol_error": {
+                "description": "Es posible que el dispositivo no est\u00e9 en modo de emparejamiento y que requiera que se presione un bot\u00f3n f\u00edsico o virtual. Aseg\u00farate de que el dispositivo est\u00e1 en modo de emparejamiento o intenta reiniciar el dispositivo, luego contin\u00faa para reanudar el emparejamiento.",
+                "title": "Error al comunicarse con el accesorio"
+            },
+            "try_pair_later": {
+                "description": "Aseg\u00farate de que el dispositivo est\u00e1 en modo de emparejamiento o reinicia el dispositivo y vuelve a intentar el emparejamiento.",
+                "title": "Emparejamiento no disponible"
             },
             "user": {
                 "data": {

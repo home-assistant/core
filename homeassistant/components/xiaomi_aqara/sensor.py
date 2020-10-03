@@ -2,26 +2,31 @@
 import logging
 
 from homeassistant.const import (
+    ATTR_BATTERY_LEVEL,
+    DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
+    DEVICE_CLASS_POWER,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
+    PERCENTAGE,
+    POWER_WATT,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
 )
 
 from . import XiaomiDevice
-from .const import DOMAIN, GATEWAYS_KEY
+from .const import BATTERY_MODELS, DOMAIN, GATEWAYS_KEY, POWER_MODELS
 
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {
     "temperature": [TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE],
-    "humidity": [UNIT_PERCENTAGE, None, DEVICE_CLASS_HUMIDITY],
+    "humidity": [PERCENTAGE, None, DEVICE_CLASS_HUMIDITY],
     "illumination": ["lm", None, DEVICE_CLASS_ILLUMINANCE],
     "lux": ["lx", None, DEVICE_CLASS_ILLUMINANCE],
     "pressure": ["hPa", None, DEVICE_CLASS_PRESSURE],
     "bed_activity": ["μm", None, None],
+    "load_power": [POWER_WATT, None, DEVICE_CLASS_POWER],
 }
 
 
@@ -79,6 +84,20 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             )
         else:
             _LOGGER.warning("Unmapped Device Model")
+
+    # Set up battery sensors
+    for devices in gateway.devices.values():
+        for device in devices:
+            if device["model"] in BATTERY_MODELS:
+                entities.append(
+                    XiaomiBatterySensor(device, "Battery", gateway, config_entry)
+                )
+            if device["model"] in POWER_MODELS:
+                entities.append(
+                    XiaomiSensor(
+                        device, "Load Power", "load_power", gateway, config_entry
+                    )
+                )
     async_add_entities(entities)
 
 
@@ -144,3 +163,37 @@ class XiaomiSensor(XiaomiDevice):
         else:
             self._state = round(value, 1)
         return True
+
+
+class XiaomiBatterySensor(XiaomiDevice):
+    """Representation of a XiaomiSensor."""
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of this entity, if any."""
+        return PERCENTAGE
+
+    @property
+    def device_class(self):
+        """Return the device class of this entity."""
+        return DEVICE_CLASS_BATTERY
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        return self._state
+
+    def parse_data(self, data, raw_data):
+        """Parse data sent by gateway."""
+        succeed = super().parse_voltage(data)
+        if not succeed:
+            return False
+        battery_level = int(self._device_state_attributes.pop(ATTR_BATTERY_LEVEL))
+        if battery_level <= 0 or battery_level > 100:
+            return False
+        self._state = battery_level
+        return True
+
+    def parse_voltage(self, data):
+        """Parse battery level data sent by gateway."""
+        return False  # Override parse_voltage to do nothing

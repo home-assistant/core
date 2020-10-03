@@ -225,6 +225,8 @@ DISCOVERY_SCHEMAS = (
         const.DISC_SPECIFIC_DEVICE_CLASS: (
             const_ozw.SPECIFIC_TYPE_POWER_SWITCH_MULTILEVEL,
             const_ozw.SPECIFIC_TYPE_SCENE_SWITCH_MULTILEVEL,
+            const_ozw.SPECIFIC_TYPE_COLOR_TUNABLE_BINARY,
+            const_ozw.SPECIFIC_TYPE_COLOR_TUNABLE_MULTILEVEL,
             const_ozw.SPECIFIC_TYPE_NOT_USED,
         ),
         const.DISC_VALUES: {
@@ -246,6 +248,16 @@ DISCOVERY_SCHEMAS = (
             "color_channels": {
                 const.DISC_COMMAND_CLASS: (CommandClass.SWITCH_COLOR,),
                 const.DISC_INDEX: ValueIndex.SWITCH_COLOR_CHANNELS,
+                const.DISC_OPTIONAL: True,
+            },
+            "min_kelvin": {
+                const.DISC_COMMAND_CLASS: (CommandClass.CONFIGURATION,),
+                const.DISC_INDEX: 81,  # PR for upstream to add SWITCH_COLOR_CT_WARM
+                const.DISC_OPTIONAL: True,
+            },
+            "max_kelvin": {
+                const.DISC_COMMAND_CLASS: (CommandClass.CONFIGURATION,),
+                const.DISC_INDEX: 82,  # PR for upstream to add SWITCH_COLOR_CT_COLD
                 const.DISC_OPTIONAL: True,
             },
         },
@@ -332,12 +344,6 @@ def check_value_schema(value, schema):
         value.instance, schema[const.DISC_INSTANCE]
     ):
         return False
-    if const.DISC_SCHEMAS in schema:
-        found = False
-        for schema_item in schema[const.DISC_SCHEMAS]:
-            found = found or check_value_schema(value, schema_item)
-        if not found:
-            return False
 
     return True
 

@@ -132,10 +132,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 "Authorization rejected by DoorBird for %s@%s", username, device_ip
             )
             return False
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from err
     except OSError as oserr:
         _LOGGER.error("Failed to setup doorbird at %s: %s", device_ip, oserr)
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from oserr
 
     if not status[0]:
         _LOGGER.error(

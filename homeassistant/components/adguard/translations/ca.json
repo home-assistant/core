@@ -1,8 +1,6 @@
 {
     "config": {
         "abort": {
-            "adguard_home_addon_outdated": "Aquesta integraci\u00f3 necessita la versi\u00f3 d'AdGuard Home {minimal_version} o una superior, tens la {current_version}. Actualitza el complement de Hass.io d'AdGuard Home.",
-            "adguard_home_outdated": "Aquesta integraci\u00f3 necessita la versi\u00f3 d'AdGuard Home {minimal_version} o una superior, tens la {current_version}.",
             "existing_instance_updated": "S'ha actualitzat la configuraci\u00f3 existent.",
             "single_instance_allowed": "Nom\u00e9s es permet una \u00fanica configuraci\u00f3 d'AdGuard Home."
         },

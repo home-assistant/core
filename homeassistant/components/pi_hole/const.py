@@ -1,7 +1,7 @@
 """Constants for the pi_hole integration."""
 from datetime import timedelta
 
-from homeassistant.const import UNIT_PERCENTAGE
+from homeassistant.const import PERCENTAGE
 
 DOMAIN = "pi_hole"
 
@@ -15,9 +15,6 @@ DEFAULT_VERIFY_SSL = True
 
 SERVICE_DISABLE = "disable"
 SERVICE_DISABLE_ATTR_DURATION = "duration"
-SERVICE_DISABLE_ATTR_NAME = "name"
-SERVICE_ENABLE = "enable"
-SERVICE_ENABLE_ATTR_NAME = SERVICE_DISABLE_ATTR_NAME
 
 ATTR_BLOCKED_DOMAINS = "domains_blocked"
 
@@ -30,7 +27,7 @@ SENSOR_DICT = {
     "ads_blocked_today": ["Ads Blocked Today", "ads", "mdi:close-octagon-outline"],
     "ads_percentage_today": [
         "Ads Percentage Blocked Today",
-        UNIT_PERCENTAGE,
+        PERCENTAGE,
         "mdi:close-octagon-outline",
     ],
     "clients_ever_seen": ["Seen Clients", "clients", "mdi:account-outline"],

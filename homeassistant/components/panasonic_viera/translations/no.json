@@ -11,9 +11,6 @@
         },
         "step": {
             "pairing": {
-                "data": {
-                    "pin": ""
-                },
                 "description": "Angi PIN-koden som vises p\u00e5 TV-en",
                 "title": "Sammenkobling"
             },
@@ -26,6 +23,5 @@
                 "title": "Sett opp TV-en din"
             }
         }
-    },
-    "title": ""
+    }
 }

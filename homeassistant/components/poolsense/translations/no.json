@@ -1,8 +1,18 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert"
+        },
+        "error": {
+            "invalid_auth": "Ugyldig godkjenning"
+        },
         "step": {
             "user": {
-                "title": ""
+                "data": {
+                    "email": "E-post",
+                    "password": "Passord"
+                },
+                "description": "[%key:common::config_flow::description%]"
             }
         }
     }

@@ -7,8 +7,10 @@
         },
         "error": {
             "discovery_error": "Nie uda\u0142o si\u0119 wykry\u0107 bramki Xiaomi Aqara, spr\u00f3buj u\u017cy\u0107 adresu IP urz\u0105dzenia, na kt\u00f3rym pracuje Home Assistant jako interfejsu.",
+            "invalid_host": "Adres IP jest nieprawid\u0142owy, po pomoc w rozwi\u0105zaniu problemu wejd\u017a tutaj: https://www.home-assistant.io/integrations/xiaomi_aqara/#connection-problem",
             "invalid_interface": "Nieprawid\u0142owy interfejs sieciowy.",
             "invalid_key": "Nieprawid\u0142owy klucz bramki.",
+            "invalid_mac": "Nieprawid\u0142owy adres MAC.",
             "not_found_error": "Nie mo\u017cna odnale\u017a\u0107 wykrytej bramki, aby uzyska\u0107 niezb\u0119dne informacje, spr\u00f3buj u\u017cy\u0107 adresu IP urz\u0105dzenia, na kt\u00f3rym pracuje Home Assistant jako interfejsu."
         },
         "flow_title": "Bramka Xiaomi Aqara: {name}",
@@ -30,9 +32,11 @@
             },
             "user": {
                 "data": {
-                    "interface": "Interfejs sieciowy"
+                    "host": "Adres IP (opcjonalnie)",
+                    "interface": "Interfejs sieciowy",
+                    "mac": "Adres MAC (opcjonalnie)"
                 },
-                "description": "Po\u0142\u0105cz si\u0119 z bramk\u0105 Xiaomi Aqara",
+                "description": "Po\u0142\u0105cz si\u0119 z bramk\u0105 Xiaomi Aqara, je\u015bli zostawisz Adres IP oraz MAC puste to bramka zostanie automatycznie wykryta.",
                 "title": "Bramka Xiaomi Aqara"
             }
         }

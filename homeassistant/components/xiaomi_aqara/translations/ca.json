@@ -7,8 +7,10 @@
         },
         "error": {
             "discovery_error": "No s'ha pogut descobrir cap passarel\u00b7la Xiaomi Aqara, prova d'utilitzar la IP del dispositiu que executa Home Assistant com a interf\u00edcie",
+            "invalid_host": "Adre\u00e7a IP no v\u00e0lida",
             "invalid_interface": "Interf\u00edcie de xarxa no v\u00e0lida",
             "invalid_key": "Clau de la passarel\u00b7la no v\u00e0lida",
+            "invalid_mac": "Adre\u00e7a MAC no v\u00e0lida",
             "not_found_error": "No s'ha pogut descobrir cap passarel\u00b7la Zeroconf per obtenir informaci\u00f3 necess\u00e0ria, prova d'utilitzar la IP del dispositiu que executa Home Assistant com a interf\u00edcie"
         },
         "flow_title": "Passarel\u00b7la Xiaomi Aqara: {name}",
@@ -30,9 +32,11 @@
             },
             "user": {
                 "data": {
-                    "interface": "Interf\u00edcie de xarxa a utilitzar"
+                    "host": "Adre\u00e7a IP (opcional)",
+                    "interface": "Interf\u00edcie de xarxa a utilitzar",
+                    "mac": "Adre\u00e7a MAC (opcional)"
                 },
-                "description": "Connecta't a la passarel\u00b7la Xiaomi Aqara",
+                "description": "Connecta't a la teva passarel\u00b7la Xiaomi Aqara, si les adreces IP i MAC es deixen buides s'utilitzar\u00e0 els descobriment autom\u00e0tic",
                 "title": "Passarel\u00b7la Xiaomi Aqara"
             }
         }

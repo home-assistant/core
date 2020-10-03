@@ -208,7 +208,13 @@ class SenseTrendsSensor(Entity):
     """Implementation of a Sense energy sensor."""
 
     def __init__(
-        self, data, name, sensor_type, is_production, trends_coordinator, unique_id,
+        self,
+        data,
+        name,
+        sensor_type,
+        is_production,
+        trends_coordinator,
+        unique_id,
     ):
         """Initialize the Sense sensor."""
         name_type = PRODUCTION_NAME if is_production else CONSUMPTION_NAME

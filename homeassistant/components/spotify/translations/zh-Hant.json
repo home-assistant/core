@@ -3,7 +3,8 @@
         "abort": {
             "already_setup": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44 Spotify \u5e33\u865f\u3002",
             "authorize_url_timeout": "\u7522\u751f\u8a8d\u8b49 URL \u6642\u903e\u6642\u3002",
-            "missing_configuration": "Spotify \u6574\u5408\u5c1a\u672a\u8a2d\u7f6e\uff0c\u8acb\u53c3\u95b1\u6587\u4ef6\u8aaa\u660e\u3002"
+            "missing_configuration": "Spotify \u6574\u5408\u5c1a\u672a\u8a2d\u7f6e\uff0c\u8acb\u53c3\u95b1\u6587\u4ef6\u8aaa\u660e\u3002",
+            "reauth_account_mismatch": "Spotify \u6240\u8a8d\u8b49\u5e33\u865f\u8207\u5e33\u865f\u4e0d\u7b26\u5408\uff0c\u9700\u91cd\u65b0\u9032\u884c\u8a8d\u8b49\u3002"
         },
         "create_entry": {
             "default": "\u5df2\u6210\u529f\u8a8d\u8b49 Spotify\u3002"
@@ -11,6 +12,10 @@
         "step": {
             "pick_implementation": {
                 "title": "\u9078\u64c7\u9a57\u8b49\u6a21\u5f0f"
+            },
+            "reauth_confirm": {
+                "description": "Spotify \u6574\u5408\u9700\u8981\u91cd\u65b0\u8a8d\u8b49 Spotify \u5e33\u865f\uff1a{account}",
+                "title": "\u91cd\u65b0\u8a8d\u8b49 Spotify\u3002"
             }
         }
     }

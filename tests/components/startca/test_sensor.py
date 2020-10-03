@@ -1,7 +1,7 @@
 """Tests for the Start.ca sensor platform."""
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.startca.sensor import StartcaData
-from homeassistant.const import DATA_GIGABYTES, HTTP_NOT_FOUND, UNIT_PERCENTAGE
+from homeassistant.const import DATA_GIGABYTES, HTTP_NOT_FOUND, PERCENTAGE
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 
@@ -53,7 +53,7 @@ async def test_capped_setup(hass, aioclient_mock):
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.start_ca_usage_ratio")
-    assert state.attributes.get("unit_of_measurement") == UNIT_PERCENTAGE
+    assert state.attributes.get("unit_of_measurement") == PERCENTAGE
     assert state.state == "76.24"
 
     state = hass.states.get("sensor.start_ca_usage")
@@ -149,7 +149,7 @@ async def test_unlimited_setup(hass, aioclient_mock):
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.start_ca_usage_ratio")
-    assert state.attributes.get("unit_of_measurement") == UNIT_PERCENTAGE
+    assert state.attributes.get("unit_of_measurement") == PERCENTAGE
     assert state.state == "0"
 
     state = hass.states.get("sensor.start_ca_usage")

@@ -16,12 +16,11 @@
             "response_error": "Ukjent feil fra enheten",
             "unknown_connection_error": "Ukjent feil under tilkobling til enhet"
         },
-        "flow_title": "",
         "step": {
             "user": {
                 "data": {
                     "password": "Passord",
-                    "url": "",
+                    "url": "URL",
                     "username": "Brukernavn"
                 },
                 "description": "Fyll inn detaljer for enhetstilgang. Spesifisering av brukernavn og passord er valgfritt, men gir st\u00f8tte for flere integrasjonsfunksjoner. P\u00e5 en annen side kan bruk av en autorisert tilkobling f\u00f8re til problemer med tilgang til enhetens webgrensesnitt utenfor Home Assistant mens integrasjonen er aktiv, og omvendt.",

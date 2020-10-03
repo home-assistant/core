@@ -2,13 +2,13 @@
 from asyncio import Event
 from collections import OrderedDict
 import logging
-from typing import Iterable, MutableMapping, Optional, cast
-import uuid
+from typing import Dict, Iterable, List, MutableMapping, Optional, cast
 
 import attr
 
 from homeassistant.core import callback
 from homeassistant.loader import bind_hass
+import homeassistant.util.uuid as uuid_util
 
 from .typing import HomeAssistantType
 
@@ -26,7 +26,7 @@ class AreaEntry:
     """Area Registry Entry."""
 
     name: Optional[str] = attr.ib(default=None)
-    id: str = attr.ib(factory=lambda: uuid.uuid4().hex)
+    id: str = attr.ib(factory=uuid_util.uuid_v1mc_hex)
 
 
 class AreaRegistry:
@@ -132,7 +132,7 @@ class AreaRegistry:
         self._store.async_delay_save(self._data_to_save, SAVE_DELAY)
 
     @callback
-    def _data_to_save(self) -> dict:
+    def _data_to_save(self) -> Dict[str, List[Dict[str, Optional[str]]]]:
         """Return data of area registry to store in a file."""
         data = {}
 

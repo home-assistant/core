@@ -3,7 +3,8 @@
         "abort": {
             "already_setup": "Du kan bare konfigurere en Spotify-konto.",
             "authorize_url_timeout": "Tidsavbrudd ved oppretting av godkjenningsadresse.",
-            "missing_configuration": "Spotify-integrasjonen er ikke konfigurert. F\u00f8lg dokumentasjonen."
+            "missing_configuration": "Spotify-integrasjonen er ikke konfigurert. F\u00f8lg dokumentasjonen.",
+            "reauth_account_mismatch": "Spotify-kontoen som er autentisert med, samsvarer ikke med den kontoen som trengs re-autentisering."
         },
         "create_entry": {
             "default": "Vellykket godkjenning med Spotify."
@@ -11,6 +12,10 @@
         "step": {
             "pick_implementation": {
                 "title": "Velg godkjenningsmetode"
+            },
+            "reauth_confirm": {
+                "description": "Spotify-integreringen m\u00e5 godkjennes p\u00e5 nytt med Spotify for konto: {account}",
+                "title": "Autentiser p\u00e5 nytt med Spotify"
             }
         }
     }

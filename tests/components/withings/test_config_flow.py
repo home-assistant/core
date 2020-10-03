@@ -65,7 +65,10 @@ async def test_config_reauth_profile(
     assert result["step_id"] == "reauth"
     assert result["description_placeholders"] == {const.PROFILE: "person0"}
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {},)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
 
     # pylint: disable=protected-access
     state = config_entry_oauth2_flow._encode_jwt(hass, {"flow_id": result["flow_id"]})

@@ -178,8 +178,12 @@ SENSOR_META = {
         name="Operator search mode",
         formatter=lambda x: ({"0": "Auto", "1": "Manual"}.get(x, "Unknown"), None),
     ),
-    (KEY_NET_CURRENT_PLMN, "FullName"): dict(name="Operator name",),
-    (KEY_NET_CURRENT_PLMN, "Numeric"): dict(name="Operator code",),
+    (KEY_NET_CURRENT_PLMN, "FullName"): dict(
+        name="Operator name",
+    ),
+    (KEY_NET_CURRENT_PLMN, "Numeric"): dict(
+        name="Operator code",
+    ),
     KEY_NET_NET_MODE: dict(include=re.compile(r"^NetworkMode$", re.IGNORECASE)),
     (KEY_NET_NET_MODE, "NetworkMode"): dict(
         name="Preferred mode",
@@ -197,7 +201,8 @@ SENSOR_META = {
         ),
     ),
     (KEY_SMS_SMS_COUNT, "LocalUnread"): dict(
-        name="SMS unread", icon="mdi:email-receive",
+        name="SMS unread",
+        icon="mdi:email-receive",
     ),
 }
 

@@ -29,7 +29,13 @@ async def async_setup_entry(
     hass_data = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        [MetOfficeWeather(entry.data, hass_data,)], False,
+        [
+            MetOfficeWeather(
+                entry.data,
+                hass_data,
+            )
+        ],
+        False,
     )
 
 

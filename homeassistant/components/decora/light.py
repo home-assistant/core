@@ -4,7 +4,9 @@ from functools import wraps
 import logging
 import time
 
-from bluepy.btle import BTLEException  # pylint: disable=import-error, no-member
+from bluepy.btle import (  # pylint: disable=import-error, no-member, no-name-in-module
+    BTLEException,
+)
 import decora  # pylint: disable=import-error, no-member
 import voluptuous as vol
 
@@ -62,7 +64,8 @@ def retry(method):
                 return method(device, *args, **kwargs)
             except (decora.decoraException, AttributeError, BTLEException):
                 _LOGGER.warning(
-                    "Decora connect error for device %s. Reconnecting...", device.name,
+                    "Decora connect error for device %s. Reconnecting...",
+                    device.name,
                 )
                 # pylint: disable=protected-access
                 device._switch.connect()

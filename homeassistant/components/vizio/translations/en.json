@@ -7,6 +7,7 @@
         "error": {
             "cannot_connect": "Failed to connect",
             "complete_pairing_failed": "Unable to complete pairing. Ensure the PIN you provided is correct and the TV is still powered and connected to the network before resubmitting.",
+            "existing_config_entry_found": "An existing VIZIO SmartCast Device config entry with the same serial number has already been configured. You must delete the existing entry in order to configure this one.",
             "host_exists": "VIZIO SmartCast Device with specified host already configured.",
             "name_exists": "VIZIO SmartCast Device with specified name already configured."
         },

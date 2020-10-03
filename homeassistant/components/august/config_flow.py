@@ -30,7 +30,9 @@ DATA_SCHEMA = vol.Schema(
 
 
 async def async_validate_input(
-    hass: core.HomeAssistant, data, august_gateway,
+    hass: core.HomeAssistant,
+    data,
+    august_gateway,
 ):
     """Validate the user input allows us to connect.
 
@@ -89,7 +91,9 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 info = await async_validate_input(
-                    self.hass, user_input, self._august_gateway,
+                    self.hass,
+                    user_input,
+                    self._august_gateway,
                 )
                 await self.async_set_unique_id(user_input[CONF_USERNAME])
                 return self.async_create_entry(title=info["title"], data=info["data"])

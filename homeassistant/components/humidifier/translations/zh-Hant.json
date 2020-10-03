@@ -6,6 +6,16 @@
             "toggle": "\u5207\u63db{entity_name}",
             "turn_off": "\u95dc\u9589{entity_name}",
             "turn_on": "\u958b\u555f{entity_name}"
+        },
+        "condition_type": {
+            "is_mode": "{entity_name}\u8a2d\u5b9a\u70ba\u6307\u5b9a\u6a21\u5f0f",
+            "is_off": "{entity_name}\u5df2\u95dc\u9589",
+            "is_on": "{entity_name}\u5df2\u958b\u555f"
+        },
+        "trigger_type": {
+            "target_humidity_changed": "{entity_name}\u8a2d\u5b9a\u6fd5\u5ea6\u5df2\u8b8a\u66f4",
+            "turned_off": "{entity_name}\u5df2\u95dc\u9589",
+            "turned_on": "{entity_name}\u5df2\u958b\u555f"
         }
     },
     "state": {

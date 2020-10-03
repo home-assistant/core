@@ -19,5 +19,15 @@
                 "title": "Connect to the Smile"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Scan Interval (seconds)"
+                },
+                "description": "Adjust Plugwise Options"
+            }
+        }
     }
 }

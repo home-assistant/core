@@ -7,12 +7,14 @@ COMMAND_ON_LIST = [
     "Stop",
     "Open (inline relay)",
     "Stop (inline relay)",
+    "Enable sun automation",
 ]
 
 COMMAND_OFF_LIST = [
     "Off",
     "Down",
     "Close (inline relay)",
+    "Disable sun automation",
 ]
 
 ATTR_EVENT = "event"
@@ -21,5 +23,4 @@ SERVICE_SEND = "send"
 
 DEVICE_PACKET_TYPE_LIGHTING4 = 0x13
 
-DATA_RFXTRX_CONFIG = "rfxtrx_config"
 EVENT_RFXTRX_EVENT = "rfxtrx_event"

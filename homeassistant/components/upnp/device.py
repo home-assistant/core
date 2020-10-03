@@ -20,6 +20,7 @@ from .const import (
     DISCOVERY_UDN,
     DISCOVERY_USN,
     DOMAIN,
+    DOMAIN_CONFIG,
     LOGGER as _LOGGER,
     PACKETS_RECEIVED,
     PACKETS_SENT,
@@ -40,8 +41,8 @@ class Device:
         """Discover UPnP/IGD devices."""
         _LOGGER.debug("Discovering UPnP/IGD devices")
         local_ip = None
-        if DOMAIN in hass.data and "config" in hass.data[DOMAIN]:
-            local_ip = hass.data[DOMAIN]["config"].get(CONF_LOCAL_IP)
+        if DOMAIN in hass.data and DOMAIN_CONFIG in hass.data[DOMAIN]:
+            local_ip = hass.data[DOMAIN][DOMAIN_CONFIG].get(CONF_LOCAL_IP)
         if local_ip:
             local_ip = IPv4Address(local_ip)
 
@@ -66,7 +67,7 @@ class Device:
         """Create UPnP/IGD device."""
         # build async_upnp_client requester
         session = async_get_clientsession(hass)
-        requester = AiohttpSessionRequester(session, True)
+        requester = AiohttpSessionRequester(session, True, 10)
 
         # create async_upnp_client device
         factory = UpnpFactory(requester, disable_state_variable_validation=True)

@@ -10,7 +10,7 @@ from homeassistant.const import MATCH_ALL, STATE_ON
 import homeassistant.util.dt as dt_util
 
 from .const import API_CHANGE, Cause
-from .entities import ENTITY_ADAPTERS
+from .entities import ENTITY_ADAPTERS, generate_alexa_id
 from .messages import AlexaResponse
 
 _LOGGER = logging.getLogger(__name__)
@@ -181,8 +181,7 @@ async def async_send_delete_message(hass, config, entity_ids):
         if domain not in ENTITY_ADAPTERS:
             continue
 
-        alexa_entity = ENTITY_ADAPTERS[domain](hass, config, hass.states.get(entity_id))
-        endpoints.append({"endpointId": alexa_entity.alexa_id()})
+        endpoints.append({"endpointId": generate_alexa_id(entity_id)})
 
     payload = {"endpoints": endpoints, "scope": {"type": "BearerToken", "token": token}}
 

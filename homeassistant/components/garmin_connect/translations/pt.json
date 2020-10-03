@@ -1,5 +1,11 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Conta j\u00e1 configurada"
+        },
+        "error": {
+            "unknown": "Erro inesperado"
+        },
         "step": {
             "user": {
                 "data": {

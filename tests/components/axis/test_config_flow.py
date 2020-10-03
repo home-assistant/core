@@ -67,7 +67,12 @@ async def test_manual_configuration_update_configuration(hass):
     assert result["type"] == "form"
     assert result["step_id"] == "user"
 
-    with patch("axis.vapix.session_request", new=vapix_session_request):
+    with patch(
+        "homeassistant.components.axis.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry, patch(
+        "axis.vapix.session_request", new=vapix_session_request
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
@@ -77,10 +82,12 @@ async def test_manual_configuration_update_configuration(hass):
                 CONF_PORT: 80,
             },
         )
+        await hass.async_block_till_done()
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
     assert device.host == "2.3.4.5"
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_flow_fails_already_configured(hass):
@@ -164,11 +171,13 @@ async def test_flow_fails_device_unavailable(hass):
 async def test_flow_create_entry_multiple_existing_entries_of_same_model(hass):
     """Test that create entry can generate a name with other entries."""
     entry = MockConfigEntry(
-        domain=AXIS_DOMAIN, data={CONF_NAME: "M1065-LW 0", CONF_MODEL: "M1065-LW"},
+        domain=AXIS_DOMAIN,
+        data={CONF_NAME: "M1065-LW 0", CONF_MODEL: "M1065-LW"},
     )
     entry.add_to_hass(hass)
     entry2 = MockConfigEntry(
-        domain=AXIS_DOMAIN, data={CONF_NAME: "M1065-LW 1", CONF_MODEL: "M1065-LW"},
+        domain=AXIS_DOMAIN,
+        data={CONF_NAME: "M1065-LW 1", CONF_MODEL: "M1065-LW"},
     )
     entry2.add_to_hass(hass)
 
@@ -282,16 +291,23 @@ async def test_zeroconf_flow_updated_configuration(hass):
         CONF_NAME: NAME,
     }
 
-    result = await hass.config_entries.flow.async_init(
-        AXIS_DOMAIN,
-        data={
-            CONF_HOST: "2.3.4.5",
-            CONF_PORT: 8080,
-            "hostname": "name",
-            "properties": {"macaddress": MAC},
-        },
-        context={"source": "zeroconf"},
-    )
+    with patch(
+        "homeassistant.components.axis.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry, patch(
+        "axis.vapix.session_request", new=vapix_session_request
+    ):
+        result = await hass.config_entries.flow.async_init(
+            AXIS_DOMAIN,
+            data={
+                CONF_HOST: "2.3.4.5",
+                CONF_PORT: 8080,
+                "hostname": "name",
+                "properties": {"macaddress": MAC},
+            },
+            context={"source": "zeroconf"},
+        )
+        await hass.async_block_till_done()
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
@@ -304,6 +320,7 @@ async def test_zeroconf_flow_updated_configuration(hass):
         CONF_MODEL: MODEL,
         CONF_NAME: NAME,
     }
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_zeroconf_flow_ignore_non_axis_device(hass):
@@ -346,7 +363,8 @@ async def test_option_flow(hass):
     }
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_STREAM_PROFILE: "profile_1"},
+        result["flow_id"],
+        user_input={CONF_STREAM_PROFILE: "profile_1"},
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY

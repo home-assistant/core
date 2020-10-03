@@ -77,4 +77,5 @@ SENSOR_TYPES = {
         False,
     ],
     "feedin_power": ["FeedIn", "Exported Power", None, "mdi:flash", False],
+    "storage_level": ["STORAGE", "Storage Level", PERCENTAGE, None, False],
 }

@@ -48,7 +48,8 @@ async def test_invalid_credentials(hass):
     conf = {CONF_USERNAME: "user@email.com", CONF_PASSWORD: "password"}
 
     with patch(
-        "simplipy.API.login_via_credentials", side_effect=InvalidCredentialsError,
+        "simplipy.API.login_via_credentials",
+        side_effect=InvalidCredentialsError,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=conf
@@ -61,7 +62,10 @@ async def test_options_flow(hass):
     conf = {CONF_USERNAME: "user@email.com", CONF_PASSWORD: "password"}
 
     config_entry = MockConfigEntry(
-        domain=DOMAIN, unique_id="abcde12345", data=conf, options={CONF_CODE: "1234"},
+        domain=DOMAIN,
+        unique_id="abcde12345",
+        data=conf,
+        options={CONF_CODE: "1234"},
     )
     config_entry.add_to_hass(hass)
 
@@ -217,7 +221,8 @@ async def test_unknown_error(hass):
     conf = {CONF_USERNAME: "user@email.com", CONF_PASSWORD: "password"}
 
     with patch(
-        "simplipy.API.login_via_credentials", side_effect=SimplipyError,
+        "simplipy.API.login_via_credentials",
+        side_effect=SimplipyError,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=conf

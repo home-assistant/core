@@ -4,6 +4,8 @@
             "already_configured": "Enheten er allerde konfigurert"
         },
         "error": {
+            "cannot_connect": "Tilkobling mislyktes.",
+            "invalid_access_token": "Ugyldig tilgangstoken",
             "invalid_auth": "Ugyldig legitimasjon",
             "unknown": "Uventet feil"
         },
@@ -12,7 +14,7 @@
                 "data": {
                     "2fa": "To-faktorskode"
                 },
-                "description": "Skriv inn pinnen som er sendt til din e-post. Hvis e-posten ikke inneholder en pin, m\u00e5 du la den st\u00e5 tom",
+                "description": "Skriv inn pin-koden som sendes til e-posten din",
                 "title": "Totrinnsverifisering"
             },
             "user": {

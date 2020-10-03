@@ -27,7 +27,8 @@ async def mock_camera_fixture(hass):
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.demo.camera.Path.read_bytes", return_value=b"Test",
+        "homeassistant.components.demo.camera.Path.read_bytes",
+        return_value=b"Test",
     ):
         yield
 
@@ -258,7 +259,8 @@ async def test_play_stream_service_no_source(hass, mock_camera, mock_stream):
 async def test_handle_play_stream_service(hass, mock_camera, mock_stream):
     """Test camera play_stream service."""
     await async_process_ha_core_config(
-        hass, {"external_url": "https://example.com"},
+        hass,
+        {"external_url": "https://example.com"},
     )
     await async_setup_component(hass, "media_player", {})
     with patch(

@@ -34,7 +34,8 @@ async def test_form(hass):
     ), patch(
         "homeassistant.components.august.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.august.async_setup_entry", return_value=True,
+        "homeassistant.components.august.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -149,7 +150,8 @@ async def test_form_needs_validate(hass):
         "homeassistant.components.august.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         result3 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {VERIFICATION_CODE_KEY: "incorrect"},
+            result["flow_id"],
+            {VERIFICATION_CODE_KEY: "incorrect"},
         )
 
     # Make sure we do not resend the code again
@@ -176,7 +178,8 @@ async def test_form_needs_validate(hass):
         "homeassistant.components.august.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         result4 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {VERIFICATION_CODE_KEY: "correct"},
+            result["flow_id"],
+            {VERIFICATION_CODE_KEY: "correct"},
         )
 
     assert len(mock_send_verification_code.mock_calls) == 0

@@ -13,6 +13,7 @@ def wait_recording_done(hass):
     trigger_db_commit(hass)
     hass.block_till_done()
     hass.data[recorder.DATA_INSTANCE].block_till_done()
+    hass.block_till_done()
 
 
 def trigger_db_commit(hass):

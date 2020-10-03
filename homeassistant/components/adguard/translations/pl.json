@@ -1,8 +1,6 @@
 {
     "config": {
         "abort": {
-            "adguard_home_addon_outdated": "Ta integracja wymaga AdGuard Home {minimal_version} lub nowszej wersji, masz {current_version}. Zaktualizuj sw\u00f3j dodatek Hass.io AdGuard Home.",
-            "adguard_home_outdated": "Ta integracja wymaga AdGuard Home {minimal_version} lub nowszej wersji, masz {current_version}.",
             "existing_instance_updated": "Zaktualizowano istniej\u0105c\u0105 konfiguracj\u0119.",
             "single_instance_allowed": "Dozwolona jest tylko jedna konfiguracja AdGuard Home."
         },

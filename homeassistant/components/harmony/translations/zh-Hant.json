@@ -27,7 +27,6 @@
             "init": {
                 "data": {
                     "activity": "\u7576\u672a\u6307\u5b9a\u6642\u9810\u8a2d\u57f7\u884c\u6d3b\u52d5\u3002",
-                    "activity_notify": "\u65bc\u958b\u59cb\u6d3b\u52d5\u958b\u95dc\u6642\u66f4\u65b0\u76ee\u524d\u6d3b\u52d5\u3002",
                     "delay_secs": "\u50b3\u9001\u547d\u4ee4\u9593\u9694\u79d2\u6578\u3002"
                 },
                 "description": "\u8abf\u6574 Harmony Hub \u9078\u9805"

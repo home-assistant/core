@@ -41,7 +41,7 @@
                     "name": "Name (optional)",
                     "type": "Binary Sensor Type"
                 },
-                "description": "Please select the options for the binary sensor attached to {zone}",
+                "description": "{zone} options",
                 "title": "Configure Binary Sensor"
             },
             "options_digital": {
@@ -50,7 +50,7 @@
                     "poll_interval": "Poll Interval (minutes) (optional)",
                     "type": "Sensor Type"
                 },
-                "description": "Please select the options for the digital sensor attached to {zone}",
+                "description": "{zone} options",
                 "title": "Configure Digital Sensor"
             },
             "options_io": {
@@ -85,6 +85,7 @@
                 "data": {
                     "api_host": "Override API host URL (optional)",
                     "blink": "Blink panel LED on when sending state change",
+                    "discovery": "Respond to discovery requests on your network",
                     "override_api_host": "Override default Home Assistant API host panel URL"
                 },
                 "description": "Please select the desired behavior for your panel",
@@ -99,7 +100,7 @@
                     "pause": "Pause between pulses (ms) (optional)",
                     "repeat": "Times to repeat (-1=infinite) (optional)"
                 },
-                "description": "Please select the output options for {zone}: state {state}",
+                "description": "{zone} options: state {state}",
                 "title": "Configure Switchable Output"
             }
         }

@@ -1,14 +1,21 @@
 """The test for the statistics sensor platform."""
 from datetime import datetime, timedelta
+from os import path
 import statistics
 import unittest
 
 import pytest
 
+from homeassistant import config as hass_config
 from homeassistant.components import recorder
-from homeassistant.components.statistics.sensor import StatisticsSensor
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN, TEMP_CELSIUS
-from homeassistant.setup import setup_component
+from homeassistant.components.statistics.sensor import DOMAIN, StatisticsSensor
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    SERVICE_RELOAD,
+    STATE_UNKNOWN,
+    TEMP_CELSIUS,
+)
+from homeassistant.setup import async_setup_component, setup_component
 from homeassistant.util import dt as dt_util
 
 from tests.async_mock import patch
@@ -442,3 +449,54 @@ class TestStatisticsSensor(unittest.TestCase):
         assert mock_data["return_time"] == state.attributes.get("max_age") + timedelta(
             hours=1
         )
+
+
+async def test_reload(hass):
+    """Verify we can reload filter sensors."""
+    await hass.async_add_executor_job(
+        init_recorder_component, hass
+    )  # force in memory db
+
+    hass.states.async_set("sensor.test_monitored", 12345)
+    await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": {
+                "platform": "statistics",
+                "name": "test",
+                "entity_id": "sensor.test_monitored",
+                "sampling_size": 100,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 2
+
+    assert hass.states.get("sensor.test")
+
+    yaml_path = path.join(
+        _get_fixtures_base_path(),
+        "fixtures",
+        "statistics/configuration.yaml",
+    )
+    with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RELOAD,
+            {},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 2
+
+    assert hass.states.get("sensor.test") is None
+    assert hass.states.get("sensor.cputest")
+
+
+def _get_fixtures_base_path():
+    return path.dirname(path.dirname(path.dirname(__file__)))

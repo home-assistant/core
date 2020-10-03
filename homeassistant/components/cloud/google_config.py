@@ -11,16 +11,16 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     HTTP_OK,
 )
-from homeassistant.core import CoreState, callback
+from homeassistant.core import CoreState, callback, split_entity_id
 from homeassistant.helpers import entity_registry
 
 from .const import (
     CONF_ENTITY_CONFIG,
     DEFAULT_DISABLE_2FA,
-    DEFAULT_SHOULD_EXPOSE,
     PREF_DISABLE_2FA,
     PREF_SHOULD_EXPOSE,
 )
+from .prefs import CloudPreferences
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 class CloudGoogleConfig(AbstractConfig):
     """HA Cloud Configuration for Google Assistant."""
 
-    def __init__(self, hass, config, cloud_user, prefs, cloud):
+    def __init__(self, hass, config, cloud_user, prefs: CloudPreferences, cloud):
         """Initialize the Google config."""
         super().__init__(hass)
         self._config = config
@@ -36,6 +36,7 @@ class CloudGoogleConfig(AbstractConfig):
         self._prefs = prefs
         self._cloud = cloud
         self._cur_entity_prefs = self._prefs.google_entity_configs
+        self._cur_default_expose = self._prefs.google_default_expose
         self._sync_entities_lock = asyncio.Lock()
         self._sync_on_started = False
 
@@ -104,7 +105,17 @@ class CloudGoogleConfig(AbstractConfig):
 
         entity_configs = self._prefs.google_entity_configs
         entity_config = entity_configs.get(entity_id, {})
-        return entity_config.get(PREF_SHOULD_EXPOSE, DEFAULT_SHOULD_EXPOSE)
+        entity_expose = entity_config.get(PREF_SHOULD_EXPOSE)
+        if entity_expose is not None:
+            return entity_expose
+
+        default_expose = self._prefs.google_default_expose
+
+        # Backwards compat
+        if default_expose is None:
+            return True
+
+        return split_entity_id(entity_id)[0] in default_expose
 
     @property
     def agent_user_id(self):
@@ -153,14 +164,17 @@ class CloudGoogleConfig(AbstractConfig):
         # don't sync.
         elif (
             self._cur_entity_prefs is not prefs.google_entity_configs
-            and self._config["filter"].empty_filter
-        ):
+            or self._cur_default_expose is not prefs.google_default_expose
+        ) and self._config["filter"].empty_filter:
             self.async_schedule_google_sync_all()
 
         if self.enabled and not self.is_local_sdk_active:
             self.async_enable_local_sdk()
         elif not self.enabled and self.is_local_sdk_active:
             self.async_disable_local_sdk()
+
+        self._cur_entity_prefs = prefs.google_entity_configs
+        self._cur_default_expose = prefs.google_default_expose
 
     async def _handle_entity_registry_updated(self, event):
         """Handle when entity registry updated."""

@@ -297,7 +297,8 @@ def _get_states_with_session(
     most_recent_state_ids = most_recent_state_ids.subquery()
 
     query = query.join(
-        most_recent_state_ids, States.state_id == most_recent_state_ids.c.max_state_id,
+        most_recent_state_ids,
+        States.state_id == most_recent_state_ids.c.max_state_id,
     ).filter(~States.domain.in_(IGNORE_DOMAINS))
 
     if filters:

@@ -69,8 +69,8 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
     try:
         await sonarr.update()
-    except SonarrError:
-        raise ConfigEntryNotReady
+    except SonarrError as err:
+        raise ConfigEntryNotReady from err
 
     undo_listener = entry.add_update_listener(_async_update_listener)
 

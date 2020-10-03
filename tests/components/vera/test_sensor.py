@@ -3,7 +3,7 @@ from typing import Any, Callable, Tuple
 
 import pyvera as pv
 
-from homeassistant.const import UNIT_PERCENTAGE
+from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 
 from .common import ComponentFactory, new_simple_controller_config
@@ -115,7 +115,7 @@ async def test_humidity_sensor(
         category=pv.CATEGORY_HUMIDITY_SENSOR,
         class_property="humidity",
         assert_states=(("12", "12"), ("13", "13")),
-        assert_unit_of_measurement=UNIT_PERCENTAGE,
+        assert_unit_of_measurement=PERCENTAGE,
     )
 
 

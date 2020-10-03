@@ -48,7 +48,7 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Required(CONF_CLIENT_SECRET): cv.string,
                     vol.Optional(
                         CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
-                    ): vol.All(cv.time_period, cv.positive_timedelta),
+                    ): cv.positive_time_period,
                 }
             ),
         )

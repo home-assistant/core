@@ -1,17 +1,24 @@
 """The Bond integration."""
 import asyncio
+from asyncio import TimeoutError as AsyncIOTimeoutError
+import logging
 
-from bond import Bond
+from aiohttp import ClientError, ClientTimeout
+from bond_api import Bond
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.entity import SLOW_UPDATE_WARNING
 
 from .const import DOMAIN
 from .utils import BondHub
 
+_LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["cover", "fan", "light", "switch"]
+_API_TIMEOUT = SLOW_UPDATE_WARNING - 1
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -25,10 +32,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     host = entry.data[CONF_HOST]
     token = entry.data[CONF_ACCESS_TOKEN]
 
-    bond = Bond(bondIp=host, bondToken=token)
+    bond = Bond(host=host, token=token, timeout=ClientTimeout(total=_API_TIMEOUT))
     hub = BondHub(bond)
-    await hass.async_add_executor_job(hub.setup)
+    try:
+        await hub.setup()
+    except (ClientError, AsyncIOTimeoutError, OSError) as error:
+        raise ConfigEntryNotReady from error
+
     hass.data[DOMAIN][entry.entry_id] = hub
+
+    if not entry.unique_id:
+        hass.config_entries.async_update_entry(entry, unique_id=hub.bond_id)
 
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(

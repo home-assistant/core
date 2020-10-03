@@ -21,7 +21,7 @@
             "link": {
                 "data": {
                     "password": "Mot de passe",
-                    "port": "Port (facultatif)",
+                    "port": "Port",
                     "ssl": "Utilisez SSL/TLS pour vous connecter \u00e0 votre NAS",
                     "username": "Nom d'utilisateur"
                 },
@@ -32,7 +32,7 @@
                 "data": {
                     "host": "Nom d'h\u00f4te ou adresse IP",
                     "password": "Mot de passe",
-                    "port": "Port (facultatif)",
+                    "port": "Port",
                     "ssl": "Utilisez SSL/TLS pour vous connecter \u00e0 votre NAS",
                     "username": "Nom d'utilisateur"
                 },
