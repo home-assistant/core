@@ -5,8 +5,19 @@ import socket
 import threading
 import time
 
-from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
+import voluptuous as vol
+
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 from .const import (
@@ -16,6 +27,10 @@ from .const import (
     ATTR_PREFIXES,
     CONF_PHONEBOOK,
     CONF_PREFIXES,
+    DEFAULT_HOST,
+    DEFAULT_PHONEBOOK,
+    DEFAULT_PORT,
+    DEFAULT_USERNAME,
     DOMAIN,
     FRITZ_ATTR_NAME,
     FRITZ_ATTR_URL,
@@ -32,6 +47,26 @@ from .const import (
     STATE_RINGING,
     STATE_TALKING,
 )
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
+        vol.Optional(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_PHONEBOOK, default=DEFAULT_PHONEBOOK): cv.positive_int,
+        vol.Optional(CONF_PREFIXES): vol.All(cv.ensure_list, [cv.string]),
+    }
+)
+
+
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Import the platform into a config entry."""
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+    )
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
