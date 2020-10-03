@@ -30,6 +30,9 @@ send_message:
     inline_keyboard:
       description: List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with associated callback data.
       example: '["/button1, /button2", "/button3"] or ["Text button1:/button1, Text button2:/button2", "Text button3:/button3"] or [[["Text button1", "/button1"], ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+    result_code:
+      description: 'The response result code of the sent message. In telegram_sent event data: {{trigger.event.data.result_code}}'
+      example: 123
 
 send_photo:
   description: Send a photo.
@@ -67,6 +70,9 @@ send_photo:
     inline_keyboard:
       description: List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with associated callback data.
       example: '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"], ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+    result_code:
+      description: 'The response result code of the sent message. In telegram_sent event data: {{trigger.event.data.result_code}}'
+      example: 123
 
 send_sticker:
   description: Send a sticker.
@@ -101,6 +107,9 @@ send_sticker:
     inline_keyboard:
       description: List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with associated callback data.
       example: '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"], ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+    result_code:
+      description: 'The response result code of the sent message. In telegram_sent event data: {{trigger.event.data.result_code}}'
+      example: 123
 
 send_video:
   description: Send a video.
@@ -138,6 +147,9 @@ send_video:
     inline_keyboard:
       description: List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with associated callback data.
       example: '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"], ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+    result_code:
+      description: 'The response result code of the sent message. In telegram_sent event data: {{trigger.event.data.result_code}}'
+      example: 123
 
 send_document:
   description: Send a document.
@@ -175,6 +187,9 @@ send_document:
     inline_keyboard:
       description: List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with associated callback data.
       example: '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"], ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+    result_code:
+      description: 'The response result code of the sent message. In telegram_sent event data: {{trigger.event.data.result_code}}'
+      example: 123
 
 send_location:
   description: Send a location.
@@ -200,6 +215,9 @@ send_location:
     inline_keyboard:
       description: List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with associated callback data.
       example: '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"], ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+    result_code:
+      description: 'The response result code of the sent message. In telegram_sent event data: {{trigger.event.data.result_code}}'
+      example: 123
 
 edit_message:
   description: Edit a previusly sent message.

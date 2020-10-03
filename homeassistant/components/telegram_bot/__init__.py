@@ -67,6 +67,7 @@ ATTR_USER_ID = "user_id"
 ATTR_USERNAME = "username"
 ATTR_VERIFY_SSL = "verify_ssl"
 ATTR_TIMEOUT = "timeout"
+ATTR_RESULT_CODE = "result_code"
 
 CONF_ALLOWED_CHAT_IDS = "allowed_chat_ids"
 CONF_PROXY_URL = "proxy_url"
@@ -91,6 +92,7 @@ SERVICE_LEAVE_CHAT = "leave_chat"
 EVENT_TELEGRAM_CALLBACK = "telegram_callback"
 EVENT_TELEGRAM_COMMAND = "telegram_command"
 EVENT_TELEGRAM_TEXT = "telegram_text"
+EVENT_TELEGRAM_SENT = "telegram_sent"
 
 PARSER_HTML = "html"
 PARSER_MD = "markdown"
@@ -136,6 +138,7 @@ BASE_SERVICE_SCHEMA = vol.Schema(
         vol.Optional(ATTR_KEYBOARD): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(ATTR_KEYBOARD_INLINE): cv.ensure_list,
         vol.Optional(ATTR_TIMEOUT): cv.positive_int,
+        vol.Optional(ATTR_RESULT_CODE): vol.Coerce(int),
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -500,6 +503,7 @@ class TelegramNotificationService:
             ATTR_REPLY_TO_MSGID: None,
             ATTR_REPLYMARKUP: None,
             ATTR_TIMEOUT: None,
+            ATTR_RESULT_CODE: None,
         }
         if data is not None:
             if ATTR_PARSER in data:
@@ -514,6 +518,8 @@ class TelegramNotificationService:
                 params[ATTR_DISABLE_WEB_PREV] = data[ATTR_DISABLE_WEB_PREV]
             if ATTR_REPLY_TO_MSGID in data:
                 params[ATTR_REPLY_TO_MSGID] = data[ATTR_REPLY_TO_MSGID]
+            if ATTR_RESULT_CODE in data:
+                params[ATTR_RESULT_CODE] = data[ATTR_RESULT_CODE]
             # Keyboards:
             if ATTR_KEYBOARD in data:
                 keys = data.get(ATTR_KEYBOARD)
@@ -540,12 +546,21 @@ class TelegramNotificationService:
             out = func_send(*args_msg, **kwargs_msg)
             if not isinstance(out, bool) and hasattr(out, ATTR_MESSAGEID):
                 chat_id = out.chat_id
-                self._last_message_id[chat_id] = out[ATTR_MESSAGEID]
+                message_id = out[ATTR_MESSAGEID]
+                self._last_message_id[chat_id] = message_id
                 _LOGGER.debug(
                     "Last message ID: %s (from chat_id %s)",
                     self._last_message_id,
                     chat_id,
                 )
+
+                event_data = {}
+                event_data[ATTR_CHAT_ID] = chat_id
+                event_data[ATTR_MESSAGEID] = message_id
+                result_code = kwargs_msg.get(ATTR_RESULT_CODE)
+                if result_code is not None:
+                    event_data[ATTR_RESULT_CODE] = result_code
+                self.hass.bus.async_fire(EVENT_TELEGRAM_SENT, event_data)
             elif not isinstance(out, bool):
                 _LOGGER.warning(
                     "Update last message: out_type:%s, out=%s", type(out), out
