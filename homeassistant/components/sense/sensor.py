@@ -212,9 +212,9 @@ class SenseVoltageSensor(Entity):
     """Implementation of a Sense energy voltage sensor."""
 
     def __init__(
-        self, 
-        data, 
-        index, 
+        self,
+        data,
+        index,
         sense_monitor_id,
     ):
         """Initialize the Sense sensor."""
