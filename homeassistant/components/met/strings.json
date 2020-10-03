@@ -12,6 +12,6 @@
         }
       }
     },
-    "error": { "name_exists": "Location already exists" }
+    "error": { "already_configured": "[%key:common::config_flow::abort::already_configured_service%]" }
   }
 }
