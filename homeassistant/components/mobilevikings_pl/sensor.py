@@ -6,6 +6,7 @@ https://mobilevikings.pl/en/mysims
 """
 import datetime
 from datetime import timedelta
+from json import JSONDecodeError
 import logging
 
 import mobilevikings_scraper
@@ -130,18 +131,18 @@ class VikingData:
     @staticmethod
     def _parse_data_str(data_str):
         """Parse string with data available."""
-        x = data_str.lower().split(" ")
-        x[0] = float(x[0])
+        parts = data_str.lower().split(" ")
+        parts[0] = float(parts[0])
         # If it's 0 then there will be no x[1]
-        if x[0] == 0:
+        if parts[0] == 0:
             return 0
         # Parse other units (don't know if it actually happens in practise)
-        if x[1] == "gb":
-            return x[0]
-        elif x[1] == "mb":
-            return x[0] / 1024
-        elif x[1] == "kb":
-            return x[0] / 1024 / 1024
+        elif parts[1] == "gb":
+            return parts[0]
+        elif parts[1] == "mb":
+            return parts[0] / 1024
+        elif parts[1] == "kb":
+            return parts[0] / 1024 / 1024
         else:
             raise Exception("Error while parsing available data!")
 
@@ -179,5 +180,11 @@ class VikingData:
                 .date()
                 .isoformat()
             )
-        except Exception as e:
-            _LOGGER.error("Error on receive last MobileVikings data: %s", e)
+        except (
+            IndexError,
+            KeyError,
+            TypeError,
+            ConnectionError,
+            JSONDecodeError,
+        ) as exc:
+            _LOGGER.error("Error on receive last MobileVikings data: %s", exc)
