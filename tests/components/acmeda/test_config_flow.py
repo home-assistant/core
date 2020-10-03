@@ -140,4 +140,4 @@ async def test_already_configured(hass, mock_hub_discover):
     )
 
     assert result["type"] == "abort"
-    assert result["reason"] == "all_configured"
+    assert result["reason"] == "no_devices_found"
