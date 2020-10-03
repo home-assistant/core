@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "L'integrazione GIO\u015a per questa stazione di misurazione \u00e8 gi\u00e0 configurata."
+            "already_configured": "Il servizio \u00e8 gi\u00e0 configurato"
         },
         "error": {
-            "cannot_connect": "Impossibile connettersi al server GIO\u015a.",
+            "cannot_connect": "Impossibile connettersi",
             "invalid_sensors_data": "Dati dei sensori non validi per questa stazione di misura.",
             "wrong_station_id": "L'ID della stazione di misura non \u00e8 corretto."
         },

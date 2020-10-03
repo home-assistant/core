@@ -267,6 +267,8 @@ async def test_extract_entity_ids(hass):
     hass.states.async_set("light.Ceiling", STATE_OFF)
     hass.states.async_set("light.Kitchen", STATE_OFF)
 
+    assert await async_setup_component(hass, "group", {})
+    await hass.async_block_till_done()
     await hass.components.group.Group.async_create_group(
         hass, "test", ["light.Ceiling", "light.Kitchen"]
     )

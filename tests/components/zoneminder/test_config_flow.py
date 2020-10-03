@@ -47,7 +47,7 @@ async def test_import(
     )
     assert result
     assert result["type"] == "abort"
-    assert result["reason"] == "auth_fail"
+    assert result["reason"] == "invalid_auth"
 
     zm_client.login.return_value = True
     result = await hass.config_entries.flow.async_init(

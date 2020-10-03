@@ -5,14 +5,18 @@
         },
         "error": {
             "cannot_connect": "Feeler beim verbannen",
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun",
             "unknown": "Onerwaarte Feeler"
         },
         "flow_title": "Nightscout",
         "step": {
             "user": {
                 "data": {
+                    "api_key": "API Schl\u00ebssel",
                     "url": "URL"
-                }
+                },
+                "description": "- URL. Adresse vun denger Nightscout Instanz: beispill: \nhttps://myhomeassistant.duckdns.org:5423\n- API Schl\u00ebssel (optionell): N\u00ebmmen benotzen wann deng Instanz proteg\u00e9iert ass. \n(auth_default_roles != readable)",
+                "title": "F\u00ebll d\u00e9ng Nightscout Server Informatiounen aus."
             }
         }
     }

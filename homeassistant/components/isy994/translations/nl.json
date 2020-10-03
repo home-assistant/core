@@ -1,5 +1,12 @@
 {
     "config": {
-        "flow_title": "Universele apparaten ISY994 {name} ({host})"
+        "flow_title": "Universele apparaten ISY994 {name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "username": "Gebruikersnaam"
+                }
+            }
+        }
     }
 }

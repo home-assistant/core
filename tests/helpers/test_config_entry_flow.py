@@ -238,7 +238,7 @@ async def test_webhook_single_entry_allowed(hass, webhook_flow_conf):
     result = await flow.async_step_user()
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "one_instance_allowed"
+    assert result["reason"] == "single_instance_allowed"
 
 
 async def test_webhook_multiple_entries_allowed(hass, webhook_flow_conf):

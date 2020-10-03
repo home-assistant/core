@@ -14,14 +14,17 @@ from homeassistant.components.deconz.config_flow import (
 from homeassistant.components.deconz.const import (
     CONF_ALLOW_CLIP_SENSOR,
     CONF_ALLOW_DECONZ_GROUPS,
+    CONF_ALLOW_NEW_DEVICES,
     CONF_MASTER_GATEWAY,
     DOMAIN,
 )
-from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONTENT_TYPE_JSON
 
 from .test_gateway import API_KEY, BRIDGEID, setup_deconz_integration
 
 from tests.async_mock import patch
+
+BAD_BRIDGEID = "0000000000000000"
 
 
 async def test_flow_discovered_bridges(hass, aioclient_mock):
@@ -32,7 +35,7 @@ async def test_flow_discovered_bridges(hass, aioclient_mock):
             {"id": BRIDGEID, "internalipaddress": "1.2.3.4", "internalport": 80},
             {"id": "1234E567890A", "internalipaddress": "5.6.7.8", "internalport": 80},
         ],
-        headers={"content-type": "application/json"},
+        headers={"content-type": CONTENT_TYPE_JSON},
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -52,7 +55,7 @@ async def test_flow_discovered_bridges(hass, aioclient_mock):
     aioclient_mock.post(
         "http://1.2.3.4:80/api",
         json=[{"success": {"username": API_KEY}}],
-        headers={"content-type": "application/json"},
+        headers={"content-type": CONTENT_TYPE_JSON},
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -73,7 +76,7 @@ async def test_flow_manual_configuration_decision(hass, aioclient_mock):
     aioclient_mock.get(
         pydeconz.utils.URL_DISCOVER,
         json=[{"id": BRIDGEID, "internalipaddress": "1.2.3.4", "internalport": 80}],
-        headers={"content-type": "application/json"},
+        headers={"content-type": CONTENT_TYPE_JSON},
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -98,13 +101,13 @@ async def test_flow_manual_configuration_decision(hass, aioclient_mock):
     aioclient_mock.post(
         "http://1.2.3.4:80/api",
         json=[{"success": {"username": API_KEY}}],
-        headers={"content-type": "application/json"},
+        headers={"content-type": CONTENT_TYPE_JSON},
     )
 
     aioclient_mock.get(
         f"http://1.2.3.4:80/api/{API_KEY}/config",
         json={"bridgeid": BRIDGEID},
-        headers={"content-type": "application/json"},
+        headers={"content-type": CONTENT_TYPE_JSON},
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -125,7 +128,7 @@ async def test_flow_manual_configuration(hass, aioclient_mock):
     aioclient_mock.get(
         pydeconz.utils.URL_DISCOVER,
         json=[],
-        headers={"content-type": "application/json"},
+        headers={"content-type": CONTENT_TYPE_JSON},
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -146,13 +149,13 @@ async def test_flow_manual_configuration(hass, aioclient_mock):
     aioclient_mock.post(
         "http://1.2.3.4:80/api",
         json=[{"success": {"username": API_KEY}}],
-        headers={"content-type": "application/json"},
+        headers={"content-type": CONTENT_TYPE_JSON},
     )
 
     aioclient_mock.get(
         f"http://1.2.3.4:80/api/{API_KEY}/config",
         json={"bridgeid": BRIDGEID},
-        headers={"content-type": "application/json"},
+        headers={"content-type": CONTENT_TYPE_JSON},
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -201,7 +204,7 @@ async def test_manual_configuration_update_configuration(hass, aioclient_mock):
     aioclient_mock.get(
         pydeconz.utils.URL_DISCOVER,
         json=[],
-        headers={"content-type": "application/json"},
+        headers={"content-type": CONTENT_TYPE_JSON},
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -222,13 +225,13 @@ async def test_manual_configuration_update_configuration(hass, aioclient_mock):
     aioclient_mock.post(
         "http://2.3.4.5:80/api",
         json=[{"success": {"username": API_KEY}}],
-        headers={"content-type": "application/json"},
+        headers={"content-type": CONTENT_TYPE_JSON},
     )
 
     aioclient_mock.get(
         f"http://2.3.4.5:80/api/{API_KEY}/config",
         json={"bridgeid": BRIDGEID},
-        headers={"content-type": "application/json"},
+        headers={"content-type": CONTENT_TYPE_JSON},
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -247,7 +250,7 @@ async def test_manual_configuration_dont_update_configuration(hass, aioclient_mo
     aioclient_mock.get(
         pydeconz.utils.URL_DISCOVER,
         json=[],
-        headers={"content-type": "application/json"},
+        headers={"content-type": CONTENT_TYPE_JSON},
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -268,13 +271,13 @@ async def test_manual_configuration_dont_update_configuration(hass, aioclient_mo
     aioclient_mock.post(
         "http://1.2.3.4:80/api",
         json=[{"success": {"username": API_KEY}}],
-        headers={"content-type": "application/json"},
+        headers={"content-type": CONTENT_TYPE_JSON},
     )
 
     aioclient_mock.get(
         f"http://1.2.3.4:80/api/{API_KEY}/config",
         json={"bridgeid": BRIDGEID},
-        headers={"content-type": "application/json"},
+        headers={"content-type": CONTENT_TYPE_JSON},
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -290,7 +293,7 @@ async def test_manual_configuration_timeout_get_bridge(hass, aioclient_mock):
     aioclient_mock.get(
         pydeconz.utils.URL_DISCOVER,
         json=[],
-        headers={"content-type": "application/json"},
+        headers={"content-type": CONTENT_TYPE_JSON},
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -311,7 +314,7 @@ async def test_manual_configuration_timeout_get_bridge(hass, aioclient_mock):
     aioclient_mock.post(
         "http://1.2.3.4:80/api",
         json=[{"success": {"username": API_KEY}}],
-        headers={"content-type": "application/json"},
+        headers={"content-type": CONTENT_TYPE_JSON},
     )
 
     aioclient_mock.get(
@@ -331,7 +334,7 @@ async def test_link_get_api_key_ResponseError(hass, aioclient_mock):
     aioclient_mock.get(
         pydeconz.utils.URL_DISCOVER,
         json=[{"id": BRIDGEID, "internalipaddress": "1.2.3.4", "internalport": 80}],
-        headers={"content-type": "application/json"},
+        headers={"content-type": CONTENT_TYPE_JSON},
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -374,7 +377,7 @@ async def test_flow_ssdp_discovery(hass, aioclient_mock):
     aioclient_mock.post(
         "http://1.2.3.4:80/api",
         json=[{"success": {"username": API_KEY}}],
-        headers={"content-type": "application/json"},
+        headers={"content-type": CONTENT_TYPE_JSON},
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -388,6 +391,35 @@ async def test_flow_ssdp_discovery(hass, aioclient_mock):
         CONF_PORT: 80,
         CONF_API_KEY: API_KEY,
     }
+
+
+async def test_flow_ssdp_discovery_bad_bridge_id_aborts(hass, aioclient_mock):
+    """Test that config flow aborts if deCONZ signals no radio hardware available."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        data={
+            ssdp.ATTR_SSDP_LOCATION: "http://1.2.3.4:80/",
+            ssdp.ATTR_UPNP_MANUFACTURER_URL: DECONZ_MANUFACTURERURL,
+            ssdp.ATTR_UPNP_SERIAL: BAD_BRIDGEID,
+        },
+        context={"source": "ssdp"},
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "link"
+
+    aioclient_mock.post(
+        "http://1.2.3.4:80/api",
+        json=[{"success": {"username": API_KEY}}],
+        headers={"content-type": CONTENT_TYPE_JSON},
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "no_hardware_available"
 
 
 async def test_ssdp_discovery_not_deconz_bridge(hass):
@@ -561,12 +593,17 @@ async def test_option_flow(hass):
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={CONF_ALLOW_CLIP_SENSOR: False, CONF_ALLOW_DECONZ_GROUPS: False},
+        user_input={
+            CONF_ALLOW_CLIP_SENSOR: False,
+            CONF_ALLOW_DECONZ_GROUPS: False,
+            CONF_ALLOW_NEW_DEVICES: False,
+        },
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == {
         CONF_ALLOW_CLIP_SENSOR: False,
         CONF_ALLOW_DECONZ_GROUPS: False,
+        CONF_ALLOW_NEW_DEVICES: False,
         CONF_MASTER_GATEWAY: True,
     }

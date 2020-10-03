@@ -384,11 +384,12 @@ DEGREE = "°"
 # Currency units
 CURRENCY_EURO = "€"
 CURRENCY_DOLLAR = "$"
+CURRENCY_CENT = "¢"
 
 # Temperature units
 TEMP_CELSIUS = f"{DEGREE}C"
 TEMP_FAHRENHEIT = f"{DEGREE}F"
-TEMP_KELVIN = f"{DEGREE}K"
+TEMP_KELVIN = "K"
 
 # Time units
 TIME_MICROSECONDS = "μs"
@@ -402,6 +403,7 @@ TIME_MONTHS = "m"
 TIME_YEARS = "y"
 
 # Length units
+LENGTH_MILLIMETERS: str = "mm"
 LENGTH_CENTIMETERS: str = "cm"
 LENGTH_METERS: str = "m"
 LENGTH_KILOMETERS: str = "km"
@@ -447,6 +449,9 @@ MASS_POUNDS: str = "lb"
 # Conductivity units
 CONDUCTIVITY: str = f"µS/{LENGTH_CENTIMETERS}"
 
+# Light units
+LIGHT_LUX: str = "lx"
+
 # UV Index units
 UV_INDEX: str = "UV index"
 
@@ -466,6 +471,10 @@ CONCENTRATION_PARTS_PER_BILLION = "ppb"
 SPEED_METERS_PER_SECOND = f"{LENGTH_METERS}/{TIME_SECONDS}"
 SPEED_KILOMETERS_PER_HOUR = f"{LENGTH_KILOMETERS}/{TIME_HOURS}"
 SPEED_MILES_PER_HOUR = "mph"
+
+# Signal_strength units
+SIGNAL_STRENGTH_DECIBELS = "dB"
+SIGNAL_STRENGTH_DECIBELS_MILLIWATT = "dBm"
 
 # Data units
 DATA_BITS = "bit"
@@ -615,3 +624,10 @@ PRECISION_TENTHS = 0.1
 # Static list of entities that will never be exposed to
 # cloud, alexa, or google_home components
 CLOUD_NEVER_EXPOSED_ENTITIES = ["group.all_locks"]
+
+# The ID of the Home Assistant Cast App
+CAST_APP_ID_HOMEASSISTANT = "B12CE3CA"
+
+# The tracker error allow when converting
+# loop time to human readable time
+MAX_TIME_TRACKING_ERROR = 0.001

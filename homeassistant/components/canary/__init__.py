@@ -13,16 +13,16 @@ from homeassistant.const import CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.util import Throttle
 
 from .const import (
     CONF_FFMPEG_ARGUMENTS,
-    DATA_CANARY,
+    DATA_COORDINATOR,
     DATA_UNDO_UPDATE_LISTENER,
     DEFAULT_FFMPEG_ARGUMENTS,
     DEFAULT_TIMEOUT,
     DOMAIN,
 )
+from .coordinator import CanaryDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -89,19 +89,21 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         hass.config_entries.async_update_entry(entry, options=options)
 
     try:
-        canary_data = CanaryData(
-            entry.data[CONF_USERNAME],
-            entry.data[CONF_PASSWORD],
-            entry.options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
-        )
+        canary_api = await hass.async_add_executor_job(_get_canary_api_instance, entry)
     except (ConnectTimeout, HTTPError) as error:
         _LOGGER.error("Unable to connect to Canary service: %s", str(error))
         raise ConfigEntryNotReady from error
 
+    coordinator = CanaryDataUpdateCoordinator(hass, api=canary_api)
+    await coordinator.async_refresh()
+
+    if not coordinator.last_update_success:
+        raise ConfigEntryNotReady
+
     undo_listener = entry.add_update_listener(_async_update_listener)
 
     hass.data[DOMAIN][entry.entry_id] = {
-        DATA_CANARY: canary_data,
+        DATA_COORDINATOR: coordinator,
         DATA_UNDO_UPDATE_LISTENER: undo_listener,
     }
 
@@ -136,67 +138,12 @@ async def _async_update_listener(hass: HomeAssistantType, entry: ConfigEntry) ->
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-class CanaryData:
-    """Get the latest data and update the states."""
+def _get_canary_api_instance(entry: ConfigEntry) -> Api:
+    """Initialize a new instance of CanaryApi."""
+    canary = Api(
+        entry.data[CONF_USERNAME],
+        entry.data[CONF_PASSWORD],
+        entry.options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
+    )
 
-    def __init__(self, username, password, timeout):
-        """Init the Canary data object."""
-
-        self._api = Api(username, password, timeout)
-
-        self._locations_by_id = {}
-        self._readings_by_device_id = {}
-
-        self.update()
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self, **kwargs):
-        """Get the latest data from py-canary with a throttle."""
-        self._update(**kwargs)
-
-    def _update(self, **kwargs):
-        """Get the latest data from py-canary."""
-        for location in self._api.get_locations():
-            location_id = location.location_id
-
-            self._locations_by_id[location_id] = location
-
-            for device in location.devices:
-                if device.is_online:
-                    self._readings_by_device_id[
-                        device.device_id
-                    ] = self._api.get_latest_readings(device.device_id)
-
-    @property
-    def locations(self):
-        """Return a list of locations."""
-        return self._locations_by_id.values()
-
-    def get_location(self, location_id):
-        """Return a location based on location_id."""
-        return self._locations_by_id.get(location_id, [])
-
-    def get_readings(self, device_id):
-        """Return a list of readings based on device_id."""
-        return self._readings_by_device_id.get(device_id, [])
-
-    def get_reading(self, device_id, sensor_type):
-        """Return reading for device_id and sensor type."""
-        readings = self._readings_by_device_id.get(device_id, [])
-        return next(
-            (
-                reading.value
-                for reading in readings
-                if reading.sensor_type == sensor_type
-            ),
-            None,
-        )
-
-    def set_location_mode(self, location_id, mode_name, is_private=False):
-        """Set location mode."""
-        self._api.set_location_mode(location_id, mode_name, is_private)
-        self.update(no_throttle=True)
-
-    def get_live_stream_session(self, device):
-        """Return live stream session."""
-        return self._api.get_live_stream_session(device)
+    return canary

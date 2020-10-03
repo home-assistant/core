@@ -5,13 +5,19 @@ import pytest
 
 from homeassistant.components import sun
 import homeassistant.components.automation as automation
-from homeassistant.const import SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ENTITY_MATCH_ALL,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    SUN_EVENT_SUNRISE,
+    SUN_EVENT_SUNSET,
+)
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.async_mock import patch
 from tests.common import async_fire_time_changed, async_mock_service, mock_component
-from tests.components.automation import common
 
 ORIG_TIME_ZONE = dt_util.DEFAULT_TIME_ZONE
 
@@ -54,16 +60,24 @@ async def test_sunset_trigger(hass, calls, legacy_patchable_time):
             },
         )
 
-    await common.async_turn_off(hass)
-    await hass.async_block_till_done()
+    await hass.services.async_call(
+        automation.DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: ENTITY_MATCH_ALL},
+        blocking=True,
+    )
 
     async_fire_time_changed(hass, trigger_time)
     await hass.async_block_till_done()
     assert len(calls) == 0
 
     with patch("homeassistant.util.dt.utcnow", return_value=now):
-        await common.async_turn_on(hass)
-        await hass.async_block_till_done()
+        await hass.services.async_call(
+            automation.DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: ENTITY_MATCH_ALL},
+            blocking=True,
+        )
 
     async_fire_time_changed(hass, trigger_time)
     await hass.async_block_till_done()

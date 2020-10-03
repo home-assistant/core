@@ -166,7 +166,7 @@ async def test_form_invalid_api_key(hass):
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
         )
 
-        assert result["errors"] == {"base": "auth"}
+        assert result["errors"] == {"base": "invalid_api_key"}
 
 
 async def test_form_api_call_error(hass):
@@ -182,7 +182,7 @@ async def test_form_api_call_error(hass):
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
         )
 
-        assert result["errors"] == {"base": "connection"}
+        assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_form_api_offline(hass):
@@ -197,7 +197,7 @@ async def test_form_api_offline(hass):
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
         )
 
-        assert result["errors"] == {"base": "auth"}
+        assert result["errors"] == {"base": "invalid_api_key"}
 
 
 def _create_mocked_owm(is_api_online: bool):

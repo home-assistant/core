@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Saate konfigureerida ainult \u00fche Spotify konto.",
+            "authorize_url_timeout": "Kinnituse URLi ajal\u00f5pp",
+            "missing_configuration": "Spotify sidumine pole h\u00e4\u00e4lestatud. Palun j\u00e4rgige dokumentatsiooni.",
+            "no_url_available": "URL ploe saadaval. Rohkem teavet [check the help section]({docs_url})",
+            "reauth_account_mismatch": "Spotify konto mida autenditi ei vasta kontole mis vajas uuesti autentimist."
+        },
+        "create_entry": {
+            "default": "Edukalt Spotifyga autenditud."
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Valige autentimismeetod"
+            },
+            "reauth_confirm": {
+                "description": "Spotify konto: {account} sidumine tuleb uuesti autentida",
+                "title": "Autendi Spotify uuesti"
+            }
+        }
+    }
+}

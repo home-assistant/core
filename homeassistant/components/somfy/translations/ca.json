@@ -4,10 +4,11 @@
             "already_setup": "Nom\u00e9s pots configurar un \u00fanic compte amb Somfy.",
             "authorize_url_timeout": "S'ha acabat el temps d'espera durant la generaci\u00f3 de l'URL d'autoritzaci\u00f3.",
             "missing_configuration": "El component Somfy no est\u00e0 configurat. Mira'n la documentaci\u00f3.",
-            "no_url_available": "No hi ha cap URL disponible. Per a m\u00e9s informaci\u00f3 sobre aquest error, [consulta la secci\u00f3 d'ajuda]({docs_url})"
+            "no_url_available": "No hi ha cap URL disponible. Per a m\u00e9s informaci\u00f3 sobre aquest error, [consulta la secci\u00f3 d'ajuda]({docs_url})",
+            "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
         },
         "create_entry": {
-            "default": "Autenticaci\u00f3 exitosa amb Somfy."
+            "default": "Autenticaci\u00f3 exitosa"
         },
         "step": {
             "pick_implementation": {
