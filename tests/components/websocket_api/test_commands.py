@@ -417,7 +417,12 @@ async def test_render_template_renders_template(hass, websocket_client):
     event = msg["event"]
     assert event == {
         "result": "State is: on",
-        "listeners": {"all": False, "domains": [], "entities": ["light.test"]},
+        "listeners": {
+            "all": False,
+            "domains": [],
+            "entities": ["light.test"],
+            "time_patterns": [],
+        },
     }
 
     hass.states.async_set("light.test", "off")
@@ -427,7 +432,12 @@ async def test_render_template_renders_template(hass, websocket_client):
     event = msg["event"]
     assert event == {
         "result": "State is: off",
-        "listeners": {"all": False, "domains": [], "entities": ["light.test"]},
+        "listeners": {
+            "all": False,
+            "domains": [],
+            "entities": ["light.test"],
+            "time_patterns": [],
+        },
     }
 
 
@@ -456,7 +466,12 @@ async def test_render_template_manual_entity_ids_no_longer_needed(
     event = msg["event"]
     assert event == {
         "result": "State is: on",
-        "listeners": {"all": False, "domains": [], "entities": ["light.test"]},
+        "listeners": {
+            "all": False,
+            "domains": [],
+            "entities": ["light.test"],
+            "time_patterns": [],
+        },
     }
 
     hass.states.async_set("light.test", "off")
@@ -466,7 +481,12 @@ async def test_render_template_manual_entity_ids_no_longer_needed(
     event = msg["event"]
     assert event == {
         "result": "State is: off",
-        "listeners": {"all": False, "domains": [], "entities": ["light.test"]},
+        "listeners": {
+            "all": False,
+            "domains": [],
+            "entities": ["light.test"],
+            "time_patterns": [],
+        },
     }
 
 
