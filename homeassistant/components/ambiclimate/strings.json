@@ -14,8 +14,8 @@
       "follow_link": "Please follow the link and authenticate before pressing Submit"
     },
     "abort": {
-      "already_setup": "[%key:common::config_flow::abort::single_instance_allowed%]",
-      "no_config": "oauth2_missing_configuration",
+      "already_configured_device": "[%key:common::config_flow::abort::already_configured_device%]",
+      "oauth2_missing_configuration": "oauth2_missing_configuration",
       "access_token": "Unknown error generating an access token."
     }
   }
