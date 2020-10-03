@@ -93,6 +93,9 @@ import homeassistant.util.dt as dt_util
 # pylint: disable=invalid-name
 
 TIME_PERIOD_ERROR = "offset {} should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F'"
+TIME_PATTERN_HOURS_MAX = 23
+TIME_PATTERN_MINUTES_MAX = 59
+TIME_PATTERN_SECONDS_MAX = 59
 
 # Home Assistant types
 byte = vol.All(vol.Coerce(int), vol.Range(min=0, max=255))
@@ -676,6 +679,35 @@ class multi_select:
                 raise vol.Invalid(f"{value} is not a valid option")
 
         return selected
+
+
+class TimePattern:
+    """Validate a time pattern value.
+
+    :raises Invalid: If the value has a wrong format or is outside the range.
+    """
+
+    def __init__(self, maximum: int) -> None:
+        """Initialize time pattern."""
+        self.maximum = maximum
+
+    def __call__(self, value: Any) -> Any:
+        """Validate input."""
+        try:
+            if value == "*":
+                return value
+
+            if isinstance(value, str) and value.startswith("/"):
+                number = int(value[1:])
+            else:
+                value = number = int(value)
+
+            if not (0 <= number <= self.maximum):
+                raise vol.Invalid(f"must be a value between 0 and {self.maximum}")
+        except ValueError as err:
+            raise vol.Invalid("invalid time_pattern value") from err
+
+        return value
 
 
 def deprecated(
