@@ -221,7 +221,7 @@ aiopvpc==2.0.2
 aiopylgtv==0.3.3
 
 # homeassistant.components.shelly
-aioshelly==0.3.3
+aioshelly==0.3.4
 
 # homeassistant.components.switcher_kis
 aioswitcher==1.2.1
@@ -315,7 +315,7 @@ axis==37
 azure-eventhub==5.1.0
 
 # homeassistant.components.azure_service_bus
-azure-servicebus==0.50.1
+azure-servicebus==0.50.3
 
 # homeassistant.components.baidu
 baidu-aip==1.6.6
@@ -481,7 +481,7 @@ defusedxml==0.6.0
 deluge-client==1.7.1
 
 # homeassistant.components.denonavr
-denonavr==0.9.4
+denonavr==0.9.5
 
 # homeassistant.components.devolo_home_control
 devolo-home-control-api==0.15.0
@@ -1404,7 +1404,7 @@ pyhik==0.2.7
 pyhiveapi==0.2.20.2
 
 # homeassistant.components.homematic
-pyhomematic==0.1.68
+pyhomematic==0.1.70
 
 # homeassistant.components.homeworks
 pyhomeworks==0.0.6
@@ -1846,7 +1846,7 @@ pyvera==0.3.10
 pyversasense==0.0.6
 
 # homeassistant.components.vesync
-pyvesync==1.1.0
+pyvesync==1.2.0
 
 # homeassistant.components.vizio
 pyvizio==0.1.56
@@ -2329,7 +2329,7 @@ zigpy-xbee==0.13.0
 zigpy-zigate==0.6.2
 
 # homeassistant.components.zha
-zigpy-znp==0.2.0
+zigpy-znp==0.2.1
 
 # homeassistant.components.zha
 zigpy==0.25.0

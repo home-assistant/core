@@ -108,7 +108,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             ):
                 entities.append(DeconzSensor(sensor, gateway))
 
-        async_add_entities(entities, True)
+        if entities:
+            async_add_entities(entities, True)
 
     gateway.listeners.append(
         async_dispatcher_connect(

@@ -774,16 +774,65 @@ class _TrackTemplateResultInfo:
         """Force recalculate the template."""
         self._refresh(None)
 
-    @callback
-    def _event_triggers_template(self, template: Template, event: Event) -> bool:
-        """Determine if a template should be re-rendered from an event."""
-        entity_id = event.data.get(ATTR_ENTITY_ID)
-        return (
-            self._info[template].filter(entity_id)
-            or event.data.get("new_state") is None
-            or event.data.get("old_state") is None
-            and self._info[template].filter_lifecycle(entity_id)
-        )
+    def _render_template_if_ready(
+        self,
+        track_template_: TrackTemplate,
+        now: datetime,
+        event: Optional[Event],
+    ) -> Union[bool, TrackTemplateResult]:
+        """Re-render the template if conditions match.
+
+        Returns False if the template was not be re-rendered
+
+        Returns True if the template re-rendered and did not
+        change.
+
+        Returns TrackTemplateResult if the template re-render
+        generates a new result.
+        """
+        template = track_template_.template
+
+        if event:
+            info = self._info[template]
+
+            if not self._rate_limit.async_has_timer(
+                template
+            ) and not _event_triggers_rerender(event, info):
+                return False
+
+            if self._rate_limit.async_schedule_action(
+                template,
+                info.rate_limit or track_template_.rate_limit,
+                now,
+                self._refresh,
+                event,
+            ):
+                return False
+
+            _LOGGER.debug(
+                "Template update %s triggered by event: %s",
+                template.template,
+                event,
+            )
+
+        self._rate_limit.async_triggered(template, now)
+        self._info[template] = template.async_render_to_info(track_template_.variables)
+
+        try:
+            result: Union[str, TemplateError] = self._info[template].result()
+        except TemplateError as ex:
+            result = ex
+
+        last_result = self._last_result.get(template)
+
+        # Check to see if the result has changed
+        if result == last_result:
+            return True
+
+        if isinstance(result, TemplateError) and isinstance(last_result, TemplateError):
+            return True
+
+        return TrackTemplateResult(template, last_result, result)
 
     @callback
     def _refresh(self, event: Optional[Event]) -> None:
@@ -792,51 +841,13 @@ class _TrackTemplateResultInfo:
         now = dt_util.utcnow()
 
         for track_template_ in self._track_templates:
-            template = track_template_.template
-            if event:
-                if not self._rate_limit.async_has_timer(
-                    template
-                ) and not self._event_triggers_template(template, event):
-                    continue
+            update = self._render_template_if_ready(track_template_, now, event)
+            if not update:
+                continue
 
-                if self._rate_limit.async_schedule_action(
-                    template,
-                    self._info[template].rate_limit or track_template_.rate_limit,
-                    now,
-                    self._refresh,
-                    event,
-                ):
-                    continue
-
-                _LOGGER.debug(
-                    "Template update %s triggered by event: %s",
-                    template.template,
-                    event,
-                )
-
-            self._rate_limit.async_triggered(template, now)
-            self._info[template] = template.async_render_to_info(
-                track_template_.variables
-            )
             info_changed = True
-
-            try:
-                result: Union[str, TemplateError] = self._info[template].result()
-            except TemplateError as ex:
-                result = ex
-
-            last_result = self._last_result.get(template)
-
-            # Check to see if the result has changed
-            if result == last_result:
-                continue
-
-            if isinstance(result, TemplateError) and isinstance(
-                last_result, TemplateError
-            ):
-                continue
-
-            updates.append(TrackTemplateResult(template, last_result, result))
+            if isinstance(update, TrackTemplateResult):
+                updates.append(update)
 
         if info_changed:
             assert self._track_state_changes
@@ -1348,3 +1359,20 @@ def _render_infos_to_track_states(render_infos: Iterable[RenderInfo]) -> TrackSt
         return TrackStates(True, set(), set())
 
     return TrackStates(False, *_entities_domains_from_render_infos(render_infos))
+
+
+@callback
+def _event_triggers_rerender(event: Event, info: RenderInfo) -> bool:
+    """Determine if a template should be re-rendered from an event."""
+    entity_id = event.data.get(ATTR_ENTITY_ID)
+
+    if info.filter(entity_id):
+        return True
+
+    if (
+        event.data.get("new_state") is not None
+        and event.data.get("old_state") is not None
+    ):
+        return False
+
+    return bool(info.filter_lifecycle(entity_id))

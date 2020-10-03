@@ -43,7 +43,7 @@ class MikrotikFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             for entry in self.hass.config_entries.async_entries(DOMAIN):
                 if entry.data[CONF_HOST] == user_input[CONF_HOST]:
-                    return self.async_abort(reason="already_configured")
+                    return self.async_abort(reason="already_configured_device")
                 if entry.data[CONF_NAME] == user_input[CONF_NAME]:
                     errors[CONF_NAME] = "name_exists"
                     break
@@ -53,8 +53,8 @@ class MikrotikFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except LoginError:
-                errors[CONF_USERNAME] = "wrong_credentials"
-                errors[CONF_PASSWORD] = "wrong_credentials"
+                errors[CONF_USERNAME] = "invalid_auth"
+                errors[CONF_PASSWORD] = "invalid_auth"
 
             if not errors:
                 return self.async_create_entry(

@@ -40,8 +40,7 @@ async def test_platform_manually_configured(hass):
 
 async def test_no_locks(hass):
     """Test that no lock entities are created."""
-    gateway = await setup_deconz_integration(hass)
-    assert len(gateway.deconz_ids) == 0
+    await setup_deconz_integration(hass)
     assert len(hass.states.async_all()) == 0
 
 
@@ -50,8 +49,9 @@ async def test_locks(hass):
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["lights"] = deepcopy(LOCKS)
     gateway = await setup_deconz_integration(hass, get_state_response=data)
-    assert "lock.door_lock" in gateway.deconz_ids
+
     assert len(hass.states.async_all()) == 1
+    assert hass.states.get("lock.door_lock").state == STATE_UNLOCKED
 
     door_lock = hass.states.get("lock.door_lock")
     assert door_lock.state == STATE_UNLOCKED
@@ -66,10 +66,13 @@ async def test_locks(hass):
     gateway.api.event_handler(state_changed_event)
     await hass.async_block_till_done()
 
-    door_lock = hass.states.get("lock.door_lock")
-    assert door_lock.state == STATE_LOCKED
+    assert hass.states.get("lock.door_lock").state == STATE_LOCKED
+
+    # Verify service calls
 
     door_lock_device = gateway.api.lights["1"]
+
+    # Service lock door
 
     with patch.object(door_lock_device, "_request", return_value=True) as set_callback:
         await hass.services.async_call(
@@ -80,6 +83,8 @@ async def test_locks(hass):
         )
         await hass.async_block_till_done()
         set_callback.assert_called_with("put", "/lights/1/state", json={"on": True})
+
+    # Service unlock door
 
     with patch.object(door_lock_device, "_request", return_value=True) as set_callback:
         await hass.services.async_call(

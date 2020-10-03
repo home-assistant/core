@@ -84,7 +84,7 @@ async def test_connection_error(hass, requests_mock):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {CONF_URL: "unknown_connection_error"}
+    assert result["errors"] == {CONF_URL: "unknown"}
 
 
 @pytest.fixture
@@ -111,7 +111,7 @@ def login_requests_mock(requests_mock):
         (LoginErrorEnum.PASSWORD_WRONG, {CONF_PASSWORD: "incorrect_password"}),
         (
             LoginErrorEnum.USERNAME_PWD_WRONG,
-            {CONF_USERNAME: "incorrect_username_or_password"},
+            {CONF_USERNAME: "invalid_auth"},
         ),
         (LoginErrorEnum.USERNAME_PWD_ORERRUN, {"base": "login_attempts_exceeded"}),
         (ResponseCodeEnum.ERROR_SYSTEM_UNKNOWN, {"base": "response_error"}),

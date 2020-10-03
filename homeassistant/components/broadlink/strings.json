@@ -26,7 +26,7 @@
       "finish": {
         "title": "Choose a name for the device",
         "data": {
-          "name": "Name"
+          "name": "[%key:common::config_flow::data::name%]"
         }
       }
     },
