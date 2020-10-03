@@ -37,6 +37,8 @@
         "access_token": "Access Token",
         "api_key": "API Key",
         "api_token": "API Token",
+        "ssl": "Uses an SSL certificate",
+        "verify_ssl": "Verify SSL certificate",
         "longitude": "Longitude",
         "latitude": "Latitude"
       },
