@@ -91,6 +91,7 @@ class GroupIntegrationRegistry:
     """Class to hold a registry of integrations."""
 
     on_off_mapping: Dict[str, str] = {STATE_ON: STATE_OFF}
+    off_on_mapping: Dict[str, str] = {STATE_OFF: STATE_ON}
     on_states_by_domain: Dict[str, Set] = {}
     exclude_domains: Set = set()
 
@@ -99,10 +100,13 @@ class GroupIntegrationRegistry:
         self.exclude_domains.add(current_domain.get())
 
     def on_off_states(self, on_states: Set, off_state: str) -> None:
-        """Registry on and off states for the current domain."""
+        """Register on and off states for the current domain."""
         for on_state in on_states:
             if on_state not in self.on_off_mapping:
                 self.on_off_mapping[on_state] = off_state
+
+        if len(on_states) == 1 and off_state not in self.off_on_mapping:
+            self.off_on_mapping[off_state] = list(on_states)[0]
 
         self.on_states_by_domain[current_domain.get()] = set(on_states)
 
@@ -543,6 +547,7 @@ class Group(Entity):
         data = {ATTR_ENTITY_ID: self.tracking, ATTR_ORDER: self._order}
         if not self.user_defined:
             data[ATTR_AUTO] = True
+
         return data
 
     @property
@@ -577,6 +582,7 @@ class Group(Entity):
             return
 
         excluded_domains = self.hass.data[REG_KEY].exclude_domains
+
         tracking = []
         trackable = []
         for ent_id in entity_ids:
@@ -592,6 +598,7 @@ class Group(Entity):
     @callback
     def _async_start(self, *_):
         """Start tracking members and write state."""
+        self._reset_tracked_state()
         self._async_start_tracking()
         self.async_write_ha_state()
 
@@ -625,15 +632,14 @@ class Group(Entity):
 
     async def async_added_to_hass(self):
         """Handle addition to Home Assistant."""
-        if self.tracking:
-            self._reset_tracked_state()
-
         if self.hass.state != CoreState.running:
             self.hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_START, self._async_start
             )
             return
 
+        if self.tracking:
+            self._reset_tracked_state()
         self._async_start_tracking()
 
     async def async_will_remove_from_hass(self):
@@ -671,19 +677,26 @@ class Group(Entity):
             if state is not None:
                 self._see_state(state)
 
-    def _see_state(self, state):
+    def _see_state(self, new_state):
         """Keep track of the the state."""
-        entity_id = state.entity_id
-        domain = state.domain
+        entity_id = new_state.entity_id
+        domain = new_state.domain
+        state = new_state.state
+        registry = self.hass.data[REG_KEY]
+        self._assumed[entity_id] = new_state.attributes.get(ATTR_ASSUMED_STATE)
 
-        domain_on_state = self.hass.data[REG_KEY].on_states_by_domain.get(
-            domain, {STATE_ON}
-        )
-        self._on_off[entity_id] = state.state in domain_on_state
-        self._assumed[entity_id] = state.attributes.get(ATTR_ASSUMED_STATE)
-
-        if domain in self.hass.data[REG_KEY].on_states_by_domain:
-            self._on_states.update(domain_on_state)
+        if domain not in registry.on_states_by_domain:
+            # Handle the group of a group case
+            if state in registry.on_off_mapping:
+                self._on_states.add(state)
+            elif state in registry.off_on_mapping:
+                self._on_states.add(registry.off_on_mapping[state])
+            self._on_off[entity_id] = state in registry.on_off_mapping
+        else:
+            entity_on_state = registry.on_states_by_domain[domain]
+            if domain in self.hass.data[REG_KEY].on_states_by_domain:
+                self._on_states.update(entity_on_state)
+            self._on_off[entity_id] = state in entity_on_state
 
     @callback
     def _async_update_group_state(self, tr_state=None):
@@ -726,7 +739,6 @@ class Group(Entity):
         # on state, we use STATE_ON/STATE_OFF
         else:
             on_state = STATE_ON
-
         group_is_on = self.mode(self._on_off.values())
         if group_is_on:
             self._state = on_state
