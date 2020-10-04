@@ -194,8 +194,8 @@ async def test_multiple_runs_no_wait(hass):
 
         calls.append(service)
         logger.debug("simulated service (%s:%s) started", fire, listen)
-        unsub = hass.bus.async_listen(listen, service_done_cb)
-        hass.bus.async_fire(fire)
+        unsub = hass.bus.async_listen(str(listen), service_done_cb)
+        hass.bus.async_fire(str(fire))
         await service_done.wait()
         unsub()
 
