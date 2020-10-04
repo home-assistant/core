@@ -555,7 +555,8 @@ class TemplateTimePattern:
     def __call__(self, *args: Any, **kwargs: Any) -> str:
         """Handle a call to the class."""
         render_info = self._hass.data.get(_RENDER_INFO)
-        assert render_info is not None
+        if render_info is None:
+            return ""
 
         if args and (args[0] is None or args[0] == "off"):
             render_info.time_pattern = False
