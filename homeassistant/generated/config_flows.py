@@ -158,6 +158,7 @@ FLOWS = [
     "roon",
     "rpi_power",
     "samsungtv",
+    "scaletest",
     "sense",
     "sentry",
     "sharkiq",

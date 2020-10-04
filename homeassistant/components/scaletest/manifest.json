@@ -1,0 +1,9 @@
+{
+  "domain": "scaletest",
+  "name": "Scale Test",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/scaletest",
+  "codeowners": [
+    "@bdraco"
+  ]
+}
