@@ -18,6 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template
+from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import UnitSystem
 
@@ -148,6 +149,7 @@ def test_iterating_all_states(hass):
 
     info = render_to_info(hass, tmpl_str)
     assert_result_info(info, "", all_states=True)
+    assert info.rate_limit == template.DEFAULT_RATE_LIMIT
 
     hass.states.async_set("test.object", "happy")
     hass.states.async_set("sensor.temperature", 10)
@@ -164,6 +166,7 @@ def test_iterating_domain_states(hass):
 
     info = render_to_info(hass, tmpl_str)
     assert_result_info(info, "", domains=["sensor"])
+    assert info.rate_limit == template.DEFAULT_RATE_LIMIT
 
     hass.states.async_set("test.object", "happy")
     hass.states.async_set("sensor.back_door", "open")
@@ -1333,12 +1336,15 @@ async def test_closest_function_home_vs_group_entity_id(hass):
         {"latitude": hass.config.latitude, "longitude": hass.config.longitude},
     )
 
+    assert await async_setup_component(hass, "group", {})
+    await hass.async_block_till_done()
     await group.Group.async_create_group(hass, "location group", ["test_domain.object"])
 
     info = render_to_info(hass, '{{ closest("group.location_group").entity_id }}')
     assert_result_info(
         info, "test_domain.object", {"group.location_group", "test_domain.object"}
     )
+    assert info.rate_limit is None
 
 
 async def test_closest_function_home_vs_group_state(hass):
@@ -1358,26 +1364,32 @@ async def test_closest_function_home_vs_group_state(hass):
         {"latitude": hass.config.latitude, "longitude": hass.config.longitude},
     )
 
+    assert await async_setup_component(hass, "group", {})
+    await hass.async_block_till_done()
     await group.Group.async_create_group(hass, "location group", ["test_domain.object"])
 
     info = render_to_info(hass, '{{ closest("group.location_group").entity_id }}')
     assert_result_info(
         info, "test_domain.object", {"group.location_group", "test_domain.object"}
     )
+    assert info.rate_limit is None
 
     info = render_to_info(hass, "{{ closest(states.group.location_group).entity_id }}")
     assert_result_info(
         info, "test_domain.object", {"test_domain.object", "group.location_group"}
     )
+    assert info.rate_limit is None
 
 
 async def test_expand(hass):
     """Test expand function."""
     info = render_to_info(hass, "{{ expand('test.object') }}")
     assert_result_info(info, "[]", ["test.object"])
+    assert info.rate_limit is None
 
     info = render_to_info(hass, "{{ expand(56) }}")
     assert_result_info(info, "[]")
+    assert info.rate_limit is None
 
     hass.states.async_set("test.object", "happy")
 
@@ -1385,18 +1397,23 @@ async def test_expand(hass):
         hass, "{{ expand('test.object') | map(attribute='entity_id') | join(', ') }}"
     )
     assert_result_info(info, "test.object", ["test.object"])
+    assert info.rate_limit is None
 
     info = render_to_info(
         hass,
         "{{ expand('group.new_group') | map(attribute='entity_id') | join(', ') }}",
     )
     assert_result_info(info, "", ["group.new_group"])
+    assert info.rate_limit is None
 
     info = render_to_info(
         hass, "{{ expand(states.group) | map(attribute='entity_id') | join(', ') }}"
     )
     assert_result_info(info, "", [], ["group"])
+    assert info.rate_limit == template.DEFAULT_RATE_LIMIT
 
+    assert await async_setup_component(hass, "group", {})
+    await hass.async_block_till_done()
     await group.Group.async_create_group(hass, "new group", ["test.object"])
 
     info = render_to_info(
@@ -1404,6 +1421,7 @@ async def test_expand(hass):
         "{{ expand('group.new_group') | map(attribute='entity_id') | join(', ') }}",
     )
     assert_result_info(info, "test.object", {"group.new_group", "test.object"})
+    assert info.rate_limit is None
 
     info = render_to_info(
         hass, "{{ expand(states.group) | map(attribute='entity_id') | join(', ') }}"
@@ -1411,6 +1429,7 @@ async def test_expand(hass):
     assert_result_info(
         info, "test.object", {"test.object", "group.new_group"}, ["group"]
     )
+    assert info.rate_limit == template.DEFAULT_RATE_LIMIT
 
     info = render_to_info(
         hass,
@@ -1425,10 +1444,14 @@ async def test_expand(hass):
         " | map(attribute='entity_id') | join(', ') }}",
     )
     assert_result_info(info, "test.object", {"test.object", "group.new_group"})
+    assert info.rate_limit is None
 
     hass.states.async_set("sensor.power_1", 0)
     hass.states.async_set("sensor.power_2", 200.2)
     hass.states.async_set("sensor.power_3", 400.4)
+
+    assert await async_setup_component(hass, "group", {})
+    await hass.async_block_till_done()
     await group.Group.async_create_group(
         hass, "power sensors", ["sensor.power_1", "sensor.power_2", "sensor.power_3"]
     )
@@ -1442,6 +1465,7 @@ async def test_expand(hass):
         str(200.2 + 400.4),
         {"group.power_sensors", "sensor.power_1", "sensor.power_2", "sensor.power_3"},
     )
+    assert info.rate_limit is None
 
 
 def test_closest_function_to_coord(hass):
@@ -1507,6 +1531,7 @@ def test_async_render_to_info_with_branching(hass):
 """,
     )
     assert_result_info(info, "off", {"light.a", "light.c"})
+    assert info.rate_limit is None
 
     info = render_to_info(
         hass,
@@ -1518,6 +1543,7 @@ def test_async_render_to_info_with_branching(hass):
 """,
     )
     assert_result_info(info, "on", {"light.a", "light.b"})
+    assert info.rate_limit is None
 
 
 def test_async_render_to_info_with_complex_branching(hass):
@@ -1554,6 +1580,7 @@ def test_async_render_to_info_with_complex_branching(hass):
     )
 
     assert_result_info(info, "['sensor.a']", {"light.a", "light.b"}, {"sensor"})
+    assert info.rate_limit == template.DEFAULT_RATE_LIMIT
 
 
 async def test_async_render_to_info_with_wildcard_matching_entity_id(hass):
@@ -1579,6 +1606,7 @@ async def test_async_render_to_info_with_wildcard_matching_entity_id(hass):
         "cover.office_skylight",
     }
     assert info.all_states is True
+    assert info.rate_limit == template.DEFAULT_RATE_LIMIT
 
 
 async def test_async_render_to_info_with_wildcard_matching_state(hass):
@@ -1609,6 +1637,7 @@ async def test_async_render_to_info_with_wildcard_matching_state(hass):
         "cover.office_skylight",
     }
     assert info.all_states is True
+    assert info.rate_limit == template.DEFAULT_RATE_LIMIT
 
     hass.states.async_set("binary_sensor.door", "closed")
     info = render_to_info(hass, template_complex_str)
@@ -1622,6 +1651,7 @@ async def test_async_render_to_info_with_wildcard_matching_state(hass):
         "cover.office_skylight",
     }
     assert info.all_states is True
+    assert info.rate_limit == template.DEFAULT_RATE_LIMIT
 
     template_cover_str = """
 
@@ -1643,6 +1673,7 @@ async def test_async_render_to_info_with_wildcard_matching_state(hass):
         "cover.office_skylight",
     }
     assert info.all_states is False
+    assert info.rate_limit == template.DEFAULT_RATE_LIMIT
 
 
 def test_nested_async_render_to_info_case(hass):
@@ -1655,6 +1686,7 @@ def test_nested_async_render_to_info_case(hass):
         hass, "{{ states[states['input_select.picker'].state].state }}", {}
     )
     assert_result_info(info, "off", {"input_select.picker", "vacuum.a"})
+    assert info.rate_limit is None
 
 
 def test_result_as_boolean(hass):
@@ -2095,6 +2127,8 @@ states.sensor.pick_humidity.state ~ " %"
         )
     )
 
+    assert await async_setup_component(hass, "group", {})
+    await hass.async_block_till_done()
     await group.Group.async_create_group(hass, "empty group", [])
 
     assert ["group.empty_group"] == template.extract_entities(
@@ -2447,6 +2481,7 @@ async def test_lifecycle(hass):
     info = tmp.async_render_to_info()
     assert info.all_states is False
     assert info.all_states_lifecycle is True
+    assert info.rate_limit is None
     assert info.entities == set()
     assert info.domains == set()
     assert info.domains_lifecycle == set()

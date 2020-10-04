@@ -784,7 +784,7 @@ DEVICES = [
             },
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-6"): {
                 "channels": ["on_off"],
-                "entity_class": "Opening",
+                "entity_class": "Motion",
                 "entity_id": "binary_sensor.ikea_of_sweden_tradfri_motion_sensor_77665544_on_off",
             },
         },

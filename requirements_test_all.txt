@@ -134,7 +134,7 @@ aiopvpc==2.0.2
 aiopylgtv==0.3.3
 
 # homeassistant.components.shelly
-aioshelly==0.3.3
+aioshelly==0.3.4
 
 # homeassistant.components.switcher_kis
 aioswitcher==1.2.1
@@ -254,10 +254,10 @@ debugpy==1.0.0rc2
 defusedxml==0.6.0
 
 # homeassistant.components.denonavr
-denonavr==0.9.4
+denonavr==0.9.5
 
 # homeassistant.components.devolo_home_control
-devolo-home-control-api==0.13.0
+devolo-home-control-api==0.15.0
 
 # homeassistant.components.directv
 directv==0.3.0
@@ -382,7 +382,7 @@ hole==0.5.1
 holidays==0.10.3
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200918.2
+home-assistant-frontend==20201001.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -539,7 +539,7 @@ plexapi==4.1.1
 plexauth==0.0.5
 
 # homeassistant.components.plex
-plexwebsocket==0.0.11
+plexwebsocket==0.0.12
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -598,7 +598,7 @@ pyHS100==0.3.5.1
 pyMetno==0.8.1
 
 # homeassistant.components.rfxtrx
-pyRFXtrx==0.25
+pyRFXtrx==0.26
 
 # homeassistant.components.tibber
 pyTibber==0.15.3
@@ -686,7 +686,7 @@ pyhaversion==3.4.2
 pyheos==0.6.0
 
 # homeassistant.components.homematic
-pyhomematic==0.1.68
+pyhomematic==0.1.70
 
 # homeassistant.components.icloud
 pyicloud==0.9.7
@@ -710,7 +710,7 @@ pyisy==2.0.2
 pykira==0.1.1
 
 # homeassistant.components.kodi
-pykodi==0.2.0
+pykodi==0.2.1
 
 # homeassistant.components.lastfm
 pylast==3.3.0
@@ -722,7 +722,7 @@ pylibrespot-java==0.1.0
 pylitejet==0.1
 
 # homeassistant.components.lutron_caseta
-pylutron-caseta==0.6.1
+pylutron-caseta==0.7.0
 
 # homeassistant.components.mailgun
 pymailgunner==1.4
@@ -812,7 +812,7 @@ pysmartthings==0.7.3
 pysoma==0.0.10
 
 # homeassistant.components.sonos
-pysonos==0.0.33
+pysonos==0.0.34
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
@@ -875,7 +875,7 @@ pytradfri[async]==7.0.2
 pyvera==0.3.10
 
 # homeassistant.components.vesync
-pyvesync==1.1.0
+pyvesync==1.2.0
 
 # homeassistant.components.vizio
 pyvizio==0.1.56
@@ -933,7 +933,7 @@ samsungtvws==1.4.0
 sense_energy==0.8.0
 
 # homeassistant.components.sentry
-sentry-sdk==0.17.8
+sentry-sdk==0.18.0
 
 # homeassistant.components.sharkiq
 sharkiqpy==0.1.8
@@ -942,7 +942,10 @@ sharkiqpy==0.1.8
 simplehound==0.3
 
 # homeassistant.components.simplisafe
-simplisafe-python==9.3.3
+simplisafe-python==9.4.1
+
+# homeassistant.components.slack
+slackclient==2.5.0
 
 # homeassistant.components.sleepiq
 sleepyq==0.7
@@ -997,7 +1000,7 @@ stringcase==1.2.0
 sunwatcher==0.2.1
 
 # homeassistant.components.surepetcare
-surepy==0.2.5
+surepy==0.2.6
 
 # homeassistant.components.tellduslive
 tellduslive==0.10.11
@@ -1077,7 +1080,7 @@ yeelight==0.5.3
 zeroconf==0.28.5
 
 # homeassistant.components.zha
-zha-quirks==0.0.44
+zha-quirks==0.0.45
 
 # homeassistant.components.zha
 zigpy-cc==0.5.2
@@ -1092,10 +1095,10 @@ zigpy-xbee==0.13.0
 zigpy-zigate==0.6.2
 
 # homeassistant.components.zha
-zigpy-znp==0.2.0
+zigpy-znp==0.2.1
 
 # homeassistant.components.zha
-zigpy==0.24.3
+zigpy==0.25.0
 
 # homeassistant.components.zoneminder
 zm-py==0.4.0

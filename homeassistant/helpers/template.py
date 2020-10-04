@@ -72,6 +72,8 @@ _COLLECTABLE_STATE_ATTRIBUTES = {
     "name",
 }
 
+DEFAULT_RATE_LIMIT = timedelta(minutes=1)
+
 
 @bind_hass
 def attach(hass: HomeAssistantType, obj: Any) -> None:
@@ -198,10 +200,11 @@ class RenderInfo:
         self.domains = set()
         self.domains_lifecycle = set()
         self.entities = set()
+        self.rate_limit = None
 
     def __repr__(self) -> str:
         """Representation of RenderInfo."""
-        return f"<RenderInfo {self.template} all_states={self.all_states} all_states_lifecycle={self.all_states_lifecycle} domains={self.domains} domains_lifecycle={self.domains_lifecycle} entities={self.entities}>"
+        return f"<RenderInfo {self.template} all_states={self.all_states} all_states_lifecycle={self.all_states_lifecycle} domains={self.domains} domains_lifecycle={self.domains_lifecycle} entities={self.entities} rate_limit={self.rate_limit}>"
 
     def _filter_domains_and_entities(self, entity_id: str) -> bool:
         """Template should re-render if the entity state changes when we match specific domains or entities."""
@@ -221,15 +224,23 @@ class RenderInfo:
 
     def _freeze_static(self) -> None:
         self.is_static = True
-        self.entities = frozenset(self.entities)
-        self.domains = frozenset(self.domains)
-        self.domains_lifecycle = frozenset(self.domains_lifecycle)
+        self._freeze_sets()
         self.all_states = False
 
-    def _freeze(self) -> None:
+    def _freeze_sets(self) -> None:
         self.entities = frozenset(self.entities)
         self.domains = frozenset(self.domains)
         self.domains_lifecycle = frozenset(self.domains_lifecycle)
+
+    def _freeze(self) -> None:
+        self._freeze_sets()
+
+        if self.rate_limit is None and (
+            self.domains or self.domains_lifecycle or self.all_states or self.exception
+        ):
+            # If the template accesses all states or an entire
+            # domain, and no rate limit is set, we use the default.
+            self.rate_limit = DEFAULT_RATE_LIMIT
 
         if self.exception:
             return

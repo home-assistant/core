@@ -72,7 +72,7 @@ async def test_connection_error(
         data={CONF_HOST: "1.2.3.4", CONF_PORT: 9123},
     )
 
-    assert result["errors"] == {"base": "connection_error"}
+    assert result["errors"] == {"base": "cannot_connect"}
     assert result["step_id"] == "user"
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
@@ -89,7 +89,7 @@ async def test_zeroconf_connection_error(
         data={"host": "1.2.3.4", "port": 9123},
     )
 
-    assert result["reason"] == "connection_error"
+    assert result["reason"] == "cannot_connect"
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
 
 
@@ -110,7 +110,7 @@ async def test_zeroconf_confirm_connection_error(
         user_input={CONF_HOST: "1.2.3.4", CONF_PORT: 9123}
     )
 
-    assert result["reason"] == "connection_error"
+    assert result["reason"] == "cannot_connect"
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
 
 
@@ -122,7 +122,7 @@ async def test_zeroconf_no_data(
     flow.hass = hass
     result = await flow.async_step_zeroconf()
 
-    assert result["reason"] == "connection_error"
+    assert result["reason"] == "cannot_connect"
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
 
 

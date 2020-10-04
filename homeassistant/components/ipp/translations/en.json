@@ -20,8 +20,8 @@
                     "base_path": "Relative path to the printer",
                     "host": "Host",
                     "port": "Port",
-                    "ssl": "Printer supports communication over SSL/TLS",
-                    "verify_ssl": "Printer uses a proper SSL certificate"
+                    "ssl": "Uses an SSL certificate",
+                    "verify_ssl": "Verify SSL certificate"
                 },
                 "description": "Set up your printer via Internet Printing Protocol (IPP) to integrate with Home Assistant.",
                 "title": "Link your printer"

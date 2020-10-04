@@ -24,7 +24,8 @@
             "user": {
                 "data": {
                     "host": "Host"
-                }
+                },
+                "description": "Antes de configurarlo, el dispositivo que funciona con bater\u00eda debe despertarse presionando el bot\u00f3n del dispositivo."
             }
         }
     },
