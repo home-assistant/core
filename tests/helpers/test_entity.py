@@ -114,14 +114,13 @@ class TestHelpersEntity:
         assert state.attributes.get(ATTR_DEVICE_CLASS) == "test_class"
 
 
-async def test_warn_slow_update(hass, caplog):
+async def test_warn_slow_update(hass):
     """Warn we log when entity update takes a long time."""
     update_call = False
 
     async def async_update():
         """Mock async update."""
         nonlocal update_call
-        await asyncio.sleep(0.00001)
         update_call = True
 
     mock_entity = entity.Entity()
@@ -129,16 +128,22 @@ async def test_warn_slow_update(hass, caplog):
     mock_entity.entity_id = "comp_test.test_entity"
     mock_entity.async_update = async_update
 
-    fast_update_time = 0.0000001
-
-    with patch.object(entity, "SLOW_UPDATE_WARNING", fast_update_time):
+    with patch.object(hass.loop, "call_later") as mock_call:
         await mock_entity.async_update_ha_state(True)
-        assert str(fast_update_time) in caplog.text
-        assert mock_entity.entity_id in caplog.text
+        assert mock_call.called
+        assert len(mock_call.mock_calls) == 2
+
+        timeout, logger_method = mock_call.mock_calls[0][1][:2]
+
+        assert timeout == entity.SLOW_UPDATE_WARNING
+        assert logger_method == entity._LOGGER.warning
+
+        assert mock_call().cancel.called
+
         assert update_call
 
 
-async def test_warn_slow_update_with_exception(hass, caplog):
+async def test_warn_slow_update_with_exception(hass):
     """Warn we log when entity update takes a long time and trow exception."""
     update_call = False
 
@@ -146,7 +151,6 @@ async def test_warn_slow_update_with_exception(hass, caplog):
         """Mock async update."""
         nonlocal update_call
         update_call = True
-        await asyncio.sleep(0.00001)
         raise AssertionError("Fake update error")
 
     mock_entity = entity.Entity()
@@ -154,23 +158,28 @@ async def test_warn_slow_update_with_exception(hass, caplog):
     mock_entity.entity_id = "comp_test.test_entity"
     mock_entity.async_update = async_update
 
-    fast_update_time = 0.0000001
-
-    with patch.object(entity, "SLOW_UPDATE_WARNING", fast_update_time):
+    with patch.object(hass.loop, "call_later") as mock_call:
         await mock_entity.async_update_ha_state(True)
-        assert str(fast_update_time) in caplog.text
-        assert mock_entity.entity_id in caplog.text
+        assert mock_call.called
+        assert len(mock_call.mock_calls) == 2
+
+        timeout, logger_method = mock_call.mock_calls[0][1][:2]
+
+        assert timeout == entity.SLOW_UPDATE_WARNING
+        assert logger_method == entity._LOGGER.warning
+
+        assert mock_call().cancel.called
+
         assert update_call
 
 
-async def test_warn_slow_device_update_disabled(hass, caplog):
+async def test_warn_slow_device_update_disabled(hass):
     """Disable slow update warning with async_device_update."""
     update_call = False
 
     async def async_update():
         """Mock async update."""
         nonlocal update_call
-        await asyncio.sleep(0.00001)
         update_call = True
 
     mock_entity = entity.Entity()
@@ -178,12 +187,10 @@ async def test_warn_slow_device_update_disabled(hass, caplog):
     mock_entity.entity_id = "comp_test.test_entity"
     mock_entity.async_update = async_update
 
-    fast_update_time = 0.0000001
-
-    with patch.object(entity, "SLOW_UPDATE_WARNING", fast_update_time):
+    with patch.object(hass.loop, "call_later") as mock_call:
         await mock_entity.async_device_update(warning=False)
-        assert str(fast_update_time) not in caplog.text
-        assert mock_entity.entity_id not in caplog.text
+
+        assert not mock_call.called
         assert update_call
 
 
