@@ -1,1 +1,1 @@
-"""Slack notification tests"""
+"""Slack notification tests."""

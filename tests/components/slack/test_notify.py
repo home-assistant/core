@@ -1,4 +1,4 @@
-"""Test slack notifications"""
+"""Test slack notifications."""
 from homeassistant.components.slack.notify import SlackNotificationService
 
 from tests.async_mock import AsyncMock
