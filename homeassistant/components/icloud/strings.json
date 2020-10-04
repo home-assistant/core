@@ -26,7 +26,7 @@
       }
     },
     "error": {
-      "login": "Login error: please check your email & password",
+      "login": "[%key:common::config_flow::error::invalid_auth%]",
       "send_verification_code": "Failed to send verification code",
       "validate_verification_code": "Failed to verify your verification code, choose a trust device and start the verification again"
     },
