@@ -21,6 +21,7 @@ from typing import (
     Any,
     Awaitable,
     Callable,
+    Collection,
     Coroutine,
     Dict,
     Iterable,
@@ -531,7 +532,15 @@ class EventOrigin(enum.Enum):
 class Event:
     """Representation of an event within the bus."""
 
-    __slots__ = ["__weakref__", "event_type", "data", "origin", "time_fired", "context"]
+    __slots__ = [
+        "__weakref__",
+        "event_type",
+        "data",
+        "origin",
+        "time_fired",
+        "context",
+        "_as_dict",
+    ]
 
     def __init__(
         self,
@@ -547,6 +556,7 @@ class Event:
         self.origin = origin
         self.time_fired = time_fired or dt_util.utcnow()
         self.context: Context = context or Context()
+        self._as_dict: Optional[Dict[str, Collection[Any]]] = None
 
     def __hash__(self) -> int:
         """Make hashable."""
@@ -558,13 +568,15 @@ class Event:
 
         Async friendly.
         """
-        return {
-            "event_type": self.event_type,
-            "data": dict(self.data),
-            "origin": str(self.origin),
-            "time_fired": self.time_fired,
-            "context": self.context.as_dict(),
-        }
+        if not self._as_dict:
+            self._as_dict = {
+                "event_type": self.event_type,
+                "data": dict(self.data),
+                "origin": str(self.origin),
+                "time_fired": self.time_fired.isoformat(),
+                "context": self.context.as_dict(),
+            }
+        return self._as_dict
 
     def __repr__(self) -> str:
         """Return the representation."""
@@ -772,6 +784,7 @@ class State:
         "context",
         "domain",
         "object_id",
+        "_as_dict",
     ]
 
     def __init__(
@@ -806,6 +819,7 @@ class State:
         self.last_changed = last_changed or self.last_updated
         self.context = context or Context()
         self.domain, self.object_id = split_entity_id(self.entity_id)
+        self._as_dict: Optional[Dict[str, Collection[Any]]] = None
 
     @property
     def name(self) -> str:
@@ -822,14 +836,16 @@ class State:
         To be used for JSON serialization.
         Ensures: state == State.from_dict(state.as_dict())
         """
-        return {
-            "entity_id": self.entity_id,
-            "state": self.state,
-            "attributes": dict(self.attributes),
-            "last_changed": self.last_changed,
-            "last_updated": self.last_updated,
-            "context": self.context.as_dict(),
-        }
+        if not self._as_dict:
+            self._as_dict = {
+                "entity_id": self.entity_id,
+                "state": self.state,
+                "attributes": dict(self.attributes),
+                "last_changed": self.last_changed.isoformat(),
+                "last_updated": self.last_updated.isoformat(),
+                "context": self.context.as_dict(),
+            }
+        return self._as_dict
 
     @classmethod
     def from_dict(cls, json_dict: Dict) -> Any:
