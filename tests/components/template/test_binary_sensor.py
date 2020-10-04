@@ -3,6 +3,7 @@ from datetime import timedelta
 import logging
 
 from homeassistant import setup
+from homeassistant.components import binary_sensor
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     EVENT_HOMEASSISTANT_START,
@@ -32,14 +33,14 @@ async def test_setup(hass):
         }
     }
     with assert_setup_component(1):
-        assert await setup.async_setup_component(hass, "binary_sensor", config)
+        assert await setup.async_setup_component(hass, binary_sensor.DOMAIN, config)
 
 
 async def test_setup_no_sensors(hass):
     """Test setup with no sensors."""
     with assert_setup_component(0):
         assert await setup.async_setup_component(
-            hass, "binary_sensor", {"binary_sensor": {"platform": "template"}}
+            hass, binary_sensor.DOMAIN, {"binary_sensor": {"platform": "template"}}
         )
 
 
@@ -48,7 +49,7 @@ async def test_setup_invalid_device(hass):
     with assert_setup_component(0):
         assert await setup.async_setup_component(
             hass,
-            "binary_sensor",
+            binary_sensor.DOMAIN,
             {"binary_sensor": {"platform": "template", "sensors": {"foo bar": {}}}},
         )
 
@@ -58,7 +59,7 @@ async def test_setup_invalid_device_class(hass):
     with assert_setup_component(0):
         assert await setup.async_setup_component(
             hass,
-            "binary_sensor",
+            binary_sensor.DOMAIN,
             {
                 "binary_sensor": {
                     "platform": "template",
@@ -78,7 +79,7 @@ async def test_setup_invalid_missing_template(hass):
     with assert_setup_component(0):
         assert await setup.async_setup_component(
             hass,
-            "binary_sensor",
+            binary_sensor.DOMAIN,
             {
                 "binary_sensor": {
                     "platform": "template",
@@ -93,7 +94,7 @@ async def test_icon_template(hass):
     with assert_setup_component(1):
         assert await setup.async_setup_component(
             hass,
-            "binary_sensor",
+            binary_sensor.DOMAIN,
             {
                 "binary_sensor": {
                     "platform": "template",
@@ -129,7 +130,7 @@ async def test_entity_picture_template(hass):
     with assert_setup_component(1):
         assert await setup.async_setup_component(
             hass,
-            "binary_sensor",
+            binary_sensor.DOMAIN,
             {
                 "binary_sensor": {
                     "platform": "template",
@@ -165,7 +166,7 @@ async def test_attribute_templates(hass):
     with assert_setup_component(1):
         assert await setup.async_setup_component(
             hass,
-            "binary_sensor",
+            binary_sensor.DOMAIN,
             {
                 "binary_sensor": {
                     "platform": "template",
@@ -204,7 +205,7 @@ async def test_match_all(hass):
         with assert_setup_component(1):
             assert await setup.async_setup_component(
                 hass,
-                "binary_sensor",
+                binary_sensor.DOMAIN,
                 {
                     "binary_sensor": {
                         "platform": "template",
@@ -247,7 +248,7 @@ async def test_event(hass):
         }
     }
     with assert_setup_component(1):
-        assert await setup.async_setup_component(hass, "binary_sensor", config)
+        assert await setup.async_setup_component(hass, binary_sensor.DOMAIN, config)
 
     await hass.async_block_till_done()
     await hass.async_start()
@@ -278,7 +279,7 @@ async def test_template_delay_on(hass):
             },
         }
     }
-    await setup.async_setup_component(hass, "binary_sensor", config)
+    await setup.async_setup_component(hass, binary_sensor.DOMAIN, config)
     await hass.async_block_till_done()
     await hass.async_start()
 
@@ -338,7 +339,7 @@ async def test_template_delay_off(hass):
         }
     }
     hass.states.async_set("sensor.test_state", "on")
-    await setup.async_setup_component(hass, "binary_sensor", config)
+    await setup.async_setup_component(hass, binary_sensor.DOMAIN, config)
     await hass.async_block_till_done()
     await hass.async_start()
 
@@ -397,7 +398,7 @@ async def test_available_without_availability_template(hass):
             },
         }
     }
-    await setup.async_setup_component(hass, "binary_sensor", config)
+    await setup.async_setup_component(hass, binary_sensor.DOMAIN, config)
     await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
@@ -424,7 +425,7 @@ async def test_availability_template(hass):
             },
         }
     }
-    await setup.async_setup_component(hass, "binary_sensor", config)
+    await setup.async_setup_component(hass, binary_sensor.DOMAIN, config)
     await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
@@ -449,7 +450,7 @@ async def test_invalid_attribute_template(hass, caplog):
 
     await setup.async_setup_component(
         hass,
-        "binary_sensor",
+        binary_sensor.DOMAIN,
         {
             "binary_sensor": {
                 "platform": "template",
@@ -478,7 +479,7 @@ async def test_invalid_availability_template_keeps_component_available(hass, cap
 
     await setup.async_setup_component(
         hass,
-        "binary_sensor",
+        binary_sensor.DOMAIN,
         {
             "binary_sensor": {
                 "platform": "template",
@@ -507,7 +508,7 @@ async def test_no_update_template_match_all(hass, caplog):
 
     await setup.async_setup_component(
         hass,
-        "binary_sensor",
+        binary_sensor.DOMAIN,
         {
             "binary_sensor": {
                 "platform": "template",
@@ -573,7 +574,7 @@ async def test_unique_id(hass):
     """Test unique_id option only creates one binary sensor per id."""
     await setup.async_setup_component(
         hass,
-        "binary_sensor",
+        binary_sensor.DOMAIN,
         {
             "binary_sensor": {
                 "platform": "template",
@@ -615,7 +616,7 @@ async def test_template_validation_error(hass, caplog):
             },
         },
     }
-    await setup.async_setup_component(hass, "binary_sensor", config)
+    await setup.async_setup_component(hass, binary_sensor.DOMAIN, config)
     await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
