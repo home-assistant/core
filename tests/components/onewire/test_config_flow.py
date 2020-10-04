@@ -2,7 +2,6 @@
 from pyownet import protocol
 
 from homeassistant.components.onewire.const import (
-    CONF_MOUNT_DIR,
     CONF_TYPE_OWSERVER,
     CONF_TYPE_SYSBUS,
     DOMAIN,
