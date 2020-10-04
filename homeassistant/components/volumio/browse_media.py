@@ -26,7 +26,7 @@ PLAYABLE_ITEM_TYPES = [
     "internal-folder",
 ]
 
-NON_EXAPNDABLE_ITEM_TYPES = [
+NON_EXPANDABLE_ITEM_TYPES = [
     "song",
     "webradio",
     "mywebradio",
@@ -106,7 +106,7 @@ def _raw_item_payload(media_library, item, parent_item=None, title=None, info=No
         "media_content_type": MEDIA_TYPE_MUSIC,
         "media_content_id": json.dumps(item),
         "can_play": item.get("type") in PLAYABLE_ITEM_TYPES,
-        "can_expand": item.get("type") not in NON_EXAPNDABLE_ITEM_TYPES,
+        "can_expand": item.get("type") not in NON_EXPANDABLE_ITEM_TYPES,
         "thumbnail": thumbnail,
     }
 
