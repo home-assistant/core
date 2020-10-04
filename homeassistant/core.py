@@ -532,7 +532,7 @@ class EventOrigin(enum.Enum):
 class Event:
     """Representation of an event within the bus."""
 
-    __slots__ = ["__weakref__", "event_type", "data", "origin", "time_fired", "context"]
+    __slots__ = ["event_type", "data", "origin", "time_fired", "context"]
 
     def __init__(
         self,
