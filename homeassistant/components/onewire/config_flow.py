@@ -64,8 +64,7 @@ class OneWireFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             owhost = user_input.get(CONF_HOST)
             owport = user_input.get(CONF_PORT)
             try:
-                owproxy = protocol.proxy(host=owhost, port=owport)
-                owproxy.dir()
+                await self.hass.async_add_executor_job(protocol.proxy, owhost, owport)
                 return self.async_create_entry(title=owhost, data=self.onewire_config)
             except (protocol.Error, protocol.ConnError) as exc:
                 _LOGGER.error(
