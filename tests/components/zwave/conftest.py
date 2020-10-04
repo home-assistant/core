@@ -30,7 +30,7 @@ def mock_openzwave():
 
 @pytest.fixture
 def mock_node():
-    """Provides a mock ZWave node."""
+    """Provide mock z-wave node."""
     node = MockNode(
         query_stage="Dynamic",
         is_awake=True,
@@ -48,5 +48,5 @@ def mock_node():
 
 @pytest.fixture
 def mock_entity(mock_node):
-    """Provides a mock ZWaveNodeEntity."""
+    """Provide mock z-wave node entity."""
     yield node_entity.ZWaveNodeEntity(mock_node, MagicMock())
