@@ -19,11 +19,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     switches = []
     for activity in activities:
-        switches.append(
-            HarmonyActivitySwitch(
-                activity + "-switch", "TODO" + activity, activity, device
-            )
-        )
+        switches.append(HarmonyActivitySwitch(activity, activity, device))
 
     async_add_entities(switches, True)
 
@@ -32,23 +28,43 @@ class HarmonyActivitySwitch(SwitchEntity):
     """Switch representation of a Harmony activity."""
 
     # TODO do we have all params
-    def __init__(self, name, unique_id, activity, remote):
+    def __init__(self, name, activity, device):
         """Initialize HarmonyActivitySwitch class."""
         self._name = name
-        self._unique_id = unique_id
         self._activity = activity
-        self._remote = remote
+        self._device = device
+
+    @property
+    def name(self):
+        """Return the Harmony activity's name."""
+        return self._name
+
+    @property
+    def unique_id(self):
+        """Return the unique id."""
+        return f"{self._device.unique_id}-{self._activity}"
+
+    @property
+    def should_poll(self):
+        """Return the fact that we should not be polled."""
+        # TODO
+        return True
 
     # TODO private variables
     @property
     def is_on(self):
         """Return if the current activity is the one for this switch."""
-        return self._remote._current_activity == self._activity
+        return self._device._current_activity == self._activity
+
+    # @property
+    # def available(self):
+    # """Return True if we're connected to the Hub, otherwise False."""
+    # return self._device.available
 
     async def async_turn_on(self, **kwargs):
         """Start this activity."""
-        self._remote.async_turn_on(**{ATTR_ACTIVITY: self.activity})
+        await self._device.async_turn_on(**{ATTR_ACTIVITY: self._activity})
 
     async def async_turn_off(self, **kwargs):
         """Stop this activity."""
-        self._remote.async_turn_off()
+        await self._device.async_turn_off()
