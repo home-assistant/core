@@ -14,6 +14,7 @@ from .const import (  # pylint: disable=unused-import
     NONE_STR,
     VALIDATION_TUPLES,
 )
+from .switch import _supported_features
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -89,10 +90,12 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             if not errors:
                 return self.async_create_entry(title="", data=user_input)
 
-        all_lights = sorted(self.hass.states.async_entity_ids("light"))
-        to_replace = {
-            CONF_LIGHTS: cv.multi_select(all_lights),
-        }
+        all_lights = [
+            light
+            for light in self.hass.states.async_entity_ids("light")
+            if _supported_features(self.hass, light)
+        ]
+        to_replace = {CONF_LIGHTS: cv.multi_select(sorted(all_lights))}
 
         options_schema = {}
         for name, default, validation in VALIDATION_TUPLES:
