@@ -3,7 +3,7 @@
 from functools import partial
 import logging
 
-from miio.gateway import GatewayException
+from miio import DeviceException
 
 from homeassistant.components.alarm_control_panel import (
     SUPPORT_ALARM_ARM_AWAY,
@@ -103,7 +103,7 @@ class XiaomiGatewayAlarm(AlarmControlPanelEntity):
                 partial(func, *args, **kwargs)
             )
             _LOGGER.debug("Response received from miio device: %s", result)
-        except GatewayException as exc:
+        except DeviceException as exc:
             _LOGGER.error(mask_error, exc)
 
     async def async_alarm_arm_away(self, code=None):
@@ -128,7 +128,6 @@ class XiaomiGatewayAlarm(AlarmControlPanelEntity):
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
             return
-
 
         _LOGGER.debug("Got new state: %s", state)
 
