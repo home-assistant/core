@@ -58,4 +58,4 @@ class ScaleTestSensor(Entity):
     @property
     def should_poll(self):
         """Return the device should not poll for updates."""
-        return False
+        return True
